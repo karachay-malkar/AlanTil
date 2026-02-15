@@ -36,10 +36,6 @@
         </div>
 
         <div class="row">
-          <button id="btnMatchWords" class="btn primary">🔗 Сопоставь слова</button>
-        </div>
-
-        <div class="row">
           <button id="btnOpenLearnMenu" class="btn primary">📚 Учить слова</button>
         </div>
       </div>
@@ -129,51 +125,6 @@
 
       </div>
     </section>
-
-
-    <!-- МЕНЮ ИГРЫ: СОПОСТАВЬ СЛОВА -->
-    <section id="viewMatchMenu" class="view hidden">
-      <div class="panel">
-        <div class="panelTitle">🔗 Сопоставь слова</div>
-        <div class="hintText" id="matchInfo">—</div>
-
-        <div class="testScopeTitle">Словари и разделы</div>
-        <div id="matchScopeBody" class="testScope">
-          <div id="matchScopeList" class="testScopeList"></div>
-        </div>
-
-        <div class="testLimitRow">
-          <div class="testLimitTitle">Количество слов</div>
-          <div class="testLimitRadios">
-            <label class="radioOpt"><input type="radio" name="matchLimit" value="30"> <span>30</span></label>
-            <label class="radioOpt"><input type="radio" name="matchLimit" value="50" checked> <span>50</span></label>
-            <label class="radioOpt"><input type="radio" name="matchLimit" value="100"> <span>100</span></label>
-          </div>
-        </div>
-
-        <div class="row">
-          <button id="btnMatchStart" class="btn primary">Начать игру</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ИГРА: СОПОСТАВЬ СЛОВА -->
-    <section id="viewMatchGame" class="view hidden">
-      <div class="panel">
-        <div class="panelTitle">🔗 Сопоставь слова</div>
-        <div class="hintText" id="matchProgress">—</div>
-        <div id="matchGrid" class="matchGrid"></div>
-      </div>
-    </section>
-
-    <!-- РЕЗУЛЬТАТ ИГРЫ -->
-    <section id="viewMatchResult" class="view hidden">
-      <div class="panel">
-        <div class="panelTitle">Результат игры</div>
-        <div id="matchResultList" class="list"></div>
-      </div>
-    </section>
-
 
     <!-- ТЕСТ -->
     <section id="viewTest" class="view hidden">
