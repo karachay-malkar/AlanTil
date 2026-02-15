@@ -1656,9 +1656,6 @@ function updateGlobalTestInfo() {
     });
   }
 
-
-  }
-
   function openMatchResult(){
     if (!matchResultList) return;
 
