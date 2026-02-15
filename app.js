@@ -8,6 +8,9 @@
   const viewLearnMenu = document.getElementById("viewLearnMenu");
 const viewSetMenu = document.getElementById("viewSetMenu");
   const viewGlobalTestMenu = document.getElementById("viewGlobalTestMenu");
+  const viewMatchMenu = document.getElementById("viewMatchMenu");
+  const viewMatchGame = document.getElementById("viewMatchGame");
+  const viewMatchResult = document.getElementById("viewMatchResult");
   const viewTest = document.getElementById("viewTest");
   const viewStudy = document.getElementById("viewStudy");
   const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
@@ -53,6 +56,20 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const btnGlobalModeKb = document.getElementById("btnGlobalModeKb");
   const btnGlobalModeRu = document.getElementById("btnGlobalModeRu");
   const btnGlobalTestBack = document.getElementById("btnGlobalTestBack");
+
+
+  // Match words menu
+  const btnMatchWords = document.getElementById("btnMatchWords");
+  const matchInfo = document.getElementById("matchInfo");
+  const matchScopeBody = document.getElementById("matchScopeBody");
+  const matchScopeList = document.getElementById("matchScopeList");
+  const btnMatchStart = document.getElementById("btnMatchStart");
+
+  // Match game
+  const matchProgress = document.getElementById("matchProgress");
+  const matchColLeft = document.getElementById("matchColLeft");
+  const matchColRight = document.getElementById("matchColRight");
+  const matchResultList = document.getElementById("matchResultList");
 
   // Test view
   const testTitle = document.getElementById("testTitle");
@@ -244,6 +261,9 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     viewSections,
 viewSetMenu,
     viewGlobalTestMenu,
+    viewMatchMenu,
+    viewMatchGame,
+    viewMatchResult,
     viewTest,
     viewStudy,
     viewDictContent,
@@ -303,6 +323,11 @@ viewSetMenu,
   }
 
   function navigateBack(){
+    // v9.9: match game/result are временные, back всегда ведёт в меню игры
+    if (currentView === viewMatchGame || currentView === viewMatchResult){
+      goView(viewMatchMenu, { push:false });
+      return;
+    }
     const prev = navStack.pop();
     if (!prev) return;
     showView(prev);
@@ -1326,6 +1351,364 @@ function updateGlobalTestInfo() {
   btnGlobalTest.addEventListener("click", openGlobalTestMenu);
   btnGlobalModeKb.addEventListener("click", () => { testMode = "kb"; startTest(); });
   btnGlobalModeRu.addEventListener("click", () => { testMode = "ru"; startTest(); });
+
+  // ---------- Match words (v9.9) — same source scope as test, but matching pairs
+  let matchItems = [];
+  let matchRemaining = [];
+  let matchTotal = 0;
+  let matchRoundIndex = 0;
+  let matchFailMap = {};
+  let matchSolved = new Set();
+  let matchLocked = false;
+  let matchSelectedIdx = null;
+  let matchSelectedRef = null;
+
+  function getSelectedMatchLimit() {
+    const el = document.querySelector('input[name="matchLimit"]:checked');
+    const n = el ? Number(el.value) : 50;
+    return (n === 30 || n === 50 || n === 100) ? n : 50;
+  }
+
+  function renderMatchScopeList() {
+    const dicts = dictsFrom(DATA);
+    const html = dicts.map(d => {
+      const sections = uniq(DATA.filter(w => w.dict === d).map(w => w.section || "")).sort(sortNatural);
+      const sectionRows = sections.map(s => {
+        const label = s ? sectionTitle(s) : "Без раздела";
+        return `
+          <label class="scopeSectionRow">
+            <input class="scopeCheckbox matchScopeSection" type="checkbox" data-dict="${escapeHtml(d)}" data-section="${escapeHtml(s)}">
+            <span>${escapeHtml(label)}</span>
+          </label>
+        `;
+      }).join("");
+
+      return `
+        <div class="scopeBlock">
+          <label class="scopeDictRow">
+            <input class="scopeCheckbox matchScopeDict" type="checkbox" data-dict="${escapeHtml(d)}">
+            <span>${escapeHtml(dictTitle(d))}</span>
+          </label>
+          ${sectionRows}
+        </div>
+      `;
+    }).join("");
+
+    matchScopeList.innerHTML = html || "<div class='hintText'>Словари не найдены.</div>";
+
+    const dictCbs = [...matchScopeList.querySelectorAll(".matchScopeDict")];
+    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
+
+    function updateDictState(dict) {
+      const secs = sectionCbs.filter(cb => cb.dataset.dict === dict);
+      const checked = secs.filter(cb => cb.checked).length;
+      const dictCb = dictCbs.find(cb => cb.dataset.dict === dict);
+      if (!dictCb) return;
+      dictCb.indeterminate = checked > 0 && checked < secs.length;
+      dictCb.checked = secs.length > 0 && checked === secs.length;
+    }
+
+    dictCbs.forEach(dictCb => {
+      dictCb.addEventListener("change", () => {
+        const d = dictCb.dataset.dict;
+        sectionCbs.filter(cb => cb.dataset.dict === d).forEach(cb => { cb.checked = dictCb.checked; });
+        dictCb.indeterminate = false;
+        updateMatchInfo();
+      });
+    });
+
+    sectionCbs.forEach(secCb => {
+      secCb.addEventListener("change", () => {
+        updateDictState(secCb.dataset.dict);
+        updateMatchInfo();
+      });
+    });
+
+    // Default: all checked
+    dictCbs.forEach(dcb => { dcb.checked = true; });
+    sectionCbs.forEach(scb => { scb.checked = true; });
+    dictCbs.forEach(dcb => { dcb.indeterminate = false; });
+
+    updateMatchInfo();
+  }
+
+  function getSelectedMatchScopePool() {
+    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
+    if (!sectionCbs.length) return DATA;
+
+    const checked = sectionCbs.filter(cb => cb.checked);
+    if (checked.length === 0) return [];
+
+    const keys = new Set(checked.map(cb => scopeKey(cb.dataset.dict, cb.dataset.section)));
+    return DATA.filter(w => keys.has(scopeKey(w.dict, w.section || "")));
+  }
+
+  function updateMatchInfo() {
+    const pool = getSelectedMatchScopePool();
+    const limit = getSelectedMatchLimit();
+
+    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
+    const checkedSecs = sectionCbs.filter(cb => cb.checked);
+    const dictCount = new Set(checkedSecs.map(cb => cb.dataset.dict)).size;
+    const secCount = checkedSecs.length;
+
+    const scopeText = (checkedSecs.length === sectionCbs.length)
+      ? "Все словари и разделы"
+      : `Выбрано: словарей ${dictCount}, разделов ${secCount}`;
+
+    if (matchInfo) matchInfo.textContent = `Источник: ${scopeText} • Слов: ${pool.length} • Игра: ${Math.min(limit, pool.length)} слов`;
+  }
+
+  function openMatchMenu(){
+    if (matchScopeBody) matchScopeBody.classList.remove("hidden");
+    renderMatchScopeList();
+    document.querySelectorAll('input[name="matchLimit"]').forEach(r => (r.onchange = updateMatchInfo));
+    goView(viewMatchMenu);
+  }
+
+  function randomFrom(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function startMatchGame(){
+    const pool = getSelectedMatchScopePool();
+
+    if (!pool.length){
+      alert("Выберите хотя бы один словарь или раздел");
+      return;
+    }
+    const limit = getSelectedMatchLimit();
+
+    matchItems = shuffle(pool.slice());
+    if (matchItems.length > limit) matchItems = matchItems.slice(0, limit);
+
+    matchRemaining = matchItems.slice();
+    matchTotal = matchItems.length;
+    matchRoundIndex = 0;
+    matchFailMap = {};
+    matchSolved = new Set();
+    matchLocked = false;
+    matchSelectedIdx = null;
+    matchSelectedRef = null;
+
+    goView(viewMatchGame, { push:false });
+    nextMatchRound();
+  }
+
+  function setMatchProgressText(extra=""){
+    if (!matchProgress) return;
+    const done = matchTotal - matchRemaining.length;
+    const base = `Пройдено: ${done}/${matchTotal} слов`;
+    matchProgress.textContent = extra ? `${base} • ${extra}` : base;
+  }
+
+  function nextMatchRound(){
+    if (!matchColLeft || !matchColRight) return;
+
+    if (matchRemaining.length === 0){
+      openMatchResult();
+      return;
+    }
+
+    // Pick random POS for this round from remaining
+    const availablePOS = uniq(matchRemaining.map(w => (w.pos || "").trim() || "unknown"));
+    const roundPOS = randomFrom(availablePOS);
+
+    let candidates = matchRemaining.filter(w => ((w.pos || "").trim() || "unknown") === roundPOS);
+    candidates = shuffle(candidates.slice());
+
+    const roundWords = candidates.slice(0, 5);
+
+    // Remove selected from remaining
+    const roundIds = new Set(roundWords.map(w => w.id));
+    matchRemaining = matchRemaining.filter(w => !roundIds.has(w.id));
+
+    matchRoundIndex++;
+
+    // Pair counter per round (starts at 0, grows only on correct match)
+    const roundPairsTotal = roundWords.length;
+    let roundPairsMatched = 0;
+
+    if (matchProgress) matchProgress.textContent = `0 из ${roundPairsTotal} пар`;
+
+    // Build columns: left = words, right = translations
+    const leftCards = shuffle(roundWords.map(w => ({ kind:"w", id:w.id, text:w.word })));
+    const rightCards = shuffle(roundWords.map(w => ({ kind:"t", id:w.id, text:w.trans })));
+
+    // Reset selection
+    matchLocked = false;
+    matchSelectedIdx = null;
+    matchSelectedRef = null;
+
+    matchColLeft.innerHTML = leftCards.map((c) => `
+      <button class="matchCard" type="button" data-kind="${c.kind}" data-id="${c.id}">
+        ${escapeHtml(c.text)}
+      </button>
+    `).join("");
+
+    matchColRight.innerHTML = rightCards.map((c) => `
+      <button class="matchCard" type="button" data-kind="${c.kind}" data-id="${c.id}">
+        ${escapeHtml(c.text)}
+      </button>
+    `).join("");
+
+    const btns = Array.from(document.querySelectorAll("#matchColLeft .matchCard, #matchColRight .matchCard"));
+
+    function clearSelection(){
+      btns.forEach(b => b.classList.remove("selected","wrong"));
+      matchSelectedIdx = null;
+      matchSelectedRef = null;
+    }
+
+    function markSolved(id){
+      matchSolved.add(Number(id));
+    }
+
+    function bumpFail(id){
+      const nid = Number(id);
+      if (!nid) return;
+      if (matchSolved.has(nid)) return;
+      matchFailMap[nid] = (matchFailMap[nid] || 0) + 1;
+    }
+
+    function allMatched(){
+      return btns.length > 0 && btns.every(b => b.classList.contains("matched"));
+    }
+
+    function updatePairCounter(){
+      if (!matchProgress) return;
+      matchProgress.textContent = `${roundPairsMatched} из ${roundPairsTotal} пар`;
+    }
+
+    btns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (matchLocked) return;
+        if (btn.classList.contains("matched")) return;
+
+        const id = Number(btn.dataset.id);
+        const kind = btn.dataset.kind;
+
+        // Toggle off if same selected element
+        if (matchSelectedIdx && matchSelectedIdx.el === btn){
+          btn.classList.remove("selected");
+          matchSelectedIdx = null;
+          matchSelectedRef = null;
+          return;
+        }
+
+        // First pick
+        if (!matchSelectedIdx){
+          clearSelection();
+          btn.classList.add("selected");
+          matchSelectedIdx = { el: btn };
+          matchSelectedRef = { id, kind };
+          return;
+        }
+
+        const firstBtn = matchSelectedIdx.el;
+        const first = matchSelectedRef;
+        const second = { id, kind };
+
+        // If same kind — just switch selection
+        if (first && second && first.kind === second.kind){
+          clearSelection();
+          btn.classList.add("selected");
+          matchSelectedIdx = { el: btn };
+          matchSelectedRef = second;
+          return;
+        }
+
+        const isCorrect = first && (first.id === second.id) && (first.kind !== second.kind);
+
+        if (isCorrect){
+          firstBtn.classList.remove("selected");
+          btn.classList.remove("selected");
+          firstBtn.classList.add("matched");
+          btn.classList.add("matched");
+          markSolved(first.id);
+
+          roundPairsMatched++;
+          updatePairCounter();
+
+          matchSelectedIdx = null;
+          matchSelectedRef = null;
+
+          if (allMatched()){
+            matchLocked = true;
+            setTimeout(() => {
+              matchLocked = false;
+              nextMatchRound();
+            }, 350);
+          }
+        } else {
+          bumpFail(first.id);
+          bumpFail(second.id);
+
+          matchLocked = true;
+          firstBtn.classList.add("wrong");
+          btn.classList.add("wrong");
+          setTimeout(() => {
+            matchLocked = false;
+            clearSelection();
+          }, 600);
+        }
+      });
+    });
+  }
+
+
+  }
+
+  function openMatchResult(){
+    if (!matchResultList) return;
+
+    const problemWords = Object.entries(matchFailMap)
+      .filter(([id, count]) => count > 0)
+      .map(([id, count]) => {
+        const word = DATA.find(w => w.id === Number(id));
+        return { ...word, fails: count };
+      })
+      .filter(w => w && w.id)
+      .sort((a,b) => b.fails - a.fails);
+
+    if (!problemWords.length){
+      matchResultList.innerHTML = `
+        <div class="smallNote" style="text-align:center;">
+          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
+          <div>Все пары собраны с первого раза ✅</div>
+        </div>
+      `;
+    } else {
+      matchResultList.innerHTML = problemWords.map(w => `
+        <div class="dictWordRow">
+          <div class="dictNum" style="color:#ef4444;font-weight:900;">
+            ❌ ${w.fails}
+          </div>
+          <div>
+            <div class="w">${escapeHtml(w.word)}</div>
+            <div class="t">${escapeHtml(w.trans)}</div>
+          </div>
+          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
+            ${isFav(w.id) ? "★" : "☆"}
+          </button>
+        </div>
+      `).join("");
+
+      matchResultList.querySelectorAll(".starBtn").forEach((btn, i) => {
+        const word = problemWords[i];
+        btn.addEventListener("click", () => {
+          const on = toggleFav(word.id);
+          btn.classList.toggle("on", on);
+          btn.textContent = on ? "★" : "☆";
+        });
+      });
+    }
+
+    goView(viewMatchResult, { push:false });
+  }
+
+  if (btnMatchWords) btnMatchWords.addEventListener("click", openMatchMenu);
+  if (btnMatchStart) btnMatchStart.addEventListener("click", startMatchGame);
 
   function startTest() {
     const pool = getSelectedScopePool();

@@ -914,3 +914,50 @@ button[data-legacy-back="1"]{display:none !important;}
 .setCheck.active path{
   stroke: #22c55e;
 }
+
+
+/* === v9.9: Match words game === */
+.matchColumns{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.matchCol{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+
+.matchCard{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(17,169,232,0.10);
+  font-weight: 900;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select:none;
+}
+
+.matchCard:active{ transform: translateY(1px); }
+
+.matchCard.selected{
+  border-color: rgba(17,169,232,0.55);
+  background: rgba(17,169,232,0.10);
+}
+
+.matchCard.matched{
+  border-color: rgba(34,197,94,0.45);
+  background: rgba(34,197,94,0.12);
+}
+
+.matchCard.wrong{
+  border-color: rgba(239,68,68,0.45);
+  background: rgba(239,68,68,0.10);
+}
