@@ -17,3 +17,18 @@ window.WORDS_FALLBACK = [
   { id: 2, folder: "easy", set: 1, word: "сау бол", trans: "спасибо", example: "Сау бол - спасибо" },
   { id: 3, folder: "easy", set: 1, word: "барыргъа", trans: "идти, ехать", example: "мен юйге барама - я иду домой" },
 ];
+
+
+
+// === STEP 4: Dictionary content data requirements ===
+// Required column in Google Sheets: dict_order
+// - Local order inside EACH dictionary (starts from 1)
+// - Used for sorting and display in "Содержание словаря"
+// - If dict_order is empty or 0, the word is NOT shown in the dictionary content view.
+//
+// Expected headers (minimum):
+// id, dict, section, set, word, trans, dict_order
+//
+// Example row:
+// { id: 101, dict: 'Основной', section: 'Быт', set: 1, dict_order: 12, word: 'окъургъа', trans: 'читать' }
+
