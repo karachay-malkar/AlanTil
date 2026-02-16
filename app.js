@@ -5,11 +5,15 @@
   // Views
   const viewDicts = document.getElementById("viewDicts");
   const viewSections = document.getElementById("viewSections");
-  const viewSets = document.getElementById("viewSets");
-  const viewSetMenu = document.getElementById("viewSetMenu");
+  const viewLearnMenu = document.getElementById("viewLearnMenu");
+const viewSetMenu = document.getElementById("viewSetMenu");
   const viewGlobalTestMenu = document.getElementById("viewGlobalTestMenu");
+  const viewMatchMenu = document.getElementById("viewMatchMenu");
+  const viewMatchGame = document.getElementById("viewMatchGame");
+  const viewMatchResult = document.getElementById("viewMatchResult");
   const viewTest = document.getElementById("viewTest");
   const viewStudy = document.getElementById("viewStudy");
+  const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
 
   // Dicts
   const dictsList = document.getElementById("dictsList");
@@ -19,36 +23,29 @@
   const sectionsTitle = document.getElementById("sectionsTitle");
   const sectionsList = document.getElementById("sectionsList");
   const btnBackToDicts = document.getElementById("btnBackToDicts");
-
-  // Sets
-  const setsTitle = document.getElementById("setsTitle");
-  const setsList = document.getElementById("setsList");
-  const btnBackToSections = document.getElementById("btnBackToSections");
-
   // Set menu
   const setMenuTitle = document.getElementById("setMenuTitle");
   const setMenuInfo = document.getElementById("setMenuInfo");
   const btnModeKb = document.getElementById("btnModeKb");
   const btnModeRu = document.getElementById("btnModeRu");
-  const setSearchInput = document.getElementById("setSearchInput");
-  const btnSetShowAll = document.getElementById("btnSetShowAll");
+    const btnSetShowAll = document.getElementById("btnSetShowAll");
   const btnSetHideAll = document.getElementById("btnSetHideAll");
   const setWordsList = document.getElementById("setWordsList");
-  const btnBackToSets2 = document.getElementById("btnBackToSets2");
-
-  // Study
+// Study
   const card = document.getElementById("card");
   const wordEl = document.getElementById("word");
   const transEl = document.getElementById("trans");
-  const btnExample = document.getElementById("btnExample");
-  const btnFav = document.getElementById("btnFav");
   const exampleBox = document.getElementById("exampleBox");
   const btnYes = document.getElementById("btnYes");
   const btnNo = document.getElementById("btnNo");
+  const btnUndo = document.getElementById("btnUndo");
+  const btnFavAction = document.getElementById("btnFavAction");
+  const favActionLabel = document.getElementById("favActionLabel");
   const btnBackToSetMenu = document.getElementById("btnBackToSetMenu");
 
   // Top meta
   const counter = document.getElementById("counter");
+  const btnBackArrow = document.getElementById("btnBackArrow");
   const modeEl = document.getElementById("mode");
 
   // Global test menu
@@ -59,6 +56,20 @@
   const btnGlobalModeKb = document.getElementById("btnGlobalModeKb");
   const btnGlobalModeRu = document.getElementById("btnGlobalModeRu");
   const btnGlobalTestBack = document.getElementById("btnGlobalTestBack");
+
+
+  // Match words menu
+  const btnMatchWords = document.getElementById("btnMatchWords");
+  const matchInfo = document.getElementById("matchInfo");
+  const matchScopeBody = document.getElementById("matchScopeBody");
+  const matchScopeList = document.getElementById("matchScopeList");
+  const btnMatchStart = document.getElementById("btnMatchStart");
+
+  // Match game
+  const matchProgress = document.getElementById("matchProgress");
+  const matchColLeft = document.getElementById("matchColLeft");
+  const matchColRight = document.getElementById("matchColRight");
+  const matchResultList = document.getElementById("matchResultList");
 
   // Test view
   const testTitle = document.getElementById("testTitle");
@@ -85,6 +96,23 @@
   }
 
   
+
+  // ---------- Storage: finished sets (manual "✅") — v9.8
+  const FINISHED_KEY = "fc_finished_sets_v1";
+  function loadFinishedMap(){ try { return JSON.parse(localStorage.getItem(FINISHED_KEY) || "{}"); } catch { return {}; } }
+  function saveFinishedMap(map){ localStorage.setItem(FINISHED_KEY, JSON.stringify(map)); }
+  function isSetFinished(d, s, setNo){
+    const map = loadFinishedMap();
+    return !!map[keyOf(d, s, setNo)];
+  }
+  function toggleSetFinished(d, s, setNo){
+    const map = loadFinishedMap();
+    const k = keyOf(d, s, setNo);
+    if (map[k]) delete map[k]; else map[k] = true;
+    saveFinishedMap(map);
+    return !!map[k];
+  }
+
   // ---------- Storage: favorites (per-device)
   const FAV_KEY = "fc_favorites_v1";
   function loadFavSet() {
@@ -180,7 +208,9 @@
     const wordI = idx("word");
     const transI = idx("trans");
     const exI = idx("example");
+    const posI = idx("pos");
 
+    const dictOrderI = idx("dict_order");
     if (idI === -1 || setI === -1 || wordI === -1 || transI === -1) return [];
 
     const out = [];
@@ -199,7 +229,9 @@
         set: Number(cols[setI] || 0),
         word: String(cols[wordI] || "").trim(),
         trans: String(cols[transI] || "").trim(),
+        pos: posI !== -1 ? String(cols[posI] || "").trim() : "",
         example: exI !== -1 ? String(cols[exI] || "").trim() : "",
+        dict_order: dictOrderI !== -1 ? Number(cols[dictOrderI] || 0) : 0,
       };
       if (!obj.id || !obj.set || !obj.word || !obj.trans) continue;
       out.push(obj);
@@ -208,48 +240,326 @@
   }
 
   // ---------- Helpers
+
+  // ---------- RU title renderer (v8.6, stage 2)
+  function renderRuTitle(el, text){
+    const groups = splitGroups(text);
+    if (!groups.length){
+      el.textContent = "";
+      return;
+    }
+    if (groups.length === 1){
+      el.textContent = groups[0];
+      return;
+    }
+    el.innerHTML = groups.map((g,i)=>`<div>${i+1}. ${escapeHtml(g)}</div>`).join("");
+  }
   function showView(which) {
-    [viewDicts, viewSections, viewSets, viewSetMenu, viewGlobalTestMenu, viewTest, viewStudy].forEach(v => v.classList.add("hidden"));
-    which.classList.remove("hidden");
+  [
+    viewDicts,
+    viewLearnMenu,
+    viewSections,
+viewSetMenu,
+    viewGlobalTestMenu,
+    viewMatchMenu,
+    viewMatchGame,
+    viewMatchResult,
+    viewTest,
+    viewStudy,
+    viewDictContent,
+    viewSessionAnalytics
+  ].forEach(v => v && v.classList.add("hidden"));
+
+  which.classList.remove("hidden");
+}
+  // --- Dictionary content visibility helper
+  function hideDictContent(){
+    if (viewDictContent) viewDictContent.classList.add("hidden");
   }
 
-  // ---------- Simple navigation history (so "Назад" from Избранного ведет на главный)
-  function setHistory(screen, mode /* 'push' | 'replace' */) {
-    try {
-      const state = { screen };
-      if (mode === "replace") history.replaceState(state, "");
-      else if (mode === "push") history.pushState(state, "");
-    } catch {}
+
+  
+  // ---------- Global back navigation (single arrow in header) — v9.7 clean stack
+  let currentView = viewDicts;
+  const navStack = [];
+
+  function isHomeView(v){ return v === viewDicts; }
+  function isTestFlowView(v){ return v === viewGlobalTestMenu || v === viewTest; }
+
+  function updateMeta(){
+    if (!counter || !modeEl) return;
+
+    const onStudy = (currentView === viewStudy);
+    const onTest = (currentView === viewTest);
+
+    // Counter only in study
+    counter.style.display = onStudy ? "" : "none";
+
+    // Mode: only in test (label "Тест"), never in study
+    if (onTest){
+      modeEl.style.display = "";
+      modeEl.textContent = "Тест";
+    } else {
+      modeEl.style.display = "none";
+      modeEl.textContent = "";
+    }
   }
 
-  function goHome(opts = {}) {
-    // opts.historyMode: 'push' | 'replace' | null
-    showView(viewDicts);
-    currentDict = "";
-    currentSection = "";
-    currentSet = 1;
-    if (opts.historyMode) setHistory("home", opts.historyMode);
+  function updateBackArrow(){
+    if (!btnBackArrow) return;
+    const shouldShow = !isHomeView(currentView) && navStack.length > 0;
+    btnBackArrow.classList.toggle("hidden", !shouldShow);
   }
 
-  function openFavoritesMenu(opts = {}) {
-    // opts.historyMode: 'push' | 'replace' | null
-    currentDict = "__fav__";
-    currentSection = "Избранное";
-    currentSet = 1;
-    openSetMenu();
-    if (opts.historyMode) setHistory("favorites", opts.historyMode);
+  function goView(nextView, opts = {}){
+    hideDictContent();
+    const { push = true, resetStack = false } = opts;
+    if (resetStack) navStack.length = 0;
+    if (push && currentView && currentView !== nextView) navStack.push(currentView);
+    showView(nextView);
+    currentView = nextView;
+    updateBackArrow();
+    updateMeta();
   }
 
-  window.addEventListener("popstate", (e) => {
-    const screen = e?.state?.screen || "home";
-    if (screen === "favorites") openFavoritesMenu({ historyMode: null });
-    else goHome({ historyMode: null });
-  });
+  function navigateBack(){
+    // v9.9: match game/result are временные, back всегда ведёт в меню игры
+    if (currentView === viewMatchGame || currentView === viewMatchResult){
+      goView(viewMatchMenu, { push:false });
+      return;
+    }
+    const prev = navStack.pop();
+    if (!prev) return;
+    showView(prev);
+    currentView = prev;
+    updateBackArrow();
+    updateMeta();
+  }
+
+  if (btnBackArrow) btnBackArrow.addEventListener("click", navigateBack);
+
+
+
 
   function uniq(arr) { return Array.from(new Set(arr)); }
   function sortNatural(a, b) { return String(a).localeCompare(String(b), "ru", { numeric: true, sensitivity: "base" }); }
   function escapeHtml(s) {
     return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  // ---------- Study renderers (v7.3)
+  // ---------- RU->ALAN front renderer (v8.6)
+  function renderRuAlanFront(el, item){
+    // number of groups determined ONLY by Russian translation variants
+    const groups = splitGroups(item.trans);
+    const exRaw = String(item.example || "").trim();
+
+    // parse examples into indexed groups
+    let eGroups = [];
+    if(exRaw){
+      const parts = exRaw.replace(/\n+/g,";").split(/\s*[;；]\s*/g).map(s=>s.trim()).filter(Boolean);
+      let cur = null;
+      for(const p of parts){
+        const m = p.match(/^\s*(\d+)\s*(?:[\.)]|[-–—])?\s*(.*)$/);
+        if(m){
+          if(cur) eGroups.push(cur);
+          cur = { i: Number(m[1])-1, lines: m[2] ? [m[2]] : [] };
+        }else{
+          if(!cur) cur = { i: 0, lines: [p] };
+          else cur.lines.push(p);
+        }
+      }
+      if(cur) eGroups.push(cur);
+    }
+
+    if(!groups.length){
+      el.textContent = escapeHtml(item.word);
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="groups">
+        ${groups.map((_,i)=>{
+          const eg = eGroups.find(g=>g.i===i);
+          return `
+            <div class="groupRow">
+              <span class="groupNum">${i+1}</span>
+              <div class="groupPill">
+                <div class="gTrans">${escapeHtml(item.word)}</div>
+                ${eg ? eg.lines.map(l=>`<div class="gEx">${escapeHtml(l)}</div>`).join("") : ``}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  // ---------- Combined renderer: translation + examples (v8.6)
+  function renderCombinedGroups(el, transText, exText){
+    const tGroups = splitGroups(transText);
+    const eRaw = String(exText||"").trim();
+
+    // parse examples into indexed groups
+    let eGroups = [];
+    if(eRaw){
+      const parts = eRaw.replace(/\n+/g,";").split(/\s*[;；]\s*/g).map(s=>s.trim()).filter(Boolean);
+      let cur = null;
+      for(const p of parts){
+        const m = p.match(/^\s*(\d+)\s*(?:[\.)]|[-–—])?\s*(.*)$/);
+        if(m){
+          if(cur) eGroups.push(cur);
+          cur = { i: Number(m[1])-1, lines: m[2] ? [m[2]] : [] };
+        }else{
+          if(!cur) cur = { i: 0, lines: [p] };
+          else cur.lines.push(p);
+        }
+      }
+      if(cur) eGroups.push(cur);
+    }
+
+    const max = Math.max(tGroups.length, eGroups.length);
+    if(!max){ el.textContent=""; return; }
+
+    el.innerHTML = `
+      <div class="groups">
+        ${Array.from({length:max}).map((_,i)=>{
+          const t = tGroups[i];
+          const eg = eGroups.find(g=>g.i===i);
+          return `
+            <div class="groupRow">
+              <span class="groupNum">${i+1}</span>
+              <div class="groupPill">
+                ${t ? `<div class="gTrans">${escapeHtml(t)}</div>` : ``}
+                ${eg ? eg.lines.map(l=>`<div class="gEx">${escapeHtml(l)}</div>`).join("") : ``}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+// ---------- Study renderers (v7.3)
+  // ---------- RU->ALAN front renderer (v8.6)
+  function renderRuAlanFront(el, item){
+    // number of groups determined ONLY by Russian translation variants
+    const groups = splitGroups(item.trans);
+    const exRaw = String(item.example || "").trim();
+
+    // parse examples into indexed groups
+    let eGroups = [];
+    if(exRaw){
+      const parts = exRaw.replace(/\n+/g,";").split(/\s*[;；]\s*/g).map(s=>s.trim()).filter(Boolean);
+      let cur = null;
+      for(const p of parts){
+        const m = p.match(/^\s*(\d+)\s*(?:[\.)]|[-–—])?\s*(.*)$/);
+        if(m){
+          if(cur) eGroups.push(cur);
+          cur = { i: Number(m[1])-1, lines: m[2] ? [m[2]] : [] };
+        }else{
+          if(!cur) cur = { i: 0, lines: [p] };
+          else cur.lines.push(p);
+        }
+      }
+      if(cur) eGroups.push(cur);
+    }
+
+    if(!groups.length){
+      el.textContent = escapeHtml(item.word);
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="groups">
+        ${groups.map((_,i)=>{
+          const eg = eGroups.find(g=>g.i===i);
+          return `
+            <div class="groupRow">
+              <span class="groupNum">${i+1}</span>
+              <div class="groupPill">
+                <div class="gTrans">${escapeHtml(item.word)}</div>
+                ${eg ? eg.lines.map(l=>`<div class="gEx">${escapeHtml(l)}</div>`).join("") : ``}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  // Split text into groups by semicolon or newline
+  function splitGroups(text){
+    return String(text||"")
+      .split(/\s*[;；]\s*|\n+/g)
+      .map(s=>s.trim())
+      .filter(Boolean)
+      // strip leading numbering inside group text (e.g. "1. ...", "2) ...", "3 - ...")
+      .map(s=>s.replace(/^\s*\d+\s*(?:[\.)]|[-–—])\s*/,"").trim());
+  }
+
+  // Render translation groups as pills (group-level)
+  function renderTransGroups(el, text){
+    const groups = splitGroups(text);
+    if(!groups.length){ el.textContent = ""; return; }
+
+    const showNums = groups.length > 1;
+    el.innerHTML = `
+      <div class="groups">
+        ${groups.map((g,i)=>`
+          <div class="groupRow">
+            ${showNums ? `<span class="groupNum">${i+1}</span>` : ``}
+            <div class="groupPill">${escapeHtml(g)}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // Render example groups by numeric markers (1,2,3...)
+  function renderExampleGroups(el, text){
+    const raw = String(text||"").trim();
+    if(!raw){ el.textContent = ""; return; }
+
+    // Split into candidate example lines by semicolons or newlines.
+    const parts = raw
+      .replace(/\n+/g, ";")
+      .split(/\s*[;；]\s*/g)
+      .map(s=>s.trim())
+      .filter(Boolean);
+
+    let groups = [];
+    let current = null;
+
+    for(const part of parts){
+      const mm = part.match(/^\s*(\d+)\s*(?:[\.)]|[-–—])?\s*(.*)$/);
+      if(mm){
+        if(current) groups.push(current);
+        const rest = (mm[2]||"").trim();
+        current = { num: mm[1], lines: rest ? [rest] : [] };
+      }else{
+        if(!current){
+          current = { num: null, lines: [part] };
+        }else{
+          current.lines.push(part);
+        }
+      }
+    }
+    if(current) groups.push(current);
+
+    const numbered = groups.length >= 1 && groups.every(g => g.num);
+
+    el.innerHTML = `
+      <div class="groups examples">
+        ${groups.map(g=>`
+          <div class="groupRow groupRowEx">
+            ${numbered ? `<span class="groupNum groupNumEx">${escapeHtml(g.num)}</span>` : ``}
+            <div class="groupExample">
+              ${g.lines.map(l=>`<div class="exLine">${escapeHtml(l)}</div>`).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
   }
 
   // Split "a, b; c, d" into blocks and pills
@@ -332,6 +642,92 @@
   }
 
   // ---------- App state
+
+  // ---------- Dictionary content (Содержание словаря)
+  const viewDictContent = document.getElementById("viewDictContent");
+  const btnOpenDictContent = document.getElementById("btnOpenDictContent");
+  const dictSearchInput = document.getElementById("dictSearchInput");
+  const dictContentList = document.getElementById("dictContentList");
+
+  function renderDictContent(filter = "") {
+    if (!dictContentList) return;
+    dictContentList.innerHTML = "";
+    if (!Array.isArray(DATA) || !currentDict) return;
+
+    const q = String(filter||"").toLowerCase().trim();
+    const words = DATA
+      .filter(w =>
+        w.dict === currentDict &&
+        Number(w.dict_order) > 0 &&
+        (!q ||
+          String(w.word||"").toLowerCase().includes(q) ||
+          String(w.trans||"").toLowerCase().includes(q))
+      )
+      .sort((a,b)=>Number(a.dict_order)-Number(b.dict_order));
+
+    const bySection = {};
+    for (const w of words) {
+      const sec = (w.section || "Раздел").trim() || "Раздел";
+      (bySection[sec] ||= []).push(w);
+    }
+
+    for (const [sec, items] of Object.entries(bySection)) {
+      const header = document.createElement("div");
+      header.className = "sectionHeader";
+      header.textContent = "▸ " + sectionTitle(sec);
+
+      const body = document.createElement("div");
+      body.classList.add("hidden");
+
+      header.addEventListener("click", () => {
+        const closed = body.classList.toggle("hidden");
+        header.textContent = (closed ? "▸ " : "▾ ") + sectionTitle(sec);
+      });
+
+      for (const w of items) {
+        const row = document.createElement("div");
+        row.className = "dictWordRow";
+        row.innerHTML = `
+          <div class="dictNum">${Number(w.dict_order)}.</div>
+          <div>
+            <div class="w">${escapeHtml(w.word)}</div>
+            <div class="t">${escapeHtml(w.trans)}</div>
+          </div>
+          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
+            ${isFav(w.id) ? "★" : "☆"}
+          </button>
+        `;
+        const star = row.querySelector(".starBtn");
+        star.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          const on = toggleFav(w.id);
+          star.classList.toggle("on", on);
+          star.textContent = on ? "★" : "☆";
+        });
+        body.appendChild(row);
+      }
+
+      dictContentList.appendChild(header);
+      dictContentList.appendChild(body);
+    }
+  }
+
+  if (btnOpenDictContent && viewDictContent) {
+    btnOpenDictContent.addEventListener("click", () => {
+      renderDictContent("");
+      goView(viewDictContent);
+      if (dictSearchInput) {
+        dictSearchInput.value = "";
+      }
+    });
+  }
+
+  if (dictSearchInput) {
+    dictSearchInput.addEventListener("input", () => {
+      renderDictContent(dictSearchInput.value);
+    });
+  }
+
   let DATA = [];
   let favIds = loadFavSet();
   let currentDict = "";
@@ -348,6 +744,10 @@
   let totalPlanned = 0;
   let currentStudyId = 0;
 
+  // v9.3: last swipe undo (single-step)
+  let swipeHistory = [];
+  let sessionFailMap = {};
+
   function setRoundIfNeeded() { if (round === "main" && mainQueue.length === 0) round = "repeat"; }
   function currentQueue() { return round === "main" ? mainQueue : repeatQueue; }
 
@@ -359,58 +759,91 @@
       btn.addEventListener("click", () => {
         currentDict = btn.getAttribute("data-dict");
         if (currentDict === "__fav__") {
-          openFavoritesMenu({ historyMode: "push" });
+          currentDict = "__fav__"; currentSection = "Избранное"; currentSet = 1; openSetMenu();
           return;
         }
         renderSections(currentDict);
-        showView(viewSections);
+        goView(viewSections);
       });
     });
-    counter.textContent = "—";
-    modeEl.textContent = "—";
-    goHome({ historyMode: "replace" });
+    
+    goView(viewDicts, { push:false, resetStack:true });
   }
 
   function renderSections(dict) {
-    sectionsTitle.textContent = (dict === "__fav__") ? "Избранное" : `Разделы: ${dictTitle(dict)}`;
-    const sections = (dict === "__fav__") ? ["Избранное"] : sectionsFrom(DATA, dict);
-    sectionsList.innerHTML = sections.map(s => `<button class="btn" data-section="${escapeHtml(s)}">${escapeHtml(sectionTitle(s))}</button>`).join("");
-    sectionsList.querySelectorAll("button[data-section]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentSection = btn.getAttribute("data-section");
-        renderSets(currentDict, currentSection);
-        showView(viewSets);
-      });
-    });
-  }
+    sectionsTitle.textContent = (dict === "__fav__") ? "Избранное" : dictTitle(dict);
 
-  function renderSets(dict, section) {
-    setsTitle.textContent = (dict === "__fav__") ? "Избранное" : `Сеты: ${sectionTitle(section)}`;
-    const sets = (dict === "__fav__") ? [1] : setsFrom(DATA, dict, section);
-    setsList.innerHTML = sets.map(s => {
-      const all = (dict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, dict, section, s);
-      const hidden = getHiddenSet(dict, section, s);
-      const active = all.filter(w => !hidden.has(w.id));
+    const sections = (dict === "__fav__") ? ["Избранное"] : sectionsFrom(DATA, dict);
+
+    sectionsList.innerHTML = sections.map(sec => {
+      const sets = (dict === "__fav__") ? [1] : setsFrom(DATA, dict, sec);
+
+      const tiles = sets.map(setNo => {
+        const all = (dict === "__fav__")
+          ? DATA.filter(w => favIds.has(w.id))
+          : wordsForSet(DATA, dict, sec, setNo);
+
+        const finished = isSetFinished(dict, sec, setNo);
+
+        const title = (dict === "__fav__") ? "Избранное" : `Сет ${setNo}`;
+        const count = all.length;
+
+        return `
+          <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
+            <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
+    <rect x="3" y="3" width="18" height="18" rx="4"
+          fill="none"
+          stroke="rgba(15,23,42,0.25)"
+          stroke-width="1.7"/>
+    <path d="M7 10.5 L11.5 16 L17 6.5"
+          fill="none"
+          stroke-width="2.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+  </svg></div>
+            <div class="setTileTitle">${escapeHtml(title)}</div>
+            <div class="setTileCount">${count} слов</div>
+          </button>
+        `;
+      }).join("");
+
       return `
-        <button class="btn" data-set="${s}">
-          Сет ${s}
-          <div class="smallNote" style="margin-top:6px;">${active.length}/${all.length} слов в сессии</div>
-        </button>
+        <div class="secBlock">
+          <div class="secTitle">${escapeHtml(sectionTitle(sec))}</div>
+          <div class="setsGrid">${tiles}</div>
+        </div>
       `;
     }).join("");
 
-    setsList.querySelectorAll("button[data-set]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentSet = Number(btn.getAttribute("data-set"));
+    // Click handlers: open set vs toggle done
+    sectionsList.querySelectorAll(".setTile").forEach(tile => {
+      const sec = tile.getAttribute("data-section");
+      const setNo = Number(tile.getAttribute("data-set"));
+
+      // Toggle ✅
+      const doneEl = tile.querySelector("[data-done='1']");
+      if (doneEl) {
+        doneEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const on = toggleSetFinished(dict, sec, setNo);
+          const svg = doneEl.querySelector("svg");
+if(svg){
+  svg.classList.toggle("active", on);
+}
+        });
+      }
+
+      // Open set menu
+      tile.addEventListener("click", () => {
+        currentSection = sec;
+        currentSet = setNo;
         openSetMenu();
       });
     });
   }
 
-  btnBackToDicts.addEventListener("click", () => showView(viewDicts));
-  btnBackToSections.addEventListener("click", () => showView(viewSections));
-
-  // ---------- Set menu / hiding words
+  btnBackToDicts.addEventListener("click", () => goView(viewDicts));
+// ---------- Set menu / hiding words
   let menuHidden = new Set();
 
   function openSetMenu() {
@@ -421,18 +854,13 @@
     setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • Сет ${currentSet}`;
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
 
-    // UX: если это "Избранное", кнопка назад должна вести на главный экран
-    btnBackToSets2.textContent = (currentDict === "__fav__") ? "← На главный" : "← К сетам";
-
-    setSearchInput.value = "";
     renderSetWordsList();
-    showView(viewSetMenu);
+    goView(viewSetMenu);
   }
 
   function renderSetWordsList() {
-    const q = (setSearchInput.value || "").trim().toLowerCase();
     const all = (currentDict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, currentDict, currentSection, currentSet);
-    const filtered = q ? all.filter(w => (w.word + " " + w.trans).toLowerCase().includes(q)) : all;
+    const filtered = all;
 
     setWordsList.innerHTML = filtered.map(w => {
       const checked = !menuHidden.has(w.id);
@@ -478,8 +906,6 @@
     });
   }
 
-  setSearchInput.addEventListener("input", renderSetWordsList);
-
   btnSetShowAll.addEventListener("click", () => {
     menuHidden = new Set();
     setHiddenSet(currentDict, currentSection, currentSet, menuHidden);
@@ -496,26 +922,67 @@
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: 0`;
   });
 
-  btnBackToSets2.addEventListener("click", () => {
-    if (currentDict === "__fav__") {
-      // Если мы зашли в Избранное как в отдельный экран — возвращаемся на главный одним шагом
-      try {
-        if (history.state?.screen === "favorites") {
-          history.back();
-          return;
-        }
-      } catch {}
-      goHome({ historyMode: "replace" });
-      return;
-    }
-    renderSets(currentDict, currentSection);
-    showView(viewSets);
-  });
-
   btnModeKb.addEventListener("click", () => { currentStudyMode = "kb"; startStudySession(); });
   btnModeRu.addEventListener("click", () => { currentStudyMode = "ru"; startStudySession(); });
 
-  // ---------- Study session
+  // ---------- Study counter helper
+  function updateStudyCounter(){
+    if (!counter) return;
+    const known = Math.max(0, totalPlanned - (mainQueue.length + repeatQueue.length));
+    counter.textContent = `знаю ${known}/${totalPlanned} слов`;
+  }
+
+
+  // v9.3: UI helpers for study action buttons
+  function updateFavActionUI(){
+    if (!btnFavAction) return;
+    const on = isFav(currentStudyId);
+    btnFavAction.classList.toggle("active", on);
+    if (favActionLabel) favActionLabel.textContent = on ? "В избранном" : "Пометить слово";
+    btnFavAction.setAttribute("aria-label", on ? "Убрать из избранного" : "Пометить слово");
+  }
+
+  function updateUndoUI(){
+    if (!btnUndo) return;
+    const can = swipeHistory.length > 0;
+    btnUndo.disabled = !can || isAnimating;
+  }
+
+  
+  
+  function undoLastSwipe(){
+    if (!swipeHistory.length || isAnimating) return;
+
+    const { item, known, fromRound } = swipeHistory.pop();
+
+    if (!known) {
+      if (sessionFailMap[item.id]) {
+        sessionFailMap[item.id]--;
+        if (sessionFailMap[item.id] <= 0) delete sessionFailMap[item.id];
+      }
+      for (let i = repeatQueue.length - 1; i >= 0; i--) {
+        if (repeatQueue[i] && repeatQueue[i].id === item.id) {
+          repeatQueue.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    if (fromRound === "main") {
+      mainQueue.unshift(item);
+    } else {
+      repeatQueue.unshift(item);
+    }
+
+    round = fromRound;
+
+    renderStudyCard();
+    updateStudyCounter();
+    updateUndoUI();
+  }
+
+// ---------- Study session
+
   function startStudySession() {
     const all = (currentDict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, currentDict, currentSection, currentSet);
     const hidden = getHiddenSet(currentDict, currentSection, currentSet);
@@ -525,141 +992,236 @@
     repeatQueue = [];
     round = "main";
     totalPlanned = active.length;
+    swipeHistory = [];
+    sessionFailMap = {};
+    updateStudyCounter();
 
-    transEl.classList.add("hidden");
-    exampleBox.classList.add("hidden");
-    showView(viewStudy);
+    goView(viewStudy);
     renderStudyCard();
+    updateStudyCounter();
   }
 
-  function renderStudyCard() {
-    setRoundIfNeeded();
+  
+function resetFlipInstant() {
+  const inner = card.querySelector(".cardInner");
+  if (!inner) {
+    card.classList.remove("flipped");
+    return;
+  }
+
+  const prev = inner.style.transition;
+  inner.style.transition = "none";
+  card.classList.remove("flipped");
+  void inner.offsetWidth;
+  inner.style.transition = prev || "";
+}
+
+function renderStudyCard() {
+    
+  resetFlipInstant();
+setRoundIfNeeded();
     const q = currentQueue();
 
     // reset front state
-    transEl.classList.add("hidden");
-    exampleBox.classList.add("hidden");
 
     if (totalPlanned === 0) {
       wordEl.textContent = "Пусто 🤷‍♂️";
       transEl.textContent = "В этом сете все слова скрыты. Верни их в меню сета.";
-      transEl.classList.remove("hidden");
-      btnFav.classList.add("hidden");
-      btnExample.classList.add("hidden");
-      counter.textContent = "0/0";
-      modeEl.textContent = "—";
-      return;
+      if (btnFavAction) btnFavAction.classList.add("hidden");
+      if (btnUndo) btnUndo.classList.add("hidden");
+return;
     } else {
-      btnExample.classList.remove("hidden");
-    }
+}
 
     if (q.length === 0) {
-      wordEl.textContent = "Готово ✅";
-      transEl.textContent = "Сессия завершена.";
-      transEl.classList.remove("hidden");
-      exampleBox.classList.add("hidden");
-      btnFav.classList.add("hidden");
-      btnExample.classList.add("hidden");
-      counter.textContent = `${totalPlanned}/${totalPlanned}`;
-      modeEl.textContent = "завершено";
+      openSessionAnalytics();
       return;
+    }
+
+    // original finish block disabled
+    if(false){
+      transEl.textContent = "Сессия завершена.";
+      if (btnFavAction) btnFavAction.classList.add("hidden");
+      if (btnUndo) btnUndo.classList.add("hidden");
+return;
     }
 
     const item = q[0];
     currentStudyId = item.id;
-    btnFav.classList.remove("hidden");
-    const favOn = isFav(item.id);
-    btnFav.classList.toggle("on", favOn);
-    btnFav.textContent = favOn ? "★" : "☆";
+    if (btnFavAction) btnFavAction.classList.remove("hidden");
+    if (btnUndo) btnUndo.classList.remove("hidden");
+    updateFavActionUI();
+    updateUndoUI();
     const front = currentStudyMode === "kb" ? item.word : item.trans;
     const back = currentStudyMode === "kb" ? item.trans : item.word;
 
-    setRichOrText(wordEl, front);
-    setRichOrText(transEl, back);
+    // Front rendering (stage 2)
+    if (currentStudyMode === "ru") {
+      renderRuTitle(wordEl, item.trans);
+    } else {
+      wordEl.textContent = front;
+    }
+    // Back rendering depends on mode
+    if(currentStudyMode === "ru"){
+      // RU → ALAN: pills count from Russian variants
+      renderRuAlanFront(transEl, item);
+    }else{
+      // ALAN → RU (default)
+      renderCombinedGroups(transEl, back, item.example);
+    }
 
     const done = totalPlanned - q.length - (round === "repeat" ? 0 : 0);
-    counter.textContent = `${Math.max(0, totalPlanned - (mainQueue.length + (round === "repeat" ? repeatQueue.length : 0)))}/${totalPlanned}`;
-    modeEl.textContent = (round === "main" ? "основной круг" : "повтор") + " • " + (currentStudyMode === "kb" ? "КБ → RU" : "RU → КБ");
+    
   }
 
-  // Tap: flip (show/hide translation)
+  // Tap: flip (front/back)
   card.addEventListener("click", (e) => {
-    // don't treat clicking example button as flip
-    if (e.target && (e.target.id === "btnExample" || e.target.id === "btnFav")) return;
-    transEl.classList.toggle("hidden");
+    if (e.target && e.target.closest && (e.target.closest("#btnUndo") || e.target.closest("#btnFavAction"))) return;
+    card.classList.toggle("flipped");
   });
-
-  // Example button
-  btnExample.addEventListener("click", () => {
-    const item = currentQueue()[0];
-    if (!item) return;
-    const ex = (item.example || "").trim();
-    if (!ex) {
-      exampleBox.textContent = "Пример пока не добавлен.";
-    } else {
-      setRichOrText(exampleBox, ex);
-    }
-    exampleBox.classList.toggle("hidden");
-  });
-
-  function swipeDecision(known) {
-    setRoundIfNeeded();
+function swipeDecision(known) {
+    
+  resetFlipInstant();
+setRoundIfNeeded();
     const q = currentQueue();
     if (!q.length) return;
 
     // close back & example
-    transEl.classList.add("hidden");
-    exampleBox.classList.add("hidden");
 
+    const fromRound = round;
     const item = q.shift();
-    if (!known) repeatQueue.push(item);
+    if (!known) {
+      sessionFailMap[item.id] = (sessionFailMap[item.id] || 0) + 1;
+      repeatQueue.push(item);
+    }
 
+    const switchedToRepeat = (round === "main" && mainQueue.length === 0);
     // When main is empty, switch to repeat
-    if (round === "main" && mainQueue.length === 0) round = "repeat";
+    if (switchedToRepeat) round = "repeat";
+
+    // store single-step undo info
+    swipeHistory.push({ item, known, fromRound });
 
     renderStudyCard();
+    updateStudyCounter();
+    updateUndoUI();
   }
 
-  btnYes.addEventListener("click", () => swipeDecision(true));
-  btnNo.addEventListener("click", () => swipeDecision(false));
+  btnYes.addEventListener("click", () => animateSwipe(1, true));
+  btnNo.addEventListener("click", () => animateSwipe(-1, false));
 
-  // Swipe gestures
+  if (btnUndo) btnUndo.addEventListener("click", (e) => { e.stopPropagation(); undoLastSwipe(); });
+  if (btnFavAction) btnFavAction.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const on = toggleFav(currentStudyId);
+    updateFavActionUI();
+  });
+
+  
+  // ---------- Swipe animation (v8.9 stable)
+  let isAnimating = false;
+
+  function animateSwipe(dir, known){
+    if(isAnimating) return;
+    isAnimating = true;
+    updateUndoUI();
+
+    card.style.pointerEvents = "none";
+    card.style.transition = "transform .5s ease, opacity .5s ease, box-shadow .5s ease";
+    card.style.transform = `translateX(${dir*520}px) rotate(${dir*14}deg)`;
+    card.style.opacity = "0";
+
+    setTimeout(()=>{
+
+      swipeDecision(known);
+      card.style.boxShadow = "";
+      
+      requestAnimationFrame(() => {
+        card.style.transition = "none";
+        card.style.transform = "translateY(-70px)";
+        card.style.opacity = "0";
+
+        requestAnimationFrame(() => {
+          card.style.transition = "transform .5s ease, opacity .5s ease";
+          card.style.transform = "translateY(0)";
+          card.style.opacity = "1";
+        });
+      });
+
+      card.style.pointerEvents = "";
+      isAnimating = false;
+      updateUndoUI();
+
+    }, 500);
+  }
+
+  // Swipe gestures (animated)
   let startX = 0, startY = 0, dragging = false;
 
   card.addEventListener("touchstart", (e) => {
-    if (!e.touches?.[0]) return;
+    if (!e.touches?.[0] || isAnimating) return;
     dragging = true;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
+    card.style.transition = "none";
+    card.style.boxShadow = "";
   }, { passive: true });
 
   card.addEventListener("touchmove", (e) => {
-    if (!dragging || !e.touches?.[0]) return;
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    if (Math.abs(dy) > Math.abs(dx)) return;
-  }, { passive: true });
+  if (!dragging || !e.touches?.[0] || isAnimating) return;
+
+  const dx = e.touches[0].clientX - startX;
+  const dy = e.touches[0].clientY - startY;
+  if (Math.abs(dy) > Math.abs(dx)) return;
+
+  // Quizlet-like threshold (30% of screen width)
+  const threshold = card.offsetWidth * 0.3;
+  const progress = Math.min(Math.abs(dx) / threshold, 1);
+
+  const rotate = dx / 22;
+  const opacity = 1 - Math.min(Math.abs(dx) / (threshold * 1.6), 0.6);
+
+  card.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+  card.style.opacity = String(opacity);
+
+  // Edge glow feedback
+  if (dx > 0) {
+    // right edge green
+    card.style.boxShadow = `0 10px 30px rgba(17,169,232,0.18), 28px 0 100px rgba(34,197,94,${1 * progress})`;
+  } else if (dx < 0) {
+    // left edge red
+    card.style.boxShadow = `0 10px 30px rgba(17,169,232,0.18), -28px 0 100px rgba(239,68,68,${1 * progress})`;
+  } else {
+    card.style.boxShadow = "";
+  }
+}, { passive: true });
 
   card.addEventListener("touchend", (e) => {
-    if (!dragging) return;
-    dragging = false;
-    const endX = (e.changedTouches?.[0]?.clientX ?? startX);
-    const dx = endX - startX;
-    const threshold = 70;
+  if (!dragging || isAnimating) return;
+  dragging = false;
 
-    if (dx > threshold) swipeDecision(true);
-    else if (dx < -threshold) swipeDecision(false);
-  });
+  const endX = (e.changedTouches?.[0]?.clientX ?? startX);
+  const dx = endX - startX;
 
-  btnBackToSetMenu.addEventListener("click", openSetMenu);
+  // Quizlet-like threshold (30% of screen width)
+  const threshold = card.offsetWidth * 0.3;
 
-  // Favorites toggle on study card
-  btnFav.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const on = toggleFav(currentStudyId);
-    btnFav.classList.toggle("on", on);
-    btnFav.textContent = on ? "★" : "☆";
-  });
+  card.style.transition = "transform .18s ease, opacity .18s ease, box-shadow .18s ease";
+
+  if (dx > threshold) animateSwipe(1, true);
+  else if (dx < -threshold) animateSwipe(-1, false);
+  else {
+    // snap back
+    card.style.transform = "";
+    card.style.opacity = "";
+    card.style.boxShadow = "";
+  }
+});
+
+  btnBackToSetMenu.addEventListener("click", () => {
+  favIds = loadFavSet();
+  openSetMenu();
+});
 
   // ---------- Global test (only global, with dict filter)
   let testMode = "kb"; // kb: Q=word, A=trans; ru: Q=trans, A=word
@@ -668,6 +1230,7 @@
   let testCorrect = 0;
   let testSelected = null;
   let testResults = [];
+  let testOptionPool = [];
   function getSelectedTestLimit() {
     const el = document.querySelector('input[name="testLimit"]:checked');
     const n = el ? Number(el.value) : 50;
@@ -764,7 +1327,7 @@ function openGlobalTestMenu() {
     // Update info when limit changes
     document.querySelectorAll('input[name="testLimit"]').forEach(r => (r.onchange = updateGlobalTestInfo));
 
-    showView(viewGlobalTestMenu);
+    goView(viewGlobalTestMenu);
   }
 
 
@@ -786,13 +1349,370 @@ function updateGlobalTestInfo() {
   }
 
   btnGlobalTest.addEventListener("click", openGlobalTestMenu);
-  btnGlobalTestBack.addEventListener("click", () => showView(viewDicts));
   btnGlobalModeKb.addEventListener("click", () => { testMode = "kb"; startTest(); });
   btnGlobalModeRu.addEventListener("click", () => { testMode = "ru"; startTest(); });
+
+  // ---------- Match words (v9.9) — same source scope as test, but matching pairs
+  let matchItems = [];
+  let matchRemaining = [];
+  let matchTotal = 0;
+  let matchRoundIndex = 0;
+  let matchFailMap = {};
+  let matchSolved = new Set();
+  let matchLocked = false;
+  let matchSelectedIdx = null;
+  let matchSelectedRef = null;
+
+  function getSelectedMatchLimit() {
+    const el = document.querySelector('input[name="matchLimit"]:checked');
+    const n = el ? Number(el.value) : 50;
+    return (n === 30 || n === 50 || n === 100) ? n : 50;
+  }
+
+  function renderMatchScopeList() {
+    const dicts = dictsFrom(DATA);
+    const html = dicts.map(d => {
+      const sections = uniq(DATA.filter(w => w.dict === d).map(w => w.section || "")).sort(sortNatural);
+      const sectionRows = sections.map(s => {
+        const label = s ? sectionTitle(s) : "Без раздела";
+        return `
+          <label class="scopeSectionRow">
+            <input class="scopeCheckbox matchScopeSection" type="checkbox" data-dict="${escapeHtml(d)}" data-section="${escapeHtml(s)}">
+            <span>${escapeHtml(label)}</span>
+          </label>
+        `;
+      }).join("");
+
+      return `
+        <div class="scopeBlock">
+          <label class="scopeDictRow">
+            <input class="scopeCheckbox matchScopeDict" type="checkbox" data-dict="${escapeHtml(d)}">
+            <span>${escapeHtml(dictTitle(d))}</span>
+          </label>
+          ${sectionRows}
+        </div>
+      `;
+    }).join("");
+
+    matchScopeList.innerHTML = html || "<div class='hintText'>Словари не найдены.</div>";
+
+    const dictCbs = [...matchScopeList.querySelectorAll(".matchScopeDict")];
+    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
+
+    function updateDictState(dict) {
+      const secs = sectionCbs.filter(cb => cb.dataset.dict === dict);
+      const checked = secs.filter(cb => cb.checked).length;
+      const dictCb = dictCbs.find(cb => cb.dataset.dict === dict);
+      if (!dictCb) return;
+      dictCb.indeterminate = checked > 0 && checked < secs.length;
+      dictCb.checked = secs.length > 0 && checked === secs.length;
+    }
+
+    dictCbs.forEach(dictCb => {
+      dictCb.addEventListener("change", () => {
+        const d = dictCb.dataset.dict;
+        sectionCbs.filter(cb => cb.dataset.dict === d).forEach(cb => { cb.checked = dictCb.checked; });
+        dictCb.indeterminate = false;
+        updateMatchInfo();
+      });
+    });
+
+    sectionCbs.forEach(secCb => {
+      secCb.addEventListener("change", () => {
+        updateDictState(secCb.dataset.dict);
+        updateMatchInfo();
+      });
+    });
+
+    // Default: all checked
+    dictCbs.forEach(dcb => { dcb.checked = true; });
+    sectionCbs.forEach(scb => { scb.checked = true; });
+    dictCbs.forEach(dcb => { dcb.indeterminate = false; });
+
+    updateMatchInfo();
+  }
+
+  function getSelectedMatchScopePool() {
+    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
+    if (!sectionCbs.length) return DATA;
+
+    const checked = sectionCbs.filter(cb => cb.checked);
+    if (checked.length === 0) return [];
+
+    const keys = new Set(checked.map(cb => scopeKey(cb.dataset.dict, cb.dataset.section)));
+    return DATA.filter(w => keys.has(scopeKey(w.dict, w.section || "")));
+  }
+
+  function updateMatchInfo() {
+    const pool = getSelectedMatchScopePool();
+    const limit = getSelectedMatchLimit();
+
+    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
+    const checkedSecs = sectionCbs.filter(cb => cb.checked);
+    const dictCount = new Set(checkedSecs.map(cb => cb.dataset.dict)).size;
+    const secCount = checkedSecs.length;
+
+    const scopeText = (checkedSecs.length === sectionCbs.length)
+      ? "Все словари и разделы"
+      : `Выбрано: словарей ${dictCount}, разделов ${secCount}`;
+
+    if (matchInfo) matchInfo.textContent = `Источник: ${scopeText} • Слов: ${pool.length} • Игра: ${Math.min(limit, pool.length)} слов`;
+  }
+
+  function openMatchMenu(){
+    if (matchScopeBody) matchScopeBody.classList.remove("hidden");
+    renderMatchScopeList();
+    document.querySelectorAll('input[name="matchLimit"]').forEach(r => (r.onchange = updateMatchInfo));
+    goView(viewMatchMenu);
+  }
+
+  function randomFrom(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function startMatchGame(){
+    const pool = getSelectedMatchScopePool();
+
+    if (!pool.length){
+      alert("Выберите хотя бы один словарь или раздел");
+      return;
+    }
+    const limit = getSelectedMatchLimit();
+
+    matchItems = shuffle(pool.slice());
+    if (matchItems.length > limit) matchItems = matchItems.slice(0, limit);
+
+    matchRemaining = matchItems.slice();
+    matchTotal = matchItems.length;
+    matchRoundIndex = 0;
+    matchFailMap = {};
+    matchSolved = new Set();
+    matchLocked = false;
+    matchSelectedIdx = null;
+    matchSelectedRef = null;
+
+    goView(viewMatchGame, { push:false });
+    nextMatchRound();
+  }
+
+  function setMatchProgressText(extra=""){
+    if (!matchProgress) return;
+    const done = matchTotal - matchRemaining.length;
+    const base = `Пройдено: ${done}/${matchTotal} слов`;
+    matchProgress.textContent = extra ? `${base} • ${extra}` : base;
+  }
+
+  function nextMatchRound(){
+    if (!matchColLeft || !matchColRight) return;
+
+    if (matchRemaining.length === 0){
+      openMatchResult();
+      return;
+    }
+
+    // Pick random POS for this round from remaining
+    const availablePOS = uniq(matchRemaining.map(w => (w.pos || "").trim() || "unknown"));
+    const roundPOS = randomFrom(availablePOS);
+
+    let candidates = matchRemaining.filter(w => ((w.pos || "").trim() || "unknown") === roundPOS);
+    candidates = shuffle(candidates.slice());
+
+    const roundWords = candidates.slice(0, 5);
+
+    // Remove selected from remaining
+    const roundIds = new Set(roundWords.map(w => w.id));
+    matchRemaining = matchRemaining.filter(w => !roundIds.has(w.id));
+
+    matchRoundIndex++;
+
+    // Pair counter per round (starts at 0, grows only on correct match)
+    const roundPairsTotal = roundWords.length;
+    let roundPairsMatched = 0;
+
+    if (matchProgress) matchProgress.textContent = `0 из ${roundPairsTotal} пар`;
+
+    // Build columns: left = words, right = translations
+    const leftCards = shuffle(roundWords.map(w => ({ kind:"w", id:w.id, text:w.word })));
+    const rightCards = shuffle(roundWords.map(w => ({ kind:"t", id:w.id, text:w.trans })));
+
+    // Reset selection
+    matchLocked = false;
+    matchSelectedIdx = null;
+    matchSelectedRef = null;
+
+    matchColLeft.innerHTML = leftCards.map((c) => `
+      <button class="matchCard" type="button" data-kind="${c.kind}" data-id="${c.id}">
+        ${escapeHtml(c.text)}
+      </button>
+    `).join("");
+
+    matchColRight.innerHTML = rightCards.map((c) => `
+      <button class="matchCard" type="button" data-kind="${c.kind}" data-id="${c.id}">
+        ${escapeHtml(c.text)}
+      </button>
+    `).join("");
+
+    const btns = Array.from(document.querySelectorAll("#matchColLeft .matchCard, #matchColRight .matchCard"));
+
+    function clearSelection(){
+      btns.forEach(b => b.classList.remove("selected","wrong"));
+      matchSelectedIdx = null;
+      matchSelectedRef = null;
+    }
+
+    function markSolved(id){
+      matchSolved.add(Number(id));
+    }
+
+    function bumpFail(id){
+      const nid = Number(id);
+      if (!nid) return;
+      if (matchSolved.has(nid)) return;
+      matchFailMap[nid] = (matchFailMap[nid] || 0) + 1;
+    }
+
+    function allMatched(){
+      return btns.length > 0 && btns.every(b => b.classList.contains("matched"));
+    }
+
+    function updatePairCounter(){
+      if (!matchProgress) return;
+      matchProgress.textContent = `${roundPairsMatched} из ${roundPairsTotal} пар`;
+    }
+
+    btns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (matchLocked) return;
+        if (btn.classList.contains("matched")) return;
+
+        const id = Number(btn.dataset.id);
+        const kind = btn.dataset.kind;
+
+        // Toggle off if same selected element
+        if (matchSelectedIdx && matchSelectedIdx.el === btn){
+          btn.classList.remove("selected");
+          matchSelectedIdx = null;
+          matchSelectedRef = null;
+          return;
+        }
+
+        // First pick
+        if (!matchSelectedIdx){
+          clearSelection();
+          btn.classList.add("selected");
+          matchSelectedIdx = { el: btn };
+          matchSelectedRef = { id, kind };
+          return;
+        }
+
+        const firstBtn = matchSelectedIdx.el;
+        const first = matchSelectedRef;
+        const second = { id, kind };
+
+        // If same kind — just switch selection
+        if (first && second && first.kind === second.kind){
+          clearSelection();
+          btn.classList.add("selected");
+          matchSelectedIdx = { el: btn };
+          matchSelectedRef = second;
+          return;
+        }
+
+        const isCorrect = first && (first.id === second.id) && (first.kind !== second.kind);
+
+        if (isCorrect){
+          firstBtn.classList.remove("selected");
+          btn.classList.remove("selected");
+          firstBtn.classList.add("matched");
+          btn.classList.add("matched");
+          markSolved(first.id);
+
+          roundPairsMatched++;
+          updatePairCounter();
+
+          matchSelectedIdx = null;
+          matchSelectedRef = null;
+
+          if (allMatched()){
+            matchLocked = true;
+            setTimeout(() => {
+              matchLocked = false;
+              nextMatchRound();
+            }, 350);
+          }
+        } else {
+          bumpFail(first.id);
+          bumpFail(second.id);
+
+          matchLocked = true;
+          firstBtn.classList.add("wrong");
+          btn.classList.add("wrong");
+          setTimeout(() => {
+            matchLocked = false;
+            clearSelection();
+          }, 600);
+        }
+      });
+    });
+  }
+
+  function openMatchResult(){
+    if (!matchResultList) return;
+
+    const problemWords = Object.entries(matchFailMap)
+      .filter(([id, count]) => count > 0)
+      .map(([id, count]) => {
+        const word = DATA.find(w => w.id === Number(id));
+        return { ...word, fails: count };
+      })
+      .filter(w => w && w.id)
+      .sort((a,b) => b.fails - a.fails);
+
+    if (!problemWords.length){
+      matchResultList.innerHTML = `
+        <div class="smallNote" style="text-align:center;">
+          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
+          <div>Все пары собраны с первого раза ✅</div>
+        </div>
+      `;
+    } else {
+      matchResultList.innerHTML = problemWords.map(w => `
+        <div class="item">
+          <div class="dictNum" style="color:#ef4444;font-weight:900;">
+            ❌ ${w.fails}
+          </div>
+          <div>
+            <div class="w">${escapeHtml(w.word)}</div>
+            <div class="t">${escapeHtml(w.trans)}</div>
+          </div>
+          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
+            ${isFav(w.id) ? "★" : "☆"}
+          </button>
+        </div>
+      `).join("");
+
+      matchResultList.querySelectorAll(".starBtn").forEach((btn, i) => {
+        const word = problemWords[i];
+        btn.addEventListener("click", () => {
+          const on = toggleFav(word.id);
+          btn.classList.toggle("on", on);
+          btn.textContent = on ? "★" : "☆";
+        });
+      });
+    }
+
+    goView(viewMatchResult, { push:false });
+  }
+
+  if (btnMatchWords) btnMatchWords.addEventListener("click", openMatchMenu);
+  if (btnMatchStart) btnMatchStart.addEventListener("click", startMatchGame);
 
   function startTest() {
     const pool = getSelectedScopePool();
     const testLimit = getSelectedTestLimit();
+
+    // full scope pool for answer options
+    testOptionPool = pool.slice();
 
     testItems = shuffle(pool.slice()); // include hidden always
     if (testItems.length > testLimit) testItems = testItems.slice(0, testLimit);
@@ -806,14 +1726,22 @@ function updateGlobalTestInfo() {
     btnTestNext.textContent = "Дальше";
     btnTestNext.disabled = true;
 
-    showView(viewTest);
+    goView(viewTest);
     renderTestQuestion();
   }
 
   function pickOptions(correctItem) {
     const correct = testMode === "kb" ? correctItem.trans : correctItem.word;
-    const basePool = testItems.length ? testItems : DATA;
-    const pool = basePool.filter(w => w.id !== correctItem.id);
+    const targetPOS = (correctItem.pos || "").trim();
+
+    let pool = testOptionPool.filter(w =>
+      w.id !== correctItem.id &&
+      (!targetPOS || (w.pos && String(w.pos).trim() === targetPOS))
+    );
+
+    if (pool.length < 3) {
+      pool = testOptionPool.filter(w => w.id !== correctItem.id);
+    }
 
     const opts = [correct];
     let guard = 0;
@@ -945,16 +1873,64 @@ function updateGlobalTestInfo() {
     renderTestQuestion();
   });
 
-  btnTestExit.addEventListener("click", () => showView(viewDicts));
 
 
-// ---------- Init
+
+  function openSessionAnalytics() {
+    const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
+    const analyticsList = document.getElementById("analyticsList");
+
+    const problemWords = Object.entries(sessionFailMap)
+      .filter(([id, count]) => count > 0)
+      .map(([id, count]) => {
+        const word = DATA.find(w => w.id === Number(id));
+        return { ...word, fails: count };
+      })
+      .sort((a,b) => b.fails - a.fails);
+
+    if (!problemWords.length) {
+      analyticsList.innerHTML = `
+        <div class="smallNote" style="text-align:center;">
+          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
+          <div>Не было незнакомых слов ✅</div>
+        </div>
+      `;
+    } else {
+      analyticsList.innerHTML = problemWords.map(w => `
+        <div class="item">
+          <div class="dictNum" style="color:#ef4444;font-weight:900;">
+            ❌ ${w.fails}
+          </div>
+          <div>
+            <div class="w">${escapeHtml(w.word)}</div>
+            <div class="t">${escapeHtml(w.trans)}</div>
+          </div>
+          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
+            ${isFav(w.id) ? "★" : "☆"}
+          </button>
+        </div>
+      `).join("");
+
+      analyticsList.querySelectorAll(".starBtn").forEach((btn, i) => {
+        const word = problemWords[i];
+        btn.addEventListener("click", () => {
+          const on = toggleFav(word.id);
+          btn.classList.toggle("on", on);
+          btn.textContent = on ? "★" : "☆";
+        });
+      });
+    }
+
+    goView(viewSessionAnalytics, { push:false });
+  }
+
+  // ---------- Init
   (async () => {
     DATA = await loadWords();
 
     if (!Array.isArray(DATA) || !DATA.length) {
       dictsList.innerHTML = "<div class='smallNote'>Нет данных. Проверь таблицу и заголовки: id, dict, section, set, word, trans, example</div>";
-      showView(viewDicts);
+      goView(viewDicts);
       return;
     }
 
@@ -966,5 +1942,12 @@ function updateGlobalTestInfo() {
     }));
 
     renderDicts();
+
+  const btnOpenLearnMenu = document.getElementById("btnOpenLearnMenu");
+  if(btnOpenLearnMenu){
+    btnOpenLearnMenu.addEventListener("click", () => {
+      goView(viewLearnMenu);
+    });
+  }
   })();
 })();
