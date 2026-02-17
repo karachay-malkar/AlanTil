@@ -156,11 +156,8 @@ function saveCachedVersion(v) {
 
 // Validate parsed words before accepting/caching (prevents "version bump" breaking the app)
 function isValidWordsArray(words){
-  if (!Array.isArray(words) || words.length === 0) return false;
-  // Require that most rows have required fields. Accept some dirty rows.
-  let ok = 0;
-  for (let i = 0; i < words.length; i++){
-    const w = words[i] || {};
+  return Array.isArray(words) && words.length > 0;
+};
     const id = Number(w.id || 0);
     const setNo = Number(w.set || 0);
     const word = String(w.word || "").trim();
@@ -252,7 +249,7 @@ function parseCsvRows(text) {
 
   async function loadWords() {
   const cachedWords = loadCachedWords();
-  const hasCache = isValidWordsArray(cachedWords);
+  const hasCache = Array.isArray(cachedWords) && cachedWords.length > 0;
   const localVersion = loadCachedVersion();
 
   const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
