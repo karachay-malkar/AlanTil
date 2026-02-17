@@ -15,7 +15,8 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const viewStudy = document.getElementById("viewStudy");
   const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
 
-  // Dicts
+  
+// Dicts
   const dictsList = document.getElementById("dictsList");
   const btnGlobalTest = document.getElementById("btnGlobalTest");
 
@@ -560,21 +561,7 @@ viewSetMenu,
   }
 // ---------- Study renderers (v7.3)
   // ---------- RU->ALAN front renderer (v8.6)
-  function renderRuAlanFront(el, item){
-    // number of groups determined ONLY by Russian translation variants
-    const groups = splitGroups(item.trans);
-    const exRaw = String(item.example || "").trim();
-
-    // parse examples into indexed groups
-    let eGroups = [];
-    if(exRaw){
-      const parts = exRaw.replace(/\n+/g,";").split(/\s*[;；]\s*/g).map(s=>s.trim()).filter(Boolean);
-      let cur = null;
-      for(const p of parts){
-        const m = p.match(/^\s*(\d+)\s*(?:[\.)]|[-–—])?\s*(.*)$/);
-        if(m){
-          if(cur) eGroups.push(cur);
-          cur = { i: Number(m[1])-1, lines: m[2] ? [m[2]] : [] };
+  ;
         }else{
           if(!cur) cur = { i: 0, lines: [p] };
           else cur.lines.push(p);
