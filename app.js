@@ -559,41 +559,7 @@ viewSetMenu,
       </div>
     `;
   }
-// ---------- Study renderers (v7.3)
-  // ---------- RU->ALAN front renderer (v8.6)
-  ;
-        }else{
-          if(!cur) cur = { i: 0, lines: [p] };
-          else cur.lines.push(p);
-        }
-      }
-      if(cur) eGroups.push(cur);
-    }
-
-    if(!groups.length){
-      el.textContent = escapeHtml(item.word);
-      return;
-    }
-
-    el.innerHTML = `
-      <div class="groups">
-        ${groups.map((_,i)=>{
-          const eg = eGroups.find(g=>g.i===i);
-          return `
-            <div class="groupRow">
-              <span class="groupNum">${i+1}</span>
-              <div class="groupPill">
-                <div class="gTrans">${escapeHtml(item.word)}</div>
-                ${eg ? eg.lines.map(l=>`<div class="gEx">${escapeHtml(l)}</div>`).join("") : ``}
-              </div>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
-  }
-
-  // Split text into groups by semicolon or newline
+// Split text into groups by semicolon or newline
   function splitGroups(text){
     return String(text||"")
       .split(/\s*[;；]\s*|\n+/g)
