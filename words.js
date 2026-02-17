@@ -1,8 +1,6 @@
 // Можно вставлять ЛЮБУЮ ссылку на Google Sheets (даже /edit) — приложение само превратит её в CSV.
 window.WORDS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1X2tc9THUxj0bZOQDdycEFGl7xJMqjUBYe7MsESWIUXI/edit?usp=sharing";
 
-// Ключ кеша (быстрый старт)
-window.WORDS_CACHE_KEY = "fc_words_cache_v3";
 
 // (Необязательно) Человеческие названия папок.
 window.FOLDER_TITLES = {

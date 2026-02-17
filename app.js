@@ -133,11 +133,92 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
-  // ---------- Cache
-  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
-  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
-  function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
+  // ---------- Words cache + versioning (v9.11: meta-sheet controlled)
+// No external old cache key anymore. Cache keys are internal and stable.
+const WORDS_STORAGE_KEY = "alan_words_cache";
+const WORDS_VERSION_KEY = "alan_words_version";
 
+function loadCachedWords() { try { return JSON.parse(localStorage.getItem(WORDS_STORAGE_KEY) || "null"); } catch { return null; } }
+function saveCachedWords(data) { try { localStorage.setItem(WORDS_STORAGE_KEY, JSON.stringify(data)); } catch {} }
+
+function loadCachedVersion() {
+  const v = localStorage.getItem(WORDS_VERSION_KEY);
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function saveCachedVersion(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return;
+  try { localStorage.setItem(WORDS_VERSION_KEY, String(n)); } catch {}
+}
+
+function extractSheetId(url) {
+  const u = (url || "").trim();
+  const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return m ? m[1] : "";
+}
+
+function makeGvizCsvUrl(sheetId, extraParams = "") {
+  if (!sheetId) return "";
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${extraParams}`;
+}
+
+// Read dictionary version from Google Sheets: sheet "meta", A1="version", B1=<number>
+async function fetchRemoteVersion(sheetUrl) {
+  const id = extractSheetId(sheetUrl);
+  if (!id) return null;
+
+  const metaUrl = makeGvizCsvUrl(id, "&sheet=meta&range=A1:B1");
+  try {
+    const res = await fetch(metaUrl, { cache: "no-store" });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const rows = parseCsvRows(text);
+    if (!rows.length) return null;
+
+    // Expected: one row, two cols: ["version", "12"]
+    const row = rows[0] || [];
+    const a1 = String(row[0] || "").trim().toLowerCase();
+    const b1 = String(row[1] || "").trim();
+    if (a1 !== "version") return null;
+
+    const n = Number(b1);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+// Tiny CSV parser that returns table rows (no header assumptions)
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (inQuotes) {
+      if (ch === '"' && next === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else cur += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ',') { row.push(cur); cur = ""; }
+      else if (ch === '
+') { row.push(cur); rows.push(row); row = []; cur = ""; }
+      else if (ch === '') {}
+      else cur += ch;
+    }
+  }
+  if (cur.length || row.length) { row.push(cur); rows.push(row); }
+
+  // remove empty trailing rows
+  return rows.filter(r => Array.isArray(r) && r.some(c => String(c || "").trim() !== ""));
+}
+
+// ---------- Sheets URL -> CSV
   // ---------- Sheets URL -> CSV
   function normalizeToCsvUrl(url) {
     const u = (url || "").trim();
@@ -150,16 +231,60 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   async function loadWords() {
-    const cached = loadCache();
-    if (Array.isArray(cached) && cached.length) return cached;
+  const cachedWords = loadCachedWords();
+  const hasCache = Array.isArray(cachedWords) && cachedWords.length > 0;
+  const localVersion = loadCachedVersion();
 
-    const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
+  const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
+
+  // 1) Try to read remote version each app start (small request).
+  const remoteVersion = await fetchRemoteVersion(sheetUrl);
+
+  // If remote version is available, we can decide whether to refresh words.
+  if (remoteVersion !== null) {
+    // No changes → use cache
+    if (hasCache && localVersion !== null && Number(localVersion) === Number(remoteVersion)) {
+      return cachedWords;
+    }
+
+    // Version changed (or no local version / no cache) → try to download fresh words
     const csvUrl = normalizeToCsvUrl(sheetUrl);
     if (csvUrl && csvUrl.startsWith("http")) {
       try {
         const words = await loadWordsFromCsv(csvUrl);
-        if (Array.isArray(words) && words.length) { saveCache(words); return words; }
+        if (Array.isArray(words) && words.length) {
+          saveCachedWords(words);
+          saveCachedVersion(remoteVersion);
+          return words;
+        }
       } catch (e) {}
+    }
+
+    // If refresh failed but cache exists, keep working offline
+    if (hasCache) return cachedWords;
+
+    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+  }
+
+  // 2) If we cannot check version (offline / blocked), prefer cache.
+  if (hasCache) return cachedWords;
+
+  // 3) No cache → try to load words directly.
+  const csvUrl = normalizeToCsvUrl(sheetUrl);
+  if (csvUrl && csvUrl.startsWith("http")) {
+    try {
+      const words = await loadWordsFromCsv(csvUrl);
+      if (Array.isArray(words) && words.length) {
+        // Version unknown, but we can still cache words for fast next start
+        saveCachedWords(words);
+        return words;
+      }
+    } catch (e) {}
+  }
+
+  return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+}
+ catch (e) {}
     }
     return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
   }
@@ -1677,7 +1802,7 @@ function updateGlobalTestInfo() {
       `;
     } else {
       matchResultList.innerHTML = problemWords.map(w => `
-        <div class="item">
+        <div class="dictWordRow">
           <div class="dictNum" style="color:#ef4444;font-weight:900;">
             ❌ ${w.fails}
           </div>
@@ -1897,7 +2022,7 @@ function updateGlobalTestInfo() {
       `;
     } else {
       analyticsList.innerHTML = problemWords.map(w => `
-        <div class="item">
+        <div class="dictWordRow">
           <div class="dictNum" style="color:#ef4444;font-weight:900;">
             ❌ ${w.fails}
           </div>

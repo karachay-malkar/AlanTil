@@ -36,7 +36,7 @@ body{
   color: var(--brand-dark);
 }
 .meta{
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-secondary);
   display:flex;
   gap: 10px;
@@ -171,7 +171,7 @@ input{
   text-align:center;
 }
 .trans{
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-secondary);
   margin-top: 12px;
   text-align:center;
@@ -182,7 +182,7 @@ input{
   padding: 0;
   border: none;
   background: transparent;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.35;
 }
 
@@ -693,7 +693,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
 #dictContentList .dictWordRow .w{
   font-weight: 900;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 #dictContentList .dictWordRow .t{
@@ -717,7 +717,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
 /* Translation (main text inside group pill) */
 .groupPill .gTrans{
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 900;
   color: var(--text-main);
   margin-bottom: 8px;
