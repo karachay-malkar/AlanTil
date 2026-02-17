@@ -206,9 +206,8 @@ function parseCsvRows(text) {
     } else {
       if (ch === '"') inQuotes = true;
       else if (ch === ',') { row.push(cur); cur = ""; }
-      else if (ch === '
-') { row.push(cur); rows.push(row); row = []; cur = ""; }
-      else if (ch === '') {}
+      else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ""; }
+      else if (ch === '\n') {}
       else cur += ch;
     }
   }
@@ -284,12 +283,7 @@ function parseCsvRows(text) {
 
   return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
 }
- catch (e) {}
-    }
-    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-  }
-
-  async function loadWordsFromCsv(url) {
+async function loadWordsFromCsv(url) {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("CSV load failed: " + res.status);
     const text = await res.text();
