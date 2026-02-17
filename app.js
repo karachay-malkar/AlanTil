@@ -152,6 +152,25 @@ function saveCachedVersion(v) {
   const n = Number(v);
   if (!Number.isFinite(n)) return;
   try { localStorage.setItem(WORDS_VERSION_KEY, String(n)); } catch {}
+
+
+// Validate parsed words before accepting/caching (prevents "version bump" breaking the app)
+function isValidWordsArray(words){
+  if (!Array.isArray(words) || words.length === 0) return false;
+  // Require that most rows have required fields. Accept some dirty rows.
+  let ok = 0;
+  for (let i = 0; i < words.length; i++){
+    const w = words[i] || {};
+    const id = Number(w.id || 0);
+    const setNo = Number(w.set || 0);
+    const word = String(w.word || "").trim();
+    const trans = String(w.trans || "").trim();
+    if (id > 0 && setNo > 0 && word && trans) ok++;
+  }
+  // At least 5 valid rows OR 70% of the file (for small sheets)
+  const minOk = Math.min(words.length, 5);
+  return ok >= minOk || ok / Math.max(1, words.length) >= 0.7;
+}
 }
 
 function extractSheetId(url) {
@@ -233,7 +252,7 @@ function parseCsvRows(text) {
 
   async function loadWords() {
   const cachedWords = loadCachedWords();
-  const hasCache = Array.isArray(cachedWords) && cachedWords.length > 0;
+  const hasCache = isValidWordsArray(cachedWords);
   const localVersion = loadCachedVersion();
 
   const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
@@ -253,7 +272,9 @@ function parseCsvRows(text) {
     if (csvUrl && csvUrl.startsWith("http")) {
       try {
         const words = await loadWordsFromCsv(csvUrl);
-        if (Array.isArray(words) && words.length) {
+
+        // ✅ Atomic update: accept ONLY if valid
+        if (isValidWordsArray(words)) {
           saveCachedWords(words);
           saveCachedVersion(remoteVersion);
           return words;
@@ -261,9 +282,10 @@ function parseCsvRows(text) {
       } catch (e) {}
     }
 
-    // If refresh failed but cache exists, keep working offline
+    // Refresh failed or returned invalid data → keep working with existing cache
     if (hasCache) return cachedWords;
 
+    // No cache → fallback
     return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
   }
 
@@ -275,8 +297,8 @@ function parseCsvRows(text) {
   if (csvUrl && csvUrl.startsWith("http")) {
     try {
       const words = await loadWordsFromCsv(csvUrl);
-      if (Array.isArray(words) && words.length) {
-        // Version unknown, but we can still cache words for fast next start
+      if (isValidWordsArray(words)) {
+        // Version unknown, but we can still cache valid words for fast next start
         saveCachedWords(words);
         return words;
       }
