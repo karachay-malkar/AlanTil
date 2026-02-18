@@ -176,8 +176,7 @@ async function loadWords() {
       if (!res.ok) throw new Error("CSV load failed: " + res.status);
       const text = await res.text();
 
-      const lines = text.split(/?
-/);
+      const lines = text.split(/\r?\n/);
       if (lines.length < 2) throw new Error("CSV too short");
 
       const first = String(lines[0] || "").trim();
