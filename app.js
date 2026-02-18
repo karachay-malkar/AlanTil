@@ -133,74 +133,165 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
-  // ---------- Cache
-  const APP_VERSION = "22"; // менять вручную при обновлении слов
-  window.WORDS_CACHE_KEY = "fc_words_cache_v" + APP_VERSION;
+  // ---------- Cache + version control (single-sheet, version in first row)
+  const DATA_KEY = "fc_words_data_v2";
+  const VERSION_KEY = "fc_words_version_v2";
 
-  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
-  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
-  function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
+  function loadCachedData() {
+    try { return JSON.parse(localStorage.getItem(DATA_KEY) || "null"); } catch { return null; }
+  }
+  function saveCachedData(data) {
+    try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch {}
+  }
+  function loadCachedVersion() {
+    try { return String(localStorage.getItem(VERSION_KEY) || ""); } catch { return ""; }
+  }
+  function saveCachedVersion(v) {
+    try { if (v != null && String(v).trim()) localStorage.setItem(VERSION_KEY, String(v).trim()); } catch {}
+  }
 
   // ---------- Sheets URL -> CSV
+
   function normalizeToCsvUrl(url) {
     const u = (url || "").trim();
     if (!u) return "";
-    if (u.includes("output=csv") || u.includes("out:csv") || u.includes("format=csv")) return u;
     const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (!m) return u;
     const id = m[1];
-    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
+    return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
   }
 
-  async function loadWords() {
-    const cached = loadCache();
-    if (Array.isArray(cached) && cached.length) return cached;
-
+async function loadWords() {
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
-    if (csvUrl && csvUrl.startsWith("http")) {
-      try {
-        const words = await loadWordsFromCsv(csvUrl);
-        if (Array.isArray(words) && words.length) { saveCache(words); return words; }
-      } catch (e) {}
+
+    if (!csvUrl || !csvUrl.startsWith("http")) {
+      const cached = loadCachedData();
+      if (Array.isArray(cached) && cached.length) return cached;
+      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
     }
-    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+
+    try {
+      const res = await fetch(csvUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error("CSV load failed: " + res.status);
+      const text = await res.text();
+
+      const lines = text.split(/
+?
+/);
+      if (lines.length < 2) throw new Error("CSV too short");
+
+      const first = String(lines[0] || "").trim();
+      let remoteVersion = "";
+      let dataText = text;
+
+      if (/^version\s*,/i.test(first)) {
+        const parts = first.split(",");
+        remoteVersion = String(parts[1] || "").trim();
+        dataText = lines.slice(1).join("\n");
+      }
+
+      const localVersion = loadCachedVersion();
+      const cached = loadCachedData();
+
+      if (remoteVersion && localVersion === remoteVersion && Array.isArray(cached) && cached.length) {
+        return cached;
+      }
+
+      const parsed = parseCsv(dataText);
+
+      if (Array.isArray(parsed) && parsed.length) {
+        saveCachedData(parsed);
+        if (remoteVersion) saveCachedVersion(remoteVersion);
+        return parsed;
+      }
+
+      if (Array.isArray(cached) && cached.length) return cached;
+      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+    } catch (e) {
+      const cached = loadCachedData();
+      if (Array.isArray(cached) && cached.length) return cached;
+      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+    }
   }
 
-  async function loadWordsFromCsv(url) {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("CSV load failed: " + res.status);
-    const text = await res.text();
-    return parseCsv(text);
-  }
-
-  // Expected headers: id, dict, section, set, word, trans, example
+// Expected headers: id, dict, section, set, word, trans, example
   // Backward compatible: folder -> section, dict defaults to "Словарь"
   function parseCsv(text) {
-    const rows = [];
-    let row = [];
-    let cur = "";
-    let inQuotes = false;
+    // Robust CSV/TSV parser (RFC4180-ish), supports:
+    // - commas, semicolons, or tabs as separators (auto-detect)
+    // - quotes with escaped quotes ("")
+    // - newlines inside quoted fields
+    // - BOM at start of file
+    const input = String(text || "").replace(/^\uFEFF/, "");
 
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      const next = text[i + 1];
-      if (inQuotes) {
-        if (ch === '"' && next === '"') { cur += '"'; i++; }
-        else if (ch === '"') inQuotes = false;
-        else cur += ch;
-      } else {
-        if (ch === '"') inQuotes = true;
-        else if (ch === ',') { row.push(cur); cur = ""; }
-        else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ""; }
-        else if (ch === '\r') {}
-        else cur += ch;
+    // --- 1) Parse into rows (no delimiter handling yet, just keep raw fields later)
+    // We'll detect delimiter from the first non-empty record.
+    function detectDelimiter(sampleLine) {
+      const candidates = [",", "\t", ";"];
+      let best = ",";
+      let bestCount = -1;
+      for (const c of candidates) {
+        const count = (sampleLine.match(new RegExp("\\" + c, "g")) || []).length;
+        if (count > bestCount) { bestCount = count; best = c; }
       }
+      return best;
     }
-    if (cur.length || row.length) { row.push(cur); rows.push(row); }
+
+    // Parse with a chosen delimiter
+    function parseWithDelimiter(delim) {
+      const rows = [];
+      let row = [];
+      let cur = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < input.length; i++) {
+        const ch = input[i];
+        const next = input[i + 1];
+
+        if (inQuotes) {
+          if (ch === '"' && next === '"') { cur += '"'; i++; continue; }
+          if (ch === '"') { inQuotes = false; continue; }
+          cur += ch;
+          continue;
+        }
+
+        if (ch === '"') { inQuotes = true; continue; }
+
+        // delimiter
+        if (ch === delim) { row.push(cur); cur = ""; continue; }
+
+        // newline handling: \r\n, \n, or \r
+        if (ch === '\n' || ch === '\r') {
+          // if \r\n — skip next
+          if (ch === '\r' && next === '\n') i++;
+          row.push(cur);
+          // Skip completely empty trailing rows
+          if (!(row.length === 1 && String(row[0] || "").trim() === "")) rows.push(row);
+          row = [];
+          cur = "";
+          continue;
+        }
+
+        cur += ch;
+      }
+
+      // last cell
+      if (cur.length || row.length) {
+        row.push(cur);
+        if (!(row.length === 1 && String(row[0] || "").trim() === "")) rows.push(row);
+      }
+      return rows;
+    }
+
+    // Find first non-empty line for delimiter detection (respecting quotes is hard;
+    // for detection we can just take up to first newline in raw input)
+    const firstLine = (input.split(/\r\n|\n|\r/)[0] || "");
+    const delim = detectDelimiter(firstLine);
+    const rows = parseWithDelimiter(delim);
     if (!rows.length) return [];
 
-    const headers = rows[0].map(h => (h || "").trim().toLowerCase());
+    const headers = rows[0].map(h => String(h || "").replace(/^\uFEFF/, "").trim().toLowerCase());
     const idx = (name) => headers.findIndex(h => h === name);
 
     const idI = idx("id");
@@ -212,14 +303,15 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     const transI = idx("trans");
     const exI = idx("example");
     const posI = idx("pos");
-
     const dictOrderI = idx("dict_order");
+
+    // minimal required columns
     if (idI === -1 || setI === -1 || wordI === -1 || transI === -1) return [];
 
     const out = [];
     for (let r = 1; r < rows.length; r++) {
       const cols = rows[r];
-      if (!cols || cols.every(c => !String(c||"").trim())) continue;
+      if (!cols || cols.every(c => !String(c || "").trim())) continue;
 
       const dict = dictI !== -1 ? String(cols[dictI] || "").trim() : "Словарь";
       const section = sectionI !== -1 ? String(cols[sectionI] || "").trim()
@@ -236,7 +328,10 @@ const viewSetMenu = document.getElementById("viewSetMenu");
         example: exI !== -1 ? String(cols[exI] || "").trim() : "",
         dict_order: dictOrderI !== -1 ? Number(cols[dictOrderI] || 0) : 0,
       };
+
+      // keep same safety filters as before
       if (!obj.id || !obj.set || !obj.word || !obj.trans) continue;
+
       out.push(obj);
     }
     return out;
@@ -1954,3 +2049,5 @@ function updateGlobalTestInfo() {
   }
   })();
 })();
+
+
