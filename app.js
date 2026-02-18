@@ -134,7 +134,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   // ---------- Cache
-  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
+  const CACHE_KEY = "fc_words_data_v2";
   function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
   function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
@@ -142,11 +142,11 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   function normalizeToCsvUrl(url) {
     const u = (url || "").trim();
     if (!u) return "";
-    if (u.includes("output=csv") || u.includes("out:csv") || u.includes("format=csv")) return u;
     const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (!m) return u;
     const id = m[1];
-    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
+    return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+  }/gviz/tq?tqx=out:csv`;
   }
 
   async function loadWords() {
@@ -1951,3 +1951,46 @@ function updateGlobalTestInfo() {
   }
   })();
 })();
+
+
+// === v9.12 Single-sheet version control ===
+const DATA_KEY = "fc_words_data_v2";
+const VERSION_KEY = "fc_words_version_v2";
+
+async function loadWordsVersioned() {
+  const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
+  const csvUrl = normalizeToCsvUrl(sheetUrl);
+  if (!csvUrl) return [];
+
+  try {
+    const res = await fetch(csvUrl, { cache: "no-store" });
+    if (!res.ok) throw new Error("CSV load failed");
+    const text = await res.text();
+
+    const lines = text.split(/\r?\n/);
+    if (lines.length < 2) throw new Error("CSV too short");
+
+    const versionRow = lines[0].split(",");
+    const remoteVersion = (versionRow[1] || "").trim();
+
+    const localVersion = localStorage.getItem(VERSION_KEY);
+    const cachedData = JSON.parse(localStorage.getItem(DATA_KEY) || "null");
+
+    if (remoteVersion && localVersion === remoteVersion && Array.isArray(cachedData)) {
+      return cachedData;
+    }
+
+    const parsed = parseCsv(lines.slice(1).join("\n"));
+
+    if (remoteVersion) {
+      localStorage.setItem(VERSION_KEY, remoteVersion);
+    }
+    localStorage.setItem(DATA_KEY, JSON.stringify(parsed));
+
+    return parsed;
+  } catch (e) {
+    const fallback = JSON.parse(localStorage.getItem(DATA_KEY) || "null");
+    if (Array.isArray(fallback)) return fallback;
+    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+  }
+}
