@@ -14,6 +14,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const viewTest = document.getElementById("viewTest");
   const viewStudy = document.getElementById("viewStudy");
   const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
+  const viewDictContent = document.getElementById("viewDictContent");
 
   // Dicts
   const dictsList = document.getElementById("dictsList");
@@ -740,9 +741,7 @@ viewSetMenu,
   }
 
   // ---------- App state
-
-  // ---------- Dictionary content (Содержание словаря)
-  const viewDictContent = document.getElementById("viewDictContent");
+// ---------- Dictionary content
   const btnOpenDictContent = document.getElementById("btnOpenDictContent");
   const dictSearchInput = document.getElementById("dictSearchInput");
   const dictContentList = document.getElementById("dictContentList");
@@ -1976,6 +1975,7 @@ function updateGlobalTestInfo() {
 
   function openSessionAnalytics() {
     const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
+  const viewDictContent = document.getElementById("viewDictContent");
     const analyticsList = document.getElementById("analyticsList");
 
     const problemWords = Object.entries(sessionFailMap)
