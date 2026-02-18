@@ -134,7 +134,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   // ---------- Cache
-  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v13";
+  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
   function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
   function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
