@@ -152,7 +152,10 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   async function loadWords() {
     const cached = loadCache();
 
-    // Всегда пытаемся загрузить свежие данные из таблицы
+    // Если есть кэш — возвращаем мгновенно, обновление в фоне
+    if (Array.isArray(cached) && cached.length) return cached;
+
+    // Нет кэша — ждём загрузку из таблицы
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
     if (csvUrl && csvUrl.startsWith("http")) {
@@ -164,9 +167,20 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       }
     }
 
-    // Если fetch не удался — используем кэш
-    if (Array.isArray(cached) && cached.length) return cached;
     return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+  }
+
+  // Фоновое обновление: загружает свежие данные и обновляет кэш
+  function backgroundRefresh() {
+    const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
+    const csvUrl = normalizeToCsvUrl(sheetUrl);
+    if (!csvUrl || !csvUrl.startsWith("http")) return;
+
+    loadWordsFromCsv(csvUrl).then(words => {
+      if (Array.isArray(words) && words.length) {
+        saveCache(words);
+      }
+    }).catch(() => {});
   }
 
   async function loadWordsFromCsv(url) {
@@ -1950,6 +1964,9 @@ function updateGlobalTestInfo() {
     }));
 
     renderDicts();
+
+    // Обновляем кэш в фоне (пользователь увидит свежие данные при следующем открытии)
+    backgroundRefresh();
 
   const btnOpenLearnMenu = document.getElementById("btnOpenLearnMenu");
   if(btnOpenLearnMenu){
