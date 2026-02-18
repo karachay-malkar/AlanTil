@@ -2,7 +2,7 @@
 window.WORDS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1X2tc9THUxj0bZOQDdycEFGl7xJMqjUBYe7MsESWIUXI/edit?usp=sharing";
 
 // Ключ кеша (быстрый старт)
-window.WORDS_CACHE_KEY = "fc_words_cache_v3";
+window.WORDS_CACHE_KEY = "fc_words_cache_v4";
 
 // (Необязательно) Человеческие названия папок.
 window.FOLDER_TITLES = {
