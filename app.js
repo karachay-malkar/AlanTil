@@ -133,21 +133,15 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
-  // ---------- Cache + version control (single-sheet, version in first row)
-  const DATA_KEY = "fc_words_data_v2";
-  const VERSION_KEY = "fc_words_version_v2";
+  // ---------- Cache (manual version in code; bump APP_VERSION to force reload)
+  const APP_VERSION = "1"; // <-- меняй вручную при обновлении таблицы
+  const DATA_KEY = "fc_words_data_v" + APP_VERSION;
 
   function loadCachedData() {
     try { return JSON.parse(localStorage.getItem(DATA_KEY) || "null"); } catch { return null; }
   }
   function saveCachedData(data) {
     try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch {}
-  }
-  function loadCachedVersion() {
-    try { return String(localStorage.getItem(VERSION_KEY) || ""); } catch { return ""; }
-  }
-  function saveCachedVersion(v) {
-    try { if (v != null && String(v).trim()) localStorage.setItem(VERSION_KEY, String(v).trim()); } catch {}
   }
 
   // ---------- Sheets URL -> CSV
@@ -158,13 +152,14 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (!m) return u;
     const id = m[1];
-    return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
   }
 
 async function loadWords() {
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
 
+    // If no URL, fallback to cached or built-in
     if (!csvUrl || !csvUrl.startsWith("http")) {
       const cached = loadCachedData();
       if (Array.isArray(cached) && cached.length) return cached;
@@ -176,34 +171,14 @@ async function loadWords() {
       if (!res.ok) throw new Error("CSV load failed: " + res.status);
       const text = await res.text();
 
-      const lines = text.split(/\r?\n/);
-      if (lines.length < 2) throw new Error("CSV too short");
-
-      const first = String(lines[0] || "").trim();
-      let remoteVersion = "";
-      let dataText = text;
-
-      if (/^version\s*,/i.test(first)) {
-        const parts = first.split(",");
-        remoteVersion = String(parts[1] || "").trim();
-        dataText = lines.slice(1).join("\n");
-      }
-
-      const localVersion = loadCachedVersion();
-      const cached = loadCachedData();
-
-      if (remoteVersion && localVersion === remoteVersion && Array.isArray(cached) && cached.length) {
-        return cached;
-      }
-
-      const parsed = parseCsv(dataText);
+      const parsed = parseCsv(text);
 
       if (Array.isArray(parsed) && parsed.length) {
         saveCachedData(parsed);
-        if (remoteVersion) saveCachedVersion(remoteVersion);
         return parsed;
       }
 
+      const cached = loadCachedData();
       if (Array.isArray(cached) && cached.length) return cached;
       return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
     } catch (e) {
@@ -213,7 +188,7 @@ async function loadWords() {
     }
   }
 
-// Expected headers: id, dict, section, set, word, trans, example
+  // Expected headers: id, dict, section, set, word, trans, example
   // Backward compatible: folder -> section, dict defaults to "Словарь"
   function parseCsv(text) {
     const rows = [];
