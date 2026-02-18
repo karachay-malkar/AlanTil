@@ -642,10 +642,10 @@ viewSetMenu,
   function dictsFrom(words) { return uniq(words.map(w => w.dict)).sort(sortNatural); }
   function sectionsFrom(words, dict) { return uniq(words.filter(w => w.dict === dict).map(w => w.section)).sort(sortNatural); }
   function setsFrom(words, dict, section) {
-    return uniq(words.filter(w => w.dict === dict && w.section === section).map(w => Number(w.set))).sort((a,b)=>a-b);
+    return uniq(words.filter(w => w.dict === dict && w.section === section).map(w => w.set)).sort(sortNatural);
   }
   function wordsForSet(words, dict, section, setNo) {
-    return words.filter(w => w.dict === dict && w.section === section && Number(w.set) === Number(setNo));
+    return words.filter(w => w.dict === dict && w.section === section && String(w.set) === String(setNo));
   }
 
   // ---------- App state
@@ -792,7 +792,7 @@ viewSetMenu,
 
         const finished = isSetFinished(dict, sec, setNo);
 
-        const title = (dict === "__fav__") ? "Избранное" : `Сет ${setNo}`;
+        const title = (dict === "__fav__") ? "Избранное" : (typeof setNo === "number" ? `Сет ${setNo}` : String(setNo));
         const count = all.length;
 
         return `
@@ -858,7 +858,8 @@ if(svg){
 
     const all = (currentDict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, currentDict, currentSection, currentSet);
     const active = all.filter(w => !menuHidden.has(w.id));
-    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • Сет ${currentSet}`;
+    const setLabel = typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet);
+    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • ${setLabel}`;
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
 
     renderSetWordsList();
