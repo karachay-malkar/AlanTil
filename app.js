@@ -134,7 +134,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   // ---------- Cache
-  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
+  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v15";
   function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
   function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
@@ -151,16 +151,21 @@ const viewSetMenu = document.getElementById("viewSetMenu");
 
   async function loadWords() {
     const cached = loadCache();
-    if (Array.isArray(cached) && cached.length) return cached;
 
+    // Всегда пытаемся загрузить свежие данные из таблицы
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
     if (csvUrl && csvUrl.startsWith("http")) {
       try {
         const words = await loadWordsFromCsv(csvUrl);
         if (Array.isArray(words) && words.length) { saveCache(words); return words; }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("loadWords: fetch failed", e);
+      }
     }
+
+    // Если fetch не удался — используем кэш
+    if (Array.isArray(cached) && cached.length) return cached;
     return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
   }
 
@@ -222,11 +227,13 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       const section = sectionI !== -1 ? String(cols[sectionI] || "").trim()
                     : (folderI !== -1 ? String(cols[folderI] || "").trim() : "Раздел");
 
+      const rawSet = String(cols[setI] || "").trim();
+      const numSet = Number(rawSet);
       const obj = {
         id: Number(cols[idI] || 0),
         dict: dict || "Словарь",
         section: section || "Раздел",
-        set: Number(cols[setI] || 0),
+        set: isNaN(numSet) ? rawSet : numSet,
         word: String(cols[wordI] || "").trim(),
         trans: String(cols[transI] || "").trim(),
         pos: posI !== -1 ? String(cols[posI] || "").trim() : "",
