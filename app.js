@@ -6,14 +6,11 @@
   const viewDicts = document.getElementById("viewDicts");
   const viewSections = document.getElementById("viewSections");
   const viewLearnMenu = document.getElementById("viewLearnMenu");
-const viewSetMenu = document.getElementById("viewSetMenu");
+  const viewSets = document.getElementById("viewSets");
+  const viewSetMenu = document.getElementById("viewSetMenu");
   const viewGlobalTestMenu = document.getElementById("viewGlobalTestMenu");
-  const viewMatchMenu = document.getElementById("viewMatchMenu");
-  const viewMatchGame = document.getElementById("viewMatchGame");
-  const viewMatchResult = document.getElementById("viewMatchResult");
   const viewTest = document.getElementById("viewTest");
   const viewStudy = document.getElementById("viewStudy");
-  const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
 
   // Dicts
   const dictsList = document.getElementById("dictsList");
@@ -23,6 +20,12 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const sectionsTitle = document.getElementById("sectionsTitle");
   const sectionsList = document.getElementById("sectionsList");
   const btnBackToDicts = document.getElementById("btnBackToDicts");
+
+  // Sets
+  const setsTitle = document.getElementById("setsTitle");
+  const setsList = document.getElementById("setsList");
+  const btnBackToSections = document.getElementById("btnBackToSections");
+
   // Set menu
   const setMenuTitle = document.getElementById("setMenuTitle");
   const setMenuInfo = document.getElementById("setMenuInfo");
@@ -31,7 +34,9 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     const btnSetShowAll = document.getElementById("btnSetShowAll");
   const btnSetHideAll = document.getElementById("btnSetHideAll");
   const setWordsList = document.getElementById("setWordsList");
-// Study
+  const btnBackToSets2 = document.getElementById("btnBackToSets2");
+
+  // Study
   const card = document.getElementById("card");
   const wordEl = document.getElementById("word");
   const transEl = document.getElementById("trans");
@@ -56,20 +61,6 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const btnGlobalModeKb = document.getElementById("btnGlobalModeKb");
   const btnGlobalModeRu = document.getElementById("btnGlobalModeRu");
   const btnGlobalTestBack = document.getElementById("btnGlobalTestBack");
-
-
-  // Match words menu
-  const btnMatchWords = document.getElementById("btnMatchWords");
-  const matchInfo = document.getElementById("matchInfo");
-  const matchScopeBody = document.getElementById("matchScopeBody");
-  const matchScopeList = document.getElementById("matchScopeList");
-  const btnMatchStart = document.getElementById("btnMatchStart");
-
-  // Match game
-  const matchProgress = document.getElementById("matchProgress");
-  const matchColLeft = document.getElementById("matchColLeft");
-  const matchColRight = document.getElementById("matchColRight");
-  const matchResultList = document.getElementById("matchResultList");
 
   // Test view
   const testTitle = document.getElementById("testTitle");
@@ -96,23 +87,6 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   
-
-  // ---------- Storage: finished sets (manual "✅") — v9.8
-  const FINISHED_KEY = "fc_finished_sets_v1";
-  function loadFinishedMap(){ try { return JSON.parse(localStorage.getItem(FINISHED_KEY) || "{}"); } catch { return {}; } }
-  function saveFinishedMap(map){ localStorage.setItem(FINISHED_KEY, JSON.stringify(map)); }
-  function isSetFinished(d, s, setNo){
-    const map = loadFinishedMap();
-    return !!map[keyOf(d, s, setNo)];
-  }
-  function toggleSetFinished(d, s, setNo){
-    const map = loadFinishedMap();
-    const k = keyOf(d, s, setNo);
-    if (map[k]) delete map[k]; else map[k] = true;
-    saveFinishedMap(map);
-    return !!map[k];
-  }
-
   // ---------- Storage: favorites (per-device)
   const FAV_KEY = "fc_favorites_v1";
   function loadFavSet() {
@@ -133,59 +107,43 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
-  // ---------- Cache (manual version in code; bump APP_VERSION to force reload)
-  const APP_VERSION = "1"; // <-- меняй вручную при обновлении таблицы
-  const DATA_KEY = "fc_words_data_v" + APP_VERSION;
-
-  function loadCachedData() {
-    try { return JSON.parse(localStorage.getItem(DATA_KEY) || "null"); } catch { return null; }
-  }
-  function saveCachedData(data) {
-    try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch {}
-  }
+  // ---------- Cache
+  const APP_VERSION = "1"; // Меняй вручную при обновлении слов
+  const CACHE_KEY = "fc_words_cache_v" + APP_VERSION;
+  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
+  function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
   // ---------- Sheets URL -> CSV
-
   function normalizeToCsvUrl(url) {
     const u = (url || "").trim();
     if (!u) return "";
+    if (u.includes("output=csv") || u.includes("out:csv") || u.includes("format=csv")) return u;
     const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (!m) return u;
     const id = m[1];
     return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
   }
 
-async function loadWords() {
+  async function loadWords() {
+    const cached = loadCache();
+    if (Array.isArray(cached) && cached.length) return cached;
+
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
-
-    // If no URL, fallback to cached or built-in
-    if (!csvUrl || !csvUrl.startsWith("http")) {
-      const cached = loadCachedData();
-      if (Array.isArray(cached) && cached.length) return cached;
-      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+    if (csvUrl && csvUrl.startsWith("http")) {
+      try {
+        const words = await loadWordsFromCsv(csvUrl);
+        if (Array.isArray(words) && words.length) { saveCache(words); return words; }
+      } catch (e) {}
     }
+    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+  }
 
-    try {
-      const res = await fetch(csvUrl, { cache: "no-store" });
-      if (!res.ok) throw new Error("CSV load failed: " + res.status);
-      const text = await res.text();
-
-      const parsed = parseCsv(text);
-
-      if (Array.isArray(parsed) && parsed.length) {
-        saveCachedData(parsed);
-        return parsed;
-      }
-
-      const cached = loadCachedData();
-      if (Array.isArray(cached) && cached.length) return cached;
-      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-    } catch (e) {
-      const cached = loadCachedData();
-      if (Array.isArray(cached) && cached.length) return cached;
-      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-    }
+  async function loadWordsFromCsv(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("CSV load failed: " + res.status);
+    const text = await res.text();
+    return parseCsv(text);
   }
 
   // Expected headers: id, dict, section, set, word, trans, example
@@ -272,63 +230,37 @@ async function loadWords() {
     el.innerHTML = groups.map((g,i)=>`<div>${i+1}. ${escapeHtml(g)}</div>`).join("");
   }
   function showView(which) {
-  [
-    viewDicts,
-    viewLearnMenu,
-    viewSections,
-viewSetMenu,
-    viewGlobalTestMenu,
-    viewMatchMenu,
-    viewMatchGame,
-    viewMatchResult,
-    viewTest,
-    viewStudy,
-    viewDictContent,
-    viewSessionAnalytics
-  ].forEach(v => v && v.classList.add("hidden"));
-
-  which.classList.remove("hidden");
-}
+    [viewDicts, viewLearnMenu, viewSections, viewSets, viewSetMenu, viewGlobalTestMenu, viewTest, viewStudy, viewDictContent].forEach(v => v.classList.add("hidden"));
+    which.classList.remove("hidden");
+  }
   // --- Dictionary content visibility helper
   function hideDictContent(){
     if (viewDictContent) viewDictContent.classList.add("hidden");
   }
 
 
-  
-  // ---------- Global back navigation (single arrow in header) — v9.7 clean stack
+  // ---------- Global back navigation (single arrow in header)
   let currentView = viewDicts;
   const navStack = [];
 
   function isHomeView(v){ return v === viewDicts; }
   function isTestFlowView(v){ return v === viewGlobalTestMenu || v === viewTest; }
 
-  function updateMeta(){
-    if (!counter || !modeEl) return;
+  function updateMetaVisibility(){
+  if (!counter || !modeEl) return;
+  const onStudy = (currentView === viewStudy);
+  counter.style.display = onStudy ? "" : "none";
+  modeEl.style.display = "none";
+}
 
-    const onStudy = (currentView === viewStudy);
-    const onTest = (currentView === viewTest);
-
-    // Counter only in study
-    counter.style.display = onStudy ? "" : "none";
-
-    // Mode: only in test (label "Тест"), never in study
-    if (onTest){
-      modeEl.style.display = "";
-      modeEl.textContent = "Тест";
-    } else {
-      modeEl.style.display = "none";
-      modeEl.textContent = "";
-    }
-  }
-
-  function updateBackArrow(){
+function updateBackArrow() {
     if (!btnBackArrow) return;
-    const shouldShow = !isHomeView(currentView) && navStack.length > 0;
+    const inFav = (currentDict === "__fav__") || (history?.state?.screen === "favorites");
+    const shouldShow = !isHomeView(currentView) && (navStack.length > 0 || inFav || isTestFlowView(currentView) || currentView === viewStudy || currentView === viewSetMenu || currentView === viewSets || currentView === viewSections || currentView === viewLearnMenu);
     btnBackArrow.classList.toggle("hidden", !shouldShow);
   }
 
-  function goView(nextView, opts = {}){
+  function goView(nextView, opts = {}) {
     hideDictContent();
     const { push = true, resetStack = false } = opts;
     if (resetStack) navStack.length = 0;
@@ -336,27 +268,73 @@ viewSetMenu,
     showView(nextView);
     currentView = nextView;
     updateBackArrow();
-    updateMeta();
+    updateMetaVisibility();
   }
 
-  function navigateBack(){
-    // v9.9: match game/result are временные, back всегда ведёт в меню игры
-    if (currentView === viewMatchGame || currentView === viewMatchResult){
-      goView(viewMatchMenu, { push:false });
+  function navigateBack() {
+
+
+    const inFav = (currentDict === "__fav__") || (history?.state?.screen === "favorites");
+    if (inFav || isTestFlowView(currentView)) {
+      navStack.length = 0;
+      goHome({ historyMode: "replace" });
+      currentView = viewDicts;
+      updateBackArrow();
+    updateMetaVisibility();
       return;
     }
+
     const prev = navStack.pop();
-    if (!prev) return;
+    if (!prev) {
+      goHome({ historyMode: "replace" });
+      currentView = viewDicts;
+      updateBackArrow();
+    updateMetaVisibility();
+      return;
+    }
     showView(prev);
     currentView = prev;
     updateBackArrow();
-    updateMeta();
+    updateMetaVisibility();
   }
 
   if (btnBackArrow) btnBackArrow.addEventListener("click", navigateBack);
 
+  // ---------- Simple navigation history (so "Назад" from Избранного ведет на главный)
+  function setHistory(screen, mode /* 'push' | 'replace' */) {
+    try {
+      const state = { screen };
+      if (mode === "replace") history.replaceState(state, "");
+      else if (mode === "push") history.pushState(state, "");
+    } catch {}
+  }
 
+  function goHome(opts = {}) {
+  // RESET META
+  if (counter) counter.textContent = "";
+  if (modeEl) modeEl.textContent = "—";
+    // opts.historyMode: 'push' | 'replace' | null
+    goView(viewDicts, { push:false, resetStack:true });
+    currentDict = "";
+    currentSection = "";
+    currentSet = 1;
+    if (opts.historyMode) setHistory("home", opts.historyMode);
+  }
 
+  function openFavoritesMenu(opts = {}) {
+    // opts.historyMode: 'push' | 'replace' | null
+    currentDict = "__fav__";
+    currentSection = "Избранное";
+    currentSet = 1;
+    openSetMenu();
+    if (opts.historyMode) setHistory("favorites", opts.historyMode);
+  }
+
+  window.addEventListener("popstate", (e) => {
+    const screen = e?.state?.screen || "home";
+    if (screen === "favorites") openFavoritesMenu({ historyMode: null });
+    else goHome({ historyMode: null });
+  });
 
   function uniq(arr) { return Array.from(new Set(arr)); }
   function sortNatural(a, b) { return String(a).localeCompare(String(b), "ru", { numeric: true, sensitivity: "base" }); }
@@ -763,7 +741,6 @@ viewSetMenu,
 
   // v9.3: last swipe undo (single-step)
   let swipeHistory = [];
-  let sessionFailMap = {};
 
   function setRoundIfNeeded() { if (round === "main" && mainQueue.length === 0) round = "repeat"; }
   function currentQueue() { return round === "main" ? mainQueue : repeatQueue; }
@@ -776,7 +753,7 @@ viewSetMenu,
       btn.addEventListener("click", () => {
         currentDict = btn.getAttribute("data-dict");
         if (currentDict === "__fav__") {
-          currentDict = "__fav__"; currentSection = "Избранное"; currentSet = 1; openSetMenu();
+          openFavoritesMenu({ historyMode: "push" });
           return;
         }
         renderSections(currentDict);
@@ -784,83 +761,49 @@ viewSetMenu,
       });
     });
     
-    goView(viewDicts, { push:false, resetStack:true });
+    goHome({ historyMode: "replace" });
   }
 
   function renderSections(dict) {
     sectionsTitle.textContent = (dict === "__fav__") ? "Избранное" : dictTitle(dict);
-
     const sections = (dict === "__fav__") ? ["Избранное"] : sectionsFrom(DATA, dict);
+    sectionsList.innerHTML = sections.map(s => `<button class="btn" data-section="${escapeHtml(s)}">${escapeHtml(sectionTitle(s))}</button>`).join("");
+    sectionsList.querySelectorAll("button[data-section]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentSection = btn.getAttribute("data-section");
+        renderSets(currentDict, currentSection);
+        goView(viewSets);
+      });
+    });
+  }
 
-    sectionsList.innerHTML = sections.map(sec => {
-      const sets = (dict === "__fav__") ? [1] : setsFrom(DATA, dict, sec);
-
-      const tiles = sets.map(setNo => {
-        const all = (dict === "__fav__")
-          ? DATA.filter(w => favIds.has(w.id))
-          : wordsForSet(DATA, dict, sec, setNo);
-
-        const finished = isSetFinished(dict, sec, setNo);
-
-        const title = (dict === "__fav__") ? "Избранное" : `Сет ${setNo}`;
-        const count = all.length;
-
-        return `
-          <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
-            <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
-    <rect x="3" y="3" width="18" height="18" rx="4"
-          fill="none"
-          stroke="rgba(15,23,42,0.25)"
-          stroke-width="1.7"/>
-    <path d="M7 10.5 L11.5 16 L17 6.5"
-          fill="none"
-          stroke-width="2.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"/>
-  </svg></div>
-            <div class="setTileTitle">${escapeHtml(title)}</div>
-            <div class="setTileCount">${count} слов</div>
-          </button>
-        `;
-      }).join("");
-
+  function renderSets(dict, section) {
+    setsTitle.textContent = (dict === "__fav__") ? "Избранное" : sectionTitle(section);
+    const sets = (dict === "__fav__") ? [1] : setsFrom(DATA, dict, section);
+    setsList.innerHTML = sets.map(s => {
+      const all = (dict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, dict, section, s);
+      const hidden = getHiddenSet(dict, section, s);
+      const active = all.filter(w => !hidden.has(w.id));
       return `
-        <div class="secBlock">
-          <div class="secTitle">${escapeHtml(sectionTitle(sec))}</div>
-          <div class="setsGrid">${tiles}</div>
-        </div>
+        <button class="btn" data-set="${s}">
+          Сет ${s}
+          <div class="smallNote" style="margin-top:6px;">${active.length}/${all.length} слов в сессии</div>
+        </button>
       `;
     }).join("");
 
-    // Click handlers: open set vs toggle done
-    sectionsList.querySelectorAll(".setTile").forEach(tile => {
-      const sec = tile.getAttribute("data-section");
-      const setNo = Number(tile.getAttribute("data-set"));
-
-      // Toggle ✅
-      const doneEl = tile.querySelector("[data-done='1']");
-      if (doneEl) {
-        doneEl.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const on = toggleSetFinished(dict, sec, setNo);
-          const svg = doneEl.querySelector("svg");
-if(svg){
-  svg.classList.toggle("active", on);
-}
-        });
-      }
-
-      // Open set menu
-      tile.addEventListener("click", () => {
-        currentSection = sec;
-        currentSet = setNo;
+    setsList.querySelectorAll("button[data-set]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentSet = Number(btn.getAttribute("data-set"));
         openSetMenu();
       });
     });
   }
 
   btnBackToDicts.addEventListener("click", () => goView(viewDicts));
-// ---------- Set menu / hiding words
+  btnBackToSections.addEventListener("click", () => goView(viewSections));
+
+  // ---------- Set menu / hiding words
   let menuHidden = new Set();
 
   function openSetMenu() {
@@ -870,6 +813,9 @@ if(svg){
     const active = all.filter(w => !menuHidden.has(w.id));
     setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • Сет ${currentSet}`;
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
+
+    // UX: если это "Избранное", кнопка назад должна вести на главный экран
+    btnBackToSets2.textContent = (currentDict === "__fav__") ? "← На главный" : "← К сетам";
 
     renderSetWordsList();
     goView(viewSetMenu);
@@ -939,6 +885,22 @@ if(svg){
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: 0`;
   });
 
+  btnBackToSets2.addEventListener("click", () => {
+    if (currentDict === "__fav__") {
+      // Если мы зашли в Избранное как в отдельный экран — возвращаемся на главный одним шагом
+      try {
+        if (history.state?.screen === "favorites") {
+          history.back();
+          return;
+        }
+      } catch {}
+      goHome({ historyMode: "replace" });
+      return;
+    }
+    renderSets(currentDict, currentSection);
+    goView(viewSets);
+  });
+
   btnModeKb.addEventListener("click", () => { currentStudyMode = "kb"; startStudySession(); });
   btnModeRu.addEventListener("click", () => { currentStudyMode = "ru"; startStudySession(); });
 
@@ -973,10 +935,6 @@ if(svg){
     const { item, known, fromRound } = swipeHistory.pop();
 
     if (!known) {
-      if (sessionFailMap[item.id]) {
-        sessionFailMap[item.id]--;
-        if (sessionFailMap[item.id] <= 0) delete sessionFailMap[item.id];
-      }
       for (let i = repeatQueue.length - 1; i >= 0; i--) {
         if (repeatQueue[i] && repeatQueue[i].id === item.id) {
           repeatQueue.splice(i, 1);
@@ -1010,7 +968,6 @@ if(svg){
     round = "main";
     totalPlanned = active.length;
     swipeHistory = [];
-    sessionFailMap = {};
     updateStudyCounter();
 
     goView(viewStudy);
@@ -1051,12 +1008,7 @@ return;
 }
 
     if (q.length === 0) {
-      openSessionAnalytics();
-      return;
-    }
-
-    // original finish block disabled
-    if(false){
+      wordEl.textContent = "Готово ✅";
       transEl.textContent = "Сессия завершена.";
       if (btnFavAction) btnFavAction.classList.add("hidden");
       if (btnUndo) btnUndo.classList.add("hidden");
@@ -1107,10 +1059,7 @@ setRoundIfNeeded();
 
     const fromRound = round;
     const item = q.shift();
-    if (!known) {
-      sessionFailMap[item.id] = (sessionFailMap[item.id] || 0) + 1;
-      repeatQueue.push(item);
-    }
+    if (!known) repeatQueue.push(item);
 
     const switchedToRepeat = (round === "main" && mainQueue.length === 0);
     // When main is empty, switch to repeat
@@ -1369,361 +1318,6 @@ function updateGlobalTestInfo() {
   btnGlobalModeKb.addEventListener("click", () => { testMode = "kb"; startTest(); });
   btnGlobalModeRu.addEventListener("click", () => { testMode = "ru"; startTest(); });
 
-  // ---------- Match words (v9.9) — same source scope as test, but matching pairs
-  let matchItems = [];
-  let matchRemaining = [];
-  let matchTotal = 0;
-  let matchRoundIndex = 0;
-  let matchFailMap = {};
-  let matchSolved = new Set();
-  let matchLocked = false;
-  let matchSelectedIdx = null;
-  let matchSelectedRef = null;
-
-  function getSelectedMatchLimit() {
-    const el = document.querySelector('input[name="matchLimit"]:checked');
-    const n = el ? Number(el.value) : 50;
-    return (n === 30 || n === 50 || n === 100) ? n : 50;
-  }
-
-  function renderMatchScopeList() {
-    const dicts = dictsFrom(DATA);
-    const html = dicts.map(d => {
-      const sections = uniq(DATA.filter(w => w.dict === d).map(w => w.section || "")).sort(sortNatural);
-      const sectionRows = sections.map(s => {
-        const label = s ? sectionTitle(s) : "Без раздела";
-        return `
-          <label class="scopeSectionRow">
-            <input class="scopeCheckbox matchScopeSection" type="checkbox" data-dict="${escapeHtml(d)}" data-section="${escapeHtml(s)}">
-            <span>${escapeHtml(label)}</span>
-          </label>
-        `;
-      }).join("");
-
-      return `
-        <div class="scopeBlock">
-          <label class="scopeDictRow">
-            <input class="scopeCheckbox matchScopeDict" type="checkbox" data-dict="${escapeHtml(d)}">
-            <span>${escapeHtml(dictTitle(d))}</span>
-          </label>
-          ${sectionRows}
-        </div>
-      `;
-    }).join("");
-
-    matchScopeList.innerHTML = html || "<div class='hintText'>Словари не найдены.</div>";
-
-    const dictCbs = [...matchScopeList.querySelectorAll(".matchScopeDict")];
-    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
-
-    function updateDictState(dict) {
-      const secs = sectionCbs.filter(cb => cb.dataset.dict === dict);
-      const checked = secs.filter(cb => cb.checked).length;
-      const dictCb = dictCbs.find(cb => cb.dataset.dict === dict);
-      if (!dictCb) return;
-      dictCb.indeterminate = checked > 0 && checked < secs.length;
-      dictCb.checked = secs.length > 0 && checked === secs.length;
-    }
-
-    dictCbs.forEach(dictCb => {
-      dictCb.addEventListener("change", () => {
-        const d = dictCb.dataset.dict;
-        sectionCbs.filter(cb => cb.dataset.dict === d).forEach(cb => { cb.checked = dictCb.checked; });
-        dictCb.indeterminate = false;
-        updateMatchInfo();
-      });
-    });
-
-    sectionCbs.forEach(secCb => {
-      secCb.addEventListener("change", () => {
-        updateDictState(secCb.dataset.dict);
-        updateMatchInfo();
-      });
-    });
-
-    // Default: all checked
-    dictCbs.forEach(dcb => { dcb.checked = true; });
-    sectionCbs.forEach(scb => { scb.checked = true; });
-    dictCbs.forEach(dcb => { dcb.indeterminate = false; });
-
-    updateMatchInfo();
-  }
-
-  function getSelectedMatchScopePool() {
-    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
-    if (!sectionCbs.length) return DATA;
-
-    const checked = sectionCbs.filter(cb => cb.checked);
-    if (checked.length === 0) return [];
-
-    const keys = new Set(checked.map(cb => scopeKey(cb.dataset.dict, cb.dataset.section)));
-    return DATA.filter(w => keys.has(scopeKey(w.dict, w.section || "")));
-  }
-
-  function updateMatchInfo() {
-    const pool = getSelectedMatchScopePool();
-    const limit = getSelectedMatchLimit();
-
-    const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
-    const checkedSecs = sectionCbs.filter(cb => cb.checked);
-    const dictCount = new Set(checkedSecs.map(cb => cb.dataset.dict)).size;
-    const secCount = checkedSecs.length;
-
-    const scopeText = (checkedSecs.length === sectionCbs.length)
-      ? "Все словари и разделы"
-      : `Выбрано: словарей ${dictCount}, разделов ${secCount}`;
-
-    if (matchInfo) matchInfo.textContent = `Источник: ${scopeText} • Слов: ${pool.length} • Игра: ${Math.min(limit, pool.length)} слов`;
-  }
-
-  function openMatchMenu(){
-    if (matchScopeBody) matchScopeBody.classList.remove("hidden");
-    renderMatchScopeList();
-    document.querySelectorAll('input[name="matchLimit"]').forEach(r => (r.onchange = updateMatchInfo));
-    goView(viewMatchMenu);
-  }
-
-  function randomFrom(arr){
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
-  function startMatchGame(){
-    const pool = getSelectedMatchScopePool();
-
-    if (!pool.length){
-      alert("Выберите хотя бы один словарь или раздел");
-      return;
-    }
-    const limit = getSelectedMatchLimit();
-
-    matchItems = shuffle(pool.slice());
-    if (matchItems.length > limit) matchItems = matchItems.slice(0, limit);
-
-    matchRemaining = matchItems.slice();
-    matchTotal = matchItems.length;
-    matchRoundIndex = 0;
-    matchFailMap = {};
-    matchSolved = new Set();
-    matchLocked = false;
-    matchSelectedIdx = null;
-    matchSelectedRef = null;
-
-    goView(viewMatchGame, { push:false });
-    nextMatchRound();
-  }
-
-  function setMatchProgressText(extra=""){
-    if (!matchProgress) return;
-    const done = matchTotal - matchRemaining.length;
-    const base = `Пройдено: ${done}/${matchTotal} слов`;
-    matchProgress.textContent = extra ? `${base} • ${extra}` : base;
-  }
-
-  function nextMatchRound(){
-    if (!matchColLeft || !matchColRight) return;
-
-    if (matchRemaining.length === 0){
-      openMatchResult();
-      return;
-    }
-
-    // Pick random POS for this round from remaining
-    const availablePOS = uniq(matchRemaining.map(w => (w.pos || "").trim() || "unknown"));
-    const roundPOS = randomFrom(availablePOS);
-
-    let candidates = matchRemaining.filter(w => ((w.pos || "").trim() || "unknown") === roundPOS);
-    candidates = shuffle(candidates.slice());
-
-    const roundWords = candidates.slice(0, 5);
-
-    // Remove selected from remaining
-    const roundIds = new Set(roundWords.map(w => w.id));
-    matchRemaining = matchRemaining.filter(w => !roundIds.has(w.id));
-
-    matchRoundIndex++;
-
-    // Pair counter per round (starts at 0, grows only on correct match)
-    const roundPairsTotal = roundWords.length;
-    let roundPairsMatched = 0;
-
-    if (matchProgress) matchProgress.textContent = `0 из ${roundPairsTotal} пар`;
-
-    // Build columns: left = words, right = translations
-    const leftCards = shuffle(roundWords.map(w => ({ kind:"w", id:w.id, text:w.word })));
-    const rightCards = shuffle(roundWords.map(w => ({ kind:"t", id:w.id, text:w.trans })));
-
-    // Reset selection
-    matchLocked = false;
-    matchSelectedIdx = null;
-    matchSelectedRef = null;
-
-    matchColLeft.innerHTML = leftCards.map((c) => `
-      <button class="matchCard" type="button" data-kind="${c.kind}" data-id="${c.id}">
-        ${escapeHtml(c.text)}
-      </button>
-    `).join("");
-
-    matchColRight.innerHTML = rightCards.map((c) => `
-      <button class="matchCard" type="button" data-kind="${c.kind}" data-id="${c.id}">
-        ${escapeHtml(c.text)}
-      </button>
-    `).join("");
-
-    const btns = Array.from(document.querySelectorAll("#matchColLeft .matchCard, #matchColRight .matchCard"));
-
-    function clearSelection(){
-      btns.forEach(b => b.classList.remove("selected","wrong"));
-      matchSelectedIdx = null;
-      matchSelectedRef = null;
-    }
-
-    function markSolved(id){
-      matchSolved.add(Number(id));
-    }
-
-    function bumpFail(id){
-      const nid = Number(id);
-      if (!nid) return;
-      if (matchSolved.has(nid)) return;
-      matchFailMap[nid] = (matchFailMap[nid] || 0) + 1;
-    }
-
-    function allMatched(){
-      return btns.length > 0 && btns.every(b => b.classList.contains("matched"));
-    }
-
-    function updatePairCounter(){
-      if (!matchProgress) return;
-      matchProgress.textContent = `${roundPairsMatched} из ${roundPairsTotal} пар`;
-    }
-
-    btns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (matchLocked) return;
-        if (btn.classList.contains("matched")) return;
-
-        const id = Number(btn.dataset.id);
-        const kind = btn.dataset.kind;
-
-        // Toggle off if same selected element
-        if (matchSelectedIdx && matchSelectedIdx.el === btn){
-          btn.classList.remove("selected");
-          matchSelectedIdx = null;
-          matchSelectedRef = null;
-          return;
-        }
-
-        // First pick
-        if (!matchSelectedIdx){
-          clearSelection();
-          btn.classList.add("selected");
-          matchSelectedIdx = { el: btn };
-          matchSelectedRef = { id, kind };
-          return;
-        }
-
-        const firstBtn = matchSelectedIdx.el;
-        const first = matchSelectedRef;
-        const second = { id, kind };
-
-        // If same kind — just switch selection
-        if (first && second && first.kind === second.kind){
-          clearSelection();
-          btn.classList.add("selected");
-          matchSelectedIdx = { el: btn };
-          matchSelectedRef = second;
-          return;
-        }
-
-        const isCorrect = first && (first.id === second.id) && (first.kind !== second.kind);
-
-        if (isCorrect){
-          firstBtn.classList.remove("selected");
-          btn.classList.remove("selected");
-          firstBtn.classList.add("matched");
-          btn.classList.add("matched");
-          markSolved(first.id);
-
-          roundPairsMatched++;
-          updatePairCounter();
-
-          matchSelectedIdx = null;
-          matchSelectedRef = null;
-
-          if (allMatched()){
-            matchLocked = true;
-            setTimeout(() => {
-              matchLocked = false;
-              nextMatchRound();
-            }, 350);
-          }
-        } else {
-          bumpFail(first.id);
-          bumpFail(second.id);
-
-          matchLocked = true;
-          firstBtn.classList.add("wrong");
-          btn.classList.add("wrong");
-          setTimeout(() => {
-            matchLocked = false;
-            clearSelection();
-          }, 600);
-        }
-      });
-    });
-  }
-
-  function openMatchResult(){
-    if (!matchResultList) return;
-
-    const problemWords = Object.entries(matchFailMap)
-      .filter(([id, count]) => count > 0)
-      .map(([id, count]) => {
-        const word = DATA.find(w => w.id === Number(id));
-        return { ...word, fails: count };
-      })
-      .filter(w => w && w.id)
-      .sort((a,b) => b.fails - a.fails);
-
-    if (!problemWords.length){
-      matchResultList.innerHTML = `
-        <div class="smallNote" style="text-align:center;">
-          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
-          <div>Все пары собраны с первого раза ✅</div>
-        </div>
-      `;
-    } else {
-      matchResultList.innerHTML = problemWords.map(w => `
-        <div class="dictWordRow">
-          <div class="dictNum" style="color:#ef4444;font-weight:900;">
-            ❌ ${w.fails}
-          </div>
-          <div>
-            <div class="w">${escapeHtml(w.word)}</div>
-            <div class="t">${escapeHtml(w.trans)}</div>
-          </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
-        </div>
-      `).join("");
-
-      matchResultList.querySelectorAll(".starBtn").forEach((btn, i) => {
-        const word = problemWords[i];
-        btn.addEventListener("click", () => {
-          const on = toggleFav(word.id);
-          btn.classList.toggle("on", on);
-          btn.textContent = on ? "★" : "☆";
-        });
-      });
-    }
-
-    goView(viewMatchResult, { push:false });
-  }
-
-  if (btnMatchWords) btnMatchWords.addEventListener("click", openMatchMenu);
-  if (btnMatchStart) btnMatchStart.addEventListener("click", startMatchGame);
-
   function startTest() {
     const pool = getSelectedScopePool();
     const testLimit = getSelectedTestLimit();
@@ -1892,56 +1486,7 @@ function updateGlobalTestInfo() {
 
 
 
-
-  function openSessionAnalytics() {
-    const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
-    const analyticsList = document.getElementById("analyticsList");
-
-    const problemWords = Object.entries(sessionFailMap)
-      .filter(([id, count]) => count > 0)
-      .map(([id, count]) => {
-        const word = DATA.find(w => w.id === Number(id));
-        return { ...word, fails: count };
-      })
-      .sort((a,b) => b.fails - a.fails);
-
-    if (!problemWords.length) {
-      analyticsList.innerHTML = `
-        <div class="smallNote" style="text-align:center;">
-          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
-          <div>Не было незнакомых слов ✅</div>
-        </div>
-      `;
-    } else {
-      analyticsList.innerHTML = problemWords.map(w => `
-        <div class="dictWordRow">
-          <div class="dictNum" style="color:#ef4444;font-weight:900;">
-            ❌ ${w.fails}
-          </div>
-          <div>
-            <div class="w">${escapeHtml(w.word)}</div>
-            <div class="t">${escapeHtml(w.trans)}</div>
-          </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
-        </div>
-      `).join("");
-
-      analyticsList.querySelectorAll(".starBtn").forEach((btn, i) => {
-        const word = problemWords[i];
-        btn.addEventListener("click", () => {
-          const on = toggleFav(word.id);
-          btn.classList.toggle("on", on);
-          btn.textContent = on ? "★" : "☆";
-        });
-      });
-    }
-
-    goView(viewSessionAnalytics, { push:false });
-  }
-
-  // ---------- Init
+// ---------- Init
   (async () => {
     DATA = await loadWords();
 
@@ -1968,5 +1513,3 @@ function updateGlobalTestInfo() {
   }
   })();
 })();
-
-
