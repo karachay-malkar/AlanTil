@@ -134,7 +134,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   // ---------- Cache
-  const APP_VERSION = "1"; // менять вручную при обновлении слов
+  const APP_VERSION = "22"; // менять вручную при обновлении слов
   window.WORDS_CACHE_KEY = "fc_words_cache_v" + APP_VERSION;
 
   const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
