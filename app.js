@@ -14,10 +14,8 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const viewTest = document.getElementById("viewTest");
   const viewStudy = document.getElementById("viewStudy");
   const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
-  const viewDictContent = document.getElementById("viewDictContent");
 
-  
-// Dicts
+  // Dicts
   const dictsList = document.getElementById("dictsList");
   const btnGlobalTest = document.getElementById("btnGlobalTest");
 
@@ -135,107 +133,11 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
-  // ---------- Words cache + versioning (v9.11: meta-sheet controlled)
-// No external old cache key anymore. Cache keys are internal and stable.
-const WORDS_STORAGE_KEY = "alan_words_cache";
-const WORDS_VERSION_KEY = "alan_words_version";
+  // ---------- Cache
+  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v3";
+  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
+  function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
-function loadCachedWords() { try { return JSON.parse(localStorage.getItem(WORDS_STORAGE_KEY) || "null"); } catch { return null; } }
-function saveCachedWords(data) { try { localStorage.setItem(WORDS_STORAGE_KEY, JSON.stringify(data)); } catch {} }
-
-function loadCachedVersion() {
-  const v = localStorage.getItem(WORDS_VERSION_KEY);
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-function saveCachedVersion(v) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return;
-  try { localStorage.setItem(WORDS_VERSION_KEY, String(n)); } catch {}
-
-
-// Validate parsed words before accepting/caching (prevents "version bump" breaking the app)
-function isValidWordsArray(words){
-  return Array.isArray(words) && words.length > 0;
-};
-    const id = Number(w.id || 0);
-    const setNo = Number(w.set || 0);
-    const word = String(w.word || "").trim();
-    const trans = String(w.trans || "").trim();
-    if (id > 0 && setNo > 0 && word && trans) ok++;
-  }
-  // At least 5 valid rows OR 70% of the file (for small sheets)
-  const minOk = Math.min(words.length, 5);
-  return ok >= minOk || ok / Math.max(1, words.length) >= 0.7;
-}
-}
-
-function extractSheetId(url) {
-  const u = (url || "").trim();
-  const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  return m ? m[1] : "";
-}
-
-function makeGvizCsvUrl(sheetId, extraParams = "") {
-  if (!sheetId) return "";
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv${extraParams}`;
-}
-
-// Read dictionary version from Google Sheets: sheet "meta", A1="version", B1=<number>
-async function fetchRemoteVersion(sheetUrl) {
-  const id = extractSheetId(sheetUrl);
-  if (!id) return null;
-
-  const metaUrl = makeGvizCsvUrl(id, "&sheet=meta&range=A1:B1");
-  try {
-    const res = await fetch(metaUrl, { cache: "no-store" });
-    if (!res.ok) return null;
-    const text = await res.text();
-    const rows = parseCsvRows(text);
-    if (!rows.length) return null;
-
-    // Expected: one row, two cols: ["version", "12"]
-    const row = rows[0] || [];
-    const a1 = String(row[0] || "").trim().toLowerCase();
-    const b1 = String(row[1] || "").trim();
-    if (a1 !== "version") return null;
-
-    const n = Number(b1);
-    return Number.isFinite(n) ? n : null;
-  } catch {
-    return null;
-  }
-}
-
-// Tiny CSV parser that returns table rows (no header assumptions)
-function parseCsvRows(text) {
-  const rows = [];
-  let row = [];
-  let cur = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i + 1];
-    if (inQuotes) {
-      if (ch === '"' && next === '"') { cur += '"'; i++; }
-      else if (ch === '"') inQuotes = false;
-      else cur += ch;
-    } else {
-      if (ch === '"') inQuotes = true;
-      else if (ch === ',') { row.push(cur); cur = ""; }
-      else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ""; }
-      else if (ch === '\n') {}
-      else cur += ch;
-    }
-  }
-  if (cur.length || row.length) { row.push(cur); rows.push(row); }
-
-  // remove empty trailing rows
-  return rows.filter(r => Array.isArray(r) && r.some(c => String(c || "").trim() !== ""));
-}
-
-// ---------- Sheets URL -> CSV
   // ---------- Sheets URL -> CSV
   function normalizeToCsvUrl(url) {
     const u = (url || "").trim();
@@ -248,63 +150,21 @@ function parseCsvRows(text) {
   }
 
   async function loadWords() {
-  const cachedWords = loadCachedWords();
-  const hasCache = Array.isArray(cachedWords) && cachedWords.length > 0;
-  const localVersion = loadCachedVersion();
+    const cached = loadCache();
+    if (Array.isArray(cached) && cached.length) return cached;
 
-  const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
-
-  // 1) Try to read remote version each app start (small request).
-  const remoteVersion = await fetchRemoteVersion(sheetUrl);
-
-  // If remote version is available, we can decide whether to refresh words.
-  if (remoteVersion !== null) {
-    // No changes → use cache
-    if (hasCache && localVersion !== null && Number(localVersion) === Number(remoteVersion)) {
-      return cachedWords;
-    }
-
-    // Version changed (or no local version / no cache) → try to download fresh words
+    const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
     if (csvUrl && csvUrl.startsWith("http")) {
       try {
         const words = await loadWordsFromCsv(csvUrl);
-
-        // ✅ Atomic update: accept ONLY if valid
-        if (isValidWordsArray(words)) {
-          saveCachedWords(words);
-          saveCachedVersion(remoteVersion);
-          return words;
-        }
+        if (Array.isArray(words) && words.length) { saveCache(words); return words; }
       } catch (e) {}
     }
-
-    // Refresh failed or returned invalid data → keep working with existing cache
-    if (hasCache) return cachedWords;
-
-    // No cache → fallback
     return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
   }
 
-  // 2) If we cannot check version (offline / blocked), prefer cache.
-  if (hasCache) return cachedWords;
-
-  // 3) No cache → try to load words directly.
-  const csvUrl = normalizeToCsvUrl(sheetUrl);
-  if (csvUrl && csvUrl.startsWith("http")) {
-    try {
-      const words = await loadWordsFromCsv(csvUrl);
-      if (isValidWordsArray(words)) {
-        // Version unknown, but we can still cache valid words for fast next start
-        saveCachedWords(words);
-        return words;
-      }
-    } catch (e) {}
-  }
-
-  return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-}
-async function loadWordsFromCsv(url) {
+  async function loadWordsFromCsv(url) {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("CSV load failed: " + res.status);
     const text = await res.text();
@@ -579,7 +439,55 @@ viewSetMenu,
       </div>
     `;
   }
-// Split text into groups by semicolon or newline
+// ---------- Study renderers (v7.3)
+  // ---------- RU->ALAN front renderer (v8.6)
+  function renderRuAlanFront(el, item){
+    // number of groups determined ONLY by Russian translation variants
+    const groups = splitGroups(item.trans);
+    const exRaw = String(item.example || "").trim();
+
+    // parse examples into indexed groups
+    let eGroups = [];
+    if(exRaw){
+      const parts = exRaw.replace(/\n+/g,";").split(/\s*[;；]\s*/g).map(s=>s.trim()).filter(Boolean);
+      let cur = null;
+      for(const p of parts){
+        const m = p.match(/^\s*(\d+)\s*(?:[\.)]|[-–—])?\s*(.*)$/);
+        if(m){
+          if(cur) eGroups.push(cur);
+          cur = { i: Number(m[1])-1, lines: m[2] ? [m[2]] : [] };
+        }else{
+          if(!cur) cur = { i: 0, lines: [p] };
+          else cur.lines.push(p);
+        }
+      }
+      if(cur) eGroups.push(cur);
+    }
+
+    if(!groups.length){
+      el.textContent = escapeHtml(item.word);
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="groups">
+        ${groups.map((_,i)=>{
+          const eg = eGroups.find(g=>g.i===i);
+          return `
+            <div class="groupRow">
+              <span class="groupNum">${i+1}</span>
+              <div class="groupPill">
+                <div class="gTrans">${escapeHtml(item.word)}</div>
+                ${eg ? eg.lines.map(l=>`<div class="gEx">${escapeHtml(l)}</div>`).join("") : ``}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  // Split text into groups by semicolon or newline
   function splitGroups(text){
     return String(text||"")
       .split(/\s*[;；]\s*|\n+/g)
@@ -736,6 +644,7 @@ viewSetMenu,
   // ---------- App state
 
   // ---------- Dictionary content (Содержание словаря)
+  const viewDictContent = document.getElementById("viewDictContent");
   const btnOpenDictContent = document.getElementById("btnOpenDictContent");
   const dictSearchInput = document.getElementById("dictSearchInput");
   const dictContentList = document.getElementById("dictContentList");
@@ -1969,7 +1878,6 @@ function updateGlobalTestInfo() {
 
   function openSessionAnalytics() {
     const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
-  const viewDictContent = document.getElementById("viewDictContent");
     const analyticsList = document.getElementById("analyticsList");
 
     const problemWords = Object.entries(sessionFailMap)
