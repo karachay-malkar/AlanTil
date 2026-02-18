@@ -134,7 +134,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   }
 
   // ---------- Cache
-  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v16";
+  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v18";
   function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
   function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
@@ -151,11 +151,8 @@ const viewSetMenu = document.getElementById("viewSetMenu");
 
   async function loadWords() {
     const cached = loadCache();
-
-    // Если есть кэш — возвращаем мгновенно, обновление в фоне
     if (Array.isArray(cached) && cached.length) return cached;
 
-    // Нет кэша — ждём загрузку из таблицы
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
     if (csvUrl && csvUrl.startsWith("http")) {
@@ -168,19 +165,6 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     }
 
     return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-  }
-
-  // Фоновое обновление: загружает свежие данные и обновляет кэш
-  function backgroundRefresh() {
-    const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
-    const csvUrl = normalizeToCsvUrl(sheetUrl);
-    if (!csvUrl || !csvUrl.startsWith("http")) return;
-
-    loadWordsFromCsv(csvUrl).then(words => {
-      if (Array.isArray(words) && words.length) {
-        saveCache(words);
-      }
-    }).catch(() => {});
   }
 
   async function loadWordsFromCsv(url) {
@@ -839,7 +823,8 @@ viewSetMenu,
     // Click handlers: open set vs toggle done
     sectionsList.querySelectorAll(".setTile").forEach(tile => {
       const sec = tile.getAttribute("data-section");
-      const setNo = Number(tile.getAttribute("data-set"));
+      const rawSet = tile.getAttribute("data-set");
+      const setNo = isNaN(Number(rawSet)) ? rawSet : Number(rawSet);
 
       // Toggle ✅
       const doneEl = tile.querySelector("[data-done='1']");
@@ -1965,8 +1950,6 @@ function updateGlobalTestInfo() {
 
     renderDicts();
 
-    // Обновляем кэш в фоне (пользователь увидит свежие данные при следующем открытии)
-    backgroundRefresh();
 
   const btnOpenLearnMenu = document.getElementById("btnOpenLearnMenu");
   if(btnOpenLearnMenu){
