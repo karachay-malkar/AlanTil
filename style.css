@@ -17,11 +17,11 @@
   --fw-semibold: 900;
   --fw-regular: 400;
 
-  --fs-title: 20px;
-  --fs-subtitle: 16px;
-  --fs-card-main: 18px;
-  --fs-body: 16px;
-  --fs-muted: 14px;
+  --fs-22px: 22px;
+  --fs-20px: 20px;
+  --fs-18px: 18px;
+  --fs-16px: 16px;
+  --fs-14px: 14px;
 
   --color-main: var(--text-main);
   --color-muted: var(--text-secondary);
@@ -44,7 +44,7 @@ body{
 .testLimitTitle,
 .testScopeTitle{
   font-family: var(--font-base);
-  font-size: var(--fs-title);
+  font-size: var(--fs-20px);
   font-weight: var(--fw-bold);
   color: var(--color-main);
 }
@@ -56,7 +56,7 @@ body{
 .testScopeTitle,
 .learnLabel{
   font-family: var(--font-base);
-  font-size: var(--fs-subtitle);
+  font-size: var(--fs-16px);
   font-weight: var(--fw-regular);
   color: var(--color-muted);
 }
@@ -66,7 +66,7 @@ body{
 .resultBody .resultWord,
 .groupPill .gTrans{
   font-family: var(--font-base);
-  font-size: var(--fs-card-main);
+  font-size: var(--fs-22px);
   font-weight: var(--fw-semibold);
   color: var(--color-main);
 }
@@ -75,7 +75,7 @@ body{
 .trans,
 .resultLine{
   font-family: var(--font-base);
-  font-size: var(--fs-body);
+  font-size: var(--fs-16px);
   font-weight: var(--fw-regular);
   color: var(--color-main);
 }
@@ -86,7 +86,7 @@ body{
 .smallNote,
 .dictNum{
   font-family: var(--font-base);
-  font-size: var(--fs-muted);
+  font-size: var(--fs-14px);
   font-weight: var(--fw-regular);
   color: var(--color-muted);
 }
@@ -105,7 +105,7 @@ body{
   color: var(--brand-dark);
 }
 .meta{
-  font-size: var(--fs-body);
+  font-size: var(--fs-16px);
   color: var(--color-muted);
   display:flex;
   gap: 10px;
@@ -155,7 +155,7 @@ body{
 
 /* ---------- FIELDS ---------- */
 .field{ display:grid; gap:6px; margin:10px 0; }
-.field span{ color: var(--color-muted); font-size: var(--fs-subtitle); }
+.field span{ color: var(--color-muted); font-size: var(--fs-16px); }
 
 input{
   width:100%;
@@ -214,9 +214,8 @@ input{
 /* ---------- STUDY CARD ---------- */
 .card{
   background: var(--card-bg);
-  border: 1px solid var(--border);
   border-radius: 28px;
-  padding: 18px 16px;
+  padding: 18px 2px;
   box-shadow: var(--shadow);
   user-select:none;
   touch-action: pan-y;
@@ -232,6 +231,8 @@ input{
 .word{
   margin-top: 8px;
   text-align:center;
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-22px);
 }
 .trans{
   margin-top: 12px;
@@ -243,7 +244,7 @@ input{
   padding: 0;
   border: none;
   background: transparent;
-  font-size: var(--fs-body);
+  font-size: var(--fs-16px);
   line-height: 1.35;
 }
 
@@ -271,7 +272,7 @@ input{
   align-items:center;
 }
 .item .w{ font-weight: var(--fw-semibold); }
-.item .t{ color: var(--color-muted); font-size: var(--fs-card-main); margin-top: 2px; }
+.item .t{ color: var(--color-muted); font-size: var(--fs-22px); margin-top: 2px; }
 .checkbox{ width: 18px; height: 18px; }
 
 /* ---------- FAVORITES ---------- */
@@ -285,7 +286,7 @@ input{
   border: 1px solid rgba(17,169,232,0.25);
   background: rgba(255,255,255,0.75);
   backdrop-filter: blur(6px);
-  font-size: var(--fs-title);
+  font-size: var(--fs-20px);
   font-weight: var(--fw-bold);
   display:flex;
   align-items:center;
@@ -302,7 +303,7 @@ input{
   border-radius: 999px;
   border: 1px solid rgba(17,169,232,0.18);
   background: rgba(17,169,232,0.06);
-  font-size: var(--fs-card-main);
+  font-size: var(--fs-22px);
   font-weight: var(--fw-bold);
   display:flex;
   align-items:center;
@@ -320,7 +321,7 @@ input{
   border: 1px solid rgba(17,169,232,0.20);
   border-radius: 18px;
   padding: 18px 14px;
-  font-size: calc(var(--fs-title) * 1.7);
+  font-size: calc(var(--fs-20px) * 1.7);
   font-weight: var(--fw-bold);
   text-align: center;
 }
@@ -483,7 +484,7 @@ input{
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 380px){
-  .word{ font-size: calc(var(--fs-title) * 1.7); }
+  .word{ font-size: calc(var(--fs-20px) * 1.7); }
 }
 
 /* --- Global header back arrow --- */
@@ -545,7 +546,7 @@ button[data-legacy-back="1"]{display:none !important;}
   align-items: center;
   justify-content: center;
   font-weight: var(--fw-bold);
-  font-size: var(--fs-muted);
+  font-size: var(--fs-14px);
   color: var(--color-muted);
   border: 1px solid rgba(15,23,42,0.10);
   background: rgba(17,169,232,0.06);
@@ -587,7 +588,7 @@ button[data-legacy-back="1"]{display:none !important;}
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size: var(--fs-body);
+  font-size: var(--fs-16px);
   font-weight: var(--fw-bold);
   color: #ffffff;
   background: var(--brand);
@@ -734,12 +735,12 @@ button[data-legacy-back="1"]{display:none !important;}
 
 #dictContentList .dictWordRow .w{
   font-weight: var(--fw-semibold);
-  font-size: var(--fs-body);
+  font-size: var(--fs-16px);
 }
 
 #dictContentList .dictWordRow .t{
   margin-top: 2px;
-  font-size: var(--fs-card-main);
+  font-size: var(--fs-22px);
   color: var(--color-muted);
 }
 
@@ -761,7 +762,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
 /* Examples (secondary text) */
 .groupPill .gEx{
-  font-size: var(--fs-card-main);
+  font-size: var(--fs-22px);
   font-weight: var(--fw-regular);
   color: var(--color-muted);
   line-height: 1.35;
@@ -948,7 +949,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
 .setTileTitle{
   font-weight: var(--fw-bold);
-  font-size: var(--fs-muted);
+  font-size: var(--fs-14px);
   line-height: 1.2;
   padding: 0 2px;
   max-width: calc(100% - 30px);
@@ -967,7 +968,7 @@ button[data-legacy-back="1"]{display:none !important;}
 /* Slightly smaller tiles on very narrow screens */
 @media (max-width: 360px){
   .setsGrid{ gap: 8px; }
-  .setTileTitle{ font-size: var(--fs-card-main); }
+  .setTileTitle{ font-size: var(--fs-22px); }
 }
 
 
