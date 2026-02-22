@@ -8,7 +8,6 @@
   --text-main: #0F172A;
   --text-secondary: #475569;
   --border: rgba(15,23,42,0.10);
-  --shadow: 0 10px 30px rgba(17,169,232,0.18);
 
   /* === Typography system === */
   --font-base: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -40,9 +39,7 @@ body{
 
 .typo-title,
 .panelTitle,
-.secTitle,
-.testLimitTitle,
-.testScopeTitle{
+.secTitle{
   font-family: var(--font-base);
   font-size: var(--fs-20px);
   font-weight: var(--fw-bold);
@@ -52,8 +49,6 @@ body{
 .typo-subtitle,
 .hintText,
 .meta,
-.testLimitTitle,
-.testScopeTitle,
 .learnLabel{
   font-family: var(--font-base);
   font-size: var(--fs-16px);
@@ -132,7 +127,6 @@ body{
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 12px;
-  box-shadow: var(--shadow);
 }
 
 .panelTitle{
@@ -177,7 +171,6 @@ input{
   background: var(--card-bg);
   color: var(--color-main);
   font-weight: var(--fw-semibold);
-  box-shadow: 0 6px 18px rgba(17,169,232,0.14);
 }
 .btn.ghost{
   background: rgba(17,169,232,0.06);
@@ -201,7 +194,6 @@ input{
   font-weight: var(--fw-semibold);
   background: rgba(17,169,232,0.08);
   border: 1px solid rgba(17,169,232,0.20);
-  box-shadow: none;
 }
 
 .smallNote{
@@ -214,7 +206,6 @@ input{
   background: var(--card-bg);
   border-radius: 28px;
   padding: 18px 2px;
-  box-shadow: var(--shadow);
   user-select:none;
   touch-action: pan-y;
   transition: transform .18s ease, opacity .18s ease;
@@ -315,7 +306,7 @@ input{
   border: 1px solid rgba(17,169,232,0.20);
   border-radius: 18px;
   padding: 18px 14px;
-  font-size: calc(var(--fs-20px) * 1.7);
+  font-size: (var(--fs-22px);
   font-weight: var(--fw-bold);
   text-align: center;
 }
@@ -410,7 +401,6 @@ input{
 
 .btn:disabled{
   opacity: 0.55;
-  box-shadow: none;
 }
 
 .resultList{
@@ -428,8 +418,7 @@ input{
   padding: 12px 10px;
   border-radius: 16px;
   border: 1px solid rgba(15,23,42,0.10);
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(17,169,232,0.10);
+  background: var(--card-bg);
 }
 
 .resultMark{
@@ -814,8 +803,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
   border-radius: var(--tile-radius);
   border: 1px solid var(--border);
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(17,169,232,0.10);
+  background: var(--card-bg);
 
   padding: 10px 8px;
   display: flex;
@@ -948,8 +936,7 @@ button[data-legacy-back="1"]{display:none !important;}
   padding: 12px 14px;
   border-radius: 16px;
   border: 1px solid var(--border);
-  background: #ffffff;
-  box-shadow: 0 6px 18px rgba(17,169,232,0.10);
+  background: var(--card-bg);
   font-weight: var(--fw-semibold);
   text-align: center;
   cursor: pointer;
