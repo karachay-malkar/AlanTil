@@ -1683,15 +1683,15 @@ function updateGlobalTestInfo() {
 
     if (!problemWords.length){
       matchResultList.innerHTML = `
-        <div class="smallNote" style="text-align:center;">
-          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
+        <div class="smallNote noteCenter">
+          <div class="noteTitle">Аперим!</div>
           <div>Все пары собраны с первого раза ✅</div>
         </div>
       `;
     } else {
       matchResultList.innerHTML = problemWords.map(w => `
         <div class="dictWordRow">
-          <div class="dictNum" style="color:#ef4444;font-weight:900;">
+          <div class="dictNum dictNumFail">
             ❌ ${w.fails}
           </div>
           <div>
@@ -1903,15 +1903,15 @@ function updateGlobalTestInfo() {
 
     if (!problemWords.length) {
       analyticsList.innerHTML = `
-        <div class="smallNote" style="text-align:center;">
-          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
+        <div class="smallNote noteCenter">
+          <div class="noteTitle">Аперим!</div>
           <div>Не было незнакомых слов ✅</div>
         </div>
       `;
     } else {
       analyticsList.innerHTML = problemWords.map(w => `
         <div class="dictWordRow">
-          <div class="dictNum" style="color:#ef4444;font-weight:900;">
+          <div class="dictNum dictNumFail">
             ❌ ${w.fails}
           </div>
           <div>
