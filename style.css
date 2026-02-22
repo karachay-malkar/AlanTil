@@ -303,14 +303,10 @@ input{
   border: 0px;
   background: rgb(255 255 255 / 0%);
   font-size: var(--fs-22px);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-regular);
   display:flex;
   align-items:center;
   justify-content:center;
-}
-.starBtn.on{
-  background: rgba(17,169,232,0.12);
-  border-color: rgba(17,169,232,0.45);
 }
 
 /* ---------- TEST ---------- */
