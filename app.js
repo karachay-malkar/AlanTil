@@ -792,8 +792,8 @@ viewSetMenu,
 
         const title = (dict === "__fav__") ? "Избранное" : (typeof setNo === "number" ? `Сет ${setNo}` : String(setNo));
         return `
-          <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
-            <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
+          <div class="setTile ${finished ? 'isSelected' : ''}" role="button" tabindex="0" data-section="${escapeHtml(sec)}" data-set="${setNo}">
+            <button class="setDone" type="button" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
     <rect x="3" y="3" width="18" height="18" rx="4"
           fill="none"
           stroke="rgba(15,23,42,0.25)"
@@ -803,9 +803,9 @@ viewSetMenu,
           stroke-width="2.8"
           stroke-linecap="round"
           stroke-linejoin="round"/>
-  </svg></div>
+  </svg></button>
             <div class="setTileTitle">${escapeHtml(title)}</div>
-          </button>
+          </div>
         `;
       }).join("");
 
@@ -833,14 +833,22 @@ viewSetMenu,
 if(svg){
   svg.classList.toggle("active", on);
 }
+          tile.classList.toggle("isSelected", on);
         });
       }
 
       // Open set menu
-      tile.addEventListener("click", () => {
+      const openTileSet = () => {
         currentSection = sec;
         currentSet = setNo;
         openSetMenu();
+      };
+      tile.addEventListener("click", openTileSet);
+      tile.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openTileSet();
+        }
       });
     });
   }
