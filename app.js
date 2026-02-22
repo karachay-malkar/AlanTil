@@ -792,7 +792,7 @@ viewSetMenu,
 
         const title = (dict === "__fav__") ? "Избранное" : (typeof setNo === "number" ? `Сет ${setNo}` : String(setNo));
         return `
-          <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
+          <button class="setTile ${finished ? 'selected' : ''}" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
             <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
     <rect x="3" y="3" width="18" height="18" rx="4"
           fill="none"
@@ -833,6 +833,7 @@ viewSetMenu,
 if(svg){
   svg.classList.toggle("active", on);
 }
+          tile.classList.toggle("selected", on);
         });
       }
 

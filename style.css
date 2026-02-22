@@ -838,6 +838,9 @@ button[data-legacy-back="1"]{display:none !important;}
 }
 
 .setTile{
+  --tile-notch-size: 26px;
+  --tile-notch-radius: 10px;
+
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 0.6;
@@ -856,6 +859,25 @@ button[data-legacy-back="1"]{display:none !important;}
   text-align: center;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.setTile::before{
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: calc(var(--tile-notch-size) + 2px);
+  height: calc(var(--tile-notch-size) + 2px);
+  background: var(--card-bg);
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-bottom-left-radius: var(--tile-notch-radius);
+  pointer-events: none;
+}
+
+.setTile.selected::before{
+  display: none;
 }
 
 .setTile:active{
@@ -873,6 +895,16 @@ button[data-legacy-back="1"]{display:none !important;}
   display:flex;
   align-items:center;
   justify-content:center;
+  z-index: 1;
+}
+
+.setTile.selected .setDone{
+  top: -1px;
+  right: -1px;
+  width: 34px;
+  height: 34px;
+  border-bottom-left-radius: 11px;
+  background: #22c55e;
 }
 
 .setTileTitle{
@@ -911,6 +943,15 @@ button[data-legacy-back="1"]{display:none !important;}
 
 .setCheck.active path{
   stroke: #22c55e;
+}
+
+.setTile.selected .setCheck.active path,
+.setTile.selected .setCheck path{
+  stroke: #ffffff;
+}
+
+.setTile.selected .setCheck rect{
+  display: none;
 }
 
 
