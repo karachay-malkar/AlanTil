@@ -833,17 +833,15 @@ button[data-legacy-back="1"]{display:none !important;}
 
 .setsGrid{
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .setTile{
-  --tile-notch-size: 26px;
-  --tile-notch-radius: 10px;
-
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 0.6;
+  aspect-ratio: 1 / 0.3;
+  min-height: 70px;
+  max-height: 110px;
 
   border-radius: 18px;
   border: 1px solid var(--border);
@@ -860,24 +858,21 @@ button[data-legacy-back="1"]{display:none !important;}
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
-}
-
-.setTile::before{
-  content: "";
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  width: calc(var(--tile-notch-size) + 2px);
-  height: calc(var(--tile-notch-size) + 2px);
-  background: var(--card-bg);
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  border-bottom-left-radius: var(--tile-notch-radius);
-  pointer-events: none;
+  clip-path: path("M 8% 0 H 84% Q 92% 0 94% 9% Q 100% 14% 100% 26% V 82% Q 100% 100% 82% 100% H 8% Q 0 100% 0 82% V 18% Q 0 0 8% 0 Z");
 }
 
 .setTile.selected::before{
-  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  clip-path: inherit;
+  background: linear-gradient(
+    to top right,
+    transparent calc(100% - 44px),
+    #22c55e 0
+  );
+  pointer-events: none;
 }
 
 .setTile:active{
@@ -899,12 +894,8 @@ button[data-legacy-back="1"]{display:none !important;}
 }
 
 .setTile.selected .setDone{
-  top: -1px;
-  right: -1px;
-  width: 34px;
-  height: 34px;
-  border-bottom-left-radius: 11px;
-  background: #22c55e;
+  top: 6px;
+  right: 6px;
 }
 
 .setTileTitle{
