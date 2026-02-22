@@ -1230,7 +1230,7 @@ setRoundIfNeeded();
   openSetMenu();
 });
 
-  // ---------- Global test (only global, with dict filter)
+  // ---------- Global test (global scope filter by dictionaries and sections)
   let testMode = "kb"; // kb: Q=word, A=trans; ru: Q=trans, A=word
   let testItems = [];
   let testIndex = 0;
@@ -1959,3 +1959,4 @@ function updateGlobalTestInfo() {
   }
   })();
 })();
+
