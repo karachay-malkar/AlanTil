@@ -14,7 +14,6 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const viewTest = document.getElementById("viewTest");
   const viewStudy = document.getElementById("viewStudy");
   const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
-  const viewDictContent = document.getElementById("viewDictContent");
 
   // Dicts
   const dictsList = document.getElementById("dictsList");
@@ -134,165 +133,74 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
-  // ---------- Cache + version control (single-sheet, version in first row)
-  const DATA_KEY = "fc_words_data_v2";
-  const VERSION_KEY = "fc_words_version_v2";
-
-  function loadCachedData() {
-    try { return JSON.parse(localStorage.getItem(DATA_KEY) || "null"); } catch { return null; }
-  }
-  function saveCachedData(data) {
-    try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch {}
-  }
-  function loadCachedVersion() {
-    try { return String(localStorage.getItem(VERSION_KEY) || ""); } catch { return ""; }
-  }
-  function saveCachedVersion(v) {
-    try { if (v != null && String(v).trim()) localStorage.setItem(VERSION_KEY, String(v).trim()); } catch {}
-  }
+  // ---------- Cache
+  const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v18";
+  function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
+  function saveCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {} }
 
   // ---------- Sheets URL -> CSV
-
   function normalizeToCsvUrl(url) {
     const u = (url || "").trim();
     if (!u) return "";
+    if (u.includes("output=csv") || u.includes("out:csv") || u.includes("format=csv")) return u;
     const m = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (!m) return u;
     const id = m[1];
-    return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv`;
+    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
   }
 
-async function loadWords() {
+  async function loadWords() {
+    const cached = loadCache();
+    if (Array.isArray(cached) && cached.length) return cached;
+
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
-
-    if (!csvUrl || !csvUrl.startsWith("http")) {
-      const cached = loadCachedData();
-      if (Array.isArray(cached) && cached.length) return cached;
-      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+    if (csvUrl && csvUrl.startsWith("http")) {
+      try {
+        const words = await loadWordsFromCsv(csvUrl);
+        if (Array.isArray(words) && words.length) { saveCache(words); return words; }
+      } catch (e) {
+        console.warn("loadWords: fetch failed", e);
+      }
     }
 
-    try {
-      const res = await fetch(csvUrl, { cache: "no-store" });
-      if (!res.ok) throw new Error("CSV load failed: " + res.status);
-      const text = await res.text();
-
-      const lines = text.split(/
-?
-/);
-      if (lines.length < 2) throw new Error("CSV too short");
-
-      const first = String(lines[0] || "").trim();
-      let remoteVersion = "";
-      let dataText = text;
-
-      if (/^version\s*,/i.test(first)) {
-        const parts = first.split(",");
-        remoteVersion = String(parts[1] || "").trim();
-        dataText = lines.slice(1).join("\n");
-      }
-
-      const localVersion = loadCachedVersion();
-      const cached = loadCachedData();
-
-      if (remoteVersion && localVersion === remoteVersion && Array.isArray(cached) && cached.length) {
-        return cached;
-      }
-
-      const parsed = parseCsv(dataText);
-
-      if (Array.isArray(parsed) && parsed.length) {
-        saveCachedData(parsed);
-        if (remoteVersion) saveCachedVersion(remoteVersion);
-        return parsed;
-      }
-
-      if (Array.isArray(cached) && cached.length) return cached;
-      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-    } catch (e) {
-      const cached = loadCachedData();
-      if (Array.isArray(cached) && cached.length) return cached;
-      return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
-    }
+    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
   }
 
-// Expected headers: id, dict, section, set, word, trans, example
+  async function loadWordsFromCsv(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("CSV load failed: " + res.status);
+    const text = await res.text();
+    return parseCsv(text);
+  }
+
+  // Expected headers: id, dict, section, set, word, trans, example
   // Backward compatible: folder -> section, dict defaults to "Словарь"
   function parseCsv(text) {
-    // Robust CSV/TSV parser (RFC4180-ish), supports:
-    // - commas, semicolons, or tabs as separators (auto-detect)
-    // - quotes with escaped quotes ("")
-    // - newlines inside quoted fields
-    // - BOM at start of file
-    const input = String(text || "").replace(/^\uFEFF/, "");
+    const rows = [];
+    let row = [];
+    let cur = "";
+    let inQuotes = false;
 
-    // --- 1) Parse into rows (no delimiter handling yet, just keep raw fields later)
-    // We'll detect delimiter from the first non-empty record.
-    function detectDelimiter(sampleLine) {
-      const candidates = [",", "\t", ";"];
-      let best = ",";
-      let bestCount = -1;
-      for (const c of candidates) {
-        const count = (sampleLine.match(new RegExp("\\" + c, "g")) || []).length;
-        if (count > bestCount) { bestCount = count; best = c; }
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+      if (inQuotes) {
+        if (ch === '"' && next === '"') { cur += '"'; i++; }
+        else if (ch === '"') inQuotes = false;
+        else cur += ch;
+      } else {
+        if (ch === '"') inQuotes = true;
+        else if (ch === ',') { row.push(cur); cur = ""; }
+        else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ""; }
+        else if (ch === '\r') {}
+        else cur += ch;
       }
-      return best;
     }
-
-    // Parse with a chosen delimiter
-    function parseWithDelimiter(delim) {
-      const rows = [];
-      let row = [];
-      let cur = "";
-      let inQuotes = false;
-
-      for (let i = 0; i < input.length; i++) {
-        const ch = input[i];
-        const next = input[i + 1];
-
-        if (inQuotes) {
-          if (ch === '"' && next === '"') { cur += '"'; i++; continue; }
-          if (ch === '"') { inQuotes = false; continue; }
-          cur += ch;
-          continue;
-        }
-
-        if (ch === '"') { inQuotes = true; continue; }
-
-        // delimiter
-        if (ch === delim) { row.push(cur); cur = ""; continue; }
-
-        // newline handling: \r\n, \n, or \r
-        if (ch === '\n' || ch === '\r') {
-          // if \r\n — skip next
-          if (ch === '\r' && next === '\n') i++;
-          row.push(cur);
-          // Skip completely empty trailing rows
-          if (!(row.length === 1 && String(row[0] || "").trim() === "")) rows.push(row);
-          row = [];
-          cur = "";
-          continue;
-        }
-
-        cur += ch;
-      }
-
-      // last cell
-      if (cur.length || row.length) {
-        row.push(cur);
-        if (!(row.length === 1 && String(row[0] || "").trim() === "")) rows.push(row);
-      }
-      return rows;
-    }
-
-    // Find first non-empty line for delimiter detection (respecting quotes is hard;
-    // for detection we can just take up to first newline in raw input)
-    const firstLine = (input.split(/\r\n|\n|\r/)[0] || "");
-    const delim = detectDelimiter(firstLine);
-    const rows = parseWithDelimiter(delim);
+    if (cur.length || row.length) { row.push(cur); rows.push(row); }
     if (!rows.length) return [];
 
-    const headers = rows[0].map(h => String(h || "").replace(/^\uFEFF/, "").trim().toLowerCase());
+    const headers = rows[0].map(h => (h || "").trim().toLowerCase());
     const idx = (name) => headers.findIndex(h => h === name);
 
     const idI = idx("id");
@@ -304,35 +212,33 @@ async function loadWords() {
     const transI = idx("trans");
     const exI = idx("example");
     const posI = idx("pos");
-    const dictOrderI = idx("dict_order");
 
-    // minimal required columns
+    const dictOrderI = idx("dict_order");
     if (idI === -1 || setI === -1 || wordI === -1 || transI === -1) return [];
 
     const out = [];
     for (let r = 1; r < rows.length; r++) {
       const cols = rows[r];
-      if (!cols || cols.every(c => !String(c || "").trim())) continue;
+      if (!cols || cols.every(c => !String(c||"").trim())) continue;
 
       const dict = dictI !== -1 ? String(cols[dictI] || "").trim() : "Словарь";
       const section = sectionI !== -1 ? String(cols[sectionI] || "").trim()
                     : (folderI !== -1 ? String(cols[folderI] || "").trim() : "Раздел");
 
+      const rawSet = String(cols[setI] || "").trim();
+      const numSet = Number(rawSet);
       const obj = {
         id: Number(cols[idI] || 0),
         dict: dict || "Словарь",
         section: section || "Раздел",
-        set: Number(cols[setI] || 0),
+        set: isNaN(numSet) ? rawSet : numSet,
         word: String(cols[wordI] || "").trim(),
         trans: String(cols[transI] || "").trim(),
         pos: posI !== -1 ? String(cols[posI] || "").trim() : "",
         example: exI !== -1 ? String(cols[exI] || "").trim() : "",
         dict_order: dictOrderI !== -1 ? Number(cols[dictOrderI] || 0) : 0,
       };
-
-      // keep same safety filters as before
       if (!obj.id || !obj.set || !obj.word || !obj.trans) continue;
-
       out.push(obj);
     }
     return out;
@@ -734,14 +640,16 @@ viewSetMenu,
   function dictsFrom(words) { return uniq(words.map(w => w.dict)).sort(sortNatural); }
   function sectionsFrom(words, dict) { return uniq(words.filter(w => w.dict === dict).map(w => w.section)).sort(sortNatural); }
   function setsFrom(words, dict, section) {
-    return uniq(words.filter(w => w.dict === dict && w.section === section).map(w => Number(w.set))).sort((a,b)=>a-b);
+    return uniq(words.filter(w => w.dict === dict && w.section === section).map(w => w.set)).sort(sortNatural);
   }
   function wordsForSet(words, dict, section, setNo) {
-    return words.filter(w => w.dict === dict && w.section === section && Number(w.set) === Number(setNo));
+    return words.filter(w => w.dict === dict && w.section === section && String(w.set) === String(setNo));
   }
 
   // ---------- App state
-// ---------- Dictionary content
+
+  // ---------- Dictionary content (Содержание словаря)
+  const viewDictContent = document.getElementById("viewDictContent");
   const btnOpenDictContent = document.getElementById("btnOpenDictContent");
   const dictSearchInput = document.getElementById("dictSearchInput");
   const dictContentList = document.getElementById("dictContentList");
@@ -882,7 +790,7 @@ viewSetMenu,
 
         const finished = isSetFinished(dict, sec, setNo);
 
-        const title = (dict === "__fav__") ? "Избранное" : `Сет ${setNo}`;
+        const title = (dict === "__fav__") ? "Избранное" : (typeof setNo === "number" ? `Сет ${setNo}` : String(setNo));
         const count = all.length;
 
         return `
@@ -915,7 +823,8 @@ viewSetMenu,
     // Click handlers: open set vs toggle done
     sectionsList.querySelectorAll(".setTile").forEach(tile => {
       const sec = tile.getAttribute("data-section");
-      const setNo = Number(tile.getAttribute("data-set"));
+      const rawSet = tile.getAttribute("data-set");
+      const setNo = isNaN(Number(rawSet)) ? rawSet : Number(rawSet);
 
       // Toggle ✅
       const doneEl = tile.querySelector("[data-done='1']");
@@ -948,7 +857,8 @@ if(svg){
 
     const all = (currentDict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, currentDict, currentSection, currentSet);
     const active = all.filter(w => !menuHidden.has(w.id));
-    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • Сет ${currentSet}`;
+    const setLabel = typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet);
+    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • ${setLabel}`;
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
 
     renderSetWordsList();
@@ -1975,7 +1885,6 @@ function updateGlobalTestInfo() {
 
   function openSessionAnalytics() {
     const viewSessionAnalytics = document.getElementById("viewSessionAnalytics");
-  const viewDictContent = document.getElementById("viewDictContent");
     const analyticsList = document.getElementById("analyticsList");
 
     const problemWords = Object.entries(sessionFailMap)
@@ -2041,6 +1950,7 @@ function updateGlobalTestInfo() {
 
     renderDicts();
 
+
   const btnOpenLearnMenu = document.getElementById("btnOpenLearnMenu");
   if(btnOpenLearnMenu){
     btnOpenLearnMenu.addEventListener("click", () => {
@@ -2049,5 +1959,3 @@ function updateGlobalTestInfo() {
   }
   })();
 })();
-
-
