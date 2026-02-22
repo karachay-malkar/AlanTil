@@ -947,6 +947,10 @@ button[data-legacy-back="1"]{display:none !important;}
   stroke: rgba(15,23,42,0.25);
 }
 
+.setCheck rect{
+    stroke: rgb(255 255 255 / 62%);
+}
+
 .setCheck.active path{
   stroke: #22c55e;
 }
