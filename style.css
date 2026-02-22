@@ -926,7 +926,7 @@ button[data-legacy-back="1"]{display:none !important;}
   width: var(--corner-size);
   height: var(--corner-size);
   border: 1px solid var(--border);
-  margin: 0;
+  margin: -1px;
   padding: 0;
   box-sizing: border-box;
   border-bottom-left-radius: var(--tile-radius);
