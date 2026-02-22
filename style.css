@@ -62,9 +62,8 @@ body{
 }
 
 .typo-card-main,
-.word,
 .resultBody .resultWord,
-.groupPill .gTrans{
+.groupPill {
   font-family: var(--font-base);
   font-size: var(--fs-22px);
   font-weight: var(--fw-semibold);
@@ -272,7 +271,7 @@ input{
   align-items:center;
 }
 .item .w{ font-weight: var(--fw-semibold); }
-.item .t{ color: var(--color-muted); font-size: var(--fs-22px); margin-top: 2px; }
+.item .t{ color: var(--color-muted); font-size: var(--fs-16px); margin-top: 2px; }
 .checkbox{ width: 18px; height: 18px; }
 
 /* ---------- FAVORITES ---------- */
@@ -758,14 +757,16 @@ button[data-legacy-back="1"]{display:none !important;}
 /* Translation (main text inside group pill) */
 .groupPill .gTrans{
   margin-bottom: 8px;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-20px)
 }
 
 /* Examples (secondary text) */
 .groupPill .gEx{
-  font-size: var(--fs-22px);
+  font-size: var(--fs-16px);
   font-weight: var(--fw-regular);
   color: var(--color-muted);
-  line-height: 1.35;
+  line-height: 1;
   margin-top: 6px;
 }
 
