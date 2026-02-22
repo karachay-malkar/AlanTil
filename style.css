@@ -897,7 +897,7 @@ button[data-legacy-back="1"]{display:none !important;}
 /* Slightly smaller tiles on very narrow screens */
 @media (max-width: 360px){
   .setsGrid{ gap: 8px; }
-  .setTileTitle{ font-size: 18px; }
+  .setTileTitle{ font-size: 13px; }
   .setTileCount{ font-size: 11px; }
 }
 
