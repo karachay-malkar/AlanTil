@@ -925,11 +925,12 @@ button[data-legacy-back="1"]{display:none !important;}
   right: 0;
   width: var(--corner-size);
   height: var(--corner-size);
-  border: 0;
+  border: 1px solid var(--border);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   border-bottom-left-radius: var(--tile-radius);
+  border-top-right-radius: var(--tile-radius);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -974,8 +975,8 @@ button[data-legacy-back="1"]{display:none !important;}
 
 
 .setCheck{
-  width: 45%;
-  height: 45%;
+  width: 80%;
+  height: 80%;
 }
 
 .setCheck path{
