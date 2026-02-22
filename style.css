@@ -885,20 +885,16 @@ button[data-legacy-back="1"]{display:none !important;}
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
   word-break: break-word;
 }
 
-.setTileCount{
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
 
 /* Slightly smaller tiles on very narrow screens */
 @media (max-width: 360px){
   .setsGrid{ gap: 8px; }
   .setTileTitle{ font-size: 18px; }
-  .setTileCount{ font-size: 11px; }
 }
 
 
