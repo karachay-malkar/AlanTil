@@ -843,7 +843,7 @@ button[data-legacy-back="1"]{display:none !important;}
 .setTile,
 .set-tile{
   --tile-radius: 18px;
-  --corner-size: 60cqh;
+  --corner-size: 40cqh;
 
   position: relative;
   width: 100%;
