@@ -795,12 +795,8 @@ viewSetMenu,
 
         return `
           <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
-            <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
-    <rect x="3" y="3" width="18" height="18" rx="4"
-          fill="none"
-          stroke="rgba(15,23,42,0.25)"
-          stroke-width="1.7"/>
-    <path d="M7 10.5 L11.5 16 L17 6.5"
+            <div class="setDone ${finished ? 'active' : ''}" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
+    <path d="M7 12.5 L10.5 16 L17.5 8"
           fill="none"
           stroke-width="2.8"
           stroke-linecap="round"
@@ -836,6 +832,7 @@ viewSetMenu,
 if(svg){
   svg.classList.toggle("active", on);
 }
+doneEl.classList.toggle("active", on);
         });
       }
 
