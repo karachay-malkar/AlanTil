@@ -864,7 +864,7 @@ if(svg){
     const all = (currentDict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, currentDict, currentSection, currentSet);
     const active = all.filter(w => !menuHidden.has(w.id));
     const setLabel = typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet);
-    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • ${setLabel}`;
+    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${setLabel}`;
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
 
     renderSetWordsList();
