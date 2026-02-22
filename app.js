@@ -791,8 +791,6 @@ viewSetMenu,
         const finished = isSetFinished(dict, sec, setNo);
 
         const title = (dict === "__fav__") ? "Избранное" : (typeof setNo === "number" ? `Сет ${setNo}` : String(setNo));
-        const count = all.length;
-
         return `
           <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
             <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
@@ -807,7 +805,6 @@ viewSetMenu,
           stroke-linejoin="round"/>
   </svg></div>
             <div class="setTileTitle">${escapeHtml(title)}</div>
-            <div class="setTileCount">${count} слов</div>
           </button>
         `;
       }).join("");
