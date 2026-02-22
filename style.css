@@ -526,51 +526,6 @@ button[data-legacy-back="1"]{display:none !important;}
   display: contents;
 }
 
-
-/* --- Multi-translation pills (study + examples) --- */
-.multi{ margin-top: 2px; }
-.multiRow{
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 8px;
-}
-.multiNum{
-  flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-14px);
-  color: var(--color-muted);
-  border: 1px solid rgba(15,23,42,0.10);
-  background: rgba(17,169,232,0.06);
-  margin-top: 2px;
-}
-.multiPills{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
-.pill{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(17,169,232,0.20);
-  background: rgba(17,169,232,0.06);
-  font-weight: var(--fw-semibold);
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-/* --- Grouped pills (v7.5) --- */
 .groups{
   margin-top: 10px;
 }
@@ -597,27 +552,14 @@ button[data-legacy-back="1"]{display:none !important;}
 .groupPill{
   flex: 1 1 auto;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-radius: 16px;
-  border: 1px solid rgba(17,169,232,0.20);
   background: rgba(17,169,232,0.06);
-  font-weight: var(--fw-semibold);
   line-height: 1.3;
   word-break: break-word;
   text-align: left;
 }
 
-/* Example pill (group) */
-.groupExample{
-  flex: 1 1 auto;
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px dashed rgba(17,169,232,0.35);
-  background: rgba(17,169,232,0.04);
-  line-height: 1.4;
-  text-align: left;
-}
 .exLine{ margin-top: 8px; }
 .exLine:first-child{ margin-top: 0; }
 
