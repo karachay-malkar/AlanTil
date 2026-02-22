@@ -300,8 +300,8 @@ input{
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  border: 1px solid rgba(17,169,232,0.18);
-  background: rgba(17,169,232,0.06);
+  border: 0px;
+  background: rgb(255 255 255 / 0%);
   font-size: var(--fs-22px);
   font-weight: var(--fw-bold);
   display:flex;
