@@ -306,7 +306,7 @@ input{
   border: 1px solid rgba(17,169,232,0.20);
   border-radius: 18px;
   padding: 18px 14px;
-  font-size: (var(--fs-22px);
+  font-size: var(--fs-22px);
   font-weight: var(--fw-bold);
   text-align: center;
 }
