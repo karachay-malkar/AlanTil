@@ -834,7 +834,7 @@ button[data-legacy-back="1"]{display:none !important;}
 .setsGrid{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
@@ -842,15 +842,15 @@ button[data-legacy-back="1"]{display:none !important;}
 
 .setTile,
 .set-tile{
-  --tile-radius: 18px;
-  --corner-size: 40cqh;
+  --tile-radius: 12px;
+  --corner-size: 90cqh;
 
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  aspect-ratio: 1 / 0.3;
-  min-height: 70px;
-  max-height: 110px;
+  aspect-ratio: 1 / 0.15;
+  min-height: 50px;
+  max-height: 80px;
   container-type: size;
 
   border-radius: var(--tile-radius);
