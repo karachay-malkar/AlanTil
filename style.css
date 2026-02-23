@@ -169,7 +169,13 @@ body{
   border-radius:8px;
   border:1px solid #ddd;
   font-size:14px;
-  background:#fff;
+}
+
+.panelSearchIcon{
+  flex:0 0 auto;
+  width:24px;
+  height:24px;
+  display:block;
 }
 
 .panelBody{
@@ -675,9 +681,13 @@ button[data-legacy-back="1"]{display:none !important;}
   cursor:pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.iconBtn svg{
+.iconBtn svg,
+.iconBtn img{
   width:24px;
   height:24px;
+  display:block;
+}
+.iconBtn svg{
   fill: var(--text-secondary);
 }
 .iconBtn:active{ opacity:.8; }
