@@ -118,7 +118,9 @@ body{
   margin: 0 auto;
   height: calc(100vh - 56px);
   min-height: calc(100vh - 56px);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .view{ padding-top: 6px; }
 
