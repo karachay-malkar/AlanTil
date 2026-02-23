@@ -127,7 +127,7 @@ body{
 
 .panel[data-unified-panel="1"]{
   width: 100%;
-  height: 90vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -145,6 +145,42 @@ body{
 
 .panel-header .panelTitle{
   margin: 0;
+}
+
+
+.panelHeader{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 16px;
+  height:60px;
+  flex-shrink:0;
+}
+
+.panelHeader .panelTitle{
+  margin:0;
+  flex-shrink:0;
+}
+
+.searchInput{
+  flex:1;
+  height:36px;
+  padding:0 12px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  font-size:14px;
+  background:#fff;
+}
+
+.panelBody{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:12px;
+  margin-top:12px;
+  margin-bottom:12px;
 }
 
 .panel-body{

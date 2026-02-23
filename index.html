@@ -74,11 +74,19 @@
     <!-- СОДЕРЖАНИЕ СЛОВАРЯ (СПРАВОЧНИК) -->
     <section id="viewDictContent" class="view hidden screen">
       <div class="panel" data-unified-panel="1">
-        <div class="panelTitle">Содержание словаря</div>
+        <div class="panelHeader">
+          <div class="panelTitle">Содержание словаря</div>
+          <input
+            id="dictSearchInput"
+            class="searchInput"
+            type="text"
+            placeholder="Поиск..."
+          />
+        </div>
 
-        <input id="dictSearchInput" placeholder="Поиск по слову или переводу" />
-
-        <div id="dictContentList" class="stack"></div>
+        <div class="panelBody">
+          <div id="dictContentList" class="stack"></div>
+        </div>
       </div>
     </section>
 
