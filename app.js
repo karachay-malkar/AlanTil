@@ -138,6 +138,16 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       <path d="M12 17.27 18.18 21 16.54 13.97 22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"></path>
     </svg>
   `;
+  const STATUS_OK_ICON_SVG = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+    </svg>
+  `;
+  const STATUS_BAD_ICON_SVG = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+    </svg>
+  `;
   function renderStarButton(id, attrs = "") {
     const on = isFav(id);
     return `<button class="starBtn ${on ? "on" : ""}" type="button" aria-label="Избранное" ${attrs}>${STAR_ICON_SVG}</button>`;
@@ -1685,14 +1695,14 @@ function updateGlobalTestInfo() {
       matchResultList.innerHTML = `
         <div class="smallNote noteCenter">
           <div class="noteTitle">Аперим!</div>
-          <div>Все пары собраны с первого раза ✅</div>
+          <div>Все пары собраны с первого раза ${STATUS_OK_ICON_SVG}</div>
         </div>
       `;
     } else {
       matchResultList.innerHTML = problemWords.map(w => `
         <div class="dictWordRow">
           <div class="dictNum dictNumFail">
-            ❌ ${w.fails}
+            ${STATUS_BAD_ICON_SVG} ${w.fails}
           </div>
           <div>
             <div class="w">${escapeHtml(w.word)}</div>
@@ -1773,6 +1783,7 @@ function updateGlobalTestInfo() {
       testProgress.textContent = "Нет слов для теста.";
       testQuestion.textContent = "Пусто 🤷‍♂️";
       testQuestion.style.display = "";
+      testOptions.classList.remove("resultScroll");
       testOptions.innerHTML = "";
       btnTestNext.classList.add("hidden");
       return;
@@ -1798,6 +1809,7 @@ function updateGlobalTestInfo() {
     testQuestion.style.display = "";
 
     const options = pickOptions(item);
+    testOptions.classList.remove("resultScroll");
     testOptions.innerHTML = options.map(opt => `
       <button class="optionBtn" data-opt="${escapeHtml(opt)}">${escapeHtml(opt)}</button>
     `).join("");
@@ -1827,7 +1839,7 @@ function updateGlobalTestInfo() {
 
     const rows = testResults.map(r => `
       <div class="resultItem" data-id="${r.id}">
-        <div class="resultMark ${r.isCorrect ? "ok" : "bad"}">${r.isCorrect ? "✓" : "✕"}</div>
+        <div class="resultMark ${r.isCorrect ? "ok" : "bad"}">${r.isCorrect ? STATUS_OK_ICON_SVG : STATUS_BAD_ICON_SVG}</div>
         <div class="resultBody">
           <div class="resultWord">${escapeHtml(r.questionText || r.word)}</div>
           <div class="resultLine"><span class="lbl">Правильно:</span> ${escapeHtml(r.correctAnswer)}</div>
@@ -1837,6 +1849,7 @@ function updateGlobalTestInfo() {
       </div>
     `).join("");
 
+    testOptions.classList.add("resultScroll");
     testOptions.innerHTML = `
       <div class="resultList">
         ${rows || "<div class='hintText'>Нет результатов.</div>"}
@@ -1906,14 +1919,14 @@ function updateGlobalTestInfo() {
       analyticsList.innerHTML = `
         <div class="smallNote noteCenter">
           <div class="noteTitle">Аперим!</div>
-          <div>Не было незнакомых слов ✅</div>
+          <div>Не было незнакомых слов ${STATUS_OK_ICON_SVG}</div>
         </div>
       `;
     } else {
       analyticsList.innerHTML = problemWords.map(w => `
         <div class="dictWordRow">
           <div class="dictNum dictNumFail">
-            ❌ ${w.fails}
+            ${STATUS_BAD_ICON_SVG} ${w.fails}
           </div>
           <div>
             <div class="w">${escapeHtml(w.word)}</div>

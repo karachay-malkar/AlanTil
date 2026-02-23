@@ -33,6 +33,7 @@ body{
   font-family: var(--font-base);
   background: var(--bg);
   color: var(--color-main);
+  overflow: hidden;
 }
 
 .hidden{ display:none !important; }
@@ -115,9 +116,15 @@ body{
   padding: 6px;
   max-width: 720px;
   margin: 0 auto;
+  height: calc(100vh - 56px);
   min-height: calc(100vh - 56px);
+  overflow: hidden;
 }
 .view{ padding-top: 6px; }
+
+.analyticsView{
+  height: 100%;
+}
 
 .panel{
   margin-top: 0px;
@@ -125,6 +132,18 @@ body{
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 12px;
+}
+
+.analyticsPanel,
+#testPanel{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.analyticsHeader,
+#testHeader{
+  flex: 0 0 auto;
 }
 
 .panelTitle{
@@ -248,7 +267,6 @@ input{
 .list{
   margin-top: 12px;
   border-top: 1px solid var(--border);
-  max-height: 52vh;
   overflow:auto;
 }
 .item{
@@ -432,44 +450,65 @@ input{
 .resultList{
   display:flex;
   flex-direction:column;
-  gap: 10px;
   margin-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .resultItem{
   display:grid;
-  grid-template-columns: 34px 1fr 44px;
+  grid-template-columns: 30px 1fr 44px;
   gap: 10px;
   align-items:center;
-  padding: 12px 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(15,23,42,0.10);
-  background: var(--card-bg);
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
 }
 
 .resultMark{
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
+  width: 24px;
+  height: 24px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight: var(--fw-bold);
-  border: 1px solid rgba(15,23,42,0.10);
+  color: var(--color-main);
 }
 
 .resultMark.ok{
-  border-color: rgb(255 255 255 / 45%);
-  background: rgb(255 255 255 / 12%);
-  color: rgb(0 221 31);
-  font-size: var(--fs-22px);
+  color: #22c55e;
  }
 
 .resultMark.bad{
-  border-color: rgb(255 255 255 / 45%);
-  background: rgb(255 255 255 / 10%);
-  color: rgb(218 18 18);
-  font-size: var(--fs-22px);
+  color: #ef4444;
+}
+
+.resultMark svg{
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: currentColor;
+}
+
+#viewMatchResult .list,
+#testOptions.resultScroll,
+#testOptions .resultList{
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#viewMatchResult .list,
+#testOptions .resultList{
+  overflow-y: auto;
+}
+
+#testOptions.resultScroll{
+  display: flex;
+  flex-direction: column;
+}
+
+.dictNumFail svg{
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom;
+  fill: currentColor;
 }
 
 

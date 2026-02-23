@@ -170,9 +170,11 @@
     </section>
 
     <!-- РЕЗУЛЬТАТ ИГРЫ -->
-    <section id="viewMatchResult" class="view hidden">
-      <div class="panel">
-        <div class="panelTitle">Результат игры</div>
+    <section id="viewMatchResult" class="view hidden analyticsView">
+      <div class="panel analyticsPanel">
+        <div class="analyticsHeader">
+          <div class="panelTitle">Результат игры</div>
+        </div>
         <div id="matchResultList" class="list"></div>
       </div>
     </section>
@@ -180,9 +182,11 @@
 
     <!-- ТЕСТ -->
     <section id="viewTest" class="view hidden">
-      <div class="panel">
-        <div class="panelTitle" id="testTitle">Тест</div>
-        <div class="hintText" id="testProgress">—</div>
+      <div class="panel" id="testPanel">
+        <div class="analyticsHeader" id="testHeader">
+          <div class="panelTitle" id="testTitle">Тест</div>
+          <div class="hintText" id="testProgress">—</div>
+        </div>
 
         <div class="testQuestion" id="testQuestion">—</div>
         <div id="testOptions" class="stack" style="margin-top:12px;"></div>
