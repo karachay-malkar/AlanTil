@@ -711,20 +711,10 @@ button[data-legacy-back="1"]{display:none !important;}
 }
 
 
-/* --- Sections header alignment --- */
-.sectionsHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
 
-
-#btnOpenDictContent{
+#viewSections .panelHeader #btnOpenDictContent{
   margin-left:auto;
-  margin-right:-6px;
-  margin-top:-14px;
 }
-
 
 /* --- Main screen label: Learn words --- */
 .learnLabel{

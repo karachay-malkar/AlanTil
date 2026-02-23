@@ -58,15 +58,17 @@
     <!-- УРОВЕНЬ 2: РАЗДЕЛЫ -->
     <section id="viewSections" class="view hidden screen">
       <div class="panel" data-unified-panel="1">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div class="panelHeader">
           <div class="panelTitle" id="sectionsTitle">Разделы</div>
           <button id="btnOpenDictContent" class="iconBtn" aria-label="Содержание словаря" title="Содержание словаря">
             <img src="words_search.svg" alt="">
           </button>
         </div>
-<div id="sectionsList" class="stack"></div>
-        <div class="row">
-          <button id="btnBackToDicts" class="btn ghost" data-legacy-back="1">← Словари</button>
+        <div class="panelBody">
+          <div id="sectionsList" class="stack"></div>
+          <div class="row">
+            <button id="btnBackToDicts" class="btn ghost" data-legacy-back="1">← Словари</button>
+          </div>
         </div>
       </div>
     </section>
