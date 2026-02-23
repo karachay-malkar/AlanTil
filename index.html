@@ -27,8 +27,8 @@
 
   <main class="wrap">
     <!-- УРОВЕНЬ 1: СЛОВАРИ -->
-    <section id="viewDicts" class="view">
-      <div class="panel">
+    <section id="viewDicts" class="view screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">Главное меню</div>
 
         <div class="row">
@@ -47,8 +47,8 @@
 
     
     <!-- НОВЫЙ ЭКРАН: УЧИТЬ СЛОВА -->
-    <section id="viewLearnMenu" class="view hidden">
-      <div class="panel">
+    <section id="viewLearnMenu" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">Учить слова</div>
         <div id="dictsList" class="stack"></div>
         <div class="smallNote"></div>
@@ -56,8 +56,8 @@
     </section>
 
     <!-- УРОВЕНЬ 2: РАЗДЕЛЫ -->
-    <section id="viewSections" class="view hidden">
-      <div class="panel">
+    <section id="viewSections" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
           <div class="panelTitle" id="sectionsTitle">Разделы</div>
           <button id="btnOpenDictContent" class="iconBtn" aria-label="Содержание словаря" title="Содержание словаря">
@@ -72,8 +72,8 @@
     </section>
 
     <!-- СОДЕРЖАНИЕ СЛОВАРЯ (СПРАВОЧНИК) -->
-    <section id="viewDictContent" class="view hidden">
-      <div class="panel">
+    <section id="viewDictContent" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">Содержание словаря</div>
 
         <input id="dictSearchInput" placeholder="Поиск по слову или переводу" />
@@ -83,8 +83,8 @@
     </section>
 
 <!-- МЕНЮ СЕТА -->
-    <section id="viewSetMenu" class="view hidden">
-      <div class="panel">
+    <section id="viewSetMenu" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle" id="setMenuTitle">Сет</div>
         <div class="hintText" id="setMenuInfo">—</div>
 
@@ -103,8 +103,8 @@
     </section>
 
     <!-- МЕНЮ ГЛОБАЛЬНОГО ТЕСТА -->
-    <section id="viewGlobalTestMenu" class="view hidden">
-      <div class="panel">
+    <section id="viewGlobalTestMenu" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">Проверь свои знания!</div>
         <div class="hintText" id="globalTestInfo">—</div>
 
@@ -132,8 +132,8 @@
 
 
     <!-- МЕНЮ ИГРЫ: СОПОСТАВЬ СЛОВА -->
-    <section id="viewMatchMenu" class="view hidden">
-      <div class="panel">
+    <section id="viewMatchMenu" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">🔗 Сопоставь слова</div>
         <div class="hintText" id="matchInfo">—</div>
 
@@ -158,8 +158,8 @@
     </section>
 
     <!-- ИГРА: СОПОСТАВЬ СЛОВА -->
-    <section id="viewMatchGame" class="view hidden">
-      <div class="panel">
+    <section id="viewMatchGame" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">🔗 Сопоставь слова</div>
         <div class="hintText" id="matchProgress">—</div>
         <div class="matchColumns">
@@ -170,8 +170,8 @@
     </section>
 
     <!-- РЕЗУЛЬТАТ ИГРЫ -->
-    <section id="viewMatchResult" class="view hidden analyticsView">
-      <div class="panel analyticsPanel">
+    <section id="viewMatchResult" class="view hidden screen">
+      <div class="panel analyticsPanel" data-unified-panel="1">
         <div class="analyticsHeader">
           <div class="panelTitle">Результат игры</div>
         </div>
@@ -181,8 +181,8 @@
 
 
     <!-- ТЕСТ -->
-    <section id="viewTest" class="view hidden analyticsView">
-      <div class="panel" id="testPanel">
+    <section id="viewTest" class="view hidden screen">
+      <div class="panel" id="testPanel" data-unified-panel="1">
         <div class="analyticsHeader" id="testHeader">
           <div class="panelTitle" id="testTitle">Тест</div>
           <div class="hintText" id="testProgress">—</div>
@@ -245,8 +245,8 @@
     </section>
   
     <!-- АНАЛИТИКА СЕССИИ -->
-    <section id="viewSessionAnalytics" class="view hidden">
-      <div class="panel">
+    <section id="viewSessionAnalytics" class="view hidden screen">
+      <div class="panel" data-unified-panel="1">
         <div class="panelTitle">Аналитика сессии</div>
         <div id="analyticsList" class="list"></div>
       </div>

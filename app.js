@@ -267,6 +267,33 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   // ---------- Helpers
 
   // ---------- RU title renderer (v8.6, stage 2)
+
+  function initUnifiedPanels() {
+    const panels = Array.from(document.querySelectorAll('.panel[data-unified-panel="1"]'));
+    panels.forEach((panel) => {
+      if (panel.querySelector(':scope > .panel-header') && panel.querySelector(':scope > .panel-body')) return;
+
+      const title = panel.querySelector('.panelTitle');
+      if (!title) return;
+
+      const header = document.createElement('div');
+      header.className = 'panel-header';
+      const body = document.createElement('div');
+      body.className = 'panel-body';
+
+      header.appendChild(title);
+      panel.insertBefore(header, panel.firstChild);
+
+      const rest = Array.from(panel.childNodes).filter((n) => n !== header && n !== body);
+      rest.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) return;
+        body.appendChild(node);
+      });
+
+      panel.appendChild(body);
+    });
+  }
+
   function renderRuTitle(el, text){
     const groups = splitGroups(text);
     if (!groups.length){
@@ -1949,6 +1976,8 @@ function updateGlobalTestInfo() {
   }
 
   // ---------- Init
+  initUnifiedPanels();
+
   (async () => {
     DATA = await loadWords();
 

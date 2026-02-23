@@ -118,14 +118,42 @@ body{
   margin: 0 auto;
   height: calc(100vh - 56px);
   min-height: calc(100vh - 56px);
+  overflow: hidden;
+}
+.view{ padding-top: 6px; }
+.screen{
+  height: 100%;
+}
+
+.panel[data-unified-panel="1"]{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.panel-header{
+  min-height: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header .panelTitle{
+  margin: 0;
+}
+
+.panel-body{
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-}
-.view{ padding-top: 6px; }
-
-.analyticsView{
-  height: 100%;
+  padding: 12px;
 }
 
 .panel{
@@ -134,18 +162,6 @@ body{
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 12px;
-}
-
-.analyticsPanel,
-#testPanel{
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.analyticsHeader,
-#testHeader{
-  flex: 0 0 auto;
 }
 
 .panelTitle{
@@ -489,22 +505,6 @@ input{
   fill: currentColor;
 }
 
-#viewMatchResult .list,
-#testOptions.resultScroll,
-#testOptions .resultList{
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-#viewMatchResult .list,
-#testOptions .resultList{
-  overflow-y: auto;
-}
-
-#testOptions.resultScroll{
-  display: flex;
-  flex-direction: column;
-}
 
 .dictNumFail svg{
   width: 16px;
@@ -1028,3 +1028,16 @@ button[data-legacy-back="1"]{display:none !important;}
 .noteCenter{ text-align: center; }
 .noteTitle{ margin-bottom: 6px; }
 .dictNumFail{ color: #ef4444; font-weight: var(--fw-semibold); }
+
+#testOptions.resultScroll{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#testOptions.resultScroll .resultList{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
