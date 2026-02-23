@@ -1829,7 +1829,7 @@ function updateGlobalTestInfo() {
       <div class="resultItem" data-id="${r.id}">
         <div class="resultMark ${r.isCorrect ? "ok" : "bad"}">${r.isCorrect ? "✓" : "✕"}</div>
         <div class="resultBody">
-          <div class="resultWord">${escapeHtml(r.word)}</div>
+          <div class="resultWord">${escapeHtml(r.questionText || r.word)}</div>
           <div class="resultLine"><span class="lbl">Правильно:</span> ${escapeHtml(r.correctAnswer)}</div>
           <div class="resultLine"><span class="lbl">Твой ответ:</span> ${escapeHtml(r.userAnswer || "—")}</div>
         </div>
@@ -1868,6 +1868,7 @@ function updateGlobalTestInfo() {
     if (!testSelected) return;
 
     const item = testItems[testIndex];
+    const questionText = testMode === "kb" ? item.word : item.trans;
     const correctAnswer = testMode === "kb" ? item.trans : item.word;
     const isCorrect = testSelected === correctAnswer;
 
@@ -1875,6 +1876,7 @@ function updateGlobalTestInfo() {
 
     testResults.push({
       id: item.id,
+      questionText,
       word: item.word,
       trans: item.trans,
       correctAnswer,
