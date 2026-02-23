@@ -133,6 +133,16 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return favIds.has(nid);
   }
 
+  const STAR_ICON_SVG = `
+    <svg class="starSvg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 17.27 18.18 21 16.54 13.97 22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"></path>
+    </svg>
+  `;
+  function renderStarButton(id, attrs = "") {
+    const on = isFav(id);
+    return `<button class="starBtn ${on ? "on" : ""}" type="button" aria-label="Избранное" ${attrs}>${STAR_ICON_SVG}</button>`;
+  }
+
   // ---------- Cache
   const CACHE_KEY = window.WORDS_CACHE_KEY || "fc_words_cache_v18";
   function loadCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
@@ -295,19 +305,13 @@ viewSetMenu,
     if (!counter || !modeEl) return;
 
     const onStudy = (currentView === viewStudy);
-    const onTest = (currentView === viewTest);
 
     // Counter only in study
     counter.style.display = onStudy ? "" : "none";
 
-    // Mode: only in test (label "Тест"), never in study
-    if (onTest){
-      modeEl.style.display = "";
-      modeEl.textContent = "Тест";
-    } else {
-      modeEl.style.display = "none";
-      modeEl.textContent = "";
-    }
+    // Mode title hidden in header for test flow
+    modeEl.style.display = "none";
+    modeEl.textContent = "";
   }
 
   function updateBackArrow(){
@@ -698,16 +702,13 @@ viewSetMenu,
             <div class="w">${escapeHtml(w.word)}</div>
             <div class="t">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
+          ${renderStarButton(w.id)}
         `;
         const star = row.querySelector(".starBtn");
         star.addEventListener("click", (e)=>{
           e.stopPropagation();
           const on = toggleFav(w.id);
           star.classList.toggle("on", on);
-          star.textContent = on ? "★" : "☆";
         });
         body.appendChild(row);
       }
@@ -884,7 +885,7 @@ if(svg){
             <div class="w">${escapeHtml(w.word)}</div>
             <div class="t">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button" aria-label="Избранное">${isFav(w.id) ? "★" : "☆"}</button>
+          ${renderStarButton(w.id)}
         </div>
       `;
     }).join("");
@@ -897,7 +898,6 @@ if(svg){
         e.stopPropagation();
         const on = toggleFav(id);
         star.classList.toggle("on", on);
-        star.textContent = on ? "★" : "☆";
 
         // В Избранном: если убрали звёздочку — слово должно сразу исчезнуть из списка
         if (currentDict === "__fav__" && !on) {
@@ -1698,9 +1698,7 @@ function updateGlobalTestInfo() {
             <div class="w">${escapeHtml(w.word)}</div>
             <div class="t">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
+          ${renderStarButton(w.id)}
         </div>
       `).join("");
 
@@ -1709,7 +1707,6 @@ function updateGlobalTestInfo() {
         btn.addEventListener("click", () => {
           const on = toggleFav(word.id);
           btn.classList.toggle("on", on);
-          btn.textContent = on ? "★" : "☆";
         });
       });
     }
@@ -1775,6 +1772,7 @@ function updateGlobalTestInfo() {
       testTitle.textContent = "Тест";
       testProgress.textContent = "Нет слов для теста.";
       testQuestion.textContent = "Пусто 🤷‍♂️";
+      testQuestion.style.display = "";
       testOptions.innerHTML = "";
       btnTestNext.classList.add("hidden");
       return;
@@ -1797,6 +1795,7 @@ function updateGlobalTestInfo() {
     testTitle.textContent = "Тест: выбрать перевод";
     testProgress.textContent = `Вопрос ${testIndex + 1} из ${testItems.length}`;
     testQuestion.textContent = question;
+    testQuestion.style.display = "";
 
     const options = pickOptions(item);
     testOptions.innerHTML = options.map(opt => `
@@ -1824,6 +1823,7 @@ function updateGlobalTestInfo() {
     testTitle.textContent = "Результаты теста";
     testProgress.textContent = `Правильно: ${testCorrect}/${testItems.length} (${pct}%)`;
     testQuestion.textContent = "";
+    testQuestion.style.display = "none";
 
     const rows = testResults.map(r => `
       <div class="resultItem" data-id="${r.id}">
@@ -1833,7 +1833,7 @@ function updateGlobalTestInfo() {
           <div class="resultLine"><span class="lbl">Правильно:</span> ${escapeHtml(r.correctAnswer)}</div>
           <div class="resultLine"><span class="lbl">Твой ответ:</span> ${escapeHtml(r.userAnswer || "—")}</div>
         </div>
-        <button class="starBtn ${isFav(r.id) ? "on" : ""}" type="button" aria-label="Избранное">${isFav(r.id) ? "★" : "☆"}</button>
+        ${renderStarButton(r.id)}
       </div>
     `).join("");
 
@@ -1853,7 +1853,6 @@ function updateGlobalTestInfo() {
       star.addEventListener("click", () => {
         const on = toggleFav(id);
         star.classList.toggle("on", on);
-        star.textContent = on ? "★" : "☆";
       });
     });
 
@@ -1920,9 +1919,7 @@ function updateGlobalTestInfo() {
             <div class="w">${escapeHtml(w.word)}</div>
             <div class="t">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
+          ${renderStarButton(w.id)}
         </div>
       `).join("");
 
@@ -1931,7 +1928,6 @@ function updateGlobalTestInfo() {
         btn.addEventListener("click", () => {
           const on = toggleFav(word.id);
           btn.classList.toggle("on", on);
-          btn.textContent = on ? "★" : "☆";
         });
       });
     }
