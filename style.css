@@ -162,11 +162,11 @@ body{
 }
 
 .panel-header{
-  min-height: 30px;
+  min-height: 24px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 6px 12px;
   border-bottom: 0px solid var(--border);
 }
 
@@ -180,7 +180,7 @@ body{
   align-items:center;
   gap:12px;
   padding:0 16px;
-  height:30px;
+  height:24px;
   flex-shrink:0;
 }
 
