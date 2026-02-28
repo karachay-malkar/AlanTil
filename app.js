@@ -271,8 +271,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   function initUnifiedPanels() {
     const panels = Array.from(document.querySelectorAll('.panel[data-unified-panel="1"]'));
     panels.forEach((panel) => {
-      if ((panel.querySelector(':scope > .panel-header') && panel.querySelector(':scope > .panel-body'))
-        || (panel.querySelector(':scope > .panelHeader') && panel.querySelector(':scope > .panelBody'))) return;
+      if (panel.querySelector(':scope > .panel-header') && panel.querySelector(':scope > .panel-body')) return;
 
       const title = panel.querySelector('.panelTitle');
       if (!title) return;

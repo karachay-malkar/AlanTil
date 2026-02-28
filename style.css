@@ -166,27 +166,14 @@ body{
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  gap: 12px;
   padding: 12px;
-  border-bottom: 0px solid var(--border);
+  border-bottom: 0 solid var(--border);
 }
 
 .panel-header .panelTitle{
   margin: 0;
-}
-
-
-.panelHeader{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 16px;
-  height:30px;
-  flex-shrink:0;
-}
-
-.panelHeader .panelTitle{
-  margin:0;
-  flex-shrink:0;
+  flex-shrink: 0;
 }
 
 .searchInput{
@@ -196,18 +183,6 @@ body{
   border-radius:8px;
   border:1px solid #ddd;
   font-size:14px;
-}
-
-
-.panelBody{
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  padding:12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
-  margin-top:12px;
-  margin-bottom:0;
 }
 
 .panel-body{
@@ -739,7 +714,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
 
 
-#viewSections .panelHeader #btnOpenDictContent{
+#viewSections .panel-header #btnOpenDictContent{
   margin-left:auto;
 }
 
