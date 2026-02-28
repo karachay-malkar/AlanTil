@@ -281,7 +281,6 @@ input{
   background: var(--card-bg);
   border-radius: var(--r);
   border: 1px solid var(--border);
-  padding: 18px 8px;
   user-select:none;
   touch-action: pan-y;
   transition: transform .18s ease, opacity .18s ease;
@@ -294,37 +293,28 @@ input{
 }
 
 .word{
-  margin-top: 8px;
+  margin-top: 50px;
   text-align:center;
   font-weight: var(--fw-semibold);
   font-size: var(--fs-22px);
 }
+
+.hint{
+  margin-top: auto;
+  padding-top: 12px;
+  text-align:center;
+}
+
 .trans{
   margin-top: 12px;
   text-align:center;
 }
 
-.example{
-  margin-top: 12px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-size: var(--fs-16px);
-  line-height: 1.35;
-}
-
-.hint{
-  margin-top: auto;
-  padding-top: 14px;
-  text-align:center;
-}
-
 .groupPill .gTrans{
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   font-size: var(--fs-20px)
 }
 
-/* Examples (secondary text) */
 .groupPill .gEx{
   font-size: var(--fs-16px);
   font-weight: var(--fw-regular);
