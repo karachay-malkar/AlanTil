@@ -319,6 +319,22 @@ input{
   text-align:center;
 }
 
+.groupPill .gTrans{
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-20px)
+}
+
+/* Examples (secondary text) */
+.groupPill .gEx{
+  font-size: var(--fs-16px);
+  font-weight: var(--fw-regular);
+  color: var(--color-muted);
+  line-height: 1.3;
+  margin-top: 12px;
+}
+
+.card{ will-change: transform, opacity; }
+
 .buttons,.footer{ display:flex; gap:10px; margin-top: 12px; }
 
 /* ---------- LIST ---------- */
@@ -667,7 +683,6 @@ button[data-legacy-back="1"]{display:none !important;}
   appearance:none;
   border:0;
   background:transparent;
-  padding:6px;
   border-radius:12px;
   width:40px;
   display:flex;
@@ -761,28 +776,6 @@ button[data-legacy-back="1"]{display:none !important;}
   margin-top: 22px;
 }
 
-
-/* === v8.6 Stage 3: study translations & examples like word lists === */
-
-/* Translation (main text inside group pill) */
-.groupPill .gTrans{
-  margin-bottom: -4px;
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-20px)
-}
-
-/* Examples (secondary text) */
-.groupPill .gEx{
-  font-size: var(--fs-16px);
-  font-weight: var(--fw-regular);
-  color: var(--color-muted);
-  line-height: 1.3;
-  margin-top: 12px;
-}
-
-
-/* --- Swipe performance (v8.9) --- */
-.card{ will-change: transform, opacity; }
 
 /* === v9.3 FINAL FIX: correct icon sizing & alignment === */
 .subActions .btn{
