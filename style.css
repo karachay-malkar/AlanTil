@@ -731,12 +731,12 @@ button[data-legacy-back="1"]{display:none !important;}
 
 #dictContentList .dictWordRow .w{
   font-weight: var(--fw-semibold);
-  font-size: var(--fs-20px);
+  font-size: var(--fs-16px);
 }
 
 #dictContentList .dictWordRow .t{
   margin-top: 2px;
-  font-size: var(--fs-20px);
+  font-size: var(--fs-16px);
   color: var(--color-muted);
 }
 
