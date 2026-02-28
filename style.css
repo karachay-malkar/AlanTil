@@ -692,32 +692,6 @@ button[data-legacy-back="1"]{display:none !important;}
 }
 .iconBtn:active{ opacity:.8; }
 
-/* Dictionary content */
-.sectionHeader{
-  margin-top:14px;
-  padding-top:10px;
-  border-top:1px solid var(--border);
-  font-weight: var(--fw-semibold);
-  color: var(--color-muted);
-  cursor:pointer;
-  user-select:none;
-}
-
-.dictWordRow{
-  display:grid;
-  grid-template-columns: 36px 1fr 44px;
-  gap:10px;
-  padding:10px 4px;
-  border-bottom:1px solid var(--border);
-  align-items:center;
-}
-
-.dictNum{
-  text-align:right;
-}
-
-
-
 #viewSections .panel-header #btnOpenDictContent{
   margin-left:auto;
 }
@@ -733,9 +707,17 @@ button[data-legacy-back="1"]{display:none !important;}
 .meta span{ min-width: 1ch; }
 
 
-/* === v8.4: Dictionary content list = set/favorites list === */
+/*** DICTIONARY ***/
 #dictContentList{
-  border-top: 1px solid var(--border);
+  border-top: 0px solid var(--border);
+}
+
+#dictContentList .sectionHeader{
+  padding-top:10px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-muted);
+  cursor:pointer;
+  user-select:none;
 }
 
 #dictContentList .dictWordRow{
@@ -749,12 +731,12 @@ button[data-legacy-back="1"]{display:none !important;}
 
 #dictContentList .dictWordRow .w{
   font-weight: var(--fw-semibold);
-  font-size: var(--fs-16px);
+  font-size: var(--fs-20px);
 }
 
 #dictContentList .dictWordRow .t{
   margin-top: 2px;
-  font-size: var(--fs-22px);
+  font-size: var(--fs-20px);
   color: var(--color-muted);
 }
 
