@@ -1283,8 +1283,8 @@ setRoundIfNeeded();
   let testOptionPool = [];
   function getSelectedTestLimit() {
     const el = document.querySelector('input[name="testLimit"]:checked');
-    const n = el ? Number(el.value) : 50;
-    return (n === 30 || n === 50 || n === 100) ? n : 50;
+    const n = el ? Number(el.value) : 40;
+    return (n === 20 || n === 40 || n === 80) ? n : 40;
   }
 
   function scopeKey(dict, section) {
@@ -1404,9 +1404,11 @@ function updateGlobalTestInfo() {
 
   // ---------- Match words (v9.9) — same source scope as test, but matching pairs
   let matchItems = [];
-  let matchRemaining = [];
-  let matchTotal = 0;
+  let matchRounds = [];
   let matchRoundIndex = 0;
+  let matchSolvedCount = 0;
+  let matchTotal = 0;
+  let matchPosGroups = {};
   let matchFailMap = {};
   let matchSolved = new Set();
   let matchLocked = false;
@@ -1415,8 +1417,8 @@ function updateGlobalTestInfo() {
 
   function getSelectedMatchLimit() {
     const el = document.querySelector('input[name="matchLimit"]:checked');
-    const n = el ? Number(el.value) : 50;
-    return (n === 30 || n === 50 || n === 100) ? n : 50;
+    const n = el ? Number(el.value) : 40;
+    return (n === 20 || n === 40 || n === 80) ? n : 40;
   }
 
   function renderMatchScopeList() {
@@ -1522,64 +1524,86 @@ function updateGlobalTestInfo() {
 
   function startMatchGame(){
     const pool = getSelectedMatchScopePool();
-
-    if (!pool.length){
-      alert("Выберите хотя бы один словарь или раздел");
-      return;
-    }
     const limit = getSelectedMatchLimit();
+    const roundsCount = limit / 5;
 
-    matchItems = shuffle(pool.slice());
-    if (matchItems.length > limit) matchItems = matchItems.slice(0, limit);
+    matchItems = pool.slice();
 
-    matchRemaining = matchItems.slice();
-    matchTotal = matchItems.length;
+    const posGroups = {};
+
+    for (const w of pool) {
+      const pos = (w.pos || "").trim() || "unknown";
+      if (!posGroups[pos]) posGroups[pos] = [];
+      posGroups[pos].push(w);
+    }
+
+    const allPOS = Object.keys(posGroups);
+    const roundPOSList = [];
+
+    for (let i = 0; i < roundsCount; i++) {
+      roundPOSList.push(randomFrom(allPOS));
+    }
+
+    const posRequiredCount = {};
+
+    for (const pos of roundPOSList) {
+      if (!posRequiredCount[pos]) posRequiredCount[pos] = 0;
+      posRequiredCount[pos] += 5;
+    }
+
+    const selectedByPOS = {};
+
+    for (const pos in posRequiredCount) {
+      const needed = posRequiredCount[pos];
+      const shuffled = shuffle(posGroups[pos].slice());
+      selectedByPOS[pos] = shuffled.slice(0, needed);
+    }
+
+    matchRounds = [];
     matchRoundIndex = 0;
+
+    const posOffsets = {};
+
+    for (const pos of roundPOSList) {
+      if (!posOffsets[pos]) posOffsets[pos] = 0;
+
+      const start = posOffsets[pos];
+      const end = start + 5;
+
+      const roundWords = selectedByPOS[pos].slice(start, end);
+
+      posOffsets[pos] += 5;
+
+      matchRounds.push(roundWords);
+    }
+
+    matchSolvedCount = 0;
+    matchTotal = roundsCount * 5;
+    matchPosGroups = posGroups;
     matchFailMap = {};
     matchSolved = new Set();
     matchLocked = false;
     matchSelectedIdx = null;
     matchSelectedRef = null;
 
+    if (matchProgress) {
+      matchProgress.textContent = `Пройдено: ${matchSolvedCount}/${matchTotal} слов`;
+    }
+
     goView(viewMatchGame, { push:false });
     nextMatchRound();
-  }
-
-  function setMatchProgressText(extra=""){
-    if (!matchProgress) return;
-    const done = matchTotal - matchRemaining.length;
-    const base = `Пройдено: ${done}/${matchTotal} слов`;
-    matchProgress.textContent = extra ? `${base} • ${extra}` : base;
   }
 
   function nextMatchRound(){
     if (!matchColLeft || !matchColRight) return;
 
-    if (matchRemaining.length === 0){
+    if (matchRoundIndex >= matchRounds.length){
       openMatchResult();
       return;
     }
 
-    // Pick random POS for this round from remaining
-    const availablePOS = uniq(matchRemaining.map(w => (w.pos || "").trim() || "unknown"));
-    const roundPOS = randomFrom(availablePOS);
-
-    let candidates = matchRemaining.filter(w => ((w.pos || "").trim() || "unknown") === roundPOS);
-    candidates = shuffle(candidates.slice());
-
-    const roundWords = candidates.slice(0, 5);
-
-    // Remove selected from remaining
-    const roundIds = new Set(roundWords.map(w => w.id));
-    matchRemaining = matchRemaining.filter(w => !roundIds.has(w.id));
-
+    const roundWords = matchRounds[matchRoundIndex];
     matchRoundIndex++;
-
-    // Pair counter per round (starts at 0, grows only on correct match)
-    const roundPairsTotal = roundWords.length;
-    let roundPairsMatched = 0;
-
-    if (matchProgress) matchProgress.textContent = `0 из ${roundPairsTotal} пар`;
 
     // Build columns: left = words, right = translations
     const leftCards = shuffle(roundWords.map(w => ({ kind:"w", id:w.id, text:w.word })));
@@ -1623,11 +1647,6 @@ function updateGlobalTestInfo() {
 
     function allMatched(){
       return btns.length > 0 && btns.every(b => b.classList.contains("matched"));
-    }
-
-    function updatePairCounter(){
-      if (!matchProgress) return;
-      matchProgress.textContent = `${roundPairsMatched} из ${roundPairsTotal} пар`;
     }
 
     btns.forEach(btn => {
@@ -1677,8 +1696,10 @@ function updateGlobalTestInfo() {
           btn.classList.add("matched");
           markSolved(first.id);
 
-          roundPairsMatched++;
-          updatePairCounter();
+          matchSolvedCount++;
+          if (matchProgress) {
+            matchProgress.textContent = `Пройдено: ${matchSolvedCount}/${matchTotal} слов`;
+          }
 
           matchSelectedIdx = null;
           matchSelectedRef = null;
