@@ -1040,3 +1040,57 @@ button[data-legacy-back="1"]{display:none !important;}
   min-height: 0;
   overflow-y: auto;
 }
+
+body.modal-open{
+  overflow: hidden;
+}
+
+.exitModal{
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.exitModalBackdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.exitModalCard{
+  position: relative;
+  width: min(100%, 420px);
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 20px 16px 16px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
+}
+
+.exitModalText{
+  text-align: center;
+  color: #0f172a;
+  font-weight: var(--fw-semibold);
+  line-height: 1.45;
+}
+
+.exitModalActions{
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.exitModalActions .exitStay{
+  flex: 1;
+  background: #d1d5db;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.exitModalActions .exitConfirm{
+  flex: 1.5;
+}
