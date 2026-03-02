@@ -78,6 +78,9 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const testOptions = document.getElementById("testOptions");
   const btnTestExit = document.getElementById("btnTestExit");
   const btnTestNext = document.getElementById("btnTestNext");
+  const exitSessionModal = document.getElementById("exitSessionModal");
+  const btnExitStay = document.getElementById("btnExitStay");
+  const btnExitConfirm = document.getElementById("btnExitConfirm");
 
   // ---------- Storage: hidden words (affects ONLY STUDY sessions)
   const HIDDEN_KEY = "fc_hidden_by_set_v7";
@@ -335,6 +338,11 @@ viewSetMenu,
   let currentView = viewDicts;
   const navStack = [];
 
+  const studySession = { inProgress: false, completed: false, wordsPool: [], progressData: {} };
+  const testSession = { inProgress: false, completed: false, wordsPool: [], progressData: {} };
+  const matchSession = { inProgress: false, completed: false, wordsPool: [], progressData: {} };
+  let exitIntentTargetView = null;
+
   function isHomeView(v){ return v === viewDicts; }
   function isTestFlowView(v){ return v === viewGlobalTestMenu || v === viewTest; }
 
@@ -357,9 +365,88 @@ viewSetMenu,
     btnBackArrow.classList.toggle("hidden", !shouldShow);
   }
 
+  function getSessionByView(view){
+    if (view === viewStudy || view === viewSessionAnalytics) return studySession;
+    if (view === viewTest) return testSession;
+    if (view === viewMatchGame || view === viewMatchResult) return matchSession;
+    return null;
+  }
+
+  function isResultsScreen(view){
+    return view === viewSessionAnalytics || view === viewMatchResult || (view === viewTest && testSession.completed);
+  }
+
+  function isActiveSession(){
+    const currentSession = getSessionByView(currentView);
+    return !!(currentSession?.inProgress && !currentSession?.completed);
+  }
+
+  function clearSessionState(session){
+    if (!session) return;
+    session.wordsPool = [];
+    session.progressData = {};
+    session.inProgress = false;
+    session.completed = false;
+
+    if (session === studySession){
+      mainQueue = [];
+      repeatQueue = [];
+      round = "main";
+      totalPlanned = 0;
+      currentStudyId = 0;
+      swipeHistory = [];
+      sessionFailMap = {};
+    } else if (session === testSession){
+      testItems = [];
+      testIndex = 0;
+      testCorrect = 0;
+      testSelected = null;
+      testResults = [];
+      testOptionPool = [];
+    } else if (session === matchSession){
+      matchItems = [];
+      matchRounds = [];
+      matchRoundIndex = 0;
+      matchSolvedCount = 0;
+      matchTotal = 0;
+      matchPosGroups = {};
+      matchFailMap = {};
+      matchSolved = new Set();
+      matchLocked = false;
+      matchSelectedIdx = null;
+      matchSelectedRef = null;
+    }
+  }
+
+  function showExitModal(){
+    if (!exitSessionModal) return;
+    exitSessionModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
+
+  function hideExitModal(){
+    if (!exitSessionModal) return;
+    exitSessionModal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
+
+  function confirmExit(){
+    clearSessionState(getSessionByView(currentView));
+    hideExitModal();
+    if (exitIntentTargetView) goView(exitIntentTargetView, { force: true });
+    exitIntentTargetView = null;
+  }
+
   function goView(nextView, opts = {}){
     hideDictContent();
-    const { push = true, resetStack = false } = opts;
+    const { push = true, resetStack = false, force = false } = opts;
+
+    if (!force && nextView && nextView !== currentView && isActiveSession() && !isResultsScreen(currentView)) {
+      exitIntentTargetView = nextView;
+      showExitModal();
+      return;
+    }
+
     if (resetStack) navStack.length = 0;
     if (push && currentView && currentView !== nextView) navStack.push(currentView);
     showView(nextView);
@@ -376,13 +463,20 @@ viewSetMenu,
     }
     const prev = navStack.pop();
     if (!prev) return;
-    showView(prev);
-    currentView = prev;
-    updateBackArrow();
-    updateMeta();
+    goView(prev, { push:false });
   }
 
   if (btnBackArrow) btnBackArrow.addEventListener("click", navigateBack);
+  if (btnExitStay) btnExitStay.addEventListener("click", () => { hideExitModal(); exitIntentTargetView = null; });
+  if (btnExitConfirm) btnExitConfirm.addEventListener("click", confirmExit);
+  if (exitSessionModal) {
+    exitSessionModal.addEventListener("click", (e) => {
+      if (e.target && e.target.matches("[data-exit-cancel='1']")) {
+        hideExitModal();
+        exitIntentTargetView = null;
+      }
+    });
+  }
 
 
 
@@ -1044,6 +1138,10 @@ if(svg){
     totalPlanned = active.length;
     swipeHistory = [];
     sessionFailMap = {};
+    studySession.inProgress = true;
+    studySession.completed = false;
+    studySession.wordsPool = active.slice();
+    studySession.progressData = { totalPlanned: active.length, known: 0, unknown: 0 };
     updateStudyCounter();
 
     goView(viewStudy);
@@ -1143,6 +1241,9 @@ setRoundIfNeeded();
     if (!known) {
       sessionFailMap[item.id] = (sessionFailMap[item.id] || 0) + 1;
       repeatQueue.push(item);
+      studySession.progressData.unknown = (studySession.progressData.unknown || 0) + 1;
+    } else {
+      studySession.progressData.known = (studySession.progressData.known || 0) + 1;
     }
 
     const switchedToRepeat = (round === "main" && mainQueue.length === 0);
@@ -1528,6 +1629,9 @@ function updateGlobalTestInfo() {
     const roundsCount = limit / 5;
 
     matchItems = pool.slice();
+    matchSession.inProgress = true;
+    matchSession.completed = false;
+    matchSession.wordsPool = pool.slice();
 
     const posGroups = {};
 
@@ -1585,6 +1689,7 @@ function updateGlobalTestInfo() {
     matchLocked = false;
     matchSelectedIdx = null;
     matchSelectedRef = null;
+    matchSession.progressData = { solved: 0, total: matchTotal };
 
     if (matchProgress) {
       matchProgress.textContent = `Пройдено: ${matchSolvedCount}/${matchTotal} слов`;
@@ -1697,6 +1802,7 @@ function updateGlobalTestInfo() {
           markSolved(first.id);
 
           matchSolvedCount++;
+          matchSession.progressData.solved = matchSolvedCount;
           if (matchProgress) {
             matchProgress.textContent = `Пройдено: ${matchSolvedCount}/${matchTotal} слов`;
           }
@@ -1769,6 +1875,8 @@ function updateGlobalTestInfo() {
       });
     }
 
+    matchSession.inProgress = false;
+    matchSession.completed = true;
     goView(viewMatchResult, { push:false });
   }
 
@@ -1789,6 +1897,10 @@ function updateGlobalTestInfo() {
     testCorrect = 0;
     testSelected = null;
     testResults = [];
+    testSession.inProgress = true;
+    testSession.completed = false;
+    testSession.wordsPool = pool.slice();
+    testSession.progressData = { index: 0, total: testItems.length, correct: 0 };
 
     btnTestNext.classList.remove("hidden");
     btnTestNext.textContent = "Дальше";
@@ -1897,6 +2009,8 @@ function updateGlobalTestInfo() {
       </div>
     `).join("");
 
+    testSession.inProgress = false;
+    testSession.completed = true;
     testOptions.classList.add("resultScroll");
     testOptions.innerHTML = `
       <div class="resultList">
@@ -1933,6 +2047,7 @@ function updateGlobalTestInfo() {
     const isCorrect = testSelected === correctAnswer;
 
     if (isCorrect) testCorrect++;
+    testSession.progressData.correct = testCorrect;
 
     testResults.push({
       id: item.id,
@@ -1945,6 +2060,7 @@ function updateGlobalTestInfo() {
     });
 
     testIndex++;
+    testSession.progressData.index = testIndex;
     renderTestQuestion();
   });
 
@@ -1993,6 +2109,8 @@ function updateGlobalTestInfo() {
       });
     }
 
+    studySession.inProgress = false;
+    studySession.completed = true;
     goView(viewSessionAnalytics, { push:false });
   }
 

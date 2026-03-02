@@ -264,6 +264,17 @@
 
   </main>
 
+  <div id="exitSessionModal" class="exitModal hidden" role="dialog" aria-modal="true" aria-labelledby="exitSessionTitle">
+    <div class="exitModalBackdrop" data-exit-cancel="1"></div>
+    <div class="exitModalCard">
+      <div class="exitModalText" id="exitSessionTitle">Вы точно хотите выйти?<br>Прогресс сессии будет потерян.</div>
+      <div class="exitModalActions">
+        <button id="btnExitStay" class="btn exitStay" type="button">Остаться</button>
+        <button id="btnExitConfirm" class="btn primary exitConfirm" type="button">Не болса да болсун!</button>
+      </div>
+    </div>
+  </div>
+
   <script src="words.js"></script>
 
   <script src="app.js"></script>
