@@ -433,7 +433,15 @@ viewSetMenu,
   function confirmExit(){
     clearSessionState(getSessionByView(currentView));
     hideExitModal();
-    if (exitIntentTargetView) goView(exitIntentTargetView, { force: true });
+
+    const stackPrev = navStack.length ? navStack[navStack.length - 1] : null;
+    if (stackPrev && stackPrev === exitIntentTargetView) {
+      navStack.pop();
+      goView(stackPrev, { push:false, force:true });
+    } else if (exitIntentTargetView) {
+      goView(exitIntentTargetView, { push:false, force:true });
+    }
+
     exitIntentTargetView = null;
   }
 
