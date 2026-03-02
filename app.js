@@ -469,8 +469,19 @@ viewSetMenu,
       goView(viewMatchMenu, { push:false });
       return;
     }
-    const prev = navStack.pop();
+
+    const prev = navStack.length ? navStack[navStack.length - 1] : null;
     if (!prev) return;
+
+    // Keep stack intact while only showing confirmation modal.
+    // Real stack rollback must happen only when navigation actually proceeds.
+    if (isActiveSession() && !isResultsScreen(currentView)) {
+      exitIntentTargetView = prev;
+      showExitModal();
+      return;
+    }
+
+    navStack.pop();
     goView(prev, { push:false });
   }
 
