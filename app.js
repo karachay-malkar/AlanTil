@@ -1873,13 +1873,13 @@ function updateGlobalTestInfo() {
       `;
     } else {
       matchResultList.innerHTML = problemWords.map(w => `
-        <div class="dictWordRow">
-          <div class="dictNum dictNumFail">
-            ${STATUS_BAD_ICON_SVG} ${w.fails}
+        <div class="resultItem analyticsResultItem" data-id="${w.id}">
+          <div class="resultMark bad analyticsFailMark" aria-label="Ошибок: ${w.fails}">
+            ${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${w.fails}</span>
           </div>
-          <div>
-            <div class="w">${escapeHtml(w.word)}</div>
-            <div class="t">${escapeHtml(w.trans)}</div>
+          <div class="resultBody">
+            <div class="resultWord">${escapeHtml(w.word)}</div>
+            <div class="resultLine analyticsTranslation">${escapeHtml(w.trans)}</div>
           </div>
           ${renderStarButton(w.id)}
         </div>
