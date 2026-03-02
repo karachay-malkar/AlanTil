@@ -2113,7 +2113,7 @@ function updateGlobalTestInfo() {
           </div>
           <div class="resultBody">
             <div class="resultWord">${escapeHtml(w.word)}</div>
-            <div class="resultLine"><span class="lbl">Правильно:</span> ${escapeHtml(w.trans)}</div>
+            <div class="resultLine analyticsTranslation">${escapeHtml(w.trans)}</div>
           </div>
           ${renderStarButton(w.id)}
         </div>

@@ -575,6 +575,11 @@ input{
 }
 
 
+.analyticsTranslation{
+  color: var(--color-muted);
+}
+
+
 .dictNumFail svg{
   width: 16px;
   height: 16px;
