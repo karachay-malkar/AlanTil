@@ -1868,7 +1868,7 @@ function updateGlobalTestInfo() {
       matchResultList.innerHTML = `
         <div class="smallNote noteCenter">
           <div class="noteTitle">Аперим!</div>
-          <div>Все пары собраны с первого раза ${STATUS_OK_ICON_SVG}</div>
+          <div class="successNoteLine">✅ Все пары собраны с первого раза</div>
         </div>
       `;
     } else {
@@ -2102,7 +2102,7 @@ function updateGlobalTestInfo() {
       analyticsList.innerHTML = `
         <div class="smallNote noteCenter">
           <div class="noteTitle">Аперим!</div>
-          <div>Не было незнакомых слов ${STATUS_OK_ICON_SVG}</div>
+          <div class="successNoteLine">✅ Не было незнакомых слов</div>
         </div>
       `;
     } else {

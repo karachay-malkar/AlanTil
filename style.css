@@ -1053,6 +1053,7 @@ button[data-legacy-back="1"]{display:none !important;}
 
 .noteCenter{ text-align: center; }
 .noteTitle{ margin-bottom: 6px; }
+.successNoteLine{ font-size: var(--fs-22px); }
 .dictNumFail{ color: #ef4444; font-weight: var(--fw-semibold); }
 
 #testOptions.resultScroll{
