@@ -84,13 +84,20 @@ const viewSetMenu = document.getElementById("viewSetMenu");
 
   // ---------- Storage: hidden words (affects ONLY STUDY sessions)
   const HIDDEN_KEY = "fc_hidden_by_set_v7";
+  function normalizeId(id) {
+    const v = String(id ?? "").trim();
+    return v;
+  }
+  function toIdSet(arr) {
+    return new Set((Array.isArray(arr) ? arr : []).map(normalizeId).filter(Boolean));
+  }
   function loadHiddenMap() { try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || "{}"); } catch { return {}; } }
   function saveHiddenMap(map) { localStorage.setItem(HIDDEN_KEY, JSON.stringify(map)); }
   function keyOf(d, s, setNo) { return `${d}:${s}:${setNo}`; }
   function getHiddenSet(d, s, setNo) {
     const map = loadHiddenMap();
     const arr = Array.isArray(map[keyOf(d, s, setNo)]) ? map[keyOf(d, s, setNo)] : [];
-    return new Set(arr.map(Number));
+    return toIdSet(arr);
   }
   function setHiddenSet(d, s, setNo, setOfIds) {
     const map = loadHiddenMap();
@@ -121,15 +128,15 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   function loadFavSet() {
     try {
       const arr = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
-      return new Set(Array.isArray(arr) ? arr.map(Number).filter(Boolean) : []);
+      return toIdSet(arr);
     } catch {
       return new Set();
     }
   }
   function saveFavSet(setOfIds) { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(setOfIds))); }
-  function isFav(id) { return favIds.has(Number(id)); }
+  function isFav(id) { return favIds.has(normalizeId(id)); }
   function toggleFav(id) {
-    const nid = Number(id);
+    const nid = normalizeId(id);
     if (!nid) return false;
     if (favIds.has(nid)) favIds.delete(nid); else favIds.add(nid);
     saveFavSet(favIds);
@@ -174,7 +181,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
 
   async function loadWords() {
     const cached = loadCache();
-    if (Array.isArray(cached) && cached.length) return cached;
+    if (Array.isArray(cached) && cached.length) return cached.map(normalizeWordEntry).filter(Boolean);
 
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
@@ -187,7 +194,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       }
     }
 
-    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK.map(normalizeWordEntry).filter(Boolean) : [];
   }
 
   async function loadWordsFromCsv(url) {
@@ -197,8 +204,67 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return parseCsv(text);
   }
 
-  // Expected headers: id, dict, section, set, word, trans, example
+  // Expected headers: id, dict, section, set, word, trans, example, synonyms
   // Backward compatible: folder -> section, dict defaults to "Словарь"
+  function parseSynonyms(raw) {
+    return String(raw || "")
+      .toLowerCase()
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function normalizeWordEntry(row) {
+    if (!row || typeof row !== "object") return null;
+    const id = normalizeId(row.id);
+    const word = String(row.word || "").trim();
+    const trans = String(row.trans || "").trim();
+    const rawSet = String(row.set ?? "").trim();
+    const numSet = Number(rawSet);
+
+    const obj = {
+      id,
+      dict: String(row.dict || "").trim() || "Словарь",
+      section: String(row.section || row.folder || "").trim() || "Раздел",
+      set: isNaN(numSet) ? rawSet : numSet,
+      word,
+      trans,
+      pos: String(row.pos || "").trim(),
+      example: String(row.example || "").trim(),
+      dict_order: Number(row.dict_order || 0),
+      synonyms: parseSynonyms(row.synonyms),
+    };
+
+    if (!obj.id || !obj.set || !obj.word || !obj.trans) return null;
+    return obj;
+  }
+
+  function hasWordConflict(candidate, selected) {
+    const transA = String(candidate?.trans || "").trim();
+    if (!transA) return false;
+    const synA = new Set(Array.isArray(candidate?.synonyms) ? candidate.synonyms : []);
+
+    return selected.some(item => {
+      if (!item) return false;
+      const sameTrans = transA === String(item.trans || "").trim();
+      if (sameTrans) return true;
+
+      const synB = Array.isArray(item.synonyms) ? item.synonyms : [];
+      return synB.some(tag => synA.has(tag));
+    });
+  }
+
+  function buildConflictFreePool(sourcePool, limit) {
+    const selected = [];
+    const shuffled = shuffle(sourcePool.slice());
+    for (const word of shuffled) {
+      if (selected.length >= limit) break;
+      if (hasWordConflict(word, selected)) continue;
+      selected.push(word);
+    }
+    return selected;
+  }
+
   function parseCsv(text) {
     const rows = [];
     let row = [];
@@ -235,6 +301,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     const transI = idx("trans");
     const exI = idx("example");
     const posI = idx("pos");
+    const synI = idx("synonyms");
 
     const dictOrderI = idx("dict_order");
     if (idI === -1 || setI === -1 || wordI === -1 || transI === -1) return [];
@@ -248,20 +315,19 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       const section = sectionI !== -1 ? String(cols[sectionI] || "").trim()
                     : (folderI !== -1 ? String(cols[folderI] || "").trim() : "Раздел");
 
-      const rawSet = String(cols[setI] || "").trim();
-      const numSet = Number(rawSet);
-      const obj = {
-        id: Number(cols[idI] || 0),
+      const obj = normalizeWordEntry({
+        id: cols[idI],
         dict: dict || "Словарь",
         section: section || "Раздел",
-        set: isNaN(numSet) ? rawSet : numSet,
-        word: String(cols[wordI] || "").trim(),
-        trans: String(cols[transI] || "").trim(),
-        pos: posI !== -1 ? String(cols[posI] || "").trim() : "",
-        example: exI !== -1 ? String(cols[exI] || "").trim() : "",
-        dict_order: dictOrderI !== -1 ? Number(cols[dictOrderI] || 0) : 0,
-      };
-      if (!obj.id || !obj.set || !obj.word || !obj.trans) continue;
+        set: cols[setI],
+        word: cols[wordI],
+        trans: cols[transI],
+        pos: posI !== -1 ? cols[posI] : "",
+        example: exI !== -1 ? cols[exI] : "",
+        dict_order: dictOrderI !== -1 ? cols[dictOrderI] : 0,
+        synonyms: synI !== -1 ? cols[synI] : "",
+      });
+      if (!obj) continue;
       out.push(obj);
     }
     return out;
@@ -1041,7 +1107,7 @@ if(svg){
     }).join("");
 
     setWordsList.querySelectorAll(".item").forEach(row => {
-      const id = Number(row.getAttribute("data-id"));
+      const id = normalizeId(row.getAttribute("data-id"));
       const cb = row.querySelector("input[type=checkbox]");
       const star = row.querySelector(".starBtn");
       star.addEventListener("click", (e) => {
@@ -1645,7 +1711,7 @@ function updateGlobalTestInfo() {
   function startMatchGame(){
     const pool = getSelectedMatchScopePool();
     const limit = getSelectedMatchLimit();
-    const roundsCount = limit / 5;
+    const roundsCount = Math.max(1, Math.floor(limit / 5));
 
     matchItems = pool.slice();
     matchSession.inProgress = true;
@@ -1678,8 +1744,8 @@ function updateGlobalTestInfo() {
 
     for (const pos in posRequiredCount) {
       const needed = posRequiredCount[pos];
-      const shuffled = shuffle(posGroups[pos].slice());
-      selectedByPOS[pos] = shuffled.slice(0, needed);
+      const conflictFree = buildConflictFreePool(posGroups[pos] || [], needed);
+      selectedByPOS[pos] = conflictFree;
     }
 
     matchRounds = [];
@@ -1693,7 +1759,8 @@ function updateGlobalTestInfo() {
       const start = posOffsets[pos];
       const end = start + 5;
 
-      const roundWords = selectedByPOS[pos].slice(start, end);
+      const roundWords = (selectedByPOS[pos] || []).slice(start, end);
+      if (roundWords.length < 5) continue;
 
       posOffsets[pos] += 5;
 
@@ -1701,7 +1768,7 @@ function updateGlobalTestInfo() {
     }
 
     matchSolvedCount = 0;
-    matchTotal = roundsCount * 5;
+    matchTotal = matchRounds.length * 5;
     matchPosGroups = posGroups;
     matchFailMap = {};
     matchSolved = new Set();
@@ -1759,11 +1826,11 @@ function updateGlobalTestInfo() {
     }
 
     function markSolved(id){
-      matchSolved.add(Number(id));
+      matchSolved.add(normalizeId(id));
     }
 
     function bumpFail(id){
-      const nid = Number(id);
+      const nid = normalizeId(id);
       if (!nid) return;
       if (matchSolved.has(nid)) return;
       matchFailMap[nid] = (matchFailMap[nid] || 0) + 1;
@@ -1778,7 +1845,7 @@ function updateGlobalTestInfo() {
         if (matchLocked) return;
         if (btn.classList.contains("matched")) return;
 
-        const id = Number(btn.dataset.id);
+        const id = normalizeId(btn.dataset.id);
         const kind = btn.dataset.kind;
 
         // Toggle off if same selected element
@@ -1858,7 +1925,7 @@ function updateGlobalTestInfo() {
     const problemWords = Object.entries(matchFailMap)
       .filter(([id, count]) => count > 0)
       .map(([id, count]) => {
-        const word = DATA.find(w => w.id === Number(id));
+        const word = DATA.find(w => w.id === id);
         return { ...word, fails: count };
       })
       .filter(w => w && w.id)
@@ -1909,8 +1976,7 @@ function updateGlobalTestInfo() {
     // full scope pool for answer options
     testOptionPool = pool.slice();
 
-    testItems = shuffle(pool.slice()); // include hidden always
-    if (testItems.length > testLimit) testItems = testItems.slice(0, testLimit);
+    testItems = buildConflictFreePool(pool, testLimit);
 
     testIndex = 0;
     testCorrect = 0;
@@ -2042,7 +2108,7 @@ function updateGlobalTestInfo() {
 
     // Wire favorites
     testOptions.querySelectorAll(".resultItem").forEach(row => {
-      const id = Number(row.getAttribute("data-id"));
+      const id = normalizeId(row.getAttribute("data-id"));
       const star = row.querySelector(".starBtn");
       star.addEventListener("click", () => {
         const on = toggleFav(id);
@@ -2093,7 +2159,7 @@ function updateGlobalTestInfo() {
     const problemWords = Object.entries(sessionFailMap)
       .filter(([id, count]) => count > 0)
       .map(([id, count]) => {
-        const word = DATA.find(w => w.id === Number(id));
+        const word = DATA.find(w => w.id === id);
         return { ...word, fails: count };
       })
       .sort((a,b) => b.fails - a.fails);
