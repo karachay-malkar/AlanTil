@@ -1167,8 +1167,8 @@ if(svg){
     if (!btnFavAction) return;
     const on = isFav(currentStudyId);
     btnFavAction.classList.toggle("active", on);
-    if (favActionLabel) favActionLabel.textContent = on ? "В избранном" : "Пометить слово";
-    btnFavAction.setAttribute("aria-label", on ? "Убрать из избранного" : "Пометить слово");
+    if (favActionLabel) favActionLabel.textContent = on ? "В избранном" : "Отметить слово";
+    btnFavAction.setAttribute("aria-label", on ? "Убрать из избранного" : "Отметить слово");
   }
 
   function updateUndoUI(){
