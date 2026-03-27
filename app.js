@@ -1704,72 +1704,31 @@ function updateGlobalTestInfo() {
     goView(viewMatchMenu);
   }
 
-  function randomFrom(arr){
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
   function startMatchGame(){
-    const pool = getSelectedMatchScopePool();
+    const scopePool = getSelectedMatchScopePool();
     const limit = getSelectedMatchLimit();
-    const roundsCount = Math.max(1, Math.floor(limit / 5));
+    const targetCount = Math.min(limit, scopePool.length);
+
+    // Pick words from the whole selected scope (not by POS),
+    // to avoid dictionary/POS bias and keep stable round size.
+    const conflictFree = buildConflictFreePool(scopePool, targetCount);
+    const selectedIds = new Set(conflictFree.map(w => normalizeId(w.id)));
+    const fallback = shuffle(scopePool.filter(w => !selectedIds.has(normalizeId(w.id))));
+    const pool = conflictFree.concat(fallback).slice(0, targetCount);
 
     matchItems = pool.slice();
     matchSession.inProgress = true;
     matchSession.completed = false;
     matchSession.wordsPool = pool.slice();
-
-    const posGroups = {};
-
-    for (const w of pool) {
-      const pos = (w.pos || "").trim() || "unknown";
-      if (!posGroups[pos]) posGroups[pos] = [];
-      posGroups[pos].push(w);
-    }
-
-    const allPOS = Object.keys(posGroups);
-    const roundPOSList = [];
-
-    for (let i = 0; i < roundsCount; i++) {
-      roundPOSList.push(randomFrom(allPOS));
-    }
-
-    const posRequiredCount = {};
-
-    for (const pos of roundPOSList) {
-      if (!posRequiredCount[pos]) posRequiredCount[pos] = 0;
-      posRequiredCount[pos] += 5;
-    }
-
-    const selectedByPOS = {};
-
-    for (const pos in posRequiredCount) {
-      const needed = posRequiredCount[pos];
-      const conflictFree = buildConflictFreePool(posGroups[pos] || [], needed);
-      selectedByPOS[pos] = conflictFree;
-    }
-
     matchRounds = [];
     matchRoundIndex = 0;
-
-    const posOffsets = {};
-
-    for (const pos of roundPOSList) {
-      if (!posOffsets[pos]) posOffsets[pos] = 0;
-
-      const start = posOffsets[pos];
-      const end = start + 5;
-
-      const roundWords = (selectedByPOS[pos] || []).slice(start, end);
-      if (roundWords.length < 5) continue;
-
-      posOffsets[pos] += 5;
-
-      matchRounds.push(roundWords);
+    for (let i = 0; i + 4 < pool.length; i += 5) {
+      matchRounds.push(pool.slice(i, i + 5));
     }
 
     matchSolvedCount = 0;
     matchTotal = matchRounds.length * 5;
-    matchPosGroups = posGroups;
+    matchPosGroups = {};
     matchFailMap = {};
     matchSolved = new Set();
     matchLocked = false;
