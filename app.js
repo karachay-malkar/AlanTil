@@ -239,30 +239,104 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return obj;
   }
 
+  const PRIORITY_POS = ["noun", "verb", "adjective", "adverb"];
+  const PRIORITY_POS_SET = new Set(PRIORITY_POS);
+
+  function normalizePos(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function randomFrom(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function getTransGroupSet(item) {
+    return new Set(splitGroups(item?.trans).map(s => s.toLowerCase()).filter(Boolean));
+  }
+
+  function getSynonymSet(item) {
+    return new Set((Array.isArray(item?.synonyms) ? item.synonyms : [])
+      .map(s => String(s || "").trim().toLowerCase())
+      .filter(Boolean));
+  }
+
   function hasWordConflict(candidate, selected) {
-    const transA = String(candidate?.trans || "").trim();
-    if (!transA) return false;
-    const synA = new Set(Array.isArray(candidate?.synonyms) ? candidate.synonyms : []);
+    const transA = getTransGroupSet(candidate);
+    const synA = getSynonymSet(candidate);
 
     return selected.some(item => {
       if (!item) return false;
-      const sameTrans = transA === String(item.trans || "").trim();
-      if (sameTrans) return true;
 
-      const synB = Array.isArray(item.synonyms) ? item.synonyms : [];
-      return synB.some(tag => synA.has(tag));
+      const transB = getTransGroupSet(item);
+      for (const t of transA) {
+        if (transB.has(t)) return true;
+      }
+
+      const synB = getSynonymSet(item);
+      for (const s of synA) {
+        if (synB.has(s)) return true;
+      }
+
+      return false;
     });
   }
 
-  function buildConflictFreePool(sourcePool, limit) {
-    const selected = [];
-    const shuffled = shuffle(sourcePool.slice());
-    for (const word of shuffled) {
-      if (selected.length >= limit) break;
-      if (hasWordConflict(word, selected)) continue;
-      selected.push(word);
+  function buildRoundPOSList(globalPool, roundsCount) {
+    const allPOS = uniq(globalPool.map(w => normalizePos(w.pos)).filter(Boolean));
+    const priorityPOS = allPOS.filter(pos => PRIORITY_POS_SET.has(pos));
+    const otherPOS = allPOS.filter(pos => !PRIORITY_POS_SET.has(pos));
+
+    const otherRoundsCount = Math.min(roundsCount, Math.round(roundsCount * 0.1));
+    const priorityRoundsCount = roundsCount - otherRoundsCount;
+    const roundPOSList = [];
+
+    for (let i = 0; i < priorityRoundsCount; i++) {
+      const fallback = otherPOS.length ? otherPOS : PRIORITY_POS;
+      const source = priorityPOS.length ? priorityPOS : fallback;
+      roundPOSList.push(randomFrom(source));
     }
-    return selected;
+
+    for (let i = 0; i < otherRoundsCount; i++) {
+      const source = otherPOS.length ? otherPOS : (priorityPOS.length ? priorityPOS : PRIORITY_POS);
+      roundPOSList.push(randomFrom(source));
+    }
+
+    return shuffle(roundPOSList);
+  }
+
+  function buildWordsByPOSRounds(globalPool, totalLimit) {
+    const roundsCount = Math.max(1, Math.floor(totalLimit / 5));
+    const roundPOSList = buildRoundPOSList(globalPool, roundsCount);
+    const usedWords = new Set();
+    const rounds = [];
+
+    for (const targetPOS of roundPOSList) {
+      const roundWords = [];
+      const maxAttempts = globalPool.length * 5;
+      let attempts = 0;
+
+      while (roundWords.length < 5 && attempts < maxAttempts) {
+        attempts++;
+        const word = randomFrom(globalPool);
+        if (!word) break;
+        if (normalizePos(word.pos) !== targetPOS) continue;
+
+        const wordId = normalizeId(word.id);
+        if (!wordId || usedWords.has(wordId)) continue;
+        if (hasWordConflict(word, roundWords)) continue;
+
+        roundWords.push(word);
+        usedWords.add(wordId);
+      }
+
+      rounds.push(roundWords);
+    }
+
+    return {
+      roundPOSList,
+      rounds,
+      items: rounds.flat()
+    };
   }
 
   function parseCsv(text) {
@@ -1704,72 +1778,22 @@ function updateGlobalTestInfo() {
     goView(viewMatchMenu);
   }
 
-  function randomFrom(arr){
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
   function startMatchGame(){
     const pool = getSelectedMatchScopePool();
     const limit = getSelectedMatchLimit();
-    const roundsCount = Math.max(1, Math.floor(limit / 5));
 
     matchItems = pool.slice();
     matchSession.inProgress = true;
     matchSession.completed = false;
     matchSession.wordsPool = pool.slice();
 
-    const posGroups = {};
-
-    for (const w of pool) {
-      const pos = (w.pos || "").trim() || "unknown";
-      if (!posGroups[pos]) posGroups[pos] = [];
-      posGroups[pos].push(w);
-    }
-
-    const allPOS = Object.keys(posGroups);
-    const roundPOSList = [];
-
-    for (let i = 0; i < roundsCount; i++) {
-      roundPOSList.push(randomFrom(allPOS));
-    }
-
-    const posRequiredCount = {};
-
-    for (const pos of roundPOSList) {
-      if (!posRequiredCount[pos]) posRequiredCount[pos] = 0;
-      posRequiredCount[pos] += 5;
-    }
-
-    const selectedByPOS = {};
-
-    for (const pos in posRequiredCount) {
-      const needed = posRequiredCount[pos];
-      const conflictFree = buildConflictFreePool(posGroups[pos] || [], needed);
-      selectedByPOS[pos] = conflictFree;
-    }
-
-    matchRounds = [];
+    const built = buildWordsByPOSRounds(pool, limit);
+    matchRounds = built.rounds;
     matchRoundIndex = 0;
 
-    const posOffsets = {};
-
-    for (const pos of roundPOSList) {
-      if (!posOffsets[pos]) posOffsets[pos] = 0;
-
-      const start = posOffsets[pos];
-      const end = start + 5;
-
-      const roundWords = (selectedByPOS[pos] || []).slice(start, end);
-      if (roundWords.length < 5) continue;
-
-      posOffsets[pos] += 5;
-
-      matchRounds.push(roundWords);
-    }
-
     matchSolvedCount = 0;
-    matchTotal = matchRounds.length * 5;
-    matchPosGroups = posGroups;
+    matchTotal = matchRounds.reduce((sum, round) => sum + round.length, 0);
+    matchPosGroups = {};
     matchFailMap = {};
     matchSolved = new Set();
     matchLocked = false;
@@ -1788,13 +1812,16 @@ function updateGlobalTestInfo() {
   function nextMatchRound(){
     if (!matchColLeft || !matchColRight) return;
 
-    if (matchRoundIndex >= matchRounds.length){
+    let roundWords = [];
+    while (matchRoundIndex < matchRounds.length && roundWords.length === 0) {
+      roundWords = matchRounds[matchRoundIndex] || [];
+      matchRoundIndex++;
+    }
+
+    if (!roundWords.length){
       openMatchResult();
       return;
     }
-
-    const roundWords = matchRounds[matchRoundIndex];
-    matchRoundIndex++;
 
     // Build columns: left = words, right = translations
     const leftCards = shuffle(roundWords.map(w => ({ kind:"w", id:w.id, text:w.word })));
@@ -1976,7 +2003,7 @@ function updateGlobalTestInfo() {
     // full scope pool for answer options
     testOptionPool = pool.slice();
 
-    testItems = buildConflictFreePool(pool, testLimit);
+    testItems = buildWordsByPOSRounds(pool, testLimit).items;
 
     testIndex = 0;
     testCorrect = 0;
