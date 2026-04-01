@@ -78,16 +78,26 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   const testOptions = document.getElementById("testOptions");
   const btnTestExit = document.getElementById("btnTestExit");
   const btnTestNext = document.getElementById("btnTestNext");
+  const exitSessionModal = document.getElementById("exitSessionModal");
+  const btnExitStay = document.getElementById("btnExitStay");
+  const btnExitConfirm = document.getElementById("btnExitConfirm");
 
   // ---------- Storage: hidden words (affects ONLY STUDY sessions)
   const HIDDEN_KEY = "fc_hidden_by_set_v7";
+  function normalizeId(id) {
+    const v = String(id ?? "").trim();
+    return v;
+  }
+  function toIdSet(arr) {
+    return new Set((Array.isArray(arr) ? arr : []).map(normalizeId).filter(Boolean));
+  }
   function loadHiddenMap() { try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || "{}"); } catch { return {}; } }
   function saveHiddenMap(map) { localStorage.setItem(HIDDEN_KEY, JSON.stringify(map)); }
   function keyOf(d, s, setNo) { return `${d}:${s}:${setNo}`; }
   function getHiddenSet(d, s, setNo) {
     const map = loadHiddenMap();
     const arr = Array.isArray(map[keyOf(d, s, setNo)]) ? map[keyOf(d, s, setNo)] : [];
-    return new Set(arr.map(Number));
+    return toIdSet(arr);
   }
   function setHiddenSet(d, s, setNo, setOfIds) {
     const map = loadHiddenMap();
@@ -118,19 +128,39 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   function loadFavSet() {
     try {
       const arr = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
-      return new Set(Array.isArray(arr) ? arr.map(Number).filter(Boolean) : []);
+      return toIdSet(arr);
     } catch {
       return new Set();
     }
   }
   function saveFavSet(setOfIds) { localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(setOfIds))); }
-  function isFav(id) { return favIds.has(Number(id)); }
+  function isFav(id) { return favIds.has(normalizeId(id)); }
   function toggleFav(id) {
-    const nid = Number(id);
+    const nid = normalizeId(id);
     if (!nid) return false;
     if (favIds.has(nid)) favIds.delete(nid); else favIds.add(nid);
     saveFavSet(favIds);
     return favIds.has(nid);
+  }
+
+  const STAR_ICON_SVG = `
+    <svg class="starSvg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 17.27 18.18 21 16.54 13.97 22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"></path>
+    </svg>
+  `;
+  const STATUS_OK_ICON_SVG = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+    </svg>
+  `;
+  const STATUS_BAD_ICON_SVG = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+    </svg>
+  `;
+  function renderStarButton(id, attrs = "") {
+    const on = isFav(id);
+    return `<button class="starBtn ${on ? "on" : ""}" type="button" aria-label="Избранное" ${attrs}>${STAR_ICON_SVG}</button>`;
   }
 
   // ---------- Cache
@@ -151,7 +181,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
 
   async function loadWords() {
     const cached = loadCache();
-    if (Array.isArray(cached) && cached.length) return cached;
+    if (Array.isArray(cached) && cached.length) return cached.map(normalizeWordEntry).filter(Boolean);
 
     const sheetUrl = (window.WORDS_SHEET_URL || "").trim();
     const csvUrl = normalizeToCsvUrl(sheetUrl);
@@ -164,7 +194,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       }
     }
 
-    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK : [];
+    return Array.isArray(window.WORDS_FALLBACK) ? window.WORDS_FALLBACK.map(normalizeWordEntry).filter(Boolean) : [];
   }
 
   async function loadWordsFromCsv(url) {
@@ -174,8 +204,141 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return parseCsv(text);
   }
 
-  // Expected headers: id, dict, section, set, word, trans, example
+  // Expected headers: id, dict, section, set, word, trans, example, synonyms
   // Backward compatible: folder -> section, dict defaults to "Словарь"
+  function parseSynonyms(raw) {
+    return String(raw || "")
+      .toLowerCase()
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function normalizeWordEntry(row) {
+    if (!row || typeof row !== "object") return null;
+    const id = normalizeId(row.id);
+    const word = String(row.word || "").trim();
+    const trans = String(row.trans || "").trim();
+    const rawSet = String(row.set ?? "").trim();
+    const numSet = Number(rawSet);
+
+    const obj = {
+      id,
+      dict: String(row.dict || "").trim() || "Словарь",
+      section: String(row.section || row.folder || "").trim() || "Раздел",
+      set: isNaN(numSet) ? rawSet : numSet,
+      word,
+      trans,
+      pos: String(row.pos || "").trim(),
+      example: String(row.example || "").trim(),
+      dict_order: Number(row.dict_order || 0),
+      synonyms: parseSynonyms(row.synonyms),
+    };
+
+    if (!obj.id || !obj.set || !obj.word || !obj.trans) return null;
+    return obj;
+  }
+
+  const PRIORITY_POS = ["noun", "verb", "adjective", "adverb"];
+  const PRIORITY_POS_SET = new Set(PRIORITY_POS);
+
+  function normalizePos(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function randomFrom(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function getTransGroupSet(item) {
+    return new Set(splitGroups(item?.trans).map(s => s.toLowerCase()).filter(Boolean));
+  }
+
+  function getSynonymSet(item) {
+    return new Set((Array.isArray(item?.synonyms) ? item.synonyms : [])
+      .map(s => String(s || "").trim().toLowerCase())
+      .filter(Boolean));
+  }
+
+  function hasWordConflict(candidate, selected) {
+    const transA = getTransGroupSet(candidate);
+    const synA = getSynonymSet(candidate);
+
+    return selected.some(item => {
+      if (!item) return false;
+
+      const transB = getTransGroupSet(item);
+      for (const t of transA) {
+        if (transB.has(t)) return true;
+      }
+
+      const synB = getSynonymSet(item);
+      for (const s of synA) {
+        if (synB.has(s)) return true;
+      }
+
+      return false;
+    });
+  }
+
+  function buildRoundPOSList(globalPool, roundsCount) {
+    const allPOS = uniq(globalPool.map(w => normalizePos(w.pos)).filter(Boolean));
+    const priorityPOS = allPOS.filter(pos => PRIORITY_POS_SET.has(pos));
+    const otherPOS = allPOS.filter(pos => !PRIORITY_POS_SET.has(pos));
+
+    const otherRoundsCount = Math.min(roundsCount, Math.round(roundsCount * 0.1));
+    const priorityRoundsCount = roundsCount - otherRoundsCount;
+    const roundPOSList = [];
+
+    for (let i = 0; i < priorityRoundsCount; i++) {
+      const fallback = otherPOS.length ? otherPOS : PRIORITY_POS;
+      const source = priorityPOS.length ? priorityPOS : fallback;
+      roundPOSList.push(randomFrom(source));
+    }
+
+    for (let i = 0; i < otherRoundsCount; i++) {
+      const source = otherPOS.length ? otherPOS : (priorityPOS.length ? priorityPOS : PRIORITY_POS);
+      roundPOSList.push(randomFrom(source));
+    }
+
+    return shuffle(roundPOSList);
+  }
+
+  function buildWordsByPOSRounds(globalPool, totalLimit) {
+    const roundsCount = Math.max(1, Math.floor(totalLimit / 5));
+    const roundPOSList = buildRoundPOSList(globalPool, roundsCount);
+    const usedWords = new Set();
+    const rounds = [];
+
+    for (const targetPOS of roundPOSList) {
+      const roundWords = [];
+      const maxAttempts = globalPool.length * 5;
+      let attempts = 0;
+
+      while (roundWords.length < 5 && attempts < maxAttempts) {
+        attempts++;
+        const word = randomFrom(globalPool);
+        if (!word) break;
+        if (normalizePos(word.pos) !== targetPOS) continue;
+
+        const wordId = normalizeId(word.id);
+        if (!wordId || usedWords.has(wordId)) continue;
+        if (hasWordConflict(word, roundWords)) continue;
+
+        roundWords.push(word);
+        usedWords.add(wordId);
+      }
+
+      rounds.push(roundWords);
+    }
+
+    return {
+      roundPOSList,
+      rounds,
+      items: rounds.flat()
+    };
+  }
+
   function parseCsv(text) {
     const rows = [];
     let row = [];
@@ -212,6 +375,7 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     const transI = idx("trans");
     const exI = idx("example");
     const posI = idx("pos");
+    const synI = idx("synonyms");
 
     const dictOrderI = idx("dict_order");
     if (idI === -1 || setI === -1 || wordI === -1 || transI === -1) return [];
@@ -225,20 +389,19 @@ const viewSetMenu = document.getElementById("viewSetMenu");
       const section = sectionI !== -1 ? String(cols[sectionI] || "").trim()
                     : (folderI !== -1 ? String(cols[folderI] || "").trim() : "Раздел");
 
-      const rawSet = String(cols[setI] || "").trim();
-      const numSet = Number(rawSet);
-      const obj = {
-        id: Number(cols[idI] || 0),
+      const obj = normalizeWordEntry({
+        id: cols[idI],
         dict: dict || "Словарь",
         section: section || "Раздел",
-        set: isNaN(numSet) ? rawSet : numSet,
-        word: String(cols[wordI] || "").trim(),
-        trans: String(cols[transI] || "").trim(),
-        pos: posI !== -1 ? String(cols[posI] || "").trim() : "",
-        example: exI !== -1 ? String(cols[exI] || "").trim() : "",
-        dict_order: dictOrderI !== -1 ? Number(cols[dictOrderI] || 0) : 0,
-      };
-      if (!obj.id || !obj.set || !obj.word || !obj.trans) continue;
+        set: cols[setI],
+        word: cols[wordI],
+        trans: cols[transI],
+        pos: posI !== -1 ? cols[posI] : "",
+        example: exI !== -1 ? cols[exI] : "",
+        dict_order: dictOrderI !== -1 ? cols[dictOrderI] : 0,
+        synonyms: synI !== -1 ? cols[synI] : "",
+      });
+      if (!obj) continue;
       out.push(obj);
     }
     return out;
@@ -247,6 +410,33 @@ const viewSetMenu = document.getElementById("viewSetMenu");
   // ---------- Helpers
 
   // ---------- RU title renderer (v8.6, stage 2)
+
+  function initUnifiedPanels() {
+    const panels = Array.from(document.querySelectorAll('.panel[data-unified-panel="1"]'));
+    panels.forEach((panel) => {
+      if (panel.querySelector(':scope > .panel-header') && panel.querySelector(':scope > .panel-body')) return;
+
+      const title = panel.querySelector('.panelTitle');
+      if (!title) return;
+
+      const header = document.createElement('div');
+      header.className = 'panel-header';
+      const body = document.createElement('div');
+      body.className = 'panel-body';
+
+      header.appendChild(title);
+      panel.insertBefore(header, panel.firstChild);
+
+      const rest = Array.from(panel.childNodes).filter((n) => n !== header && n !== body);
+      rest.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) return;
+        body.appendChild(node);
+      });
+
+      panel.appendChild(body);
+    });
+  }
+
   function renderRuTitle(el, text){
     const groups = splitGroups(text);
     if (!groups.length){
@@ -288,6 +478,11 @@ viewSetMenu,
   let currentView = viewDicts;
   const navStack = [];
 
+  const studySession = { inProgress: false, completed: false, wordsPool: [], progressData: {} };
+  const testSession = { inProgress: false, completed: false, wordsPool: [], progressData: {} };
+  const matchSession = { inProgress: false, completed: false, wordsPool: [], progressData: {} };
+  let exitIntentTargetView = null;
+
   function isHomeView(v){ return v === viewDicts; }
   function isTestFlowView(v){ return v === viewGlobalTestMenu || v === viewTest; }
 
@@ -295,19 +490,13 @@ viewSetMenu,
     if (!counter || !modeEl) return;
 
     const onStudy = (currentView === viewStudy);
-    const onTest = (currentView === viewTest);
 
     // Counter only in study
     counter.style.display = onStudy ? "" : "none";
 
-    // Mode: only in test (label "Тест"), never in study
-    if (onTest){
-      modeEl.style.display = "";
-      modeEl.textContent = "Тест";
-    } else {
-      modeEl.style.display = "none";
-      modeEl.textContent = "";
-    }
+    // Mode title hidden in header for test flow
+    modeEl.style.display = "none";
+    modeEl.textContent = "";
   }
 
   function updateBackArrow(){
@@ -316,9 +505,96 @@ viewSetMenu,
     btnBackArrow.classList.toggle("hidden", !shouldShow);
   }
 
+  function getSessionByView(view){
+    if (view === viewStudy || view === viewSessionAnalytics) return studySession;
+    if (view === viewTest) return testSession;
+    if (view === viewMatchGame || view === viewMatchResult) return matchSession;
+    return null;
+  }
+
+  function isResultsScreen(view){
+    return view === viewSessionAnalytics || view === viewMatchResult || (view === viewTest && testSession.completed);
+  }
+
+  function isActiveSession(){
+    const currentSession = getSessionByView(currentView);
+    return !!(currentSession?.inProgress && !currentSession?.completed);
+  }
+
+  function clearSessionState(session){
+    if (!session) return;
+    session.wordsPool = [];
+    session.progressData = {};
+    session.inProgress = false;
+    session.completed = false;
+
+    if (session === studySession){
+      mainQueue = [];
+      repeatQueue = [];
+      round = "main";
+      totalPlanned = 0;
+      currentStudyId = 0;
+      swipeHistory = [];
+      sessionFailMap = {};
+    } else if (session === testSession){
+      testItems = [];
+      testIndex = 0;
+      testCorrect = 0;
+      testSelected = null;
+      testResults = [];
+      testOptionPool = [];
+    } else if (session === matchSession){
+      matchItems = [];
+      matchRounds = [];
+      matchRoundIndex = 0;
+      matchSolvedCount = 0;
+      matchTotal = 0;
+      matchPosGroups = {};
+      matchFailMap = {};
+      matchSolved = new Set();
+      matchLocked = false;
+      matchSelectedIdx = null;
+      matchSelectedRef = null;
+    }
+  }
+
+  function showExitModal(){
+    if (!exitSessionModal) return;
+    exitSessionModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
+
+  function hideExitModal(){
+    if (!exitSessionModal) return;
+    exitSessionModal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+  }
+
+  function confirmExit(){
+    clearSessionState(getSessionByView(currentView));
+    hideExitModal();
+
+    const stackPrev = navStack.length ? navStack[navStack.length - 1] : null;
+    if (stackPrev && stackPrev === exitIntentTargetView) {
+      navStack.pop();
+      goView(stackPrev, { push:false, force:true });
+    } else if (exitIntentTargetView) {
+      goView(exitIntentTargetView, { push:false, force:true });
+    }
+
+    exitIntentTargetView = null;
+  }
+
   function goView(nextView, opts = {}){
     hideDictContent();
-    const { push = true, resetStack = false } = opts;
+    const { push = true, resetStack = false, force = false } = opts;
+
+    if (!force && nextView && nextView !== currentView && isActiveSession() && !isResultsScreen(currentView)) {
+      exitIntentTargetView = nextView;
+      showExitModal();
+      return;
+    }
+
     if (resetStack) navStack.length = 0;
     if (push && currentView && currentView !== nextView) navStack.push(currentView);
     showView(nextView);
@@ -333,15 +609,33 @@ viewSetMenu,
       goView(viewMatchMenu, { push:false });
       return;
     }
-    const prev = navStack.pop();
+
+    const prev = navStack.length ? navStack[navStack.length - 1] : null;
     if (!prev) return;
-    showView(prev);
-    currentView = prev;
-    updateBackArrow();
-    updateMeta();
+
+    // Keep stack intact while only showing confirmation modal.
+    // Real stack rollback must happen only when navigation actually proceeds.
+    if (isActiveSession() && !isResultsScreen(currentView)) {
+      exitIntentTargetView = prev;
+      showExitModal();
+      return;
+    }
+
+    navStack.pop();
+    goView(prev, { push:false });
   }
 
   if (btnBackArrow) btnBackArrow.addEventListener("click", navigateBack);
+  if (btnExitStay) btnExitStay.addEventListener("click", () => { hideExitModal(); exitIntentTargetView = null; });
+  if (btnExitConfirm) btnExitConfirm.addEventListener("click", confirmExit);
+  if (exitSessionModal) {
+    exitSessionModal.addEventListener("click", (e) => {
+      if (e.target && e.target.matches("[data-exit-cancel='1']")) {
+        hideExitModal();
+        exitIntentTargetView = null;
+      }
+    });
+  }
 
 
 
@@ -698,16 +992,13 @@ viewSetMenu,
             <div class="w">${escapeHtml(w.word)}</div>
             <div class="t">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
+          ${renderStarButton(w.id)}
         `;
         const star = row.querySelector(".starBtn");
         star.addEventListener("click", (e)=>{
           e.stopPropagation();
           const on = toggleFav(w.id);
           star.classList.toggle("on", on);
-          star.textContent = on ? "★" : "☆";
         });
         body.appendChild(row);
       }
@@ -791,11 +1082,9 @@ viewSetMenu,
         const finished = isSetFinished(dict, sec, setNo);
 
         const title = (dict === "__fav__") ? "Избранное" : (typeof setNo === "number" ? `Сет ${setNo}` : String(setNo));
-        const count = all.length;
-
         return `
-          <button class="setTile" type="button" data-section="${escapeHtml(sec)}" data-set="${setNo}">
-            <div class="setDone" data-done="1" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
+          <div class="setTile set-tile ${finished ? 'selected' : ''}" role="button" tabindex="0" data-section="${escapeHtml(sec)}" data-set="${setNo}">
+            <button class="setDone setTileCorner set-tile__corner" data-done="1" type="button" aria-label="Отметить как выучено"><svg viewBox="0 0 24 24" class="setCheck ${finished ? 'active' : ''}">
     <rect x="3" y="3" width="18" height="18" rx="4"
           fill="none"
           stroke="rgba(15,23,42,0.25)"
@@ -805,10 +1094,9 @@ viewSetMenu,
           stroke-width="2.8"
           stroke-linecap="round"
           stroke-linejoin="round"/>
-  </svg></div>
+  </svg></button>
             <div class="setTileTitle">${escapeHtml(title)}</div>
-            <div class="setTileCount">${count} слов</div>
-          </button>
+          </div>
         `;
       }).join("");
 
@@ -836,11 +1124,20 @@ viewSetMenu,
 if(svg){
   svg.classList.toggle("active", on);
 }
+          tile.classList.toggle("selected", on);
         });
       }
 
       // Open set menu
       tile.addEventListener("click", () => {
+        currentSection = sec;
+        currentSet = setNo;
+        openSetMenu();
+      });
+
+      tile.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
         currentSection = sec;
         currentSet = setNo;
         openSetMenu();
@@ -858,7 +1155,7 @@ if(svg){
     const all = (currentDict === "__fav__") ? DATA.filter(w => favIds.has(w.id)) : wordsForSet(DATA, currentDict, currentSection, currentSet);
     const active = all.filter(w => !menuHidden.has(w.id));
     const setLabel = typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet);
-    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${dictTitle(currentDict)} • ${sectionTitle(currentSection)} • ${setLabel}`;
+    setMenuTitle.textContent = (currentDict === "__fav__") ? "⭐ Избранное" : `${setLabel}`;
     setMenuInfo.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
 
     renderSetWordsList();
@@ -878,20 +1175,19 @@ if(svg){
             <div class="w">${escapeHtml(w.word)}</div>
             <div class="t">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button" aria-label="Избранное">${isFav(w.id) ? "★" : "☆"}</button>
+          ${renderStarButton(w.id)}
         </div>
       `;
     }).join("");
 
     setWordsList.querySelectorAll(".item").forEach(row => {
-      const id = Number(row.getAttribute("data-id"));
+      const id = normalizeId(row.getAttribute("data-id"));
       const cb = row.querySelector("input[type=checkbox]");
       const star = row.querySelector(".starBtn");
       star.addEventListener("click", (e) => {
         e.stopPropagation();
         const on = toggleFav(id);
         star.classList.toggle("on", on);
-        star.textContent = on ? "★" : "☆";
 
         // В Избранном: если убрали звёздочку — слово должно сразу исчезнуть из списка
         if (currentDict === "__fav__" && !on) {
@@ -945,8 +1241,8 @@ if(svg){
     if (!btnFavAction) return;
     const on = isFav(currentStudyId);
     btnFavAction.classList.toggle("active", on);
-    if (favActionLabel) favActionLabel.textContent = on ? "В избранном" : "Пометить слово";
-    btnFavAction.setAttribute("aria-label", on ? "Убрать из избранного" : "Пометить слово");
+    if (favActionLabel) favActionLabel.textContent = on ? "В избранном" : "Отметить слово";
+    btnFavAction.setAttribute("aria-label", on ? "Убрать из избранного" : "Отметить слово");
   }
 
   function updateUndoUI(){
@@ -1001,6 +1297,10 @@ if(svg){
     totalPlanned = active.length;
     swipeHistory = [];
     sessionFailMap = {};
+    studySession.inProgress = true;
+    studySession.completed = false;
+    studySession.wordsPool = active.slice();
+    studySession.progressData = { totalPlanned: active.length, known: 0, unknown: 0 };
     updateStudyCounter();
 
     goView(viewStudy);
@@ -1100,6 +1400,9 @@ setRoundIfNeeded();
     if (!known) {
       sessionFailMap[item.id] = (sessionFailMap[item.id] || 0) + 1;
       repeatQueue.push(item);
+      studySession.progressData.unknown = (studySession.progressData.unknown || 0) + 1;
+    } else {
+      studySession.progressData.known = (studySession.progressData.known || 0) + 1;
     }
 
     const switchedToRepeat = (round === "main" && mainQueue.length === 0);
@@ -1240,8 +1543,8 @@ setRoundIfNeeded();
   let testOptionPool = [];
   function getSelectedTestLimit() {
     const el = document.querySelector('input[name="testLimit"]:checked');
-    const n = el ? Number(el.value) : 50;
-    return (n === 30 || n === 50 || n === 100) ? n : 50;
+    const n = el ? Number(el.value) : 40;
+    return (n === 20 || n === 40 || n === 80) ? n : 40;
   }
 
   function scopeKey(dict, section) {
@@ -1361,9 +1664,11 @@ function updateGlobalTestInfo() {
 
   // ---------- Match words (v9.9) — same source scope as test, but matching pairs
   let matchItems = [];
-  let matchRemaining = [];
-  let matchTotal = 0;
+  let matchRounds = [];
   let matchRoundIndex = 0;
+  let matchSolvedCount = 0;
+  let matchTotal = 0;
+  let matchPosGroups = {};
   let matchFailMap = {};
   let matchSolved = new Set();
   let matchLocked = false;
@@ -1372,8 +1677,8 @@ function updateGlobalTestInfo() {
 
   function getSelectedMatchLimit() {
     const el = document.querySelector('input[name="matchLimit"]:checked');
-    const n = el ? Number(el.value) : 50;
-    return (n === 30 || n === 50 || n === 100) ? n : 50;
+    const n = el ? Number(el.value) : 40;
+    return (n === 20 || n === 40 || n === 80) ? n : 40;
   }
 
   function renderMatchScopeList() {
@@ -1473,70 +1778,50 @@ function updateGlobalTestInfo() {
     goView(viewMatchMenu);
   }
 
-  function randomFrom(arr){
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
   function startMatchGame(){
     const pool = getSelectedMatchScopePool();
-
-    if (!pool.length){
-      alert("Выберите хотя бы один словарь или раздел");
-      return;
-    }
     const limit = getSelectedMatchLimit();
 
-    matchItems = shuffle(pool.slice());
-    if (matchItems.length > limit) matchItems = matchItems.slice(0, limit);
+    matchItems = pool.slice();
+    matchSession.inProgress = true;
+    matchSession.completed = false;
+    matchSession.wordsPool = pool.slice();
 
-    matchRemaining = matchItems.slice();
-    matchTotal = matchItems.length;
+    const built = buildWordsByPOSRounds(pool, limit);
+    matchRounds = built.rounds;
     matchRoundIndex = 0;
+
+    matchSolvedCount = 0;
+    matchTotal = matchRounds.reduce((sum, round) => sum + round.length, 0);
+    matchPosGroups = {};
     matchFailMap = {};
     matchSolved = new Set();
     matchLocked = false;
     matchSelectedIdx = null;
     matchSelectedRef = null;
+    matchSession.progressData = { solved: 0, total: matchTotal };
+
+    if (matchProgress) {
+      matchProgress.textContent = `Пройдено: ${matchSolvedCount}/${matchTotal} слов`;
+    }
 
     goView(viewMatchGame, { push:false });
     nextMatchRound();
   }
 
-  function setMatchProgressText(extra=""){
-    if (!matchProgress) return;
-    const done = matchTotal - matchRemaining.length;
-    const base = `Пройдено: ${done}/${matchTotal} слов`;
-    matchProgress.textContent = extra ? `${base} • ${extra}` : base;
-  }
-
   function nextMatchRound(){
     if (!matchColLeft || !matchColRight) return;
 
-    if (matchRemaining.length === 0){
+    let roundWords = [];
+    while (matchRoundIndex < matchRounds.length && roundWords.length === 0) {
+      roundWords = matchRounds[matchRoundIndex] || [];
+      matchRoundIndex++;
+    }
+
+    if (!roundWords.length){
       openMatchResult();
       return;
     }
-
-    // Pick random POS for this round from remaining
-    const availablePOS = uniq(matchRemaining.map(w => (w.pos || "").trim() || "unknown"));
-    const roundPOS = randomFrom(availablePOS);
-
-    let candidates = matchRemaining.filter(w => ((w.pos || "").trim() || "unknown") === roundPOS);
-    candidates = shuffle(candidates.slice());
-
-    const roundWords = candidates.slice(0, 5);
-
-    // Remove selected from remaining
-    const roundIds = new Set(roundWords.map(w => w.id));
-    matchRemaining = matchRemaining.filter(w => !roundIds.has(w.id));
-
-    matchRoundIndex++;
-
-    // Pair counter per round (starts at 0, grows only on correct match)
-    const roundPairsTotal = roundWords.length;
-    let roundPairsMatched = 0;
-
-    if (matchProgress) matchProgress.textContent = `0 из ${roundPairsTotal} пар`;
 
     // Build columns: left = words, right = translations
     const leftCards = shuffle(roundWords.map(w => ({ kind:"w", id:w.id, text:w.word })));
@@ -1568,11 +1853,11 @@ function updateGlobalTestInfo() {
     }
 
     function markSolved(id){
-      matchSolved.add(Number(id));
+      matchSolved.add(normalizeId(id));
     }
 
     function bumpFail(id){
-      const nid = Number(id);
+      const nid = normalizeId(id);
       if (!nid) return;
       if (matchSolved.has(nid)) return;
       matchFailMap[nid] = (matchFailMap[nid] || 0) + 1;
@@ -1582,17 +1867,12 @@ function updateGlobalTestInfo() {
       return btns.length > 0 && btns.every(b => b.classList.contains("matched"));
     }
 
-    function updatePairCounter(){
-      if (!matchProgress) return;
-      matchProgress.textContent = `${roundPairsMatched} из ${roundPairsTotal} пар`;
-    }
-
     btns.forEach(btn => {
       btn.addEventListener("click", () => {
         if (matchLocked) return;
         if (btn.classList.contains("matched")) return;
 
-        const id = Number(btn.dataset.id);
+        const id = normalizeId(btn.dataset.id);
         const kind = btn.dataset.kind;
 
         // Toggle off if same selected element
@@ -1634,8 +1914,11 @@ function updateGlobalTestInfo() {
           btn.classList.add("matched");
           markSolved(first.id);
 
-          roundPairsMatched++;
-          updatePairCounter();
+          matchSolvedCount++;
+          matchSession.progressData.solved = matchSolvedCount;
+          if (matchProgress) {
+            matchProgress.textContent = `Пройдено: ${matchSolvedCount}/${matchTotal} слов`;
+          }
 
           matchSelectedIdx = null;
           matchSelectedRef = null;
@@ -1669,7 +1952,7 @@ function updateGlobalTestInfo() {
     const problemWords = Object.entries(matchFailMap)
       .filter(([id, count]) => count > 0)
       .map(([id, count]) => {
-        const word = DATA.find(w => w.id === Number(id));
+        const word = DATA.find(w => w.id === id);
         return { ...word, fails: count };
       })
       .filter(w => w && w.id)
@@ -1677,24 +1960,22 @@ function updateGlobalTestInfo() {
 
     if (!problemWords.length){
       matchResultList.innerHTML = `
-        <div class="smallNote" style="text-align:center;">
-          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
-          <div>Все пары собраны с первого раза ✅</div>
+        <div class="smallNote noteCenter">
+          <div class="noteTitle">Аперим!</div>
+          <div class="successNoteLine">✅ Все пары собраны с первого раза</div>
         </div>
       `;
     } else {
       matchResultList.innerHTML = problemWords.map(w => `
-        <div class="dictWordRow">
-          <div class="dictNum" style="color:#ef4444;font-weight:900;">
-            ❌ ${w.fails}
+        <div class="resultItem analyticsResultItem" data-id="${w.id}">
+          <div class="resultMark bad analyticsFailMark" aria-label="Ошибок: ${w.fails}">
+            ${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${w.fails}</span>
           </div>
-          <div>
-            <div class="w">${escapeHtml(w.word)}</div>
-            <div class="t">${escapeHtml(w.trans)}</div>
+          <div class="resultBody">
+            <div class="resultWord">${escapeHtml(w.word)}</div>
+            <div class="resultLine analyticsTranslation">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
+          ${renderStarButton(w.id)}
         </div>
       `).join("");
 
@@ -1703,11 +1984,12 @@ function updateGlobalTestInfo() {
         btn.addEventListener("click", () => {
           const on = toggleFav(word.id);
           btn.classList.toggle("on", on);
-          btn.textContent = on ? "★" : "☆";
         });
       });
     }
 
+    matchSession.inProgress = false;
+    matchSession.completed = true;
     goView(viewMatchResult, { push:false });
   }
 
@@ -1721,13 +2003,16 @@ function updateGlobalTestInfo() {
     // full scope pool for answer options
     testOptionPool = pool.slice();
 
-    testItems = shuffle(pool.slice()); // include hidden always
-    if (testItems.length > testLimit) testItems = testItems.slice(0, testLimit);
+    testItems = buildWordsByPOSRounds(pool, testLimit).items;
 
     testIndex = 0;
     testCorrect = 0;
     testSelected = null;
     testResults = [];
+    testSession.inProgress = true;
+    testSession.completed = false;
+    testSession.wordsPool = pool.slice();
+    testSession.progressData = { index: 0, total: testItems.length, correct: 0 };
 
     btnTestNext.classList.remove("hidden");
     btnTestNext.textContent = "Дальше";
@@ -1769,6 +2054,8 @@ function updateGlobalTestInfo() {
       testTitle.textContent = "Тест";
       testProgress.textContent = "Нет слов для теста.";
       testQuestion.textContent = "Пусто 🤷‍♂️";
+      testQuestion.style.display = "";
+      testOptions.classList.remove("resultScroll");
       testOptions.innerHTML = "";
       btnTestNext.classList.add("hidden");
       return;
@@ -1791,8 +2078,10 @@ function updateGlobalTestInfo() {
     testTitle.textContent = "Тест: выбрать перевод";
     testProgress.textContent = `Вопрос ${testIndex + 1} из ${testItems.length}`;
     testQuestion.textContent = question;
+    testQuestion.style.display = "";
 
     const options = pickOptions(item);
+    testOptions.classList.remove("resultScroll");
     testOptions.innerHTML = options.map(opt => `
       <button class="optionBtn" data-opt="${escapeHtml(opt)}">${escapeHtml(opt)}</button>
     `).join("");
@@ -1818,19 +2107,23 @@ function updateGlobalTestInfo() {
     testTitle.textContent = "Результаты теста";
     testProgress.textContent = `Правильно: ${testCorrect}/${testItems.length} (${pct}%)`;
     testQuestion.textContent = "";
+    testQuestion.style.display = "none";
 
     const rows = testResults.map(r => `
       <div class="resultItem" data-id="${r.id}">
-        <div class="resultMark ${r.isCorrect ? "ok" : "bad"}">${r.isCorrect ? "✓" : "✕"}</div>
+        <div class="resultMark ${r.isCorrect ? "ok" : "bad"}">${r.isCorrect ? STATUS_OK_ICON_SVG : STATUS_BAD_ICON_SVG}</div>
         <div class="resultBody">
-          <div class="resultWord">${escapeHtml(r.word)}</div>
+          <div class="resultWord">${escapeHtml(r.questionText || r.word)}</div>
           <div class="resultLine"><span class="lbl">Правильно:</span> ${escapeHtml(r.correctAnswer)}</div>
           <div class="resultLine"><span class="lbl">Твой ответ:</span> ${escapeHtml(r.userAnswer || "—")}</div>
         </div>
-        <button class="starBtn ${isFav(r.id) ? "on" : ""}" type="button" aria-label="Избранное">${isFav(r.id) ? "★" : "☆"}</button>
+        ${renderStarButton(r.id)}
       </div>
     `).join("");
 
+    testSession.inProgress = false;
+    testSession.completed = true;
+    testOptions.classList.add("resultScroll");
     testOptions.innerHTML = `
       <div class="resultList">
         ${rows || "<div class='hintText'>Нет результатов.</div>"}
@@ -1842,12 +2135,11 @@ function updateGlobalTestInfo() {
 
     // Wire favorites
     testOptions.querySelectorAll(".resultItem").forEach(row => {
-      const id = Number(row.getAttribute("data-id"));
+      const id = normalizeId(row.getAttribute("data-id"));
       const star = row.querySelector(".starBtn");
       star.addEventListener("click", () => {
         const on = toggleFav(id);
         star.classList.toggle("on", on);
-        star.textContent = on ? "★" : "☆";
       });
     });
 
@@ -1862,13 +2154,16 @@ function updateGlobalTestInfo() {
     if (!testSelected) return;
 
     const item = testItems[testIndex];
+    const questionText = testMode === "kb" ? item.word : item.trans;
     const correctAnswer = testMode === "kb" ? item.trans : item.word;
     const isCorrect = testSelected === correctAnswer;
 
     if (isCorrect) testCorrect++;
+    testSession.progressData.correct = testCorrect;
 
     testResults.push({
       id: item.id,
+      questionText,
       word: item.word,
       trans: item.trans,
       correctAnswer,
@@ -1877,6 +2172,7 @@ function updateGlobalTestInfo() {
     });
 
     testIndex++;
+    testSession.progressData.index = testIndex;
     renderTestQuestion();
   });
 
@@ -1890,31 +2186,29 @@ function updateGlobalTestInfo() {
     const problemWords = Object.entries(sessionFailMap)
       .filter(([id, count]) => count > 0)
       .map(([id, count]) => {
-        const word = DATA.find(w => w.id === Number(id));
+        const word = DATA.find(w => w.id === id);
         return { ...word, fails: count };
       })
       .sort((a,b) => b.fails - a.fails);
 
     if (!problemWords.length) {
       analyticsList.innerHTML = `
-        <div class="smallNote" style="text-align:center;">
-          <div style="font-weight:900; margin-bottom:6px;">Аперим!</div>
-          <div>Не было незнакомых слов ✅</div>
+        <div class="smallNote noteCenter">
+          <div class="noteTitle">Аперим!</div>
+          <div class="successNoteLine">✅ Не было незнакомых слов</div>
         </div>
       `;
     } else {
       analyticsList.innerHTML = problemWords.map(w => `
-        <div class="dictWordRow">
-          <div class="dictNum" style="color:#ef4444;font-weight:900;">
-            ❌ ${w.fails}
+        <div class="resultItem analyticsResultItem" data-id="${w.id}">
+          <div class="resultMark bad analyticsFailMark" aria-label="Ошибок: ${w.fails}">
+            ${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${w.fails}</span>
           </div>
-          <div>
-            <div class="w">${escapeHtml(w.word)}</div>
-            <div class="t">${escapeHtml(w.trans)}</div>
+          <div class="resultBody">
+            <div class="resultWord">${escapeHtml(w.word)}</div>
+            <div class="resultLine analyticsTranslation">${escapeHtml(w.trans)}</div>
           </div>
-          <button class="starBtn ${isFav(w.id) ? "on" : ""}" type="button">
-            ${isFav(w.id) ? "★" : "☆"}
-          </button>
+          ${renderStarButton(w.id)}
         </div>
       `).join("");
 
@@ -1923,15 +2217,18 @@ function updateGlobalTestInfo() {
         btn.addEventListener("click", () => {
           const on = toggleFav(word.id);
           btn.classList.toggle("on", on);
-          btn.textContent = on ? "★" : "☆";
         });
       });
     }
 
+    studySession.inProgress = false;
+    studySession.completed = true;
     goView(viewSessionAnalytics, { push:false });
   }
 
   // ---------- Init
+  initUnifiedPanels();
+
   (async () => {
     DATA = await loadWords();
 
