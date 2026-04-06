@@ -220,6 +220,10 @@ const viewSetMenu = document.getElementById("viewSetMenu");
     return normalized === "1" || normalized === "true";
   }
 
+  function isWordEnabledInTestModes(word) {
+    return !!word && word.usedInTest === true;
+  }
+
   function normalizeWordEntry(row) {
     if (!row || typeof row !== "object") return null;
     const id = normalizeId(row.id);
@@ -1627,13 +1631,13 @@ setRoundIfNeeded();
 
   function getSelectedScopePool() {
     const sectionCbs = [...testScopeList.querySelectorAll(".scopeSection")];
-    if (!sectionCbs.length) return DATA.filter(w => w.usedInTest !== false);
+    if (!sectionCbs.length) return DATA.filter(isWordEnabledInTestModes);
 
     const checked = sectionCbs.filter(cb => cb.checked);
     if (checked.length === 0) return [];
 
     const keys = new Set(checked.map(cb => scopeKey(cb.dataset.dict, cb.dataset.section)));
-    return DATA.filter(w => w.usedInTest !== false && keys.has(scopeKey(w.dict, w.section || "")));
+    return DATA.filter(w => isWordEnabledInTestModes(w) && keys.has(scopeKey(w.dict, w.section || "")));
   }
 
 function openGlobalTestMenu() {
@@ -1755,13 +1759,13 @@ function updateGlobalTestInfo() {
 
   function getSelectedMatchScopePool() {
     const sectionCbs = [...matchScopeList.querySelectorAll(".matchScopeSection")];
-    if (!sectionCbs.length) return DATA.filter(w => w.usedInTest !== false);
+    if (!sectionCbs.length) return DATA.filter(isWordEnabledInTestModes);
 
     const checked = sectionCbs.filter(cb => cb.checked);
     if (checked.length === 0) return [];
 
     const keys = new Set(checked.map(cb => scopeKey(cb.dataset.dict, cb.dataset.section)));
-    return DATA.filter(w => w.usedInTest !== false && keys.has(scopeKey(w.dict, w.section || "")));
+    return DATA.filter(w => isWordEnabledInTestModes(w) && keys.has(scopeKey(w.dict, w.section || "")));
   }
 
   function showNoWordsForMode() {
