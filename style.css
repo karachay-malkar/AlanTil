@@ -2,7 +2,7 @@
 
 :root{
   --home-top-offset: 88px;
-  --study-bottom-panel-h: 220px;
+  --study-bottom-panel-h: 212px;
 
   --r: 22px;
   --brand: #2b89fa;
@@ -376,26 +376,28 @@ input{
 #viewStudy{
   height: 100vh;
   height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  position: relative;
   overflow: hidden;
   padding-bottom: 0;
 }
 
 #viewStudy .card.big{
-  flex: 1;
+  height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: calc(var(--study-bottom-panel-h) + 16px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--study-bottom-panel-h) + 24px + env(safe-area-inset-bottom, 0px));
 }
 
 .studyBottomPanel{
-  position: sticky;
+  position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
-  z-index: 10;
+  z-index: 30;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
   background: var(--bg);
-  padding-top: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ---------- STUDY CARD ---------- */
