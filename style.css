@@ -257,6 +257,60 @@ input{
   color: #ffffff;
   border: none;
 }
+
+.instagramLink{
+  margin-top: auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-decoration:none;
+  background: var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px 14px;
+}
+
+.instagramBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width: 82px;
+  height: 32px;
+  border-radius:10px;
+  background: linear-gradient(135deg, #f58529 0%, #dd2a7b 55%, #8134af 100%);
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+}
+
+.instagramText{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.instagramTitle{
+  color:#000;
+  font-size:16px;
+  font-weight:400;
+  line-height:1.2;
+}
+
+.instagramSubtitle{
+  color:#6b7280;
+  font-size:14px;
+  font-weight:400;
+  line-height:1.2;
+}
+
+.instagramArrow{
+  margin-left:auto;
+  color: var(--color-muted);
+  font-size:22px;
+  line-height:1;
+}
+
 .btn.primary:active,
 .btn.secondary:active{
   background: var(--brand-dark);
