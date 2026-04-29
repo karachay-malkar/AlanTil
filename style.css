@@ -258,8 +258,32 @@ input{
   border: none;
 }
 
+
+.homePanel{
+  height: 100% !important;
+}
+
+.homeMainActions .row{
+  margin-top: 0;
+}
+
+.homeMainActions{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
 .instagramLink{
-  margin-top: auto;
+  margin-top: 28px;
+}
+
+@media (min-height: 640px) {
+  .instagramLink{
+    margin-top: auto;
+  }
+}
+
+.instagramLink{
   display:flex;
   align-items:center;
   gap:12px;
