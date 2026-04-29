@@ -385,7 +385,14 @@ input{
   height: calc(100% - var(--study-bottom-panel-h) - env(safe-area-inset-bottom, 0px));
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding-bottom: 24px;
+}
+
+#viewStudy .card.big::-webkit-scrollbar{
+  display: none;
 }
 
 .studyBottomPanel{
