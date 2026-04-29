@@ -2,6 +2,7 @@
 
 :root{
   --home-top-offset: 88px;
+  --study-bottom-panel-h: 220px;
 
   --r: 22px;
   --brand: #2b89fa;
@@ -369,6 +370,32 @@ input{
 .smallNote{
   margin-top: 10px;
   line-height: 1.35;
+}
+
+
+#viewStudy{
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+#viewStudy .card.big{
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: calc(var(--study-bottom-panel-h) + 16px + env(safe-area-inset-bottom, 0px));
+}
+
+.studyBottomPanel{
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--bg);
+  padding-top: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ---------- STUDY CARD ---------- */
