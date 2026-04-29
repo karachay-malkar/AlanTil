@@ -1,5 +1,8 @@
 
+
 :root{
+  --home-top-offset: 88px;
+
   --r: 22px;
   --brand: #2b89fa;
   --brand-dark: #2b89fa;
@@ -142,6 +145,7 @@ body{
   overflow: hidden;
 }
 .view{ padding-top: 6px; }
+#viewDicts{ padding-top: 0; }
 .screen{
   height: 100vh;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -260,7 +264,24 @@ input{
 
 
 .homePanel{
-  height: 100% !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.panel.homePanel[data-unified-panel="1"]{
+  height: calc(100vh - var(--home-top-offset));
+}
+
+@supports (height: 100dvh) {
+  .panel.homePanel[data-unified-panel="1"]{
+    height: calc(100dvh - var(--home-top-offset));
+  }
+}
+
+.homeContent{
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .homeMainActions .row{
@@ -273,14 +294,9 @@ input{
   gap:12px;
 }
 
-.instagramLink{
-  margin-top: 28px;
-}
-
-@media (min-height: 640px) {
-  .instagramLink{
-    margin-top: auto;
-  }
+.instagramBlock{
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .instagramLink{
