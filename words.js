@@ -3,7 +3,7 @@ window.WORDS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1X2tc9THUxj0bZO
 
 // Версия кеша: измени число чтобы принудительно обновить данные из таблицы.
 // Например: v13 → v14 — у всех пользователей данные загрузятся заново.
-window.WORDS_CACHE_KEY = "fc_words_cache_v25";
+window.WORDS_CACHE_KEY = "fc_words_cache_v29";
 
 // (Необязательно) Человеческие названия папок.
 window.FOLDER_TITLES = {
@@ -29,8 +29,7 @@ window.WORDS_FALLBACK = [
 //
 // Expected headers (minimum):
 // id, dict, section, set, word, trans, dict_order
-// Optional: synonyms
+// Optional: synonyms, used_in_test
 //
 // Example row:
 // { id: 'B101', dict: 'Основной', section: 'Быт', set: 1, dict_order: 12, word: 'окъургъа', trans: 'читать', synonyms: 'читать' }
-

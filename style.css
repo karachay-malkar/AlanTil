@@ -1,5 +1,9 @@
 
+
 :root{
+  --home-top-offset: 88px;
+  --study-bottom-panel-h: 200px;
+
   --r: 22px;
   --brand: #2b89fa;
   --brand-dark: #2b89fa;
@@ -142,6 +146,7 @@ body{
   overflow: hidden;
 }
 .view{ padding-top: 6px; }
+#viewDicts{ padding-top: 0; }
 .screen{
   height: 100vh;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -257,6 +262,96 @@ input{
   color: #ffffff;
   border: none;
 }
+
+
+.homePanel{
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.panel.homePanel[data-unified-panel="1"]{
+  height: calc(100vh - var(--home-top-offset));
+}
+
+@supports (height: 100dvh) {
+  .panel.homePanel[data-unified-panel="1"]{
+    height: calc(100dvh - var(--home-top-offset));
+  }
+}
+
+.homeContent{
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.homeMainActions .row{
+  margin-top: 0;
+}
+
+.homeMainActions{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.instagramBlock{
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.instagramLink{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-decoration:none;
+  background: var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px 14px;
+}
+
+.instagramBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width: 82px;
+  height: 32px;
+  border-radius:10px;
+  background: linear-gradient(135deg, #f58529 0%, #dd2a7b 55%, #8134af 100%);
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+}
+
+.instagramText{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.instagramTitle{
+  color:#000;
+  font-size:16px;
+  font-weight:400;
+  line-height:1.2;
+}
+
+.instagramSubtitle{
+  color:#6b7280;
+  font-size:14px;
+  font-weight:400;
+  line-height:1.2;
+}
+
+.instagramArrow{
+  margin-left:auto;
+  color: var(--color-muted);
+  font-size:22px;
+  line-height:1;
+}
+
 .btn.primary:active,
 .btn.secondary:active{
   background: var(--brand-dark);
@@ -275,6 +370,42 @@ input{
 .smallNote{
   margin-top: 10px;
   line-height: 1.35;
+}
+
+
+#viewStudy{
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+#viewStudy .card.big{
+  height: calc(100% - var(--study-bottom-panel-h) - env(safe-area-inset-bottom, 0px));
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 24px;
+}
+
+#viewStudy .card.big::-webkit-scrollbar{
+  display: none;
+}
+
+.studyBottomPanel{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  background: var(--bg);
 }
 
 /* ---------- STUDY CARD ---------- */

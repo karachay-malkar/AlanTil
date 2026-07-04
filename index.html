@@ -28,10 +28,12 @@
   <main class="wrap">
     <!-- УРОВЕНЬ 1: СЛОВАРИ -->
     <section id="viewDicts" class="view screen">
-      <div class="panel" data-unified-panel="1">
+      <div class="panel homePanel" data-unified-panel="1">
         <div class="panelTitle">Алан тил</div>
 
-        <div class="row">
+        <div class="homeContent">
+          <div class="homeMainActions">
+          <div class="row">
           <button id="btnGlobalTest" class="btn primary">🧠 Проверь свой уровень!</button>
         </div>
 
@@ -39,8 +41,27 @@
           <button id="btnMatchWords" class="btn primary">🔗 Сопоставь слова</button>
         </div>
 
-        <div class="row">
-          <button id="btnOpenLearnMenu" class="btn primary">📚 Учить слова</button>
+          <div class="row">
+            <button id="btnOpenLearnMenu" class="btn primary">📚 Учить слова</button>
+          </div>
+          </div>
+        </div>
+
+        <div class="instagramBlock">
+        <a
+          class="instagramLink"
+          href="https://www.instagram.com/alan_til_app?igsh=MTcxanlxb2Z1MHo4cA=="
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Следите за нами в Instagram"
+        >
+          <span class="instagramBadge" aria-hidden="true">Instagram</span>
+          <span class="instagramText">
+            <span class="instagramTitle">Следите за нами в Instagram</span>
+            <span class="instagramSubtitle">Новости проекта и обновления</span>
+          </span>
+          <span class="instagramArrow" aria-hidden="true">›</span>
+        </a>
         </div>
       </div>
     </section>
@@ -225,13 +246,14 @@
         </div>
       </div>
 
-      <div class="buttons">
-        <button id="btnNo" class="btn secondary">❌ Не знаю</button>
-        <button id="btnYes" class="btn primary">✅ Знаю</button>
-      </div>
+      <div class="studyBottomPanel">
+        <div class="buttons">
+          <button id="btnNo" class="btn secondary">❌ Не знаю</button>
+          <button id="btnYes" class="btn primary">✅ Знаю</button>
+        </div>
 
-      <div class="buttons subActions">
-        <button id="btnUndo" class="btn neutral" type="button" aria-label="Назад">
+        <div class="buttons subActions">
+          <button id="btnUndo" class="btn neutral" type="button" aria-label="Назад">
           <span class="btnIcon">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a6 6 0 0 1-6 6H6v2h6a8 8 0 0 0 0-16z"></path>
@@ -249,8 +271,9 @@
         </button>
       </div>
 
-      <div class="footer">
-        <button id="btnBackToSetMenu" class="btn ghost" data-legacy-back="1">К меню сета</button>
+        <div class="footer">
+          <button id="btnBackToSetMenu" class="btn ghost" data-legacy-back="1">К меню сета</button>
+        </div>
       </div>
     </section>
   
