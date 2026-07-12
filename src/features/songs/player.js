@@ -1,5 +1,15 @@
 import { resetPlayerState, songsState } from "./state.js";
 
+const PLAY_ICON = `
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M8 5v14l11-7z"></path>
+  </svg>`;
+
+const PAUSE_ICON = `
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M6 5h4v14H6zm8 0h4v14h-4z"></path>
+  </svg>`;
+
 let audio = null;
 let cleanup = [];
 let currentContainer = null;
@@ -29,13 +39,18 @@ function updateView() {
   const range = currentContainer.querySelector("[data-audio-progress]");
   const current = currentContainer.querySelector("[data-audio-current]");
   const duration = currentContainer.querySelector("[data-audio-duration]");
+  const progress = songsState.player.duration > 0
+    ? Math.min(100, Math.max(0, (songsState.player.currentTime / songsState.player.duration) * 100))
+    : 0;
+
   if (playButton) {
-    playButton.textContent = songsState.player.playing ? "Пауза" : "Слушать";
+    playButton.innerHTML = songsState.player.playing ? PAUSE_ICON : PLAY_ICON;
     playButton.setAttribute("aria-label", songsState.player.playing ? "Поставить на паузу" : "Воспроизвести песню");
   }
   if (range) {
     range.max = String(songsState.player.duration || 0);
     range.value = String(songsState.player.currentTime || 0);
+    range.style.setProperty("--media-progress", `${progress}%`);
   }
   if (current) current.textContent = formatTime(songsState.player.currentTime);
   if (duration) duration.textContent = formatTime(songsState.player.duration);
@@ -65,25 +80,18 @@ export function getPlayerState() {
 
 export function mountPlayer(container, song, { onStateChange } = {}) {
   disposePlayer();
+  if (!container || !song?.audioUrl) return null;
+
   currentContainer = container;
-  songsState.player.songId = song?.id || null;
-
-  if (!container) return null;
-  if (!song?.audioUrl) {
-    container.innerHTML = `<div class="songAudioUnavailable">Аудиозапись пока не добавлена.</div>`;
-    return null;
-  }
-
+  songsState.player.songId = song.id || null;
   container.innerHTML = `
-    <div class="songPlayer" aria-label="Аудиоплеер">
-      <button class="btn primary songPlayButton" type="button" data-audio-play>Слушать</button>
-      <div class="songProgressRow">
-        <span data-audio-current>0:00</span>
-        <input class="songProgress" type="range" min="0" max="0" step="0.1" value="0" data-audio-progress aria-label="Позиция воспроизведения" />
-        <span data-audio-duration>0:00</span>
-      </div>
-      <div class="songPlayerError hidden" data-audio-error>Не удалось загрузить аудиозапись.</div>
-    </div>`;
+    <div class="mediaPlayer songPlayer" aria-label="Аудиоплеер">
+      <button class="mediaPlayButton" type="button" data-audio-play aria-label="Воспроизвести песню">${PLAY_ICON}</button>
+      <span class="mediaTime" data-audio-current>0:00</span>
+      <input class="mediaProgress songProgress" type="range" min="0" max="0" step="0.1" value="0" data-audio-progress aria-label="Позиция воспроизведения" />
+      <span class="mediaTime" data-audio-duration>0:00</span>
+    </div>
+    <div class="mediaError hidden" data-audio-error>Не удалось загрузить аудиозапись.</div>`;
 
   audio = new Audio();
   audio.preload = "metadata";

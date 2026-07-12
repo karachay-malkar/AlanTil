@@ -41,10 +41,6 @@
   flex:0 0 38px;
 }
 
-.wordCardHeader .starBtn.on{
-  color:var(--brand);
-}
-
 .wordCardMeanings .groups{
   margin-top:14px;
 }

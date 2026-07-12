@@ -36,6 +36,8 @@
   --color-neutral: #d1d5db;
   --color-success: #22c55e;
   --color-danger: #ef4444;
+  --favorite-active: #D4A017;
+  --favorite-active-soft: rgba(212,160,23,0.12);
   --color-check-muted: rgba(15,23,42,0.25);
   --color-check-light: rgb(255 255 255 / 62%);
   --color-overlay: rgba(15,23,42,0.55);
