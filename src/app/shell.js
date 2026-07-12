@@ -22,6 +22,7 @@ export function createShell() {
                 <div class="row"><button class="btn primary" type="button" data-route="test.menu">🧠 Проверь свой уровень!</button></div>
                 <div class="row"><button class="btn primary" type="button" data-route="match.menu">🔗 Сопоставь слова</button></div>
                 <div class="row"><button class="btn primary" type="button" data-route="learn.catalog">📚 Учить слова</button></div>
+                <div class="row"><button class="btn primary" type="button" data-route="songs.playlists">🎵 Песни</button></div>
               </div>
             </div>
             <div class="instagramBlock">
