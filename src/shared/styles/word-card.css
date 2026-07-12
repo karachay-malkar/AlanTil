@@ -1,0 +1,55 @@
+.infoModalCard{
+  max-height:calc(100vh - 32px);
+  overflow-y:auto;
+}
+
+@supports (height:100dvh){
+  .infoModalCard{
+    max-height:calc(100dvh - 32px);
+  }
+}
+
+.infoModalContent{
+  margin-top:14px;
+}
+
+.wordCard{
+  text-align:left;
+}
+
+.wordCardHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.wordCardWord{
+  font-size:var(--fs-24px);
+  font-weight:var(--fw-bold);
+  color:var(--color-main);
+  overflow-wrap:anywhere;
+}
+
+.wordCardPos{
+  margin-top:4px;
+  color:var(--color-muted);
+  font-size:var(--fs-14px);
+}
+
+.wordCardHeader .starBtn{
+  flex:0 0 38px;
+}
+
+.wordCardHeader .starBtn.on{
+  color:var(--brand);
+}
+
+.wordCardMeanings .groups{
+  margin-top:14px;
+}
+
+.wordCardMeanings .groupRow{
+  margin-left:0;
+  margin-right:0;
+}
