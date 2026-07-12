@@ -1,0 +1,77 @@
+*{ box-sizing:border-box; }
+html,
+body,
+main.wrap{
+  height:100%;
+}
+
+html,
+body{
+  min-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  html,
+  body{
+    min-height: 100dvh;
+  }
+}
+
+body{
+  margin:0;
+  font-family: var(--font-base);
+  background: var(--bg);
+  color: var(--color-main);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden{ display:none !important; }
+
+.typo-title,
+.panelTitle,
+.secTitle{
+  font-family: var(--font-base);
+  font-size: var(--fs-20px);
+  font-weight: var(--fw-bold);
+  color: var(--color-main);
+}
+
+.typo-subtitle,
+.hintText,
+.meta,
+.learnLabel{
+  font-family: var(--font-base);
+  font-size: var(--fs-16px);
+  font-weight: var(--fw-regular);
+  color: var(--color-muted);
+}
+
+.typo-card-main,
+.groupPill {
+  font-family: var(--font-base);
+  font-size: var(--fs-22px);
+  font-weight: var(--fw-semibold);
+  color: var(--color-main);
+}
+
+.typo-body,
+.trans {
+  font-family: var(--font-base);
+  font-size: var(--fs-16px);
+  font-weight: var(--fw-regular);
+  color: var(--color-main);
+}
+
+.typo-muted,
+.setTileCount,
+.hint,
+.smallNote,
+.dictNum{
+  font-family: var(--font-base);
+  font-size: var(--fs-14px);
+  font-weight: var(--fw-regular);
+  color: var(--color-muted);
+}
+

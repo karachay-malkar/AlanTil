@@ -1,0 +1,357 @@
+#viewStudy{
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+#viewStudy .card.big{
+  height: calc(100% - var(--study-bottom-panel-h) - env(safe-area-inset-bottom, 0px));
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 24px;
+}
+
+#viewStudy .card.big::-webkit-scrollbar{
+  display: none;
+}
+
+.studyBottomPanel{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+/* ---------- STUDY CARD ---------- */
+.card{
+  background: var(--card-bg);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  user-select:none;
+  touch-action: pan-y;
+  transition: transform .18s ease, opacity .18s ease;
+  position: relative;
+}
+.card.big{
+  min-height: 65vh;
+  display:flex;
+  flex-direction:column;
+}
+
+.word{
+  margin-top: 50px;
+  text-align:center;
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-22px);
+}
+
+.hint{
+  margin-top: auto;
+  padding-top: 12px;
+  text-align:center;
+}
+
+.trans{
+  margin-top: 12px;
+  text-align:center;
+}
+
+.groupPill .gTrans{
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-20px)
+}
+
+.groupPill .gEx{
+  font-size: var(--fs-16px);
+  font-weight: var(--fw-regular);
+  color: var(--color-muted);
+  line-height: 1.3;
+  margin-top: 12px;
+}
+
+.card{ will-change: transform, opacity; }
+
+.buttons,.footer{ display:flex; gap:10px; margin-top: 12px; }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 380px){
+  .word{ font-size: calc(var(--fs-20px) * 1.7); }
+}
+
+/*** DICTIONARY ***/
+#dictContentList{
+  border-top: 0px solid var(--border);
+}
+
+#dictContentList .sectionHeader{
+  padding-top:10px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-muted);
+  cursor:pointer;
+  user-select:none;
+}
+
+#dictContentList .dictWordRow{
+  display: grid;
+  grid-template-columns: 28px 1fr 44px;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+
+#dictContentList .dictWordRow .w{
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-16px);
+}
+
+#dictContentList .dictWordRow .t{
+  margin-top: 2px;
+  font-size: var(--fs-16px);
+  color: var(--color-muted);
+}
+
+#dictContentList .dictNum{
+  text-align: right;
+}
+
+/* === v9.3 FINAL FIX: correct icon sizing & alignment === */
+.subActions .btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.subActions .btnLabel{
+  display:flex;
+  align-items:center;
+}
+
+.subActions .btnIcon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+.subActions .btnIcon svg{
+  width:20px;
+  height:20px;
+  display:block;
+}
+
+
+/* === v9.5: Flip-card animation === */
+.card{
+  perspective: 1200px;
+}
+
+.cardInner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+
+.card.flipped .cardInner{
+  transform: rotateY(180deg);
+}
+
+.cardFace{
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px;
+}
+
+.cardFront{
+  justify-content: flex-start;
+}
+
+.cardBack{
+  transform: rotateY(180deg);
+  justify-content: flex-start;
+}
+
+
+/* === v9.5.5 Star toggle fix === */
+.starSvg{
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.favAction.active .starSvg{
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+
+/* === v9.8: Sections + Sets combined grid === */
+.secBlock{
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.secBlock:first-child{
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.secTitle{
+  margin-bottom: 10px;
+}
+
+.setsGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.setTile,
+.set-tile{
+  --tile-radius: 12px;
+  --corner-size: 90cqh;
+
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  aspect-ratio: 1 / 0.15;
+  min-height: 50px;
+  max-height: 80px;
+  container-type: size;
+
+  border-radius: var(--tile-radius);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.setTile:not(.selected),
+.set-tile:not(.selected){
+  -webkit-mask:
+    radial-gradient(circle at 100% 0, transparent var(--corner-size), var(--mask-solid) calc(var(--corner-size) + 1px)),
+    linear-gradient(var(--mask-solid) 0 0);
+  -webkit-mask-composite: source-over;
+  mask:
+    radial-gradient(circle at 100% 0, transparent var(--corner-size), var(--mask-solid) calc(var(--corner-size) + 1px)),
+    linear-gradient(var(--mask-solid) 0 0);
+  mask-composite: add;
+}
+
+.setDone,
+.setTileCorner,
+.set-tile__corner{
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--corner-size);
+  height: var(--corner-size);
+  border: 1px solid var(--border);
+  margin: -1px;
+  padding: 0;
+  box-sizing: border-box;
+  border-bottom-left-radius: var(--tile-radius);
+  border-top-right-radius: var(--tile-radius);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.setTile.selected .setDone,
+.set-tile.selected .set-tile__corner{
+  background: var(--color-success);
+}
+
+.setTile:active,
+.set-tile:active{
+  transform: translateY(1px);
+}
+
+.setTileTitle{
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-14px);
+  line-height: 1.2;
+  padding: 0 2px;
+  max-width: calc(100% - 30px);
+  margin: 0 auto;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* Slightly smaller tiles on very narrow screens */
+@media (max-width: 360px){
+  .setsGrid{ gap: 8px; }
+  .setTileTitle{ font-size: var(--fs-22px); }
+}
+
+
+.setCheck{
+  width: 80%;
+  height: 80%;
+}
+
+.setCheck path{
+  stroke: var(--color-check-muted);
+}
+
+.setCheck rect{
+    stroke: var(--color-check-light);
+}
+
+.setCheck.active path{
+  stroke: var(--color-success);
+}
+
+.setTile.selected .setCheck.active path,
+.setTile.selected .setCheck path,
+.set-tile.selected .setCheck.active path,
+.set-tile.selected .setCheck path{
+  stroke: var(--color-white);
+}
+
+.setTile.selected .setCheck rect,
+.set-tile.selected .setCheck rect{
+  display: none;
+}
+
+
