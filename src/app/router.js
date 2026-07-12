@@ -2,6 +2,7 @@ const FEATURE_LOADERS = {
   learn: () => import("../features/learn/index.js"),
   test: () => import("../features/test/index.js"),
   match: () => import("../features/match/index.js"),
+  songs: () => import("../features/songs/index.js"),
 };
 
 function featureOf(route) {
