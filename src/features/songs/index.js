@@ -2,7 +2,7 @@ import { getWords } from "../../shared/data/word-repository.js";
 import { closeInfoModal } from "../../shared/ui/info-modal.js";
 import { renderSongsCatalog } from "./catalog.js";
 import { disposePlayer } from "./player.js";
-import { getPlaylists, getSongById, getSongsByPlaylist } from "./repository.js";
+import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js";
 import { renderPlaylists } from "./playlists.js";
 import { renderSongView } from "./song-view.js";
 import { songsState } from "./state.js";
@@ -22,8 +22,18 @@ export async function mount(context, params = {}) {
   }
 
   if (screen === "catalog") {
-    const playlists = await getPlaylists();
     const playlistId = String(params.playlistId || songsState.selectedPlaylistId || "");
+    if (playlistId === "__fav__") {
+      renderSongsCatalog(
+        context,
+        { id: "__fav__", title: "Избранные песни" },
+        await getSongs(),
+        controller.signal,
+      );
+      return;
+    }
+
+    const playlists = await getPlaylists();
     const playlist = playlists.find((item) => item.id === playlistId) || null;
     renderSongsCatalog(context, playlist, await getSongsByPlaylist(playlistId), controller.signal);
     return;

@@ -1,14 +1,6 @@
+import { PAUSE_ICON_SVG, PLAY_ICON_SVG } from "../../shared/ui/icons.js";
+import { renderMediaPlayer } from "../../shared/ui/media-player.js";
 import { resetPlayerState, songsState } from "./state.js";
-
-const PLAY_ICON = `
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M8 5v14l11-7z"></path>
-  </svg>`;
-
-const PAUSE_ICON = `
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M6 5h4v14H6zm8 0h4v14h-4z"></path>
-  </svg>`;
 
 let audio = null;
 let cleanup = [];
@@ -44,7 +36,7 @@ function updateView() {
     : 0;
 
   if (playButton) {
-    playButton.innerHTML = songsState.player.playing ? PAUSE_ICON : PLAY_ICON;
+    playButton.innerHTML = songsState.player.playing ? PAUSE_ICON_SVG : PLAY_ICON_SVG;
     playButton.setAttribute("aria-label", songsState.player.playing ? "Поставить на паузу" : "Воспроизвести песню");
   }
   if (range) {
@@ -84,14 +76,7 @@ export function mountPlayer(container, song, { onStateChange } = {}) {
 
   currentContainer = container;
   songsState.player.songId = song.id || null;
-  container.innerHTML = `
-    <div class="mediaPlayer songPlayer" aria-label="Аудиоплеер">
-      <button class="mediaPlayButton" type="button" data-audio-play aria-label="Воспроизвести песню">${PLAY_ICON}</button>
-      <span class="mediaTime" data-audio-current>0:00</span>
-      <input class="mediaProgress songProgress" type="range" min="0" max="0" step="0.1" value="0" data-audio-progress aria-label="Позиция воспроизведения" />
-      <span class="mediaTime" data-audio-duration>0:00</span>
-    </div>
-    <div class="mediaError hidden" data-audio-error>Не удалось загрузить аудиозапись.</div>`;
+  container.innerHTML = renderMediaPlayer();
 
   audio = new Audio();
   audio.preload = "metadata";

@@ -76,43 +76,6 @@
   .word{ font-size: calc(var(--fs-20px) * 1.7); }
 }
 
-/*** DICTIONARY ***/
-#dictContentList{
-  border-top: 0px solid var(--border);
-}
-
-#dictContentList .sectionHeader{
-  padding-top:10px;
-  font-weight: var(--fw-semibold);
-  color: var(--color-muted);
-  cursor:pointer;
-  user-select:none;
-}
-
-#dictContentList .dictWordRow{
-  display: grid;
-  grid-template-columns: 28px 1fr 44px;
-  gap: 10px;
-  padding: 10px 4px;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-}
-
-#dictContentList .dictWordRow .w{
-  font-weight: var(--fw-semibold);
-  font-size: var(--fs-16px);
-}
-
-#dictContentList .dictWordRow .t{
-  margin-top: 2px;
-  font-size: var(--fs-16px);
-  color: var(--color-muted);
-}
-
-#dictContentList .dictNum{
-  text-align: right;
-}
-
 /* === v9.3 FINAL FIX: correct icon sizing & alignment === */
 .subActions .btn{
   display:flex;
@@ -174,19 +137,6 @@
 .cardBack{
   transform: rotateY(180deg);
   justify-content: flex-start;
-}
-
-
-/* === v9.5.5 Star toggle fix === */
-.starSvg{
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-}
-
-.favAction.active .starSvg{
-  fill: currentColor;
-  stroke: currentColor;
 }
 
 

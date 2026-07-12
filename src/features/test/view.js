@@ -2,6 +2,7 @@ import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js";
 import { dictsFrom, isWordEnabledInTestModes, sortNatural, uniq } from "../../shared/domain/word-selection.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js";
+import { renderContentListRow } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { pickOptions, startTest, submitAnswer } from "./engine.js";
@@ -123,16 +124,17 @@ export function renderTestMenu(context, words, signal) {
 
 function renderResults(context, signal, redraw) {
   const percentage = Math.round((testState.correct / Math.max(1, testState.items.length)) * 100);
-  const rows = testState.results.map((result) => `
-    <div class="resultItem" data-id="${escapeHtml(result.id)}">
-      <div class="resultMark ${result.isCorrect ? "ok" : "bad"}">${result.isCorrect ? STATUS_OK_ICON_SVG : STATUS_BAD_ICON_SVG}</div>
-      <div class="resultBody"><div class="resultWord">${escapeHtml(result.questionText || result.word)}</div><div class="resultLine"><span class="lbl">Правильно:</span> ${escapeHtml(result.correctAnswer)}</div><div class="resultLine"><span class="lbl">Твой ответ:</span> ${escapeHtml(result.userAnswer || "—")}</div></div>
-      ${renderStarButton(result.id, `data-word-id="${escapeHtml(result.id)}"`)}
-    </div>`).join("");
+  const rows = testState.results.map((result) => renderContentListRow({
+    id: result.id,
+    leadingHtml: `<span class="contentListStatus ${result.isCorrect ? "ok" : "bad"}">${result.isCorrect ? STATUS_OK_ICON_SVG : STATUS_BAD_ICON_SVG}</span>`,
+    primary: result.questionText || result.word,
+    secondaryHtml: `<span class="contentListDetail"><strong>Правильно:</strong> ${escapeHtml(result.correctAnswer)}</span><span class="contentListDetail"><strong>Твой ответ:</strong> ${escapeHtml(result.userAnswer || "—")}</span>`,
+    trailingHtml: renderStarButton(result.id, `data-word-id="${escapeHtml(result.id)}"`),
+  })).join("");
 
   context.root.innerHTML = panel({
     title: "Результаты теста",
-    body: `<div class="hintText">Правильно: ${testState.correct}/${testState.items.length} (${percentage}%)</div><div id="testOptions" class="stack resultScroll"><div class="resultList">${rows || "<div class='hintText'>Нет результатов.</div>"}</div><div class="row"><button class="btn primary" id="btnTestAgain2" type="button">Пройти ещё раз</button></div></div>`,
+    body: `<div class="hintText">Правильно: ${testState.correct}/${testState.items.length} (${percentage}%)</div><div id="testOptions" class="stack resultScroll"><div class="contentList">${rows || "<div class='hintText'>Нет результатов.</div>"}</div><div class="row"><button class="btn primary" id="btnTestAgain2" type="button">Пройти ещё раз</button></div></div>`,
   });
 
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
