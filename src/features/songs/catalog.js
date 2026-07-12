@@ -34,12 +34,14 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     list.innerHTML = filtered.length
       ? filtered.map((song, index) => `
           <button class="songCatalogItem" type="button" data-song-id="${escapeHtml(song.id)}">
-            <span class="songCatalogNumber">${index + 1}</span>
-            <span class="songCatalogText">
-              <span class="songCatalogTitle">${escapeHtml(song.title)}</span>
-              ${song.artist ? `<span class="songCatalogArtist">${escapeHtml(song.artist)}</span>` : ""}
+            <span class="groupNum songCatalogNumber">${escapeHtml(song.order || index + 1)}</span>
+            <span class="songCatalogPill">
+              <span class="songCatalogText">
+                <span class="songCatalogTitle">${escapeHtml(song.title)}</span>
+                ${song.artist ? `<span class="songCatalogArtist">${escapeHtml(song.artist)}</span>` : ""}
+              </span>
+              <span class="songsChevron" aria-hidden="true">›</span>
             </span>
-            <span class="songsChevron" aria-hidden="true">›</span>
           </button>`).join("")
       : `<div class="songsEmptyState"><div class="songsEmptyTitle">Ничего не найдено</div></div>`;
 
