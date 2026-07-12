@@ -9,10 +9,7 @@ export function renderWordCard(word) {
   return `
     <article class="wordCard" data-word-card-id="${escapeHtml(word?.id || "")}">
       <div class="wordCardHeader">
-        <div>
-          <div class="wordCardWord">${escapeHtml(word?.word || "")}</div>
-          ${word?.pos ? `<div class="wordCardPos">${escapeHtml(word.pos)}</div>` : ""}
-        </div>
+        <div class="wordCardWord">${escapeHtml(word?.word || "")}</div>
         ${renderStarButton(word?.id || "", `data-word-card-star="1"`)}
       </div>
       <div class="wordCardMeanings">${groupsHost.innerHTML}</div>
@@ -23,7 +20,7 @@ export function openWordCard(context, word) {
   if (!word) return null;
   wordFavorites.reload();
   const modal = openInfoModal(context.shell.modalRoot, {
-    title: "Словарная карточка",
+    title: "",
     content: renderWordCard(word),
     closeText: "Закрыть",
   });

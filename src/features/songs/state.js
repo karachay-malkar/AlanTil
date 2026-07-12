@@ -3,6 +3,8 @@ export const songsState = {
   selectedPlaylistId: null,
   selectedSongId: null,
   searchQuery: "",
+  searchMode: "title",
+  searchOpen: false,
   scrollPositions: {},
   player: {
     songId: null,
@@ -26,6 +28,8 @@ export function resetSongsState() {
   songsState.selectedPlaylistId = null;
   songsState.selectedSongId = null;
   songsState.searchQuery = "";
+  songsState.searchMode = "title";
+  songsState.searchOpen = false;
   songsState.scrollPositions = {};
   resetPlayerState();
 }

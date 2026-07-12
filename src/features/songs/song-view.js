@@ -28,7 +28,6 @@ export function renderSongView(context, song, words, signal) {
     title: escapeHtml(song.title),
     headerExtra: `<button id="songInfoButton" class="iconBtn songInfoButton" type="button" aria-label="Информация о песне" title="Информация о песне">i</button>`,
     body: `
-      ${song.artist ? `<div class="songArtist">${escapeHtml(song.artist)}</div>` : ""}
       ${song.audioUrl ? `<div id="songPlayerRoot" class="songPlayerRoot"></div>` : ""}
       ${lyricsMarkup ? `<article class="songLyrics" id="songLyrics">${lyricsMarkup}</article>` : ""}`,
     classes: "songsPanel songViewPanel",
