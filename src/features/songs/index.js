@@ -12,8 +12,6 @@ let activeContext = null;
 
 export async function mount(context, params = {}) {
   activeContext = context;
-  context.ensureStyle("src/features/songs/songs.css", "songs-feature-style");
-  context.ensureStyle("src/shared/styles/word-card.css", "word-card-style");
   controller = new AbortController();
   const screen = params.screen || "playlists";
   songsState.currentScreen = screen;
