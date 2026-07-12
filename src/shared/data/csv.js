@@ -6,18 +6,20 @@ export function normalizeToCsvUrl(url) {
   if (value.includes("output=csv") || value.includes("out:csv") || value.includes("format=csv")) return value;
   const match = value.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if (!match) return value;
-  return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv`;
+  const gid = value.match(/[?&#]gid=(\d+)/)?.[1];
+  return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv${gid ? `&gid=${gid}` : ""}`;
 }
 
-export function parseCsv(text) {
-  const rows = [];
+export function parseCsvRows(text) {
+  const matrix = [];
   let row = [];
   let current = "";
   let inQuotes = false;
+  const source = String(text || "");
 
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    const next = text[index + 1];
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
     if (inQuotes) {
       if (char === '"' && next === '"') {
         current += '"';
@@ -34,7 +36,7 @@ export function parseCsv(text) {
       current = "";
     } else if (char === "\n") {
       row.push(current);
-      rows.push(row);
+      matrix.push(row);
       row = [];
       current = "";
     } else if (char !== "\r") {
@@ -44,47 +46,49 @@ export function parseCsv(text) {
 
   if (current.length || row.length) {
     row.push(current);
-    rows.push(row);
+    matrix.push(row);
   }
-  if (!rows.length) return [];
+  if (!matrix.length) return { headers: [], rows: [] };
 
-  const headers = rows[0].map((header) => String(header || "").trim().toLowerCase());
-  const column = (name) => headers.findIndex((header) => header === name);
-  const idIndex = column("id");
-  const dictIndex = column("dict");
-  const sectionIndex = column("section");
-  const folderIndex = column("folder");
-  const setIndex = column("set");
-  const wordIndex = column("word");
-  const transIndex = column("trans");
-  const exampleIndex = column("example");
-  const posIndex = column("pos");
-  const synonymsIndex = column("synonyms");
-  const usedInTestIndex = column("used_in_test");
-  const dictOrderIndex = column("dict_order");
+  const headers = matrix[0].map((header, index) => {
+    const value = String(header || "").trim().toLowerCase();
+    return index === 0 ? value.replace(/^\uFEFF/, "") : value;
+  });
+  const rows = matrix.slice(1)
+    .filter((columns) => columns && !columns.every((cell) => !String(cell || "").trim()))
+    .map((columns) => {
+      const object = {};
+      headers.forEach((header, index) => {
+        if (header) object[header] = columns[index] ?? "";
+      });
+      return object;
+    });
 
-  if (idIndex === -1 || setIndex === -1 || wordIndex === -1 || transIndex === -1) return [];
+  return { headers, rows };
+}
+
+export function parseCsv(text) {
+  const { headers, rows } = parseCsvRows(text);
+  if (!headers.length) return [];
+  const has = (name) => headers.includes(name);
+  if (!has("id") || !has("set") || !has("word") || !has("trans")) return [];
 
   const output = [];
-  for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
-    const columns = rows[rowIndex];
-    if (!columns || columns.every((cell) => !String(cell || "").trim())) continue;
-
+  for (const row of rows) {
     const normalized = normalizeWordEntry({
-      id: columns[idIndex],
-      dict: dictIndex !== -1 ? columns[dictIndex] : "Словарь",
-      section: sectionIndex !== -1 ? columns[sectionIndex] : (folderIndex !== -1 ? columns[folderIndex] : "Раздел"),
-      set: columns[setIndex],
-      word: columns[wordIndex],
-      trans: columns[transIndex],
-      example: exampleIndex !== -1 ? columns[exampleIndex] : "",
-      pos: posIndex !== -1 ? columns[posIndex] : "",
-      synonyms: synonymsIndex !== -1 ? columns[synonymsIndex] : "",
-      used_in_test: usedInTestIndex !== -1 ? columns[usedInTestIndex] : undefined,
-      dict_order: dictOrderIndex !== -1 ? columns[dictOrderIndex] : 0,
+      id: row.id,
+      dict: has("dict") ? row.dict : "Словарь",
+      section: has("section") ? row.section : (has("folder") ? row.folder : "Раздел"),
+      set: row.set,
+      word: row.word,
+      trans: row.trans,
+      example: has("example") ? row.example : "",
+      pos: has("pos") ? row.pos : "",
+      synonyms: has("synonyms") ? row.synonyms : "",
+      used_in_test: has("used_in_test") ? row.used_in_test : undefined,
+      dict_order: has("dict_order") ? row.dict_order : 0,
     });
     if (normalized) output.push(normalized);
   }
-
   return output;
 }
