@@ -14,15 +14,23 @@ export function closeInfoModal() {
   document.body.classList.remove("modal-open");
 }
 
-export function openInfoModal(root, { title = "Информация", content = "", closeText = "Закрыть" } = {}) {
+export function openInfoModal(root, { title = "", content = "", closeText = "Закрыть" } = {}) {
   if (!root) throw new Error("Modal root is required");
   closeInfoModal();
   activeRoot = root;
+  const normalizedTitle = String(title || "").trim();
+  const titleMarkup = normalizedTitle
+    ? `<div class="exitModalText infoModalTitle" id="infoModalTitle"></div>`
+    : "";
+  const accessibility = normalizedTitle
+    ? `aria-labelledby="infoModalTitle"`
+    : `aria-label="Информация"`;
+
   root.innerHTML = `
-    <div class="exitModal infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+    <div class="exitModal infoModal" role="dialog" aria-modal="true" ${accessibility}>
       <div class="exitModalBackdrop" data-info-close="1"></div>
-      <div class="exitModalCard infoModalCard">
-        <div class="exitModalText infoModalTitle" id="infoModalTitle"></div>
+      <div class="exitModalCard infoModalCard ${normalizedTitle ? "hasInfoModalTitle" : "noInfoModalTitle"}">
+        ${titleMarkup}
         <div class="infoModalContent"></div>
         <div class="exitModalActions">
           <button class="btn primary" type="button" data-info-close="1"></button>
@@ -30,7 +38,8 @@ export function openInfoModal(root, { title = "Информация", content = 
       </div>
     </div>`;
 
-  root.querySelector("#infoModalTitle").textContent = String(title || "Информация");
+  const titleElement = root.querySelector("#infoModalTitle");
+  if (titleElement) titleElement.textContent = normalizedTitle;
   root.querySelector(".infoModalContent").innerHTML = String(content || "");
   root.querySelector(".exitModalActions button").textContent = String(closeText || "Закрыть");
   root.querySelectorAll("[data-info-close='1']").forEach((element) => {
