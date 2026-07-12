@@ -1,0 +1,62 @@
+:root{
+  --home-top-offset: 88px;
+  --study-bottom-panel-h: 200px;
+
+  --r: 22px;
+  --brand: #2b89fa;
+  --brand-dark: #2b89fa;
+  --bg: #F6FAFD;
+  --card-bg: #FFFFFF;
+  --text-main: #0F172A;
+  --text-secondary: #00000075;
+  --border: rgba(15,23,42,0.10);
+
+  /* === Typography system === */
+  --font-base: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+
+  --fw-bold: 950;
+  --fw-semibold: 700;
+  --fw-regular: 400;
+
+  --fs-24px: 24px;
+  --fs-22px: 22px;
+  --fs-20px: 20px;
+  --fs-18px: 18px;
+  --fs-16px: 16px;
+  --fs-14px: 14px;
+
+  --color-main: var(--text-main);
+  --color-muted: var(--text-secondary);
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-icon: #111111;
+  --color-text-dark: #111827;
+  --color-muted-ui: #6b7280;
+  --color-input-border: #dddddd;
+  --color-neutral: #d1d5db;
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-check-muted: rgba(15,23,42,0.25);
+  --color-check-light: rgb(255 255 255 / 62%);
+  --color-overlay: rgba(15,23,42,0.55);
+  --color-modal-shadow: rgba(15,23,42,0.22);
+  --brand-soft-06: rgba(17,169,232,0.06);
+  --brand-soft-08: rgba(17,169,232,0.08);
+  --brand-soft-10: rgba(17,169,232,0.10);
+  --brand-soft-12: rgba(17,169,232,0.12);
+  --brand-soft-18: rgba(17,169,232,0.18);
+  --brand-soft-20: rgba(17,169,232,0.20);
+  --brand-soft-25: rgba(17,169,232,0.25);
+  --brand-soft-45: rgba(17,169,232,0.45);
+  --brand-soft-55: rgba(17,169,232,0.55);
+  --success-soft-12: rgba(34,197,94,0.12);
+  --success-soft-45: rgba(34,197,94,0.45);
+  --danger-soft-10: rgba(239,68,68,0.10);
+  --danger-soft-45: rgba(239,68,68,0.45);
+  --word-group-bg: rgb(102 210 255 / 16%);
+  --instagram-gradient: linear-gradient(135deg, #f58529 0%, #dd2a7b 55%, #8134af 100%);
+  --mask-solid: #000000;
+  --swipe-brand-rgb: 17,169,232;
+  --swipe-success-rgb: 34,197,94;
+  --swipe-danger-rgb: 239,68,68;
+}

@@ -1,0 +1,45 @@
+/* === v9.9: Match words game === */
+.matchColumns{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.matchCol{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+
+.matchCard{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  font-weight: var(--fw-semibold);
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select:none;
+}
+
+.matchCard:active{ transform: translateY(1px); }
+
+.matchCard.selected{
+  border-color: var(--brand-soft-55);
+  background: var(--brand-soft-10);
+}
+
+.matchCard.matched{
+  border-color: var(--success-soft-45);
+  background: var(--success-soft-12);
+}
+
+.matchCard.wrong{
+  border-color: var(--danger-soft-45);
+  background: var(--danger-soft-10);
+}
+
