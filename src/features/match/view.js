@@ -3,6 +3,7 @@ import { dictsFrom, isWordEnabledInTestModes, shuffle, sortNatural, uniq } from 
 import { normalizeId } from "../../shared/domain/word-normalizer.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STATUS_BAD_ICON_SVG } from "../../shared/ui/icons.js";
+import { renderContentListRow } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { bumpFailure, markSolved, nextRound, startMatch } from "./engine.js";
@@ -216,15 +217,16 @@ export function renderMatchResult(context, words, signal) {
     .sort((a, b) => b.fails - a.fails);
 
   const content = problemWords.length
-    ? problemWords.map((word) => `
-      <div class="resultItem analyticsResultItem" data-id="${escapeHtml(word.id)}">
-        <div class="resultMark bad analyticsFailMark" aria-label="Ошибок: ${word.fails}">${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${word.fails}</span></div>
-        <div class="resultBody"><div class="resultWord">${escapeHtml(word.word)}</div><div class="resultLine analyticsTranslation">${escapeHtml(word.trans)}</div></div>
-        ${renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`)}
-      </div>`).join("")
+    ? problemWords.map((word) => renderContentListRow({
+        id: word.id,
+        leadingHtml: `<span class="contentListStatus bad analyticsFailMark" aria-label="Ошибок: ${word.fails}">${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${word.fails}</span></span>`,
+        primary: word.word,
+        secondary: word.trans,
+        trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
+      })).join("")
     : `<div class="smallNote noteCenter"><div class="noteTitle">Аперим!</div><div class="successNoteLine">✅ Все пары собраны с первого раза</div></div>`;
 
-  context.root.innerHTML = panel({ title: "Результат игры", body: `<div id="matchResultList" class="list">${content}</div>` });
+  context.root.innerHTML = panel({ title: "Результат игры", body: `<div id="matchResultList" class="contentList">${content}</div>` });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
     button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal });
   });

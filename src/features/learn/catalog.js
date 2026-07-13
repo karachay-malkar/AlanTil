@@ -1,6 +1,7 @@
 import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js";
 import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
+import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { getHiddenSet, isSetFinished, learnState, setHiddenSet, toggleSetFinished } from "./state.js";
@@ -27,12 +28,14 @@ function wireStars(container, wordsById, rerender) {
 
 export function renderCatalog(context, words, signal) {
   const dicts = dictsFrom(words);
+  const items = [
+    { id: "__fav__", title: "Избранное", favorite: true },
+    ...dicts.map((dict) => ({ id: dict, title: dictTitle(dict) })),
+  ];
+
   context.root.innerHTML = panel({
     title: "Учить слова",
-    body: `<div id="dictsList" class="stack">
-      <button class="btn" type="button" data-dict="__fav__">⭐ Избранное</button>
-      ${dicts.map((dict) => `<button class="btn" type="button" data-dict="${escapeHtml(dict)}">${escapeHtml(dictTitle(dict))}</button>`).join("")}
-    </div><div class="smallNote"></div>`,
+    body: renderSectionMenu(items, { dataName: "dict" }),
   });
 
   context.root.querySelectorAll("[data-dict]").forEach((button) => {
@@ -118,7 +121,7 @@ export function renderDictionaryContent(context, words, signal) {
   context.root.innerHTML = panel({
     title: "Содержание словаря",
     headerExtra: `<input id="dictSearchInput" class="searchInput" type="text" placeholder="Поиск..." />`,
-    body: `<div id="dictContentList" class="stack"></div>`,
+    body: `<div id="dictContentList" class="contentList contentListGrouped"></div>`,
   });
 
   const input = context.root.querySelector("#dictSearchInput");
@@ -140,12 +143,13 @@ export function renderDictionaryContent(context, words, signal) {
     list.innerHTML = Array.from(grouped.entries()).map(([section, entries]) => `
       <div class="sectionHeader" data-section-header>▸ ${escapeHtml(sectionTitle(section))}</div>
       <div class="hidden" data-section-body>
-        ${entries.map((word) => `
-          <div class="dictWordRow">
-            <div class="dictNum">${Number(word.dict_order)}.</div>
-            <div><div class="w">${escapeHtml(word.word)}</div><div class="t">${escapeHtml(word.trans)}</div></div>
-            ${renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`)}
-          </div>`).join("")}
+        ${entries.map((word) => renderContentListRow({
+          id: word.id,
+          leadingHtml: `<span class="contentListIndex">${Number(word.dict_order)}.</span>`,
+          primary: word.word,
+          secondary: word.trans,
+          trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
+        })).join("")}
       </div>`).join("");
 
     list.querySelectorAll("[data-section-header]").forEach((header) => {
@@ -182,7 +186,7 @@ export function renderSetMenu(context, words, signal) {
       <div class="hintText" id="setMenuInfo"></div>
       <div class="row"><button id="btnModeKb" class="btn primary" type="button">АЛАН → РУС</button><button id="btnModeRu" class="btn primary" type="button">РУС → АЛАН</button></div>
       <div class="row"><button id="btnSetShowAll" class="btn" type="button">Показать все</button><button id="btnSetHideAll" class="btn" type="button">Скрыть все</button></div>
-      <div id="setWordsList" class="list"></div>`,
+      <div id="setWordsList" class="contentList"></div>`,
   });
 
   const info = context.root.querySelector("#setMenuInfo");
@@ -196,16 +200,18 @@ export function renderSetMenu(context, words, signal) {
 
   function draw() {
     const all = allWords();
-    list.innerHTML = all.map((word) => `
-      <div class="item" data-id="${escapeHtml(word.id)}">
-        <input class="checkbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} />
-        <div><div class="w">${escapeHtml(word.word)}</div><div class="t">${escapeHtml(word.trans)}</div></div>
-        ${renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`)}
-      </div>`).join("");
+    list.innerHTML = all.map((word) => renderContentListRow({
+      id: word.id,
+      rowAttributes: `data-word-row="${escapeHtml(word.id)}"`,
+      leadingHtml: `<input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="Добавить слово в сессию" />`,
+      primary: word.word,
+      secondary: word.trans,
+      trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
+    })).join("");
 
-    list.querySelectorAll(".item").forEach((row) => {
-      const id = row.dataset.id;
-      row.querySelector(".checkbox").addEventListener("change", (event) => {
+    list.querySelectorAll("[data-word-row]").forEach((row) => {
+      const id = row.dataset.wordRow;
+      row.querySelector(".contentListCheckbox").addEventListener("change", (event) => {
         if (event.target.checked) learnState.menuHidden.delete(id);
         else learnState.menuHidden.add(id);
         setHiddenSet(currentDict, currentSection, currentSet, learnState.menuHidden);

@@ -1,18 +1,12 @@
 import { splitGroups } from "../domain/word-selection.js";
-import { STAR_ICON_SVG } from "./icons.js";
+import { escapeHtml } from "./html.js";
+import { renderFavoriteButton } from "./favorite-button.js";
 import { wordFavorites } from "../state/word-favorites.js";
 
-export function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+export { escapeHtml };
 
 export function renderStarButton(id, attributes = "") {
-  return `<button class="starBtn ${wordFavorites.has(id) ? "on" : ""}" type="button" aria-label="Избранное" ${attributes}>${STAR_ICON_SVG}</button>`;
+  return renderFavoriteButton({ active: wordFavorites.has(id), attributes });
 }
 
 function parseExampleGroups(text) {
