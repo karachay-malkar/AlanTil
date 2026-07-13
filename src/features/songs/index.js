@@ -1,8 +1,12 @@
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { EVENTS } from "../../shared/analytics/events.js";
 import { getWords } from "../../shared/data/word-repository.js";
+import { songFavorites } from "../../shared/state/song-favorites.js";
 import { closeInfoModal } from "../../shared/ui/info-modal.js";
 import { renderSongsCatalog } from "./catalog.js";
 import { disposePlayer } from "./player.js";
 import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js";
+import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js";
 import { renderPlaylists } from "./playlists.js";
 import { renderSongView } from "./song-view.js";
 import { songsState } from "./state.js";
@@ -17,25 +21,30 @@ export async function mount(context, params = {}) {
   songsState.currentScreen = screen;
 
   if (screen === "playlists") {
-    renderPlaylists(context, await getPlaylists(), controller.signal);
+    const playlists = await getPlaylists();
+    renderPlaylists(context, playlists, controller.signal);
+    trackEvent(EVENTS.SONGS_OPEN, { playlist_count: playlists.length });
     return;
   }
 
   if (screen === "catalog") {
-    const playlistId = String(params.playlistId || songsState.selectedPlaylistId || "");
-    if (playlistId === "__fav__") {
-      renderSongsCatalog(
-        context,
-        { id: "__fav__", title: "Избранные песни" },
-        await getSongs(),
-        controller.signal,
-      );
+    const playlistSlug = String(params.playlistSlug || "");
+    if (playlistSlug === "favorites") {
+      const songs = await getSongs();
+      songFavorites.reload();
+      const favoriteCount = songs.filter((song) => songFavorites.has(song.id)).length;
+      renderSongsCatalog(context, { id: "__fav__", title: "Избранные песни", slug: "favorites" }, songs, controller.signal);
+      trackEvent(EVENTS.PLAYLIST_OPEN, { playlist_id: "__fav__", song_count: favoriteCount });
       return;
     }
 
     const playlists = await getPlaylists();
-    const playlist = playlists.find((item) => item.id === playlistId) || null;
-    renderSongsCatalog(context, playlist, await getSongsByPlaylist(playlistId), controller.signal);
+    const playlist = params.playlistId
+      ? playlists.find((item) => item.id === String(params.playlistId)) || null
+      : resolvePlaylistBySlug(playlists, playlistSlug);
+    const songs = playlist ? await getSongsByPlaylist(playlist.id) : [];
+    renderSongsCatalog(context, playlist ? { ...playlist, slug: slugForPlaylist(playlists, playlist.id) } : null, songs, controller.signal);
+    if (playlist) trackEvent(EVENTS.PLAYLIST_OPEN, { playlist_id: playlist.id, song_count: songs.length });
     return;
   }
 
