@@ -1,16 +1,12 @@
 import { initAnalytics, trackEvent } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
+import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js";
 import { createModalService } from "../shared/ui/modal.js";
 import { createRouter } from "./router.js";
 import { createShell } from "./shell.js";
 
 async function bootstrap() {
-  const telegram = window.Telegram?.WebApp;
-  try {
-    telegram?.ready();
-  } catch (error) {
-    console.warn("Telegram WebApp initialization failed", error);
-  }
+  const telegram = createTelegramAdapter();
 
   const shell = createShell();
   const modal = createModalService(shell.modalRoot);
@@ -30,9 +26,19 @@ async function bootstrap() {
   };
 
   const router = createRouter({ shell, modal, context });
-  await initAnalytics();
+  void initAnalytics();
   await router.start();
   trackEvent(EVENTS.APP_OPEN, { screen_name: router.getCurrent().route === "home" ? "home" : router.getCurrent().route.split(".")[0] });
+
+  void initTelegram({
+    adapter: telegram,
+    onReady(webApp) {
+      router.attachTelegram(webApp);
+    },
+  }).catch((error) => {
+    router.releaseTelegramLaunchUrl();
+    console.warn("Telegram WebApp initialization failed", error);
+  });
 }
 
 bootstrap().catch((error) => {
