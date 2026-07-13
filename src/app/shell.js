@@ -17,6 +17,7 @@ export function createShell() {
       { id: "match.menu", title: "🔗 Сопоставь слова" },
       { id: "learn.catalog", title: "📚 Учить слова" },
       { id: "songs.playlists", title: "🎵 Песни" },
+      { id: "account.home", title: "👤 Аккаунт" },
       { id: "settings.home", title: "⚙️ Настройки" },
     ], { dataName: "route", className: "homeMainActions" });
 
