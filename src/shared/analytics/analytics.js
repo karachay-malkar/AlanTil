@@ -1,4 +1,4 @@
-import { analyticsEnabled, appVersion, debugMode, measurementId } from "../../config/analytics.js";
+import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../config/analytics.js";
 
 const FORBIDDEN_PARAMETER_NAMES = new Set([
   "name", "email", "phone", "telephone", "telegram_id", "telegram_username", "username",
@@ -6,8 +6,11 @@ const FORBIDDEN_PARAMETER_NAMES = new Set([
   "free_text", "word", "translation", "lyrics", "text",
 ]);
 
+const GA_DISABLE_KEY = `ga-disable-${measurementId}`;
 let initialized = false;
 let scriptRequested = false;
+let defaultConsentSet = false;
+let runtimeEnabled = false;
 let analyticsContext = { screen_name: "unknown", page_path: window.location.pathname || "/" };
 
 function ensureDataLayer() {
@@ -25,6 +28,56 @@ function sanitizeValue(value) {
   if (typeof value === "boolean" || typeof value === "number") return value;
   if (typeof value === "string") return value.slice(0, 300);
   return undefined;
+}
+
+function consentPayload(analyticsStorage) {
+  return {
+    analytics_storage: analyticsStorage,
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+  };
+}
+
+function setDefaultConsent(analyticsStorage = "denied") {
+  if (!analyticsAvailable || defaultConsentSet) return;
+  defaultConsentSet = true;
+  ensureDataLayer()("consent", "default", {
+    ...consentPayload(analyticsStorage),
+    wait_for_update: 500,
+  });
+}
+
+function updateConsent(analyticsStorage) {
+  if (!analyticsAvailable) return;
+  ensureDataLayer()("consent", "update", consentPayload(analyticsStorage));
+}
+
+function requestScript() {
+  if (scriptRequested || !analyticsAvailable) return;
+  scriptRequested = true;
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+  script.addEventListener("error", () => {
+    if (debugMode) console.warn("[analytics] gtag.js was blocked or unavailable");
+  }, { once: true });
+  document.head.appendChild(script);
+}
+
+function deleteCookie(name, domain = "") {
+  const domainPart = domain ? `; domain=${domain}` : "";
+  document.cookie = `${name}=; Max-Age=0; path=/${domainPart}; SameSite=Lax`;
+}
+
+function deleteAnalyticsCookies() {
+  const hostname = window.location.hostname;
+  const domains = ["", hostname, hostname ? `.${hostname}` : ""].filter((value, index, list) => list.indexOf(value) === index);
+  document.cookie.split(";").forEach((entry) => {
+    const name = entry.split("=")[0]?.trim();
+    if (!name || (name !== "_ga" && !name.startsWith("_ga_"))) return;
+    domains.forEach((domain) => deleteCookie(name, domain));
+  });
 }
 
 export function sanitizeParameters(parameters = {}) {
@@ -50,54 +103,55 @@ export function getAnalyticsContext() {
   return { ...analyticsContext };
 }
 
-export function setDefaultConsent(overrides = {}) {
-  if (!analyticsEnabled) return;
+export function prepareAnalytics() {
+  if (!analyticsAvailable) return false;
+  window[GA_DISABLE_KEY] = true;
+  setDefaultConsent("denied");
+  return true;
+}
+
+async function enableAnalytics() {
+  if (!analyticsAvailable) return false;
+  setDefaultConsent("denied");
+  window[GA_DISABLE_KEY] = false;
+  runtimeEnabled = true;
+  updateConsent("granted");
+
   const gtag = ensureDataLayer();
-  gtag("consent", "default", {
-    analytics_storage: "granted",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
-    wait_for_update: 500,
-    ...overrides,
-  });
-}
-
-export function updateConsent(consent = {}) {
-  if (!analyticsEnabled) return;
-  ensureDataLayer()("consent", "update", consent);
-}
-
-function requestScript() {
-  if (scriptRequested || !analyticsEnabled) return;
-  scriptRequested = true;
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
-  script.addEventListener("error", () => {
-    if (debugMode) console.warn("[analytics] gtag.js was blocked or unavailable");
-  }, { once: true });
-  document.head.appendChild(script);
-}
-
-export async function initAnalytics() {
-  if (initialized || !analyticsEnabled) return initialized;
-  initialized = true;
-  const gtag = ensureDataLayer();
-  setDefaultConsent();
-  gtag("js", new Date());
-  gtag("config", measurementId, {
-    send_page_view: false,
-    allow_google_signals: false,
-    allow_ad_personalization_signals: false,
-    debug_mode: debugMode,
-  });
+  if (!initialized) {
+    initialized = true;
+    gtag("js", new Date());
+    gtag("config", measurementId, {
+      send_page_view: false,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+      debug_mode: debugMode,
+    });
+  }
   requestScript();
   return true;
 }
 
+function disableAnalytics() {
+  if (!analyticsAvailable) return false;
+  setDefaultConsent("denied");
+  runtimeEnabled = false;
+  window[GA_DISABLE_KEY] = true;
+  updateConsent("denied");
+  deleteAnalyticsCookies();
+  return true;
+}
+
+export async function setAnalyticsEnabled(enabled) {
+  return enabled ? enableAnalytics() : disableAnalytics();
+}
+
+export function isAnalyticsEnabled() {
+  return runtimeEnabled;
+}
+
 export function trackEvent(eventName, parameters = {}) {
-  if (!analyticsEnabled || !eventName) return false;
+  if (!analyticsAvailable || !runtimeEnabled || !eventName) return false;
   try {
     const safe = sanitizeParameters(parameters);
     if (debugMode) console.info(`[analytics] ${eventName}`, safe);
