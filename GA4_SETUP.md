@@ -1,4 +1,4 @@
-# Настройка Google Analytics 4 для AlanTil 11.6
+# Настройка Google Analytics 4 для AlanTil 11.7
 
 ## 1. Обязательная настройка потока данных
 

@@ -140,6 +140,8 @@ export function createRouter({ shell, modal, context }) {
   let skipNextPopLeaveCheck = false;
   let lastTrackedLocation = "";
   let lastPageReferrer = safeReferrer(document.referrer);
+  let telegramWebApp = context.telegram?.getWebApp?.() || null;
+  let telegramBackButton = null;
 
   let currentScreen = "";
   let screenPagePath = "/";
@@ -214,7 +216,7 @@ export function createRouter({ shell, modal, context }) {
   function syncBackControls() {
     const visible = current.route !== "home";
     shell.setBackVisible(visible);
-    const backButton = context.telegram?.BackButton;
+    const backButton = telegramWebApp?.BackButton;
     try {
       if (visible) backButton?.show?.();
       else backButton?.hide?.();
@@ -223,12 +225,16 @@ export function createRouter({ shell, modal, context }) {
     }
   }
 
+  function navigationSuffix() {
+    return context.telegram?.getPendingUrlSuffix?.() || debugSearchSuffix();
+  }
+
   function historyState(target, index) {
     return { [ROUTER_STATE_KEY]: true, index, route: target.route, params: target.params };
   }
 
   function syncBrowserHistory(target, mode = "push") {
-    const path = `${buildPath(target.route, target.params)}${debugSearchSuffix()}`;
+    const path = `${buildPath(target.route, target.params)}${navigationSuffix()}`;
     if (mode === "replace") {
       entries[historyIndex] = target;
       window.history.replaceState(historyState(target, historyIndex), "", path);
@@ -263,11 +269,12 @@ export function createRouter({ shell, modal, context }) {
   }
 
   function sendPageView({ initial = false } = {}) {
-    const pageLocation = window.location.href;
+    const pagePath = buildPath(current.route, current.params);
+    const pageLocation = `${window.location.origin}${pagePath}${debugSearchSuffix()}`;
     if (!initial && pageLocation === lastTrackedLocation) return false;
     const pageReferrer = safeReferrer(lastTrackedLocation) || lastPageReferrer;
     trackPageView({
-      page_path: window.location.pathname || "/",
+      page_path: pagePath,
       page_location: pageLocation,
       page_title: document.title,
       page_referrer: pageReferrer,
@@ -404,6 +411,45 @@ export function createRouter({ shell, modal, context }) {
     });
   }
 
+  function releaseTelegramLaunchUrl() {
+    context.telegram?.releaseLaunchUrl?.();
+    const path = `${buildPath(current.route, current.params)}${debugSearchSuffix()}`;
+    window.history.replaceState(historyState(current, historyIndex), "", path);
+  }
+
+  function attachTelegram(webApp) {
+    const nextWebApp = webApp || null;
+    const nextBackButton = nextWebApp?.BackButton || null;
+    if (telegramBackButton === nextBackButton && telegramWebApp === nextWebApp) {
+      syncBackControls();
+      return nextWebApp;
+    }
+
+    try {
+      telegramBackButton?.offClick?.(handleTelegramBack);
+    } catch (error) {
+      console.warn("Telegram BackButton unbinding failed", error);
+    }
+
+    telegramWebApp = nextWebApp;
+    telegramBackButton = nextBackButton;
+    context.telegram?.attach?.(nextWebApp);
+
+    try {
+      telegramBackButton?.onClick?.(handleTelegramBack);
+    } catch (error) {
+      console.warn("Telegram BackButton binding failed", error);
+    }
+
+    syncBackControls();
+    releaseTelegramLaunchUrl();
+    return nextWebApp;
+  }
+
+  function handleTelegramBack() {
+    void back();
+  }
+
   async function start() {
     if (started) return true;
     started = true;
@@ -412,7 +458,7 @@ export function createRouter({ shell, modal, context }) {
     historyIndex = 0;
     entries[0] = current;
     const canonicalPath = initial.notFound ? "/" : buildPath(current.route, current.params);
-    window.history.replaceState(historyState(current, 0), "", `${canonicalPath}${debugSearchSuffix()}`);
+    window.history.replaceState(historyState(current, 0), "", `${canonicalPath}${navigationSuffix()}`);
     return show(current, { historyMode: "none", force: true, initial: true, skipLeaveCheck: true });
   }
 
@@ -433,6 +479,8 @@ export function createRouter({ shell, modal, context }) {
     syncBrowserHistory,
     handlePopState,
     mountCurrentRoute,
+    attachTelegram,
+    releaseTelegramLaunchUrl,
   };
 
   shell.backButton.addEventListener("click", () => back());
@@ -454,11 +502,7 @@ export function createRouter({ shell, modal, context }) {
     if (!currentScreen && started) startScreenTimer(current.route);
   });
 
-  try {
-    context.telegram?.BackButton?.onClick?.(() => back());
-  } catch (error) {
-    console.warn("Telegram BackButton binding failed", error);
-  }
+  if (telegramWebApp) attachTelegram(telegramWebApp);
 
   return api;
 }
