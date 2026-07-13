@@ -1,11 +1,12 @@
-import { initAnalytics, trackEvent } from "../shared/analytics/analytics.js";
-import { EVENTS } from "../shared/analytics/events.js";
+import { prepareAnalytics } from "../shared/analytics/analytics.js";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js";
+import { initPrivacyController } from "../shared/privacy/privacy-controller.js";
 import { createModalService } from "../shared/ui/modal.js";
 import { createRouter } from "./router.js";
 import { createShell } from "./shell.js";
 
 async function bootstrap() {
+  prepareAnalytics();
   const telegram = createTelegramAdapter();
 
   const shell = createShell();
@@ -26,9 +27,8 @@ async function bootstrap() {
   };
 
   const router = createRouter({ shell, modal, context });
-  void initAnalytics();
   await router.start();
-  trackEvent(EVENTS.APP_OPEN, { screen_name: router.getCurrent().route === "home" ? "home" : router.getCurrent().route.split(".")[0] });
+  void initPrivacyController({ appRouter: router });
 
   void initTelegram({
     adapter: telegram,
