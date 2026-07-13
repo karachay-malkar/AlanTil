@@ -268,21 +268,37 @@ export function createRouter({ shell, modal, context }) {
     syncBackControls();
   }
 
-  function sendPageView({ initial = false } = {}) {
+  function sendPageView({ initial = false, force = false } = {}) {
     const pagePath = buildPath(current.route, current.params);
     const pageLocation = `${window.location.origin}${pagePath}${debugSearchSuffix()}`;
-    if (!initial && pageLocation === lastTrackedLocation) return false;
+    if (!force && !initial && pageLocation === lastTrackedLocation) return false;
     const pageReferrer = safeReferrer(lastTrackedLocation) || lastPageReferrer;
-    trackPageView({
+    const sent = trackPageView({
       page_path: pagePath,
       page_location: pageLocation,
       page_title: document.title,
       page_referrer: pageReferrer,
       screen_name: screenNameOf(current.route),
     });
+    if (!sent) return false;
     lastPageReferrer = safeReferrer(pageLocation);
     lastTrackedLocation = pageLocation;
     return true;
+  }
+
+  function discardScreenTimer() {
+    currentScreen = "";
+    screenPagePath = "/";
+    screenOpenedAt = 0;
+    activeDuration = 0;
+    activeStartedAt = 0;
+  }
+
+  function setAnalyticsActive(enabled) {
+    discardScreenTimer();
+    if (!enabled || !started) return false;
+    startScreenTimer(current.route);
+    return sendPageView({ force: true });
   }
 
   async function show(target, {
@@ -481,6 +497,7 @@ export function createRouter({ shell, modal, context }) {
     mountCurrentRoute,
     attachTelegram,
     releaseTelegramLaunchUrl,
+    setAnalyticsActive,
   };
 
   shell.backButton.addEventListener("click", () => back());

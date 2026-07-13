@@ -23,7 +23,7 @@ export async function mount(context, params = {}) {
   controller = new AbortController();
   const screen = params.screen || "home";
   if (screen === "home") renderSettingsHome(context, controller.signal);
-  else if (screen === "privacy") renderPrivacy(context);
+  else if (screen === "privacy") renderPrivacy(context, controller.signal, params);
   else if (screen === "version") renderVersion(context);
   else context.router.replace("settings.home", {}, { force: true });
 }
