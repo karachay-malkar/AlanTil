@@ -2,7 +2,7 @@ import { prepareAnalytics } from "../shared/analytics/analytics.js";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js";
 import { createModalService } from "../shared/ui/modal.js";
-import { createRouter } from "./router.js?v=11.8.1";
+import { createRouter } from "./router.js?v=12.1";
 import { createShell } from "./shell.js";
 
 async function bootstrap() {
