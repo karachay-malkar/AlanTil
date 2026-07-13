@@ -1,33 +1,42 @@
+import { initAnalytics, trackEvent } from "../shared/analytics/analytics.js";
+import { EVENTS } from "../shared/analytics/events.js";
 import { createModalService } from "../shared/ui/modal.js";
 import { createRouter } from "./router.js";
 import { createShell } from "./shell.js";
 
-const telegram = window.Telegram?.WebApp;
-try {
-  telegram?.ready();
-} catch (error) {
-  console.warn("Telegram WebApp initialization failed", error);
+async function bootstrap() {
+  const telegram = window.Telegram?.WebApp;
+  try {
+    telegram?.ready();
+  } catch (error) {
+    console.warn("Telegram WebApp initialization failed", error);
+  }
+
+  const shell = createShell();
+  const modal = createModalService(shell.modalRoot);
+  const context = {
+    root: shell.root,
+    shell,
+    modal,
+    telegram,
+    ensureStyle(href, id) {
+      if (document.getElementById(id)) return;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    },
+  };
+
+  const router = createRouter({ shell, modal, context });
+  await initAnalytics();
+  await router.start();
+  trackEvent(EVENTS.APP_OPEN, { screen_name: router.getCurrent().route === "home" ? "home" : router.getCurrent().route.split(".")[0] });
 }
 
-const shell = createShell();
-const modal = createModalService(shell.modalRoot);
-const context = {
-  root: shell.root,
-  shell,
-  modal,
-  telegram,
-  ensureStyle(href, id) {
-    if (document.getElementById(id)) return;
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  },
-};
-
-const router = createRouter({ shell, modal, context });
-shell.renderHome();
-shell.setBackVisible(false);
-
-window.addEventListener("popstate", () => router.back());
+bootstrap().catch((error) => {
+  console.error("Application bootstrap failed", error);
+  const root = document.getElementById("appRoot");
+  if (root) root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">Не удалось запустить приложение.</div></div></section>`;
+});
