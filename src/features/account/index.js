@@ -29,6 +29,10 @@ let nicknameCheckRequest = 0;
 let actionError = "";
 let loginMessage = "";
 
+function isMounted() {
+  return Boolean(controller && !controller.signal.aborted);
+}
+
 function renderLoading(context) {
   context.root.innerHTML = panel({
     title: "Аккаунт",
@@ -45,7 +49,19 @@ function updateNicknameState({ messageElement, submitButton }, state, message, e
   if (submitButton) submitButton.disabled = !enabled;
 }
 
+async function handleSignOut(context) {
+  actionError = "";
+  loginMessage = "";
+  try {
+    await signOut();
+  } catch (error) {
+    actionError = error.message;
+    if (isMounted()) await renderAccount(context);
+  }
+}
+
 async function renderAccount(context) {
+  if (!isMounted()) return;
   const requestId = ++renderRequest;
   const authState = getCurrentAuthState();
   if (!authState.ready) {
@@ -66,7 +82,7 @@ async function renderAccount(context) {
           await signInWithGoogle();
         } catch (error) {
           actionError = error.message;
-          await renderAccount(context);
+          if (isMounted()) await renderAccount(context);
         }
       },
       onEmail: async (email) => {
@@ -78,7 +94,7 @@ async function renderAccount(context) {
         } catch (error) {
           actionError = error.message;
         }
-        await renderAccount(context);
+        if (isMounted()) await renderAccount(context);
       },
       onGuest: () => context.router.navigate("home"),
     });
@@ -92,7 +108,7 @@ async function renderAccount(context) {
   } catch (error) {
     actionError = error.message;
   }
-  if (requestId !== renderRequest || controller.signal.aborted) return;
+  if (requestId !== renderRequest || !isMounted()) return;
 
   if (!profile) {
     renderProfileCreation(context, authState.user, { error: actionError });
@@ -107,10 +123,10 @@ async function renderAccount(context) {
 
         updateNicknameState(elements, "checking", "Проверяем никнейм…", false);
         window.setTimeout(async () => {
-          if (checkId !== nicknameCheckRequest || controller.signal.aborted) return;
+          if (checkId !== nicknameCheckRequest || !isMounted()) return;
           try {
             const result = await isNicknameAvailable(value);
-            if (checkId !== nicknameCheckRequest || controller.signal.aborted) return;
+            if (checkId !== nicknameCheckRequest || !isMounted()) return;
             updateNicknameState(
               elements,
               result.available ? "available" : "invalid",
@@ -118,7 +134,7 @@ async function renderAccount(context) {
               result.available,
             );
           } catch (error) {
-            updateNicknameState(elements, "invalid", error.message, false);
+            if (isMounted()) updateNicknameState(elements, "invalid", error.message, false);
           }
         }, 350);
       },
@@ -131,12 +147,9 @@ async function renderAccount(context) {
         } catch (error) {
           actionError = error.message;
         }
-        await renderAccount(context);
+        if (isMounted()) await renderAccount(context);
       },
-      onSignOut: async () => {
-        actionError = "";
-        await signOut();
-      },
+      onSignOut: () => handleSignOut(context),
     });
     return;
   }
@@ -149,14 +162,7 @@ async function renderAccount(context) {
     error: "",
   });
   bindProfile(context, controller.signal, {
-    onSignOut: async () => {
-      try {
-        await signOut();
-      } catch (error) {
-        actionError = error.message;
-        await renderAccount(context);
-      }
-    },
+    onSignOut: () => handleSignOut(context),
   });
 }
 
@@ -172,18 +178,18 @@ export async function mount(context) {
   } catch (error) {
     actionError = error.message;
   }
-  if (controller.signal.aborted) return;
+  if (!isMounted()) return;
 
   unsubscribeAuth = subscribeToAuth(() => {
-    if (!controller?.signal.aborted) void renderAccount(context);
+    if (isMounted()) void renderAccount(context);
   });
 }
 
 export function unmount() {
   controller?.abort();
-  controller = null;
   unsubscribeAuth?.();
   unsubscribeAuth = null;
+  controller = null;
   renderRequest += 1;
   nicknameCheckRequest += 1;
 }
