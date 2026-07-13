@@ -1,3 +1,5 @@
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js";
 import { panel } from "../../shared/ui/panel.js";
 import { openInfoModal } from "../../shared/ui/info-modal.js";
 import { openWordCard } from "../../shared/ui/word-card.js";
@@ -33,6 +35,12 @@ export function renderSongView(context, song, words, signal) {
     classes: "songsPanel songViewPanel",
   });
 
+  trackEvent(EVENTS.SONG_OPEN, {
+    song_id: song.id,
+    playlist_id: song.playlistId,
+    has_audio: Boolean(song.audioUrl),
+  });
+
   const playerRoot = context.root.querySelector("#songPlayerRoot");
   if (playerRoot) {
     mountPlayer(playerRoot, song, {
@@ -52,6 +60,19 @@ export function renderSongView(context, song, words, signal) {
 
   const wordsById = new Map(words.map((word) => [word.id, word]));
   context.root.querySelectorAll("[data-word-id]").forEach((button) => {
-    button.addEventListener("click", () => openWordCard(context, wordsById.get(button.dataset.wordId)), { signal });
+    button.addEventListener("click", () => {
+      const word = wordsById.get(button.dataset.wordId);
+      if (!word) return;
+      trackEvent(EVENTS.WORD_RESULT, {
+        word_id: word.id,
+        source: WORD_SOURCES.SONG,
+        result: WORD_RESULTS.OPENED,
+        dictionary_id: word.dict,
+        section_id: word.section,
+        set_id: String(word.set),
+        direction: DIRECTIONS.NONE,
+      });
+      openWordCard(context, word);
+    }, { signal });
   });
 }
