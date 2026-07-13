@@ -155,6 +155,17 @@
   margin-bottom: 10px;
 }
 
+.sectionRouteLink{
+  appearance:none;
+  width:auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  display:block;
+  text-align:left;
+  cursor:pointer;
+}
+
 .setsGrid{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -290,4 +301,3 @@
 .set-tile.selected .setCheck rect{
   display: none;
 }
-
