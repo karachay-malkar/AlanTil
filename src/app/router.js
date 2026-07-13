@@ -6,7 +6,7 @@ const FEATURE_LOADERS = {
   test: () => import("../features/test/index.js"),
   match: () => import("../features/match/index.js"),
   songs: () => import("../features/songs/index.js"),
-  settings: () => import("../features/settings/index.js"),
+  settings: () => import("../features/settings/index.js?v=11.8.1"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -154,9 +154,17 @@ export function createRouter({ shell, modal, context }) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);
     const loader = FEATURE_LOADERS[feature];
     if (!loader) throw new Error(`Unknown feature: ${feature}`);
-    const module = await loader();
-    loadedModules.set(feature, module);
-    return module;
+
+    try {
+      const module = await loader();
+      loadedModules.set(feature, module);
+      return module;
+    } catch (error) {
+      if (feature !== "settings") throw error;
+      const module = await import(`../features/settings/index.js?v=11.8.1&retry=${Date.now()}`);
+      loadedModules.set(feature, module);
+      return module;
+    }
   }
 
   function targetWithInheritedParams(route, params = {}) {
