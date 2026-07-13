@@ -7,6 +7,7 @@ export const matchState = {
   roundIndex: 0,
   solvedCount: 0,
   total: 0,
+  errorsCount: 0,
   failMap: {},
   solved: new Set(),
   locked: false,
@@ -16,6 +17,8 @@ export const matchState = {
     completed: false,
     wordsPool: [],
     progressData: {},
+    metadata: {},
+    tracker: null,
   },
 };
 
@@ -25,6 +28,7 @@ export function clearMatchSession() {
   matchState.roundIndex = 0;
   matchState.solvedCount = 0;
   matchState.total = 0;
+  matchState.errorsCount = 0;
   matchState.failMap = {};
   matchState.solved = new Set();
   matchState.locked = false;
@@ -33,4 +37,6 @@ export function clearMatchSession() {
   matchState.session.completed = false;
   matchState.session.wordsPool = [];
   matchState.session.progressData = {};
+  matchState.session.metadata = {};
+  matchState.session.tracker = null;
 }
