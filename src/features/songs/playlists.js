@@ -1,24 +1,30 @@
 import { renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
+import { buildPlaylistRoutes } from "./routes.js";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";
 
 export function renderPlaylists(context, playlists, signal) {
   const items = [
-    { id: FAVORITES_PLAYLIST_ID, title: "Избранные песни", favorite: true },
-    ...playlists.map((playlist) => ({ id: playlist.id, title: playlist.title })),
+    { id: "favorites", title: "Избранные песни", favorite: true },
+    ...buildPlaylistRoutes(playlists).map(({ playlist, slug }) => ({ id: slug, title: playlist.title, playlistId: playlist.id })),
   ];
 
   context.root.innerHTML = panel({
     title: "Песни",
     body: playlists.length
-      ? renderSectionMenu(items, { dataName: "playlist-id" })
-      : `${renderSectionMenu(items.slice(0, 1), { dataName: "playlist-id" })}<div class="emptyState"><div class="emptyStateTitle">Песни пока не добавлены</div></div>`,
+      ? renderSectionMenu(items, { dataName: "playlist-slug" })
+      : `${renderSectionMenu(items.slice(0, 1), { dataName: "playlist-slug" })}<div class="emptyState"><div class="emptyStateTitle">Песни пока не добавлены</div></div>`,
   });
 
-  context.root.querySelectorAll("[data-playlist-id]").forEach((button) => {
+  const routes = buildPlaylistRoutes(playlists);
+  context.root.querySelectorAll("[data-playlist-slug]").forEach((button) => {
     button.addEventListener("click", () => {
-      context.router.navigate("songs.catalog", { playlistId: button.dataset.playlistId });
+      const playlistSlug = button.dataset.playlistSlug;
+      const playlistId = playlistSlug === "favorites"
+        ? FAVORITES_PLAYLIST_ID
+        : routes.find((entry) => entry.slug === playlistSlug)?.playlist.id || "";
+      context.router.navigate("songs.catalog", { playlistSlug, playlistId, songId: null });
     }, { signal });
   });
 }
