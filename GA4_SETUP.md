@@ -1,4 +1,4 @@
-# Настройка Google Analytics 4 для AlanTil 11.8
+# Настройка Google Analytics 4 для AlanTil 11.8.1
 
 ## 1. Поток данных GA4
 
