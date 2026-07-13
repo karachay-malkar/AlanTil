@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Алан тил</title>
+</head>
+<body>
+  <script>
+    (() => {
+      const originalPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      try {
+        sessionStorage.setItem("alantil_spa_path", originalPath);
+      } catch {
+        // The redirect still opens the SPA even when storage is restricted.
+      }
+      window.location.replace("/");
+    })();
+  </script>
+</body>
+</html>
