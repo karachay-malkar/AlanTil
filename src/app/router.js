@@ -6,7 +6,8 @@ const FEATURE_LOADERS = {
   test: () => import("../features/test/index.js"),
   match: () => import("../features/match/index.js"),
   songs: () => import("../features/songs/index.js"),
-  settings: () => import("../features/settings/index.js?v=11.8.1"),
+  account: () => import("../features/account/index.js?v=12.2"),
+  settings: () => import("../features/settings/index.js?v=12.2"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -17,6 +18,7 @@ const TITLE_BY_SCREEN = Object.freeze({
   match: "Сопоставление — Алан тил",
   songs: "Песни — Алан тил",
   song: "Песня — Алан тил",
+  account: "Аккаунт — Алан тил",
   settings: "Настройки — Алан тил",
   privacy: "Политика конфиденциальности — Алан тил",
   version: "Версия приложения — Алан тил",
@@ -58,6 +60,7 @@ export function parsePathname(pathname) {
     return { route: "songs.catalog", params: { playlistSlug: second } };
   }
   if (first === "song" && second) return { route: "songs.song", params: { songId: second } };
+  if (first === "account" && !second) return { route: "account.home", params: {} };
   if (first === "settings") {
     if (!second) return { route: "settings.home", params: {} };
     if (second === "privacy") return { route: "settings.privacy", params: {} };
@@ -87,6 +90,7 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "songs.playlists") return "/songs";
   if (routeName === "songs.catalog") return params.playlistSlug ? `/songs/${encodeSegment(params.playlistSlug)}` : "/songs";
   if (routeName === "songs.song") return params.songId ? `/song/${encodeSegment(params.songId)}` : "/songs";
+  if (routeName === "account.home") return "/account";
   if (routeName === "settings.home") return "/settings";
   if (routeName === "settings.privacy") return "/settings/privacy";
   if (routeName === "settings.version") return "/settings/version";
@@ -160,8 +164,10 @@ export function createRouter({ shell, modal, context }) {
       loadedModules.set(feature, module);
       return module;
     } catch (error) {
-      if (feature !== "settings") throw error;
-      const module = await import(`../features/settings/index.js?v=11.8.1&retry=${Date.now()}`);
+      if (!["settings", "account"].includes(feature)) throw error;
+      const module = feature === "account"
+        ? await import(`../features/account/index.js?v=12.2&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=12.2&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -378,6 +384,7 @@ export function createRouter({ shell, modal, context }) {
     }
     if (current.route === "songs.catalog") return { route: "songs.playlists", params: {} };
     if (current.route === "songs.playlists") return { route: "home", params: {} };
+    if (current.route === "account.home") return { route: "home", params: {} };
     if (["settings.privacy", "settings.version"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "home", params: {} };
     return null;
