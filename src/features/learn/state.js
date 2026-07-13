@@ -24,6 +24,7 @@ export const learnState = {
     completed: false,
     wordsPool: [],
     progressData: {},
+    tracker: null,
   },
 };
 
@@ -60,6 +61,11 @@ export function toggleSetFinished(dict, section, setNumber) {
   return Boolean(map[key]);
 }
 
+export function getLearnItemsCompleted() {
+  const pending = new Set([...learnState.mainQueue, ...learnState.repeatQueue].map((word) => word?.id).filter(Boolean));
+  return Math.max(0, learnState.totalPlanned - pending.size);
+}
+
 export function clearStudySession() {
   learnState.mainQueue = [];
   learnState.repeatQueue = [];
@@ -73,4 +79,5 @@ export function clearStudySession() {
   learnState.studySession.completed = false;
   learnState.studySession.wordsPool = [];
   learnState.studySession.progressData = {};
+  learnState.studySession.tracker = null;
 }
