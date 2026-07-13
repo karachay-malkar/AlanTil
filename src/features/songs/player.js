@@ -1,10 +1,14 @@
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { EVENTS } from "../../shared/analytics/events.js";
 import { PAUSE_ICON_SVG, PLAY_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderMediaPlayer } from "../../shared/ui/media-player.js";
 import { resetPlayerState, songsState } from "./state.js";
 
+const PROGRESS_THRESHOLDS = [25, 50, 75, 90];
 let audio = null;
 let cleanup = [];
 let currentContainer = null;
+let analyticsState = null;
 
 function listen(target, type, handler, options) {
   target.addEventListener(type, handler, options);
@@ -17,11 +21,57 @@ function formatTime(seconds) {
   return `${minutes}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+function rounded(value) {
+  return Math.max(0, Math.round(Number(value) || 0));
+}
+
 function syncState() {
   if (!audio) return;
   songsState.player.currentTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
   songsState.player.duration = Number.isFinite(audio.duration) ? audio.duration : 0;
   songsState.player.playing = !audio.paused && !audio.ended;
+}
+
+function updateListening(force = false) {
+  if (!audio || !analyticsState) return;
+  const currentTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+  if (analyticsState.lastAudioTime !== null && (!audio.paused || force)) {
+    const delta = currentTime - analyticsState.lastAudioTime;
+    if (delta > 0 && delta <= 5) analyticsState.listenedSec += delta;
+  }
+  analyticsState.lastAudioTime = currentTime;
+}
+
+function analyticsParameters() {
+  return {
+    song_id: analyticsState?.songId || "",
+    playlist_id: analyticsState?.playlistId || "",
+    position_sec: rounded(audio?.currentTime),
+    duration_sec: rounded(audio?.duration),
+  };
+}
+
+function trackPause() {
+  if (!audio || !analyticsState?.hasPlayed) return;
+  const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+  const nearEnd = duration > 0 && audio.currentTime >= duration - 0.5;
+  if (audio.ended || nearEnd || analyticsState.lastEvent === "pause") return;
+  updateListening(true);
+  analyticsState.lastEvent = "pause";
+  trackEvent(EVENTS.SONG_PAUSE, analyticsParameters());
+}
+
+function trackProgress() {
+  if (!audio || !analyticsState || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+  const percent = (audio.currentTime / audio.duration) * 100;
+  PROGRESS_THRESHOLDS.forEach((threshold) => {
+    if (percent < threshold || analyticsState.progress.has(threshold)) return;
+    analyticsState.progress.add(threshold);
+    trackEvent(EVENTS.SONG_PROGRESS, {
+      ...analyticsParameters(),
+      progress_percent: threshold,
+    });
+  });
 }
 
 function updateView() {
@@ -49,6 +99,7 @@ function updateView() {
 }
 
 export function disposePlayer() {
+  if (audio && !audio.paused && !audio.ended) trackPause();
   cleanup.splice(0).forEach((remove) => remove());
   if (audio) {
     audio.pause();
@@ -57,6 +108,7 @@ export function disposePlayer() {
   }
   audio = null;
   currentContainer = null;
+  analyticsState = null;
   resetPlayerState();
 }
 
@@ -76,6 +128,16 @@ export function mountPlayer(container, song, { onStateChange } = {}) {
 
   currentContainer = container;
   songsState.player.songId = song.id || null;
+  analyticsState = {
+    songId: song.id || "",
+    playlistId: song.playlistId || "",
+    listenedSec: 0,
+    lastAudioTime: null,
+    hasPlayed: false,
+    completed: false,
+    lastEvent: "",
+    progress: new Set(),
+  };
   container.innerHTML = renderMediaPlayer();
 
   audio = new Audio();
@@ -107,10 +169,43 @@ export function mountPlayer(container, song, { onStateChange } = {}) {
   listen(progress, "input", () => {
     if (!audio) return;
     audio.currentTime = Number(progress.value) || 0;
+    if (analyticsState) analyticsState.lastAudioTime = audio.currentTime;
+    trackProgress();
     notify();
   });
-  ["loadedmetadata", "durationchange", "timeupdate", "play", "pause", "ended"].forEach((eventName) => {
-    listen(audio, eventName, notify);
+  listen(audio, "loadedmetadata", notify);
+  listen(audio, "durationchange", notify);
+  listen(audio, "timeupdate", () => {
+    updateListening();
+    trackProgress();
+    notify();
+  });
+  listen(audio, "play", () => {
+    if (analyticsState) {
+      analyticsState.hasPlayed = true;
+      analyticsState.lastAudioTime = audio.currentTime;
+      analyticsState.lastEvent = "play";
+    }
+    trackEvent(EVENTS.SONG_PLAY, analyticsParameters());
+    notify();
+  });
+  listen(audio, "pause", () => {
+    trackPause();
+    notify();
+  });
+  listen(audio, "ended", () => {
+    updateListening(true);
+    if (analyticsState && !analyticsState.completed) {
+      analyticsState.completed = true;
+      analyticsState.lastEvent = "complete";
+      trackEvent(EVENTS.SONG_COMPLETE, {
+        song_id: analyticsState.songId,
+        playlist_id: analyticsState.playlistId,
+        listened_sec: rounded(analyticsState.listenedSec),
+        audio_duration_sec: rounded(audio.duration),
+      });
+    }
+    notify();
   });
   listen(audio, "error", () => {
     error?.classList.remove("hidden");
