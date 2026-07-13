@@ -1,8 +1,7 @@
 import { renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
-import { renderPrivacy } from "./privacy.js";
-import { renderVersion } from "./version.js";
 
+const SETTINGS_ASSET_VERSION = "11.8.1";
 let controller = null;
 
 function renderSettingsHome(context, signal) {
@@ -19,13 +18,36 @@ function renderSettingsHome(context, signal) {
   });
 }
 
+async function importSettingsScreen(path) {
+  try {
+    return await import(`${path}?v=${SETTINGS_ASSET_VERSION}`);
+  } catch {
+    return import(`${path}?v=${SETTINGS_ASSET_VERSION}&retry=${Date.now()}`);
+  }
+}
+
 export async function mount(context, params = {}) {
   controller = new AbortController();
   const screen = params.screen || "home";
-  if (screen === "home") renderSettingsHome(context, controller.signal);
-  else if (screen === "privacy") renderPrivacy(context, controller.signal, params);
-  else if (screen === "version") renderVersion(context);
-  else context.router.replace("settings.home", {}, { force: true });
+
+  if (screen === "home") {
+    renderSettingsHome(context, controller.signal);
+    return;
+  }
+
+  if (screen === "privacy") {
+    const { renderPrivacy } = await importSettingsScreen("./privacy.js");
+    renderPrivacy(context, controller.signal, params);
+    return;
+  }
+
+  if (screen === "version") {
+    const { renderVersion } = await importSettingsScreen("./version.js");
+    renderVersion(context);
+    return;
+  }
+
+  context.router.replace("settings.home", {}, { force: true });
 }
 
 export function unmount() {
