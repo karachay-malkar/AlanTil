@@ -14,6 +14,8 @@ export const testState = {
     completed: false,
     wordsPool: [],
     progressData: {},
+    metadata: {},
+    tracker: null,
   },
 };
 
@@ -28,4 +30,6 @@ export function clearTestSession() {
   testState.session.completed = false;
   testState.session.wordsPool = [];
   testState.session.progressData = {};
+  testState.session.metadata = {};
+  testState.session.tracker = null;
 }

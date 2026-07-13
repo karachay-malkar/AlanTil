@@ -5,7 +5,7 @@ import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.j
 import { renderContentListRow } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
-import { pickOptions, startTest, submitAnswer } from "./engine.js";
+import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js";
 import { testState } from "./state.js";
 
 function dictTitle(code) {
@@ -72,6 +72,14 @@ export function renderTestMenu(context, words, signal) {
     return Number(context.root.querySelector('input[name="testLimit"]:checked')?.value || 40);
   }
 
+  function selectionMetadata() {
+    const selected = sectionCheckboxes.filter((checkbox) => checkbox.checked);
+    return {
+      dictionaryCount: new Set(selected.map((checkbox) => checkbox.dataset.dict)).size,
+      sectionCount: selected.length,
+    };
+  }
+
   function updateDictState(dict) {
     const children = sectionCheckboxes.filter((checkbox) => checkbox.dataset.dict === dict);
     const checked = children.filter((checkbox) => checkbox.checked).length;
@@ -113,7 +121,7 @@ export function renderTestMenu(context, words, signal) {
     }
     testState.limit = selectedLimit();
     testState.selectedScopeKeys = new Set(sectionCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
-    startTest(pool, mode, testState.limit);
+    startTest(pool, mode, testState.limit, selectionMetadata());
     await context.router.navigate("test.session", {}, { force: true });
   }
 
@@ -122,7 +130,7 @@ export function renderTestMenu(context, words, signal) {
   updateInfo();
 }
 
-function renderResults(context, signal, redraw) {
+export function renderTestResults(context, signal) {
   const percentage = Math.round((testState.correct / Math.max(1, testState.items.length)) * 100);
   const rows = testState.results.map((result) => renderContentListRow({
     id: result.id,
@@ -140,18 +148,17 @@ function renderResults(context, signal, redraw) {
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
     button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal });
   });
-  context.root.querySelector("#btnTestAgain2")?.addEventListener("click", () => {
-    startTest(testState.session.wordsPool, testState.mode, testState.limit);
-    redraw();
+  context.root.querySelector("#btnTestAgain2")?.addEventListener("click", async () => {
+    startTest(testState.session.wordsPool, testState.mode, testState.limit, testState.session.metadata);
+    await context.router.replace("test.session", {}, { force: true });
   }, { signal });
 }
 
 export function renderTestSession(context, signal) {
   function draw() {
     if (testState.index >= testState.items.length) {
-      testState.session.inProgress = false;
-      testState.session.completed = true;
-      renderResults(context, signal, draw);
+      completeTest();
+      context.router.replace("test.results", {}, { force: true });
       return;
     }
 

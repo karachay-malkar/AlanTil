@@ -3,18 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Alan til</title>
+  <meta name="description" content="AlanTil — приложение для изучения карачаево-балкарского языка." />
+  <title>Алан тил</title>
+  <script>
+    (() => {
+      try {
+        const restoredPath = sessionStorage.getItem("alantil_spa_path");
+        if (!restoredPath) return;
+        sessionStorage.removeItem("alantil_spa_path");
+        history.replaceState(null, "", restoredPath);
+      } catch {
+        // Restricted storage must not prevent the application from loading.
+      }
+    })();
+  </script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="src/shared/styles/tokens.css" />
-  <link rel="stylesheet" href="src/shared/styles/base.css" />
-  <link rel="stylesheet" href="src/shared/styles/layout.css" />
-  <link rel="stylesheet" href="src/shared/styles/components.css" />
+  <link rel="stylesheet" href="/src/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="/src/shared/styles/base.css" />
+  <link rel="stylesheet" href="/src/shared/styles/layout.css" />
+  <link rel="stylesheet" href="/src/shared/styles/components.css" />
 </head>
 <body>
   <header id="appHeader" class="top">
     <div class="titleWrap">
       <div class="brand">
-        <img src="assets/images/logo.png" class="brandIcon" alt="Алан Тил" />
+        <img src="/assets/images/logo.png" class="brandIcon" alt="Алан Тил" />
       </div>
       <button id="btnBackArrow" class="backArrow hidden" type="button" aria-label="Назад" title="Назад">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -31,6 +44,6 @@
   <main id="appRoot" class="wrap" aria-live="polite"></main>
   <div id="modalRoot"></div>
 
-  <script type="module" src="src/app/bootstrap.js"></script>
+  <script type="module" src="/src/app/bootstrap.js"></script>
 </body>
 </html>

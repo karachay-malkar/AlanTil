@@ -1,7 +1,25 @@
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js";
 import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js";
 import { testState } from "./state.js";
 
-export function startTest(pool, mode, limit) {
+function abandonPreviousSession() {
+  const tracker = testState.session.tracker;
+  if (tracker?.getStatus() !== "active") return;
+  tracker.abandon(CANCEL_REASONS.NEW_SESSION, {
+    questions_total: testState.items.length,
+    questions_answered: testState.index,
+    items_total: testState.items.length,
+    items_completed: testState.index,
+    progress_percent: Math.round((testState.index / Math.max(1, testState.items.length)) * 100),
+    correct_count: testState.correct,
+    wrong_count: Math.max(0, testState.index - testState.correct),
+  });
+}
+
+export function startTest(pool, mode, limit, metadata = {}) {
+  abandonPreviousSession();
   testState.mode = mode === "ru" ? "ru" : "kb";
   testState.limit = [20, 40, 80].includes(Number(limit)) ? Number(limit) : 40;
   testState.optionPool = pool.slice();
@@ -14,6 +32,17 @@ export function startTest(pool, mode, limit) {
   testState.session.completed = false;
   testState.session.wordsPool = pool.slice();
   testState.session.progressData = { index: 0, total: testState.items.length, correct: 0 };
+  testState.session.metadata = { ...metadata };
+  testState.session.tracker = testState.items.length ? createActivityTracker(ACTIVITY_TYPES.TEST) : null;
+  testState.session.tracker?.start({
+    direction: directionFromMode(testState.mode),
+    limit: testState.limit,
+    items_total: testState.items.length,
+    items_completed: 0,
+    questions_total: testState.items.length,
+    dictionary_count: metadata.dictionaryCount || 0,
+    section_count: metadata.sectionCount || 0,
+  });
 }
 
 export function pickOptions(item) {
@@ -52,9 +81,37 @@ export function submitAnswer(answer) {
     userAnswer: answer,
     isCorrect,
   });
+  trackEvent(EVENTS.WORD_RESULT, {
+    word_id: item.id,
+    source: WORD_SOURCES.TEST,
+    result: isCorrect ? WORD_RESULTS.CORRECT : WORD_RESULTS.WRONG,
+    dictionary_id: item.dict,
+    section_id: item.section,
+    set_id: String(item.set),
+    direction: directionFromMode(testState.mode),
+  });
   testState.index += 1;
   testState.selectedAnswer = null;
   testState.session.progressData.index = testState.index;
   testState.session.progressData.correct = testState.correct;
   return true;
+}
+
+export function completeTest() {
+  if (!testState.session.inProgress || testState.session.completed) return false;
+  testState.session.inProgress = false;
+  testState.session.completed = true;
+  const total = testState.items.length;
+  const wrong = Math.max(0, total - testState.correct);
+  return testState.session.tracker?.complete({
+    items_total: total,
+    items_completed: total,
+    questions_total: total,
+    questions_answered: total,
+    correct_count: testState.correct,
+    wrong_count: wrong,
+    accuracy_percent: Math.round((testState.correct / Math.max(1, total)) * 100),
+    dictionary_count: testState.session.metadata.dictionaryCount || 0,
+    section_count: testState.session.metadata.sectionCount || 0,
+  }) || false;
 }

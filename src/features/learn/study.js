@@ -1,8 +1,11 @@
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js";
 import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STAR_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js";
-import { getHiddenSet, learnState } from "./state.js";
+import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js";
 
 function currentQueue() {
   return learnState.round === "main" ? learnState.mainQueue : learnState.repeatQueue;
@@ -18,6 +21,14 @@ function updateCounter(shell) {
 }
 
 export function initializeStudy(words, mode) {
+  const previousProgress = learnState.studySession.progressData || {};
+  learnState.studySession.tracker?.abandon?.(CANCEL_REASONS.NEW_SESSION, {
+    items_total: previousProgress.totalPlanned || learnState.totalPlanned,
+    items_completed: getLearnItemsCompleted(),
+    known_count: previousProgress.known || 0,
+    unknown_count: previousProgress.unknown || 0,
+  });
+
   learnState.currentStudyMode = mode === "ru" ? "ru" : "kb";
   const all = learnState.currentDict === "__fav__"
     ? words.filter((word) => wordFavorites.has(word.id))
@@ -35,7 +46,17 @@ export function initializeStudy(words, mode) {
   learnState.studySession.inProgress = true;
   learnState.studySession.completed = false;
   learnState.studySession.wordsPool = active.slice();
-  learnState.studySession.progressData = { totalPlanned: active.length, known: 0, unknown: 0 };
+  learnState.studySession.progressData = { totalPlanned: active.length, known: 0, unknown: 0, undo: 0 };
+  learnState.studySession.tracker = active.length ? createActivityTracker(ACTIVITY_TYPES.LEARN) : null;
+  learnState.studySession.tracker?.start({
+    direction: directionFromMode(learnState.currentStudyMode),
+    dictionary_id: learnState.currentDict,
+    section_id: learnState.currentSection,
+    set_id: String(learnState.currentSet),
+    limit: active.length,
+    items_total: active.length,
+    items_completed: 0,
+  });
 }
 
 export function renderStudy(context, words, signal, params) {
@@ -86,8 +107,17 @@ export function renderStudy(context, words, signal, params) {
   }
 
   function finish() {
+    const progress = learnState.studySession.progressData || {};
     learnState.studySession.inProgress = false;
     learnState.studySession.completed = true;
+    learnState.studySession.tracker?.complete({
+      items_total: learnState.totalPlanned,
+      items_completed: learnState.totalPlanned,
+      known_count: progress.known || 0,
+      unknown_count: progress.unknown || 0,
+      repeated_count: progress.unknown || 0,
+      undo_count: progress.undo || 0,
+    });
     context.shell.setCounter("");
     context.router.replace("learn.results", {}, { force: true });
   }
@@ -142,6 +172,15 @@ export function renderStudy(context, words, signal, params) {
     } else {
       learnState.studySession.progressData.known = (learnState.studySession.progressData.known || 0) + 1;
     }
+    trackEvent(EVENTS.WORD_RESULT, {
+      word_id: item.id,
+      source: WORD_SOURCES.LEARN,
+      result: known ? WORD_RESULTS.KNOWN : WORD_RESULTS.UNKNOWN,
+      dictionary_id: item.dict || learnState.currentDict,
+      section_id: item.section || learnState.currentSection,
+      set_id: String(item.set || learnState.currentSet),
+      direction: directionFromMode(learnState.currentStudyMode),
+    });
     if (learnState.round === "main" && learnState.mainQueue.length === 0) learnState.round = "repeat";
     learnState.swipeHistory.push({ item, known, fromRound });
     draw();
@@ -178,7 +217,10 @@ export function renderStudy(context, words, signal, params) {
   function undo() {
     if (!learnState.swipeHistory.length || learnState.isAnimating) return;
     const { item, known, fromRound } = learnState.swipeHistory.pop();
+    const progress = learnState.studySession.progressData || {};
+    progress.undo = (progress.undo || 0) + 1;
     if (!known) {
+      progress.unknown = Math.max(0, (progress.unknown || 0) - 1);
       if (learnState.sessionFailMap[item.id]) {
         learnState.sessionFailMap[item.id] -= 1;
         if (learnState.sessionFailMap[item.id] <= 0) delete learnState.sessionFailMap[item.id];
@@ -189,6 +231,8 @@ export function renderStudy(context, words, signal, params) {
           break;
         }
       }
+    } else {
+      progress.known = Math.max(0, (progress.known || 0) - 1);
     }
     if (fromRound === "main") learnState.mainQueue.unshift(item);
     else learnState.repeatQueue.unshift(item);

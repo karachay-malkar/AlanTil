@@ -1,3 +1,5 @@
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js";
 import { songFavorites } from "../../shared/state/song-favorites.js";
 import { renderFavoriteButton } from "../../shared/ui/favorite-button.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
@@ -69,6 +71,8 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
   const modes = context.root.querySelector("#songsSearchModes");
   const list = context.root.querySelector("#songsCatalogList");
   input.value = songsState.searchQuery;
+  let searchEventTimer = 0;
+  let searchOpenTracked = false;
 
   function draw() {
     const query = normalizeSearchValue(songsState.searchQuery);
@@ -96,7 +100,7 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     list.querySelectorAll("[data-song-open]").forEach((button) => {
       button.addEventListener("click", () => {
         songsState.scrollPositions[playlist.id] = list.closest(".panel-body")?.scrollTop || 0;
-        context.router.navigate("songs.song", { playlistId: playlist.id, songId: button.dataset.songOpen });
+        context.router.navigate("songs.song", { playlistId: playlist.id, playlistSlug: playlist.slug || "favorites", songId: button.dataset.songOpen });
       }, { signal });
     });
 
@@ -109,6 +113,21 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
         if (favoritesOnly && !active) draw();
       }, { signal });
     });
+    return filtered.length;
+  }
+
+  function scheduleSearchEvent(resultCount) {
+    window.clearTimeout(searchEventTimer);
+    const queryLength = songsState.searchQuery.trim().length;
+    if (!queryLength) return;
+    searchEventTimer = window.setTimeout(() => {
+      trackEvent(resultCount ? EVENTS.SEARCH_RESULT : EVENTS.SEARCH_EMPTY, {
+        search_area: SEARCH_AREAS.SONGS,
+        search_mode: songsState.searchMode,
+        query_length: queryLength,
+        result_count: resultCount,
+      });
+    }, 600);
   }
 
   function setSearchOpen(open) {
@@ -118,6 +137,10 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", open ? "Закрыть поиск" : "Открыть поиск");
     if (open) {
+      if (!searchOpenTracked) {
+        searchOpenTracked = true;
+        trackEvent(EVENTS.SEARCH_OPEN, { search_area: SEARCH_AREAS.SONGS, search_mode: songsState.searchMode });
+      }
       requestAnimationFrame(() => input.focus());
     } else {
       songsState.searchQuery = "";
@@ -129,7 +152,7 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
   toggle.addEventListener("click", () => setSearchOpen(!songsState.searchOpen), { signal });
   input.addEventListener("input", () => {
     songsState.searchQuery = input.value;
-    draw();
+    scheduleSearchEvent(draw());
   }, { signal });
 
   context.root.querySelectorAll('input[name="songsSearchMode"]').forEach((radio) => {
@@ -138,12 +161,13 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
       context.root.querySelectorAll(".searchModeItem").forEach((label) => {
         label.classList.toggle("active", label.contains(radio));
       });
-      draw();
+      scheduleSearchEvent(draw());
       input.focus();
     }, { signal });
   });
 
   draw();
+  signal.addEventListener("abort", () => window.clearTimeout(searchEventTimer), { once: true });
 
   requestAnimationFrame(() => {
     const body = list.closest(".panel-body");

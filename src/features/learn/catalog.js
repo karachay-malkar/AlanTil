@@ -1,5 +1,8 @@
 import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js";
+import { trackEvent } from "../../shared/analytics/analytics.js";
+import { EVENTS, SEARCH_AREAS, SEARCH_MODES } from "../../shared/analytics/events.js";
 import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js";
+import { createSlugMap } from "../../shared/domain/slugs.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
@@ -12,6 +15,18 @@ function dictTitle(code) {
 
 function sectionTitle(code) {
   return SECTION_TITLES[code] || code;
+}
+
+function dictionarySlugMap(words) {
+  return createSlugMap(dictsFrom(words), { reserved: ["favorites"] });
+}
+
+function sectionSlugMap(words, dict) {
+  return createSlugMap(sectionsFrom(words, dict));
+}
+
+function setSlugMap(words, dict, section) {
+  return createSlugMap(setsFrom(words, dict, section).map(String));
 }
 
 function wireStars(container, wordsById, rerender) {
@@ -28,26 +43,30 @@ function wireStars(container, wordsById, rerender) {
 
 export function renderCatalog(context, words, signal) {
   const dicts = dictsFrom(words);
+  const slugs = dictionarySlugMap(words);
   const items = [
-    { id: "__fav__", title: "Избранное", favorite: true },
-    ...dicts.map((dict) => ({ id: dict, title: dictTitle(dict) })),
+    { id: "favorites", title: "Избранное", favorite: true },
+    ...dicts.map((dict) => ({ id: slugs.slugFor(dict), title: dictTitle(dict) })),
   ];
 
   context.root.innerHTML = panel({
     title: "Учить слова",
-    body: renderSectionMenu(items, { dataName: "dict" }),
+    body: renderSectionMenu(items, { dataName: "dictionary-slug" }),
   });
 
-  context.root.querySelectorAll("[data-dict]").forEach((button) => {
+  context.root.querySelectorAll("[data-dictionary-slug]").forEach((button) => {
     button.addEventListener("click", () => {
-      learnState.currentDict = button.dataset.dict;
-      if (learnState.currentDict === "__fav__") {
+      const dictionarySlug = button.dataset.dictionarySlug;
+      if (dictionarySlug === "favorites") {
+        learnState.currentDict = "__fav__";
         learnState.currentSection = "Избранное";
         learnState.currentSet = 1;
-        context.router.navigate("learn.set");
-      } else {
-        context.router.navigate("learn.sections");
+        context.router.navigate("learn.set", { dictionarySlug: "favorites", sectionSlug: null, setSlug: null });
+        return;
       }
+      learnState.currentDict = slugs.valueFor(dictionarySlug) || "";
+      learnState.currentSection = "";
+      context.router.navigate("learn.sections", { dictionarySlug, sectionSlug: null, setSlug: null });
     }, { signal });
   });
 }
@@ -59,14 +78,19 @@ export function renderSections(context, words, signal) {
     return;
   }
 
-  const sections = dict === "__fav__" ? ["Избранное"] : sectionsFrom(words, dict);
+  const dictionarySlug = dictionarySlugMap(words).slugFor(dict);
+  const sectionSlugs = sectionSlugMap(words, dict);
+  const availableSections = sectionsFrom(words, dict);
+  const sections = learnState.currentSection ? [learnState.currentSection] : availableSections;
   const body = sections.map((section) => {
-    const sets = dict === "__fav__" ? [1] : setsFrom(words, dict, section);
+    const sets = setsFrom(words, dict, section);
+    const setSlugs = setSlugMap(words, dict, section);
+    const sectionSlug = sectionSlugs.slugFor(section);
     const tiles = sets.map((setNumber) => {
       const finished = isSetFinished(dict, section, setNumber);
-      const title = dict === "__fav__" ? "Избранное" : (typeof setNumber === "number" ? `Сет ${setNumber}` : String(setNumber));
+      const title = typeof setNumber === "number" ? `Сет ${setNumber}` : String(setNumber);
       return `
-        <div class="setTile set-tile ${finished ? "selected" : ""}" role="button" tabindex="0" data-section="${escapeHtml(section)}" data-set="${escapeHtml(setNumber)}">
+        <div class="setTile set-tile ${finished ? "selected" : ""}" role="button" tabindex="0" data-section="${escapeHtml(section)}" data-section-slug="${escapeHtml(sectionSlug)}" data-set="${escapeHtml(setNumber)}" data-set-slug="${escapeHtml(setSlugs.slugFor(String(setNumber)))}">
           <button class="setDone setTileCorner set-tile__corner" data-done="1" type="button" aria-label="Отметить как выучено">
             <svg viewBox="0 0 24 24" class="setCheck ${finished ? "active" : ""}">
               <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke-width="1.7"></rect>
@@ -76,16 +100,27 @@ export function renderSections(context, words, signal) {
           <div class="setTileTitle">${escapeHtml(title)}</div>
         </div>`;
     }).join("");
-    return `<div class="secBlock"><div class="secTitle">${escapeHtml(sectionTitle(section))}</div><div class="setsGrid">${tiles}</div></div>`;
+    const sectionHeader = learnState.currentSection
+      ? `<div class="secTitle">${escapeHtml(sectionTitle(section))}</div>`
+      : `<button class="secTitle sectionRouteLink" type="button" data-section-open="${escapeHtml(sectionSlug)}">${escapeHtml(sectionTitle(section))}</button>`;
+    return `<div class="secBlock">${sectionHeader}<div class="setsGrid">${tiles}</div></div>`;
   }).join("");
 
   context.root.innerHTML = panel({
-    title: escapeHtml(dict === "__fav__" ? "Избранное" : dictTitle(dict)),
-    headerExtra: dict === "__fav__" ? "" : `<button id="btnOpenDictContent" class="iconBtn" type="button" aria-label="Содержание словаря" title="Содержание словаря"><img src="assets/icons/words-search.svg" alt="" /></button>`,
+    title: escapeHtml(learnState.currentSection ? sectionTitle(learnState.currentSection) : dictTitle(dict)),
+    headerExtra: `<button id="btnOpenDictContent" class="iconBtn" type="button" aria-label="Содержание словаря" title="Содержание словаря"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
     body: `<div id="sectionsList" class="stack">${body}</div>`,
   });
 
-  context.root.querySelector("#btnOpenDictContent")?.addEventListener("click", () => context.router.navigate("learn.catalog-content"), { signal });
+  context.root.querySelector("#btnOpenDictContent")?.addEventListener("click", () => context.router.navigate("learn.catalog-content", { dictionarySlug, sectionSlug: null, setSlug: null }), { signal });
+  context.root.querySelectorAll("[data-section-open]").forEach((button) => {
+    button.addEventListener("click", () => context.router.navigate("learn.sections", {
+      dictionarySlug,
+      sectionSlug: button.dataset.sectionOpen,
+      setSlug: null,
+    }), { signal });
+  });
+
   context.root.querySelectorAll(".setTile").forEach((tile) => {
     const section = tile.dataset.section;
     const rawSet = tile.dataset.set;
@@ -100,7 +135,11 @@ export function renderSections(context, words, signal) {
     const open = () => {
       learnState.currentSection = section;
       learnState.currentSet = setNumber;
-      context.router.navigate("learn.set");
+      context.router.navigate("learn.set", {
+        dictionarySlug,
+        sectionSlug: tile.dataset.sectionSlug,
+        setSlug: tile.dataset.setSlug,
+      });
     };
     tile.addEventListener("click", open, { signal });
     tile.addEventListener("keydown", (event) => {
@@ -120,13 +159,15 @@ export function renderDictionaryContent(context, words, signal) {
 
   context.root.innerHTML = panel({
     title: "Содержание словаря",
-    headerExtra: `<input id="dictSearchInput" class="searchInput" type="text" placeholder="Поиск..." />`,
+    headerExtra: `<input id="dictSearchInput" class="searchInput" type="search" placeholder="Поиск..." autocomplete="off" />`,
     body: `<div id="dictContentList" class="contentList contentListGrouped"></div>`,
   });
 
   const input = context.root.querySelector("#dictSearchInput");
   const list = context.root.querySelector("#dictContentList");
   const byId = new Map(words.map((word) => [word.id, word]));
+  let searchOpened = false;
+  let searchTimer = 0;
 
   function draw(filter = "") {
     const query = String(filter || "").toLowerCase().trim();
@@ -161,9 +202,30 @@ export function renderDictionaryContent(context, words, signal) {
       }, { signal });
     });
     wireStars(list, byId);
+    return filtered.length;
   }
 
-  input.addEventListener("input", () => draw(input.value), { signal });
+  function scheduleSearchEvent(resultCount) {
+    window.clearTimeout(searchTimer);
+    const queryLength = input.value.trim().length;
+    if (!queryLength) return;
+    searchTimer = window.setTimeout(() => {
+      trackEvent(resultCount ? EVENTS.SEARCH_RESULT : EVENTS.SEARCH_EMPTY, {
+        search_area: SEARCH_AREAS.DICTIONARY,
+        search_mode: SEARCH_MODES.WORD,
+        query_length: queryLength,
+        result_count: resultCount,
+      });
+    }, 600);
+  }
+
+  input.addEventListener("focus", () => {
+    if (searchOpened) return;
+    searchOpened = true;
+    trackEvent(EVENTS.SEARCH_OPEN, { search_area: SEARCH_AREAS.DICTIONARY, search_mode: SEARCH_MODES.WORD });
+  }, { signal });
+  input.addEventListener("input", () => scheduleSearchEvent(draw(input.value)), { signal });
+  signal.addEventListener("abort", () => window.clearTimeout(searchTimer), { once: true });
   draw();
 }
 

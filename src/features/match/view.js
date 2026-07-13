@@ -6,7 +6,7 @@ import { STATUS_BAD_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
-import { bumpFailure, markSolved, nextRound, startMatch } from "./engine.js";
+import { completeMatch, markSolved, nextRound, recordMismatch, startMatch } from "./engine.js";
 import { matchState } from "./state.js";
 
 function dictTitle(code) {
@@ -108,7 +108,11 @@ export function renderMatchMenu(context, words, signal) {
     }
     matchState.limit = selectedLimit();
     matchState.selectedScopeKeys = new Set(sectionCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
-    startMatch(pool, matchState.limit);
+    const selectedSections = sectionCheckboxes.filter((checkbox) => checkbox.checked);
+    startMatch(pool, matchState.limit, {
+      dictionaryCount: new Set(selectedSections.map((checkbox) => checkbox.dataset.dict)).size,
+      sectionCount: selectedSections.length,
+    });
     await context.router.navigate("match.game", {}, { force: true });
   }, { signal });
   updateInfo();
@@ -125,9 +129,8 @@ export function renderMatchGame(context, words, signal) {
   const right = context.root.querySelector("#matchColRight");
 
   function finish() {
-    matchState.session.inProgress = false;
-    matchState.session.completed = true;
-    context.router.replace("match.result", {}, { force: true });
+    completeMatch();
+    context.router.replace("match.results", {}, { force: true });
   }
 
   function drawRound() {
@@ -193,8 +196,7 @@ export function renderMatchGame(context, words, signal) {
           }, 350);
         }
       } else {
-        bumpFailure(first.id);
-        bumpFailure(choice.id);
+        recordMismatch(first.id, choice.id);
         matchState.locked = true;
         first.element.classList.add("wrong");
         button.classList.add("wrong");

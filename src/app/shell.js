@@ -1,3 +1,5 @@
+import { renderSectionMenu } from "../shared/ui/list.js";
+
 export function createShell() {
   const root = document.getElementById("appRoot");
   const backButton = document.getElementById("btnBackArrow");
@@ -10,6 +12,14 @@ export function createShell() {
   }
 
   function renderHome() {
+    const menu = renderSectionMenu([
+      { id: "test.menu", title: "🧠 Проверь свой уровень!" },
+      { id: "match.menu", title: "🔗 Сопоставь слова" },
+      { id: "learn.catalog", title: "📚 Учить слова" },
+      { id: "songs.playlists", title: "🎵 Песни" },
+      { id: "settings.home", title: "⚙️ Настройки" },
+    ], { dataName: "route", className: "homeMainActions" });
+
     root.innerHTML = `
       <section id="viewDicts" class="view screen homeView">
         <div class="panel homePanel" data-unified-panel="1">
@@ -17,14 +27,7 @@ export function createShell() {
             <div class="panelTitle">Алан тил</div>
           </div>
           <div class="panel-body homePanelBody">
-            <div class="homeContent">
-              <div class="homeMainActions">
-                <div class="row"><button class="btn primary" type="button" data-route="test.menu">🧠 Проверь свой уровень!</button></div>
-                <div class="row"><button class="btn primary" type="button" data-route="match.menu">🔗 Сопоставь слова</button></div>
-                <div class="row"><button class="btn primary" type="button" data-route="learn.catalog">📚 Учить слова</button></div>
-                <div class="row"><button class="btn primary" type="button" data-route="songs.playlists">🎵 Песни</button></div>
-              </div>
-            </div>
+            <div class="homeContent">${menu}</div>
             <div class="instagramBlock">
               <a class="instagramLink" href="https://www.instagram.com/alan_til_app?igsh=MTcxanlxb2Z1MHo4cA==" target="_blank" rel="noopener noreferrer" aria-label="Следите за нами в Instagram">
                 <span class="instagramBadge" aria-hidden="true">Instagram</span>
