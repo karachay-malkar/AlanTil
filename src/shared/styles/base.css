@@ -1,77 +1,22 @@
-*{ box-sizing:border-box; }
-html,
-body,
-main.wrap{
-  height:100%;
-}
-
-html,
+html,body{overflow:hidden}
 body{
-  min-height: 100vh;
+  font-family:var(--font-body);
+  color:var(--text-1);
+  background:
+    radial-gradient(circle at 14% -8%,var(--surface-white-55),transparent 35%),
+    linear-gradient(150deg,var(--app-bg),var(--app-bg-deep));
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
 }
-
-@supports (height: 100dvh) {
-  html,
-  body{
-    min-height: 100dvh;
-  }
-}
-
-body{
-  margin:0;
-  font-family: var(--font-base);
-  background: var(--bg);
-  color: var(--color-main);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.hidden{ display:none !important; }
-
-.typo-title,
-.panelTitle,
-.secTitle{
-  font-family: var(--font-base);
-  font-size: var(--fs-20px);
-  font-weight: var(--fw-bold);
-  color: var(--color-main);
-}
-
-.typo-subtitle,
-.hintText,
-.meta,
-.learnLabel{
-  font-family: var(--font-base);
-  font-size: var(--fs-16px);
-  font-weight: var(--fw-regular);
-  color: var(--color-muted);
-}
-
-.typo-card-main,
-.groupPill {
-  font-family: var(--font-base);
-  font-size: var(--fs-22px);
-  font-weight: var(--fw-semibold);
-  color: var(--color-main);
-}
-
-.typo-body,
-.trans {
-  font-family: var(--font-base);
-  font-size: var(--fs-16px);
-  font-weight: var(--fw-regular);
-  color: var(--color-main);
-}
-
-.typo-muted,
-.setTileCount,
-.hint,
-.smallNote,
-.dictNum{
-  font-family: var(--font-base);
-  font-size: var(--fs-14px);
-  font-weight: var(--fw-regular);
-  color: var(--color-muted);
-}
-
+::selection{background:var(--accent-soft)}
+.hidden{display:none!important}
+.typo-title,.panelTitle,.secTitle{font-size:20px;font-weight:850;color:var(--text-1)}
+.typo-subtitle,.hintText,.meta,.learnLabel{font-size:15px;color:var(--text-2)}
+.typo-card-main,.groupPill{font-size:21px;font-weight:720;color:var(--text-1)}
+.typo-body,.trans{font-size:16px;color:var(--text-1)}
+.typo-muted,.setTileCount,.hint,.smallNote,.dictNum{font-size:13px;color:var(--text-2)}
+.smallNote{line-height:1.5}
+.smallNote+.smallNote{margin-top:8px}
+button,input{touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent-glow);outline-offset:2px}

@@ -1,0 +1,12 @@
+[data-feature="settings"] .panel{height:100%}
+[data-feature="settings"] .settingsDocument{width:min(100%,620px);margin:0 auto;color:var(--text-1);line-height:1.62}
+[data-feature="settings"] .settingsDocument h1,[data-feature="settings"] .settingsDocument h2,[data-feature="settings"] .settingsDocument h3{line-height:1.2;margin:22px 0 9px}
+[data-feature="settings"] .settingsDocument h1:first-child,[data-feature="settings"] .settingsDocument h2:first-child{margin-top:0}
+[data-feature="settings"] .settingsDocument p{margin-top:10px;color:var(--text-2)}
+[data-feature="settings"] .settingsDocument ul,[data-feature="settings"] .settingsDocument ol{margin:10px 0 0 20px;padding-left:4px}
+[data-feature="settings"] .settingsDocumentDate{margin-bottom:18px;font:700 11px/1.3 var(--font-terminal);color:var(--text-3)}
+[data-feature="settings"] .settingsFacts{display:grid;gap:9px}
+[data-feature="settings"] .settingsFacts>div{padding:12px 13px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-0)}
+[data-feature="settings"] .analyticsSettingsSection{margin-top:24px;padding:16px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-panel-soft)}
+[data-feature="settings"] .analyticsPreferenceRow{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
+[data-feature="settings"] .analyticsPreferenceCheckbox{width:20px;height:20px;min-height:0;accent-color:var(--accent)}

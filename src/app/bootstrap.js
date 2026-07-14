@@ -1,16 +1,15 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.1";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.1";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.2";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.2";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js";
 import { createModalService } from "../shared/ui/modal.js";
-import { createRouter } from "./router.js?v=13.1";
-import { createShell } from "./shell.js";
+import { createRouter } from "./router.js?v=13.2";
+import { createShell } from "./shell.js?v=13.2";
 
 async function bootstrap() {
   prepareAnalytics();
   const telegram = createTelegramAdapter();
-
   const shell = createShell();
   const modal = createModalService(shell.modalRoot);
   const context = {
@@ -18,16 +17,12 @@ async function bootstrap() {
     shell,
     modal,
     telegram,
-    ensureStyle(href, id) {
-      if (document.getElementById(id)) return;
-      const link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = href;
-      document.head.appendChild(link);
+    ensureStyle() {
+      // Feature styles are loaded once through app.css.
     },
   };
 
+  shell.renderHome();
   await initializeAuth();
   await initializeProgressSystem();
 
@@ -48,6 +43,6 @@ async function bootstrap() {
 
 bootstrap().catch((error) => {
   console.error("Application bootstrap failed", error);
-  const root = document.getElementById("appRoot");
-  if (root) root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">Не удалось запустить приложение.</div></div></section>`;
+  const shell = document.getElementById("appRoot");
+  if (shell) shell.innerHTML = `<section class="screenState screenStateError">Не удалось запустить приложение.</section>`;
 });

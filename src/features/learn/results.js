@@ -20,7 +20,7 @@ export function renderResults(context, words, signal) {
         secondary: word.trans,
         trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
       })).join("")
-    : `<div class="smallNote noteCenter"><div class="noteTitle">Аперим!</div><div class="successNoteLine">✅ Не было незнакомых слов</div></div>`;
+    : `<div class="smallNote noteCenter"><div class="noteTitle">Аперим!</div><div class="successNoteLine">Не было незнакомых слов</div></div>`;
 
   context.root.innerHTML = panel({ title: "Аналитика сессии", body: `<div id="analyticsList" class="contentList">${content}</div>` });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {

@@ -1,0 +1,13 @@
+[data-feature="practice"] .practiceView{height:100%}
+[data-feature="practice"] .practicePanel{height:100%}
+[data-feature="practice"] .practiceMenu{display:grid;gap:11px}
+[data-feature="practice"] .menuItem{width:100%;min-height:78px;padding:12px 13px;border-radius:var(--radius-md);display:grid;grid-template-columns:44px minmax(0,1fr) 22px;align-items:center;gap:12px;text-align:left}
+[data-feature="practice"] .menuIcon{width:44px;height:44px;border-radius:var(--radius-sm);display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-strong)}
+[data-feature="practice"] .menuIcon svg{width:25px;height:25px;fill:currentColor}
+[data-feature="practice"] .menuItemText{min-width:0}
+[data-feature="practice"] .menuItem strong,[data-feature="practice"] .menuItem small{display:block}
+[data-feature="practice"] .menuItem strong{font-size:16px}
+[data-feature="practice"] .menuItem small{margin-top:4px;color:var(--text-2);font-size:12px;line-height:1.35}
+[data-feature="practice"] .menuArrow{color:var(--text-3)}
+[data-feature="practice"] .menuArrow svg{width:20px;height:20px;fill:currentColor}
+[data-feature="practice"] .menuItem.disabled{opacity:.48}

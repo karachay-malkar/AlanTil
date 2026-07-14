@@ -1,292 +1,37 @@
-.accountView{
-  height:100%;
-  min-height:0;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
-
-.panel.accountPanel[data-unified-panel="1"]{
-  flex:1 1 auto;
-  height:auto;
-  max-height:100%;
-  min-height:0;
-}
-
-.accountView .accountPanel .panel-body{
-  min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  overflow-anchor:none;
-  -webkit-overflow-scrolling:touch;
-}
-
-.accountPanel .panel-body{
-  display:flex;
-  justify-content:center;
-}
-
-.accountStack{
-  width:min(100%,520px);
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  padding-bottom:env(safe-area-inset-bottom,0px);
-}
-
-.accountIntro{
-  margin:0;
-  color:var(--color-muted);
-  font-size:var(--fs-16px);
-  line-height:1.45;
-}
-
-.accountForm{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.accountField{
-  display:flex;
-  flex-direction:column;
-  gap:7px;
-}
-
-.accountField>span{
-  color:var(--color-muted);
-  font-size:var(--fs-16px);
-}
-
-.accountField input{
-  width:100%;
-  min-height:var(--control-height);
-  margin:0;
-  padding:0 var(--control-padding-inline);
-  border:1px solid var(--control-border);
-  border-radius:var(--control-radius);
-  background:var(--control-background);
-  color:var(--color-main);
-  font:inherit;
-  outline:none;
-  transition:border-color .15s ease,box-shadow .15s ease,opacity .15s ease;
-}
-
-.accountField input:focus{
-  border-color:var(--brand-soft-45);
-  box-shadow:0 0 0 2px var(--brand-soft-08);
-}
-
-.accountField input[readonly]{
-  background:var(--control-background);
-  color:var(--color-main);
-}
-
-.accountField input:disabled{
-  background:var(--control-background);
-  color:var(--color-muted);
-  cursor:not-allowed;
-  opacity:.62;
-}
-
-.accountField input.isSuccess{
-  border-color:var(--success-soft-45);
-}
-
-.accountField input.isError{
-  border-color:var(--danger-soft-45);
-}
-
-.accountAction{
-  width:100%;
-  flex:0 0 auto;
-}
-
-.authProviderList{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  width:100%;
-}
-
-.authProviderButton{
-  flex:0 0 auto;
-  width:100%;
-  margin:0;
-  background:var(--control-background);
-  display:grid;
-  grid-template-columns:24px minmax(0,1fr) 24px;
-  align-items:center;
-  gap:10px;
-  box-shadow:0 1px 2px rgba(15,23,42,.04);
-  transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .08s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-
-.authProviderButton::after{
-  content:"";
-  width:24px;
-  height:1px;
-}
-
-.authProviderIcon{
-  width:22px;
-  height:22px;
-  display:block;
-  object-fit:contain;
-}
-
-.authProviderLabel{
-  min-width:0;
-  text-align:center;
-  line-height:1.25;
-}
-
-@media (hover:hover){
-  .authProviderButton:hover:not(:disabled){
-    border-color:rgba(15,23,42,.24);
-    background:var(--control-background);
-    box-shadow:0 3px 10px rgba(15,23,42,.08);
-  }
-}
-
-.authProviderButton:active:not(:disabled){
-  transform:translateY(1px);
-  background:var(--brand-soft-06);
-}
-
-.authProviderButton:disabled{
-  cursor:not-allowed;
-  opacity:.62;
-}
-
-.authProviderButton.isLoading{
-  cursor:progress;
-}
-
-.authProviderButton.isLoading .authProviderIcon{
-  opacity:.68;
-}
-
-.accountDivider{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  color:var(--color-muted);
-  font-size:var(--fs-14px);
-}
-
-.accountDivider::before,
-.accountDivider::after{
-  content:"";
-  height:1px;
-  flex:1;
-  background:var(--border);
-}
-
-.authEmailToggle{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-}
-
-.authEmailSection{
-  display:none;
-}
-
-.authEmailSection.isOpen{
-  display:block;
-}
-
-.accountMessage{
-  padding:11px 12px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  font-size:var(--fs-14px);
-  line-height:1.35;
-}
-
-.accountMessageSuccess{
-  background:var(--brand-soft-08);
-  color:var(--color-main);
-}
-
-.accountMessageError{
-  background:var(--danger-soft-10);
-  border-color:var(--danger-soft-45);
-  color:var(--color-danger);
-}
-
-.accountFacts{
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  border:1px solid var(--control-border);
-  border-radius:var(--control-radius);
-  overflow:hidden;
-  background:var(--control-background);
-}
-
-.accountFact{
-  display:grid;
-  grid-template-columns:minmax(100px,1fr) minmax(0,1.6fr);
-  gap:12px;
-  min-height:var(--control-height);
-  padding:10px var(--control-padding-inline);
-  align-items:center;
-  border-bottom:1px solid var(--border);
-}
-
-.accountFact:last-child{
-  border-bottom:0;
-}
-
-.accountFact dt{
-  color:var(--color-muted);
-}
-
-.accountFact dd{
-  margin:0;
-  text-align:right;
-  font-weight:var(--fw-semibold);
-  overflow-wrap:anywhere;
-}
-
-.accountPrivacyNote{
-  margin:0;
-  color:var(--color-muted);
-  font-size:var(--fs-14px);
-  line-height:1.4;
-}
-
-.accountNicknameMessage{
-  min-height:20px;
-  color:var(--color-muted);
-  font-size:var(--fs-14px);
-  line-height:1.35;
-}
-
-.accountNicknameMessage.available{
-  color:var(--color-success);
-}
-
-.accountNicknameMessage.invalid{
-  color:var(--color-danger);
-}
-
-.accountNicknameMessage.checking{
-  color:var(--color-muted);
-}
-
-@media(max-width:480px){
-  .accountFact{
-    grid-template-columns:1fr;
-    gap:4px;
-    align-items:start;
-  }
-
-  .accountFact dd{
-    text-align:left;
-  }
-}
+[data-feature="account"] .accountView{height:100%;min-height:0}
+[data-feature="account"] .accountPanel{height:100%}
+[data-feature="account"] .accountPanel .panel-body{display:flex;justify-content:center}
+[data-feature="account"] .accountStack{width:min(100%,520px);display:flex;flex-direction:column;gap:14px;padding-bottom:8px}
+[data-feature="account"] .accountIntro{color:var(--text-2);font-size:15px;line-height:1.5}
+[data-feature="account"] .accountForm{display:flex;flex-direction:column;gap:12px}
+[data-feature="account"] .accountField{display:flex;flex-direction:column;gap:7px}
+[data-feature="account"] .accountField>span{color:var(--text-2);font-size:14px}
+[data-feature="account"] .accountField input{transition:border-color var(--duration-fast),box-shadow var(--duration-fast),opacity var(--duration-fast)}
+[data-feature="account"] .accountField input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+[data-feature="account"] .accountField input:disabled{color:var(--text-3);opacity:.64}
+[data-feature="account"] .accountField input.isSuccess{border-color:var(--success)}
+[data-feature="account"] .accountField input.isError{border-color:var(--danger)}
+[data-feature="account"] .accountAction{width:100%;flex:0 0 auto}
+[data-feature="account"] .authProviderList{display:flex;flex-direction:column;gap:10px;width:100%}
+[data-feature="account"] .authProviderButton{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 24px;align-items:center;gap:10px;background:var(--surface-paper)}
+[data-feature="account"] .authProviderButton::after{content:"";width:24px;height:1px}
+[data-feature="account"] .authProviderIcon{width:22px;height:22px;object-fit:contain}
+[data-feature="account"] .authProviderLabel{text-align:center;line-height:1.25}
+[data-feature="account"] .accountDivider{display:flex;align-items:center;gap:10px;color:var(--text-2);font-size:13px}
+[data-feature="account"] .accountDivider::before,[data-feature="account"] .accountDivider::after{content:"";height:1px;flex:1;background:var(--line)}
+[data-feature="account"] .authEmailToggle{display:flex;align-items:center;justify-content:center;gap:8px}
+[data-feature="account"] .authEmailSection{display:none}
+[data-feature="account"] .authEmailSection.isOpen{display:block}
+[data-feature="account"] .accountMessage{padding:11px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:13px;line-height:1.4}
+[data-feature="account"] .accountMessageSuccess{background:var(--success-soft);border-color:var(--success-border)}
+[data-feature="account"] .accountMessageError{background:var(--danger-soft);border-color:var(--danger-border);color:var(--danger-strong)}
+[data-feature="account"] .accountFacts{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface-paper-soft)}
+[data-feature="account"] .accountFact{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,1.6fr);gap:12px;min-height:48px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--line-soft)}
+[data-feature="account"] .accountFact:last-child{border-bottom:0}
+[data-feature="account"] .accountFact dt{color:var(--text-2)}
+[data-feature="account"] .accountFact dd{text-align:right;font-weight:720;overflow-wrap:anywhere}
+[data-feature="account"] .accountPrivacyNote{color:var(--text-2);font-size:13px;line-height:1.45}
+[data-feature="account"] .accountNicknameMessage{min-height:20px;color:var(--text-2);font-size:13px}
+[data-feature="account"] .accountNicknameMessage.available{color:var(--success)}
+[data-feature="account"] .accountNicknameMessage.invalid{color:var(--danger)}
+@media(max-width:480px){[data-feature="account"] .accountFact{grid-template-columns:1fr;gap:4px;align-items:start}[data-feature="account"] .accountFact dd{text-align:left}}
