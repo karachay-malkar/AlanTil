@@ -1,4 +1,4 @@
--- AlanTil 12.2
+-- AlanTil 12.2.1
 -- Run this file once in Supabase Dashboard -> SQL Editor.
 
 begin;

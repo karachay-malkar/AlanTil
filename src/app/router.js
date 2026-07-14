@@ -1,13 +1,14 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
+import { initializeAuth } from "../shared/auth/auth-service.js";
 
 const FEATURE_LOADERS = {
   learn: () => import("../features/learn/index.js"),
   test: () => import("../features/test/index.js"),
   match: () => import("../features/match/index.js"),
   songs: () => import("../features/songs/index.js"),
-  account: () => import("../features/account/index.js?v=12.2"),
-  settings: () => import("../features/settings/index.js?v=12.2"),
+  account: () => import("../features/account/index.js?v=12.2.1"),
+  settings: () => import("../features/settings/index.js?v=12.2.1"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -166,8 +167,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=12.2&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=12.2&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=12.2.1&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=12.2.1&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -483,13 +484,15 @@ export function createRouter({ shell, modal, context }) {
 
   async function start() {
     if (started) return true;
+    await initializeAuth();
     started = true;
     const initial = resolveInitialRoute();
     current = { route: initial.route, params: compactParams(initial.params) };
     historyIndex = 0;
     entries[0] = current;
     const canonicalPath = initial.notFound ? "/" : buildPath(current.route, current.params);
-    window.history.replaceState(historyState(current, 0), "", `${canonicalPath}${navigationSuffix()}`);
+    const initialUrlSuffix = `${window.location.search || ""}${window.location.hash || ""}` || navigationSuffix();
+    window.history.replaceState(historyState(current, 0), "", `${canonicalPath}${initialUrlSuffix}`);
     return show(current, { historyMode: "none", force: true, initial: true, skipLeaveCheck: true });
   }
 
