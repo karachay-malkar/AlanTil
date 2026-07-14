@@ -1,14 +1,14 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=12.3";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=12.4";
 
 const FEATURE_LOADERS = {
-  learn: () => import("../features/learn/index.js"),
-  test: () => import("../features/test/index.js"),
-  match: () => import("../features/match/index.js"),
+  learn: () => import("../features/learn/index.js?v=12.4"),
+  test: () => import("../features/test/index.js?v=12.4"),
+  match: () => import("../features/match/index.js?v=12.4"),
   songs: () => import("../features/songs/index.js"),
-  account: () => import("../features/account/index.js?v=12.3"),
-  settings: () => import("../features/settings/index.js?v=12.3"),
+  account: () => import("../features/account/index.js?v=12.4"),
+  settings: () => import("../features/settings/index.js?v=12.4"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -167,8 +167,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=12.3&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=12.3&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=12.4&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=12.4&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -184,7 +184,7 @@ export function createRouter({ shell, modal, context }) {
 
   async function mayLeave(force) {
     if (force || !currentModule?.canLeave || currentModule.canLeave()) return true;
-    return modal.confirm({ message: "Вы точно хотите выйти?<br>Прогресс сессии будет потерян." });
+    return modal.confirm({ message: "Вы точно хотите выйти?<br>Сессия будет сохранена как незавершённая." });
   }
 
   function pauseScreenTimer() {

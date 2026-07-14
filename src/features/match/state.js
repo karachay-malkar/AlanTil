@@ -9,7 +9,9 @@ export const matchState = {
   total: 0,
   errorsCount: 0,
   failMap: {},
+  errorPairs: {},
   solved: new Set(),
+  shown: new Set(),
   locked: false,
   selected: null,
   session: {
@@ -19,6 +21,7 @@ export const matchState = {
     progressData: {},
     metadata: {},
     tracker: null,
+    runtime: null,
   },
 };
 
@@ -30,7 +33,9 @@ export function clearMatchSession() {
   matchState.total = 0;
   matchState.errorsCount = 0;
   matchState.failMap = {};
+  matchState.errorPairs = {};
   matchState.solved = new Set();
+  matchState.shown = new Set();
   matchState.locked = false;
   matchState.selected = null;
   matchState.session.inProgress = false;
@@ -39,4 +44,5 @@ export function clearMatchSession() {
   matchState.session.progressData = {};
   matchState.session.metadata = {};
   matchState.session.tracker = null;
+  matchState.session.runtime = null;
 }

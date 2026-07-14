@@ -1,5 +1,6 @@
 import { getWords } from "../../shared/data/word-repository.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
+import { finalizeMatchSession } from "./engine.js";
 import { clearMatchSession, matchState } from "./state.js";
 import { renderMatchGame, renderMatchMenu, renderMatchResult } from "./view.js";
 
@@ -23,15 +24,17 @@ export async function mount(context, params = {}) {
 export function onLeave(reason = "route_change") {
   if (matchState.currentScreen !== "game") return;
   const tracker = matchState.session.tracker;
-  if (tracker?.getStatus() !== "active") return;
-  tracker.abandon(reason, {
-    items_total: matchState.total,
-    items_completed: matchState.solvedCount,
-    pairs_total: matchState.total,
-    pairs_completed: matchState.solvedCount,
-    progress_percent: Math.round((matchState.solvedCount / Math.max(1, matchState.total)) * 100),
-    errors_count: matchState.errorsCount,
-  });
+  if (tracker?.getStatus() === "active") {
+    tracker.abandon(reason, {
+      items_total: matchState.total,
+      items_completed: matchState.solvedCount,
+      pairs_total: matchState.total,
+      pairs_completed: matchState.solvedCount,
+      progress_percent: Math.round((matchState.solvedCount / Math.max(1, matchState.total)) * 100),
+      errors_count: matchState.errorsCount,
+    });
+  }
+  if (matchState.session.inProgress) finalizeMatchSession("interrupted", reason);
 }
 
 export function unmount() {

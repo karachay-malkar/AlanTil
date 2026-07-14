@@ -16,6 +16,7 @@ export const testState = {
     progressData: {},
     metadata: {},
     tracker: null,
+    runtime: null,
   },
 };
 
@@ -32,4 +33,5 @@ export function clearTestSession() {
   testState.session.progressData = {};
   testState.session.metadata = {};
   testState.session.tracker = null;
+  testState.session.runtime = null;
 }

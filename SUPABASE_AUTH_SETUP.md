@@ -1,4 +1,4 @@
-# AlanTil 12.3 — настройка Supabase Auth
+# AlanTil 12.4 — настройка Supabase Auth
 
 ## 1. Создание таблиц и политик
 
@@ -10,11 +10,15 @@
 
 Скрипт создаёт:
 
-- `profiles` — уникальный никнейм без email;
-- Row Level Security для профиля;
-- функцию проверки доступности никнейма;
-- `blocked_emails` — список запрещённых адресов;
-- Auth Hook, который запрещает создание нового аккаунта для адреса из списка.
+- `profiles` и проверку уникального никнейма;
+- `user_settings`;
+- облачные состояния избранного, скрытых слов и прогресса сетов;
+- общие таблицы сессий `learn_sessions`, `test_sessions`, `match_sessions`;
+- детализацию слов и ошибочных сопоставлений;
+- накопительную таблицу `user_word_progress`;
+- атомарные функции `save_learn_session`, `save_test_session`, `save_match_session`;
+- Row Level Security: пользователь видит только собственные данные;
+- `blocked_emails` и Auth Hook для запрета новых аккаунтов.
 
 ## 2. URL авторизации
 
@@ -92,7 +96,7 @@ public.hook_reject_blocked_email
 2. Найдите пользователя.
 3. Выберите **Delete user**.
 
-Строка `profiles` удалится автоматически по `on delete cascade`.
+Профиль, настройки, прогресс и история сессий удалятся автоматически по `on delete cascade`.
 
 ### Заблокировать email навсегда, включая повторную регистрацию
 
@@ -127,7 +131,21 @@ where email = 'example@gmail.com';
 4. Обновите страницу — сессия должна сохраниться.
 5. Выполните выход.
 6. Проверьте вход по email.
-7. Добавьте тестовый email в `blocked_emails` и убедитесь, что новый аккаунт с ним создать нельзя.
+7. Добавьте слово в избранное, завершите короткую сессию и проверьте появление строк в таблицах прогресса.
+8. Повторно отправленная сессия с тем же UUID не должна увеличивать статистику второй раз.
+9. Добавьте тестовый email в `blocked_emails` и убедитесь, что новый аккаунт с ним создать нельзя.
+
+Проверка объектов базы:
+
+```sql
+select to_regclass('public.learn_sessions');
+select to_regclass('public.test_sessions');
+select to_regclass('public.match_sessions');
+select to_regclass('public.user_word_progress');
+select to_regprocedure('public.save_learn_session(jsonb)');
+select to_regprocedure('public.save_test_session(jsonb)');
+select to_regprocedure('public.save_match_session(jsonb)');
+```
 
 ## Безопасность
 

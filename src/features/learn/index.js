@@ -8,7 +8,7 @@ import { panel } from "../../shared/ui/panel.js";
 import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js";
 import { renderResults } from "./results.js";
 import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js";
-import { renderStudy } from "./study.js";
+import { finalizeLearnSession, renderStudy } from "./study.js";
 
 let controller = null;
 let activeContext = null;
@@ -118,16 +118,18 @@ export async function mount(context, params = {}) {
 
 export function onLeave(reason = "route_change") {
   const tracker = learnState.studySession.tracker;
-  if (tracker?.getStatus() !== "active") return;
-  const itemsCompleted = getLearnItemsCompleted();
-  const progress = learnState.studySession.progressData || {};
-  tracker.abandon(reason, {
-    items_total: learnState.totalPlanned,
-    items_completed: itemsCompleted,
-    progress_percent: Math.round((itemsCompleted / Math.max(1, learnState.totalPlanned)) * 100),
-    known_count: progress.known || 0,
-    unknown_count: progress.unknown || 0,
-  });
+  if (tracker?.getStatus() === "active") {
+    const itemsCompleted = getLearnItemsCompleted();
+    const progress = learnState.studySession.progressData || {};
+    tracker.abandon(reason, {
+      items_total: learnState.totalPlanned,
+      items_completed: itemsCompleted,
+      progress_percent: Math.round((itemsCompleted / Math.max(1, learnState.totalPlanned)) * 100),
+      known_count: progress.known || 0,
+      unknown_count: progress.unknown || 0,
+    });
+  }
+  if (learnState.studySession.inProgress) finalizeLearnSession("interrupted", reason);
 }
 
 export function unmount() {

@@ -2,9 +2,53 @@ import { trackEvent } from "../../shared/analytics/analytics.js";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js";
 import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js";
+import {
+  createSessionRuntime,
+  finalizeSessionRuntime,
+  persistSessionRuntime,
+} from "../../shared/progress/session-builders.js";
 import { testState } from "./state.js";
 
+function sessionWords() {
+  return testState.results.map((result) => ({
+    word_id: result.id,
+    result: result.isCorrect ? "correct" : "wrong",
+    wrong_word_id: result.isCorrect ? null : result.wrongWordId || null,
+  }));
+}
+
+function testSessionPayload() {
+  const words = sessionWords();
+  return {
+    questions_planned: testState.items.length,
+    questions_answered: words.length,
+    correct_total: words.filter((word) => word.result === "correct").length,
+    wrong_total: words.filter((word) => word.result === "wrong").length,
+    words,
+  };
+}
+
+function persistTestSession() {
+  persistSessionRuntime(testState.session.runtime, testSessionPayload());
+}
+
+export function finalizeTestSession(status = "interrupted", exitReason = "route_change") {
+  const session = testState.session;
+  if (!session.runtime || session.runtime.finalized) return false;
+  const result = finalizeSessionRuntime(session.runtime, {
+    status,
+    exitReason,
+    payload: testSessionPayload(),
+  });
+  session.inProgress = false;
+  session.completed = status === "completed";
+  return result;
+}
+
 function abandonPreviousSession() {
+  if (testState.session.runtime && !testState.session.runtime.finalized) {
+    finalizeTestSession("interrupted", CANCEL_REASONS.NEW_SESSION);
+  }
   const tracker = testState.session.tracker;
   if (tracker?.getStatus() !== "active") return;
   tracker.abandon(CANCEL_REASONS.NEW_SESSION, {
@@ -33,6 +77,10 @@ export function startTest(pool, mode, limit, metadata = {}) {
   testState.session.wordsPool = pool.slice();
   testState.session.progressData = { index: 0, total: testState.items.length, correct: 0 };
   testState.session.metadata = { ...metadata };
+  testState.session.runtime = testState.items.length ? createSessionRuntime("test", {
+    selected_sources: Array.isArray(metadata.selectedSources) ? metadata.selectedSources : [],
+    direction: directionFromMode(testState.mode),
+  }) : null;
   testState.session.tracker = testState.items.length ? createActivityTracker(ACTIVITY_TYPES.TEST) : null;
   testState.session.tracker?.start({
     direction: directionFromMode(testState.mode),
@@ -43,33 +91,36 @@ export function startTest(pool, mode, limit, metadata = {}) {
     dictionary_count: metadata.dictionaryCount || 0,
     section_count: metadata.sectionCount || 0,
   });
+  persistTestSession();
 }
 
 export function pickOptions(item) {
-  const correct = testState.mode === "kb" ? item.trans : item.word;
+  const correctText = testState.mode === "kb" ? item.trans : item.word;
   const targetPOS = String(item.pos || "").trim();
   let pool = testState.optionPool.filter((candidate) => candidate.id !== item.id && (!targetPOS || String(candidate.pos || "").trim() === targetPOS));
   if (pool.length < 3) pool = testState.optionPool.filter((candidate) => candidate.id !== item.id);
 
-  const options = [correct];
+  const options = [{ id: item.id, text: correctText }];
+  const usedTexts = new Set([correctText]);
   let guard = 0;
   while (options.length < 4 && guard < 2000) {
     guard += 1;
     const candidate = pool[Math.floor(Math.random() * pool.length)];
     if (!candidate) break;
     const text = testState.mode === "kb" ? candidate.trans : candidate.word;
-    if (!text || options.includes(text)) continue;
-    options.push(text);
+    if (!text || usedTexts.has(text)) continue;
+    usedTexts.add(text);
+    options.push({ id: candidate.id, text });
   }
   return shuffle(options);
 }
 
 export function submitAnswer(answer) {
-  if (testState.index >= testState.items.length || !answer) return false;
+  if (testState.index >= testState.items.length || !answer?.id || !answer?.text) return false;
   const item = testState.items[testState.index];
   const questionText = testState.mode === "kb" ? item.word : item.trans;
   const correctAnswer = testState.mode === "kb" ? item.trans : item.word;
-  const isCorrect = answer === correctAnswer;
+  const isCorrect = String(answer.id) === String(item.id);
   if (isCorrect) testState.correct += 1;
 
   testState.results.push({
@@ -78,7 +129,8 @@ export function submitAnswer(answer) {
     word: item.word,
     trans: item.trans,
     correctAnswer,
-    userAnswer: answer,
+    userAnswer: answer.text,
+    wrongWordId: isCorrect ? null : String(answer.id),
     isCorrect,
   });
   trackEvent(EVENTS.WORD_RESULT, {
@@ -94,13 +146,13 @@ export function submitAnswer(answer) {
   testState.selectedAnswer = null;
   testState.session.progressData.index = testState.index;
   testState.session.progressData.correct = testState.correct;
+  persistTestSession();
   return true;
 }
 
 export function completeTest() {
   if (!testState.session.inProgress || testState.session.completed) return false;
-  testState.session.inProgress = false;
-  testState.session.completed = true;
+  finalizeTestSession("completed", null);
   const total = testState.items.length;
   const wrong = Math.max(0, total - testState.correct);
   return testState.session.tracker?.complete({

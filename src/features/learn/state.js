@@ -1,5 +1,6 @@
 import { normalizeId } from "../../shared/domain/word-normalizer.js";
-import { readJson, writeJson } from "../../shared/state/storage.js";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js";
 
 export const HIDDEN_KEY = "fc_hidden_by_set_v7";
 export const FINISHED_KEY = "fc_finished_sets_v1";
@@ -24,7 +25,10 @@ export const learnState = {
     completed: false,
     wordsPool: [],
     progressData: {},
+    wordStats: {},
+    metadata: {},
     tracker: null,
+    runtime: null,
   },
 };
 
@@ -37,28 +41,53 @@ function toIdSet(values) {
 }
 
 export function getHiddenSet(dict, section, setNumber) {
-  const map = readJson(HIDDEN_KEY, {});
+  const map = readScopedJson(HIDDEN_KEY, {});
   return toIdSet(map[keyOf(dict, section, setNumber)]);
 }
 
 export function setHiddenSet(dict, section, setNumber, ids) {
-  const map = readJson(HIDDEN_KEY, {});
-  map[keyOf(dict, section, setNumber)] = Array.from(ids);
-  writeJson(HIDDEN_KEY, map);
+  const map = readScopedJson(HIDDEN_KEY, {});
+  const key = keyOf(dict, section, setNumber);
+  const before = toIdSet(map[key]);
+  const after = toIdSet(Array.from(ids || []));
+  map[key] = Array.from(after);
+  writeScopedJson(HIDDEN_KEY, map);
+
+  const changed = new Set([...before, ...after]);
+  changed.forEach((wordId) => {
+    if (before.has(wordId) === after.has(wordId)) return;
+    enqueueProgress("hidden_word", {
+      dictionary_id: String(dict || ""),
+      section_id: String(section || ""),
+      set_id: String(setNumber || ""),
+      word_id: wordId,
+      is_hidden: after.has(wordId),
+      updated_at: new Date().toISOString(),
+    }, { id: `hidden_word:${dict}:${section}:${setNumber}:${wordId}` });
+  });
+  return after;
 }
 
 export function isSetFinished(dict, section, setNumber) {
-  const map = readJson(FINISHED_KEY, {});
+  const map = readScopedJson(FINISHED_KEY, {});
   return Boolean(map[keyOf(dict, section, setNumber)]);
 }
 
 export function toggleSetFinished(dict, section, setNumber) {
-  const map = readJson(FINISHED_KEY, {});
+  const map = readScopedJson(FINISHED_KEY, {});
   const key = keyOf(dict, section, setNumber);
-  if (map[key]) delete map[key];
-  else map[key] = true;
-  writeJson(FINISHED_KEY, map);
-  return Boolean(map[key]);
+  const next = !Boolean(map[key]);
+  if (next) map[key] = true;
+  else delete map[key];
+  writeScopedJson(FINISHED_KEY, map);
+  enqueueProgress("set_progress", {
+    dictionary_id: String(dict || ""),
+    section_id: String(section || ""),
+    set_id: String(setNumber || ""),
+    is_finished: next,
+    updated_at: new Date().toISOString(),
+  }, { id: `set_progress:${dict}:${section}:${setNumber}` });
+  return next;
 }
 
 export function getLearnItemsCompleted() {
@@ -79,5 +108,8 @@ export function clearStudySession() {
   learnState.studySession.completed = false;
   learnState.studySession.wordsPool = [];
   learnState.studySession.progressData = {};
+  learnState.studySession.wordStats = {};
+  learnState.studySession.metadata = {};
   learnState.studySession.tracker = null;
+  learnState.studySession.runtime = null;
 }

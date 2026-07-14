@@ -1,6 +1,6 @@
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=12.3";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=12.4";
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=12.3";
+import { panel } from "../../shared/ui/panel.js?v=12.4";
 
 const GOOGLE_ICON = "/assets/icons/auth/google.svg";
 
@@ -15,7 +15,6 @@ export function renderLogin(context, {
     viewClasses: "accountView",
     body: `
       <div class="accountStack">
-        <p class="accountIntro">Вход нужен для создания профиля. Приложением можно пользоваться без регистрации.</p>
         ${error ? `<div class="accountMessage accountMessageError" role="alert">${escapeHtml(error)}</div>` : ""}
         ${message ? `<div class="accountMessage accountMessageSuccess" role="status">${escapeHtml(message)}</div>` : ""}
 

@@ -1,5 +1,5 @@
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=12.3";
+import { panel } from "../../shared/ui/panel.js?v=12.4";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
@@ -25,9 +25,6 @@ export function renderProfileCreation(context, user, {
     viewClasses: "accountView",
     body: `
       <div class="accountStack">
-        <p class="accountIntro">${unavailable
-          ? "Данные профиля сейчас нельзя загрузить. Вход остаётся активным."
-          : "Выберите уникальный никнейм. Имя и фамилия не требуются."}</p>
         ${error ? `<div class="accountMessage accountMessageError" role="alert">${escapeHtml(error)}</div>` : ""}
         <form id="accountProfileForm" class="accountForm" novalidate>
           <label class="accountField" for="accountProfileEmail">
@@ -103,7 +100,6 @@ export function renderProfile(context, { user, profile, provider, error = "" }) 
           ${renderAccountFact("Email", user?.email || "")}
           ${renderAccountFact("Способ входа", provider || "")}
         </dl>
-        <p class="accountPrivacyNote">Email виден только вам и не хранится в публичном профиле.</p>
         <button id="accountSignOut" class="btn ghost accountAction" type="button">Выйти</button>
       </div>`,
   });

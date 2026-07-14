@@ -1,5 +1,6 @@
 import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js";
 import { dictsFrom, isWordEnabledInTestModes, sortNatural, uniq } from "../../shared/domain/word-selection.js";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
@@ -77,6 +78,10 @@ export function renderTestMenu(context, words, signal) {
     return {
       dictionaryCount: new Set(selected.map((checkbox) => checkbox.dataset.dict)).size,
       sectionCount: selected.length,
+      selectedSources: buildSelectedSources(selected.map((checkbox) => ({
+        dictionaryId: checkbox.dataset.dict,
+        sectionId: checkbox.dataset.section,
+      }))),
     };
   }
 
@@ -91,12 +96,7 @@ export function renderTestMenu(context, words, signal) {
 
   function updateInfo() {
     const pool = selectedPool();
-    const selectedSections = sectionCheckboxes.filter((checkbox) => checkbox.checked);
-    const dictionaryCount = new Set(selectedSections.map((checkbox) => checkbox.dataset.dict)).size;
-    const scopeText = selectedSections.length === sectionCheckboxes.length
-      ? "Все словари и разделы"
-      : `Выбрано: словарей ${dictionaryCount}, разделов ${selectedSections.length}`;
-    info.textContent = `Источник: ${scopeText} • Слов: ${pool.length} • Тест: ${Math.min(selectedLimit(), pool.length)} слов`;
+    info.textContent = `Выбрано: ${pool.length} • Тест: ${Math.min(selectedLimit(), pool.length)} слов`;
   }
 
   dictCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => {
@@ -169,14 +169,17 @@ export function renderTestSession(context, signal) {
       body: `
         <div class="hintText" id="testProgress">Вопрос ${testState.index + 1} из ${testState.items.length}</div>
         <div class="testQuestion" id="testQuestion">${escapeHtml(question)}</div>
-        <div id="testOptions" class="stack" style="margin-top:12px;">${pickOptions(item).map((option) => `<button class="optionBtn" type="button" data-option="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join("")}</div>
+        <div id="testOptions" class="stack" style="margin-top:12px;">${pickOptions(item).map((option) => `<button class="optionBtn" type="button" data-option-id="${escapeHtml(option.id)}" data-option-text="${escapeHtml(option.text)}">${escapeHtml(option.text)}</button>`).join("")}</div>
         <div class="row"><button id="btnTestNext" class="btn primary" type="button" disabled>Дальше</button></div>`,
     });
 
     const next = context.root.querySelector("#btnTestNext");
     const options = Array.from(context.root.querySelectorAll(".optionBtn"));
     options.forEach((button) => button.addEventListener("click", () => {
-      testState.selectedAnswer = button.dataset.option;
+      testState.selectedAnswer = {
+        id: button.dataset.optionId,
+        text: button.dataset.optionText,
+      };
       options.forEach((option) => option.classList.remove("selected"));
       button.classList.add("selected");
       next.disabled = false;

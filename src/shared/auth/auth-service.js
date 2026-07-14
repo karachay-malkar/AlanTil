@@ -1,6 +1,6 @@
 import { getAuthRedirectUrl } from "../../config/supabase.js";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=12.3";
-import { getSupabaseClient } from "./supabase-client.js?v=12.3";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=12.4";
+import { getSupabaseClient } from "./supabase-client.js?v=12.4";
 
 const AUTH_CALLBACK_PARAMETERS = Object.freeze([
   "code",
