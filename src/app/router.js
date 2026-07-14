@@ -1,14 +1,14 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=12.3";
 
 const FEATURE_LOADERS = {
   learn: () => import("../features/learn/index.js"),
   test: () => import("../features/test/index.js"),
   match: () => import("../features/match/index.js"),
   songs: () => import("../features/songs/index.js"),
-  account: () => import("../features/account/index.js?v=12.2.1"),
-  settings: () => import("../features/settings/index.js?v=12.2.1"),
+  account: () => import("../features/account/index.js?v=12.3"),
+  settings: () => import("../features/settings/index.js?v=12.3"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -167,8 +167,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=12.2.1&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=12.2.1&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=12.3&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=12.3&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }

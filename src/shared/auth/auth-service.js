@@ -1,6 +1,6 @@
 import { getAuthRedirectUrl } from "../../config/supabase.js";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js";
-import { getSupabaseClient } from "./supabase-client.js";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=12.3";
+import { getSupabaseClient } from "./supabase-client.js?v=12.3";
 
 const AUTH_CALLBACK_PARAMETERS = Object.freeze([
   "code",
@@ -79,6 +79,10 @@ function setSessionState(session, error = null) {
 function ensureAuthSubscription(client) {
   if (authSubscription) return authSubscription;
   const { data: listener } = client.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      setSessionState(null, null);
+      return;
+    }
     const currentError = getAuthState().error;
     setSessionState(session, event === "INITIAL_SESSION" ? currentError : null);
   });
@@ -221,10 +225,11 @@ export async function signInWithEmail(email) {
 }
 
 export async function signOut() {
+  setAuthState({ error: null });
   const client = await getSupabaseClient();
   const { error } = await client.auth.signOut({ scope: "local" });
   if (error) throw new Error(normalizeAuthError(error));
-  setAuthState({ ready: true, session: null, user: null, error: null });
+  setSessionState(null, null);
 }
 
 export function getCurrentAuthState() {

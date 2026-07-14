@@ -1,4 +1,4 @@
--- AlanTil 12.2.1
+-- AlanTil 12.3
 -- Run this file once in Supabase Dashboard -> SQL Editor.
 
 begin;
@@ -148,6 +148,9 @@ grant execute on function public.hook_reject_blocked_email(jsonb) to supabase_au
 revoke execute on function public.hook_reject_blocked_email(jsonb) from public, anon, authenticated;
 
 commit;
+
+-- Refresh the PostgREST schema cache after creating tables and functions.
+notify pgrst, 'reload schema';
 
 -- Examples for the SQL Editor:
 -- Permanently block an email from creating a new account:

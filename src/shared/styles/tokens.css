@@ -3,6 +3,13 @@
   --study-bottom-panel-h: 200px;
 
   --r: 22px;
+
+  --control-height: 48px;
+  --control-height-compact: 40px;
+  --control-radius: 16px;
+  --control-padding-inline: 14px;
+  --control-background: var(--card-bg);
+  --control-border: var(--border);
   --brand: #2b89fa;
   --brand-dark: #2b89fa;
   --bg: #F6FAFD;
