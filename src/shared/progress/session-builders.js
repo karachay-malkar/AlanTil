@@ -3,6 +3,7 @@ import { createActivityClock } from "./activity-clock.js";
 import { enqueueProgress } from "./progress-queue.js";
 import { createSessionId, removeActiveSession, saveActiveSession } from "./session-store.js";
 import { getStorageScope } from "./storage-scope.js";
+import { recordActivitySession } from "./activity-history-store.js";
 
 const SESSION_QUEUE_TYPES = Object.freeze({
   learn: "learn_session",
@@ -97,6 +98,7 @@ export function finalizeSessionRuntime(runtime, {
     id: `${queueType}:${runtime.id}`,
     replace: false,
   });
+  recordActivitySession(runtime.type, finalPayload);
   return finalPayload;
 }
 

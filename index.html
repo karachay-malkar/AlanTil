@@ -17,11 +17,11 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/src/shared/styles/tokens.css?v=12.4" />
+  <link rel="stylesheet" href="/src/shared/styles/tokens.css?v=13.1" />
   <link rel="stylesheet" href="/src/shared/styles/base.css" />
   <link rel="stylesheet" href="/src/shared/styles/layout.css" />
-  <link rel="stylesheet" href="/src/shared/styles/components.css?v=12.4" />
-  <link rel="stylesheet" href="/src/shared/styles/privacy.css?v=12.4" />
+  <link rel="stylesheet" href="/src/shared/styles/components.css?v=13.1" />
+  <link rel="stylesheet" href="/src/shared/styles/privacy.css?v=13.1" />
 </head>
 <body>
   <header id="appHeader" class="top">
@@ -42,8 +42,13 @@
   </header>
 
   <main id="appRoot" class="wrap" aria-live="polite"></main>
+  <nav id="bottomNav" class="bottomNav" aria-label="Основная навигация">
+    <button class="bottomNavItem" type="button" data-route="practice.home"><span class="bottomNavIcon" aria-hidden="true">◫</span><span>Практика</span></button>
+    <button class="bottomNavItem active" type="button" data-route="path.home"><span class="bottomNavIcon" aria-hidden="true">△</span><span>Путь</span></button>
+    <button class="bottomNavItem" type="button" data-route="profile.home"><span class="bottomNavIcon" aria-hidden="true">◉</span><span>Профиль</span></button>
+  </nav>
   <div id="modalRoot"></div>
 
-  <script type="module" src="/src/app/bootstrap.js?v=12.4"></script>
+  <script type="module" src="/src/app/bootstrap.js?v=13.1"></script>
 </body>
 </html>

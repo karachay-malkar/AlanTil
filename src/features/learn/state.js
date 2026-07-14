@@ -18,6 +18,8 @@ export const learnState = {
   totalPlanned: 0,
   currentStudyId: "",
   swipeHistory: [],
+  analyticsActions: [],
+  analyticsFlushed: false,
   sessionFailMap: {},
   isAnimating: false,
   studySession: {
@@ -102,6 +104,8 @@ export function clearStudySession() {
   learnState.totalPlanned = 0;
   learnState.currentStudyId = "";
   learnState.swipeHistory = [];
+  learnState.analyticsActions = [];
+  learnState.analyticsFlushed = false;
   learnState.sessionFailMap = {};
   learnState.isAnimating = false;
   learnState.studySession.inProgress = false;

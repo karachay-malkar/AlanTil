@@ -1,5 +1,5 @@
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=12.4";
+import { panel } from "../../shared/ui/panel.js?v=13.1";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;

@@ -42,6 +42,18 @@ export function normalizeWordEntry(row) {
     pos: String(row.pos || "").trim(),
     example: String(row.example || "").trim(),
     dict_order: Number(row.dict_order || 0),
+    catalog_id: String(row.catalog_id || "").trim(),
+    group_id: String(row.group_id || "").trim(),
+    set_id: String(row.set_id || "").trim(),
+    story_type: String(row.story_type || "").trim(),
+    order_override: Number(row.order_override || 0),
+    background_segment: String(row.background_segment || "").trim(),
+    position_x: row.position_x === "" || row.position_x === undefined ? null : Number(row.position_x),
+    position_y: row.position_y === "" || row.position_y === undefined ? null : Number(row.position_y),
+    required_accuracy: row.required_accuracy === "" || row.required_accuracy === undefined ? null : Number(row.required_accuracy),
+    reward_id: String(row.reward_id || "").trim(),
+    is_optional: ["1", "true", "yes"].includes(String(row.is_optional || "").trim().toLowerCase()),
+    review_schedule: String(row.review_schedule || "").trim(),
     synonyms: parseSynonyms(row.synonyms),
     usedInTest: typeof row.usedInTest === "boolean"
       ? row.usedInTest
