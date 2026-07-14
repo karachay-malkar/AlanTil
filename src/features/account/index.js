@@ -28,6 +28,7 @@ let renderRequest = 0;
 let nicknameCheckRequest = 0;
 let actionError = "";
 let loginMessage = "";
+let emailExpanded = false;
 
 function isMounted() {
   return Boolean(controller && !controller.signal.aborted);
@@ -73,6 +74,7 @@ async function renderAccount(context) {
     renderLogin(context, {
       message: loginMessage,
       error: actionError || authState.error || "",
+      emailExpanded,
     });
     bindLogin(context, controller.signal, {
       onGoogle: async () => {
@@ -88,6 +90,7 @@ async function renderAccount(context) {
       onEmail: async (email) => {
         actionError = "";
         loginMessage = "";
+        emailExpanded = true;
         try {
           await signInWithEmail(email);
           loginMessage = "Ссылка для входа отправлена. Откройте письмо на этом устройстве.";
@@ -95,6 +98,9 @@ async function renderAccount(context) {
           actionError = error.message;
         }
         if (isMounted()) await renderAccount(context);
+      },
+      onEmailExpand: () => {
+        emailExpanded = true;
       },
       onGuest: () => context.router.navigate("home"),
     });
@@ -111,7 +117,7 @@ async function renderAccount(context) {
   if (requestId !== renderRequest || !isMounted()) return;
 
   if (!profile) {
-    renderProfileCreation(context, authState.user, { error: actionError });
+    renderProfileCreation(context, authState.user, { error: actionError || authState.error || "" });
     bindProfileCreation(context, controller.signal, {
       onNicknameInput: (value, elements) => {
         const validation = validateNickname(value);
@@ -159,7 +165,7 @@ async function renderAccount(context) {
     user: authState.user,
     profile,
     provider: getUserProvider(authState.user),
-    error: "",
+    error: actionError || authState.error || "",
   });
   bindProfile(context, controller.signal, {
     onSignOut: () => handleSignOut(context),
@@ -167,10 +173,11 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=12.2", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=12.2.1", "account-feature-style");
   controller = new AbortController();
   actionError = "";
   loginMessage = "";
+  emailExpanded = false;
   renderLoading(context);
 
   try {

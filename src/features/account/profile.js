@@ -12,7 +12,7 @@ export function renderProfileCreation(context, user, {
   error = "",
 } = {}) {
   context.root.innerHTML = panel({
-    title: "Создание профиля",
+    title: "Создайте никнейм",
     classes: "accountPanel",
     body: `
       <div class="accountStack">
@@ -27,7 +27,7 @@ export function renderProfileCreation(context, user, {
             <input id="accountNickname" name="nickname" type="text" minlength="3" maxlength="30" autocomplete="nickname" spellcheck="false" value="${escapeHtml(nickname)}" required />
           </label>
           <div id="accountNicknameMessage" class="accountNicknameMessage ${escapeHtml(nicknameState)}" role="status">${escapeHtml(nicknameMessage)}</div>
-          <button id="accountCreateProfile" class="btn primary accountAction" type="submit" disabled>Создать профиль</button>
+          <button id="accountCreateProfile" class="btn primary accountAction" type="submit" disabled>Сохранить</button>
         </form>
         <button id="accountSignOut" class="btn ghost accountAction" type="button">Выйти</button>
       </div>`,

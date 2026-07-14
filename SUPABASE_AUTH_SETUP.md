@@ -1,4 +1,4 @@
-# AlanTil 12.2 — настройка Supabase Auth
+# AlanTil 12.2.1 — настройка Supabase Auth
 
 ## 1. Создание таблиц и политик
 
@@ -43,7 +43,13 @@ http://localhost:3000/account
 - Google включён;
 - Client ID заполнен;
 - Client Secret заполнен;
-- Callback URL Supabase добавлен в Google Cloud OAuth Client.
+- Callback URL Supabase добавлен в Google Cloud OAuth Client:
+
+```text
+https://pybrzgedqjmosbmilcea.supabase.co/auth/v1/callback
+```
+
+В Google Cloud не нужно добавлять `https://alantil.ru/account`: этот адрес используется Supabase только как URL возврата в приложение.
 
 Client Secret нельзя добавлять в GitHub или клиентский код.
 
