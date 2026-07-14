@@ -16,7 +16,7 @@ export function renderAuthProviderButton({
   const normalizedProvider = normalizeProvider(provider);
   const safeLabel = String(label || "Войти").trim() || "Войти";
   const buttonLabel = loading ? LOADING_LABEL : safeLabel;
-  const classes = `authProviderButton${loading ? " isLoading" : ""}`;
+  const classes = `btn authProviderButton${loading ? " isLoading" : ""}`;
   const isDisabled = Boolean(disabled || loading);
 
   return `

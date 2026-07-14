@@ -1,7 +1,15 @@
-export function panel({ title, headerExtra = "", body = "", classes = "" }) {
+export function panel({
+  title,
+  headerExtra = "",
+  body = "",
+  classes = "",
+  viewClasses = "",
+}) {
+  const viewClassName = `view screen${viewClasses ? ` ${viewClasses}` : ""}`;
+  const panelClassName = `panel${classes ? ` ${classes}` : ""}`;
   return `
-    <section class="view screen">
-      <div class="panel ${classes}" data-unified-panel="1">
+    <section class="${viewClassName}">
+      <div class="${panelClassName}" data-unified-panel="1">
         <div class="panel-header">
           <div class="panelTitle">${title}</div>
           ${headerExtra}

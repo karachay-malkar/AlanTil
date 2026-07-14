@@ -1,17 +1,14 @@
-import { getSupabaseClient } from "../auth/supabase-client.js";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=12.3";
+import {
+  logSupabaseError,
+  normalizeSupabaseError,
+} from "../errors/supabase-error.js?v=12.3";
 
 const NICKNAME_PATTERN = /^[\p{L}\p{N}_]{3,30}$/u;
 
-function normalizeDatabaseError(error) {
-  const code = String(error?.code || "");
-  const message = String(error?.message || "");
-  if (code === "23505" || /duplicate key|unique constraint/i.test(message)) {
-    return "Такой никнейм уже используется.";
-  }
-  if (code === "42501" || /row-level security|permission denied/i.test(message)) {
-    return "Не удалось сохранить профиль. Проверьте настройки базы данных.";
-  }
-  return message || "Не удалось выполнить операцию с профилем.";
+function throwProfileError(scope, error, operation) {
+  logSupabaseError(scope, error);
+  throw normalizeSupabaseError(error, { operation });
 }
 
 export function normalizeNickname(value) {
@@ -38,7 +35,7 @@ export async function getProfile(userId) {
     .select("user_id,nickname,created_at,updated_at")
     .eq("user_id", userId)
     .maybeSingle();
-  if (error) throw new Error(normalizeDatabaseError(error));
+  if (error) throwProfileError("get_profile", error, "get_profile");
   return data || null;
 }
 
@@ -50,7 +47,7 @@ export async function isNicknameAvailable(value) {
   const { data, error } = await client.rpc("is_nickname_available", {
     candidate: validation.nickname,
   });
-  if (error) throw new Error(normalizeDatabaseError(error));
+  if (error) throwProfileError("check_nickname", error, "nickname_check");
   return {
     ...validation,
     available: Boolean(data),
@@ -69,6 +66,6 @@ export async function createProfile(userId, value) {
     .insert({ user_id: userId, nickname: validation.nickname })
     .select("user_id,nickname,created_at,updated_at")
     .single();
-  if (error) throw new Error(normalizeDatabaseError(error));
+  if (error) throwProfileError("create_profile", error, "create_profile");
   return data;
 }

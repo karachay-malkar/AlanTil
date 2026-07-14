@@ -1,3 +1,26 @@
+.accountView{
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.panel.accountPanel[data-unified-panel="1"]{
+  flex:1 1 auto;
+  height:auto;
+  max-height:100%;
+  min-height:0;
+}
+
+.accountView .accountPanel .panel-body{
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overflow-anchor:none;
+  -webkit-overflow-scrolling:touch;
+}
+
 .accountPanel .panel-body{
   display:flex;
   justify-content:center;
@@ -8,6 +31,7 @@
   display:flex;
   flex-direction:column;
   gap:14px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 
 .accountIntro{
@@ -35,7 +59,42 @@
 }
 
 .accountField input{
+  width:100%;
+  min-height:var(--control-height);
   margin:0;
+  padding:0 var(--control-padding-inline);
+  border:1px solid var(--control-border);
+  border-radius:var(--control-radius);
+  background:var(--control-background);
+  color:var(--color-main);
+  font:inherit;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease,opacity .15s ease;
+}
+
+.accountField input:focus{
+  border-color:var(--brand-soft-45);
+  box-shadow:0 0 0 2px var(--brand-soft-08);
+}
+
+.accountField input[readonly]{
+  background:var(--control-background);
+  color:var(--color-main);
+}
+
+.accountField input:disabled{
+  background:var(--control-background);
+  color:var(--color-muted);
+  cursor:not-allowed;
+  opacity:.62;
+}
+
+.accountField input.isSuccess{
+  border-color:var(--success-soft-45);
+}
+
+.accountField input.isError{
+  border-color:var(--danger-soft-45);
 }
 
 .accountAction{
@@ -51,22 +110,14 @@
 }
 
 .authProviderButton{
-  appearance:none;
+  flex:0 0 auto;
   width:100%;
-  min-height:54px;
   margin:0;
-  padding:0 16px;
-  border:1px solid rgba(15,23,42,.16);
-  border-radius:16px;
-  background:var(--card-bg);
-  color:var(--color-main);
+  background:var(--control-background);
   display:grid;
-  grid-template-columns:28px minmax(0,1fr) 28px;
+  grid-template-columns:24px minmax(0,1fr) 24px;
   align-items:center;
   gap:10px;
-  font:inherit;
-  font-weight:var(--fw-semibold);
-  cursor:pointer;
   box-shadow:0 1px 2px rgba(15,23,42,.04);
   transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease,transform .08s ease;
   -webkit-tap-highlight-color:transparent;
@@ -74,13 +125,13 @@
 
 .authProviderButton::after{
   content:"";
-  width:28px;
+  width:24px;
   height:1px;
 }
 
 .authProviderIcon{
-  width:24px;
-  height:24px;
+  width:22px;
+  height:22px;
   display:block;
   object-fit:contain;
 }
@@ -94,14 +145,14 @@
 @media (hover:hover){
   .authProviderButton:hover:not(:disabled){
     border-color:rgba(15,23,42,.24);
-    background:rgba(255,255,255,.96);
+    background:var(--control-background);
     box-shadow:0 3px 10px rgba(15,23,42,.08);
   }
 }
 
 .authProviderButton:active:not(:disabled){
   transform:translateY(1px);
-  background:rgba(15,23,42,.025);
+  background:var(--brand-soft-06);
 }
 
 .authProviderButton:disabled{
@@ -162,8 +213,8 @@
 }
 
 .accountMessageError{
-  background:rgba(180,35,35,.06);
-  border-color:rgba(180,35,35,.2);
+  background:var(--danger-soft-10);
+  border-color:var(--danger-soft-45);
   color:var(--color-danger);
 }
 
@@ -171,16 +222,19 @@
   margin:0;
   display:flex;
   flex-direction:column;
-  border:1px solid var(--border);
-  border-radius:14px;
+  border:1px solid var(--control-border);
+  border-radius:var(--control-radius);
   overflow:hidden;
+  background:var(--control-background);
 }
 
 .accountFact{
   display:grid;
   grid-template-columns:minmax(100px,1fr) minmax(0,1.6fr);
   gap:12px;
-  padding:12px;
+  min-height:var(--control-height);
+  padding:10px var(--control-padding-inline);
+  align-items:center;
   border-bottom:1px solid var(--border);
 }
 
@@ -229,6 +283,7 @@
   .accountFact{
     grid-template-columns:1fr;
     gap:4px;
+    align-items:start;
   }
 
   .accountFact dd{

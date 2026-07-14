@@ -1,6 +1,6 @@
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=12.3";
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=12.3";
 
 const GOOGLE_ICON = "/assets/icons/auth/google.svg";
 
@@ -12,9 +12,10 @@ export function renderLogin(context, {
   context.root.innerHTML = panel({
     title: "Аккаунт",
     classes: "accountPanel",
+    viewClasses: "accountView",
     body: `
       <div class="accountStack">
-        <p class="accountIntro">Вход нужен только для сохранения прогресса в облаке. Приложением можно пользоваться без регистрации.</p>
+        <p class="accountIntro">Вход нужен для создания профиля. Приложением можно пользоваться без регистрации.</p>
         ${error ? `<div class="accountMessage accountMessageError" role="alert">${escapeHtml(error)}</div>` : ""}
         ${message ? `<div class="accountMessage accountMessageSuccess" role="status">${escapeHtml(message)}</div>` : ""}
 
@@ -36,7 +37,7 @@ export function renderLogin(context, {
         <div id="accountEmailSection" class="authEmailSection${emailExpanded ? " isOpen" : ""}">
           <form id="accountEmailForm" class="accountForm" novalidate>
             <label class="accountField" for="accountEmail">
-              <span>Электронная почта</span>
+              <span>Email</span>
               <input id="accountEmail" name="email" type="email" inputmode="email" autocomplete="email" required />
             </label>
             <button class="btn accountAction" type="submit">Получить ссылку для входа</button>
