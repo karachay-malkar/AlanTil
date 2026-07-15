@@ -2,6 +2,11 @@ import { trackEvent } from "../../shared/analytics/analytics.js";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js";
 import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js";
+import {
+  createSessionRuntime,
+  finalizeSessionRuntime,
+  persistSessionRuntime,
+} from "../../shared/progress/session-builders.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STAR_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js";
@@ -20,8 +25,69 @@ function updateCounter(shell) {
   shell.setCounter(`знаю ${known}/${learnState.totalPlanned} слов`);
 }
 
+function ensureWordStats(item) {
+  const id = String(item?.id || "").trim();
+  if (!id) return null;
+  if (!learnState.studySession.wordStats[id]) {
+    learnState.studySession.wordStats[id] = {
+      word_id: id,
+      show_count: 0,
+      left_swipe_count: 0,
+      final_result: "unfinished",
+      first_position: Object.keys(learnState.studySession.wordStats).length + 1,
+    };
+  }
+  return learnState.studySession.wordStats[id];
+}
+
+function sessionWords() {
+  return Object.values(learnState.studySession.wordStats || {})
+    .filter((entry) => entry?.word_id && entry.show_count > 0)
+    .sort((left, right) => left.first_position - right.first_position)
+    .map((entry) => ({
+      word_id: entry.word_id,
+      show_count: Math.max(0, Number(entry.show_count) || 0),
+      left_swipe_count: Math.max(0, Number(entry.left_swipe_count) || 0),
+      final_result: entry.final_result === "known" ? "known" : "unfinished",
+      first_position: Math.max(1, Number(entry.first_position) || 1),
+    }));
+}
+
+function learnSessionPayload() {
+  const words = sessionWords();
+  return {
+    words_planned: learnState.totalPlanned,
+    unique_words_shown: words.length,
+    card_shows_total: words.reduce((sum, word) => sum + word.show_count, 0),
+    left_swipes_total: words.reduce((sum, word) => sum + word.left_swipe_count, 0),
+    known_words_total: words.filter((word) => word.final_result === "known").length,
+    unfinished_words_total: words.filter((word) => word.final_result !== "known").length,
+    words,
+  };
+}
+
+function persistLearnSession() {
+  persistSessionRuntime(learnState.studySession.runtime, learnSessionPayload());
+}
+
+export function finalizeLearnSession(status = "interrupted", exitReason = "route_change") {
+  const session = learnState.studySession;
+  if (!session.runtime || session.runtime.finalized) return false;
+  const result = finalizeSessionRuntime(session.runtime, {
+    status,
+    exitReason,
+    payload: learnSessionPayload(),
+  });
+  session.inProgress = false;
+  session.completed = status === "completed";
+  return result;
+}
+
 export function initializeStudy(words, mode) {
   const previousProgress = learnState.studySession.progressData || {};
+  if (learnState.studySession.runtime && !learnState.studySession.runtime.finalized) {
+    finalizeLearnSession("interrupted", CANCEL_REASONS.NEW_SESSION);
+  }
   learnState.studySession.tracker?.abandon?.(CANCEL_REASONS.NEW_SESSION, {
     items_total: previousProgress.totalPlanned || learnState.totalPlanned,
     items_completed: getLearnItemsCompleted(),
@@ -47,6 +113,18 @@ export function initializeStudy(words, mode) {
   learnState.studySession.completed = false;
   learnState.studySession.wordsPool = active.slice();
   learnState.studySession.progressData = { totalPlanned: active.length, known: 0, unknown: 0, undo: 0 };
+  learnState.studySession.wordStats = {};
+  learnState.studySession.metadata = {
+    dictionaryId: learnState.currentDict,
+    sectionId: learnState.currentSection,
+    setId: String(learnState.currentSet),
+  };
+  learnState.studySession.runtime = active.length ? createSessionRuntime("learn", {
+    dictionary_id: learnState.currentDict,
+    section_id: learnState.currentSection,
+    set_id: String(learnState.currentSet),
+    direction: directionFromMode(learnState.currentStudyMode),
+  }) : null;
   learnState.studySession.tracker = active.length ? createActivityTracker(ACTIVITY_TYPES.LEARN) : null;
   learnState.studySession.tracker?.start({
     direction: directionFromMode(learnState.currentStudyMode),
@@ -57,6 +135,7 @@ export function initializeStudy(words, mode) {
     items_total: active.length,
     items_completed: 0,
   });
+  persistLearnSession();
 }
 
 export function renderStudy(context, words, signal, params) {
@@ -66,7 +145,7 @@ export function renderStudy(context, words, signal, params) {
     <section id="viewStudy" class="view study">
       <div id="card" class="card big" aria-label="Карточка">
         <div class="cardInner">
-          <div class="cardFace cardFront"><div class="word" id="word">слово</div><div class="hint">Нажми на карточку, чтобы увидеть перевод</div></div>
+          <div class="cardFace cardFront"><div class="word" id="word">слово</div><div class="hint">Нажмите на слово, чтобы увидеть перевод</div></div>
           <div class="cardFace cardBack"><div class="trans" id="trans">перевод</div><div id="exampleBox" class="example"></div></div>
         </div>
       </div>
@@ -108,8 +187,7 @@ export function renderStudy(context, words, signal, params) {
 
   function finish() {
     const progress = learnState.studySession.progressData || {};
-    learnState.studySession.inProgress = false;
-    learnState.studySession.completed = true;
+    finalizeLearnSession("completed", null);
     learnState.studySession.tracker?.complete({
       items_total: learnState.totalPlanned,
       items_completed: learnState.totalPlanned,
@@ -142,6 +220,8 @@ export function renderStudy(context, words, signal, params) {
 
     const item = queue[0];
     learnState.currentStudyId = item.id;
+    const stats = ensureWordStats(item);
+    if (stats) stats.show_count += 1;
     favoriteButton.classList.remove("hidden");
     undoButton.classList.remove("hidden");
     updateFavorite();
@@ -155,6 +235,7 @@ export function renderStudy(context, words, signal, params) {
       renderCombinedGroups(translationElement, item.trans, item.example);
     }
     updateCounter(context.shell);
+    persistLearnSession();
   }
 
   function decide(known) {
@@ -164,13 +245,16 @@ export function renderStudy(context, words, signal, params) {
     if (!queue.length) return;
     const fromRound = learnState.round;
     const item = queue.shift();
+    const stats = ensureWordStats(item);
 
     if (!known) {
       learnState.sessionFailMap[item.id] = (learnState.sessionFailMap[item.id] || 0) + 1;
       learnState.repeatQueue.push(item);
       learnState.studySession.progressData.unknown = (learnState.studySession.progressData.unknown || 0) + 1;
+      if (stats) stats.left_swipe_count += 1;
     } else {
       learnState.studySession.progressData.known = (learnState.studySession.progressData.known || 0) + 1;
+      if (stats) stats.final_result = "known";
     }
     trackEvent(EVENTS.WORD_RESULT, {
       word_id: item.id,
@@ -183,6 +267,7 @@ export function renderStudy(context, words, signal, params) {
     });
     if (learnState.round === "main" && learnState.mainQueue.length === 0) learnState.round = "repeat";
     learnState.swipeHistory.push({ item, known, fromRound });
+    persistLearnSession();
     draw();
   }
 
@@ -218,9 +303,11 @@ export function renderStudy(context, words, signal, params) {
     if (!learnState.swipeHistory.length || learnState.isAnimating) return;
     const { item, known, fromRound } = learnState.swipeHistory.pop();
     const progress = learnState.studySession.progressData || {};
+    const stats = ensureWordStats(item);
     progress.undo = (progress.undo || 0) + 1;
     if (!known) {
       progress.unknown = Math.max(0, (progress.unknown || 0) - 1);
+      if (stats) stats.left_swipe_count = Math.max(0, stats.left_swipe_count - 1);
       if (learnState.sessionFailMap[item.id]) {
         learnState.sessionFailMap[item.id] -= 1;
         if (learnState.sessionFailMap[item.id] <= 0) delete learnState.sessionFailMap[item.id];
@@ -233,10 +320,12 @@ export function renderStudy(context, words, signal, params) {
       }
     } else {
       progress.known = Math.max(0, (progress.known || 0) - 1);
+      if (stats) stats.final_result = "unfinished";
     }
     if (fromRound === "main") learnState.mainQueue.unshift(item);
     else learnState.repeatQueue.unshift(item);
     learnState.round = fromRound;
+    persistLearnSession();
     draw();
   }
 

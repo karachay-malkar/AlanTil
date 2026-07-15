@@ -1,9 +1,10 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=12.3";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=12.4";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=12.4";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js";
 import { createModalService } from "../shared/ui/modal.js";
-import { createRouter } from "./router.js?v=12.3";
+import { createRouter } from "./router.js?v=12.4";
 import { createShell } from "./shell.js";
 
 async function bootstrap() {
@@ -28,6 +29,7 @@ async function bootstrap() {
   };
 
   await initializeAuth();
+  await initializeProgressSystem();
 
   const router = createRouter({ shell, modal, context });
   await router.start();

@@ -1,7 +1,7 @@
 import { renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 
-const SETTINGS_ASSET_VERSION = "12.3";
+const SETTINGS_ASSET_VERSION = "12.4";
 let controller = null;
 
 function renderSettingsHome(context, signal) {

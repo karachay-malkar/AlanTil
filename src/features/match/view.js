@@ -1,6 +1,7 @@
 import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js";
 import { dictsFrom, isWordEnabledInTestModes, shuffle, sortNatural, uniq } from "../../shared/domain/word-selection.js";
 import { normalizeId } from "../../shared/domain/word-normalizer.js";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STATUS_BAD_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
@@ -79,12 +80,7 @@ export function renderMatchMenu(context, words, signal) {
 
   function updateInfo() {
     const pool = selectedPool();
-    const selectedSections = sectionCheckboxes.filter((checkbox) => checkbox.checked);
-    const dictionaryCount = new Set(selectedSections.map((checkbox) => checkbox.dataset.dict)).size;
-    const scopeText = selectedSections.length === sectionCheckboxes.length
-      ? "Все словари и разделы"
-      : `Выбрано: словарей ${dictionaryCount}, разделов ${selectedSections.length}`;
-    info.textContent = `Источник: ${scopeText} • Слов: ${pool.length} • Игра: ${Math.min(selectedLimit(), pool.length)} слов`;
+    info.textContent = `Выбрано: ${pool.length} • Игра: ${Math.min(selectedLimit(), pool.length)} слов`;
   }
 
   dictCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => {
@@ -112,6 +108,10 @@ export function renderMatchMenu(context, words, signal) {
     startMatch(pool, matchState.limit, {
       dictionaryCount: new Set(selectedSections.map((checkbox) => checkbox.dataset.dict)).size,
       sectionCount: selectedSections.length,
+      selectedSources: buildSelectedSources(selectedSections.map((checkbox) => ({
+        dictionaryId: checkbox.dataset.dict,
+        sectionId: checkbox.dataset.section,
+      }))),
     });
     await context.router.navigate("match.game", {}, { force: true });
   }, { signal });

@@ -1,8 +1,8 @@
-import { getSupabaseClient } from "../auth/supabase-client.js?v=12.3";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=12.4";
 import {
   logSupabaseError,
   normalizeSupabaseError,
-} from "../errors/supabase-error.js?v=12.3";
+} from "../errors/supabase-error.js?v=12.4";
 
 const NICKNAME_PATTERN = /^[\p{L}\p{N}_]{3,30}$/u;
 
