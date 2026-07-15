@@ -13,4 +13,5 @@
 @import url("../../features/account/account.css") layer(features);
 @import url("../../features/settings/settings.css") layer(features);
 @import url("../../features/songs/songs.css") layer(features);
+@import url("./paper-components.css") layer(utilities);
 @import url("./utilities.css") layer(utilities);

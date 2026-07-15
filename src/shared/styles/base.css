@@ -2,21 +2,18 @@ html,body{overflow:hidden}
 body{
   font-family:var(--font-body);
   color:var(--text-1);
-  background:
-    radial-gradient(circle at 14% -8%,var(--surface-white-55),transparent 35%),
-    linear-gradient(150deg,var(--app-bg),var(--app-bg-deep));
+  background:var(--app-bg);
   line-height:1.45;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
 ::selection{background:var(--accent-soft)}
 .hidden{display:none!important}
-.typo-title,.panelTitle,.secTitle{font-size:20px;font-weight:850;color:var(--text-1)}
-.typo-subtitle,.hintText,.meta,.learnLabel{font-size:15px;color:var(--text-2)}
-.typo-card-main,.groupPill{font-size:21px;font-weight:720;color:var(--text-1)}
+.typo-title,.panelTitle,.secTitle{font-size:20px;font-weight:820;color:var(--text-1)}
+.typo-subtitle,.hintText,.meta,.learnLabel{font-size:14px;color:var(--text-2)}
+.typo-card-main,.groupPill{font-size:20px;font-weight:700;color:var(--text-1)}
 .typo-body,.trans{font-size:16px;color:var(--text-1)}
 .typo-muted,.setTileCount,.hint,.smallNote,.dictNum{font-size:13px;color:var(--text-2)}
-.smallNote{line-height:1.5}
-.smallNote+.smallNote{margin-top:8px}
+.smallNote{line-height:1.5}.smallNote+.smallNote{margin-top:8px}
 button,input{touch-action:manipulation}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent-glow);outline-offset:2px}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent-glow);outline-offset:2px}

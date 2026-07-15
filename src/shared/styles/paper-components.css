@@ -1,0 +1,95 @@
+/* Shared paper-style component overrides. Keep visual tokens in theme.css. */
+.panel,.stonePanel{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.panel-header{padding-inline:0;background:transparent;border-bottom:1px solid var(--line-soft)}
+.panel-body{padding-inline:0}
+.sectionMenu{gap:0}
+.sectionMenuItem,.menuItem,.profileLink{
+  border:0;
+  border-bottom:1px solid var(--line-soft);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.sectionMenuItem:hover,.menuItem:hover,.profileLink:hover{background:var(--surface-paper-soft);box-shadow:none}
+.contentList{gap:0}
+.contentListRow{
+  border:0;
+  border-bottom:1px solid var(--line-soft);
+  border-radius:0;
+  background:transparent;
+}
+.contentListRow:last-child{border-bottom-color:transparent}
+.scopeBlock{border:0;border-radius:0;background:transparent}
+.scopeDictRow{background:transparent;border-bottom:1px solid var(--line-soft)}
+.scopeSectionRow{border-top:0;border-bottom:1px solid var(--line-soft)}
+.setTile,.set-tile{border:0;border-bottom:1px solid var(--line-soft);border-radius:0;background:transparent;box-shadow:none}
+
+.setPreparationView{padding-top:4px}
+.setPreparation{
+  width:min(100%,var(--content-max));
+  height:100%;
+  min-height:0;
+  margin:0 auto;
+  display:grid;
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+  overflow:hidden;
+}
+.setPreparationHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:4px 4px 8px;
+}
+.setPreparationTitle{margin:0;font-size:clamp(21px,6vw,28px);line-height:1.12;overflow-wrap:anywhere}
+.setPreparationSubtitle{margin-top:4px;color:var(--text-3);font-size:12px;line-height:1.25}
+.setSelectionCount{flex:0 0 auto;padding-top:5px;color:var(--text-2);font:650 12px/1 var(--font-terminal)}
+.setSelectionTools{display:flex;gap:14px;padding:0 4px 7px}
+.textAction{
+  appearance:none;
+  min-height:28px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--text-2);
+  font:650 12px/1 var(--font-body);
+  cursor:pointer;
+}
+.textAction:hover{color:var(--accent-strong)}
+.setPreparationWords{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.setPreparationWord .contentListMain{min-height:50px;padding-block:7px}
+.setPreparationWord .contentListLeading{padding-left:4px;padding-right:8px}
+.setPreparationWord .contentListTrailing{padding-left:4px;padding-right:2px}
+.setPreparationFooter{
+  padding:9px 2px max(4px,var(--safe-bottom));
+  background:linear-gradient(180deg,rgba(238,233,223,0),var(--app-bg) 12px);
+}
+.directionChoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.directionChoiceButton{
+  appearance:none;
+  min-height:var(--control-h);
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-1);
+  font:700 12px/1.1 var(--font-terminal);
+  cursor:pointer;
+}
+.directionChoiceButton:hover:not(:disabled){border-color:var(--accent);color:var(--accent-strong)}
+.directionChoiceButton:disabled{opacity:.38;cursor:default}
+.setTestButton{width:100%;margin-top:7px}
+
+.btn,.stationAction,.optionBtn{box-shadow:none}
+.btn.primary,.stationAction{background:var(--accent);box-shadow:none}
+.btn.secondary,.stationAction.secondary{background:transparent;box-shadow:none}
+
+@media(max-width:340px){
+  .setPreparationHeader{gap:6px}
+  .directionChoiceButton{font-size:11px;padding-inline:5px}
+}

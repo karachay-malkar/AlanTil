@@ -1,12 +1,12 @@
-import { PATH_CONFIG, STORY_TYPES } from "../../config/path.js";
+import { PATH_CONFIG } from "../../config/path.js";
 import { createSlugMap, toSlug } from "./slugs.js";
+import { DEFAULT_STORY_TYPE, resolveStoryType, validateStationStoryTypes } from "./story-resolver.js";
 import { sortNatural } from "./word-selection.js";
 
 const EASY_RE = /(^|\s)(легк|easy)/i;
 const MEDIUM_RE = /(^|\s)(средн|medium)/i;
 const HARD_RE = /(^|\s)(сложн|hard)/i;
 const RARE_RE = /(^|\s)(редк|rare)/i;
-const THEMATIC_RE = /(темат|theme|topic)/i;
 
 export function normalizeRouteText(value) {
   return String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
@@ -21,14 +21,8 @@ export function difficultyKind(value) {
   return "thematic";
 }
 
-export function storyTypeFor({ catalogId, groupId }) {
-  const group = normalizeRouteText(groupId);
-  const catalog = normalizeRouteText(catalogId);
-  const kind = difficultyKind(group);
-  if (kind === "easy" || kind === "medium") return STORY_TYPES.ASCENT;
-  if (kind === "hard" || kind === "rare") return STORY_TYPES.SUMMIT;
-  if (THEMATIC_RE.test(catalog) || kind === "thematic") return STORY_TYPES.TRAILS;
-  return STORY_TYPES.TRAILS;
+export function storyTypeFor(row) {
+  return resolveStoryType(row);
 }
 
 function numericOrder(value, fallback) {
@@ -54,6 +48,15 @@ export function routeKeyParts(key) {
 function firstOrder(words, fallback) {
   const values = words.map((word) => numericOrder(word.dict_order, 0)).filter(Boolean);
   return values.length ? Math.min(...values) : fallback;
+}
+
+function diagnoseStoryConflict(station, resolution) {
+  if (!resolution.conflict) return;
+  console.warn("AlanTil route: conflicting story_type values; station moved to ascent", {
+    station: makeStationKey(station),
+    values: resolution.values,
+    invalidValues: resolution.invalidValues,
+  });
 }
 
 export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionaryId } = {}) {
@@ -111,12 +114,13 @@ export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionar
     const groups = Array.from(catalog.groupsMap.values()).map((group) => {
       const stations = Array.from(group.stationsMap.values())
         .map((station, index) => {
-          const difficulty = difficultyKind(station.groupId);
-          const storyType = storyTypeFor(station);
+          const storyResolution = validateStationStoryTypes(station.words);
+          diagnoseStoryConflict(station, storyResolution);
           const normalized = {
             ...station,
-            storyType: station.words[0]?.story_type || storyType,
-            difficulty,
+            storyType: storyResolution.storyType,
+            storyTypeExplicit: storyResolution.explicit,
+            difficulty: difficultyKind(station.groupId),
             order: station.words[0]?.order_override || firstOrder(station.words, station.sourceOrder || index + 1),
             isOptional: Boolean(station.words[0]?.is_optional),
             requiredAccuracy: Number(station.words[0]?.required_accuracy || PATH_CONFIG.stationRequiredAccuracy),
@@ -133,8 +137,6 @@ export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionar
         .sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
       return {
         ...group,
-        storyType: stations[0]?.storyType || storyTypeFor(group),
-        difficulty: stations[0]?.difficulty || difficultyKind(group.groupId),
         stations,
         order: Math.min(...stations.map((station) => station.order), group.sourceOrder),
       };
@@ -142,7 +144,7 @@ export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionar
     return {
       ...catalog,
       groups,
-      storyTypes: Array.from(new Set(groups.map((group) => group.storyType))),
+      storyTypes: Array.from(new Set(groups.flatMap((group) => group.stations.map((station) => station.storyType)))),
       order: Math.min(...groups.map((group) => group.order), catalog.sourceOrder),
     };
   }).sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
@@ -154,9 +156,11 @@ export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionar
 
   catalogs.forEach((catalog) => {
     PATH_CONFIG.storyOrder.forEach((type) => {
-      const groups = catalog.groups.filter((group) => group.storyType === type);
+      const groups = catalog.groups
+        .map((group) => ({ ...group, storyType: type, stations: group.stations.filter((station) => station.storyType === type) }))
+        .filter((group) => group.stations.length > 0);
       if (!groups.length) return;
-      const storyCatalog = { ...catalog, groups };
+      const storyCatalog = { ...catalog, groups, storyTypes: [type] };
       stories[type].catalogs.push(storyCatalog);
       stories[type].groups.push(...groups);
       stories[type].stations.push(...groups.flatMap((group) => group.stations));
@@ -168,7 +172,8 @@ export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionar
     story.groupCount = story.groups.length;
   });
 
-  const byKey = new Map(Object.values(stories).flatMap((story) => story.stations).map((station) => [station.key, station]));
+  const allStations = catalogs.flatMap((catalog) => catalog.groups.flatMap((group) => group.stations));
+  const byKey = new Map(allStations.map((station) => [station.key, station]));
   const slugMaps = {
     catalog: createSlugMap(catalogs.map((catalog) => catalog.catalogId)),
     groupByCatalog: new Map(),
@@ -181,7 +186,7 @@ export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionar
     });
   });
 
-  return { dictionaryId, catalogs, stories, byKey, slugMaps };
+  return { dictionaryId, catalogs, stories, byKey, slugMaps, defaultStoryType: DEFAULT_STORY_TYPE };
 }
 
 export function stationPathParams(route, station) {

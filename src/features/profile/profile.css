@@ -1,26 +1,15 @@
-[data-feature="profile"] .profileView{height:100%;min-height:0;overflow:auto;padding:12px;overscroll-behavior:contain}
-[data-feature="profile"] .profileHero{position:relative;overflow:hidden;padding:20px;border:1px solid var(--line-strong);border-left:5px solid var(--accent);border-radius:var(--radius-md);background:linear-gradient(145deg,var(--surface-0),var(--surface-2));box-shadow:var(--shadow-stone)}
-[data-feature="profile"] .profileHero::after{content:"";position:absolute;right:-42px;top:-42px;width:150px;height:150px;border:1px solid var(--line-soft);border-radius:50%;box-shadow:0 0 0 18px var(--brand-soft-06),0 0 0 36px var(--brand-soft-06)}
-[data-feature="profile"] .profileNickname{position:relative;z-index:1;font-size:28px;font-weight:900;overflow-wrap:anywhere}
-[data-feature="profile"] .profilePathLabel{position:relative;z-index:1;margin-top:16px;font:800 10px/1.3 var(--font-terminal);letter-spacing:.11em;color:var(--accent-strong)}
-[data-feature="profile"] .profilePathValue{position:relative;z-index:1;margin-top:4px;font:900 48px/1 var(--font-terminal)}
-[data-feature="profile"] .profileGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
-[data-feature="profile"] .profileStat{min-height:88px;padding:13px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-panel-mid);box-shadow:var(--shadow-xs)}
-[data-feature="profile"] .profileStat strong{display:block;font:850 23px/1.1 var(--font-terminal)}
-[data-feature="profile"] .profileStat span{display:block;margin-top:6px;color:var(--text-2);font-size:12px;line-height:1.3}
-[data-feature="profile"] .profileSection{margin-top:19px}
-[data-feature="profile"] .profileSectionTitle{margin:0 0 9px;font:800 11px/1.2 var(--font-terminal);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-strong)}
-[data-feature="profile"] .storyRows{display:grid;gap:8px}
-[data-feature="profile"] .storyRow{padding:12px;border-radius:var(--radius-sm);text-align:left}
-[data-feature="profile"] .storyRowHead{display:flex;justify-content:space-between;gap:12px;font-weight:800}
-[data-feature="profile"] .storyMiniBar{display:block;height:7px;margin-top:8px;background:var(--line-soft);overflow:hidden}
-[data-feature="profile"] .storyMiniBar span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-strong))}
-[data-feature="profile"] .profileLinks{display:grid;gap:8px}
-[data-feature="profile"] .profileLink{min-height:48px;padding:10px 13px;border-radius:var(--radius-sm);text-align:left;font-weight:760}
-[data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:7px}
-[data-feature="profile"] .problemWord{padding:6px 9px;border:1px solid var(--line-soft);border-radius:var(--radius-pill);background:var(--accent-soft);font-size:13px}
-[data-feature="profile"] .rewardGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-[data-feature="profile"] .rewardCard{min-height:94px;padding:10px 7px;border:1px solid var(--line);border-radius:var(--radius-sm);background:linear-gradient(145deg,var(--surface-0),var(--surface-2));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;font-size:11px;line-height:1.25}
-[data-feature="profile"] .rewardIcon{width:30px;height:30px;color:var(--accent-strong)}
-[data-feature="profile"] .rewardIcon svg{width:100%;height:100%;fill:currentColor}
-@media(max-width:360px){[data-feature="profile"] .profileGrid{grid-template-columns:1fr}[data-feature="profile"] .rewardGrid{grid-template-columns:repeat(2,1fr)}}
+[data-feature="profile"] .profileView{height:100%;min-height:0;overflow:auto;padding:8px 12px;overscroll-behavior:contain}
+[data-feature="profile"] .profileHero{position:relative;padding:8px 2px 15px;border-bottom:1px solid var(--line-soft)}
+[data-feature="profile"] .profileNickname{font-size:27px;font-weight:820;overflow-wrap:anywhere}
+[data-feature="profile"] .profilePathLabel{margin-top:13px;font:650 9px/1.3 var(--font-terminal);letter-spacing:.07em;color:var(--text-2)}
+[data-feature="profile"] .profilePathValue{margin-top:3px;font:780 42px/1 var(--font-terminal)}
+[data-feature="profile"] .profileGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;margin-top:8px}
+[data-feature="profile"] .profileStat{min-height:74px;padding:11px 2px;border-bottom:1px solid var(--line-soft)}
+[data-feature="profile"] .profileStat strong{display:block;font:760 21px/1.1 var(--font-terminal)}
+[data-feature="profile"] .profileStat span{display:block;margin-top:5px;color:var(--text-2);font-size:11px;line-height:1.3}
+[data-feature="profile"] .profileSection{margin-top:17px}.profileSectionTitle{margin:0 0 6px;font:650 10px/1.2 var(--font-terminal);letter-spacing:.05em;color:var(--text-2)}
+[data-feature="profile"] .storyRows{display:grid}.storyRow{padding:10px 2px;border:0;border-bottom:1px solid var(--line-soft);text-align:left}.storyRowHead{display:flex;justify-content:space-between;gap:12px;font-weight:720}.storyMiniBar{display:block;height:3px;margin-top:7px;background:var(--line-soft);overflow:hidden}.storyMiniBar span{display:block;height:100%;background:var(--accent)}
+[data-feature="profile"] .profileLinks{display:grid}.profileLink{min-height:44px;padding:9px 2px;border:0;border-bottom:1px solid var(--line-soft);text-align:left;font-weight:700}
+[data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:6px}.problemWord{padding:5px 7px;border-bottom:1px solid var(--line);font-size:12px}
+[data-feature="profile"] .rewardGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 9px}.rewardCard{min-height:86px;padding:9px 5px;border:0;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font-size:10px;line-height:1.2}.rewardIcon{width:27px;height:27px;color:var(--text-2)}.rewardIcon svg{width:100%;height:100%;fill:currentColor}.rewardIcon svg [fill="none"]{fill:none}
+@media(max-width:360px){[data-feature="profile"] .profileGrid{grid-template-columns:1fr 1fr}[data-feature="profile"] .rewardGrid{grid-template-columns:repeat(2,1fr)}}

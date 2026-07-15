@@ -3,8 +3,6 @@
 [data-feature="learn"] .panel-body{overscroll-behavior:contain}
 [data-feature="learn"] .setsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 [data-feature="learn"] .setTile{position:relative;overflow:hidden}
-[data-feature="learn"] .setTile::after{content:"";position:absolute;right:-18px;bottom:-24px;width:72px;height:72px;border:1px solid var(--line-soft);border-radius:50%;background:var(--accent-soft)}
-[data-feature="learn"] .setTileTitle,[data-feature="learn"] .setTileCount{position:relative;z-index:1}
 [data-feature="learn"] .contentList{padding-bottom:4px}
 [data-feature="learn"] .sectionRouteLink{display:block}
 
@@ -29,13 +27,13 @@
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:clamp(22px,5vw,42px);
   overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  border:1px solid var(--line-strong);border-left:5px solid var(--accent);
+  border:1px solid var(--line);
   border-radius:var(--radius-lg);
   background:
     var(--surface-learn-gradient);
-  box-shadow:var(--shadow-md),inset 0 0 0 1px var(--surface-white-40);
+  box-shadow:var(--shadow-sm);
 }
-.learnCard .cardFace::before{content:"";position:absolute;inset:10px;border:1px solid var(--line-soft);border-radius:calc(var(--radius-lg) - 7px);pointer-events:none}
+.learnCard .cardFace::before{content:"";position:absolute;inset:10px;border:1px solid var(--line-soft);border-radius:calc(var(--radius-lg) - 7px);pointer-events:none;opacity:.55}
 .learnCard .cardBack{transform:rotateY(180deg);justify-content:flex-start;overflow:auto;overscroll-behavior:contain;padding-top:32px;padding-bottom:32px}
 .learnCard .word{position:relative;z-index:1;max-width:100%;text-align:center;font-size:clamp(30px,8vw,52px);font-weight:900;line-height:1.08;overflow-wrap:anywhere}
 .learnCard .hint{position:relative;z-index:1;margin-top:16px;text-align:center;color:var(--text-2);font:650 12px/1.4 var(--font-terminal);letter-spacing:.03em}
@@ -46,8 +44,8 @@
 .learnSessionActions{
   width:min(100%,560px);margin:0 auto;
   flex:0 0 auto;display:grid;gap:8px;
-  padding:10px;border:1px solid var(--line);
-  border-radius:var(--radius-md);background:var(--surface-panel);box-shadow:var(--shadow-sm);
+  padding:6px 0 0;border:0;
+  border-radius:0;background:transparent;box-shadow:none;
 }
 .learnSessionActions .buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
 .learnSessionActions .btn{min-height:48px}
@@ -88,13 +86,13 @@
 [data-feature="path"][data-screen="study"] #viewStudy>.card .cardInner{position:relative;width:100%;height:100%;min-height:0;transform-style:preserve-3d}
 [data-feature="learn"][data-screen="study"] #viewStudy>.card .cardFace,
 [data-feature="path"][data-screen="study"] #viewStudy>.card .cardFace{
-  position:absolute;inset:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(22px,5vw,42px);overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line-strong);border-left:5px solid var(--accent);border-radius:var(--radius-lg);background:var(--surface-learn-gradient);box-shadow:var(--shadow-md),inset 0 0 0 1px var(--surface-white-40);
+  position:absolute;inset:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(22px,5vw,42px);overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface-learn-gradient);box-shadow:var(--shadow-sm);
 }
 [data-feature="learn"][data-screen="study"] #viewStudy>.card .cardBack,
 [data-feature="path"][data-screen="study"] #viewStudy>.card .cardBack{overflow:auto;justify-content:flex-start;padding-top:32px;padding-bottom:32px}
 [data-feature="learn"][data-screen="study"] .studyBottomPanel,
 [data-feature="path"][data-screen="study"] .studyBottomPanel{
-  position:static;width:min(100%,560px);margin:0 auto;display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-panel);box-shadow:var(--shadow-sm);
+  position:static;width:min(100%,560px);margin:0 auto;display:grid;gap:8px;padding:6px 0 0;border:0;border-radius:0;background:transparent;box-shadow:none;
 }
 [data-feature="learn"][data-screen="study"] .studyBottomPanel .buttons,
 [data-feature="path"][data-screen="study"] .studyBottomPanel .buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
