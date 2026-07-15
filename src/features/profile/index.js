@@ -1,12 +1,13 @@
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.1";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.2";
 import { getWords } from "../../shared/data/word-repository.js";
 import { buildLearningRoute } from "../../shared/domain/learning-route.js";
 import { dictionaryPathProgress, stationsDueForReview } from "../../shared/domain/route-progress.js";
-import { getProfile } from "../../shared/profile/profile-service.js?v=13.1";
+import { getProfile } from "../../shared/profile/profile-service.js?v=13.2";
 import { activitySummary } from "../../shared/progress/activity-history-store.js";
 import { getUserRewards } from "../../shared/progress/reward-store.js";
 import { getAllStationProgress } from "../../shared/progress/station-progress-store.js";
 import { escapeHtml } from "../../shared/ui/html.js";
+import { uiIcon } from "../../shared/ui/icons.js";
 
 let controller = null;
 
@@ -19,16 +20,15 @@ function durationLabel(seconds) {
 
 function rewardLabel(reward) {
   const id = String(reward.reward_id || "");
-  if (id.includes(":group:")) return { icon: "◇", title: "Освоенный рубеж" };
-  if (id.includes("artifact")) return { icon: "⌘", title: "Национальный артефакт" };
-  if (id.includes("place")) return { icon: "△", title: "Место" };
-  if (id.includes("quote")) return { icon: "❝", title: "Цитата" };
-  return { icon: "✦", title: "Достижение" };
+  if (id.includes(":group:")) return { icon: "milestone", title: "Освоенный рубеж" };
+  if (id.includes("artifact")) return { icon: "artifact", title: "Национальный артефакт" };
+  if (id.includes("place")) return { icon: "station", title: "Место" };
+  if (id.includes("quote")) return { icon: "review", title: "Цитата" };
+  return { icon: "mastered", title: "Достижение" };
 }
 
 export async function mount(context) {
   controller = new AbortController();
-  context.ensureStyle("/src/features/profile/profile.css?v=13.1", "profile-feature-style");
   const [words] = await Promise.all([getWords()]);
   const route = buildLearningRoute(words);
   const path = dictionaryPathProgress(route);
@@ -81,13 +81,13 @@ export async function mount(context) {
       </section>
       <section class="profileSection">
         <h2 class="profileSectionTitle">Коллекция</h2>
-        <div class="rewardGrid">${rewards.length ? rewards.slice(0, 12).map((reward) => { const item = rewardLabel(reward); return `<div class="rewardCard"><span class="rewardIcon">${item.icon}</span>${escapeHtml(item.title)}</div>`; }).join("") : `<div class="smallNote">Награды появятся после завершения рубежей и тематических троп.</div>`}</div>
+        <div class="rewardGrid">${rewards.length ? rewards.slice(0, 12).map((reward) => { const item = rewardLabel(reward); return `<div class="rewardCard"><span class="rewardIcon">${uiIcon(item.icon)}</span><span>${escapeHtml(item.title)}</span></div>`; }).join("") : `<div class="smallNote">Награды появятся после завершения рубежей и тематических троп.</div>`}</div>
       </section>
       <section class="profileSection">
         <h2 class="profileSectionTitle">Профиль и приложение</h2>
         <div class="profileLinks">
-          <button class="profileLink" type="button" data-profile-route="profile.account">Аккаунт</button>
-          <button class="profileLink" type="button" data-profile-route="profile.settings">Настройки</button>
+          <button class="profileLink" type="button" data-profile-route="account.home">Аккаунт</button>
+          <button class="profileLink" type="button" data-profile-route="settings.home">Настройки</button>
         </div>
       </section>
     </section>`;

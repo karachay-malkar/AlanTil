@@ -1,115 +1,13 @@
-/* ---------- TEST ---------- */
-.testQuestion{
-  margin-top: 10px;
-  background: var(--brand-soft-06);
-  border: 1px solid var(--brand-soft-20);
-  border-radius: 18px;
-  padding: 18px 14px;
-  font-size: var(--fs-22px);
-  font-weight: var(--fw-bold);
-  text-align: center;
-}
-
-.optionBtn{
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--color-white);
-  font-weight: var(--fw-semibold);
-  text-align: center;
-}
-.optionBtn.correct{
-  border-color: var(--success-soft-45);
-  background: var(--success-soft-12);
-}
-.optionBtn.wrong{
-  border-color: var(--danger-soft-45);
-  background: var(--danger-soft-10);
-}
-
-/* ---------- TEST LIMIT ---------- */
-.testLimitRow{
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.testLimitRadios{
-  display: flex;
-  gap: 10px;
-}
-.radioOpt{
-  flex: 1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--color-white);
-  font-weight: var(--fw-semibold);
-}
-.radioOpt input{
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--brand);
-}
-
-
-/* ---------- TEST SCOPE ---------- */
-.testScopeTitle{
-  margin-top: 14px;
-}
-
-.scopeBlock{
-  margin: 8px 2px;
-  padding: 6px;
-  border-radius: 16px;
-  background: var(--color-white);
-}
-.scopeDictRow,
-.scopeSectionRow{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-}
-.scopeDictRow{ font-weight: var(--fw-bold); }
-.scopeSectionRow{
-  margin-left: 28px;
-  margin-top: 8px;
-  font-weight: var(--fw-semibold);
-}
-.scopeCheckbox{
-  width: 18px !important;
-  height: 18px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  accent-color: var(--brand);
-  flex: 0 0 auto;
-}
-
-.optionBtn.selected{
-  border-color: var(--brand-soft-55);
-  background: var(--brand-soft-10);
-}
-
-.btn:disabled{
-  opacity: 0.55;
-}
-
-#testOptions.resultScroll{
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-#testOptions.resultScroll .contentList{
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-}
+[data-feature="test"] .panel{height:100%}
+[data-feature="test"] .testScope{margin-top:4px}
+[data-feature="test"] .resultScroll{min-height:0}
+[data-feature="test"] .testSessionPanel .panel-header{min-height:52px}
+[data-feature="test"] .testSessionPanel .panel-body{display:flex;flex-direction:column;justify-content:center}
+[data-feature="test"] .testQuestion{margin:10px 0 20px;text-align:center;font-size:clamp(28px,8vw,44px);font-weight:900;line-height:1.08;overflow-wrap:anywhere}
+[data-feature="test"] .testOptions{display:grid;gap:10px}
+[data-feature="test"] .optionBtn{min-height:52px;padding:11px 13px;border-radius:var(--radius-sm);font-weight:750;text-align:center}
+[data-feature="test"] .optionBtn.selected{border-color:var(--accent);background:var(--accent-soft)}
+[data-feature="test"] .optionBtn.correct{border-color:var(--success);background:var(--success-soft);color:var(--success-strong)}
+[data-feature="test"] .optionBtn.wrong{border-color:var(--danger);background:var(--danger-soft);color:var(--danger-strong)}
+[data-feature="test"] .optionBtn:disabled{opacity:1}
+@media(max-height:650px){[data-feature="test"] .testQuestion{margin:4px 0 12px;font-size:clamp(24px,7vw,36px)}[data-feature="test"] .optionBtn{min-height:46px}}
