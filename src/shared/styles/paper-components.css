@@ -61,7 +61,7 @@
   cursor:pointer;
 }
 .textAction:hover{color:var(--accent-strong)}
-.setPreparationWords{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.setPreparationWords{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
 .setPreparationWord .contentListMain{min-height:50px;padding-block:7px}
 .setPreparationWord .contentListLeading{padding-left:4px;padding-right:8px}
 .setPreparationWord .contentListTrailing{padding-left:4px;padding-right:2px}
@@ -93,3 +93,5 @@
   .setPreparationHeader{gap:6px}
   .directionChoiceButton{font-size:11px;padding-inline:5px}
 }
+
+.setPreparationWords::-webkit-scrollbar{width:0;height:0;display:none}

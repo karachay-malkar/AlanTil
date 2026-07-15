@@ -1,37 +1,63 @@
 import { PATH_CONFIG } from "../../config/path.js";
 import { createSlugMap, toSlug } from "./slugs.js";
-import { DEFAULT_STORY_TYPE, resolveStoryType, validateStationStoryTypes } from "./story-resolver.js";
 import { sortNatural } from "./word-selection.js";
-
-const EASY_RE = /(^|\s)(легк|easy)/i;
-const MEDIUM_RE = /(^|\s)(средн|medium)/i;
-const HARD_RE = /(^|\s)(сложн|hard)/i;
-const RARE_RE = /(^|\s)(редк|rare)/i;
 
 export function normalizeRouteText(value) {
   return String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
 }
 
-export function difficultyKind(value) {
-  const text = normalizeRouteText(value);
-  if (EASY_RE.test(text)) return "easy";
-  if (MEDIUM_RE.test(text)) return "medium";
-  if (RARE_RE.test(text)) return "rare";
-  if (HARD_RE.test(text)) return "hard";
-  return "thematic";
-}
-
-export function storyTypeFor(row) {
-  return resolveStoryType(row);
-}
-
-function numericOrder(value, fallback) {
+function numericOrder(value, fallback = Number.MAX_SAFE_INTEGER) {
   const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? number : fallback;
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function routeOrder(word, fallback) {
+  return numericOrder(word?.global_order, numericOrder(word?.dict_order, fallback));
+}
+
+function stableId(value, fallback) {
+  return normalizeRouteText(value) || fallback;
+}
+
+function storyDescriptor(word, sourceOrder) {
+  const id = stableId(word?.story_id || word?.story_type, PATH_CONFIG.defaultStoryType);
+  return {
+    id,
+    name: normalizeRouteText(word?.story_name) || id,
+    order: numericOrder(word?.story_order, numericOrder(id, sourceOrder)),
+  };
+}
+
+function dictionaryDescriptor(word, sourceOrder) {
+  const id = stableId(word?.dictionary_id || word?.catalog_id || word?.dict, "dictionary");
+  return {
+    id,
+    name: normalizeRouteText(word?.dictionary_name || word?.dict) || id,
+    order: numericOrder(word?.dictionary_order, numericOrder(id, sourceOrder)),
+  };
+}
+
+function sectionDescriptor(word, sourceOrder) {
+  const id = stableId(word?.section_id || word?.group_id || word?.section, "section");
+  return {
+    id,
+    name: normalizeRouteText(word?.section_name || word?.section) || id,
+    order: numericOrder(word?.section_order, numericOrder(id, sourceOrder)),
+  };
+}
+
+function namedSetDescriptor(word, sourceOrder) {
+  const id = normalizeRouteText(word?.set_id);
+  if (!id) return null;
+  return {
+    id,
+    name: normalizeRouteText(word?.set_name || word?.set) || id,
+    order: numericOrder(word?.set_order, numericOrder(id, sourceOrder)),
+  };
 }
 
 function makeStationKey(station) {
-  return [station.dictionaryId, station.catalogId, station.groupId, station.setId]
+  return [station.storyType, station.dictionaryId, station.catalogId, station.groupId, station.setId]
     .map(normalizeRouteText)
     .join("::");
 }
@@ -41,171 +67,272 @@ export function stationKey(station) {
 }
 
 export function routeKeyParts(key) {
-  const [dictionaryId = "", catalogId = "", groupId = "", setId = ""] = String(key || "").split("::");
-  return { dictionaryId, catalogId, groupId, setId };
+  const [storyType = "", dictionaryId = "", catalogId = "", groupId = "", setId = ""] = String(key || "").split("::");
+  return { storyType, dictionaryId, catalogId, groupId, setId };
 }
 
-function firstOrder(words, fallback) {
-  const values = words.map((word) => numericOrder(word.dict_order, 0)).filter(Boolean);
-  return values.length ? Math.min(...values) : fallback;
-}
 
-function diagnoseStoryConflict(station, resolution) {
-  if (!resolution.conflict) return;
-  console.warn("AlanTil route: conflicting story_type values; station moved to ascent", {
-    station: makeStationKey(station),
-    values: resolution.values,
-    invalidValues: resolution.invalidValues,
+function createStationSlugMap(stations = []) {
+  const valueToSlug = new Map();
+  const slugToValue = new Map();
+  const occupied = new Set();
+  stations.forEach((station, index) => {
+    const value = String(station.setId || "");
+    let base = String(station.slug || toSlug(value, `station-${index + 1}`));
+    let slug = base;
+    let suffix = 2;
+    while (occupied.has(slug)) {
+      slug = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    occupied.add(slug);
+    valueToSlug.set(value, slug);
+    slugToValue.set(slug, value);
   });
+  return {
+    slugFor(value) { return valueToSlug.get(String(value ?? "")) || toSlug(value); },
+    valueFor(slug) { return slugToValue.get(String(slug || "").toLowerCase()) || null; },
+  };
 }
 
-export function buildLearningRoute(words, { dictionaryId = PATH_CONFIG.dictionaryId } = {}) {
-  const source = Array.isArray(words) ? words : [];
-  const catalogMap = new Map();
-  let sourceIndex = 0;
+function dynamicStationName(start, end) {
+  return start === end ? `Слово ${start}` : `Топ ${start}–${end}`;
+}
 
-  source.forEach((word) => {
-    const catalogId = normalizeRouteText(word?.catalog_id || word?.dict) || "Словарь";
-    const catalogName = normalizeRouteText(word?.dict) || catalogId;
-    const groupId = normalizeRouteText(word?.group_id || word?.section) || "Раздел";
-    const groupName = normalizeRouteText(word?.section) || groupId;
-    const setId = normalizeRouteText(word?.set_id || word?.set);
-    const setName = normalizeRouteText(word?.set) || setId;
-    if (!word?.id || !setId) return;
-    sourceIndex += 1;
+function createNamedStation({ story, dictionary, section, set, words }) {
+  const sortedWords = words.slice().sort((left, right) => routeOrder(left, 0) - routeOrder(right, 0));
+  const station = {
+    dictionaryId: dictionary.id,
+    catalogId: dictionary.id,
+    catalogName: dictionary.name,
+    groupId: section.id,
+    groupName: section.name,
+    setId: set.id,
+    sourceSetId: set.id,
+    selectionSetId: set.id,
+    name: set.name,
+    words: sortedWords,
+    storyType: story.id,
+    storyName: story.name,
+    isNamedSet: true,
+    requiredAccuracy: Number(sortedWords[0]?.required_accuracy || PATH_CONFIG.stationRequiredAccuracy),
+    order: Math.min(...sortedWords.map((word, index) => routeOrder(word, index + 1))),
+  };
+  station.key = makeStationKey(station);
+  station.slug = toSlug(set.id, `set-${set.id}`);
+  station.anchorWordId = String(sortedWords[0]?.id || "");
+  return station;
+}
 
-    if (!catalogMap.has(catalogId)) {
-      catalogMap.set(catalogId, {
-        dictionaryId,
-        catalogId,
-        name: catalogName,
-        groupsMap: new Map(),
-        sourceOrder: sourceIndex,
-      });
-    }
-    const catalog = catalogMap.get(catalogId);
-    if (!catalog.groupsMap.has(groupId)) {
-      catalog.groupsMap.set(groupId, {
-        dictionaryId,
-        catalogId,
-        groupId,
-        name: groupName,
-        stationsMap: new Map(),
-        sourceOrder: sourceIndex,
-      });
-    }
-    const group = catalog.groupsMap.get(groupId);
-    if (!group.stationsMap.has(setId)) {
-      group.stationsMap.set(setId, {
-        dictionaryId,
-        catalogId,
-        groupId,
-        setId,
-        name: setName,
-        description: String(word?.description || "").trim(),
-        words: [],
-        sourceOrder: sourceIndex,
-      });
-    }
-    group.stationsMap.get(setId).words.push(word);
-  });
-
-  const catalogs = Array.from(catalogMap.values()).map((catalog) => {
-    const groups = Array.from(catalog.groupsMap.values()).map((group) => {
-      const stations = Array.from(group.stationsMap.values())
-        .map((station, index) => {
-          const storyResolution = validateStationStoryTypes(station.words);
-          diagnoseStoryConflict(station, storyResolution);
-          const normalized = {
-            ...station,
-            storyType: storyResolution.storyType,
-            storyTypeExplicit: storyResolution.explicit,
-            difficulty: difficultyKind(station.groupId),
-            order: station.words[0]?.order_override || firstOrder(station.words, station.sourceOrder || index + 1),
-            isOptional: Boolean(station.words[0]?.is_optional),
-            requiredAccuracy: Number(station.words[0]?.required_accuracy || PATH_CONFIG.stationRequiredAccuracy),
-            backgroundSegment: station.words[0]?.background_segment || "",
-            positionX: Number.isFinite(station.words[0]?.position_x) ? station.words[0].position_x : null,
-            positionY: Number.isFinite(station.words[0]?.position_y) ? station.words[0].position_y : null,
-            rewardId: station.words[0]?.reward_id || "",
-            reviewSchedule: station.words[0]?.review_schedule || "",
-          };
-          normalized.key = makeStationKey(normalized);
-          normalized.slug = toSlug(station.setId, `station-${index + 1}`);
-          return normalized;
-        })
-        .sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
-      return {
-        ...group,
-        stations,
-        order: Math.min(...stations.map((station) => station.order), group.sourceOrder),
-      };
-    }).sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
-    return {
-      ...catalog,
-      groups,
-      storyTypes: Array.from(new Set(groups.flatMap((group) => group.stations.map((station) => station.storyType)))),
-      order: Math.min(...groups.map((group) => group.order), catalog.sourceOrder),
+function createDynamicStations({ story, dictionary, section, words, stationSize }) {
+  const sortedWords = words.slice().sort((left, right) => routeOrder(left, 0) - routeOrder(right, 0));
+  const output = [];
+  for (let offset = 0; offset < sortedWords.length; offset += stationSize) {
+    const stationWords = sortedWords.slice(offset, offset + stationSize);
+    if (!stationWords.length) continue;
+    const first = offset + 1;
+    const last = offset + stationWords.length;
+    const anchorWordId = String(stationWords[0]?.id || `row-${first}`);
+    const station = {
+      dictionaryId: dictionary.id,
+      catalogId: dictionary.id,
+      catalogName: dictionary.name,
+      groupId: section.id,
+      groupName: section.name,
+      setId: `dynamic:${anchorWordId}`,
+      sourceSetId: "",
+      selectionSetId: `dynamic-section-${section.id}`,
+      name: dynamicStationName(first, last),
+      words: stationWords,
+      storyType: story.id,
+      storyName: story.name,
+      isNamedSet: false,
+      requiredAccuracy: PATH_CONFIG.stationRequiredAccuracy,
+      order: routeOrder(stationWords[0], first),
+      anchorWordId,
+      chunkIndex: output.length + 1,
+      stationSize,
     };
-  }).sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
+    station.key = makeStationKey(station);
+    station.slug = `words-${toSlug(anchorWordId, `station-${output.length + 1}`)}`;
+    output.push(station);
+  }
+  return output;
+}
 
+export function buildLearningRoute(words, { stationSize = 40 } = {}) {
+  const size = Number(stationSize) === 20 ? 20 : 40;
+  const source = Array.isArray(words) ? words.filter((word) => word?.id) : [];
+  const storiesMap = new Map();
+
+  source.forEach((word, index) => {
+    const sourceOrder = index + 1;
+    const story = storyDescriptor(word, sourceOrder);
+    const dictionary = dictionaryDescriptor(word, sourceOrder);
+    const section = sectionDescriptor(word, sourceOrder);
+    const namedSet = namedSetDescriptor(word, sourceOrder);
+
+    if (!storiesMap.has(story.id)) {
+      storiesMap.set(story.id, { ...story, dictionariesMap: new Map(), sourceOrder });
+    }
+    const storyNode = storiesMap.get(story.id);
+    if (!storyNode.dictionariesMap.has(dictionary.id)) {
+      storyNode.dictionariesMap.set(dictionary.id, { ...dictionary, sectionsMap: new Map(), sourceOrder });
+    }
+    const dictionaryNode = storyNode.dictionariesMap.get(dictionary.id);
+    if (!dictionaryNode.sectionsMap.has(section.id)) {
+      dictionaryNode.sectionsMap.set(section.id, {
+        ...section,
+        dynamicWords: [],
+        setsMap: new Map(),
+        sourceOrder,
+      });
+    }
+    const sectionNode = dictionaryNode.sectionsMap.get(section.id);
+    if (namedSet) {
+      if (!sectionNode.setsMap.has(namedSet.id)) {
+        sectionNode.setsMap.set(namedSet.id, { ...namedSet, words: [], sourceOrder });
+      }
+      sectionNode.setsMap.get(namedSet.id).words.push(word);
+    } else {
+      sectionNode.dynamicWords.push(word);
+    }
+  });
+
+  const storyOrder = Array.from(storiesMap.values())
+    .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name))
+    .map((story) => story.id);
   const stories = {};
-  PATH_CONFIG.storyOrder.forEach((type) => {
-    stories[type] = { type, label: PATH_CONFIG.storyLabels[type], catalogs: [], groups: [], stations: [] };
+  const allCatalogs = [];
+
+  storyOrder.forEach((storyId) => {
+    const storyNode = storiesMap.get(storyId);
+    const catalogs = Array.from(storyNode.dictionariesMap.values())
+      .map((dictionaryNode) => {
+        const groups = Array.from(dictionaryNode.sectionsMap.values())
+          .map((sectionNode) => {
+            const dynamicStations = createDynamicStations({
+              story: storyNode,
+              dictionary: dictionaryNode,
+              section: sectionNode,
+              words: sectionNode.dynamicWords,
+              stationSize: size,
+            });
+            const namedStations = Array.from(sectionNode.setsMap.values())
+              .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name))
+              .map((setNode) => createNamedStation({
+                story: storyNode,
+                dictionary: dictionaryNode,
+                section: sectionNode,
+                set: setNode,
+                words: setNode.words,
+              }));
+            const stations = [...dynamicStations, ...namedStations]
+              .sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
+            return {
+              dictionaryId: dictionaryNode.id,
+              catalogId: dictionaryNode.id,
+              groupId: sectionNode.id,
+              name: sectionNode.name,
+              order: sectionNode.order,
+              stations,
+              sourceOrder: sectionNode.sourceOrder,
+            };
+          })
+          .filter((group) => group.stations.length)
+          .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name));
+        return {
+          dictionaryId: dictionaryNode.id,
+          catalogId: dictionaryNode.id,
+          name: dictionaryNode.name,
+          order: dictionaryNode.order,
+          sourceOrder: dictionaryNode.sourceOrder,
+          groups,
+        };
+      })
+      .filter((catalog) => catalog.groups.length)
+      .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name));
+
+    const groups = catalogs.flatMap((catalog) => catalog.groups);
+    const stations = groups.flatMap((group) => group.stations);
+    stories[storyId] = {
+      type: storyId,
+      label: storyNode.name,
+      order: storyNode.order,
+      catalogs,
+      groups,
+      stations,
+      stationCount: stations.length,
+      groupCount: groups.length,
+      wordCount: stations.reduce((sum, station) => sum + station.words.length, 0),
+    };
+    allCatalogs.push(...catalogs);
   });
 
-  catalogs.forEach((catalog) => {
-    PATH_CONFIG.storyOrder.forEach((type) => {
-      const groups = catalog.groups
-        .map((group) => ({ ...group, storyType: type, stations: group.stations.filter((station) => station.storyType === type) }))
-        .filter((group) => group.stations.length > 0);
-      if (!groups.length) return;
-      const storyCatalog = { ...catalog, groups, storyTypes: [type] };
-      stories[type].catalogs.push(storyCatalog);
-      stories[type].groups.push(...groups);
-      stories[type].stations.push(...groups.flatMap((group) => group.stations));
-    });
-  });
-
-  Object.values(stories).forEach((story) => {
-    story.stationCount = story.stations.length;
-    story.groupCount = story.groups.length;
-  });
-
-  const allStations = catalogs.flatMap((catalog) => catalog.groups.flatMap((group) => group.stations));
+  const allStations = storyOrder.flatMap((storyId) => stories[storyId].stations);
   const byKey = new Map(allStations.map((station) => [station.key, station]));
   const slugMaps = {
-    catalog: createSlugMap(catalogs.map((catalog) => catalog.catalogId)),
+    story: createSlugMap(storyOrder),
+    catalogByStory: new Map(),
     groupByCatalog: new Map(),
     setByGroup: new Map(),
   };
-  catalogs.forEach((catalog) => {
-    slugMaps.groupByCatalog.set(catalog.catalogId, createSlugMap(catalog.groups.map((group) => group.groupId)));
-    catalog.groups.forEach((group) => {
-      slugMaps.setByGroup.set(`${catalog.catalogId}::${group.groupId}`, createSlugMap(group.stations.map((station) => station.setId)));
+
+  storyOrder.forEach((storyId) => {
+    const story = stories[storyId];
+    slugMaps.catalogByStory.set(storyId, createSlugMap(story.catalogs.map((catalog) => catalog.catalogId)));
+    story.catalogs.forEach((catalog) => {
+      const catalogKey = `${storyId}::${catalog.catalogId}`;
+      slugMaps.groupByCatalog.set(catalogKey, createSlugMap(catalog.groups.map((group) => group.groupId)));
+      catalog.groups.forEach((group) => {
+        const groupKey = `${storyId}::${catalog.catalogId}::${group.groupId}`;
+        slugMaps.setByGroup.set(groupKey, createStationSlugMap(group.stations));
+      });
     });
   });
 
-  return { dictionaryId, catalogs, stories, byKey, slugMaps, defaultStoryType: DEFAULT_STORY_TYPE };
+  const defaultStoryType = stories[PATH_CONFIG.defaultStoryType]
+    ? PATH_CONFIG.defaultStoryType
+    : (storyOrder[0] || PATH_CONFIG.defaultStoryType);
+
+  return {
+    stationSize: size,
+    storyOrder,
+    storyLabels: Object.fromEntries(storyOrder.map((type) => [type, stories[type].label])),
+    catalogs: allCatalogs,
+    stories,
+    byKey,
+    slugMaps,
+    defaultStoryType,
+  };
 }
 
 export function stationPathParams(route, station) {
+  const storyType = station.storyType;
+  const catalogKey = `${storyType}::${station.catalogId}`;
+  const groupKey = `${storyType}::${station.catalogId}::${station.groupId}`;
   return {
-    storyType: station.storyType,
-    catalogSlug: route.slugMaps.catalog.slugFor(station.catalogId),
-    groupSlug: route.slugMaps.groupByCatalog.get(station.catalogId)?.slugFor(station.groupId) || toSlug(station.groupId),
-    setSlug: route.slugMaps.setByGroup.get(`${station.catalogId}::${station.groupId}`)?.slugFor(station.setId) || toSlug(station.setId),
+    storyType,
+    catalogSlug: route.slugMaps.catalogByStory.get(storyType)?.slugFor(station.catalogId) || toSlug(station.catalogId),
+    groupSlug: route.slugMaps.groupByCatalog.get(catalogKey)?.slugFor(station.groupId) || toSlug(station.groupId),
+    setSlug: station.slug || route.slugMaps.setByGroup.get(groupKey)?.slugFor(station.setId) || toSlug(station.setId),
   };
 }
 
 export function resolveStationFromParams(route, params = {}) {
   const story = route.stories[params.storyType] || null;
   if (!story) return null;
-  const catalogId = route.slugMaps.catalog.valueFor(params.catalogSlug);
+  const catalogId = route.slugMaps.catalogByStory.get(params.storyType)?.valueFor(params.catalogSlug);
   if (!catalogId) return null;
-  const groupId = route.slugMaps.groupByCatalog.get(catalogId)?.valueFor(params.groupSlug);
+  const catalogKey = `${params.storyType}::${catalogId}`;
+  const groupId = route.slugMaps.groupByCatalog.get(catalogKey)?.valueFor(params.groupSlug);
   if (!groupId) return null;
-  const setId = route.slugMaps.setByGroup.get(`${catalogId}::${groupId}`)?.valueFor(params.setSlug);
-  if (!setId) return null;
-  return story.stations.find((station) => station.catalogId === catalogId && station.groupId === groupId && station.setId === setId) || null;
+  const groupKey = `${params.storyType}::${catalogId}::${groupId}`;
+  const setId = route.slugMaps.setByGroup.get(groupKey)?.valueFor(params.setSlug);
+  const group = story.groups.find((item) => item.catalogId === catalogId && item.groupId === groupId);
+  if (!group) return null;
+  if (setId) return group.stations.find((station) => station.setId === setId) || null;
+  const anchorSlug = String(params.setSlug || "").replace(/^words-/, "");
+  if (!anchorSlug) return null;
+  return group.stations.find((station) => station.words.some((word) => toSlug(word.id) === anchorSlug)) || null;
 }

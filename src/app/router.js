@@ -1,17 +1,17 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.4";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.5";
 
 const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.4"),
-  path: () => import("../features/path/index.js?v=13.4"),
-  profile: () => import("../features/profile/index.js?v=13.4"),
-  learn: () => import("../features/learn/index.js?v=13.4"),
-  test: () => import("../features/test/index.js?v=13.4"),
-  match: () => import("../features/match/index.js?v=13.4"),
-  songs: () => import("../features/songs/index.js?v=13.4"),
-  account: () => import("../features/account/index.js?v=13.4"),
-  settings: () => import("../features/settings/index.js?v=13.4"),
+  practice: () => import("../features/practice/index.js?v=13.5"),
+  path: () => import("../features/path/index.js?v=13.5"),
+  profile: () => import("../features/profile/index.js?v=13.5"),
+  learn: () => import("../features/learn/index.js?v=13.5"),
+  test: () => import("../features/test/index.js?v=13.5"),
+  match: () => import("../features/match/index.js?v=13.5"),
+  songs: () => import("../features/songs/index.js?v=13.5"),
+  account: () => import("../features/account/index.js?v=13.5"),
+  settings: () => import("../features/settings/index.js?v=13.5"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -55,7 +55,7 @@ export function parsePathname(pathname) {
   const [first, second, third, fourth, fifth, sixth] = segments;
   if (first === "practice" && !second) return { route: "practice.home", params: {} };
   if (first === "path") {
-    const storyType = ["ascent", "summit", "trails"].includes(second) ? second : "ascent";
+    const storyType = String(second || "ascent").trim() || "ascent";
     if (!third) return { route: "path.home", params: { storyType } };
     if (third && fourth && fifth) {
       const params = { storyType, catalogSlug: third, groupSlug: fourth, setSlug: fifth };
@@ -102,7 +102,7 @@ export function buildPath(routeName, params = {}) {
   const dictionary = params.dictionarySlug ? encodeSegment(params.dictionarySlug) : "";
   const section = params.sectionSlug ? encodeSegment(params.sectionSlug) : "";
   const set = params.setSlug ? encodeSegment(params.setSlug) : "";
-  const story = ["ascent", "summit", "trails"].includes(params.storyType) ? params.storyType : "ascent";
+  const story = String(params.storyType || "ascent").trim() || "ascent";
   const stationBase = params.catalogSlug && params.groupSlug && params.setSlug
     ? `/path/${story}/${encodeSegment(params.catalogSlug)}/${encodeSegment(params.groupSlug)}/${encodeSegment(params.setSlug)}`
     : `/path/${story}`;
@@ -204,8 +204,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.4&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.4&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.5&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.5&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -302,9 +302,20 @@ export function createRouter({ shell, modal, context }) {
     return parsePathname(window.location.pathname);
   }
 
+  function canonicalize(route = current.route, params = current.params) {
+    current = { route, params: compactParams(params) };
+    entries[historyIndex] = current;
+    const path = `${buildPath(current.route, current.params)}${navigationSuffix()}`;
+    window.history.replaceState(historyState(current, historyIndex), "", path);
+    return getCurrent();
+  }
+
+
   async function mountCurrentRoute() {
     shell.setCounter("");
     shell.clearMode();
+    shell.configureScreen(current.route);
+    syncBackControls();
     const feature = featureOf(current.route);
     currentModule = await loadModule(feature);
     await currentModule.mount(
@@ -313,7 +324,6 @@ export function createRouter({ shell, modal, context }) {
     );
     shell.setActiveNav(current.route);
     setDocumentTitle(current.route);
-    syncBackControls();
   }
 
   function sendPageView({ initial = false, force = false } = {}) {
@@ -546,6 +556,7 @@ export function createRouter({ shell, modal, context }) {
     attachTelegram,
     releaseTelegramLaunchUrl,
     setAnalyticsActive,
+    canonicalize,
   };
 
   shell.backButton.addEventListener("click", () => back());

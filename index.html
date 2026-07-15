@@ -18,7 +18,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.4" />
+  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.5" />
 </head>
 <body>
   <div id="appShell" class="appShell" data-feature="path" data-screen="home" data-layout="map" data-header="minimal" data-bottom-nav="true">
@@ -30,9 +30,10 @@
         <span id="headerSectionIcon" class="appHeaderSectionIcon" aria-hidden="true"></span>
       </div>
       <div class="appHeaderCenter">
-        <span id="headerBrand" class="appHeaderBrand">Alan Til!</span>
+        <span id="headerTitle" class="appHeaderBrand">Alan Til!</span>
+        <span id="headerSubtitle" class="appHeaderSubtitle hidden"></span>
       </div>
-      <div class="appHeaderTrailing" aria-hidden="true"></div>
+      <div class="appHeaderTrailing" aria-hidden="true"><img id="headerLogo" class="appHeaderLogo hidden" src="/assets/images/logo.png" alt="" /></div>
     </header>
 
     <main id="appViewport" class="appViewport">
@@ -60,6 +61,6 @@
   </div>
 
   <div id="modalRoot" class="modalRoot"></div>
-  <script type="module" src="/src/app/bootstrap.js?v=13.4"></script>
+  <script type="module" src="/src/app/bootstrap.js?v=13.5"></script>
 </body>
 </html>

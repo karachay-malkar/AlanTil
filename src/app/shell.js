@@ -9,13 +9,16 @@ export function createShell() {
   const root = document.getElementById("appRoot");
   const backButton = document.getElementById("btnBackArrow");
   const sectionIcon = document.getElementById("headerSectionIcon");
+  const headerTitle = document.getElementById("headerTitle");
+  const headerSubtitle = document.getElementById("headerSubtitle");
+  const headerLogo = document.getElementById("headerLogo");
   const sessionStatus = document.getElementById("sessionStatus");
   const counter = document.getElementById("counter");
   const mode = document.getElementById("mode");
   const modalRoot = document.getElementById("modalRoot");
   const bottomNav = document.getElementById("bottomNav");
 
-  if (!appShell || !header || !viewport || !root || !backButton || !sectionIcon || !sessionStatus || !counter || !mode || !modalRoot || !bottomNav) {
+  if (!appShell || !header || !viewport || !root || !backButton || !sectionIcon || !headerTitle || !headerSubtitle || !headerLogo || !sessionStatus || !counter || !mode || !modalRoot || !bottomNav) {
     throw new Error("Application shell is incomplete");
   }
 
@@ -25,6 +28,15 @@ export function createShell() {
     const visible = Boolean(counter.textContent || mode.textContent);
     sessionStatus.classList.toggle("hidden", !visible);
     viewport.classList.toggle("hasSessionStatus", visible);
+  }
+
+  function setHeaderContent({ title = "Alan Til!", subtitle = "", logo = false, brand = true } = {}) {
+    headerTitle.textContent = title;
+    headerTitle.classList.toggle("appHeaderBrand", brand);
+    headerTitle.classList.toggle("appHeaderScreenTitle", !brand);
+    headerSubtitle.textContent = subtitle;
+    headerSubtitle.classList.toggle("hidden", !subtitle);
+    headerLogo.classList.toggle("hidden", !logo);
   }
 
   function configureScreen(route = "path.home") {
@@ -37,37 +49,24 @@ export function createShell() {
     appShell.dataset.bottomNav = String(currentConfig.bottomNav);
     sectionIcon.innerHTML = uiIcon(currentConfig.icon, "appHeaderSectionIconSvg");
     bottomNav.hidden = !currentConfig.bottomNav;
+    setHeaderContent();
     viewport.scrollTop = 0;
     root.scrollTop = 0;
     return currentConfig;
   }
 
-  function renderHome() {
-    showScreenLoading(root, "");
-  }
+  function renderHome() { showScreenLoading(root, ""); }
 
   function setBackVisible(visible) {
     backButton.classList.toggle("hidden", !visible);
     sectionIcon.classList.toggle("hidden", visible);
   }
 
-  function setCounter(text = "") {
-    counter.textContent = text;
-    syncSessionStatus();
-  }
-
-  function clearMode() {
-    mode.textContent = "";
-    syncSessionStatus();
-  }
-
-  function setMode(text = "") {
-    mode.textContent = text;
-    syncSessionStatus();
-  }
+  function setCounter(text = "") { counter.textContent = text; syncSessionStatus(); }
+  function clearMode() { mode.textContent = ""; syncSessionStatus(); }
+  function setMode(text = "") { mode.textContent = text; syncSessionStatus(); }
 
   function setActiveNav(route = "") {
-    configureScreen(route || "path.home");
     void revealScreen(root);
     const feature = String(route).split(".")[0];
     const active = ["test", "match", "songs", "practice"].includes(feature)
@@ -83,36 +82,13 @@ export function createShell() {
     });
   }
 
-  function beginNavigation(route, message = "") {
-    configureScreen(route);
-    showScreenLoading(root, message);
-  }
-
-  async function completeNavigation(options = {}) {
-    await revealScreen(root, options);
-  }
-
-  function renderError(message) {
-    showScreenError(root, message);
-  }
+  function beginNavigation(route, message = "") { configureScreen(route); showScreenLoading(root, message); }
+  async function completeNavigation(options = {}) { await revealScreen(root, options); }
+  function renderError(message) { showScreenError(root, message); }
 
   return {
-    appShell,
-    header,
-    viewport,
-    root,
-    backButton,
-    modalRoot,
-    bottomNav,
-    configureScreen,
-    renderHome,
-    setBackVisible,
-    setCounter,
-    setMode,
-    clearMode,
-    setActiveNav,
-    beginNavigation,
-    completeNavigation,
-    renderError,
+    appShell, header, viewport, root, backButton, modalRoot, bottomNav,
+    configureScreen, renderHome, setBackVisible, setCounter, setMode, clearMode,
+    setHeaderContent, setActiveNav, beginNavigation, completeNavigation, renderError,
   };
 }

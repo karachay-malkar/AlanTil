@@ -8,6 +8,7 @@ import {
   persistSessionRuntime,
 } from "../../shared/progress/session-builders.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
+import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js";
 import { uiIcon } from "../../shared/ui/icons.js";
 import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js";
 import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js";
@@ -81,11 +82,13 @@ export function finalizeLearnSession(status = "interrupted", exitReason = "route
   const session = learnState.studySession;
   if (!session.runtime || session.runtime.finalized) return false;
   flushLearningAnalytics();
+  const payload = learnSessionPayload();
   const result = finalizeSessionRuntime(session.runtime, {
     status,
     exitReason,
-    payload: learnSessionPayload(),
+    payload,
   });
+  if (result?.id) recordLearnWordResults(result.id, payload.words, result.ended_at || new Date().toISOString());
   session.inProgress = false;
   session.completed = status === "completed";
   return result;
@@ -104,9 +107,11 @@ export function initializeStudy(words, mode, options = {}) {
   });
 
   learnState.currentStudyMode = mode === "ru" ? "ru" : "kb";
-  const all = learnState.currentDict === "__fav__"
-    ? words.filter((word) => wordFavorites.has(word.id))
-    : wordsForSet(words, learnState.currentDict, learnState.currentSection, learnState.currentSet);
+  const all = Array.isArray(options.wordsOverride)
+    ? options.wordsOverride.slice()
+    : learnState.currentDict === "__fav__"
+      ? words.filter((word) => wordFavorites.has(word.id))
+      : wordsForSet(words, learnState.currentDict, learnState.currentSection, learnState.currentSet);
   const hidden = getHiddenSet(learnState.currentDict, learnState.currentSection, learnState.currentSet);
   const active = all.filter((word) => !hidden.has(word.id));
 
@@ -151,7 +156,7 @@ export function initializeStudy(words, mode, options = {}) {
 
 export function renderStudy(context, words, signal, params = {}) {
   if (!learnState.studySession.inProgress || params.mode) {
-    initializeStudy(words, params.mode || learnState.currentStudyMode, { stationContext: params.stationContext });
+    initializeStudy(words, params.mode || learnState.currentStudyMode, { stationContext: params.stationContext, wordsOverride: params.wordsOverride });
   }
 
   context.root.innerHTML = `

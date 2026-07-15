@@ -10,3 +10,12 @@
 [data-feature="settings"] .analyticsSettingsSection{margin-top:20px;padding:12px 2px;border-top:1px solid var(--line-soft)}
 [data-feature="settings"] .analyticsPreferenceRow{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
 [data-feature="settings"] .analyticsPreferenceCheckbox{width:20px;height:20px;min-height:0;accent-color:var(--accent)}
+[data-feature="settings"] .settingsBlock{padding:4px 0 18px}
+[data-feature="settings"] .settingsBlockTitle{margin-bottom:10px}
+[data-feature="settings"] .settingsStationSize{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+[data-feature="settings"] .settingsChoice{position:relative;display:block}
+[data-feature="settings"] .settingsChoice input{position:absolute;opacity:0;pointer-events:none}
+[data-feature="settings"] .settingsChoice span{min-height:var(--control-h);display:grid;place-items:center;border:1px solid var(--line);background:var(--surface-paper-soft);font-weight:760}
+[data-feature="settings"] .settingsChoice input:checked+span{border-color:var(--accent-strong);color:var(--accent-strong);background:var(--accent-soft)}
+[data-feature="settings"] .settingsHint{margin-top:8px;color:var(--text-3);font-size:12px}
+[data-feature="settings"] .settingsLinksBlock{border-top:1px solid var(--line-soft)}
