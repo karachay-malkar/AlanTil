@@ -19,14 +19,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Reconstruct release archive
+      - name: Reconstruct release patch
         shell: bash
         run: |
           set -euo pipefail
-          cat .upload/part-* | base64 --decode > /tmp/AlanTil-13.5.zip
-          rm -rf /tmp/AlanTil-13.5
-          mkdir -p /tmp/AlanTil-13.5
-          unzip -q /tmp/AlanTil-13.5.zip -d /tmp/AlanTil-13.5
+          cat .upload/patch-* > /tmp/AlanTil-13.5.patch
 
       - name: Create clean 13.5 branch
         shell: bash
@@ -36,9 +33,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git checkout --detach f1f86551d701c5f6fd7f2ec3b80e35c75d9d8baa
           git switch -C 13.5
-          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -a /tmp/AlanTil-13.5/. .
-          git add -A
+          git apply --index /tmp/AlanTil-13.5.patch
           git commit -m "13.5: dynamic stations and word-based progress"
           git push origin 13.5 --force
 
