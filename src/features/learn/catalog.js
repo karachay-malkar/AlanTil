@@ -7,7 +7,7 @@ import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
-import { getHiddenSet, isSetFinished, learnState, setHiddenSet, toggleSetFinished } from "./state.js";
+import { getHiddenSet, learnState, setHiddenSet } from "./state.js";
 
 function dictTitle(code) {
   return DICT_TITLES[code] || code;
@@ -87,16 +87,9 @@ export function renderSections(context, words, signal) {
     const setSlugs = setSlugMap(words, dict, section);
     const sectionSlug = sectionSlugs.slugFor(section);
     const tiles = sets.map((setNumber) => {
-      const finished = isSetFinished(dict, section, setNumber);
       const title = typeof setNumber === "number" ? `Сет ${setNumber}` : String(setNumber);
       return `
-        <div class="setTile set-tile ${finished ? "selected" : ""}" role="button" tabindex="0" data-section="${escapeHtml(section)}" data-section-slug="${escapeHtml(sectionSlug)}" data-set="${escapeHtml(setNumber)}" data-set-slug="${escapeHtml(setSlugs.slugFor(String(setNumber)))}">
-          <button class="setDone setTileCorner set-tile__corner" data-done="1" type="button" aria-label="Отметить как выучено">
-            <svg viewBox="0 0 24 24" class="setCheck ${finished ? "active" : ""}">
-              <rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke-width="1.7"></rect>
-              <path d="M7 10.5 L11.5 16 L17 6.5" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-          </button>
+        <div class="setTile set-tile" role="button" tabindex="0" data-section="${escapeHtml(section)}" data-section-slug="${escapeHtml(sectionSlug)}" data-set="${escapeHtml(setNumber)}" data-set-slug="${escapeHtml(setSlugs.slugFor(String(setNumber)))}">
           <div class="setTileTitle">${escapeHtml(title)}</div>
         </div>`;
     }).join("");
@@ -125,12 +118,6 @@ export function renderSections(context, words, signal) {
     const section = tile.dataset.section;
     const rawSet = tile.dataset.set;
     const setNumber = Number.isNaN(Number(rawSet)) ? rawSet : Number(rawSet);
-    tile.querySelector("[data-done='1']")?.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const on = toggleSetFinished(dict, section, setNumber);
-      tile.classList.toggle("selected", on);
-      tile.querySelector(".setCheck")?.classList.toggle("active", on);
-    }, { signal });
 
     const open = () => {
       learnState.currentSection = section;

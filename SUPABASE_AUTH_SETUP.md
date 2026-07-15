@@ -1,4 +1,4 @@
-# AlanTil 12.4 — настройка Supabase Auth
+# AlanTil 13.1 — настройка Supabase Auth
 
 ## 1. Создание таблиц и политик
 

@@ -87,6 +87,18 @@ export function parseCsv(text) {
       synonyms: has("synonyms") ? row.synonyms : "",
       used_in_test: has("used_in_test") ? row.used_in_test : undefined,
       dict_order: has("dict_order") ? row.dict_order : 0,
+      catalog_id: has("catalog_id") ? row.catalog_id : "",
+      group_id: has("group_id") ? row.group_id : "",
+      set_id: has("set_id") ? row.set_id : "",
+      story_type: has("story_type") ? row.story_type : "",
+      order_override: has("order_override") ? row.order_override : 0,
+      background_segment: has("background_segment") ? row.background_segment : "",
+      position_x: has("position_x") ? row.position_x : "",
+      position_y: has("position_y") ? row.position_y : "",
+      required_accuracy: has("required_accuracy") ? row.required_accuracy : "",
+      reward_id: has("reward_id") ? row.reward_id : "",
+      is_optional: has("is_optional") ? row.is_optional : "",
+      review_schedule: has("review_schedule") ? row.review_schedule : "",
     });
     if (normalized) output.push(normalized);
   }

@@ -1,19 +1,24 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=12.4";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.1";
 
 const FEATURE_LOADERS = {
-  learn: () => import("../features/learn/index.js?v=12.4"),
-  test: () => import("../features/test/index.js?v=12.4"),
-  match: () => import("../features/match/index.js?v=12.4"),
-  songs: () => import("../features/songs/index.js"),
-  account: () => import("../features/account/index.js?v=12.4"),
-  settings: () => import("../features/settings/index.js?v=12.4"),
+  practice: () => import("../features/practice/index.js?v=13.1"),
+  path: () => import("../features/path/index.js?v=13.1"),
+  profile: () => import("../features/profile/index.js?v=13.1"),
+  learn: () => import("../features/learn/index.js?v=13.1"),
+  test: () => import("../features/test/index.js?v=13.1"),
+  match: () => import("../features/match/index.js?v=13.1"),
+  songs: () => import("../features/songs/index.js?v=13.1"),
+  account: () => import("../features/account/index.js?v=13.1"),
+  settings: () => import("../features/settings/index.js?v=13.1"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
 const TITLE_BY_SCREEN = Object.freeze({
-  home: "Алан тил",
+  path: "Путь — Алан тил",
+  practice: "Практика — Алан тил",
+  profile: "Профиль — Алан тил",
   learn: "Учить слова — Алан тил",
   test: "Тест — Алан тил",
   match: "Сопоставление — Алан тил",
@@ -45,9 +50,30 @@ function cleanPathname(pathname) {
 
 export function parsePathname(pathname) {
   const segments = cleanPathname(pathname).split("/").filter(Boolean).map(decodeSegment);
-  if (!segments.length) return { route: "home", params: {} };
+  if (!segments.length) return { route: "path.home", params: { storyType: "ascent" } };
 
-  const [first, second, third, fourth] = segments;
+  const [first, second, third, fourth, fifth, sixth] = segments;
+  if (first === "practice" && !second) return { route: "practice.home", params: {} };
+  if (first === "path") {
+    const storyType = ["ascent", "summit", "trails"].includes(second) ? second : "ascent";
+    if (!third) return { route: "path.home", params: { storyType } };
+    if (third && fourth && fifth) {
+      const params = { storyType, catalogSlug: third, groupSlug: fourth, setSlug: fifth };
+      if (sixth === "study") return { route: "path.study", params };
+      if (sixth === "test") return { route: "path.test", params };
+      return { route: "path.station", params };
+    }
+    return { route: "path.home", params: { storyType }, notFound: true };
+  }
+  if (first === "profile") {
+    if (!second) return { route: "profile.home", params: {} };
+    if (second === "account") return { route: "account.home", params: {} };
+    if (second === "settings") {
+      if (!third) return { route: "settings.home", params: {} };
+      if (third === "privacy") return { route: "settings.privacy", params: {} };
+      if (third === "version") return { route: "settings.version", params: {} };
+    }
+  }
   if (first === "learn") {
     if (!second) return { route: "learn.catalog", params: {} };
     if (!third) return { route: "learn.sections", params: { dictionarySlug: second } };
@@ -61,21 +87,32 @@ export function parsePathname(pathname) {
     return { route: "songs.catalog", params: { playlistSlug: second } };
   }
   if (first === "song" && second) return { route: "songs.song", params: { songId: second } };
-  if (first === "account" && !second) return { route: "account.home", params: {} };
+
+  // Legacy URLs are canonicalized to the profile structure.
+  if (first === "account" && !second) return { route: "profile.home", params: {}, redirected: true };
   if (first === "settings") {
-    if (!second) return { route: "settings.home", params: {} };
-    if (second === "privacy") return { route: "settings.privacy", params: {} };
-    if (second === "version") return { route: "settings.version", params: {} };
+    if (!second) return { route: "settings.home", params: {}, redirected: true };
+    if (second === "privacy") return { route: "settings.privacy", params: {}, redirected: true };
+    if (second === "version") return { route: "settings.version", params: {}, redirected: true };
   }
-  return { route: "home", params: {}, notFound: true };
+  return { route: "path.home", params: { storyType: "ascent" }, notFound: true };
 }
 
 export function buildPath(routeName, params = {}) {
   const dictionary = params.dictionarySlug ? encodeSegment(params.dictionarySlug) : "";
   const section = params.sectionSlug ? encodeSegment(params.sectionSlug) : "";
   const set = params.setSlug ? encodeSegment(params.setSlug) : "";
+  const story = ["ascent", "summit", "trails"].includes(params.storyType) ? params.storyType : "ascent";
+  const stationBase = params.catalogSlug && params.groupSlug && params.setSlug
+    ? `/path/${story}/${encodeSegment(params.catalogSlug)}/${encodeSegment(params.groupSlug)}/${encodeSegment(params.setSlug)}`
+    : `/path/${story}`;
 
-  if (routeName === "home") return "/";
+  if (routeName === "home" || routeName === "path.home") return `/path/${story}`;
+  if (routeName === "path.station") return stationBase;
+  if (routeName === "path.study") return `${stationBase}/study`;
+  if (routeName === "path.test") return `${stationBase}/test`;
+  if (routeName === "practice.home") return "/practice";
+  if (routeName === "profile.home") return "/profile";
   if (routeName === "learn.catalog") return "/learn";
   if (["learn.sections", "learn.catalog-content"].includes(routeName)) {
     if (!dictionary) return "/learn";
@@ -91,19 +128,19 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "songs.playlists") return "/songs";
   if (routeName === "songs.catalog") return params.playlistSlug ? `/songs/${encodeSegment(params.playlistSlug)}` : "/songs";
   if (routeName === "songs.song") return params.songId ? `/song/${encodeSegment(params.songId)}` : "/songs";
-  if (routeName === "account.home") return "/account";
-  if (routeName === "settings.home") return "/settings";
-  if (routeName === "settings.privacy") return "/settings/privacy";
-  if (routeName === "settings.version") return "/settings/version";
-  return "/";
+  if (routeName === "account.home") return "/profile/account";
+  if (routeName === "settings.home") return "/profile/settings";
+  if (routeName === "settings.privacy") return "/profile/settings/privacy";
+  if (routeName === "settings.version") return "/profile/settings/version";
+  return `/path/${story}`;
 }
 
 function featureOf(route) {
-  return route === "home" ? "home" : String(route || "").split(".")[0];
+  return route === "home" ? "path" : String(route || "path.home").split(".")[0];
 }
 
 function screenNameOf(route) {
-  if (route === "home") return "home";
+  if (route === "home") return "path";
   if (route === "songs.song") return "song";
   if (route === "settings.privacy") return "privacy";
   if (route === "settings.version") return "version";
@@ -136,7 +173,7 @@ function safeReferrer(value) {
 export function createRouter({ shell, modal, context }) {
   const entries = [];
   const loadedModules = new Map();
-  let current = { route: "home", params: {} };
+  let current = { route: "path.home", params: { storyType: "ascent" } };
   let currentModule = null;
   let navigating = false;
   let started = false;
@@ -167,15 +204,15 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=12.4&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=12.4&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.1&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.1&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
   }
 
   function targetWithInheritedParams(route, params = {}) {
-    const sameFeature = featureOf(route) === featureOf(current.route) && route !== "home";
+    const sameFeature = featureOf(route) === featureOf(current.route) && route !== "home" && !String(route).endsWith(".home");
     return {
       route,
       params: compactParams({ ...(sameFeature ? current.params : {}), ...params }),
@@ -229,7 +266,7 @@ export function createRouter({ shell, modal, context }) {
   }
 
   function syncBackControls() {
-    const visible = current.route !== "home";
+    const visible = !["home", "path.home", "practice.home", "profile.home"].includes(current.route);
     shell.setBackVisible(visible);
     const backButton = telegramWebApp?.BackButton;
     try {
@@ -268,17 +305,13 @@ export function createRouter({ shell, modal, context }) {
   async function mountCurrentRoute() {
     shell.setCounter("");
     shell.clearMode();
-    if (current.route === "home") {
-      shell.renderHome();
-      currentModule = null;
-    } else {
-      const feature = featureOf(current.route);
-      currentModule = await loadModule(feature);
-      await currentModule.mount(
-        { ...context, router: api },
-        { ...current.params, screen: current.route.split(".")[1] || "index" },
-      );
-    }
+    const feature = featureOf(current.route);
+    currentModule = await loadModule(feature);
+    await currentModule.mount(
+      { ...context, router: api },
+      { ...current.params, screen: current.route.split(".")[1] || "home" },
+    );
+    shell.setActiveNav(current.route);
     setDocumentTitle(current.route);
     syncBackControls();
   }
@@ -353,7 +386,7 @@ export function createRouter({ shell, modal, context }) {
 
   async function navigate(route, params = {}, options = {}) {
     const target = targetWithInheritedParams(route, params);
-    const reason = options.reason || (route === "home" ? "home" : "route_change");
+    const reason = options.reason || (["home", "path.home"].includes(route) ? "home" : "route_change");
     return show(target, { historyMode: options.push === false ? "replace" : "push", force: options.force === true, reason });
   }
 
@@ -364,31 +397,28 @@ export function createRouter({ shell, modal, context }) {
 
   function fallbackBackTarget() {
     const params = { ...current.params };
+    if (["path.study", "path.test"].includes(current.route)) return { route: "path.station", params };
+    if (current.route === "path.station") return { route: "path.home", params: { storyType: params.storyType || "ascent" } };
+    if (current.route === "path.home") return null;
     if (["learn.study", "learn.results", "learn.set"].includes(current.route)) {
       if (params.dictionarySlug === "favorites") return { route: "learn.catalog", params: {} };
       return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug, sectionSlug: params.sectionSlug }) };
     }
     if (current.route === "learn.catalog-content") return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug }) };
-    if (current.route === "learn.sections" && params.sectionSlug) {
-      return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug }) };
-    }
+    if (current.route === "learn.sections" && params.sectionSlug) return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug }) };
     if (current.route === "learn.sections") return { route: "learn.catalog", params: {} };
-    if (current.route.startsWith("learn.")) return { route: "home", params: {} };
+    if (current.route.startsWith("learn.")) return { route: "path.home", params: { storyType: "ascent" } };
     if (["test.session", "test.results"].includes(current.route)) return { route: "test.menu", params: {} };
-    if (current.route === "test.menu") return { route: "home", params: {} };
+    if (current.route === "test.menu") return { route: "practice.home", params: {} };
     if (["match.game", "match.results"].includes(current.route)) return { route: "match.menu", params: {} };
-    if (current.route === "match.menu") return { route: "home", params: {} };
-    if (current.route === "songs.song") {
-      return params.playlistSlug
-        ? { route: "songs.catalog", params: { playlistSlug: params.playlistSlug } }
-        : { route: "songs.playlists", params: {} };
-    }
+    if (current.route === "match.menu") return { route: "practice.home", params: {} };
+    if (current.route === "songs.song") return params.playlistSlug ? { route: "songs.catalog", params: { playlistSlug: params.playlistSlug } } : { route: "songs.playlists", params: {} };
     if (current.route === "songs.catalog") return { route: "songs.playlists", params: {} };
-    if (current.route === "songs.playlists") return { route: "home", params: {} };
-    if (current.route === "account.home") return { route: "home", params: {} };
+    if (current.route === "songs.playlists") return { route: "practice.home", params: {} };
+    if (current.route === "account.home") return { route: "profile.home", params: {} };
     if (["settings.privacy", "settings.version"].includes(current.route)) return { route: "settings.home", params: {} };
-    if (current.route === "settings.home") return { route: "home", params: {} };
-    return null;
+    if (current.route === "settings.home") return { route: "profile.home", params: {} };
+    return { route: "path.home", params: { storyType: "ascent" } };
   }
 
   async function back(options = {}) {
@@ -403,11 +433,11 @@ export function createRouter({ shell, modal, context }) {
     return show(fallback, { historyMode: "replace", force: true, reason: "back", skipLeaveCheck: true });
   }
 
-  async function reset(route = "home", params = {}) {
+  async function reset(route = "path.home", params = { storyType: "ascent" }) {
     const target = { route, params: compactParams(params) };
     historyIndex = 0;
     entries.length = 0;
-    return show(target, { historyMode: "replace", force: true, reason: route === "home" ? "home" : "route_change" });
+    return show(target, { historyMode: "replace", force: true, reason: ["home", "path.home"].includes(route) ? "home" : "route_change" });
   }
 
   async function handlePopState(event) {
@@ -520,6 +550,12 @@ export function createRouter({ shell, modal, context }) {
 
   shell.backButton.addEventListener("click", () => back());
   shell.root.addEventListener("click", (event) => {
+    const routeElement = event.target.closest("[data-route]");
+    if (!routeElement) return;
+    event.preventDefault();
+    navigate(routeElement.dataset.route);
+  });
+  shell.bottomNav.addEventListener("click", (event) => {
     const routeElement = event.target.closest("[data-route]");
     if (!routeElement) return;
     event.preventDefault();

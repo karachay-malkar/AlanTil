@@ -1,4 +1,4 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=12.4";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.1";
 import { normalizeId } from "../domain/word-normalizer.js";
 import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js";
 import {
@@ -10,6 +10,9 @@ import {
   writeProgressQueue,
 } from "./progress-queue.js";
 import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js";
+import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js";
+import { replaceUserRewards } from "./reward-store.js";
+import { replaceRouteSettings } from "./route-settings-store.js";
 import { snapshotRecoveredSession } from "./session-builders.js";
 import { readActiveSessions, removeActiveSession } from "./session-store.js";
 import {
@@ -81,8 +84,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=12.4"),
-    import("../state/song-favorites.js?v=12.4"),
+    import("../state/word-favorites.js?v=13.1"),
+    import("../state/song-favorites.js?v=13.1"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -116,6 +119,9 @@ async function applyCloudState(state) {
   );
   applyHiddenRows(state.hiddenWords);
   applySetProgressRows(state.setProgress);
+  replaceStationProgress(state.stationProgress || []);
+  replaceUserRewards(state.rewards || []);
+  if (state.routeSettings) replaceRouteSettings(state.routeSettings);
   if (state.userSettings) {
     replaceUserSettings(state.userSettings);
   } else {
@@ -129,10 +135,10 @@ async function applyCloudState(state) {
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=12.4");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=13.1");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=12.4");
+    const { songFavorites } = await import("../state/song-favorites.js?v=13.1");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});
@@ -148,6 +154,13 @@ async function applyQueueEntryLocally(entry) {
     if (payload.is_finished) map[key] = true;
     else delete map[key];
     writeScopedJson(FINISHED_KEY, map);
+  } else if (entry.type === "station_progress") {
+    mergeStationProgressRows([payload]);
+  } else if (entry.type === "user_reward") {
+    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js");
+    replaceUserRewards([...getUserRewards(), payload]);
+  } else if (entry.type === "route_settings") {
+    replaceRouteSettings(payload);
   } else if (entry.type === "user_settings") {
     replaceUserSettings(payload);
   }
