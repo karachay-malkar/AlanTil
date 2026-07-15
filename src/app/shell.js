@@ -1,3 +1,4 @@
+import { uiIcon } from "../shared/ui/icons.js";
 import { screenConfig } from "./screen-registry.js";
 import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js";
 
@@ -7,18 +8,24 @@ export function createShell() {
   const viewport = document.getElementById("appViewport");
   const root = document.getElementById("appRoot");
   const backButton = document.getElementById("btnBackArrow");
-  const headerEyebrow = document.getElementById("headerEyebrow");
-  const headerTitle = document.getElementById("headerTitle");
+  const sectionIcon = document.getElementById("headerSectionIcon");
+  const sessionStatus = document.getElementById("sessionStatus");
   const counter = document.getElementById("counter");
   const mode = document.getElementById("mode");
   const modalRoot = document.getElementById("modalRoot");
   const bottomNav = document.getElementById("bottomNav");
 
-  if (!appShell || !header || !viewport || !root || !backButton || !headerEyebrow || !headerTitle || !counter || !mode || !modalRoot || !bottomNav) {
+  if (!appShell || !header || !viewport || !root || !backButton || !sectionIcon || !sessionStatus || !counter || !mode || !modalRoot || !bottomNav) {
     throw new Error("Application shell is incomplete");
   }
 
   let currentConfig = screenConfig("path.home");
+
+  function syncSessionStatus() {
+    const visible = Boolean(counter.textContent || mode.textContent);
+    sessionStatus.classList.toggle("hidden", !visible);
+    viewport.classList.toggle("hasSessionStatus", visible);
+  }
 
   function configureScreen(route = "path.home") {
     currentConfig = screenConfig(route);
@@ -28,8 +35,7 @@ export function createShell() {
     appShell.dataset.layout = currentConfig.layout;
     appShell.dataset.header = currentConfig.header;
     appShell.dataset.bottomNav = String(currentConfig.bottomNav);
-    headerEyebrow.textContent = currentConfig.eyebrow;
-    headerTitle.textContent = currentConfig.title;
+    sectionIcon.innerHTML = uiIcon(currentConfig.icon, "appHeaderSectionIconSvg");
     bottomNav.hidden = !currentConfig.bottomNav;
     viewport.scrollTop = 0;
     root.scrollTop = 0;
@@ -37,28 +43,27 @@ export function createShell() {
   }
 
   function renderHome() {
-    showScreenLoading(root, "Открываем путь…");
+    showScreenLoading(root, "");
   }
 
   function setBackVisible(visible) {
     backButton.classList.toggle("hidden", !visible);
+    sectionIcon.classList.toggle("hidden", visible);
   }
 
   function setCounter(text = "") {
     counter.textContent = text;
-    counter.classList.toggle("hidden", !text);
-    headerTitle.classList.toggle("hidden", Boolean(text) && currentConfig.header === "session");
+    syncSessionStatus();
   }
 
   function clearMode() {
     mode.textContent = "";
-    mode.classList.add("hidden");
-    headerTitle.classList.remove("hidden");
+    syncSessionStatus();
   }
 
   function setMode(text = "") {
     mode.textContent = text;
-    mode.classList.toggle("hidden", !text);
+    syncSessionStatus();
   }
 
   function setActiveNav(route = "") {
@@ -78,7 +83,7 @@ export function createShell() {
     });
   }
 
-  function beginNavigation(route, message = "Открываем экран…") {
+  function beginNavigation(route, message = "") {
     configureScreen(route);
     showScreenLoading(root, message);
   }

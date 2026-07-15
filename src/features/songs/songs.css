@@ -3,7 +3,7 @@
 [data-feature="songs"] .expandSearchControl{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:40px}
 [data-feature="songs"] .expandSearchInput{width:0;min-height:40px;opacity:0;padding:0;border-width:0;transition:width var(--duration-normal),opacity var(--duration-fast),padding var(--duration-normal),border-width var(--duration-normal)}
 [data-feature="songs"] .expandSearchControl.open .expandSearchInput{width:min(220px,42vw);opacity:1;padding-inline:12px;border-width:1px}
-[data-feature="songs"] .expandSearchToggle{width:40px;height:40px;flex:0 0 40px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-0);color:var(--text-1);display:grid;place-items:center}
+[data-feature="songs"] .expandSearchToggle{width:40px;height:40px;flex:0 0 40px;border:0;border-radius:50%;background:transparent;color:var(--text-1);display:grid;place-items:center}
 [data-feature="songs"] .expandSearchToggle svg{width:21px;height:21px;fill:currentColor}
 [data-feature="songs"] .searchModeList{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
 [data-feature="songs"] .searchModeItem{position:relative}
@@ -11,7 +11,7 @@
 [data-feature="songs"] .searchModeItem span{display:block;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius-pill);font-size:12px;background:var(--surface-0)}
 [data-feature="songs"] .searchModeItem.active span,[data-feature="songs"] .searchModeItem input:checked+span{border-color:var(--accent);background:var(--accent-soft)}
 [data-feature="songs"] .searchModeDot{display:none}
-[data-feature="songs"] .songPlayerRoot{margin-bottom:16px;padding:13px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-panel-mid)}
+[data-feature="songs"] .songPlayerRoot{margin-bottom:13px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
 [data-feature="songs"] .mediaPlayer{display:grid;grid-template-columns:44px auto minmax(0,1fr) auto;gap:9px;align-items:center}
 [data-feature="songs"] .mediaPlayButton{width:44px;height:44px;border:1px solid var(--accent-strong);border-radius:50%;background:var(--accent);color:var(--text-inverse);display:grid;place-items:center}
 [data-feature="songs"] .mediaPlayButton svg{width:22px;height:22px;fill:currentColor}
@@ -19,8 +19,8 @@
 [data-feature="songs"] .mediaProgress{min-height:0;height:4px;padding:0;border:0;border-radius:var(--radius-pill);accent-color:var(--accent);background:linear-gradient(90deg,var(--accent) var(--media-progress,0%),var(--line) var(--media-progress,0%))}
 [data-feature="songs"] .mediaError{margin-top:8px;color:var(--danger);font-size:12px}
 [data-feature="songs"] .songLyrics{display:flex;flex-direction:column;gap:18px;padding-bottom:20px}
-[data-feature="songs"] .songStanza{padding:13px;border-left:3px solid var(--line);background:var(--surface-white-20)}
-[data-feature="songs"] .songStanzaChorus{border-left-color:var(--accent);background:var(--accent-soft)}
+[data-feature="songs"] .songStanza{padding:10px 2px;border-left:2px solid var(--line)}
+[data-feature="songs"] .songStanzaChorus{border-left-color:var(--accent)}
 [data-feature="songs"] .songLinePair{margin-top:10px}
 [data-feature="songs"] .songLinePair:first-child{margin-top:0}
 [data-feature="songs"] .songOriginalLine{font-size:17px;font-weight:720;line-height:1.55}

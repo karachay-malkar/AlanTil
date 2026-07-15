@@ -6,6 +6,8 @@ export const PATH_CONFIG = Object.freeze({
   milestoneRequiredAccuracy: 90,
   summitUnlockAscentPercent: 60,
   routeBackground: "first-gorge",
+  defaultStoryType: "ascent",
+  storyColumn: "story_type",
   storyOrder: ["ascent", "summit", "trails"],
   storyLabels: Object.freeze({
     ascent: "Восхождение",

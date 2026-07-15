@@ -17,9 +17,15 @@ async function fetchWords() {
   const csvUrl = normalizeToCsvUrl(WORDS_SHEET_URL);
   if (!csvUrl || !csvUrl.startsWith("http")) return [];
   requestCount += 1;
-  const response = await fetch(csvUrl, { cache: "no-store" });
-  if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
-  return parseCsv(await response.text());
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(csvUrl, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
+    return parseCsv(await response.text());
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
 }
 
 export async function getWords() {
@@ -28,10 +34,6 @@ export async function getWords() {
 
   loadingPromise = (async () => {
     const cached = normalizeCollection(readJson(WORDS_CACHE_KEY, null));
-    if (cached.length) {
-      words = cached;
-      return words;
-    }
 
     try {
       const remoteWords = normalizeCollection(await fetchWords());
@@ -42,6 +44,11 @@ export async function getWords() {
       }
     } catch (error) {
       console.warn("word-repository: fetch failed", error);
+    }
+
+    if (cached.length) {
+      words = cached;
+      return words;
     }
 
     words = normalizeCollection(WORDS_FALLBACK);

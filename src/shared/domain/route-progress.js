@@ -47,14 +47,37 @@ export function allStoryProgress(route) {
 
 export function dictionaryPathProgress(route) {
   const progress = allStoryProgress(route);
-  const easy = progress.ascent.difficulty.easy?.wordPercent || 0;
-  const medium = progress.ascent.difficulty.medium?.wordPercent || 0;
-  const hard = progress.summit.difficulty.hard?.wordPercent || 0;
-  const base = ((easy * PATH_CONFIG.mainPathWeights.easy)
-    + (medium * PATH_CONFIG.mainPathWeights.medium)
-    + (hard * PATH_CONFIG.mainPathWeights.hard)) / 100;
-  const rare = progress.summit.difficulty.rare?.wordPercent || 0;
-  return { percent: Math.round(base), rarePercent: rare, stories: progress };
+  const stations = Object.values(route?.stories || {}).flatMap((story) => story.stations || []);
+
+  function difficultyWordProgress(kind) {
+    const selected = stations.filter((station) => (station.difficulty || "thematic") === kind);
+    const wordsTotal = selected.reduce((sum, station) => sum + (station.words?.length || 0), 0);
+    const wordsMastered = selected
+      .filter((station) => effectiveStoredStatus(station) === "mastered")
+      .reduce((sum, station) => sum + (station.words?.length || 0), 0);
+    return { wordsTotal, wordsMastered, percent: percent(wordsMastered, wordsTotal) };
+  }
+
+  const easyEntry = difficultyWordProgress("easy");
+  const mediumEntry = difficultyWordProgress("medium");
+  const hardEntry = difficultyWordProgress("hard");
+  const weightedWords = easyEntry.wordsTotal + mediumEntry.wordsTotal + hardEntry.wordsTotal;
+  let overallPercent = 0;
+
+  if (weightedWords > 0) {
+    overallPercent = ((easyEntry.percent * PATH_CONFIG.mainPathWeights.easy)
+      + (mediumEntry.percent * PATH_CONFIG.mainPathWeights.medium)
+      + (hardEntry.percent * PATH_CONFIG.mainPathWeights.hard)) / 100;
+  } else {
+    const wordsTotal = stations.reduce((sum, station) => sum + (station.words?.length || 0), 0);
+    const wordsMastered = stations
+      .filter((station) => effectiveStoredStatus(station) === "mastered")
+      .reduce((sum, station) => sum + (station.words?.length || 0), 0);
+    overallPercent = percent(wordsMastered, wordsTotal);
+  }
+
+  const rare = difficultyWordProgress("rare").percent;
+  return { percent: Math.round(overallPercent), rarePercent: rare, stories: progress };
 }
 
 function previousRequiredStation(story, station) {

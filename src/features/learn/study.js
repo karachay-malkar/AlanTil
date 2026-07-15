@@ -8,7 +8,7 @@ import {
   persistSessionRuntime,
 } from "../../shared/progress/session-builders.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { STAR_ICON_SVG } from "../../shared/ui/icons.js";
+import { uiIcon } from "../../shared/ui/icons.js";
 import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js";
 import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js";
 import { captureLearnActionSnapshot, cloneLearnValue, restoreLearnActionSnapshot } from "./action-history.js";
@@ -163,10 +163,10 @@ export function renderStudy(context, words, signal, params = {}) {
         </div>
       </div>
       <div class="studyBottomPanel">
-        <div class="buttons"><button id="btnNo" class="btn secondary" type="button">❌ Не знаю</button><button id="btnYes" class="btn primary" type="button">✅ Знаю</button></div>
+        <div class="buttons"><button id="btnNo" class="btn secondary" type="button"><span class="btnIcon">${uiIcon("wrong")}</span><span class="btnLabel">Не знаю</span></button><button id="btnYes" class="btn primary" type="button"><span class="btnIcon">${uiIcon("correct")}</span><span class="btnLabel">Знаю</span></button></div>
         <div class="buttons subActions">
-          <button id="btnUndo" class="btn neutral" type="button" aria-label="Назад"><span class="btnIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a6 6 0 0 1-6 6H6v2h6a8 8 0 0 0 0-16z"></path></svg></span><span class="btnLabel">Назад</span></button>
-          <button id="btnFavAction" class="btn neutral favAction" type="button" aria-label="Отметить слово"><span class="btnIcon">${STAR_ICON_SVG}</span><span class="btnLabel" id="favActionLabel">Отметить слово</span></button>
+          <button id="btnUndo" class="btn neutral" type="button" aria-label="Назад"><span class="btnIcon">${uiIcon("undo2")}</span><span class="btnLabel">Назад</span></button>
+          <button id="btnFavAction" class="btn neutral favAction" type="button" aria-label="Отметить слово"><span class="btnIcon">${uiIcon("starLine")}</span><span class="btnLabel" id="favActionLabel">Отметить слово</span></button>
         </div>
       </div>
     </section>`;

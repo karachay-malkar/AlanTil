@@ -7,7 +7,8 @@ import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
-import { getHiddenSet, learnState, setHiddenSet } from "./state.js";
+import { learnState } from "./state.js";
+import { renderSetPreparation } from "./set-preparation.js";
 
 function dictTitle(code) {
   return DICT_TITLES[code] || code;
@@ -223,73 +224,24 @@ export function renderSetMenu(context, words, signal) {
     return;
   }
 
-  learnState.menuHidden = getHiddenSet(currentDict, currentSection, currentSet);
-  const allWords = () => currentDict === "__fav__"
+  const setWords = currentDict === "__fav__"
     ? words.filter((word) => wordFavorites.has(word.id))
     : wordsForSet(words, currentDict, currentSection, currentSet);
+  const title = currentDict === "__fav__"
+    ? "Избранное"
+    : (typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet));
 
-  const title = currentDict === "__fav__" ? "⭐ Избранное" : (typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet));
-  context.root.innerHTML = panel({
-    title: escapeHtml(title),
-    body: `
-      <div class="hintText" id="setMenuInfo"></div>
-      <div class="row"><button id="btnModeKb" class="btn primary" type="button">АЛАН → РУС</button><button id="btnModeRu" class="btn primary" type="button">РУС → АЛАН</button></div>
-      <div class="row"><button id="btnSetShowAll" class="btn" type="button">Показать все</button><button id="btnSetHideAll" class="btn" type="button">Скрыть все</button></div>
-      <div id="setWordsList" class="contentList"></div>`,
+  renderSetPreparation(context, {
+    title,
+    subtitle: currentDict === "__fav__" ? "" : sectionTitle(currentSection),
+    words: setWords,
+    dictionaryId: currentDict,
+    sectionId: currentSection,
+    setId: currentSet,
+    signal,
+    favoritesOnly: currentDict === "__fav__",
+    onStart(mode) {
+      context.router.navigate("learn.study", { mode });
+    },
   });
-
-  const info = context.root.querySelector("#setMenuInfo");
-  const list = context.root.querySelector("#setWordsList");
-
-  function updateInfo() {
-    const all = allWords();
-    const active = all.filter((word) => !learnState.menuHidden.has(word.id));
-    info.textContent = `Слов в сете: ${all.length} • В сессии: ${active.length}`;
-  }
-
-  function draw() {
-    const all = allWords();
-    list.innerHTML = all.map((word) => renderContentListRow({
-      id: word.id,
-      rowAttributes: `data-word-row="${escapeHtml(word.id)}"`,
-      leadingHtml: `<input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="Добавить слово в сессию" />`,
-      primary: word.word,
-      secondary: word.trans,
-      trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
-    })).join("");
-
-    list.querySelectorAll("[data-word-row]").forEach((row) => {
-      const id = row.dataset.wordRow;
-      row.querySelector(".contentListCheckbox").addEventListener("change", (event) => {
-        if (event.target.checked) learnState.menuHidden.delete(id);
-        else learnState.menuHidden.add(id);
-        setHiddenSet(currentDict, currentSection, currentSet, learnState.menuHidden);
-        updateInfo();
-      }, { signal });
-    });
-
-    wireStars(list, new Map(all.map((word) => [word.id, word])), (_word, on) => {
-      if (currentDict === "__fav__" && !on) draw();
-      updateInfo();
-    });
-  }
-
-  context.root.querySelector("#btnSetShowAll").addEventListener("click", () => {
-    learnState.menuHidden = new Set();
-    setHiddenSet(currentDict, currentSection, currentSet, learnState.menuHidden);
-    draw();
-    updateInfo();
-  }, { signal });
-
-  context.root.querySelector("#btnSetHideAll").addEventListener("click", () => {
-    learnState.menuHidden = new Set(allWords().map((word) => word.id));
-    setHiddenSet(currentDict, currentSection, currentSet, learnState.menuHidden);
-    draw();
-    updateInfo();
-  }, { signal });
-
-  context.root.querySelector("#btnModeKb").addEventListener("click", () => context.router.navigate("learn.study", { mode: "kb" }), { signal });
-  context.root.querySelector("#btnModeRu").addEventListener("click", () => context.router.navigate("learn.study", { mode: "ru" }), { signal });
-  draw();
-  updateInfo();
 }

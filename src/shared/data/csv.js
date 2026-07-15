@@ -90,7 +90,7 @@ export function parseCsv(text) {
       catalog_id: has("catalog_id") ? row.catalog_id : "",
       group_id: has("group_id") ? row.group_id : "",
       set_id: has("set_id") ? row.set_id : "",
-      story_type: has("story_type") ? row.story_type : "",
+      story_type: has("story_type") ? row.story_type : (has("story") ? row.story : (has("ветка") ? row["ветка"] : (has("история") ? row["история"] : ""))),
       order_override: has("order_override") ? row.order_override : 0,
       background_segment: has("background_segment") ? row.background_segment : "",
       position_x: has("position_x") ? row.position_x : "",

@@ -13,7 +13,7 @@
 [data-feature="account"] .accountField input.isError{border-color:var(--danger)}
 [data-feature="account"] .accountAction{width:100%;flex:0 0 auto}
 [data-feature="account"] .authProviderList{display:flex;flex-direction:column;gap:10px;width:100%}
-[data-feature="account"] .authProviderButton{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 24px;align-items:center;gap:10px;background:var(--surface-paper)}
+[data-feature="account"] .authProviderButton{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 24px;align-items:center;gap:10px;background:transparent}
 [data-feature="account"] .authProviderButton::after{content:"";width:24px;height:1px}
 [data-feature="account"] .authProviderIcon{width:22px;height:22px;object-fit:contain}
 [data-feature="account"] .authProviderLabel{text-align:center;line-height:1.25}
@@ -22,11 +22,11 @@
 [data-feature="account"] .authEmailToggle{display:flex;align-items:center;justify-content:center;gap:8px}
 [data-feature="account"] .authEmailSection{display:none}
 [data-feature="account"] .authEmailSection.isOpen{display:block}
-[data-feature="account"] .accountMessage{padding:11px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);font-size:13px;line-height:1.4}
+[data-feature="account"] .accountMessage{padding:9px 2px;border-radius:0;border:0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.4}
 [data-feature="account"] .accountMessageSuccess{background:var(--success-soft);border-color:var(--success-border)}
 [data-feature="account"] .accountMessageError{background:var(--danger-soft);border-color:var(--danger-border);color:var(--danger-strong)}
-[data-feature="account"] .accountFacts{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface-paper-soft)}
-[data-feature="account"] .accountFact{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,1.6fr);gap:12px;min-height:48px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--line-soft)}
+[data-feature="account"] .accountFacts{display:flex;flex-direction:column;border:0;overflow:hidden;background:transparent}
+[data-feature="account"] .accountFact{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,1.6fr);gap:12px;min-height:48px;padding:10px 2px;align-items:center;border-bottom:1px solid var(--line-soft)}
 [data-feature="account"] .accountFact:last-child{border-bottom:0}
 [data-feature="account"] .accountFact dt{color:var(--text-2)}
 [data-feature="account"] .accountFact dd{text-align:right;font-weight:720;overflow-wrap:anywhere}

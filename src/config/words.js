@@ -1,5 +1,5 @@
 export const WORDS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1X2tc9THUxj0bZOQDdycEFGl7xJMqjUBYe7MsESWIUXI/edit?usp=sharing";
-export const WORDS_CACHE_KEY = "fc_words_cache_v29";
+export const WORDS_CACHE_KEY = "fc_words_cache_v30";
 
 export const DICT_TITLES = Object.freeze({});
 export const SECTION_TITLES = Object.freeze({});
