@@ -1,0 +1,48 @@
+name: Publish AlanTil 13.5
+
+on:
+  push:
+    branches:
+      - upload-13.5
+    paths:
+      - .upload/READY
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout upload branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .upload/part-* | base64 --decode > /tmp/AlanTil-13.5.zip
+          rm -rf /tmp/AlanTil-13.5
+          mkdir -p /tmp/AlanTil-13.5
+          unzip -q /tmp/AlanTil-13.5.zip -d /tmp/AlanTil-13.5
+
+      - name: Create clean 13.5 branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "AlanTil Release Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --detach f1f86551d701c5f6fd7f2ec3b80e35c75d9d8baa
+          git switch -C 13.5
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/AlanTil-13.5/. .
+          git add -A
+          git commit -m "13.5: dynamic stations and word-based progress"
+          git push origin 13.5 --force
+
+      - name: Remove temporary upload branch
+        if: success()
+        shell: bash
+        run: git push origin --delete upload-13.5 || true
