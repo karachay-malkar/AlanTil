@@ -7,9 +7,14 @@
 [data-feature="profile"] .profileStat{min-height:74px;padding:11px 2px;border-bottom:1px solid var(--line-soft)}
 [data-feature="profile"] .profileStat strong{display:block;font:760 21px/1.1 var(--font-terminal)}
 [data-feature="profile"] .profileStat span{display:block;margin-top:5px;color:var(--text-2);font-size:11px;line-height:1.3}
-[data-feature="profile"] .profileSection{margin-top:17px}.profileSectionTitle{margin:0 0 6px;font:650 10px/1.2 var(--font-terminal);letter-spacing:.05em;color:var(--text-2)}
-[data-feature="profile"] .storyRows{display:grid}.storyRow{padding:10px 2px;border:0;border-bottom:1px solid var(--line-soft);text-align:left}.storyRowHead{display:flex;justify-content:space-between;gap:12px;font-weight:720}.storyMiniBar{display:block;height:3px;margin-top:7px;background:var(--line-soft);overflow:hidden}.storyMiniBar span{display:block;height:100%;background:var(--accent)}
-[data-feature="profile"] .profileLinks{display:grid}.profileLink{min-height:44px;padding:9px 2px;border:0;border-bottom:1px solid var(--line-soft);text-align:left;font-weight:700}
+[data-feature="profile"] .profileSection{margin-top:17px}[data-feature="profile"] .profileSectionTitle{margin-bottom:7px}
+[data-feature="profile"] .storyRows{display:grid}
+[data-feature="profile"] .storyRow{display:grid;gap:7px;padding:10px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left}
+[data-feature="profile"] .storyRow:active{background:transparent;opacity:.68}
+[data-feature="profile"] .storyRowHead{display:flex;justify-content:space-between;gap:12px;font-weight:720}
+[data-feature="profile"] .storySegmentedProgress{justify-self:start}
+[data-feature="profile"] .profileLinks{display:grid}.profileLink{min-height:var(--control-h);padding:9px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left;font-weight:700}
+[data-feature="profile"] .profileLink:active{background:transparent;opacity:.68}
 [data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:6px}.problemWord{padding:5px 7px;border-bottom:1px solid var(--line);font-size:12px}
 [data-feature="profile"] .rewardGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 9px}.rewardCard{min-height:86px;padding:9px 5px;border:0;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font-size:10px;line-height:1.2}.rewardIcon{width:27px;height:27px;color:var(--text-2)}.rewardIcon svg{width:100%;height:100%;fill:currentColor}.rewardIcon svg [fill="none"]{fill:none}
 @media(max-width:360px){[data-feature="profile"] .profileGrid{grid-template-columns:1fr 1fr}[data-feature="profile"] .rewardGrid{grid-template-columns:repeat(2,1fr)}}

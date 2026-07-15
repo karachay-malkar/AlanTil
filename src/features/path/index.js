@@ -6,6 +6,9 @@ import { getStationProgress, markStationCardsCompleted, markStationStarted } fro
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js";
 import { awardReward } from "../../shared/progress/reward-store.js";
 import { escapeHtml } from "../../shared/ui/html.js";
+import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
+import { createRouteScale } from "../../shared/ui/route-scale.js";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
 import { renderSetPreparation } from "../learn/set-preparation.js";
 import { learnState } from "../learn/state.js";
 import { finalizeLearnSession, renderStudy } from "../learn/study.js";
@@ -20,14 +23,6 @@ function storyType(value) {
 
 function routeParams(station, route) {
   return stationPathParams(route, station);
-}
-
-function progressGauge(value) {
-  const percent = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
-  const total = 14;
-  const filled = Math.round((percent / 100) * total);
-  const bar = `${"—".repeat(filled)}${" ".repeat(total - filled)}`;
-  return `<span class="pathProgressGauge" aria-label="${percent}%">[${bar}]</span><span class="pathProgressPercent">${percent}%</span>`;
 }
 
 function stateLabel(status) {
@@ -62,58 +57,53 @@ function stationButton(station, route, index) {
     </button>`;
 }
 
+function routeScrollKey(story) {
+  return `route_scroll_${story}`;
+}
+
+function catalogSection(catalog, route, stationIndex) {
+  const stations = catalog.groups.flatMap((group) => group.stations);
+  return `<section class="routeCatalog" data-route-catalog="${escapeHtml(catalog.catalogId)}">
+    ${renderBracketHeading(catalog.name, { tag: "h2", className: "routeCatalogHeading" })}
+    <div class="routeCatalogStations">
+      ${stations.map((station) => stationButton(station, route, stationIndex.get(station.key))).join("")}
+    </div>
+  </section>`;
+}
+
 function renderRoute(context, route, activeStory) {
   const story = route.stories[activeStory];
   const progress = allStoryProgress(route)[activeStory];
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
+  const reversedCatalogs = [...story.catalogs].reverse();
 
   context.shell.setCounter("");
   context.root.innerHTML = `
     <section class="pathView">
       <div class="pathStickyControls">
         <div class="storyTabs" role="tablist" aria-label="Ветка пути">
-          ${PATH_CONFIG.storyOrder.map((type) => `
-            <button
-              class="storyTab ${type === activeStory ? "active" : ""}"
-              type="button"
-              role="tab"
-              aria-selected="${type === activeStory ? "true" : "false"}"
-              data-story="${type}"
-            >${type === activeStory ? `<span aria-hidden="true">[</span>` : ""}${escapeHtml(PATH_CONFIG.storyLabels[type])}${type === activeStory ? `<span aria-hidden="true">]</span>` : ""}</button>`).join("")}
+          ${PATH_CONFIG.storyOrder.map((type) => `<button class="storyTab ${type === activeStory ? "active" : ""}" type="button" role="tab" aria-selected="${type === activeStory}" data-story="${type}">${escapeHtml(PATH_CONFIG.storyLabels[type])}</button>`).join("")}
         </div>
-        <div class="storyProgress">${progressGauge(progress.percent)}<span class="pathProgressCount">${progress.masteredStations}/${progress.totalStations}</span></div>
+        <div class="storyProgress">
+          ${renderSegmentedProgress({ value: progress.percent, segments: 10, label: `Прогресс ${PATH_CONFIG.storyLabels[activeStory]}` })}
+          <span class="pathProgressPercent">${progress.percent}%</span>
+          <span class="pathProgressCount">${progress.masteredStations}/${progress.totalStations}</span>
+        </div>
       </div>
-
       <div class="pathMapViewport">
         <div class="routeBackdrop" aria-hidden="true"></div>
         <div class="routeMap" data-story-map="${activeStory}">
-          ${story.catalogs.map((catalog) => `
-            <div class="routeCatalog">
-              ${catalog.groups.map((group) => {
-                const complete = group.stations.every((station) => computedStationStatus(route, station) === "mastered");
-                return `<section class="routeGroup" data-group-key="${escapeHtml(`${catalog.catalogId}::${group.groupId}`)}">
-                  <div class="milestoneNode ${complete ? "complete" : ""}"><span>[ ${escapeHtml(group.name)} ]</span></div>
-                  ${group.stations.map((station) => stationButton(station, route, stationIndex.get(station.key))).join("")}
-                </section>`;
-              }).join("")}
-            </div>`).join("")}
+          ${reversedCatalogs.map((catalog) => catalogSection(catalog, route, stationIndex)).join("")}
         </div>
       </div>
-
-      <nav class="routeNavigator" aria-label="Позиция на маршруте">
-        ${story.groups.flatMap((group) => [
-          `<button class="navDot group ${group.stations.every((station) => computedStationStatus(route, station) === "mastered") ? "mastered" : ""}" type="button" data-scroll-group="${escapeHtml(`${group.catalogId}::${group.groupId}`)}" aria-label="${escapeHtml(group.name)}"></button>`,
-          ...group.stations.map((station) => {
-            const status = computedStationStatus(route, station);
-            return `<button class="navDot ${status}" type="button" data-scroll-station="${escapeHtml(station.key)}" aria-label="${escapeHtml(station.name)}"></button>`;
-          }),
-        ]).join("")}
-      </nav>
+      <nav class="routeScale" aria-label="Рубежи маршрута"></nav>
     </section>`;
 
   context.root.querySelectorAll("[data-story]").forEach((button) => {
     button.addEventListener("click", () => {
       const next = storyType(button.dataset.story);
+      const viewport = context.root.querySelector(".pathMapViewport");
+      updateRouteSettings({ [routeScrollKey(activeStory)]: viewport?.scrollTop || 0 }, { queue: false });
       updateRouteSettings({ active_story: next });
       context.router.navigate("path.home", { storyType: next });
     }, { signal: controller.signal });
@@ -123,37 +113,22 @@ function renderRoute(context, route, activeStory) {
     button.addEventListener("click", () => {
       const station = route.byKey.get(button.dataset.stationKey);
       if (!station || computedStationStatus(route, station) === "locked") return;
+      const viewport = context.root.querySelector(".pathMapViewport");
+      updateRouteSettings({ [routeScrollKey(activeStory)]: viewport?.scrollTop || 0 }, { queue: false });
       context.router.navigate("path.station", routeParams(station, route));
     }, { signal: controller.signal });
   });
 
-  const mapViewport = context.root.querySelector(".pathMapViewport");
-
-  context.root.querySelectorAll("[data-scroll-station]").forEach((button) => {
-    button.addEventListener("click", () => {
-      context.root.querySelector(`[data-station-key="${CSS.escape(button.dataset.scrollStation)}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, { signal: controller.signal });
+  const viewport = context.root.querySelector(".pathMapViewport");
+  createRouteScale({ root: context.root, viewport, catalogs: reversedCatalogs, signal: controller.signal });
+  requestAnimationFrame(() => {
+    const settings = getRouteSettings();
+    const stored = Number(settings[routeScrollKey(activeStory)]);
+    viewport.scrollTop = Number.isFinite(stored) && stored > 0 ? Math.min(stored, viewport.scrollHeight) : viewport.scrollHeight;
   });
-
-  context.root.querySelectorAll("[data-scroll-group]").forEach((button) => {
-    button.addEventListener("click", () => {
-      context.root.querySelector(`[data-group-key="${CSS.escape(button.dataset.scrollGroup)}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, { signal: controller.signal });
-  });
-
-  if ("IntersectionObserver" in window && mapViewport) {
-    const stationObserver = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-      if (!visible) return;
-      context.root.querySelectorAll(".navDot.current").forEach((dot) => dot.classList.remove("current"));
-      context.root.querySelector(`[data-scroll-station="${CSS.escape(visible.target.dataset.stationKey)}"]`)?.classList.add("current");
-    }, { root: mapViewport, rootMargin: "-34% 0px -34% 0px", threshold: [0.2, 0.55] });
-
-    context.root.querySelectorAll("[data-station-key]").forEach((station) => stationObserver.observe(station));
-    controller.signal.addEventListener("abort", () => stationObserver.disconnect(), { once: true });
-  }
+  viewport?.addEventListener("scroll", () => {
+    updateRouteSettings({ [routeScrollKey(activeStory)]: viewport.scrollTop }, { queue: false });
+  }, { signal: controller.signal, passive: true });
 }
 
 function groupLabel(route, station) {

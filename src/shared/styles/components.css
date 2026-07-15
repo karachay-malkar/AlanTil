@@ -91,7 +91,7 @@ button.contentListMain{cursor:pointer}
 
 .starBtn{appearance:none;width:38px;height:38px;padding:8px;border:0;border-radius:50%;background:transparent;color:var(--text-3);display:grid;place-items:center}
 .starBtn svg{width:23px;height:23px;fill:currentColor}
-.starBtn.on{color:var(--favorite-active);background:var(--favorite-active-soft)}
+.starBtn.on{color:var(--favorite-active);background:transparent}
 
 .secBlock{margin-top:18px}
 .secBlock:first-child{margin-top:0}
@@ -112,7 +112,7 @@ button.contentListMain{cursor:pointer}
 .testLimitRadios{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .radioOpt{position:relative;display:block}
 .radioOpt input{position:absolute;opacity:0;pointer-events:none}
-.radioOpt span{min-height:42px;display:grid;place-items:center;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-0);font-weight:760}
+.radioOpt span{min-height:var(--control-h);display:grid;place-items:center;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-0);font-weight:760}
 .radioOpt input:checked+span{border-color:var(--accent-strong);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 
 .groups{width:100%;display:flex;flex-direction:column;gap:10px}
@@ -152,3 +152,16 @@ button.contentListMain{cursor:pointer}
 .infoModalTitle{text-align:left;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
 .infoModalContent{min-height:0;overflow:auto;padding:14px 0}
 body.modal-open{overflow:hidden}
+
+button,a,[role="button"],label{-webkit-tap-highlight-color:transparent}
+button:active,a:active,[role="button"]:active,label:active{background-color:transparent}
+.bracketHeading{display:flex;align-items:center;gap:.42em;margin:0;color:var(--text-2);font:650 11px/1.25 var(--font-terminal);letter-spacing:.035em}
+.bracketHeading>span:first-child,.bracketHeading>span:last-child{color:var(--accent-strong)}
+.segmentedProgress{display:inline-grid;grid-auto-flow:column;grid-auto-columns:8px;gap:4px;align-items:center;vertical-align:middle}
+.segmentedProgressSegment{display:block;width:8px;height:2px;border-radius:999px;background:color-mix(in srgb,var(--text-1) 18%,transparent)}
+.segmentedProgressSegment.isFilled{background:var(--text-1)}
+.textAction{min-height:var(--control-h-text);padding:0;border:0;background:transparent;color:var(--text-2)}
+.textAction:active{opacity:.68;transform:translateY(1px)}
+.starBtn{width:var(--control-h-compact);height:var(--control-h-compact);background:transparent!important}
+.starBtn.on{color:var(--favorite-active);background:transparent!important}
+.starBtn.on svg{fill:currentColor}
