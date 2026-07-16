@@ -1,17 +1,17 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.6";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.6.1";
 
 const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.6"),
-  path: () => import("../features/path/index.js?v=13.6"),
-  profile: () => import("../features/profile/index.js?v=13.6"),
-  learn: () => import("../features/learn/index.js?v=13.6"),
-  test: () => import("../features/test/index.js?v=13.6"),
-  match: () => import("../features/match/index.js?v=13.6"),
-  songs: () => import("../features/songs/index.js?v=13.6"),
-  account: () => import("../features/account/index.js?v=13.6"),
-  settings: () => import("../features/settings/index.js?v=13.6"),
+  practice: () => import("../features/practice/index.js?v=13.6.1"),
+  path: () => import("../features/path/index.js?v=13.6.1"),
+  profile: () => import("../features/profile/index.js?v=13.6.1"),
+  learn: () => import("../features/learn/index.js?v=13.6.1"),
+  test: () => import("../features/test/index.js?v=13.6.1"),
+  match: () => import("../features/match/index.js?v=13.6.1"),
+  songs: () => import("../features/songs/index.js?v=13.6.1"),
+  account: () => import("../features/account/index.js?v=13.6.1"),
+  settings: () => import("../features/settings/index.js?v=13.6.1"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -209,8 +209,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.6&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.6&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.6.1&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.6.1&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }

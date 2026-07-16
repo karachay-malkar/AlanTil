@@ -58,6 +58,23 @@ function storyProgressRows(route, path) {
   </div>`;
 }
 
+async function loadStoryProgress() {
+  try {
+    const words = await getWords();
+    const route = buildLearningRoute(words, { stationSize: getStationSize() });
+    return { route, path: dictionaryPathProgress(route) };
+  } catch (error) {
+    console.warn("profile: story progress is temporarily unavailable", error);
+    return null;
+  }
+}
+
+function unavailableStoryProgress() {
+  return `<div class="profileFutureNote" role="status">
+    Прогресс временно недоступен. Аватар и остальные разделы профиля продолжают работать.
+  </div>`;
+}
+
 function lockedStatus() {
   return `<div class="profileLockedState">
     <div class="profileAvatarFrame isLocked">
@@ -92,9 +109,7 @@ async function renderStatus(context, auth, profile) {
   } else if (!profile.avatar_gender) {
     body = genderSelection();
   } else {
-    const words = await getWords();
-    const route = buildLearningRoute(words, { stationSize: getStationSize() });
-    const path = dictionaryPathProgress(route);
+    const progress = await loadStoryProgress();
     body = `<div class="profileStatusContent">
       <div class="profileAvatarFrame" data-avatar-gender="${escapeHtml(profile.avatar_gender)}">
         <div class="profileAvatarFigure">${avatarFigure(profile.avatar_gender)}</div>
@@ -103,7 +118,7 @@ async function renderStatus(context, auth, profile) {
       <div class="profileNickname">${escapeHtml(profile.nickname)}</div>
       <section class="profileStatusSection profileStorySection">
         ${renderBracketHeading("Прогресс по историям", { className: "profileSectionTitle" })}
-        ${storyProgressRows(route, path)}
+        ${progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}
       </section>
       <section class="profileStatusSection profileFutureSection">
         ${renderBracketHeading("Артефакты", { className: "profileSectionTitle" })}
@@ -138,32 +153,41 @@ function renderSkills(context, auth, profile) {
 }
 
 async function renderStatistics(context) {
-  const words = await getWords();
-  const route = buildLearningRoute(words, { stationSize: getStationSize() });
-  const path = dictionaryPathProgress(route);
-  const mastery = allWordMasterySummary(words);
-  const activity = activitySummary();
-  const difficult = problemWordRows(words, 12);
-  const completedDictionaries = route.storyOrder.reduce((sum, type) => sum + Number(path.stories[type]?.completedCatalogs || 0), 0);
+  let body = "";
+  try {
+    const words = await getWords();
+    const route = buildLearningRoute(words, { stationSize: getStationSize() });
+    const path = dictionaryPathProgress(route);
+    const mastery = allWordMasterySummary(words);
+    const activity = activitySummary();
+    const difficult = problemWordRows(words, 12);
+    const completedDictionaries = route.storyOrder.reduce((sum, type) => sum + Number(path.stories[type]?.completedCatalogs || 0), 0);
+    body = `<section class="profileStatusSection">
+      ${renderBracketHeading("Сводка эффективности", { className: "profileSectionTitle" })}
+      <div class="profileGrid">
+        <div class="profileStat"><strong>${mastery.mastered}</strong><span>освоенных слов</span></div>
+        <div class="profileStat"><strong>${completedDictionaries}</strong><span>завершённых словарей</span></div>
+        <div class="profileStat"><strong>${durationLabel(activity.activeSeconds)}</strong><span>активного времени</span></div>
+        <div class="profileStat"><strong>${activity.learnSessions}</strong><span>учебных сессий</span></div>
+        <div class="profileStat"><strong>${activity.accuracy}%</strong><span>точность тестов</span></div>
+        <div class="profileStat"><strong>${mastery.review}</strong><span>слов к повторению</span></div>
+      </div>
+    </section>
+    <section class="profileStatusSection">
+      ${renderBracketHeading("Проблемные слова", { className: "profileSectionTitle" })}
+      <div class="problemWords">${difficult.length ? difficult.map(({ word, unknownRate }) => `<span class="problemWord"><strong>${escapeHtml(word.word)}</strong><small>${unknownRate}%</small></span>`).join("") : `<span class="profileFutureNote">Пока недостаточно данных.</span>`}</div>
+    </section>`;
+  } catch (error) {
+    console.warn("profile: statistics are temporarily unavailable", error);
+    body = `<div class="profileLockedState">
+      <strong>Статистика временно недоступна</strong>
+      <span>Профиль продолжает работать. Попробуйте открыть статистику позже.</span>
+    </div>`;
+  }
+
   context.root.innerHTML = `<section class="view screen profileView profileStatisticsView">
     ${renderProfileNavigation("statistics")}
-    <div class="profileScroll">
-      <section class="profileStatusSection">
-        ${renderBracketHeading("Сводка эффективности", { className: "profileSectionTitle" })}
-        <div class="profileGrid">
-          <div class="profileStat"><strong>${mastery.mastered}</strong><span>освоенных слов</span></div>
-          <div class="profileStat"><strong>${completedDictionaries}</strong><span>завершённых словарей</span></div>
-          <div class="profileStat"><strong>${durationLabel(activity.activeSeconds)}</strong><span>активного времени</span></div>
-          <div class="profileStat"><strong>${activity.learnSessions}</strong><span>учебных сессий</span></div>
-          <div class="profileStat"><strong>${activity.accuracy}%</strong><span>точность тестов</span></div>
-          <div class="profileStat"><strong>${mastery.review}</strong><span>слов к повторению</span></div>
-        </div>
-      </section>
-      <section class="profileStatusSection">
-        ${renderBracketHeading("Проблемные слова", { className: "profileSectionTitle" })}
-        <div class="problemWords">${difficult.length ? difficult.map(({ word, unknownRate }) => `<span class="problemWord"><strong>${escapeHtml(word.word)}</strong><small>${unknownRate}%</small></span>`).join("") : `<span class="profileFutureNote">Пока недостаточно данных.</span>`}</div>
-      </section>
-    </div>
+    <div class="profileScroll">${body}</div>
   </section>`;
 }
 

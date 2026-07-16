@@ -1,4 +1,4 @@
-# AlanTil 13.6 — настройка Supabase Auth и словаря
+# AlanTil 13.6.1 — настройка Supabase Auth и словаря
 
 ## 1. Создание таблиц и политик
 
@@ -6,7 +6,9 @@
 2. Перейдите в **SQL Editor**.
 3. Откройте файл `supabase/schema.sql` из проекта.
 4. Выполните файл целиком.
-5. Дождитесь успешного выполнения и обновления кэша схемы PostgREST.
+5. После загрузки нормализованных таблиц `content_*` выполните
+   `supabase/migrations/13.6.1_dictionary_view_path_progress.sql`.
+6. Дождитесь успешного выполнения и обновления кэша схемы PostgREST.
 
 Скрипт создаёт:
 
@@ -19,6 +21,8 @@
 - детализацию слов и ошибочных сопоставлений;
 - накопительную таблицу `user_word_progress`;
 - атомарные функции `save_learn_session`, `save_test_session`, `save_match_session`;
+- совместимое представление словаря `content_words_ru`;
+- прогресс станций, тестов пути, наград и настроек маршрута;
 - Row Level Security: пользователь видит только собственные данные;
 - `blocked_emails` и Auth Hook для запрета новых аккаунтов.
 
@@ -158,6 +162,9 @@ select to_regclass('public.learn_sessions');
 select to_regclass('public.test_sessions');
 select to_regclass('public.match_sessions');
 select to_regclass('public.user_word_progress');
+select to_regclass('public.content_words_ru');
+select to_regclass('public.user_station_progress');
+select to_regclass('public.station_test_sessions');
 select to_regprocedure('public.save_learn_session(jsonb)');
 select to_regprocedure('public.save_test_session(jsonb)');
 select to_regprocedure('public.save_match_session(jsonb)');

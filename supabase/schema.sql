@@ -1,4 +1,4 @@
--- AlanTil 13.6
+-- AlanTil 13.6.1
 -- Run this file in Supabase Dashboard -> SQL Editor.
 -- It is safe to run repeatedly.
 
@@ -816,7 +816,7 @@ notify pgrst, 'reload schema';
 -- delete from public.blocked_emails where email = 'example@gmail.com';
 
 
--- AlanTil 13.1 — station path, reviews and rewards.
+-- AlanTil 13.6.1 — station path, reviews and rewards.
 -- Safe to run after the 12.4 schema. Existing tables and RPC functions are not removed.
 
 create table if not exists public.user_station_progress (
@@ -825,7 +825,7 @@ create table if not exists public.user_station_progress (
   catalog_id text not null,
   group_id text not null,
   set_id text not null,
-  story_type text not null check (story_type in ('ascent', 'summit', 'trails')),
+  story_type text not null check (char_length(btrim(story_type)) > 0),
   status text not null default 'available' check (status in (
     'locked', 'available', 'studying', 'test_ready',
     'review_1_waiting', 'review_1_due',
@@ -857,7 +857,7 @@ create table if not exists public.station_test_sessions (
   catalog_id text not null,
   group_id text not null,
   set_id text not null,
-  story_type text not null check (story_type in ('ascent', 'summit', 'trails')),
+  story_type text not null check (char_length(btrim(story_type)) > 0),
   phase text not null check (phase in ('first_test', 'review_1', 'review_2', 'practice', 'milestone')),
   status text not null check (status in ('active', 'completed', 'interrupted')),
   questions_total integer not null default 0 check (questions_total >= 0),
@@ -887,6 +887,14 @@ create table if not exists public.station_test_session_words (
     on delete cascade
 );
 
+create index if not exists station_test_session_words_session_user_idx
+  on public.station_test_session_words (session_id, user_id);
+create index if not exists station_test_session_words_word_idx
+  on public.station_test_session_words (word_id);
+create index if not exists station_test_session_words_wrong_word_idx
+  on public.station_test_session_words (wrong_word_id)
+  where wrong_word_id is not null;
+
 create table if not exists public.user_rewards (
   user_id uuid not null references auth.users(id) on delete cascade,
   reward_id text not null,
@@ -899,8 +907,8 @@ create table if not exists public.user_rewards (
 
 create table if not exists public.user_route_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  selected_dictionary_id text not null default 'alantil-kb-ru',
-  active_story text not null default 'ascent' check (active_story in ('ascent', 'summit', 'trails')),
+  selected_dictionary_id text not null default '1',
+  active_story text not null default '1' check (char_length(btrim(active_story)) > 0),
   selected_background_route text not null default 'first-gorge',
   updated_at timestamptz not null default now()
 );
@@ -926,32 +934,32 @@ grant select, insert, update, delete on public.user_route_settings to authentica
 drop policy if exists user_station_progress_own on public.user_station_progress;
 create policy user_station_progress_own on public.user_station_progress
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists station_test_sessions_own on public.station_test_sessions;
 create policy station_test_sessions_own on public.station_test_sessions
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists station_test_session_words_own on public.station_test_session_words;
 create policy station_test_session_words_own on public.station_test_session_words
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists user_rewards_own on public.user_rewards;
 create policy user_rewards_own on public.user_rewards
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists user_route_settings_own on public.user_route_settings;
 create policy user_route_settings_own on public.user_route_settings
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create or replace function public.save_station_test_session(payload jsonb)
 returns uuid
@@ -979,7 +987,7 @@ begin
     coalesce(payload->>'catalog_id', ''),
     coalesce(payload->>'group_id', ''),
     coalesce(payload->>'set_id', ''),
-    coalesce(payload->>'story_type', 'ascent'),
+    coalesce(nullif(payload->>'story_type', ''), '1'),
     coalesce(payload->>'phase', 'first_test'),
     coalesce(payload->>'status', 'completed'),
     greatest(0, coalesce((payload->>'questions_total')::integer, 0)),

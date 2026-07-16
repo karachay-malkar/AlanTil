@@ -10,7 +10,7 @@ import { escapeHtml } from "../../shared/ui/html.js";
 import { renderSectionMenu } from "../../shared/ui/list.js";
 import { panel } from "../../shared/ui/panel.js";
 
-const SETTINGS_ASSET_VERSION = "13.6";
+const SETTINGS_ASSET_VERSION = "13.6.1";
 let controller = null;
 
 async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
