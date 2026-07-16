@@ -13,6 +13,8 @@ const SCREENS = Object.freeze({
 
   "practice.home": { layout: "root", header: "minimal", bottomNav: true, icon: "dumbbell" },
   "profile.home": { layout: "root", header: "minimal", bottomNav: true, icon: "userRound" },
+  "profile.skills": { layout: "root", header: "minimal", bottomNav: true, icon: "userRound" },
+  "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, icon: "userRound" },
 
   "learn.catalog": { layout: "detail", header: "standard", bottomNav: false, icon: "learn" },
   "learn.sections": { layout: "detail", header: "standard", bottomNav: false, icon: "learn" },
@@ -34,7 +36,7 @@ const SCREENS = Object.freeze({
   "songs.song": { layout: "document", header: "standard", bottomNav: false, icon: "music2" },
 
   "account.home": { layout: "document", header: "standard", bottomNav: false, icon: "userRound" },
-  "settings.home": { layout: "detail", header: "standard", bottomNav: false, icon: "settings" },
+  "settings.home": { layout: "root", header: "minimal", bottomNav: true, icon: "settings" },
   "settings.privacy": { layout: "document", header: "standard", bottomNav: false, icon: "settings" },
   "settings.version": { layout: "detail", header: "standard", bottomNav: false, icon: "settings" },
 });

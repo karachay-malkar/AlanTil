@@ -1,15 +1,20 @@
-import { WORDS_CACHE_KEY, WORDS_FALLBACK, WORDS_SHEET_URL } from "../../config/words.js";
+import {
+  DICTIONARY_CACHE_KEY,
+  DICTIONARY_CONTENT_VIEW,
+  DICTIONARY_KEY,
+  DICTIONARY_METADATA_TABLE,
+  LEGACY_DICTIONARY_CACHE_KEYS,
+} from "../../config/words.js";
 import { getSupabaseClient } from "../auth/supabase-client.js";
 import { normalizeWordEntry } from "../domain/word-normalizer.js";
 import { readJson, writeJson } from "../state/storage.js";
-import { normalizeToCsvUrl, parseCsv } from "./csv.js";
 
-const CONTENT_VIEWS = ["content_words_ru", "v_words_app"];
 const PAGE_SIZE = 1000;
 let words = null;
 let loadingPromise = null;
 let requestCount = 0;
 let source = "none";
+let installedVersion = "";
 
 function normalizeCollection(collection) {
   return (Array.isArray(collection) ? collection : [])
@@ -18,23 +23,49 @@ function normalizeCollection(collection) {
     .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
 }
 
-function isMissingContentSource(error) {
-  return ["42P01", "PGRST205", "PGRST204"].includes(error?.code);
+function validateDictionary(collection) {
+  if (!collection.length) throw new Error("Сервер вернул пустой словарь.");
+  const identifiers = new Set();
+  for (const word of collection) {
+    if (!word.id || !word.story_id || !word.dictionary_id || !word.section_id) {
+      throw new Error("Структура словаря повреждена: отсутствуют обязательные разделы.");
+    }
+    if (identifiers.has(word.id)) throw new Error(`В словаре повторяется word_id: ${word.id}`);
+    identifiers.add(word.id);
+  }
+  return collection;
 }
 
-async function fetchContentView(client, viewName) {
+function clearLegacyDictionaryCaches() {
+  try {
+    LEGACY_DICTIONARY_CACHE_KEYS.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Restricted storage must not prevent a fresh dictionary download.
+  }
+}
+
+function readDictionaryCache() {
+  const cached = readJson(DICTIONARY_CACHE_KEY, null);
+  const cachedWords = normalizeCollection(cached?.words);
+  const version = String(cached?.version || "").trim();
+  if (!version || !cachedWords.length) return null;
+  try {
+    return { version, words: validateDictionary(cachedWords) };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchContentWords(client) {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
     requestCount += 1;
     const result = await client
-      .from(viewName)
+      .from(DICTIONARY_CONTENT_VIEW)
       .select("*")
       .order("global_order", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
-    if (result.error) {
-      if (isMissingContentSource(result.error)) return null;
-      throw result.error;
-    }
+    if (result.error) throw result.error;
     const page = Array.isArray(result.data) ? result.data : [];
     rows.push(...page);
     if (page.length < PAGE_SIZE) break;
@@ -42,28 +73,30 @@ async function fetchContentView(client, viewName) {
   return rows;
 }
 
-async function fetchSupabaseWords() {
-  const client = await getSupabaseClient();
-  for (const viewName of CONTENT_VIEWS) {
-    const rows = await fetchContentView(client, viewName);
-    if (Array.isArray(rows) && rows.length) return rows;
-  }
-  return [];
+async function fetchLatestVersion(client) {
+  requestCount += 1;
+  const { data, error } = await client
+    .from(DICTIONARY_METADATA_TABLE)
+    .select("current_version")
+    .eq("dictionary_key", DICTIONARY_KEY)
+    .single();
+  if (error) throw error;
+  const version = String(data?.current_version || "").trim();
+  if (!version) throw new Error("Версия словаря на сервере не указана.");
+  return version;
 }
 
-async function fetchCsvWords() {
-  const csvUrl = normalizeToCsvUrl(WORDS_SHEET_URL);
-  if (!csvUrl || !csvUrl.startsWith("http")) return [];
-  requestCount += 1;
-  const controller = new AbortController();
-  const timeout = globalThis.setTimeout(() => controller.abort(), 8000);
-  try {
-    const response = await fetch(csvUrl, { cache: "no-store", signal: controller.signal });
-    if (!response.ok) throw new Error(`CSV load failed: ${response.status}`);
-    return parseCsv(await response.text());
-  } finally {
-    globalThis.clearTimeout(timeout);
+async function downloadDictionary() {
+  const client = await getSupabaseClient();
+  const version = await fetchLatestVersion(client);
+  const downloadedWords = validateDictionary(normalizeCollection(await fetchContentWords(client)));
+  if (!writeJson(DICTIONARY_CACHE_KEY, { version, words: downloadedWords })) {
+    throw new Error("Не удалось сохранить словарь на устройстве.");
   }
+  words = downloadedWords;
+  installedVersion = version;
+  source = "supabase";
+  return { version, words: downloadedWords };
 }
 
 export async function getWords() {
@@ -71,41 +104,15 @@ export async function getWords() {
   if (loadingPromise) return loadingPromise;
 
   loadingPromise = (async () => {
-    const cached = normalizeCollection(readJson(WORDS_CACHE_KEY, null));
-
-    try {
-      const cloudWords = normalizeCollection(await fetchSupabaseWords());
-      if (cloudWords.length) {
-        words = cloudWords;
-        source = "supabase";
-        writeJson(WORDS_CACHE_KEY, words);
-        return words;
-      }
-    } catch (error) {
-      console.warn("word-repository: Supabase content load failed", error);
-    }
-
-    try {
-      const remoteWords = normalizeCollection(await fetchCsvWords());
-      if (remoteWords.length) {
-        words = remoteWords;
-        source = "csv";
-        writeJson(WORDS_CACHE_KEY, words);
-        return words;
-      }
-    } catch (error) {
-      console.warn("word-repository: CSV load failed", error);
-    }
-
-    if (cached.length) {
-      words = cached;
+    clearLegacyDictionaryCaches();
+    const cached = readDictionaryCache();
+    if (cached) {
+      words = cached.words;
+      installedVersion = cached.version;
       source = "cache";
       return words;
     }
-
-    words = normalizeCollection(WORDS_FALLBACK);
-    source = "fallback";
-    return words;
+    return (await downloadDictionary()).words;
   })().finally(() => {
     loadingPromise = null;
   });
@@ -117,6 +124,32 @@ export function getCachedWords() {
   return words || [];
 }
 
+export function getInstalledDictionaryVersion() {
+  return installedVersion || readDictionaryCache()?.version || "";
+}
+
+export async function getDictionaryVersionStatus() {
+  clearLegacyDictionaryCaches();
+  const currentVersion = getInstalledDictionaryVersion();
+  const client = await getSupabaseClient();
+  const latestVersion = await fetchLatestVersion(client);
+  return {
+    currentVersion,
+    latestVersion,
+    needsUpdate: currentVersion !== latestVersion,
+  };
+}
+
+export async function refreshDictionary() {
+  if (loadingPromise) await loadingPromise;
+  loadingPromise = downloadDictionary().finally(() => {
+    loadingPromise = null;
+  });
+  const result = await loadingPromise;
+  globalThis.dispatchEvent?.(new CustomEvent("alantil:dictionary-updated", { detail: { version: result.version } }));
+  return result;
+}
+
 export function getRepositoryDiagnostics() {
-  return { requestCount, cached: Array.isArray(words), size: words?.length || 0, source };
+  return { requestCount, cached: Array.isArray(words), source, installedVersion };
 }

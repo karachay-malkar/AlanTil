@@ -1,6 +1,6 @@
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.5";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.6";
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=13.5";
+import { panel } from "../../shared/ui/panel.js?v=13.6";
 
 const GOOGLE_ICON = "/assets/icons/auth/google.svg";
 

@@ -1,4 +1,7 @@
 [data-feature="settings"] .panel{height:100%}
+[data-feature="settings"] .settingsHomeView{height:100%;min-height:0;display:grid;grid-template-rows:38px minmax(0,1fr);gap:5px;padding-left:14px;padding-right:14px;overflow:hidden;background:var(--path-scene-gradient)}
+[data-feature="settings"] .settingsHomeScroll{min-height:0;overflow:auto;overscroll-behavior:contain;padding:18px 2px 28px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 17px,#000 calc(100% - 24px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 17px,#000 calc(100% - 24px),transparent 100%)}
+[data-feature="settings"] .settingsPageTitle{margin:3px 0 16px}
 [data-feature="settings"] .settingsDocument{width:min(100%,620px);margin:0 auto;color:var(--text-1);line-height:1.62}
 [data-feature="settings"] .settingsDocument h1,[data-feature="settings"] .settingsDocument h2,[data-feature="settings"] .settingsDocument h3{line-height:1.2;margin:22px 0 9px}
 [data-feature="settings"] .settingsDocument h1:first-child,[data-feature="settings"] .settingsDocument h2:first-child{margin-top:0}
@@ -19,3 +22,12 @@
 [data-feature="settings"] .settingsChoice input:checked+span{border-color:var(--accent-strong);color:var(--accent-strong);background:var(--accent-soft)}
 [data-feature="settings"] .settingsHint{margin-top:8px;color:var(--text-3);font-size:12px}
 [data-feature="settings"] .settingsLinksBlock{border-top:1px solid var(--line-soft)}
+[data-feature="settings"] .settingsDictionaryBlock{border-top:1px solid var(--line-soft);padding-top:18px}
+[data-feature="settings"] .settingsDictionaryVersions{display:grid;border-top:1px solid var(--line-soft)}
+[data-feature="settings"] .settingsDictionaryVersions>div{min-height:43px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);font-size:13px}
+[data-feature="settings"] .settingsDictionaryVersions dt{color:var(--text-2)}
+[data-feature="settings"] .settingsDictionaryVersions dd{font:800 12px/1 var(--font-terminal)}
+[data-feature="settings"] .settingsDictionaryState{margin-top:10px;color:var(--success-strong);font-size:13px;font-weight:760}
+[data-feature="settings"] .settingsDictionaryState.needsUpdate{color:var(--warning)}
+[data-feature="settings"] .settingsDictionaryError{margin-top:8px;color:var(--danger);font-size:12px;line-height:1.4}
+[data-feature="settings"] .settingsDictionaryButton{width:100%;margin-top:10px}

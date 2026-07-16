@@ -1,17 +1,17 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.5";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.6";
 
 const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.5"),
-  path: () => import("../features/path/index.js?v=13.5"),
-  profile: () => import("../features/profile/index.js?v=13.5"),
-  learn: () => import("../features/learn/index.js?v=13.5"),
-  test: () => import("../features/test/index.js?v=13.5"),
-  match: () => import("../features/match/index.js?v=13.5"),
-  songs: () => import("../features/songs/index.js?v=13.5"),
-  account: () => import("../features/account/index.js?v=13.5"),
-  settings: () => import("../features/settings/index.js?v=13.5"),
+  practice: () => import("../features/practice/index.js?v=13.6"),
+  path: () => import("../features/path/index.js?v=13.6"),
+  profile: () => import("../features/profile/index.js?v=13.6"),
+  learn: () => import("../features/learn/index.js?v=13.6"),
+  test: () => import("../features/test/index.js?v=13.6"),
+  match: () => import("../features/match/index.js?v=13.6"),
+  songs: () => import("../features/songs/index.js?v=13.6"),
+  account: () => import("../features/account/index.js?v=13.6"),
+  settings: () => import("../features/settings/index.js?v=13.6"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -67,6 +67,9 @@ export function parsePathname(pathname) {
   }
   if (first === "profile") {
     if (!second) return { route: "profile.home", params: {} };
+    if (second === "status") return { route: "profile.home", params: {}, redirected: true };
+    if (second === "skills") return { route: "profile.skills", params: {} };
+    if (second === "statistics") return { route: "profile.statistics", params: {} };
     if (second === "account") return { route: "account.home", params: {} };
     if (second === "settings") {
       if (!third) return { route: "settings.home", params: {} };
@@ -113,6 +116,8 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "path.test") return `${stationBase}/test`;
   if (routeName === "practice.home") return "/practice";
   if (routeName === "profile.home") return "/profile";
+  if (routeName === "profile.skills") return "/profile/skills";
+  if (routeName === "profile.statistics") return "/profile/statistics";
   if (routeName === "learn.catalog") return "/learn";
   if (["learn.sections", "learn.catalog-content"].includes(routeName)) {
     if (!dictionary) return "/learn";
@@ -204,8 +209,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.5&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.5&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.6&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.6&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -266,7 +271,7 @@ export function createRouter({ shell, modal, context }) {
   }
 
   function syncBackControls() {
-    const visible = !["home", "path.home", "practice.home", "profile.home"].includes(current.route);
+    const visible = !["home", "path.home", "practice.home", "profile.home", "profile.skills", "profile.statistics", "settings.home"].includes(current.route);
     shell.setBackVisible(visible);
     const backButton = telegramWebApp?.BackButton;
     try {
@@ -314,7 +319,7 @@ export function createRouter({ shell, modal, context }) {
   async function mountCurrentRoute() {
     shell.setCounter("");
     shell.clearMode();
-    shell.configureScreen(current.route);
+    shell.beginNavigation(current.route, "Открываем…");
     syncBackControls();
     const feature = featureOf(current.route);
     currentModule = await loadModule(feature);
@@ -426,6 +431,7 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "songs.catalog") return { route: "songs.playlists", params: {} };
     if (current.route === "songs.playlists") return { route: "practice.home", params: {} };
     if (current.route === "account.home") return { route: "profile.home", params: {} };
+    if (["profile.skills", "profile.statistics"].includes(current.route)) return { route: "profile.home", params: {} };
     if (["settings.privacy", "settings.version"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "profile.home", params: {} };
     return { route: "path.home", params: { storyType: "ascent" } };

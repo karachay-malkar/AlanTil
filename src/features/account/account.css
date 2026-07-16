@@ -34,4 +34,15 @@
 [data-feature="account"] .accountNicknameMessage{min-height:20px;color:var(--text-2);font-size:13px}
 [data-feature="account"] .accountNicknameMessage.available{color:var(--success)}
 [data-feature="account"] .accountNicknameMessage.invalid{color:var(--danger)}
+[data-feature="account"] .accountGenderOnboarding{width:min(100%,430px)}
+[data-feature="account"] .accountGenderIntro{display:grid;gap:7px;text-align:center}
+[data-feature="account"] .accountGenderIntro strong{font-size:19px}
+[data-feature="account"] .accountGenderIntro span{color:var(--text-2);font-size:13px;line-height:1.45}
+[data-feature="account"] .accountGenderChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+[data-feature="account"] .accountGenderChoice{appearance:none;min-height:170px;padding:16px 10px;border:1px solid var(--line);background:var(--surface-paper-soft);color:var(--text-1);display:grid;place-items:center;align-content:center;gap:10px;font-weight:800}
+[data-feature="account"] .accountGenderChoice:active{opacity:.72;transform:translateY(1px)}
+[data-feature="account"] .accountGenderChoice:disabled{opacity:.45}
+[data-feature="account"] .accountGenderFigure{width:72px;height:86px;color:var(--text-2)}
+[data-feature="account"] .accountGenderFigure svg{width:100%;height:100%;fill:currentColor}
+[data-feature="account"] .accountGenderChoice[data-avatar-gender="female"] .accountGenderFigure{color:var(--accent-strong);transform:scale(.94)}
 @media(max-width:480px){[data-feature="account"] .accountFact{grid-template-columns:1fr;gap:4px;align-items:start}[data-feature="account"] .accountFact dd{text-align:left}}

@@ -65,10 +65,14 @@ function distractorsFor(item, allWords, count = 3) {
   return selected;
 }
 
-function buildQuestion(item, allWords) {
+function buildQuestion(item, allWords, mode = "kb") {
   return {
     item,
-    options: shuffle([item, ...distractorsFor(item, allWords)]).map((word) => ({ id: String(word.id), text: String(word.trans || ""), word })),
+    options: shuffle([item, ...distractorsFor(item, allWords)]).map((word) => ({
+      id: String(word.id),
+      text: String(mode === "ru" ? word.word : word.trans || ""),
+      word,
+    })),
   };
 }
 
@@ -91,7 +95,7 @@ function sessionPayload(session) {
     wrong_total: Math.max(0, session.answers.length - correct),
     accuracy: total ? Math.round((correct / total) * 100) : 0,
     score_percent: total ? Math.round((correct / total) * 100) : 0,
-    direction: "alan_to_ru",
+    direction: session.mode === "ru" ? "ru_to_alan" : "alan_to_ru",
     started_at: session.startedAt,
     ended_at: ended,
     completed_at: ended,
@@ -122,17 +126,19 @@ function saveActive(session) {
     index: session.index,
     answers: session.answers,
     startedAt: session.startedAt,
+    mode: session.mode,
   });
 }
 
 function clearActive() { writeScopedJson(ACTIVE_KEY, {}); }
 export function getInterruptedStationTest() { return readScopedJson(ACTIVE_KEY, {}); }
 
-export function createStationTestSession(station, allWords, selectedWords = station.words) {
+export function createStationTestSession(station, allWords, selectedWords = station.words, mode = "kb") {
   const sourceWords = Array.isArray(selectedWords) && selectedWords.length ? selectedWords : station.words;
+  const normalizedMode = mode === "ru" ? "ru" : "kb";
   const signature = selectionSignature(sourceWords);
   const interrupted = getInterruptedStationTest();
-  const canResume = Boolean(interrupted?.id && interrupted.stationKey === station.key && interrupted.selectionSignature === signature && Array.isArray(interrupted.questionIds));
+  const canResume = Boolean(interrupted?.id && interrupted.stationKey === station.key && interrupted.selectionSignature === signature && interrupted.mode === normalizedMode && Array.isArray(interrupted.questionIds));
   const wordsById = new Map(sourceWords.map((item) => [String(item.id), item]));
   const restored = canResume ? interrupted.questionIds.map((id) => wordsById.get(String(id))).filter(Boolean) : [];
   const restoredIds = new Set(restored.map((item) => String(item.id)));
@@ -140,8 +146,9 @@ export function createStationTestSession(station, allWords, selectedWords = stat
   const session = {
     id: canResume ? interrupted.id : uuid(),
     station,
+    mode: normalizedMode,
     selectionSignature: signature,
-    questions: orderedWords.map((item) => buildQuestion(item, allWords)),
+    questions: orderedWords.map((item) => buildQuestion(item, allWords, normalizedMode)),
     index: canResume ? Math.min(Number(interrupted.index || 0), orderedWords.length) : 0,
     answers: canResume && Array.isArray(interrupted.answers) ? interrupted.answers.slice(0, orderedWords.length) : [],
     startedAt: canResume ? interrupted.startedAt : new Date().toISOString(),
@@ -157,10 +164,12 @@ export function renderStationTest(context, session, { onComplete } = {}) {
   if (!question) return completeStationTest(context, session, onComplete);
   const number = session.index + 1;
   context.shell.setCounter(`${number}/${session.questions.length}`);
+  const questionText = session.mode === "ru" ? question.item.trans : question.item.word;
+  const questionHint = session.mode === "ru" ? "Выберите слово на аланском" : "Выберите точный перевод";
   context.root.innerHTML = `<section class="view screen stationTestView">
     <div class="stationTestPanel">
-      <div class="stationTestQuestion">${escapeHtml(question.item.word)}</div>
-      <div class="stationTestHint">Выберите точный перевод</div>
+      <div class="stationTestQuestion">${escapeHtml(questionText)}</div>
+      <div class="stationTestHint">${questionHint}</div>
       <div class="stationTestOptions">
         ${question.options.map((option) => `<button class="optionBtn stationTestOption" type="button" data-answer-id="${escapeHtml(option.id)}">${escapeHtml(option.text)}</button>`).join("")}
       </div>

@@ -172,7 +172,7 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 .panel-body,.contentList,.view,.screen,.appViewport,.appScreenHost{scrollbar-width:none;-ms-overflow-style:none}
 .panel-body::-webkit-scrollbar,.contentList::-webkit-scrollbar,.view::-webkit-scrollbar,.screen::-webkit-scrollbar,.appViewport::-webkit-scrollbar,.appScreenHost::-webkit-scrollbar{width:0;height:0;display:none}
 
-/* 13.5 mountain field-journal components */
+/* 13.6 mountain field-journal components */
 .bracketHeading{display:flex;align-items:center;gap:.38em;margin:0;color:var(--text-1);font:850 17px/1.2 var(--font-terminal);letter-spacing:.045em}
 .bracketHeading>span:first-child,.bracketHeading>span:last-child{color:var(--accent-strong);font-weight:900}
 .segmentedProgress{display:inline-flex;align-items:center;gap:5px;max-width:100%;vertical-align:middle;color:var(--accent-strong);font:800 12px/1 var(--font-terminal)}

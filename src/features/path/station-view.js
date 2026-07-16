@@ -52,6 +52,8 @@ export function renderStationView(context, station, {
   let activeTab = "menu";
   let hidden = getHiddenSet(station.dictionaryId, station.groupId, selectionId);
   let menuScrollTop = 0;
+  let studyMode = "kb";
+  let marqueeObserver = null;
 
   context.shell.setHeaderContent?.({
     title: station.name,
@@ -75,6 +77,40 @@ export function renderStationView(context, station, {
     setHiddenSet(station.dictionaryId, station.groupId, selectionId, hidden);
   }
 
+  function scrollingLine(value, className) {
+    const text = String(value || "");
+    return `<span class="${className} stationTextClip" title="${escapeHtml(text)}"><span class="stationMarquee" data-station-marquee>${escapeHtml(text)}</span></span>`;
+  }
+
+  function wireVisibleMarquees() {
+    marqueeObserver?.disconnect();
+    marqueeObserver = null;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const list = context.root.querySelector(".stationWordList");
+    const tracks = Array.from(context.root.querySelectorAll("[data-station-marquee]"));
+    requestAnimationFrame(() => {
+      tracks.forEach((track) => {
+        if (!track.isConnected) return;
+        const clip = track.parentElement;
+        const distance = Math.ceil(track.scrollWidth - clip.clientWidth);
+        track.classList.toggle("isOverflowing", distance > 2);
+        if (distance > 2) {
+          track.style.setProperty("--marquee-distance", `${distance}px`);
+          track.style.setProperty("--marquee-duration", `${Math.min(14, Math.max(7, distance / 28 + 5)).toFixed(1)}s`);
+        }
+      });
+    });
+    if (!list || typeof IntersectionObserver !== "function") return;
+    marqueeObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const track = entry.target.querySelector("[data-station-marquee]");
+        if (!track) return;
+        track.classList.toggle("isMarqueeVisible", entry.isIntersecting && entry.intersectionRatio > 0.35);
+      });
+    }, { root: list, threshold: [0, 0.35, 0.75] });
+    context.root.querySelectorAll("[data-station-line]").forEach((line) => marqueeObserver.observe(line));
+  }
+
   function wireTabButtons() {
     context.root.querySelectorAll("[data-station-tab]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -92,28 +128,34 @@ export function renderStationView(context, station, {
     const selected = activeWords();
     return `<section class="stationPane stationMenuPane" data-station-pane="menu">
       <div class="stationMenuToolbar">
-        <span class="stationSelectionCount">${selected.length}/${allWords.length}</span>
         <span class="stationMenuActions">
           <button class="textAction" type="button" data-show-all>Показать все</button>
           <span aria-hidden="true">·</span>
           <button class="textAction" type="button" data-hide-all>Скрыть все</button>
         </span>
+        <span class="stationSelectionCount">${selected.length}/${allWords.length}</span>
       </div>
       <div class="contentList stationWordList">
         ${allWords.map((word) => `<div class="contentListRow stationWordRow" data-station-word="${escapeHtml(word.id)}">
           <label class="stationWordToggle">
             <input class="contentListCheckbox" type="checkbox" ${hidden.has(String(word.id)) ? "" : "checked"} aria-label="Добавить слово в обучение" />
           </label>
-          <span class="contentListMain"><strong class="contentListPrimary">${escapeHtml(word.word)}</strong><span class="contentListSecondary">${escapeHtml(word.trans)}</span></span>
+          <span class="contentListMain"><span data-station-line>${scrollingLine(word.word, "contentListPrimary")}</span><span data-station-line>${scrollingLine(word.trans, "contentListSecondary")}</span></span>
           ${renderStarButton(word.id, `data-station-favorite="${escapeHtml(word.id)}"`)}
         </div>`).join("")}
       </div>
       <footer class="stationLaunchPanel">
-        <div class="directionChoice">
-          <button class="directionChoiceButton" type="button" data-station-study="kb" ${selected.length ? "" : "disabled"}>АЛАН → РУС</button>
-          <button class="directionChoiceButton" type="button" data-station-study="ru" ${selected.length ? "" : "disabled"}>РУС → АЛАН</button>
+        <div class="stationDirectionControl">
+          <span>Направление</span>
+          <div class="stationDirectionToggle" role="radiogroup" aria-label="Направление обучения">
+            <button class="${studyMode === "kb" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "kb"}" data-station-mode="kb">АЛАН → РУС</button>
+            <button class="${studyMode === "ru" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "ru"}" data-station-mode="ru">РУС → АЛАН</button>
+          </div>
         </div>
-        <button class="btn secondary stationTestButton" type="button" data-station-test ${selected.length ? "" : "disabled"}>Проверить знания</button>
+        <div class="stationLaunchActions">
+          <button class="btn neutral stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>Учить слова</button>
+          <button class="btn secondary stationTestButton" type="button" data-station-test ${selected.length ? "" : "disabled"}>Проверить знания</button>
+        </div>
       </footer>
     </section>`;
   }
@@ -173,10 +215,19 @@ export function renderStationView(context, station, {
     context.root.querySelectorAll("[data-station-favorite]").forEach((button) => {
       button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.stationFavorite)), { signal });
     });
-    context.root.querySelectorAll("[data-station-study]").forEach((button) => {
-      button.addEventListener("click", () => onStartStudy?.(button.dataset.stationStudy, activeWords()), { signal });
+    context.root.querySelectorAll("[data-station-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        studyMode = button.dataset.stationMode === "ru" ? "ru" : "kb";
+        context.root.querySelectorAll("[data-station-mode]").forEach((item) => {
+          const active = item.dataset.stationMode === studyMode;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-checked", String(active));
+        });
+      }, { signal });
     });
-    context.root.querySelector("[data-station-test]")?.addEventListener("click", () => onStartTest?.(activeWords()), { signal });
+    context.root.querySelector("[data-station-study]")?.addEventListener("click", () => onStartStudy?.(studyMode, activeWords()), { signal });
+    context.root.querySelector("[data-station-test]")?.addEventListener("click", () => onStartTest?.(studyMode, activeWords()), { signal });
+    wireVisibleMarquees();
   }
 
   function wireStatistics() {
@@ -186,6 +237,8 @@ export function renderStationView(context, station, {
   }
 
   function draw() {
+    marqueeObserver?.disconnect();
+    marqueeObserver = null;
     context.root.innerHTML = `<section class="view screen stationView">
       <div class="stationViewTabs" role="tablist" aria-label="Раздел станции">
         <button class="stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">[ Меню ]</button>

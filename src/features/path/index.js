@@ -23,7 +23,7 @@ function activeStoryType(route, value) {
 }
 
 function routeParams(station, route) { return stationPathParams(route, station); }
-function routeScrollKey(story, stationSize) { return `route_scroll_${story}_${stationSize}`; }
+function routeScrollKey(story, stationSize) { return `route_scroll_v2_${story}_${stationSize}`; }
 
 function stationMilestones(summary) {
   const count = Math.floor(summary.mastered / 20);
@@ -67,17 +67,34 @@ function routeCatalogSection(catalog, stationIndex) {
   </section>`;
 }
 
-function restoreMapPosition(context, viewport, story, stationSize) {
+function nextLayoutFrame() {
+  return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+async function restoreMapPosition(viewport, story, stationSize) {
+  if (!viewport) return;
   viewport.classList.add("isPositioning");
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  const previousBehavior = viewport.style.scrollBehavior;
+  viewport.style.scrollBehavior = "auto";
+  try {
+    await Promise.resolve(document.fonts?.ready).catch(() => {});
+    await nextLayoutFrame();
     const settings = getRouteSettings();
     const key = routeScrollKey(story, stationSize);
     const hasStored = Object.prototype.hasOwnProperty.call(settings, key);
-    const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
     const stored = Number(settings[key]);
-    viewport.scrollTop = hasStored && Number.isFinite(stored) ? Math.max(0, Math.min(stored, maxScroll)) : maxScroll;
+    const position = () => {
+      const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+      const target = hasStored && Number.isFinite(stored) ? Math.max(0, Math.min(stored, maxScroll)) : maxScroll;
+      viewport.scrollTop = target;
+    };
+    position();
+    await nextLayoutFrame();
+    position();
+  } finally {
+    viewport.style.scrollBehavior = previousBehavior;
     viewport.classList.remove("isPositioning");
-  }));
+  }
 }
 
 function renderRoute(context, route, activeStory) {
@@ -127,9 +144,13 @@ function renderRoute(context, route, activeStory) {
 
   const viewport = context.root.querySelector(".pathMapViewport");
   createRouteScale({ root: context.root, viewport, catalogs: reversedCatalogs, signal: controller.signal });
-  restoreMapPosition(context, viewport, activeStory, route.stationSize);
+  let mapPositionReady = false;
+  void restoreMapPosition(viewport, activeStory, route.stationSize).then(() => {
+    mapPositionReady = true;
+  });
   let saveFrame = 0;
   viewport?.addEventListener("scroll", () => {
+    if (!mapPositionReady) return;
     if (saveFrame) return;
     saveFrame = requestAnimationFrame(() => {
       saveFrame = 0;
@@ -153,9 +174,9 @@ function renderStation(context, route, station) {
       pendingSelections.set(station.key, words);
       context.router.navigate("path.study", { ...routeParams(station, route), mode });
     },
-    onStartTest(words) {
+    onStartTest(mode, words) {
       pendingSelections.set(station.key, words);
-      context.router.navigate("path.test", routeParams(station, route));
+      context.router.navigate("path.test", { ...routeParams(station, route), mode });
     },
   });
 }
@@ -184,7 +205,8 @@ function renderResult(context, route, station, result, allWords) {
   </section>`;
   context.root.querySelector("[data-result-return]")?.addEventListener("click", () => context.router.replace("path.station", routeParams(station, route), { force: true }), { signal: controller.signal });
   context.root.querySelector("[data-result-repeat]")?.addEventListener("click", () => {
-    const session = createStationTestSession(station, allWords, selectedWordsForStation(station));
+    const mode = result.payload.direction === "ru_to_alan" ? "ru" : "kb";
+    const session = createStationTestSession(station, allWords, selectedWordsForStation(station), mode);
     renderStationTest(context, session, { onComplete: (next) => renderResult(context, route, station, next, allWords) });
   }, { signal: controller.signal });
 }
@@ -233,7 +255,7 @@ export async function mount(context, params = {}) {
 
   if (screen === "test") {
     const allWords = route.storyOrder.flatMap((type) => route.stories[type].stations).flatMap((item) => item.words);
-    const session = createStationTestSession(station, allWords, selectedWordsForStation(station));
+    const session = createStationTestSession(station, allWords, selectedWordsForStation(station), params.mode || "kb");
     renderStationTest(context, session, { onComplete: (result) => renderResult(context, route, station, result, allWords) });
   }
 }

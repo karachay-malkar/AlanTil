@@ -1,10 +1,11 @@
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.5";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=13.6";
 import {
   logSupabaseError,
   normalizeSupabaseError,
-} from "../errors/supabase-error.js?v=13.5";
+} from "../errors/supabase-error.js?v=13.6";
 
 const NICKNAME_PATTERN = /^[\p{L}\p{N}_]{3,30}$/u;
+const AVATAR_GENDERS = new Set(["male", "female"]);
 
 function throwProfileError(scope, error, operation) {
   logSupabaseError(scope, error);
@@ -32,7 +33,7 @@ export async function getProfile(userId) {
   const client = await getSupabaseClient();
   const { data, error } = await client
     .from("profiles")
-    .select("user_id,nickname,created_at,updated_at")
+    .select("user_id,nickname,avatar_gender,created_at,updated_at")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throwProfileError("get_profile", error, "get_profile");
@@ -64,8 +65,34 @@ export async function createProfile(userId, value) {
   const { data, error } = await client
     .from("profiles")
     .insert({ user_id: userId, nickname: validation.nickname })
-    .select("user_id,nickname,created_at,updated_at")
+    .select("user_id,nickname,avatar_gender,created_at,updated_at")
     .single();
   if (error) throwProfileError("create_profile", error, "create_profile");
   return data;
+}
+
+export function normalizeAvatarGender(value) {
+  const gender = String(value || "").trim().toLowerCase();
+  return AVATAR_GENDERS.has(gender) ? gender : "";
+}
+
+export async function setAvatarGender(userId, value) {
+  const avatarGender = normalizeAvatarGender(value);
+  if (!userId) throw new Error("Пользователь не авторизован.");
+  if (!avatarGender) throw new Error("Выберите образ аватара.");
+
+  const client = await getSupabaseClient();
+  const { data, error } = await client
+    .from("profiles")
+    .update({ avatar_gender: avatarGender })
+    .eq("user_id", userId)
+    .is("avatar_gender", null)
+    .select("user_id,nickname,avatar_gender,created_at,updated_at")
+    .maybeSingle();
+  if (error) throwProfileError("set_avatar_gender", error, "set_avatar_gender");
+  if (data) return data;
+
+  const current = await getProfile(userId);
+  if (current?.avatar_gender === avatarGender) return current;
+  throw new Error("Пол аватара уже выбран и не может быть изменён.");
 }

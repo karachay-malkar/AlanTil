@@ -7,24 +7,42 @@
   background:var(--app-bg);
   isolation:isolate;
 }
+.appViewport::before,.appViewport::after{
+  content:"";position:absolute;left:0;right:0;z-index:20;pointer-events:none;
+}
+.appViewport::before{
+  top:0;height:calc(var(--safe-top) + var(--header-h) + 34px);
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--app-bg) 100%,transparent) 0%,
+    color-mix(in srgb,var(--app-bg) 92%,transparent) 52%,
+    color-mix(in srgb,var(--app-bg) 44%,transparent) 78%,
+    transparent 100%);
+}
+.appViewport::after{
+  bottom:0;height:calc(var(--safe-bottom) + 48px);
+  background:linear-gradient(0deg,
+    color-mix(in srgb,var(--app-bg) 100%,transparent) 0%,
+    color-mix(in srgb,var(--app-bg) 88%,transparent) 48%,
+    color-mix(in srgb,var(--app-bg) 38%,transparent) 78%,
+    transparent 100%);
+}
+.appShell[data-bottom-nav="true"] .appViewport::after{height:calc(var(--safe-bottom) + var(--nav-h) + 28px)}
 .appHeader{
   position:absolute;z-index:var(--z-header);inset:0 0 auto 0;
   height:calc(var(--header-h) + var(--safe-top));min-width:0;
   padding:var(--safe-top) 10px 0;
   display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;
-  background:color-mix(in srgb,var(--app-bg) 20%,transparent);
-  backdrop-filter:blur(var(--header-blur));
-  -webkit-backdrop-filter:blur(var(--header-blur));
+  background:transparent;
   border:0;box-shadow:none;
 }
-.appHeaderLeading,.appHeaderTrailing{height:100%;display:flex;align-items:center;justify-content:center;min-width:0}
-.appHeaderCenter{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05}
+.appHeaderLeading,.appHeaderTrailing{position:relative;z-index:1;height:100%;display:flex;align-items:center;justify-content:center;min-width:0}
+.appHeaderCenter{position:relative;z-index:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05}
 .appHeaderBrand{font:italic 700 20px/1 var(--font-brand);letter-spacing:.025em;color:var(--text-1);white-space:nowrap}
 .appHeaderScreenTitle{max-width:100%;font:800 clamp(15px,4vw,18px)/1.08 var(--font-body);color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .appHeaderSubtitle{max-width:100%;margin-top:2px;color:var(--text-2);font:650 10px/1.1 var(--font-terminal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .appHeaderAction,.appHeaderSectionIcon{width:36px;height:36px;display:grid;place-items:center;color:var(--text-2)}
-.appHeaderAction{appearance:none;border:0;background:transparent;padding:7px;border-radius:0}
-.appHeaderAction:active{background:transparent;opacity:.68;transform:translateY(1px)}
+.appHeaderAction{appearance:none;border:1px solid color-mix(in srgb,var(--line) 55%,transparent);background:color-mix(in srgb,var(--surface-0) 86%,transparent);padding:7px;border-radius:50%;box-shadow:var(--shadow-xs)}
+.appHeaderAction:active{background:color-mix(in srgb,var(--surface-0) 70%,transparent);opacity:.68;transform:translateY(1px)}
 .appHeaderAction svg,.appHeaderSectionIconSvg{width:21px;height:21px}
 .appHeaderSectionIconSvg{fill:currentColor}.appHeaderSectionIconSvg [fill="none"]{fill:none}
 .appHeaderLogo{display:block;width:28px;height:28px;object-fit:contain;opacity:.82;filter:grayscale(1) sepia(.15)}
@@ -39,13 +57,15 @@
 .bottomNav{
   position:absolute;z-index:var(--z-nav);inset:auto 0 0 0;min-width:0;height:calc(var(--nav-h) + var(--safe-bottom));
   padding:0 8px var(--safe-bottom);display:grid;grid-template-columns:repeat(3,1fr);
-  background:color-mix(in srgb,var(--app-bg) 20%,transparent);
-  backdrop-filter:blur(var(--header-blur));-webkit-backdrop-filter:blur(var(--header-blur));
+  background:transparent;
   border:0;box-shadow:none;
 }
+.bottomNav::before{content:"";position:absolute;z-index:0;left:10px;right:10px;top:5px;bottom:calc(var(--safe-bottom) + 5px);border:1px solid color-mix(in srgb,var(--line) 46%,transparent);border-radius:24px;background:color-mix(in srgb,var(--surface-0) 82%,transparent);box-shadow:var(--shadow-xs)}
 .bottomNav[hidden]{display:none}
-.bottomNavItem{appearance:none;border:0;background:transparent;color:color-mix(in srgb,var(--text-2) 58%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:650;min-width:0;transition:color var(--duration-fast),opacity var(--duration-fast),transform var(--duration-fast)}
+.bottomNavItem{appearance:none;position:relative;z-index:1;border:0;background:transparent;color:color-mix(in srgb,var(--text-2) 58%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:650;min-width:0;transition:color var(--duration-fast),opacity var(--duration-fast),transform var(--duration-fast)}
 .bottomNavItem.active{color:var(--text-1);background:transparent}.bottomNavItem:active{background:transparent;opacity:.7;transform:translateY(1px)}
 .bottomNavIcon{width:22px;height:22px;fill:none;stroke:currentColor}
+.stationLaunchPanel,.setPreparationFooter,.modeLaunchBar,.learnSessionActions{position:relative;z-index:25}
+.profilePrimaryNav,.stationViewTabs{position:relative;z-index:25}
 @media(max-width:360px){.appHeader{padding-left:6px;padding-right:6px}.appShell{--nav-h:57px}.bottomNavItem{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

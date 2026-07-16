@@ -1,4 +1,4 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.5";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.6";
 import { normalizeId } from "../domain/word-normalizer.js";
 import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js";
 import {
@@ -93,8 +93,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=13.5"),
-    import("../state/song-favorites.js?v=13.5"),
+    import("../state/word-favorites.js?v=13.6"),
+    import("../state/song-favorites.js?v=13.6"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -145,10 +145,10 @@ async function applyCloudState(state) {
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=13.5");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=13.6");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=13.5");
+    const { songFavorites } = await import("../state/song-favorites.js?v=13.6");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});

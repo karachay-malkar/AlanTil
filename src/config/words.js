@@ -1,11 +1,8 @@
-export const WORDS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1X2tc9THUxj0bZOQDdycEFGl7xJMqjUBYe7MsESWIUXI/edit?usp=sharing";
-export const WORDS_CACHE_KEY = "fc_words_cache_v30";
+export const DICTIONARY_CACHE_KEY = "alantil_dictionary_cache_v1";
+export const LEGACY_DICTIONARY_CACHE_KEYS = Object.freeze(["fc_words_cache_v30"]);
+export const DICTIONARY_METADATA_TABLE = "dictionary_metadata";
+export const DICTIONARY_CONTENT_VIEW = "content_words_ru";
+export const DICTIONARY_KEY = "main";
 
 export const DICT_TITLES = Object.freeze({});
 export const SECTION_TITLES = Object.freeze({});
-
-export const WORDS_FALLBACK = Object.freeze([
-  { id: "B001", folder: "easy", set: 1, word: "окъургъа", trans: "читать", example: "китабны окъургъа - читать книгу", synonyms: "читать" },
-  { id: "B002", folder: "easy", set: 1, word: "сау бол", trans: "спасибо", example: "Сау бол - спасибо", synonyms: "спасибо" },
-  { id: "B003", folder: "easy", set: 1, word: "барыргъа", trans: "идти, ехать", example: "мен юйге барама - я иду домой", synonyms: "идти, ехать" },
-]);

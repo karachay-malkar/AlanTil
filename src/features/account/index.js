@@ -6,22 +6,25 @@ import {
   signInWithGoogle,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=13.5";
+} from "../../shared/auth/auth-service.js?v=13.6";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=13.5";
+} from "../../shared/errors/supabase-error.js?v=13.6";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
+  setAvatarGender,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=13.5";
-import { panel } from "../../shared/ui/panel.js?v=13.5";
+} from "../../shared/profile/profile-service.js?v=13.6";
+import { panel } from "../../shared/ui/panel.js?v=13.6";
 import { bindLogin, renderLogin } from "./login.js";
 import {
+  bindAvatarGenderSelection,
   bindProfile,
   bindProfileCreation,
+  renderAvatarGenderSelection,
   renderProfile,
   renderProfileCreation,
 } from "./profile.js";
@@ -323,6 +326,29 @@ async function renderAccount(context) {
     return;
   }
 
+  if (!profile.avatar_gender) {
+    prepareAccountRender(context);
+    renderAvatarGenderSelection(context, { error: actionError || authState.error || "" });
+    bindAvatarGenderSelection(context, controller.signal, {
+      onSelect: async (gender) => {
+        const label = gender === "female" ? "женский" : "мужской";
+        const confirmed = await context.modal.confirm({
+          message: `Выбрать ${label} образ?<br>После сохранения изменить выбор будет нельзя.`,
+        });
+        if (!confirmed) return;
+        actionError = "";
+        try {
+          await setAvatarGender(authState.user.id, gender);
+        } catch (error) {
+          actionError = error.message;
+        }
+        scheduleAccountRender(context);
+      },
+    });
+    resetAccountViewport(context);
+    return;
+  }
+
   actionError = "";
   profileFailure = null;
   resetNicknameState();
@@ -340,7 +366,7 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=13.5", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=13.6", "account-feature-style");
   controller = new AbortController();
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";
