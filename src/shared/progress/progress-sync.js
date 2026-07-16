@@ -1,4 +1,4 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.1";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.5";
 import { normalizeId } from "../domain/word-normalizer.js";
 import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js";
 import {
@@ -13,6 +13,7 @@ import { executeProgressEntry, fetchCloudProgressState } from "./progress-reposi
 import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js";
 import { replaceUserRewards } from "./reward-store.js";
 import { replaceRouteSettings } from "./route-settings-store.js";
+import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js";
 import { snapshotRecoveredSession } from "./session-builders.js";
 import { readActiveSessions, removeActiveSession } from "./session-store.js";
 import {
@@ -33,7 +34,7 @@ const HIDDEN_KEY = "fc_hidden_by_set_v7";
 const FINISHED_KEY = "fc_finished_sets_v1";
 const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 const CLAIM_MARKER_KEY = "alantil_guest_claim_v1";
-const LEGACY_KEYS = [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY];
+const LEGACY_KEYS = [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY, WORD_PROGRESS_LOCAL_KEY];
 
 let initialized = false;
 let unsubscribeAuth = null;
@@ -44,6 +45,14 @@ let lastUserId = "";
 
 function setKey(dictionaryId, sectionId, setId) {
   return `${String(dictionaryId || "")}:${String(sectionId || "")}:${String(setId || "")}`;
+}
+
+function parseSetKey(value) {
+  const text = String(value || "");
+  const first = text.indexOf(":");
+  const second = first < 0 ? -1 : text.indexOf(":", first + 1);
+  if (first < 0 || second < 0) return [text, "", ""];
+  return [text.slice(0, first), text.slice(first + 1, second), text.slice(second + 1)];
 }
 
 function safeReadGlobal(key, fallback) {
@@ -84,8 +93,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=13.1"),
-    import("../state/song-favorites.js?v=13.1"),
+    import("../state/word-favorites.js?v=13.5"),
+    import("../state/song-favorites.js?v=13.5"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -121,6 +130,7 @@ async function applyCloudState(state) {
   applySetProgressRows(state.setProgress);
   replaceStationProgress(state.stationProgress || []);
   replaceUserRewards(state.rewards || []);
+  mergeCloudWordProgress(state.wordProgress || []);
   if (state.routeSettings) replaceRouteSettings(state.routeSettings);
   if (state.userSettings) {
     replaceUserSettings(state.userSettings);
@@ -135,10 +145,10 @@ async function applyCloudState(state) {
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=13.1");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=13.5");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=13.1");
+    const { songFavorites } = await import("../state/song-favorites.js?v=13.5");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});
@@ -163,6 +173,8 @@ async function applyQueueEntryLocally(entry) {
     replaceRouteSettings(payload);
   } else if (entry.type === "user_settings") {
     replaceUserSettings(payload);
+  } else if (entry.type === "word_progress") {
+    mergeCloudWordProgress([payload]);
   }
 }
 
@@ -183,6 +195,7 @@ function guestStateEntries(now = new Date().toISOString()) {
   const hidden = readScopedJson(HIDDEN_KEY, {}, STORAGE_SCOPES.GUEST);
   const finished = readScopedJson(FINISHED_KEY, {}, STORAGE_SCOPES.GUEST);
   const settings = readScopedJson(USER_SETTINGS_KEY, null, STORAGE_SCOPES.GUEST);
+  const wordProgress = readScopedJson(WORD_PROGRESS_LOCAL_KEY, { rows: {} }, STORAGE_SCOPES.GUEST);
 
   (Array.isArray(wordFavorites) ? wordFavorites : []).forEach((wordId) => entries.push({
     type: "word_favorite",
@@ -195,7 +208,7 @@ function guestStateEntries(now = new Date().toISOString()) {
     id: `song_favorite:${String(songId || "").trim()}`,
   }));
   Object.entries(hidden || {}).forEach(([key, values]) => {
-    const [dictionary_id, section_id, set_id] = key.split(":");
+    const [dictionary_id, section_id, set_id] = parseSetKey(key);
     (Array.isArray(values) ? values : []).forEach((wordId) => entries.push({
       type: "hidden_word",
       payload: { dictionary_id, section_id, set_id, word_id: normalizeId(wordId), is_hidden: true, updated_at: now },
@@ -204,11 +217,32 @@ function guestStateEntries(now = new Date().toISOString()) {
   });
   Object.entries(finished || {}).forEach(([key, active]) => {
     if (!active) return;
-    const [dictionary_id, section_id, set_id] = key.split(":");
+    const [dictionary_id, section_id, set_id] = parseSetKey(key);
     entries.push({
       type: "set_progress",
       payload: { dictionary_id, section_id, set_id, is_finished: true, updated_at: now },
       id: `set_progress:${dictionary_id}:${section_id}:${set_id}`,
+    });
+  });
+  Object.values(wordProgress?.rows || {}).forEach((row) => {
+    const wordId = normalizeId(row?.word_id);
+    if (!wordId) return;
+    entries.push({
+      type: "word_progress",
+      payload: {
+        word_id: wordId,
+        study_shown_count: Number(row.study_shown_count || 0),
+        known_count: Number(row.known_count || 0),
+        unknown_count: Number(row.unknown_count || 0),
+        test_correct_count: Number(row.test_correct_count || 0),
+        test_wrong_count: Number(row.test_wrong_count || 0),
+        mastery_status: row.mastery_status || "not_started",
+        mastered_at: row.mastered_at || null,
+        last_result: row.last_result || null,
+        last_seen_at: row.last_seen_at || null,
+        updated_at: now,
+      },
+      id: `word_progress:${wordId}`,
     });
   });
   if (settings) entries.push({
@@ -222,6 +256,7 @@ function guestStateEntries(now = new Date().toISOString()) {
     if (entry.type === "song_favorite") return Boolean(entry.payload.song_id);
     if (entry.type === "hidden_word") return Boolean(entry.payload.dictionary_id && entry.payload.set_id && entry.payload.word_id);
     if (entry.type === "set_progress") return Boolean(entry.payload.dictionary_id && entry.payload.set_id);
+    if (entry.type === "word_progress") return Boolean(entry.payload.word_id);
     return entry.type === "user_settings";
   });
 }
@@ -255,7 +290,7 @@ function finalizeGuestClaimIfReady(scope) {
   if (!marker || marker.status !== "pending" || storageScopeForUser(marker.user_id) !== scope) return;
   const queueIds = new Set(readProgressQueue(scope).map((entry) => entry.id));
   if ((marker.entry_ids || []).some((id) => queueIds.has(id))) return;
-  [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY].forEach((key) => removeScopedValue(key, STORAGE_SCOPES.GUEST));
+  [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY, WORD_PROGRESS_LOCAL_KEY].forEach((key) => removeScopedValue(key, STORAGE_SCOPES.GUEST));
   writeProgressQueue([], STORAGE_SCOPES.GUEST);
   safeWriteGlobal(CLAIM_MARKER_KEY, { ...marker, status: "completed", completed_at: new Date().toISOString() });
 }

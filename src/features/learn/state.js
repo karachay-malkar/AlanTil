@@ -44,7 +44,17 @@ function toIdSet(values) {
 
 export function getHiddenSet(dict, section, setNumber) {
   const map = readScopedJson(HIDDEN_KEY, {});
-  return toIdSet(map[keyOf(dict, section, setNumber)]);
+  const direct = toIdSet(map[keyOf(dict, section, setNumber)]);
+  if (!String(setNumber || "").startsWith("dynamic-section-")) return direct;
+
+  // Dynamic stations are only a view over the section. Combine historic
+  // station selections so changing 20 ↔ 40 words never loses hidden words.
+  const prefix = `${String(dict || "")}:${String(section || "")}:`;
+  Object.entries(map).forEach(([key, values]) => {
+    if (!key.startsWith(prefix)) return;
+    toIdSet(values).forEach((wordId) => direct.add(wordId));
+  });
+  return direct;
 }
 
 export function setHiddenSet(dict, section, setNumber, ids) {

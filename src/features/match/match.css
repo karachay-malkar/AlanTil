@@ -1,9 +1,10 @@
-[data-feature="match"] .panel{height:100%}
-[data-feature="match"] .matchColumns{min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-[data-feature="match"] .matchCol{display:flex;flex-direction:column;gap:9px;min-width:0}
-[data-feature="match"] .matchCard{min-height:var(--control-h);padding:10px;border-radius:var(--radius-sm);font-size:14px;font-weight:750;line-height:1.2;overflow-wrap:anywhere}
+[data-feature="match"] .matchGameView{display:grid;grid-template-rows:24px minmax(0,1fr);gap:7px}.matchProgress{text-align:center;color:var(--text-2);font:700 10px/1.3 var(--font-terminal)}
+[data-feature="match"] .matchColumns{min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:auto}
+[data-feature="match"] .matchCol{display:flex;flex-direction:column;gap:7px;min-width:0}
+[data-feature="match"] .matchCard{min-height:var(--control-h);padding:8px;border-radius:2px;font-size:13px;font-weight:760;line-height:1.2;overflow-wrap:anywhere}
 [data-feature="match"] .matchCard.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 [data-feature="match"] .matchCard.matched{border-color:var(--success);background:var(--success-soft);color:var(--success-strong);opacity:.78}
 [data-feature="match"] .matchCard.wrong{border-color:var(--danger);background:var(--danger-soft);color:var(--danger-strong);animation:matchShake .24s ease}
+[data-feature="match"] .matchResultsView{display:block;overflow:auto}
 @keyframes matchShake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-@media(max-width:360px){[data-feature="match"] .matchColumns{gap:7px}[data-feature="match"] .matchCard{padding:8px 6px;font-size:12px}}
+@media(max-width:360px){[data-feature="match"] .matchColumns{gap:6px}[data-feature="match"] .matchCard{padding:7px 5px;font-size:11px}}

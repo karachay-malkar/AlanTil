@@ -8,6 +8,7 @@ import {
   persistSessionRuntime,
 } from "../../shared/progress/session-builders.js";
 import { testState } from "./state.js";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js";
 
 function sessionWords() {
   return testState.results.map((result) => ({
@@ -35,11 +36,24 @@ function persistTestSession() {
 export function finalizeTestSession(status = "interrupted", exitReason = "route_change") {
   const session = testState.session;
   if (!session.runtime || session.runtime.finalized) return false;
+  const payload = testSessionPayload();
   const result = finalizeSessionRuntime(session.runtime, {
     status,
     exitReason,
-    payload: testSessionPayload(),
+    payload,
   });
+  if (status === "completed" && result?.id) {
+    const accuracy = payload.questions_answered
+      ? Math.round((payload.correct_total / payload.questions_answered) * 100)
+      : 0;
+    recordTestWordResults({
+      sessionId: result.id,
+      answers: payload.words,
+      accuracy,
+      requiredAccuracy: 80,
+      completedAt: result.ended_at || new Date().toISOString(),
+    });
+  }
   session.inProgress = false;
   session.completed = status === "completed";
   return result;

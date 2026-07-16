@@ -86,6 +86,11 @@ html[data-theme="alan-paper"]{
   --path-segment-8:none;
   --media-progress:0%;
 
+  --topographic-lines:
+    radial-gradient(ellipse at 16% 12%,transparent 0 16%,rgba(73,78,57,.10) 16.2% 16.6%,transparent 16.8% 23%,rgba(73,78,57,.08) 23.2% 23.6%,transparent 23.8%),
+    radial-gradient(ellipse at 78% 48%,transparent 0 17%,rgba(73,78,57,.08) 17.2% 17.6%,transparent 17.8% 25%,rgba(73,78,57,.07) 25.2% 25.6%,transparent 25.8%),
+    repeating-radial-gradient(ellipse at 55% 92%,transparent 0 26px,rgba(73,78,57,.045) 27px 28px,transparent 29px 39px);
+
   --millstone-size:78px;
   --millstone-border:rgba(75,70,61,.42);
   --millstone-face:
@@ -148,11 +153,21 @@ html[data-theme="alan-paper"]{
 
 
   --route-station-gap:58px;
-  --route-catalog-gap:108px;
-  --route-heading-gap:78px;
+  --route-section-gap:92px;
+  --route-dictionary-gap:118px;
+  --route-catalog-gap:118px;
+  --route-heading-gap:22px;
   --route-scale-dot-size:4px;
-  --route-scale-diamond-size:8px;
+  --route-scale-section-size:6px;
+  --route-scale-diamond-size:9px;
   --route-scale-height:60%;
+  --route-scale-unpassed:color-mix(in srgb,var(--text-1) 18%,transparent);
+  --route-scale-passed:color-mix(in srgb,var(--text-1) 72%,transparent);
+  --route-scale-section-color:color-mix(in srgb,var(--text-1) 34%,transparent);
+  --route-scale-diamond-color:color-mix(in srgb,var(--text-1) 55%,transparent);
+  --station-size:82px;
+  --station-progress-track:color-mix(in srgb,var(--text-1) 10%,transparent);
+  --station-progress-fill:var(--accent-strong);
   --header-blur:5px;
   --segmented-progress-segments:10;
 

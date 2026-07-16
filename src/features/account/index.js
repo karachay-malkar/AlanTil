@@ -6,18 +6,18 @@ import {
   signInWithGoogle,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=13.1";
+} from "../../shared/auth/auth-service.js?v=13.5";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=13.1";
+} from "../../shared/errors/supabase-error.js?v=13.5";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=13.1";
-import { panel } from "../../shared/ui/panel.js?v=13.1";
+} from "../../shared/profile/profile-service.js?v=13.5";
+import { panel } from "../../shared/ui/panel.js?v=13.5";
 import { bindLogin, renderLogin } from "./login.js";
 import {
   bindProfile,
@@ -340,7 +340,7 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=13.1", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=13.5", "account-feature-style");
   controller = new AbortController();
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";

@@ -30,6 +30,20 @@ function setSlugMap(words, dict, section) {
   return createSlugMap(setsFrom(words, dict, section).map(String));
 }
 
+
+function dynamicSetTitle(words, dict, section, setId) {
+  const source = words
+    .filter((word) => word.dict === dict && word.section === section && !String(word.set_id || word.set || "").trim())
+    .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
+  const anchor = String(setId || "").slice("dynamic:".length);
+  const startIndex = source.findIndex((word) => String(word.id) === anchor);
+  if (startIndex < 0) return "Станция";
+  const count = wordsForSet(words, dict, section, setId).length;
+  const first = startIndex + 1;
+  const last = startIndex + Math.max(1, count);
+  return first === last ? `Слово ${first}` : `Топ ${first}–${last}`;
+}
+
 function wireStars(container, wordsById, rerender) {
   container.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
     button.addEventListener("click", (event) => {
@@ -88,7 +102,10 @@ export function renderSections(context, words, signal) {
     const setSlugs = setSlugMap(words, dict, section);
     const sectionSlug = sectionSlugs.slugFor(section);
     const tiles = sets.map((setNumber) => {
-      const title = typeof setNumber === "number" ? `Сет ${setNumber}` : String(setNumber);
+      const setWords = wordsForSet(words, dict, section, setNumber);
+      const title = String(setNumber).startsWith("dynamic:")
+        ? dynamicSetTitle(words, dict, section, setNumber)
+        : (setWords[0]?.set_name || setWords[0]?.set || String(setNumber));
       return `
         <div class="setTile set-tile" role="button" tabindex="0" data-section="${escapeHtml(section)}" data-section-slug="${escapeHtml(sectionSlug)}" data-set="${escapeHtml(setNumber)}" data-set-slug="${escapeHtml(setSlugs.slugFor(String(setNumber)))}">
           <div class="setTileTitle">${escapeHtml(title)}</div>
@@ -229,7 +246,9 @@ export function renderSetMenu(context, words, signal) {
     : wordsForSet(words, currentDict, currentSection, currentSet);
   const title = currentDict === "__fav__"
     ? "Избранное"
-    : (typeof currentSet === "number" ? `Сет ${currentSet}` : String(currentSet));
+    : String(currentSet).startsWith("dynamic:")
+      ? dynamicSetTitle(words, currentDict, currentSection, currentSet)
+      : (setWords[0]?.set_name || setWords[0]?.set || String(currentSet));
 
   renderSetPreparation(context, {
     title,

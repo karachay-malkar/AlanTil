@@ -71,3 +71,5 @@
   .learnCard .word{font-size:clamp(26px,7vw,42px)}
 }
 
+
+.appShell[data-bottom-nav="false"] .learnSession{padding-top:calc(var(--header-h) + var(--safe-top) + 8px);padding-bottom:10px}

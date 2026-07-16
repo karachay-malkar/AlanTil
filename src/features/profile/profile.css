@@ -1,20 +1,20 @@
-[data-feature="profile"] .profileView{height:100%;min-height:0;overflow:auto;padding:8px 12px;overscroll-behavior:contain}
-[data-feature="profile"] .profileHero{position:relative;padding:8px 2px 15px;border-bottom:1px solid var(--line-soft)}
-[data-feature="profile"] .profileNickname{font-size:27px;font-weight:820;overflow-wrap:anywhere}
-[data-feature="profile"] .profilePathLabel{margin-top:13px;font:650 9px/1.3 var(--font-terminal);letter-spacing:.07em;color:var(--text-2)}
-[data-feature="profile"] .profilePathValue{margin-top:3px;font:780 42px/1 var(--font-terminal)}
-[data-feature="profile"] .profileGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;margin-top:8px}
-[data-feature="profile"] .profileStat{min-height:74px;padding:11px 2px;border-bottom:1px solid var(--line-soft)}
-[data-feature="profile"] .profileStat strong{display:block;font:760 21px/1.1 var(--font-terminal)}
+[data-feature="profile"] .profileView{position:relative;height:100%;min-height:0;overflow:auto;padding-left:14px;padding-right:14px;overscroll-behavior:contain;background:var(--path-scene-gradient)}
+[data-feature="profile"] .profileView>*{position:relative;z-index:1}
+[data-feature="profile"] .profileHero{padding:10px 2px 17px;border-bottom:1px solid var(--line-soft)}
+[data-feature="profile"] .profileNickname{font-size:29px;font-weight:860;overflow-wrap:anywhere}
+[data-feature="profile"] .profilePathLabel{margin-top:13px;font:800 10px/1.3 var(--font-terminal);letter-spacing:.08em;color:var(--text-1)}
+[data-feature="profile"] .profilePathLine{display:flex;align-items:center;gap:14px;margin-top:5px}.profileMainProgress{width:min(260px,65vw)}
+[data-feature="profile"] .profilePathValue{font:820 42px/1 var(--font-terminal)}
+[data-feature="profile"] .profilePathMeta{margin-top:4px;color:var(--text-2);font:700 10px/1 var(--font-terminal)}
+[data-feature="profile"] .profileSection{margin-top:20px}.profileSectionTitle{margin-bottom:9px}
+[data-feature="profile"] .profileGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;border-top:1px solid var(--line-soft)}
+[data-feature="profile"] .profileStat{min-height:72px;padding:11px 2px;border-bottom:1px solid var(--line-soft)}
+[data-feature="profile"] .profileStat strong{display:block;font:800 21px/1.1 var(--font-terminal)}
 [data-feature="profile"] .profileStat span{display:block;margin-top:5px;color:var(--text-2);font-size:11px;line-height:1.3}
-[data-feature="profile"] .profileSection{margin-top:17px}[data-feature="profile"] .profileSectionTitle{margin-bottom:7px}
-[data-feature="profile"] .storyRows{display:grid}
-[data-feature="profile"] .storyRow{display:grid;gap:7px;padding:10px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left}
-[data-feature="profile"] .storyRow:active{background:transparent;opacity:.68}
-[data-feature="profile"] .storyRowHead{display:flex;justify-content:space-between;gap:12px;font-weight:720}
-[data-feature="profile"] .storySegmentedProgress{justify-self:start}
-[data-feature="profile"] .profileLinks{display:grid}.profileLink{min-height:var(--control-h);padding:9px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left;font-weight:700}
-[data-feature="profile"] .profileLink:active{background:transparent;opacity:.68}
-[data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:6px}.problemWord{padding:5px 7px;border-bottom:1px solid var(--line);font-size:12px}
-[data-feature="profile"] .rewardGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 9px}.rewardCard{min-height:86px;padding:9px 5px;border:0;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font-size:10px;line-height:1.2}.rewardIcon{width:27px;height:27px;color:var(--text-2)}.rewardIcon svg{width:100%;height:100%;fill:currentColor}.rewardIcon svg [fill="none"]{fill:none}
-@media(max-width:360px){[data-feature="profile"] .profileGrid{grid-template-columns:1fr 1fr}[data-feature="profile"] .rewardGrid{grid-template-columns:repeat(2,1fr)}}
+[data-feature="profile"] .storyRows{display:grid;border-top:1px solid var(--line-soft)}
+[data-feature="profile"] .storyRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 12px;padding:12px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left;box-shadow:none;clip-path:none}
+[data-feature="profile"] .storyRow:active{background:transparent;opacity:.68}.storyRowHead{grid-column:1/-1;display:flex;justify-content:space-between;gap:12px;font-weight:820}.storySegmentedProgress{justify-self:start;width:min(260px,68vw)}.storyRowMeta{color:var(--text-3);font:700 9px/1 var(--font-terminal)}
+[data-feature="profile"] .profileLinks{display:grid;border-top:1px solid var(--line-soft)}.profileLink{min-height:var(--control-h);padding:9px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left;font-weight:760;box-shadow:none;clip-path:none}.profileLink:active{background:transparent;opacity:.68}
+[data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--line-soft);padding-top:9px}.problemWord{min-width:92px;padding:6px 8px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:8px;font-size:12px}.problemWord small{color:var(--danger-strong);font:700 9px/1.4 var(--font-terminal)}
+[data-feature="profile"] .rewardGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 9px;border-top:1px solid var(--line-soft)}.rewardCard{min-height:86px;padding:9px 5px;border:0;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font-size:10px;line-height:1.2}.rewardIcon{width:27px;height:27px;color:var(--text-2)}.rewardIcon svg{width:100%;height:100%;fill:currentColor}.rewardIcon svg [fill="none"]{fill:none}
+@media(max-width:360px){[data-feature="profile"] .rewardGrid{grid-template-columns:repeat(2,1fr)}[data-feature="profile"] .profilePathLine{gap:8px}.profileMainProgress{width:min(218px,62vw)}}

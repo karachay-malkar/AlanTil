@@ -1,4 +1,5 @@
 import { normalizeId, normalizePos } from "./word-normalizer.js";
+import { getStationSize } from "../settings/user-settings-store.js";
 
 const PRIORITY_POS = ["noun", "verb", "adjective", "adverb"];
 const PRIORITY_POS_SET = new Set(PRIORITY_POS);
@@ -28,12 +29,47 @@ export function sectionsFrom(words, dict) {
   return uniq(words.filter((word) => word.dict === dict).map((word) => word.section)).sort(sortNatural);
 }
 
+function sourceSetId(word) {
+  return String(word?.set_id || word?.set || "").trim();
+}
+
+function orderedSectionWords(words, dict, section) {
+  return words.filter((word) => word.dict === dict && word.section === section)
+    .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
+}
+
 export function setsFrom(words, dict, section) {
-  return uniq(words.filter((word) => word.dict === dict && word.section === section).map((word) => word.set)).sort(sortNatural);
+  const source = orderedSectionWords(words, dict, section);
+  const size = getStationSize();
+  const items = [];
+  const dynamic = source.filter((word) => !sourceSetId(word));
+  for (let offset = 0; offset < dynamic.length; offset += size) {
+    const anchorWord = dynamic[offset];
+    const anchor = String(anchorWord?.id || offset + 1);
+    items.push({ id: `dynamic:${anchor}`, order: Number(anchorWord?.global_order || anchorWord?.dict_order || offset + 1) });
+  }
+  const named = new Map();
+  source.forEach((word) => {
+    const id = sourceSetId(word);
+    if (!id) return;
+    const order = Number(word.global_order || word.dict_order || Number.MAX_SAFE_INTEGER);
+    named.set(id, Math.min(named.get(id) ?? Number.MAX_SAFE_INTEGER, order));
+  });
+  named.forEach((order, id) => items.push({ id, order }));
+  return items.sort((left, right) => left.order - right.order || sortNatural(left.id, right.id)).map((item) => item.id);
 }
 
 export function wordsForSet(words, dict, section, setNumber) {
-  return words.filter((word) => word.dict === dict && word.section === section && String(word.set) === String(setNumber));
+  const source = orderedSectionWords(words, dict, section);
+  const setId = String(setNumber || "");
+  if (setId.startsWith("dynamic:")) {
+    const dynamic = source.filter((word) => !sourceSetId(word));
+    const anchor = setId.slice("dynamic:".length);
+    const index = dynamic.findIndex((word) => String(word.id) === anchor);
+    if (index < 0) return [];
+    return dynamic.slice(index, index + getStationSize());
+  }
+  return source.filter((word) => sourceSetId(word) === setId);
 }
 
 export function isWordEnabledInTestModes(word) {

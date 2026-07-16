@@ -9,6 +9,7 @@ export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 export const DEFAULT_USER_SETTINGS = Object.freeze({
   interface_language_code: "ru",
   translation_language_code: "ru",
+  station_size: 40,
 });
 
 const listeners = new Set();
@@ -19,10 +20,15 @@ function normalizeLanguageCode(value, fallback = "ru") {
   return /^[a-z]{2,8}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : fallback;
 }
 
+function normalizeStationSize(value) {
+  return Number(value) === 20 ? 20 : 40;
+}
+
 function normalizeSettings(value = {}) {
   return {
     interface_language_code: normalizeLanguageCode(value.interface_language_code, DEFAULT_USER_SETTINGS.interface_language_code),
     translation_language_code: normalizeLanguageCode(value.translation_language_code, DEFAULT_USER_SETTINGS.translation_language_code),
+    station_size: normalizeStationSize(value.station_size),
   };
 }
 
@@ -51,10 +57,15 @@ export function getTranslationLanguageCode() {
   return state.translation_language_code;
 }
 
+export function getStationSize() {
+  return normalizeStationSize(state.station_size);
+}
+
 export function setUserSettings(updates = {}, { queue = true } = {}) {
   const next = normalizeSettings({ ...state, ...updates });
   const changed = next.interface_language_code !== state.interface_language_code
-    || next.translation_language_code !== state.translation_language_code;
+    || next.translation_language_code !== state.translation_language_code
+    || next.station_size !== state.station_size;
   state = next;
   writeScopedJson(USER_SETTINGS_KEY, state);
   if (changed && queue) {

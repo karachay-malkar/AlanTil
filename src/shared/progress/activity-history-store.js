@@ -50,6 +50,9 @@ export function activitySummary() {
   });
   return {
     sessionsTotal: rows.length,
+    learnSessions: rows.filter((row) => row.type === "learn").length,
+    testAttempts: rows.filter((row) => ["test", "station_test"].includes(row.type)).length,
+    matchSessions: rows.filter((row) => row.type === "match").length,
     sessionsCompleted: completed.length,
     activeSeconds,
     accuracy: testCorrect + testWrong ? Math.round((testCorrect / (testCorrect + testWrong)) * 100) : 0,
