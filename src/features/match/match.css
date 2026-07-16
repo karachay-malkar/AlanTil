@@ -1,7 +1,7 @@
 [data-feature="match"] .panel{height:100%}
 [data-feature="match"] .matchColumns{min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 [data-feature="match"] .matchCol{display:flex;flex-direction:column;gap:9px;min-width:0}
-[data-feature="match"] .matchCard{min-height:52px;padding:10px;border-radius:var(--radius-sm);font-size:14px;font-weight:750;line-height:1.2;overflow-wrap:anywhere}
+[data-feature="match"] .matchCard{min-height:var(--control-h);padding:10px;border-radius:var(--radius-sm);font-size:14px;font-weight:750;line-height:1.2;overflow-wrap:anywhere}
 [data-feature="match"] .matchCard.selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 [data-feature="match"] .matchCard.matched{border-color:var(--success);background:var(--success-soft);color:var(--success-strong);opacity:.78}
 [data-feature="match"] .matchCard.wrong{border-color:var(--danger);background:var(--danger-soft);color:var(--danger-strong);animation:matchShake .24s ease}

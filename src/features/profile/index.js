@@ -8,6 +8,8 @@ import { getUserRewards } from "../../shared/progress/reward-store.js";
 import { getAllStationProgress } from "../../shared/progress/station-progress-store.js";
 import { escapeHtml } from "../../shared/ui/html.js";
 import { uiIcon } from "../../shared/ui/icons.js";
+import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
 
 let controller = null;
 
@@ -67,24 +69,24 @@ export async function mount(context) {
         <div class="profileStat"><strong>${due}</strong><span>повторений ожидают</span></div>
       </div>
       <section class="profileSection">
-        <h2 class="profileSectionTitle">Истории</h2>
+        ${renderBracketHeading("Истории", { className: "profileSectionTitle" })}
         <div class="storyRows">
           ${stories.map(([type, label]) => {
             const value = path.stories[type];
-            return `<button class="storyRow" type="button" data-profile-story="${type}"><span class="storyRowHead"><span>${escapeHtml(label)}</span><span>${value.percent}%</span></span><span class="storyMiniBar"><span style="width:${value.percent}%"></span></span></button>`;
+            return `<button class="storyRow" type="button" data-profile-story="${type}"><span class="storyRowHead"><span>${escapeHtml(label)}</span><span>${value.percent}%</span></span>${renderSegmentedProgress({ value: value.percent, segments: 10, label: `Прогресс ${label}`, className: "storySegmentedProgress" })}</button>`;
           }).join("")}
         </div>
       </section>
       <section class="profileSection">
-        <h2 class="profileSectionTitle">Проблемные слова</h2>
+        ${renderBracketHeading("Проблемные слова", { className: "profileSectionTitle" })}
         <div class="problemWords">${problemWords.length ? problemWords.map((word) => `<span class="problemWord">${escapeHtml(word.word)}</span>`).join("") : `<span class="smallNote">Пока недостаточно данных.</span>`}</div>
       </section>
       <section class="profileSection">
-        <h2 class="profileSectionTitle">Коллекция</h2>
+        ${renderBracketHeading("Коллекция", { className: "profileSectionTitle" })}
         <div class="rewardGrid">${rewards.length ? rewards.slice(0, 12).map((reward) => { const item = rewardLabel(reward); return `<div class="rewardCard"><span class="rewardIcon">${uiIcon(item.icon)}</span><span>${escapeHtml(item.title)}</span></div>`; }).join("") : `<div class="smallNote">Награды появятся после завершения рубежей и тематических троп.</div>`}</div>
       </section>
       <section class="profileSection">
-        <h2 class="profileSectionTitle">Профиль и приложение</h2>
+        ${renderBracketHeading("Профиль и приложение", { className: "profileSectionTitle" })}
         <div class="profileLinks">
           <button class="profileLink" type="button" data-profile-route="account.home">Аккаунт</button>
           <button class="profileLink" type="button" data-profile-route="settings.home">Настройки</button>

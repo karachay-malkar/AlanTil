@@ -155,15 +155,17 @@ export function renderStudy(context, words, signal, params = {}) {
   }
 
   context.root.innerHTML = `
-    <section id="viewStudy" class="view study">
-      <div id="card" class="card big" aria-label="Карточка">
-        <div class="cardInner">
-          <div class="cardFace cardFront"><div class="word" id="word">слово</div><div class="hint">Нажмите на слово, чтобы увидеть перевод</div></div>
-          <div class="cardFace cardBack"><div class="trans" id="trans">перевод</div><div id="exampleBox" class="example"></div></div>
-        </div>
+    <section class="learnSession">
+      <div class="learnSessionMain">
+        <article id="card" class="learnCard" aria-label="Карточка">
+          <div class="cardInner">
+            <div class="cardFace cardFront"><div class="word" id="word">слово</div><div class="hint">Нажмите на слово, чтобы увидеть перевод</div></div>
+            <div class="cardFace cardBack"><div class="trans" id="trans">перевод</div></div>
+          </div>
+        </article>
       </div>
-      <div class="studyBottomPanel">
-        <div class="buttons"><button id="btnNo" class="btn secondary" type="button"><span class="btnIcon">${uiIcon("wrong")}</span><span class="btnLabel">Не знаю</span></button><button id="btnYes" class="btn primary" type="button"><span class="btnIcon">${uiIcon("correct")}</span><span class="btnLabel">Знаю</span></button></div>
+      <div class="learnSessionActions">
+        <div class="buttons learnPrimaryActions"><button id="btnNo" class="btn secondary" type="button"><span class="btnIcon">${uiIcon("wrong")}</span><span class="btnLabel">Не знаю</span></button><button id="btnYes" class="btn primary" type="button"><span class="btnIcon">${uiIcon("correct")}</span><span class="btnLabel">Знаю</span></button></div>
         <div class="buttons subActions">
           <button id="btnUndo" class="btn neutral" type="button" aria-label="Назад"><span class="btnIcon">${uiIcon("undo2")}</span><span class="btnLabel">Назад</span></button>
           <button id="btnFavAction" class="btn neutral favAction" type="button" aria-label="Отметить слово"><span class="btnIcon">${uiIcon("starLine")}</span><span class="btnLabel" id="favActionLabel">Отметить слово</span></button>

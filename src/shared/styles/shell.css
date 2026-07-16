@@ -12,14 +12,16 @@
   position:relative;z-index:var(--z-header);min-width:0;
   padding:var(--safe-top) 10px 0;
   display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;
-  background:var(--app-bg);
+  background:color-mix(in srgb,var(--app-bg) 30%,transparent);
+  backdrop-filter:blur(var(--header-blur));
+  -webkit-backdrop-filter:blur(var(--header-blur));
 }
 .appHeaderLeading,.appHeaderTrailing{height:100%;display:flex;align-items:center;justify-content:center;min-width:0}
 .appHeaderCenter{min-width:0;display:grid;place-items:center;text-align:center}
 .appHeaderBrand{font:italic 700 20px/1 var(--font-brand);letter-spacing:.025em;color:var(--text-1);white-space:nowrap}
 .appHeaderAction,.appHeaderSectionIcon{width:36px;height:36px;display:grid;place-items:center;color:var(--text-2)}
 .appHeaderAction{appearance:none;border:0;background:transparent;padding:7px;border-radius:50%}
-.appHeaderAction:active{background:var(--accent-soft)}
+.appHeaderAction:active{background:transparent;opacity:.68;transform:translateY(1px)}
 .appHeaderAction svg,.appHeaderSectionIconSvg{width:21px;height:21px}
 .appHeaderSectionIconSvg{fill:currentColor}
 .appHeaderSectionIconSvg [fill="none"]{fill:none}
@@ -39,6 +41,7 @@
 }
 .bottomNavItem{appearance:none;border:0;background:transparent;color:color-mix(in srgb,var(--text-2) 58%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:650;min-width:0;transition:color var(--duration-fast),opacity var(--duration-fast)}
 .bottomNavItem.active{color:var(--text-1)}
+.bottomNavItem:active{background:transparent;opacity:.7}
 .bottomNavIcon{width:22px;height:22px;fill:none;stroke:currentColor}
 @media(max-width:360px){.appHeader{padding-left:6px;padding-right:6px}.appShell{--nav-h:57px}.bottomNavItem{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

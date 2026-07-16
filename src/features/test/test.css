@@ -1,13 +1,13 @@
 [data-feature="test"] .panel{height:100%}
 [data-feature="test"] .testScope{margin-top:4px}
 [data-feature="test"] .resultScroll{min-height:0}
-[data-feature="test"] .testSessionPanel .panel-header{min-height:52px}
+[data-feature="test"] .testSessionPanel .panel-header{min-height:var(--control-h)}
 [data-feature="test"] .testSessionPanel .panel-body{display:flex;flex-direction:column;justify-content:center}
 [data-feature="test"] .testQuestion{margin:10px 0 20px;text-align:center;font-size:clamp(28px,8vw,44px);font-weight:900;line-height:1.08;overflow-wrap:anywhere}
 [data-feature="test"] .testOptions{display:grid;gap:10px}
-[data-feature="test"] .optionBtn{min-height:52px;padding:11px 13px;border-radius:var(--radius-sm);font-weight:750;text-align:center}
+[data-feature="test"] .optionBtn{min-height:var(--control-h);padding:11px 13px;border-radius:var(--radius-sm);font-weight:750;text-align:center}
 [data-feature="test"] .optionBtn.selected{border-color:var(--accent);background:var(--accent-soft)}
 [data-feature="test"] .optionBtn.correct{border-color:var(--success);background:var(--success-soft);color:var(--success-strong)}
 [data-feature="test"] .optionBtn.wrong{border-color:var(--danger);background:var(--danger-soft);color:var(--danger-strong)}
 [data-feature="test"] .optionBtn:disabled{opacity:1}
-@media(max-height:650px){[data-feature="test"] .testQuestion{margin:4px 0 12px;font-size:clamp(24px,7vw,36px)}[data-feature="test"] .optionBtn{min-height:46px}}
+@media(max-height:650px){[data-feature="test"] .testQuestion{margin:4px 0 12px;font-size:clamp(24px,7vw,36px)}[data-feature="test"] .optionBtn{min-height:var(--control-h)}}

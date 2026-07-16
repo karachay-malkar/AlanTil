@@ -132,8 +132,10 @@ html[data-theme="alan-paper"]{
   --space-8:40px;
 
   --control-h-sm:36px;
-  --control-h:46px;
-  --control-h-lg:50px;
+  --control-h:44px;
+  --control-h-compact:36px;
+  --control-h-text:28px;
+  --control-h-lg:44px;
   --content-max:720px;
   --header-h:46px;
   --nav-h:60px;
@@ -143,6 +145,16 @@ html[data-theme="alan-paper"]{
   --duration-fast:110ms;
   --duration-normal:145ms;
   --ease-standard:cubic-bezier(.2,.7,.2,1);
+
+
+  --route-station-gap:58px;
+  --route-catalog-gap:108px;
+  --route-heading-gap:78px;
+  --route-scale-dot-size:4px;
+  --route-scale-diamond-size:8px;
+  --route-scale-height:60%;
+  --header-blur:5px;
+  --segmented-progress-segments:10;
 
   --z-header:30;
   --z-path-controls:24;
@@ -206,7 +218,7 @@ html[data-theme="alan-paper"]{
   --swipe-success-rgb:93,118,84;
   --swipe-danger-rgb:152,86,76;
   --control-height:var(--control-h);
-  --control-height-compact:var(--control-h-sm);
+  --control-height-compact:var(--control-h-compact);
   --control-radius:var(--radius-sm);
   --control-padding-inline:14px;
   --control-background:var(--surface-component);

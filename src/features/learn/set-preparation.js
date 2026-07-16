@@ -1,6 +1,7 @@
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
+import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
 import { getHiddenSet, learnState, setHiddenSet } from "./state.js";
 
 function normalizeContext(value, fallback = "") {
@@ -41,17 +42,17 @@ export function renderSetPreparation(context, {
     <section class="view screen setPreparationView">
       <div class="setPreparation">
         <header class="setPreparationHeader">
-          <div>
-            <h1 class="setPreparationTitle">${escapeHtml(title)}</h1>
+          <div class="setPreparationHeading">
+            ${renderBracketHeading(title, { tag: "h1", className: "setPreparationTitle" })}
             ${subtitle ? `<div class="setPreparationSubtitle">${escapeHtml(subtitle)}</div>` : ""}
           </div>
-          <div id="setSelectionCount" class="setSelectionCount" aria-live="polite"></div>
+          <div class="setPreparationMeta">
+            <div id="setSelectionCount" class="setSelectionCount" aria-live="polite"></div>
+            <div class="setSelectionTools" aria-label="Управление выбором слов">
+              <button class="textAction" type="button" data-select-all>Все</button><span aria-hidden="true">·</span><button class="textAction" type="button" data-hide-all>Скрыть</button>
+            </div>
+          </div>
         </header>
-
-        <div class="setSelectionTools" aria-label="Управление выбором слов">
-          <button class="textAction" type="button" data-select-all>Показать все</button>
-          <button class="textAction" type="button" data-hide-all>Скрыть все</button>
-        </div>
 
         <div id="setPreparationWords" class="contentList setPreparationWords"></div>
 

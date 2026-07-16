@@ -17,3 +17,5 @@ body{
 .smallNote{line-height:1.5}.smallNote+.smallNote{margin-top:8px}
 button,input{touch-action:manipulation}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent-glow);outline-offset:2px}
+
+button,a,[role="button"],label{-webkit-tap-highlight-color:transparent}
