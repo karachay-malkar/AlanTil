@@ -1,6 +1,6 @@
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.6";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.6.2";
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 
 const GOOGLE_ICON = "/assets/icons/auth/google.svg";
 
@@ -9,6 +9,7 @@ export function renderLogin(context, {
   error = "",
   emailExpanded = false,
 } = {}) {
+  context.shell.setHeaderContent?.({ title: "Вход" });
   context.root.innerHTML = panel({
     title: "Аккаунт",
     classes: "accountPanel",

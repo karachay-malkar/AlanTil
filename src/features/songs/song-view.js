@@ -1,6 +1,6 @@
 import { trackEvent } from "../../shared/analytics/analytics.js";
 import { DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 import { openInfoModal } from "../../shared/ui/info-modal.js";
 import { openWordCard } from "../../shared/ui/word-card.js";
 import { escapeHtml } from "../../shared/ui/word-renderers.js";
@@ -18,12 +18,14 @@ function songInformation(song) {
 
 export function renderSongView(context, song, words, signal) {
   if (!song) {
+    context.shell.setHeaderContent?.({ title: "Песня" });
     context.root.innerHTML = panel({ title: "Песня", body: `<div class="errorState">Песня не найдена.</div>`, classes: "songsPanel" });
     return;
   }
 
   songsState.selectedPlaylistId = song.playlistId;
   songsState.selectedSongId = song.id;
+  context.shell.setHeaderContent?.({ title: song.title, subtitle: song.artist || "" });
   const lyricsMarkup = renderSongLyrics(song.lyrics, song.translation, words);
 
   context.root.innerHTML = panel({

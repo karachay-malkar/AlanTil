@@ -30,6 +30,7 @@ function buildScope(words) {
 
 export function renderTestMenu(context, words, signal) {
   const available = enabledWords(words);
+  let selectedMode = testState.mode === "ru" ? "ru" : "kb";
   const scope = buildScope(available);
   const scopeHtml = scope.map((dictionary) => `<div class="scopeBlock">
     <label class="scopeDictRow"><input class="scopeCheckbox scopeDict" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" checked /><span class="scopeLabel"><strong>${escapeHtml(dictionary.name)}</strong><small>${dictionary.count}</small></span></label>
@@ -48,7 +49,16 @@ export function renderTestMenu(context, words, signal) {
         <div class="testLimitRadios">${[20, 40, 80].map((limit) => `<label class="radioOpt"><input type="radio" name="testLimit" value="${limit}" ${testState.limit === limit ? "checked" : ""} /><span>${limit}</span></label>`).join("")}</div>
       </section>
     </div>
-    <footer class="modeLaunchBar"><button id="btnGlobalModeKb" class="btn primary" type="button">АЛАН → РУС</button><button id="btnGlobalModeRu" class="btn secondary" type="button">РУС → АЛАН</button></footer>
+    <footer class="modeLaunchBar modeMenuLaunch">
+      <div class="modeDirectionControl">
+        <span>Направление</span>
+        <div class="modeDirectionToggle" role="radiogroup" aria-label="Направление теста">
+          <button type="button" role="radio" data-test-mode="kb">АЛАН → РУС</button>
+          <button type="button" role="radio" data-test-mode="ru">РУС → АЛАН</button>
+        </div>
+      </div>
+      <button id="btnGlobalTestStart" class="btn primary" type="button">Начать тест</button>
+    </footer>
   </section>`;
 
   const list = context.root.querySelector("#testScopeList");
@@ -70,7 +80,15 @@ export function renderTestMenu(context, words, signal) {
   }
   function selectedLimit() { return Number(context.root.querySelector('input[name="testLimit"]:checked')?.value || 40); }
   function updateInfo() { const pool = selectedPool(); info.textContent = `Выбрано ${pool.length} · тест ${Math.min(selectedLimit(), pool.length)}`; }
+  function updateMode() {
+    context.root.querySelectorAll("[data-test-mode]").forEach((button) => {
+      const active = button.dataset.testMode === selectedMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-checked", String(active));
+    });
+  }
   syncParents(); updateInfo();
+  updateMode();
 
   dictCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => {
     sectionCheckboxes.filter((section) => section.dataset.dict === checkbox.dataset.dict).forEach((section) => { section.checked = checkbox.checked; });
@@ -92,8 +110,14 @@ export function renderTestMenu(context, words, signal) {
     });
     await context.router.navigate("test.session", {}, { force: true });
   }
-  context.root.querySelector("#btnGlobalModeKb").addEventListener("click", () => launch("kb"), { signal });
-  context.root.querySelector("#btnGlobalModeRu").addEventListener("click", () => launch("ru"), { signal });
+  context.root.querySelectorAll("[data-test-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedMode = button.dataset.testMode === "ru" ? "ru" : "kb";
+      testState.mode = selectedMode;
+      updateMode();
+    }, { signal });
+  });
+  context.root.querySelector("#btnGlobalTestStart")?.addEventListener("click", () => launch(selectedMode), { signal });
 }
 
 export function renderTestResults(context, signal) {

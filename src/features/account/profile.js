@@ -1,5 +1,5 @@
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
@@ -10,6 +10,7 @@ function avatarSilhouette() {
 }
 
 export function renderAvatarGenderSelection(context, { error = "" } = {}) {
+  context.shell.setHeaderContent?.({ title: "Образ аватара" });
   context.root.innerHTML = panel({
     title: "Образ аватара",
     classes: "accountPanel",
@@ -63,8 +64,10 @@ export function renderProfileCreation(context, user, {
       ? " isError"
       : "";
 
+  const title = unavailable ? "Аккаунт" : "Создайте никнейм";
+  context.shell.setHeaderContent?.({ title });
   context.root.innerHTML = panel({
-    title: unavailable ? "Аккаунт" : "Создайте никнейм",
+    title,
     classes: "accountPanel",
     viewClasses: "accountView",
     body: `
@@ -132,6 +135,7 @@ export function bindProfileCreation(context, signal, {
 }
 
 export function renderProfile(context, { user, profile, provider, error = "" }) {
+  context.shell.setHeaderContent?.({ title: "Аккаунт" });
   context.root.innerHTML = panel({
     title: "Аккаунт",
     classes: "accountPanel",

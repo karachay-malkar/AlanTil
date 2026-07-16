@@ -1,18 +1,38 @@
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.6";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.6.2";
 import { getWords } from "../../shared/data/word-repository.js";
 import { buildLearningRoute } from "../../shared/domain/learning-route.js";
 import { dictionaryPathProgress } from "../../shared/domain/route-progress.js";
-import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.6";
+import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.6.2";
 import { activitySummary } from "../../shared/progress/activity-history-store.js";
 import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js";
 import { getStationSize } from "../../shared/settings/user-settings-store.js";
 import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
 import { escapeHtml } from "../../shared/ui/html.js";
 import { uiIcon } from "../../shared/ui/icons.js";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
 
 let controller = null;
+
+function setProfileHeaderNavigation(context, active = "profile") {
+  const routes = {
+    profile: "profile.home",
+    statistics: "profile.statistics",
+    settings: "settings.home",
+  };
+  context.shell.setHeaderTabs?.({
+    items: [
+      { id: "profile", label: "Профиль" },
+      { id: "statistics", label: "Статистика" },
+      { id: "settings", label: "Настройки" },
+    ],
+    active,
+    ariaLabel: "Разделы профиля",
+    onSelect(id) {
+      const route = routes[id];
+      if (route) context.router.navigate(route);
+    },
+  });
+}
 
 function durationLabel(seconds) {
   const minutes = Math.round(Math.max(0, Number(seconds || 0)) / 60);
@@ -36,7 +56,6 @@ function subNavigation(active = "status") {
 }
 
 function bindLocalNavigation(context, signal) {
-  bindProfileNavigation(context, signal);
   context.root.querySelectorAll("[data-profile-subroute]").forEach((button) => {
     button.addEventListener("click", () => context.router.navigate(button.dataset.profileSubroute), { signal });
   });
@@ -101,6 +120,7 @@ function genderSelection(error = "") {
 }
 
 async function renderStatus(context, auth, profile) {
+  setProfileHeaderNavigation(context, "profile");
   let body = "";
   if (!auth.user) {
     body = lockedStatus();
@@ -132,13 +152,13 @@ async function renderStatus(context, auth, profile) {
   }
 
   context.root.innerHTML = `<section class="view screen profileView">
-    ${renderProfileNavigation("profile")}
     ${subNavigation("status")}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
 
 function renderSkills(context, auth, profile) {
+  setProfileHeaderNavigation(context, "profile");
   const locked = !auth.user || !profile?.avatar_gender;
   // TODO(avatar-skills): replace this placeholder with a multilingual table that maps
   // skill names to parts of speech or set_id values. Do not hardcode skill taxonomy here.
@@ -146,13 +166,13 @@ function renderSkills(context, auth, profile) {
     ? `<div class="profileLockedState profileSkillsLocked"><span class="profileLockedIcon">${uiIcon("locked")}</span><strong>Навыки недоступны</strong><span>Сначала войдите и настройте аватар.</span></div>`
     : `<div class="profileFutureFeature"><strong>[ Навыки ]</strong><span>Позже этот раздел будет подключён из отдельной мультиязычной таблицы.</span></div>`;
   context.root.innerHTML = `<section class="view screen profileView">
-    ${renderProfileNavigation("profile")}
     ${subNavigation("skills")}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
 
 async function renderStatistics(context) {
+  setProfileHeaderNavigation(context, "statistics");
   let body = "";
   try {
     const words = await getWords();
@@ -186,7 +206,6 @@ async function renderStatistics(context) {
   }
 
   context.root.innerHTML = `<section class="view screen profileView profileStatisticsView">
-    ${renderProfileNavigation("statistics")}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
@@ -203,7 +222,6 @@ async function loadProfile(auth) {
 
 export async function mount(context, params = {}) {
   controller = new AbortController();
-  context.shell.setHeaderContent?.();
   const auth = getCurrentAuthState();
   const profile = await loadProfile(auth);
   const screen = params.screen || "home";

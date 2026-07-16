@@ -7,13 +7,14 @@ export function panel({
 }) {
   const viewClassName = `view screen${viewClasses ? ` ${viewClasses}` : ""}`;
   const panelClassName = `panel${classes ? ` ${classes}` : ""}`;
+  const toolbar = headerExtra
+    ? `<div class="panel-header panel-toolbar">${headerExtra}</div>`
+    : "";
   return `
     <section class="${viewClassName}">
       <div class="${panelClassName}" data-unified-panel="1">
-        <div class="panel-header">
-          <div class="panelTitle">${title}</div>
-          ${headerExtra}
-        </div>
+        <h1 class="panelTitle srOnly">${title}</h1>
+        ${toolbar}
         <div class="panel-body">${body}</div>
       </div>
     </section>`;

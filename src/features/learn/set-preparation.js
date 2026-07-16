@@ -1,7 +1,6 @@
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
-import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
 import { getHiddenSet, learnState, setHiddenSet } from "./state.js";
 
 function normalizeContext(value, fallback = "") {
@@ -37,30 +36,28 @@ export function renderSetPreparation(context, {
     setId: normalizeContext(setId),
   };
   prepareSelection(storageContext);
+  let selectedMode = learnState.currentStudyMode === "ru" ? "ru" : "kb";
+
+  context.shell.setHeaderContent?.({ title, subtitle });
 
   context.root.innerHTML = `
     <section class="view screen setPreparationView">
       <div class="setPreparation">
-        <header class="setPreparationHeader">
-          <div class="setPreparationHeading">
-            ${renderBracketHeading(title, { tag: "h1", className: "setPreparationTitle" })}
-            ${subtitle ? `<div class="setPreparationSubtitle">${escapeHtml(subtitle)}</div>` : ""}
+        <div class="setPreparationToolbar">
+          <div class="setSelectionTools" aria-label="Управление выбором слов">
+            <button class="textAction" type="button" data-select-all>Показать все</button><span aria-hidden="true">·</span><button class="textAction" type="button" data-hide-all>Скрыть все</button>
           </div>
-          <div class="setPreparationMeta">
-            <div id="setSelectionCount" class="setSelectionCount" aria-live="polite"></div>
-            <div class="setSelectionTools" aria-label="Управление выбором слов">
-              <button class="textAction" type="button" data-select-all>Все</button><span aria-hidden="true">·</span><button class="textAction" type="button" data-hide-all>Скрыть</button>
-            </div>
-          </div>
-        </header>
+          <div id="setSelectionCount" class="setSelectionCount" aria-live="polite"></div>
+        </div>
 
         <div id="setPreparationWords" class="contentList setPreparationWords"></div>
 
         <footer class="setPreparationFooter">
-          <div class="directionChoice" aria-label="Направление обучения">
-            <button class="directionChoiceButton" type="button" data-study-mode="kb">АЛАН → РУС</button>
-            <button class="directionChoiceButton" type="button" data-study-mode="ru">РУС → АЛАН</button>
+          <div class="directionChoice" role="radiogroup" aria-label="Направление обучения">
+            <button class="directionChoiceButton" type="button" role="radio" data-study-mode="kb">АЛАН → РУС</button>
+            <button class="directionChoiceButton" type="button" role="radio" data-study-mode="ru">РУС → АЛАН</button>
           </div>
+          <button class="btn primary setStudyButton" type="button" data-study-start>Начать изучение</button>
           ${canTest ? `<button class="btn secondary setTestButton" type="button" data-set-test>${escapeHtml(testLabel)}</button>` : ""}
         </footer>
       </div>
@@ -69,6 +66,7 @@ export function renderSetPreparation(context, {
   const list = context.root.querySelector("#setPreparationWords");
   const count = context.root.querySelector("#setSelectionCount");
   const modeButtons = Array.from(context.root.querySelectorAll("[data-study-mode]"));
+  const startButton = context.root.querySelector("[data-study-start]");
 
   function visibleWords() {
     return favoritesOnly ? sourceWords.filter((word) => wordFavorites.has(word.id)) : sourceWords;
@@ -86,8 +84,12 @@ export function renderSetPreparation(context, {
     const active = activeWords().length;
     count.textContent = `${active}/${visibleWords().length}`;
     modeButtons.forEach((button) => {
-      button.disabled = !canStudy || active === 0;
+      const selected = button.dataset.studyMode === selectedMode;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-checked", String(selected));
+      button.disabled = !canStudy;
     });
+    if (startButton) startButton.disabled = !canStudy || active === 0;
   }
 
   function wireFavorites() {
@@ -139,10 +141,17 @@ export function renderSetPreparation(context, {
 
   modeButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      if (button.disabled || typeof onStart !== "function") return;
-      onStart(button.dataset.studyMode, activeWords());
+      if (button.disabled) return;
+      selectedMode = button.dataset.studyMode === "ru" ? "ru" : "kb";
+      learnState.currentStudyMode = selectedMode;
+      updateState();
     }, { signal });
   });
+
+  startButton?.addEventListener("click", () => {
+    if (startButton.disabled || typeof onStart !== "function") return;
+    onStart(selectedMode, activeWords());
+  }, { signal });
 
   context.root.querySelector("[data-set-test]")?.addEventListener("click", () => {
     if (typeof onTest === "function") onTest();

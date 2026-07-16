@@ -1,10 +1,11 @@
 import { renderSectionMenu } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 import { buildPlaylistRoutes } from "./routes.js";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";
 
 export function renderPlaylists(context, playlists, signal) {
+  context.shell.setHeaderContent?.({ title: "Песни" });
   const items = [
     { id: "favorites", title: "Избранные песни", favorite: true },
     ...buildPlaylistRoutes(playlists).map(({ playlist, slug }) => ({ id: slug, title: playlist.title, playlistId: playlist.id })),

@@ -4,9 +4,9 @@ import { getWords } from "../../shared/data/word-repository.js";
 import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js";
 import { createSlugMap } from "../../shared/domain/slugs.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { panel } from "../../shared/ui/panel.js";
-import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js";
-import { renderResults } from "./results.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.6.2";
+import { renderResults } from "./results.js?v=13.6.2";
 import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js";
 import { finalizeLearnSession, renderStudy } from "./study.js";
 

@@ -1,11 +1,12 @@
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { STATUS_BAD_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { learnState } from "./state.js";
 
 export function renderResults(context, words, signal) {
+  context.shell.setHeaderContent?.({ title: "Результат обучения" });
   const problemWords = Object.entries(learnState.sessionFailMap)
     .filter(([, count]) => count > 0)
     .map(([id, count]) => ({ ...words.find((word) => word.id === id), fails: count }))

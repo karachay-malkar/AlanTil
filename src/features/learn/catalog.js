@@ -5,10 +5,10 @@ import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/dom
 import { createSlugMap } from "../../shared/domain/slugs.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { learnState } from "./state.js";
-import { renderSetPreparation } from "./set-preparation.js";
+import { renderSetPreparation } from "./set-preparation.js?v=13.6.2";
 
 function dictTitle(code) {
   return DICT_TITLES[code] || code;
@@ -57,6 +57,7 @@ function wireStars(container, wordsById, rerender) {
 }
 
 export function renderCatalog(context, words, signal) {
+  context.shell.setHeaderContent?.({ title: "Учить слова" });
   const dicts = dictsFrom(words);
   const slugs = dictionarySlugMap(words);
   const items = [
@@ -117,8 +118,11 @@ export function renderSections(context, words, signal) {
     return `<div class="secBlock">${sectionHeader}<div class="setsGrid">${tiles}</div></div>`;
   }).join("");
 
+  const pageTitle = learnState.currentSection ? sectionTitle(learnState.currentSection) : dictTitle(dict);
+  context.shell.setHeaderContent?.({ title: pageTitle });
+
   context.root.innerHTML = panel({
-    title: escapeHtml(learnState.currentSection ? sectionTitle(learnState.currentSection) : dictTitle(dict)),
+    title: escapeHtml(pageTitle),
     headerExtra: `<button id="btnOpenDictContent" class="iconBtn" type="button" aria-label="Содержание словаря" title="Содержание словаря"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
     body: `<div id="sectionsList" class="stack">${body}</div>`,
   });
@@ -162,6 +166,7 @@ export function renderDictionaryContent(context, words, signal) {
     return;
   }
 
+  context.shell.setHeaderContent?.({ title: "Содержание словаря", subtitle: dictTitle(dict) });
   context.root.innerHTML = panel({
     title: "Содержание словаря",
     headerExtra: `<input id="dictSearchInput" class="searchInput" type="search" placeholder="Поиск..." autocomplete="off" />`,

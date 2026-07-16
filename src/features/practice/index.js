@@ -1,10 +1,21 @@
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 import { uiIcon } from "../../shared/ui/icons.js";
 
 let controller = null;
 
 export function mount(context) {
   controller = new AbortController();
+  context.shell.setHeaderTabs?.({
+    items: [
+      { id: "test.menu", label: "Тест" },
+      { id: "match.menu", label: "Сопоставление" },
+      { id: "songs.playlists", label: "Песни" },
+    ],
+    ariaLabel: "Режимы практики",
+    onSelect(route) {
+      context.router.navigate(route);
+    },
+  });
   context.root.innerHTML = panel({
     title: "Практика",
     classes: "practicePanel",

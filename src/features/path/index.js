@@ -102,13 +102,9 @@ function renderRoute(context, route, activeStory) {
   const progress = allStoryProgress(route)[activeStory];
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
   const reversedCatalogs = [...story.catalogs].reverse();
-  context.shell.setHeaderContent?.();
   context.shell.setCounter("");
   context.root.innerHTML = `<section class="pathView">
     <div class="pathStickyControls">
-      <div class="storyTabs" role="tablist" aria-label="История пути">
-        ${route.storyOrder.map((type) => `<button class="storyTab ${type === activeStory ? "active" : ""}" type="button" role="tab" aria-selected="${type === activeStory}" data-story="${escapeHtml(type)}">${escapeHtml(route.storyLabels[type])}</button>`).join("")}
-      </div>
       <div class="storyProgress">
         ${renderSegmentedProgress({ value: progress.percent, segments: 10, label: `Освоено ${progress.percent}% слов истории ${route.storyLabels[activeStory]}` })}
         <span class="pathProgressPercent">${progress.percent}%</span>
@@ -122,14 +118,18 @@ function renderRoute(context, route, activeStory) {
     <nav class="routeScale" aria-label="Рубежи маршрута"></nav>
   </section>`;
 
-  context.root.querySelectorAll("[data-story]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const next = activeStoryType(route, button.dataset.story);
+  context.shell.setHeaderTabs?.({
+    items: route.storyOrder.map((type) => ({ id: type, label: route.storyLabels[type] })),
+    active: activeStory,
+    ariaLabel: "История пути",
+    onSelect(type) {
+      const next = activeStoryType(route, type);
+      if (next === activeStory) return;
       const viewport = context.root.querySelector(".pathMapViewport");
       updateRouteSettings({ [routeScrollKey(activeStory, route.stationSize)]: viewport?.scrollTop || 0 }, { queue: false });
       updateRouteSettings({ active_story: next });
       context.router.navigate("path.home", { storyType: next });
-    }, { signal: controller.signal });
+    },
   });
 
   context.root.querySelectorAll("[data-station-key]").forEach((button) => {

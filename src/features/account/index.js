@@ -6,20 +6,20 @@ import {
   signInWithGoogle,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=13.6";
+} from "../../shared/auth/auth-service.js?v=13.6.2";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=13.6";
+} from "../../shared/errors/supabase-error.js?v=13.6.2";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
   setAvatarGender,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=13.6";
-import { panel } from "../../shared/ui/panel.js?v=13.6";
-import { bindLogin, renderLogin } from "./login.js";
+} from "../../shared/profile/profile-service.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { bindLogin, renderLogin } from "./login.js?v=13.6.2";
 import {
   bindAvatarGenderSelection,
   bindProfile,
@@ -27,7 +27,7 @@ import {
   renderAvatarGenderSelection,
   renderProfile,
   renderProfileCreation,
-} from "./profile.js";
+} from "./profile.js?v=13.6.2";
 
 let controller = null;
 let unsubscribeAuth = null;
@@ -104,6 +104,7 @@ function scheduleAccountRender(context) {
 
 function renderLoading(context) {
   prepareAccountRender(context);
+  context.shell.setHeaderContent?.({ title: "Аккаунт" });
   context.root.innerHTML = panel({
     title: "Аккаунт",
     classes: "accountPanel",
@@ -366,7 +367,7 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=13.6", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=13.6.2", "account-feature-style");
   controller = new AbortController();
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";

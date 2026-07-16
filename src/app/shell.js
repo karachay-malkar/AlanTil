@@ -1,5 +1,4 @@
-import { uiIcon } from "../shared/ui/icons.js";
-import { screenConfig } from "./screen-registry.js";
+import { screenConfig } from "./screen-registry.js?v=13.6.2";
 import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js";
 
 export function createShell() {
@@ -8,17 +7,17 @@ export function createShell() {
   const viewport = document.getElementById("appViewport");
   const root = document.getElementById("appRoot");
   const backButton = document.getElementById("btnBackArrow");
-  const sectionIcon = document.getElementById("headerSectionIcon");
+  const headerText = document.getElementById("headerText");
+  const headerTabs = document.getElementById("headerTabs");
   const headerTitle = document.getElementById("headerTitle");
   const headerSubtitle = document.getElementById("headerSubtitle");
-  const headerLogo = document.getElementById("headerLogo");
   const sessionStatus = document.getElementById("sessionStatus");
   const counter = document.getElementById("counter");
   const mode = document.getElementById("mode");
   const modalRoot = document.getElementById("modalRoot");
   const bottomNav = document.getElementById("bottomNav");
 
-  if (!appShell || !header || !viewport || !root || !backButton || !sectionIcon || !headerTitle || !headerSubtitle || !headerLogo || !sessionStatus || !counter || !mode || !modalRoot || !bottomNav) {
+  if (!appShell || !header || !viewport || !root || !backButton || !headerText || !headerTabs || !headerTitle || !headerSubtitle || !sessionStatus || !counter || !mode || !modalRoot || !bottomNav) {
     throw new Error("Application shell is incomplete");
   }
 
@@ -30,13 +29,34 @@ export function createShell() {
     viewport.classList.toggle("hasSessionStatus", visible);
   }
 
-  function setHeaderContent({ title = "Alan Til!", subtitle = "", logo = false, brand = true } = {}) {
+  function setHeaderContent({ title = "", subtitle = "" } = {}) {
+    headerTabs.replaceChildren();
+    headerTabs.classList.add("hidden");
+    header.classList.remove("hasHeaderTabs");
+    headerText.classList.remove("hidden");
     headerTitle.textContent = title;
-    headerTitle.classList.toggle("appHeaderBrand", brand);
-    headerTitle.classList.toggle("appHeaderScreenTitle", !brand);
     headerSubtitle.textContent = subtitle;
     headerSubtitle.classList.toggle("hidden", !subtitle);
-    headerLogo.classList.toggle("hidden", !logo);
+    headerText.classList.toggle("hidden", !title && !subtitle);
+  }
+
+  function setHeaderTabs({ items = [], active = "", ariaLabel = "Разделы экрана", onSelect } = {}) {
+    headerTabs.replaceChildren();
+    const normalized = Array.isArray(items) ? items.filter((item) => item?.id && item?.label) : [];
+    normalized.forEach((item) => {
+      const button = document.createElement("button");
+      const selected = String(item.id) === String(active);
+      button.type = "button";
+      button.className = `appHeaderTab${selected ? " active" : ""}`;
+      button.textContent = item.bracketed === false ? String(item.label) : `[ ${item.label} ]`;
+      button.setAttribute("aria-current", selected ? "page" : "false");
+      button.addEventListener("click", () => onSelect?.(item.id));
+      headerTabs.append(button);
+    });
+    headerTabs.setAttribute("aria-label", ariaLabel);
+    headerTabs.classList.toggle("hidden", normalized.length === 0);
+    header.classList.toggle("hasHeaderTabs", normalized.length > 0);
+    headerText.classList.toggle("hidden", normalized.length > 0);
   }
 
   function configureScreen(route = "path.home") {
@@ -47,9 +67,11 @@ export function createShell() {
     appShell.dataset.layout = currentConfig.layout;
     appShell.dataset.header = currentConfig.header;
     appShell.dataset.bottomNav = String(currentConfig.bottomNav);
-    sectionIcon.innerHTML = uiIcon(currentConfig.icon, "appHeaderSectionIconSvg");
     bottomNav.hidden = !currentConfig.bottomNav;
-    setHeaderContent();
+    counter.textContent = "";
+    mode.textContent = "";
+    syncSessionStatus();
+    setHeaderContent({ title: currentConfig.title || "" });
     viewport.scrollTop = 0;
     root.scrollTop = 0;
     return currentConfig;
@@ -59,7 +81,7 @@ export function createShell() {
 
   function setBackVisible(visible) {
     backButton.classList.toggle("hidden", !visible);
-    sectionIcon.classList.toggle("hidden", visible);
+    header.classList.toggle("hasBack", visible);
   }
 
   function setCounter(text = "") { counter.textContent = text; syncSessionStatus(); }
@@ -89,6 +111,6 @@ export function createShell() {
   return {
     appShell, header, viewport, root, backButton, modalRoot, bottomNav,
     configureScreen, renderHome, setBackVisible, setCounter, setMode, clearMode,
-    setHeaderContent, setActiveNav, beginNavigation, completeNavigation, renderError,
+    setHeaderContent, setHeaderTabs, setActiveNav, beginNavigation, completeNavigation, renderError,
   };
 }

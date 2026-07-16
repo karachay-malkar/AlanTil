@@ -3,7 +3,7 @@ import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js";
 import { songFavorites } from "../../shared/state/song-favorites.js";
 import { renderFavoriteButton } from "../../shared/ui/favorite-button.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 import { renderExpandableSearch } from "../../shared/ui/search-control.js";
 import { escapeHtml } from "../../shared/ui/html.js";
 import { songsState } from "./state.js";
@@ -38,6 +38,7 @@ function artistsFrom(value) {
 
 export function renderSongsCatalog(context, playlist, songs, signal) {
   if (!playlist) {
+    context.shell.setHeaderContent?.({ title: "Песни" });
     context.root.innerHTML = panel({ title: "Песни", body: `<div class="errorState">Плейлист не найден.</div>` });
     return;
   }
@@ -50,6 +51,7 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     songsState.searchOpen = false;
   }
   songsState.selectedPlaylistId = playlist.id;
+  context.shell.setHeaderContent?.({ title: playlist.title });
 
   const search = renderExpandableSearch({
     idPrefix: "songsSearch",

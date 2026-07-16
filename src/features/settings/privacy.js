@@ -3,9 +3,10 @@ import {
   subscribePrivacyState,
   updateAnalyticsPreference,
 } from "../../shared/privacy/privacy-controller.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 
 export function renderPrivacy(context, signal, params = {}) {
+  context.shell.setHeaderContent?.({ title: "Конфиденциальность" });
   const initialState = getPrivacyState();
   context.root.innerHTML = panel({
     title: "Политика конфиденциальности",

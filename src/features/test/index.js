@@ -2,7 +2,7 @@ import { getWords } from "../../shared/data/word-repository.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { finalizeTestSession } from "./engine.js";
 import { clearTestSession, testState } from "./state.js";
-import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js";
+import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js?v=13.6.2";
 
 let controller = null;
 export async function mount(context, params = {}) {

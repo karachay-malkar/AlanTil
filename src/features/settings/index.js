@@ -4,16 +4,37 @@ import {
   refreshDictionary,
 } from "../../shared/data/word-repository.js";
 import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js";
 import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
 import { escapeHtml } from "../../shared/ui/html.js";
 import { renderSectionMenu } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js";
+import { panel } from "../../shared/ui/panel.js?v=13.6.2";
 
-const SETTINGS_ASSET_VERSION = "13.6.1";
+const SETTINGS_ASSET_VERSION = "13.6.2";
 let controller = null;
 
+function setSettingsHeaderNavigation(context) {
+  const routes = {
+    profile: "profile.home",
+    statistics: "profile.statistics",
+    settings: "settings.home",
+  };
+  context.shell.setHeaderTabs?.({
+    items: [
+      { id: "profile", label: "Профиль" },
+      { id: "statistics", label: "Статистика" },
+      { id: "settings", label: "Настройки" },
+    ],
+    active: "settings",
+    ariaLabel: "Разделы профиля",
+    onSelect(id) {
+      const route = routes[id];
+      if (route) context.router.navigate(route);
+    },
+  });
+}
+
 async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
+  setSettingsHeaderNavigation(context);
   const settings = getUserSettings();
   const currentFallback = getInstalledDictionaryVersion();
   let versionStatus = null;
@@ -28,9 +49,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
   const needsUpdate = versionStatus?.needsUpdate === true;
 
   context.root.innerHTML = `<section class="view screen settingsHomeView">
-    ${renderProfileNavigation("settings")}
     <div class="settingsHomeScroll">
-      ${renderBracketHeading("Настройки", { className: "settingsPageTitle" })}
       <section class="settingsBlock">
         ${renderBracketHeading("Размер станции", { className: "settingsBlockTitle" })}
         <div class="settingsStationSize" role="radiogroup" aria-label="Количество слов в динамической станции">
@@ -56,8 +75,6 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
       </section>
     </div>
   </section>`;
-
-  bindProfileNavigation(context, signal);
 
   context.root.querySelectorAll('input[name="stationSize"]').forEach((radio) => {
     radio.addEventListener("change", () => {

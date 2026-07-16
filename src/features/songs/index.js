@@ -3,12 +3,12 @@ import { EVENTS } from "../../shared/analytics/events.js";
 import { getWords } from "../../shared/data/word-repository.js";
 import { songFavorites } from "../../shared/state/song-favorites.js";
 import { closeInfoModal } from "../../shared/ui/info-modal.js";
-import { renderSongsCatalog } from "./catalog.js";
+import { renderSongsCatalog } from "./catalog.js?v=13.6.2";
 import { disposePlayer } from "./player.js";
 import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js";
 import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js";
-import { renderPlaylists } from "./playlists.js";
-import { renderSongView } from "./song-view.js";
+import { renderPlaylists } from "./playlists.js?v=13.6.2";
+import { renderSongView } from "./song-view.js?v=13.6.2";
 import { songsState } from "./state.js";
 
 let controller = null;

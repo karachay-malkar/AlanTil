@@ -8,9 +8,9 @@
   background:var(--surface-card-gradient);
   box-shadow:var(--shadow-sm);
 }
-.panel-header{min-height:58px;flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-soft)}
+.panel-header{position:relative;z-index:25;min-height:44px;flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:2px 0 4px;border:0}
 .panelTitle{min-width:0;flex:0 1 auto;margin:0;font-size:20px;font-weight:850;line-height:1.18}
-.panel-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 16px 18px}
+.panel-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:8px 16px 18px}
 .panel-body::-webkit-scrollbar,.contentList::-webkit-scrollbar{width:5px}
 .panel-body::-webkit-scrollbar-thumb,.contentList::-webkit-scrollbar-thumb{background:var(--line);border-radius:var(--radius-pill)}
 .stack{display:flex;flex-direction:column;gap:10px}
@@ -140,7 +140,7 @@ button.contentListMain{cursor:pointer}
 .instagramBadge{display:inline-flex;align-items:center;justify-content:center;min-width:82px;height:32px;border-radius:9px;background:var(--instagram-gradient);color:var(--text-inverse);font-size:12px;font-weight:700}
 .instagramText{display:flex;flex-direction:column;gap:2px;min-width:0}.instagramTitle{font-size:15px}.instagramSubtitle{color:var(--text-2);font-size:12px}.instagramArrow{margin-left:auto;color:var(--text-3);font-size:20px}
 
-@media(max-width:420px){.view{padding:8px}.panel-header{padding:12px}.panel-body{padding:12px}.row{gap:8px}.setsGrid{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.view{padding:8px}.panel-header{padding:2px 0 4px}.panel-body{padding:8px 12px 12px}.row{gap:8px}.setsGrid{grid-template-columns:1fr 1fr}}
 @media(max-width:340px){.setsGrid{grid-template-columns:1fr}.btn{padding-inline:10px;font-size:13px}}
 
 .exitModal{position:fixed;inset:0;z-index:var(--z-modal);display:grid;place-items:center;padding:18px}
@@ -154,6 +154,7 @@ button.contentListMain{cursor:pointer}
 body.modal-open{overflow:hidden}
 
 button,a,[role="button"],label{-webkit-tap-highlight-color:transparent}
+.srOnly{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 button:active,a:active,[role="button"]:active,label:active{background-color:transparent}
 .bracketHeading{display:flex;align-items:center;gap:.42em;margin:0;color:var(--text-2);font:650 11px/1.25 var(--font-terminal);letter-spacing:.035em}
 .bracketHeading>span:first-child,.bracketHeading>span:last-child{color:var(--accent-strong)}
