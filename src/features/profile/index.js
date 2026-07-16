@@ -1,37 +1,21 @@
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.6.2";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.7.6";
 import { getWords } from "../../shared/data/word-repository.js";
 import { buildLearningRoute } from "../../shared/domain/learning-route.js";
 import { dictionaryPathProgress } from "../../shared/domain/route-progress.js";
-import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.6.2";
+import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.7.6";
 import { activitySummary } from "../../shared/progress/activity-history-store.js";
 import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js";
 import { getStationSize } from "../../shared/settings/user-settings-store.js";
-import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
 import { escapeHtml } from "../../shared/ui/html.js";
 import { uiIcon } from "../../shared/ui/icons.js";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
 
 let controller = null;
 
 function setProfileHeaderNavigation(context, active = "profile") {
-  const routes = {
-    profile: "profile.home",
-    statistics: "profile.statistics",
-    settings: "settings.home",
-  };
-  context.shell.setHeaderTabs?.({
-    items: [
-      { id: "profile", label: "Профиль" },
-      { id: "statistics", label: "Статистика" },
-      { id: "settings", label: "Настройки" },
-    ],
-    active,
-    ariaLabel: "Разделы профиля",
-    onSelect(id) {
-      const route = routes[id];
-      if (route) context.router.navigate(route);
-    },
-  });
+  context.shell.setHeaderContent?.({ title: "Alan Til!" });
+  return renderProfileNavigation(active);
 }
 
 function durationLabel(seconds) {
@@ -50,8 +34,8 @@ function avatarFigure(gender = "") {
 
 function subNavigation(active = "status") {
   return `<nav class="profileSubNav" aria-label="Содержимое профиля">
-    <button class="profileSubTab ${active === "status" ? "active" : ""}" type="button" data-profile-subroute="profile.home">[ Статус ]</button>
-    <button class="profileSubTab ${active === "skills" ? "active" : ""}" type="button" data-profile-subroute="profile.skills">[ Навыки ]</button>
+    <button class="tabAction profileSubTab ${active === "status" ? "active" : ""}" type="button" data-profile-subroute="profile.home">[ Статус ]</button>
+    <button class="tabAction profileSubTab ${active === "skills" ? "active" : ""}" type="button" data-profile-subroute="profile.skills">[ Навыки ]</button>
   </nav>`;
 }
 
@@ -99,11 +83,11 @@ function lockedStatus() {
     <div class="profileAvatarFrame isLocked">
       <div class="profileAvatarFigure">${avatarFigure()}</div>
       <span class="profileAvatarLock">${uiIcon("locked")}</span>
-      <button class="profileAccountButton" type="button" data-profile-account aria-label="Войти в аккаунт">${uiIcon("account")}</button>
+      <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="Войти в аккаунт">${uiIcon("account")}</button>
     </div>
     <strong>Профиль недоступен</strong>
     <span>Войдите, чтобы открыть аватар и связанную с ним историю.</span>
-    <button class="btn neutral profileLoginButton" type="button" data-profile-account>Войти</button>
+    <button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>Войти</button>
   </div>`;
 }
 
@@ -113,19 +97,19 @@ function genderSelection(error = "") {
     <strong>Выберите пол аватара</strong>
     <span>Выбор выполняется один раз и позже не изменяется.</span>
     <div class="profileGenderChoices">
-      <button type="button" data-profile-gender="male"><span>${avatarFigure("male")}</span><strong>Мужской</strong></button>
-      <button type="button" data-profile-gender="female"><span>${avatarFigure("female")}</span><strong>Женский</strong></button>
+      <button class="choiceControl" type="button" data-profile-gender="male"><span>${avatarFigure("male")}</span><strong>Мужской</strong></button>
+      <button class="choiceControl" type="button" data-profile-gender="female"><span>${avatarFigure("female")}</span><strong>Женский</strong></button>
     </div>
   </section>`;
 }
 
 async function renderStatus(context, auth, profile) {
-  setProfileHeaderNavigation(context, "profile");
+  const primaryNavigation = setProfileHeaderNavigation(context, "profile");
   let body = "";
   if (!auth.user) {
     body = lockedStatus();
   } else if (!profile) {
-    body = `<div class="profileLockedState"><strong>Завершите настройку аккаунта</strong><span>Создайте никнейм, чтобы открыть профиль.</span><button class="btn neutral profileLoginButton" type="button" data-profile-account>Продолжить</button></div>`;
+    body = `<div class="profileLockedState"><strong>Завершите настройку аккаунта</strong><span>Создайте никнейм, чтобы открыть профиль.</span><button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>Продолжить</button></div>`;
   } else if (!profile.avatar_gender) {
     body = genderSelection();
   } else {
@@ -133,46 +117,48 @@ async function renderStatus(context, auth, profile) {
     body = `<div class="profileStatusContent">
       <div class="profileAvatarFrame" data-avatar-gender="${escapeHtml(profile.avatar_gender)}">
         <div class="profileAvatarFigure">${avatarFigure(profile.avatar_gender)}</div>
-        <button class="profileAccountButton" type="button" data-profile-account aria-label="Открыть аккаунт">${uiIcon("account")}</button>
+        <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="Открыть аккаунт">${uiIcon("account")}</button>
       </div>
       <div class="profileNickname">${escapeHtml(profile.nickname)}</div>
       <section class="profileStatusSection profileStorySection">
-        ${renderBracketHeading("Прогресс по историям", { className: "profileSectionTitle" })}
+        <h2 class="profileSectionTitle">Прогресс по историям</h2>
         ${progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}
       </section>
       <section class="profileStatusSection profileFutureSection">
-        ${renderBracketHeading("Артефакты", { className: "profileSectionTitle" })}
+        <h2 class="profileSectionTitle">Артефакты</h2>
         <div class="profileFutureNote">Заработанные вещи появятся здесь позже.</div>
       </section>
       <section class="profileStatusSection profileFutureSection">
-        ${renderBracketHeading("Достижения", { className: "profileSectionTitle" })}
+        <h2 class="profileSectionTitle">Достижения</h2>
         <div class="profileFutureNote">Раздел будет добавлен позже.</div>
       </section>
     </div>`;
   }
 
   context.root.innerHTML = `<section class="view screen profileView">
+    ${primaryNavigation}
     ${subNavigation("status")}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
 
 function renderSkills(context, auth, profile) {
-  setProfileHeaderNavigation(context, "profile");
+  const primaryNavigation = setProfileHeaderNavigation(context, "profile");
   const locked = !auth.user || !profile?.avatar_gender;
   // TODO(avatar-skills): replace this placeholder with a multilingual table that maps
   // skill names to parts of speech or set_id values. Do not hardcode skill taxonomy here.
   const body = locked
     ? `<div class="profileLockedState profileSkillsLocked"><span class="profileLockedIcon">${uiIcon("locked")}</span><strong>Навыки недоступны</strong><span>Сначала войдите и настройте аватар.</span></div>`
-    : `<div class="profileFutureFeature"><strong>[ Навыки ]</strong><span>Позже этот раздел будет подключён из отдельной мультиязычной таблицы.</span></div>`;
+    : `<div class="profileFutureFeature"><strong>Навыки</strong><span>Позже этот раздел будет подключён из отдельной мультиязычной таблицы.</span></div>`;
   context.root.innerHTML = `<section class="view screen profileView">
+    ${primaryNavigation}
     ${subNavigation("skills")}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
 
 async function renderStatistics(context) {
-  setProfileHeaderNavigation(context, "statistics");
+  const primaryNavigation = setProfileHeaderNavigation(context, "statistics");
   let body = "";
   try {
     const words = await getWords();
@@ -183,7 +169,7 @@ async function renderStatistics(context) {
     const difficult = problemWordRows(words, 12);
     const completedDictionaries = route.storyOrder.reduce((sum, type) => sum + Number(path.stories[type]?.completedCatalogs || 0), 0);
     body = `<section class="profileStatusSection">
-      ${renderBracketHeading("Сводка эффективности", { className: "profileSectionTitle" })}
+      <h2 class="profileSectionTitle">Сводка эффективности</h2>
       <div class="profileGrid">
         <div class="profileStat"><strong>${mastery.mastered}</strong><span>освоенных слов</span></div>
         <div class="profileStat"><strong>${completedDictionaries}</strong><span>завершённых словарей</span></div>
@@ -194,7 +180,7 @@ async function renderStatistics(context) {
       </div>
     </section>
     <section class="profileStatusSection">
-      ${renderBracketHeading("Проблемные слова", { className: "profileSectionTitle" })}
+      <h2 class="profileSectionTitle">Проблемные слова</h2>
       <div class="problemWords">${difficult.length ? difficult.map(({ word, unknownRate }) => `<span class="problemWord"><strong>${escapeHtml(word.word)}</strong><small>${unknownRate}%</small></span>`).join("") : `<span class="profileFutureNote">Пока недостаточно данных.</span>`}</div>
     </section>`;
   } catch (error) {
@@ -206,6 +192,7 @@ async function renderStatistics(context) {
   }
 
   context.root.innerHTML = `<section class="view screen profileView profileStatisticsView">
+    ${primaryNavigation}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
@@ -231,6 +218,7 @@ export async function mount(context, params = {}) {
   else await renderStatus(context, auth, profile);
 
   const signal = controller.signal;
+  bindProfileNavigation(context, signal);
   bindLocalNavigation(context, signal);
   context.root.querySelectorAll("[data-profile-story]").forEach((button) => {
     button.addEventListener("click", () => context.router.navigate("path.home", { storyType: button.dataset.profileStory }), { signal });

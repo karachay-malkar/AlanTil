@@ -9,6 +9,8 @@ export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 export const DEFAULT_USER_SETTINGS = Object.freeze({
   interface_language_code: "ru",
   translation_language_code: "ru",
+  alan_script_code: "cyrillic",
+  alan_dialect_code: "canonical",
   station_size: 40,
 });
 
@@ -24,10 +26,20 @@ function normalizeStationSize(value) {
   return Number(value) === 20 ? 20 : 40;
 }
 
+function normalizeAlanScriptCode(value) {
+  return value === "turkic" ? "turkic" : "cyrillic";
+}
+
+function normalizeAlanDialectCode(value) {
+  return ["canonical", "karachay", "balkar"].includes(value) ? value : "canonical";
+}
+
 function normalizeSettings(value = {}) {
   return {
     interface_language_code: normalizeLanguageCode(value.interface_language_code, DEFAULT_USER_SETTINGS.interface_language_code),
     translation_language_code: normalizeLanguageCode(value.translation_language_code, DEFAULT_USER_SETTINGS.translation_language_code),
+    alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
+    alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),
     station_size: normalizeStationSize(value.station_size),
   };
 }
@@ -65,6 +77,8 @@ export function setUserSettings(updates = {}, { queue = true } = {}) {
   const next = normalizeSettings({ ...state, ...updates });
   const changed = next.interface_language_code !== state.interface_language_code
     || next.translation_language_code !== state.translation_language_code
+    || next.alan_script_code !== state.alan_script_code
+    || next.alan_dialect_code !== state.alan_dialect_code
     || next.station_size !== state.station_size;
   state = next;
   writeScopedJson(USER_SETTINGS_KEY, state);

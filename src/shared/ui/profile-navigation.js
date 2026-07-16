@@ -5,7 +5,7 @@ export function renderProfileNavigation(active = "profile") {
     { id: "settings", label: "Настройки", route: "settings.home" },
   ];
   return `<nav class="profilePrimaryNav" aria-label="Разделы профиля">
-    ${items.map((item) => `<button class="profilePrimaryTab ${active === item.id ? "active" : ""}" type="button" data-profile-navigation="${item.route}" ${active === item.id ? 'aria-current="page"' : ""}>[ ${item.label} ]</button>`).join("")}
+    ${items.map((item) => `<button class="tabAction profilePrimaryTab ${active === item.id ? "active" : ""}" type="button" data-profile-navigation="${item.route}" ${active === item.id ? 'aria-current="page"' : ""}>[ ${item.label} ]</button>`).join("")}
   </nav>`;
 }
 

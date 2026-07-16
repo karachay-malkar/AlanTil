@@ -1,30 +1,42 @@
 import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { STATUS_BAD_ICON_SVG } from "../../shared/ui/icons.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { learnState } from "./state.js";
 
-export function renderResults(context, words, signal) {
+export function renderResults(context, words, signal, { onDone } = {}) {
   context.shell.setHeaderContent?.({ title: "Результат обучения" });
-  const problemWords = Object.entries(learnState.sessionFailMap)
-    .filter(([, count]) => count > 0)
-    .map(([id, count]) => ({ ...words.find((word) => word.id === id), fails: count }))
+  context.shell.setCounter("");
+  const sessionRows = Object.values(learnState.studySession.wordStats || {}).filter((row) => Number(row?.show_count || 0) > 0);
+  const studiedTotal = sessionRows.length;
+  const unknownRows = sessionRows.filter((row) => Number(row.left_swipe_count || 0) > 0);
+  const leftSwipesTotal = unknownRows.reduce((sum, row) => sum + Number(row.left_swipe_count || 0), 0);
+  const problemWords = unknownRows
+    .map((row) => ({ ...words.find((word) => String(word.id) === String(row.word_id)), fails: Number(row.left_swipe_count || 0) }))
     .filter((word) => word.id)
     .sort((a, b) => b.fails - a.fails);
 
   const content = problemWords.length
     ? problemWords.map((word) => renderContentListRow({
         id: word.id,
-        leadingHtml: `<span class="contentListStatus bad analyticsFailMark" aria-label="Ошибок: ${word.fails}">${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${word.fails}</span></span>`,
+        leadingHtml: `<span class="learnResultCount" aria-label="Свайпов влево: ${word.fails}">×${word.fails}</span>`,
         primary: word.word,
         secondary: word.trans,
         trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
       })).join("")
     : `<div class="smallNote noteCenter"><div class="noteTitle">Аперим!</div><div class="successNoteLine">Не было незнакомых слов</div></div>`;
 
-  context.root.innerHTML = panel({ title: "Аналитика сессии", body: `<div id="analyticsList" class="contentList">${content}</div>` });
+  context.root.innerHTML = panel({ title: "Итог сессии", body: `
+    <div class="learnResultSummary" aria-label="Итоги обучения">
+      <div><strong>${studiedTotal}</strong><span>изучено</span></div>
+      <div><strong>${unknownRows.length}</strong><span>слов «не знаю»</span></div>
+      <div><strong>${leftSwipesTotal}</strong><span>свайпов влево</span></div>
+    </div>
+    <div id="analyticsList" class="contentList learnResultList">${content}</div>
+    ${typeof onDone === "function" ? '<div class="learnResultFooter"><button class="btn actionPrimary" type="button" data-learn-result-done>К этапу</button></div>' : ""}
+  ` });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
     button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal });
   });
+  context.root.querySelector("[data-learn-result-done]")?.addEventListener("click", onDone, { signal });
 }

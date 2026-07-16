@@ -10,6 +10,15 @@ const DEFAULTS = Object.freeze({
   updated_at: null,
 });
 
+function cloudSettingsPayload(settings = {}) {
+  return {
+    selected_dictionary_id: settings.selected_dictionary_id,
+    active_story: settings.active_story,
+    selected_background_route: settings.selected_background_route,
+    updated_at: settings.updated_at,
+  };
+}
+
 export function getRouteSettings() {
   return { ...DEFAULTS, ...(readScopedJson(ROUTE_SETTINGS_KEY, {}) || {}) };
 }
@@ -17,12 +26,13 @@ export function getRouteSettings() {
 export function updateRouteSettings(updates = {}, { queue = true } = {}) {
   const next = { ...getRouteSettings(), ...updates, updated_at: new Date().toISOString() };
   writeScopedJson(ROUTE_SETTINGS_KEY, next);
-  if (queue) enqueueProgress("route_settings", next, { id: "route_settings", replace: true });
+  if (queue) enqueueProgress("route_settings", cloudSettingsPayload(next), { id: "route_settings", replace: true });
   return next;
 }
 
 export function replaceRouteSettings(row) {
-  const next = { ...DEFAULTS, ...(row || {}) };
+  const local = readScopedJson(ROUTE_SETTINGS_KEY, {}) || {};
+  const next = { ...DEFAULTS, ...local, ...(row || {}) };
   writeScopedJson(ROUTE_SETTINGS_KEY, next);
   return next;
 }

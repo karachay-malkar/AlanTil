@@ -17,8 +17,8 @@ export function createModalService(root) {
         <div class="exitModalCard">
           <div class="exitModalText" id="globalModalTitle">${message}</div>
           <div class="exitModalActions">
-            <button class="btn exitStay" type="button" data-modal-cancel="1">${cancelText}</button>
-            <button class="btn primary exitConfirm" type="button" data-modal-confirm="1">${confirmText}</button>
+            <button class="btn actionText exitStay" type="button" data-modal-cancel="1">${cancelText}</button>
+            <button class="btn actionPrimary exitConfirm" type="button" data-modal-confirm="1">${confirmText}</button>
           </div>
         </div>
       </div>`;

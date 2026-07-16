@@ -1,7 +1,37 @@
 [data-feature="settings"] .panel{height:100%}
-[data-feature="settings"] .settingsHomeView{height:100%;min-height:0;display:grid;grid-template-rows:minmax(0,1fr);padding-left:14px;padding-right:14px;overflow:hidden;background:var(--path-scene-gradient)}
-[data-feature="settings"] .settingsHomeScroll{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 2px 28px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 34px,#000 calc(100% - 46px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 34px,#000 calc(100% - 46px),transparent 100%)}
-[data-feature="settings"] .settingsPageTitle{margin:3px 0 16px}
+[data-feature="settings"] .settingsHomeView{height:100%;min-height:0;display:grid;grid-template-rows:30px minmax(0,1fr);gap:2px;padding-left:14px;padding-right:14px;overflow:hidden;background:var(--path-scene-gradient)}
+[data-feature="settings"] .settingsHomeView>.profilePrimaryNav{position:relative;z-index:25}
+[data-feature="settings"] .settingsHomeScroll{width:min(100%,620px);min-height:0;margin:0 auto;overflow:auto;overscroll-behavior:contain;padding:8px 2px 30px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 20px,#000 calc(100% - 46px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 20px,#000 calc(100% - 46px),transparent 100%)}
+[data-feature="settings"] .settingsPageHead,[data-feature="settings"] .settingsSectionHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+[data-feature="settings"] .settingsPageHead{min-height:42px}
+[data-feature="settings"] .settingsPageHead h1{margin:0;font-size:19px;font-weight:860}
+[data-feature="settings"] .settingsSection{margin-top:20px}
+[data-feature="settings"] .settingsSectionTitle{margin:0;padding:0 0 7px;border-bottom:1px solid var(--line-soft);font-size:15px;font-weight:850;line-height:1.2}
+[data-feature="settings"] .settingsSectionHead{align-items:flex-start;border-bottom:1px solid var(--line-soft)}
+[data-feature="settings"] .settingsSectionHead .settingsSectionTitle{flex:1;border:0}
+[data-feature="settings"] .settingsSmallAction{appearance:none;flex:0 0 auto;min-height:29px;padding:4px 10px;border:1px solid var(--line);border-radius:2px;background:transparent;color:var(--text-3);font:750 10px/1 var(--font-terminal)}
+[data-feature="settings"] .settingsSmallAction.isDirty,[data-feature="settings"] .settingsUpdateWrap.needsUpdate .settingsSmallAction{border-color:var(--accent-strong);background:var(--accent);color:var(--text-inverse)}
+[data-feature="settings"] .settingsSmallAction:disabled{opacity:.48}
+[data-feature="settings"] .settingsRow{min-height:46px;display:grid;grid-template-columns:minmax(120px,1fr) minmax(142px,auto);align-items:center;gap:12px;border-bottom:1px solid var(--line-soft)}
+[data-feature="settings"] .settingsRow[hidden]{display:none}
+[data-feature="settings"] .settingsRowLabel{color:var(--text-2);font-size:12px;line-height:1.25}
+[data-feature="settings"] .settingsSegments{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);min-width:142px;padding:2px;border:1px solid var(--line);border-radius:999px;background:transparent}
+[data-feature="settings"] .settingsChoice{position:relative;display:block;min-width:0}
+[data-feature="settings"] .settingsChoice input{position:absolute;opacity:0;pointer-events:none}
+[data-feature="settings"] .settingsChoice span{min-height:28px;padding:4px 7px;display:grid;place-items:center;border:0;border-radius:999px;background:transparent;color:var(--text-3);font:750 10px/1 var(--font-terminal);white-space:nowrap}
+[data-feature="settings"] .settingsChoice input:checked+span{background:color-mix(in srgb,var(--surface-0) 72%,transparent);color:var(--text-1);box-shadow:var(--shadow-xs)}
+[data-feature="settings"] .settingsUpdateWrap{position:relative;flex:0 0 auto}
+[data-feature="settings"] .settingsUpdateBadge{position:absolute;right:-5px;top:-6px;width:14px;height:14px;display:grid;place-items:center;border-radius:50%;background:var(--warning);color:#fff;font:900 9px/14px var(--font-terminal);box-shadow:0 0 0 2px var(--app-bg)}
+[data-feature="settings"] .settingsDictionaryVersions{display:grid;margin:0}
+[data-feature="settings"] .settingsDictionaryVersions>div{min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);font-size:12px}
+[data-feature="settings"] .settingsDictionaryVersions dt{color:var(--text-2)}
+[data-feature="settings"] .settingsDictionaryVersions dd{margin:0;font:800 11px/1 var(--font-terminal)}
+[data-feature="settings"] .settingsDictionaryNotice{margin-top:7px;color:var(--warning);font-size:11px;font-weight:760}
+[data-feature="settings"] .settingsDictionaryError{margin-top:7px;color:var(--danger);font-size:11px;line-height:1.4}
+[data-feature="settings"] .settingsLinksSection{border-top:1px solid var(--line-soft)}
+[data-feature="settings"] .settingsLink{appearance:none;width:100%;min-height:46px;padding:7px 2px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;color:var(--text-1);text-align:left;font-size:13px}
+[data-feature="settings"] .settingsLinkEnd{display:flex;align-items:center;gap:8px;color:var(--text-3);font-size:19px}
+[data-feature="settings"] .settingsLinkEnd small{font:700 10px/1 var(--font-terminal)}
 [data-feature="settings"] .settingsDocument{width:min(100%,620px);margin:0 auto;color:var(--text-1);line-height:1.62}
 [data-feature="settings"] .settingsDocument h1,[data-feature="settings"] .settingsDocument h2,[data-feature="settings"] .settingsDocument h3{line-height:1.2;margin:22px 0 9px}
 [data-feature="settings"] .settingsDocument h1:first-child,[data-feature="settings"] .settingsDocument h2:first-child{margin-top:0}
@@ -13,21 +43,4 @@
 [data-feature="settings"] .analyticsSettingsSection{margin-top:20px;padding:12px 2px;border-top:1px solid var(--line-soft)}
 [data-feature="settings"] .analyticsPreferenceRow{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
 [data-feature="settings"] .analyticsPreferenceCheckbox{width:20px;height:20px;min-height:0;accent-color:var(--accent)}
-[data-feature="settings"] .settingsBlock{padding:4px 0 18px}
-[data-feature="settings"] .settingsBlockTitle{margin-bottom:10px}
-[data-feature="settings"] .settingsStationSize{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-[data-feature="settings"] .settingsChoice{position:relative;display:block}
-[data-feature="settings"] .settingsChoice input{position:absolute;opacity:0;pointer-events:none}
-[data-feature="settings"] .settingsChoice span{min-height:var(--control-h);display:grid;place-items:center;border:1px solid var(--line);background:var(--surface-paper-soft);font-weight:760}
-[data-feature="settings"] .settingsChoice input:checked+span{border-color:var(--accent-strong);color:var(--accent-strong);background:var(--accent-soft)}
-[data-feature="settings"] .settingsHint{margin-top:8px;color:var(--text-3);font-size:12px}
-[data-feature="settings"] .settingsLinksBlock{border-top:1px solid var(--line-soft)}
-[data-feature="settings"] .settingsDictionaryBlock{border-top:1px solid var(--line-soft);padding-top:18px}
-[data-feature="settings"] .settingsDictionaryVersions{display:grid;border-top:1px solid var(--line-soft)}
-[data-feature="settings"] .settingsDictionaryVersions>div{min-height:43px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);font-size:13px}
-[data-feature="settings"] .settingsDictionaryVersions dt{color:var(--text-2)}
-[data-feature="settings"] .settingsDictionaryVersions dd{font:800 12px/1 var(--font-terminal)}
-[data-feature="settings"] .settingsDictionaryState{margin-top:10px;color:var(--success-strong);font-size:13px;font-weight:760}
-[data-feature="settings"] .settingsDictionaryState.needsUpdate{color:var(--warning)}
-[data-feature="settings"] .settingsDictionaryError{margin-top:8px;color:var(--danger);font-size:12px;line-height:1.4}
-[data-feature="settings"] .settingsDictionaryButton{width:100%;margin-top:10px}
+@media(max-width:360px){[data-feature="settings"] .settingsHomeView{padding-inline:10px}[data-feature="settings"] .settingsRow{grid-template-columns:minmax(104px,1fr) minmax(132px,auto);gap:8px}[data-feature="settings"] .settingsSegments{min-width:132px}[data-feature="settings"] .settingsChoice span{padding-inline:5px;font-size:9px}}

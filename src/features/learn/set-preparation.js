@@ -53,12 +53,12 @@ export function renderSetPreparation(context, {
         <div id="setPreparationWords" class="contentList setPreparationWords"></div>
 
         <footer class="setPreparationFooter">
-          <div class="directionChoice" role="radiogroup" aria-label="Направление обучения">
-            <button class="directionChoiceButton" type="button" role="radio" data-study-mode="kb">АЛАН → РУС</button>
-            <button class="directionChoiceButton" type="button" role="radio" data-study-mode="ru">РУС → АЛАН</button>
+          <div class="segmentControl directionChoice" role="radiogroup" aria-label="Направление обучения">
+            <button class="segmentOption directionChoiceButton" type="button" role="radio" data-study-mode="kb">АЛАН → РУС</button>
+            <button class="segmentOption directionChoiceButton" type="button" role="radio" data-study-mode="ru">РУС → АЛАН</button>
           </div>
-          <button class="btn primary setStudyButton" type="button" data-study-start>Начать изучение</button>
-          ${canTest ? `<button class="btn secondary setTestButton" type="button" data-set-test>${escapeHtml(testLabel)}</button>` : ""}
+          <button class="btn actionPrimary setStudyButton" type="button" data-study-start>Начать изучение</button>
+          ${canTest ? `<button class="btn actionText setTestButton" type="button" data-set-test>${escapeHtml(testLabel)}</button>` : ""}
         </footer>
       </div>
     </section>`;
@@ -107,7 +107,7 @@ export function renderSetPreparation(context, {
     list.innerHTML = visibleWords().map((word) => renderContentListRow({
       id: word.id,
       rowAttributes: `data-word-row="${escapeHtml(word.id)}"`,
-      leadingHtml: `<input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="Добавить слово в обучение" />`,
+      leadingHtml: `<label class="bracketCheckbox"><input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="Добавить слово в обучение" /><span class="bracketCheckboxMark" aria-hidden="true"></span></label>`,
       primary: word.word,
       secondary: word.trans,
       trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),

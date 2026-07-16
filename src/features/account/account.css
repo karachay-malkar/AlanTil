@@ -13,7 +13,7 @@
 [data-feature="account"] .accountField input.isError{border-color:var(--danger)}
 [data-feature="account"] .accountAction{width:100%;flex:0 0 auto}
 [data-feature="account"] .authProviderList{display:flex;flex-direction:column;gap:10px;width:100%}
-[data-feature="account"] .authProviderButton{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 24px;align-items:center;gap:10px;background:transparent}
+[data-feature="account"] .authProviderButton{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) 24px;align-items:center;gap:10px}
 [data-feature="account"] .authProviderButton::after{content:"";width:24px;height:1px}
 [data-feature="account"] .authProviderIcon{width:22px;height:22px;object-fit:contain}
 [data-feature="account"] .authProviderLabel{text-align:center;line-height:1.25}

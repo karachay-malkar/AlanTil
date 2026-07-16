@@ -8,6 +8,7 @@ import {
   finalizeSessionRuntime,
   persistSessionRuntime,
 } from "../../shared/progress/session-builders.js";
+import { recordMatchWordResults } from "../../shared/progress/word-progress-store.js";
 import { matchState } from "./state.js";
 
 function wordById(id) {
@@ -55,11 +56,15 @@ function persistMatchSession() {
 export function finalizeMatchSession(status = "interrupted", exitReason = "route_change") {
   const session = matchState.session;
   if (!session.runtime || session.runtime.finalized) return false;
+  const payload = matchSessionPayload();
   const result = finalizeSessionRuntime(session.runtime, {
     status,
     exitReason,
-    payload: matchSessionPayload(),
+    payload,
   });
+  if (result?.id && payload.words.length) {
+    recordMatchWordResults(result.id, payload.words, result.ended_at || new Date().toISOString());
+  }
   session.inProgress = false;
   session.completed = status === "completed";
   return result;

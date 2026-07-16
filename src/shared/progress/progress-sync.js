@@ -1,4 +1,4 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.6.2";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.7.6";
 import { normalizeId } from "../domain/word-normalizer.js";
 import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js";
 import {
@@ -35,6 +35,7 @@ const FINISHED_KEY = "fc_finished_sets_v1";
 const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 const CLAIM_MARKER_KEY = "alantil_guest_claim_v1";
 const LEGACY_KEYS = [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY, WORD_PROGRESS_LOCAL_KEY];
+const SNAPSHOT_STATUS_RANK = Object.freeze({ not_started: 0, learning: 1, mastered: 2, review: 3 });
 
 let initialized = false;
 let unsubscribeAuth = null;
@@ -77,6 +78,94 @@ function migrateLegacyStorage() {
   LEGACY_KEYS.forEach((key) => migrateLegacyValueToGuest(key));
 }
 
+function snapshotWordRow(row = {}) {
+  const wordId = normalizeId(row.word_id);
+  if (!wordId) return null;
+  return {
+    word_id: wordId,
+    sessions_total: Math.max(0, Number(row.sessions_total || 0)),
+    learn_sessions_total: Math.max(0, Number(row.learn_sessions_total || 0)),
+    learn_unfinished_total: Math.max(0, Number(row.learn_unfinished_total || 0)),
+    test_answers_total: Math.max(0, Number(row.test_answers_total || 0)),
+    match_sessions_total: Math.max(0, Number(row.match_sessions_total || 0)),
+    match_success_total: Math.max(0, Number(row.match_success_total || 0)),
+    match_errors_total: Math.max(0, Number(row.match_errors_total || 0)),
+    study_shown_count: Math.max(0, Number(row.study_shown_count || 0)),
+    known_count: Math.max(0, Number(row.known_count || 0)),
+    unknown_count: Math.max(0, Number(row.unknown_count || 0)),
+    test_correct_count: Math.max(0, Number(row.test_correct_count || 0)),
+    test_wrong_count: Math.max(0, Number(row.test_wrong_count || 0)),
+    mastery_status: ["not_started", "learning", "mastered", "review"].includes(row.mastery_status)
+      ? row.mastery_status
+      : "not_started",
+    mastered_at: row.mastered_at || null,
+    last_mode: row.last_mode || null,
+    last_result: row.last_result || null,
+    last_seen_at: row.last_seen_at || null,
+    last_studied_at: row.last_studied_at || null,
+    last_tested_at: row.last_tested_at || null,
+  };
+}
+
+function mergeSnapshotRows(rows = []) {
+  const numericFields = [
+    "sessions_total", "learn_sessions_total", "learn_unfinished_total", "test_answers_total",
+    "match_sessions_total", "match_success_total", "match_errors_total", "study_shown_count",
+    "known_count", "unknown_count", "test_correct_count", "test_wrong_count",
+  ];
+  const byId = new Map();
+  rows.forEach((value) => {
+    const row = snapshotWordRow(value);
+    if (!row) return;
+    const current = byId.get(row.word_id);
+    if (!current) {
+      byId.set(row.word_id, row);
+      return;
+    }
+    numericFields.forEach((field) => { current[field] = Math.max(current[field], row[field]); });
+    if (SNAPSHOT_STATUS_RANK[row.mastery_status] > SNAPSHOT_STATUS_RANK[current.mastery_status]) {
+      current.mastery_status = row.mastery_status;
+    }
+    if (row.mastered_at && (!current.mastered_at || Date.parse(row.mastered_at) < Date.parse(current.mastered_at))) {
+      current.mastered_at = row.mastered_at;
+    }
+    if (Date.parse(row.last_studied_at || "") > Date.parse(current.last_studied_at || "")) {
+      current.last_studied_at = row.last_studied_at;
+    }
+    if (Date.parse(row.last_tested_at || "") > Date.parse(current.last_tested_at || "")) {
+      current.last_tested_at = row.last_tested_at;
+    }
+    if (Date.parse(row.last_seen_at || "") > Date.parse(current.last_seen_at || "")) {
+      current.last_seen_at = row.last_seen_at;
+      current.last_mode = row.last_mode;
+      current.last_result = row.last_result;
+    }
+  });
+  return Array.from(byId.values());
+}
+
+function migrateLegacyWordProgressQueue(scope) {
+  const queue = readProgressQueue(scope);
+  const legacy = queue.filter((entry) => entry.type === "word_progress");
+  if (!legacy.length) return queue;
+  const words = mergeSnapshotRows(legacy.map((entry) => entry.payload));
+  const createdAt = legacy.map((entry) => entry.created_at).filter(Boolean).sort()[0] || new Date().toISOString();
+  const snapshotId = `legacy:${scope}`;
+  const next = queue.filter((entry) => entry.type !== "word_progress");
+  if (words.length) {
+    next.push({
+      id: `word_progress_snapshot:${snapshotId}`,
+      type: "word_progress_snapshot",
+      payload: { snapshot_id: snapshotId, words },
+      claim_id: "",
+      created_at: createdAt,
+      attempts: 0,
+    });
+  }
+  writeProgressQueue(next, scope);
+  return next;
+}
+
 function recoverInterruptedSessions(scope = getStorageScope()) {
   const sessions = readActiveSessions(scope);
   Object.entries(sessions).forEach(([type, snapshot]) => {
@@ -93,8 +182,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=13.6.2"),
-    import("../state/song-favorites.js?v=13.6.2"),
+    import("../state/word-favorites.js?v=13.7.6"),
+    import("../state/song-favorites.js?v=13.7.6"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -145,10 +234,10 @@ async function applyCloudState(state) {
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=13.6.2");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=13.7.6");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=13.6.2");
+    const { songFavorites } = await import("../state/song-favorites.js?v=13.7.6");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});
@@ -173,8 +262,8 @@ async function applyQueueEntryLocally(entry) {
     replaceRouteSettings(payload);
   } else if (entry.type === "user_settings") {
     replaceUserSettings(payload);
-  } else if (entry.type === "word_progress") {
-    mergeCloudWordProgress([payload]);
+  } else if (entry.type === "word_progress_snapshot") {
+    mergeCloudWordProgress(payload.words || []);
   }
 }
 
@@ -188,7 +277,7 @@ function readClaimMarker() {
   return marker && typeof marker === "object" ? marker : null;
 }
 
-function guestStateEntries(now = new Date().toISOString()) {
+function guestStateEntries(now = new Date().toISOString(), snapshotId = `guest:${Date.now()}`) {
   const entries = [];
   const wordFavorites = readScopedJson(WORD_FAVORITES_KEY, [], STORAGE_SCOPES.GUEST);
   const songFavorites = readScopedJson(SONG_FAVORITES_KEY, [], STORAGE_SCOPES.GUEST);
@@ -224,26 +313,11 @@ function guestStateEntries(now = new Date().toISOString()) {
       id: `set_progress:${dictionary_id}:${section_id}:${set_id}`,
     });
   });
-  Object.values(wordProgress?.rows || {}).forEach((row) => {
-    const wordId = normalizeId(row?.word_id);
-    if (!wordId) return;
-    entries.push({
-      type: "word_progress",
-      payload: {
-        word_id: wordId,
-        study_shown_count: Number(row.study_shown_count || 0),
-        known_count: Number(row.known_count || 0),
-        unknown_count: Number(row.unknown_count || 0),
-        test_correct_count: Number(row.test_correct_count || 0),
-        test_wrong_count: Number(row.test_wrong_count || 0),
-        mastery_status: row.mastery_status || "not_started",
-        mastered_at: row.mastered_at || null,
-        last_result: row.last_result || null,
-        last_seen_at: row.last_seen_at || null,
-        updated_at: now,
-      },
-      id: `word_progress:${wordId}`,
-    });
+  const snapshotWords = mergeSnapshotRows(Object.values(wordProgress?.rows || {}));
+  if (snapshotWords.length) entries.push({
+    type: "word_progress_snapshot",
+    payload: { snapshot_id: snapshotId, words: snapshotWords },
+    id: `word_progress_snapshot:${snapshotId}`,
   });
   if (settings) entries.push({
     type: "user_settings",
@@ -256,18 +330,22 @@ function guestStateEntries(now = new Date().toISOString()) {
     if (entry.type === "song_favorite") return Boolean(entry.payload.song_id);
     if (entry.type === "hidden_word") return Boolean(entry.payload.dictionary_id && entry.payload.set_id && entry.payload.word_id);
     if (entry.type === "set_progress") return Boolean(entry.payload.dictionary_id && entry.payload.set_id);
-    if (entry.type === "word_progress") return Boolean(entry.payload.word_id);
+    if (entry.type === "word_progress_snapshot") return Boolean(entry.payload.snapshot_id && entry.payload.words?.length);
     return entry.type === "user_settings";
   });
 }
 
 async function claimGuestData(userId) {
   const marker = readClaimMarker();
-  if (marker?.status === "completed" || (marker?.status === "pending" && marker.user_id !== userId)) return marker;
+  if (marker?.status === "pending" && marker.user_id !== userId) return marker;
   const userScope = storageScopeForUser(userId);
-  const claimId = marker?.claim_id || `claim:${userId}:${Date.now()}`;
+  const claimId = marker?.status === "pending" && marker.user_id === userId
+    ? marker.claim_id
+    : `claim:${userId}:${Date.now()}`;
+  migrateLegacyWordProgressQueue(STORAGE_SCOPES.GUEST);
   const guestQueue = readProgressQueue(STORAGE_SCOPES.GUEST);
-  const stateEntries = guestStateEntries();
+  const stateEntries = guestStateEntries(new Date().toISOString(), claimId);
+  if (!guestQueue.length && !stateEntries.length) return marker;
   const prepared = [...guestQueue, ...stateEntries].map((entry) => ({
     ...entry,
     claim_id: claimId,
@@ -355,15 +433,15 @@ export async function pullCloudProgress() {
   return pullPromise;
 }
 
-function activateScopeForUser(userId) {
+async function activateScopeForUser(userId) {
   setStorageScope(userId);
+  migrateLegacyWordProgressQueue(getStorageScope());
   recoverInterruptedSessions();
-  if (!userId) return;
-  void (async () => {
-    await pullCloudProgress();
-    await claimGuestData(userId);
-    await flushProgressQueue();
-  })();
+  if (!userId) return true;
+  await pullCloudProgress();
+  await claimGuestData(userId);
+  await flushProgressQueue();
+  return true;
 }
 
 function bindSynchronizationEvents() {
@@ -379,7 +457,7 @@ export async function initializeProgressSystem() {
   migrateLegacyStorage();
   bindSynchronizationEvents();
   lastUserId = getCurrentAuthState().user?.id || "";
-  activateScopeForUser(lastUserId);
+  await activateScopeForUser(lastUserId);
   unsubscribeAuth = subscribeToAuth((state) => {
     const nextUserId = state.user?.id || "";
     if (nextUserId === lastUserId) return;

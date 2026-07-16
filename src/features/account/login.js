@@ -1,6 +1,6 @@
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.6.2";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.7.6";
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 
 const GOOGLE_ICON = "/assets/icons/auth/google.svg";
 
@@ -29,7 +29,7 @@ export function renderLogin(context, {
 
         <div class="accountDivider"><span>или</span></div>
 
-        <button id="accountEmailToggle" class="btn ghost accountAction authEmailToggle${emailExpanded ? " hidden" : ""}" type="button">
+        <button id="accountEmailToggle" class="btn actionText accountAction authEmailToggle${emailExpanded ? " hidden" : ""}" type="button">
           <span aria-hidden="true">✉</span>
           <span>Войти по Email</span>
         </button>
@@ -40,11 +40,11 @@ export function renderLogin(context, {
               <span>Email</span>
               <input id="accountEmail" name="email" type="email" inputmode="email" autocomplete="email" required />
             </label>
-            <button class="btn accountAction" type="submit">Получить ссылку для входа</button>
+            <button class="btn actionPrimary accountAction" type="submit">Получить ссылку для входа</button>
           </form>
         </div>
 
-        <button id="accountContinueGuest" class="btn ghost accountAction" type="button">Продолжить без аккаунта</button>
+        <button id="accountContinueGuest" class="btn actionText accountAction" type="button">Продолжить без аккаунта</button>
       </div>`,
   });
 }

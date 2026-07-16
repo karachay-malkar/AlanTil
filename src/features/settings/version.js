@@ -1,4 +1,4 @@
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 
 export function renderVersion(context) {
   context.shell.setHeaderContent?.({ title: "Версия приложения" });
@@ -6,7 +6,7 @@ export function renderVersion(context) {
     title: "Версия приложения",
     body: `
       <dl class="settingsFacts">
-        <div><dt>Версия</dt><dd>13.6.2</dd></div>
+        <div><dt>Версия</dt><dd>13.7.6</dd></div>
         <div><dt>Последнее обновление</dt><dd>июль 2026</dd></div>
       </dl>`,
   });

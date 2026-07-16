@@ -1,4 +1,4 @@
-[data-feature="match"] .matchGameView{display:grid;grid-template-rows:24px minmax(0,1fr);gap:7px}.matchProgress{text-align:center;color:var(--text-2);font:700 10px/1.3 var(--font-terminal)}
+[data-feature="match"] .matchGameView{display:block}.matchGameView .matchColumns{height:100%}
 [data-feature="match"] .matchColumns{min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:auto}
 [data-feature="match"] .matchCol{display:flex;flex-direction:column;gap:7px;min-width:0}
 [data-feature="match"] .matchCard{min-height:var(--control-h);padding:8px;border-radius:2px;font-size:13px;font-weight:760;line-height:1.2;overflow-wrap:anywhere}

@@ -46,18 +46,18 @@ export function renderTestMenu(context, words, signal) {
       <div id="testScopeList" class="testScopeList">${scopeHtml || `<div class="hintText">Словари не найдены.</div>`}</div>
       <section class="modeOptionSection">
         <div class="modeOptionLabel">Количество слов</div>
-        <div class="testLimitRadios">${[20, 40, 80].map((limit) => `<label class="radioOpt"><input type="radio" name="testLimit" value="${limit}" ${testState.limit === limit ? "checked" : ""} /><span>${limit}</span></label>`).join("")}</div>
+        <div class="segmentControl testLimitRadios">${[20, 40, 80].map((limit) => `<label class="segmentOption radioOpt"><input type="radio" name="testLimit" value="${limit}" ${testState.limit === limit ? "checked" : ""} /><span>${limit}</span></label>`).join("")}</div>
       </section>
     </div>
     <footer class="modeLaunchBar modeMenuLaunch">
       <div class="modeDirectionControl">
         <span>Направление</span>
-        <div class="modeDirectionToggle" role="radiogroup" aria-label="Направление теста">
-          <button type="button" role="radio" data-test-mode="kb">АЛАН → РУС</button>
-          <button type="button" role="radio" data-test-mode="ru">РУС → АЛАН</button>
+        <div class="segmentControl modeDirectionToggle" role="radiogroup" aria-label="Направление теста">
+          <button class="segmentOption" type="button" role="radio" data-test-mode="kb">АЛАН → РУС</button>
+          <button class="segmentOption" type="button" role="radio" data-test-mode="ru">РУС → АЛАН</button>
         </div>
       </div>
-      <button id="btnGlobalTestStart" class="btn primary" type="button">Начать тест</button>
+      <button id="btnGlobalTestStart" class="btn actionPrimary" type="button">Начать тест</button>
     </footer>
   </section>`;
 
@@ -133,7 +133,7 @@ export function renderTestResults(context, signal) {
   context.root.innerHTML = `<section class="view screen modeView testResultsView">
     <div class="modeResultSummary"><span class="modeResultMark">${level ? "⌃".repeat(level) : "—"}</span><strong>${percentage}%</strong><span>${percentage >= 80 ? "Тест сдан" : "Тест не сдан"} · ${testState.correct}/${testState.items.length}</span></div>
     <div class="contentList modeResultList">${rows || `<div class="hintText">Нет результатов.</div>`}</div>
-    <footer class="modeLaunchBar"><button class="btn primary" id="btnTestAgain2" type="button">Пройти ещё раз</button></footer>
+    <footer class="modeLaunchBar"><button class="btn actionPrimary" id="btnTestAgain2" type="button">Пройти ещё раз</button></footer>
   </section>`;
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal }));
   context.root.querySelector("#btnTestAgain2")?.addEventListener("click", async () => { startTest(testState.session.wordsPool, testState.mode, testState.limit, testState.session.metadata); await context.router.replace("test.session", {}, { force: true }); }, { signal });
@@ -147,9 +147,8 @@ export function renderTestSession(context, signal) {
     context.shell.setCounter(`${testState.index + 1}/${testState.items.length}`);
     context.root.innerHTML = `<section class="view screen modeSessionView">
       <div class="modeQuestion">${escapeHtml(question)}</div>
-      <div class="modeQuestionHint">Выберите точный перевод</div>
-      <div id="testOptions" class="modeOptions">${pickOptions(item).map((option) => `<button class="optionBtn" type="button" data-option-id="${escapeHtml(option.id)}" data-option-text="${escapeHtml(option.text)}">${escapeHtml(option.text)}</button>`).join("")}</div>
-      <footer class="modeLaunchBar"><button id="btnTestNext" class="btn primary" type="button" disabled>Дальше</button></footer>
+      <div id="testOptions" class="modeOptions">${pickOptions(item).map((option) => `<button class="choiceControl optionBtn" type="button" data-option-id="${escapeHtml(option.id)}" data-option-text="${escapeHtml(option.text)}">${escapeHtml(option.text)}</button>`).join("")}</div>
+      <footer class="modeLaunchBar"><button id="btnTestNext" class="btn actionPrimary" type="button" disabled>Ответить</button></footer>
     </section>`;
     const next = context.root.querySelector("#btnTestNext");
     const options = Array.from(context.root.querySelectorAll(".optionBtn"));

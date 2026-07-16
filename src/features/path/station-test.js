@@ -5,6 +5,7 @@ import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer
 import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js";
 import { recordActivitySession } from "../../shared/progress/activity-history-store.js";
 import { enqueueProgress } from "../../shared/progress/progress-queue.js";
+import { stationTestPhase } from "../../shared/progress/station-progress-store.js";
 import { recordTestWordResults } from "../../shared/progress/word-progress-store.js";
 import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js";
 import { escapeHtml } from "../../shared/ui/html.js";
@@ -85,9 +86,12 @@ function sessionPayload(session) {
     id: session.id,
     attempt_id: session.id,
     dictionary_id: session.station.dictionaryId,
+    catalog_id: session.station.catalogId,
+    group_id: session.station.groupId,
     section_id: session.station.groupId,
     set_id: session.station.sourceSetId || null,
     story_type: session.station.storyType,
+    phase: session.phase,
     station_key: session.station.key,
     status: session.completed ? "completed" : "interrupted",
     questions_total: total,
@@ -102,6 +106,7 @@ function sessionPayload(session) {
     duration_sec: durationSec,
     active_duration_sec: durationSec,
     created_at: session.startedAt,
+    required_accuracy: Number(session.station.requiredAccuracy || PATH_CONFIG.stationRequiredAccuracy || 80),
     word_ids: session.questions.map((question) => String(question.item.id)),
     words: session.answers.map((answer, index) => ({
       word_id: answer.wordId,
@@ -153,6 +158,7 @@ export function createStationTestSession(station, allWords, selectedWords = stat
     answers: canResume && Array.isArray(interrupted.answers) ? interrupted.answers.slice(0, orderedWords.length) : [],
     startedAt: canResume ? interrupted.startedAt : new Date().toISOString(),
     completed: false,
+    phase: stationTestPhase(station),
   };
   saveActive(session);
   return session;
@@ -165,20 +171,28 @@ export function renderStationTest(context, session, { onComplete } = {}) {
   const number = session.index + 1;
   context.shell.setCounter(`${number}/${session.questions.length}`);
   const questionText = session.mode === "ru" ? question.item.trans : question.item.word;
-  const questionHint = session.mode === "ru" ? "Выберите слово на аланском" : "Выберите точный перевод";
   context.root.innerHTML = `<section class="view screen stationTestView">
     <div class="stationTestPanel">
       <div class="stationTestQuestion">${escapeHtml(questionText)}</div>
-      <div class="stationTestHint">${questionHint}</div>
       <div class="stationTestOptions">
-        ${question.options.map((option) => `<button class="optionBtn stationTestOption" type="button" data-answer-id="${escapeHtml(option.id)}">${escapeHtml(option.text)}</button>`).join("")}
+        ${question.options.map((option) => `<button class="choiceControl optionBtn stationTestOption" type="button" data-answer-id="${escapeHtml(option.id)}">${escapeHtml(option.text)}</button>`).join("")}
       </div>
     </div>
+    <footer class="modeLaunchBar"><button class="btn actionPrimary stationTestSubmit" type="button" data-answer-submit disabled>Ответить</button></footer>
   </section>`;
 
-  context.root.querySelectorAll("[data-answer-id]").forEach((button) => {
+  const answerButtons = Array.from(context.root.querySelectorAll("[data-answer-id]"));
+  const submitButton = context.root.querySelector("[data-answer-submit]");
+  let selectedId = "";
+  answerButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      const selected = question.options.find((option) => option.id === button.dataset.answerId);
+      selectedId = button.dataset.answerId || "";
+      answerButtons.forEach((option) => option.classList.toggle("selected", option === button));
+      submitButton.disabled = !selectedId;
+    });
+  });
+  submitButton.addEventListener("click", () => {
+      const selected = question.options.find((option) => option.id === selectedId);
       if (!selected) return;
       const correct = selected.id === String(question.item.id);
       session.answers.push({ wordId: String(question.item.id), result: correct ? "correct" : "wrong", wrongWordId: correct ? null : selected.id });
@@ -191,7 +205,6 @@ export function renderStationTest(context, session, { onComplete } = {}) {
       session.index += 1;
       saveActive(session);
       renderStationTest(context, session, { onComplete });
-    });
   });
 }
 
@@ -200,8 +213,15 @@ export function completeStationTest(context, session, onComplete) {
   const payload = sessionPayload(session);
   const required = Number(session.station.requiredAccuracy || PATH_CONFIG.stationRequiredAccuracy || 80);
   const passed = payload.accuracy >= required;
-  recordTestWordResults({ sessionId: payload.id, answers: payload.words, accuracy: payload.accuracy, requiredAccuracy: required, completedAt: payload.ended_at });
-  enqueueProgress("test_session", payload, { id: `test_session:${payload.id}`, replace: false });
+  recordTestWordResults({
+    sessionId: payload.id,
+    answers: payload.words,
+    accuracy: payload.accuracy,
+    requiredAccuracy: required,
+    updateMastery: true,
+    completedAt: payload.ended_at,
+  });
+  enqueueProgress("station_test_session", payload, { id: `station_test_session:${payload.id}`, replace: false });
   recordActivitySession("station_test", payload);
   clearActive();
   context.shell.setCounter("");

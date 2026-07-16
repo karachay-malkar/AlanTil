@@ -26,26 +26,26 @@ input,textarea,select{
 }
 input::placeholder,textarea::placeholder{color:var(--text-3)}
 .searchInput{flex:1;min-width:0;height:40px;min-height:40px;border-radius:var(--radius-pill);padding-inline:15px}
-.btn,.sectionMenuItem,.menuItem,.profileLink,.stationAction,.optionBtn,.matchCard,.storyRow{
+.btn,.sectionMenuItem,.menuItem,.profileLink,.optionBtn,.matchCard,.storyRow{
   appearance:none;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);
   box-shadow:var(--shadow-xs);transition:transform var(--duration-fast),background var(--duration-fast),border-color var(--duration-fast),box-shadow var(--duration-fast),opacity var(--duration-fast);
 }
 .btn{
-  flex:1;min-height:var(--control-h);padding:9px 14px;border-radius:var(--radius-sm);
+  min-height:38px;padding:7px 13px;border-radius:2px;
   display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center;font-weight:760;line-height:1.2;
 }
-.btn:hover:not(:disabled),.sectionMenuItem:hover:not(:disabled),.menuItem:hover:not(:disabled),.profileLink:hover:not(:disabled),.stationAction:hover:not(:disabled),.optionBtn:hover:not(:disabled){border-color:var(--accent);box-shadow:var(--shadow-sm)}
-.btn:active:not(:disabled),.sectionMenuItem:active:not(:disabled),.menuItem:active:not(:disabled),.profileLink:active:not(:disabled),.stationAction:active:not(:disabled),.optionBtn:active:not(:disabled){transform:translateY(1px);box-shadow:none}
-.btn:disabled,.optionBtn:disabled,.stationAction:disabled{opacity:.46;box-shadow:none}
-.btn.primary,.btn.secondary,.stationAction{border-color:var(--accent-strong);background:linear-gradient(180deg,var(--accent),var(--accent-strong));color:var(--text-inverse);box-shadow:0 4px 0 var(--button-shadow)}
-.btn.secondary,.stationAction.secondary{background:linear-gradient(180deg,var(--surface-2),var(--surface-3));color:var(--text-1);border-color:var(--line-strong)}
-.btn.ghost{background:transparent;border-color:var(--line)}
-.btn.neutral{background:var(--surface-paper-soft)}
+.btn:hover:not(:disabled),.sectionMenuItem:hover:not(:disabled),.menuItem:hover:not(:disabled),.profileLink:hover:not(:disabled),.optionBtn:hover:not(:disabled){border-color:var(--accent);box-shadow:var(--shadow-sm)}
+.btn:active:not(:disabled),.sectionMenuItem:active:not(:disabled),.menuItem:active:not(:disabled),.profileLink:active:not(:disabled),.optionBtn:active:not(:disabled){transform:translateY(1px);box-shadow:none}
+.btn:disabled,.optionBtn:disabled{opacity:.46;box-shadow:none}
+.btn.actionPrimary{border-color:var(--accent-strong);background:var(--accent);color:var(--text-inverse);box-shadow:none}
+.btn.actionText{border-color:transparent;background:transparent;color:var(--text-2);box-shadow:none}
+.btn.actionText:hover:not(:disabled){border-color:transparent;background:transparent;color:var(--text-1);box-shadow:none}
+.btn.actionCompact{min-height:30px;padding:4px 10px;font:750 10px/1 var(--font-terminal)}
 .btn.mini{min-height:var(--control-h-sm);margin-top:12px}
 .btnIcon{width:22px;height:22px;display:grid;place-items:center;flex:0 0 auto}
 .btnIcon svg{width:100%;height:100%;fill:currentColor}
 .btnLabel{min-width:0}
-.iconBtn{width:40px;height:40px;flex:0 0 40px;padding:9px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-0);color:var(--text-1);display:grid;place-items:center}
+.iconBtn{width:40px;height:40px;flex:0 0 40px;padding:9px;border:0;border-radius:0;background:transparent;color:var(--text-1);display:grid;place-items:center}
 .iconBtn svg,.iconBtn img{width:22px;height:22px;object-fit:contain}
 .hintText{margin:0 0 10px;color:var(--text-2);font-size:14px;line-height:1.45}
 .errorState,.emptyState{padding:22px;border:1px dashed var(--line);border-radius:var(--radius-md);background:var(--surface-panel-faint);text-align:center;color:var(--text-2)}
@@ -112,15 +112,15 @@ button.contentListMain{cursor:pointer}
 .testLimitRadios{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .radioOpt{position:relative;display:block}
 .radioOpt input{position:absolute;opacity:0;pointer-events:none}
-.radioOpt span{min-height:var(--control-h);display:grid;place-items:center;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-0);font-weight:760}
-.radioOpt input:checked+span{border-color:var(--accent-strong);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.radioOpt span{min-height:30px;display:grid;place-items:center;border:0;border-radius:999px;background:transparent;color:var(--text-3);font-weight:760}
+.radioOpt input:checked+span{border-color:transparent;background:color-mix(in srgb,var(--surface-0) 76%,transparent);color:var(--text-1);box-shadow:var(--shadow-xs)}
 
-.groups{width:100%;display:flex;flex-direction:column;gap:10px}
-.groupRow{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:start}
-.groupNum{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);font:700 11px/24px var(--font-terminal);color:var(--accent-strong)}
-.groupPill{min-width:0;padding:10px 12px;border-radius:var(--radius-sm);background:var(--word-group-bg)}
-.gTrans{font-weight:760}
-.gEx{margin-top:5px;font-size:13px;color:var(--text-2);white-space:pre-wrap}
+.groups{width:100%;display:flex;flex-direction:column;gap:18px}
+.groupRow{display:grid;grid-template-columns:30px minmax(0,1fr);gap:7px;align-items:start}
+.groupNum{min-width:30px;padding-top:1px;color:var(--accent-strong);font:800 12px/1.45 var(--font-terminal)}
+.groupPill{min-width:0;padding:0;border:0;border-radius:0;background:transparent}
+.gTrans{font-weight:820;line-height:1.35}
+.gEx{margin-top:6px;font-size:13px;color:var(--text-2);line-height:1.48;white-space:normal;overflow-wrap:anywhere}
 .wordCard{padding:4px 0}
 .wordCardHeader{display:flex;align-items:flex-start;gap:12px}
 .wordCardWord{flex:1;font-size:26px;font-weight:860;overflow-wrap:anywhere}
@@ -181,7 +181,7 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 .segmentedProgressBracket{flex:0 0 auto}
 .segmentedProgressSegment{display:block;width:8px;height:2px;border-radius:0;background:color-mix(in srgb,var(--text-1) 20%,transparent)}
 .segmentedProgressSegment.isFilled{background:var(--text-1)}
-.btn,.directionChoiceButton,.optionBtn,.matchCard,.radioOpt span{
+.btn,.directionChoiceButton,.optionBtn,.matchCard{
   border-radius:2px;
   border-color:var(--line-strong);
   background:color-mix(in srgb,var(--surface-0) 72%,transparent);
@@ -194,3 +194,24 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 .scopeBlock{border:0;border-top:1px solid var(--line-soft);border-radius:0;background:transparent}
 .scopeDictRow,.scopeSectionRow{background:transparent;border-bottom:1px solid var(--line-soft)}
 .scopeDictRow{font-size:15px;font-weight:850}.scopeSectionRow{padding-left:34px;color:var(--text-2);font-size:13px}
+
+/* Unified interactive vocabulary: text/icon action, primary action, segment,
+   bracket tab and selectable choice. Navigation rows stay a list pattern. */
+.iconAction{appearance:none;border:0;background:transparent;box-shadow:none}
+.iconAction:active{background:transparent;opacity:.68;transform:translateY(1px)}
+:where(.textAction,.appHeaderAction,.iconBtn,.starBtn,.mediaPlayButton,.expandSearchToggle){box-shadow:none}
+:where(.tabAction,.profilePrimaryTab,.profileSubTab,.stationViewTab,.storyTab){border:0;background:transparent;box-shadow:none}
+:where(.segmentControl,.settingsSegments,.stationDirectionToggle,.modeDirectionToggle,.testLimitRadios){box-shadow:none}
+.segmentOption{min-width:0}
+:where(.choiceControl,.optionBtn,.matchCard,.profileGenderChoices button){box-shadow:none}
+.optionBtn,.matchCard{background:color-mix(in srgb,var(--surface-0) 48%,transparent)}
+.optionBtn.selected,.matchCard.selected{border-color:var(--accent-strong);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 34%,transparent)}
+
+.bracketCheckbox{position:relative;display:grid;place-items:center;min-width:36px;min-height:44px;cursor:pointer}
+.bracketCheckbox input{position:absolute;width:1px;height:1px;min-height:0;opacity:0;pointer-events:none}
+.bracketCheckboxMark{position:relative;width:30px;height:20px;display:grid;place-items:center;color:var(--text-3);font:850 14px/1 var(--font-terminal)}
+.bracketCheckboxMark::before{content:"[ ]";display:block;width:30px;text-align:center}
+.bracketCheckboxMark::after{content:"";position:absolute;left:50%;top:50%;width:12px;text-align:center;font-size:10px;line-height:1;transform:translate(-50%,-52%)}
+.bracketCheckbox input:checked+.bracketCheckboxMark{color:var(--accent-strong)}
+.bracketCheckbox input:checked+.bracketCheckboxMark::after{content:"✓"}
+.bracketCheckbox input:focus-visible+.bracketCheckboxMark{outline:2px solid var(--accent);outline-offset:4px}

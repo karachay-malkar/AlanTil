@@ -5,10 +5,10 @@ import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/dom
 import { createSlugMap } from "../../shared/domain/slugs.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js";
 import { learnState } from "./state.js";
-import { renderSetPreparation } from "./set-preparation.js?v=13.6.2";
+import { renderSetPreparation } from "./set-preparation.js?v=13.7.6";
 
 function dictTitle(code) {
   return DICT_TITLES[code] || code;
@@ -16,6 +16,16 @@ function dictTitle(code) {
 
 function sectionTitle(code) {
   return SECTION_TITLES[code] || code;
+}
+
+function dictionaryLabel(words, code) {
+  const word = words.find((entry) => entry.dict === code);
+  return word?.dictionary_name || dictTitle(code);
+}
+
+function sectionLabel(words, dict, code) {
+  const word = words.find((entry) => entry.dict === dict && entry.section === code);
+  return word?.section_name || sectionTitle(code);
 }
 
 function dictionarySlugMap(words) {
@@ -37,7 +47,7 @@ function dynamicSetTitle(words, dict, section, setId) {
     .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
   const anchor = String(setId || "").slice("dynamic:".length);
   const startIndex = source.findIndex((word) => String(word.id) === anchor);
-  if (startIndex < 0) return "Станция";
+  if (startIndex < 0) return "Этап";
   const count = wordsForSet(words, dict, section, setId).length;
   const first = startIndex + 1;
   const last = startIndex + Math.max(1, count);
@@ -62,7 +72,7 @@ export function renderCatalog(context, words, signal) {
   const slugs = dictionarySlugMap(words);
   const items = [
     { id: "favorites", title: "Избранное", favorite: true },
-    ...dicts.map((dict) => ({ id: slugs.slugFor(dict), title: dictTitle(dict) })),
+    ...dicts.map((dict) => ({ id: slugs.slugFor(dict), title: dictionaryLabel(words, dict) })),
   ];
 
   context.root.innerHTML = panel({
@@ -113,17 +123,19 @@ export function renderSections(context, words, signal) {
         </div>`;
     }).join("");
     const sectionHeader = learnState.currentSection
-      ? `<div class="secTitle">${escapeHtml(sectionTitle(section))}</div>`
-      : `<button class="secTitle sectionRouteLink" type="button" data-section-open="${escapeHtml(sectionSlug)}">${escapeHtml(sectionTitle(section))}</button>`;
+      ? `<div class="secTitle">${escapeHtml(sectionLabel(words, dict, section))}</div>`
+      : `<button class="secTitle sectionRouteLink" type="button" data-section-open="${escapeHtml(sectionSlug)}">${escapeHtml(sectionLabel(words, dict, section))}</button>`;
     return `<div class="secBlock">${sectionHeader}<div class="setsGrid">${tiles}</div></div>`;
   }).join("");
 
-  const pageTitle = learnState.currentSection ? sectionTitle(learnState.currentSection) : dictTitle(dict);
+  const pageTitle = learnState.currentSection
+    ? sectionLabel(words, dict, learnState.currentSection)
+    : dictionaryLabel(words, dict);
   context.shell.setHeaderContent?.({ title: pageTitle });
 
   context.root.innerHTML = panel({
     title: escapeHtml(pageTitle),
-    headerExtra: `<button id="btnOpenDictContent" class="iconBtn" type="button" aria-label="Содержание словаря" title="Содержание словаря"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
+    headerExtra: `<button id="btnOpenDictContent" class="iconAction iconBtn" type="button" aria-label="Содержание словаря" title="Содержание словаря"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
     body: `<div id="sectionsList" class="stack">${body}</div>`,
   });
 
@@ -166,7 +178,7 @@ export function renderDictionaryContent(context, words, signal) {
     return;
   }
 
-  context.shell.setHeaderContent?.({ title: "Содержание словаря", subtitle: dictTitle(dict) });
+  context.shell.setHeaderContent?.({ title: "Содержание словаря", subtitle: dictionaryLabel(words, dict) });
   context.root.innerHTML = panel({
     title: "Содержание словаря",
     headerExtra: `<input id="dictSearchInput" class="searchInput" type="search" placeholder="Поиск..." autocomplete="off" />`,
@@ -192,7 +204,7 @@ export function renderDictionaryContent(context, words, signal) {
     });
 
     list.innerHTML = Array.from(grouped.entries()).map(([section, entries]) => `
-      <div class="sectionHeader" data-section-header>▸ ${escapeHtml(sectionTitle(section))}</div>
+      <div class="sectionHeader" data-section-header>▸ ${escapeHtml(sectionLabel(words, dict, section))}</div>
       <div class="hidden" data-section-body>
         ${entries.map((word) => renderContentListRow({
           id: word.id,
@@ -257,7 +269,7 @@ export function renderSetMenu(context, words, signal) {
 
   renderSetPreparation(context, {
     title,
-    subtitle: currentDict === "__fav__" ? "" : sectionTitle(currentSection),
+    subtitle: currentDict === "__fav__" ? "" : sectionLabel(words, currentDict, currentSection),
     words: setWords,
     dictionaryId: currentDict,
     sectionId: currentSection,

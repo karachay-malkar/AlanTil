@@ -9,19 +9,17 @@ export function renderExpandableSearch({
   placeholder = "Поиск...",
 } = {}) {
   return {
-    header: `
-      <div class="expandSearchControl ${open ? "open" : ""}" data-search-control>
+    toggle: `<button id="${idPrefix}Toggle" class="iconAction appHeaderAction expandSearchToggle ${open ? "active" : ""}" type="button" aria-label="${open ? "Закрыть поиск" : "Открыть поиск"}" aria-expanded="${open}">${SEARCH_ICON_SVG}</button>`,
+    bar: `
+      <div id="${idPrefix}Bar" class="catalogSearchBar ${open ? "" : "hidden"}" data-search-control>
         <input id="${idPrefix}Input" class="expandSearchInput" type="search" placeholder="${escapeHtml(placeholder)}" autocomplete="off" aria-label="Поиск" />
-        <button id="${idPrefix}Toggle" class="expandSearchToggle" type="button" aria-label="${open ? "Закрыть поиск" : "Открыть поиск"}" aria-expanded="${open}">${SEARCH_ICON_SVG}</button>
-      </div>`,
-    modes: `
-      <div id="${idPrefix}Modes" class="searchModeList ${open ? "" : "hidden"}" role="radiogroup" aria-label="Область поиска">
-        ${modes.map(({ value, label }) => `
-          <label class="searchModeItem ${selectedMode === value ? "active" : ""}">
-            <input type="radio" name="${idPrefix}Mode" value="${escapeHtml(value)}" ${selectedMode === value ? "checked" : ""} />
-            <span class="searchModeDot" aria-hidden="true"></span>
-            <span>${escapeHtml(label)}</span>
-          </label>`).join("")}
+        <div id="${idPrefix}Modes" class="searchModeList" role="radiogroup" aria-label="Область поиска">
+          ${modes.map(({ value, label }) => `
+            <label class="searchModeItem ${selectedMode === value ? "active" : ""}">
+              <input type="radio" name="${idPrefix}Mode" value="${escapeHtml(value)}" ${selectedMode === value ? "checked" : ""} />
+              <span>${escapeHtml(label)}</span>
+            </label>`).join("")}
+        </div>
       </div>`,
   };
 }

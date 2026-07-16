@@ -26,8 +26,8 @@ export function showAnalyticsConsentPanel({ onDecline, onAccept, onPrivacy } = {
       <a href="/settings/privacy" data-consent-privacy>Политика конфиденциальности</a>
     </div>
     <div class="analyticsConsentActions">
-      <button class="analyticsConsentButton analyticsConsentDecline" type="button" data-consent-decline>Не собирать статистику</button>
-      <button class="analyticsConsentButton analyticsConsentAccept" type="button" data-consent-accept>Продолжить со статистикой</button>
+      <button class="btn actionText analyticsConsentButton analyticsConsentDecline" type="button" data-consent-decline>Не собирать статистику</button>
+      <button class="btn actionPrimary analyticsConsentButton analyticsConsentAccept" type="button" data-consent-accept>Продолжить со статистикой</button>
     </div>`;
 
   panel.querySelector("[data-consent-decline]")?.addEventListener("click", () => onDecline?.(), { signal: controller.signal });

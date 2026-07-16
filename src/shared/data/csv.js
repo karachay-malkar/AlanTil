@@ -1,4 +1,5 @@
-import { normalizeWordEntry } from "../domain/word-normalizer.js";
+import { getDisplayedWordEntry } from "../domain/alan-display.js";
+import { normalizeLegacyWordEntry } from "../domain/word-normalizer.js";
 
 export function normalizeToCsvUrl(url) {
   const value = String(url || "").trim();
@@ -75,7 +76,7 @@ export function parseCsv(text) {
 
   const output = [];
   for (const row of rows) {
-    const normalized = normalizeWordEntry({
+    const normalized = normalizeLegacyWordEntry({
       id: row.id,
       dict: has("dict") ? row.dict : "Словарь",
       section: has("section") ? row.section : (has("folder") ? row.folder : "Раздел"),
@@ -100,7 +101,7 @@ export function parseCsv(text) {
       is_optional: has("is_optional") ? row.is_optional : "",
       review_schedule: has("review_schedule") ? row.review_schedule : "",
     });
-    if (normalized) output.push(normalized);
+    if (normalized) output.push(getDisplayedWordEntry(normalized));
   }
   return output;
 }

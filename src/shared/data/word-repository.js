@@ -6,7 +6,8 @@ import {
   LEGACY_DICTIONARY_CACHE_KEYS,
 } from "../../config/words.js";
 import { getSupabaseClient } from "../auth/supabase-client.js";
-import { normalizeWordEntry } from "../domain/word-normalizer.js";
+import { getDisplayedWordCollection } from "../domain/alan-display.js";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js";
 import { readJson, writeJson } from "../state/storage.js";
 
 const PAGE_SIZE = 1000;
@@ -16,9 +17,10 @@ let requestCount = 0;
 let source = "none";
 let installedVersion = "";
 
-function normalizeCollection(collection) {
+function normalizeCollection(collection, source = "cache") {
+  const normalize = source === "supabase" ? normalizeSupabaseWordEntry : normalizeWordEntry;
   return (Array.isArray(collection) ? collection : [])
-    .map(normalizeWordEntry)
+    .map((row) => normalize(row))
     .filter(Boolean)
     .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
 }
@@ -29,6 +31,9 @@ function validateDictionary(collection) {
   for (const word of collection) {
     if (!word.id || !word.story_id || !word.dictionary_id || !word.section_id) {
       throw new Error("Структура словаря повреждена: отсутствуют обязательные разделы.");
+    }
+    if ((!word.wordAlanCyrillic && !word.wordAlanTurkic) || !word.translationRu) {
+      throw new Error(`Структура словаря повреждена: отсутствует текст слова ${word.id}.`);
     }
     if (identifiers.has(word.id)) throw new Error(`В словаре повторяется word_id: ${word.id}`);
     identifiers.add(word.id);
@@ -46,7 +51,7 @@ function clearLegacyDictionaryCaches() {
 
 function readDictionaryCache() {
   const cached = readJson(DICTIONARY_CACHE_KEY, null);
-  const cachedWords = normalizeCollection(cached?.words);
+  const cachedWords = normalizeCollection(cached?.words, "cache");
   const version = String(cached?.version || "").trim();
   if (!version || !cachedWords.length) return null;
   try {
@@ -89,7 +94,7 @@ async function fetchLatestVersion(client) {
 async function downloadDictionary() {
   const client = await getSupabaseClient();
   const version = await fetchLatestVersion(client);
-  const downloadedWords = validateDictionary(normalizeCollection(await fetchContentWords(client)));
+  const downloadedWords = validateDictionary(normalizeCollection(await fetchContentWords(client), "supabase"));
   if (!writeJson(DICTIONARY_CACHE_KEY, { version, words: downloadedWords })) {
     throw new Error("Не удалось сохранить словарь на устройстве.");
   }
@@ -100,7 +105,7 @@ async function downloadDictionary() {
 }
 
 export async function getWords() {
-  if (words) return words;
+  if (words) return getDisplayedWordCollection(words);
   if (loadingPromise) return loadingPromise;
 
   loadingPromise = (async () => {
@@ -110,9 +115,9 @@ export async function getWords() {
       words = cached.words;
       installedVersion = cached.version;
       source = "cache";
-      return words;
+      return getDisplayedWordCollection(words);
     }
-    return (await downloadDictionary()).words;
+    return getDisplayedWordCollection((await downloadDictionary()).words);
   })().finally(() => {
     loadingPromise = null;
   });
@@ -121,7 +126,7 @@ export async function getWords() {
 }
 
 export function getCachedWords() {
-  return words || [];
+  return getDisplayedWordCollection(words || []);
 }
 
 export function getInstalledDictionaryVersion() {
@@ -147,7 +152,7 @@ export async function refreshDictionary() {
   });
   const result = await loadingPromise;
   globalThis.dispatchEvent?.(new CustomEvent("alantil:dictionary-updated", { detail: { version: result.version } }));
-  return result;
+  return { ...result, words: getDisplayedWordCollection(result.words) };
 }
 
 export function getRepositoryDiagnostics() {

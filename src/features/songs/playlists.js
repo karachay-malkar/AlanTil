@@ -1,5 +1,5 @@
 import { renderSectionMenu } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 import { buildPlaylistRoutes } from "./routes.js";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";

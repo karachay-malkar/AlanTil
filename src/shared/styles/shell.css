@@ -1,4 +1,8 @@
 .appShell{
+  --content-rest-gap:16px;
+  --action-edge-gap:16px;
+  --chrome-top-depth:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap));
+  --chrome-bottom-depth:calc(var(--safe-bottom) + var(--content-rest-gap));
   position:relative;
   width:min(100%,var(--content-max));
   height:100dvh;
@@ -8,53 +12,44 @@
   isolation:isolate;
 }
 .appViewport::before,.appViewport::after{
-  content:"";position:absolute;left:0;right:0;z-index:20;pointer-events:none;
+  content:"";position:absolute;left:0;right:0;z-index:29;pointer-events:auto;
+  background:rgba(255,255,255,.035);
+  -webkit-backdrop-filter:blur(var(--header-blur));
+  backdrop-filter:blur(var(--header-blur));
 }
 .appViewport::before{
-  top:0;height:calc(var(--safe-top) + var(--header-h) + 72px);
-  background:linear-gradient(180deg,
-    color-mix(in srgb,var(--app-bg) 100%,transparent) 0%,
-    color-mix(in srgb,var(--app-bg) 98%,transparent) 38%,
-    color-mix(in srgb,var(--app-bg) 88%,transparent) 58%,
-    color-mix(in srgb,var(--app-bg) 62%,transparent) 76%,
-    color-mix(in srgb,var(--app-bg) 24%,transparent) 90%,
-    transparent 100%);
+  top:0;height:var(--chrome-top-depth);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,rgba(0,0,0,.72) 42%,rgba(0,0,0,.24) 76%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0,rgba(0,0,0,.72) 42%,rgba(0,0,0,.24) 76%,transparent 100%);
 }
 .appViewport::after{
-  bottom:0;height:calc(var(--safe-bottom) + 96px);
-  background:linear-gradient(0deg,
-    color-mix(in srgb,var(--app-bg) 100%,transparent) 0%,
-    color-mix(in srgb,var(--app-bg) 98%,transparent) 42%,
-    color-mix(in srgb,var(--app-bg) 82%,transparent) 64%,
-    color-mix(in srgb,var(--app-bg) 48%,transparent) 80%,
-    color-mix(in srgb,var(--app-bg) 18%,transparent) 92%,
-    transparent 100%);
+  bottom:0;height:var(--chrome-bottom-depth);
+  -webkit-mask-image:linear-gradient(to top,#000 0,rgba(0,0,0,.72) 42%,rgba(0,0,0,.24) 76%,transparent 100%);
+  mask-image:linear-gradient(to top,#000 0,rgba(0,0,0,.72) 42%,rgba(0,0,0,.24) 76%,transparent 100%);
 }
-.appShell[data-bottom-nav="true"] .appViewport::after{height:calc(var(--safe-bottom) + var(--nav-h) + 64px)}
+.appShell[data-bottom-nav="true"]{--chrome-bottom-depth:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))}
 .appHeader{
   position:absolute;z-index:var(--z-header);inset:0 0 auto 0;
   height:calc(var(--header-h) + var(--safe-top));min-width:0;
-  padding:var(--safe-top) 10px 0;
-  display:grid;grid-template-columns:40px minmax(0,1fr) minmax(40px,max-content);align-items:center;
+  padding:var(--safe-top) 10px 0;pointer-events:none;
   background:transparent;
   border:0;box-shadow:none;
 }
-.appHeader:not(.hasBack){grid-template-columns:0 minmax(0,1fr) minmax(0,max-content)}
-.appHeaderLeading,.appHeaderTrailing{position:relative;z-index:1;height:100%;display:flex;align-items:center;justify-content:center;min-width:0}
-.appHeaderCenter{position:relative;z-index:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05}
+.appHeaderLeading,.appHeaderTrailing{position:absolute;z-index:2;top:var(--safe-top);height:var(--header-h);display:flex;align-items:center;gap:6px;min-width:0;pointer-events:auto}
+.appHeaderLeading{left:10px;justify-content:flex-start}.appHeaderTrailing{right:10px;justify-content:flex-end}
+.appHeaderCenter{position:absolute;z-index:1;top:var(--safe-top);left:56px;right:56px;height:var(--header-h);min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05;pointer-events:none}
 .appHeaderText{min-width:0;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .appHeaderScreenTitle{max-width:100%;font:800 clamp(15px,4vw,18px)/1.08 var(--font-body);color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .appHeaderSubtitle{max-width:100%;margin-top:2px;color:var(--text-2);font:650 10px/1.1 var(--font-terminal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.appHeaderTabs{width:100%;height:100%;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none}
-.appHeaderTabs::-webkit-scrollbar{display:none}
-.appHeaderTab{appearance:none;min-width:0;height:36px;padding:0 5px;border:0;background:transparent;color:var(--text-3);font:750 clamp(9px,2.9vw,12px)/1 var(--font-terminal);white-space:nowrap}
-.appHeaderTab.active{color:var(--text-1);font-weight:900}.appHeaderTab:active{background:transparent;opacity:.62}
 .appHeaderAction{width:36px;height:36px;display:grid;place-items:center;color:var(--text-2)}
-.appHeaderAction{appearance:none;border:1px solid color-mix(in srgb,var(--line) 55%,transparent);background:color-mix(in srgb,var(--surface-0) 86%,transparent);padding:7px;border-radius:50%;box-shadow:var(--shadow-xs)}
-.appHeaderAction:active{background:color-mix(in srgb,var(--surface-0) 70%,transparent);opacity:.68;transform:translateY(1px)}
+.appHeaderAction{appearance:none;border:0;background:transparent;padding:7px;border-radius:0;box-shadow:none}
+.appHeaderAction:active{background:transparent;opacity:.62;transform:translateY(1px)}
 .appHeaderAction svg{width:21px;height:21px}
+.appHeaderActionSlot{display:flex;align-items:center;justify-content:flex-end;min-width:0;pointer-events:auto}
+.appHeaderTextAction{appearance:none;min-width:0;min-height:34px;padding:0 4px;border:0;background:transparent;color:var(--text-2);font:750 11px/1 var(--font-terminal)}
+.appHeaderTextAction:active{opacity:.62;transform:translateY(1px)}
 .appViewport{position:absolute;z-index:1;inset:0;min-width:0;min-height:0;overflow:hidden;background:var(--app-bg)}
-.sessionStatus{min-width:max-content;min-height:0;padding:0 4px;display:flex;align-items:center;justify-content:flex-end;gap:5px;color:var(--text-2);font:700 10px/1.2 var(--font-terminal);background:transparent;pointer-events:none}
+.sessionStatus{min-width:max-content;min-height:0;padding:0;display:flex;align-items:center;justify-content:flex-end;gap:5px;color:var(--text-2);font:750 10px/1.2 var(--font-terminal);background:transparent;pointer-events:none}
 .sessionMode:empty{display:none}
 .appScreenHost{width:100%;height:100%;min-height:0;overflow:hidden;position:relative;transition:opacity var(--duration-normal) var(--ease-standard),transform var(--duration-normal) var(--ease-standard)}
 .appScreenHost.is-entering{opacity:0;transform:translateY(5px)}
@@ -72,7 +67,7 @@
 .bottomNavItem{appearance:none;position:relative;z-index:1;border:0;background:transparent;color:color-mix(in srgb,var(--text-2) 58%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:650;min-width:0;transition:color var(--duration-fast),opacity var(--duration-fast),transform var(--duration-fast)}
 .bottomNavItem.active{color:var(--text-1);background:transparent}.bottomNavItem:active{background:transparent;opacity:.7;transform:translateY(1px)}
 .bottomNavIcon{width:22px;height:22px;fill:none;stroke:currentColor}
-.stationLaunchPanel,.setPreparationFooter,.modeLaunchBar,.learnSessionActions{position:relative;z-index:25;background:transparent!important;border:0;box-shadow:none}
+.stationLaunchPanel,.setPreparationFooter,.modeLaunchBar,.learnSessionActions{position:relative;z-index:30;background:transparent!important;border:0;box-shadow:none}
 .profilePrimaryNav,.stationViewTabs{position:relative;z-index:25}
 @media(max-width:360px){.appHeader{padding-left:6px;padding-right:6px}.appShell{--nav-h:57px}.bottomNavItem{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

@@ -1,4 +1,4 @@
-# AlanTil 13.6.1 — настройка Supabase Auth и словаря
+# AlanTil 13.7 — настройка Supabase Auth, словаря и прогресса
 
 ## 1. Создание таблиц и политик
 
@@ -6,9 +6,11 @@
 2. Перейдите в **SQL Editor**.
 3. Откройте файл `supabase/schema.sql` из проекта.
 4. Выполните файл целиком.
-5. После загрузки нормализованных таблиц `content_*` выполните
-   `supabase/migrations/13.6.1_dictionary_view_path_progress.sql`.
-6. Дождитесь успешного выполнения и обновления кэша схемы PostgREST.
+5. После загрузки нормализованных таблиц `content_*` примените миграции из
+   `supabase/migrations/` в порядке их временных меток.
+6. Не запускайте файл из `supabase/deferred/`: он предназначен только для
+   очистки после проверки опубликованного клиента 13.7.
+7. Дождитесь успешного выполнения и обновления кэша схемы PostgREST.
 
 Скрипт создаёт:
 
@@ -19,9 +21,14 @@
 - облачные состояния избранного, скрытых слов и прогресса сетов;
 - общие таблицы сессий `learn_sessions`, `test_sessions`, `match_sessions`;
 - детализацию слов и ошибочных сопоставлений;
-- накопительную таблицу `user_word_progress`;
-- атомарные функции `save_learn_session`, `save_test_session`, `save_match_session`;
-- совместимое представление словаря `content_words_ru`;
+- накопительную таблицу `user_word_progress` с каноническими счётчиками;
+- атомарные функции `save_learn_session`, `save_test_session`,
+  `save_station_test_session`, `save_match_session`;
+- идемпотентный перенос гостевого прогресса через
+  `merge_word_progress_snapshot`;
+- основное представление словаря `v_words_app` с кириллицей и готовой тюркской
+  латиницей;
+- временно сохранённое совместимое представление `content_words_ru`;
 - прогресс станций, тестов пути, наград и настроек маршрута;
 - Row Level Security: пользователь видит только собственные данные;
 - `blocked_emails` и Auth Hook для запрета новых аккаунтов.
@@ -153,7 +160,14 @@ set current_version = 'ДД.ММ.ГГГГ'
 where dictionary_key = 'main';
 ```
 
-Версию нужно менять после успешного обновления `content_words_ru`. Приложение сравнивает её с версией локального словаря пользователя.
+Версию нужно менять после успешного обновления `content_*` и проверки
+`v_words_app`. Приложение сравнивает её с версией локального словаря
+пользователя.
+
+После публикации 13.7 и проверки, что действующий сайт больше не обращается к
+`content_words_ru` и старым счётчикам, файл
+`supabase/deferred/20260717_alantil_13_7_cleanup_legacy_dictionary_progress.sql`
+можно перенести в `supabase/migrations/` и применить отдельно.
 
 Проверка объектов базы:
 
@@ -162,12 +176,16 @@ select to_regclass('public.learn_sessions');
 select to_regclass('public.test_sessions');
 select to_regclass('public.match_sessions');
 select to_regclass('public.user_word_progress');
-select to_regclass('public.content_words_ru');
+select to_regclass('public.v_words_app');
+select count(*), count(distinct word_id) from public.v_words_app;
+select to_regclass('public.content_words_ru'); -- временная совместимость 13.6
 select to_regclass('public.user_station_progress');
 select to_regclass('public.station_test_sessions');
 select to_regprocedure('public.save_learn_session(jsonb)');
 select to_regprocedure('public.save_test_session(jsonb)');
 select to_regprocedure('public.save_match_session(jsonb)');
+select to_regprocedure('public.save_station_test_session(jsonb)');
+select to_regprocedure('public.merge_word_progress_snapshot(jsonb)');
 ```
 
 ## Безопасность

@@ -1,0 +1,177 @@
+/* Unified transparent chrome and full-height scrolling.
+   Every document scroller occupies the device viewport; its content starts and
+   ends clear of controls, then travels behind them and fades at physical edges. */
+
+.appScreenHost,.appScreenHost>.view,.appScreenHost>.screen{
+  width:100%;max-width:100%;height:100%;min-width:0;min-height:0;overflow-x:hidden;
+}
+.appScreenHost>.view{padding:0!important}
+
+/* The same mask curve is mirrored at the top and bottom. */
+:where(
+  .panel-body,
+  .pathMapViewport,
+  .stationWordList,
+  .stationStatisticsPane,
+  .profileScroll,
+  .settingsHomeScroll,
+  .setPreparationWords,
+  .modeScroll,
+  .modeResultList,
+  .matchResultsView
+){
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap));
+  --scroll-fade-bottom:calc(var(--safe-bottom) + var(--content-rest-gap));
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--scroll-fade-top),#000 calc(100% - var(--scroll-fade-bottom)),transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0,#000 var(--scroll-fade-top),#000 calc(100% - var(--scroll-fade-bottom)),transparent 100%);
+}
+
+.appShell[data-bottom-nav="true"] :where(.panel-body,.profileScroll,.settingsHomeScroll,.pathMapViewport){
+  --scroll-fade-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
+}
+
+/* Generic document/list panels. */
+.panel{position:relative!important;display:block!important;height:100%;min-height:0;overflow:hidden}
+.panel-header{
+  position:absolute!important;z-index:30;top:calc(var(--safe-top) + var(--header-h) + 4px);left:14px;right:14px;
+  height:40px;min-height:40px;padding:0!important;pointer-events:auto;background:transparent!important;
+}
+.panel-body{
+  position:absolute;inset:0;width:100%;height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;
+  padding:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap)) 16px calc(var(--safe-bottom) + var(--content-rest-gap))!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap));
+  scroll-padding-bottom:calc(var(--safe-bottom) + var(--content-rest-gap));
+}
+.panel.hasPanelToolbar .panel-body{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 60px);
+  padding-top:calc(var(--safe-top) + var(--header-h) + 60px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 60px);
+}
+.appShell[data-bottom-nav="true"] .panel-body{
+  padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))!important;
+  scroll-padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
+}
+.appShell:has(.panel.hasPanelToolbar){--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 60px)}
+
+/* Path: header controls float above one full-height map scroller. */
+.pathView{display:block!important;padding:0!important;overflow:hidden}
+.pathStickyControls{
+  position:absolute!important;z-index:30;top:calc(var(--safe-top) + var(--header-h));left:0;right:0;height:58px;
+  pointer-events:auto;background:transparent!important;
+}
+.pathMapViewport{position:absolute!important;inset:0;min-height:0;overflow-y:auto;overflow-x:hidden;--scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 72px)}
+.routeMap{min-height:100%;padding-top:calc(var(--safe-top) + var(--header-h) + 74px)!important;padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))!important}
+.appShell[data-feature="path"][data-screen="home"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 72px)}
+
+/* Stage menu/statistics: no phantom bottom-navigation reservation. */
+.appShell[data-feature="path"][data-screen="station"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 90px);--chrome-bottom-depth:calc(var(--safe-bottom) + 110px)}
+.appShell[data-feature="path"][data-screen="station"][data-station-pane="statistics"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 54px);--chrome-bottom-depth:calc(var(--safe-bottom) + var(--content-rest-gap))}
+.stationWordList{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 90px);
+  --scroll-fade-bottom:calc(var(--safe-bottom) + 110px);
+  padding:calc(var(--safe-top) + var(--header-h) + 90px) 12px calc(var(--safe-bottom) + 110px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 90px)!important;
+  scroll-padding-bottom:calc(var(--safe-bottom) + 110px)!important;
+}
+.stationLaunchPanel{bottom:calc(var(--safe-bottom) + var(--action-edge-gap))!important}
+.stationStatisticsPane{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 54px);
+  --scroll-fade-bottom:calc(var(--safe-bottom) + var(--content-rest-gap));
+  padding:calc(var(--safe-top) + var(--header-h) + 54px) 12px calc(var(--safe-bottom) + var(--content-rest-gap))!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 54px)!important;
+  scroll-padding-bottom:calc(var(--safe-bottom) + var(--content-rest-gap))!important;
+}
+.appShell[data-feature="path"][data-screen="study"],.appShell[data-feature="learn"][data-screen="study"]{--chrome-bottom-depth:calc(var(--safe-bottom) + 80px)}
+
+/* Profile and settings keep their text tabs floating in the transparent chrome. */
+[data-feature="profile"] .profileView,[data-feature="settings"] .settingsHomeView{display:block!important;padding:0!important;overflow:hidden}
+[data-feature="profile"] .profilePrimaryNav,[data-feature="settings"] .settingsHomeView>.profilePrimaryNav{
+  position:absolute!important;z-index:30;top:calc(var(--safe-top) + var(--header-h));left:14px;right:14px;height:30px;pointer-events:auto;
+}
+[data-feature="profile"] .profileSubNav{
+  position:absolute!important;z-index:30;top:calc(var(--safe-top) + var(--header-h) + 30px);left:14px;right:14px;height:30px;pointer-events:auto;
+}
+[data-feature="profile"] .profileScroll,[data-feature="settings"] .settingsHomeScroll{
+  position:absolute;inset:0;width:auto!important;max-width:none;min-height:0;margin:0!important;overflow-y:auto;overflow-x:hidden;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--scroll-fade-top),#000 calc(100% - var(--scroll-fade-bottom)),transparent 100%)!important;
+  mask-image:linear-gradient(to bottom,transparent 0,#000 var(--scroll-fade-top),#000 calc(100% - var(--scroll-fade-bottom)),transparent 100%)!important;
+}
+[data-feature="profile"] .profileScroll{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 76px);
+  padding:calc(var(--safe-top) + var(--header-h) + 76px) 16px calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 76px);
+  scroll-padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
+}
+[data-feature="profile"] .profileStatisticsView .profileScroll{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 46px);
+  padding-top:calc(var(--safe-top) + var(--header-h) + 46px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 46px);
+}
+[data-feature="settings"] .settingsHomeScroll{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 46px);
+  padding:calc(var(--safe-top) + var(--header-h) + 46px) 16px calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 46px);
+  scroll-padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
+}
+.appShell[data-feature="profile"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 76px)}
+.appShell[data-feature="profile"][data-screen="statistics"],.appShell[data-feature="settings"][data-screen="home"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 46px)}
+
+/* Set preparation: one full-height list behind its toolbar and compact actions. */
+.setPreparationView,.setPreparation{position:relative;display:block!important;padding:0!important;overflow:hidden}
+.setPreparationToolbar{
+  position:absolute!important;z-index:30;top:calc(var(--safe-top) + var(--header-h) + 4px);left:14px;right:14px;height:34px;
+  pointer-events:auto;background:transparent;
+}
+.setPreparationWords{
+  position:absolute;inset:0;min-height:0;overflow-y:auto;overflow-x:hidden;
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 54px);
+  --scroll-fade-bottom:calc(var(--safe-bottom) + 94px);
+  padding:calc(var(--safe-top) + var(--header-h) + 54px) 14px calc(var(--safe-bottom) + 110px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 54px);
+  scroll-padding-bottom:calc(var(--safe-bottom) + 110px);
+}
+.setPreparationFooter{
+  position:absolute!important;z-index:30;left:14px;right:14px;bottom:calc(var(--safe-bottom) + var(--action-edge-gap));padding:0!important;pointer-events:auto;background:transparent!important;
+}
+.appShell[data-feature="learn"][data-screen="set"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 54px);--chrome-bottom-depth:calc(var(--safe-bottom) + 94px)}
+.setPreparation:has(.setTestButton) .setPreparationWords{--scroll-fade-bottom:calc(var(--safe-bottom) + 138px);padding-bottom:calc(var(--safe-bottom) + 154px)!important;scroll-padding-bottom:calc(var(--safe-bottom) + 154px)}
+.appShell[data-feature="learn"][data-screen="set"]:has(.setTestButton){--chrome-bottom-depth:calc(var(--safe-bottom) + 138px)}
+
+/* Test and matching menus/results use the same full-height content layer. */
+[data-feature="test"] .modeView,[data-feature="match"] .modeView{position:relative;display:block!important;padding:0!important;overflow:hidden}
+.modeScroll,.modeResultList{
+  position:absolute;inset:0;min-height:0;overflow-y:auto;overflow-x:hidden;
+  padding:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap)) 14px calc(var(--safe-bottom) + 70px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap));
+  scroll-padding-bottom:calc(var(--safe-bottom) + 70px);
+}
+.modeScroll{--scroll-fade-bottom:calc(var(--safe-bottom) + 54px)}
+.modeView>.modeLaunchBar{
+  position:absolute!important;z-index:30;left:14px;right:14px;bottom:calc(var(--safe-bottom) + var(--action-edge-gap));padding:0!important;pointer-events:auto;background:transparent!important;
+}
+.appShell[data-feature="match"][data-screen="menu"],.appShell[data-feature="test"][data-screen="results"]{--chrome-bottom-depth:calc(var(--safe-bottom) + 54px)}
+.appShell[data-feature="test"][data-screen="menu"]{--chrome-bottom-depth:calc(var(--safe-bottom) + 93px)}
+.testMenuView .modeScroll{--scroll-fade-bottom:calc(var(--safe-bottom) + 93px);padding-bottom:calc(var(--safe-bottom) + 109px)!important;scroll-padding-bottom:calc(var(--safe-bottom) + 109px)}
+.testResultsView .modeResultSummary{
+  position:absolute;z-index:30;top:calc(var(--safe-top) + var(--header-h) + 4px);left:14px;right:14px;height:116px;min-height:116px;pointer-events:auto;
+}
+.testResultsView .modeResultList{
+  --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 136px);
+  --scroll-fade-bottom:calc(var(--safe-bottom) + 54px);
+  padding-top:calc(var(--safe-top) + var(--header-h) + 136px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 136px);
+}
+.appShell[data-feature="test"][data-screen="results"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 136px)}
+.matchResultsView .modeResultList{--scroll-fade-bottom:calc(var(--safe-bottom) + var(--content-rest-gap));padding-bottom:calc(var(--safe-bottom) + var(--content-rest-gap))!important;scroll-padding-bottom:calc(var(--safe-bottom) + var(--content-rest-gap))}
+
+.appHeaderTextAction.songInfoButton{font-size:11px}
+
+/* Fixed session canvases are not documents, but still respect transparent chrome. */
+.appScreenHost>.modeSessionView,.appScreenHost>.stationTestView,.appScreenHost>.stationResultView{
+  padding:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap)) 14px calc(var(--safe-bottom) + var(--action-edge-gap))!important;
+}
+.appScreenHost>.learnSession{padding-top:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap))!important;padding-bottom:calc(var(--safe-bottom) + var(--action-edge-gap))!important}
+
+@media(max-width:420px){
+  .panel-body{padding-left:14px!important;padding-right:14px!important}
+}

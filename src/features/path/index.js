@@ -5,10 +5,10 @@ import { getRouteSettings, updateRouteSettings } from "../../shared/progress/rou
 import { awardWordMilestones } from "../../shared/progress/word-progress-store.js";
 import { getStationSize } from "../../shared/settings/user-settings-store.js";
 import { escapeHtml } from "../../shared/ui/html.js";
-import { renderBracketHeading } from "../../shared/ui/bracket-heading.js";
 import { createRouteScale } from "../../shared/ui/route-scale.js";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
 import { getHiddenSet, learnState } from "../learn/state.js";
+import { renderResults as renderLearnResults } from "../learn/results.js";
 import { finalizeLearnSession, renderStudy } from "../learn/study.js";
 import { createStationTestSession, renderStationTest } from "./station-test.js";
 import { renderStationView } from "./station-view.js";
@@ -37,7 +37,7 @@ function stationButton(station, index) {
   const ordinal = String(index + 1).padStart(2, "0");
   return `<button
     id="station-${escapeHtml(station.key)}"
-    class="stationNode ${status}"
+    class="choiceControl stationNode ${status}"
     style="--station-progress:${progress.percent * 3.6}deg"
     type="button"
     data-station-key="${escapeHtml(station.key)}"
@@ -54,7 +54,7 @@ function routeGroupSection(group, stationIndex, catalogId) {
   const reversedStations = [...group.stations].reverse();
   return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${group.groupId}`)}">
     <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key))).join("")}</div>
-    ${renderBracketHeading(group.name, { tag: "h3", className: "routeSectionHeading" })}
+    <h3 class="routeSectionHeading">${escapeHtml(group.name)}</h3>
   </section>`;
 }
 
@@ -63,7 +63,7 @@ function routeCatalogSection(catalog, stationIndex) {
   return `<section class="routeCatalog" data-route-catalog="${escapeHtml(catalog.catalogId)}">
     <span class="routeCatalogEnd" data-catalog-end="${escapeHtml(catalog.catalogId)}" aria-hidden="true"></span>
     <div class="routeCatalogGroups">${reversedGroups.map((group) => routeGroupSection(group, stationIndex, catalog.catalogId)).join("")}</div>
-    ${renderBracketHeading(catalog.name, { tag: "h2", className: "routeCatalogHeading" })}
+    <h2 class="routeCatalogHeading">${escapeHtml(catalog.name)}</h2>
   </section>`;
 }
 
@@ -71,7 +71,7 @@ function nextLayoutFrame() {
   return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 }
 
-async function restoreMapPosition(viewport, story, stationSize) {
+async function restoreMapPosition(viewport) {
   if (!viewport) return;
   viewport.classList.add("isPositioning");
   const previousBehavior = viewport.style.scrollBehavior;
@@ -79,14 +79,9 @@ async function restoreMapPosition(viewport, story, stationSize) {
   try {
     await Promise.resolve(document.fonts?.ready).catch(() => {});
     await nextLayoutFrame();
-    const settings = getRouteSettings();
-    const key = routeScrollKey(story, stationSize);
-    const hasStored = Object.prototype.hasOwnProperty.call(settings, key);
-    const stored = Number(settings[key]);
     const position = () => {
       const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
-      const target = hasStored && Number.isFinite(stored) ? Math.max(0, Math.min(stored, maxScroll)) : maxScroll;
-      viewport.scrollTop = target;
+      viewport.scrollTop = maxScroll;
     };
     position();
     await nextLayoutFrame();
@@ -103,8 +98,12 @@ function renderRoute(context, route, activeStory) {
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
   const reversedCatalogs = [...story.catalogs].reverse();
   context.shell.setCounter("");
+  context.shell.setHeaderContent?.({ title: "Alan Til!" });
   context.root.innerHTML = `<section class="pathView">
     <div class="pathStickyControls">
+      <nav class="storyTabs" aria-label="История пути">
+        ${route.storyOrder.map((type) => `<button class="tabAction storyTab ${type === activeStory ? "active" : ""}" type="button" data-story-tab="${escapeHtml(type)}" ${type === activeStory ? 'aria-current="page"' : ""}>[ ${escapeHtml(route.storyLabels[type])} ]</button>`).join("")}
+      </nav>
       <div class="storyProgress">
         ${renderSegmentedProgress({ value: progress.percent, segments: 10, label: `Освоено ${progress.percent}% слов истории ${route.storyLabels[activeStory]}` })}
         <span class="pathProgressPercent">${progress.percent}%</span>
@@ -118,18 +117,16 @@ function renderRoute(context, route, activeStory) {
     <nav class="routeScale" aria-label="Рубежи маршрута"></nav>
   </section>`;
 
-  context.shell.setHeaderTabs?.({
-    items: route.storyOrder.map((type) => ({ id: type, label: route.storyLabels[type] })),
-    active: activeStory,
-    ariaLabel: "История пути",
-    onSelect(type) {
+  context.root.querySelectorAll("[data-story-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const type = button.dataset.storyTab;
       const next = activeStoryType(route, type);
       if (next === activeStory) return;
       const viewport = context.root.querySelector(".pathMapViewport");
       updateRouteSettings({ [routeScrollKey(activeStory, route.stationSize)]: viewport?.scrollTop || 0 }, { queue: false });
       updateRouteSettings({ active_story: next });
       context.router.navigate("path.home", { storyType: next });
-    },
+    }, { signal: controller.signal });
   });
 
   context.root.querySelectorAll("[data-station-key]").forEach((button) => {
@@ -145,7 +142,7 @@ function renderRoute(context, route, activeStory) {
   const viewport = context.root.querySelector(".pathMapViewport");
   createRouteScale({ root: context.root, viewport, catalogs: reversedCatalogs, signal: controller.signal });
   let mapPositionReady = false;
-  void restoreMapPosition(viewport, activeStory, route.stationSize).then(() => {
+  void restoreMapPosition(viewport).then(() => {
     mapPositionReady = true;
   });
   let saveFrame = 0;
@@ -198,8 +195,8 @@ function renderResult(context, route, station, result, allWords) {
       <div class="stationResultScore">${result.payload.accuracy}%</div>
       <div class="stationResultText">${escapeHtml(message)}<br>${result.payload.correct_total}/${result.payload.questions_total}</div>
       <div class="stationActions">
-        <button class="btn primary" type="button" data-result-return>К станции</button>
-        ${result.passed ? "" : `<button class="btn secondary" type="button" data-result-repeat>Повторить</button>`}
+        <button class="btn actionText" type="button" data-result-return>К этапу</button>
+        ${result.passed ? "" : `<button class="btn actionPrimary" type="button" data-result-repeat>Повторить</button>`}
       </div>
     </div>
   </section>`;
@@ -247,7 +244,9 @@ export async function mount(context, params = {}) {
       onComplete() {
         activeStudy = false;
         pendingSelections.delete(station.key);
-        context.router.replace("path.station", routeParams(station, route), { force: true });
+        renderLearnResults(context, words, controller.signal, {
+          onDone: () => context.router.replace("path.station", routeParams(station, route), { force: true }),
+        });
       },
     });
     return;

@@ -1,16 +1,12 @@
 [data-feature="songs"] .panel{height:100%}
-[data-feature="songs"] .songsCatalogPanel .panel-header{align-items:flex-start}
-[data-feature="songs"] .expandSearchControl{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:40px}
-[data-feature="songs"] .expandSearchInput{width:0;min-height:40px;opacity:0;padding:0;border-width:0;transition:width var(--duration-normal),opacity var(--duration-fast),padding var(--duration-normal),border-width var(--duration-normal)}
-[data-feature="songs"] .expandSearchControl.open .expandSearchInput{width:min(220px,42vw);opacity:1;padding-inline:12px;border-width:1px}
-[data-feature="songs"] .expandSearchToggle{width:40px;height:40px;flex:0 0 40px;border:0;border-radius:50%;background:transparent;color:var(--text-1);display:grid;place-items:center}
-[data-feature="songs"] .expandSearchToggle svg{width:21px;height:21px;fill:currentColor}
-[data-feature="songs"] .searchModeList{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
-[data-feature="songs"] .searchModeItem{position:relative}
-[data-feature="songs"] .searchModeItem input{position:absolute;opacity:0}
-[data-feature="songs"] .searchModeItem span{display:block;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius-pill);font-size:12px;background:var(--surface-0)}
-[data-feature="songs"] .searchModeItem.active span,[data-feature="songs"] .searchModeItem input:checked+span{border-color:var(--accent);background:var(--accent-soft)}
-[data-feature="songs"] .searchModeDot{display:none}
+[data-feature="songs"] .expandSearchToggle.active{color:var(--accent-strong)}
+[data-feature="songs"] .catalogSearchBar{display:grid;grid-template-columns:minmax(92px,1fr) auto;align-items:center;gap:6px;margin-bottom:10px}
+[data-feature="songs"] .expandSearchInput{width:100%;min-width:0;height:32px;min-height:32px;padding:0 10px;border-radius:var(--radius-pill);font-size:12px}
+[data-feature="songs"] .searchModeList{display:grid;grid-template-columns:repeat(3,minmax(0,auto));gap:0;padding:2px;border:1px solid var(--line);border-radius:var(--radius-pill)}
+[data-feature="songs"] .searchModeItem{position:relative;min-width:0}
+[data-feature="songs"] .searchModeItem input{position:absolute;width:1px;height:1px;min-height:0;opacity:0;pointer-events:none}
+[data-feature="songs"] .searchModeItem span{min-height:26px;display:grid;place-items:center;padding:3px 6px;border:0;border-radius:var(--radius-pill);background:transparent;color:var(--text-3);font:750 9px/1 var(--font-terminal);white-space:nowrap}
+[data-feature="songs"] .searchModeItem.active span,[data-feature="songs"] .searchModeItem input:checked+span{background:color-mix(in srgb,var(--surface-0) 84%,transparent);color:var(--text-1);box-shadow:var(--shadow-xs)}
 [data-feature="songs"] .songPlayerRoot{margin-bottom:13px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
 [data-feature="songs"] .mediaPlayer{display:grid;grid-template-columns:44px auto minmax(0,1fr) auto;gap:9px;align-items:center}
 [data-feature="songs"] .mediaPlayButton{width:44px;height:44px;border:1px solid var(--accent-strong);border-radius:50%;background:var(--accent);color:var(--text-inverse);display:grid;place-items:center}
@@ -29,4 +25,5 @@
 [data-feature="songs"] .songInfoButton{font:850 16px/1 var(--font-terminal)}
 [data-feature="songs"] .songInfoModalContent{display:grid;gap:10px}
 [data-feature="songs"] .songInfoText{margin-top:8px;color:var(--text-2)}
-@media(max-width:420px){[data-feature="songs"] .expandSearchControl.open .expandSearchInput{width:min(160px,36vw)}[data-feature="songs"] .songOriginalLine{font-size:16px}}
+@media(max-width:360px){[data-feature="songs"] .catalogSearchBar{gap:4px}[data-feature="songs"] .expandSearchInput{padding-inline:8px}[data-feature="songs"] .searchModeItem span{padding-inline:4px;font-size:8px}}
+@media(max-width:420px){[data-feature="songs"] .songOriginalLine{font-size:16px}}

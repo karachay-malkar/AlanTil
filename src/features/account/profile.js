@@ -1,5 +1,5 @@
 import { escapeHtml } from "../../shared/ui/html.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
@@ -23,11 +23,11 @@ export function renderAvatarGenderSelection(context, { error = "" } = {}) {
           <span>Это окончательный выбор. Позже изменить его будет нельзя.</span>
         </div>
         <div class="accountGenderChoices" role="group" aria-label="Пол аватара">
-          <button class="accountGenderChoice" type="button" data-avatar-gender="male">
+          <button class="accountGenderChoice choiceControl" type="button" data-avatar-gender="male">
             <span class="accountGenderFigure">${avatarSilhouette()}</span>
             <span>Мужской</span>
           </button>
-          <button class="accountGenderChoice" type="button" data-avatar-gender="female">
+          <button class="accountGenderChoice choiceControl" type="button" data-avatar-gender="female">
             <span class="accountGenderFigure">${avatarSilhouette()}</span>
             <span>Женский</span>
           </button>
@@ -83,10 +83,10 @@ export function renderProfileCreation(context, user, {
             <input id="accountNickname" class="${nicknameClass.trim()}" name="nickname" type="text" minlength="3" maxlength="30" autocomplete="nickname" spellcheck="false" value="${escapeHtml(nickname)}" ${unavailable ? "disabled" : ""} aria-invalid="${nicknameState === "invalid" ? "true" : "false"}" required />
           </label>
           <div id="accountNicknameMessage" class="accountNicknameMessage ${escapeHtml(nicknameState)}" role="status">${escapeHtml(nicknameMessage)}</div>
-          <button id="accountCreateProfile" class="btn primary accountAction" type="submit" ${submitEnabled && !unavailable ? "" : "disabled"}>Сохранить</button>
+          <button id="accountCreateProfile" class="btn actionPrimary accountAction" type="submit" ${submitEnabled && !unavailable ? "" : "disabled"}>Сохранить</button>
         </form>
-        ${unavailable ? `<button id="accountRetryProfile" class="btn accountAction" type="button">Повторить</button>` : ""}
-        <button id="accountSignOut" class="btn ghost accountAction" type="button">Выйти</button>
+        ${unavailable ? `<button id="accountRetryProfile" class="btn actionPrimary accountAction" type="button">Повторить</button>` : ""}
+        <button id="accountSignOut" class="btn actionText accountAction" type="button">Выйти</button>
       </div>`,
   });
 }
@@ -149,7 +149,7 @@ export function renderProfile(context, { user, profile, provider, error = "" }) 
           ${renderAccountFact("Способ входа", provider || "")}
           ${renderAccountFact("Образ аватара", profile?.avatar_gender === "female" ? "Женский" : "Мужской")}
         </dl>
-        <button id="accountSignOut" class="btn ghost accountAction" type="button">Выйти</button>
+        <button id="accountSignOut" class="btn actionText accountAction" type="button">Выйти</button>
       </div>`,
   });
 }

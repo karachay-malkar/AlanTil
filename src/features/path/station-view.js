@@ -82,6 +82,11 @@ export function renderStationView(context, station, {
     return `<span class="${className} stationTextClip" title="${escapeHtml(text)}"><span class="stationMarquee" data-station-marquee>${escapeHtml(text)}</span></span>`;
   }
 
+  function staticLine(value, className) {
+    const text = String(value || "");
+    return `<span class="${className} stationTextClip stationStaticText" title="${escapeHtml(text)}">${escapeHtml(text)}</span>`;
+  }
+
   function wireVisibleMarquees() {
     marqueeObserver?.disconnect();
     marqueeObserver = null;
@@ -96,7 +101,7 @@ export function renderStationView(context, station, {
         track.classList.toggle("isOverflowing", distance > 2);
         if (distance > 2) {
           track.style.setProperty("--marquee-distance", `${distance}px`);
-          track.style.setProperty("--marquee-duration", `${Math.min(14, Math.max(7, distance / 28 + 5)).toFixed(1)}s`);
+          track.style.setProperty("--marquee-duration", `${Math.min(9.5, Math.max(4.8, distance / 42 + 3.4)).toFixed(1)}s`);
         }
       });
     });
@@ -137,24 +142,25 @@ export function renderStationView(context, station, {
       </div>
       <div class="contentList stationWordList">
         ${allWords.map((word) => `<div class="contentListRow stationWordRow" data-station-word="${escapeHtml(word.id)}">
-          <label class="stationWordToggle">
+          <label class="stationWordToggle bracketCheckbox">
             <input class="contentListCheckbox" type="checkbox" ${hidden.has(String(word.id)) ? "" : "checked"} aria-label="Добавить слово в обучение" />
+            <span class="bracketCheckboxMark" aria-hidden="true"></span>
           </label>
-          <span class="contentListMain"><span data-station-line>${scrollingLine(word.word, "contentListPrimary")}</span><span data-station-line>${scrollingLine(word.trans, "contentListSecondary")}</span></span>
+          <span class="contentListMain"><span data-station-line>${staticLine(word.word, "contentListPrimary")}</span><span data-station-line>${scrollingLine(word.trans, "contentListSecondary")}</span></span>
           ${renderStarButton(word.id, `data-station-favorite="${escapeHtml(word.id)}"`)}
         </div>`).join("")}
       </div>
       <footer class="stationLaunchPanel">
         <div class="stationDirectionControl">
           <span>Направление</span>
-          <div class="stationDirectionToggle" role="radiogroup" aria-label="Направление обучения">
-            <button class="${studyMode === "kb" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "kb"}" data-station-mode="kb">АЛАН → РУС</button>
-            <button class="${studyMode === "ru" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "ru"}" data-station-mode="ru">РУС → АЛАН</button>
+          <div class="segmentControl stationDirectionToggle" role="radiogroup" aria-label="Направление обучения">
+            <button class="segmentOption ${studyMode === "kb" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "kb"}" data-station-mode="kb">АЛАН → РУС</button>
+            <button class="segmentOption ${studyMode === "ru" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "ru"}" data-station-mode="ru">РУС → АЛАН</button>
           </div>
         </div>
         <div class="stationLaunchActions">
-          <button class="btn neutral stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>Учить слова</button>
-          <button class="btn secondary stationTestButton" type="button" data-station-test ${selected.length ? "" : "disabled"}>Проверить знания</button>
+          <button class="btn actionText stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>Учить слова</button>
+          <button class="btn actionPrimary stationTestButton" type="button" data-station-test ${selected.length ? "" : "disabled"}>Завершить этап: тест</button>
         </div>
       </footer>
     </section>`;
@@ -181,11 +187,11 @@ export function renderStationView(context, station, {
         <div><strong>${summary.review}</strong><span>требуют повторения</span></div>
       </div>
       <section class="stationStatsSection">
-        <h2 class="bracketHeading stationStatsHeading"><span aria-hidden="true">[</span><span>Последние результаты</span><span aria-hidden="true">]</span></h2>
+        <h2 class="stationStatsHeading">Последние результаты</h2>
         <div class="stationAttempts">${recent.length ? recent.map(resultCard).join("") : `<div class="stationEmptyState">Тесты ещё не проходились.</div>`}</div>
       </section>
       <section class="stationStatsSection">
-        <h2 class="bracketHeading stationStatsHeading"><span aria-hidden="true">[</span><span>Проблемные слова</span><span aria-hidden="true">]</span></h2>
+        <h2 class="stationStatsHeading">Проблемные слова</h2>
         ${problemRows(allWords)}
       </section>
     </section>`;
@@ -194,20 +200,32 @@ export function renderStationView(context, station, {
   function wireMenu() {
     const list = context.root.querySelector(".stationWordList");
     if (list) list.scrollTop = menuScrollTop;
+
+    function updateSelectionState() {
+      const selectedCount = activeWords().length;
+      const count = context.root.querySelector(".stationSelectionCount");
+      if (count) count.textContent = `${selectedCount}/${allWords.length}`;
+      context.root.querySelectorAll("[data-station-study], [data-station-test]").forEach((button) => {
+        button.disabled = selectedCount === 0;
+      });
+    }
+
     list?.querySelectorAll("[data-station-word]").forEach((row) => {
       row.querySelector("input")?.addEventListener("change", (event) => {
         if (event.currentTarget.checked) hidden.delete(String(row.dataset.stationWord));
         else hidden.add(String(row.dataset.stationWord));
         persist();
-        draw();
+        updateSelectionState();
       }, { signal });
     });
     context.root.querySelector("[data-show-all]")?.addEventListener("click", () => {
+      if (list) menuScrollTop = list.scrollTop;
       replaceCurrentStationHidden([]);
       persist();
       draw();
     }, { signal });
     context.root.querySelector("[data-hide-all]")?.addEventListener("click", () => {
+      if (list) menuScrollTop = list.scrollTop;
       replaceCurrentStationHidden(allWords.map((word) => word.id));
       persist();
       draw();
@@ -239,10 +257,11 @@ export function renderStationView(context, station, {
   function draw() {
     marqueeObserver?.disconnect();
     marqueeObserver = null;
+    context.shell.appShell.dataset.stationPane = activeTab;
     context.root.innerHTML = `<section class="view screen stationView">
-      <div class="stationViewTabs" role="tablist" aria-label="Раздел станции">
-        <button class="stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">[ Меню ]</button>
-        <button class="stationViewTab ${activeTab === "statistics" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "statistics"}" data-station-tab="statistics">[ Статистика ]</button>
+      <div class="stationViewTabs" role="tablist" aria-label="Раздел этапа">
+        <button class="tabAction stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">[ Меню ]</button>
+        <button class="tabAction stationViewTab ${activeTab === "statistics" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "statistics"}" data-station-tab="statistics">[ Статистика ]</button>
       </div>
       ${activeTab === "menu" ? renderMenu() : renderStatistics()}
     </section>`;

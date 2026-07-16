@@ -1,14 +1,14 @@
-[data-feature="profile"] .profileView{position:relative;height:100%;min-height:0;display:grid;grid-template-rows:34px minmax(0,1fr);gap:4px;padding-left:14px;padding-right:14px;overflow:hidden;background:var(--path-scene-gradient)}
-[data-feature="profile"] .profileStatisticsView{grid-template-rows:minmax(0,1fr)}
+[data-feature="profile"] .profileView{position:relative;height:100%;min-height:0;display:grid;grid-template-rows:30px 30px minmax(0,1fr);gap:2px;padding-left:14px;padding-right:14px;overflow:hidden;background:var(--path-scene-gradient)}
+[data-feature="profile"] .profileStatisticsView{grid-template-rows:30px minmax(0,1fr)}
 [data-feature="profile"] .profileView::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;background-image:var(--topographic-lines);background-size:420px 420px;background-position:center top}
 [data-feature="profile"] .profileView>*{position:relative;z-index:1}
 [data-feature="profile"] .profilePrimaryNav{z-index:25}
-.profilePrimaryNav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:4px}
+.profilePrimaryNav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:2px}
 .profilePrimaryTab,.profileSubTab{appearance:none;min-width:0;min-height:30px;padding:0 3px;border:0;background:transparent;color:var(--text-3);font:750 clamp(9px,2.9vw,12px)/1 var(--font-terminal);white-space:nowrap}
 .profilePrimaryTab.active,.profileSubTab.active{color:var(--text-1);font-weight:900}
 .profilePrimaryTab:active,.profileSubTab:active{opacity:.62}
-[data-feature="profile"] .profileSubNav{position:relative;z-index:25;display:flex;align-items:center;justify-content:center;gap:28px}
-[data-feature="profile"] .profileScroll{min-height:0;overflow:auto;overscroll-behavior:contain;padding:18px 2px 28px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 34px,#000 calc(100% - 46px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 34px,#000 calc(100% - 46px),transparent 100%)}
+[data-feature="profile"] .profileSubNav{position:relative;z-index:25;display:flex;align-items:center;justify-content:center;gap:20px}
+[data-feature="profile"] .profileScroll{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 2px 28px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 46px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 46px),transparent 100%)}
 [data-feature="profile"] .profileStatusContent{width:min(100%,520px);margin:0 auto;display:grid;justify-items:center}
 [data-feature="profile"] .profileAvatarFrame{position:relative;width:min(72vw,286px);aspect-ratio:4/5;margin:6px auto 0;display:grid;place-items:end center;overflow:visible;border:1px solid var(--line-strong);border-radius:2px;background:linear-gradient(155deg,color-mix(in srgb,var(--surface-0) 35%,transparent),color-mix(in srgb,var(--accent) 9%,transparent))}
 [data-feature="profile"] .profileAvatarFrame::before{content:"STATUS";position:absolute;left:9px;top:8px;color:var(--text-3);font:750 8px/1 var(--font-terminal);letter-spacing:.14em}
@@ -20,7 +20,7 @@
 [data-feature="profile"] .profileAccountButton svg{width:100%;height:100%;fill:currentColor}
 [data-feature="profile"] .profileNickname{margin-top:11px;font-size:22px;font-weight:880;text-align:center;overflow-wrap:anywhere}
 [data-feature="profile"] .profileStatusSection{width:100%;margin-top:20px}
-[data-feature="profile"] .profileSectionTitle{margin-bottom:9px}
+[data-feature="profile"] .profileSectionTitle{margin:0 0 9px;padding-bottom:8px;border-bottom:1px solid var(--line-soft);font-size:17px;font-weight:850;line-height:1.2}
 [data-feature="profile"] .profileStoryRows{display:grid;border-top:1px solid var(--line-soft)}
 [data-feature="profile"] .profileStoryRow{appearance:none;display:grid;gap:7px;width:100%;padding:12px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;text-align:left;color:var(--text-1)}
 [data-feature="profile"] .profileStoryHead{display:flex;justify-content:space-between;gap:12px;font-size:13px}

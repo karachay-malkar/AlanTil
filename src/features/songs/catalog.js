@@ -3,16 +3,16 @@ import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js";
 import { songFavorites } from "../../shared/state/song-favorites.js";
 import { renderFavoriteButton } from "../../shared/ui/favorite-button.js";
 import { renderContentListRow } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 import { renderExpandableSearch } from "../../shared/ui/search-control.js";
 import { escapeHtml } from "../../shared/ui/html.js";
 import { songsState } from "./state.js";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";
 const SEARCH_MODES = [
-  { value: "title", label: "По названию" },
-  { value: "artist", label: "По исполнителю" },
-  { value: "lyrics", label: "По тексту" },
+  { value: "title", label: "Название" },
+  { value: "artist", label: "Исполнитель" },
+  { value: "lyrics", label: "Текст" },
 ];
 
 function normalizeSearchValue(value) {
@@ -59,18 +59,17 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     modes: SEARCH_MODES,
     selectedMode: songsState.searchMode,
   });
+  context.shell.setHeaderAction?.(search.toggle);
 
   context.root.innerHTML = panel({
     title: playlist.title,
-    headerExtra: search.header,
-    body: `${search.modes}<div id="songsCatalogList" class="contentList"></div>`,
+    body: `${search.bar}<div id="songsCatalogList" class="contentList"></div>`,
     classes: "songsCatalogPanel",
   });
 
   const input = context.root.querySelector("#songsSearchInput");
-  const toggle = context.root.querySelector("#songsSearchToggle");
-  const control = context.root.querySelector("[data-search-control]");
-  const modes = context.root.querySelector("#songsSearchModes");
+  const toggle = context.shell.headerActionSlot?.querySelector("#songsSearchToggle");
+  const searchBar = context.root.querySelector("#songsSearchBar");
   const list = context.root.querySelector("#songsCatalogList");
   input.value = songsState.searchQuery;
   let searchEventTimer = 0;
@@ -134,8 +133,8 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
 
   function setSearchOpen(open) {
     songsState.searchOpen = open;
-    control.classList.toggle("open", open);
-    modes.classList.toggle("hidden", !open);
+    searchBar.classList.toggle("hidden", !open);
+    toggle.classList.toggle("active", open);
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", open ? "Закрыть поиск" : "Открыть поиск");
     if (open) {
@@ -151,7 +150,7 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     }
   }
 
-  toggle.addEventListener("click", () => setSearchOpen(!songsState.searchOpen), { signal });
+  toggle?.addEventListener("click", () => setSearchOpen(!songsState.searchOpen), { signal });
   input.addEventListener("input", () => {
     songsState.searchQuery = input.value;
     scheduleSearchEvent(draw());

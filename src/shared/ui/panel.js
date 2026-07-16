@@ -6,7 +6,7 @@ export function panel({
   viewClasses = "",
 }) {
   const viewClassName = `view screen${viewClasses ? ` ${viewClasses}` : ""}`;
-  const panelClassName = `panel${classes ? ` ${classes}` : ""}`;
+  const panelClassName = `panel${headerExtra ? " hasPanelToolbar" : ""}${classes ? ` ${classes}` : ""}`;
   const toolbar = headerExtra
     ? `<div class="panel-header panel-toolbar">${headerExtra}</div>`
     : "";

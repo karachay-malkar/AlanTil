@@ -9,6 +9,7 @@ import {
 } from "../../shared/progress/session-builders.js";
 import { wordFavorites } from "../../shared/state/word-favorites.js";
 import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js";
 import { uiIcon } from "../../shared/ui/icons.js";
 import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js";
 import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js";
@@ -24,7 +25,7 @@ function setRoundIfNeeded() {
 
 function updateCounter(shell) {
   const known = Math.max(0, learnState.totalPlanned - (learnState.mainQueue.length + learnState.repeatQueue.length));
-  shell.setCounter(`знаю ${known}/${learnState.totalPlanned} слов`);
+  shell.setCounter(`${known}/${learnState.totalPlanned}`);
 }
 
 function ensureWordStats(item) {
@@ -163,17 +164,20 @@ export function renderStudy(context, words, signal, params = {}) {
     <section class="learnSession">
       <div class="learnSessionMain">
         <article id="card" class="learnCard" aria-label="Карточка">
+          <div class="learnCardActions">
+            <button id="btnUndo" class="iconAction learnCardAction" type="button" aria-label="Вернуть предыдущее слово">${uiIcon("undo2")}<span>Назад</span></button>
+            ${renderFavoriteButton({ attributes: 'id="btnFavAction"', label: "Добавить в избранное" })}
+          </div>
           <div class="cardInner">
-            <div class="cardFace cardFront"><div class="word" id="word">слово</div><div class="hint">Нажмите на слово, чтобы увидеть перевод</div></div>
+            <div class="cardFace cardFront"><div class="word" id="word">слово</div></div>
             <div class="cardFace cardBack"><div class="trans" id="trans">перевод</div></div>
           </div>
         </article>
       </div>
       <div class="learnSessionActions">
-        <div class="buttons learnPrimaryActions"><button id="btnNo" class="btn secondary" type="button"><span class="btnIcon">${uiIcon("wrong")}</span><span class="btnLabel">Не знаю</span></button><button id="btnYes" class="btn primary" type="button"><span class="btnIcon">${uiIcon("correct")}</span><span class="btnLabel">Знаю</span></button></div>
-        <div class="buttons subActions">
-          <button id="btnUndo" class="btn neutral" type="button" aria-label="Назад"><span class="btnIcon">${uiIcon("undo2")}</span><span class="btnLabel">Назад</span></button>
-          <button id="btnFavAction" class="btn neutral favAction" type="button" aria-label="Отметить слово"><span class="btnIcon">${uiIcon("starLine")}</span><span class="btnLabel" id="favActionLabel">Отметить слово</span></button>
+        <div class="learnDecisionGroup">
+          <button id="btnNo" class="choiceControl sessionDecision sessionDecisionUnknown" type="button"><span class="sessionDecisionIcon">${uiIcon("wrong")}</span><span>Не знаю</span></button>
+          <button id="btnYes" class="choiceControl sessionDecision sessionDecisionKnown" type="button"><span class="sessionDecisionIcon">${uiIcon("correct")}</span><span>Знаю</span></button>
         </div>
       </div>
     </section>`;
@@ -183,7 +187,6 @@ export function renderStudy(context, words, signal, params = {}) {
   const translationElement = context.root.querySelector("#trans");
   const undoButton = context.root.querySelector("#btnUndo");
   const favoriteButton = context.root.querySelector("#btnFavAction");
-  const favoriteLabel = context.root.querySelector("#favActionLabel");
 
   function resetFlipInstant() {
     const inner = card.querySelector(".cardInner");
@@ -196,9 +199,9 @@ export function renderStudy(context, words, signal, params = {}) {
 
   function updateFavorite() {
     const on = wordFavorites.has(learnState.currentStudyId);
-    favoriteButton.classList.toggle("active", on);
-    favoriteLabel.textContent = on ? "В избранном" : "Отметить слово";
-    favoriteButton.setAttribute("aria-label", on ? "Убрать из избранного" : "Отметить слово");
+    favoriteButton.classList.toggle("on", on);
+    favoriteButton.setAttribute("aria-label", on ? "Убрать из избранного" : "Добавить в избранное");
+    favoriteButton.setAttribute("title", on ? "Убрать из избранного" : "Добавить в избранное");
   }
 
   function updateUndo() {
@@ -234,7 +237,7 @@ export function renderStudy(context, words, signal, params = {}) {
       translationElement.textContent = "В этом сете все слова скрыты. Верни их в меню сета.";
       favoriteButton.classList.add("hidden");
       undoButton.classList.add("hidden");
-      context.shell.setCounter("знаю 0/0 слов");
+      context.shell.setCounter("0/0");
       return;
     }
     if (!queue.length) {

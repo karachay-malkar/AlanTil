@@ -40,9 +40,9 @@ export function renderMatchMenu(context, words, signal) {
     <div class="modeScroll">
       <div class="modeLead"><span id="matchInfo">—</span><small>Выберите словари и разделы</small></div>
       <div id="matchScopeList" class="testScopeList">${scopeHtml || `<div class="hintText">Словари не найдены.</div>`}</div>
-      <section class="modeOptionSection"><div class="modeOptionLabel">Количество слов</div><div class="testLimitRadios">${[20, 40, 80].map((limit) => `<label class="radioOpt"><input type="radio" name="matchLimit" value="${limit}" ${matchState.limit === limit ? "checked" : ""} /><span>${limit}</span></label>`).join("")}</div></section>
+      <section class="modeOptionSection"><div class="modeOptionLabel">Количество слов</div><div class="segmentControl testLimitRadios">${[20, 40, 80].map((limit) => `<label class="segmentOption radioOpt"><input type="radio" name="matchLimit" value="${limit}" ${matchState.limit === limit ? "checked" : ""} /><span>${limit}</span></label>`).join("")}</div></section>
     </div>
-    <footer class="modeLaunchBar"><button id="btnMatchStart" class="btn primary" type="button">Начать игру</button></footer>
+    <footer class="modeLaunchBar"><button id="btnMatchStart" class="btn actionPrimary" type="button">Начать игру</button></footer>
   </section>`;
 
   const list = context.root.querySelector("#matchScopeList"); const info = context.root.querySelector("#matchInfo");
@@ -66,17 +66,17 @@ export function renderMatchMenu(context, words, signal) {
 
 export function renderMatchGame(context, words, signal) {
   context.root.innerHTML = `<section class="view screen modeSessionView matchGameView">
-    <div class="matchProgress" id="matchProgress">Пройдено ${matchState.solvedCount}/${matchState.total}</div>
     <div class="matchColumns"><div id="matchColLeft" class="matchCol"></div><div id="matchColRight" class="matchCol"></div></div>
   </section>`;
-  const progress = context.root.querySelector("#matchProgress"); const left = context.root.querySelector("#matchColLeft"); const right = context.root.querySelector("#matchColRight");
+  context.shell.setCounter(`${matchState.solvedCount}/${matchState.total}`);
+  const left = context.root.querySelector("#matchColLeft"); const right = context.root.querySelector("#matchColRight");
   function finish() { completeMatch(); context.router.replace("match.results", {}, { force: true }); }
   function drawRound() {
     const roundWords = nextRound(); if (!roundWords.length) { finish(); return; }
     const leftCards = shuffle(roundWords.map((word) => ({ kind: "w", id: word.id, text: word.word }))); const rightCards = shuffle(roundWords.map((word) => ({ kind: "t", id: word.id, text: word.trans })));
     matchState.locked = false; matchState.selected = null;
-    left.innerHTML = leftCards.map((card) => `<button class="matchCard" type="button" data-kind="${card.kind}" data-id="${escapeHtml(card.id)}">${escapeHtml(card.text)}</button>`).join("");
-    right.innerHTML = rightCards.map((card) => `<button class="matchCard" type="button" data-kind="${card.kind}" data-id="${escapeHtml(card.id)}">${escapeHtml(card.text)}</button>`).join("");
+    left.innerHTML = leftCards.map((card) => `<button class="choiceControl matchCard" type="button" data-kind="${card.kind}" data-id="${escapeHtml(card.id)}">${escapeHtml(card.text)}</button>`).join("");
+    right.innerHTML = rightCards.map((card) => `<button class="choiceControl matchCard" type="button" data-kind="${card.kind}" data-id="${escapeHtml(card.id)}">${escapeHtml(card.text)}</button>`).join("");
     const buttons = Array.from(context.root.querySelectorAll(".matchCard"));
     function clearSelection() { buttons.forEach((button) => button.classList.remove("selected", "wrong")); matchState.selected = null; }
     function allMatched() { return buttons.length > 0 && buttons.every((button) => button.classList.contains("matched")); }
@@ -88,7 +88,7 @@ export function renderMatchGame(context, words, signal) {
       const first = matchState.selected;
       if (first.kind === choice.kind) { clearSelection(); button.classList.add("selected"); matchState.selected = choice; return; }
       if (first.id === choice.id) {
-        first.element.classList.remove("selected"); button.classList.remove("selected"); first.element.classList.add("matched"); button.classList.add("matched"); markSolved(first.id); progress.textContent = `Пройдено ${matchState.solvedCount}/${matchState.total}`; matchState.selected = null;
+        first.element.classList.remove("selected"); button.classList.remove("selected"); first.element.classList.add("matched"); button.classList.add("matched"); markSolved(first.id); context.shell.setCounter(`${matchState.solvedCount}/${matchState.total}`); matchState.selected = null;
         if (allMatched()) { matchState.locked = true; window.setTimeout(() => { matchState.locked = false; drawRound(); }, 350); }
       } else { recordMismatch(first.id, choice.id); matchState.locked = true; first.element.classList.add("wrong"); button.classList.add("wrong"); window.setTimeout(() => { matchState.locked = false; clearSelection(); }, 600); }
     }, { signal }));

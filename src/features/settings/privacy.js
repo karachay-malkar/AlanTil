@@ -3,7 +3,7 @@ import {
   subscribePrivacyState,
   updateAnalyticsPreference,
 } from "../../shared/privacy/privacy-controller.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 
 export function renderPrivacy(context, signal, params = {}) {
   context.shell.setHeaderContent?.({ title: "Конфиденциальность" });
@@ -46,7 +46,7 @@ export function renderPrivacy(context, signal, params = {}) {
             <input id="analyticsPreferenceCheckbox" class="analyticsPreferenceCheckbox" type="checkbox" ${initialState.enabled ? "checked" : ""} />
             <span>Разрешить статистику использования</span>
           </label>
-          <button id="saveAnalyticsPreference" class="btn primary analyticsPreferenceSave" type="button">Сохранить настройки</button>
+          <button id="saveAnalyticsPreference" class="btn actionPrimary analyticsPreferenceSave" type="button">Сохранить настройки</button>
           <div id="analyticsPreferenceMessage" class="analyticsPreferenceMessage hidden" role="status">Настройки статистики сохранены</div>
         </section>
 

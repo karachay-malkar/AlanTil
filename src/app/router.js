@@ -1,17 +1,17 @@
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
 import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.6.2";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.7.6";
 
 const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.6.2"),
-  path: () => import("../features/path/index.js?v=13.6.2"),
-  profile: () => import("../features/profile/index.js?v=13.6.2"),
-  learn: () => import("../features/learn/index.js?v=13.6.2"),
-  test: () => import("../features/test/index.js?v=13.6.2"),
-  match: () => import("../features/match/index.js?v=13.6.2"),
-  songs: () => import("../features/songs/index.js?v=13.6.2"),
-  account: () => import("../features/account/index.js?v=13.6.2"),
-  settings: () => import("../features/settings/index.js?v=13.6.2"),
+  practice: () => import("../features/practice/index.js?v=13.7.6"),
+  path: () => import("../features/path/index.js?v=13.7.6"),
+  profile: () => import("../features/profile/index.js?v=13.7.6"),
+  learn: () => import("../features/learn/index.js?v=13.7.6"),
+  test: () => import("../features/test/index.js?v=13.7.6"),
+  match: () => import("../features/match/index.js?v=13.7.6"),
+  songs: () => import("../features/songs/index.js?v=13.7.6"),
+  account: () => import("../features/account/index.js?v=13.7.6"),
+  settings: () => import("../features/settings/index.js?v=13.7.6"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -28,6 +28,7 @@ const TITLE_BY_SCREEN = Object.freeze({
   settings: "Настройки — Алан тил",
   privacy: "Политика конфиденциальности — Алан тил",
   version: "Версия приложения — Алан тил",
+  thanks: "Благодарности — Алан тил",
 });
 
 function decodeSegment(value) {
@@ -75,6 +76,7 @@ export function parsePathname(pathname) {
       if (!third) return { route: "settings.home", params: {} };
       if (third === "privacy") return { route: "settings.privacy", params: {} };
       if (third === "version") return { route: "settings.version", params: {} };
+      if (third === "thanks") return { route: "settings.thanks", params: {} };
     }
   }
   if (first === "learn") {
@@ -97,6 +99,7 @@ export function parsePathname(pathname) {
     if (!second) return { route: "settings.home", params: {}, redirected: true };
     if (second === "privacy") return { route: "settings.privacy", params: {}, redirected: true };
     if (second === "version") return { route: "settings.version", params: {}, redirected: true };
+    if (second === "thanks") return { route: "settings.thanks", params: {}, redirected: true };
   }
   return { route: "path.home", params: { storyType: "ascent" }, notFound: true };
 }
@@ -137,6 +140,7 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "settings.home") return "/profile/settings";
   if (routeName === "settings.privacy") return "/profile/settings/privacy";
   if (routeName === "settings.version") return "/profile/settings/version";
+  if (routeName === "settings.thanks") return "/profile/settings/thanks";
   return `/path/${story}`;
 }
 
@@ -149,6 +153,7 @@ function screenNameOf(route) {
   if (route === "songs.song") return "song";
   if (route === "settings.privacy") return "privacy";
   if (route === "settings.version") return "version";
+  if (route === "settings.thanks") return "thanks";
   return featureOf(route);
 }
 
@@ -209,8 +214,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.6.2&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.6.2&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.7.6&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.7.6&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -226,7 +231,9 @@ export function createRouter({ shell, modal, context }) {
 
   async function mayLeave(force) {
     if (force || !currentModule?.canLeave || currentModule.canLeave()) return true;
-    return modal.confirm({ message: "Вы точно хотите выйти?<br>Сессия будет сохранена как незавершённая." });
+    const message = currentModule?.getLeaveMessage?.()
+      || "Вы точно хотите выйти?<br>Сессия будет сохранена как незавершённая.";
+    return modal.confirm({ message });
   }
 
   function pauseScreenTimer() {
@@ -316,13 +323,13 @@ export function createRouter({ shell, modal, context }) {
   }
 
 
-  async function mountCurrentRoute() {
+  async function mountCurrentRoute(preloadedModule = null) {
     shell.setCounter("");
     shell.clearMode();
     shell.beginNavigation(current.route, "Открываем…");
     syncBackControls();
     const feature = featureOf(current.route);
-    currentModule = await loadModule(feature);
+    currentModule = preloadedModule || await loadModule(feature);
     await currentModule.mount(
       { ...context, router: api },
       { ...current.params, screen: current.route.split(".")[1] || "home" },
@@ -378,6 +385,10 @@ export function createRouter({ shell, modal, context }) {
     try {
       if (!skipLeaveCheck && !(await mayLeave(force))) return false;
 
+      // Keep the current screen in place while the destination bundle loads.
+      // This prevents the practice menu from flashing before a selected mode.
+      const nextModule = await loadModule(featureOf(target.route));
+
       finishScreenTimer();
       await currentModule?.onLeave?.(reason);
       currentModule?.unmount?.();
@@ -385,7 +396,7 @@ export function createRouter({ shell, modal, context }) {
       current = { route: target.route, params: compactParams(target.params) };
 
       if (historyMode !== "none") syncBrowserHistory(current, historyMode);
-      await mountCurrentRoute();
+      await mountCurrentRoute(nextModule);
       startScreenTimer(current.route);
       sendPageView({ initial });
       return true;
@@ -432,7 +443,7 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "songs.playlists") return { route: "practice.home", params: {} };
     if (current.route === "account.home") return { route: "profile.home", params: {} };
     if (["profile.skills", "profile.statistics"].includes(current.route)) return { route: "profile.home", params: {} };
-    if (["settings.privacy", "settings.version"].includes(current.route)) return { route: "settings.home", params: {} };
+    if (["settings.privacy", "settings.version", "settings.thanks"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "profile.home", params: {} };
     return { route: "path.home", params: { storyType: "ascent" } };
   }

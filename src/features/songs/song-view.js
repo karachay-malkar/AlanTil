@@ -1,6 +1,6 @@
 import { trackEvent } from "../../shared/analytics/analytics.js";
 import { DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js";
-import { panel } from "../../shared/ui/panel.js?v=13.6.2";
+import { panel } from "../../shared/ui/panel.js?v=13.7.6";
 import { openInfoModal } from "../../shared/ui/info-modal.js";
 import { openWordCard } from "../../shared/ui/word-card.js";
 import { escapeHtml } from "../../shared/ui/word-renderers.js";
@@ -17,6 +17,7 @@ function songInformation(song) {
 }
 
 export function renderSongView(context, song, words, signal) {
+  context.shell.setHeaderAction?.();
   if (!song) {
     context.shell.setHeaderContent?.({ title: "Песня" });
     context.root.innerHTML = panel({ title: "Песня", body: `<div class="errorState">Песня не найдена.</div>`, classes: "songsPanel" });
@@ -26,11 +27,11 @@ export function renderSongView(context, song, words, signal) {
   songsState.selectedPlaylistId = song.playlistId;
   songsState.selectedSongId = song.id;
   context.shell.setHeaderContent?.({ title: song.title, subtitle: song.artist || "" });
+  context.shell.setHeaderAction?.(`<button id="songInfoButton" class="iconAction appHeaderTextAction songInfoButton" type="button" aria-label="Информация о песне" title="Информация о песне">Info</button>`);
   const lyricsMarkup = renderSongLyrics(song.lyrics, song.translation, words);
 
   context.root.innerHTML = panel({
     title: escapeHtml(song.title),
-    headerExtra: `<button id="songInfoButton" class="iconBtn songInfoButton" type="button" aria-label="Информация о песне" title="Информация о песне">i</button>`,
     body: `
       ${song.audioUrl ? `<div id="songPlayerRoot" class="songPlayerRoot"></div>` : ""}
       ${lyricsMarkup ? `<article class="songLyrics" id="songLyrics">${lyricsMarkup}</article>` : ""}`,
@@ -52,7 +53,7 @@ export function renderSongView(context, song, words, signal) {
     });
   }
 
-  context.root.querySelector("#songInfoButton")?.addEventListener("click", () => {
+  context.shell.headerActionSlot?.querySelector("#songInfoButton")?.addEventListener("click", () => {
     openInfoModal(context.shell.modalRoot, {
       title: song.title,
       content: `<div class="songInfoModalContent">${songInformation(song)}</div>`,

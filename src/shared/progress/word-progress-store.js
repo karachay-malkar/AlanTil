@@ -1,10 +1,24 @@
 import { getActivityHistory } from "./activity-history-store.js";
 import { readScopedJson, writeScopedJson } from "./storage-scope.js";
 import { awardReward } from "./reward-store.js";
-import { enqueueProgress } from "./progress-queue.js";
 
 export const WORD_PROGRESS_LOCAL_KEY = "alantil_word_progress_v13_5";
 const MAX_PROCESSED_SESSIONS = 600;
+const NUMERIC_FIELDS = Object.freeze([
+  "sessions_total",
+  "learn_sessions_total",
+  "learn_unfinished_total",
+  "test_answers_total",
+  "match_sessions_total",
+  "match_success_total",
+  "match_errors_total",
+  "study_shown_count",
+  "known_count",
+  "unknown_count",
+  "test_correct_count",
+  "test_wrong_count",
+]);
+const STATUS_RANK = Object.freeze({ not_started: 0, learning: 1, mastered: 2, review: 3 });
 
 function normalizeId(value) {
   return String(value ?? "").trim();
@@ -13,6 +27,13 @@ function normalizeId(value) {
 function emptyRow(wordId) {
   return {
     word_id: normalizeId(wordId),
+    sessions_total: 0,
+    learn_sessions_total: 0,
+    learn_unfinished_total: 0,
+    test_answers_total: 0,
+    match_sessions_total: 0,
+    match_success_total: 0,
+    match_errors_total: 0,
     study_shown_count: 0,
     known_count: 0,
     unknown_count: 0,
@@ -20,8 +41,11 @@ function emptyRow(wordId) {
     test_wrong_count: 0,
     mastery_status: "not_started",
     mastered_at: null,
+    last_mode: null,
     last_result: null,
     last_seen_at: null,
+    last_studied_at: null,
+    last_tested_at: null,
   };
 }
 
@@ -31,13 +55,7 @@ function normalizeRow(row = {}, wordId = row.word_id) {
     ...row,
     word_id: normalizeId(wordId || row.word_id),
   };
-  [
-    "study_shown_count",
-    "known_count",
-    "unknown_count",
-    "test_correct_count",
-    "test_wrong_count",
-  ].forEach((key) => {
+  NUMERIC_FIELDS.forEach((key) => {
     normalized[key] = Math.max(0, Number(normalized[key] || 0));
   });
   if (!["not_started", "learning", "mastered", "review"].includes(normalized.mastery_status)) {
@@ -75,43 +93,37 @@ function markProcessed(state, sessionId) {
   return true;
 }
 
-function queueWordProgress(rows = []) {
-  const updatedAt = new Date().toISOString();
-  rows.forEach((row) => {
-    if (!row?.word_id) return;
-    enqueueProgress("word_progress", {
-      word_id: row.word_id,
-      study_shown_count: row.study_shown_count,
-      known_count: row.known_count,
-      unknown_count: row.unknown_count,
-      test_correct_count: row.test_correct_count,
-      test_wrong_count: row.test_wrong_count,
-      mastery_status: row.mastery_status,
-      mastered_at: row.mastered_at,
-      last_result: row.last_result,
-      last_seen_at: row.last_seen_at,
-      updated_at: updatedAt,
-    }, { id: `word_progress:${row.word_id}` });
-  });
+function laterIso(left, right) {
+  const leftTime = Date.parse(left || "") || 0;
+  const rightTime = Date.parse(right || "") || 0;
+  return rightTime > leftTime ? right : left;
+}
+
+function strongerStatus(left, right) {
+  const local = STATUS_RANK[left] === undefined ? "not_started" : left;
+  const cloud = STATUS_RANK[right] === undefined ? "not_started" : right;
+  return STATUS_RANK[cloud] > STATUS_RANK[local] ? cloud : local;
 }
 
 export function recordLearnWordResults(sessionId, words = [], completedAt = new Date().toISOString()) {
   const state = readState();
   if (!markProcessed(state, sessionId)) return false;
-  const changed = [];
   (Array.isArray(words) ? words : []).forEach((entry) => {
     const row = withMutableRow(state, entry?.word_id);
     if (!row) return;
+    row.sessions_total += 1;
+    row.learn_sessions_total += 1;
     row.study_shown_count += Math.max(0, Number(entry.show_count || 0));
     row.unknown_count += Math.max(0, Number(entry.left_swipe_count || 0));
     if (entry.final_result === "known") row.known_count += 1;
+    else row.learn_unfinished_total += 1;
     if (row.mastery_status === "not_started") row.mastery_status = "learning";
-    row.last_result = entry.final_result === "known" ? "known" : "unknown";
+    row.last_mode = "learn";
+    row.last_result = entry.final_result === "known" ? "known" : "unfinished";
     row.last_seen_at = completedAt;
-    changed.push(row);
+    row.last_studied_at = completedAt;
   });
   writeState(state);
-  queueWordProgress(changed);
   return true;
 }
 
@@ -120,33 +132,55 @@ export function recordTestWordResults({
   answers = [],
   accuracy = 0,
   requiredAccuracy = 80,
+  updateMastery = false,
   completedAt = new Date().toISOString(),
 } = {}) {
   const state = readState();
   if (!markProcessed(state, sessionId)) return false;
   const passed = Number(accuracy || 0) >= Number(requiredAccuracy || 80);
-  const changed = [];
   (Array.isArray(answers) ? answers : []).forEach((entry) => {
     const row = withMutableRow(state, entry?.word_id || entry?.wordId);
     if (!row) return;
+    row.sessions_total += 1;
+    row.test_answers_total += 1;
     const correct = entry.result === "correct" || entry.isCorrect === true;
     if (correct) row.test_correct_count += 1;
     else row.test_wrong_count += 1;
-    if (passed && correct) {
+    if (updateMastery && passed && correct) {
       row.mastery_status = "mastered";
       row.mastered_at ||= completedAt;
-    } else if (!correct && row.mastered_at) {
+    } else if (updateMastery && !correct && (row.mastered_at || ["mastered", "review"].includes(row.mastery_status))) {
       row.mastery_status = "review";
     } else if (row.mastery_status === "not_started") {
       row.mastery_status = "learning";
     }
+    row.last_mode = "test";
     row.last_result = correct ? "correct" : "wrong";
     row.last_seen_at = completedAt;
-    changed.push(row);
+    row.last_tested_at = completedAt;
   });
   writeState(state);
-  queueWordProgress(changed);
-  if (passed) awardWordMilestones();
+  if (updateMastery && passed) awardWordMilestones();
+  return true;
+}
+
+export function recordMatchWordResults(sessionId, words = [], completedAt = new Date().toISOString()) {
+  const state = readState();
+  if (!markProcessed(state, sessionId)) return false;
+  (Array.isArray(words) ? words : []).forEach((entry) => {
+    const row = withMutableRow(state, entry?.word_id);
+    if (!row) return;
+    const matched = entry.matched === true;
+    row.sessions_total += 1;
+    row.match_sessions_total += 1;
+    if (matched) row.match_success_total += 1;
+    row.match_errors_total += Math.max(0, Number(entry.error_count || 0));
+    if (row.mastery_status === "not_started") row.mastery_status = "learning";
+    row.last_mode = "match";
+    row.last_result = matched ? "matched" : "unfinished";
+    row.last_seen_at = completedAt;
+  });
+  writeState(state);
   return true;
 }
 
@@ -155,21 +189,28 @@ export function mergeCloudWordProgress(rows = []) {
   (Array.isArray(rows) ? rows : []).forEach((cloud) => {
     const row = withMutableRow(state, cloud?.word_id);
     if (!row) return;
-    row.study_shown_count = Math.max(row.study_shown_count, Number(cloud.study_shown_count ?? cloud.learn_shows_total ?? 0));
-    row.known_count = Math.max(row.known_count, Number(cloud.known_count ?? cloud.learn_known_total ?? 0));
-    row.unknown_count = Math.max(row.unknown_count, Number(cloud.unknown_count ?? cloud.learn_left_swipes_total ?? 0));
-    row.test_correct_count = Math.max(row.test_correct_count, Number(cloud.test_correct_count ?? cloud.test_correct_total ?? 0));
-    row.test_wrong_count = Math.max(row.test_wrong_count, Number(cloud.test_wrong_count ?? cloud.test_wrong_total ?? 0));
-    const explicitStatus = String(cloud.mastery_status || "").trim();
-    if (["mastered", "review", "learning"].includes(explicitStatus)) row.mastery_status = explicitStatus;
+    NUMERIC_FIELDS.forEach((field) => {
+      row[field] = Math.max(row[field], Math.max(0, Number(cloud?.[field] || 0)));
+    });
+    row.mastery_status = strongerStatus(row.mastery_status, String(cloud.mastery_status || "not_started").trim());
     if (cloud.mastered_at) {
       row.mastered_at = row.mastered_at || cloud.mastered_at;
       if (row.mastery_status === "not_started") row.mastery_status = "mastered";
     }
-    if (cloud.last_result) row.last_result = cloud.last_result;
-    if (cloud.last_seen_at) row.last_seen_at = cloud.last_seen_at;
+    const localSeen = row.last_seen_at;
+    row.last_seen_at = laterIso(row.last_seen_at, cloud.last_seen_at);
+    row.last_studied_at = laterIso(row.last_studied_at, cloud.last_studied_at);
+    row.last_tested_at = laterIso(row.last_tested_at, cloud.last_tested_at);
+    if (cloud.last_seen_at && row.last_seen_at !== localSeen) {
+      row.last_mode = cloud.last_mode || row.last_mode;
+      row.last_result = cloud.last_result || row.last_result;
+    }
   });
   writeState(state);
+}
+
+export function getWordProgressSnapshotRows() {
+  return Array.from(getWordProgressMap().values()).map((row) => ({ ...row }));
 }
 
 export function getWordProgress(wordId) {

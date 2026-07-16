@@ -1,4 +1,5 @@
 import { escapeHtml } from "../../shared/ui/word-renderers.js";
+import { applyAlanCyrillicDialect } from "../../shared/domain/alan-display.js";
 
 const CHORUS_MARKER = /^(?:припев|рефрен|chorus|къайтарыу|къайтарыуу|кайтарыу)\s*\d*\s*[:.]?$/iu;
 const VERSE_MARKER = /^(?:куплет|строфа|verse)\s*\d*\s*[:.]?$/iu;
@@ -13,9 +14,17 @@ function normalizeToken(value) {
 }
 
 function wordForms(word) {
-  return String(word?.word || "")
+  const canonicalCyrillic = String(word?.wordAlanCyrillic || "");
+  return [
+    word?.word,
+    canonicalCyrillic,
+    applyAlanCyrillicDialect(canonicalCyrillic, "karachay"),
+    applyAlanCyrillicDialect(canonicalCyrillic, "balkar"),
+    word?.wordAlanTurkic,
+  ]
+    .flatMap((value) => String(value || "")
     .split(/\s*[\/|]\s*/g)
-    .map(normalizeToken)
+    .map(normalizeToken))
     .filter(Boolean);
 }
 

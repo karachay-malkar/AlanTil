@@ -52,7 +52,10 @@
 }
 .textAction:hover{color:var(--accent-strong)}
 .setPreparationWords{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
-.setPreparationWord .contentListMain{min-height:50px;padding-block:7px}
+.setPreparationWord{position:relative;border-bottom:0!important}
+.setPreparationWord::after{content:"";position:absolute;left:44px;right:42px;bottom:0;height:1px;background:color-mix(in srgb,var(--line-soft) 72%,transparent);pointer-events:none}
+.setPreparationWord:last-child::after{display:none}
+.setPreparationWord .contentListMain{min-height:50px;padding-block:6px;text-align:left;align-items:flex-start}
 .setPreparationWord .contentListLeading{padding-left:4px;padding-right:8px}
 .setPreparationWord .contentListTrailing{padding-left:4px;padding-right:2px}
 .setPreparationFooter{
@@ -61,13 +64,13 @@
   padding:8px 2px max(4px,var(--safe-bottom));
   background:transparent;
 }
-.directionChoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.directionChoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:2px;border:1px solid var(--line);border-radius:999px}
 .directionChoiceButton{
   appearance:none;
-  min-height:var(--control-h);
-  padding:8px 10px;
-  border:1px solid var(--line);
-  border-radius:var(--radius-sm);
+  min-height:28px;
+  padding:4px 8px;
+  border:0;
+  border-radius:999px;
   background:transparent;
   color:var(--text-1);
   font:700 12px/1.1 var(--font-terminal);
@@ -75,12 +78,12 @@
 }
 .directionChoiceButton:hover:not(:disabled){border-color:var(--accent);color:var(--accent-strong)}
 .directionChoiceButton:disabled{opacity:.38;cursor:default}
-.directionChoiceButton.active{border-color:var(--accent-strong);color:var(--text-1);background:color-mix(in srgb,var(--surface-0) 82%,transparent)}
+.directionChoiceButton.active{border-color:transparent;color:var(--text-1);background:color-mix(in srgb,var(--surface-0) 82%,transparent);box-shadow:var(--shadow-xs)}
 .setStudyButton,.setTestButton{width:100%}
 
-.btn,.stationAction,.optionBtn{box-shadow:none}
-.btn.primary,.stationAction{background:var(--accent);box-shadow:none}
-.btn.secondary,.stationAction.secondary{background:transparent;box-shadow:none}
+.btn,.optionBtn{box-shadow:none}
+.btn.actionPrimary{background:var(--accent);box-shadow:none}
+.btn.actionText{background:transparent;box-shadow:none;clip-path:none}
 
 @media(max-width:340px){
   .directionChoiceButton{font-size:11px;padding-inline:5px}

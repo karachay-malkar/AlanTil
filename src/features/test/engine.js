@@ -42,7 +42,7 @@ export function finalizeTestSession(status = "interrupted", exitReason = "route_
     exitReason,
     payload,
   });
-  if (status === "completed" && result?.id) {
+  if (result?.id && payload.words.length) {
     const accuracy = payload.questions_answered
       ? Math.round((payload.correct_total / payload.questions_answered) * 100)
       : 0;
@@ -51,6 +51,7 @@ export function finalizeTestSession(status = "interrupted", exitReason = "route_
       answers: payload.words,
       accuracy,
       requiredAccuracy: 80,
+      updateMastery: false,
       completedAt: result.ended_at || new Date().toISOString(),
     });
   }

@@ -33,7 +33,7 @@ export function openInfoModal(root, { title = "", content = "", closeText = "Ð—Ð
         ${titleMarkup}
         <div class="infoModalContent"></div>
         <div class="exitModalActions">
-          <button class="btn primary" type="button" data-info-close="1"></button>
+          <button class="btn actionPrimary" type="button" data-info-close="1"></button>
         </div>
       </div>
     </div>`;

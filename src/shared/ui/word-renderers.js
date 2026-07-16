@@ -56,7 +56,7 @@ export function renderRuAlanFront(element, item) {
         const example = examples.find((group) => group.index === index);
         return `
           <div class="groupRow">
-            <span class="groupNum">${index + 1}</span>
+            <span class="groupNum">[${index + 1}]</span>
             <div class="groupPill">
               <div class="gTrans">${escapeHtml(item.word)}</div>
               ${example ? example.lines.map((line) => `<div class="gEx">${escapeHtml(line)}</div>`).join("") : ""}
@@ -82,7 +82,7 @@ export function renderCombinedGroups(element, translationText, exampleText) {
         const example = examples.find((group) => group.index === index);
         return `
           <div class="groupRow">
-            <span class="groupNum">${index + 1}</span>
+            <span class="groupNum">[${index + 1}]</span>
             <div class="groupPill">
               ${translation ? `<div class="gTrans">${escapeHtml(translation)}</div>` : ""}
               ${example ? example.lines.map((line) => `<div class="gEx">${escapeHtml(line)}</div>`).join("") : ""}

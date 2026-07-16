@@ -24,7 +24,7 @@ export function createRouteScale({ root, viewport, catalogs = [], signal }) {
     catalogs.forEach((catalog) => {
       const catalogElement = root.querySelector(`[data-route-catalog="${selectorValue(catalog.catalogId)}"]`);
       if (!catalogElement) return;
-      parts.push(`<button class="routeScaleDiamond" type="button" data-scroll-catalog="${escapeHtml(catalog.catalogId)}" aria-label="Перейти к рубежу словаря ${escapeHtml(catalog.name)}"><span></span></button>`);
+      parts.push(`<button class="iconAction routeScaleDiamond" type="button" data-scroll-catalog="${escapeHtml(catalog.catalogId)}" aria-label="Перейти к рубежу словаря ${escapeHtml(catalog.name)}"><span></span></button>`);
       const groups = [...(catalog.groups || [])].reverse();
       groups.forEach((group, groupIndex) => {
         const groupElement = root.querySelector(`[data-route-section="${selectorValue(`${catalog.catalogId}::${group.groupId}`)}"]`);
