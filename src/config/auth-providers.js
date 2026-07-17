@@ -4,12 +4,14 @@ export const AUTH_PROVIDERS = Object.freeze([
     enabled: true,
     labelKey: "account.voyti_cherez_google",
     icon: "/assets/icons/auth/google.svg",
+    identityButton: true,
   }),
   Object.freeze({
     id: "apple",
     enabled: false,
     labelKey: "account.voyti_cherez_apple",
     icon: "/assets/icons/auth/apple.svg",
+    identityButton: false,
   }),
 ]);
 

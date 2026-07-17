@@ -1,13 +1,13 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.10.1";
 import {
   getCurrentAuthState,
   getUserProvider,
-  initializeAuth,
-  signInWithEmail,
-  signInWithGoogle,
+  signInWithGoogleCredential,
+  signInWithProvider,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=13.9.0";
+} from "../../shared/auth/auth-service.js?v=13.10.1";
+import { renderGoogleIdentityButton } from "../../shared/auth/google-identity.js?v=13.10.1";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
@@ -20,7 +20,7 @@ import {
   validateNickname,
 } from "../../shared/profile/profile-service.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
-import { bindLogin, renderLogin } from "./login.js?v=13.9.0";
+import { bindLogin, renderLogin } from "./login.js?v=13.10.1";
 import {
   bindAvatarGenderSelection,
   bindProfile,
@@ -37,8 +37,6 @@ let nicknameCheckRequest = 0;
 let nicknameCheckTimer = 0;
 let renderQueued = false;
 let actionError = "";
-let loginMessage = "";
-let emailExpanded = false;
 let nicknameValue = "";
 let nicknameStatus = { state: "", message: "", available: false };
 let profileFailure = null;
@@ -62,8 +60,6 @@ function resetNicknameState() {
 
 function resetAccountStateForAuthChange() {
   actionError = "";
-  loginMessage = "";
-  emailExpanded = false;
   profileFailure = null;
   resetNicknameState();
 }
@@ -115,6 +111,20 @@ function renderLoading(context) {
   resetAccountViewport(context);
 }
 
+function showInlineLoginError(context, error) {
+  if (!isMounted()) return;
+  const message = String(error?.message || error || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe"));
+  actionError = message;
+  let element = context.root.querySelector(".accountMessageError");
+  if (!element) {
+    element = document.createElement("div");
+    element.className = "accountMessage accountMessageError";
+    element.setAttribute("role", "alert");
+    context.root.querySelector(".authProviderList")?.before(element);
+  }
+  element.textContent = message;
+}
+
 function updateNicknameState({ inputElement, messageElement, submitButton }, state, message, enabled = false) {
   if (inputElement) {
     inputElement.classList.toggle("isSuccess", state === "available");
@@ -137,7 +147,6 @@ function setProfileFailure(error) {
 
 async function handleSignOut(context) {
   actionError = "";
-  loginMessage = "";
   profileFailure = null;
   clearNicknameTimer();
   try {
@@ -193,39 +202,31 @@ async function renderAccount(context) {
 
   if (!authState.user) {
     prepareAccountRender(context);
-    renderLogin(context, {
-      message: loginMessage,
-      error: actionError || authState.error || "",
-      emailExpanded,
-    });
+    renderLogin(context, { error: actionError || authState.error || "" });
     bindLogin(context, controller.signal, {
-      onGoogle: async () => {
+      onGoogleMount: async (container) => {
+        await renderGoogleIdentityButton(container, {
+          onCredential: async ({ credential, nonce }) => {
+            actionError = "";
+            await signInWithGoogleCredential(credential, nonce);
+          },
+          onError: (error) => showInlineLoginError(context, error),
+        });
+      },
+      onProvider: async (provider) => {
         actionError = "";
-        loginMessage = "";
         try {
-          await signInWithGoogle();
+          await signInWithProvider(provider);
         } catch (error) {
-          actionError = error.message;
-          scheduleAccountRender(context);
+          showInlineLoginError(context, error);
           throw error;
         }
       },
-      onEmail: async (email) => {
-        actionError = "";
-        loginMessage = "";
-        emailExpanded = true;
-        try {
-          await signInWithEmail(email);
-          loginMessage = msg("account.ssylka_dlya_vhoda_otpravlena_otkroyte_pismo_na");
-        } catch (error) {
-          actionError = error.message;
-        }
-        scheduleAccountRender(context);
-      },
-      onEmailExpand: () => {
-        emailExpanded = true;
-      },
-      onGuest: () => context.router.navigate("home"),
+      onGuest: () => context.router.replace(
+        "path.home",
+        { storyType: "ascent" },
+        { force: true, reason: "home" },
+      ),
     });
     resetAccountViewport(context);
     return;
@@ -368,21 +369,12 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=13.9.0", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=13.10.1", "account-feature-style");
   controller = new AbortController();
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";
   resetAccountStateForAuthChange();
-  renderLoading(context);
 
-  try {
-    await initializeAuth();
-  } catch (error) {
-    actionError = error.message;
-  }
-  if (!isMounted()) return;
-
-  lastAuthUserId = getCurrentAuthState().user?.id || "";
   unsubscribeAuth = subscribeToAuth((state) => {
     const nextUserId = state.user?.id || "";
     if (nextUserId !== lastAuthUserId) {
@@ -391,6 +383,8 @@ export async function mount(context) {
     }
     scheduleAccountRender(context);
   });
+
+  await renderAccount(context);
 }
 
 export function unmount() {

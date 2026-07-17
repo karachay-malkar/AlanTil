@@ -1,24 +1,26 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
 import {
   getCurrentAuthState,
-  initializeAuth,
+  hasAuthCallback,
   subscribeToAuth,
-} from "../shared/auth/auth-service.js?v=13.10.0";
-import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.0";
+  waitForAuthInitialization,
+} from "../shared/auth/auth-service.js?v=13.10.1";
+import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.1";
 import {
   initializeProgressSystem,
   pullCloudProgress,
-} from "../shared/progress/progress-sync.js?v=13.9.0";
-import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.0";
+} from "../shared/progress/progress-sync.js?v=13.10.1";
+import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.1";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
-import { createRouter } from "./router.js?v=13.9.0";
+import { createRouter } from "./router.js?v=13.10.1";
 import { createShell } from "./shell.js?v=13.9.0";
 
 async function bootstrap() {
   initializeI18n();
   prepareAnalytics();
+  const callbackVisit = hasAuthCallback() || window.location.pathname === "/auth/callback";
   const telegram = createTelegramAdapter();
   const shell = createShell();
   const modal = createModalService(shell.modalRoot);
@@ -34,15 +36,15 @@ async function bootstrap() {
 
   shell.renderHome();
 
-  // The local guest scope is ready before any network work begins. A slow or
-  // blocked auth service can no longer hold the first screen.
+  // Local guest state is initialized before all network operations.
   await initializeProgressSystem();
-  void initializeAuth();
+  const authReady = waitForAuthInitialization();
+  if (callbackVisit) await authReady;
 
   const router = createRouter({ shell, modal, context });
   await router.start();
   void initPrivacyController({ appRouter: router });
-  initGuestProfilePrompt({ modal, router });
+  if (!callbackVisit) initGuestProfilePrompt({ modal, router });
 
   let activeUserId = getCurrentAuthState().user?.id || "";
   subscribeToAuth((state) => {
@@ -55,6 +57,14 @@ async function bootstrap() {
       return;
     }
     void pullCloudProgress().finally(() => router.refresh());
+  });
+
+  void authReady.then(async () => {
+    if (callbackVisit) {
+      await router.replace("account.home", {}, { force: true });
+    }
+  }).catch((error) => {
+    console.warn("Authentication initialization failed", error);
   });
 
   void initTelegram({

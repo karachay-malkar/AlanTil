@@ -3,7 +3,7 @@
 @import url("./base.css?v=13.9.0") layer(base);
 @import url("./shell.css?v=13.9.0") layer(shell);
 @import url("./components.css?v=13.9.0") layer(components);
-@import url("./guest-profile-prompt.css?v=13.10.0") layer(components);
+@import url("./guest-profile-prompt.css?v=13.10.1") layer(components);
 @import url("./privacy.css?v=13.9.0") layer(components);
 @import url("../../features/path/path.css?v=13.9.0") layer(features);
 @import url("../../features/learn/learn.css?v=13.9.0") layer(features);

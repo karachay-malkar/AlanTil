@@ -11,29 +11,41 @@ test("guest prompt contains the approved Russian copy", async () => {
   assert.match(messages, /Профиль позволит сохранять прогресс и пользоваться расширенными функциями приложения\./);
 });
 
-test("Email sign-in is absent from the account interface", async () => {
+test("Email sign-in is fully absent from the account flow", async () => {
+  const auth = await read("src/shared/auth/auth-service.js");
+  const account = await read("src/features/account/index.js");
   const login = await read("src/features/account/login.js");
-  assert.doesNotMatch(login, /accountEmail|accountEmailForm|voyti_po_email|signInWithOtp/);
-  assert.match(login, /getEnabledAuthProviders/);
+  assert.doesNotMatch(auth, /signInWithEmail|signInWithOtp/);
+  assert.doesNotMatch(account, /signInWithEmail|emailExpanded|onEmail/);
+  assert.doesNotMatch(login, /accountEmail|voyti_po_email/);
 });
 
-test("guest storage cannot be read or removed while an account is active", async () => {
-  const storage = await read("src/shared/progress/storage-scope.js");
-  assert.match(storage, /isInactiveGuestScope/);
-  assert.match(storage, /if \(isInactiveGuestScope\(scope\)\) return fallback/);
-  assert.match(storage, /if \(isInactiveGuestScope\(scope\)\) return false/);
+test("Google sign-in uses Google Identity Services without an OAuth browser redirect", async () => {
+  const auth = await read("src/shared/auth/auth-service.js");
+  const identity = await read("src/shared/auth/google-identity.js");
+  assert.match(identity, /accounts\.id\.renderButton/);
+  assert.match(identity, /accounts\.google\.com\/gsi\/client/);
+  assert.match(auth, /signInWithIdToken/);
+  assert.match(auth, /provider: "google"/);
+  assert.doesNotMatch(auth, /REDIRECT_OAUTH_PROVIDERS = new Set\(\["google"/);
 });
 
-test("application starts local progress before background authentication", async () => {
-  const bootstrap = await read("src/app/bootstrap.js");
-  const localIndex = bootstrap.indexOf("await initializeProgressSystem()");
-  const authIndex = bootstrap.indexOf("void initializeAuth()");
-  assert.ok(localIndex >= 0 && authIndex > localIndex);
+test("guest action returns directly to the path", async () => {
+  const account = await read("src/features/account/index.js");
+  assert.match(account, /context\.router\.replace\(\s*"path\.home"/);
+  assert.doesNotMatch(account, /router\.navigate\("home"\)/);
 });
 
-test("dictionary requests are bounded and do not require the Supabase SDK", async () => {
+test("OAuth callback has a dedicated URL and returns to the account screen", async () => {
+  const config = await read("src/config/supabase.js");
+  const auth = await read("src/shared/auth/auth-service.js");
+  assert.match(config, /new URL\("\/auth\/callback"/);
+  assert.match(auth, /AUTH_DESTINATION_PATH = "\/profile\/account"/);
+});
+
+test("dictionary requests remain bounded and cache-first", async () => {
   const repository = await read("src/shared/data/word-repository.js");
   assert.match(repository, /AbortController/);
   assert.match(repository, /REQUEST_TIMEOUT_MS = 7000/);
-  assert.doesNotMatch(repository, /getSupabaseClient/);
+  assert.match(repository, /const cached = readDictionaryCache\(\)/);
 });

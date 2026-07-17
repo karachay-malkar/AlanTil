@@ -17,3 +17,24 @@
   font-size:14px;
   line-height:1.45;
 }
+
+.googleIdentityButton{
+  display:flex;
+  justify-content:center;
+  min-height:44px;
+  width:100%;
+}
+
+.googleIdentityButton > div{
+  max-width:100%;
+}
+
+.googleIdentityLoading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:44px;
+  color:var(--text-2);
+  font-size:14px;
+}

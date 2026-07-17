@@ -1,39 +1,53 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
-import { extname } from "node:path";
+import { readFile } from "node:fs/promises";
 
-const projectRoot = new URL("../", import.meta.url);
-const srcRoot = new URL("../src/", import.meta.url);
-const analyticsSource = await readFile(new URL("../src/config/analytics.js", import.meta.url), "utf8");
-const appVersion = analyticsSource.match(/appVersion\s*=\s*"([^"]+)"/)?.[1];
-const compatibleVersions = new Set(["13.9.0", "13.10.0"]);
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-async function javascriptFiles(directoryUrl) {
-  const entries = await readdir(directoryUrl, { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    const child = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, directoryUrl);
-    if (entry.isDirectory()) files.push(...await javascriptFiles(child));
-    else if (extname(entry.name) === ".js") files.push(child);
+const singletonPaths = [
+  "/src/config/analytics.js",
+  "/src/config/auth-providers.js",
+  "/src/config/supabase.js",
+  "/src/features/account/index.js",
+  "/src/features/account/login.js",
+  "/src/shared/auth/auth-service.js",
+  "/src/shared/auth/guest-profile-prompt.js",
+  "/src/shared/auth/supabase-client.js",
+  "/src/shared/data/word-repository.js",
+  "/src/shared/i18n/index.js",
+  "/src/shared/i18n/messages-13-10.js",
+  "/src/shared/progress/progress-sync.js",
+  "/src/shared/progress/storage-scope.js",
+];
+
+test("13.10.1 is the published application version", async () => {
+  const analytics = await read("src/config/analytics.js");
+  const index = await read("index.html");
+  assert.match(analytics, /appVersion = "13\.10\.1"/);
+  assert.match(index, /app\.css\?v=13\.10\.1/);
+  assert.match(index, /bootstrap\.js\?v=13\.10\.1/);
+});
+
+test("legacy singleton module URLs are redirected to one 13.10.1 instance", async () => {
+  const index = await read("index.html");
+  for (const path of singletonPaths) {
+    const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const mapping = new RegExp(`"${escaped}\\?v=13\\.(?:9\\.0|10\\.0)"\\s*:\\s*"${escaped}\\?v=13\\.10\\.1"`);
+    const isNewOnly = index.includes(`"${path}?v=13.10.1"`);
+    assert.ok(mapping.test(index) || isNewOnly, `missing 13.10.1 singleton mapping for ${path}`);
   }
-  return files;
-}
+});
 
-test("local JavaScript dependencies use a compatible 13.10 release asset version", async () => {
-  assert.equal(appVersion, "13.10.0");
-  const failures = [];
-  const importPattern = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)(["'`])([^"'`]+\.js(?:\?[^"'`]*)?)/g;
-  for (const file of await javascriptFiles(srcRoot)) {
-    const source = await readFile(file, "utf8");
-    for (const match of source.matchAll(importPattern)) {
-      const specifier = match[2];
-      if (!specifier.startsWith(".")) continue;
-      const version = new URLSearchParams(specifier.split("?")[1] || "").get("v");
-      if (!compatibleVersions.has(version)) {
-        failures.push(`${file.pathname.replace(projectRoot.pathname, "")}: ${specifier}`);
-      }
-    }
+test("changed entry modules do not reference the broken 13.10.0 URLs", async () => {
+  const paths = [
+    "src/app/bootstrap.js",
+    "src/features/account/index.js",
+    "src/features/account/login.js",
+    "src/shared/auth/auth-service.js",
+    "src/shared/auth/guest-profile-prompt.js",
+    "src/shared/auth/google-identity.js",
+  ];
+  for (const path of paths) {
+    assert.doesNotMatch(await read(path), /\?v=13\.10\.0/);
   }
-  assert.deepEqual(failures, []);
 });

@@ -29,4 +29,9 @@ export const RELEASE_MESSAGES_13_10 = Object.freeze({
     en: "Sign in with Apple",
     tr: "Apple ile giriş yap",
   }),
+  "account.vhod_cherez_google_vremenno_nedostupen": Object.freeze({
+    ru: "Вход через Google временно недоступен. Повторите попытку позже.",
+    en: "Google sign-in is temporarily unavailable. Please try again later.",
+    tr: "Google ile giriş geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+  }),
 });

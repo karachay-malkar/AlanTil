@@ -1,11 +1,19 @@
-import { getCurrentAuthState, subscribeToAuth } from "./auth-service.js?v=13.10.0";
-import { hasPersistedAuthSession } from "./supabase-client.js?v=13.10.0";
-import { msg } from "../i18n/index.js?v=13.10.0";
+import {
+  getCurrentAuthState,
+  hasAuthCallback,
+  subscribeToAuth,
+} from "./auth-service.js?v=13.10.1";
+import { hasPersistedAuthSession } from "./supabase-client.js?v=13.10.1";
+import { msg } from "../i18n/index.js?v=13.10.1";
 import { escapeHtml } from "../ui/html.js?v=13.9.0";
 
 const SESSION_KEY = "alantil_guest_profile_prompt_seen_v1";
 let unsubscribeAuth = null;
 let activePrompt = null;
+
+function isCallbackVisit() {
+  return hasAuthCallback() || window.location.pathname === "/auth/callback";
+}
 
 function wasShownThisVisit() {
   try {
@@ -32,7 +40,7 @@ function promptMarkup() {
 }
 
 async function showPrompt({ modal, router }) {
-  if (activePrompt || wasShownThisVisit() || getCurrentAuthState().user) return false;
+  if (activePrompt || wasShownThisVisit() || isCallbackVisit() || getCurrentAuthState().user) return false;
   markShownThisVisit();
   activePrompt = modal.confirm({
     message: promptMarkup(),
@@ -51,7 +59,7 @@ async function showPrompt({ modal, router }) {
 export function initGuestProfilePrompt({ modal, router } = {}) {
   unsubscribeAuth?.();
   unsubscribeAuth = null;
-  if (!modal || !router || wasShownThisVisit()) return () => {};
+  if (!modal || !router || wasShownThisVisit() || isCallbackVisit()) return () => {};
 
   const schedulePrompt = () => {
     requestAnimationFrame(() => requestAnimationFrame(() => void showPrompt({ modal, router })));
@@ -60,15 +68,11 @@ export function initGuestProfilePrompt({ modal, router } = {}) {
   const current = getCurrentAuthState();
   if (current.user) return () => {};
 
-  // No stored session means this is certainly a guest visit, so the prompt can
-  // be shown without waiting for Supabase or an external module.
   if (!hasPersistedAuthSession()) {
     schedulePrompt();
     return () => {};
   }
 
-  // A stored session may belong to a returning user. Wait for the bounded
-  // background auth check so an authenticated user never sees the guest prompt.
   unsubscribeAuth = subscribeToAuth((state) => {
     if (!state.ready) return;
     unsubscribeAuth?.();
