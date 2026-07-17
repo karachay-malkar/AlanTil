@@ -1,95 +1,56 @@
-import { msg } from "../i18n/index.js?v=13.10.1";
-import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.1";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.9.0";
-import { getSupabaseClient } from "./supabase-client.js?v=13.10.1";
+import { msg } from "../i18n/index.js?v=13.10.2";
+import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.2";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.2";
+import { getSupabaseClient } from "./supabase-client.js?v=13.10.2";
 
-const AUTH_CALLBACK_PARAMETERS = Object.freeze([
-  "code",
-  "error",
-  "error_code",
-  "error_description",
-]);
-const REDIRECT_OAUTH_PROVIDERS = new Set(["apple"]);
-const AUTH_REQUEST_TIMEOUT_MS = 7000;
+const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
+const AUTH_REQUEST_TIMEOUT_MS = 60000;
+const AUTH_RETRY_DELAYS_MS = [0, 1500, 5000, 15000];
 const AUTH_DESTINATION_PATH = "/profile/account";
 
 let initializationPromise = null;
 let authSubscription = null;
-let callbackExchangeCode = "";
-let callbackExchangePromise = null;
-const successfulCallbackCodes = new Set();
+let callbackPromise = null;
 
-function withTimeout(value, timeoutMs = AUTH_REQUEST_TIMEOUT_MS, label = "Auth request") {
+const sleep = (ms) => new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+
+function withTimeout(value, label, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) {
   let timer = 0;
   return Promise.race([
     Promise.resolve(value),
     new Promise((_, reject) => {
-      timer = globalThis.setTimeout(() => {
-        const error = new Error(`${label} timeout`);
-        error.code = "ALANTIL_TIMEOUT";
-        reject(error);
-      }, timeoutMs);
+      timer = globalThis.setTimeout(() => reject(new Error(`${label} timeout`)), timeoutMs);
     }),
   ]).finally(() => globalThis.clearTimeout(timer));
 }
 
-function isRedirectConfigurationError(value) {
-  return /(?:redirect(?:_to)?|redirect url|callback url|return url|requested path).*(?:not allowed|not permitted|invalid|allow list)|not in (?:the )?allow list/i.test(value);
+function isRetryable(error) {
+  return /network|fetch|load failed|timeout|offline/i.test(String(error?.message || error));
 }
 
-function normalizeAuthError(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
-  const message = String(error?.message || error || "").trim();
-  if (!message) return fallback;
-  if (isRedirectConfigurationError(message)) {
-    return msg("service.ssylka_vozvrata_ne_razreshena_v_supabase");
+async function retryAuth(operation, label) {
+  let lastError = null;
+  for (const waitMs of AUTH_RETRY_DELAYS_MS) {
+    if (waitMs) await sleep(waitMs);
+    if (globalThis.navigator && navigator.onLine === false) throw new Error("Offline");
+    try {
+      return await withTimeout(operation(), label);
+    } catch (error) {
+      lastError = error;
+      if (!isRetryable(error)) throw error;
+    }
   }
-  if (/blocked|banned|signup.*disabled|регистрац/i.test(message)) {
-    return msg("service.vhod_ili_registratsiya_dlya_etogo_adresa_nedostupny");
-  }
-  if (/rate limit|too many requests/i.test(message)) {
-    return msg("service.slishkom_mnogo_popytok_povtorite_pozzhe");
-  }
-  if (/network|fetch|failed to fetch|load failed|timeout/i.test(message)) {
-    return msg("service.ne_udalos_svyazatsya_s_servisom_avtorizatsii");
-  }
+  throw lastError || new Error(`${label} failed`);
+}
+
+function authMessage(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
+  const value = String(error?.message || error || "");
+  if (/rate limit|too many requests/i.test(value)) return msg("service.slishkom_mnogo_popytok_povtorite_pozzhe");
+  if (isRetryable(error)) return msg("service.ne_udalos_svyazatsya_s_servisom_avtorizatsii");
   return fallback;
 }
 
-function normalizeCallbackError(error) {
-  const message = String(error?.message || error || "").trim();
-  if (isRedirectConfigurationError(message)) {
-    return msg("service.ssylka_vozvrata_ne_razreshena_v_supabase");
-  }
-  return msg("service.ne_udalos_zavershit_vhod_cherez_google");
-}
-
-function readCallbackParameters(locationObject = window.location) {
-  const parameters = new URLSearchParams(locationObject.search || "");
-  return {
-    code: parameters.get("code"),
-    hasCode: parameters.has("code"),
-    error: parameters.get("error"),
-    errorCode: parameters.get("error_code"),
-    errorDescription: parameters.get("error_description"),
-    hasCallbackParameters: AUTH_CALLBACK_PARAMETERS.some((name) => parameters.has(name)),
-  };
-}
-
-function cleanAuthCallbackUrl({ removeCode = true } = {}) {
-  const url = new URL(window.location.href);
-  AUTH_CALLBACK_PARAMETERS.forEach((name) => {
-    if (name === "code" && !removeCode) return;
-    url.searchParams.delete(name);
-  });
-  const search = url.searchParams.toString();
-  window.history.replaceState(
-    window.history.state,
-    "",
-    `${AUTH_DESTINATION_PATH}${search ? `?${search}` : ""}${url.hash}`,
-  );
-}
-
-function setSessionState(session, error = null) {
+function applySession(session, error = null) {
   return setAuthState({
     ready: true,
     session: session || null,
@@ -98,127 +59,78 @@ function setSessionState(session, error = null) {
   });
 }
 
-function ensureAuthSubscription(client) {
-  if (authSubscription) return authSubscription;
-  const { data: listener } = client.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_OUT") {
-      setSessionState(null, null);
-      return;
-    }
-    const currentError = getAuthState().error;
-    setSessionState(session, event === "INITIAL_SESSION" ? currentError : null);
+function bindAuthEvents(client) {
+  if (authSubscription) return;
+  const { data } = client.auth.onAuthStateChange((event, session) => {
+    applySession(event === "SIGNED_OUT" ? null : session, null);
   });
-  authSubscription = listener.subscription;
-  return authSubscription;
+  authSubscription = data.subscription;
+}
+
+function callbackParams() {
+  const params = new URLSearchParams(window.location.search || "");
+  return {
+    code: String(params.get("code") || "").trim(),
+    error: String(params.get("error_description") || params.get("error") || "").trim(),
+    present: CALLBACK_KEYS.some((key) => params.has(key)),
+  };
+}
+
+function clearCallbackUrl() {
+  const url = new URL(window.location.href);
+  CALLBACK_KEYS.forEach((key) => url.searchParams.delete(key));
+  const search = url.searchParams.toString();
+  window.history.replaceState(window.history.state, "", `${AUTH_DESTINATION_PATH}${search ? `?${search}` : ""}${url.hash}`);
 }
 
 export function hasAuthCallback(locationObject = window.location) {
-  return readCallbackParameters(locationObject).hasCallbackParameters;
+  const params = new URLSearchParams(locationObject.search || "");
+  return CALLBACK_KEYS.some((key) => params.has(key));
 }
 
-export async function handleAuthCallback(clientOverride = null) {
-  const callback = readCallbackParameters();
-  if (!callback.hasCallbackParameters) return { handled: false, success: false };
-
-  if (callback.error || callback.errorCode || callback.errorDescription) {
-    const sourceMessage = [callback.error, callback.errorCode, callback.errorDescription].filter(Boolean).join(" ");
-    const message = isRedirectConfigurationError(sourceMessage)
-      ? msg("service.ssylka_vozvrata_ne_razreshena_v_supabase")
-      : msg("service.ne_udalos_zavershit_vhod_cherez_google");
-    setAuthState({ ready: true, error: message });
-    cleanAuthCallbackUrl({ removeCode: false });
-    return { handled: true, success: false, error: message };
+async function handleAuthCallback(client) {
+  const callback = callbackParams();
+  if (!callback.present) return false;
+  if (callback.error || !callback.code) {
+    applySession(null, msg("service.ne_udalos_zavershit_vhod_cherez_google"));
+    clearCallbackUrl();
+    return true;
   }
-
-  if (!callback.hasCode || !String(callback.code || "").trim()) {
-    const message = msg("service.kod_avtorizatsii_otsutstvuet");
-    setAuthState({ ready: true, error: message });
-    cleanAuthCallbackUrl({ removeCode: true });
-    return { handled: true, success: false, error: message };
+  if (!callbackPromise) {
+    callbackPromise = retryAuth(() => client.auth.exchangeCodeForSession(callback.code), "Auth callback")
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (!data?.session?.user) throw new Error("Session was not created");
+        applySession(data.session, null);
+      })
+      .catch((error) => applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google"))))
+      .finally(() => {
+        clearCallbackUrl();
+        callbackPromise = null;
+      });
   }
-
-  const code = String(callback.code).trim();
-  if (successfulCallbackCodes.has(code)) {
-    const current = getAuthState();
-    cleanAuthCallbackUrl({ removeCode: true });
-    return {
-      handled: true,
-      success: Boolean(current.session && current.user),
-      session: current.session || null,
-      user: current.user || null,
-      error: current.session && current.user ? null : msg("service.sessiya_ne_byla_sozdana"),
-    };
-  }
-  if (callbackExchangeCode === code && callbackExchangePromise) return callbackExchangePromise;
-
-  callbackExchangeCode = code;
-  callbackExchangePromise = (async () => {
-    try {
-      const client = clientOverride || await getSupabaseClient();
-      const { data, error } = await withTimeout(
-        client.auth.exchangeCodeForSession(code),
-        AUTH_REQUEST_TIMEOUT_MS,
-        "Auth callback",
-      );
-      if (error) throw error;
-
-      const session = data?.session || null;
-      const user = data?.user || session?.user || null;
-      if (!session || !user) {
-        const message = msg("service.sessiya_ne_byla_sozdana");
-        setAuthState({ ready: true, session: null, user: null, error: message });
-        cleanAuthCallbackUrl({ removeCode: true });
-        return { handled: true, success: false, error: message };
-      }
-
-      setAuthState({ ready: true, session, user, error: null });
-      successfulCallbackCodes.add(code);
-      cleanAuthCallbackUrl({ removeCode: true });
-      return { handled: true, success: true, session, user };
-    } catch (error) {
-      const message = normalizeCallbackError(error);
-      setAuthState({ ready: true, session: null, user: null, error: message });
-      cleanAuthCallbackUrl({ removeCode: true });
-      return { handled: true, success: false, error: message };
-    }
-  })().finally(() => {
-    callbackExchangePromise = null;
-  });
-
-  return callbackExchangePromise;
+  await callbackPromise;
+  return true;
 }
 
 function startAuthInitialization() {
   if (initializationPromise) return initializationPromise;
-
   initializationPromise = (async () => {
     try {
       const client = await getSupabaseClient();
-      const callbackResult = await handleAuthCallback(client);
-
-      if (!callbackResult.handled || !callbackResult.success) {
-        const { data, error } = await withTimeout(client.auth.getSession(), 5000, "Auth session");
+      const callbackHandled = await handleAuthCallback(client);
+      if (!callbackHandled) {
+        const { data, error } = await client.auth.getSession();
         if (error) throw error;
-        setSessionState(data.session || null, callbackResult.handled ? callbackResult.error || null : null);
+        applySession(data.session || null, null);
       }
-
-      ensureAuthSubscription(client);
-      return getAuthState();
+      bindAuthEvents(client);
     } catch (error) {
       const current = getAuthState();
-      const message = hasAuthCallback()
-        ? normalizeCallbackError(error)
-        : normalizeAuthError(error, msg("service.ne_udalos_proverit_sostoyanie_akkaunta"));
-      setAuthState({
-        ready: true,
-        session: current.session || null,
-        user: current.user || null,
-        error: message,
-      });
-      return getAuthState();
+      setAuthState({ ...current, ready: true, error: authMessage(error, msg("service.ne_udalos_proverit_sostoyanie_akkaunta")) });
     }
+    return getAuthState();
   })();
-
   return initializationPromise;
 }
 
@@ -235,55 +147,46 @@ export async function signInWithGoogleCredential(token, nonce) {
   const credential = String(token || "").trim();
   const rawNonce = String(nonce || "").trim();
   if (!credential || !rawNonce) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
-
-  setAuthState({ error: null });
-  const client = await getSupabaseClient();
-  const { data, error } = await withTimeout(client.auth.signInWithIdToken({
-    provider: "google",
-    token: credential,
-    nonce: rawNonce,
-  }), AUTH_REQUEST_TIMEOUT_MS, "Google sign in");
-  if (error) throw new Error(normalizeAuthError(error));
-
-  const session = data?.session || null;
-  if (!session?.user) throw new Error(msg("service.sessiya_ne_byla_sozdana"));
-  ensureAuthSubscription(client);
-  setSessionState(session, null);
-  return data;
+  const result = await retryAuth(async () => {
+    const client = await getSupabaseClient();
+    const response = await client.auth.signInWithIdToken({
+      provider: "google",
+      token: credential,
+      nonce: rawNonce,
+    });
+    return { client, ...response };
+  }, "Google sign in");
+  if (result.error) throw new Error(authMessage(result.error));
+  if (!result.data?.session?.user) throw new Error(msg("service.sessiya_ne_byla_sozdana"));
+  bindAuthEvents(result.client);
+  applySession(result.data.session, null);
+  return result.data;
 }
 
 export async function signInWithProvider(provider) {
   const normalized = String(provider || "").trim().toLowerCase();
-  if (!REDIRECT_OAUTH_PROVIDERS.has(normalized)) {
-    throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
-  }
-
-  setAuthState({ error: null });
-  const client = await getSupabaseClient();
-  const { data, error } = await withTimeout(client.auth.signInWithOAuth({
-    provider: normalized,
-    options: { redirectTo: getAuthRedirectUrl() },
-  }), AUTH_REQUEST_TIMEOUT_MS, "OAuth sign in");
-  if (error) throw new Error(normalizeAuthError(error));
-  return data;
+  if (normalized !== "apple") throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+  const result = await retryAuth(async () => {
+    const client = await getSupabaseClient();
+    const response = await client.auth.signInWithOAuth({
+      provider: normalized,
+      options: { redirectTo: getAuthRedirectUrl() },
+    });
+    return response;
+  }, "OAuth sign in");
+  if (result.error) throw new Error(authMessage(result.error));
+  return result.data;
 }
 
 export async function signOut() {
-  setAuthState({ error: null });
   const client = await getSupabaseClient();
-  const { error } = await withTimeout(client.auth.signOut({ scope: "local" }), 5000, "Sign out");
-  if (error) throw new Error(normalizeAuthError(error));
-  setSessionState(null, null);
+  const { error } = await withTimeout(client.auth.signOut({ scope: "local" }), "Sign out", 30000);
+  if (error) throw new Error(authMessage(error));
+  applySession(null, null);
 }
 
-export function getCurrentAuthState() {
-  return getAuthState();
-}
-
-export function subscribeToAuth(subscriber) {
-  return subscribeAuthState(subscriber);
-}
-
+export function getCurrentAuthState() { return getAuthState(); }
+export function subscribeToAuth(subscriber) { return subscribeAuthState(subscriber); }
 export function getUserProvider(user) {
   const provider = String(user?.app_metadata?.provider || "").toLowerCase();
   if (provider === "google") return "Google";
@@ -295,7 +198,5 @@ export function disposeAuth() {
   authSubscription?.unsubscribe?.();
   authSubscription = null;
   initializationPromise = null;
-  callbackExchangeCode = "";
-  callbackExchangePromise = null;
-  successfulCallbackCodes.clear();
+  callbackPromise = null;
 }

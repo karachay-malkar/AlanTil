@@ -18,29 +18,44 @@
       }
     })();
   </script>
+  <link rel="preconnect" href="https://accounts.google.com" crossorigin />
+  <link rel="modulepreload" href="/src/vendor/supabase-js.js?v=13.10.2" />
   <script type="importmap">
     {
       "imports": {
-        "/src/config/analytics.js?v=13.9.0": "/src/config/analytics.js?v=13.10.1",
-        "/src/config/auth-providers.js?v=13.10.0": "/src/config/auth-providers.js?v=13.10.1",
-        "/src/config/supabase.js?v=13.9.0": "/src/config/supabase.js?v=13.10.1",
-        "/src/features/account/index.js?v=13.9.0": "/src/features/account/index.js?v=13.10.1",
-        "/src/features/account/login.js?v=13.9.0": "/src/features/account/login.js?v=13.10.1",
-        "/src/shared/auth/auth-service.js?v=13.9.0": "/src/shared/auth/auth-service.js?v=13.10.1",
-        "/src/shared/auth/auth-service.js?v=13.10.0": "/src/shared/auth/auth-service.js?v=13.10.1",
-        "/src/shared/auth/guest-profile-prompt.js?v=13.10.0": "/src/shared/auth/guest-profile-prompt.js?v=13.10.1",
-        "/src/shared/auth/supabase-client.js?v=13.9.0": "/src/shared/auth/supabase-client.js?v=13.10.1",
-        "/src/shared/auth/supabase-client.js?v=13.10.0": "/src/shared/auth/supabase-client.js?v=13.10.1",
-        "/src/shared/data/word-repository.js?v=13.9.0": "/src/shared/data/word-repository.js?v=13.10.1",
-        "/src/shared/i18n/index.js?v=13.9.0": "/src/shared/i18n/index.js?v=13.10.1",
-        "/src/shared/i18n/index.js?v=13.10.0": "/src/shared/i18n/index.js?v=13.10.1",
-        "/src/shared/i18n/messages-13-10.js?v=13.10.0": "/src/shared/i18n/messages-13-10.js?v=13.10.1",
-        "/src/shared/progress/progress-sync.js?v=13.9.0": "/src/shared/progress/progress-sync.js?v=13.10.1",
-        "/src/shared/progress/storage-scope.js?v=13.9.0": "/src/shared/progress/storage-scope.js?v=13.10.1"
+        "/src/app/router.js?v=13.9.0": "/src/app/router.js?v=13.10.2",
+        "/src/config/analytics.js?v=13.9.0": "/src/config/analytics.js?v=13.10.2",
+        "/src/config/auth-providers.js?v=13.10.0": "/src/config/auth-providers.js?v=13.10.2",
+        "/src/config/auth-providers.js?v=13.10.1": "/src/config/auth-providers.js?v=13.10.2",
+        "/src/config/supabase.js?v=13.9.0": "/src/config/supabase.js?v=13.10.2",
+        "/src/config/supabase.js?v=13.10.1": "/src/config/supabase.js?v=13.10.2",
+        "/src/features/account/index.js?v=13.9.0": "/src/features/account/index.js?v=13.10.2",
+        "/src/features/account/login.js?v=13.9.0": "/src/features/account/login.js?v=13.10.2",
+        "/src/features/account/login.js?v=13.10.1": "/src/features/account/login.js?v=13.10.2",
+        "/src/features/path/index.js?v=13.9.0": "/src/features/path/index.js?v=13.10.2",
+        "/src/shared/auth/auth-service.js?v=13.9.0": "/src/shared/auth/auth-service.js?v=13.10.2",
+        "/src/shared/auth/auth-service.js?v=13.10.0": "/src/shared/auth/auth-service.js?v=13.10.2",
+        "/src/shared/auth/auth-service.js?v=13.10.1": "/src/shared/auth/auth-service.js?v=13.10.2",
+        "/src/shared/auth/auth-store.js?v=13.9.0": "/src/shared/auth/auth-store.js?v=13.10.2",
+        "/src/shared/auth/google-identity.js?v=13.10.1": "/src/shared/auth/google-identity.js?v=13.10.2",
+        "/src/shared/auth/guest-profile-prompt.js?v=13.10.0": "/src/shared/auth/guest-profile-prompt.js?v=13.10.2",
+        "/src/shared/auth/guest-profile-prompt.js?v=13.10.1": "/src/shared/auth/guest-profile-prompt.js?v=13.10.2",
+        "/src/shared/auth/supabase-client.js?v=13.9.0": "/src/shared/auth/supabase-client.js?v=13.10.2",
+        "/src/shared/auth/supabase-client.js?v=13.10.0": "/src/shared/auth/supabase-client.js?v=13.10.2",
+        "/src/shared/auth/supabase-client.js?v=13.10.1": "/src/shared/auth/supabase-client.js?v=13.10.2",
+        "/src/shared/data/word-repository.js?v=13.9.0": "/src/shared/data/word-repository.js?v=13.10.2",
+        "/src/shared/data/word-repository.js?v=13.10.0": "/src/shared/data/word-repository.js?v=13.10.2",
+        "/src/shared/i18n/index.js?v=13.9.0": "/src/shared/i18n/index.js?v=13.10.2",
+        "/src/shared/i18n/index.js?v=13.10.0": "/src/shared/i18n/index.js?v=13.10.2",
+        "/src/shared/i18n/index.js?v=13.10.1": "/src/shared/i18n/index.js?v=13.10.2",
+        "/src/shared/i18n/messages-13-10.js?v=13.10.0": "/src/shared/i18n/messages-13-10.js?v=13.10.2",
+        "/src/shared/i18n/messages-13-10.js?v=13.10.1": "/src/shared/i18n/messages-13-10.js?v=13.10.2",
+        "/src/shared/progress/progress-sync.js?v=13.9.0": "/src/shared/progress/progress-sync.js?v=13.10.2",
+        "/src/shared/progress/storage-scope.js?v=13.9.0": "/src/shared/progress/storage-scope.js?v=13.10.2"
       }
     }
   </script>
-  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.10.1" />
+  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.10.2" />
 </head>
 <body>
   <div id="appShell" class="appShell" data-feature="path" data-screen="home" data-layout="map" data-header="minimal" data-bottom-nav="true">
@@ -51,41 +66,21 @@
         </button>
       </div>
       <div class="appHeaderCenter">
-        <div id="headerText" class="appHeaderText">
-          <span id="headerTitle" class="appHeaderScreenTitle"></span>
-          <span id="headerSubtitle" class="appHeaderSubtitle hidden"></span>
-        </div>
+        <div id="headerText" class="appHeaderText"><span id="headerTitle" class="appHeaderScreenTitle"></span><span id="headerSubtitle" class="appHeaderSubtitle hidden"></span></div>
       </div>
       <div class="appHeaderTrailing">
         <div id="headerActionSlot" class="appHeaderActionSlot hidden"></div>
-        <div id="sessionStatus" class="sessionStatus hidden" aria-live="polite">
-          <span id="counter" class="sessionCounter"></span>
-          <span id="mode" class="sessionMode"></span>
-        </div>
+        <div id="sessionStatus" class="sessionStatus hidden" aria-live="polite"><span id="counter" class="sessionCounter"></span><span id="mode" class="sessionMode"></span></div>
       </div>
     </header>
-
-    <main id="appViewport" class="appViewport">
-      <div id="appRoot" class="appScreenHost" aria-live="polite" aria-busy="false"></div>
-    </main>
-
+    <main id="appViewport" class="appViewport"><div id="appRoot" class="appScreenHost" aria-live="polite" aria-busy="false"></div></main>
     <nav id="bottomNav" class="bottomNav" aria-label="Основная навигация" data-i18n-aria-label="common.osnovnaya_navigatsiya">
-      <button class="tabAction bottomNavItem" type="button" data-route="practice.home">
-        <svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
-        <span data-i18n="common.praktika">Практика</span>
-      </button>
-      <button class="tabAction bottomNavItem active" type="button" data-route="path.home">
-        <svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
-        <span data-i18n="common.put">Путь</span>
-      </button>
-      <button class="tabAction bottomNavItem" type="button" data-route="profile.home">
-        <svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
-        <span data-i18n="common.profil">Профиль</span>
-      </button>
+      <button class="tabAction bottomNavItem" type="button" data-route="practice.home"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg><span data-i18n="common.praktika">Практика</span></button>
+      <button class="tabAction bottomNavItem active" type="button" data-route="path.home"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg><span data-i18n="common.put">Путь</span></button>
+      <button class="tabAction bottomNavItem" type="button" data-route="profile.home"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg><span data-i18n="common.profil">Профиль</span></button>
     </nav>
   </div>
-
   <div id="modalRoot" class="modalRoot"></div>
-  <script type="module" src="/src/app/bootstrap.js?v=13.10.1"></script>
+  <script type="module" src="/src/app/bootstrap.js?v=13.10.2"></script>
 </body>
 </html>

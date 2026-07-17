@@ -1,4 +1,4 @@
-import { msg } from "../../shared/i18n/index.js?v=13.10.1";
+import { msg } from "../../shared/i18n/index.js?v=13.10.2";
 import {
   getCurrentAuthState,
   getUserProvider,
@@ -6,8 +6,9 @@ import {
   signInWithProvider,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=13.10.1";
-import { renderGoogleIdentityButton } from "../../shared/auth/google-identity.js?v=13.10.1";
+} from "../../shared/auth/auth-service.js?v=13.10.2";
+import { renderGoogleIdentityButton } from "../../shared/auth/google-identity.js?v=13.10.2";
+import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=13.10.2";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
@@ -20,7 +21,7 @@ import {
   validateNickname,
 } from "../../shared/profile/profile-service.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
-import { bindLogin, renderLogin } from "./login.js?v=13.10.1";
+import { bindLogin, renderLogin } from "./login.js?v=13.10.2";
 import {
   bindAvatarGenderSelection,
   bindProfile,
@@ -41,6 +42,7 @@ let nicknameValue = "";
 let nicknameStatus = { state: "", message: "", available: false };
 let profileFailure = null;
 let lastAuthUserId = "";
+let disposeGoogleIdentity = null;
 
 function isMounted() {
   return Boolean(controller && !controller.signal.aborted);
@@ -65,6 +67,8 @@ function resetAccountStateForAuthChange() {
 }
 
 function prepareAccountRender(context) {
+  disposeGoogleIdentity?.();
+  disposeGoogleIdentity = null;
   const activeElement = document.activeElement;
   if (activeElement && context.root.contains(activeElement) && typeof activeElement.blur === "function") {
     activeElement.blur();
@@ -195,7 +199,7 @@ async function renderAccount(context) {
   const requestId = ++renderRequest;
   const authState = getCurrentAuthState();
 
-  if (!authState.ready) {
+  if (!authState.ready && hasPersistedAuthSession()) {
     renderLoading(context);
     return;
   }
@@ -204,8 +208,9 @@ async function renderAccount(context) {
     prepareAccountRender(context);
     renderLogin(context, { error: actionError || authState.error || "" });
     bindLogin(context, controller.signal, {
-      onGoogleMount: async (container) => {
-        await renderGoogleIdentityButton(container, {
+      onGoogleMount: (container) => {
+        disposeGoogleIdentity?.();
+        disposeGoogleIdentity = renderGoogleIdentityButton(container, {
           onCredential: async ({ credential, nonce }) => {
             actionError = "";
             await signInWithGoogleCredential(credential, nonce);
@@ -369,7 +374,7 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=13.10.1", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=13.10.2", "account-feature-style");
   controller = new AbortController();
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";
@@ -395,6 +400,8 @@ export function unmount() {
   renderQueued = false;
   renderRequest += 1;
   clearNicknameTimer();
+  disposeGoogleIdentity?.();
+  disposeGoogleIdentity = null;
 }
 
 export function canLeave() {

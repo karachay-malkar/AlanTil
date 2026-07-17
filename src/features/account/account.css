@@ -17,11 +17,18 @@
 [data-feature="account"] .authProviderButton::after{content:"";width:24px;height:1px}
 [data-feature="account"] .authProviderIcon{width:22px;height:22px;object-fit:contain}
 [data-feature="account"] .authProviderLabel{text-align:center;line-height:1.25}
-[data-feature="account"] .accountDivider{display:flex;align-items:center;gap:10px;color:var(--text-2);font-size:13px}
-[data-feature="account"] .accountDivider::before,[data-feature="account"] .accountDivider::after{content:"";height:1px;flex:1;background:var(--line)}
-[data-feature="account"] .authEmailToggle{display:flex;align-items:center;justify-content:center;gap:8px}
-[data-feature="account"] .authEmailSection{display:none}
-[data-feature="account"] .authEmailSection.isOpen{display:block}
+[data-feature="account"] .googleIdentityButton{display:grid;width:100%;min-height:44px;gap:6px}
+[data-feature="account"] .googleIdentityFallback{grid-area:1/1;width:100%;visibility:visible}
+[data-feature="account"] .googleIdentityOfficial{grid-area:1/1;display:none;min-height:44px;justify-content:center;align-items:center;overflow:hidden}
+[data-feature="account"] .googleIdentityOfficial>div{margin-inline:auto!important}
+[data-feature="account"] .googleIdentityStatus{min-height:18px;color:var(--text-2);font-size:12px;line-height:1.35;text-align:center}
+[data-feature="account"] .googleIdentitySpinner{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;opacity:0}
+[data-feature="account"] .googleIdentityButton[data-google-state="loading"] .googleIdentitySpinner,
+[data-feature="account"] .googleIdentityButton[data-google-state="signing-in"] .googleIdentitySpinner{opacity:.65;animation:googleIdentitySpin .8s linear infinite}
+[data-feature="account"] .googleIdentityButton[data-google-state="ready"] .googleIdentityFallback{visibility:hidden;pointer-events:none}
+[data-feature="account"] .googleIdentityButton[data-google-state="ready"] .googleIdentityOfficial{display:flex}
+[data-feature="account"] .googleIdentityButton[data-google-state="retry"] .googleIdentityFallback{cursor:pointer}
+@keyframes googleIdentitySpin{to{transform:rotate(360deg)}}
 [data-feature="account"] .accountMessage{padding:9px 2px;border-radius:0;border:0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.4}
 [data-feature="account"] .accountMessageSuccess{background:var(--success-soft);border-color:var(--success-border)}
 [data-feature="account"] .accountMessageError{background:var(--danger-soft);border-color:var(--danger-border);color:var(--danger-strong)}
@@ -46,3 +53,4 @@
 [data-feature="account"] .accountGenderFigure svg{width:100%;height:100%;fill:currentColor}
 [data-feature="account"] .accountGenderChoice[data-avatar-gender="female"] .accountGenderFigure{color:var(--accent-strong);transform:scale(.94)}
 @media(max-width:480px){[data-feature="account"] .accountFact{grid-template-columns:1fr;gap:4px;align-items:start}[data-feature="account"] .accountFact dd{text-align:left}}
+@media(prefers-reduced-motion:reduce){[data-feature="account"] .googleIdentitySpinner{animation:none}}

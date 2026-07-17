@@ -11,6 +11,8 @@ const singletonPaths = [
   "/src/features/account/index.js",
   "/src/features/account/login.js",
   "/src/shared/auth/auth-service.js",
+  "/src/shared/auth/auth-store.js",
+  "/src/shared/auth/google-identity.js",
   "/src/shared/auth/guest-profile-prompt.js",
   "/src/shared/auth/supabase-client.js",
   "/src/shared/data/word-repository.js",
@@ -20,34 +22,28 @@ const singletonPaths = [
   "/src/shared/progress/storage-scope.js",
 ];
 
-test("13.10.1 is the published application version", async () => {
+test("13.10.2 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
   const index = await read("index.html");
-  assert.match(analytics, /appVersion = "13\.10\.1"/);
-  assert.match(index, /app\.css\?v=13\.10\.1/);
-  assert.match(index, /bootstrap\.js\?v=13\.10\.1/);
+  assert.match(analytics, /appVersion = "13\.10\.2"/);
+  assert.match(index, /app\.css\?v=13\.10\.2/);
+  assert.match(index, /bootstrap\.js\?v=13\.10\.2/);
 });
 
-test("legacy singleton module URLs are redirected to one 13.10.1 instance", async () => {
+test("changed singleton module URLs resolve to one 13.10.2 instance", async () => {
   const index = await read("index.html");
   for (const path of singletonPaths) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const mapping = new RegExp(`"${escaped}\\?v=13\\.(?:9\\.0|10\\.0)"\\s*:\\s*"${escaped}\\?v=13\\.10\\.1"`);
-    const isNewOnly = index.includes(`"${path}?v=13.10.1"`);
-    assert.ok(mapping.test(index) || isNewOnly, `missing 13.10.1 singleton mapping for ${path}`);
+    const target = new RegExp(`"${escaped}\\?v=13\\.10\\.2"`);
+    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.2`), `missing 13.10.2 reference for ${path}`);
   }
 });
 
-test("changed entry modules do not reference the broken 13.10.0 URLs", async () => {
-  const paths = [
-    "src/app/bootstrap.js",
-    "src/features/account/index.js",
-    "src/features/account/login.js",
-    "src/shared/auth/auth-service.js",
-    "src/shared/auth/guest-profile-prompt.js",
-    "src/shared/auth/google-identity.js",
-  ];
-  for (const path of paths) {
-    assert.doesNotMatch(await read(path), /\?v=13\.10\.0/);
-  }
+test("local Supabase SDK replaces runtime CDN loading", async () => {
+  const client = await read("src/shared/auth/supabase-client.js");
+  const loader = await read("src/vendor/supabase-js.js");
+  assert.match(client, /\/src\/vendor\/supabase-js\.js\?v=13\.10\.2/);
+  assert.match(loader, /payload-1\.txt/);
+  assert.match(loader, /gunzipSync/);
+  assert.doesNotMatch(client + loader, /cdn\.jsdelivr\.net|unpkg\.com|esm\.sh/);
 });

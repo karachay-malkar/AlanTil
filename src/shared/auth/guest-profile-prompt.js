@@ -2,9 +2,9 @@ import {
   getCurrentAuthState,
   hasAuthCallback,
   subscribeToAuth,
-} from "./auth-service.js?v=13.10.1";
-import { hasPersistedAuthSession } from "./supabase-client.js?v=13.10.1";
-import { msg } from "../i18n/index.js?v=13.10.1";
+} from "./auth-service.js?v=13.10.2";
+import { hasPersistedAuthSession } from "./supabase-client.js?v=13.10.2";
+import { msg } from "../i18n/index.js?v=13.10.2";
 import { escapeHtml } from "../ui/html.js?v=13.9.0";
 
 const SESSION_KEY = "alantil_guest_profile_prompt_seen_v1";

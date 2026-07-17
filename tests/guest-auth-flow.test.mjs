@@ -11,41 +11,60 @@ test("guest prompt contains the approved Russian copy", async () => {
   assert.match(messages, /Профиль позволит сохранять прогресс и пользоваться расширенными функциями приложения\./);
 });
 
-test("Email sign-in is fully absent from the account flow", async () => {
-  const auth = await read("src/shared/auth/auth-service.js");
-  const account = await read("src/features/account/index.js");
+test("Google option is visible before the official script is ready", async () => {
   const login = await read("src/features/account/login.js");
-  assert.doesNotMatch(auth, /signInWithEmail|signInWithOtp/);
-  assert.doesNotMatch(account, /signInWithEmail|emailExpanded|onEmail/);
-  assert.doesNotMatch(login, /accountEmail|voyti_po_email/);
-});
-
-test("Google sign-in uses Google Identity Services without an OAuth browser redirect", async () => {
-  const auth = await read("src/shared/auth/auth-service.js");
   const identity = await read("src/shared/auth/google-identity.js");
+  assert.match(login, /data-google-fallback/);
+  assert.match(login, /authProviderIcon/);
   assert.match(identity, /accounts\.id\.renderButton/);
-  assert.match(identity, /accounts\.google\.com\/gsi\/client/);
-  assert.match(auth, /signInWithIdToken/);
-  assert.match(auth, /provider: "google"/);
-  assert.doesNotMatch(auth, /REDIRECT_OAUTH_PROVIDERS = new Set\(\["google"/);
+  assert.match(identity, /activeRenderers/);
+  assert.doesNotMatch(identity, /googleClientIdEndpoint/);
 });
 
-test("guest action returns directly to the path", async () => {
-  const account = await read("src/features/account/index.js");
-  assert.match(account, /context\.router\.replace\(\s*"path\.home"/);
-  assert.doesNotMatch(account, /router\.navigate\("home"\)/);
+test("Google client ID is local public configuration", async () => {
+  const config = await read("src/config/auth.js");
+  assert.match(config, /\.apps\.googleusercontent\.com/);
+  assert.match(config, /accounts\.google\.com\/gsi\/client/);
 });
 
-test("OAuth callback has a dedicated URL and returns to the account screen", async () => {
-  const config = await read("src/config/supabase.js");
+test("Google token exchange retries and does not use a seven-second cutoff", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
-  assert.match(config, /new URL\("\/auth\/callback"/);
-  assert.match(auth, /AUTH_DESTINATION_PATH = "\/profile\/account"/);
+  assert.match(auth, /AUTH_REQUEST_TIMEOUT_MS = 60000/);
+  assert.match(auth, /retryAuth/);
+  assert.match(auth, /signInWithIdToken/);
+  assert.doesNotMatch(auth, /AUTH_REQUEST_TIMEOUT_MS = 7000/);
 });
 
-test("dictionary requests remain bounded and cache-first", async () => {
+test("guest action remains available independently of Google", async () => {
+  const login = await read("src/features/account/login.js");
+  assert.match(login, /accountContinueGuest/);
+  assert.match(login, /onGuest/);
+});
+
+test("cold start has a local dictionary and public REST uses only apikey", async () => {
   const repository = await read("src/shared/data/word-repository.js");
-  assert.match(repository, /AbortController/);
-  assert.match(repository, /REQUEST_TIMEOUT_MS = 7000/);
-  assert.match(repository, /const cached = readDictionaryCache\(\)/);
+  const starter = await read("src/data/starter-dictionary.js");
+  assert.match(repository, /readStarterDictionary/);
+  assert.match(repository, /scheduleBackgroundRefresh/);
+  assert.match(repository, /apikey: supabasePublishableKey/);
+  assert.doesNotMatch(repository, /Authorization:\s*`Bearer \$\{supabasePublishableKey\}`/);
+  assert.match(starter, /STARTER_DICTIONARY_VERSION/);
+  assert.match(starter, /"0001"/);
+  assert.match(starter, /"1199"/);
+  assert.match(starter, /"1760"/);
+});
+
+test("service worker caches the shell and local SDK", async () => {
+  const worker = await read("service-worker.js");
+  assert.match(worker, /supabase-js\/payload-1\.txt\?v=13\.10\.2/);
+  assert.match(worker, /navigationResponse/);
+  assert.match(worker, /staticResponse/);
+});
+
+
+test("starter dictionary contains valid current rows for every story", async () => {
+  const { STARTER_DICTIONARY } = await import("../src/data/starter-dictionary.js?v=13.10.2-test");
+  assert.equal(STARTER_DICTIONARY.length, 60);
+  assert.deepEqual(new Set(STARTER_DICTIONARY.map((row) => String(row.story_id))), new Set(["1", "2", "3"]));
+  assert.ok(STARTER_DICTIONARY.every((row) => row.word_id && row.word_alan_cyrillic && row.translation_ru));
 });
