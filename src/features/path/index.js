@@ -1,17 +1,18 @@
-import { getWords } from "../../shared/data/word-repository.js?v=13.8.1";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.8.1";
-import { allStoryProgress, computedStationStatus, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.8.1";
-import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.8.1";
-import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.8.1";
-import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.8.1";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8.1";
-import { getHiddenSet, learnState } from "../learn/state.js?v=13.8.1";
-import { renderResults as renderLearnResults } from "../learn/results.js?v=13.8.1";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.8.1";
-import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.8.1";
-import { renderStationView } from "./station-view.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.9.0";
+import { allStoryProgress, computedStationStatus, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
+import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";
+import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.9.0";
+import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.9.0";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
+import { getHiddenSet, learnState } from "../learn/state.js?v=13.9.0";
+import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.0";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.9.0";
+import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.9.0";
+import { renderStationView } from "./station-view.js?v=13.9.0";
 
 let controller = null;
 let activeStudy = false;
@@ -28,7 +29,7 @@ function routeScrollKey(story, stationSize) { return `route_scroll_v2_${story}_$
 function stationMilestones(summary) {
   const count = Math.floor(summary.mastered / 20);
   if (!count) return "";
-  return `<span class="stationMilestones" aria-label="${count} маршрутных отметок">${Array.from({ length: Math.min(4, count) }, () => "⌃").join("")}</span>`;
+  return `<span class="stationMilestones" aria-label="${msg("path.marshrutnyh_otmetok", { count })}">${Array.from({ length: Math.min(4, count) }, () => "⌃").join("")}</span>`;
 }
 
 function stationButton(station, index) {
@@ -41,7 +42,7 @@ function stationButton(station, index) {
     style="--station-progress:${progress.percent * 3.6}deg"
     type="button"
     data-station-key="${escapeHtml(station.key)}"
-    aria-label="${escapeHtml(station.name)}. Освоено ${progress.mastered} из ${progress.total} слов"
+    aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(station.name), mastered: progress.mastered, total: progress.total })}"
   >
     <span class="stationProgressRing" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span>
     <span class="stationLabel">${escapeHtml(station.name)}</span>
@@ -98,14 +99,14 @@ function renderRoute(context, route, activeStory) {
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
   const reversedCatalogs = [...story.catalogs].reverse();
   context.shell.setCounter("");
-  context.shell.setHeaderContent?.({ title: "Alan Til!" });
+  context.shell.setHeaderContent?.({ title: msg("common.alan_til_2") });
   context.root.innerHTML = `<section class="pathView">
     <div class="pathStickyControls">
-      <nav class="storyTabs" aria-label="История пути">
+      <nav class="storyTabs" aria-label="${msg("path.istoriya_puti")}">
         ${route.storyOrder.map((type) => `<button class="tabAction storyTab ${type === activeStory ? "active" : ""}" type="button" data-story-tab="${escapeHtml(type)}" ${type === activeStory ? 'aria-current="page"' : ""}>[ ${escapeHtml(route.storyLabels[type])} ]</button>`).join("")}
       </nav>
       <div class="storyProgress">
-        ${renderSegmentedProgress({ value: progress.percent, segments: 10, label: `Освоено ${progress.percent}% слов истории ${route.storyLabels[activeStory]}` })}
+        ${renderSegmentedProgress({ value: progress.percent, segments: 10, label: msg("path.osvoeno_slov_istorii", { percent: progress.percent, name: route.storyLabels[activeStory] }) })}
         <span class="pathProgressPercent">${progress.percent}%</span>
         <span class="pathProgressCount">${progress.masteredWords}/${progress.totalWords}</span>
       </div>
@@ -114,7 +115,7 @@ function renderRoute(context, route, activeStory) {
       <div class="routeBackdrop" aria-hidden="true"></div>
       <div class="routeMap" data-story-map="${escapeHtml(activeStory)}">${reversedCatalogs.map((catalog) => routeCatalogSection(catalog, stationIndex)).join("")}</div>
     </div>
-    <nav class="routeScale" aria-label="Рубежи маршрута"></nav>
+    <nav class="routeScale" aria-label="${msg("path.rubezhi_marshruta")}"></nav>
   </section>`;
 
   context.root.querySelectorAll("[data-story-tab]").forEach((button) => {
@@ -178,24 +179,24 @@ function renderStation(context, route, station) {
 }
 
 function masteryLabel(level) {
-  if (level === 3) return "III знак вершины";
-  if (level === 2) return "II маршрутный знак";
-  if (level === 1) return "I маршрутный знак";
-  return "Тест не сдан";
+  if (level === 3) return msg("path.iii_znak_vershiny");
+  if (level === 2) return msg("path.ii_marshrutnyy_znak");
+  if (level === 1) return msg("path.i_marshrutnyy_znak");
+  return msg("path.test_ne_sdan");
 }
 
 function renderResult(context, route, station, result, allWords) {
   if (result.passed) awardWordMilestones(allWords);
-  const message = result.passed ? masteryLabel(result.masteryLevel) : `Нужно не менее ${result.required}%`;
-  context.shell.setHeaderContent?.({ title: "Результат теста", subtitle: station.name, logo: true, brand: false });
+  const message = result.passed ? masteryLabel(result.masteryLevel) : msg("path.nuzhno_ne_menee", { required: result.required });
+  context.shell.setHeaderContent?.({ title: msg("path.rezultat_testa"), subtitle: station.name, logo: true, brand: false });
   context.root.innerHTML = `<section class="view screen stationResultView">
     <div class="stationResult">
       <div class="stationResultMark" aria-hidden="true">${result.masteryLevel ? "⌃".repeat(result.masteryLevel) : "—"}</div>
       <div class="stationResultScore">${result.payload.accuracy}%</div>
       <div class="stationResultText">${escapeHtml(message)}<br>${result.payload.correct_total}/${result.payload.questions_total}</div>
       <div class="stationActions">
-        <button class="btn actionText" type="button" data-result-return>К этапу</button>
-        ${result.passed ? "" : `<button class="btn actionPrimary" type="button" data-result-repeat>Повторить</button>`}
+        <button class="btn actionText" type="button" data-result-return>${msg("path.k_etapu")}</button>
+        ${result.passed ? "" : `<button class="btn actionPrimary" type="button" data-result-repeat>${msg("path.povtorit")}</button>`}
       </div>
     </div>
   </section>`;
@@ -235,7 +236,7 @@ export async function mount(context, params = {}) {
     learnState.currentDict = station.dictionaryId;
     learnState.currentSection = station.groupId;
     learnState.currentSet = station.selectionSetId || station.setId || station.key;
-    context.shell.setHeaderContent?.({ title: "Учить слова", subtitle: station.name, logo: true, brand: false });
+    context.shell.setHeaderContent?.({ title: msg("path.uchit_slova"), subtitle: station.name, logo: true, brand: false });
     renderStudy(context, words, controller.signal, {
       mode: params.mode || learnState.currentStudyMode || "kb",
       wordsOverride: selectedWords,

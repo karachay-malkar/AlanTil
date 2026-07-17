@@ -1,16 +1,17 @@
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=13.8.1";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.8.1";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.8.1";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.8.1";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.8.1";
+} from "../../shared/data/word-repository.js?v=13.9.0";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.9.0";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.9.0";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.9.0";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.8.1";
+const SETTINGS_ASSET_VERSION = "13.9.0";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -48,7 +49,7 @@ function updateSaveButton(root, saved = false) {
   if (!button) return;
   button.disabled = !hasUnsavedChanges;
   button.classList.toggle("isDirty", hasUnsavedChanges);
-  button.textContent = saved ? "Сохранено ✓" : "Сохранить";
+  button.textContent = saved ? msg("settings.sohraneno") : msg("settings.sohranit");
 }
 
 function settingsSyncIsPending() {
@@ -67,14 +68,14 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
   try {
     versionStatus = await getDictionaryVersionStatus();
   } catch {
-    versionError = "Не удалось проверить актуальную версию.";
+    versionError = msg("settings.ne_udalos_proverit_aktualnuyu_versiyu");
   }
-  const currentVersion = versionStatus?.currentVersion || currentFallback || "Не установлена";
-  const latestVersion = versionStatus?.latestVersion || "Недоступна";
+  const currentVersion = versionStatus?.currentVersion || currentFallback || msg("settings.ne_ustanovlena");
+  const latestVersion = versionStatus?.latestVersion || msg("settings.nedostupna");
   const needsUpdate = versionStatus?.needsUpdate === true;
 
   const languageChoices = [
-    ["ru", "RU", "Русский"],
+    ["ru", "RU", msg("settings.russkiy")],
     ["en", "EN", "English"],
     ["tr", "TR", "Türkçe"],
   ].map(([value, label, ariaLabel]) => settingChoice({
@@ -85,7 +86,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     checked: draftSettings.interface_language_code === value,
   })).join("");
   const scriptChoices = [
-    ["cyrillic", "Кириллица"],
+    ["cyrillic", msg("settings.kirillitsa")],
     ["turkic", "Latin"],
   ].map(([value, label]) => settingChoice({
     name: "alanScript",
@@ -94,9 +95,9 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     checked: draftSettings.alan_script_code === value,
   })).join("");
   const dialectChoices = [
-    ["balkar", "Ж", "Балкарский вариант: Ж"],
-    ["karachay", "Дж", "Карачаевский вариант: Дж"],
-    ["canonical", "Җ", "Канонический вариант: Җ"],
+    ["balkar", msg("settings.zh"), msg("settings.balkarskiy_variant_zh")],
+    ["karachay", msg("settings.dzh"), msg("settings.karachaevskiy_variant_dzh")],
+    ["canonical", "Җ", msg("settings.kanonicheskiy_variant_j")],
   ].map(([value, label, ariaLabel]) => settingChoice({
     name: "alanDialect",
     value,
@@ -108,7 +109,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     name: "stageSize",
     value,
     label: String(value),
-    ariaLabel: `${value} слов в этапе`,
+    ariaLabel: msg("settings.slov_v_etape", { value: value }),
     checked: Number(draftSettings.station_size) === value,
   })).join("");
 
@@ -116,43 +117,43 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     ${renderProfileNavigation("settings")}
     <div class="settingsHomeScroll">
       <div class="settingsPageHead">
-        <h1>Настройки</h1>
-        <button class="btn actionPrimary actionCompact settingsSmallAction" type="button" data-settings-save disabled>Сохранить</button>
+        <h1>${msg("settings.nastroyki")}</h1>
+        <button class="btn actionPrimary actionCompact settingsSmallAction" type="button" data-settings-save disabled>${msg("settings.sohranit")}</button>
       </div>
 
       <section class="settingsSection">
-        <h2 class="settingsSectionTitle">Языковые настройки</h2>
-        ${settingRow("Язык интерфейса", languageChoices)}
-        ${settingRow("Алфавит аланских слов", scriptChoices)}
-        ${settingRow("Вариант кириллицы", dialectChoices, { className: "settingsDialectRow", hidden: draftSettings.alan_script_code === "turkic" })}
+        <h2 class="settingsSectionTitle">${msg("settings.yazykovye_nastroyki")}</h2>
+        ${settingRow(msg("settings.yazyk_interfeysa"), languageChoices)}
+        ${settingRow(msg("settings.alfavit_alanskih_slov"), scriptChoices)}
+        ${settingRow(msg("settings.variant_kirillitsy"), dialectChoices, { className: "settingsDialectRow", hidden: draftSettings.alan_script_code === "turkic" })}
       </section>
 
       <section class="settingsSection">
-        <h2 class="settingsSectionTitle">Изучение слов</h2>
-        ${settingRow("Слов в этапе", sizeChoices)}
+        <h2 class="settingsSectionTitle">${msg("settings.izuchenie_slov")}</h2>
+        ${settingRow(msg("settings.slov_v_etape_2"), sizeChoices)}
       </section>
 
       <section class="settingsSection settingsDictionarySection">
         <div class="settingsSectionHead">
-          <h2 class="settingsSectionTitle">Версия словаря</h2>
+          <h2 class="settingsSectionTitle">${msg("settings.versiya_slovarya")}</h2>
           <span class="settingsUpdateWrap ${needsUpdate ? "needsUpdate" : ""}">
-            <button class="btn actionPrimary actionCompact settingsSmallAction settingsUpdateButton" type="button" data-dictionary-refresh ${needsUpdate ? "" : "disabled"}>Обновить</button>
-            ${needsUpdate ? '<span class="settingsUpdateBadge" aria-label="Доступно обновление">!</span>' : ""}
+            <button class="btn actionPrimary actionCompact settingsSmallAction settingsUpdateButton" type="button" data-dictionary-refresh ${needsUpdate ? "" : "disabled"}>${msg("settings.obnovit")}</button>
+            ${needsUpdate ? `<span class="settingsUpdateBadge" aria-label="${msg("settings.dostupno_obnovlenie")}">!</span>` : ""}
           </span>
         </div>
         <dl class="settingsDictionaryVersions">
-          <div><dt>Текущая</dt><dd>${escapeHtml(currentVersion)}</dd></div>
-          <div><dt>Актуальная</dt><dd>${escapeHtml(latestVersion)}</dd></div>
+          <div><dt>${msg("settings.tekuschaya")}</dt><dd>${escapeHtml(currentVersion)}</dd></div>
+          <div><dt>${msg("settings.aktualnaya")}</dt><dd>${escapeHtml(latestVersion)}</dd></div>
         </dl>
-        ${needsUpdate ? '<div class="settingsDictionaryNotice" role="status">Обновите словарь</div>' : ""}
+        ${needsUpdate ? `<div class="settingsDictionaryNotice" role="status">${msg("settings.obnovite_slovar")}</div>` : ""}
         ${versionError ? `<div class="settingsDictionaryError" role="alert">${escapeHtml(versionError)}</div>` : ""}
         ${actionError ? `<div class="settingsDictionaryError" role="alert">${escapeHtml(actionError)}</div>` : ""}
       </section>
 
-      <section class="settingsSection settingsLinksSection" aria-label="О приложении">
-        ${settingsLink("settings.thanks", "Благодарности")}
-        ${settingsLink("settings.version", "Версия приложения", "13.8.1")}
-        ${settingsLink("settings.privacy", "Политика конфиденциальности")}
+      <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
+        ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.9.0")}
+        ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>
   </section>`;
@@ -193,7 +194,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     const button = event.currentTarget;
     if (!hasUnsavedChanges) return;
     button.disabled = true;
-    button.textContent = "Сохраняем…";
+    button.textContent = msg("settings.sohranyaem");
     try {
       const authenticated = Boolean(getCurrentAuthState().user?.id);
       const persistedSettings = setUserSettings(draftSettings, {
@@ -201,12 +202,12 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
         requireStorage: true,
       });
       if (!sameSettings(persistedSettings, draftSettings)) {
-        throw new Error("Локальное хранилище не подтвердило выбранные настройки.");
+        throw new Error(msg("settings.lokalnoe_hranilische_ne_podtverdilo_vybrannye_nastroyki"));
       }
       if (authenticated) {
         await flushProgressQueue();
         if (settingsSyncIsPending()) {
-          throw new Error("Настройки сохранены на устройстве, но ещё не синхронизированы.");
+          throw new Error(msg("settings.nastroyki_sohraneny_na_ustroystve_no_esche_ne"));
         }
       }
       document.documentElement.lang = persistedSettings.interface_language_code || "ru";
@@ -214,9 +215,9 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
       draftSettings = { ...persistedSettings };
       hasUnsavedChanges = false;
       updateSaveButton(context.root, true);
-      window.setTimeout(() => updateSaveButton(context.root), 1100);
+      await context.router.refresh();
     } catch (error) {
-      button.textContent = "Повторить";
+      button.textContent = msg("settings.povtorit");
       button.disabled = false;
       button.classList.add("isDirty");
       console.error("Settings save failed", error);
@@ -231,12 +232,12 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     const button = event.currentTarget;
     if (!needsUpdate) return;
     button.disabled = true;
-    button.textContent = "Обновляем…";
+    button.textContent = msg("settings.obnovlyaem");
     try {
       await refreshDictionary();
       await renderSettingsHome(context, signal);
     } catch (error) {
-      await renderSettingsHome(context, signal, { actionError: error?.message || "Не удалось обновить словарь." });
+      await renderSettingsHome(context, signal, { actionError: error?.message || msg("settings.ne_udalos_obnovit_slovar") });
     }
   }, { signal });
 }
@@ -289,5 +290,5 @@ export function canLeave() {
 }
 
 export function getLeaveMessage() {
-  return "Настройки не сохранены.<br>Выйти без сохранения?";
+  return msg("settings.nastroyki_ne_sohraneny_vyyti_bez_sohraneniya").replace("\n", "<br>");
 }

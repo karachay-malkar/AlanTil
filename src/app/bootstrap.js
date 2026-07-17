@@ -1,13 +1,15 @@
-import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.8.1";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.8.1";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.8.1";
-import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.8.1";
-import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.8.1";
-import { createModalService } from "../shared/ui/modal.js?v=13.8.1";
-import { createRouter } from "./router.js?v=13.8.1";
-import { createShell } from "./shell.js?v=13.8.1";
+import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.9.0";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.9.0";
+import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.9.0";
+import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
+import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
+import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
+import { createRouter } from "./router.js?v=13.9.0";
+import { createShell } from "./shell.js?v=13.9.0";
 
 async function bootstrap() {
+  initializeI18n();
   prepareAnalytics();
   const telegram = createTelegramAdapter();
   const shell = createShell();
@@ -44,5 +46,5 @@ async function bootstrap() {
 bootstrap().catch((error) => {
   console.error("Application bootstrap failed", error);
   const shell = document.getElementById("appRoot");
-  if (shell) shell.innerHTML = `<section class="screenState screenStateError">Не удалось запустить приложение.</section>`;
+  if (shell) shell.innerHTML = `<section class="screenState screenStateError">${msg("common.ne_udalos_zapustit_prilozhenie")}</section>`;
 });

@@ -1,15 +1,16 @@
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.8.1";
-import { getWords } from "../../shared/data/word-repository.js?v=13.8.1";
-import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=13.8.1";
-import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=13.8.1";
-import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.8.1";
-import { activitySummary } from "../../shared/progress/activity-history-store.js?v=13.8.1";
-import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=13.8.1";
-import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { uiIcon } from "../../shared/ui/icons.js?v=13.8.1";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.8.1";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
+import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=13.9.0";
+import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
+import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.9.0";
+import { activitySummary } from "../../shared/progress/activity-history-store.js?v=13.9.0";
+import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=13.9.0";
+import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
 
 let controller = null;
 
@@ -20,8 +21,8 @@ function setProfileHeaderNavigation(context, active = "profile") {
 
 function durationLabel(seconds) {
   const minutes = Math.round(Math.max(0, Number(seconds || 0)) / 60);
-  if (minutes < 60) return `${minutes} мин`;
-  return `${Math.floor(minutes / 60)} ч ${minutes % 60} мин`;
+  if (minutes < 60) return msg("profile.min", { minutes: minutes });
+  return msg("profile.ch_min", { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
 }
 
 function avatarFigure(gender = "") {
@@ -33,9 +34,9 @@ function avatarFigure(gender = "") {
 }
 
 function subNavigation(active = "status") {
-  return `<nav class="profileSubNav" aria-label="Содержимое профиля">
-    <button class="tabAction profileSubTab ${active === "status" ? "active" : ""}" type="button" data-profile-subroute="profile.home">[ Статус ]</button>
-    <button class="tabAction profileSubTab ${active === "skills" ? "active" : ""}" type="button" data-profile-subroute="profile.skills">[ Навыки ]</button>
+  return `<nav class="profileSubNav" aria-label="${msg("profile.soderzhimoe_profilya")}">
+    <button class="tabAction profileSubTab ${active === "status" ? "active" : ""}" type="button" data-profile-subroute="profile.home">${msg("profile.status")}</button>
+    <button class="tabAction profileSubTab ${active === "skills" ? "active" : ""}" type="button" data-profile-subroute="profile.skills">${msg("profile.navyki")}</button>
   </nav>`;
 }
 
@@ -55,7 +56,7 @@ function storyProgressRows(route, path) {
       const label = route.storyLabels[type];
       return `<button class="profileStoryRow" type="button" data-profile-story="${escapeHtml(type)}">
         <span class="profileStoryHead"><strong>${escapeHtml(label)}</strong><span>${value.percent}%</span></span>
-        ${renderSegmentedProgress({ value: value.percent, segments: 10, label: `Прогресс ${label}`, className: "profileStoryProgress" })}
+        ${renderSegmentedProgress({ value: value.percent, segments: 10, label: msg("profile.progress", { label: label }), className: "profileStoryProgress" })}
       </button>`;
     }).join("")}
   </div>`;
@@ -74,31 +75,31 @@ async function loadStoryProgress() {
 
 function unavailableStoryProgress() {
   return `<div class="profileFutureNote" role="status">
-    Прогресс временно недоступен. Аватар и остальные разделы профиля продолжают работать.
+    ${msg("profile.progress_vremenno_nedostupen_avatar_i_ostalnye_razdely")}
   </div>`;
 }
 
 function lockedStatus() {
   return `<div class="profileLockedState">
-    <div class="profileAvatarFrame isLocked">
+    <div class="profileAvatarFrame isLocked" data-status-label="${msg("profile.status_label")}">
       <div class="profileAvatarFigure">${avatarFigure()}</div>
       <span class="profileAvatarLock">${uiIcon("locked")}</span>
-      <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="Войти в аккаунт">${uiIcon("account")}</button>
+      <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="${msg("profile.voyti_v_akkaunt")}">${uiIcon("account")}</button>
     </div>
-    <strong>Профиль недоступен</strong>
-    <span>Войдите, чтобы открыть аватар и связанную с ним историю.</span>
-    <button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>Войти</button>
+    <strong>${msg("profile.profil_nedostupen")}</strong>
+    <span>${msg("profile.voydite_chtoby_otkryt_avatar_i_svyazannuyu_s")}</span>
+    <button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>${msg("profile.voyti")}</button>
   </div>`;
 }
 
 function genderSelection(error = "") {
   return `<section class="profileGenderSetup">
     ${error ? `<div class="profileInlineError" role="alert">${escapeHtml(error)}</div>` : ""}
-    <strong>Выберите пол аватара</strong>
-    <span>Выбор выполняется один раз и позже не изменяется.</span>
+    <strong>${msg("profile.vyberite_pol_avatara")}</strong>
+    <span>${msg("profile.vybor_vypolnyaetsya_odin_raz_i_pozzhe_ne")}</span>
     <div class="profileGenderChoices">
-      <button class="choiceControl" type="button" data-profile-gender="male"><span>${avatarFigure("male")}</span><strong>Мужской</strong></button>
-      <button class="choiceControl" type="button" data-profile-gender="female"><span>${avatarFigure("female")}</span><strong>Женский</strong></button>
+      <button class="choiceControl" type="button" data-profile-gender="male"><span>${avatarFigure("male")}</span><strong>${msg("profile.muzhskoy")}</strong></button>
+      <button class="choiceControl" type="button" data-profile-gender="female"><span>${avatarFigure("female")}</span><strong>${msg("profile.zhenskiy")}</strong></button>
     </div>
   </section>`;
 }
@@ -109,28 +110,28 @@ async function renderStatus(context, auth, profile) {
   if (!auth.user) {
     body = lockedStatus();
   } else if (!profile) {
-    body = `<div class="profileLockedState"><strong>Завершите настройку аккаунта</strong><span>Создайте никнейм, чтобы открыть профиль.</span><button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>Продолжить</button></div>`;
+    body = `<div class="profileLockedState"><strong>${msg("profile.zavershite_nastroyku_akkaunta")}</strong><span>${msg("profile.sozdayte_nikneym_chtoby_otkryt_profil")}</span><button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>${msg("profile.prodolzhit")}</button></div>`;
   } else if (!profile.avatar_gender) {
     body = genderSelection();
   } else {
     const progress = await loadStoryProgress();
     body = `<div class="profileStatusContent">
-      <div class="profileAvatarFrame" data-avatar-gender="${escapeHtml(profile.avatar_gender)}">
+      <div class="profileAvatarFrame" data-avatar-gender="${escapeHtml(profile.avatar_gender)}" data-status-label="${msg("profile.status_label")}">
         <div class="profileAvatarFigure">${avatarFigure(profile.avatar_gender)}</div>
-        <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="Открыть аккаунт">${uiIcon("account")}</button>
+        <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="${msg("profile.otkryt_akkaunt")}">${uiIcon("account")}</button>
       </div>
       <div class="profileNickname">${escapeHtml(profile.nickname)}</div>
       <section class="profileStatusSection profileStorySection">
-        <h2 class="profileSectionTitle">Прогресс по историям</h2>
+        <h2 class="profileSectionTitle">${msg("profile.progress_po_istoriyam")}</h2>
         ${progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}
       </section>
       <section class="profileStatusSection profileFutureSection">
-        <h2 class="profileSectionTitle">Артефакты</h2>
-        <div class="profileFutureNote">Заработанные вещи появятся здесь позже.</div>
+        <h2 class="profileSectionTitle">${msg("profile.artefakty")}</h2>
+        <div class="profileFutureNote">${msg("profile.zarabotannye_veschi_poyavyatsya_zdes_pozzhe")}</div>
       </section>
       <section class="profileStatusSection profileFutureSection">
-        <h2 class="profileSectionTitle">Достижения</h2>
-        <div class="profileFutureNote">Раздел будет добавлен позже.</div>
+        <h2 class="profileSectionTitle">${msg("profile.dostizheniya")}</h2>
+        <div class="profileFutureNote">${msg("profile.razdel_budet_dobavlen_pozzhe")}</div>
       </section>
     </div>`;
   }
@@ -148,8 +149,8 @@ function renderSkills(context, auth, profile) {
   // TODO(avatar-skills): replace this placeholder with a multilingual table that maps
   // skill names to parts of speech or set_id values. Do not hardcode skill taxonomy here.
   const body = locked
-    ? `<div class="profileLockedState profileSkillsLocked"><span class="profileLockedIcon">${uiIcon("locked")}</span><strong>Навыки недоступны</strong><span>Сначала войдите и настройте аватар.</span></div>`
-    : `<div class="profileFutureFeature"><strong>Навыки</strong><span>Позже этот раздел будет подключён из отдельной мультиязычной таблицы.</span></div>`;
+    ? `<div class="profileLockedState profileSkillsLocked"><span class="profileLockedIcon">${uiIcon("locked")}</span><strong>${msg("profile.navyki_nedostupny")}</strong><span>${msg("profile.snachala_voydite_i_nastroyte_avatar")}</span></div>`
+    : `<div class="profileFutureFeature"><strong>${msg("profile.navyki_2")}</strong><span>${msg("profile.pozzhe_etot_razdel_budet_podklyuchen_iz_otdelnoy")}</span></div>`;
   context.root.innerHTML = `<section class="view screen profileView">
     ${primaryNavigation}
     ${subNavigation("skills")}
@@ -169,25 +170,25 @@ async function renderStatistics(context) {
     const difficult = problemWordRows(words, 12);
     const completedDictionaries = route.storyOrder.reduce((sum, type) => sum + Number(path.stories[type]?.completedCatalogs || 0), 0);
     body = `<section class="profileStatusSection">
-      <h2 class="profileSectionTitle">Сводка эффективности</h2>
+      <h2 class="profileSectionTitle">${msg("statistics.svodka_effektivnosti")}</h2>
       <div class="profileGrid">
-        <div class="profileStat"><strong>${mastery.mastered}</strong><span>освоенных слов</span></div>
-        <div class="profileStat"><strong>${completedDictionaries}</strong><span>завершённых словарей</span></div>
-        <div class="profileStat"><strong>${durationLabel(activity.activeSeconds)}</strong><span>активного времени</span></div>
-        <div class="profileStat"><strong>${activity.learnSessions}</strong><span>учебных сессий</span></div>
-        <div class="profileStat"><strong>${activity.accuracy}%</strong><span>точность тестов</span></div>
-        <div class="profileStat"><strong>${mastery.review}</strong><span>слов к повторению</span></div>
+        <div class="profileStat"><strong>${mastery.mastered}</strong><span>${msg("statistics.osvoennyh_slov")}</span></div>
+        <div class="profileStat"><strong>${completedDictionaries}</strong><span>${msg("statistics.zavershennyh_slovarey")}</span></div>
+        <div class="profileStat"><strong>${durationLabel(activity.activeSeconds)}</strong><span>${msg("statistics.aktivnogo_vremeni")}</span></div>
+        <div class="profileStat"><strong>${activity.learnSessions}</strong><span>${msg("statistics.uchebnyh_sessiy")}</span></div>
+        <div class="profileStat"><strong>${activity.accuracy}%</strong><span>${msg("statistics.tochnost_testov")}</span></div>
+        <div class="profileStat"><strong>${mastery.review}</strong><span>${msg("statistics.slov_k_povtoreniyu")}</span></div>
       </div>
     </section>
     <section class="profileStatusSection">
-      <h2 class="profileSectionTitle">Проблемные слова</h2>
-      <div class="problemWords">${difficult.length ? difficult.map(({ word, unknownRate }) => `<span class="problemWord"><strong>${escapeHtml(word.word)}</strong><small>${unknownRate}%</small></span>`).join("") : `<span class="profileFutureNote">Пока недостаточно данных.</span>`}</div>
+      <h2 class="profileSectionTitle">${msg("statistics.problemnye_slova")}</h2>
+      <div class="problemWords">${difficult.length ? difficult.map(({ word, unknownRate }) => `<span class="problemWord"><strong>${escapeHtml(word.word)}</strong><small>${unknownRate}%</small></span>`).join("") : `<span class="profileFutureNote">${msg("statistics.poka_nedostatochno_dannyh")}</span>`}</div>
     </section>`;
   } catch (error) {
     console.warn("profile: statistics are temporarily unavailable", error);
     body = `<div class="profileLockedState">
-      <strong>Статистика временно недоступна</strong>
-      <span>Профиль продолжает работать. Попробуйте открыть статистику позже.</span>
+      <strong>${msg("statistics.statistika_vremenno_nedostupna")}</strong>
+      <span>${msg("statistics.profil_prodolzhaet_rabotat_poprobuyte_otkryt_statistiku_po")}</span>
     </div>`;
   }
 
@@ -226,8 +227,10 @@ export async function mount(context, params = {}) {
   context.root.querySelectorAll("[data-profile-gender]").forEach((button) => {
     button.addEventListener("click", async () => {
       const gender = button.dataset.profileGender;
-      const label = gender === "female" ? "женский" : "мужской";
-      const confirmed = await context.modal.confirm({ message: `Выбрать ${label} образ?<br>После сохранения изменить выбор будет нельзя.` });
+      const label = gender === "female" ? msg("profile.zhenskiy_2") : msg("profile.muzhskoy_2");
+      const confirmed = await context.modal.confirm({
+        message: msg("profile.vybrat_obraz_posle_sohraneniya_izmenit_vybor_budet", { label }).replace("\n", "<br>"),
+      });
       if (!confirmed) return;
       const choices = Array.from(context.root.querySelectorAll("[data-profile-gender]"));
       choices.forEach((choice) => { choice.disabled = true; });

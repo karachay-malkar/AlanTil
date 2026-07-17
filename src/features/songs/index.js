@@ -1,15 +1,16 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
-import { EVENTS } from "../../shared/analytics/events.js?v=13.8.1";
-import { getWords } from "../../shared/data/word-repository.js?v=13.8.1";
-import { songFavorites } from "../../shared/state/song-favorites.js?v=13.8.1";
-import { closeInfoModal } from "../../shared/ui/info-modal.js?v=13.8.1";
-import { renderSongsCatalog } from "./catalog.js?v=13.8.1";
-import { disposePlayer } from "./player.js?v=13.8.1";
-import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=13.8.1";
-import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=13.8.1";
-import { renderPlaylists } from "./playlists.js?v=13.8.1";
-import { renderSongView } from "./song-view.js?v=13.8.1";
-import { songsState } from "./state.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
+import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=13.9.0";
+import { closeInfoModal } from "../../shared/ui/info-modal.js?v=13.9.0";
+import { renderSongsCatalog } from "./catalog.js?v=13.9.0";
+import { disposePlayer } from "./player.js?v=13.9.0";
+import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=13.9.0";
+import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=13.9.0";
+import { renderPlaylists } from "./playlists.js?v=13.9.0";
+import { renderSongView } from "./song-view.js?v=13.9.0";
+import { songsState } from "./state.js?v=13.9.0";
 
 let controller = null;
 let activeContext = null;
@@ -33,7 +34,7 @@ export async function mount(context, params = {}) {
       const songs = await getSongs();
       songFavorites.reload();
       const favoriteCount = songs.filter((song) => songFavorites.has(song.id)).length;
-      renderSongsCatalog(context, { id: "__fav__", title: "Избранные песни", slug: "favorites" }, songs, controller.signal);
+      renderSongsCatalog(context, { id: "__fav__", title: msg("songs.izbrannye_pesni"), slug: "favorites" }, songs, controller.signal);
       trackEvent(EVENTS.PLAYLIST_OPEN, { playlist_id: "__fav__", song_count: favoriteCount });
       return;
     }
@@ -55,7 +56,7 @@ export async function mount(context, params = {}) {
     return;
   }
 
-  context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">Неизвестный экран песен.</div></div></section>`;
+  context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("songs.neizvestnyy_ekran_pesen")}</div></div></section>`;
 }
 
 export function unmount() {

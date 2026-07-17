@@ -1,14 +1,15 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.8.1";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
-import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.8.1";
-import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.8.1";
-import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.8.1";
-import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.8.1";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.8.1";
-import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.8.1";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.8.1";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
+import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
+import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
+import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.9.0";
+import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.9.0";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
+import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.9.0";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 
 const ACTIVE_KEY = "alantil_station_test_active_v13_5";
 
@@ -163,7 +164,7 @@ export function createStationTestSession(station, allWords, mode = "kb") {
 }
 
 export function renderStationTest(context, session, { onComplete } = {}) {
-  context.shell.setHeaderContent?.({ title: "Проверь знания", subtitle: session.station.name, logo: true, brand: false });
+  context.shell.setHeaderContent?.({ title: msg("common.prover_znaniya"), subtitle: session.station.name, logo: true, brand: false });
   const question = session.questions[session.index];
   if (!question) return completeStationTest(context, session, onComplete);
   const number = session.index + 1;
@@ -176,7 +177,7 @@ export function renderStationTest(context, session, { onComplete } = {}) {
         ${question.options.map((option) => `<button class="choiceControl optionBtn stationTestOption" type="button" data-answer-id="${escapeHtml(option.id)}">${escapeHtml(option.text)}</button>`).join("")}
       </div>
     </div>
-    <footer class="modeLaunchBar"><button class="btn actionPrimary stationTestSubmit" type="button" data-answer-submit disabled>Ответить</button></footer>
+    <footer class="modeLaunchBar"><button class="btn actionPrimary stationTestSubmit" type="button" data-answer-submit disabled>${msg("stage.otvetit")}</button></footer>
   </section>`;
 
   const answerButtons = Array.from(context.root.querySelectorAll("[data-answer-id]"));

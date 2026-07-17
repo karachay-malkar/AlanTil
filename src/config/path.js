@@ -1,3 +1,4 @@
+import { msg } from "../shared/i18n/index.js?v=13.9.0";
 export const PATH_CONFIG = Object.freeze({
   dictionaryId: "alantil-kb-ru",
   review1DelayDays: 1,
@@ -10,9 +11,9 @@ export const PATH_CONFIG = Object.freeze({
   storyColumn: "story_type",
   storyOrder: ["ascent", "summit", "trails"],
   storyLabels: Object.freeze({
-    ascent: "Восхождение",
-    summit: "На вершине",
-    trails: "Тропы",
+    get ascent() { return msg("path.voshozhdenie"); },
+    get summit() { return msg("path.na_vershine"); },
+    get trails() { return msg("path.tropy"); },
   }),
   mainPathWeights: Object.freeze({
     easy: 50,

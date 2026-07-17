@@ -1,11 +1,12 @@
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
-import { learnState } from "./state.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { learnState } from "./state.js?v=13.9.0";
 
 export function renderResults(context, words, signal, { onDone } = {}) {
-  context.shell.setHeaderContent?.({ title: "Результат обучения" });
+  context.shell.setHeaderContent?.({ title: msg("learn.rezultat_obucheniya") });
   context.shell.setCounter("");
   const sessionRows = Object.values(learnState.studySession.wordStats || {}).filter((row) => Number(row?.show_count || 0) > 0);
   const studiedTotal = sessionRows.length;
@@ -19,21 +20,21 @@ export function renderResults(context, words, signal, { onDone } = {}) {
   const content = problemWords.length
     ? problemWords.map((word) => renderContentListRow({
         id: word.id,
-        leadingHtml: `<span class="learnResultCount" aria-label="Свайпов влево: ${word.fails}">×${word.fails}</span>`,
+        leadingHtml: `<span class="learnResultCount" aria-label="${msg("learn.svaypov_vlevo", { fails: word.fails })}">×${word.fails}</span>`,
         primary: word.word,
         secondary: word.trans,
         trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
       })).join("")
-    : `<div class="smallNote noteCenter"><div class="noteTitle">Аперим!</div><div class="successNoteLine">Не было незнакомых слов</div></div>`;
+    : `<div class="smallNote noteCenter"><div class="noteTitle">${msg("learn.aperim")}</div><div class="successNoteLine">${msg("learn.ne_bylo_neznakomyh_slov")}</div></div>`;
 
-  context.root.innerHTML = panel({ title: "Итог сессии", body: `
-    <div class="learnResultSummary" aria-label="Итоги обучения">
-      <div><strong>${studiedTotal}</strong><span>изучено</span></div>
-      <div><strong>${unknownRows.length}</strong><span>слов «не знаю»</span></div>
-      <div><strong>${leftSwipesTotal}</strong><span>свайпов влево</span></div>
+  context.root.innerHTML = panel({ title: msg("learn.itog_sessii"), body: `
+    <div class="learnResultSummary" aria-label="${msg("learn.itogi_obucheniya")}">
+      <div><strong>${studiedTotal}</strong><span>${msg("learn.izucheno")}</span></div>
+      <div><strong>${unknownRows.length}</strong><span>${msg("learn.slov_ne_znayu")}</span></div>
+      <div><strong>${leftSwipesTotal}</strong><span>${msg("learn.svaypov_vlevo_2")}</span></div>
     </div>
     <div id="analyticsList" class="contentList learnResultList">${content}</div>
-    ${typeof onDone === "function" ? '<div class="learnResultFooter"><button class="btn actionPrimary" type="button" data-learn-result-done>К этапу</button></div>' : ""}
+    ${typeof onDone === "function" ? `<div class="learnResultFooter"><button class="btn actionPrimary" type="button" data-learn-result-done>${msg("learn.k_etapu")}</button></div>` : ""}
   ` });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
     button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal });

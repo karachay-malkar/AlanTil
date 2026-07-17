@@ -1,10 +1,11 @@
+import { msg } from "../i18n/index.js?v=13.9.0";
 export function renderProfileNavigation(active = "profile") {
   const items = [
-    { id: "profile", label: "Профиль", route: "profile.home" },
-    { id: "statistics", label: "Статистика", route: "profile.statistics" },
-    { id: "settings", label: "Настройки", route: "settings.home" },
+    { id: "profile", label: msg("common.profil"), route: "profile.home" },
+    { id: "statistics", label: msg("common.statistika"), route: "profile.statistics" },
+    { id: "settings", label: msg("common.nastroyki"), route: "settings.home" },
   ];
-  return `<nav class="profilePrimaryNav" aria-label="Разделы профиля">
+  return `<nav class="profilePrimaryNav" aria-label="${msg("common.razdely_profilya")}">
     ${items.map((item) => `<button class="tabAction profilePrimaryTab ${active === item.id ? "active" : ""}" type="button" data-profile-navigation="${item.route}" ${active === item.id ? 'aria-current="page"' : ""}>[ ${item.label} ]</button>`).join("")}
   </nav>`;
 }

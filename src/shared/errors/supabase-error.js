@@ -1,3 +1,4 @@
+import { msg } from "../i18n/index.js?v=13.9.0";
 const EMAIL_PATTERN = /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g;
 const JWT_PATTERN = /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g;
 const LONG_TOKEN_PATTERN = /\b[A-Za-z0-9_-]{48,}\b/g;
@@ -62,7 +63,7 @@ export function normalizeSupabaseError(error, { operation = "profile" } = {}) {
   const missingProfileTable = code === "PGRST205"
     || /could not find the table[^\n]*profiles|relation[^\n]*profiles[^\n]*does not exist|schema cache[^\n]*profiles/i.test(message);
   if (missingProfileTable) {
-    return new SupabaseUserError("Профили пользователей пока недоступны. Попробуйте позже.", {
+    return new SupabaseUserError(msg("service.profili_polzovateley_poka_nedostupny_poprobuyte_pozzhe"), {
       kind: SUPABASE_ERROR_KINDS.PROFILE_SCHEMA_UNAVAILABLE,
       code,
       retryable: true,
@@ -74,7 +75,7 @@ export function normalizeSupabaseError(error, { operation = "profile" } = {}) {
   const missingNicknameFunction = code === "PGRST202"
     || /could not find the function[^\n]*is_nickname_available|function[^\n]*is_nickname_available[^\n]*does not exist|schema cache[^\n]*is_nickname_available/i.test(message);
   if (missingNicknameFunction || (normalizedOperation === "nickname_check" && /function[^\n]*not found/i.test(message))) {
-    return new SupabaseUserError("Проверка никнейма временно недоступна.", {
+    return new SupabaseUserError(msg("service.proverka_nikneyma_vremenno_nedostupna"), {
       kind: SUPABASE_ERROR_KINDS.NICKNAME_CHECK_UNAVAILABLE,
       code,
       retryable: true,
@@ -84,7 +85,7 @@ export function normalizeSupabaseError(error, { operation = "profile" } = {}) {
   }
 
   if (code === "23505" || /duplicate key|unique constraint/i.test(message)) {
-    return new SupabaseUserError("Такой никнейм уже используется.", {
+    return new SupabaseUserError(msg("service.takoy_nikneym_uzhe_ispolzuetsya"), {
       kind: SUPABASE_ERROR_KINDS.DUPLICATE_NICKNAME,
       code,
       retryable: false,
@@ -94,7 +95,7 @@ export function normalizeSupabaseError(error, { operation = "profile" } = {}) {
   }
 
   if (code === "42501" || /row-level security|permission denied|not authorized|jwt.*expired/i.test(message)) {
-    return new SupabaseUserError("Не удалось получить доступ к профилю. Войдите заново.", {
+    return new SupabaseUserError(msg("service.ne_udalos_poluchit_dostup_k_profilyu_voydite"), {
       kind: SUPABASE_ERROR_KINDS.ACCESS_DENIED,
       code,
       retryable: true,
@@ -104,7 +105,7 @@ export function normalizeSupabaseError(error, { operation = "profile" } = {}) {
   }
 
   if (/network|failed to fetch|fetch failed|load failed|connection|offline|timeout/i.test(message)) {
-    return new SupabaseUserError("Не удалось связаться с сервисом профилей.", {
+    return new SupabaseUserError(msg("service.ne_udalos_svyazatsya_s_servisom_profiley"), {
       kind: SUPABASE_ERROR_KINDS.NETWORK,
       code,
       retryable: true,
@@ -113,7 +114,7 @@ export function normalizeSupabaseError(error, { operation = "profile" } = {}) {
     });
   }
 
-  return new SupabaseUserError("Не удалось выполнить операцию. Повторите позже.", {
+  return new SupabaseUserError(msg("service.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe"), {
     kind: SUPABASE_ERROR_KINDS.UNKNOWN,
     code,
     retryable: true,

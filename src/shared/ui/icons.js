@@ -14,7 +14,7 @@ const PATHS = Object.freeze({
   waypoint: '<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 12h6M15 12h6M12 3v6M12 15v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
   circleDot: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2" fill="currentColor"/>',
   back: '<path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>',
-  path: '<path d="M3 20 9.5 9l3 5L16 8l5 12H3Zm7.3-7.2L7.2 18h6.2l-3.1-5.2Zm6-1.1L13.8.1 18h4.9l-2.4-6.3Z"/>',
+  path: '<path d="M3 20 9.5 9l3 5L16 8l5 12H3Zm7.3-7.2L7.2 18h6.2l-3.1-5.2Zm6-1.1L13.9.0 18h4.9l-2.4-6.3Z"/>',
   practice: '<path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/>',
   profile: '<path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z"/>',
   learn: '<path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3V3Zm3 14h11V6a1 1 0 0 0-1-1H6v12.17c.31-.11.65-.17 1-.17Zm0 2a1 1 0 0 0 0 2h11v-2H7Z"/>',

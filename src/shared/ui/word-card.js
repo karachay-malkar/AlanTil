@@ -1,6 +1,7 @@
-import { wordFavorites } from "../state/word-favorites.js?v=13.8.1";
-import { openInfoModal } from "./info-modal.js?v=13.8.1";
-import { escapeHtml, renderCombinedGroups, renderStarButton } from "./word-renderers.js?v=13.8.1";
+import { msg } from "../i18n/index.js?v=13.9.0";
+import { wordFavorites } from "../state/word-favorites.js?v=13.9.0";
+import { openInfoModal } from "./info-modal.js?v=13.9.0";
+import { escapeHtml, renderCombinedGroups, renderStarButton } from "./word-renderers.js?v=13.9.0";
 
 export function renderWordCard(word) {
   const groupsHost = document.createElement("div");
@@ -22,7 +23,7 @@ export function openWordCard(context, word) {
   const modal = openInfoModal(context.shell.modalRoot, {
     title: "",
     content: renderWordCard(word),
-    closeText: "Закрыть",
+    closeText: msg("common.zakryt"),
   });
 
   const star = modal?.querySelector("[data-word-card-star='1']");

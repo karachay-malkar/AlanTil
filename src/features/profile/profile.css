@@ -11,7 +11,7 @@
 [data-feature="profile"] .profileScroll{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 2px 28px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 46px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 46px),transparent 100%)}
 [data-feature="profile"] .profileStatusContent{width:min(100%,520px);margin:0 auto;display:grid;justify-items:center}
 [data-feature="profile"] .profileAvatarFrame{position:relative;width:min(72vw,286px);aspect-ratio:4/5;margin:6px auto 0;display:grid;place-items:end center;overflow:visible;border:1px solid var(--line-strong);border-radius:2px;background:linear-gradient(155deg,color-mix(in srgb,var(--surface-0) 35%,transparent),color-mix(in srgb,var(--accent) 9%,transparent))}
-[data-feature="profile"] .profileAvatarFrame::before{content:"STATUS";position:absolute;left:9px;top:8px;color:var(--text-3);font:750 8px/1 var(--font-terminal);letter-spacing:.14em}
+[data-feature="profile"] .profileAvatarFrame::before{content:attr(data-status-label);position:absolute;left:9px;top:8px;color:var(--text-3);font:750 8px/1 var(--font-terminal);letter-spacing:.14em}
 [data-feature="profile"] .profileAvatarFigure{width:82%;height:90%;display:flex;align-items:flex-end;justify-content:center;color:var(--text-2);overflow:hidden}
 [data-feature="profile"] .profileAvatarSvg{width:100%;height:100%;fill:currentColor}
 [data-feature="profile"] .profileAvatarDetail{fill:var(--app-bg-deep);stroke:var(--text-3);stroke-width:2}

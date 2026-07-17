@@ -1,3 +1,4 @@
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import {
   getCurrentAuthState,
   getUserProvider,
@@ -6,20 +7,20 @@ import {
   signInWithGoogle,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=13.8.1";
+} from "../../shared/auth/auth-service.js?v=13.9.0";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=13.8.1";
+} from "../../shared/errors/supabase-error.js?v=13.9.0";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
   setAvatarGender,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
-import { bindLogin, renderLogin } from "./login.js?v=13.8.1";
+} from "../../shared/profile/profile-service.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { bindLogin, renderLogin } from "./login.js?v=13.9.0";
 import {
   bindAvatarGenderSelection,
   bindProfile,
@@ -27,7 +28,7 @@ import {
   renderAvatarGenderSelection,
   renderProfile,
   renderProfileCreation,
-} from "./profile.js?v=13.8.1";
+} from "./profile.js?v=13.9.0";
 
 let controller = null;
 let unsubscribeAuth = null;
@@ -104,12 +105,12 @@ function scheduleAccountRender(context) {
 
 function renderLoading(context) {
   prepareAccountRender(context);
-  context.shell.setHeaderContent?.({ title: "Аккаунт" });
+  context.shell.setHeaderContent?.({ title: msg("account.akkaunt") });
   context.root.innerHTML = panel({
-    title: "Аккаунт",
+    title: msg("account.akkaunt"),
     classes: "accountPanel",
     viewClasses: "accountView",
-    body: `<div class="loadingState">Проверяем аккаунт…</div>`,
+    body: `<div class="loadingState">${msg("account.proveryaem_akkaunt")}</div>`,
   });
   resetAccountViewport(context);
 }
@@ -130,7 +131,7 @@ function updateNicknameState({ inputElement, messageElement, submitButton }, sta
 function setProfileFailure(error) {
   clearNicknameTimer();
   profileFailure = error;
-  actionError = error?.message || "Не удалось выполнить операцию. Повторите позже.";
+  actionError = error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe");
   nicknameStatus = { state: "", message: "", available: false };
 }
 
@@ -170,7 +171,7 @@ function renderProfileUnavailable(context, authState) {
   prepareAccountRender(context);
   renderProfileCreation(context, authState.user, {
     nickname: nicknameValue,
-    error: actionError || profileFailure?.message || "Не удалось выполнить операцию. Повторите позже.",
+    error: actionError || profileFailure?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe"),
     unavailable: true,
   });
   bindProfileCreation(context, controller.signal, {
@@ -215,7 +216,7 @@ async function renderAccount(context) {
         emailExpanded = true;
         try {
           await signInWithEmail(email);
-          loginMessage = "Ссылка для входа отправлена. Откройте письмо на этом устройстве.";
+          loginMessage = msg("account.ssylka_dlya_vhoda_otpravlena_otkroyte_pismo_na");
         } catch (error) {
           actionError = error.message;
         }
@@ -268,7 +269,7 @@ async function renderAccount(context) {
           return;
         }
 
-        nicknameStatus = { state: "checking", message: "Проверяем никнейм…", available: false };
+        nicknameStatus = { state: "checking", message: msg("account.proveryaem_nikneym"), available: false };
         updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, false);
         const checkId = nicknameCheckRequest;
         nicknameCheckTimer = window.setTimeout(async () => {
@@ -332,9 +333,9 @@ async function renderAccount(context) {
     renderAvatarGenderSelection(context, { error: actionError || authState.error || "" });
     bindAvatarGenderSelection(context, controller.signal, {
       onSelect: async (gender) => {
-        const label = gender === "female" ? "женский" : "мужской";
+        const label = gender === "female" ? msg("account.zhenskiy") : msg("account.muzhskoy");
         const confirmed = await context.modal.confirm({
-          message: `Выбрать ${label} образ?<br>После сохранения изменить выбор будет нельзя.`,
+          message: msg("account.vybrat_obraz_posle_sohraneniya_izmenit_vybor_budet", { label }).replace("\n", "<br>"),
         });
         if (!confirmed) return;
         actionError = "";
@@ -367,7 +368,7 @@ async function renderAccount(context) {
 }
 
 export async function mount(context) {
-  context.ensureStyle("/src/features/account/account.css?v=13.8.1", "account-feature-style");
+  context.ensureStyle("/src/features/account/account.css?v=13.9.0", "account-feature-style");
   controller = new AbortController();
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";

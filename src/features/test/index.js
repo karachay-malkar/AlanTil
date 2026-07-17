@@ -1,16 +1,17 @@
-import { getWords } from "../../shared/data/word-repository.js?v=13.8.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { finalizeTestSession } from "./engine.js?v=13.8.1";
-import { clearTestSession, testState } from "./state.js?v=13.8.1";
-import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { finalizeTestSession } from "./engine.js?v=13.9.0";
+import { clearTestSession, testState } from "./state.js?v=13.9.0";
+import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js?v=13.9.0";
 
 let controller = null;
 export async function mount(context, params = {}) {
   context.ensureStyle("/src/features/test/test.css", "test-feature-style");
   controller = new AbortController(); wordFavorites.reload();
   const words = await getWords(); const screen = params.screen || "menu"; testState.currentScreen = screen;
-  const titles = { menu: "Проверь знания", session: "Проверь знания", results: "Результаты теста" };
-  context.shell.setHeaderContent?.({ title: titles[screen] || "Проверь знания", logo: true, brand: false });
+  const titles = { menu: msg("test.prover_znaniya"), session: msg("test.prover_znaniya"), results: msg("test.rezultaty_testa") };
+  context.shell.setHeaderContent?.({ title: titles[screen] || msg("test.prover_znaniya"), logo: true, brand: false });
   if (screen === "menu") renderTestMenu(context, words, controller.signal);
   else if (screen === "session") renderTestSession(context, controller.signal);
   else if (screen === "results") renderTestResults(context, controller.signal);

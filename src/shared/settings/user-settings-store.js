@@ -1,9 +1,9 @@
-import { enqueueProgress } from "../progress/progress-queue.js?v=13.8.1";
+import { enqueueProgress } from "../progress/progress-queue.js?v=13.9.0";
 import {
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js?v=13.8.1";
+} from "../progress/storage-scope.js?v=13.9.0";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 export const DEFAULT_USER_SETTINGS = Object.freeze({
@@ -22,6 +22,12 @@ function normalizeLanguageCode(value, fallback = "ru") {
   return /^[a-z]{2,8}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : fallback;
 }
 
+function normalizeInterfaceLanguageCode(value) {
+  const source = normalizeLanguageCode(value, DEFAULT_USER_SETTINGS.interface_language_code).split("-")[0];
+  const normalized = source === "tu" ? "tr" : source;
+  return ["ru", "en", "tr"].includes(normalized) ? normalized : DEFAULT_USER_SETTINGS.interface_language_code;
+}
+
 function normalizeStationSize(value) {
   return Number(value) === 20 ? 20 : 40;
 }
@@ -36,7 +42,7 @@ function normalizeAlanDialectCode(value) {
 
 function normalizeSettings(value = {}) {
   return {
-    interface_language_code: normalizeLanguageCode(value.interface_language_code, DEFAULT_USER_SETTINGS.interface_language_code),
+    interface_language_code: normalizeInterfaceLanguageCode(value.interface_language_code),
     translation_language_code: normalizeLanguageCode(value.translation_language_code, DEFAULT_USER_SETTINGS.translation_language_code),
     alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
     alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),

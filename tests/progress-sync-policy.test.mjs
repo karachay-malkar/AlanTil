@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   nextUnattemptedProgressEntry,
   shouldDiscardProgressError,
-} from "../src/shared/progress/progress-sync-policy.js?v=13.8.1";
+} from "../src/shared/progress/progress-sync-policy.js?v=13.9.0";
 
 test("a failed entry does not hide later settings from the same queue pass", () => {
   const queue = [

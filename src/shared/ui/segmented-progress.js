@@ -1,4 +1,4 @@
-import { escapeHtml } from "./html.js?v=13.8.1";
+import { escapeHtml } from "./html.js?v=13.9.0";
 
 export function renderSegmentedProgress({ value = 0, segments = 10, label = "", className = "" } = {}) {
   const percent = Math.max(0, Math.min(100, Number(value) || 0));

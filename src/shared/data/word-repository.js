@@ -1,14 +1,15 @@
+import { msg } from "../i18n/index.js?v=13.9.0";
 import {
   DICTIONARY_CACHE_KEY,
   DICTIONARY_CONTENT_VIEW,
   DICTIONARY_KEY,
   DICTIONARY_METADATA_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
-} from "../../config/words.js?v=13.8.1";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.8.1";
-import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.8.1";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.8.1";
-import { readJson, writeJson } from "../state/storage.js?v=13.8.1";
+} from "../../config/words.js?v=13.9.0";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=13.9.0";
+import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.9.0";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.9.0";
+import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
 const PAGE_SIZE = 1000;
 let words = null;
@@ -26,16 +27,16 @@ function normalizeCollection(collection, source = "cache") {
 }
 
 function validateDictionary(collection) {
-  if (!collection.length) throw new Error("Сервер вернул пустой словарь.");
+  if (!collection.length) throw new Error(msg("service.server_vernul_pustoy_slovar"));
   const identifiers = new Set();
   for (const word of collection) {
     if (!word.id || !word.story_id || !word.dictionary_id || !word.section_id) {
-      throw new Error("Структура словаря повреждена: отсутствуют обязательные разделы.");
+      throw new Error(msg("service.struktura_slovarya_povrezhdena_otsutstvuyut_obyazatelnye_r"));
     }
     if ((!word.wordAlanCyrillic && !word.wordAlanTurkic) || !word.translationRu) {
-      throw new Error(`Структура словаря повреждена: отсутствует текст слова ${word.id}.`);
+      throw new Error(msg("service.struktura_slovarya_povrezhdena_otsutstvuet_tekst_slova", { id: word.id }));
     }
-    if (identifiers.has(word.id)) throw new Error(`В словаре повторяется word_id: ${word.id}`);
+    if (identifiers.has(word.id)) throw new Error(msg("service.v_slovare_povtoryaetsya_word_id", { id: word.id }));
     identifiers.add(word.id);
   }
   return collection;
@@ -87,7 +88,7 @@ async function fetchLatestVersion(client) {
     .single();
   if (error) throw error;
   const version = String(data?.current_version || "").trim();
-  if (!version) throw new Error("Версия словаря на сервере не указана.");
+  if (!version) throw new Error(msg("service.versiya_slovarya_na_servere_ne_ukazana"));
   return version;
 }
 
@@ -96,7 +97,7 @@ async function downloadDictionary() {
   const version = await fetchLatestVersion(client);
   const downloadedWords = validateDictionary(normalizeCollection(await fetchContentWords(client), "supabase"));
   if (!writeJson(DICTIONARY_CACHE_KEY, { version, words: downloadedWords })) {
-    throw new Error("Не удалось сохранить словарь на устройстве.");
+    throw new Error(msg("service.ne_udalos_sohranit_slovar_na_ustroystve"));
   }
   words = downloadedWords;
   installedVersion = version;

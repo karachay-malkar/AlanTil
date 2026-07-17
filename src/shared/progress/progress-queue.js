@@ -2,7 +2,7 @@ import {
   getStorageScope,
   readScopedJson,
   writeScopedJson,
-} from "./storage-scope.js?v=13.8.1";
+} from "./storage-scope.js?v=13.9.0";
 
 export const PROGRESS_QUEUE_KEY = "alantil_progress_queue_v1";
 const listeners = new Set();

@@ -1,56 +1,57 @@
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import {
   getPrivacyState,
   subscribePrivacyState,
   updateAnalyticsPreference,
-} from "../../shared/privacy/privacy-controller.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+} from "../../shared/privacy/privacy-controller.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 
 export function renderPrivacy(context, signal, params = {}) {
-  context.shell.setHeaderContent?.({ title: "Конфиденциальность" });
+  context.shell.setHeaderContent?.({ title: msg("privacy.konfidentsialnost") });
   const initialState = getPrivacyState();
   context.root.innerHTML = panel({
-    title: "Политика конфиденциальности",
+    title: msg("privacy.politika_konfidentsialnosti"),
     body: `
       <article class="settingsDocument">
-        <p><strong>AlanTil / «Алан тил»</strong> — приложение для изучения карачаево-балкарского языка. По вопросам конфиденциальности можно написать на <a href="mailto:alantil0709@gmail.com">alantil0709@gmail.com</a>.</p>
+        <p><strong>${msg("privacy.alantil_alan_til")}</strong> ${msg("privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_")} <a href="mailto:alantil0709@gmail.com">alantil0709@gmail.com</a>.</p>
 
-        <h2>Какие данные сохраняются на устройстве</h2>
-        <p>Приложение может локально сохранять в браузере избранные и скрытые слова, избранные песни, прогресс сетов, настройки, незавершённые занятия, очередь синхронизации, кэш словаря и песен, служебное состояние и сессию авторизации Supabase. Эти данные нужны для работы без входа и восстановления состояния после перезагрузки.</p>
-        <p>Для выбора применимого режима статистики приложение может определить код страны подключения. В приложении он сохраняется только на время текущего сеанса.</p>
+        <h2>${msg("privacy.kakie_dannye_sohranyayutsya_na_ustroystve")}</h2>
+        <p>${msg("privacy.prilozhenie_mozhet_lokalno_sohranyat_v_brauzere_izbrannye")}</p>
+        <p>${msg("privacy.dlya_vybora_primenimogo_rezhima_statistiki_prilozhenie_moz")}</p>
 
-        <h2>Аккаунт и авторизация</h2>
-        <p>Регистрация необязательна. При входе через Google пароль вводится только на стороне Google и не передаётся AlanTil. При входе по электронной почте используется одноразовая ссылка без пароля.</p>
-        <p>Supabase Auth хранит технический идентификатор аккаунта, электронную почту, способ входа, дату создания и служебные данные авторизации. Имя и фотография из Google не используются в интерфейсе и не копируются в профиль AlanTil. В таблице профиля хранится только идентификатор пользователя и выбранный уникальный никнейм. Электронная почта не дублируется в открытом профиле.</p>
-        <p>Электронная почта отображается только самому владельцу на экране его аккаунта. Другие пользователи не могут получить её через интерфейс или публичные запросы приложения.</p>
+        <h2>${msg("privacy.akkaunt_i_avtorizatsiya")}</h2>
+        <p>${msg("privacy.registratsiya_neobyazatelna_pri_vhode_cherez_google_parol")}</p>
+        <p>${msg("privacy.supabase_auth_hranit_tehnicheskiy_identifikator_akkaunta_e")}</p>
+        <p>${msg("privacy.elektronnaya_pochta_otobrazhaetsya_tolko_samomu_vladeltsu_")}</p>
 
-        <h2>Облачный прогресс</h2>
-        <p>Для авторизованного пользователя Supabase может хранить избранные слова и песни, скрытые слова, прогресс сетов, выбранные языки, общие данные завершённых и прерванных занятий, результаты слов в режимах обучения и теста, ошибки сопоставления и длительность занятий.</p>
-        <p>В облачный прогресс передаются технические ID слов, словарей, разделов и сетов, но не тексты слов, переводов, песен и поисковых запросов.</p>
+        <h2>${msg("privacy.oblachnyy_progress")}</h2>
+        <p>${msg("privacy.dlya_avtorizovannogo_polzovatelya_supabase_mozhet_hranit_i")}</p>
+        <p>${msg("privacy.v_oblachnyy_progress_peredayutsya_tehnicheskie_id_slov")}</p>
 
-        <h2>Какие данные передаются в Google Analytics</h2>
-        <p>При включённой статистике могут передаваться просмотры разделов, тип устройства и браузера, приблизительная страна, события использования приложения, длительность занятий, факт завершения режимов, а также технические идентификаторы словарей, разделов, сетов, песен и слов.</p>
+        <h2>${msg("privacy.kakie_dannye_peredayutsya_v_google_analytics")}</h2>
+        <p>${msg("privacy.pri_vklyuchennoy_statistike_mogut_peredavatsya_prosmotry_r")}</p>
 
-        <h2>Какие данные не передаются в Google Analytics</h2>
-        <p>Приложение не передаёт в Google Analytics никнейм, email пользователя, номер телефона, Telegram ID, Telegram username, точную геолокацию, сообщения и свободный текст поискового запроса. Текст слова и его перевод также не используются как аналитические параметры.</p>
+        <h2>${msg("privacy.kakie_dannye_ne_peredayutsya_v_google_analytics")}</h2>
+        <p>${msg("privacy.prilozhenie_ne_peredaet_v_google_analytics_nikneym")}</p>
 
-        <h2>Зачем используется аналитика</h2>
-        <p>Аналитика помогает понимать, как применяются разделы приложения, находить проблемы интерфейса, развивать словарь и улучшать режимы обучения, тестирования, сопоставления и работы с песнями.</p>
+        <h2>${msg("privacy.zachem_ispolzuetsya_analitika")}</h2>
+        <p>${msg("privacy.analitika_pomogaet_ponimat_kak_primenyayutsya_razdely_pril")}</p>
 
-        <h2>Удаление данных</h2>
-        <p>Локальные данные можно удалить через очистку данных сайта в настройках браузера. Для удаления зарегистрированного аккаунта и связанных с ним данных можно написать на адрес, указанный в начале политики. Отдельная кнопка удаления аккаунта будет добавлена позднее.</p>
+        <h2>${msg("privacy.udalenie_dannyh")}</h2>
+        <p>${msg("privacy.lokalnye_dannye_mozhno_udalit_cherez_ochistku_dannyh")}</p>
 
         <section id="analytics-settings" class="analyticsSettingsSection" aria-labelledby="analytics-settings-title">
-          <h2 id="analytics-settings-title">Статистика использования</h2>
-          <p>Статистика использования помогает нам улучшать приложение. Настройка не влияет на доступность словарей, песен и режимов обучения.</p>
+          <h2 id="analytics-settings-title">${msg("privacy.statistika_ispolzovaniya")}</h2>
+          <p>${msg("privacy.statistika_ispolzovaniya_pomogaet_nam_uluchshat_prilozheni")}</p>
           <label class="analyticsPreferenceRow">
             <input id="analyticsPreferenceCheckbox" class="analyticsPreferenceCheckbox" type="checkbox" ${initialState.enabled ? "checked" : ""} />
-            <span>Разрешить статистику использования</span>
+            <span>${msg("privacy.razreshit_statistiku_ispolzovaniya")}</span>
           </label>
-          <button id="saveAnalyticsPreference" class="btn actionPrimary analyticsPreferenceSave" type="button">Сохранить настройки</button>
-          <div id="analyticsPreferenceMessage" class="analyticsPreferenceMessage hidden" role="status">Настройки статистики сохранены</div>
+          <button id="saveAnalyticsPreference" class="btn actionPrimary analyticsPreferenceSave" type="button">${msg("privacy.sohranit_nastroyki")}</button>
+          <div id="analyticsPreferenceMessage" class="analyticsPreferenceMessage hidden" role="status">${msg("privacy.nastroyki_statistiki_sohraneny")}</div>
         </section>
 
-        <p class="settingsDocumentDate">Редакция: июль 2026 года.</p>
+        <p class="settingsDocumentDate">${msg("privacy.redaktsiya_iyul_2026_goda")}</p>
       </article>`,
   });
 

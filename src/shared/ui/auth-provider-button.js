@@ -1,6 +1,9 @@
-import { escapeHtml } from "./html.js?v=13.8.1";
+import { msg } from "../i18n/index.js?v=13.9.0";
+import { escapeHtml } from "./html.js?v=13.9.0";
 
-const LOADING_LABEL = "Выполняется вход…";
+function loadingLabel() {
+  return msg("common.vypolnyaetsya_vhod");
+}
 
 function normalizeProvider(value) {
   return String(value || "").trim().toLowerCase();
@@ -14,8 +17,8 @@ export function renderAuthProviderButton({
   loading = false,
 } = {}) {
   const normalizedProvider = normalizeProvider(provider);
-  const safeLabel = String(label || "Войти").trim() || "Войти";
-  const buttonLabel = loading ? LOADING_LABEL : safeLabel;
+  const safeLabel = String(label || msg("common.voyti")).trim() || msg("common.voyti");
+  const buttonLabel = loading ? loadingLabel() : safeLabel;
   const classes = `btn actionPrimary authProviderButton${loading ? " isLoading" : ""}`;
   const isDisabled = Boolean(disabled || loading);
 
@@ -39,11 +42,11 @@ export function setAuthProviderButtonState(button, {
   label,
 } = {}) {
   if (!button) return;
-  const storedLabel = String(label || button.dataset.authProviderLabel || "Войти").trim() || "Войти";
+  const storedLabel = String(label || button.dataset.authProviderLabel || msg("common.voyti")).trim() || msg("common.voyti");
   button.dataset.authProviderLabel = storedLabel;
   button.classList.toggle("isLoading", Boolean(loading));
   button.disabled = Boolean(disabled || loading);
   button.setAttribute("aria-busy", loading ? "true" : "false");
   const labelElement = button.querySelector(".authProviderLabel");
-  if (labelElement) labelElement.textContent = loading ? LOADING_LABEL : storedLabel;
+  if (labelElement) labelElement.textContent = loading ? loadingLabel() : storedLabel;
 }

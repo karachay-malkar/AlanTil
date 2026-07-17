@@ -1,7 +1,8 @@
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
-import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=13.9.0";
 
 function normalizeContext(value, fallback = "") {
   return String(value ?? fallback).trim();
@@ -24,7 +25,7 @@ export function renderSetPreparation(context, {
   signal,
   canStudy = true,
   canTest = false,
-  testLabel = "Пройти тест",
+  testLabel = msg("learn.proyti_test"),
   onStart,
   onTest,
   favoritesOnly = false,
@@ -44,8 +45,8 @@ export function renderSetPreparation(context, {
     <section class="view screen setPreparationView">
       <div class="setPreparation">
         <div class="setPreparationToolbar">
-          <div class="setSelectionTools" aria-label="Управление выбором слов">
-            <button class="textAction" type="button" data-select-all>Показать все</button><span aria-hidden="true">·</span><button class="textAction" type="button" data-hide-all>Скрыть все</button>
+          <div class="setSelectionTools" aria-label="${msg("learn.upravlenie_vyborom_slov")}">
+            <button class="textAction" type="button" data-select-all>${msg("learn.pokazat_vse")}</button><span aria-hidden="true">·</span><button class="textAction" type="button" data-hide-all>${msg("learn.skryt_vse")}</button>
           </div>
           <div id="setSelectionCount" class="setSelectionCount" aria-live="polite"></div>
         </div>
@@ -53,11 +54,11 @@ export function renderSetPreparation(context, {
         <div id="setPreparationWords" class="contentList setPreparationWords"></div>
 
         <footer class="setPreparationFooter">
-          <div class="segmentControl directionChoice" role="radiogroup" aria-label="Направление обучения">
-            <button class="segmentOption directionChoiceButton" type="button" role="radio" data-study-mode="kb">АЛАН → РУС</button>
-            <button class="segmentOption directionChoiceButton" type="button" role="radio" data-study-mode="ru">РУС → АЛАН</button>
+          <div class="segmentControl directionChoice" role="radiogroup" aria-label="${msg("learn.napravlenie_obucheniya")}">
+            <button class="segmentOption directionChoiceButton" type="button" role="radio" data-study-mode="kb">${msg("learn.alan_rus")}</button>
+            <button class="segmentOption directionChoiceButton" type="button" role="radio" data-study-mode="ru">${msg("learn.rus_alan")}</button>
           </div>
-          <button class="btn actionPrimary setStudyButton" type="button" data-study-start>Начать изучение</button>
+          <button class="btn actionPrimary setStudyButton" type="button" data-study-start>${msg("learn.nachat_izuchenie")}</button>
           ${canTest ? `<button class="btn actionText setTestButton" type="button" data-set-test>${escapeHtml(testLabel)}</button>` : ""}
         </footer>
       </div>
@@ -107,7 +108,7 @@ export function renderSetPreparation(context, {
     list.innerHTML = visibleWords().map((word) => renderContentListRow({
       id: word.id,
       rowAttributes: `data-word-row="${escapeHtml(word.id)}"`,
-      leadingHtml: `<label class="bracketCheckbox"><input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="Добавить слово в обучение" /><span class="bracketCheckboxMark" aria-hidden="true"></span></label>`,
+      leadingHtml: `<label class="bracketCheckbox"><input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="${msg("learn.dobavit_slovo_v_obuchenie")}" /><span class="bracketCheckboxMark" aria-hidden="true"></span></label>`,
       primary: word.word,
       secondary: word.trans,
       trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),

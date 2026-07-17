@@ -1,16 +1,17 @@
-import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.8.1";
-import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.8.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js?v=13.8.1";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
-import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.8.1";
-import { testState } from "./state.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js?v=13.9.0";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.9.0";
+import { testState } from "./state.js?v=13.9.0";
 
 function dictionaryId(word) { return String(word.dictionary_id || word.catalog_id || word.dict || "").trim(); }
-function dictionaryName(word) { return String(word.dictionary_name || word.dict || dictionaryId(word) || "Словарь").trim(); }
+function dictionaryName(word) { return String(word.dictionary_name || word.dict || dictionaryId(word) || msg("test.slovar")).trim(); }
 function sectionId(word) { return String(word.section_id || word.group_id || word.section || "").trim(); }
-function sectionName(word) { return String(word.section_name || word.section || sectionId(word) || "Без раздела").trim(); }
+function sectionName(word) { return String(word.section_name || word.section || sectionId(word) || msg("test.bez_razdela")).trim(); }
 function scopeKey(dict, section) { return `${dict}||${section || ""}`; }
 function enabledWords(words) { return words.filter(isWordEnabledInTestModes); }
 
@@ -42,22 +43,22 @@ export function renderTestMenu(context, words, signal) {
 
   context.root.innerHTML = `<section class="view screen modeView testMenuView">
     <div class="modeScroll">
-      <div class="modeLead"><span id="globalTestInfo">—</span><small>Выберите словари и разделы</small></div>
-      <div id="testScopeList" class="testScopeList">${scopeHtml || `<div class="hintText">Словари не найдены.</div>`}</div>
+      <div class="modeLead"><span id="globalTestInfo">—</span><small>${msg("test.vyberite_slovari_i_razdely")}</small></div>
+      <div id="testScopeList" class="testScopeList">${scopeHtml || `<div class="hintText">${msg("test.slovari_ne_naydeny")}</div>`}</div>
       <section class="modeOptionSection">
-        <div class="modeOptionLabel">Количество слов</div>
+        <div class="modeOptionLabel">${msg("test.kolichestvo_slov")}</div>
         <div class="segmentControl testLimitRadios">${[20, 40, 80].map((limit) => `<label class="segmentOption radioOpt"><input type="radio" name="testLimit" value="${limit}" ${testState.limit === limit ? "checked" : ""} /><span>${limit}</span></label>`).join("")}</div>
       </section>
     </div>
     <footer class="modeLaunchBar modeMenuLaunch">
       <div class="modeDirectionControl">
-        <span>Направление</span>
-        <div class="segmentControl modeDirectionToggle" role="radiogroup" aria-label="Направление теста">
-          <button class="segmentOption" type="button" role="radio" data-test-mode="kb">АЛАН → РУС</button>
-          <button class="segmentOption" type="button" role="radio" data-test-mode="ru">РУС → АЛАН</button>
+        <span>${msg("test.napravlenie")}</span>
+        <div class="segmentControl modeDirectionToggle" role="radiogroup" aria-label="${msg("test.napravlenie_testa")}">
+          <button class="segmentOption" type="button" role="radio" data-test-mode="kb">${msg("test.alan_rus")}</button>
+          <button class="segmentOption" type="button" role="radio" data-test-mode="ru">${msg("test.rus_alan")}</button>
         </div>
       </div>
-      <button id="btnGlobalTestStart" class="btn actionPrimary" type="button">Начать тест</button>
+      <button id="btnGlobalTestStart" class="btn actionPrimary" type="button">${msg("test.nachat_test")}</button>
     </footer>
   </section>`;
 
@@ -79,7 +80,7 @@ export function renderTestMenu(context, words, signal) {
     return available.filter((word) => keys.has(scopeKey(dictionaryId(word), sectionId(word))));
   }
   function selectedLimit() { return Number(context.root.querySelector('input[name="testLimit"]:checked')?.value || 40); }
-  function updateInfo() { const pool = selectedPool(); info.textContent = `Выбрано ${pool.length} · тест ${Math.min(selectedLimit(), pool.length)}`; }
+  function updateInfo() { const pool = selectedPool(); info.textContent = msg("test.vybrano_test", { pool: pool.length, limit: Math.min(selectedLimit(), pool.length) }); }
   function updateMode() {
     context.root.querySelectorAll("[data-test-mode]").forEach((button) => {
       const active = button.dataset.testMode === selectedMode;
@@ -99,7 +100,7 @@ export function renderTestMenu(context, words, signal) {
 
   async function launch(mode) {
     const pool = selectedPool();
-    if (!pool.length) { context.telegram?.showAlert?.("Нет слов для выбранного режима.") || window.alert("Нет слов для выбранного режима."); return; }
+    if (!pool.length) { context.telegram?.showAlert?.(msg("test.net_slov_dlya_vybrannogo_rezhima")) || window.alert(msg("test.net_slov_dlya_vybrannogo_rezhima")); return; }
     testState.limit = selectedLimit();
     const selected = sectionCheckboxes.filter((checkbox) => checkbox.checked);
     testState.selectedScopeKeys = new Set(selected.map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
@@ -127,13 +128,13 @@ export function renderTestResults(context, signal) {
     id: result.id,
     leadingHtml: `<span class="contentListStatus ${result.isCorrect ? "ok" : "bad"}">${result.isCorrect ? STATUS_OK_ICON_SVG : STATUS_BAD_ICON_SVG}</span>`,
     primary: result.questionText || result.word,
-    secondaryHtml: `<span class="contentListDetail"><strong>Правильно:</strong> ${escapeHtml(result.correctAnswer)}</span><span class="contentListDetail"><strong>Ответ:</strong> ${escapeHtml(result.userAnswer || "—")}</span>`,
+    secondaryHtml: `<span class="contentListDetail"><strong>${msg("test.pravilno")}</strong> ${escapeHtml(result.correctAnswer)}</span><span class="contentListDetail"><strong>${msg("test.otvet")}</strong> ${escapeHtml(result.userAnswer || "—")}</span>`,
     trailingHtml: renderStarButton(result.id, `data-word-id="${escapeHtml(result.id)}"`),
   })).join("");
   context.root.innerHTML = `<section class="view screen modeView testResultsView">
-    <div class="modeResultSummary"><span class="modeResultMark">${level ? "⌃".repeat(level) : "—"}</span><strong>${percentage}%</strong><span>${percentage >= 80 ? "Тест сдан" : "Тест не сдан"} · ${testState.correct}/${testState.items.length}</span></div>
-    <div class="contentList modeResultList">${rows || `<div class="hintText">Нет результатов.</div>`}</div>
-    <footer class="modeLaunchBar"><button class="btn actionPrimary" id="btnTestAgain2" type="button">Пройти ещё раз</button></footer>
+    <div class="modeResultSummary"><span class="modeResultMark">${level ? "⌃".repeat(level) : "—"}</span><strong>${percentage}%</strong><span>${percentage >= 80 ? msg("test.test_sdan") : msg("test.test_ne_sdan")} · ${testState.correct}/${testState.items.length}</span></div>
+    <div class="contentList modeResultList">${rows || `<div class="hintText">${msg("test.net_rezultatov")}</div>`}</div>
+    <footer class="modeLaunchBar"><button class="btn actionPrimary" id="btnTestAgain2" type="button">${msg("test.proyti_esche_raz")}</button></footer>
   </section>`;
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal }));
   context.root.querySelector("#btnTestAgain2")?.addEventListener("click", async () => { startTest(testState.session.wordsPool, testState.mode, testState.limit, testState.session.metadata); await context.router.replace("test.session", {}, { force: true }); }, { signal });
@@ -148,7 +149,7 @@ export function renderTestSession(context, signal) {
     context.root.innerHTML = `<section class="view screen modeSessionView">
       <div class="modeQuestion">${escapeHtml(question)}</div>
       <div id="testOptions" class="modeOptions">${pickOptions(item).map((option) => `<button class="choiceControl optionBtn" type="button" data-option-id="${escapeHtml(option.id)}" data-option-text="${escapeHtml(option.text)}">${escapeHtml(option.text)}</button>`).join("")}</div>
-      <footer class="modeLaunchBar"><button id="btnTestNext" class="btn actionPrimary" type="button" disabled>Ответить</button></footer>
+      <footer class="modeLaunchBar"><button id="btnTestNext" class="btn actionPrimary" type="button" disabled>${msg("test.otvetit")}</button></footer>
     </section>`;
     const next = context.root.querySelector("#btnTestNext");
     const options = Array.from(context.root.querySelectorAll(".optionBtn"));

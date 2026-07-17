@@ -1,18 +1,19 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
-import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js?v=13.8.1";
-import { songFavorites } from "../../shared/state/song-favorites.js?v=13.8.1";
-import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.8.1";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
-import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { songsState } from "./state.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
+import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js?v=13.9.0";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=13.9.0";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.9.0";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { songsState } from "./state.js?v=13.9.0";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";
 const SEARCH_MODES = [
-  { value: "title", label: "Название" },
-  { value: "artist", label: "Исполнитель" },
-  { value: "lyrics", label: "Текст" },
+  { value: "title", label: msg("songs.nazvanie") },
+  { value: "artist", label: msg("songs.ispolnitel") },
+  { value: "lyrics", label: msg("songs.tekst") },
 ];
 
 function normalizeSearchValue(value) {
@@ -38,8 +39,8 @@ function artistsFrom(value) {
 
 export function renderSongsCatalog(context, playlist, songs, signal) {
   if (!playlist) {
-    context.shell.setHeaderContent?.({ title: "Песни" });
-    context.root.innerHTML = panel({ title: "Песни", body: `<div class="errorState">Плейлист не найден.</div>` });
+    context.shell.setHeaderContent?.({ title: msg("songs.pesni") });
+    context.root.innerHTML = panel({ title: msg("songs.pesni"), body: `<div class="errorState">${msg("songs.pleylist_ne_nayden")}</div>` });
     return;
   }
 
@@ -93,10 +94,10 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
           trailingHtml: renderFavoriteButton({
             active: songFavorites.has(song.id),
             attributes: `data-song-favorite-id="${escapeHtml(song.id)}"`,
-            label: songFavorites.has(song.id) ? "Удалить песню из избранного" : "Добавить песню в избранное",
+            label: songFavorites.has(song.id) ? msg("songs.udalit_pesnyu_iz_izbrannogo") : msg("songs.dobavit_pesnyu_v_izbrannoe"),
           }),
         })).join("")
-      : `<div class="emptyState"><div class="emptyStateTitle">${favoritesOnly && !query ? "Избранных песен пока нет" : "Ничего не найдено"}</div></div>`;
+      : `<div class="emptyState"><div class="emptyStateTitle">${favoritesOnly && !query ? msg("songs.izbrannyh_pesen_poka_net") : msg("songs.nichego_ne_naydeno")}</div></div>`;
 
     list.querySelectorAll("[data-song-open]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -109,8 +110,8 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
       button.addEventListener("click", () => {
         const active = songFavorites.toggle(button.dataset.songFavoriteId);
         button.classList.toggle("on", active);
-        button.setAttribute("aria-label", active ? "Удалить песню из избранного" : "Добавить песню в избранное");
-        button.setAttribute("title", active ? "Удалить песню из избранного" : "Добавить песню в избранное");
+        button.setAttribute("aria-label", active ? msg("songs.udalit_pesnyu_iz_izbrannogo") : msg("songs.dobavit_pesnyu_v_izbrannoe"));
+        button.setAttribute("title", active ? msg("songs.udalit_pesnyu_iz_izbrannogo") : msg("songs.dobavit_pesnyu_v_izbrannoe"));
         if (favoritesOnly && !active) draw();
       }, { signal });
     });
@@ -136,7 +137,7 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
     searchBar.classList.toggle("hidden", !open);
     toggle.classList.toggle("active", open);
     toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-label", open ? "Закрыть поиск" : "Открыть поиск");
+    toggle.setAttribute("aria-label", open ? msg("songs.zakryt_poisk") : msg("songs.otkryt_poisk"));
     if (open) {
       if (!searchOpenTracked) {
         searchOpenTracked = true;

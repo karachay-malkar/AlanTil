@@ -1,14 +1,15 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
-import { EVENTS } from "../../shared/analytics/events.js?v=13.8.1";
-import { getWords } from "../../shared/data/word-repository.js?v=13.8.1";
-import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.8.1";
-import { createSlugMap } from "../../shared/domain/slugs.js?v=13.8.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
-import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.8.1";
-import { renderResults } from "./results.js?v=13.8.1";
-import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.8.1";
-import { finalizeLearnSession, renderStudy } from "./study.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
+import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
+import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { createSlugMap } from "../../shared/domain/slugs.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.9.0";
+import { renderResults } from "./results.js?v=13.9.0";
+import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.9.0";
+import { finalizeLearnSession, renderStudy } from "./study.js?v=13.9.0";
 
 let controller = null;
 let activeContext = null;
@@ -19,7 +20,7 @@ function resolveDictionary(words, slug) {
 }
 
 function resolveSection(words, dict, slug) {
-  if (!slug || dict === "__fav__") return dict === "__fav__" ? "Избранное" : "";
+  if (!slug || dict === "__fav__") return dict === "__fav__" ? msg("learn.izbrannoe") : "";
   return createSlugMap(sectionsFrom(words, dict)).valueFor(slug);
 }
 
@@ -44,7 +45,7 @@ function applyRouteState(words, params, requestedScreen) {
 
   if (!learnState.currentDict) return null;
   if (learnState.currentDict === "__fav__") {
-    learnState.currentSection = "Избранное";
+    learnState.currentSection = msg("learn.izbrannoe");
     learnState.currentSet = 1;
     if (screen === "sections") screen = "set";
     return screen;
@@ -94,11 +95,11 @@ export async function mount(context, params = {}) {
   learnState.currentScreen = screen || requestedScreen;
 
   if (!words.length) {
-    context.root.innerHTML = panel({ title: "Учить слова", body: `<div class="smallNote">Нет данных. Проверь таблицу и заголовки: id, dict, section, set, word, trans, example.</div>` });
+    context.root.innerHTML = panel({ title: msg("learn.uchit_slova"), body: `<div class="smallNote">${msg("learn.net_dannyh_prover_tablitsu_i_zagolovki_id")}</div>` });
     return;
   }
   if (!screen) {
-    context.root.innerHTML = panel({ title: "Учить слова", body: `<div class="errorState">Словарь, раздел или сет по этой ссылке не найден.</div>` });
+    context.root.innerHTML = panel({ title: msg("learn.uchit_slova"), body: `<div class="errorState">${msg("learn.slovar_razdel_ili_set_po_etoy_ssylke")}</div>` });
     return;
   }
 

@@ -1,13 +1,14 @@
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 
 export function renderVersion(context) {
-  context.shell.setHeaderContent?.({ title: "Версия приложения" });
+  context.shell.setHeaderContent?.({ title: msg("about.versiya_prilozheniya") });
   context.root.innerHTML = panel({
-    title: "Версия приложения",
+    title: msg("about.versiya_prilozheniya"),
     body: `
       <dl class="settingsFacts">
-        <div><dt>Версия</dt><dd>13.8.1</dd></div>
-        <div><dt>Последнее обновление</dt><dd>июль 2026</dd></div>
+        <div><dt>${msg("about.versiya")}</dt><dd>13.9.0</dd></div>
+        <div><dt>${msg("about.poslednee_obnovlenie")}</dt><dd>${msg("about.iyul_2026")}</dd></div>
       </dl>`,
   });
 }

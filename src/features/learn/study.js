@@ -1,19 +1,20 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
-import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.8.1";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.8.1";
-import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
+import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js?v=13.9.0";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js?v=13.8.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js?v=13.8.1";
-import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.8.1";
-import { uiIcon } from "../../shared/ui/icons.js?v=13.8.1";
-import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js?v=13.8.1";
-import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js?v=13.8.1";
-import { captureLearnActionSnapshot, cloneLearnValue, restoreLearnActionSnapshot } from "./action-history.js?v=13.8.1";
+} from "../../shared/progress/session-builders.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.9.0";
+import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
+import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js?v=13.9.0";
+import { captureLearnActionSnapshot, cloneLearnValue, restoreLearnActionSnapshot } from "./action-history.js?v=13.9.0";
 
 function currentQueue() {
   return learnState.round === "main" ? learnState.mainQueue : learnState.repeatQueue;
@@ -163,21 +164,21 @@ export function renderStudy(context, words, signal, params = {}) {
   context.root.innerHTML = `
     <section class="learnSession">
       <div class="learnSessionMain">
-        <article id="card" class="learnCard" aria-label="Карточка">
+        <article id="card" class="learnCard" aria-label="${msg("learn.kartochka")}">
           <div class="learnCardActions">
-            <button id="btnUndo" class="iconAction learnCardAction" type="button" aria-label="Вернуть предыдущее слово">${uiIcon("undo2")}<span>Назад</span></button>
-            ${renderFavoriteButton({ attributes: 'id="btnFavAction"', label: "Добавить в избранное" })}
+            <button id="btnUndo" class="iconAction learnCardAction" type="button" aria-label="${msg("learn.vernut_predyduschee_slovo")}">${uiIcon("undo2")}<span>${msg("learn.nazad")}</span></button>
+            ${renderFavoriteButton({ attributes: 'id="btnFavAction"', label: msg("learn.dobavit_v_izbrannoe") })}
           </div>
           <div class="cardInner">
-            <div class="cardFace cardFront"><div class="word" id="word">слово</div></div>
-            <div class="cardFace cardBack"><div class="trans" id="trans">перевод</div></div>
+            <div class="cardFace cardFront"><div class="word" id="word">${msg("learn.slovo_2")}</div></div>
+            <div class="cardFace cardBack"><div class="trans" id="trans">${msg("learn.perevod")}</div></div>
           </div>
         </article>
       </div>
       <div class="learnSessionActions">
         <div class="learnDecisionGroup">
-          <button id="btnNo" class="choiceControl sessionDecision sessionDecisionUnknown" type="button"><span class="sessionDecisionIcon">${uiIcon("wrong")}</span><span>Не знаю</span></button>
-          <button id="btnYes" class="choiceControl sessionDecision sessionDecisionKnown" type="button"><span class="sessionDecisionIcon">${uiIcon("correct")}</span><span>Знаю</span></button>
+          <button id="btnNo" class="choiceControl sessionDecision sessionDecisionUnknown" type="button"><span class="sessionDecisionIcon">${uiIcon("wrong")}</span><span>${msg("learn.ne_znayu")}</span></button>
+          <button id="btnYes" class="choiceControl sessionDecision sessionDecisionKnown" type="button"><span class="sessionDecisionIcon">${uiIcon("correct")}</span><span>${msg("learn.znayu")}</span></button>
         </div>
       </div>
     </section>`;
@@ -200,8 +201,8 @@ export function renderStudy(context, words, signal, params = {}) {
   function updateFavorite() {
     const on = wordFavorites.has(learnState.currentStudyId);
     favoriteButton.classList.toggle("on", on);
-    favoriteButton.setAttribute("aria-label", on ? "Убрать из избранного" : "Добавить в избранное");
-    favoriteButton.setAttribute("title", on ? "Убрать из избранного" : "Добавить в избранное");
+    favoriteButton.setAttribute("aria-label", on ? msg("learn.ubrat_iz_izbrannogo") : msg("learn.dobavit_v_izbrannoe"));
+    favoriteButton.setAttribute("title", on ? msg("learn.ubrat_iz_izbrannogo") : msg("learn.dobavit_v_izbrannoe"));
   }
 
   function updateUndo() {
@@ -233,8 +234,8 @@ export function renderStudy(context, words, signal, params = {}) {
     const queue = currentQueue();
 
     if (learnState.totalPlanned === 0) {
-      wordElement.textContent = "Пусто 🤷‍♂️";
-      translationElement.textContent = "В этом сете все слова скрыты. Верни их в меню сета.";
+      wordElement.textContent = msg("learn.pusto");
+      translationElement.textContent = msg("learn.v_etom_sete_vse_slova_skryty_verni");
       favoriteButton.classList.add("hidden");
       undoButton.classList.add("hidden");
       context.shell.setCounter("0/0");

@@ -1,14 +1,15 @@
-import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js?v=13.8.1";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
-import { EVENTS, SEARCH_AREAS, SEARCH_MODES } from "../../shared/analytics/events.js?v=13.8.1";
-import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js?v=13.8.1";
-import { createSlugMap } from "../../shared/domain/slugs.js?v=13.8.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
-import { learnState } from "./state.js?v=13.8.1";
-import { renderSetPreparation } from "./set-preparation.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
+import { EVENTS, SEARCH_AREAS, SEARCH_MODES } from "../../shared/analytics/events.js?v=13.9.0";
+import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { createSlugMap } from "../../shared/domain/slugs.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { learnState } from "./state.js?v=13.9.0";
+import { renderSetPreparation } from "./set-preparation.js?v=13.9.0";
 
 function dictTitle(code) {
   return DICT_TITLES[code] || code;
@@ -47,11 +48,11 @@ function dynamicSetTitle(words, dict, section, setId) {
     .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
   const anchor = String(setId || "").slice("dynamic:".length);
   const startIndex = source.findIndex((word) => String(word.id) === anchor);
-  if (startIndex < 0) return "Этап";
+  if (startIndex < 0) return msg("learn.etap");
   const count = wordsForSet(words, dict, section, setId).length;
   const first = startIndex + 1;
   const last = startIndex + Math.max(1, count);
-  return first === last ? `Слово ${first}` : `Топ ${first}–${last}`;
+  return first === last ? msg("learn.slovo", { first: first }) : msg("learn.top", { first: first, last: last });
 }
 
 function wireStars(container, wordsById, rerender) {
@@ -67,16 +68,16 @@ function wireStars(container, wordsById, rerender) {
 }
 
 export function renderCatalog(context, words, signal) {
-  context.shell.setHeaderContent?.({ title: "Учить слова" });
+  context.shell.setHeaderContent?.({ title: msg("learn.uchit_slova") });
   const dicts = dictsFrom(words);
   const slugs = dictionarySlugMap(words);
   const items = [
-    { id: "favorites", title: "Избранное", favorite: true },
+    { id: "favorites", title: msg("learn.izbrannoe"), favorite: true },
     ...dicts.map((dict) => ({ id: slugs.slugFor(dict), title: dictionaryLabel(words, dict) })),
   ];
 
   context.root.innerHTML = panel({
-    title: "Учить слова",
+    title: msg("learn.uchit_slova"),
     body: renderSectionMenu(items, { dataName: "dictionary-slug" }),
   });
 
@@ -85,7 +86,7 @@ export function renderCatalog(context, words, signal) {
       const dictionarySlug = button.dataset.dictionarySlug;
       if (dictionarySlug === "favorites") {
         learnState.currentDict = "__fav__";
-        learnState.currentSection = "Избранное";
+        learnState.currentSection = msg("learn.izbrannoe");
         learnState.currentSet = 1;
         context.router.navigate("learn.set", { dictionarySlug: "favorites", sectionSlug: null, setSlug: null });
         return;
@@ -135,7 +136,7 @@ export function renderSections(context, words, signal) {
 
   context.root.innerHTML = panel({
     title: escapeHtml(pageTitle),
-    headerExtra: `<button id="btnOpenDictContent" class="iconAction iconBtn" type="button" aria-label="Содержание словаря" title="Содержание словаря"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
+    headerExtra: `<button id="btnOpenDictContent" class="iconAction iconBtn" type="button" aria-label="${msg("learn.soderzhanie_slovarya")}" title="${msg("learn.soderzhanie_slovarya")}"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
     body: `<div id="sectionsList" class="stack">${body}</div>`,
   });
 
@@ -178,10 +179,10 @@ export function renderDictionaryContent(context, words, signal) {
     return;
   }
 
-  context.shell.setHeaderContent?.({ title: "Содержание словаря", subtitle: dictionaryLabel(words, dict) });
+  context.shell.setHeaderContent?.({ title: msg("learn.soderzhanie_slovarya"), subtitle: dictionaryLabel(words, dict) });
   context.root.innerHTML = panel({
-    title: "Содержание словаря",
-    headerExtra: `<input id="dictSearchInput" class="searchInput" type="search" placeholder="Поиск..." autocomplete="off" />`,
+    title: msg("learn.soderzhanie_slovarya"),
+    headerExtra: `<input id="dictSearchInput" class="searchInput" type="search" placeholder="${msg("learn.poisk")}" autocomplete="off" />`,
     body: `<div id="dictContentList" class="contentList contentListGrouped"></div>`,
   });
 
@@ -198,7 +199,7 @@ export function renderDictionaryContent(context, words, signal) {
       .sort((a, b) => Number(a.dict_order) - Number(b.dict_order));
     const grouped = new Map();
     filtered.forEach((word) => {
-      const section = String(word.section || "Раздел").trim() || "Раздел";
+      const section = String(word.section || msg("learn.razdel")).trim() || msg("learn.razdel");
       if (!grouped.has(section)) grouped.set(section, []);
       grouped.get(section).push(word);
     });
@@ -262,7 +263,7 @@ export function renderSetMenu(context, words, signal) {
     ? words.filter((word) => wordFavorites.has(word.id))
     : wordsForSet(words, currentDict, currentSection, currentSet);
   const title = currentDict === "__fav__"
-    ? "Избранное"
+    ? msg("learn.izbrannoe")
     : String(currentSet).startsWith("dynamic:")
       ? dynamicSetTitle(words, currentDict, currentSection, currentSet)
       : (setWords[0]?.set_name || setWords[0]?.set || String(currentSet));

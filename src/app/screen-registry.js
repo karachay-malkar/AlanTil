@@ -1,3 +1,4 @@
+import { msg } from "../shared/i18n/index.js?v=13.9.0";
 const DEFAULT_SCREEN = Object.freeze({
   layout: "detail",
   header: "standard",
@@ -6,42 +7,43 @@ const DEFAULT_SCREEN = Object.freeze({
 });
 
 const SCREENS = Object.freeze({
-  "path.home": { layout: "map", header: "minimal", bottomNav: true, title: "Alan Til!" },
-  "path.station": { layout: "detail", header: "standard", bottomNav: false, title: "Этап" },
-  "path.study": { layout: "session", header: "session", bottomNav: false, title: "Учить слова" },
-  "path.test": { layout: "session", header: "session", bottomNav: false, title: "Проверь знания" },
+  "path.home": { layout: "map", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "path.station": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.etap" },
+  "path.study": { layout: "session", header: "session", bottomNav: false, titleKey: "common.uchit_slova" },
+  "path.test": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya" },
 
-  "practice.home": { layout: "root", header: "minimal", bottomNav: true, title: "Alan Til!" },
-  "profile.home": { layout: "root", header: "minimal", bottomNav: true, title: "Alan Til!" },
-  "profile.skills": { layout: "root", header: "minimal", bottomNav: true, title: "Alan Til!" },
-  "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, title: "Alan Til!" },
+  "practice.home": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "profile.home": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "profile.skills": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
 
-  "learn.catalog": { layout: "detail", header: "standard", bottomNav: false, title: "Учить слова" },
-  "learn.sections": { layout: "detail", header: "standard", bottomNav: false, title: "Словарь" },
-  "learn.catalog-content": { layout: "detail", header: "standard", bottomNav: false, title: "Содержание словаря" },
-  "learn.set": { layout: "detail", header: "standard", bottomNav: false, title: "Набор слов" },
-  "learn.study": { layout: "session", header: "session", bottomNav: false, title: "Учить слова" },
-  "learn.results": { layout: "detail", header: "standard", bottomNav: false, title: "Результат обучения" },
+  "learn.catalog": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.uchit_slova" },
+  "learn.sections": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.slovar" },
+  "learn.catalog-content": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.soderzhanie_slovarya" },
+  "learn.set": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.nabor_slov" },
+  "learn.study": { layout: "session", header: "session", bottomNav: false, titleKey: "common.uchit_slova" },
+  "learn.results": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.rezultat_obucheniya" },
 
-  "test.menu": { layout: "detail", header: "standard", bottomNav: false, title: "Проверь знания" },
-  "test.session": { layout: "session", header: "session", bottomNav: false, title: "Проверь знания" },
-  "test.results": { layout: "detail", header: "standard", bottomNav: false, title: "Результаты теста" },
+  "test.menu": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.prover_znaniya" },
+  "test.session": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya" },
+  "test.results": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.rezultaty_testa" },
 
-  "match.menu": { layout: "detail", header: "standard", bottomNav: false, title: "Сопоставь слова" },
-  "match.game": { layout: "session", header: "session", bottomNav: false, title: "Сопоставь слова" },
-  "match.results": { layout: "detail", header: "standard", bottomNav: false, title: "Результат игры" },
+  "match.menu": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.sopostav_slova" },
+  "match.game": { layout: "session", header: "session", bottomNav: false, titleKey: "common.sopostav_slova" },
+  "match.results": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.rezultat_igry" },
 
-  "songs.playlists": { layout: "detail", header: "standard", bottomNav: false, title: "Песни" },
-  "songs.catalog": { layout: "detail", header: "standard", bottomNav: false, title: "Песни" },
-  "songs.song": { layout: "document", header: "standard", bottomNav: false, title: "Песня" },
+  "songs.playlists": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.pesni" },
+  "songs.catalog": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.pesni" },
+  "songs.song": { layout: "document", header: "standard", bottomNav: false, titleKey: "common.pesnya" },
 
-  "account.home": { layout: "document", header: "standard", bottomNav: false, title: "Аккаунт" },
-  "settings.home": { layout: "root", header: "minimal", bottomNav: true, title: "Alan Til!" },
-  "settings.privacy": { layout: "document", header: "standard", bottomNav: false, title: "Политика конфиденциальности" },
-  "settings.version": { layout: "detail", header: "standard", bottomNav: false, title: "Версия приложения" },
-  "settings.thanks": { layout: "document", header: "standard", bottomNav: false, title: "Благодарности" },
+  "account.home": { layout: "document", header: "standard", bottomNav: false, titleKey: "common.akkaunt" },
+  "settings.home": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "settings.privacy": { layout: "document", header: "standard", bottomNav: false, titleKey: "common.politika_konfidentsialnosti" },
+  "settings.version": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.versiya_prilozheniya" },
+  "settings.thanks": { layout: "document", header: "standard", bottomNav: false, titleKey: "common.blagodarnosti" },
 });
 
 export function screenConfig(route = "path.home") {
-  return { ...DEFAULT_SCREEN, ...(SCREENS[route] || {}) };
+  const config = { ...DEFAULT_SCREEN, ...(SCREENS[route] || {}) };
+  return { ...config, title: config.titleKey ? msg(config.titleKey) : config.title };
 }

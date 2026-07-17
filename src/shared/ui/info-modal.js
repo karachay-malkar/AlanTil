@@ -1,3 +1,4 @@
+import { msg } from "../i18n/index.js?v=13.9.0";
 let activeRoot = null;
 let escapeHandler = null;
 
@@ -14,7 +15,7 @@ export function closeInfoModal() {
   document.body.classList.remove("modal-open");
 }
 
-export function openInfoModal(root, { title = "", content = "", closeText = "Закрыть" } = {}) {
+export function openInfoModal(root, { title = "", content = "", closeText = msg("common.zakryt") } = {}) {
   if (!root) throw new Error("Modal root is required");
   closeInfoModal();
   activeRoot = root;
@@ -24,7 +25,7 @@ export function openInfoModal(root, { title = "", content = "", closeText = "З�
     : "";
   const accessibility = normalizedTitle
     ? `aria-labelledby="infoModalTitle"`
-    : `aria-label="Информация"`;
+    : `aria-label="${msg("common.informatsiya")}"`;
 
   root.innerHTML = `
     <div class="exitModal infoModal" role="dialog" aria-modal="true" ${accessibility}>
@@ -41,7 +42,7 @@ export function openInfoModal(root, { title = "", content = "", closeText = "З�
   const titleElement = root.querySelector("#infoModalTitle");
   if (titleElement) titleElement.textContent = normalizedTitle;
   root.querySelector(".infoModalContent").innerHTML = String(content || "");
-  root.querySelector(".exitModalActions button").textContent = String(closeText || "Закрыть");
+  root.querySelector(".exitModalActions button").textContent = String(closeText || msg("common.zakryt"));
   root.querySelectorAll("[data-info-close='1']").forEach((element) => {
     element.addEventListener("click", closeInfoModal);
   });

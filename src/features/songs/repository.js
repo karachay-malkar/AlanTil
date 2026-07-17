@@ -1,6 +1,7 @@
-import { SONGS_CACHE_KEY, SONGS_SHEET_URL } from "../../config/songs.js?v=13.8.1";
-import { normalizeToCsvUrl, parseCsvRows } from "../../shared/data/csv.js?v=13.8.1";
-import { readJson, writeJson } from "../../shared/state/storage.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { SONGS_CACHE_KEY, SONGS_SHEET_URL } from "../../config/songs.js?v=13.9.0";
+import { normalizeToCsvUrl, parseCsvRows } from "../../shared/data/csv.js?v=13.9.0";
+import { readJson, writeJson } from "../../shared/state/storage.js?v=13.9.0";
 
 let songs = null;
 let loadingPromise = null;
@@ -31,7 +32,7 @@ function normalizeSong(row, index = 0) {
   if (!row || typeof row !== "object") return null;
 
   const title = first(row, ["title", "song", "song_title", "song_name", "name", "название", "песня"]);
-  const playlistTitle = first(row, ["playlist_title", "playlistTitle", "playlist_name", "playlist", "album", "плейлист", "сборник"], "Песни");
+  const playlistTitle = first(row, ["playlist_title", "playlistTitle", "playlist_name", "playlist", "album", "плейлист", "сборник"], msg("songs.pesni"));
   const playlistId = first(row, ["playlist_id", "playlistId", "playlist_code", "album_id"], slug(playlistTitle) || "songs");
   const id = first(row, ["id", "song_id", "code"], `${playlistId}-${slug(title) || index + 1}`);
   const lyrics = first(row, ["lyrics", "lyrics_kb", "lyrics_alan", "text_kb", "original_text", "text", "song_text", "alan_text", "текст"]);

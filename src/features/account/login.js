@@ -1,6 +1,7 @@
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 
 const GOOGLE_ICON = "/assets/icons/auth/google.svg";
 
@@ -9,9 +10,9 @@ export function renderLogin(context, {
   error = "",
   emailExpanded = false,
 } = {}) {
-  context.shell.setHeaderContent?.({ title: "Вход" });
+  context.shell.setHeaderContent?.({ title: msg("account.vhod") });
   context.root.innerHTML = panel({
-    title: "Аккаунт",
+    title: msg("account.akkaunt"),
     classes: "accountPanel",
     viewClasses: "accountView",
     body: `
@@ -22,16 +23,16 @@ export function renderLogin(context, {
         <div class="authProviderList">
           ${renderAuthProviderButton({
             provider: "google",
-            label: "Войти через Google",
+            label: msg("account.voyti_cherez_google"),
             icon: GOOGLE_ICON,
           })}
         </div>
 
-        <div class="accountDivider"><span>или</span></div>
+        <div class="accountDivider"><span>${msg("account.ili")}</span></div>
 
         <button id="accountEmailToggle" class="btn actionText accountAction authEmailToggle${emailExpanded ? " hidden" : ""}" type="button">
           <span aria-hidden="true">✉</span>
-          <span>Войти по Email</span>
+          <span>${msg("account.voyti_po_email")}</span>
         </button>
 
         <div id="accountEmailSection" class="authEmailSection${emailExpanded ? " isOpen" : ""}">
@@ -40,11 +41,11 @@ export function renderLogin(context, {
               <span>Email</span>
               <input id="accountEmail" name="email" type="email" inputmode="email" autocomplete="email" required />
             </label>
-            <button class="btn actionPrimary accountAction" type="submit">Получить ссылку для входа</button>
+            <button class="btn actionPrimary accountAction" type="submit">${msg("account.poluchit_ssylku_dlya_vhoda")}</button>
           </form>
         </div>
 
-        <button id="accountContinueGuest" class="btn actionText accountAction" type="button">Продолжить без аккаунта</button>
+        <button id="accountContinueGuest" class="btn actionText accountAction" type="button">${msg("account.prodolzhit_bez_akkaunta")}</button>
       </div>`,
   });
 }
@@ -81,10 +82,10 @@ export function bindLogin(context, signal, {
     event.preventDefault();
     const submitButton = emailForm.querySelector("button[type='submit']");
     const emailInput = emailForm.querySelector("#accountEmail");
-    const originalLabel = submitButton?.textContent || "Получить ссылку для входа";
+    const originalLabel = submitButton?.textContent || msg("account.poluchit_ssylku_dlya_vhoda");
     if (submitButton) {
       submitButton.disabled = true;
-      submitButton.textContent = "Отправляем…";
+      submitButton.textContent = msg("account.otpravlyaem");
     }
     try {
       await onEmail?.(emailInput?.value || "");

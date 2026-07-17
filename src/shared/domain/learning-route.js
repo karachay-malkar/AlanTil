@@ -1,6 +1,7 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.8.1";
-import { createSlugMap, toSlug } from "./slugs.js?v=13.8.1";
-import { sortNatural } from "./word-selection.js?v=13.8.1";
+import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=13.9.0";
+import { createSlugMap, toSlug } from "./slugs.js?v=13.9.0";
+import { sortNatural } from "./word-selection.js?v=13.9.0";
 
 export function normalizeRouteText(value) {
   return String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
@@ -96,7 +97,9 @@ function createStationSlugMap(stations = []) {
 }
 
 function dynamicStationName(start, end) {
-  return start === end ? `Слово ${start}` : `Топ ${start}–${end}`;
+  return start === end
+    ? msg("learn.slovo", { first: start })
+    : msg("learn.top", { first: start, last: end });
 }
 
 function createNamedStation({ story, dictionary, section, set, words }) {

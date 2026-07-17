@@ -1,7 +1,8 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.8.1";
-import { stationKey } from "../domain/learning-route.js?v=13.8.1";
-import { enqueueProgress } from "./progress-queue.js?v=13.8.1";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.8.1";
+import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
+import { stationKey } from "../domain/learning-route.js?v=13.9.0";
+import { getInterfaceLocale } from "../i18n/index.js?v=13.9.0";
+import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
 
 export const STATION_PROGRESS_KEY = "alantil_station_progress_v13_1";
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -195,5 +196,5 @@ export function subscribeStationProgress(listener) {
 export function formatDueDate(value) {
   const time = asTime(value);
   if (!time) return "";
-  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(time));
+  return new Intl.DateTimeFormat(getInterfaceLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(time));
 }

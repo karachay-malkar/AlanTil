@@ -12,8 +12,8 @@ globalThis.CustomEvent = class CustomEvent {
 };
 globalThis.window = { dispatchEvent() {} };
 
-const settingsStore = await import("../src/shared/settings/user-settings-store.js?v=13.8.1");
-const progressQueue = await import("../src/shared/progress/progress-queue.js?v=13.8.1");
+const settingsStore = await import("../src/shared/settings/user-settings-store.js?v=13.9.0");
+const progressQueue = await import("../src/shared/progress/progress-queue.js?v=13.9.0");
 
 test("all Cyrillic variants survive storage reload and enter the sync payload", () => {
   for (const dialect of ["karachay", "balkar", "canonical"]) {
@@ -29,4 +29,15 @@ test("all Cyrillic variants survive storage reload and enter the sync payload", 
     assert.equal(entry.payload.alan_script_code, "cyrillic");
     assert.equal(entry.payload.alan_dialect_code, dialect);
   }
+});
+
+test("supported interface languages survive reload and unsupported values fall back to Russian", () => {
+  for (const language of ["ru", "en", "tr"]) {
+    settingsStore.setUserSettings({ interface_language_code: language }, { queue: false });
+    assert.equal(settingsStore.reloadUserSettings().interface_language_code, language);
+  }
+  settingsStore.setUserSettings({ interface_language_code: "de" }, { queue: false });
+  assert.equal(settingsStore.reloadUserSettings().interface_language_code, "ru");
+  settingsStore.setUserSettings({ interface_language_code: "tu" }, { queue: false });
+  assert.equal(settingsStore.reloadUserSettings().interface_language_code, "tr");
 });

@@ -1,5 +1,6 @@
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
@@ -10,26 +11,26 @@ function avatarSilhouette() {
 }
 
 export function renderAvatarGenderSelection(context, { error = "" } = {}) {
-  context.shell.setHeaderContent?.({ title: "Образ аватара" });
+  context.shell.setHeaderContent?.({ title: msg("account.obraz_avatara") });
   context.root.innerHTML = panel({
-    title: "Образ аватара",
+    title: msg("account.obraz_avatara"),
     classes: "accountPanel",
     viewClasses: "accountView",
     body: `
       <div class="accountStack accountGenderOnboarding">
         ${error ? `<div class="accountMessage accountMessageError" role="alert">${escapeHtml(error)}</div>` : ""}
         <div class="accountGenderIntro">
-          <strong>Выберите пол аватара</strong>
-          <span>Это окончательный выбор. Позже изменить его будет нельзя.</span>
+          <strong>${msg("account.vyberite_pol_avatara")}</strong>
+          <span>${msg("account.eto_okonchatelnyy_vybor_pozzhe_izmenit_ego_budet")}</span>
         </div>
-        <div class="accountGenderChoices" role="group" aria-label="Пол аватара">
+        <div class="accountGenderChoices" role="group" aria-label="${msg("account.pol_avatara")}">
           <button class="accountGenderChoice choiceControl" type="button" data-avatar-gender="male">
             <span class="accountGenderFigure">${avatarSilhouette()}</span>
-            <span>Мужской</span>
+            <span>${msg("account.muzhskoy_2")}</span>
           </button>
           <button class="accountGenderChoice choiceControl" type="button" data-avatar-gender="female">
             <span class="accountGenderFigure">${avatarSilhouette()}</span>
-            <span>Женский</span>
+            <span>${msg("account.zhenskiy_2")}</span>
           </button>
         </div>
       </div>`,
@@ -64,7 +65,7 @@ export function renderProfileCreation(context, user, {
       ? " isError"
       : "";
 
-  const title = unavailable ? "Аккаунт" : "Создайте никнейм";
+  const title = unavailable ? msg("account.akkaunt") : msg("account.sozdayte_nikneym");
   context.shell.setHeaderContent?.({ title });
   context.root.innerHTML = panel({
     title,
@@ -79,14 +80,14 @@ export function renderProfileCreation(context, user, {
             <input id="accountProfileEmail" type="email" value="${escapeHtml(user?.email || "")}" readonly />
           </label>
           <label class="accountField" for="accountNickname">
-            <span>Никнейм</span>
+            <span>${msg("account.nikneym")}</span>
             <input id="accountNickname" class="${nicknameClass.trim()}" name="nickname" type="text" minlength="3" maxlength="30" autocomplete="nickname" spellcheck="false" value="${escapeHtml(nickname)}" ${unavailable ? "disabled" : ""} aria-invalid="${nicknameState === "invalid" ? "true" : "false"}" required />
           </label>
           <div id="accountNicknameMessage" class="accountNicknameMessage ${escapeHtml(nicknameState)}" role="status">${escapeHtml(nicknameMessage)}</div>
-          <button id="accountCreateProfile" class="btn actionPrimary accountAction" type="submit" ${submitEnabled && !unavailable ? "" : "disabled"}>Сохранить</button>
+          <button id="accountCreateProfile" class="btn actionPrimary accountAction" type="submit" ${submitEnabled && !unavailable ? "" : "disabled"}>${msg("account.sohranit")}</button>
         </form>
-        ${unavailable ? `<button id="accountRetryProfile" class="btn actionPrimary accountAction" type="button">Повторить</button>` : ""}
-        <button id="accountSignOut" class="btn actionText accountAction" type="button">Выйти</button>
+        ${unavailable ? `<button id="accountRetryProfile" class="btn actionPrimary accountAction" type="button">${msg("account.povtorit")}</button>` : ""}
+        <button id="accountSignOut" class="btn actionText accountAction" type="button">${msg("account.vyyti")}</button>
       </div>`,
   });
 }
@@ -120,7 +121,7 @@ export function bindProfileCreation(context, signal, {
 
   retryButton?.addEventListener("click", async () => {
     retryButton.disabled = true;
-    retryButton.textContent = "Проверяем…";
+    retryButton.textContent = msg("account.proveryaem");
     await onRetry?.();
   }, { signal });
 
@@ -135,21 +136,21 @@ export function bindProfileCreation(context, signal, {
 }
 
 export function renderProfile(context, { user, profile, provider, error = "" }) {
-  context.shell.setHeaderContent?.({ title: "Аккаунт" });
+  context.shell.setHeaderContent?.({ title: msg("account.akkaunt") });
   context.root.innerHTML = panel({
-    title: "Аккаунт",
+    title: msg("account.akkaunt"),
     classes: "accountPanel",
     viewClasses: "accountView",
     body: `
       <div class="accountStack">
         ${error ? `<div class="accountMessage accountMessageError" role="alert">${escapeHtml(error)}</div>` : ""}
         <dl class="accountFacts">
-          ${renderAccountFact("Никнейм", profile?.nickname || "")}
+          ${renderAccountFact(msg("account.nikneym"), profile?.nickname || "")}
           ${renderAccountFact("Email", user?.email || "")}
-          ${renderAccountFact("Способ входа", provider || "")}
-          ${renderAccountFact("Образ аватара", profile?.avatar_gender === "female" ? "Женский" : "Мужской")}
+          ${renderAccountFact(msg("account.sposob_vhoda"), provider || "")}
+          ${renderAccountFact(msg("account.obraz_avatara"), profile?.avatar_gender === "female" ? msg("account.zhenskiy_2") : msg("account.muzhskoy_2"))}
         </dl>
-        <button id="accountSignOut" class="btn actionText accountAction" type="button">Выйти</button>
+        <button id="accountSignOut" class="btn actionText accountAction" type="button">${msg("account.vyyti")}</button>
       </div>`,
   });
 }

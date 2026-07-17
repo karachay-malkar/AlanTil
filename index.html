@@ -18,13 +18,13 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.8.1" />
+  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.9.0" />
 </head>
 <body>
   <div id="appShell" class="appShell" data-feature="path" data-screen="home" data-layout="map" data-header="minimal" data-bottom-nav="true">
     <header id="appHeader" class="appHeader">
       <div class="appHeaderLeading">
-        <button id="btnBackArrow" class="iconAction appHeaderAction hidden" type="button" aria-label="Назад" title="Назад">
+        <button id="btnBackArrow" class="iconAction appHeaderAction hidden" type="button" aria-label="Назад" title="Назад" data-i18n-aria-label="common.nazad" data-i18n-title="common.nazad">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
         </button>
       </div>
@@ -47,23 +47,23 @@
       <div id="appRoot" class="appScreenHost" aria-live="polite" aria-busy="false"></div>
     </main>
 
-    <nav id="bottomNav" class="bottomNav" aria-label="Основная навигация">
+    <nav id="bottomNav" class="bottomNav" aria-label="Основная навигация" data-i18n-aria-label="common.osnovnaya_navigatsiya">
       <button class="tabAction bottomNavItem" type="button" data-route="practice.home">
         <svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>
-        <span>Практика</span>
+        <span data-i18n="common.praktika">Практика</span>
       </button>
       <button class="tabAction bottomNavItem active" type="button" data-route="path.home">
         <svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
-        <span>Путь</span>
+        <span data-i18n="common.put">Путь</span>
       </button>
       <button class="tabAction bottomNavItem" type="button" data-route="profile.home">
         <svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
-        <span>Профиль</span>
+        <span data-i18n="common.profil">Профиль</span>
       </button>
     </nav>
   </div>
 
   <div id="modalRoot" class="modalRoot"></div>
-  <script type="module" src="/src/app/bootstrap.js?v=13.8.1"></script>
+  <script type="module" src="/src/app/bootstrap.js?v=13.9.0"></script>
 </body>
 </html>

@@ -1,9 +1,10 @@
-import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=13.8.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8.1";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
-import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=13.8.1";
+import { getInterfaceLocale, msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=13.9.0";
 
 function storageKey(station) {
   return station.selectionSetId || station.setId || station.key;
@@ -11,15 +12,15 @@ function storageKey(station) {
 
 
 function masteryMark(percent) {
-  if (percent >= 100) return { level: 3, label: "III знак", symbol: "⌃⌃⌃" };
-  if (percent >= 90) return { level: 2, label: "II знак", symbol: "⌃⌃" };
-  if (percent >= 80) return { level: 1, label: "I знак", symbol: "⌃" };
-  return { level: 0, label: "не сдан", symbol: "—" };
+  if (percent >= 100) return { level: 3, label: msg("stage.iii_znak"), symbol: "⌃⌃⌃" };
+  if (percent >= 90) return { level: 2, label: msg("stage.ii_znak"), symbol: "⌃⌃" };
+  if (percent >= 80) return { level: 1, label: msg("stage.i_znak"), symbol: "⌃" };
+  return { level: 0, label: msg("stage.ne_sdan"), symbol: "—" };
 }
 
 function resultCard(result) {
   const mark = masteryMark(result.percent);
-  const date = result.date ? new Intl.DateTimeFormat("ru", { day: "2-digit", month: "2-digit" }).format(new Date(result.date)) : "";
+  const date = result.date ? new Intl.DateTimeFormat(getInterfaceLocale(), { day: "2-digit", month: "2-digit" }).format(new Date(result.date)) : "";
   return `<div class="stationAttempt ${result.percent >= 80 ? "isPassed" : "isFailed"}">
     <strong>${result.percent}%</strong>
     <span>${escapeHtml(mark.label)}</span>
@@ -29,9 +30,9 @@ function resultCard(result) {
 
 function problemRows(words) {
   const rows = problemWordRows(words, 7);
-  if (!rows.length) return `<div class="stationEmptyState">Пока недостаточно данных.</div>`;
+  if (!rows.length) return `<div class="stationEmptyState">${msg("stage.poka_nedostatochno_dannyh")}</div>`;
   return `<div class="stationProblemList">
-    <div class="stationProblemHead"><span>Слово</span><span>Показы</span><span>«Не знаю»</span><span>Затруднение</span><span></span></div>
+    <div class="stationProblemHead"><span>${msg("stage.slovo")}</span><span>${msg("stage.pokazy")}</span><span>${msg("stage.ne_znayu")}</span><span>${msg("stage.zatrudnenie")}</span><span></span></div>
     ${rows.map(({ word, progress, evaluated, unknownRate }) => `<div class="stationProblemRow">
       <span class="stationProblemWord">${escapeHtml(word.word)}</span>
       <span>${evaluated}</span>
@@ -134,16 +135,16 @@ export function renderStationView(context, station, {
     return `<section class="stationPane stationMenuPane" data-station-pane="menu">
       <div class="stationMenuToolbar">
         <span class="stationMenuActions">
-          <button class="textAction" type="button" data-show-all>Показать все</button>
+          <button class="textAction" type="button" data-show-all>${msg("stage.pokazat_vse")}</button>
           <span aria-hidden="true">·</span>
-          <button class="textAction" type="button" data-hide-all>Скрыть все</button>
+          <button class="textAction" type="button" data-hide-all>${msg("stage.skryt_vse")}</button>
         </span>
         <span class="stationSelectionCount">${selected.length}/${allWords.length}</span>
       </div>
       <div class="contentList stationWordList">
         ${allWords.map((word) => `<div class="contentListRow stationWordRow" data-station-word="${escapeHtml(word.id)}">
           <label class="stationWordToggle bracketCheckbox">
-            <input class="contentListCheckbox" type="checkbox" ${hidden.has(String(word.id)) ? "" : "checked"} aria-label="Добавить слово в обучение" />
+            <input class="contentListCheckbox" type="checkbox" ${hidden.has(String(word.id)) ? "" : "checked"} aria-label="${msg("stage.dobavit_slovo_v_obuchenie")}" />
             <span class="bracketCheckboxMark" aria-hidden="true"></span>
           </label>
           <span class="contentListMain"><span data-station-line>${staticLine(word.word, "contentListPrimary")}</span><span data-station-line>${scrollingLine(word.trans, "contentListSecondary")}</span></span>
@@ -152,15 +153,15 @@ export function renderStationView(context, station, {
       </div>
       <footer class="stationLaunchPanel">
         <div class="stationDirectionControl">
-          <span>Направление</span>
-          <div class="segmentControl stationDirectionToggle" role="radiogroup" aria-label="Направление обучения">
-            <button class="segmentOption ${studyMode === "kb" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "kb"}" data-station-mode="kb">АЛАН → РУС</button>
-            <button class="segmentOption ${studyMode === "ru" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "ru"}" data-station-mode="ru">РУС → АЛАН</button>
+          <span>${msg("stage.napravlenie")}</span>
+          <div class="segmentControl stationDirectionToggle" role="radiogroup" aria-label="${msg("stage.napravlenie_obucheniya")}">
+            <button class="segmentOption ${studyMode === "kb" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "kb"}" data-station-mode="kb">${msg("stage.alan_rus")}</button>
+            <button class="segmentOption ${studyMode === "ru" ? "active" : ""}" type="button" role="radio" aria-checked="${studyMode === "ru"}" data-station-mode="ru">${msg("stage.rus_alan")}</button>
           </div>
         </div>
         <div class="stationLaunchActions">
-          <button class="btn actionText stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>Учить слова</button>
-          <button class="btn actionPrimary stationTestButton" type="button" data-station-test>Завершить этап: тест</button>
+          <button class="btn actionText stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>${msg("stage.uchit_slova")}</button>
+          <button class="btn actionPrimary stationTestButton" type="button" data-station-test>${msg("stage.zavershit_etap_test")}</button>
         </div>
       </footer>
     </section>`;
@@ -175,23 +176,23 @@ export function renderStationView(context, station, {
     return `<section class="stationPane stationStatisticsPane" data-station-pane="statistics">
       <div class="stationStatsSummary">
         <div class="stationMasteryBlock">
-          <span class="stationStatLabel">Освоено слов</span>
+          <span class="stationStatLabel">${msg("stage.osvoeno_slov_2")}</span>
           <strong>${summary.mastered}/${summary.total}</strong>
-          ${renderSegmentedProgress({ value: summary.percent, segments: 10, label: `Освоено ${summary.percent}% слов`, className: "stationMasteryProgress" })}
+          ${renderSegmentedProgress({ value: summary.percent, segments: 10, label: msg("stage.osvoeno_slov", { percent: summary.percent }), className: "stationMasteryProgress" })}
         </div>
         <div class="stationMasteryBadge" aria-label="${escapeHtml(mark.label)}"><span>${escapeHtml(mark.symbol)}</span><small>${escapeHtml(mark.label)}</small></div>
       </div>
       <div class="stationMetricGrid">
-        <div><strong>${attempts.length}</strong><span>попыток</span></div>
-        <div><strong>${best}%</strong><span>лучший результат</span></div>
-        <div><strong>${summary.review}</strong><span>требуют повторения</span></div>
+        <div><strong>${attempts.length}</strong><span>${msg("stage.popytok")}</span></div>
+        <div><strong>${best}%</strong><span>${msg("stage.luchshiy_rezultat")}</span></div>
+        <div><strong>${summary.review}</strong><span>${msg("stage.trebuyut_povtoreniya")}</span></div>
       </div>
       <section class="stationStatsSection">
-        <h2 class="stationStatsHeading">Последние результаты</h2>
-        <div class="stationAttempts">${recent.length ? recent.map(resultCard).join("") : `<div class="stationEmptyState">Тесты ещё не проходились.</div>`}</div>
+        <h2 class="stationStatsHeading">${msg("stage.poslednie_rezultaty")}</h2>
+        <div class="stationAttempts">${recent.length ? recent.map(resultCard).join("") : `<div class="stationEmptyState">${msg("stage.testy_esche_ne_prohodilis")}</div>`}</div>
       </section>
       <section class="stationStatsSection">
-        <h2 class="stationStatsHeading">Проблемные слова</h2>
+        <h2 class="stationStatsHeading">${msg("stage.problemnye_slova")}</h2>
         ${problemRows(allWords)}
       </section>
     </section>`;
@@ -258,9 +259,9 @@ export function renderStationView(context, station, {
     marqueeObserver = null;
     context.shell.appShell.dataset.stationPane = activeTab;
     context.root.innerHTML = `<section class="view screen stationView">
-      <div class="stationViewTabs" role="tablist" aria-label="Раздел этапа">
-        <button class="tabAction stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">[ Меню ]</button>
-        <button class="tabAction stationViewTab ${activeTab === "statistics" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "statistics"}" data-station-tab="statistics">[ Статистика ]</button>
+      <div class="stationViewTabs" role="tablist" aria-label="${msg("stage.razdel_etapa")}">
+        <button class="tabAction stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">${msg("stage.menyu")}</button>
+        <button class="tabAction stationViewTab ${activeTab === "statistics" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "statistics"}" data-station-tab="statistics">${msg("stage.statistika")}</button>
       </div>
       ${activeTab === "menu" ? renderMenu() : renderStatistics()}
     </section>`;

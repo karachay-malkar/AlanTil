@@ -4,7 +4,7 @@ import {
   PRIVACY_REGION_CACHE_KEY,
   PRIVACY_REGION_ENDPOINT,
   PRIVACY_REGION_TIMEOUT_MS,
-} from "../../config/privacy.js?v=13.8.1";
+} from "../../config/privacy.js?v=13.9.0";
 
 const consentCountries = new Set(CONSENT_REQUIRED_COUNTRIES);
 const cisCountries = new Set(CIS_COUNTRIES);

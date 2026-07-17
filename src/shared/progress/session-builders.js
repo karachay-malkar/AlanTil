@@ -1,9 +1,9 @@
-import { getTranslationLanguageCode } from "../settings/user-settings-store.js?v=13.8.1";
-import { createActivityClock } from "./activity-clock.js?v=13.8.1";
-import { enqueueProgress } from "./progress-queue.js?v=13.8.1";
-import { createSessionId, removeActiveSession, saveActiveSession } from "./session-store.js?v=13.8.1";
-import { getStorageScope } from "./storage-scope.js?v=13.8.1";
-import { recordActivitySession } from "./activity-history-store.js?v=13.8.1";
+import { getTranslationLanguageCode } from "../settings/user-settings-store.js?v=13.9.0";
+import { createActivityClock } from "./activity-clock.js?v=13.9.0";
+import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
+import { createSessionId, removeActiveSession, saveActiveSession } from "./session-store.js?v=13.9.0";
+import { getStorageScope } from "./storage-scope.js?v=13.9.0";
+import { recordActivitySession } from "./activity-history-store.js?v=13.9.0";
 
 const SESSION_QUEUE_TYPES = Object.freeze({
   learn: "learn_session",

@@ -1,4 +1,5 @@
-import { escapeHtml } from "./html.js?v=13.8.1";
+import { msg } from "../i18n/index.js?v=13.9.0";
+import { escapeHtml } from "./html.js?v=13.9.0";
 
 function dotCount(height, routeHeight) {
   if (!routeHeight) return 4;
@@ -24,7 +25,7 @@ export function createRouteScale({ root, viewport, catalogs = [], signal }) {
     catalogs.forEach((catalog) => {
       const catalogElement = root.querySelector(`[data-route-catalog="${selectorValue(catalog.catalogId)}"]`);
       if (!catalogElement) return;
-      parts.push(`<button class="iconAction routeScaleDiamond" type="button" data-scroll-catalog="${escapeHtml(catalog.catalogId)}" aria-label="Перейти к рубежу словаря ${escapeHtml(catalog.name)}"><span></span></button>`);
+      parts.push(`<button class="iconAction routeScaleDiamond" type="button" data-scroll-catalog="${escapeHtml(catalog.catalogId)}" aria-label="${msg("common.pereyti_k_rubezhu_slovarya", { name: escapeHtml(catalog.name) })}"><span></span></button>`);
       const groups = [...(catalog.groups || [])].reverse();
       groups.forEach((group, groupIndex) => {
         const groupElement = root.querySelector(`[data-route-section="${selectorValue(`${catalog.catalogId}::${group.groupId}`)}"]`);

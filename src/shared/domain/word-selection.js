@@ -1,5 +1,5 @@
-import { normalizeId, normalizePos } from "./word-normalizer.js?v=13.8.1";
-import { getStationSize } from "../settings/user-settings-store.js?v=13.8.1";
+import { normalizeId, normalizePos } from "./word-normalizer.js?v=13.9.0";
+import { getStationSize } from "../settings/user-settings-store.js?v=13.9.0";
 
 const PRIORITY_POS = ["noun", "verb", "adjective", "adverb"];
 const PRIORITY_POS_SET = new Set(PRIORITY_POS);

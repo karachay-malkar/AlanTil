@@ -1,6 +1,7 @@
-import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.8.1";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.8.1";
-import { getSupabaseClient } from "./supabase-client.js?v=13.8.1";
+import { msg } from "../i18n/index.js?v=13.9.0";
+import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.9.0";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.9.0";
+import { getSupabaseClient } from "./supabase-client.js?v=13.9.0";
 
 const AUTH_CALLBACK_PARAMETERS = Object.freeze([
   "code",
@@ -19,20 +20,20 @@ function isRedirectConfigurationError(value) {
   return /(?:redirect(?:_to)?|redirect url|callback url|return url|requested path).*(?:not allowed|not permitted|invalid|allow list)|not in (?:the )?allow list/i.test(value);
 }
 
-function normalizeAuthError(error, fallback = "Не удалось выполнить вход.") {
+function normalizeAuthError(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
   const message = String(error?.message || error || "").trim();
   if (!message) return fallback;
   if (isRedirectConfigurationError(message)) {
-    return "Ссылка возврата не разрешена в Supabase.";
+    return msg("service.ssylka_vozvrata_ne_razreshena_v_supabase");
   }
   if (/blocked|banned|signup.*disabled|регистрац/i.test(message)) {
-    return "Вход или регистрация для этого адреса недоступны.";
+    return msg("service.vhod_ili_registratsiya_dlya_etogo_adresa_nedostupny");
   }
   if (/rate limit|too many requests/i.test(message)) {
-    return "Слишком много попыток. Повторите позже.";
+    return msg("service.slishkom_mnogo_popytok_povtorite_pozzhe");
   }
   if (/network|fetch|failed to fetch|load failed/i.test(message)) {
-    return "Не удалось связаться с сервисом авторизации.";
+    return msg("service.ne_udalos_svyazatsya_s_servisom_avtorizatsii");
   }
   return fallback;
 }
@@ -40,9 +41,9 @@ function normalizeAuthError(error, fallback = "Не удалось выполн�
 function normalizeCallbackError(error) {
   const message = String(error?.message || error || "").trim();
   if (isRedirectConfigurationError(message)) {
-    return "Ссылка возврата не разрешена в Supabase.";
+    return msg("service.ssylka_vozvrata_ne_razreshena_v_supabase");
   }
-  return "Не удалось завершить вход через Google.";
+  return msg("service.ne_udalos_zavershit_vhod_cherez_google");
 }
 
 function readCallbackParameters(locationObject = window.location) {
@@ -101,15 +102,15 @@ export async function handleAuthCallback(clientOverride = null) {
   if (callback.error || callback.errorCode || callback.errorDescription) {
     const sourceMessage = [callback.error, callback.errorCode, callback.errorDescription].filter(Boolean).join(" ");
     const message = isRedirectConfigurationError(sourceMessage)
-      ? "Ссылка возврата не разрешена в Supabase."
-      : "Не удалось завершить вход через Google.";
+      ? msg("service.ssylka_vozvrata_ne_razreshena_v_supabase")
+      : msg("service.ne_udalos_zavershit_vhod_cherez_google");
     setAuthState({ ready: true, error: message });
     cleanAuthCallbackUrl({ removeCode: false });
     return { handled: true, success: false, error: message };
   }
 
   if (!callback.hasCode || !String(callback.code || "").trim()) {
-    const message = "Код авторизации отсутствует.";
+    const message = msg("service.kod_avtorizatsii_otsutstvuet");
     setAuthState({ ready: true, error: message });
     return { handled: true, success: false, error: message };
   }
@@ -123,7 +124,7 @@ export async function handleAuthCallback(clientOverride = null) {
       success: Boolean(current.session && current.user),
       session: current.session || null,
       user: current.user || null,
-      error: current.session && current.user ? null : "Сессия не была создана.",
+      error: current.session && current.user ? null : msg("service.sessiya_ne_byla_sozdana"),
     };
   }
   if (callbackExchangeCode === code && callbackExchangePromise) return callbackExchangePromise;
@@ -138,7 +139,7 @@ export async function handleAuthCallback(clientOverride = null) {
       const session = data?.session || null;
       const user = data?.user || session?.user || null;
       if (!session || !user) {
-        const message = "Сессия не была создана.";
+        const message = msg("service.sessiya_ne_byla_sozdana");
         setAuthState({ ready: true, session: null, user: null, error: message });
         return { handled: true, success: false, error: message };
       }
@@ -179,7 +180,7 @@ export async function initializeAuth() {
       const current = getAuthState();
       const message = hasAuthCallback()
         ? normalizeCallbackError(error)
-        : normalizeAuthError(error, "Не удалось проверить состояние аккаунта.");
+        : normalizeAuthError(error, msg("service.ne_udalos_proverit_sostoyanie_akkaunta"));
       setAuthState({
         ready: true,
         session: current.session || null,
@@ -209,7 +210,7 @@ export async function signInWithGoogle() {
 
 export async function signInWithEmail(email) {
   const normalizedEmail = String(email || "").trim().toLowerCase();
-  if (!normalizedEmail) throw new Error("Введите электронную почту.");
+  if (!normalizedEmail) throw new Error(msg("service.vvedite_elektronnuyu_pochtu"));
 
   setAuthState({ error: null });
   const client = await getSupabaseClient();
@@ -244,7 +245,7 @@ export function getUserProvider(user) {
   const provider = String(user?.app_metadata?.provider || "").toLowerCase();
   if (provider === "google") return "Google";
   if (provider === "email") return "Email";
-  return provider || "Не определён";
+  return provider || msg("service.ne_opredelen");
 }
 
 export function disposeAuth() {

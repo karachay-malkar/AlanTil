@@ -1,8 +1,9 @@
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.8.1";
+import { msg } from "../i18n/index.js?v=13.9.0";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=13.9.0";
 import {
   logSupabaseError,
   normalizeSupabaseError,
-} from "../errors/supabase-error.js?v=13.8.1";
+} from "../errors/supabase-error.js?v=13.9.0";
 
 const NICKNAME_PATTERN = /^[\p{L}\p{N}_]{3,30}$/u;
 const AVATAR_GENDERS = new Set(["male", "female"]);
@@ -18,12 +19,12 @@ export function normalizeNickname(value) {
 
 export function validateNickname(value) {
   const nickname = normalizeNickname(value);
-  if (!nickname) return { valid: false, nickname, message: "Введите никнейм." };
+  if (!nickname) return { valid: false, nickname, message: msg("service.vvedite_nikneym") };
   if (nickname.length < 3 || nickname.length > 30) {
-    return { valid: false, nickname, message: "Никнейм должен содержать от 3 до 30 символов." };
+    return { valid: false, nickname, message: msg("service.nikneym_dolzhen_soderzhat_ot_3_do_30") };
   }
   if (!NICKNAME_PATTERN.test(nickname)) {
-    return { valid: false, nickname, message: "Используйте только буквы, цифры и знак подчёркивания." };
+    return { valid: false, nickname, message: msg("service.ispolzuyte_tolko_bukvy_tsifry_i_znak_podcherkivaniya") };
   }
   return { valid: true, nickname, message: "" };
 }
@@ -52,14 +53,14 @@ export async function isNicknameAvailable(value) {
   return {
     ...validation,
     available: Boolean(data),
-    message: data ? "Никнейм свободен." : "Такой никнейм уже используется.",
+    message: data ? msg("service.nikneym_svoboden") : msg("service.takoy_nikneym_uzhe_ispolzuetsya"),
   };
 }
 
 export async function createProfile(userId, value) {
   const validation = validateNickname(value);
   if (!validation.valid) throw new Error(validation.message);
-  if (!userId) throw new Error("Пользователь не авторизован.");
+  if (!userId) throw new Error(msg("service.polzovatel_ne_avtorizovan"));
 
   const client = await getSupabaseClient();
   const { data, error } = await client
@@ -78,8 +79,8 @@ export function normalizeAvatarGender(value) {
 
 export async function setAvatarGender(userId, value) {
   const avatarGender = normalizeAvatarGender(value);
-  if (!userId) throw new Error("Пользователь не авторизован.");
-  if (!avatarGender) throw new Error("Выберите образ аватара.");
+  if (!userId) throw new Error(msg("service.polzovatel_ne_avtorizovan"));
+  if (!avatarGender) throw new Error(msg("service.vyberite_obraz_avatara"));
 
   const client = await getSupabaseClient();
   const { data, error } = await client
@@ -94,5 +95,5 @@ export async function setAvatarGender(userId, value) {
 
   const current = await getProfile(userId);
   if (current?.avatar_gender === avatarGender) return current;
-  throw new Error("Пол аватара уже выбран и не может быть изменён.");
+  throw new Error(msg("service.pol_avatara_uzhe_vybran_i_ne_mozhet"));
 }

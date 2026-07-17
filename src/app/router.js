@@ -1,34 +1,35 @@
-import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=13.8.1";
-import { EVENTS } from "../shared/analytics/events.js?v=13.8.1";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.8.1";
+import { msg } from "../shared/i18n/index.js?v=13.9.0";
+import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=13.9.0";
+import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.9.0";
 
 const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.8.1"),
-  path: () => import("../features/path/index.js?v=13.8.1"),
-  profile: () => import("../features/profile/index.js?v=13.8.1"),
-  learn: () => import("../features/learn/index.js?v=13.8.1"),
-  test: () => import("../features/test/index.js?v=13.8.1"),
-  match: () => import("../features/match/index.js?v=13.8.1"),
-  songs: () => import("../features/songs/index.js?v=13.8.1"),
-  account: () => import("../features/account/index.js?v=13.8.1"),
-  settings: () => import("../features/settings/index.js?v=13.8.1"),
+  practice: () => import("../features/practice/index.js?v=13.9.0"),
+  path: () => import("../features/path/index.js?v=13.9.0"),
+  profile: () => import("../features/profile/index.js?v=13.9.0"),
+  learn: () => import("../features/learn/index.js?v=13.9.0"),
+  test: () => import("../features/test/index.js?v=13.9.0"),
+  match: () => import("../features/match/index.js?v=13.9.0"),
+  songs: () => import("../features/songs/index.js?v=13.9.0"),
+  account: () => import("../features/account/index.js?v=13.9.0"),
+  settings: () => import("../features/settings/index.js?v=13.9.0"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
-const TITLE_BY_SCREEN = Object.freeze({
-  path: "Путь — Алан тил",
-  practice: "Практика — Алан тил",
-  profile: "Профиль — Алан тил",
-  learn: "Учить слова — Алан тил",
-  test: "Тест — Алан тил",
-  match: "Сопоставление — Алан тил",
-  songs: "Песни — Алан тил",
-  song: "Песня — Алан тил",
-  account: "Аккаунт — Алан тил",
-  settings: "Настройки — Алан тил",
-  privacy: "Политика конфиденциальности — Алан тил",
-  version: "Версия приложения — Алан тил",
-  thanks: "Благодарности — Алан тил",
+const TITLE_KEY_BY_SCREEN = Object.freeze({
+  path: "common.put_alan_til",
+  practice: "common.praktika_alan_til",
+  profile: "common.profil_alan_til",
+  learn: "common.uchit_slova_alan_til",
+  test: "common.test_alan_til",
+  match: "common.sopostavlenie_alan_til",
+  songs: "common.pesni_alan_til",
+  song: "common.pesnya_alan_til",
+  account: "common.akkaunt_alan_til",
+  settings: "common.nastroyki_alan_til",
+  privacy: "common.politika_konfidentsialnosti_alan_til",
+  version: "common.versiya_prilozheniya_alan_til",
+  thanks: "common.blagodarnosti_alan_til",
 });
 
 function decodeSegment(value) {
@@ -214,8 +215,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.8.1&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.8.1&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.9.0&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.9.0&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -232,7 +233,7 @@ export function createRouter({ shell, modal, context }) {
   async function mayLeave(force) {
     if (force || !currentModule?.canLeave || currentModule.canLeave()) return true;
     const message = currentModule?.getLeaveMessage?.()
-      || "Вы точно хотите выйти?<br>Сессия будет сохранена как незавершённая.";
+      || msg("common.vy_tochno_hotite_vyyti_sessiya_budet_sohranena").replace("\n", "<br>");
     return modal.confirm({ message });
   }
 
@@ -274,7 +275,8 @@ export function createRouter({ shell, modal, context }) {
   }
 
   function setDocumentTitle(route) {
-    document.title = TITLE_BY_SCREEN[screenNameOf(route)] || "Алан тил";
+    const key = TITLE_KEY_BY_SCREEN[screenNameOf(route)];
+    document.title = key ? msg(key) : msg("common.alan_til");
   }
 
   function syncBackControls() {
@@ -326,7 +328,7 @@ export function createRouter({ shell, modal, context }) {
   async function mountCurrentRoute(preloadedModule = null) {
     shell.setCounter("");
     shell.clearMode();
-    shell.beginNavigation(current.route, "Открываем…");
+    shell.beginNavigation(current.route, msg("common.otkryvaem"));
     syncBackControls();
     const feature = featureOf(current.route);
     currentModule = preloadedModule || await loadModule(feature);
@@ -402,7 +404,7 @@ export function createRouter({ shell, modal, context }) {
       return true;
     } catch (error) {
       console.error("Router mount failed", error);
-      context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">Не удалось открыть раздел.</div></div></section>`;
+      context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`;
       syncBackControls();
       return false;
     } finally {
@@ -419,6 +421,24 @@ export function createRouter({ shell, modal, context }) {
   async function replace(route, params = {}, options = {}) {
     const target = targetWithInheritedParams(route, params);
     return show(target, { historyMode: "replace", force: options.force === true, reason: options.reason || "route_change" });
+  }
+
+  async function refresh() {
+    if (navigating) return false;
+    navigating = true;
+    try {
+      currentModule?.unmount?.();
+      currentModule = null;
+      const module = await loadModule(featureOf(current.route));
+      await mountCurrentRoute(module);
+      return true;
+    } catch (error) {
+      console.error("Router refresh failed", error);
+      context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`;
+      return false;
+    } finally {
+      navigating = false;
+    }
   }
 
   function fallbackBackTarget() {
@@ -561,6 +581,7 @@ export function createRouter({ shell, modal, context }) {
     start,
     navigate,
     replace,
+    refresh,
     back,
     reset,
     getCurrent,
