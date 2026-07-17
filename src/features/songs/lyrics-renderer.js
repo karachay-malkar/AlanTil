@@ -1,5 +1,5 @@
-import { escapeHtml } from "../../shared/ui/word-renderers.js";
-import { applyAlanCyrillicDialect } from "../../shared/domain/alan-display.js";
+import { escapeHtml } from "../../shared/ui/word-renderers.js?v=13.8";
+import { applyAlanCyrillicDialect } from "../../shared/domain/alan-display.js?v=13.8";
 
 const CHORUS_MARKER = /^(?:припев|рефрен|chorus|къайтарыу|къайтарыуу|кайтарыу)\s*\d*\s*[:.]?$/iu;
 const VERSE_MARKER = /^(?:куплет|строфа|verse)\s*\d*\s*[:.]?$/iu;

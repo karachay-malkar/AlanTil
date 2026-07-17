@@ -1,15 +1,15 @@
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.7.6";
-import { getWords } from "../../shared/data/word-repository.js";
-import { buildLearningRoute } from "../../shared/domain/learning-route.js";
-import { dictionaryPathProgress } from "../../shared/domain/route-progress.js";
-import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.7.6";
-import { activitySummary } from "../../shared/progress/activity-history-store.js";
-import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js";
-import { getStationSize } from "../../shared/settings/user-settings-store.js";
-import { escapeHtml } from "../../shared/ui/html.js";
-import { uiIcon } from "../../shared/ui/icons.js";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.8";
+import { getWords } from "../../shared/data/word-repository.js?v=13.8";
+import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=13.8";
+import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=13.8";
+import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.8";
+import { activitySummary } from "../../shared/progress/activity-history-store.js?v=13.8";
+import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=13.8";
+import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
+import { uiIcon } from "../../shared/ui/icons.js?v=13.8";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.8";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8";
 
 let controller = null;
 

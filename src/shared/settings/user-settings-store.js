@@ -1,9 +1,9 @@
-import { enqueueProgress } from "../progress/progress-queue.js";
+import { enqueueProgress } from "../progress/progress-queue.js?v=13.8";
 import {
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js";
+} from "../progress/storage-scope.js?v=13.8";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 export const DEFAULT_USER_SETTINGS = Object.freeze({
@@ -73,7 +73,12 @@ export function getStationSize() {
   return normalizeStationSize(state.station_size);
 }
 
-export function setUserSettings(updates = {}, { queue = true } = {}) {
+export function setUserSettings(updates = {}, {
+  queue = true,
+  forceQueue = false,
+  requireStorage = false,
+} = {}) {
+  const previous = state;
   const next = normalizeSettings({ ...state, ...updates });
   const changed = next.interface_language_code !== state.interface_language_code
     || next.translation_language_code !== state.translation_language_code
@@ -81,8 +86,12 @@ export function setUserSettings(updates = {}, { queue = true } = {}) {
     || next.alan_dialect_code !== state.alan_dialect_code
     || next.station_size !== state.station_size;
   state = next;
-  writeScopedJson(USER_SETTINGS_KEY, state);
-  if (changed && queue) {
+  const stored = writeScopedJson(USER_SETTINGS_KEY, state);
+  if (!stored && requireStorage) {
+    state = previous;
+    throw new Error("User settings could not be written to local storage.");
+  }
+  if ((changed || forceQueue) && queue) {
     enqueueProgress("user_settings", {
       ...state,
       updated_at: new Date().toISOString(),

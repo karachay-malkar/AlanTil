@@ -1,8 +1,8 @@
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { EVENTS } from "../../shared/analytics/events.js";
-import { PAUSE_ICON_SVG, PLAY_ICON_SVG } from "../../shared/ui/icons.js";
-import { renderMediaPlayer } from "../../shared/ui/media-player.js";
-import { resetPlayerState, songsState } from "./state.js";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { EVENTS } from "../../shared/analytics/events.js?v=13.8";
+import { PAUSE_ICON_SVG, PLAY_ICON_SVG } from "../../shared/ui/icons.js?v=13.8";
+import { renderMediaPlayer } from "../../shared/ui/media-player.js?v=13.8";
+import { resetPlayerState, songsState } from "./state.js?v=13.8";
 
 const PROGRESS_THRESHOLDS = [25, 50, 75, 90];
 let audio = null;

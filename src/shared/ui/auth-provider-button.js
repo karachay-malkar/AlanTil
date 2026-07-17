@@ -1,4 +1,4 @@
-import { escapeHtml } from "./html.js";
+import { escapeHtml } from "./html.js?v=13.8";
 
 const LOADING_LABEL = "Выполняется вход…";
 

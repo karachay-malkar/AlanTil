@@ -1,5 +1,5 @@
-import { screenConfig } from "./screen-registry.js?v=13.7.6";
-import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js";
+import { screenConfig } from "./screen-registry.js?v=13.8";
+import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js?v=13.8";
 
 export function createShell() {
   const appShell = document.getElementById("appShell");

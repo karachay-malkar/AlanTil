@@ -1,7 +1,7 @@
-import { splitGroups } from "../domain/word-selection.js";
-import { escapeHtml } from "./html.js";
-import { renderFavoriteButton } from "./favorite-button.js";
-import { wordFavorites } from "../state/word-favorites.js";
+import { splitGroups } from "../domain/word-selection.js?v=13.8";
+import { escapeHtml } from "./html.js?v=13.8";
+import { renderFavoriteButton } from "./favorite-button.js?v=13.8";
+import { wordFavorites } from "../state/word-favorites.js?v=13.8";
 
 export { escapeHtml };
 

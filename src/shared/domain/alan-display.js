@@ -1,4 +1,4 @@
-import { getUserSettings } from "../settings/user-settings-store.js";
+import { getUserSettings } from "../settings/user-settings-store.js?v=13.8";
 
 function text(value) {
   return String(value || "").trim();

@@ -2,7 +2,7 @@ import {
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js";
+} from "../progress/storage-scope.js?v=13.8";
 
 export function createFavoritesStore(key, normalizeId = (value) => String(value || "").trim()) {
   const listeners = new Set();

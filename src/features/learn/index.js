@@ -1,14 +1,14 @@
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { EVENTS } from "../../shared/analytics/events.js";
-import { getWords } from "../../shared/data/word-repository.js";
-import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js";
-import { createSlugMap } from "../../shared/domain/slugs.js";
-import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { panel } from "../../shared/ui/panel.js?v=13.7.6";
-import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.7.6";
-import { renderResults } from "./results.js?v=13.7.6";
-import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js";
-import { finalizeLearnSession, renderStudy } from "./study.js";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { EVENTS } from "../../shared/analytics/events.js?v=13.8";
+import { getWords } from "../../shared/data/word-repository.js?v=13.8";
+import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.8";
+import { createSlugMap } from "../../shared/domain/slugs.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
+import { panel } from "../../shared/ui/panel.js?v=13.8";
+import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.8";
+import { renderResults } from "./results.js?v=13.8";
+import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.8";
+import { finalizeLearnSession, renderStudy } from "./study.js?v=13.8";
 
 let controller = null;
 let activeContext = null;

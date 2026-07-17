@@ -1,9 +1,9 @@
-import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js";
-import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { escapeHtml } from "../../shared/ui/html.js";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js";
-import { renderStarButton } from "../../shared/ui/word-renderers.js";
-import { getHiddenSet, setHiddenSet } from "../learn/state.js";
+import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8";
+import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=13.8";
 
 function storageKey(station) {
   return station.selectionSetId || station.setId || station.key;

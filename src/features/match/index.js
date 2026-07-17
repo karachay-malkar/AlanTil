@@ -1,8 +1,8 @@
-import { getWords } from "../../shared/data/word-repository.js";
-import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { finalizeMatchSession } from "./engine.js";
-import { clearMatchSession, matchState } from "./state.js";
-import { renderMatchGame, renderMatchMenu, renderMatchResult } from "./view.js";
+import { getWords } from "../../shared/data/word-repository.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
+import { finalizeMatchSession } from "./engine.js?v=13.8";
+import { clearMatchSession, matchState } from "./state.js?v=13.8";
+import { renderMatchGame, renderMatchMenu, renderMatchResult } from "./view.js?v=13.8";
 let controller = null;
 export async function mount(context, params = {}) {
   context.ensureStyle("/src/features/test/test.css", "test-feature-style"); context.ensureStyle("/src/features/match/match.css", "match-feature-style"); controller = new AbortController(); wordFavorites.reload();

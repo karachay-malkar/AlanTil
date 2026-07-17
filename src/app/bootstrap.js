@@ -1,11 +1,11 @@
-import { prepareAnalytics } from "../shared/analytics/analytics.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.7.6";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.7.6";
-import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js";
-import { initPrivacyController } from "../shared/privacy/privacy-controller.js";
-import { createModalService } from "../shared/ui/modal.js";
-import { createRouter } from "./router.js?v=13.7.6";
-import { createShell } from "./shell.js?v=13.7.6";
+import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.8";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.8";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.8";
+import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.8";
+import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.8";
+import { createModalService } from "../shared/ui/modal.js?v=13.8";
+import { createRouter } from "./router.js?v=13.8";
+import { createShell } from "./shell.js?v=13.8";
 
 async function bootstrap() {
   prepareAnalytics();

@@ -1,5 +1,5 @@
-import { getAllStationProgress } from "../progress/station-progress-store.js";
-import { getWordProgress, wordProgressSummary } from "../progress/word-progress-store.js";
+import { getAllStationProgress } from "../progress/station-progress-store.js?v=13.8";
+import { getWordProgress, wordProgressSummary } from "../progress/word-progress-store.js?v=13.8";
 
 function percent(done, total) {
   return total ? Math.round((done / total) * 100) : 0;

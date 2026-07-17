@@ -1,12 +1,12 @@
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js";
-import { songFavorites } from "../../shared/state/song-favorites.js";
-import { renderFavoriteButton } from "../../shared/ui/favorite-button.js";
-import { renderContentListRow } from "../../shared/ui/list.js";
-import { panel } from "../../shared/ui/panel.js?v=13.7.6";
-import { renderExpandableSearch } from "../../shared/ui/search-control.js";
-import { escapeHtml } from "../../shared/ui/html.js";
-import { songsState } from "./state.js";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js?v=13.8";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=13.8";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.8";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.8";
+import { panel } from "../../shared/ui/panel.js?v=13.8";
+import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=13.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
+import { songsState } from "./state.js?v=13.8";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";
 const SEARCH_MODES = [

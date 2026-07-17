@@ -2,12 +2,15 @@ import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js";
-import { escapeHtml } from "../../shared/ui/html.js";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js";
+} from "../../shared/data/word-repository.js?v=13.8";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.8";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.8";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.8";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.8";
 
-const SETTINGS_ASSET_VERSION = "13.7.6";
+const SETTINGS_ASSET_VERSION = "13.8";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -46,6 +49,10 @@ function updateSaveButton(root, saved = false) {
   button.disabled = !hasUnsavedChanges;
   button.classList.toggle("isDirty", hasUnsavedChanges);
   button.textContent = saved ? "Сохранено ✓" : "Сохранить";
+}
+
+function settingsSyncIsPending() {
+  return readProgressQueue().some((entry) => entry.id === "user_settings:current");
 }
 
 async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
@@ -144,7 +151,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="О приложении">
         ${settingsLink("settings.thanks", "Благодарности")}
-        ${settingsLink("settings.version", "Версия приложения", "13.7.6")}
+        ${settingsLink("settings.version", "Версия приложения", "13.8")}
         ${settingsLink("settings.privacy", "Политика конфиденциальности")}
       </section>
     </div>
@@ -188,9 +195,23 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     button.disabled = true;
     button.textContent = "Сохраняем…";
     try {
-      setUserSettings(draftSettings);
-      document.documentElement.lang = draftSettings.interface_language_code || "ru";
-      baselineSettings = { ...draftSettings };
+      const authenticated = Boolean(getCurrentAuthState().user?.id);
+      const persistedSettings = setUserSettings(draftSettings, {
+        forceQueue: authenticated,
+        requireStorage: true,
+      });
+      if (!sameSettings(persistedSettings, draftSettings)) {
+        throw new Error("Локальное хранилище не подтвердило выбранные настройки.");
+      }
+      if (authenticated) {
+        await flushProgressQueue();
+        if (settingsSyncIsPending()) {
+          throw new Error("Настройки сохранены на устройстве, но ещё не синхронизированы.");
+        }
+      }
+      document.documentElement.lang = persistedSettings.interface_language_code || "ru";
+      baselineSettings = { ...persistedSettings };
+      draftSettings = { ...persistedSettings };
       hasUnsavedChanges = false;
       updateSaveButton(context.root, true);
       window.setTimeout(() => updateSaveButton(context.root), 1100);

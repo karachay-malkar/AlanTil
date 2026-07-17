@@ -1,17 +1,17 @@
-import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js";
-import { EVENTS } from "../shared/analytics/events.js";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.7.6";
+import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=13.8";
+import { EVENTS } from "../shared/analytics/events.js?v=13.8";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.8";
 
 const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.7.6"),
-  path: () => import("../features/path/index.js?v=13.7.6"),
-  profile: () => import("../features/profile/index.js?v=13.7.6"),
-  learn: () => import("../features/learn/index.js?v=13.7.6"),
-  test: () => import("../features/test/index.js?v=13.7.6"),
-  match: () => import("../features/match/index.js?v=13.7.6"),
-  songs: () => import("../features/songs/index.js?v=13.7.6"),
-  account: () => import("../features/account/index.js?v=13.7.6"),
-  settings: () => import("../features/settings/index.js?v=13.7.6"),
+  practice: () => import("../features/practice/index.js?v=13.8"),
+  path: () => import("../features/path/index.js?v=13.8"),
+  profile: () => import("../features/profile/index.js?v=13.8"),
+  learn: () => import("../features/learn/index.js?v=13.8"),
+  test: () => import("../features/test/index.js?v=13.8"),
+  match: () => import("../features/match/index.js?v=13.8"),
+  songs: () => import("../features/songs/index.js?v=13.8"),
+  account: () => import("../features/account/index.js?v=13.8"),
+  settings: () => import("../features/settings/index.js?v=13.8"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -214,8 +214,8 @@ export function createRouter({ shell, modal, context }) {
     } catch (error) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.7.6&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.7.6&retry=${Date.now()}`);
+        ? await import(`../features/account/index.js?v=13.8&retry=${Date.now()}`)
+        : await import(`../features/settings/index.js?v=13.8&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }

@@ -1,8 +1,8 @@
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.7.6";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=13.8";
 import {
   logSupabaseError,
   normalizeSupabaseError,
-} from "../errors/supabase-error.js?v=13.7.6";
+} from "../errors/supabase-error.js?v=13.8";
 
 const NICKNAME_PATTERN = /^[\p{L}\p{N}_]{3,30}$/u;
 const AVATAR_GENDERS = new Set(["male", "female"]);

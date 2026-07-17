@@ -1,8 +1,8 @@
-import { getAnalyticsContext, trackEvent } from "../analytics/analytics.js";
-import { EVENTS } from "../analytics/events.js";
-import { normalizeId } from "../domain/word-normalizer.js";
-import { enqueueProgress } from "../progress/progress-queue.js";
-import { createFavoritesStore } from "./favorites-store.js";
+import { getAnalyticsContext, trackEvent } from "../analytics/analytics.js?v=13.8";
+import { EVENTS } from "../analytics/events.js?v=13.8";
+import { normalizeId } from "../domain/word-normalizer.js?v=13.8";
+import { enqueueProgress } from "../progress/progress-queue.js?v=13.8";
+import { createFavoritesStore } from "./favorites-store.js?v=13.8";
 
 export const WORD_FAVORITES_KEY = "fc_favorites_v1";
 const store = createFavoritesStore(WORD_FAVORITES_KEY, normalizeId);

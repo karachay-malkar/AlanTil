@@ -1,8 +1,8 @@
-import { getWords } from "../../shared/data/word-repository.js";
-import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { finalizeTestSession } from "./engine.js";
-import { clearTestSession, testState } from "./state.js";
-import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js?v=13.7.6";
+import { getWords } from "../../shared/data/word-repository.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
+import { finalizeTestSession } from "./engine.js?v=13.8";
+import { clearTestSession, testState } from "./state.js?v=13.8";
+import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js?v=13.8";
 
 let controller = null;
 export async function mount(context, params = {}) {

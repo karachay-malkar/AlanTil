@@ -1,4 +1,4 @@
-import { panel } from "../../shared/ui/panel.js?v=13.7.6";
+import { panel } from "../../shared/ui/panel.js?v=13.8";
 
 export function renderThanks(context) {
   context.shell.setHeaderContent?.({ title: "Благодарности" });

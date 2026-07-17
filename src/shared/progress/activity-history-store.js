@@ -1,4 +1,4 @@
-import { readScopedJson, writeScopedJson } from "./storage-scope.js";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.8";
 
 export const ACTIVITY_HISTORY_KEY = "alantil_activity_history_v13_1";
 const LIMIT = 300;

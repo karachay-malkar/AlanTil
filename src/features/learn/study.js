@@ -1,19 +1,19 @@
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js";
-import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.8";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.8";
+import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js?v=13.8";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js";
-import { wordFavorites } from "../../shared/state/word-favorites.js";
-import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js";
-import { renderFavoriteButton } from "../../shared/ui/favorite-button.js";
-import { uiIcon } from "../../shared/ui/icons.js";
-import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js";
-import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js";
-import { captureLearnActionSnapshot, cloneLearnValue, restoreLearnActionSnapshot } from "./action-history.js";
+} from "../../shared/progress/session-builders.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
+import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js?v=13.8";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.8";
+import { uiIcon } from "../../shared/ui/icons.js?v=13.8";
+import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js?v=13.8";
+import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js?v=13.8";
+import { captureLearnActionSnapshot, cloneLearnValue, restoreLearnActionSnapshot } from "./action-history.js?v=13.8";
 
 function currentQueue() {
   return learnState.round === "main" ? learnState.mainQueue : learnState.repeatQueue;

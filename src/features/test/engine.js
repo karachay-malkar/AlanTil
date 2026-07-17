@@ -1,14 +1,14 @@
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js";
-import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.8";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.8";
+import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js?v=13.8";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js";
-import { testState } from "./state.js";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js";
+} from "../../shared/progress/session-builders.js?v=13.8";
+import { testState } from "./state.js?v=13.8";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.8";
 
 function sessionWords() {
   return testState.results.map((result) => ({

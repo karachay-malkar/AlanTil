@@ -1,6 +1,6 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.7.6";
-import { normalizeId } from "../domain/word-normalizer.js";
-import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.8";
+import { normalizeId } from "../domain/word-normalizer.js?v=13.8";
+import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=13.8";
 import {
   enqueueProgress,
   mergeProgressQueues,
@@ -8,14 +8,15 @@ import {
   removeProgressEntry,
   updateProgressEntry,
   writeProgressQueue,
-} from "./progress-queue.js";
-import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js";
-import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js";
-import { replaceUserRewards } from "./reward-store.js";
-import { replaceRouteSettings } from "./route-settings-store.js";
-import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js";
-import { snapshotRecoveredSession } from "./session-builders.js";
-import { readActiveSessions, removeActiveSession } from "./session-store.js";
+} from "./progress-queue.js?v=13.8";
+import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js?v=13.8";
+import { nextUnattemptedProgressEntry, shouldDiscardProgressError } from "./progress-sync-policy.js?v=13.8";
+import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js?v=13.8";
+import { replaceUserRewards } from "./reward-store.js?v=13.8";
+import { replaceRouteSettings } from "./route-settings-store.js?v=13.8";
+import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js?v=13.8";
+import { snapshotRecoveredSession } from "./session-builders.js?v=13.8";
+import { readActiveSessions, removeActiveSession } from "./session-store.js?v=13.8";
 import {
   getStorageScope,
   getStorageScopeUserId,
@@ -26,7 +27,7 @@ import {
   STORAGE_SCOPES,
   storageScopeForUser,
   writeScopedJson,
-} from "./storage-scope.js";
+} from "./storage-scope.js?v=13.8";
 
 const WORD_FAVORITES_KEY = "fc_favorites_v1";
 const SONG_FAVORITES_KEY = "alantil_song_favorites_v1";
@@ -182,8 +183,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=13.7.6"),
-    import("../state/song-favorites.js?v=13.7.6"),
+    import("../state/word-favorites.js?v=13.8"),
+    import("../state/song-favorites.js?v=13.8"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -234,10 +235,10 @@ async function applyCloudState(state) {
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=13.7.6");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=13.8");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=13.7.6");
+    const { songFavorites } = await import("../state/song-favorites.js?v=13.8");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});
@@ -256,7 +257,7 @@ async function applyQueueEntryLocally(entry) {
   } else if (entry.type === "station_progress") {
     mergeStationProgressRows([payload]);
   } else if (entry.type === "user_reward") {
-    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js");
+    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js?v=13.8");
     replaceUserRewards([...getUserRewards(), payload]);
   } else if (entry.type === "route_settings") {
     replaceRouteSettings(payload);
@@ -382,24 +383,35 @@ export async function flushProgressQueue() {
   if (syncPromise) return syncPromise;
 
   syncPromise = (async () => {
+    const attemptedIds = new Set();
+    let completedWithoutErrors = true;
     let queue = readProgressQueue(scope);
-    while (queue.length && getStorageScope() === scope && getCurrentAuthState().user?.id === userId) {
-      const entry = queue[0];
+    while (getStorageScope() === scope && getCurrentAuthState().user?.id === userId) {
+      const entry = nextUnattemptedProgressEntry(queue, attemptedIds);
+      if (!entry) break;
+      attemptedIds.add(entry.id);
       try {
         await executeProgressEntry(entry);
         removeProgressEntry(entry.id, scope);
       } catch (error) {
-        updateProgressEntry(entry.id, {
-          attempts: Number(entry.attempts || 0) + 1,
-          last_error_at: new Date().toISOString(),
-        }, scope);
-        console.warn("Progress synchronization paused", error);
-        return false;
+        if (shouldDiscardProgressError(entry, error)) {
+          // A favorite from a removed legacy dictionary cannot satisfy the
+          // canonical content_words foreign key and must not block new data.
+          removeProgressEntry(entry.id, scope);
+          console.warn("Obsolete word favorite was discarded", entry.payload?.word_id);
+        } else {
+          completedWithoutErrors = false;
+          updateProgressEntry(entry.id, {
+            attempts: Number(entry.attempts || 0) + 1,
+            last_error_at: new Date().toISOString(),
+          }, scope);
+          console.warn("Progress entry synchronization failed", entry.type, error);
+        }
       }
       queue = readProgressQueue(scope);
     }
     finalizeGuestClaimIfReady(scope);
-    return true;
+    return completedWithoutErrors;
   })().finally(() => {
     syncPromise = null;
   });

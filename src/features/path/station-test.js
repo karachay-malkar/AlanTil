@@ -1,14 +1,14 @@
-import { PATH_CONFIG } from "../../config/path.js";
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js";
-import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js";
-import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js";
-import { recordActivitySession } from "../../shared/progress/activity-history-store.js";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js";
-import { stationTestPhase } from "../../shared/progress/station-progress-store.js";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js";
-import { escapeHtml } from "../../shared/ui/html.js";
+import { PATH_CONFIG } from "../../config/path.js?v=13.8";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.8";
+import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.8";
+import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.8";
+import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.8";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.8";
+import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.8";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.8";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
 
 const ACTIVE_KEY = "alantil_station_test_active_v13_5";
 

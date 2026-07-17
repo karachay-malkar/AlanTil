@@ -1,15 +1,15 @@
-import { trackEvent } from "../../shared/analytics/analytics.js";
-import { EVENTS } from "../../shared/analytics/events.js";
-import { getWords } from "../../shared/data/word-repository.js";
-import { songFavorites } from "../../shared/state/song-favorites.js";
-import { closeInfoModal } from "../../shared/ui/info-modal.js";
-import { renderSongsCatalog } from "./catalog.js?v=13.7.6";
-import { disposePlayer } from "./player.js";
-import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js";
-import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js";
-import { renderPlaylists } from "./playlists.js?v=13.7.6";
-import { renderSongView } from "./song-view.js?v=13.7.6";
-import { songsState } from "./state.js";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
+import { EVENTS } from "../../shared/analytics/events.js?v=13.8";
+import { getWords } from "../../shared/data/word-repository.js?v=13.8";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=13.8";
+import { closeInfoModal } from "../../shared/ui/info-modal.js?v=13.8";
+import { renderSongsCatalog } from "./catalog.js?v=13.8";
+import { disposePlayer } from "./player.js?v=13.8";
+import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=13.8";
+import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=13.8";
+import { renderPlaylists } from "./playlists.js?v=13.8";
+import { renderSongView } from "./song-view.js?v=13.8";
+import { songsState } from "./state.js?v=13.8";
 
 let controller = null;
 let activeContext = null;

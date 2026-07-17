@@ -1,4 +1,4 @@
-import { escapeHtml } from "./html.js";
+import { escapeHtml } from "./html.js?v=13.8";
 
 function dotCount(height, routeHeight) {
   if (!routeHeight) return 4;

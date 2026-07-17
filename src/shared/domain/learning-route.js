@@ -1,6 +1,6 @@
-import { PATH_CONFIG } from "../../config/path.js";
-import { createSlugMap, toSlug } from "./slugs.js";
-import { sortNatural } from "./word-selection.js";
+import { PATH_CONFIG } from "../../config/path.js?v=13.8";
+import { createSlugMap, toSlug } from "./slugs.js?v=13.8";
+import { sortNatural } from "./word-selection.js?v=13.8";
 
 export function normalizeRouteText(value) {
   return String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
