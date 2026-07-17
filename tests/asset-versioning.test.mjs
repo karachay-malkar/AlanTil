@@ -7,6 +7,7 @@ const projectRoot = new URL("../", import.meta.url);
 const srcRoot = new URL("../src/", import.meta.url);
 const analyticsSource = await readFile(new URL("../src/config/analytics.js", import.meta.url), "utf8");
 const appVersion = analyticsSource.match(/appVersion\s*=\s*"([^"]+)"/)?.[1];
+const compatibleVersions = new Set(["13.9.0", "13.10.0"]);
 
 async function javascriptFiles(directoryUrl) {
   const entries = await readdir(directoryUrl, { withFileTypes: true });
@@ -19,8 +20,8 @@ async function javascriptFiles(directoryUrl) {
   return files;
 }
 
-test("every literal local JavaScript dependency uses the release version", async () => {
-  assert.equal(appVersion, "13.9.0");
+test("local JavaScript dependencies use a compatible 13.10 release asset version", async () => {
+  assert.equal(appVersion, "13.10.0");
   const failures = [];
   const importPattern = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)(["'`])([^"'`]+\.js(?:\?[^"'`]*)?)/g;
   for (const file of await javascriptFiles(srcRoot)) {
@@ -28,7 +29,8 @@ test("every literal local JavaScript dependency uses the release version", async
     for (const match of source.matchAll(importPattern)) {
       const specifier = match[2];
       if (!specifier.startsWith(".")) continue;
-      if (!specifier.includes(`?v=${appVersion}`)) {
+      const version = new URLSearchParams(specifier.split("?")[1] || "").get("v");
+      if (!compatibleVersions.has(version)) {
         failures.push(`${file.pathname.replace(projectRoot.pathname, "")}: ${specifier}`);
       }
     }

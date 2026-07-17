@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=13.10.0";
 import {
   DICTIONARY_CACHE_KEY,
   DICTIONARY_CONTENT_VIEW,
@@ -6,20 +6,21 @@ import {
   DICTIONARY_METADATA_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
 } from "../../config/words.js?v=13.9.0";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.9.0";
+import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.9.0";
 import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.9.0";
 import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.9.0";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
 const PAGE_SIZE = 1000;
+const REQUEST_TIMEOUT_MS = 7000;
 let words = null;
 let loadingPromise = null;
 let requestCount = 0;
 let source = "none";
 let installedVersion = "";
 
-function normalizeCollection(collection, source = "cache") {
-  const normalize = source === "supabase" ? normalizeSupabaseWordEntry : normalizeWordEntry;
+function normalizeCollection(collection, sourceName = "cache") {
+  const normalize = sourceName === "supabase" ? normalizeSupabaseWordEntry : normalizeWordEntry;
   return (Array.isArray(collection) ? collection : [])
     .map((row) => normalize(row))
     .filter(Boolean)
@@ -62,46 +63,82 @@ function readDictionaryCache() {
   }
 }
 
-async function fetchContentWords(client) {
+function restUrl(resource, parameters = {}) {
+  const url = new URL(`/rest/v1/${resource}`, supabaseUrl);
+  Object.entries(parameters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+  });
+  return url;
+}
+
+async function fetchRestJson(url, label) {
+  requestCount += 1;
+  const controller = new AbortController();
+  const timer = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        apikey: supabasePublishableKey,
+        Authorization: `Bearer ${supabasePublishableKey}`,
+        Accept: "application/json",
+      },
+    });
+    if (!response.ok) throw new Error(`${label} failed: ${response.status}`);
+    return response.json();
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      const timeoutError = new Error(`${label} timeout`);
+      timeoutError.code = "ALANTIL_TIMEOUT";
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timer);
+  }
+}
+
+async function fetchContentWords() {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
-    requestCount += 1;
-    const result = await client
-      .from(DICTIONARY_CONTENT_VIEW)
-      .select("*")
-      .order("global_order", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
-    if (result.error) throw result.error;
-    const page = Array.isArray(result.data) ? result.data : [];
-    rows.push(...page);
-    if (page.length < PAGE_SIZE) break;
+    const page = await fetchRestJson(restUrl(DICTIONARY_CONTENT_VIEW, {
+      select: "*",
+      order: "global_order.asc",
+      offset: from,
+      limit: PAGE_SIZE,
+    }), "Dictionary page");
+    const normalizedPage = Array.isArray(page) ? page : [];
+    rows.push(...normalizedPage);
+    if (normalizedPage.length < PAGE_SIZE) break;
   }
   return rows;
 }
 
-async function fetchLatestVersion(client) {
-  requestCount += 1;
-  const { data, error } = await client
-    .from(DICTIONARY_METADATA_TABLE)
-    .select("current_version")
-    .eq("dictionary_key", DICTIONARY_KEY)
-    .single();
-  if (error) throw error;
-  const version = String(data?.current_version || "").trim();
+async function fetchLatestVersion() {
+  const data = await fetchRestJson(restUrl(DICTIONARY_METADATA_TABLE, {
+    select: "current_version",
+    dictionary_key: `eq.${DICTIONARY_KEY}`,
+    limit: 1,
+  }), "Dictionary version");
+  const version = String(data?.[0]?.current_version || "").trim();
   if (!version) throw new Error(msg("service.versiya_slovarya_na_servere_ne_ukazana"));
   return version;
 }
 
 async function downloadDictionary() {
-  const client = await getSupabaseClient();
-  const version = await fetchLatestVersion(client);
-  const downloadedWords = validateDictionary(normalizeCollection(await fetchContentWords(client), "supabase"));
+  const [version, rawWords] = await Promise.all([
+    fetchLatestVersion(),
+    fetchContentWords(),
+  ]);
+  const downloadedWords = validateDictionary(normalizeCollection(rawWords, "supabase"));
   if (!writeJson(DICTIONARY_CACHE_KEY, { version, words: downloadedWords })) {
     throw new Error(msg("service.ne_udalos_sohranit_slovar_na_ustroystve"));
   }
   words = downloadedWords;
   installedVersion = version;
-  source = "supabase";
+  source = "supabase-rest";
   return { version, words: downloadedWords };
 }
 
@@ -137,8 +174,7 @@ export function getInstalledDictionaryVersion() {
 export async function getDictionaryVersionStatus() {
   clearLegacyDictionaryCaches();
   const currentVersion = getInstalledDictionaryVersion();
-  const client = await getSupabaseClient();
-  const latestVersion = await fetchLatestVersion(client);
+  const latestVersion = await fetchLatestVersion();
   return {
     currentVersion,
     latestVersion,

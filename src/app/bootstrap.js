@@ -1,7 +1,15 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.9.0";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.9.0";
-import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.9.0";
+import {
+  getCurrentAuthState,
+  initializeAuth,
+  subscribeToAuth,
+} from "../shared/auth/auth-service.js?v=13.10.0";
+import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.0";
+import {
+  initializeProgressSystem,
+  pullCloudProgress,
+} from "../shared/progress/progress-sync.js?v=13.9.0";
+import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.0";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
@@ -25,12 +33,29 @@ async function bootstrap() {
   };
 
   shell.renderHome();
-  await initializeAuth();
+
+  // The local guest scope is ready before any network work begins. A slow or
+  // blocked auth service can no longer hold the first screen.
   await initializeProgressSystem();
+  void initializeAuth();
 
   const router = createRouter({ shell, modal, context });
   await router.start();
   void initPrivacyController({ appRouter: router });
+  initGuestProfilePrompt({ modal, router });
+
+  let activeUserId = getCurrentAuthState().user?.id || "";
+  subscribeToAuth((state) => {
+    if (!state.ready) return;
+    const nextUserId = state.user?.id || "";
+    if (nextUserId === activeUserId) return;
+    activeUserId = nextUserId;
+    if (!nextUserId) {
+      void router.refresh();
+      return;
+    }
+    void pullCloudProgress().finally(() => router.refresh());
+  });
 
   void initTelegram({
     adapter: telegram,

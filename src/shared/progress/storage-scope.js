@@ -23,6 +23,10 @@ function notifyScopeChanged() {
   });
 }
 
+function isInactiveGuestScope(scope) {
+  return String(scope || "") === GUEST_SCOPE && activeScope !== GUEST_SCOPE;
+}
+
 export function storageScopeForUser(userId) {
   const normalized = String(userId || "").trim();
   return normalized ? `user:${normalized}` : GUEST_SCOPE;
@@ -54,6 +58,10 @@ export function scopedStorageKey(baseKey, scope = activeScope) {
 }
 
 export function readScopedJson(baseKey, fallback, scope = activeScope) {
+  // Guest data is deliberately inaccessible while an account scope is active.
+  // This prevents legacy claim logic from copying guest progress into accounts,
+  // while preserving that guest progress for the next signed-out visit.
+  if (isInactiveGuestScope(scope)) return fallback;
   try {
     return safeParse(localStorage.getItem(scopedStorageKey(baseKey, scope)), fallback);
   } catch {
@@ -62,6 +70,7 @@ export function readScopedJson(baseKey, fallback, scope = activeScope) {
 }
 
 export function writeScopedJson(baseKey, value, scope = activeScope) {
+  if (isInactiveGuestScope(scope)) return false;
   try {
     localStorage.setItem(scopedStorageKey(baseKey, scope), JSON.stringify(value));
     return true;
@@ -71,6 +80,7 @@ export function writeScopedJson(baseKey, value, scope = activeScope) {
 }
 
 export function removeScopedValue(baseKey, scope = activeScope) {
+  if (isInactiveGuestScope(scope)) return false;
   try {
     localStorage.removeItem(scopedStorageKey(baseKey, scope));
     return true;
@@ -80,6 +90,7 @@ export function removeScopedValue(baseKey, scope = activeScope) {
 }
 
 export function hasScopedValue(baseKey, scope = activeScope) {
+  if (isInactiveGuestScope(scope)) return false;
   try {
     return localStorage.getItem(scopedStorageKey(baseKey, scope)) !== null;
   } catch {

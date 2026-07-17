@@ -3,9 +3,14 @@ import {
   subscribeUserSettings,
 } from "../settings/user-settings-store.js?v=13.9.0";
 import { INTERFACE_MESSAGES } from "./messages.js?v=13.9.0";
+import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=13.10.0";
 
 export const SUPPORTED_INTERFACE_LANGUAGES = Object.freeze(["ru", "en", "tr"]);
 
+const ALL_INTERFACE_MESSAGES = Object.freeze({
+  ...INTERFACE_MESSAGES,
+  ...RELEASE_MESSAGES_13_10,
+});
 const missingKeys = new Set();
 const listeners = new Set();
 let currentLanguage = "ru";
@@ -24,7 +29,7 @@ function interpolate(template, params = {}) {
 }
 
 function sourceMessage(key) {
-  const source = INTERFACE_MESSAGES[key]?.ru;
+  const source = ALL_INTERFACE_MESSAGES[key]?.ru;
   if (source) return source;
   if (!missingKeys.has(key)) {
     missingKeys.add(key);
@@ -44,7 +49,7 @@ export function getInterfaceLocale() {
 export function messageForLanguage(language, key, params = {}) {
   const locale = normalizeLanguage(language);
   const source = sourceMessage(key);
-  const translated = INTERFACE_MESSAGES[key]?.[locale] || source;
+  const translated = ALL_INTERFACE_MESSAGES[key]?.[locale] || source;
   return interpolate(translated, params);
 }
 
@@ -99,5 +104,5 @@ export function initializeI18n() {
 
 export function hasCompleteTranslations(language) {
   const locale = normalizeLanguage(language);
-  return Object.values(INTERFACE_MESSAGES).every((entry) => Boolean(entry?.[locale]));
+  return Object.values(ALL_INTERFACE_MESSAGES).every((entry) => Boolean(entry?.[locale]));
 }

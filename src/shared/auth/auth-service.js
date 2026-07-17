@@ -1,7 +1,7 @@
-import { msg } from "../i18n/index.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=13.10.0";
 import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.9.0";
 import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.9.0";
-import { getSupabaseClient } from "./supabase-client.js?v=13.9.0";
+import { getSupabaseClient } from "./supabase-client.js?v=13.10.0";
 
 const AUTH_CALLBACK_PARAMETERS = Object.freeze([
   "code",
@@ -9,12 +9,28 @@ const AUTH_CALLBACK_PARAMETERS = Object.freeze([
   "error_code",
   "error_description",
 ]);
+const OAUTH_PROVIDERS = new Set(["google", "apple"]);
+const AUTH_REQUEST_TIMEOUT_MS = 7000;
 
 let initializationPromise = null;
 let authSubscription = null;
 let callbackExchangeCode = "";
 let callbackExchangePromise = null;
 const successfulCallbackCodes = new Set();
+
+function withTimeout(value, timeoutMs = AUTH_REQUEST_TIMEOUT_MS, label = "Auth request") {
+  let timer = 0;
+  return Promise.race([
+    Promise.resolve(value),
+    new Promise((_, reject) => {
+      timer = globalThis.setTimeout(() => {
+        const error = new Error(`${label} timeout`);
+        error.code = "ALANTIL_TIMEOUT";
+        reject(error);
+      }, timeoutMs);
+    }),
+  ]).finally(() => globalThis.clearTimeout(timer));
+}
 
 function isRedirectConfigurationError(value) {
   return /(?:redirect(?:_to)?|redirect url|callback url|return url|requested path).*(?:not allowed|not permitted|invalid|allow list)|not in (?:the )?allow list/i.test(value);
@@ -32,7 +48,7 @@ function normalizeAuthError(error, fallback = msg("service.ne_udalos_vypolnit_vh
   if (/rate limit|too many requests/i.test(message)) {
     return msg("service.slishkom_mnogo_popytok_povtorite_pozzhe");
   }
-  if (/network|fetch|failed to fetch|load failed/i.test(message)) {
+  if (/network|fetch|failed to fetch|load failed|timeout/i.test(message)) {
     return msg("service.ne_udalos_svyazatsya_s_servisom_avtorizatsii");
   }
   return fallback;
@@ -133,7 +149,7 @@ export async function handleAuthCallback(clientOverride = null) {
   callbackExchangePromise = (async () => {
     try {
       const client = clientOverride || await getSupabaseClient();
-      const { data, error } = await client.auth.exchangeCodeForSession(code);
+      const { data, error } = await withTimeout(client.auth.exchangeCodeForSession(code), AUTH_REQUEST_TIMEOUT_MS, "Auth callback");
       if (error) throw error;
 
       const session = data?.session || null;
@@ -160,7 +176,7 @@ export async function handleAuthCallback(clientOverride = null) {
   return callbackExchangePromise;
 }
 
-export async function initializeAuth() {
+function startAuthInitialization() {
   if (initializationPromise) return initializationPromise;
 
   initializationPromise = (async () => {
@@ -169,7 +185,7 @@ export async function initializeAuth() {
       const callbackResult = await handleAuthCallback(client);
 
       if (!callbackResult.handled || !callbackResult.success) {
-        const { data, error } = await client.auth.getSession();
+        const { data, error } = await withTimeout(client.auth.getSession(), 5000, "Auth session");
         if (error) throw error;
         setSessionState(data.session || null, callbackResult.handled ? callbackResult.error || null : null);
       }
@@ -194,41 +210,47 @@ export async function initializeAuth() {
   return initializationPromise;
 }
 
-export async function signInWithGoogle() {
+// Start the check, but never hold the application shell while the network or
+// an external module is unavailable. Consumers receive updates via subscribeToAuth.
+export async function initializeAuth() {
+  void startAuthInitialization();
+  return getAuthState();
+}
+
+export function waitForAuthInitialization() {
+  return startAuthInitialization();
+}
+
+export async function signInWithProvider(provider) {
+  const normalized = String(provider || "").trim().toLowerCase();
+  if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+
   setAuthState({ error: null });
   const client = await getSupabaseClient();
-  const { data, error } = await client.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: getAuthRedirectUrl(),
-      queryParams: { prompt: "select_account" },
-    },
-  });
+  const options = { redirectTo: getAuthRedirectUrl() };
+  if (normalized === "google") options.queryParams = { prompt: "select_account" };
+  const { data, error } = await withTimeout(client.auth.signInWithOAuth({
+    provider: normalized,
+    options,
+  }), AUTH_REQUEST_TIMEOUT_MS, "OAuth sign in");
   if (error) throw new Error(normalizeAuthError(error));
   return data;
 }
 
-export async function signInWithEmail(email) {
-  const normalizedEmail = String(email || "").trim().toLowerCase();
-  if (!normalizedEmail) throw new Error(msg("service.vvedite_elektronnuyu_pochtu"));
+export function signInWithGoogle() {
+  return signInWithProvider("google");
+}
 
-  setAuthState({ error: null });
-  const client = await getSupabaseClient();
-  const { data, error } = await client.auth.signInWithOtp({
-    email: normalizedEmail,
-    options: {
-      emailRedirectTo: getAuthRedirectUrl(),
-      shouldCreateUser: true,
-    },
-  });
-  if (error) throw new Error(normalizeAuthError(error));
-  return data;
+// Kept temporarily for module compatibility. Email sign-in is removed from
+// the interface and cannot start an authentication request.
+export async function signInWithEmail() {
+  throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
 }
 
 export async function signOut() {
   setAuthState({ error: null });
   const client = await getSupabaseClient();
-  const { error } = await client.auth.signOut({ scope: "local" });
+  const { error } = await withTimeout(client.auth.signOut({ scope: "local" }), 5000, "Sign out");
   if (error) throw new Error(normalizeAuthError(error));
   setSessionState(null, null);
 }
@@ -244,7 +266,7 @@ export function subscribeToAuth(subscriber) {
 export function getUserProvider(user) {
   const provider = String(user?.app_metadata?.provider || "").toLowerCase();
   if (provider === "google") return "Google";
-  if (provider === "email") return "Email";
+  if (provider === "apple") return "Apple";
   return provider || msg("service.ne_opredelen");
 }
 
