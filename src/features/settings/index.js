@@ -1,17 +1,17 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.10.3";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=13.9.0";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.9.0";
+} from "../../shared/data/word-repository.js?v=13.10.3";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.3";
 import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.9.0";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.9.0";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.10.3";
 import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.9.0";
+const SETTINGS_ASSET_VERSION = "13.10.3";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -56,23 +56,55 @@ function settingsSyncIsPending() {
   return readProgressQueue().some((entry) => entry.id === "user_settings:current");
 }
 
-async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
+function updateDictionaryVersionBlock(root, {
+  currentVersion = getInstalledDictionaryVersion(),
+  latestVersion = msg("settings.nedostupna"),
+  needsUpdate = false,
+  checking = false,
+  error = "",
+} = {}) {
+  const current = root.querySelector("[data-dictionary-current]");
+  const latest = root.querySelector("[data-dictionary-latest]");
+  const button = root.querySelector("[data-dictionary-refresh]");
+  const badge = root.querySelector("[data-dictionary-update-badge]");
+  const notice = root.querySelector("[data-dictionary-update-notice]");
+  const errorBox = root.querySelector("[data-dictionary-version-error]");
+
+  if (current) current.textContent = currentVersion || msg("settings.ne_ustanovlena");
+  if (latest) latest.textContent = checking ? "…" : (latestVersion || msg("settings.nedostupna"));
+  if (button) {
+    button.disabled = checking || !needsUpdate;
+    button.closest(".settingsUpdateWrap")?.classList.toggle("needsUpdate", needsUpdate);
+  }
+  if (badge) badge.hidden = !needsUpdate;
+  if (notice) notice.hidden = !needsUpdate;
+  if (errorBox) {
+    errorBox.hidden = !error;
+    errorBox.textContent = error;
+  }
+}
+
+async function updateDictionaryVersionStatus(root, signal) {
+  updateDictionaryVersionBlock(root, { checking: true });
+  try {
+    const status = await getDictionaryVersionStatus({ signal, retry: false });
+    if (signal.aborted || !root.isConnected) return;
+    updateDictionaryVersionBlock(root, status);
+  } catch {
+    if (signal.aborted || !root.isConnected) return;
+    updateDictionaryVersionBlock(root, {
+      currentVersion: getInstalledDictionaryVersion(),
+      error: msg("settings.ne_udalos_proverit_aktualnuyu_versiyu"),
+    });
+  }
+}
+
+function renderSettingsHome(context, signal, { actionError = "" } = {}) {
   context.shell.setHeaderContent?.({ title: "Alan Til!" });
   let baselineSettings = getUserSettings();
   draftSettings = { ...baselineSettings };
   hasUnsavedChanges = false;
-
-  const currentFallback = getInstalledDictionaryVersion();
-  let versionStatus = null;
-  let versionError = "";
-  try {
-    versionStatus = await getDictionaryVersionStatus();
-  } catch {
-    versionError = msg("settings.ne_udalos_proverit_aktualnuyu_versiyu");
-  }
-  const currentVersion = versionStatus?.currentVersion || currentFallback || msg("settings.ne_ustanovlena");
-  const latestVersion = versionStatus?.latestVersion || msg("settings.nedostupna");
-  const needsUpdate = versionStatus?.needsUpdate === true;
+  const currentVersion = getInstalledDictionaryVersion();
 
   const languageChoices = [
     ["ru", "RU", msg("settings.russkiy")],
@@ -109,7 +141,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     name: "stageSize",
     value,
     label: String(value),
-    ariaLabel: msg("settings.slov_v_etape", { value: value }),
+    ariaLabel: msg("settings.slov_v_etape", { value }),
     checked: Number(draftSettings.station_size) === value,
   })).join("");
 
@@ -136,23 +168,23 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
       <section class="settingsSection settingsDictionarySection">
         <div class="settingsSectionHead">
           <h2 class="settingsSectionTitle">${msg("settings.versiya_slovarya")}</h2>
-          <span class="settingsUpdateWrap ${needsUpdate ? "needsUpdate" : ""}">
-            <button class="btn actionPrimary actionCompact settingsSmallAction settingsUpdateButton" type="button" data-dictionary-refresh ${needsUpdate ? "" : "disabled"}>${msg("settings.obnovit")}</button>
-            ${needsUpdate ? `<span class="settingsUpdateBadge" aria-label="${msg("settings.dostupno_obnovlenie")}">!</span>` : ""}
+          <span class="settingsUpdateWrap">
+            <button class="btn actionPrimary actionCompact settingsSmallAction settingsUpdateButton" type="button" data-dictionary-refresh disabled>${msg("settings.obnovit")}</button>
+            <span data-dictionary-update-badge class="settingsUpdateBadge" aria-label="${msg("settings.dostupno_obnovlenie")}" hidden>!</span>
           </span>
         </div>
         <dl class="settingsDictionaryVersions">
-          <div><dt>${msg("settings.tekuschaya")}</dt><dd>${escapeHtml(currentVersion)}</dd></div>
-          <div><dt>${msg("settings.aktualnaya")}</dt><dd>${escapeHtml(latestVersion)}</dd></div>
+          <div><dt>${msg("settings.tekuschaya")}</dt><dd data-dictionary-current>${escapeHtml(currentVersion || msg("settings.ne_ustanovlena"))}</dd></div>
+          <div><dt>${msg("settings.aktualnaya")}</dt><dd data-dictionary-latest>…</dd></div>
         </dl>
-        ${needsUpdate ? `<div class="settingsDictionaryNotice" role="status">${msg("settings.obnovite_slovar")}</div>` : ""}
-        ${versionError ? `<div class="settingsDictionaryError" role="alert">${escapeHtml(versionError)}</div>` : ""}
+        <div data-dictionary-update-notice class="settingsDictionaryNotice" role="status" hidden>${msg("settings.obnovite_slovar")}</div>
+        <div data-dictionary-version-error class="settingsDictionaryError" role="alert" hidden></div>
         ${actionError ? `<div class="settingsDictionaryError" role="alert">${escapeHtml(actionError)}</div>` : ""}
       </section>
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.9.0")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.3")}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>
@@ -230,16 +262,17 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
   context.root.querySelector("[data-dictionary-refresh]")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
-    if (!needsUpdate) return;
     button.disabled = true;
     button.textContent = msg("settings.obnovlyaem");
     try {
-      await refreshDictionary();
-      await renderSettingsHome(context, signal);
+      await refreshDictionary({ signal });
+      if (!signal.aborted) renderSettingsHome(context, signal);
     } catch (error) {
-      await renderSettingsHome(context, signal, { actionError: error?.message || msg("settings.ne_udalos_obnovit_slovar") });
+      if (!signal.aborted) renderSettingsHome(context, signal, { actionError: error?.message || msg("settings.ne_udalos_obnovit_slovar") });
     }
   }, { signal });
+
+  void updateDictionaryVersionStatus(context.root, signal);
 }
 
 async function importSettingsScreen(path) {
@@ -257,7 +290,7 @@ export async function mount(context, params = {}) {
   const screen = params.screen || "home";
 
   if (screen === "home") {
-    await renderSettingsHome(context, controller.signal);
+    renderSettingsHome(context, controller.signal);
     return;
   }
   if (screen === "privacy") {

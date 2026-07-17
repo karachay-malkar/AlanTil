@@ -41,6 +41,14 @@ test("guest action remains available independently of Google", async () => {
   assert.match(login, /onGuest/);
 });
 
+test("guest auth initialization avoids loading Supabase without a saved session", async () => {
+  const auth = await read("src/shared/auth/auth-service.js");
+  assert.match(auth, /!callbackPresent && !hasPersistedAuthSession\(\)/);
+  const guardIndex = auth.indexOf("!callbackPresent && !hasPersistedAuthSession()");
+  const clientIndex = auth.indexOf("const client = await getSupabaseClient()", guardIndex);
+  assert.ok(guardIndex >= 0 && clientIndex > guardIndex);
+});
+
 test("cold start has a local dictionary and public REST uses only apikey", async () => {
   const repository = await read("src/shared/data/word-repository.js");
   const starter = await read("src/data/starter-dictionary.js");
@@ -54,16 +62,17 @@ test("cold start has a local dictionary and public REST uses only apikey", async
   assert.match(starter, /"1760"/);
 });
 
-test("service worker caches the shell and local SDK", async () => {
+test("service worker caches only the guest shell eagerly", async () => {
   const worker = await read("service-worker.js");
-  assert.match(worker, /supabase-js\/payload-1\.txt\?v=13\.10\.2/);
   assert.match(worker, /navigationResponse/);
   assert.match(worker, /staticResponse/);
+  const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
+  assert.match(coreAssets, /starter-dictionary/);
+  assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
 });
 
-
 test("starter dictionary contains valid current rows for every story", async () => {
-  const { STARTER_DICTIONARY } = await import("../src/data/starter-dictionary.js?v=13.10.2-test");
+  const { STARTER_DICTIONARY } = await import("../src/data/starter-dictionary.js?v=13.10.3-test");
   assert.equal(STARTER_DICTIONARY.length, 60);
   assert.deepEqual(new Set(STARTER_DICTIONARY.map((row) => String(row.story_id))), new Set(["1", "2", "3"]));
   assert.ok(STARTER_DICTIONARY.every((row) => row.word_id && row.word_alan_cyrillic && row.translation_ru));

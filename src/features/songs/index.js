@@ -1,23 +1,32 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.10.3";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.10.3";
 import { songFavorites } from "../../shared/state/song-favorites.js?v=13.9.0";
 import { closeInfoModal } from "../../shared/ui/info-modal.js?v=13.9.0";
 import { renderSongsCatalog } from "./catalog.js?v=13.9.0";
-import { disposePlayer } from "./player.js?v=13.9.0";
-import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=13.9.0";
+import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=13.10.3";
 import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=13.9.0";
 import { renderPlaylists } from "./playlists.js?v=13.9.0";
-import { renderSongView } from "./song-view.js?v=13.9.0";
 import { songsState } from "./state.js?v=13.9.0";
 
 let controller = null;
 let activeContext = null;
+let disposeActivePlayer = null;
+
+async function loadSongScreen() {
+  const [view, player] = await Promise.all([
+    import("./song-view.js?v=13.9.0"),
+    import("./player.js?v=13.9.0"),
+  ]);
+  disposeActivePlayer = player.disposePlayer;
+  return view.renderSongView;
+}
 
 export async function mount(context, params = {}) {
   activeContext = context;
   controller = new AbortController();
+  disposeActivePlayer = null;
   const screen = params.screen || "playlists";
   songsState.currentScreen = screen;
 
@@ -51,7 +60,12 @@ export async function mount(context, params = {}) {
 
   if (screen === "song") {
     const songId = String(params.songId || songsState.selectedSongId || "");
-    const [song, words] = await Promise.all([getSongById(songId), getWords()]);
+    const [renderSongView, song, words] = await Promise.all([
+      loadSongScreen(),
+      getSongById(songId),
+      getWords(),
+    ]);
+    if (controller.signal.aborted) return;
     renderSongView(context, song, words, controller.signal);
     return;
   }
@@ -63,7 +77,8 @@ export function unmount() {
   controller?.abort();
   controller = null;
   closeInfoModal();
-  disposePlayer();
+  disposeActivePlayer?.();
+  disposeActivePlayer = null;
   activeContext?.shell.setCounter("");
   activeContext = null;
 }

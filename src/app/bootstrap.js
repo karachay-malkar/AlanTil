@@ -4,21 +4,20 @@ import {
   hasAuthCallback,
   subscribeToAuth,
   waitForAuthInitialization,
-} from "../shared/auth/auth-service.js?v=13.10.2";
-import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.2";
-import { preloadGoogleIdentity } from "../shared/auth/google-identity.js?v=13.10.2";
-import { initializeProgressSystem, pullCloudProgress } from "../shared/progress/progress-sync.js?v=13.10.2";
-import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.2";
+} from "../shared/auth/auth-service.js?v=13.10.3";
+import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.3";
+import { initializeProgressSystem, pullCloudProgress } from "../shared/progress/progress-sync.js?v=13.10.3";
+import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.3";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
-import { createRouter } from "./router.js?v=13.10.2";
+import { createRouter } from "./router.js?v=13.10.3";
 import { createShell } from "./shell.js?v=13.9.0";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=13.10.2", { scope: "/" })
+    navigator.serviceWorker.register("/service-worker.js?v=13.10.3", { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
@@ -42,7 +41,6 @@ async function bootstrap() {
   };
 
   shell.renderHome();
-  void preloadGoogleIdentity();
   await initializeProgressSystem();
   const authReady = waitForAuthInitialization();
   if (callbackVisit) await authReady;

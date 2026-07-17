@@ -1,8 +1,9 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.10.3";
 import { SONGS_CACHE_KEY, SONGS_SHEET_URL } from "../../config/songs.js?v=13.9.0";
 import { normalizeToCsvUrl, parseCsvRows } from "../../shared/data/csv.js?v=13.9.0";
 import { readJson, writeJson } from "../../shared/state/storage.js?v=13.9.0";
 
+const SONGS_REQUEST_TIMEOUT_MS = 8000;
 let songs = null;
 let loadingPromise = null;
 let requestCount = 0;
@@ -30,16 +31,13 @@ function slug(value) {
 
 function normalizeSong(row, index = 0) {
   if (!row || typeof row !== "object") return null;
-
   const title = first(row, ["title", "song", "song_title", "song_name", "name", "название", "песня"]);
   const playlistTitle = first(row, ["playlist_title", "playlistTitle", "playlist_name", "playlist", "album", "плейлист", "сборник"], msg("songs.pesni"));
   const playlistId = first(row, ["playlist_id", "playlistId", "playlist_code", "album_id"], slug(playlistTitle) || "songs");
   const id = first(row, ["id", "song_id", "code"], `${playlistId}-${slug(title) || index + 1}`);
   const lyrics = first(row, ["lyrics", "lyrics_kb", "lyrics_alan", "text_kb", "original_text", "text", "song_text", "alan_text", "текст"]);
   const translation = first(row, ["translation", "lyrics_ru", "text_ru", "russian_text", "translation_text", "trans", "перевод"]);
-
   if (!id || !title) return null;
-
   return {
     id,
     title,
@@ -75,23 +73,27 @@ async function fetchSongs() {
   const csvUrl = normalizeToCsvUrl(SONGS_SHEET_URL);
   if (!csvUrl || !csvUrl.startsWith("http")) return [];
   requestCount += 1;
-  const response = await fetch(csvUrl, { cache: "no-store" });
-  if (!response.ok) throw new Error(`Songs CSV load failed: ${response.status}`);
-  const parsed = parseCsvRows(await response.text());
-  return normalizeCollection(parsed.rows);
+  const controller = new AbortController();
+  const timer = globalThis.setTimeout(() => controller.abort(), SONGS_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(csvUrl, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) throw new Error(`Songs CSV load failed: ${response.status}`);
+    const parsed = parseCsvRows(await response.text());
+    return normalizeCollection(parsed.rows);
+  } finally {
+    globalThis.clearTimeout(timer);
+  }
 }
 
 export async function getSongs() {
   if (songs) return songs;
   if (loadingPromise) return loadingPromise;
-
   loadingPromise = (async () => {
     const cached = normalizeCollection(readJson(SONGS_CACHE_KEY, null));
     if (cached.length) {
       songs = cached;
       return songs;
     }
-
     try {
       const remote = await fetchSongs();
       if (remote.length) {
@@ -102,13 +104,11 @@ export async function getSongs() {
     } catch (error) {
       console.warn("songs-repository: fetch failed", error);
     }
-
     songs = [];
     return songs;
   })().finally(() => {
     loadingPromise = null;
   });
-
   return loadingPromise;
 }
 
@@ -125,7 +125,6 @@ export async function getSongsByPlaylist(playlistId) {
 export async function getPlaylists() {
   const collection = await getSongs();
   const grouped = new Map();
-
   collection.forEach((song) => {
     if (!grouped.has(song.playlistId)) {
       grouped.set(song.playlistId, {
@@ -139,7 +138,6 @@ export async function getPlaylists() {
     }
     grouped.get(song.playlistId).count += 1;
   });
-
   return Array.from(grouped.values()).sort((left, right) =>
     left.order - right.order || left.title.localeCompare(right.title, "ru"));
 }

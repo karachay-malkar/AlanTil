@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=13.10.2";
+import { msg } from "../i18n/index.js?v=13.10.3";
 import {
   DICTIONARY_CACHE_KEY,
   DICTIONARY_CONTENT_VIEW,
@@ -6,18 +6,20 @@ import {
   DICTIONARY_METADATA_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
 } from "../../config/words.js?v=13.9.0";
-import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.2";
+import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
 import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=13.10.2";
 import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.9.0";
 import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.9.0";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
 const PAGE_SIZE = 1000;
-const REQUEST_TIMEOUT_MS = 30000;
-const RETRY_DELAYS_MS = Object.freeze([0, 1500, 5000, 15000, 30000]);
+const DOWNLOAD_TIMEOUT_MS = 15000;
+const VERSION_TIMEOUT_MS = 5000;
+const RETRY_DELAYS_MS = Object.freeze([0, 5000, 30000]);
 let words = null;
 let loadingPromise = null;
 let backgroundPromise = null;
+let versionPromise = null;
 let retryTimer = 0;
 let requestCount = 0;
 let source = "none";
@@ -87,10 +89,13 @@ function restUrl(resource, parameters = {}) {
   return url;
 }
 
-async function fetchRestJson(url, label) {
+async function fetchRestJson(url, label, { timeoutMs = DOWNLOAD_TIMEOUT_MS, signal } = {}) {
   requestCount += 1;
   const controller = new AbortController();
-  const timer = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const abort = () => controller.abort();
+  if (signal?.aborted) controller.abort();
+  else signal?.addEventListener("abort", abort, { once: true });
+  const timer = globalThis.setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -105,17 +110,18 @@ async function fetchRestJson(url, label) {
     return response.json();
   } catch (error) {
     if (error?.name === "AbortError") {
-      const timeoutError = new Error(`${label} timeout`);
-      timeoutError.code = "ALANTIL_TIMEOUT";
+      const timeoutError = new Error(signal?.aborted ? `${label} aborted` : `${label} timeout`);
+      timeoutError.code = signal?.aborted ? "ALANTIL_ABORTED" : "ALANTIL_TIMEOUT";
       throw timeoutError;
     }
     throw error;
   } finally {
     globalThis.clearTimeout(timer);
+    signal?.removeEventListener("abort", abort);
   }
 }
 
-async function fetchContentWords() {
+async function fetchContentWords({ signal } = {}) {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
     const page = await fetchRestJson(restUrl(DICTIONARY_CONTENT_VIEW, {
@@ -123,7 +129,7 @@ async function fetchContentWords() {
       order: "global_order.asc",
       offset: from,
       limit: PAGE_SIZE,
-    }), "Dictionary page");
+    }), "Dictionary page", { timeoutMs: DOWNLOAD_TIMEOUT_MS, signal });
     const normalizedPage = Array.isArray(page) ? page : [];
     rows.push(...normalizedPage);
     if (normalizedPage.length < PAGE_SIZE) break;
@@ -131,15 +137,23 @@ async function fetchContentWords() {
   return rows;
 }
 
-async function fetchLatestVersion() {
+async function fetchLatestVersion({ signal, timeoutMs = VERSION_TIMEOUT_MS } = {}) {
   const data = await fetchRestJson(restUrl(DICTIONARY_METADATA_TABLE, {
     select: "current_version",
     dictionary_key: `eq.${DICTIONARY_KEY}`,
     limit: 1,
-  }), "Dictionary version");
+  }), "Dictionary version", { timeoutMs, signal });
   const version = String(data?.[0]?.current_version || "").trim();
   if (!version) throw new Error(msg("service.versiya_slovarya_na_servere_ne_ukazana"));
   return version;
+}
+
+function sharedLatestVersion() {
+  if (versionPromise) return versionPromise;
+  versionPromise = fetchLatestVersion().finally(() => {
+    versionPromise = null;
+  });
+  return versionPromise;
 }
 
 async function retry(operation) {
@@ -156,11 +170,10 @@ async function retry(operation) {
   throw lastError || new Error("Dictionary request failed");
 }
 
-async function downloadDictionary() {
-  const [version, rawWords] = await Promise.all([
-    fetchLatestVersion(),
-    fetchContentWords(),
-  ]);
+async function downloadDictionary(expectedVersion = "", { signal } = {}) {
+  const [version, rawWords] = expectedVersion
+    ? [expectedVersion, await fetchContentWords({ signal })]
+    : await Promise.all([fetchLatestVersion({ signal, timeoutMs: DOWNLOAD_TIMEOUT_MS }), fetchContentWords({ signal })]);
   const downloadedWords = validateDictionary(normalizeCollection(rawWords, "supabase"));
   writeJson(DICTIONARY_CACHE_KEY, { version, words: downloadedWords });
   words = downloadedWords;
@@ -169,7 +182,16 @@ async function downloadDictionary() {
   globalThis.dispatchEvent?.(new CustomEvent("alantil:dictionary-updated", {
     detail: { version, total: downloadedWords.length },
   }));
-  return { version, words: downloadedWords };
+  return { version, words: downloadedWords, changed: true };
+}
+
+async function refreshDictionaryIfNeeded({ signal } = {}) {
+  const currentVersion = getInstalledDictionaryVersion();
+  const latestVersion = signal ? await fetchLatestVersion({ signal }) : await sharedLatestVersion();
+  if (latestVersion === currentVersion) {
+    return { version: currentVersion, words: words || readDictionaryCache()?.words || [], changed: false };
+  }
+  return downloadDictionary(latestVersion, { signal });
 }
 
 function bindOnlineRetry() {
@@ -185,10 +207,10 @@ function scheduleBackgroundRefresh({ immediate = false } = {}) {
   const run = async () => {
     retryTimer = 0;
     if (globalThis.navigator && navigator.onLine === false) return null;
-    backgroundPromise = retry(downloadDictionary)
+    backgroundPromise = retry(refreshDictionaryIfNeeded)
       .catch((error) => {
         console.warn("Dictionary background refresh failed", error);
-        retryTimer = globalThis.setTimeout(() => scheduleBackgroundRefresh({ immediate: true }), 30000);
+        retryTimer = globalThis.setTimeout(() => scheduleBackgroundRefresh({ immediate: true }), 60000);
         return null;
       })
       .finally(() => {
@@ -228,15 +250,16 @@ export function getInstalledDictionaryVersion() {
   return installedVersion || readDictionaryCache()?.version || STARTER_DICTIONARY_VERSION;
 }
 
-export async function getDictionaryVersionStatus() {
+export async function getDictionaryVersionStatus({ signal, retry: shouldRetry = false } = {}) {
   const currentVersion = getInstalledDictionaryVersion();
-  const latestVersion = await retry(fetchLatestVersion);
+  const operation = () => signal ? fetchLatestVersion({ signal }) : sharedLatestVersion();
+  const latestVersion = shouldRetry ? await retry(operation) : await operation();
   return { currentVersion, latestVersion, needsUpdate: currentVersion !== latestVersion };
 }
 
-export async function refreshDictionary() {
+export async function refreshDictionary({ signal } = {}) {
   if (loadingPromise) await loadingPromise;
-  const result = await retry(downloadDictionary);
+  const result = await retry(() => refreshDictionaryIfNeeded({ signal }));
   return { ...result, words: getDisplayedWordCollection(result.words) };
 }
 
@@ -247,5 +270,6 @@ export function getRepositoryDiagnostics() {
     source,
     installedVersion,
     backgroundRefreshing: Boolean(backgroundPromise),
+    checkingVersion: Boolean(versionPromise),
   };
 }

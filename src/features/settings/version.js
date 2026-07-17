@@ -1,4 +1,4 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.10.3";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 
 export function renderVersion(context) {
@@ -7,7 +7,7 @@ export function renderVersion(context) {
     title: msg("about.versiya_prilozheniya"),
     body: `
       <dl class="settingsFacts">
-        <div><dt>${msg("about.versiya")}</dt><dd>13.9.0</dd></div>
+        <div><dt>${msg("about.versiya")}</dt><dd>13.10.3</dd></div>
         <div><dt>${msg("about.poslednee_obnovlenie")}</dt><dd>${msg("about.iyul_2026")}</dd></div>
       </dl>`,
   });

@@ -5,11 +5,15 @@ import { readFile } from "node:fs/promises";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 const singletonPaths = [
+  "/src/app/router.js",
   "/src/config/analytics.js",
   "/src/config/auth-providers.js",
   "/src/config/supabase.js",
   "/src/features/account/index.js",
   "/src/features/account/login.js",
+  "/src/features/path/index.js",
+  "/src/features/settings/index.js",
+  "/src/features/songs/index.js",
   "/src/shared/auth/auth-service.js",
   "/src/shared/auth/auth-store.js",
   "/src/shared/auth/google-identity.js",
@@ -22,28 +26,36 @@ const singletonPaths = [
   "/src/shared/progress/storage-scope.js",
 ];
 
-test("13.10.2 is the published application version", async () => {
+test("13.10.3 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
   const index = await read("index.html");
-  assert.match(analytics, /appVersion = "13\.10\.2"/);
-  assert.match(index, /app\.css\?v=13\.10\.2/);
-  assert.match(index, /bootstrap\.js\?v=13\.10\.2/);
+  assert.match(analytics, /appVersion = "13\.10\.3"/);
+  assert.match(index, /app\.css\?v=13\.10\.3/);
+  assert.match(index, /bootstrap\.js\?v=13\.10\.3/);
 });
 
-test("changed singleton module URLs resolve to one 13.10.2 instance", async () => {
+test("changed singleton module URLs resolve to one 13.10.3 instance", async () => {
   const index = await read("index.html");
   for (const path of singletonPaths) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const target = new RegExp(`"${escaped}\\?v=13\\.10\\.2"`);
-    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.2`), `missing 13.10.2 reference for ${path}`);
+    const target = new RegExp(`"${escaped}\\?v=13\\.10\\.3"`);
+    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.3`), `missing 13.10.3 reference for ${path}`);
   }
 });
 
 test("local Supabase SDK replaces runtime CDN loading", async () => {
   const client = await read("src/shared/auth/supabase-client.js");
   const loader = await read("src/vendor/supabase-js.js");
-  assert.match(client, /\/src\/vendor\/supabase-js\.js\?v=13\.10\.2/);
+  assert.match(client, /\/src\/vendor\/supabase-js\.js\?v=13\.10\.3/);
   assert.match(loader, /payload-1\.txt/);
   assert.match(loader, /gunzipSync/);
   assert.doesNotMatch(client + loader, /cdn\.jsdelivr\.net|unpkg\.com|esm\.sh/);
+});
+
+test("guest shell does not eagerly preload Supabase", async () => {
+  const index = await read("index.html");
+  const worker = await read("service-worker.js");
+  assert.doesNotMatch(index, /modulepreload[^>]+supabase-js/);
+  const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
+  assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
 });

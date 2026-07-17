@@ -1,7 +1,7 @@
-import { msg } from "../i18n/index.js?v=13.10.2";
-import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.2";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.2";
-import { getSupabaseClient } from "./supabase-client.js?v=13.10.2";
+import { msg } from "../i18n/index.js?v=13.10.3";
+import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.3";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.3";
+import { getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.3";
 
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
 const AUTH_REQUEST_TIMEOUT_MS = 60000;
@@ -117,10 +117,15 @@ function startAuthInitialization() {
   if (initializationPromise) return initializationPromise;
   initializationPromise = (async () => {
     try {
+      const callbackPresent = hasAuthCallback();
+      if (!callbackPresent && !hasPersistedAuthSession()) {
+        return applySession(null, null);
+      }
+
       const client = await getSupabaseClient();
       const callbackHandled = await handleAuthCallback(client);
       if (!callbackHandled) {
-        const { data, error } = await client.auth.getSession();
+        const { data, error } = await withTimeout(client.auth.getSession(), "Auth session", 15000);
         if (error) throw error;
         applySession(data.session || null, null);
       }
