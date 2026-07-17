@@ -1,7 +1,7 @@
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8";
-import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
+import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=13.8.1";
 
 function normalizeContext(value, fallback = "") {
   return String(value ?? fallback).trim();

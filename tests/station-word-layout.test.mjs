@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const stationView = await readFile(new URL("../src/features/path/station-view.js", import.meta.url), "utf8");
+const pathCss = await readFile(new URL("../src/features/path/path.css", import.meta.url), "utf8");
 const chromeCss = await readFile(new URL("../src/shared/styles/chrome.css", import.meta.url), "utf8");
 
 test("stage words are static while only overflowing translations use the marquee", () => {
@@ -12,7 +13,7 @@ test("stage words are static while only overflowing translations use the marquee
 });
 
 test("stage rows reserve fixed left-aligned content and action columns", () => {
-  assert.match(chromeCss, /\.stationWordRow\{[^}]*grid-template-columns:36px minmax\(0,1fr\) 36px/s);
-  assert.match(chromeCss, /\.stationWordRow>\.contentListMain\{[^}]*grid-column:2[^}]*text-align:left/s);
-  assert.match(chromeCss, /\.stationWordRow \.contentListPrimary\{[^}]*text-align:left[^}]*transform:none!important/s);
+  assert.match(pathCss, /\.stationWordRow\{[^}]*grid-template-columns:36px minmax\(0,1fr\) 36px/s);
+  assert.match(pathCss, /\.stationWordRow \.contentListMain\{[^}]*justify-content:stretch[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*text-align:left!important/s);
+  assert.doesNotMatch(chromeCss, /\.stationWordRow(?:\{|>| )/);
 });

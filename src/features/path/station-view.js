@@ -1,9 +1,9 @@
-import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=13.8";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8";
-import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=13.8";
+import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=13.8.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8.1";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
+import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=13.8.1";
 
 function storageKey(station) {
   return station.selectionSetId || station.setId || station.key;
@@ -160,7 +160,7 @@ export function renderStationView(context, station, {
         </div>
         <div class="stationLaunchActions">
           <button class="btn actionText stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>Учить слова</button>
-          <button class="btn actionPrimary stationTestButton" type="button" data-station-test ${selected.length ? "" : "disabled"}>Завершить этап: тест</button>
+          <button class="btn actionPrimary stationTestButton" type="button" data-station-test>Завершить этап: тест</button>
         </div>
       </footer>
     </section>`;
@@ -205,9 +205,8 @@ export function renderStationView(context, station, {
       const selectedCount = activeWords().length;
       const count = context.root.querySelector(".stationSelectionCount");
       if (count) count.textContent = `${selectedCount}/${allWords.length}`;
-      context.root.querySelectorAll("[data-station-study], [data-station-test]").forEach((button) => {
-        button.disabled = selectedCount === 0;
-      });
+      const studyButton = context.root.querySelector("[data-station-study]");
+      if (studyButton) studyButton.disabled = selectedCount === 0;
     }
 
     list?.querySelectorAll("[data-station-word]").forEach((row) => {
@@ -244,7 +243,7 @@ export function renderStationView(context, station, {
       }, { signal });
     });
     context.root.querySelector("[data-station-study]")?.addEventListener("click", () => onStartStudy?.(studyMode, activeWords()), { signal });
-    context.root.querySelector("[data-station-test]")?.addEventListener("click", () => onStartTest?.(studyMode, activeWords()), { signal });
+    context.root.querySelector("[data-station-test]")?.addEventListener("click", () => onStartTest?.(studyMode), { signal });
     wireVisibleMarquees();
   }
 

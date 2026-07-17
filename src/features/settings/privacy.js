@@ -2,8 +2,8 @@ import {
   getPrivacyState,
   subscribePrivacyState,
   updateAnalyticsPreference,
-} from "../../shared/privacy/privacy-controller.js?v=13.8";
-import { panel } from "../../shared/ui/panel.js?v=13.8";
+} from "../../shared/privacy/privacy-controller.js?v=13.8.1";
+import { panel } from "../../shared/ui/panel.js?v=13.8.1";
 
 export function renderPrivacy(context, signal, params = {}) {
   context.shell.setHeaderContent?.({ title: "Конфиденциальность" });

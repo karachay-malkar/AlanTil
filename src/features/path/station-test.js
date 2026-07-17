@@ -1,14 +1,14 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.8";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
-import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.8";
-import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.8";
-import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.8";
-import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.8";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.8";
-import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.8";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.8";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.8";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
+import { PATH_CONFIG } from "../../config/path.js?v=13.8.1";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
+import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.8.1";
+import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.8.1";
+import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.8.1";
+import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.8.1";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.8.1";
+import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.8.1";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.8.1";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.8.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
 
 const ACTIVE_KEY = "alantil_station_test_active_v13_5";
 
@@ -51,17 +51,15 @@ function difficultyDistance(candidate, item) {
   return Math.abs(candidateOrder - itemOrder);
 }
 
-function distractorsFor(item, allWords, count = 3) {
+export function distractorsFor(item, allWords, count = 3) {
   const targetPos = normalizePos(item.pos);
-  const samePos = allWords.filter((candidate) => normalizePos(candidate.pos) === targetPos);
+  const samePos = shuffle(allWords.filter((candidate) => normalizePos(candidate.pos) === targetPos))
+    .sort((a, b) => difficultyDistance(a, item) - difficultyDistance(b, item));
   const selected = [];
-  for (const pass of [samePos.slice().sort((a, b) => difficultyDistance(a, item) - difficultyDistance(b, item)), samePos, allWords]) {
-    for (const candidate of shuffle(pass.slice())) {
-      if (selected.length >= count) break;
-      if (isAmbiguous(candidate, item, selected)) continue;
-      selected.push(candidate);
-    }
+  for (const candidate of samePos) {
     if (selected.length >= count) break;
+    if (isAmbiguous(candidate, item, selected)) continue;
+    selected.push(candidate);
   }
   return selected;
 }
@@ -138,8 +136,8 @@ function saveActive(session) {
 function clearActive() { writeScopedJson(ACTIVE_KEY, {}); }
 export function getInterruptedStationTest() { return readScopedJson(ACTIVE_KEY, {}); }
 
-export function createStationTestSession(station, allWords, selectedWords = station.words, mode = "kb") {
-  const sourceWords = Array.isArray(selectedWords) && selectedWords.length ? selectedWords : station.words;
+export function createStationTestSession(station, allWords, mode = "kb") {
+  const sourceWords = Array.isArray(station.words) ? station.words : [];
   const normalizedMode = mode === "ru" ? "ru" : "kb";
   const signature = selectionSignature(sourceWords);
   const interrupted = getInterruptedStationTest();

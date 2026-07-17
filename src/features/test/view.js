@@ -1,11 +1,11 @@
-import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.8";
-import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.8";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
-import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js?v=13.8";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8";
-import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.8";
-import { testState } from "./state.js?v=13.8";
+import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.8.1";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.8.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
+import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js?v=13.8.1";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
+import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.8.1";
+import { testState } from "./state.js?v=13.8.1";
 
 function dictionaryId(word) { return String(word.dictionary_id || word.catalog_id || word.dict || "").trim(); }
 function dictionaryName(word) { return String(word.dictionary_name || word.dict || dictionaryId(word) || "Словарь").trim(); }

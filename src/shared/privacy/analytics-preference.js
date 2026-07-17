@@ -1,4 +1,4 @@
-import { ANALYTICS_PREFERENCE_KEY } from "../../config/privacy.js?v=13.8";
+import { ANALYTICS_PREFERENCE_KEY } from "../../config/privacy.js?v=13.8.1";
 
 const listeners = new Set();
 

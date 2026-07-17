@@ -1,14 +1,14 @@
-import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js?v=13.8";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
-import { EVENTS, SEARCH_AREAS, SEARCH_MODES } from "../../shared/analytics/events.js?v=13.8";
-import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js?v=13.8";
-import { createSlugMap } from "../../shared/domain/slugs.js?v=13.8";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
-import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js?v=13.8";
-import { panel } from "../../shared/ui/panel.js?v=13.8";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8";
-import { learnState } from "./state.js?v=13.8";
-import { renderSetPreparation } from "./set-preparation.js?v=13.8";
+import { DICT_TITLES, SECTION_TITLES } from "../../config/words.js?v=13.8.1";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
+import { EVENTS, SEARCH_AREAS, SEARCH_MODES } from "../../shared/analytics/events.js?v=13.8.1";
+import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js?v=13.8.1";
+import { createSlugMap } from "../../shared/domain/slugs.js?v=13.8.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
+import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js?v=13.8.1";
+import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
+import { learnState } from "./state.js?v=13.8.1";
+import { renderSetPreparation } from "./set-preparation.js?v=13.8.1";
 
 function dictTitle(code) {
   return DICT_TITLES[code] || code;

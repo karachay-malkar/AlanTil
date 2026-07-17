@@ -1,6 +1,6 @@
-import { SONGS_CACHE_KEY, SONGS_SHEET_URL } from "../../config/songs.js?v=13.8";
-import { normalizeToCsvUrl, parseCsvRows } from "../../shared/data/csv.js?v=13.8";
-import { readJson, writeJson } from "../../shared/state/storage.js?v=13.8";
+import { SONGS_CACHE_KEY, SONGS_SHEET_URL } from "../../config/songs.js?v=13.8.1";
+import { normalizeToCsvUrl, parseCsvRows } from "../../shared/data/csv.js?v=13.8.1";
+import { readJson, writeJson } from "../../shared/state/storage.js?v=13.8.1";
 
 let songs = null;
 let loadingPromise = null;

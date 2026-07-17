@@ -2,15 +2,15 @@ import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=13.8";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.8";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.8";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.8";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.8";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.8";
+} from "../../shared/data/word-repository.js?v=13.8.1";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.8.1";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.8.1";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.8.1";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.8.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.8.1";
 
-const SETTINGS_ASSET_VERSION = "13.8";
+const SETTINGS_ASSET_VERSION = "13.8.1";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -151,7 +151,7 @@ async function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="О приложении">
         ${settingsLink("settings.thanks", "Благодарности")}
-        ${settingsLink("settings.version", "Версия приложения", "13.8")}
+        ${settingsLink("settings.version", "Версия приложения", "13.8.1")}
         ${settingsLink("settings.privacy", "Политика конфиденциальности")}
       </section>
     </div>

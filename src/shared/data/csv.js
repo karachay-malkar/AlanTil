@@ -1,5 +1,5 @@
-import { getDisplayedWordEntry } from "../domain/alan-display.js?v=13.8";
-import { normalizeLegacyWordEntry } from "../domain/word-normalizer.js?v=13.8";
+import { getDisplayedWordEntry } from "../domain/alan-display.js?v=13.8.1";
+import { normalizeLegacyWordEntry } from "../domain/word-normalizer.js?v=13.8.1";
 
 export function normalizeToCsvUrl(url) {
   const value = String(url || "").trim();

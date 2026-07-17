@@ -1,4 +1,4 @@
-import { toSlug } from "../../shared/domain/slugs.js?v=13.8";
+import { toSlug } from "../../shared/domain/slugs.js?v=13.8.1";
 
 export function buildPlaylistRoutes(playlists) {
   const occupied = new Set(["favorites"]);

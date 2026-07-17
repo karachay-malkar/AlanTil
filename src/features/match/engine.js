@@ -1,15 +1,15 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8";
-import { ACTIVITY_TYPES, CANCEL_REASONS, DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.8";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.8";
-import { buildWordsByPOSRounds } from "../../shared/domain/word-selection.js?v=13.8";
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.8";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.8.1";
+import { ACTIVITY_TYPES, CANCEL_REASONS, DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.8.1";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.8.1";
+import { buildWordsByPOSRounds } from "../../shared/domain/word-selection.js?v=13.8.1";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.8.1";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js?v=13.8";
-import { recordMatchWordResults } from "../../shared/progress/word-progress-store.js?v=13.8";
-import { matchState } from "./state.js?v=13.8";
+} from "../../shared/progress/session-builders.js?v=13.8.1";
+import { recordMatchWordResults } from "../../shared/progress/word-progress-store.js?v=13.8.1";
+import { matchState } from "./state.js?v=13.8.1";
 
 function wordById(id) {
   const normalized = normalizeId(id);

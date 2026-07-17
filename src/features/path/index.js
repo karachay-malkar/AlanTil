@@ -1,17 +1,17 @@
-import { getWords } from "../../shared/data/word-repository.js?v=13.8";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.8";
-import { allStoryProgress, computedStationStatus, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.8";
-import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.8";
-import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.8";
-import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.8";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.8";
-import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.8";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8";
-import { getHiddenSet, learnState } from "../learn/state.js?v=13.8";
-import { renderResults as renderLearnResults } from "../learn/results.js?v=13.8";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.8";
-import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.8";
-import { renderStationView } from "./station-view.js?v=13.8";
+import { getWords } from "../../shared/data/word-repository.js?v=13.8.1";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.8.1";
+import { allStoryProgress, computedStationStatus, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.8.1";
+import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.8.1";
+import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.8.1";
+import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.8.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.8.1";
+import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.8.1";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.8.1";
+import { getHiddenSet, learnState } from "../learn/state.js?v=13.8.1";
+import { renderResults as renderLearnResults } from "../learn/results.js?v=13.8.1";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.8.1";
+import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.8.1";
+import { renderStationView } from "./station-view.js?v=13.8.1";
 
 let controller = null;
 let activeStudy = false;
@@ -171,8 +171,7 @@ function renderStation(context, route, station) {
       pendingSelections.set(station.key, words);
       context.router.navigate("path.study", { ...routeParams(station, route), mode });
     },
-    onStartTest(mode, words) {
-      pendingSelections.set(station.key, words);
+    onStartTest(mode) {
       context.router.navigate("path.test", { ...routeParams(station, route), mode });
     },
   });
@@ -203,7 +202,7 @@ function renderResult(context, route, station, result, allWords) {
   context.root.querySelector("[data-result-return]")?.addEventListener("click", () => context.router.replace("path.station", routeParams(station, route), { force: true }), { signal: controller.signal });
   context.root.querySelector("[data-result-repeat]")?.addEventListener("click", () => {
     const mode = result.payload.direction === "ru_to_alan" ? "ru" : "kb";
-    const session = createStationTestSession(station, allWords, selectedWordsForStation(station), mode);
+    const session = createStationTestSession(station, allWords, mode);
     renderStationTest(context, session, { onComplete: (next) => renderResult(context, route, station, next, allWords) });
   }, { signal: controller.signal });
 }
@@ -254,7 +253,7 @@ export async function mount(context, params = {}) {
 
   if (screen === "test") {
     const allWords = route.storyOrder.flatMap((type) => route.stories[type].stations).flatMap((item) => item.words);
-    const session = createStationTestSession(station, allWords, selectedWordsForStation(station), params.mode || "kb");
+    const session = createStationTestSession(station, allWords, params.mode || "kb");
     renderStationTest(context, session, { onComplete: (result) => renderResult(context, route, station, result, allWords) });
   }
 }

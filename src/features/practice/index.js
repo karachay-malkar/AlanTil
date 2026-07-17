@@ -1,5 +1,5 @@
-import { panel } from "../../shared/ui/panel.js?v=13.8";
-import { uiIcon } from "../../shared/ui/icons.js?v=13.8";
+import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+import { uiIcon } from "../../shared/ui/icons.js?v=13.8.1";
 
 let controller = null;
 

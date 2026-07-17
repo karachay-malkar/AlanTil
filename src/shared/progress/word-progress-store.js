@@ -1,6 +1,6 @@
-import { getActivityHistory } from "./activity-history-store.js?v=13.8";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.8";
-import { awardReward } from "./reward-store.js?v=13.8";
+import { getActivityHistory } from "./activity-history-store.js?v=13.8.1";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.8.1";
+import { awardReward } from "./reward-store.js?v=13.8.1";
 
 export const WORD_PROGRESS_LOCAL_KEY = "alantil_word_progress_v13_5";
 const MAX_PROCESSED_SESSIONS = 600;

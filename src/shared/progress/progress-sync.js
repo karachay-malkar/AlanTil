@@ -1,6 +1,6 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.8";
-import { normalizeId } from "../domain/word-normalizer.js?v=13.8";
-import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=13.8";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.8.1";
+import { normalizeId } from "../domain/word-normalizer.js?v=13.8.1";
+import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=13.8.1";
 import {
   enqueueProgress,
   mergeProgressQueues,
@@ -8,15 +8,15 @@ import {
   removeProgressEntry,
   updateProgressEntry,
   writeProgressQueue,
-} from "./progress-queue.js?v=13.8";
-import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js?v=13.8";
-import { nextUnattemptedProgressEntry, shouldDiscardProgressError } from "./progress-sync-policy.js?v=13.8";
-import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js?v=13.8";
-import { replaceUserRewards } from "./reward-store.js?v=13.8";
-import { replaceRouteSettings } from "./route-settings-store.js?v=13.8";
-import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js?v=13.8";
-import { snapshotRecoveredSession } from "./session-builders.js?v=13.8";
-import { readActiveSessions, removeActiveSession } from "./session-store.js?v=13.8";
+} from "./progress-queue.js?v=13.8.1";
+import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js?v=13.8.1";
+import { nextUnattemptedProgressEntry, shouldDiscardProgressError } from "./progress-sync-policy.js?v=13.8.1";
+import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js?v=13.8.1";
+import { replaceUserRewards } from "./reward-store.js?v=13.8.1";
+import { replaceRouteSettings } from "./route-settings-store.js?v=13.8.1";
+import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js?v=13.8.1";
+import { snapshotRecoveredSession } from "./session-builders.js?v=13.8.1";
+import { readActiveSessions, removeActiveSession } from "./session-store.js?v=13.8.1";
 import {
   getStorageScope,
   getStorageScopeUserId,
@@ -27,7 +27,7 @@ import {
   STORAGE_SCOPES,
   storageScopeForUser,
   writeScopedJson,
-} from "./storage-scope.js?v=13.8";
+} from "./storage-scope.js?v=13.8.1";
 
 const WORD_FAVORITES_KEY = "fc_favorites_v1";
 const SONG_FAVORITES_KEY = "alantil_song_favorites_v1";
@@ -183,8 +183,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=13.8"),
-    import("../state/song-favorites.js?v=13.8"),
+    import("../state/word-favorites.js?v=13.8.1"),
+    import("../state/song-favorites.js?v=13.8.1"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -235,10 +235,10 @@ async function applyCloudState(state) {
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=13.8");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=13.8.1");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=13.8");
+    const { songFavorites } = await import("../state/song-favorites.js?v=13.8.1");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});
@@ -257,7 +257,7 @@ async function applyQueueEntryLocally(entry) {
   } else if (entry.type === "station_progress") {
     mergeStationProgressRows([payload]);
   } else if (entry.type === "user_reward") {
-    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js?v=13.8");
+    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js?v=13.8.1");
     replaceUserRewards([...getUserRewards(), payload]);
   } else if (entry.type === "route_settings") {
     replaceRouteSettings(payload);

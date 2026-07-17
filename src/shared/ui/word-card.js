@@ -1,6 +1,6 @@
-import { wordFavorites } from "../state/word-favorites.js?v=13.8";
-import { openInfoModal } from "./info-modal.js?v=13.8";
-import { escapeHtml, renderCombinedGroups, renderStarButton } from "./word-renderers.js?v=13.8";
+import { wordFavorites } from "../state/word-favorites.js?v=13.8.1";
+import { openInfoModal } from "./info-modal.js?v=13.8.1";
+import { escapeHtml, renderCombinedGroups, renderStarButton } from "./word-renderers.js?v=13.8.1";
 
 export function renderWordCard(word) {
   const groupsHost = document.createElement("div");

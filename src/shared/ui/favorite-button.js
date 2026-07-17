@@ -1,4 +1,4 @@
-import { STAR_ICON_SVG } from "./icons.js?v=13.8";
+import { STAR_ICON_SVG } from "./icons.js?v=13.8.1";
 
 export function renderFavoriteButton({ active = false, attributes = "", label = "Избранное" } = {}) {
   return `<button class="iconAction starBtn ${active ? "on" : ""}" type="button" aria-label="${label}" title="${label}" ${attributes}>${STAR_ICON_SVG}</button>`;

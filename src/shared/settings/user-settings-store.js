@@ -1,9 +1,9 @@
-import { enqueueProgress } from "../progress/progress-queue.js?v=13.8";
+import { enqueueProgress } from "../progress/progress-queue.js?v=13.8.1";
 import {
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js?v=13.8";
+} from "../progress/storage-scope.js?v=13.8.1";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 export const DEFAULT_USER_SETTINGS = Object.freeze({

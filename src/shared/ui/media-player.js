@@ -1,4 +1,4 @@
-import { PLAY_ICON_SVG } from "./icons.js?v=13.8";
+import { PLAY_ICON_SVG } from "./icons.js?v=13.8.1";
 
 export function renderMediaPlayer() {
   return `

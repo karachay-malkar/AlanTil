@@ -20,7 +20,7 @@ async function javascriptFiles(directoryUrl) {
 }
 
 test("every literal local JavaScript dependency uses the release version", async () => {
-  assert.equal(appVersion, "13.8");
+  assert.equal(appVersion, "13.8.1");
   const failures = [];
   const importPattern = /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)(["'`])([^"'`]+\.js(?:\?[^"'`]*)?)/g;
   for (const file of await javascriptFiles(srcRoot)) {

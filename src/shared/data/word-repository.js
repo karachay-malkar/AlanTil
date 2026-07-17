@@ -4,11 +4,11 @@ import {
   DICTIONARY_KEY,
   DICTIONARY_METADATA_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
-} from "../../config/words.js?v=13.8";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.8";
-import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.8";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.8";
-import { readJson, writeJson } from "../state/storage.js?v=13.8";
+} from "../../config/words.js?v=13.8.1";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=13.8.1";
+import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.8.1";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.8.1";
+import { readJson, writeJson } from "../state/storage.js?v=13.8.1";
 
 const PAGE_SIZE = 1000;
 let words = null;

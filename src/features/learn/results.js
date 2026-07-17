@@ -1,8 +1,8 @@
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.8";
-import { panel } from "../../shared/ui/panel.js?v=13.8";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8";
-import { learnState } from "./state.js?v=13.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.8.1";
+import { renderContentListRow } from "../../shared/ui/list.js?v=13.8.1";
+import { panel } from "../../shared/ui/panel.js?v=13.8.1";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.8.1";
+import { learnState } from "./state.js?v=13.8.1";
 
 export function renderResults(context, words, signal, { onDone } = {}) {
   context.shell.setHeaderContent?.({ title: "Результат обучения" });

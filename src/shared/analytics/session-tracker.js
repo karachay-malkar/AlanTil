@@ -1,5 +1,5 @@
-import { trackEvent } from "./analytics.js?v=13.8";
-import { CANCEL_REASONS, EVENTS } from "./events.js?v=13.8";
+import { trackEvent } from "./analytics.js?v=13.8.1";
+import { CANCEL_REASONS, EVENTS } from "./events.js?v=13.8.1";
 
 const trackers = new Set();
 let lifecycleBound = false;

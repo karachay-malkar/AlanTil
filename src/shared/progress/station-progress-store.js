@@ -1,7 +1,7 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.8";
-import { stationKey } from "../domain/learning-route.js?v=13.8";
-import { enqueueProgress } from "./progress-queue.js?v=13.8";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.8";
+import { PATH_CONFIG } from "../../config/path.js?v=13.8.1";
+import { stationKey } from "../domain/learning-route.js?v=13.8.1";
+import { enqueueProgress } from "./progress-queue.js?v=13.8.1";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.8.1";
 
 export const STATION_PROGRESS_KEY = "alantil_station_progress_v13_1";
 const DAY_MS = 24 * 60 * 60 * 1000;

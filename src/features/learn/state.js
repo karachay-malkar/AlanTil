@@ -1,6 +1,6 @@
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.8";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.8";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.8";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.8.1";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.8.1";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.8.1";
 
 export const HIDDEN_KEY = "fc_hidden_by_set_v7";
 export const FINISHED_KEY = "fc_finished_sets_v1";

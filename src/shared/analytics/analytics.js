@@ -1,4 +1,4 @@
-import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../config/analytics.js?v=13.8";
+import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../config/analytics.js?v=13.8.1";
 
 const FORBIDDEN_PARAMETER_NAMES = new Set([
   "name", "email", "phone", "telephone", "telegram_id", "telegram_username", "username",
