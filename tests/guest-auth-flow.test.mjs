@@ -29,9 +29,27 @@ test("Google redirect is built locally and does not wait for the Supabase SDK", 
   assert.match(auth, /code_challenge/);
   assert.match(auth, /code_challenge_method/);
   assert.match(auth, /PKCE_VERIFIER_KEY/);
-  assert.match(providerFlow, /buildOAuthRedirectUrl/);
-  assert.match(providerFlow, /window\.location\.assign/);
+  assert.match(providerFlow, /prepareSignInWithProvider/);
+  assert.match(providerFlow, /window\.location\.href/);
   assert.doesNotMatch(providerFlow, /getSupabaseClient|signInWithOAuth|signInWithIdToken|retryAuth/);
+});
+
+test("Google OAuth is prepared before the tap and uses synchronous navigation", async () => {
+  const login = await read("src/features/account/login.js");
+  const auth = await read("src/shared/auth/auth-service.js");
+  assert.match(login, /prepareSignInWithProvider/);
+  assert.match(login, /button\.dataset\.authHref/);
+  assert.match(login, /window\.location\.href = preparedUrl/);
+  assert.match(login, /PROVIDER_FALLBACK_RESET_MS = 5000/);
+  assert.match(auth, /preparedOAuthRedirects/);
+  assert.match(auth, /export function prepareSignInWithProvider/);
+});
+
+test("auth and account modules bypass stale cache", async () => {
+  const worker = await read("service-worker.js");
+  assert.match(worker, /networkFirstStaticResponse/);
+  assert.match(worker, /src\/shared\/auth/);
+  assert.match(worker, /src\/features\/account/);
 });
 
 test("account screen warms the SDK without blocking the visible login button", async () => {

@@ -1,7 +1,7 @@
-import { msg } from "../i18n/index.js?v=13.10.6";
-import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.6";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.6";
-import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.6";
+import { msg } from "../i18n/index.js?v=13.10.7";
+import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.7";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.7";
+import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.7";
 
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
 const OAUTH_PROVIDERS = new Set(["google", "apple"]);
@@ -12,6 +12,7 @@ const PKCE_VERIFIER_KEY = `${AUTH_STORAGE_KEY}-code-verifier`;
 let initializationPromise = null;
 let authSubscription = null;
 let callbackPromise = null;
+const preparedOAuthRedirects = new Map();
 
 function withTimeout(value, label, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) {
   let timer = 0;
@@ -88,6 +89,25 @@ async function buildOAuthRedirectUrl(provider) {
   return url.toString();
 }
 
+function normalizeOAuthProvider(provider) {
+  const normalized = String(provider || "").trim().toLowerCase();
+  if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+  return normalized;
+}
+
+export function prepareSignInWithProvider(provider) {
+  const normalized = normalizeOAuthProvider(provider);
+  const existing = preparedOAuthRedirects.get(normalized);
+  if (existing) return existing;
+
+  const prepared = buildOAuthRedirectUrl(normalized).catch((error) => {
+    preparedOAuthRedirects.delete(normalized);
+    throw error;
+  });
+  preparedOAuthRedirects.set(normalized, prepared);
+  return prepared;
+}
+
 function applySession(session, error = null) {
   return setAuthState({
     ready: true,
@@ -148,6 +168,7 @@ async function handleAuthCallback(client) {
       } catch (error) {
         applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google")));
       } finally {
+        preparedOAuthRedirects.clear();
         clearCallbackUrl();
       }
     })().finally(() => {
@@ -218,13 +239,12 @@ export async function signInWithGoogleCredential(token, nonce) {
 }
 
 export async function signInWithProvider(provider) {
-  const normalized = String(provider || "").trim().toLowerCase();
-  if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+  const normalized = normalizeOAuthProvider(provider);
 
   setAuthState({ error: null });
   try {
-    const url = await buildOAuthRedirectUrl(normalized);
-    window.location.assign(url);
+    const url = await prepareSignInWithProvider(normalized);
+    window.location.href = url;
     return { provider: normalized, url };
   } catch (error) {
     throw new Error(authMessage(error));
@@ -256,4 +276,5 @@ export function disposeAuth() {
   authSubscription = null;
   initializationPromise = null;
   callbackPromise = null;
+  preparedOAuthRedirects.clear();
 }

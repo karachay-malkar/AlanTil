@@ -1,0 +1,7 @@
+AlanTil 13.10.7
+
+- Google OAuth URL is prepared before the tap, so navigation starts synchronously inside the user gesture.
+- The Google button no longer enters an endless loading state when navigation is blocked or delayed.
+- OAuth callback processing is prioritized over progress initialization.
+- Authentication and account modules use network-first service-worker caching.
+- Google Cloud, Supabase profiles and cloud data are unchanged.

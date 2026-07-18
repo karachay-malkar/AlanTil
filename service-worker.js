@@ -1,12 +1,12 @@
-const VERSION = "13.10.6";
+const VERSION = "13.10.7";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.10.6",
-  "/src/shared/styles/app.css?v=13.10.6",
+  "/src/app/bootstrap.js?v=13.10.7",
+  "/src/shared/styles/app.css?v=13.10.7",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
 ];
@@ -40,6 +40,19 @@ async function navigationResponse(request) {
   }
 }
 
+async function networkFirstStaticResponse(request) {
+  try {
+    const response = await fetch(request, { cache: "no-store" });
+    if (response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return (await caches.match(request)) || Response.error();
+  }
+}
+
 async function staticResponse(request) {
   const cached = await caches.match(request);
   const network = fetch(request).then(async (response) => {
@@ -61,6 +74,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/src/shared/auth/") || url.pathname.startsWith("/src/features/account/") || url.pathname === "/src/config/supabase.js") {
+    event.respondWith(networkFirstStaticResponse(request));
+    return;
+  }
   if (["script", "style", "image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {
     event.respondWith(staticResponse(request));
   }

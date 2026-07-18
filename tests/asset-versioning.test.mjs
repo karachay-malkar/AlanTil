@@ -27,20 +27,20 @@ const singletonPaths = [
   "/src/shared/progress/storage-scope.js",
 ];
 
-test("13.10.6 is the published application version", async () => {
+test("13.10.7 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
   const index = await read("index.html");
-  assert.match(analytics, /appVersion = "13\.10\.6"/);
-  assert.match(index, /app\.css\?v=13\.10\.6/);
-  assert.match(index, /bootstrap\.js\?v=13\.10\.6/);
+  assert.match(analytics, /appVersion = "13\.10\.7"/);
+  assert.match(index, /app\.css\?v=13\.10\.7/);
+  assert.match(index, /bootstrap\.js\?v=13\.10\.7/);
 });
 
-test("singleton module URLs resolve to one 13.10.6 instance", async () => {
+test("singleton module URLs resolve to one 13.10.7 instance", async () => {
   const index = await read("index.html");
   for (const path of singletonPaths) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const target = new RegExp(`"${escaped}\?v=13\.10\.6"`);
-    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.6`), `missing 13.10.6 reference for ${path}`);
+    const target = new RegExp(`"${escaped}\?v=13\.10\.7"`);
+    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.7`), `missing 13.10.7 reference for ${path}`);
   }
 });
 
