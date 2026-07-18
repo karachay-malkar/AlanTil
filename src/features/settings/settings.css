@@ -15,14 +15,7 @@
 [data-feature="settings"] .settingsRow{min-height:46px;display:grid;grid-template-columns:minmax(120px,1fr) minmax(142px,auto);align-items:center;gap:12px;border-bottom:1px solid var(--line-soft)}
 [data-feature="settings"] .settingsRow[hidden]{display:none}
 [data-feature="settings"] .settingsRowLabel{color:var(--text-2);font-size:12px;line-height:1.25}
-[data-feature="settings"] .settingsSegments{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);min-width:142px;padding:2px;border:1px solid var(--line);border-radius:999px;background:transparent}
-[data-feature="settings"] .settingsChoice{position:relative;display:block;min-width:0}
-[data-feature="settings"] .settingsChoice input{position:absolute;opacity:0;pointer-events:none}
-[data-feature="settings"] .settingsChoice span{min-height:28px;padding:4px 7px;display:grid;place-items:center;border:0;border-radius:999px;background:transparent;color:var(--text-3);font:750 10px/1 var(--font-terminal);white-space:nowrap}
-[data-feature="settings"] .settingsChoice input:checked+span{background:color-mix(in srgb,var(--surface-0) 72%,transparent);color:var(--text-1);box-shadow:var(--shadow-xs)}
-[data-feature="settings"] .settingsLearningPreview{margin-top:14px;min-height:136px}
-[data-feature="settings"] .settingsLearningPreview.isVisible{min-height:136px;padding:17px 16px}
-[data-feature="settings"] .settingsLearningPreview .learningPreviewWord{font-size:30px}
+[data-feature="settings"] .settingsLearningPreview{width:100%;height:180px;max-height:180px;margin-top:14px}
 [data-feature="settings"] .settingsUpdateWrap{position:relative;flex:0 0 auto}
 [data-feature="settings"] .settingsUpdateBadge{position:absolute;right:-5px;top:-6px;width:14px;height:14px;display:grid;place-items:center;border-radius:50%;background:var(--warning);color:#fff;font:900 9px/14px var(--font-terminal);box-shadow:0 0 0 2px var(--app-bg)}
 [data-feature="settings"] .settingsDictionaryVersions{display:grid;margin:0}
@@ -46,4 +39,4 @@
 [data-feature="settings"] .analyticsSettingsSection{margin-top:20px;padding:12px 2px;border-top:1px solid var(--line-soft)}
 [data-feature="settings"] .analyticsPreferenceRow{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
 [data-feature="settings"] .analyticsPreferenceCheckbox{width:20px;height:20px;min-height:0;accent-color:var(--accent)}
-@media(max-width:360px){[data-feature="settings"] .settingsHomeView{padding-inline:10px}[data-feature="settings"] .settingsRow{grid-template-columns:minmax(104px,1fr) minmax(132px,auto);gap:8px}[data-feature="settings"] .settingsSegments{min-width:132px}[data-feature="settings"] .settingsChoice span{padding-inline:5px;font-size:9px}}
+@media(max-width:360px){[data-feature="settings"] .settingsHomeView{padding-inline:10px}[data-feature="settings"] .settingsRow{grid-template-columns:minmax(104px,1fr) minmax(132px,auto);gap:8px}}

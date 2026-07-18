@@ -1,0 +1,37 @@
+.settingsSegments{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(0,1fr);
+  min-width:142px;
+  padding:2px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:transparent;
+}
+.settingsChoice{position:relative;display:block;min-width:0}
+.settingsChoice input{position:absolute;opacity:0;pointer-events:none}
+.settingsChoiceBody,.settingsChoice>span{
+  min-height:28px;
+  padding:4px 7px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:var(--text-3);
+  font:750 10px/1 var(--font-terminal);
+  white-space:nowrap;
+  transition:background var(--duration-fast),color var(--duration-fast),box-shadow var(--duration-fast);
+}
+.settingsChoice input:checked+.settingsChoiceBody,.settingsChoice input:checked+span{
+  background:color-mix(in srgb,var(--surface-0) 72%,transparent);
+  color:var(--text-1);
+  box-shadow:var(--shadow-xs);
+}
+.settingsChoice input:focus-visible+.settingsChoiceBody,.settingsChoice input:focus-visible+span{outline:2px solid var(--accent-strong);outline-offset:2px}
+@media(max-width:360px){
+  .settingsSegments{min-width:132px}
+  .settingsChoiceBody,.settingsChoice>span{padding-inline:5px;font-size:9px}
+}

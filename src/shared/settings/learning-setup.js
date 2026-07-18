@@ -3,7 +3,7 @@ import {
   LEARNING_SETUP_LANGUAGES,
   previewContent,
   setupText,
-} from "./learning-preview-data.js?v=13.10.8";
+} from "./learning-preview-data.js?v=13.10.9";
 
 function flagSvg(language) {
   if (language === "ru") {
@@ -15,14 +15,20 @@ function flagSvg(language) {
   return `<svg viewBox="0 0 24 16" aria-hidden="true"><path fill="#21468b" d="M0 0h24v16H0z"/><path stroke="#fff" stroke-width="4" d="m0 0 24 16M24 0 0 16"/><path stroke="#cf142b" stroke-width="2" d="m0 0 24 16M24 0 0 16"/><path stroke="#fff" stroke-width="6" d="M12 0v16M0 8h24"/><path stroke="#cf142b" stroke-width="3.5" d="M12 0v16M0 8h24"/></svg>`;
 }
 
-function choice({ name, value, label, checked, detail = "", extraClass = "" }) {
-  return `<label class="learningSetupChoice ${extraClass}">
+function choice({ name, value, label, checked, extraClass = "" }) {
+  return `<label class="settingsChoice ${extraClass}">
     <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(value)}" ${checked ? "checked" : ""}>
-    <span class="learningSetupChoiceBody">
-      <span class="learningSetupChoiceLabel">${label}</span>
-      ${detail ? `<small>${escapeHtml(detail)}</small>` : ""}
-    </span>
+    <span class="settingsChoiceBody">${label}</span>
   </label>`;
+}
+
+function capitalizeWord(value) {
+  const text = String(value || "");
+  return text ? `${text[0].toUpperCase()}${text.slice(1)}` : "";
+}
+
+function segmentedControl(choices, className = "") {
+  return `<div class="segmentControl settingsSegments ${escapeHtml(className)}" role="radiogroup">${choices}</div>`;
 }
 
 export function emptyLearningSetupDraft() {
@@ -43,44 +49,44 @@ export function isLearningSetupDraftComplete(draft = {}) {
 }
 
 export function renderLearningPreview(settings = {}, { className = "", marker = "" } = {}) {
-  const language = settings.interface_language_code;
-  const copy = setupText(language || "ru");
-  const ready = Boolean(language && settings.alan_script_code
-    && (settings.alan_script_code === "turkic" || settings.alan_dialect_code));
-  const preview = ready ? previewContent(settings) : null;
-  const classes = ["learningSetupPreview", preview ? "isVisible" : "", className].filter(Boolean).join(" ");
+  const copy = setupText(settings.interface_language_code || "ru");
+  const preview = previewContent(settings);
+  const classes = ["learnCard", "learningSetupCard", className].filter(Boolean).join(" ");
   const markerAttribute = marker ? ` data-learning-preview="${escapeHtml(marker)}"` : "";
-  return `<section class="${escapeHtml(classes)}"${markerAttribute} aria-label="${escapeHtml(copy.preview)}" aria-live="polite">
-    ${preview ? `<div class="learningPreviewWord">${escapeHtml(preview.word)}</div>
-      <div class="learningPreviewTranslation">${escapeHtml(preview.translation)}</div>
-      <div class="learningPreviewExample"><span>${escapeHtml(preview.example)}</span><b aria-hidden="true">✦</b><span>${escapeHtml(preview.exampleTranslation)}</span></div>` : ""}
-  </section>`;
+  return `<article class="${escapeHtml(classes)}"${markerAttribute} aria-label="${escapeHtml(copy.preview)}" aria-live="polite">
+    <div class="cardInner">
+      <div class="cardFace cardFront">
+        <div class="groups">
+          <div class="word">${escapeHtml(capitalizeWord(preview.word))}</div>
+          <div class="groupPill">
+            <div class="gTrans">${escapeHtml(preview.translation)}</div>
+            <div class="gEx">${escapeHtml(preview.example)} <span aria-hidden="true">✦</span> ${escapeHtml(preview.exampleTranslation)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>`;
 }
 
 export function renderLearningSetup(draft = {}, { error = "" } = {}) {
   const language = draft.interface_language_code;
   const copy = setupText(language || "ru");
-  const title = language
-    ? copy.title
-    : "Настрой обучение под себя · Set up learning · Öğrenmeni ayarla";
 
   const languageChoices = LEARNING_SETUP_LANGUAGES.map((option) => choice({
     name: "learningLanguage",
     value: option.code,
     checked: language === option.code,
     label: `<span class="learningSetupFlag">${flagSvg(option.code)}</span><span>${escapeHtml(option.label)}</span>`,
-    extraClass: "learningSetupLanguageChoice",
   })).join("");
 
   const scriptChoices = [
-    { value: "cyrillic", label: copy.cyrillic, detail: "җигер" },
-    { value: "turkic", label: "Latin", detail: "ciger" },
-  ].map((option) => choice({
+    ["cyrillic", copy.cyrillic],
+    ["turkic", "Latin"],
+  ].map(([value, label]) => choice({
     name: "learningScript",
-    value: option.value,
-    label: escapeHtml(option.label),
-    detail: option.detail,
-    checked: draft.alan_script_code === option.value,
+    value,
+    label: escapeHtml(label),
+    checked: draft.alan_script_code === value,
   })).join("");
 
   const dialectChoices = [
@@ -92,31 +98,25 @@ export function renderLearningSetup(draft = {}, { error = "" } = {}) {
     value,
     label,
     checked: draft.alan_dialect_code === value,
-    extraClass: "learningSetupDialectChoice",
   })).join("");
 
   return `<section class="learningSetupScreen">
     <div class="learningSetupPane">
-      <header class="learningSetupHead">
-        <span class="learningSetupKicker">ALAN TIL</span>
-        <h1>${escapeHtml(title)}</h1>
-      </header>
-
       ${error ? `<div class="learningSetupError" role="alert">${escapeHtml(error)}</div>` : ""}
 
       <section class="learningSetupStep isVisible" data-setup-step="language">
-        <h2>Язык · Language · Dil</h2>
-        <div class="learningSetupChoices learningSetupLanguageChoices" role="radiogroup">${languageChoices}</div>
+        <h1>Язык · Language · Dil</h1>
+        ${segmentedControl(languageChoices, "learningSetupLanguageSegments")}
       </section>
 
       <section class="learningSetupStep ${language ? "isVisible" : ""}" data-setup-step="script" aria-hidden="${language ? "false" : "true"}">
         <h2>${escapeHtml(copy.script)}</h2>
-        <div class="learningSetupChoices" role="radiogroup">${scriptChoices}</div>
+        ${segmentedControl(scriptChoices)}
       </section>
 
       <section class="learningSetupStep ${draft.alan_script_code === "cyrillic" ? "isVisible" : ""}" data-setup-step="dialect" aria-hidden="${draft.alan_script_code === "cyrillic" ? "false" : "true"}">
         <h2>${escapeHtml(copy.dialect)}</h2>
-        <div class="learningSetupChoices learningSetupDialectChoices" role="radiogroup">${dialectChoices}</div>
+        ${segmentedControl(dialectChoices)}
       </section>
 
       ${renderLearningPreview(draft)}

@@ -11,6 +11,7 @@ const singletonPaths = [
   "/src/config/supabase.js",
   "/src/features/account/index.js",
   "/src/features/account/login.js",
+  "/src/features/onboarding/index.js",
   "/src/features/path/index.js",
   "/src/features/settings/index.js",
   "/src/features/settings/version.js",
@@ -25,22 +26,25 @@ const singletonPaths = [
   "/src/shared/i18n/messages-13-10.js",
   "/src/shared/progress/progress-sync.js",
   "/src/shared/progress/storage-scope.js",
+  "/src/shared/settings/learning-preview-data.js",
+  "/src/shared/settings/learning-setup.js",
+  "/src/shared/settings/user-settings-store.js",
 ];
 
-test("13.10.7 is the published application version", async () => {
+test("13.10.9 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
   const index = await read("index.html");
-  assert.match(analytics, /appVersion = "13\.10\.7"/);
-  assert.match(index, /app\.css\?v=13\.10\.7/);
-  assert.match(index, /bootstrap\.js\?v=13\.10\.7/);
+  assert.match(analytics, /appVersion = "13\.10\.9"/);
+  assert.match(index, /app\.css\?v=13\.10\.9/);
+  assert.match(index, /bootstrap\.js\?v=13\.10\.9/);
 });
 
-test("singleton module URLs resolve to one 13.10.7 instance", async () => {
+test("singleton module URLs resolve to one 13.10.9 instance", async () => {
   const index = await read("index.html");
   for (const path of singletonPaths) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const target = new RegExp(`"${escaped}\?v=13\.10\.7"`);
-    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.7`), `missing 13.10.7 reference for ${path}`);
+    const target = new RegExp(`"${escaped}\?v=13\.10\.9"`);
+    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.9`), `missing 13.10.9 reference for ${path}`);
   }
 });
 

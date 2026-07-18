@@ -26,6 +26,7 @@ test("preview uses the approved ciger example and diamond separator", async () =
   assert.match(data, /valiant work/);
   assert.match(data, /yiğitçe emek/);
   assert.match(setup, /✦/);
+  assert.match(setup, /learnCard/);
 });
 
 test("no option is preselected in an empty draft", async () => {

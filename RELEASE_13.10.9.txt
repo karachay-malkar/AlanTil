@@ -1,0 +1,7 @@
+AlanTil 13.10.9
+
+- Rebuilt first-launch setup from the existing shared segmented controls and standard application button.
+- Removed the extra onboarding heading and kept the first language row below the top chrome fade.
+- Kept the learning preview card visible from the first render and reused the real learn-card classes.
+- Preserved progressive disclosure for script and Cyrillic letter form.
+- Restored authenticated /profile/account tabs now open the profile root instead of trapping the user on account details.

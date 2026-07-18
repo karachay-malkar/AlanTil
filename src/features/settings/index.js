@@ -5,14 +5,14 @@ import {
   refreshDictionary,
 } from "../../shared/data/word-repository.js?v=13.10.3";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.3";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.10.8";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.10.9";
 import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.10.3";
-import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.10.8";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.10.8";
+import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.10.9";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.10.9";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.10.8";
+const SETTINGS_ASSET_VERSION = "13.10.9";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -28,7 +28,7 @@ function sameSettings(left = {}, right = {}) {
 function settingChoice({ name, value, label, checked, ariaLabel = "" }) {
   return `<label class="segmentOption settingsChoice" ${ariaLabel ? `aria-label="${escapeHtml(ariaLabel)}"` : ""}>
     <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(value)}" ${checked ? "checked" : ""}>
-    <span>${escapeHtml(label)}</span>
+    <span class="settingsChoiceBody">${escapeHtml(label)}</span>
   </label>`;
 }
 
@@ -198,7 +198,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.8")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.9")}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>

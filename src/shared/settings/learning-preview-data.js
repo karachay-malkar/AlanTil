@@ -26,7 +26,7 @@ export const LEARNING_SETUP_TEXT = Object.freeze({
     script: "Написание аланских слов",
     cyrillic: "Кириллица",
     continue: "Продолжить",
-    dialect: "Выберите написание буквы",
+    dialect: "Выберите форму",
     preview: "Предпросмотр учебной карточки",
     storageError: "Не удалось сохранить настройки на этом устройстве.",
   }),
