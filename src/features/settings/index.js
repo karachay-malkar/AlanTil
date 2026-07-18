@@ -5,19 +5,21 @@ import {
   refreshDictionary,
 } from "../../shared/data/word-repository.js?v=13.10.3";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.3";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.9.0";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.10.8";
 import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.10.3";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.9.0";
+import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.10.8";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.10.8";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.10.3";
+const SETTINGS_ASSET_VERSION = "13.10.8";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
 
 function sameSettings(left = {}, right = {}) {
   return left.interface_language_code === right.interface_language_code
+    && left.translation_language_code === right.translation_language_code
     && left.alan_script_code === right.alan_script_code
     && left.alan_dialect_code === right.alan_dialect_code
     && Number(left.station_size) === Number(right.station_size);
@@ -50,6 +52,18 @@ function updateSaveButton(root, saved = false) {
   button.disabled = !hasUnsavedChanges;
   button.classList.toggle("isDirty", hasUnsavedChanges);
   button.textContent = saved ? msg("settings.sohraneno") : msg("settings.sohranit");
+}
+
+function updateLearningPreview(root) {
+  const current = root.querySelector('[data-learning-preview="settings"]');
+  if (!current || !draftSettings) return;
+  const template = document.createElement("template");
+  template.innerHTML = renderLearningPreview(draftSettings, {
+    className: "settingsLearningPreview",
+    marker: "settings",
+  }).trim();
+  const next = template.content.firstElementChild;
+  if (next) current.replaceWith(next);
 }
 
 function settingsSyncIsPending() {
@@ -127,14 +141,13 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     checked: draftSettings.alan_script_code === value,
   })).join("");
   const dialectChoices = [
-    ["balkar", msg("settings.zh"), msg("settings.balkarskiy_variant_zh")],
-    ["karachay", msg("settings.dzh"), msg("settings.karachaevskiy_variant_dzh")],
-    ["canonical", "Җ", msg("settings.kanonicheskiy_variant_j")],
-  ].map(([value, label, ariaLabel]) => settingChoice({
+    ["canonical", "Җ"],
+    ["karachay", "Дж"],
+    ["balkar", "Ж"],
+  ].map(([value, label]) => settingChoice({
     name: "alanDialect",
     value,
     label,
-    ariaLabel,
     checked: draftSettings.alan_dialect_code === value,
   })).join("");
   const sizeChoices = [20, 40].map((value) => settingChoice({
@@ -158,6 +171,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
         ${settingRow(msg("settings.yazyk_interfeysa"), languageChoices)}
         ${settingRow(msg("settings.alfavit_alanskih_slov"), scriptChoices)}
         ${settingRow(msg("settings.variant_kirillitsy"), dialectChoices, { className: "settingsDialectRow", hidden: draftSettings.alan_script_code === "turkic" })}
+        ${renderLearningPreview(draftSettings, { className: "settingsLearningPreview", marker: "settings" })}
       </section>
 
       <section class="settingsSection">
@@ -184,7 +198,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.3")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.8")}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>
@@ -196,11 +210,15 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     draftSettings = { ...draftSettings, ...updates };
     hasUnsavedChanges = !sameSettings(draftSettings, baselineSettings);
     updateSaveButton(context.root);
+    updateLearningPreview(context.root);
   };
 
   context.root.querySelectorAll('input[name="interfaceLanguage"]').forEach((radio) => {
     radio.addEventListener("change", () => {
-      if (radio.checked) markChanged({ interface_language_code: radio.value });
+      if (radio.checked) markChanged({
+        interface_language_code: radio.value,
+        translation_language_code: radio.value,
+      });
     }, { signal });
   });
   context.root.querySelectorAll('input[name="alanScript"]').forEach((radio) => {

@@ -1,17 +1,21 @@
 import { enqueueProgress } from "../progress/progress-queue.js?v=13.9.0";
 import {
+  hasScopedValue,
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
 } from "../progress/storage-scope.js?v=13.9.0";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
+const LEGACY_SETUP_COMPLETED_AT = "2026-07-18T00:00:00.000Z";
+
 export const DEFAULT_USER_SETTINGS = Object.freeze({
   interface_language_code: "ru",
   translation_language_code: "ru",
   alan_script_code: "cyrillic",
   alan_dialect_code: "canonical",
   station_size: 40,
+  learning_setup_completed_at: null,
 });
 
 const listeners = new Set();
@@ -40,14 +44,33 @@ function normalizeAlanDialectCode(value) {
   return ["canonical", "karachay", "balkar"].includes(value) ? value : "canonical";
 }
 
+function normalizeCompletionTimestamp(value) {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+}
+
 function normalizeSettings(value = {}) {
+  const interfaceLanguage = normalizeInterfaceLanguageCode(value.interface_language_code);
   return {
-    interface_language_code: normalizeInterfaceLanguageCode(value.interface_language_code),
-    translation_language_code: normalizeLanguageCode(value.translation_language_code, DEFAULT_USER_SETTINGS.translation_language_code),
+    interface_language_code: interfaceLanguage,
+    // The selected interface language is also the learning translation language.
+    translation_language_code: interfaceLanguage,
     alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
     alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),
     station_size: normalizeStationSize(value.station_size),
+    learning_setup_completed_at: normalizeCompletionTimestamp(value.learning_setup_completed_at),
   };
+}
+
+function storedSettings() {
+  const hasStoredSettings = hasScopedValue(USER_SETTINGS_KEY);
+  const stored = readScopedJson(USER_SETTINGS_KEY, DEFAULT_USER_SETTINGS);
+  if (hasStoredSettings && stored && typeof stored === "object"
+      && !Object.prototype.hasOwnProperty.call(stored, "learning_setup_completed_at")) {
+    return { ...stored, learning_setup_completed_at: LEGACY_SETUP_COMPLETED_AT };
+  }
+  return stored;
 }
 
 function notify() {
@@ -62,7 +85,8 @@ function notify() {
 }
 
 export function reloadUserSettings() {
-  state = normalizeSettings(readScopedJson(USER_SETTINGS_KEY, DEFAULT_USER_SETTINGS));
+  state = normalizeSettings(storedSettings());
+  writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
   return getUserSettings();
 }
@@ -79,6 +103,10 @@ export function getStationSize() {
   return normalizeStationSize(state.station_size);
 }
 
+export function hasCompletedLearningSetup(settings = state) {
+  return Boolean(normalizeCompletionTimestamp(settings?.learning_setup_completed_at));
+}
+
 export function setUserSettings(updates = {}, {
   queue = true,
   forceQueue = false,
@@ -90,7 +118,8 @@ export function setUserSettings(updates = {}, {
     || next.translation_language_code !== state.translation_language_code
     || next.alan_script_code !== state.alan_script_code
     || next.alan_dialect_code !== state.alan_dialect_code
-    || next.station_size !== state.station_size;
+    || next.station_size !== state.station_size
+    || next.learning_setup_completed_at !== state.learning_setup_completed_at;
   state = next;
   const stored = writeScopedJson(USER_SETTINGS_KEY, state);
   if (!stored && requireStorage) {
@@ -107,8 +136,19 @@ export function setUserSettings(updates = {}, {
   return getUserSettings();
 }
 
+export function completeLearningSetup(updates = {}) {
+  return setUserSettings({
+    ...updates,
+    learning_setup_completed_at: new Date().toISOString(),
+  }, { requireStorage: true });
+}
+
 export function replaceUserSettings(settings = {}) {
-  state = normalizeSettings(settings);
+  const incoming = settings && typeof settings === "object" ? settings : {};
+  const merged = Object.prototype.hasOwnProperty.call(incoming, "learning_setup_completed_at")
+    ? incoming
+    : { ...incoming, learning_setup_completed_at: state.learning_setup_completed_at };
+  state = normalizeSettings(merged);
   writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
   return getUserSettings();

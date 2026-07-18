@@ -1,4 +1,4 @@
-import { getUserSettings } from "../settings/user-settings-store.js?v=13.9.0";
+import { getUserSettings } from "../settings/user-settings-store.js?v=13.10.8";
 
 function text(value) {
   return String(value || "").trim();
@@ -6,11 +6,19 @@ function text(value) {
 
 function displaySettings(settings) {
   const source = settings || getUserSettings();
+  const interfaceLanguage = ["ru", "en", "tr"].includes(source?.interface_language_code)
+    ? source.interface_language_code
+    : "ru";
+  const translationLanguage = ["ru", "en", "tr"].includes(source?.translation_language_code)
+    ? source.translation_language_code
+    : interfaceLanguage;
   return {
     script: source?.alan_script_code === "turkic" ? "turkic" : "cyrillic",
     dialect: ["canonical", "karachay", "balkar"].includes(source?.alan_dialect_code)
       ? source.alan_dialect_code
       : "canonical",
+    interfaceLanguage,
+    translationLanguage,
   };
 }
 
@@ -38,41 +46,65 @@ export function getDisplayedAlanPhrases(entry, settings) {
   return displayedAlanValue(entry, "phrasesAlanCyrillic", "phrasesAlanTurkic", settings);
 }
 
+function localizedValue(entry, language, keys) {
+  if (language === "en") return text(entry?.[keys.english]) || text(entry?.[keys.russian]);
+  if (language === "tr") return text(entry?.[keys.turkish]) || text(entry?.[keys.russian]);
+  return text(entry?.[keys.russian]);
+}
+
 function displayedStructureName(entry, keys, settings) {
-  return displayedAlanValue(entry, keys.cyrillic, keys.turkic, settings)
-    || text(entry?.[keys.russian]);
+  const selected = displaySettings(settings);
+  return localizedValue(entry, selected.interfaceLanguage, keys);
 }
 
 export function getDisplayedStoryName(entry, settings) {
   return displayedStructureName(entry, {
-    cyrillic: "storyNameAlanCyrillic",
-    turkic: "storyNameAlanTurkic",
     russian: "storyNameRu",
+    english: "storyNameEn",
+    turkish: "storyNameTr",
   }, settings);
 }
 
 export function getDisplayedDictionaryName(entry, settings) {
   return displayedStructureName(entry, {
-    cyrillic: "dictionaryNameAlanCyrillic",
-    turkic: "dictionaryNameAlanTurkic",
     russian: "dictionaryNameRu",
+    english: "dictionaryNameEn",
+    turkish: "dictionaryNameTr",
   }, settings);
 }
 
 export function getDisplayedSectionName(entry, settings) {
   return displayedStructureName(entry, {
-    cyrillic: "sectionNameAlanCyrillic",
-    turkic: "sectionNameAlanTurkic",
     russian: "sectionNameRu",
+    english: "sectionNameEn",
+    turkish: "sectionNameTr",
   }, settings);
 }
 
 export function getDisplayedSetName(entry, settings) {
   return displayedStructureName(entry, {
-    cyrillic: "setNameAlanCyrillic",
-    turkic: "setNameAlanTurkic",
     russian: "setNameRu",
+    english: "setNameEn",
+    turkish: "setNameTr",
   }, settings);
+}
+
+export function getDisplayedTranslation(entry, settings) {
+  const selected = displaySettings(settings);
+  return localizedValue(entry, selected.translationLanguage, {
+    russian: "translationRu",
+    english: "translationEn",
+    turkish: "translationTr",
+  });
+}
+
+function getDisplayedTranslatedPhrases(entry, settings) {
+  const selected = displaySettings(settings);
+  return localizedValue(entry, selected.translationLanguage, {
+    russian: "phrasesRu",
+    english: "phrasesEn",
+    turkish: "phrasesTr",
+  });
 }
 
 function numberedPhraseRows(value) {
@@ -93,11 +125,11 @@ function numberedPhraseRows(value) {
 export function getDisplayedExample(entry, settings) {
   if (entry?.legacyExample) return text(entry.legacyExample);
   const alanRows = numberedPhraseRows(getDisplayedAlanPhrases(entry, settings));
-  const russianRows = numberedPhraseRows(entry?.phrasesRu);
-  if (!alanRows.length && !russianRows.length) return "";
-  const russianByKey = new Map(russianRows.map((row) => [row.key, row.text]));
+  const translatedRows = numberedPhraseRows(getDisplayedTranslatedPhrases(entry, settings));
+  if (!alanRows.length && !translatedRows.length) return "";
+  const translatedByKey = new Map(translatedRows.map((row) => [row.key, row.text]));
   return alanRows.map((row, index) => {
-    const translation = russianByKey.get(row.key) || russianRows[index]?.text || "";
+    const translation = translatedByKey.get(row.key) || translatedRows[index]?.text || "";
     return [row.text, translation].filter(Boolean).join(" ✦ ");
   }).join("; ");
 }
@@ -107,7 +139,7 @@ export function getDisplayedWordEntry(entry, settings) {
   return {
     ...entry,
     word: getDisplayedAlanWord(entry, settings),
-    trans: text(entry.translationRu),
+    trans: getDisplayedTranslation(entry, settings),
     example: getDisplayedExample(entry, settings),
     story_name: getDisplayedStoryName(entry, settings),
     dictionary_name: getDisplayedDictionaryName(entry, settings),

@@ -1,0 +1,8 @@
+AlanTil 13.10.8
+
+- Added mandatory first-launch learning setup before the sign-in screen.
+- Language, Alan script and Cyrillic letter form are selected progressively with a live learning-card preview.
+- Fixed interface hierarchy localization so Alan script no longer replaces Russian, English or Turkish interface names.
+- Added English/Turkish fields to the application dictionary view with Russian fallback in the client.
+- Added administrative Supabase views for users and sessions with nickname and email.
+- Updated service-worker caching so changed application modules are checked network-first.

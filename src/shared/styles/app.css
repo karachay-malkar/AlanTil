@@ -5,6 +5,7 @@
 @import url("./components.css?v=13.9.0") layer(components);
 @import url("./guest-profile-prompt.css?v=13.10.2") layer(components);
 @import url("./privacy.css?v=13.9.0") layer(components);
+@import url("../../features/onboarding/onboarding.css?v=13.10.8") layer(features);
 @import url("../../features/path/path.css?v=13.9.0") layer(features);
 @import url("../../features/learn/learn.css?v=13.9.0") layer(features);
 @import url("../../features/test/test.css?v=13.9.0") layer(features);
@@ -12,7 +13,7 @@
 @import url("../../features/practice/practice.css?v=13.9.0") layer(features);
 @import url("../../features/profile/profile.css?v=13.9.0") layer(features);
 @import url("../../features/account/account.css?v=13.10.2") layer(features);
-@import url("../../features/settings/settings.css?v=13.9.0") layer(features);
+@import url("../../features/settings/settings.css?v=13.10.8") layer(features);
 @import url("../../features/songs/songs.css?v=13.9.0") layer(features);
 @import url("./paper-components.css?v=13.9.0") layer(utilities);
 @import url("./chrome.css?v=13.9.0") layer(utilities);

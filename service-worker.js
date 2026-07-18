@@ -1,4 +1,4 @@
-const VERSION = "13.10.7";
+const VERSION = "13.10.8";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
@@ -7,6 +7,8 @@ const CORE_ASSETS = [
   "/404.html",
   "/src/app/bootstrap.js?v=13.10.7",
   "/src/shared/styles/app.css?v=13.10.7",
+  "/src/features/onboarding/index.js?v=13.10.8",
+  "/src/features/onboarding/onboarding.css?v=13.10.8",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
 ];
@@ -31,7 +33,7 @@ self.addEventListener("activate", (event) => {
 
 async function navigationResponse(request) {
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { cache: "no-store" });
     const cache = await caches.open(RUNTIME_CACHE);
     cache.put(request, response.clone());
     return response;
@@ -74,11 +76,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
+
+  // Application code and styles are always checked against the network first.
+  // This prevents an older query string from pinning an obsolete module.
+  if (url.pathname.startsWith("/src/") && ["script", "style", "worker"].includes(request.destination)) {
+    event.respondWith(networkFirstStaticResponse(request));
+    return;
+  }
   if (url.pathname.startsWith("/src/shared/auth/") || url.pathname.startsWith("/src/features/account/") || url.pathname === "/src/config/supabase.js") {
     event.respondWith(networkFirstStaticResponse(request));
     return;
   }
-  if (["script", "style", "image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {
+  if (["image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {
     event.respondWith(staticResponse(request));
   }
 });

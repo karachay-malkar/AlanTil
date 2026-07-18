@@ -85,7 +85,15 @@ export function mergeProgressQueues(sourceEntries, scope = getStorageScope(), { 
   const queue = readProgressQueue(scope);
   const byId = new Map(queue.map((entry) => [entry.id, entry]));
   normalizeQueue(sourceEntries).forEach((entry) => {
-    if (byId.has(entry.id)) return;
+    const current = byId.get(entry.id);
+    if (entry.type === "user_settings") {
+      // Guest setup may replace only the blank settings entry prepared for a
+      // brand-new account. Existing cloud or pending account settings win.
+      if (!current || current.payload?.learning_setup_completed_at) return;
+      byId.set(entry.id, { ...entry, claim_id: claimId || entry.claim_id || "" });
+      return;
+    }
+    if (current) return;
     byId.set(entry.id, { ...entry, claim_id: claimId || entry.claim_id || "" });
   });
   return writeProgressQueue(Array.from(byId.values()), scope);

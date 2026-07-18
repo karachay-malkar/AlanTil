@@ -11,13 +11,14 @@ import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.7";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
+import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.8";
 import { createRouter } from "./router.js?v=13.10.7";
 import { createShell } from "./shell.js?v=13.9.0";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=13.10.7", { scope: "/" })
+    navigator.serviceWorker.register("/service-worker.js?v=13.10.8", { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
@@ -39,6 +40,14 @@ async function bootstrap() {
       // Feature styles are loaded once through app.css.
     },
   };
+
+  // The learning language must be understandable before any sign-in screen is shown.
+  if (!callbackVisit) {
+    const setupWasShown = await runLearningSetup({ shell });
+    if (setupWasShown) {
+      window.history.replaceState(null, "", "/profile/account");
+    }
+  }
 
   shell.renderHome();
   const progressReady = initializeProgressSystem();
