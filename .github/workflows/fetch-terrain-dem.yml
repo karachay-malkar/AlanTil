@@ -1,0 +1,38 @@
+name: Fetch Terrain DEM Source
+
+on:
+  push:
+    branches:
+      - terrain-dem-stage6-1-source
+    paths:
+      - .github/workflows/fetch-terrain-dem.yml
+
+permissions:
+  contents: read
+
+env:
+  DEM_URL: https://step.esa.int/auxdata/dem/SRTM90/tiff/srtm_45_04.zip
+
+jobs:
+  fetch-dem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download CGIAR SRTM 90 m GeoTIFF tile
+        run: |
+          set -euo pipefail
+          mkdir -p terrain-source
+          curl --fail --location --retry 4 --retry-delay 5 "$DEM_URL" --output terrain-source/srtm_45_04.zip
+          unzip -o terrain-source/srtm_45_04.zip -d terrain-source
+          find terrain-source -maxdepth 2 -type f -printf '%P\t%s bytes\n'
+          test -f terrain-source/srtm_45_04.tif
+          sha256sum terrain-source/srtm_45_04.tif > terrain-source/SHA256SUMS.txt
+      - name: Upload DEM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: srtm-45-04-geotiff
+          path: |
+            terrain-source/srtm_45_04.tif
+            terrain-source/SHA256SUMS.txt
+          compression-level: 0
+          retention-days: 1
