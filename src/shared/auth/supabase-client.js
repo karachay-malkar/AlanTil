@@ -1,6 +1,6 @@
-import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.4";
+import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.5";
 
-const SUPABASE_MODULE_URL = "/src/vendor/supabase-js.js?v=13.10.4";
+const SUPABASE_MODULE_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 const AUTH_STORAGE_KEY = "alantil_auth_session_v1";
 let clientPromise = null;
 
