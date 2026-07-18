@@ -26,27 +26,27 @@ const singletonPaths = [
   "/src/shared/progress/storage-scope.js",
 ];
 
-test("13.10.3 is the published application version", async () => {
+test("13.10.4 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
   const index = await read("index.html");
-  assert.match(analytics, /appVersion = "13\.10\.3"/);
-  assert.match(index, /app\.css\?v=13\.10\.3/);
-  assert.match(index, /bootstrap\.js\?v=13\.10\.3/);
+  assert.match(analytics, /appVersion = "13\.10\.4"/);
+  assert.match(index, /app\.css\?v=13\.10\.4/);
+  assert.match(index, /bootstrap\.js\?v=13\.10\.4/);
 });
 
-test("changed singleton module URLs resolve to one 13.10.3 instance", async () => {
+test("singleton module URLs resolve to one 13.10.4 instance", async () => {
   const index = await read("index.html");
   for (const path of singletonPaths) {
     const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const target = new RegExp(`"${escaped}\\?v=13\\.10\\.3"`);
-    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.3`), `missing 13.10.3 reference for ${path}`);
+    const target = new RegExp(`"${escaped}\\?v=13\\.10\\.4"`);
+    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.4`), `missing 13.10.4 reference for ${path}`);
   }
 });
 
 test("local Supabase SDK replaces runtime CDN loading", async () => {
   const client = await read("src/shared/auth/supabase-client.js");
   const loader = await read("src/vendor/supabase-js.js");
-  assert.match(client, /\/src\/vendor\/supabase-js\.js\?v=13\.10\.3/);
+  assert.match(client, /\/src\/vendor\/supabase-js\.js\?v=13\.10\.4/);
   assert.match(loader, /payload-1\.txt/);
   assert.match(loader, /gunzipSync/);
   assert.doesNotMatch(client + loader, /cdn\.jsdelivr\.net|unpkg\.com|esm\.sh/);

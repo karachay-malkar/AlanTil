@@ -11,28 +11,35 @@ test("guest prompt contains the approved Russian copy", async () => {
   assert.match(messages, /Профиль позволит сохранять прогресс и пользоваться расширенными функциями приложения\./);
 });
 
-test("Google option is visible before the official script is ready", async () => {
+test("Google is rendered as an immediate local provider button", async () => {
+  const providers = await read("src/config/auth-providers.js");
   const login = await read("src/features/account/login.js");
-  const identity = await read("src/shared/auth/google-identity.js");
-  assert.match(login, /data-google-fallback/);
-  assert.match(login, /authProviderIcon/);
-  assert.match(identity, /accounts\.id\.renderButton/);
-  assert.match(identity, /activeRenderers/);
-  assert.doesNotMatch(identity, /googleClientIdEndpoint/);
+  assert.match(providers, /id: "google"[\s\S]*?enabled: true[\s\S]*?identityButton: false/);
+  assert.match(login, /renderAuthProviderButton/);
+  assert.match(login, /data-auth-provider/);
+  assert.doesNotMatch(login, /data-google-fallback|data-google-official|onGoogleMount/);
 });
 
-test("Google client ID is local public configuration", async () => {
-  const config = await read("src/config/auth.js");
-  assert.match(config, /\.apps\.googleusercontent\.com/);
-  assert.match(config, /accounts\.google\.com\/gsi\/client/);
-});
-
-test("Google token exchange retries and does not use a seven-second cutoff", async () => {
+test("Google uses one-shot Supabase redirect OAuth", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
-  assert.match(auth, /AUTH_REQUEST_TIMEOUT_MS = 60000/);
-  assert.match(auth, /retryAuth/);
-  assert.match(auth, /signInWithIdToken/);
-  assert.doesNotMatch(auth, /AUTH_REQUEST_TIMEOUT_MS = 7000/);
+  const start = auth.indexOf("export async function signInWithProvider");
+  const end = auth.indexOf("export async function signOut", start);
+  const providerFlow = auth.slice(start, end);
+  assert.match(providerFlow, /OAUTH_PROVIDERS\.has/);
+  assert.match(providerFlow, /signInWithOAuth/);
+  assert.match(providerFlow, /provider: normalized/);
+  assert.match(providerFlow, /redirectTo: getAuthRedirectUrl\(\)/);
+  assert.match(providerFlow, /prompt: "select_account"/);
+  assert.doesNotMatch(providerFlow, /retryAuth|signInWithIdToken/);
+});
+
+test("authentication has a bounded timeout and no automatic retry loop", async () => {
+  const auth = await read("src/shared/auth/auth-service.js");
+  assert.match(auth, /AUTH_REQUEST_TIMEOUT_MS = 15000/);
+  assert.doesNotMatch(auth, /AUTH_RETRY_DELAYS_MS|async function retryAuth|const sleep/);
+  const callbackStart = auth.indexOf("async function handleAuthCallback");
+  const callbackEnd = auth.indexOf("function startAuthInitialization", callbackStart);
+  assert.doesNotMatch(auth.slice(callbackStart, callbackEnd), /retryAuth/);
 });
 
 test("guest action remains available independently of Google", async () => {
@@ -45,7 +52,7 @@ test("guest auth initialization avoids loading Supabase without a saved session"
   const auth = await read("src/shared/auth/auth-service.js");
   assert.match(auth, /!callbackPresent && !hasPersistedAuthSession\(\)/);
   const guardIndex = auth.indexOf("!callbackPresent && !hasPersistedAuthSession()");
-  const clientIndex = auth.indexOf("const client = await getSupabaseClient()", guardIndex);
+  const clientIndex = auth.indexOf("getSupabaseClient()", guardIndex);
   assert.ok(guardIndex >= 0 && clientIndex > guardIndex);
 });
 
@@ -72,7 +79,7 @@ test("service worker caches only the guest shell eagerly", async () => {
 });
 
 test("starter dictionary contains valid current rows for every story", async () => {
-  const { STARTER_DICTIONARY } = await import("../src/data/starter-dictionary.js?v=13.10.3-test");
+  const { STARTER_DICTIONARY } = await import("../src/data/starter-dictionary.js?v=13.10.4-test");
   assert.equal(STARTER_DICTIONARY.length, 60);
   assert.deepEqual(new Set(STARTER_DICTIONARY.map((row) => String(row.story_id))), new Set(["1", "2", "3"]));
   assert.ok(STARTER_DICTIONARY.every((row) => row.word_id && row.word_alan_cyrillic && row.translation_ru));

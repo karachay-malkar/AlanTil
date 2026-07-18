@@ -1,18 +1,16 @@
-import { msg } from "../i18n/index.js?v=13.10.3";
-import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.3";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.3";
-import { getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.3";
+import { msg } from "../i18n/index.js?v=13.10.4";
+import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.4";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.4";
+import { getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.4";
 
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
-const AUTH_REQUEST_TIMEOUT_MS = 60000;
-const AUTH_RETRY_DELAYS_MS = [0, 1500, 5000, 15000];
+const OAUTH_PROVIDERS = new Set(["google", "apple"]);
+const AUTH_REQUEST_TIMEOUT_MS = 15000;
 const AUTH_DESTINATION_PATH = "/profile/account";
 
 let initializationPromise = null;
 let authSubscription = null;
 let callbackPromise = null;
-
-const sleep = (ms) => new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 
 function withTimeout(value, label, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) {
   let timer = 0;
@@ -28,23 +26,16 @@ function isRetryable(error) {
   return /network|fetch|load failed|timeout|offline/i.test(String(error?.message || error));
 }
 
-async function retryAuth(operation, label) {
-  let lastError = null;
-  for (const waitMs of AUTH_RETRY_DELAYS_MS) {
-    if (waitMs) await sleep(waitMs);
-    if (globalThis.navigator && navigator.onLine === false) throw new Error("Offline");
-    try {
-      return await withTimeout(operation(), label);
-    } catch (error) {
-      lastError = error;
-      if (!isRetryable(error)) throw error;
-    }
-  }
-  throw lastError || new Error(`${label} failed`);
+function isRedirectConfigurationError(value) {
+  return /(?:redirect(?:_to)?|redirect url|callback url|return url|requested path).*(?:not allowed|not permitted|invalid|allow list)|not in (?:the )?allow list/i.test(String(value || ""));
 }
 
 function authMessage(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
   const value = String(error?.message || error || "");
+  if (isRedirectConfigurationError(value)) return msg("service.ssylka_vozvrata_ne_razreshena_v_supabase");
+  if (/blocked|banned|signup.*disabled|регистрац/i.test(value)) {
+    return msg("service.vhod_ili_registratsiya_dlya_etogo_adresa_nedostupny");
+  }
   if (/rate limit|too many requests/i.test(value)) return msg("service.slishkom_mnogo_popytok_povtorite_pozzhe");
   if (isRetryable(error)) return msg("service.ne_udalos_svyazatsya_s_servisom_avtorizatsii");
   return fallback;
@@ -96,19 +87,27 @@ async function handleAuthCallback(client) {
     clearCallbackUrl();
     return true;
   }
+
   if (!callbackPromise) {
-    callbackPromise = retryAuth(() => client.auth.exchangeCodeForSession(callback.code), "Auth callback")
-      .then(({ data, error }) => {
+    callbackPromise = (async () => {
+      try {
+        const { data, error } = await withTimeout(
+          client.auth.exchangeCodeForSession(callback.code),
+          "Auth callback",
+        );
         if (error) throw error;
         if (!data?.session?.user) throw new Error("Session was not created");
         applySession(data.session, null);
-      })
-      .catch((error) => applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google"))))
-      .finally(() => {
+      } catch (error) {
+        applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google")));
+      } finally {
         clearCallbackUrl();
-        callbackPromise = null;
-      });
+      }
+    })().finally(() => {
+      callbackPromise = null;
+    });
   }
+
   await callbackPromise;
   return true;
 }
@@ -122,10 +121,10 @@ function startAuthInitialization() {
         return applySession(null, null);
       }
 
-      const client = await getSupabaseClient();
+      const client = await withTimeout(getSupabaseClient(), "Supabase client");
       const callbackHandled = await handleAuthCallback(client);
       if (!callbackHandled) {
-        const { data, error } = await withTimeout(client.auth.getSession(), "Auth session", 15000);
+        const { data, error } = await withTimeout(client.auth.getSession(), "Auth session");
         if (error) throw error;
         applySession(data.session || null, null);
       }
@@ -148,46 +147,60 @@ export function waitForAuthInitialization() {
   return startAuthInitialization();
 }
 
+// Retained only for compatibility with an older account module. The current
+// web sign-in button uses signInWithProvider("google") and redirect OAuth.
 export async function signInWithGoogleCredential(token, nonce) {
   const credential = String(token || "").trim();
   const rawNonce = String(nonce || "").trim();
   if (!credential || !rawNonce) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
-  const result = await retryAuth(async () => {
-    const client = await getSupabaseClient();
-    const response = await client.auth.signInWithIdToken({
+
+  try {
+    const client = await withTimeout(getSupabaseClient(), "Supabase client");
+    const { data, error } = await withTimeout(client.auth.signInWithIdToken({
       provider: "google",
       token: credential,
       nonce: rawNonce,
-    });
-    return { client, ...response };
-  }, "Google sign in");
-  if (result.error) throw new Error(authMessage(result.error));
-  if (!result.data?.session?.user) throw new Error(msg("service.sessiya_ne_byla_sozdana"));
-  bindAuthEvents(result.client);
-  applySession(result.data.session, null);
-  return result.data;
+    }), "Google token sign in");
+    if (error) throw error;
+    if (!data?.session?.user) throw new Error(msg("service.sessiya_ne_byla_sozdana"));
+    bindAuthEvents(client);
+    applySession(data.session, null);
+    return data;
+  } catch (error) {
+    throw new Error(authMessage(error));
+  }
 }
 
 export async function signInWithProvider(provider) {
   const normalized = String(provider || "").trim().toLowerCase();
-  if (normalized !== "apple") throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
-  const result = await retryAuth(async () => {
-    const client = await getSupabaseClient();
-    const response = await client.auth.signInWithOAuth({
+  if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+
+  setAuthState({ error: null });
+  try {
+    const client = await withTimeout(getSupabaseClient(), "Supabase client");
+    const options = { redirectTo: getAuthRedirectUrl() };
+    if (normalized === "google") options.queryParams = { prompt: "select_account" };
+
+    const { data, error } = await withTimeout(client.auth.signInWithOAuth({
       provider: normalized,
-      options: { redirectTo: getAuthRedirectUrl() },
-    });
-    return response;
-  }, "OAuth sign in");
-  if (result.error) throw new Error(authMessage(result.error));
-  return result.data;
+      options,
+    }), "OAuth sign in");
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    throw new Error(authMessage(error));
+  }
 }
 
 export async function signOut() {
-  const client = await getSupabaseClient();
-  const { error } = await withTimeout(client.auth.signOut({ scope: "local" }), "Sign out", 30000);
-  if (error) throw new Error(authMessage(error));
-  applySession(null, null);
+  try {
+    const client = await withTimeout(getSupabaseClient(), "Supabase client");
+    const { error } = await withTimeout(client.auth.signOut({ scope: "local" }), "Sign out");
+    if (error) throw error;
+    applySession(null, null);
+  } catch (error) {
+    throw new Error(authMessage(error));
+  }
 }
 
 export function getCurrentAuthState() { return getAuthState(); }
