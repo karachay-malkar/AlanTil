@@ -1,0 +1,7 @@
+AlanTil 13.10.6
+
+- Google OAuth redirect is now built locally with PKCE and starts without waiting for supabase-js.
+- Supabase SDK preloads in the background only when the account screen is opened.
+- SDK loading uses the pinned jsDelivr module with the existing same-origin bundle as a delayed fallback.
+- Guest startup remains free of Supabase SDK loading.
+- OAuth callback, profiles, cloud progress and Supabase data remain unchanged.

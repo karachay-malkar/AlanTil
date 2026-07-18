@@ -1,5 +1,6 @@
-import { getEnabledAuthProviders } from "../../config/auth-providers.js?v=13.10.4";
-import { msg } from "../../shared/i18n/index.js?v=13.10.4";
+import { getEnabledAuthProviders } from "../../config/auth-providers.js?v=13.10.6";
+import { preloadSupabaseClient } from "../../shared/auth/supabase-client.js?v=13.10.6";
+import { msg } from "../../shared/i18n/index.js?v=13.10.6";
 import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
@@ -13,6 +14,7 @@ function renderProvider(provider) {
 }
 
 export function renderLogin(context, { error = "" } = {}) {
+  void preloadSupabaseClient();
   const providers = getEnabledAuthProviders();
   context.shell.setHeaderContent?.({ title: msg("account.vhod") });
   context.root.innerHTML = panel({

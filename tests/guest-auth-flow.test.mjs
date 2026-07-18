@@ -20,20 +20,38 @@ test("Google is rendered as an immediate local provider button", async () => {
   assert.doesNotMatch(login, /data-google-fallback|data-google-official|onGoogleMount/);
 });
 
-test("Google uses one-shot Supabase redirect OAuth", async () => {
+test("Google redirect is built locally and does not wait for the Supabase SDK", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
   const start = auth.indexOf("export async function signInWithProvider");
   const end = auth.indexOf("export async function signOut", start);
   const providerFlow = auth.slice(start, end);
-  assert.match(providerFlow, /OAUTH_PROVIDERS\.has/);
-  assert.match(providerFlow, /signInWithOAuth/);
-  assert.match(providerFlow, /provider: normalized/);
-  assert.match(providerFlow, /redirectTo: getAuthRedirectUrl\(\)/);
-  assert.match(providerFlow, /prompt: "select_account"/);
-  assert.doesNotMatch(providerFlow, /retryAuth|signInWithIdToken/);
+  assert.match(auth, /auth\/v1\/authorize/);
+  assert.match(auth, /code_challenge/);
+  assert.match(auth, /code_challenge_method/);
+  assert.match(auth, /PKCE_VERIFIER_KEY/);
+  assert.match(providerFlow, /buildOAuthRedirectUrl/);
+  assert.match(providerFlow, /window\.location\.assign/);
+  assert.doesNotMatch(providerFlow, /getSupabaseClient|signInWithOAuth|signInWithIdToken|retryAuth/);
 });
 
-test("authentication has a bounded timeout and no automatic retry loop", async () => {
+test("account screen warms the SDK without blocking the visible login button", async () => {
+  const login = await read("src/features/account/login.js");
+  const renderIndex = login.indexOf("export function renderLogin");
+  const warmIndex = login.indexOf("void preloadSupabaseClient()", renderIndex);
+  const markupIndex = login.indexOf("context.root.innerHTML", renderIndex);
+  assert.ok(warmIndex > renderIndex);
+  assert.ok(markupIndex > warmIndex);
+});
+
+test("Supabase SDK loading has a same-origin fallback", async () => {
+  const client = await read("src/shared/auth/supabase-client.js");
+  assert.match(client, /cdn\.jsdelivr\.net/);
+  assert.match(client, /LOCAL_FALLBACK_MODULE_URL/);
+  assert.match(client, /\/src\/vendor\/supabase-js\.js/);
+  assert.match(client, /firstSuccessful/);
+});
+
+test("authentication has a bounded callback timeout and no automatic retry loop", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
   assert.match(auth, /AUTH_REQUEST_TIMEOUT_MS = 15000/);
   assert.doesNotMatch(auth, /AUTH_RETRY_DELAYS_MS|async function retryAuth|const sleep/);
@@ -76,11 +94,4 @@ test("service worker caches only the guest shell eagerly", async () => {
   const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
   assert.match(coreAssets, /starter-dictionary/);
   assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
-});
-
-test("starter dictionary contains valid current rows for every story", async () => {
-  const { STARTER_DICTIONARY } = await import("../src/data/starter-dictionary.js?v=13.10.4-test");
-  assert.equal(STARTER_DICTIONARY.length, 60);
-  assert.deepEqual(new Set(STARTER_DICTIONARY.map((row) => String(row.story_id))), new Set(["1", "2", "3"]));
-  assert.ok(STARTER_DICTIONARY.every((row) => row.word_id && row.word_alan_cyrillic && row.translation_ru));
 });

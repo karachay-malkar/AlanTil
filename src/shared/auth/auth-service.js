@@ -1,12 +1,13 @@
-import { msg } from "../i18n/index.js?v=13.10.4";
-import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.4";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.4";
-import { getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.4";
+import { msg } from "../i18n/index.js?v=13.10.6";
+import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.6";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.6";
+import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.6";
 
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
 const OAUTH_PROVIDERS = new Set(["google", "apple"]);
 const AUTH_REQUEST_TIMEOUT_MS = 15000;
 const AUTH_DESTINATION_PATH = "/profile/account";
+const PKCE_VERIFIER_KEY = `${AUTH_STORAGE_KEY}-code-verifier`;
 
 let initializationPromise = null;
 let authSubscription = null;
@@ -39,6 +40,52 @@ function authMessage(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
   if (/rate limit|too many requests/i.test(value)) return msg("service.slishkom_mnogo_popytok_povtorite_pozzhe");
   if (isRetryable(error)) return msg("service.ne_udalos_svyazatsya_s_servisom_avtorizatsii");
   return fallback;
+}
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function createPkceVerifier() {
+  const bytes = new Uint8Array(48);
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+  }
+  return bytesToBase64Url(bytes);
+}
+
+async function createPkceChallenge(verifier) {
+  if (!globalThis.crypto?.subtle || typeof TextEncoder !== "function") {
+    return { challenge: verifier, method: "plain" };
+  }
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return { challenge: bytesToBase64Url(new Uint8Array(digest)), method: "s256" };
+}
+
+function persistPkceVerifier(verifier) {
+  try {
+    localStorage.setItem(PKCE_VERIFIER_KEY, JSON.stringify(verifier));
+  } catch {
+    throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+  }
+}
+
+async function buildOAuthRedirectUrl(provider) {
+  const verifier = createPkceVerifier();
+  const { challenge, method } = await createPkceChallenge(verifier);
+  persistPkceVerifier(verifier);
+
+  const url = new URL(`${supabaseUrl}/auth/v1/authorize`);
+  url.searchParams.set("provider", provider);
+  url.searchParams.set("redirect_to", getAuthRedirectUrl());
+  url.searchParams.set("code_challenge", challenge);
+  url.searchParams.set("code_challenge_method", method);
+  if (provider === "google") url.searchParams.set("prompt", "select_account");
+  return url.toString();
 }
 
 function applySession(session, error = null) {
@@ -147,8 +194,7 @@ export function waitForAuthInitialization() {
   return startAuthInitialization();
 }
 
-// Retained only for compatibility with an older account module. The current
-// web sign-in button uses signInWithProvider("google") and redirect OAuth.
+// Kept for compatibility with older cached account modules.
 export async function signInWithGoogleCredential(token, nonce) {
   const credential = String(token || "").trim();
   const rawNonce = String(nonce || "").trim();
@@ -177,16 +223,9 @@ export async function signInWithProvider(provider) {
 
   setAuthState({ error: null });
   try {
-    const client = await withTimeout(getSupabaseClient(), "Supabase client");
-    const options = { redirectTo: getAuthRedirectUrl() };
-    if (normalized === "google") options.queryParams = { prompt: "select_account" };
-
-    const { data, error } = await withTimeout(client.auth.signInWithOAuth({
-      provider: normalized,
-      options,
-    }), "OAuth sign in");
-    if (error) throw error;
-    return data;
+    const url = await buildOAuthRedirectUrl(normalized);
+    window.location.assign(url);
+    return { provider: normalized, url };
   } catch (error) {
     throw new Error(authMessage(error));
   }
