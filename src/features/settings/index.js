@@ -1,18 +1,18 @@
-import { msg } from "../../shared/i18n/index.js?v=13.10.3";
+import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.10.3";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
 } from "../../shared/data/word-repository.js?v=13.10.3";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.3";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.10.9";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.10.10";
 import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.10.3";
-import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.10.9";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.10.9";
+import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.10.10";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.10.10";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.10.9";
+const SETTINGS_ASSET_VERSION = "13.10.10";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -198,7 +198,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.9")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.10")}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>
@@ -260,7 +260,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
           throw new Error(msg("settings.nastroyki_sohraneny_na_ustroystve_no_esche_ne"));
         }
       }
-      document.documentElement.lang = persistedSettings.interface_language_code || "ru";
+      setInterfaceLanguage(persistedSettings.interface_language_code);
       baselineSettings = { ...persistedSettings };
       draftSettings = { ...persistedSettings };
       hasUnsavedChanges = false;

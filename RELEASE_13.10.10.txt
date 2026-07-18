@@ -1,0 +1,6 @@
+AlanTil 13.10.10
+
+- Fixed interface-language switching by canonicalizing every historical user-settings store import to one ES-module instance.
+- Applied the selected interface language immediately after settings are persisted and before the current route is rendered again.
+- Added regression tests for RU, EN and TR settings-store wiring.
+- Completed the multilingual dictionary data pass in Supabase and refreshed dictionary metadata.
