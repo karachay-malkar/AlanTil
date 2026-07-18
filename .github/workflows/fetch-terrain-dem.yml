@@ -8,7 +8,7 @@ on:
       - .github/workflows/fetch-terrain-dem.yml
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   DEM_URL: https://step.esa.int/auxdata/dem/SRTM90/tiff/srtm_45_04.zip
@@ -16,23 +16,50 @@ env:
 jobs:
   fetch-dem:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
-      - name: Download CGIAR SRTM 90 m GeoTIFF tile
+      - name: Check out temporary source branch
+        uses: actions/checkout@v4
+        with:
+          ref: terrain-dem-stage6-1-source
+      - name: Download and crop CGIAR SRTM 90 m GeoTIFF
         run: |
           set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gdal-bin
+          rm -rf terrain-source
           mkdir -p terrain-source
           curl --fail --location --retry 4 --retry-delay 5 "$DEM_URL" --output terrain-source/srtm_45_04.zip
-          unzip -o terrain-source/srtm_45_04.zip -d terrain-source
-          find terrain-source -maxdepth 2 -type f -printf '%P\t%s bytes\n'
-          test -f terrain-source/srtm_45_04.tif
-          sha256sum terrain-source/srtm_45_04.tif > terrain-source/SHA256SUMS.txt
-      - name: Upload DEM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: srtm-45-04-geotiff
-          path: |
-            terrain-source/srtm_45_04.tif
-            terrain-source/SHA256SUMS.txt
-          compression-level: 0
-          retention-days: 1
+          unzip -o terrain-source/srtm_45_04.zip -d terrain-source/raw
+          test -f terrain-source/raw/srtm_45_04.tif
+          gdalwarp \
+            -overwrite \
+            -te 40.5687258143 42.8071105599 44.2042655776 44.2900000000 \
+            -te_srs EPSG:4326 \
+            -t_srs EPSG:4326 \
+            -tr 0.000833333333333 0.000833333333333 \
+            -r bilinear \
+            -dstnodata -32768 \
+            -ot Int16 \
+            -co COMPRESS=DEFLATE \
+            -co PREDICTOR=2 \
+            -co TILED=YES \
+            terrain-source/raw/srtm_45_04.tif terrain-source/caucasus-srtm90-crop.tif
+          sha256sum terrain-source/caucasus-srtm90-crop.tif > terrain-source/SHA256SUMS.txt
+          base64 -w 0 terrain-source/caucasus-srtm90-crop.tif | split -b 1800k -d -a 3 - terrain-source/caucasus-srtm90-crop.tif.b64.part-
+          rm -rf terrain-source/raw terrain-source/srtm_45_04.zip terrain-source/caucasus-srtm90-crop.tif
+          cat > terrain-source/README.txt <<'EOF'
+Source: CGIAR-CSI SRTM 90 m v4.1 GeoTIFF tile srtm_45_04.
+Downloaded from ESA STEP auxiliary data mirror.
+Crop bounds: 40.5687258143,42.8071105599,44.2042655776,44.29 (EPSG:4326).
+Reconstruction: concatenate caucasus-srtm90-crop.tif.b64.part-* and base64-decode.
+EOF
+          find terrain-source -maxdepth 1 -type f -printf '%f\t%s bytes\n'
+      - name: Commit encoded cropped DEM to temporary branch
+        run: |
+          set -euo pipefail
+          git config user.name "Alan Til Terrain Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add terrain-source
+          git commit -m "Add temporary cropped SRTM DEM payload"
+          git push origin HEAD:terrain-dem-stage6-1-source
