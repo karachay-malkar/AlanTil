@@ -46,14 +46,31 @@ test("interface language and Alan script are independent", () => {
   assert.equal(shown.example, "1.1 джигер урунуу ✦ valiant work");
 });
 
-test("missing Turkish structure text falls back to Russian, not Alan", () => {
-  const shown = display.getDisplayedWordEntry({ ...word, storyNameTr: "" }, {
+test("missing Turkish structure text never falls back to another language", () => {
+  const shown = display.getDisplayedWordEntry({
+    ...word,
+    storyId: "ascent",
+    storyNameTr: "",
+    dictionaryId: "2",
+    dictionaryNameRu: "Основные слова",
+    dictionaryNameTr: "",
+    sectionId: "3",
+    sectionNameRu: "Сложный",
+    sectionNameTr: "",
+    dict: "Основные слова",
+    section: "Сложный",
+  }, {
     interface_language_code: "tr",
     translation_language_code: "tr",
     alan_script_code: "turkic",
     alan_dialect_code: "canonical",
   });
   assert.equal(shown.word, "ciger");
-  assert.equal(shown.story_name, "Восхождение");
+  assert.equal(shown.story_name, "Yol ascent");
+  assert.equal(shown.dictionary_name, "Sözlük 2");
+  assert.equal(shown.section_name, "Bölüm 3");
+  assert.equal(shown.dict, "Sözlük 2");
+  assert.equal(shown.section, "Bölüm 3");
   assert.equal(shown.trans, "gayretli");
+  assert.doesNotMatch([shown.story_name, shown.dictionary_name, shown.section_name, shown.dict, shown.section].join(" "), /Основные слова|Сложный/);
 });

@@ -1,7 +1,7 @@
-import { msg } from "../i18n/index.js?v=13.10.7";
-import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.7";
-import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.7";
-import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.7";
+import { msg } from "../i18n/index.js?v=13.10.12";
+import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.12";
+import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.12";
+import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.12";
 
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
 const OAUTH_PROVIDERS = new Set(["google", "apple"]);

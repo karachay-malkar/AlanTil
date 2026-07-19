@@ -1,14 +1,14 @@
-const VERSION = "13.10.11";
+const VERSION = "13.10.12";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.10.11",
-  "/src/shared/styles/app.css?v=13.10.11",
-  "/src/features/onboarding/index.js?v=13.10.11",
-  "/src/features/onboarding/onboarding.css?v=13.10.11",
+  "/src/app/bootstrap.js?v=13.10.12",
+  "/src/shared/styles/app.css?v=13.10.12",
+  "/src/features/onboarding/index.js?v=13.10.12",
+  "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
 ];
@@ -77,14 +77,14 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
-  // Application code and styles are always checked against the network first.
-  // This prevents an older query string from pinning an obsolete module.
-  if (url.pathname.startsWith("/src/") && ["script", "style", "worker"].includes(request.destination)) {
+  if (url.pathname.startsWith("/src/shared/auth/") || url.pathname.startsWith("/src/features/account/") || url.pathname === "/src/config/supabase.js") {
     event.respondWith(networkFirstStaticResponse(request));
     return;
   }
-  if (url.pathname.startsWith("/src/shared/auth/") || url.pathname.startsWith("/src/features/account/") || url.pathname === "/src/config/supabase.js") {
-    event.respondWith(networkFirstStaticResponse(request));
+  // Versioned application assets are immutable within a release. Serving the
+  // cached response first removes route latency; the next release uses a new URL.
+  if (url.pathname.startsWith("/src/") && ["script", "style", "worker"].includes(request.destination)) {
+    event.respondWith(staticResponse(request));
     return;
   }
   if (["image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {

@@ -2,9 +2,7 @@ import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.9.0";
 import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "../../shared/ui/icons.js?v=13.9.0";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
-import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=13.10.11";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.9.0";
 import { testState } from "./state.js?v=13.9.0";
@@ -15,13 +13,6 @@ function sectionId(word) { return String(word.section_id || word.group_id || wor
 function sectionName(word) { return String(word.section_name || word.section || sectionId(word) || msg("test.bez_razdela")).trim(); }
 function scopeKey(dict, section) { return `${dict}||${section || ""}`; }
 function enabledWords(words) { return words.filter(isWordEnabledInTestModes); }
-
-function renderAnswerLine(label, value, className = "") {
-  return `<span class="contentListDetail testResultAnswerLine ${className}"><strong>${escapeHtml(label)}</strong>${renderOverflowMarquee(value || "—", {
-    clipClass: "testResultAnswerClip",
-    trackClass: "testResultAnswerTrack",
-  })}</span>`;
-}
 
 function buildScope(words) {
   const dictionaries = new Map();
@@ -133,26 +124,29 @@ export function renderTestResults(context, signal) {
   const percentage = Math.round((testState.correct / Math.max(1, testState.items.length)) * 100);
   const level = percentage >= 100 ? 3 : percentage >= 90 ? 2 : percentage >= 80 ? 1 : 0;
   const rows = testState.results.map((result) => {
-    const answerLines = result.isCorrect
-      ? renderAnswerLine(msg("test.pravilno"), result.correctAnswer, "isCorrect")
-      : `${renderAnswerLine(msg("test.otvet"), result.userAnswer || "—", "isWrong")}${renderAnswerLine(msg("test.pravilno"), result.correctAnswer, "isCorrect")}`;
-    return renderContentListRow({
+    const details = result.isCorrect
+      ? [{ label: msg("test.pravilno"), value: result.correctAnswer, tone: "correct" }]
+      : [
+          { label: msg("test.otvet"), value: result.userAnswer || "—", tone: "wrong" },
+          { label: msg("test.pravilno"), value: result.correctAnswer, tone: "correct" },
+        ];
+    return renderResultRow({
       id: result.id,
-      leadingHtml: `<span class="contentListStatus ${result.isCorrect ? "ok" : "bad"}">${result.isCorrect ? STATUS_OK_ICON_SVG : STATUS_BAD_ICON_SVG}</span>`,
+      status: result.isCorrect ? "ok" : "bad",
       primary: result.questionText || result.word,
-      secondaryHtml: `<span class="testResultAnswers">${answerLines}</span>`,
+      details,
       trailingHtml: renderStarButton(result.id, `data-word-id="${escapeHtml(result.id)}"`),
     });
   }).join("");
-  context.root.innerHTML = `<section class="view screen modeView testResultsView">
-    <div class="modeResultSummary"><span class="modeResultMark">${level ? "⌃".repeat(level) : "—"}</span><strong>${percentage}%</strong><span>${percentage >= 80 ? msg("test.test_sdan") : msg("test.test_ne_sdan")} · ${testState.correct}/${testState.items.length}</span></div>
-    <div class="contentList modeResultList">${rows || `<div class="hintText">${msg("test.net_rezultatov")}</div>`}</div>
-    <footer class="modeLaunchBar"><button class="btn actionPrimary" id="btnTestAgain2" type="button">${msg("test.proyti_esche_raz")}</button></footer>
-  </section>`;
-  bindOverflowMarquees(context.root, {
-    signal,
-    scrollRoot: context.root.querySelector(".modeResultList"),
+  context.root.innerHTML = renderResultScreen({
+    className: "testResultsView",
+    summaryClass: "modeResultSummary",
+    summaryHtml: `<span class="modeResultMark">${level ? "⌃".repeat(level) : "—"}</span><strong>${percentage}%</strong><span>${percentage >= 80 ? msg("test.test_sdan") : msg("test.test_ne_sdan")} · ${testState.correct}/${testState.items.length}</span>`,
+    contentHtml: rows,
+    emptyHtml: `<div class="hintText">${msg("test.net_rezultatov")}</div>`,
+    footerHtml: `<button class="btn actionPrimary" id="btnTestAgain2" type="button">${msg("test.proyti_esche_raz")}</button>`,
   });
+  bindResultRows(context.root, { signal });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal }));
   context.root.querySelector("#btnTestAgain2")?.addEventListener("click", async () => { startTest(testState.session.wordsPool, testState.mode, testState.limit, testState.session.metadata); await context.router.replace("test.session", {}, { force: true }); }, { signal });
 }

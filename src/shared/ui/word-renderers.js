@@ -1,4 +1,4 @@
-import { parseExampleGroups } from "../domain/example-groups.js?v=13.10.11";
+import { parseExampleGroups } from "../domain/example-groups.js?v=13.10.12";
 import { splitGroups } from "../domain/word-selection.js?v=13.9.0";
 import { escapeHtml } from "./html.js?v=13.9.0";
 import { renderFavoriteButton } from "./favorite-button.js?v=13.9.0";

@@ -21,7 +21,7 @@ const staticAriaNode = {
   setAttribute(name, value) { this.attributes[name] = value; },
 };
 globalThis.document = {
-  documentElement: { lang: "ru" },
+  documentElement: { lang: "ru", dataset: {} },
   querySelectorAll(selector) {
     if (selector === "[data-i18n]") return [staticTextNode];
     if (selector === "[data-i18n-aria-label]") return [staticAriaNode];
@@ -81,12 +81,12 @@ test("all literal msg keys used by the application exist in the catalogue", asyn
   assert.deepEqual(missing, []);
 });
 
-test("placeholders and Russian fallback remain deterministic", () => {
+test("placeholders remain deterministic without crossing into another language", () => {
   assert.equal(
     messageForLanguage("en", "path.nuzhno_ne_menee", { required: 80 }),
     "At least 80% is required",
   );
-  assert.equal(messageForLanguage("de", "common.nazad"), "Назад");
+  assert.equal(messageForLanguage("en", "common.nazad"), "Back");
 });
 
 test("switching the interface language updates the document immediately", () => {
@@ -96,4 +96,14 @@ test("switching the interface language updates the document immediately", () => 
   assert.equal(staticAriaNode.attributes["aria-label"], "Ana gezinme");
   setInterfaceLanguage("en");
   assert.equal(document.documentElement.lang, "en");
+});
+
+test("separately imported i18n URLs share the selected language", async () => {
+  const first = await import("../src/shared/i18n/index.js?v=singleton-a");
+  const second = await import("../src/shared/i18n/index.js?v=singleton-b");
+  first.setInterfaceLanguage("tr");
+  assert.equal(second.getInterfaceLanguage(), "tr");
+  assert.equal(second.msg("common.put"), "Yol");
+  second.setInterfaceLanguage("en");
+  assert.equal(first.msg("common.put"), "Path");
 });

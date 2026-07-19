@@ -83,9 +83,28 @@ export function createShell() {
         : "path.home";
     bottomNav.querySelectorAll("[data-route]").forEach((button) => {
       const on = button.dataset.route === active;
+      button.classList.remove("isPending");
       button.classList.toggle("active", on);
       if (on) button.setAttribute("aria-current", "page");
       else button.removeAttribute("aria-current");
+    });
+    delete appShell.dataset.navigationPending;
+    delete appShell.dataset.pendingRoute;
+    root.setAttribute("aria-busy", "false");
+  }
+
+  function setNavigationPending(route = "", pending = true) {
+    const feature = String(route || "").split(".")[0];
+    const pendingRoute = ["test", "match", "songs", "practice"].includes(feature)
+      ? "practice.home"
+      : ["profile", "account", "settings"].includes(feature)
+        ? "profile.home"
+        : "path.home";
+    appShell.dataset.navigationPending = String(Boolean(pending));
+    appShell.dataset.pendingRoute = String(route || "");
+    root.setAttribute("aria-busy", String(Boolean(pending)));
+    bottomNav.querySelectorAll("[data-route]").forEach((button) => {
+      button.classList.toggle("isPending", Boolean(pending) && button.dataset.route === pendingRoute);
     });
   }
 
@@ -97,5 +116,6 @@ export function createShell() {
     appShell, header, viewport, root, backButton, headerActionSlot, modalRoot, bottomNav,
     configureScreen, renderHome, setBackVisible, setCounter, setMode, clearMode,
     setHeaderContent, setHeaderAction, setActiveNav, beginNavigation, completeNavigation, renderError,
+    setNavigationPending,
   };
 }

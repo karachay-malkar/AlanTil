@@ -1,7 +1,6 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
-import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { learnState } from "./state.js?v=13.9.0";
 
@@ -18,24 +17,32 @@ export function renderResults(context, words, signal, { onDone } = {}) {
     .sort((a, b) => b.fails - a.fails);
 
   const content = problemWords.length
-    ? problemWords.map((word) => renderContentListRow({
+    ? problemWords.map((word) => renderResultRow({
         id: word.id,
-        leadingHtml: `<span class="learnResultCount" aria-label="${msg("learn.svaypov_vlevo", { fails: word.fails })}">×${word.fails}</span>`,
+        status: "bad",
+        count: word.fails,
+        statusLabel: msg("learn.svaypov_vlevo", { fails: word.fails }),
         primary: word.word,
-        secondary: word.trans,
+        details: [{ value: word.trans }],
         trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
       })).join("")
     : `<div class="smallNote noteCenter"><div class="noteTitle">${msg("learn.aperim")}</div><div class="successNoteLine">${msg("learn.ne_bylo_neznakomyh_slov")}</div></div>`;
 
-  context.root.innerHTML = panel({ title: msg("learn.itog_sessii"), body: `
-    <div class="learnResultSummary" aria-label="${msg("learn.itogi_obucheniya")}">
+  context.root.innerHTML = renderResultScreen({
+    className: "learnResultsView",
+    summaryClass: "learnResultScreenSummary",
+    summaryHtml: `<div class="learnResultSummary" aria-label="${msg("learn.itogi_obucheniya")}">
       <div><strong>${studiedTotal}</strong><span>${msg("learn.izucheno")}</span></div>
       <div><strong>${unknownRows.length}</strong><span>${msg("learn.slov_ne_znayu")}</span></div>
       <div><strong>${leftSwipesTotal}</strong><span>${msg("learn.svaypov_vlevo_2")}</span></div>
-    </div>
-    <div id="analyticsList" class="contentList learnResultList">${content}</div>
-    ${typeof onDone === "function" ? `<div class="learnResultFooter"><button class="btn actionPrimary" type="button" data-learn-result-done>${msg("learn.k_etapu")}</button></div>` : ""}
-  ` });
+    </div>`,
+    contentHtml: content,
+    listId: "analyticsList",
+    footerHtml: typeof onDone === "function"
+      ? `<button class="btn actionPrimary" type="button" data-learn-result-done>${msg("learn.k_etapu")}</button>`
+      : "",
+  });
+  bindResultRows(context.root, { signal });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
     button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal });
   });

@@ -1,6 +1,6 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.9.0";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=13.10.12";
 import { normalizeId } from "../domain/word-normalizer.js?v=13.9.0";
-import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=13.9.0";
+import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=13.10.12";
 import {
   enqueueProgress,
   mergeProgressQueues,
@@ -8,7 +8,7 @@ import {
   removeProgressEntry,
   updateProgressEntry,
   writeProgressQueue,
-} from "./progress-queue.js?v=13.9.0";
+} from "./progress-queue.js?v=13.10.12";
 import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js?v=13.9.0";
 import { nextUnattemptedProgressEntry, shouldDiscardProgressError } from "./progress-sync-policy.js?v=13.9.0";
 import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js?v=13.9.0";
@@ -27,7 +27,7 @@ import {
   STORAGE_SCOPES,
   storageScopeForUser,
   writeScopedJson,
-} from "./storage-scope.js?v=13.9.0";
+} from "./storage-scope.js?v=13.10.12";
 
 const WORD_FAVORITES_KEY = "fc_favorites_v1";
 const SONG_FAVORITES_KEY = "alantil_song_favorites_v1";
@@ -42,6 +42,7 @@ let initialized = false;
 let unsubscribeAuth = null;
 let syncPromise = null;
 let pullPromise = null;
+let pullScope = "";
 let bound = false;
 let lastUserId = "";
 
@@ -425,8 +426,14 @@ export async function pullCloudProgress() {
   if (!userId || getCurrentAuthState().user?.id !== userId) return false;
   if (syncPromise) await syncPromise;
   if (getStorageScope() !== scope || getCurrentAuthState().user?.id !== userId) return false;
-  if (pullPromise) return pullPromise;
+  if (pullPromise) {
+    if (pullScope === scope) return pullPromise;
+    await pullPromise;
+    if (getStorageScope() !== scope || getCurrentAuthState().user?.id !== userId) return false;
+    return pullCloudProgress();
+  }
 
+  pullScope = scope;
   pullPromise = (async () => {
     try {
       const state = await fetchCloudProgressState();
@@ -440,19 +447,55 @@ export async function pullCloudProgress() {
     }
   })().finally(() => {
     pullPromise = null;
+    pullScope = "";
   });
 
   return pullPromise;
 }
 
-async function activateScopeForUser(userId) {
-  setStorageScope(userId);
-  migrateLegacyWordProgressQueue(getStorageScope());
-  recoverInterruptedSessions();
-  if (!userId) return true;
+function activeScopeMatches(userId) {
+  return getStorageScope() === storageScopeForUser(userId)
+    && (getCurrentAuthState().user?.id || "") === String(userId || "");
+}
+
+function announceScopeReady(userId, phase) {
+  window.dispatchEvent(new CustomEvent("alantil:scope-ready", {
+    detail: { scope: getStorageScope(), userId: String(userId || ""), phase },
+  }));
+}
+
+async function synchronizeActiveScope(userId) {
+  if (!userId || !activeScopeMatches(userId)) return false;
   await pullCloudProgress();
+  if (!activeScopeMatches(userId)) return false;
   await claimGuestData(userId);
+  if (!activeScopeMatches(userId)) return false;
   await flushProgressQueue();
+  if (!activeScopeMatches(userId)) return false;
+  announceScopeReady(userId, "cloud");
+  return true;
+}
+
+async function activateScopeForUser(userId, { deferCloud = false } = {}) {
+  document.documentElement.dataset.scopeReady = "false";
+  try {
+    setStorageScope(userId);
+    migrateLegacyWordProgressQueue(getStorageScope());
+    recoverInterruptedSessions();
+  } finally {
+    document.documentElement.dataset.scopeReady = "true";
+    announceScopeReady(userId, "local");
+  }
+  if (!userId) return true;
+  const synchronization = synchronizeActiveScope(userId).catch((error) => {
+    console.warn("Account scope synchronization failed", error);
+    return false;
+  });
+  if (deferCloud) {
+    void synchronization;
+    return true;
+  }
+  await synchronization;
   return true;
 }
 
@@ -469,12 +512,12 @@ export async function initializeProgressSystem() {
   migrateLegacyStorage();
   bindSynchronizationEvents();
   lastUserId = getCurrentAuthState().user?.id || "";
-  await activateScopeForUser(lastUserId);
+  await activateScopeForUser(lastUserId, { deferCloud: true });
   unsubscribeAuth = subscribeToAuth((state) => {
     const nextUserId = state.user?.id || "";
     if (nextUserId === lastUserId) return;
     lastUserId = nextUserId;
-    void activateScopeForUser(nextUserId);
+    void activateScopeForUser(nextUserId, { deferCloud: true });
   });
   return true;
 }

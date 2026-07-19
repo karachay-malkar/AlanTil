@@ -1,5 +1,5 @@
 import { getAllStationProgress } from "../progress/station-progress-store.js?v=13.9.0";
-import { getWordProgress, wordProgressSummary } from "../progress/word-progress-store.js?v=13.9.0";
+import { getWordProgress, getWordProgressMap, wordProgressSummary } from "../progress/word-progress-store.js?v=13.9.0";
 
 function percent(done, total) {
   return total ? Math.round((done / total) * 100) : 0;
@@ -11,17 +11,42 @@ function uniqueWords(stations = []) {
   return Array.from(map.values());
 }
 
-export function stationWordProgress(station) {
-  return wordProgressSummary(station?.words || []);
+function summaryFromMap(words = [], progressMap) {
+  const ids = (Array.isArray(words) ? words : []).map((word) => String(word?.id || word || "").trim()).filter(Boolean);
+  let mastered = 0;
+  let review = 0;
+  ids.forEach((id) => {
+    const status = progressMap.get(id)?.mastery_status;
+    if (status === "mastered" || status === "review") mastered += 1;
+    if (status === "review") review += 1;
+  });
+  return {
+    total: ids.length,
+    mastered,
+    review,
+    percent: ids.length ? Math.round((mastered / ids.length) * 100) : 0,
+  };
 }
 
-export function storyProgress(route, storyType) {
+export function createRouteProgressSnapshot() {
+  return { progressMap: getWordProgressMap(), stationSummaries: new Map() };
+}
+
+export function stationWordProgress(station, snapshot = null) {
+  if (!snapshot?.progressMap) return wordProgressSummary(station?.words || []);
+  if (!snapshot.stationSummaries.has(station)) {
+    snapshot.stationSummaries.set(station, summaryFromMap(station?.words || [], snapshot.progressMap));
+  }
+  return snapshot.stationSummaries.get(station);
+}
+
+export function storyProgress(route, storyType, snapshot = createRouteProgressSnapshot()) {
   const story = route?.stories?.[storyType] || { stations: [], groups: [], catalogs: [] };
   const words = uniqueWords(story.stations);
-  const summary = wordProgressSummary(words);
-  const completedStations = story.stations.filter((station) => stationWordProgress(station).percent === 100);
-  const completedGroups = story.groups.filter((group) => group.stations.every((station) => stationWordProgress(station).percent === 100));
-  const completedCatalogs = story.catalogs.filter((catalog) => catalog.groups.every((group) => group.stations.every((station) => stationWordProgress(station).percent === 100)));
+  const summary = summaryFromMap(words, snapshot.progressMap);
+  const completedStations = story.stations.filter((station) => stationWordProgress(station, snapshot).percent === 100);
+  const completedGroups = story.groups.filter((group) => group.stations.every((station) => stationWordProgress(station, snapshot).percent === 100));
+  const completedCatalogs = story.catalogs.filter((catalog) => catalog.groups.every((group) => group.stations.every((station) => stationWordProgress(station, snapshot).percent === 100)));
   return {
     totalStations: story.stations.length,
     masteredStations: completedStations.length,
@@ -36,23 +61,24 @@ export function storyProgress(route, storyType) {
   };
 }
 
-export function allStoryProgress(route) {
-  return Object.fromEntries((route?.storyOrder || []).map((type) => [type, storyProgress(route, type)]));
+export function allStoryProgress(route, snapshot = createRouteProgressSnapshot()) {
+  return Object.fromEntries((route?.storyOrder || []).map((type) => [type, storyProgress(route, type, snapshot)]));
 }
 
 export function dictionaryPathProgress(route) {
-  const stories = allStoryProgress(route);
+  const snapshot = createRouteProgressSnapshot();
+  const stories = allStoryProgress(route, snapshot);
   const words = uniqueWords((route?.storyOrder || []).flatMap((type) => route.stories[type]?.stations || []));
-  const summary = wordProgressSummary(words);
+  const summary = summaryFromMap(words, snapshot.progressMap);
   return { percent: summary.percent, rarePercent: 0, stories, totalWords: summary.total, masteredWords: summary.mastered };
 }
 
-export function computedStationStatus(route, station) {
-  const summary = stationWordProgress(station);
+export function computedStationStatus(route, station, snapshot = null) {
+  const summary = stationWordProgress(station, snapshot);
   if (summary.percent === 100) return summary.review ? "review_1_due" : "mastered";
   if (summary.mastered > 0 || summary.review > 0) return "studying";
   const hasActivity = (station?.words || []).some((word) => {
-    const progress = getWordProgress(word.id);
+    const progress = snapshot?.progressMap?.get(String(word.id)) || getWordProgress(word.id);
     return progress.study_shown_count > 0 || progress.test_correct_count > 0 || progress.test_wrong_count > 0;
   });
   return hasActivity ? "studying" : "available";

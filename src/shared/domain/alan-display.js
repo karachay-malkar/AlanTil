@@ -1,5 +1,5 @@
-import { combineNumberedExamples } from "./example-groups.js?v=13.10.11";
-import { getUserSettings } from "../settings/user-settings-store.js?v=13.10.8";
+import { combineNumberedExamples } from "./example-groups.js?v=13.10.12";
+import { getUserSettings } from "../settings/user-settings-store.js?v=13.10.12";
 
 function text(value) {
   return String(value || "").trim();
@@ -40,7 +40,7 @@ export function getDisplayedSessionExitPhrase(settings) {
 function displayedAlanValue(entry, cyrillicKey, turkicKey, settings) {
   const selected = displaySettings(settings);
   if (selected.script === "turkic") {
-    return text(entry?.[turkicKey]) || text(entry?.[cyrillicKey]);
+    return text(entry?.[turkicKey]);
   }
   return applyAlanCyrillicDialect(entry?.[cyrillicKey], selected.dialect);
 }
@@ -54,14 +54,25 @@ export function getDisplayedAlanPhrases(entry, settings) {
 }
 
 function localizedValue(entry, language, keys) {
-  if (language === "en") return text(entry?.[keys.english]) || text(entry?.[keys.russian]);
-  if (language === "tr") return text(entry?.[keys.turkish]) || text(entry?.[keys.russian]);
+  if (language === "en") return text(entry?.[keys.english]);
+  if (language === "tr") return text(entry?.[keys.turkish]);
   return text(entry?.[keys.russian]);
 }
 
-function displayedStructureName(entry, keys, settings) {
+const STRUCTURE_TERMS = Object.freeze({
+  story: Object.freeze({ ru: "Маршрут", en: "Route", tr: "Yol" }),
+  dictionary: Object.freeze({ ru: "Словарь", en: "Dictionary", tr: "Sözlük" }),
+  section: Object.freeze({ ru: "Раздел", en: "Section", tr: "Bölüm" }),
+  set: Object.freeze({ ru: "Набор слов", en: "Word set", tr: "Kelime seti" }),
+});
+
+function displayedStructureName(entry, keys, idKeys, kind, settings) {
   const selected = displaySettings(settings);
-  return localizedValue(entry, selected.interfaceLanguage, keys);
+  const localized = localizedValue(entry, selected.interfaceLanguage, keys);
+  if (localized) return localized;
+  const id = idKeys.map((key) => text(entry?.[key])).find(Boolean) || "";
+  if (!id) return "";
+  return `${STRUCTURE_TERMS[kind][selected.interfaceLanguage]} ${id}`;
 }
 
 export function getDisplayedStoryName(entry, settings) {
@@ -69,7 +80,7 @@ export function getDisplayedStoryName(entry, settings) {
     russian: "storyNameRu",
     english: "storyNameEn",
     turkish: "storyNameTr",
-  }, settings);
+  }, ["storyId", "story_id"], "story", settings);
 }
 
 export function getDisplayedDictionaryName(entry, settings) {
@@ -77,7 +88,7 @@ export function getDisplayedDictionaryName(entry, settings) {
     russian: "dictionaryNameRu",
     english: "dictionaryNameEn",
     turkish: "dictionaryNameTr",
-  }, settings);
+  }, ["dictionaryId", "dictionary_id"], "dictionary", settings);
 }
 
 export function getDisplayedSectionName(entry, settings) {
@@ -85,7 +96,7 @@ export function getDisplayedSectionName(entry, settings) {
     russian: "sectionNameRu",
     english: "sectionNameEn",
     turkish: "sectionNameTr",
-  }, settings);
+  }, ["sectionId", "section_id"], "section", settings);
 }
 
 export function getDisplayedSetName(entry, settings) {
@@ -93,7 +104,7 @@ export function getDisplayedSetName(entry, settings) {
     russian: "setNameRu",
     english: "setNameEn",
     turkish: "setNameTr",
-  }, settings);
+  }, ["setId", "set_id"], "set", settings);
 }
 
 export function getDisplayedTranslation(entry, settings) {
@@ -115,7 +126,9 @@ function getDisplayedTranslatedPhrases(entry, settings) {
 }
 
 export function getDisplayedExample(entry, settings) {
-  if (entry?.legacyExample) return text(entry.legacyExample);
+  if (entry?.legacyExample) {
+    return displaySettings(settings).translationLanguage === "ru" ? text(entry.legacyExample) : "";
+  }
   return combineNumberedExamples(
     getDisplayedAlanPhrases(entry, settings),
     getDisplayedTranslatedPhrases(entry, settings),
@@ -124,15 +137,24 @@ export function getDisplayedExample(entry, settings) {
 
 export function getDisplayedWordEntry(entry, settings) {
   if (!entry) return entry;
+  const storyName = getDisplayedStoryName(entry, settings);
+  const dictionaryName = getDisplayedDictionaryName(entry, settings);
+  const sectionName = getDisplayedSectionName(entry, settings);
+  const setName = getDisplayedSetName(entry, settings);
   return {
     ...entry,
     word: getDisplayedAlanWord(entry, settings),
     trans: getDisplayedTranslation(entry, settings),
     example: getDisplayedExample(entry, settings),
-    story_name: getDisplayedStoryName(entry, settings),
-    dictionary_name: getDisplayedDictionaryName(entry, settings),
-    section_name: getDisplayedSectionName(entry, settings),
-    set_name: getDisplayedSetName(entry, settings),
+    story_name: storyName,
+    dictionary_name: dictionaryName,
+    section_name: sectionName,
+    set_name: setName,
+    // Legacy aliases are still consumed by a few menus. Keep them in the
+    // selected language, or use a neutral stable id — never another language.
+    dict: dictionaryName || text(entry.dictionaryId || entry.dictionary_id),
+    section: sectionName || text(entry.sectionId || entry.section_id),
+    set: setName || text(entry.setId || entry.set_id),
   };
 }
 

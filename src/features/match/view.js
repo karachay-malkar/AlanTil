@@ -3,8 +3,7 @@ import { isWordEnabledInTestModes, shuffle } from "../../shared/domain/word-sele
 import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.9.0";
 import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { STATUS_BAD_ICON_SVG } from "../../shared/ui/icons.js?v=13.9.0";
-import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { completeMatch, markSolved, nextRound, recordMismatch, startMatch } from "./engine.js?v=13.9.0";
 import { matchState } from "./state.js?v=13.9.0";
@@ -99,7 +98,22 @@ export function renderMatchGame(context, words, signal) {
 
 export function renderMatchResult(context, words, signal) {
   const problemWords = Object.entries(matchState.failMap).filter(([, count]) => count > 0).map(([id, count]) => ({ ...words.find((word) => word.id === id), fails: count })).filter((word) => word.id).sort((a, b) => b.fails - a.fails);
-  const content = problemWords.length ? problemWords.map((word) => renderContentListRow({ id: word.id, leadingHtml: `<span class="contentListStatus bad analyticsFailMark" aria-label="${msg("match.oshibok", { fails: word.fails })}">${STATUS_BAD_ICON_SVG}<span class="analyticsFailCount">${word.fails}</span></span>`, primary: word.word, secondary: word.trans, trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`) })).join("") : `<div class="smallNote noteCenter"><div class="noteTitle">${msg("match.aperim")}</div><div class="successNoteLine">${msg("match.vse_pary_sobrany_s_pervogo_raza")}</div></div>`;
-  context.root.innerHTML = `<section class="view screen modeView matchResultsView"><div id="matchResultList" class="contentList modeResultList">${content}</div></section>`;
+  const content = problemWords.length ? problemWords.map((word) => renderResultRow({
+    id: word.id,
+    status: "bad",
+    count: word.fails,
+    statusLabel: msg("match.oshibok", { fails: word.fails }),
+    primary: word.word,
+    details: [{ value: word.trans }],
+    trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
+  })).join("") : `<div class="smallNote noteCenter"><div class="noteTitle">${msg("match.aperim")}</div><div class="successNoteLine">${msg("match.vse_pary_sobrany_s_pervogo_raza")}</div></div>`;
+  context.root.innerHTML = renderResultScreen({
+    className: "matchResultsView",
+    summaryClass: "modeResultSummary",
+    summaryHtml: `<span class="modeResultMark">${matchState.errorsCount ? "—" : "⌃⌃⌃"}</span><strong>${matchState.solvedCount}/${matchState.total}</strong><span>${msg("match.oshibok", { fails: matchState.errorsCount })}</span>`,
+    contentHtml: content,
+    listId: "matchResultList",
+  });
+  bindResultRows(context.root, { signal });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal }));
 }

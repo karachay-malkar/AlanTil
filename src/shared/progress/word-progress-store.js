@@ -1,5 +1,10 @@
 import { getActivityHistory } from "./activity-history-store.js?v=13.9.0";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
+import {
+  getStorageScope,
+  readScopedJson,
+  subscribeStorageScope,
+  writeScopedJson,
+} from "./storage-scope.js?v=13.9.0";
 import { awardReward } from "./reward-store.js?v=13.9.0";
 
 export const WORD_PROGRESS_LOCAL_KEY = "alantil_word_progress_v13_5";
@@ -19,6 +24,9 @@ const NUMERIC_FIELDS = Object.freeze([
   "test_wrong_count",
 ]);
 const STATUS_RANK = Object.freeze({ not_started: 0, learning: 1, mastered: 2, review: 3 });
+let cachedScope = "";
+let cachedState = null;
+let cachedProgressMap = null;
 
 function normalizeId(value) {
   return String(value ?? "").trim();
@@ -65,17 +73,25 @@ function normalizeRow(row = {}, wordId = row.word_id) {
 }
 
 function readState() {
+  const scope = getStorageScope();
+  if (cachedState && cachedScope === scope) return cachedState;
   const raw = readScopedJson(WORD_PROGRESS_LOCAL_KEY, {});
   const rows = raw?.rows && typeof raw.rows === "object" ? raw.rows : {};
   const processed = Array.isArray(raw?.processed_session_ids) ? raw.processed_session_ids : [];
-  return { rows, processed_session_ids: processed };
+  cachedScope = scope;
+  cachedState = { rows, processed_session_ids: processed };
+  cachedProgressMap = null;
+  return cachedState;
 }
 
 function writeState(state) {
-  writeScopedJson(WORD_PROGRESS_LOCAL_KEY, {
+  cachedScope = getStorageScope();
+  cachedState = {
     rows: state.rows,
     processed_session_ids: state.processed_session_ids.slice(-MAX_PROCESSED_SESSIONS),
-  });
+  };
+  cachedProgressMap = null;
+  writeScopedJson(WORD_PROGRESS_LOCAL_KEY, cachedState);
 }
 
 function withMutableRow(state, wordId) {
@@ -214,13 +230,16 @@ export function getWordProgressSnapshotRows() {
 }
 
 export function getWordProgress(wordId) {
-  const state = readState();
-  return normalizeRow(state.rows[normalizeId(wordId)], wordId);
+  const id = normalizeId(wordId);
+  return getWordProgressMap().get(id) || emptyRow(id);
 }
 
 export function getWordProgressMap() {
+  readState();
+  if (cachedProgressMap) return cachedProgressMap;
   const state = readState();
-  return new Map(Object.entries(state.rows).map(([id, row]) => [id, normalizeRow(row, id)]));
+  cachedProgressMap = new Map(Object.entries(state.rows).map(([id, row]) => [id, normalizeRow(row, id)]));
+  return cachedProgressMap;
 }
 
 export function wordProgressSummary(words = []) {
@@ -295,3 +314,9 @@ export function awardWordMilestones(words = []) {
   }
   return highest;
 }
+
+subscribeStorageScope(() => {
+  cachedScope = "";
+  cachedState = null;
+  cachedProgressMap = null;
+});

@@ -1,0 +1,10 @@
+AlanTil 13.10.12
+
+- Made interface language state a single shared source across versioned modules and restored it before the application becomes visible.
+- Removed Russian fallbacks from English and Turkish interface, word, example and route labels; missing structure translations now use localized neutral labels.
+- Restored the correct account storage scope before routing, rendered its local settings before cloud synchronization and removed duplicate authentication/progress refresh work.
+- Queued the latest navigation intent instead of dropping taps, preloaded adjacent screens and cached route/dictionary/progress calculations.
+- Served immutable versioned application assets cache-first while keeping authentication and account modules network-first.
+- Unified learn, test, station-test and matching result screens with fixed 80 px rows, identical status icons and separate error counters.
+- Kept result text inside its row with the shared single-line overflow marquee and removed the circle/background around status crosses.
+- Added regression coverage for language isolation, reload persistence, singleton imports, navigation coalescing, caching and result geometry.

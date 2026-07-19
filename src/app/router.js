@@ -1,7 +1,7 @@
-import { msg } from "../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../shared/i18n/index.js?v=13.10.12";
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=13.9.0";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 
 const FEATURE_LOADERS = {
   practice: () => import("../features/practice/index.js?v=13.9.0"),
@@ -187,6 +187,8 @@ export function createRouter({ shell, modal, context }) {
   let current = { route: "path.home", params: { storyType: "ascent" } };
   let currentModule = null;
   let navigating = false;
+  let queuedNavigation = null;
+  let queuedRefresh = null;
   let started = false;
   let historyIndex = 0;
   let revertingPopState = false;
@@ -220,6 +222,48 @@ export function createRouter({ shell, modal, context }) {
       loadedModules.set(feature, module);
       return module;
     }
+  }
+
+  function settleQueuedNavigation(value = false) {
+    if (!queuedNavigation) return;
+    queuedNavigation.resolve(value);
+    queuedNavigation = null;
+  }
+
+  function queueNavigation(target, options) {
+    settleQueuedNavigation(false);
+    shell.setNavigationPending?.(target.route, true);
+    return new Promise((resolve) => {
+      queuedNavigation = { target, options, resolve };
+    });
+  }
+
+  function drainPendingWork() {
+    if (navigating) return;
+    if (queuedNavigation) {
+      const request = queuedNavigation;
+      queuedNavigation = null;
+      void show(request.target, request.options).then(request.resolve);
+      return;
+    }
+    if (queuedRefresh) {
+      const options = queuedRefresh;
+      queuedRefresh = null;
+      void refresh(options);
+    }
+  }
+
+  function scheduleFeatureWarmup(route) {
+    const currentFeature = featureOf(route);
+    const features = currentFeature === "path"
+      ? ["practice", "profile"]
+      : currentFeature === "practice"
+        ? ["path", "test", "match"]
+        : [];
+    if (!features.length) return;
+    const warm = () => features.forEach((feature) => void loadModule(feature).catch(() => {}));
+    if (typeof requestIdleCallback === "function") requestIdleCallback(warm, { timeout: 1800 });
+    else globalThis.setTimeout(warm, 250);
   }
 
   function targetWithInheritedParams(route, params = {}) {
@@ -380,8 +424,13 @@ export function createRouter({ shell, modal, context }) {
     skipLeaveCheck = false,
     initial = false,
   } = {}) {
-    if (navigating) return false;
-    if (!initial && targetsEqual(target, current)) return true;
+    const options = { historyMode, force, reason, skipLeaveCheck, initial };
+    shell.setNavigationPending?.(target.route, true);
+    if (navigating) return queueNavigation(target, options);
+    if (!initial && targetsEqual(target, current)) {
+      shell.setNavigationPending?.(target.route, false);
+      return true;
+    }
     navigating = true;
 
     try {
@@ -390,6 +439,7 @@ export function createRouter({ shell, modal, context }) {
       // Keep the current screen in place while the destination bundle loads.
       // This prevents the practice menu from flashing before a selected mode.
       const nextModule = await loadModule(featureOf(target.route));
+      if (queuedNavigation && !initial) return false;
 
       finishScreenTimer();
       await currentModule?.onLeave?.(reason);
@@ -401,6 +451,7 @@ export function createRouter({ shell, modal, context }) {
       await mountCurrentRoute(nextModule);
       startScreenTimer(current.route);
       sendPageView({ initial });
+      scheduleFeatureWarmup(current.route);
       return true;
     } catch (error) {
       console.error("Router mount failed", error);
@@ -409,6 +460,8 @@ export function createRouter({ shell, modal, context }) {
       return false;
     } finally {
       navigating = false;
+      if (!queuedNavigation) shell.setNavigationPending?.(current.route, false);
+      drainPendingWork();
     }
   }
 
@@ -423,10 +476,16 @@ export function createRouter({ shell, modal, context }) {
     return show(target, { historyMode: "replace", force: options.force === true, reason: options.reason || "route_change" });
   }
 
-  async function refresh() {
-    if (navigating) return false;
+  async function refresh(options = {}) {
+    const refreshTarget = options.target || { route: current.route, params: { ...current.params } };
+    if (navigating) {
+      queuedRefresh = { ...queuedRefresh, ...options, target: refreshTarget };
+      return true;
+    }
+    if (options.background && !targetsEqual(refreshTarget, current)) return false;
     navigating = true;
     try {
+      if (queuedNavigation) return false;
       currentModule?.unmount?.();
       currentModule = null;
       const module = await loadModule(featureOf(current.route));
@@ -438,6 +497,7 @@ export function createRouter({ shell, modal, context }) {
       return false;
     } finally {
       navigating = false;
+      drainPendingWork();
     }
   }
 

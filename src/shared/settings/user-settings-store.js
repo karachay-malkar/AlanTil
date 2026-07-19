@@ -1,10 +1,10 @@
-import { enqueueProgress } from "../progress/progress-queue.js?v=13.9.0";
+import { enqueueProgress } from "../progress/progress-queue.js?v=13.10.12";
 import {
   hasScopedValue,
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js?v=13.9.0";
+} from "../progress/storage-scope.js?v=13.10.12";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 const LEGACY_SETUP_COMPLETED_AT = "2026-07-18T00:00:00.000Z";
@@ -63,9 +63,9 @@ function normalizeSettings(value = {}) {
   };
 }
 
-function storedSettings() {
+function storedSettings(fallback = DEFAULT_USER_SETTINGS) {
   const hasStoredSettings = hasScopedValue(USER_SETTINGS_KEY);
-  const stored = readScopedJson(USER_SETTINGS_KEY, DEFAULT_USER_SETTINGS);
+  const stored = readScopedJson(USER_SETTINGS_KEY, fallback);
   if (hasStoredSettings && stored && typeof stored === "object"
       && !Object.prototype.hasOwnProperty.call(stored, "learning_setup_completed_at")) {
     return { ...stored, learning_setup_completed_at: LEGACY_SETUP_COMPLETED_AT };
@@ -84,8 +84,18 @@ function notify() {
   });
 }
 
-export function reloadUserSettings() {
-  state = normalizeSettings(storedSettings());
+export function reloadUserSettings({ preserveLanguageIfMissing = false } = {}) {
+  const fallback = preserveLanguageIfMissing
+    ? {
+        ...DEFAULT_USER_SETTINGS,
+        interface_language_code: state.interface_language_code,
+        translation_language_code: state.translation_language_code,
+        alan_script_code: state.alan_script_code,
+        alan_dialect_code: state.alan_dialect_code,
+        station_size: state.station_size,
+      }
+    : DEFAULT_USER_SETTINGS;
+  state = normalizeSettings(storedSettings(fallback));
   writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
   return getUserSettings();
@@ -160,5 +170,5 @@ export function subscribeUserSettings(listener) {
   return () => listeners.delete(listener);
 }
 
-subscribeStorageScope(() => reloadUserSettings());
+subscribeStorageScope(() => reloadUserSettings({ preserveLanguageIfMissing: true }));
 reloadUserSettings();

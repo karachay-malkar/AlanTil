@@ -1,24 +1,19 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
-import {
-  getCurrentAuthState,
-  hasAuthCallback,
-  subscribeToAuth,
-  waitForAuthInitialization,
-} from "../shared/auth/auth-service.js?v=13.10.7";
-import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.7";
-import { initializeProgressSystem, pullCloudProgress } from "../shared/progress/progress-sync.js?v=13.10.7";
-import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.7";
+import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=13.10.12";
+import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.12";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.10.12";
+import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.12";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
-import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.8";
-import { createRouter } from "./router.js?v=13.10.7";
+import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
+import { createRouter } from "./router.js?v=13.10.12";
 import { createShell } from "./shell.js?v=13.9.0";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=13.10.8", { scope: "/" })
+    navigator.serviceWorker.register("/service-worker.js?v=13.10.12", { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
@@ -41,8 +36,13 @@ async function bootstrap() {
     },
   };
 
+  // Resolve the saved account before rendering settings-dependent screens. A
+  // guest resolves locally without loading the Supabase SDK.
+  const authState = await waitForAuthInitialization();
+  await initializeProgressSystem();
+
   // The learning language must be understandable before any sign-in screen is shown.
-  if (!callbackVisit) {
+  if (!callbackVisit && !authState.user) {
     const setupWasShown = await runLearningSetup({ shell });
     if (setupWasShown) {
       window.history.replaceState(null, "", "/profile/account");
@@ -50,13 +50,6 @@ async function bootstrap() {
   }
 
   shell.renderHome();
-  const progressReady = initializeProgressSystem();
-  const authReady = waitForAuthInitialization();
-  if (callbackVisit) {
-    await authReady;
-  } else {
-    await progressReady;
-  }
 
   const router = createRouter({ shell, modal, context });
   let dictionaryRefreshQueued = false;
@@ -67,37 +60,17 @@ async function bootstrap() {
       dictionaryRefreshQueued = false;
       const route = router.getCurrent().route;
       if (!route.startsWith("path.") && !route.startsWith("learn.")) return;
-      const refreshed = await router.refresh();
-      if (!refreshed) refreshDictionaryScreen();
+      await router.refresh({ background: true, reason: "dictionary_update" });
     }, 100);
   };
   window.addEventListener("alantil:dictionary-updated", refreshDictionaryScreen);
-
-  await router.start();
-  if (callbackVisit) {
-    void progressReady.then(() => router.refresh()).catch((error) => {
-      console.warn("Progress initialization after authentication failed", error);
-    });
-  }
-  void initPrivacyController({ appRouter: router });
-  if (!callbackVisit) initGuestProfilePrompt({ modal, router });
-
-  let activeUserId = getCurrentAuthState().user?.id || "";
-  subscribeToAuth((state) => {
-    if (!state.ready) return;
-    const nextUserId = state.user?.id || "";
-    if (nextUserId === activeUserId) return;
-    activeUserId = nextUserId;
-    if (!nextUserId) {
-      void router.refresh();
-      return;
-    }
-    void pullCloudProgress().finally(() => router.refresh());
+  window.addEventListener("alantil:scope-ready", () => {
+    void router.refresh({ background: true, reason: "storage_scope" });
   });
 
-  void authReady.then(async () => {
-    if (callbackVisit) await router.replace("account.home", {}, { force: true });
-  }).catch((error) => console.warn("Authentication initialization failed", error));
+  await router.start();
+  void initPrivacyController({ appRouter: router });
+  if (!callbackVisit) initGuestProfilePrompt({ modal, router });
 
   void initTelegram({
     adapter: telegram,

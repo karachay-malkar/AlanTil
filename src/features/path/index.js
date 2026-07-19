@@ -1,13 +1,16 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
 import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.9.0";
-import { allStoryProgress, computedStationStatus, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
+import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";
 import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.9.0";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.9.0";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { getHiddenSet, learnState } from "../learn/state.js?v=13.9.0";
 import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.0";
 import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.9.0";
@@ -17,6 +20,7 @@ import { renderStationView } from "./station-view.js?v=13.9.0";
 let controller = null;
 let activeStudy = false;
 const pendingSelections = new Map();
+let routeCache = { words: null, stationSize: 0, route: null };
 
 function activeStoryType(route, value) {
   const key = String(value || "").trim();
@@ -32,9 +36,9 @@ function stationMilestones(summary) {
   return `<span class="stationMilestones" aria-label="${msg("path.marshrutnyh_otmetok", { count })}">${Array.from({ length: Math.min(4, count) }, () => "⌃").join("")}</span>`;
 }
 
-function stationButton(station, index) {
-  const status = computedStationStatus(null, station);
-  const progress = stationWordProgress(station);
+function stationButton(station, index, progressSnapshot) {
+  const status = computedStationStatus(null, station, progressSnapshot);
+  const progress = stationWordProgress(station, progressSnapshot);
   const ordinal = String(index + 1).padStart(2, "0");
   return `<button
     id="station-${escapeHtml(station.key)}"
@@ -51,19 +55,19 @@ function stationButton(station, index) {
   </button>`;
 }
 
-function routeGroupSection(group, stationIndex, catalogId) {
+function routeGroupSection(group, stationIndex, catalogId, progressSnapshot) {
   const reversedStations = [...group.stations].reverse();
   return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${group.groupId}`)}">
-    <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key))).join("")}</div>
+    <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key), progressSnapshot)).join("")}</div>
     <h3 class="routeSectionHeading">${escapeHtml(group.name)}</h3>
   </section>`;
 }
 
-function routeCatalogSection(catalog, stationIndex) {
+function routeCatalogSection(catalog, stationIndex, progressSnapshot) {
   const reversedGroups = [...catalog.groups].reverse();
   return `<section class="routeCatalog" data-route-catalog="${escapeHtml(catalog.catalogId)}">
     <span class="routeCatalogEnd" data-catalog-end="${escapeHtml(catalog.catalogId)}" aria-hidden="true"></span>
-    <div class="routeCatalogGroups">${reversedGroups.map((group) => routeGroupSection(group, stationIndex, catalog.catalogId)).join("")}</div>
+    <div class="routeCatalogGroups">${reversedGroups.map((group) => routeGroupSection(group, stationIndex, catalog.catalogId, progressSnapshot)).join("")}</div>
     <h2 class="routeCatalogHeading">${escapeHtml(catalog.name)}</h2>
   </section>`;
 }
@@ -93,9 +97,9 @@ async function restoreMapPosition(viewport) {
   }
 }
 
-function renderRoute(context, route, activeStory) {
+function renderRoute(context, route, activeStory, progressSnapshot) {
   const story = route.stories[activeStory];
-  const progress = allStoryProgress(route)[activeStory];
+  const progress = allStoryProgress(route, progressSnapshot)[activeStory];
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
   const reversedCatalogs = [...story.catalogs].reverse();
   context.shell.setCounter("");
@@ -113,7 +117,7 @@ function renderRoute(context, route, activeStory) {
     </div>
     <div class="pathMapViewport isPositioning">
       <div class="routeBackdrop" aria-hidden="true"></div>
-      <div class="routeMap" data-story-map="${escapeHtml(activeStory)}">${reversedCatalogs.map((catalog) => routeCatalogSection(catalog, stationIndex)).join("")}</div>
+      <div class="routeMap" data-story-map="${escapeHtml(activeStory)}">${reversedCatalogs.map((catalog) => routeCatalogSection(catalog, stationIndex, progressSnapshot)).join("")}</div>
     </div>
     <nav class="routeScale" aria-label="${msg("path.rubezhi_marshruta")}"></nav>
   </section>`;
@@ -188,18 +192,44 @@ function masteryLabel(level) {
 function renderResult(context, route, station, result, allWords) {
   if (result.passed) awardWordMilestones(allWords);
   const message = result.passed ? masteryLabel(result.masteryLevel) : msg("path.nuzhno_ne_menee", { required: result.required });
+  const wordsById = new Map(allWords.map((word) => [String(word.id), word]));
+  const alanToTranslation = result.payload.direction !== "ru_to_alan";
+  const rows = (result.payload.words || []).map((answer) => {
+    const word = wordsById.get(String(answer.word_id));
+    if (!word) return "";
+    const wrongWord = wordsById.get(String(answer.wrong_word_id || ""));
+    const correct = answer.result === "correct" || answer.is_correct === true;
+    const correctAnswer = alanToTranslation ? word.trans : word.word;
+    const selectedAnswer = wrongWord ? (alanToTranslation ? wrongWord.trans : wrongWord.word) : correctAnswer;
+    return renderResultRow({
+      id: word.id,
+      status: correct ? "ok" : "bad",
+      primary: alanToTranslation ? word.word : word.trans,
+      details: correct
+        ? [{ label: msg("test.pravilno"), value: correctAnswer, tone: "correct" }]
+        : [
+            { label: msg("test.otvet"), value: selectedAnswer || "—", tone: "wrong" },
+            { label: msg("test.pravilno"), value: correctAnswer, tone: "correct" },
+          ],
+      trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
+    });
+  }).join("");
   context.shell.setHeaderContent?.({ title: msg("path.rezultat_testa"), subtitle: station.name, logo: true, brand: false });
-  context.root.innerHTML = `<section class="view screen stationResultView">
-    <div class="stationResult">
-      <div class="stationResultMark" aria-hidden="true">${result.masteryLevel ? "⌃".repeat(result.masteryLevel) : "—"}</div>
-      <div class="stationResultScore">${result.payload.accuracy}%</div>
-      <div class="stationResultText">${escapeHtml(message)}<br>${result.payload.correct_total}/${result.payload.questions_total}</div>
-      <div class="stationActions">
+  context.root.innerHTML = renderResultScreen({
+    className: "stationResultView",
+    summaryClass: "modeResultSummary",
+    summaryHtml: `<span class="modeResultMark" aria-hidden="true">${result.masteryLevel ? "⌃".repeat(result.masteryLevel) : "—"}</span><strong>${result.payload.accuracy}%</strong><span>${escapeHtml(message)} · ${result.payload.correct_total}/${result.payload.questions_total}</span>`,
+    contentHtml: rows,
+    emptyHtml: `<div class="hintText">${msg("test.net_rezultatov")}</div>`,
+    footerHtml: `<div class="stationActions">
         <button class="btn actionText" type="button" data-result-return>${msg("path.k_etapu")}</button>
         ${result.passed ? "" : `<button class="btn actionPrimary" type="button" data-result-repeat>${msg("path.povtorit")}</button>`}
-      </div>
-    </div>
-  </section>`;
+      </div>`,
+  });
+  bindResultRows(context.root, { signal: controller.signal });
+  context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => {
+    button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal: controller.signal });
+  });
   context.root.querySelector("[data-result-return]")?.addEventListener("click", () => context.router.replace("path.station", routeParams(station, route), { force: true }), { signal: controller.signal });
   context.root.querySelector("[data-result-repeat]")?.addEventListener("click", () => {
     const mode = result.payload.direction === "ru_to_alan" ? "ru" : "kb";
@@ -211,20 +241,25 @@ function renderResult(context, route, station, result, allWords) {
 export async function mount(context, params = {}) {
   controller = new AbortController();
   const words = await getWords();
-  const route = buildLearningRoute(words, { stationSize: getStationSize() });
+  const stationSize = getStationSize();
+  if (routeCache.words !== words || routeCache.stationSize !== stationSize) {
+    routeCache = { words, stationSize, route: buildLearningRoute(words, { stationSize }) };
+  }
+  const route = routeCache.route;
   const screen = params.screen || "home";
   const activeStory = activeStoryType(route, params.storyType || getRouteSettings().active_story);
   updateRouteSettings({ active_story: activeStory }, { queue: false });
 
   if (screen === "home") {
+    const progressSnapshot = createRouteProgressSnapshot();
     if (String(params.storyType || "") !== activeStory) context.router.canonicalize?.("path.home", { storyType: activeStory });
-    renderRoute(context, route, activeStory);
+    renderRoute(context, route, activeStory, progressSnapshot);
     return;
   }
   const station = resolveStationFromParams(route, { ...params, storyType: activeStory });
   if (!station) {
     context.router.canonicalize?.("path.home", { storyType: activeStory });
-    renderRoute(context, route, activeStory);
+    renderRoute(context, route, activeStory, createRouteProgressSnapshot());
     return;
   }
 

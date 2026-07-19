@@ -9,6 +9,7 @@ import {
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
 import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=13.10.2";
 import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.9.0";
+import { getUserSettings } from "../settings/user-settings-store.js?v=13.10.12";
 import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.9.0";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
@@ -25,6 +26,32 @@ let requestCount = 0;
 let source = "none";
 let installedVersion = "";
 let onlineListenerBound = false;
+let displayedWords = null;
+let displayedWordsKey = "";
+
+function displayCacheKey() {
+  const settings = getUserSettings();
+  return [
+    installedVersion,
+    settings.interface_language_code,
+    settings.translation_language_code,
+    settings.alan_script_code,
+    settings.alan_dialect_code,
+  ].join("|");
+}
+
+function displayedCollection(collection = words || []) {
+  const key = displayCacheKey();
+  if (displayedWords && displayedWordsKey === key) return displayedWords;
+  displayedWords = getDisplayedWordCollection(collection);
+  displayedWordsKey = key;
+  return displayedWords;
+}
+
+function invalidateDisplayedWords() {
+  displayedWords = null;
+  displayedWordsKey = "";
+}
 
 function delay(ms) {
   return new Promise((resolve) => globalThis.setTimeout(resolve, Math.max(0, ms)));
@@ -179,6 +206,7 @@ async function downloadDictionary(expectedVersion = "", { signal } = {}) {
   words = downloadedWords;
   installedVersion = version;
   source = "supabase-rest";
+  invalidateDisplayedWords();
   globalThis.dispatchEvent?.(new CustomEvent("alantil:dictionary-updated", {
     detail: { version, total: downloadedWords.length },
   }));
@@ -224,7 +252,7 @@ function scheduleBackgroundRefresh({ immediate = false } = {}) {
 }
 
 export async function getWords() {
-  if (words) return getDisplayedWordCollection(words);
+  if (words) return displayedCollection(words);
   if (loadingPromise) return loadingPromise;
 
   loadingPromise = Promise.resolve().then(() => {
@@ -234,8 +262,9 @@ export async function getWords() {
     words = local.words;
     installedVersion = local.version;
     source = cached ? "cache" : "starter";
+    invalidateDisplayedWords();
     scheduleBackgroundRefresh();
-    return getDisplayedWordCollection(words);
+    return displayedCollection(words);
   }).finally(() => {
     loadingPromise = null;
   });
@@ -243,7 +272,7 @@ export async function getWords() {
 }
 
 export function getCachedWords() {
-  return getDisplayedWordCollection(words || []);
+  return displayedCollection(words || []);
 }
 
 export function getInstalledDictionaryVersion() {
@@ -260,7 +289,7 @@ export async function getDictionaryVersionStatus({ signal, retry: shouldRetry = 
 export async function refreshDictionary({ signal } = {}) {
   if (loadingPromise) await loadingPromise;
   const result = await retry(() => refreshDictionaryIfNeeded({ signal }));
-  return { ...result, words: getDisplayedWordCollection(result.words) };
+  return { ...result, words: displayedCollection(result.words) };
 }
 
 export function getRepositoryDiagnostics() {
