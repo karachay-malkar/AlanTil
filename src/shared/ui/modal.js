@@ -1,3 +1,4 @@
+import { getDisplayedSessionExitPhrase } from "../domain/alan-display.js?v=13.10.11";
 import { msg } from "../i18n/index.js?v=13.9.0";
 export function createModalService(root) {
   let resolver = null;
@@ -10,7 +11,7 @@ export function createModalService(root) {
     currentResolver?.(value);
   }
 
-  function confirm({ message, cancelText = msg("common.ostatsya"), confirmText = msg("common.ne_bolsa_da_bolsun") }) {
+  function confirm({ message, cancelText = msg("common.ostatsya"), confirmText = getDisplayedSessionExitPhrase() }) {
     if (resolver) close(false);
     root.innerHTML = `
       <div class="exitModal" role="dialog" aria-modal="true" aria-labelledby="globalModalTitle">

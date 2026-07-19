@@ -2,6 +2,7 @@ import { getInterfaceLocale, msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=13.10.11";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=13.9.0";
@@ -54,7 +55,7 @@ export function renderStationView(context, station, {
   let hidden = getHiddenSet(station.dictionaryId, station.groupId, selectionId);
   let menuScrollTop = 0;
   let studyMode = "kb";
-  let marqueeObserver = null;
+  let stopMarquees = () => {};
 
   context.shell.setHeaderContent?.({
     title: station.name,
@@ -79,8 +80,10 @@ export function renderStationView(context, station, {
   }
 
   function scrollingLine(value, className) {
-    const text = String(value || "");
-    return `<span class="${className} stationTextClip" title="${escapeHtml(text)}"><span class="stationMarquee" data-station-marquee>${escapeHtml(text)}</span></span>`;
+    return renderOverflowMarquee(value, {
+      clipClass: `${className} stationTextClip`,
+      trackClass: "stationMarquee",
+    });
   }
 
   function staticLine(value, className) {
@@ -89,32 +92,11 @@ export function renderStationView(context, station, {
   }
 
   function wireVisibleMarquees() {
-    marqueeObserver?.disconnect();
-    marqueeObserver = null;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
-    const list = context.root.querySelector(".stationWordList");
-    const tracks = Array.from(context.root.querySelectorAll("[data-station-marquee]"));
-    requestAnimationFrame(() => {
-      tracks.forEach((track) => {
-        if (!track.isConnected) return;
-        const clip = track.parentElement;
-        const distance = Math.ceil(track.scrollWidth - clip.clientWidth);
-        track.classList.toggle("isOverflowing", distance > 2);
-        if (distance > 2) {
-          track.style.setProperty("--marquee-distance", `${distance}px`);
-          track.style.setProperty("--marquee-duration", `${Math.min(9.5, Math.max(4.8, distance / 42 + 3.4)).toFixed(1)}s`);
-        }
-      });
+    stopMarquees();
+    stopMarquees = bindOverflowMarquees(context.root, {
+      signal,
+      scrollRoot: context.root.querySelector(".stationWordList"),
     });
-    if (!list || typeof IntersectionObserver !== "function") return;
-    marqueeObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const track = entry.target.querySelector("[data-station-marquee]");
-        if (!track) return;
-        track.classList.toggle("isMarqueeVisible", entry.isIntersecting && entry.intersectionRatio > 0.35);
-      });
-    }, { root: list, threshold: [0, 0.35, 0.75] });
-    context.root.querySelectorAll("[data-station-line]").forEach((line) => marqueeObserver.observe(line));
   }
 
   function wireTabButtons() {
@@ -255,8 +237,8 @@ export function renderStationView(context, station, {
   }
 
   function draw() {
-    marqueeObserver?.disconnect();
-    marqueeObserver = null;
+    stopMarquees();
+    stopMarquees = () => {};
     context.shell.appShell.dataset.stationPane = activeTab;
     context.root.innerHTML = `<section class="view screen stationView">
       <div class="stationViewTabs" role="tablist" aria-label="${msg("stage.razdel_etapa")}">

@@ -43,7 +43,7 @@ test("interface language and Alan script are independent", () => {
   assert.equal(shown.word, "джигер");
   assert.equal(shown.trans, "energetic");
   assert.equal(shown.story_name, "Ascent");
-  assert.equal(shown.example, "джигер урунуу ✦ valiant work");
+  assert.equal(shown.example, "1.1 джигер урунуу ✦ valiant work");
 });
 
 test("missing Turkish structure text falls back to Russian, not Alan", () => {

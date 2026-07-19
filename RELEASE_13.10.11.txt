@@ -1,0 +1,6 @@
+AlanTil 13.10.11
+
+- Restored semantic example grouping so 1.*, 2.* and 3.* examples remain under the matching word meaning.
+- Switched the exit confirmation phrase between “Не болса да болсун!” and “Ne bolsa da bolsun!” by Alan script.
+- Reused the existing left-aligned list marquee for long wrong and correct answers on test result screens.
+- Kept short result answers static and all answer rows single-line.

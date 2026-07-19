@@ -1,3 +1,4 @@
+import { combineNumberedExamples } from "./example-groups.js?v=13.10.11";
 import { getUserSettings } from "../settings/user-settings-store.js?v=13.10.8";
 
 function text(value) {
@@ -28,6 +29,12 @@ export function applyAlanCyrillicDialect(value, dialect = "canonical") {
   if (dialect === "balkar") return source.replaceAll("Җ", "Ж").replaceAll("җ", "ж");
   if (dialect === "karachay") return source.replaceAll("Җ", "Дж").replaceAll("җ", "дж");
   return source;
+}
+
+export function getDisplayedSessionExitPhrase(settings) {
+  return displaySettings(settings).script === "turkic"
+    ? "Ne bolsa da bolsun!"
+    : "Не болса да болсун!";
 }
 
 function displayedAlanValue(entry, cyrillicKey, turkicKey, settings) {
@@ -107,31 +114,12 @@ function getDisplayedTranslatedPhrases(entry, settings) {
   });
 }
 
-function numberedPhraseRows(value) {
-  const source = text(value);
-  if (!source) return [];
-  return source
-    .split(/\r?\n|\s*;\s*/)
-    .map((line, index) => {
-      const clean = text(line);
-      const match = clean.match(/^(\d+\.\d+)\s+(.+)$/u);
-      return match
-        ? { key: match[1], text: match[2].trim() }
-        : { key: `line-${index + 1}`, text: clean };
-    })
-    .filter((entry) => entry.text);
-}
-
 export function getDisplayedExample(entry, settings) {
   if (entry?.legacyExample) return text(entry.legacyExample);
-  const alanRows = numberedPhraseRows(getDisplayedAlanPhrases(entry, settings));
-  const translatedRows = numberedPhraseRows(getDisplayedTranslatedPhrases(entry, settings));
-  if (!alanRows.length && !translatedRows.length) return "";
-  const translatedByKey = new Map(translatedRows.map((row) => [row.key, row.text]));
-  return alanRows.map((row, index) => {
-    const translation = translatedByKey.get(row.key) || translatedRows[index]?.text || "";
-    return [row.text, translation].filter(Boolean).join(" ✦ ");
-  }).join("; ");
+  return combineNumberedExamples(
+    getDisplayedAlanPhrases(entry, settings),
+    getDisplayedTranslatedPhrases(entry, settings),
+  );
 }
 
 export function getDisplayedWordEntry(entry, settings) {

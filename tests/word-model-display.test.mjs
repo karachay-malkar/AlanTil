@@ -87,10 +87,10 @@ test("legacy CSV normalization remains separate", () => {
 
 test("Cyrillic dialect and stored Turkic text share one display layer", () => {
   const word = normalizeSupabaseWordEntry(supabaseRow);
-  const karachay = { alan_script_code: "cyrillic", alan_dialect_code: "karachay" };
-  const balkar = { alan_script_code: "cyrillic", alan_dialect_code: "balkar" };
-  const canonical = { alan_script_code: "cyrillic", alan_dialect_code: "canonical" };
-  const turkic = { alan_script_code: "turkic", alan_dialect_code: "balkar" };
+  const karachay = { interface_language_code: "ru", alan_script_code: "cyrillic", alan_dialect_code: "karachay" };
+  const balkar = { interface_language_code: "ru", alan_script_code: "cyrillic", alan_dialect_code: "balkar" };
+  const canonical = { interface_language_code: "ru", alan_script_code: "cyrillic", alan_dialect_code: "canonical" };
+  const turkic = { interface_language_code: "ru", alan_script_code: "turkic", alan_dialect_code: "balkar" };
 
   assert.equal(getDisplayedAlanWord(word, canonical), "җаш");
   assert.equal(getDisplayedAlanWord(word, karachay), "джаш");
@@ -98,17 +98,17 @@ test("Cyrillic dialect and stored Turkic text share one display layer", () => {
   assert.equal(getDisplayedAlanWord(word, turkic), "caş");
   assert.equal(getDisplayedAlanPhrases(word, turkic), "1.1 caş keldi\n1.2 Caş tölü");
 
-  assert.equal(getDisplayedStoryName(word, turkic), "Örge barıw");
-  assert.equal(getDisplayedDictionaryName(word, turkic), "Baş sözlük");
-  assert.equal(getDisplayedSectionName(word, turkic), "Adamla");
-  assert.equal(getDisplayedSetName(word, karachay), "Джаш тёлю");
-  assert.equal(getDisplayedSetName(word, balkar), "Жаш тёлю");
-  assert.equal(getDisplayedSetName(word, canonical), "Җаш тёлю");
-  assert.equal(getDisplayedSetName(word, turkic), "Caş tölü");
+  assert.equal(getDisplayedStoryName(word, turkic), "Восхождение");
+  assert.equal(getDisplayedDictionaryName(word, turkic), "Основной словарь");
+  assert.equal(getDisplayedSectionName(word, turkic), "Люди");
+  assert.equal(getDisplayedSetName(word, karachay), "Молодёжь");
+  assert.equal(getDisplayedSetName(word, balkar), "Молодёжь");
+  assert.equal(getDisplayedSetName(word, canonical), "Молодёжь");
+  assert.equal(getDisplayedSetName(word, turkic), "Молодёжь");
 
   assert.equal(
     getDisplayedExample(word, karachay),
-    "джаш келди ✦ юноша пришёл; Джаш тёлю ✦ молодёжь",
+    "1.1 джаш келди ✦ юноша пришёл; 1.2 Джаш тёлю ✦ молодёжь",
   );
   assert.equal(word.translationRu, "юноша");
 });

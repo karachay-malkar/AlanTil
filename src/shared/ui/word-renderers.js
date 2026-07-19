@@ -1,3 +1,4 @@
+import { parseExampleGroups } from "../domain/example-groups.js?v=13.10.11";
 import { splitGroups } from "../domain/word-selection.js?v=13.9.0";
 import { escapeHtml } from "./html.js?v=13.9.0";
 import { renderFavoriteButton } from "./favorite-button.js?v=13.9.0";
@@ -7,28 +8,6 @@ export { escapeHtml };
 
 export function renderStarButton(id, attributes = "") {
   return renderFavoriteButton({ active: wordFavorites.has(id), attributes });
-}
-
-function parseExampleGroups(text) {
-  const raw = String(text || "").trim();
-  if (!raw) return [];
-  const parts = raw.replace(/\n+/g, ";").split(/\s*[;；]\s*/g).map((part) => part.trim()).filter(Boolean);
-  const groups = [];
-  let current = null;
-
-  for (const part of parts) {
-    const match = part.match(/^\s*(\d+)\s*(?:[.)]|[-–—])?\s*(.*)$/);
-    if (match) {
-      if (current) groups.push(current);
-      current = { index: Number(match[1]) - 1, lines: match[2] ? [match[2]] : [] };
-    } else if (!current) {
-      current = { index: 0, lines: [part] };
-    } else {
-      current.lines.push(part);
-    }
-  }
-  if (current) groups.push(current);
-  return groups;
 }
 
 export function renderRuTitle(element, text) {

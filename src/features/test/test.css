@@ -8,3 +8,10 @@
 .modeResultSummary{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:118px;padding:8px;border-bottom:1px solid var(--line-soft)}.modeResultSummary strong{font:850 42px/1 var(--font-terminal)}.modeResultSummary>span:last-child{margin-top:6px;color:var(--text-2);font-size:12px}.modeResultMark{color:var(--accent-strong);font:900 18px/1 var(--font-terminal)}.modeResultList{min-height:0;overflow:auto}
 .testResultsView{grid-template-rows:auto minmax(0,1fr) auto!important}
 @media(max-height:650px){.modeQuestion{font-size:clamp(24px,7vw,38px)}.modeOptions{align-content:start}}
+.testResultsView .contentListMain,.testResultsView .contentListSecondary{width:100%;min-width:0;max-width:100%;overflow:hidden}
+.testResultAnswers{display:grid;width:100%;min-width:0;gap:3px}
+.testResultAnswerLine{display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px;width:100%;min-width:0;margin-top:2px;overflow:hidden;white-space:nowrap;text-align:left}
+.testResultAnswerLine>strong{font:800 10px/1 var(--font-terminal);white-space:nowrap}
+.testResultAnswerLine.isWrong>strong{color:var(--danger)}.testResultAnswerLine.isCorrect>strong{color:var(--success-strong)}
+.testResultAnswerClip{min-width:0;line-height:1.35}.testResultAnswerTrack{font-size:13px;color:var(--text-2)}
+

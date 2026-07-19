@@ -215,3 +215,10 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 .bracketCheckbox input:checked+.bracketCheckboxMark{color:var(--accent-strong)}
 .bracketCheckbox input:checked+.bracketCheckboxMark::after{content:"✓"}
 .bracketCheckbox input:focus-visible+.bracketCheckboxMark{outline:2px solid var(--accent);outline-offset:4px}
+
+/* Shared single-line overflow motion used by vocabulary lists and test results. */
+.overflowMarqueeClip{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden;white-space:nowrap;text-align:left!important;direction:ltr}
+.overflowMarqueeTrack{display:inline-block;min-width:max-content;white-space:nowrap;transform:translateX(0);will-change:transform;text-align:left!important}
+.overflowMarqueeTrack.isOverflowing.isMarqueeVisible{animation:overflowTextMarquee var(--marquee-duration,5.8s) linear .55s infinite}
+@keyframes overflowTextMarquee{0%,16%{transform:translateX(0)}84%,100%{transform:translateX(calc(-1 * var(--marquee-distance,0px)))}}
+@media(prefers-reduced-motion:reduce){.overflowMarqueeTrack{animation:none!important;transform:none!important}}
