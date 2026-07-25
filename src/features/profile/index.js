@@ -14,6 +14,11 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 
 let controller = null;
 
+const AVATAR_IMAGE_BY_GENDER = Object.freeze({
+  male: "/assets/images/profile/avatar-male.svg?v=13.11",
+  female: "/assets/images/profile/avatar-female.svg?v=13.11",
+});
+
 function setProfileHeaderNavigation(context, active = "profile") {
   context.shell.setHeaderContent?.({ title: "Alan Til!" });
   return renderProfileNavigation(active);
@@ -26,10 +31,15 @@ function durationLabel(seconds) {
 }
 
 function avatarFigure(gender = "") {
+  const imageUrl = AVATAR_IMAGE_BY_GENDER[gender];
+  if (imageUrl) {
+    return `<img class="profileAvatarImage" src="${imageUrl}" alt="" aria-hidden="true" decoding="async" draggable="false" />`;
+  }
+
   return `<svg class="profileAvatarSvg" viewBox="0 0 180 230" aria-hidden="true" focusable="false">
     <circle cx="90" cy="64" r="44" />
     <path d="M25 217c2-69 25-108 65-108s63 39 65 108z" />
-    ${gender === "female" ? '<path class="profileAvatarDetail" d="M44 71c1-38 18-57 46-57s45 19 46 57c-12-14-27-23-46-23S56 57 44 71z" />' : '<path class="profileAvatarDetail" d="M55 31c10-13 22-19 36-19 17 0 30 8 39 23-22-8-47-9-75-4z" />'}
+    <path class="profileAvatarDetail" d="M55 31c10-13 22-19 36-19 17 0 30 8 39 23-22-8-47-9-75-4z" />
   </svg>`;
 }
 
