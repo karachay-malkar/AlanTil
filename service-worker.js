@@ -1,4 +1,4 @@
-const VERSION = "13.10.12";
+const VERSION = "13.11";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
@@ -11,7 +11,16 @@ const CORE_ASSETS = [
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
+  "/assets/images/profile/avatar-male.svg?v=13.11",
+  "/assets/images/profile/avatar-female.svg?v=13.11",
 ];
+const NETWORK_FIRST_PATHS = new Set([
+  "/src/config/analytics.js",
+  "/src/config/supabase.js",
+  "/src/features/profile/index.js",
+  "/src/features/profile/profile.css",
+  "/src/features/settings/version.js",
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -77,7 +86,9 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith("/src/shared/auth/") || url.pathname.startsWith("/src/features/account/") || url.pathname === "/src/config/supabase.js") {
+  if (url.pathname.startsWith("/src/shared/auth/")
+      || url.pathname.startsWith("/src/features/account/")
+      || NETWORK_FIRST_PATHS.has(url.pathname)) {
     event.respondWith(networkFirstStaticResponse(request));
     return;
   }
