@@ -1,0 +1,7 @@
+AlanTil 13.11
+
+- Added the approved male and female national character illustrations to avatar selection and the profile status card.
+- Preserved the neutral locked-profile silhouette for users who have not signed in.
+- Kept avatar_gender persistence, one-time gender selection, navigation, sessions, analytics, favorites and progress architecture unchanged.
+- Added transparent embedded WebP avatar assets and invalidated the profile release cache.
+- Added regression checks for the release version, both character assets and the retained locked silhouette.
