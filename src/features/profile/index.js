@@ -33,7 +33,7 @@ function durationLabel(seconds) {
 function avatarFigure(gender = "") {
   const imageUrl = AVATAR_IMAGE_BY_GENDER[gender];
   if (imageUrl) {
-    return `<img class="profileAvatarImage" src="${imageUrl}" alt="" aria-hidden="true" decoding="async" draggable="false" />`;
+    return `<img class="profileAvatarImage" src="${imageUrl}" alt="" aria-hidden="true" decoding="async" draggable="false" style="display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom" />`;
   }
 
   return `<svg class="profileAvatarSvg" viewBox="0 0 180 230" aria-hidden="true" focusable="false">
