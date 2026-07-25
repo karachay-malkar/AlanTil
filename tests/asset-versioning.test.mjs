@@ -49,12 +49,29 @@ const singletonPaths = [
   "/src/shared/settings/user-settings-store.js",
 ];
 
-test("13.10.12 is the published application version", async () => {
+test("13.11 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
+  const versionScreen = await read("src/features/settings/version.js");
   const index = await read("index.html");
-  assert.match(analytics, /appVersion = "13\.10\.12"/);
+  const worker = await read("service-worker.js");
+  assert.match(analytics, /appVersion = "13\.11"/);
+  assert.match(versionScreen, /<dd>13\.11<\/dd>/);
+  assert.match(worker, /const VERSION = "13\.11"/);
   assert.match(index, /app\.css\?v=13\.10\.12/);
   assert.match(index, /bootstrap\.js\?v=13\.10\.12/);
+});
+
+test("profile uses both 13.11 character assets and keeps the locked silhouette", async () => {
+  const profile = await read("src/features/profile/index.js");
+  const profileStyles = await read("src/features/profile/profile.css");
+  const male = await read("assets/images/profile/avatar-male.svg");
+  const female = await read("assets/images/profile/avatar-female.svg");
+  assert.match(profile, /avatar-male\.svg\?v=13\.11/);
+  assert.match(profile, /avatar-female\.svg\?v=13\.11/);
+  assert.match(profile, /profileAvatarSvg/);
+  assert.match(profileStyles, /\.profileAvatarImage/);
+  assert.match(male, /data:image\/webp;base64,/);
+  assert.match(female, /data:image\/webp;base64,/);
 });
 
 test("singleton module URLs resolve to one 13.10.12 instance", async () => {
