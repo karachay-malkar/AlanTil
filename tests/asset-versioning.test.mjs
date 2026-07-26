@@ -61,17 +61,21 @@ test("13.11 is the published application version", async () => {
   assert.match(index, /bootstrap\.js\?v=13\.10\.12/);
 });
 
-test("profile uses both 13.11 character assets and keeps the locked silhouette", async () => {
+test("profile uses both 13.11 PNG character assets and keeps the locked silhouette", async () => {
   const profile = await read("src/features/profile/index.js");
   const profileStyles = await read("src/features/profile/profile.css");
-  const male = await read("assets/images/profile/avatar-male.svg");
-  const female = await read("assets/images/profile/avatar-female.svg");
-  assert.match(profile, /avatar-male\.svg\?v=13\.11/);
-  assert.match(profile, /avatar-female\.svg\?v=13\.11/);
+  const worker = await read("service-worker.js");
+  const male = await readFile(new URL("../assets/images/profile/avatar_male.png", import.meta.url));
+  const female = await readFile(new URL("../assets/images/profile/avatar_female.png", import.meta.url));
+  assert.match(profile, /avatar_male\.png\?v=13\.11/);
+  assert.match(profile, /avatar_female\.png\?v=13\.11/);
+  assert.doesNotMatch(profile, /avatar-(?:male|female)\.(?:svg|png)/);
+  assert.match(worker, /avatar_male\.png\?v=13\.11/);
+  assert.match(worker, /avatar_female\.png\?v=13\.11/);
   assert.match(profile, /profileAvatarSvg/);
   assert.match(profileStyles, /\.profileAvatarImage/);
-  assert.match(male, /data:image\/webp;base64,/);
-  assert.match(female, /data:image\/webp;base64,/);
+  assert.equal(male.subarray(1, 4).toString("ascii"), "PNG");
+  assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
 test("singleton module URLs resolve to one 13.10.12 instance", async () => {

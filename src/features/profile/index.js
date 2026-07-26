@@ -15,8 +15,8 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 let controller = null;
 
 const AVATAR_IMAGE_BY_GENDER = Object.freeze({
-  male: "/assets/images/profile/avatar-male.svg?v=13.11",
-  female: "/assets/images/profile/avatar-female.svg?v=13.11",
+  male: "/assets/images/profile/avatar_male.png?v=13.11",
+  female: "/assets/images/profile/avatar_female.png?v=13.11",
 });
 
 function setProfileHeaderNavigation(context, active = "profile") {

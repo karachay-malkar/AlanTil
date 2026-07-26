@@ -1,6 +1,6 @@
 const VERSION = "13.11";
-const SHELL_CACHE = `alantil-shell-${VERSION}-avatar-hq`;
-const RUNTIME_CACHE = `alantil-runtime-${VERSION}-avatar-hq`;
+const SHELL_CACHE = `alantil-shell-${VERSION}-avatar-png`;
+const RUNTIME_CACHE = `alantil-runtime-${VERSION}-avatar-png`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -11,8 +11,8 @@ const CORE_ASSETS = [
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
-  "/assets/images/profile/avatar-male.svg?v=13.11",
-  "/assets/images/profile/avatar-female.svg?v=13.11",
+  "/assets/images/profile/avatar_male.png?v=13.11",
+  "/assets/images/profile/avatar_female.png?v=13.11",
 ];
 const NETWORK_FIRST_PATHS = new Set([
   "/src/config/analytics.js",
