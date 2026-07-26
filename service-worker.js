@@ -1,6 +1,6 @@
 const VERSION = "13.11";
-const SHELL_CACHE = `alantil-shell-${VERSION}`;
-const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
+const SHELL_CACHE = `alantil-shell-${VERSION}-avatar-hq`;
+const RUNTIME_CACHE = `alantil-runtime-${VERSION}-avatar-hq`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
