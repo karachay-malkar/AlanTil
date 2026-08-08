@@ -1,0 +1,45 @@
+name: Ops DB URL Sentinel 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-sentinel-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sentinel:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Read correction sentinels only
+        shell: bash
+        run: |
+          set -u
+          mkdir -p ops_word_sync_dburl_20260808/sentinel
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          Q1=$(psql "$SUPABASE_DB_URL" -X -Atc "select case when phrases_text like '%не хватает опыта%' then 'corrected' when phrases_text like '%не хватаем опыта%' then 'old' else 'other' end from public.content_word_texts where word_id='0045' and language_code='ru' and script_code=''" )
+          Q2=$(psql "$SUPABASE_DB_URL" -X -Atc "select case when phrases_text like '%меня зовут Бонд%' then 'corrected' when phrases_text like '%меня зоут Бонд%' then 'old' else 'other' end from public.content_word_texts where word_id='0049' and language_code='ru' and script_code=''" )
+          Q3=$(psql "$SUPABASE_DB_URL" -X -Atc "select case when phrases_text like '%дом, крытый черепицей%' then 'corrected' when phrases_text like '%1.2 крытый черепицей%' then 'old' else 'other' end from public.content_word_texts where word_id='2208' and language_code='ru' and script_code=''" )
+          Q4=$(psql "$SUPABASE_DB_URL" -X -Atc "select case when translation_text like '%6. несостоятельный, бедный%' then 'corrected' when translation_text='тонкий, худой' then 'old' else 'other' end from public.content_word_texts where word_id='0797' and language_code='ru' and script_code=''" )
+          WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_words")
+          export Q1 Q2 Q3 Q4 WORD_COUNT
+          python - <<'PY'
+          import json,os,pathlib
+          vals=[os.environ['Q1'],os.environ['Q2'],os.environ['Q3'],os.environ['Q4']]
+          pathlib.Path('ops_word_sync_dburl_20260808/sentinel/status.json').write_text(json.dumps({'word_count':int(os.environ['WORD_COUNT']),'sentinels':vals,'all_corrected':all(x=='corrected' for x in vals),'all_old':all(x=='old' for x in vals)},indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin ops/word-sync-2026-08-08
+          git add ops_word_sync_dburl_20260808/sentinel/status.json
+          git commit -m "ops: record word correction sentinels"
+          git push origin HEAD:ops/word-sync-2026-08-08
