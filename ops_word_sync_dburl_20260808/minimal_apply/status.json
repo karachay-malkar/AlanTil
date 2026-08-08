@@ -1,0 +1,8 @@
+{
+  "completed_at_utc": "2026-08-08T17:58:44.813180+00:00",
+  "result": "FAILED",
+  "exit_code": 3,
+  "error_summary": [
+    "psql:ops_final_bundle/alantil_word_corrections_2026-08-08.sql:828: ERROR:  Guard failed on correction 12: word_id=0095 alan/turkic phrases_text"
+  ]
+}
