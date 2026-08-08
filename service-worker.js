@@ -1,6 +1,6 @@
-const VERSION = "13.11";
-const SHELL_CACHE = `alantil-shell-${VERSION}-avatar-png`;
-const RUNTIME_CACHE = `alantil-runtime-${VERSION}-avatar-png`;
+const VERSION = "13.11.1";
+const SHELL_CACHE = `alantil-shell-${VERSION}-station-30`;
+const RUNTIME_CACHE = `alantil-runtime-${VERSION}-station-30`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -18,7 +18,6 @@ const NETWORK_FIRST_PATHS = new Set([
   "/src/config/analytics.js",
   "/src/config/supabase.js",
   "/src/features/profile/index.js",
-  "/src/features/profile/profile.css",
   "/src/features/settings/version.js",
 ]);
 
