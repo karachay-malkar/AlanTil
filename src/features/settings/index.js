@@ -3,16 +3,16 @@ import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=13.10.3";
+} from "../../shared/data/word-repository.js?v=13.13";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.3";
 import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.10.10";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.10.3";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.13";
 import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.10.10";
 import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.10.10";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.10.10";
+const SETTINGS_ASSET_VERSION = "13.13";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -185,7 +185,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.10.10")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.13")}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>
