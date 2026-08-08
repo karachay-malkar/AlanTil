@@ -1,16 +1,17 @@
 import { msg } from "../i18n/index.js?v=13.10.3";
 import {
   DICTIONARY_CACHE_KEY,
-  DICTIONARY_CONTENT_VIEW,
+  DICTIONARY_CONTENT_TABLE,
   DICTIONARY_KEY,
   DICTIONARY_METADATA_TABLE,
+  DICTIONARY_STORIES_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
-} from "../../config/words.js?v=13.9.0";
+} from "../../config/words.js?v=13.12";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
 import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=13.10.2";
 import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.9.0";
-import { getUserSettings } from "../settings/user-settings-store.js?v=13.10.12";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.9.0";
+import { getUserSettings } from "../settings/user-settings-store.js?v=13.12";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.12";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
 const PAGE_SIZE = 1000;
@@ -57,10 +58,31 @@ function delay(ms) {
   return new Promise((resolve) => globalThis.setTimeout(resolve, Math.max(0, ms)));
 }
 
-function normalizeCollection(collection, sourceName = "cache") {
-  const normalize = sourceName === "supabase" ? normalizeSupabaseWordEntry : normalizeWordEntry;
+function storiesByDictionary(stories = []) {
+  const map = new Map();
+  (Array.isArray(stories) ? stories : [])
+    .slice()
+    .sort((left, right) => Number(left?.story_order || 0) - Number(right?.story_order || 0))
+    .forEach((story) => {
+      const dictionaryIds = Array.isArray(story?.dictionary_ids) ? story.dictionary_ids : [];
+      dictionaryIds.forEach((dictionaryId) => {
+        const id = String(dictionaryId || "").trim();
+        if (id && !map.has(id)) map.set(id, story);
+      });
+    });
+  return map;
+}
+
+function normalizeCollection(collection, sourceName = "cache", stories = []) {
+  if (sourceName === "supabase") {
+    const storyMap = storiesByDictionary(stories);
+    return (Array.isArray(collection) ? collection : [])
+      .map((row) => normalizeSupabaseWordEntry(row, storyMap.get(String(row?.dictionary_id || "").trim()) || null))
+      .filter(Boolean)
+      .sort((left, right) => Number(left.global_order || 0) - Number(right.global_order || 0));
+  }
   return (Array.isArray(collection) ? collection : [])
-    .map((row) => normalize(row))
+    .map((row) => normalizeWordEntry(row, { source: sourceName === "legacy" ? "legacy" : "auto" }))
     .filter(Boolean)
     .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
 }
@@ -69,7 +91,7 @@ function validateDictionary(collection) {
   if (!collection.length) throw new Error(msg("service.server_vernul_pustoy_slovar"));
   const identifiers = new Set();
   for (const word of collection) {
-    if (!word.id || !word.story_id || !word.dictionary_id || !word.section_id) {
+    if (!word.id || !word.story_id || !word.dictionary_id || !word.set_id) {
       throw new Error(msg("service.struktura_slovarya_povrezhdena_otsutstvuyut_obyazatelnye_r"));
     }
     if ((!word.wordAlanCyrillic && !word.wordAlanTurkic) || !word.translationRu) {
@@ -104,7 +126,7 @@ function readDictionaryCache() {
 function readStarterDictionary() {
   return {
     version: STARTER_DICTIONARY_VERSION,
-    words: validateDictionary(normalizeCollection(STARTER_DICTIONARY, "supabase")),
+    words: validateDictionary(normalizeCollection(STARTER_DICTIONARY, "legacy")),
   };
 }
 
@@ -151,7 +173,7 @@ async function fetchRestJson(url, label, { timeoutMs = DOWNLOAD_TIMEOUT_MS, sign
 async function fetchContentWords({ signal } = {}) {
   const rows = [];
   for (let from = 0; ; from += PAGE_SIZE) {
-    const page = await fetchRestJson(restUrl(DICTIONARY_CONTENT_VIEW, {
+    const page = await fetchRestJson(restUrl(DICTIONARY_CONTENT_TABLE, {
       select: "*",
       order: "global_order.asc",
       offset: from,
@@ -162,6 +184,14 @@ async function fetchContentWords({ signal } = {}) {
     if (normalizedPage.length < PAGE_SIZE) break;
   }
   return rows;
+}
+
+async function fetchContentStories({ signal } = {}) {
+  const data = await fetchRestJson(restUrl(DICTIONARY_STORIES_TABLE, {
+    select: "*",
+    order: "story_order.asc",
+  }), "Dictionary stories", { timeoutMs: DOWNLOAD_TIMEOUT_MS, signal });
+  return Array.isArray(data) ? data : [];
 }
 
 async function fetchLatestVersion({ signal, timeoutMs = VERSION_TIMEOUT_MS } = {}) {
@@ -198,10 +228,11 @@ async function retry(operation) {
 }
 
 async function downloadDictionary(expectedVersion = "", { signal } = {}) {
-  const [version, rawWords] = expectedVersion
-    ? [expectedVersion, await fetchContentWords({ signal })]
-    : await Promise.all([fetchLatestVersion({ signal, timeoutMs: DOWNLOAD_TIMEOUT_MS }), fetchContentWords({ signal })]);
-  const downloadedWords = validateDictionary(normalizeCollection(rawWords, "supabase"));
+  const contentPromise = Promise.all([fetchContentWords({ signal }), fetchContentStories({ signal })]);
+  const [version, [rawWords, rawStories]] = expectedVersion
+    ? [expectedVersion, await contentPromise]
+    : await Promise.all([fetchLatestVersion({ signal, timeoutMs: DOWNLOAD_TIMEOUT_MS }), contentPromise]);
+  const downloadedWords = validateDictionary(normalizeCollection(rawWords, "supabase", rawStories));
   writeJson(DICTIONARY_CACHE_KEY, { version, words: downloadedWords });
   words = downloadedWords;
   installedVersion = version;
