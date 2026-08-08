@@ -1,0 +1,189 @@
+name: Match corrected rows to current words by content
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/match-word-corrections-by-content.yml
+
+permissions:
+  contents: write
+
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+
+      - name: Match by word, translation, POS and examples
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, json, re
+          from difflib import SequenceMatcher
+          from pathlib import Path
+
+          out = Path("ops_live_export/content_match")
+          out.mkdir(parents=True, exist_ok=True)
+
+          packed = Path("ops_source/corrected_rows_11_07_26.json.gz.b64").read_text(encoding="utf-8").strip()
+          raw = gzip.decompress(base64.b64decode(packed))
+          if hashlib.sha256(raw).hexdigest() != "80ca3458b636248562fb54aa1bf2b9b123e802d62d4c921faa0ef139eed2352d":
+              raise SystemExit("correction source checksum mismatch")
+          legacy = json.loads(raw.decode("utf-8"))
+          current = json.loads(Path("ops_live_export/content_words_ru.json").read_text(encoding="utf-8"))
+
+          def norm(v):
+              if v is None: return ""
+              s = str(v).replace("\r\n", "\n").replace("\r", "\n")
+              s = re.sub(r"\s+", " ", s).strip().casefold()
+              return s
+
+          def as_list(v):
+              if v is None: return []
+              if isinstance(v, list): return [str(x) for x in v]
+              if isinstance(v, tuple): return [str(x) for x in v]
+              s = str(v).strip()
+              if not s: return []
+              if s.startswith("["):
+                  try:
+                      x = json.loads(s)
+                      if isinstance(x, list): return [str(y) for y in x]
+                  except Exception: pass
+              return [x.strip() for x in s.split(";") if x.strip()]
+
+          def current_example(row):
+              a = as_list(row.get("phrases_alan_cyrillic"))
+              r = as_list(row.get("phrases_ru"))
+              n = max(len(a), len(r))
+              parts = []
+              for i in range(n):
+                  aa = a[i] if i < len(a) else ""
+                  rr = r[i] if i < len(r) else ""
+                  if aa and rr: parts.append(f"{aa} ✦ {rr}")
+                  elif aa: parts.append(aa)
+                  elif rr: parts.append(rr)
+              return "; ".join(parts)
+
+          def ratio(a, b):
+              a, b = norm(a), norm(b)
+              if not a and not b: return 1.0
+              if not a or not b: return 0.0
+              return SequenceMatcher(None, a, b).ratio()
+
+          results = []
+          for old in legacy:
+              ow = old.get("word", "")
+              ot = old.get("trans", "")
+              op = old.get("pos", "")
+              oe = old.get("example", "")
+              candidates = []
+              for cur in current:
+                  cw = cur.get("word_alan_cyrillic") or cur.get("word") or ""
+                  ct = cur.get("translation_ru") or cur.get("translation") or ""
+                  cp = cur.get("pos") or ""
+                  ce = current_example(cur)
+                  wr = ratio(ow, cw)
+                  # Skip obviously unrelated words to keep translation coincidences from dominating.
+                  if wr < 0.42:
+                      continue
+                  tr = ratio(ot, ct)
+                  er = ratio(oe, ce)
+                  pr = 1.0 if norm(op) == norm(cp) and norm(op) else (0.5 if not norm(op) and not norm(cp) else 0.0)
+                  exact_word = norm(ow) == norm(cw)
+                  score = 0.58 * wr + 0.23 * tr + 0.14 * er + 0.05 * pr + (0.08 if exact_word else 0.0)
+                  candidates.append({
+                      "score": score,
+                      "word_ratio": wr,
+                      "translation_ratio": tr,
+                      "example_ratio": er,
+                      "pos_match": pr,
+                      "exact_word": exact_word,
+                      "row": cur,
+                  })
+              candidates.sort(key=lambda x: (x["score"], x["exact_word"], x["word_ratio"], x["translation_ratio"]), reverse=True)
+              top = candidates[:3]
+              best = top[0] if top else None
+              second = top[1] if len(top) > 1 else None
+              margin = (best["score"] - second["score"]) if best and second else (best["score"] if best else 0)
+
+              confidence = "low"
+              if best:
+                  if best["exact_word"] and best["score"] >= 0.83 and margin >= 0.04:
+                      confidence = "high"
+                  elif best["exact_word"] and best["score"] >= 0.72 and margin >= 0.02:
+                      confidence = "medium"
+                  elif best["word_ratio"] >= 0.86 and best["score"] >= 0.72 and margin >= 0.05:
+                      confidence = "medium"
+
+              def compact(c):
+                  if not c: return None
+                  r = c["row"]
+                  return {
+                      "score": round(c["score"], 6),
+                      "word_ratio": round(c["word_ratio"], 6),
+                      "translation_ratio": round(c["translation_ratio"], 6),
+                      "example_ratio": round(c["example_ratio"], 6),
+                      "exact_word": c["exact_word"],
+                      "word_id": r.get("word_id"),
+                      "global_order": r.get("global_order"),
+                      "story_id": r.get("story_id"),
+                      "story_name": r.get("story_name"),
+                      "dictionary_id": r.get("dictionary_id"),
+                      "dictionary_name": r.get("dictionary_name"),
+                      "section_id": r.get("section_id"),
+                      "section_name": r.get("section_name"),
+                      "set_id": r.get("set_id"),
+                      "set_name": r.get("set_name"),
+                      "word_alan_cyrillic": r.get("word_alan_cyrillic"),
+                      "word_alan_turkic": r.get("word_alan_turkic"),
+                      "translation_ru": r.get("translation_ru"),
+                      "pos": r.get("pos"),
+                      "synonyms": r.get("synonyms"),
+                      "phrases_alan_cyrillic": r.get("phrases_alan_cyrillic"),
+                      "phrases_alan_turkic": r.get("phrases_alan_turkic"),
+                      "phrases_ru": r.get("phrases_ru"),
+                  }
+
+              results.append({
+                  "legacy_id": old["legacy_id"],
+                  "legacy_seq": old["seq"],
+                  "desired_word": old.get("word"),
+                  "desired_translation": old.get("trans"),
+                  "desired_example": old.get("example"),
+                  "desired_pos": old.get("pos"),
+                  "desired_synonyms": old.get("synonyms"),
+                  "legacy_comment": old.get("comment"),
+                  "confidence": confidence,
+                  "margin": round(margin, 6),
+                  "best": compact(best),
+                  "alternatives": [compact(x) for x in top[1:]],
+              })
+
+          ids = [r.get("best", {}).get("word_id") if r.get("best") else None for r in results]
+          collisions = sorted({x for x in ids if x and ids.count(x) > 1})
+          summary = {
+              "marked_rows": len(results),
+              "high": sum(r["confidence"] == "high" for r in results),
+              "medium": sum(r["confidence"] == "medium" for r in results),
+              "low": sum(r["confidence"] == "low" for r in results),
+              "best_match_collisions": collisions,
+              "unique_best_word_ids": len(set(x for x in ids if x)),
+          }
+          (out / "match_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+          for idx in range(0, len(results), 12):
+              (out / f"matches_part_{idx//12+1}.json").write_text(json.dumps(results[idx:idx+12], ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+
+      - name: Commit matching report
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/content_match
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: match corrected rows to current word IDs"
+          git push origin HEAD:ops/word-sync-2026-08-08
