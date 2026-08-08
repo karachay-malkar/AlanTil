@@ -1,6 +1,6 @@
-const VERSION = "13.11.1";
-const SHELL_CACHE = `alantil-shell-${VERSION}-station-30`;
-const RUNTIME_CACHE = `alantil-runtime-${VERSION}-station-30`;
+const VERSION = "13.12";
+const SHELL_CACHE = `alantil-shell-${VERSION}`;
+const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -91,8 +91,6 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(networkFirstStaticResponse(request));
     return;
   }
-  // Versioned application assets are immutable within a release. Serving the
-  // cached response first removes route latency; the next release uses a new URL.
   if (url.pathname.startsWith("/src/") && ["script", "style", "worker"].includes(request.destination)) {
     event.respondWith(staticResponse(request));
     return;
