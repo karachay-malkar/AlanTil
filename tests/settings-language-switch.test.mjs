@@ -4,11 +4,11 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("all historical settings-store specifiers resolve to one module instance", async () => {
+test("all historical settings-store specifiers resolve to one 13.13 module instance", async () => {
   const index = await read("index.html");
-  const versions = ["13.9.0", ...Array.from({ length: 12 }, (_, index) => `13.10.${index}`)];
+  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, index) => `13.10.${index}`), "13.11", "13.12", "13.13"];
   for (const version of versions) {
-    assert.ok(index.includes(`"/src/shared/settings/user-settings-store.js?v=${version}": "/src/shared/settings/user-settings-store.js?v=13.10.12"`), `missing settings-store alias for ${version}`);
+    assert.ok(index.includes(`"/src/shared/settings/user-settings-store.js?v=${version}": "/src/shared/settings/user-settings-store.js?v=13.13"`), `missing settings-store alias for ${version}`);
   }
 });
 
