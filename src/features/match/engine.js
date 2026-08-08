@@ -1,13 +1,13 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { buildWordsByPOSRounds } from "../../shared/domain/word-selection.js?v=13.9.0";
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.9.0";
+import { buildWordsByPOSRounds } from "../../shared/domain/word-selection.js?v=13.13";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js?v=13.9.0";
+} from "../../shared/progress/session-builders.js?v=13.13";
 import { recordMatchWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 import { matchState } from "./state.js?v=13.9.0";
 
@@ -77,9 +77,9 @@ function trackWord(id, result) {
     word_id: word.id,
     source: WORD_SOURCES.MATCH,
     result,
-    dictionary_id: word.dict,
-    section_id: word.section,
-    set_id: String(word.set),
+    dictionary_id: word.dictionary_id,
+    section_id: word.section_id,
+    set_id: String(word.set_id),
     direction: DIRECTIONS.NONE,
   });
 }
