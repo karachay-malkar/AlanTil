@@ -1,0 +1,13 @@
+{
+  "completed_at_utc": "2026-08-08T18:01:31.262370+00:00",
+  "result": "PASSED",
+  "transaction_exit_code": 0,
+  "post_field_mismatches": 0,
+  "word_count_before": 2355,
+  "word_count_after": 2355,
+  "structure_hash_before": "4b05a5f33aaf807efa35dd3b00185951",
+  "structure_hash_after": "4b05a5f33aaf807efa35dd3b00185951",
+  "structure_unchanged": true,
+  "database_changes_committed": true,
+  "error_summary": []
+}
