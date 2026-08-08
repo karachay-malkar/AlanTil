@@ -7,10 +7,11 @@ export const PATH_CONFIG = Object.freeze({
   milestoneRequiredAccuracy: 90,
   summitUnlockAscentPercent: 60,
   routeBackground: "first-gorge",
-  defaultStoryType: "roots",
+  defaultStoryType: "oblivion",
   storyColumn: "story_type",
-  storyOrder: ["roots", "ascent", "pathways"],
+  storyOrder: ["oblivion", "roots", "ascent", "pathways"],
   storyLabels: Object.freeze({
+    get oblivion() { return "На пороге забвения"; },
     get roots() { return msg("path.voshozhdenie"); },
     get ascent() { return msg("path.na_vershine"); },
     get pathways() { return msg("path.tropy"); },
@@ -35,6 +36,7 @@ export const STATION_STATUSES = Object.freeze([
 ]);
 
 export const STORY_TYPES = Object.freeze({
+  OBLIVION: "oblivion",
   ROOTS: "roots",
   ASCENT: "ascent",
   PATHWAYS: "pathways",
