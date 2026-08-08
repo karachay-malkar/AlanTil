@@ -3,6 +3,8 @@ import { msg } from "../i18n/index.js?v=13.9.0";
 import { createSlugMap, toSlug } from "./slugs.js?v=13.9.0";
 import { sortNatural } from "./word-selection.js?v=13.9.0";
 
+const FIXED_STATION_SIZE = 30;
+
 export function normalizeRouteText(value) {
   return String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
 }
@@ -71,7 +73,6 @@ export function routeKeyParts(key) {
   const [storyType = "", dictionaryId = "", catalogId = "", groupId = "", setId = ""] = String(key || "").split("::");
   return { storyType, dictionaryId, catalogId, groupId, setId };
 }
-
 
 function createStationSlugMap(stations = []) {
   const valueToSlug = new Map();
@@ -163,8 +164,8 @@ function createDynamicStations({ story, dictionary, section, words, stationSize 
   return output;
 }
 
-export function buildLearningRoute(words, { stationSize = 40 } = {}) {
-  const size = Number(stationSize) === 20 ? 20 : 40;
+export function buildLearningRoute(words, _options = {}) {
+  const size = FIXED_STATION_SIZE;
   const source = Array.isArray(words) ? words.filter((word) => word?.id) : [];
   const storiesMap = new Map();
 
