@@ -7,6 +7,7 @@ import {
 } from "../progress/storage-scope.js?v=13.10.12";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
+export const FIXED_STATION_SIZE = 30;
 const LEGACY_SETUP_COMPLETED_AT = "2026-07-18T00:00:00.000Z";
 
 export const DEFAULT_USER_SETTINGS = Object.freeze({
@@ -14,7 +15,7 @@ export const DEFAULT_USER_SETTINGS = Object.freeze({
   translation_language_code: "ru",
   alan_script_code: "cyrillic",
   alan_dialect_code: "canonical",
-  station_size: 40,
+  station_size: FIXED_STATION_SIZE,
   learning_setup_completed_at: null,
 });
 
@@ -32,8 +33,8 @@ function normalizeInterfaceLanguageCode(value) {
   return ["ru", "en", "tr"].includes(normalized) ? normalized : DEFAULT_USER_SETTINGS.interface_language_code;
 }
 
-function normalizeStationSize(value) {
-  return Number(value) === 20 ? 20 : 40;
+function normalizeStationSize() {
+  return FIXED_STATION_SIZE;
 }
 
 function normalizeAlanScriptCode(value) {
