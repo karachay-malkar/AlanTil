@@ -1,0 +1,38 @@
+name: Package 13.13 source
+
+on:
+  push:
+    branches:
+      - "13.13"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/AlanTil_13.13
+          rsync -a ./ /tmp/AlanTil_13.13/ \
+            --exclude='.git/' \
+            --exclude='.github/workflows/package-13-13.yml' \
+            --exclude='*.ttf' \
+            --exclude='*.otf' \
+            --exclude='*.woff' \
+            --exclude='*.woff2'
+          cd /tmp
+          zip -qr AlanTil_13.13.zip AlanTil_13.13
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil_13.13_source
+          path: /tmp/AlanTil_13.13.zip
+          if-no-files-found: error
+          retention-days: 1
