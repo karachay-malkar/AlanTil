@@ -1,31 +1,41 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { DICT_TITLES } from "../../config/words.js?v=13.12";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS, SEARCH_AREAS, SEARCH_MODES } from "../../shared/analytics/events.js?v=13.9.0";
-import { dictsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js?v=13.12";
+import { dictsFrom, sectionsFrom, setsFrom, wordsForSet } from "../../shared/domain/word-selection.js?v=13.13";
 import { createSlugMap } from "../../shared/domain/slugs.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { renderContentListRow, renderSectionMenu } from "../../shared/ui/list.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { learnState } from "./state.js?v=13.12";
+import { learnState } from "./state.js?v=13.13";
 import { renderSetPreparation } from "./set-preparation.js?v=13.9.0";
 
-function dictTitle(code) {
-  return DICT_TITLES[code] || code;
+function dictionaryLabel(words, code) {
+  const word = words.find((entry) => String(entry.dictionary_id || "") === String(code || ""));
+  return String(word?.dictionary_name || "").trim();
 }
 
-function dictionaryLabel(words, code) {
-  const word = words.find((entry) => String(entry.dictionary_id || entry.dict || "") === String(code || ""));
-  return word?.dictionary_name || dictTitle(code);
+function sectionLabel(words, dict, section) {
+  const word = words.find((entry) => String(entry.dictionary_id || "") === String(dict || "")
+    && String(entry.section_id || "") === String(section || ""));
+  return String(word?.section_name || "").trim();
+}
+
+function setNumberLabel(setId) {
+  const match = String(setId || "").match(/(\d+)$/);
+  return match ? match[1] : "";
 }
 
 function dictionarySlugMap(words) {
   return createSlugMap(dictsFrom(words), { reserved: ["favorites"] });
 }
 
-function setSlugMap(words, dict) {
-  return createSlugMap(setsFrom(words, dict).map(String));
+function sectionSlugMap(words, dict) {
+  return createSlugMap(sectionsFrom(words, dict));
+}
+
+function setSlugMap(words, dict, section) {
+  return createSlugMap(setsFrom(words, dict, section).map(String));
 }
 
 function wireStars(container, wordsById, rerender) {
@@ -65,36 +75,27 @@ export function renderCatalog(context, words, signal) {
         return;
       }
       learnState.currentDict = slugs.valueFor(dictionarySlug) || "";
-      learnState.currentSection = learnState.currentDict;
+      learnState.currentSection = "";
+      learnState.currentSet = "";
       context.router.navigate("learn.sections", { dictionarySlug, sectionSlug: null, setSlug: null });
     }, { signal });
   });
 }
 
-export function renderSections(context, words, signal) {
-  const dict = learnState.currentDict;
-  if (!dict) {
-    context.router.replace("learn.catalog", {}, { force: true });
-    return;
-  }
-
-  learnState.currentSection = dict;
-  const dictionarySlug = dictionarySlugMap(words).slugFor(dict);
-  const setSlugs = setSlugMap(words, dict);
-  const sets = setsFrom(words, dict);
-  const tiles = sets.map((setId) => `
-    <div class="setTile set-tile" role="button" tabindex="0"
-      data-set="${escapeHtml(setId)}"
-      data-set-slug="${escapeHtml(setSlugs.slugFor(String(setId)))}">
-      <div class="setTileTitle">${escapeHtml(setId)}</div>
-    </div>`).join("");
+function renderSectionList(context, words, signal, dict, dictionarySlug) {
+  const sections = sectionsFrom(words, dict);
+  const sectionSlugs = sectionSlugMap(words, dict);
+  const items = sections.map((section) => ({
+    id: sectionSlugs.slugFor(section),
+    title: sectionLabel(words, dict, section),
+  }));
   const pageTitle = dictionaryLabel(words, dict);
 
   context.shell.setHeaderContent?.({ title: pageTitle });
   context.root.innerHTML = panel({
     title: escapeHtml(pageTitle),
     headerExtra: `<button id="btnOpenDictContent" class="iconAction iconBtn" type="button" aria-label="${msg("learn.soderzhanie_slovarya")}" title="${msg("learn.soderzhanie_slovarya")}"><img src="/assets/icons/words-search.svg" alt="" /></button>`,
-    body: `<div class="setsGrid">${tiles}</div>`,
+    body: renderSectionMenu(items, { dataName: "section-slug" }),
   });
 
   context.root.querySelector("#btnOpenDictContent")?.addEventListener("click", () => context.router.navigate("learn.catalog-content", {
@@ -103,17 +104,43 @@ export function renderSections(context, words, signal) {
     setSlug: null,
   }), { signal });
 
+  context.root.querySelectorAll("[data-section-slug]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const sectionSlug = button.dataset.sectionSlug;
+      const section = sectionSlugs.valueFor(sectionSlug) || "";
+      if (!section) return;
+      learnState.currentSection = section;
+      learnState.currentSet = "";
+      context.router.navigate("learn.sections", { dictionarySlug, sectionSlug, setSlug: null });
+    }, { signal });
+  });
+}
+
+function renderSetList(context, words, signal, dict, section, dictionarySlug) {
+  const sectionSlugs = sectionSlugMap(words, dict);
+  const sectionSlug = sectionSlugs.slugFor(section);
+  const setSlugs = setSlugMap(words, dict, section);
+  const sets = setsFrom(words, dict, section);
+  const tiles = sets.map((setId) => `
+    <div class="setTile set-tile" role="button" tabindex="0"
+      data-set="${escapeHtml(setId)}"
+      data-set-slug="${escapeHtml(setSlugs.slugFor(String(setId)))}">
+      <div class="setTileTitle">${escapeHtml(setNumberLabel(setId))}</div>
+    </div>`).join("");
+  const pageTitle = sectionLabel(words, dict, section);
+
+  context.shell.setHeaderContent?.({ title: pageTitle, subtitle: dictionaryLabel(words, dict) });
+  context.root.innerHTML = panel({
+    title: escapeHtml(pageTitle),
+    body: `<div class="setsGrid">${tiles}</div>`,
+  });
+
   context.root.querySelectorAll(".setTile").forEach((tile) => {
-    const setId = tile.dataset.set;
     const open = () => {
-      learnState.currentSection = dict;
-      learnState.currentSet = setId;
-      // The current router still carries a middle path segment. It is a URL
-      // compatibility segment only and mirrors the dictionary; no section is
-      // stored in content data.
+      learnState.currentSet = tile.dataset.set;
       context.router.navigate("learn.set", {
         dictionarySlug,
-        sectionSlug: dictionarySlug,
+        sectionSlug,
         setSlug: tile.dataset.setSlug,
       });
     };
@@ -124,6 +151,20 @@ export function renderSections(context, words, signal) {
       open();
     }, { signal });
   });
+}
+
+export function renderSections(context, words, signal) {
+  const dict = learnState.currentDict;
+  if (!dict || dict === "__fav__") {
+    context.router.replace("learn.catalog", {}, { force: true });
+    return;
+  }
+  const dictionarySlug = dictionarySlugMap(words).slugFor(dict);
+  if (!learnState.currentSection) {
+    renderSectionList(context, words, signal, dict, dictionarySlug);
+    return;
+  }
+  renderSetList(context, words, signal, dict, learnState.currentSection, dictionarySlug);
 }
 
 export function renderDictionaryContent(context, words, signal) {
@@ -149,7 +190,7 @@ export function renderDictionaryContent(context, words, signal) {
   function draw(filter = "") {
     const query = String(filter || "").toLowerCase().trim();
     const filtered = words
-      .filter((word) => String(word.dictionary_id || word.dict || "") === dict
+      .filter((word) => String(word.dictionary_id || "") === dict
         && Number(word.dict_order) > 0
         && (!query || word.word.toLowerCase().includes(query) || word.trans.toLowerCase().includes(query)))
       .sort((a, b) => Number(a.dict_order) - Number(b.dict_order));
@@ -191,7 +232,7 @@ export function renderDictionaryContent(context, words, signal) {
 }
 
 export function renderSetMenu(context, words, signal) {
-  const { currentDict, currentSet } = learnState;
+  const { currentDict, currentSection, currentSet } = learnState;
   if (!currentDict) {
     context.router.replace("learn.catalog", {}, { force: true });
     return;
@@ -199,17 +240,17 @@ export function renderSetMenu(context, words, signal) {
 
   const setWords = currentDict === "__fav__"
     ? words.filter((word) => wordFavorites.has(word.id))
-    : wordsForSet(words, currentDict, currentDict, currentSet);
+    : wordsForSet(words, currentDict, currentSection, currentSet);
   const title = currentDict === "__fav__"
     ? msg("learn.izbrannoe")
-    : (setWords[0]?.set_name || setWords[0]?.set || String(currentSet));
+    : (String(setWords[0]?.set_name || "").trim() || setNumberLabel(currentSet));
 
   renderSetPreparation(context, {
     title,
-    subtitle: currentDict === "__fav__" ? "" : dictionaryLabel(words, currentDict),
+    subtitle: currentDict === "__fav__" ? "" : sectionLabel(words, currentDict, currentSection),
     words: setWords,
     dictionaryId: currentDict,
-    sectionId: currentDict,
+    sectionId: currentSection,
     setId: currentSet,
     signal,
     favoritesOnly: currentDict === "__fav__",
