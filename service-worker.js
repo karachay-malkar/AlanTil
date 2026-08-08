@@ -31,10 +31,14 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();
-    await Promise.all(names
-      .filter((name) => name.startsWith("alantil-") && ![SHELL_CACHE, RUNTIME_CACHE].includes(name))
-      .map((name) => caches.delete(name)));
+    const staleAlanTilCaches = names.filter((name) => name.startsWith("alantil-") && ![SHELL_CACHE, RUNTIME_CACHE].includes(name));
+    const hadPreviousShell = staleAlanTilCaches.some((name) => name.startsWith("alantil-shell-"));
+    await Promise.all(staleAlanTilCaches.map((name) => caches.delete(name)));
     await self.clients.claim();
+    if (hadPreviousShell) {
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      await Promise.allSettled(clients.map((client) => client.navigate(client.url)));
+    }
   })());
 });
 
