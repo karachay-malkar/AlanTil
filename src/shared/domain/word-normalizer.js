@@ -43,33 +43,6 @@ function nullableNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-function compatibilityFields({
-  wordAlanCyrillic,
-  translationRu,
-  legacyExample,
-  storyNameRu,
-  dictionaryNameRu,
-  sectionNameRu,
-  setNameRu,
-  dictionaryId,
-  sectionId,
-  setId,
-}) {
-  return {
-    word: wordAlanCyrillic,
-    trans: translationRu,
-    example: legacyExample,
-    story_name: storyNameRu,
-    dictionary_name: dictionaryNameRu || dictionaryId,
-    section_name: sectionNameRu || sectionId,
-    set_name: setNameRu,
-    // These aliases remain stable for the legacy learn URLs and local keys.
-    dict: dictionaryNameRu || dictionaryId || "Словарь",
-    section: sectionNameRu || sectionId || "Раздел",
-    set: setNameRu || setId || "",
-  };
-}
-
 function commonRouteFields(row) {
   return {
     order_override: numberValue(row.order_override),
@@ -84,43 +57,66 @@ function commonRouteFields(row) {
 }
 
 function completeModel(model, row = {}) {
-  const compatibility = compatibilityFields(model);
+  const dictionaryId = normalizeId(model.dictionaryId);
+  const setId = normalizeId(model.setId);
+  const storyId = normalizeId(model.storyId);
+  const storyNameRu = text(model.storyNameRu);
+  const dictionaryName = text(model.dictionaryNameRu) || dictionaryId;
+  const setName = text(model.setNameRu) || setId;
+
   const normalized = {
     ...model,
-    ...compatibility,
-    id: model.id,
-    word_id: model.id,
+    id: normalizeId(model.id),
+    word_id: normalizeId(model.id),
     global_order: numberValue(model.globalOrder),
-    story_id: model.storyId,
-    dictionary_id: model.dictionaryId,
-    section_id: model.sectionId,
-    set_id: model.setId,
+    dict_order: numberValue(model.globalOrder),
+    story_id: storyId,
+    story_type: storyId,
+    dictionary_id: dictionaryId,
+    catalog_id: dictionaryId,
+    // The physical content model no longer has sections. These compatibility
+    // aliases keep older menus stable while pointing at the real dictionary.
+    section_id: dictionaryId,
+    group_id: dictionaryId,
+    set_id: setId,
     pos: text(model.pos),
     synonyms: parseSynonyms(model.synonyms),
-    dict_order: numberValue(model.globalOrder),
-    catalog_id: model.dictionaryId,
-    group_id: model.sectionId,
-    story_type: model.storyId,
+    word: text(model.wordAlanCyrillic),
+    trans: text(model.translationRu),
+    example: text(model.legacyExample),
+    story_name: storyNameRu || storyId,
+    dictionary_name: dictionaryName,
+    section_name: dictionaryName,
+    set_name: setName,
+    dict: dictionaryName,
+    section: dictionaryName,
+    set: setName,
     usedInTest: typeof row.usedInTest === "boolean"
       ? row.usedInTest
       : parseUsedInTest(row.used_in_test, row.used_in_test !== undefined),
     ...commonRouteFields(row),
   };
 
-  if (!normalized.id || !normalized.wordAlanCyrillic || !normalized.translationRu) return null;
+  if (!normalized.id || !dictionaryId || !setId || !normalized.wordAlanCyrillic || !normalized.translationRu) return null;
   return normalized;
 }
 
-export function normalizeSupabaseWordEntry(row) {
+function storyValue(story, row, key, fallbackKey = key) {
+  return text(story?.[key] ?? row?.[fallbackKey]);
+}
+
+export function normalizeSupabaseWordEntry(row, story = null) {
   if (!row || typeof row !== "object") return null;
+  const dictionaryId = normalizeId(row.dictionary_id);
+  const setId = normalizeId(row.set_id);
   const model = {
-    sourceType: "v_words_app",
+    sourceType: "content_words",
     id: normalizeId(row.word_id),
     globalOrder: numberValue(row.global_order),
-    storyId: normalizeId(row.story_id),
-    dictionaryId: normalizeId(row.dictionary_id),
-    sectionId: normalizeId(row.section_id),
-    setId: normalizeId(row.set_id),
+    storyId: normalizeId(story?.story_id || row.story_id),
+    dictionaryId,
+    sectionId: dictionaryId,
+    setId,
     pos: text(row.pos),
     synonyms: row.synonyms,
 
@@ -135,26 +131,26 @@ export function normalizeSupabaseWordEntry(row) {
     phrasesEn: text(row.phrases_en),
     phrasesTr: text(row.phrases_tr),
 
-    storyNameRu: text(row.story_name_ru),
-    storyNameEn: text(row.story_name_en),
-    storyNameTr: text(row.story_name_tr),
-    storyNameAlanCyrillic: text(row.story_name_alan_cyrillic),
-    storyNameAlanTurkic: text(row.story_name_alan_turkic),
-    dictionaryNameRu: text(row.dictionary_name_ru),
-    dictionaryNameEn: text(row.dictionary_name_en),
-    dictionaryNameTr: text(row.dictionary_name_tr),
-    dictionaryNameAlanCyrillic: text(row.dictionary_name_alan_cyrillic),
-    dictionaryNameAlanTurkic: text(row.dictionary_name_alan_turkic),
-    sectionNameRu: text(row.section_name_ru),
-    sectionNameEn: text(row.section_name_en),
-    sectionNameTr: text(row.section_name_tr),
-    sectionNameAlanCyrillic: text(row.section_name_alan_cyrillic),
-    sectionNameAlanTurkic: text(row.section_name_alan_turkic),
-    setNameRu: text(row.set_name_ru),
-    setNameEn: text(row.set_name_en),
-    setNameTr: text(row.set_name_tr),
-    setNameAlanCyrillic: text(row.set_name_alan_cyrillic),
-    setNameAlanTurkic: text(row.set_name_alan_turkic),
+    storyNameRu: storyValue(story, row, "name_ru", "story_name_ru"),
+    storyNameEn: storyValue(story, row, "name_en", "story_name_en"),
+    storyNameTr: storyValue(story, row, "name_tr", "story_name_tr"),
+    storyNameAlanCyrillic: storyValue(story, row, "name_alan_cyrillic", "story_name_alan_cyrillic"),
+    storyNameAlanTurkic: storyValue(story, row, "name_alan_turkic", "story_name_alan_turkic"),
+    dictionaryNameRu: dictionaryId,
+    dictionaryNameEn: dictionaryId,
+    dictionaryNameTr: dictionaryId,
+    dictionaryNameAlanCyrillic: dictionaryId,
+    dictionaryNameAlanTurkic: dictionaryId,
+    sectionNameRu: dictionaryId,
+    sectionNameEn: dictionaryId,
+    sectionNameTr: dictionaryId,
+    sectionNameAlanCyrillic: dictionaryId,
+    sectionNameAlanTurkic: dictionaryId,
+    setNameRu: setId,
+    setNameEn: setId,
+    setNameTr: setId,
+    setNameAlanCyrillic: setId,
+    setNameAlanTurkic: setId,
     legacyExample: "",
   };
   return completeModel(model, row);
@@ -163,51 +159,77 @@ export function normalizeSupabaseWordEntry(row) {
 export function normalizeLegacyWordEntry(row) {
   if (!row || typeof row !== "object") return null;
   const id = normalizeId(row.id || row.word_id);
-  const dictionaryId = normalizeId(row.dictionary_id || row.catalog_id || row.dict);
-  const sectionId = normalizeId(row.section_id || row.group_id || row.section || row.folder);
-  const setId = normalizeId(row.set_id);
+  const legacySection = normalizeId(row.section_id || row.group_id || row.section || row.folder);
+  let dictionaryId = normalizeId(row.dictionary_id || row.catalog_id || row.dict);
+  let setId = normalizeId(row.set_id || row.set);
+
+  // Starter data from releases before 13.12 used numeric section IDs. Map it
+  // into the permanent flat dictionary/set model without touching lexical text.
+  const dictionaryBySection = {
+    "1": "beginner",
+    "2": "intermediate",
+    "3": "advanced",
+    "4": "universe",
+    "5": "animals",
+    "6": "natural_materials",
+    "7": "plants",
+  };
+  if (dictionaryBySection[legacySection]) dictionaryId = dictionaryBySection[legacySection];
+  if (!setId && dictionaryId) {
+    const order = numberValue(row.global_order, row.dict_order);
+    const starts = { beginner: 1, intermediate: 882, advanced: 1199 };
+    if (starts[dictionaryId]) {
+      setId = `${dictionaryId}-${String(Math.floor((order - starts[dictionaryId]) / 30) + 1).padStart(2, "0")}`;
+    }
+  } else if (/^\d+$/.test(setId) && dictionaryId) {
+    const offsets = { universe: 0, animals: 5, natural_materials: 13, plants: 18 };
+    const ordinal = Number(setId) - (offsets[dictionaryId] || 0);
+    if (ordinal > 0) setId = `${dictionaryId}-${String(ordinal).padStart(2, "0")}`;
+  }
+
+  const storyId = normalizeId(row.story_id || row.story_type);
   const model = {
     sourceType: "legacy",
     id,
     globalOrder: numberValue(row.global_order, row.dict_order),
-    storyId: normalizeId(row.story_id || row.story_type),
+    storyId: storyId === "1" ? "roots" : storyId === "2" ? "ascent" : storyId === "3" ? "pathways" : storyId,
     dictionaryId,
-    sectionId,
+    sectionId: dictionaryId,
     setId,
     pos: text(row.pos),
     synonyms: row.synonyms,
 
-    wordAlanCyrillic: text(row.word),
-    wordAlanTurkic: "",
-    translationRu: text(row.trans || row.translation),
-    translationEn: "",
-    translationTr: "",
-    phrasesAlanCyrillic: "",
-    phrasesAlanTurkic: "",
-    phrasesRu: "",
-    phrasesEn: "",
-    phrasesTr: "",
+    wordAlanCyrillic: text(row.word_alan_cyrillic || row.word),
+    wordAlanTurkic: text(row.word_alan_turkic),
+    translationRu: text(row.translation_ru || row.trans || row.translation),
+    translationEn: text(row.translation_en),
+    translationTr: text(row.translation_tr),
+    phrasesAlanCyrillic: text(row.phrases_alan_cyrillic),
+    phrasesAlanTurkic: text(row.phrases_alan_turkic),
+    phrasesRu: text(row.phrases_ru),
+    phrasesEn: text(row.phrases_en),
+    phrasesTr: text(row.phrases_tr),
 
-    storyNameRu: text(row.story_name),
-    storyNameEn: "",
-    storyNameTr: "",
-    storyNameAlanCyrillic: "",
-    storyNameAlanTurkic: "",
-    dictionaryNameRu: text(row.dictionary_name || row.dict || dictionaryId || "Словарь"),
-    dictionaryNameEn: "",
-    dictionaryNameTr: "",
-    dictionaryNameAlanCyrillic: "",
-    dictionaryNameAlanTurkic: "",
-    sectionNameRu: text(row.section_name || row.section || row.folder || sectionId || "Раздел"),
-    sectionNameEn: "",
-    sectionNameTr: "",
-    sectionNameAlanCyrillic: "",
-    sectionNameAlanTurkic: "",
-    setNameRu: text(row.set_name || row.set),
-    setNameEn: "",
-    setNameTr: "",
-    setNameAlanCyrillic: "",
-    setNameAlanTurkic: "",
+    storyNameRu: text(row.story_name_ru || row.story_name),
+    storyNameEn: text(row.story_name_en),
+    storyNameTr: text(row.story_name_tr),
+    storyNameAlanCyrillic: text(row.story_name_alan_cyrillic),
+    storyNameAlanTurkic: text(row.story_name_alan_turkic),
+    dictionaryNameRu: dictionaryId,
+    dictionaryNameEn: dictionaryId,
+    dictionaryNameTr: dictionaryId,
+    dictionaryNameAlanCyrillic: dictionaryId,
+    dictionaryNameAlanTurkic: dictionaryId,
+    sectionNameRu: dictionaryId,
+    sectionNameEn: dictionaryId,
+    sectionNameTr: dictionaryId,
+    sectionNameAlanCyrillic: dictionaryId,
+    sectionNameAlanTurkic: dictionaryId,
+    setNameRu: setId,
+    setNameEn: setId,
+    setNameTr: setId,
+    setNameAlanCyrillic: setId,
+    setNameAlanTurkic: setId,
     legacyExample: text(row.example || row.phrases || row.phrases_ru_combined),
   };
   return completeModel(model, row);
@@ -216,56 +238,58 @@ export function normalizeLegacyWordEntry(row) {
 function normalizeCachedWordEntry(row) {
   if (!row || typeof row !== "object") return null;
   const model = {
-    sourceType: text(row.sourceType) || "v_words_app",
+    sourceType: text(row.sourceType) || "content_words",
     id: normalizeId(row.id || row.word_id),
     globalOrder: numberValue(row.globalOrder, row.global_order, row.dict_order),
     storyId: normalizeId(row.storyId || row.story_id || row.story_type),
-    dictionaryId: normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id),
-    sectionId: normalizeId(row.sectionId || row.section_id || row.group_id),
-    setId: normalizeId(row.setId || row.set_id),
+    dictionaryId: normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id || row.dict),
+    sectionId: normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id || row.dict),
+    setId: normalizeId(row.setId || row.set_id || row.set),
     pos: text(row.pos),
     synonyms: row.synonyms,
 
-    wordAlanCyrillic: text(row.wordAlanCyrillic),
-    wordAlanTurkic: text(row.wordAlanTurkic),
-    translationRu: text(row.translationRu),
-    translationEn: text(row.translationEn),
-    translationTr: text(row.translationTr),
-    phrasesAlanCyrillic: text(row.phrasesAlanCyrillic),
-    phrasesAlanTurkic: text(row.phrasesAlanTurkic),
-    phrasesRu: text(row.phrasesRu),
-    phrasesEn: text(row.phrasesEn),
-    phrasesTr: text(row.phrasesTr),
+    wordAlanCyrillic: text(row.wordAlanCyrillic || row.word_alan_cyrillic || row.word),
+    wordAlanTurkic: text(row.wordAlanTurkic || row.word_alan_turkic),
+    translationRu: text(row.translationRu || row.translation_ru || row.trans),
+    translationEn: text(row.translationEn || row.translation_en),
+    translationTr: text(row.translationTr || row.translation_tr),
+    phrasesAlanCyrillic: text(row.phrasesAlanCyrillic || row.phrases_alan_cyrillic),
+    phrasesAlanTurkic: text(row.phrasesAlanTurkic || row.phrases_alan_turkic),
+    phrasesRu: text(row.phrasesRu || row.phrases_ru),
+    phrasesEn: text(row.phrasesEn || row.phrases_en),
+    phrasesTr: text(row.phrasesTr || row.phrases_tr),
 
-    storyNameRu: text(row.storyNameRu),
-    storyNameEn: text(row.storyNameEn),
-    storyNameTr: text(row.storyNameTr),
-    storyNameAlanCyrillic: text(row.storyNameAlanCyrillic),
-    storyNameAlanTurkic: text(row.storyNameAlanTurkic),
-    dictionaryNameRu: text(row.dictionaryNameRu),
-    dictionaryNameEn: text(row.dictionaryNameEn),
-    dictionaryNameTr: text(row.dictionaryNameTr),
-    dictionaryNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic),
-    dictionaryNameAlanTurkic: text(row.dictionaryNameAlanTurkic),
-    sectionNameRu: text(row.sectionNameRu),
-    sectionNameEn: text(row.sectionNameEn),
-    sectionNameTr: text(row.sectionNameTr),
-    sectionNameAlanCyrillic: text(row.sectionNameAlanCyrillic),
-    sectionNameAlanTurkic: text(row.sectionNameAlanTurkic),
-    setNameRu: text(row.setNameRu),
-    setNameEn: text(row.setNameEn),
-    setNameTr: text(row.setNameTr),
-    setNameAlanCyrillic: text(row.setNameAlanCyrillic),
-    setNameAlanTurkic: text(row.setNameAlanTurkic),
-    legacyExample: text(row.legacyExample),
+    storyNameRu: text(row.storyNameRu || row.story_name_ru || row.story_name),
+    storyNameEn: text(row.storyNameEn || row.story_name_en),
+    storyNameTr: text(row.storyNameTr || row.story_name_tr),
+    storyNameAlanCyrillic: text(row.storyNameAlanCyrillic || row.story_name_alan_cyrillic),
+    storyNameAlanTurkic: text(row.storyNameAlanTurkic || row.story_name_alan_turkic),
+    dictionaryNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_id),
+    dictionaryNameEn: text(row.dictionaryNameEn || row.dictionary_name_en || row.dictionary_id),
+    dictionaryNameTr: text(row.dictionaryNameTr || row.dictionary_name_tr || row.dictionary_id),
+    dictionaryNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic || row.dictionary_name_alan_cyrillic || row.dictionary_id),
+    dictionaryNameAlanTurkic: text(row.dictionaryNameAlanTurkic || row.dictionary_name_alan_turkic || row.dictionary_id),
+    sectionNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_id),
+    sectionNameEn: text(row.dictionaryNameEn || row.dictionary_name_en || row.dictionary_id),
+    sectionNameTr: text(row.dictionaryNameTr || row.dictionary_name_tr || row.dictionary_id),
+    sectionNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic || row.dictionary_name_alan_cyrillic || row.dictionary_id),
+    sectionNameAlanTurkic: text(row.dictionaryNameAlanTurkic || row.dictionary_name_alan_turkic || row.dictionary_id),
+    setNameRu: text(row.setNameRu || row.set_name_ru || row.set_id),
+    setNameEn: text(row.setNameEn || row.set_name_en || row.set_id),
+    setNameTr: text(row.setNameTr || row.set_name_tr || row.set_id),
+    setNameAlanCyrillic: text(row.setNameAlanCyrillic || row.set_name_alan_cyrillic || row.set_id),
+    setNameAlanTurkic: text(row.setNameAlanTurkic || row.set_name_alan_turkic || row.set_id),
+    legacyExample: text(row.legacyExample || row.example),
   };
   return completeModel(model, row);
 }
 
-export function normalizeWordEntry(row, { source = "auto" } = {}) {
-  if (source === "supabase") return normalizeSupabaseWordEntry(row);
+export function normalizeWordEntry(row, { source = "auto", story = null } = {}) {
+  if (source === "supabase") return normalizeSupabaseWordEntry(row, story);
   if (source === "legacy") return normalizeLegacyWordEntry(row);
   if (row?.wordAlanCyrillic !== undefined || row?.translationRu !== undefined) return normalizeCachedWordEntry(row);
-  if (row?.word_alan_cyrillic !== undefined || row?.translation_ru !== undefined) return normalizeSupabaseWordEntry(row);
+  if (row?.word_alan_cyrillic !== undefined && row?.dictionary_id !== undefined && row?.set_id !== undefined) {
+    return normalizeSupabaseWordEntry(row, story);
+  }
   return normalizeLegacyWordEntry(row);
 }
