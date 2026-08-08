@@ -1,12 +1,12 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js?v=13.9.0";
+} from "../../shared/progress/session-builders.js?v=13.13";
 import { testState } from "./state.js?v=13.9.0";
 import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 
@@ -152,9 +152,9 @@ export function submitAnswer(answer) {
     word_id: item.id,
     source: WORD_SOURCES.TEST,
     result: isCorrect ? WORD_RESULTS.CORRECT : WORD_RESULTS.WRONG,
-    dictionary_id: item.dict,
-    section_id: item.section,
-    set_id: String(item.set),
+    dictionary_id: item.dictionary_id,
+    section_id: item.section_id,
+    set_id: String(item.set_id),
     direction: directionFromMode(testState.mode),
   });
   testState.index += 1;
