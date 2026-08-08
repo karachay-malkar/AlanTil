@@ -1,0 +1,225 @@
+{
+  "completed_at_utc": "2026-08-08T18:05:32.401264+00:00",
+  "result": "FAILED",
+  "project_ref": "pybrzgedqjmosbmilcea",
+  "word_count": 2355,
+  "word_text_rows": 11775,
+  "story_count": 3,
+  "dictionary_count": 3,
+  "section_count": 7,
+  "set_count": 25,
+  "structure_hash": "4b05a5f33aaf807efa35dd3b00185951",
+  "verified_field_mismatches": 0,
+  "soft_hyphen_target_rows_remaining": 0,
+  "source_corrected_rows": 94,
+  "unique_source_matches": 67,
+  "unresolved_source_rows": [
+    {
+      "legacy_id": "A308",
+      "word": "тюйюл / тюл",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A347",
+      "word": "къарындаш",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A362",
+      "word": "къалай",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A402",
+      "word": "жашау",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A556",
+      "word": "къачан",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A596",
+      "word": "къара",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A674",
+      "word": "сау",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A707",
+      "word": "айтханлай",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A728",
+      "word": "кючлю",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A807",
+      "word": "къоркъаргъа",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "A825",
+      "word": "чабыргъа",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C7",
+      "word": "абындыргъа",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C31",
+      "word": "мадарсыз",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C56",
+      "word": "къымыжыргъа",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C88",
+      "word": "жигерсиз",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C121",
+      "word": "айыпсыз",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C147",
+      "word": "къутсуз",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C181",
+      "word": "эрипсиз",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "C222",
+      "word": "теклик",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D18",
+      "word": "ана",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D47",
+      "word": "ата",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D104",
+      "word": "ит",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D197",
+      "word": "жауун",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D259",
+      "word": "гыржын",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D507",
+      "word": "окъуу",
+      "candidate_word_ids": []
+    },
+    {
+      "legacy_id": "D538",
+      "word": "кюн",
+      "candidate_word_ids": [
+        "0023",
+        "1783"
+      ]
+    },
+    {
+      "legacy_id": "D569",
+      "word": "эрттен",
+      "candidate_word_ids": []
+    }
+  ],
+  "export_rc": 0,
+  "export_error": "",
+  "export_rows": 2355,
+  "raw_json_bytes": 3254046,
+  "raw_json_sha256": "beea94f2cee4df20de864035b98bb3398cbfd3030d68ecbf360065c79a3a1e3d",
+  "gzip_bytes": 332887,
+  "gzip_sha256": "4b1c671c2c7d4550e83b2bec6ac9a625b7da747b3f3edbc883fb6a1263ab210e",
+  "parts": [
+    {
+      "file": "v_words_01.b64",
+      "chars": 36988,
+      "sha256": "5c0ecf0c26de8532c22117ec4967c8f17ce0598d25b8be7a29ce20f85f378b53"
+    },
+    {
+      "file": "v_words_02.b64",
+      "chars": 36988,
+      "sha256": "f8fb4132f2c0d0903e69ee526c6aab264573aa9b8a5ef9bf340680bbe48911fa"
+    },
+    {
+      "file": "v_words_03.b64",
+      "chars": 36988,
+      "sha256": "73f1506c5334f8a7ec3b1c40ca0782ed84116f9ad36f75c2bba6a5799c8664c6"
+    },
+    {
+      "file": "v_words_04.b64",
+      "chars": 36988,
+      "sha256": "06ee32065065c6527e35ef2179e9477de274f4e3bf0fc5cae91238252b87f77b"
+    },
+    {
+      "file": "v_words_05.b64",
+      "chars": 36988,
+      "sha256": "c5048c245d1ae5cd693a14d113618f70dba0a5d8c5257fd21e46cf6a9f6015aa"
+    },
+    {
+      "file": "v_words_06.b64",
+      "chars": 36988,
+      "sha256": "caf500aaa99e53ae48c4b76e5fdd319a79f9edde10b96abbf0476a5d19702b2e"
+    },
+    {
+      "file": "v_words_07.b64",
+      "chars": 36988,
+      "sha256": "6501798171114bff2ad0adc5e238726cdc95709a526e483f51eb352214b44b84"
+    },
+    {
+      "file": "v_words_08.b64",
+      "chars": 36988,
+      "sha256": "499df3bb6747a52cac0a4b5ce72104a704679d93961dcbdccc319eb7cb8c3c92"
+    },
+    {
+      "file": "v_words_09.b64",
+      "chars": 36988,
+      "sha256": "2ed141869aa0c9ae94dd02dbba8a06c4d8698a6ae5d996b152e50be234f7ff3a"
+    },
+    {
+      "file": "v_words_10.b64",
+      "chars": 36988,
+      "sha256": "c4f9b80f51c3ab35cf45b4830837a2576f01f4b30600e51437aab0059fad82af"
+    },
+    {
+      "file": "v_words_11.b64",
+      "chars": 36988,
+      "sha256": "1811a80a44d074ebc1dce6257f5a027e18cbdbd40fae10064b6ae360cd311102"
+    },
+    {
+      "file": "v_words_12.b64",
+      "chars": 36984,
+      "sha256": "0c3277ca78953a5a14112ba147cd3f908d5b0e1aea68aa3758c1585a812cab19"
+    }
+  ]
+}
