@@ -1,0 +1,109 @@
+name: Ops DB URL Final Export 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-export-final-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Export current live view and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          mkdir -p ops_word_sync_dburl_20260808/export_final
+          python - <<'PY'
+          import json,pathlib
+          diffs=json.load(open('ops_final_bundle/word_corrections_diff.json',encoding='utf-8'))
+          def q(v): return "'"+str(v).replace("'","''")+"'"
+          vals=[f"({q(d['word_id'])},{q(d['language_code'])},{q(d['script_code'])},{q(d['column'])},{q(d['corrected'])})" for d in diffs]
+          sql="""WITH expected(word_id,language_code,script_code,column_name,expected_value) AS (VALUES\n%s\n), actual AS (SELECT e.*, CASE e.column_name WHEN 'word_text' THEN t.word_text WHEN 'translation_text' THEN t.translation_text WHEN 'phrases_text' THEN t.phrases_text END actual_value FROM expected e LEFT JOIN public.content_word_texts t ON t.word_id=e.word_id AND t.language_code=e.language_code AND t.script_code=e.script_code) SELECT count(*) FROM actual WHERE actual_value IS DISTINCT FROM expected_value;\n""" % ',\n'.join(vals)
+          pathlib.Path('/tmp/validate141.sql').write_text(sql,encoding='utf-8')
+          hidden=sorted({d['word_id'] for d in diffs if 'скрыт' in d.get('legacy_comment','').lower()})
+          pathlib.Path('/tmp/hidden_ids.txt').write_text(','.join(q(x) for x in hidden),encoding='utf-8')
+          PY
+          FIELD_MISMATCHES=$(psql "$SUPABASE_DB_URL" -X -Atf /tmp/validate141.sql)
+          HIDDEN_IDS=$(cat /tmp/hidden_ids.txt)
+          SOFT_HYPHENS=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_word_texts where word_id in ($HIDDEN_IDS) and (position(chr(173) in coalesce(word_text,''))>0 or position(chr(173) in coalesce(translation_text,''))>0 or position(chr(173) in coalesce(phrases_text,''))>0)")
+          WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_words")
+          TEXT_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_word_texts")
+          STORY_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_stories")
+          DICTIONARY_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_dictionaries")
+          SECTION_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_sections")
+          SET_COUNT=$(psql "$SUPABASE_DB_URL" -X -Atc "select count(*) from public.content_sets")
+          STRUCTURE_HASH=$(psql "$SUPABASE_DB_URL" -X -Atc "select md5(string_agg(concat_ws('|',word_id,global_order::text,story_id::text,dictionary_id::text,section_id::text,coalesce(set_id::text,'')), E'\\n' order by global_order,word_id)) from public.content_words")
+          psql "$SUPABASE_DB_URL" -X -q -Atc "select coalesce(json_agg(v order by global_order,word_id),'[]'::json) from public.v_words_app v" > /tmp/v_words_app.json
+          export FIELD_MISMATCHES SOFT_HYPHENS WORD_COUNT TEXT_COUNT STORY_COUNT DICTIONARY_COUNT SECTION_COUNT SET_COUNT STRUCTURE_HASH
+          python - <<'PY'
+          import json,os,pathlib,hashlib,gzip,base64,math,datetime
+          out=pathlib.Path('ops_word_sync_dburl_20260808/export_final')
+          rows=json.load(open('/tmp/v_words_app.json',encoding='utf-8'))
+          source=json.load(open('ops_source/corrected_rows_11_07_26.json',encoding='utf-8'))
+          unresolved=[]
+          for s in source:
+              c=[r for r in rows if r.get('word_alan_cyrillic')==s['word'] and r.get('translation_ru')==s['trans']]
+              if len(c)!=1:
+                  unresolved.append({'legacy_id':s['legacy_id'],'word':s['word'],'candidate_word_ids':[r.get('word_id') for r in c]})
+          field_mismatches=int(os.environ['FIELD_MISMATCHES'])
+          soft=int(os.environ['SOFT_HYPHENS'])
+          structure_hash=os.environ['STRUCTURE_HASH']
+          passed=(len(rows)==2355 and int(os.environ['WORD_COUNT'])==2355 and field_mismatches==0 and soft==0 and len(unresolved)==0 and structure_hash=='4b05a5f33aaf807efa35dd3b00185951')
+          canonical=json.dumps(rows,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+          gz=gzip.compress(canonical,compresslevel=9)
+          b64=base64.b64encode(gz).decode('ascii')
+          part_count=12
+          chunk=math.ceil(len(b64)/part_count)
+          parts=[]
+          for i in range(part_count):
+              piece=b64[i*chunk:(i+1)*chunk]
+              if not piece: continue
+              name=f'v_words_{i+1:02d}.b64'
+              (out/name).write_text(piece,encoding='ascii')
+              parts.append({'file':name,'chars':len(piece),'sha256':hashlib.sha256(piece.encode()).hexdigest()})
+          status={
+            'completed_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'result':'PASSED' if passed else 'FAILED',
+            'project_ref':'pybrzgedqjmosbmilcea',
+            'word_count':int(os.environ['WORD_COUNT']),
+            'word_text_rows':int(os.environ['TEXT_COUNT']),
+            'story_count':int(os.environ['STORY_COUNT']),
+            'dictionary_count':int(os.environ['DICTIONARY_COUNT']),
+            'section_count':int(os.environ['SECTION_COUNT']),
+            'set_count':int(os.environ['SET_COUNT']),
+            'structure_hash':structure_hash,
+            'structure_hash_expected':'4b05a5f33aaf807efa35dd3b00185951',
+            'verified_field_mismatches':field_mismatches,
+            'soft_hyphen_target_rows_remaining':soft,
+            'source_corrected_rows':len(source),
+            'unique_source_matches':len(source)-len(unresolved),
+            'unresolved_source_rows':unresolved,
+            'export_rows':len(rows),
+            'raw_json_bytes':len(canonical),
+            'raw_json_sha256':hashlib.sha256(canonical).hexdigest(),
+            'gzip_bytes':len(gz),
+            'gzip_sha256':hashlib.sha256(gz).hexdigest(),
+            'base64_chars':len(b64),
+            'parts':parts
+          }
+          (out/'manifest.json').write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding='utf-8')
+          if not passed: raise SystemExit('Final export validation failed')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_word_sync_dburl_20260808/export_final
+          git commit -m "ops: export validated live AlanTil words"
+          git push origin HEAD:ops/word-sync-2026-08-08
