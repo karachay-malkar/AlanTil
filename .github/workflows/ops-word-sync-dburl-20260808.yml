@@ -1,0 +1,172 @@
+name: Ops Word Sync via DB URL 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-word-sync-dburl-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+
+      - name: Verify secret, connection, and current database state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${SUPABASE_DB_URL:-}"
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y postgresql-client
+          fi
+          export PGCONNECT_TIMEOUT=20
+          mkdir -p ops_word_sync_dburl_20260808/result
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select 1" >/dev/null
+          psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -Atc "COPY (SELECT row_to_json(x)::text FROM (SELECT word_id,language_code,script_code,word_text,translation_text,phrases_text FROM public.content_word_texts ORDER BY word_id,language_code,script_code) x) TO STDOUT" > ops_word_sync_dburl_20260808/result/pre_texts.jsonl
+          PRE_WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_words")
+          PRE_STRUCTURE_HASH=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select md5(string_agg(concat_ws('|',word_id,global_order::text,story_id::text,dictionary_id::text,section_id::text,coalesce(set_id::text,'')), E'\\n' order by global_order,word_id)) from public.content_words")
+          export PRE_WORD_COUNT PRE_STRUCTURE_HASH
+          python - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path('ops_word_sync_dburl_20260808/result')
+          if int(os.environ['PRE_WORD_COUNT']) != 2355:
+              raise SystemExit(f"Expected 2355 words, got {os.environ['PRE_WORD_COUNT']}")
+          diffs=json.load(open('ops_final_bundle/word_corrections_diff.json',encoding='utf-8'))
+          texts={}
+          for line in (root/'pre_texts.jsonl').read_text(encoding='utf-8').splitlines():
+              if not line.strip(): continue
+              r=json.loads(line)
+              texts[(r['word_id'],r['language_code'],r['script_code'])]=r
+          drift=[]
+          for d in diffs:
+              key=(d['word_id'],d['language_code'],d['script_code'])
+              row=texts.get(key)
+              actual=None if row is None else row.get(d['column'])
+              if actual != d['current']:
+                  drift.append({'word_id':d['word_id'],'language_code':d['language_code'],'script_code':d['script_code'],'column':d['column'],'expected_current':d['current'],'actual':actual})
+          check={
+              'word_count':int(os.environ['PRE_WORD_COUNT']),
+              'structure_hash':os.environ['PRE_STRUCTURE_HASH'],
+              'planned_field_changes':len(diffs),
+              'pre_state_guard_mismatches':len(drift),
+              'result':'PASSED' if not drift else 'FAILED'
+          }
+          (root/'precheck.json').write_text(json.dumps(check,ensure_ascii=False,indent=2),encoding='utf-8')
+          if drift:
+              (root/'precheck_drift.json').write_text(json.dumps(drift,ensure_ascii=False,indent=2),encoding='utf-8')
+              raise SystemExit(f'Live database drifted in {len(drift)} guarded fields; no write performed')
+          PY
+          rm ops_word_sync_dburl_20260808/result/pre_texts.jsonl
+          echo "$PRE_STRUCTURE_HASH" > ops_word_sync_dburl_20260808/result/pre_structure_hash.txt
+
+      - name: Apply all 141 verified field corrections atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PGCONNECT_TIMEOUT=20
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f ops_final_bundle/alantil_word_corrections_2026-08-08.sql > ops_word_sync_dburl_20260808/result/transaction.log
+
+      - name: Independent post-write validation and full export
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PGCONNECT_TIMEOUT=20
+          psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -Atc "COPY (SELECT row_to_json(x)::text FROM (SELECT word_id,language_code,script_code,word_text,translation_text,phrases_text FROM public.content_word_texts ORDER BY word_id,language_code,script_code) x) TO STDOUT" > ops_word_sync_dburl_20260808/result/post_texts.jsonl
+          psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -Atc "COPY (SELECT row_to_json(v)::text FROM (SELECT * FROM public.v_words_app ORDER BY global_order,word_id) v) TO STDOUT" > ops_word_sync_dburl_20260808/result/full_v_words_app.jsonl
+          POST_WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_words")
+          POST_TEXT_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_word_texts")
+          POST_STRUCTURE_HASH=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select md5(string_agg(concat_ws('|',word_id,global_order::text,story_id::text,dictionary_id::text,section_id::text,coalesce(set_id::text,'')), E'\\n' order by global_order,word_id)) from public.content_words")
+          STORY_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_stories")
+          DICTIONARY_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_dictionaries")
+          SECTION_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_sections")
+          SET_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_sets")
+          export POST_WORD_COUNT POST_TEXT_COUNT POST_STRUCTURE_HASH STORY_COUNT DICTIONARY_COUNT SECTION_COUNT SET_COUNT
+          python - <<'PY'
+          import json, os, hashlib, pathlib, datetime
+          root=pathlib.Path('ops_word_sync_dburl_20260808/result')
+          diffs=json.load(open('ops_final_bundle/word_corrections_diff.json',encoding='utf-8'))
+          source=json.load(open('ops_source/corrected_rows_11_07_26.json',encoding='utf-8'))
+          texts={}
+          for line in (root/'post_texts.jsonl').read_text(encoding='utf-8').splitlines():
+              if line.strip():
+                  r=json.loads(line); texts[(r['word_id'],r['language_code'],r['script_code'])]=r
+          remaining=[]
+          for d in diffs:
+              row=texts.get((d['word_id'],d['language_code'],d['script_code']))
+              actual=None if row is None else row.get(d['column'])
+              if actual != d['corrected']:
+                  remaining.append({'word_id':d['word_id'],'language_code':d['language_code'],'script_code':d['script_code'],'column':d['column'],'expected':d['corrected'],'actual':actual})
+          rows=[json.loads(x) for x in (root/'full_v_words_app.jsonl').read_text(encoding='utf-8').splitlines() if x.strip()]
+          if len(rows)!=2355: raise SystemExit(f'Export has {len(rows)} rows, expected 2355')
+          pre_hash=(root/'pre_structure_hash.txt').read_text().strip()
+          if os.environ['POST_STRUCTURE_HASH'] != pre_hash: raise SystemExit('Structure hash changed')
+          if remaining:
+              (root/'post_mismatches.json').write_text(json.dumps(remaining,ensure_ascii=False,indent=2),encoding='utf-8')
+              raise SystemExit(f'{len(remaining)} corrected fields do not match expected values')
+          unresolved=[]
+          for s in source:
+              candidates=[r for r in rows if r.get('word_alan_cyrillic')==s['word'] and r.get('translation_ru')==s['trans']]
+              if len(candidates)!=1:
+                  unresolved.append({'legacy_id':s['legacy_id'],'word':s['word'],'translation':s['trans'],'candidate_word_ids':[r.get('word_id') for r in candidates]})
+          if unresolved:
+              (root/'target_mapping_failures.json').write_text(json.dumps(unresolved,ensure_ascii=False,indent=2),encoding='utf-8')
+              raise SystemExit(f'{len(unresolved)} of 94 corrected source rows do not resolve uniquely')
+          hidden_ids={d['word_id'] for d in diffs if 'скрыт' in d.get('legacy_comment','').lower()}
+          hidden_remaining=0
+          for (wid,lang,script),r in texts.items():
+              if wid in hidden_ids and any('\u00ad' in (r.get(k) or '') for k in ('word_text','translation_text','phrases_text')):
+                  hidden_remaining += 1
+          if hidden_remaining: raise SystemExit(f'Soft hyphens remain in {hidden_remaining} corrected target rows')
+          raw=json.dumps(rows,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+          export_sha=hashlib.sha256(raw).hexdigest()
+          chunks=[]; chunk_dir=root/'chunks'; chunk_dir.mkdir(exist_ok=True)
+          for i in range(0,len(rows),200):
+              part=rows[i:i+200]; name=f'words_{i//200+1:02d}.json'
+              data=json.dumps(part,ensure_ascii=False,indent=2)
+              (chunk_dir/name).write_text(data,encoding='utf-8')
+              chunks.append({'file':name,'rows':len(part),'sha256':hashlib.sha256(data.encode()).hexdigest()})
+          status={
+              'completed_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'project_ref':'pybrzgedqjmosbmilcea',
+              'source_corrected_rows':len(source),
+              'verified_field_changes':len(diffs),
+              'post_field_mismatches':0,
+              'unique_source_matches':94,
+              'word_count':int(os.environ['POST_WORD_COUNT']),
+              'word_text_rows':int(os.environ['POST_TEXT_COUNT']),
+              'structure_hash_before':pre_hash,
+              'structure_hash_after':os.environ['POST_STRUCTURE_HASH'],
+              'story_count':int(os.environ['STORY_COUNT']),
+              'dictionary_count':int(os.environ['DICTIONARY_COUNT']),
+              'section_count':int(os.environ['SECTION_COUNT']),
+              'set_count':int(os.environ['SET_COUNT']),
+              'soft_hyphen_target_rows_remaining':0,
+              'export_rows':len(rows),
+              'export_sha256':export_sha,
+              'chunks':chunks,
+              'result':'PASSED'
+          }
+          (root/'status.json').write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding='utf-8')
+          (root/'manifest.json').write_text(json.dumps({'rows':len(rows),'sha256':export_sha,'chunks':chunks},ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          rm ops_word_sync_dburl_20260808/result/post_texts.jsonl ops_word_sync_dburl_20260808/result/full_v_words_app.jsonl
+
+      - name: Commit verified result snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_word_sync_dburl_20260808/result
+          git commit -m "ops: apply and verify 94 manual word corrections"
+          git push origin HEAD:ops/word-sync-2026-08-08
