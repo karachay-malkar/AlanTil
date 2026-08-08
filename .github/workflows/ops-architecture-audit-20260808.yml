@@ -1,0 +1,106 @@
+name: Ops Architecture Audit 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-architecture-audit-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Inspect live architecture read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          mkdir -p ops_architecture_audit_20260808
+          psql "$SUPABASE_DB_URL" -X -q -At <<'SQL' > ops_architecture_audit_20260808/audit.json
+          with
+          cols as (
+            select table_name, json_agg(json_build_object('column',column_name,'type',data_type,'nullable',is_nullable,'default',column_default) order by ordinal_position) columns
+            from information_schema.columns
+            where table_schema='public' and table_name in ('content_words','content_word_texts','content_sets','content_stories','content_dictionaries','content_sections','user_settings','content_words_ru','v_words_app')
+            group by table_name
+          ),
+          set_rows as (
+            select coalesce(json_agg(to_jsonb(s) order by s.set_id),'[]'::json) value from public.content_sets s
+          ),
+          set_counts as (
+            select coalesce(json_agg(json_build_object('set_id',x.set_id,'word_count',x.word_count) order by x.set_id),'[]'::json) value
+            from (select set_id, count(*) word_count from public.content_words where set_id is not null group by set_id) x
+          ),
+          section_plan as (
+            select coalesce(json_agg(json_build_object(
+              'story_id',story_id,'dictionary_id',dictionary_id,'section_id',section_id,
+              'total_words',total_words,'dynamic_words',dynamic_words,'named_words',named_words,
+              'named_set_count',named_set_count,'current_dynamic_20',ceil(dynamic_words/20.0)::int,
+              'current_dynamic_40',ceil(dynamic_words/40.0)::int,'proposed_dynamic_30',ceil(dynamic_words/30.0)::int,
+              'proposed_last_dynamic_size',case when dynamic_words=0 then 0 when dynamic_words%30=0 then 30 else dynamic_words%30 end
+            ) order by story_id,dictionary_id,section_id),'[]'::json) value
+            from (
+              select story_id,dictionary_id,section_id,count(*) total_words,
+                count(*) filter(where set_id is null) dynamic_words,
+                count(*) filter(where set_id is not null) named_words,
+                count(distinct set_id) filter(where set_id is not null) named_set_count
+              from public.content_words group by story_id,dictionary_id,section_id
+            ) q
+          ),
+          totals as (
+            select json_build_object(
+              'content_words',count(*),
+              'dynamic_words',count(*) filter(where set_id is null),
+              'named_words',count(*) filter(where set_id is not null),
+              'distinct_named_sets',count(distinct set_id) filter(where set_id is not null)
+            ) value from public.content_words
+          ),
+          views as (
+            select json_object_agg(c.relname, pg_get_viewdef(c.oid,true)) value
+            from pg_class c join pg_namespace n on n.oid=c.relnamespace
+            where n.nspname='public' and c.relkind in ('v','m') and c.relname in ('v_words_app','content_words_ru')
+          ),
+          constraints as (
+            select coalesce(json_agg(json_build_object('table',c.relname,'name',con.conname,'type',con.contype,'definition',pg_get_constraintdef(con.oid)) order by c.relname,con.conname),'[]'::json) value
+            from pg_constraint con join pg_class c on c.oid=con.conrelid join pg_namespace n on n.oid=c.relnamespace
+            where n.nspname='public' and c.relname in ('content_words','content_word_texts','content_sets','user_settings')
+          ),
+          functions as (
+            select coalesce(json_agg(json_build_object('schema',n.nspname,'name',p.proname,'definition',pg_get_functiondef(p.oid)) order by p.proname),'[]'::json) value
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and (pg_get_functiondef(p.oid) ilike '%station_size%' or pg_get_functiondef(p.oid) ilike '%content_sets%' or pg_get_functiondef(p.oid) ilike '%set_id%')
+          )
+          select json_build_object(
+            'generated_at',now(),
+            'columns',(select json_object_agg(table_name,columns) from cols),
+            'totals',(select value from totals),
+            'content_sets',(select value from set_rows),
+            'named_set_word_counts',(select value from set_counts),
+            'section_station_plan',(select value from section_plan),
+            'views',(select value from views),
+            'constraints',(select value from constraints),
+            'functions_referencing_sets_or_station_size',(select value from functions)
+          );
+          SQL
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('ops_architecture_audit_20260808/audit.json')
+          data=json.loads(p.read_text(encoding='utf-8'))
+          p.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin ops/word-sync-2026-08-08
+          git add ops_architecture_audit_20260808/audit.json
+          git commit -m "ops: record current word architecture audit" || exit 0
+          git push origin HEAD:ops/word-sync-2026-08-08
