@@ -1,0 +1,37 @@
+{
+  "openapi": 401,
+  "content_words_ru": {
+    "requests": [
+      {
+        "offset": 0,
+        "status": 200
+      },
+      {
+        "offset": 1000,
+        "status": 200
+      },
+      {
+        "offset": 2000,
+        "status": 200
+      }
+    ],
+    "rows": 2355
+  },
+  "v_words_app": {
+    "requests": [
+      {
+        "offset": 0,
+        "status": 200
+      },
+      {
+        "offset": 1000,
+        "status": 200
+      },
+      {
+        "offset": 2000,
+        "status": 200
+      }
+    ],
+    "rows": 2355
+  }
+}
