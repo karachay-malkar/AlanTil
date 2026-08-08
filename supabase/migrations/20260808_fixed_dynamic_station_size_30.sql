@@ -5,6 +5,9 @@
 
 begin;
 
+alter table public.user_settings
+  drop constraint if exists user_settings_station_size_check;
+
 update public.user_settings
 set station_size = 30,
     updated_at = now()
@@ -12,9 +15,6 @@ where station_size is distinct from 30;
 
 alter table public.user_settings
   alter column station_size set default 30;
-
-alter table public.user_settings
-  drop constraint if exists user_settings_station_size_check;
 
 alter table public.user_settings
   add constraint user_settings_station_size_check
