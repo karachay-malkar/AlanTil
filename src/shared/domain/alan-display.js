@@ -59,20 +59,8 @@ function localizedValue(entry, language, keys) {
   return text(entry?.[keys.russian]);
 }
 
-const STRUCTURE_TERMS = Object.freeze({
-  story: Object.freeze({ ru: "Маршрут", en: "Route", tr: "Yol" }),
-  dictionary: Object.freeze({ ru: "Словарь", en: "Dictionary", tr: "Sözlük" }),
-  section: Object.freeze({ ru: "Раздел", en: "Section", tr: "Bölüm" }),
-  set: Object.freeze({ ru: "Набор слов", en: "Word set", tr: "Kelime seti" }),
-});
-
-function displayedStructureName(entry, keys, idKeys, kind, settings) {
-  const selected = displaySettings(settings);
-  const localized = localizedValue(entry, selected.interfaceLanguage, keys);
-  if (localized) return localized;
-  const id = idKeys.map((key) => text(entry?.[key])).find(Boolean) || "";
-  if (!id) return "";
-  return `${STRUCTURE_TERMS[kind][selected.interfaceLanguage]} ${id}`;
+function displayedStructureName(entry, keys, settings) {
+  return localizedValue(entry, displaySettings(settings).interfaceLanguage, keys);
 }
 
 export function getDisplayedStoryName(entry, settings) {
@@ -80,7 +68,7 @@ export function getDisplayedStoryName(entry, settings) {
     russian: "storyNameRu",
     english: "storyNameEn",
     turkish: "storyNameTr",
-  }, ["storyId", "story_id"], "story", settings);
+  }, settings);
 }
 
 export function getDisplayedDictionaryName(entry, settings) {
@@ -88,7 +76,7 @@ export function getDisplayedDictionaryName(entry, settings) {
     russian: "dictionaryNameRu",
     english: "dictionaryNameEn",
     turkish: "dictionaryNameTr",
-  }, ["dictionaryId", "dictionary_id"], "dictionary", settings);
+  }, settings);
 }
 
 export function getDisplayedSectionName(entry, settings) {
@@ -96,7 +84,7 @@ export function getDisplayedSectionName(entry, settings) {
     russian: "sectionNameRu",
     english: "sectionNameEn",
     turkish: "sectionNameTr",
-  }, ["sectionId", "section_id"], "section", settings);
+  }, settings);
 }
 
 export function getDisplayedSetName(entry, settings) {
@@ -104,7 +92,15 @@ export function getDisplayedSetName(entry, settings) {
     russian: "setNameRu",
     english: "setNameEn",
     turkish: "setNameTr",
-  }, ["setId", "set_id"], "set", settings);
+  }, settings);
+}
+
+export function getDisplayedStoryIntro(entry, settings) {
+  return displayedStructureName(entry, {
+    russian: "storyIntroRu",
+    english: "storyIntroEn",
+    turkish: "storyIntroTr",
+  }, settings);
 }
 
 export function getDisplayedTranslation(entry, settings) {
@@ -141,20 +137,20 @@ export function getDisplayedWordEntry(entry, settings) {
   const dictionaryName = getDisplayedDictionaryName(entry, settings);
   const sectionName = getDisplayedSectionName(entry, settings);
   const setName = getDisplayedSetName(entry, settings);
+  const storyIntro = getDisplayedStoryIntro(entry, settings);
   return {
     ...entry,
     word: getDisplayedAlanWord(entry, settings),
     trans: getDisplayedTranslation(entry, settings),
     example: getDisplayedExample(entry, settings),
     story_name: storyName,
+    story_intro: storyIntro,
     dictionary_name: dictionaryName,
     section_name: sectionName,
     set_name: setName,
-    // Legacy aliases are still consumed by a few menus. Keep them in the
-    // selected language, or use a neutral stable id — never another language.
-    dict: dictionaryName || text(entry.dictionaryId || entry.dictionary_id),
-    section: sectionName || text(entry.sectionId || entry.section_id),
-    set: setName || text(entry.setId || entry.set_id),
+    dict: dictionaryName,
+    section: sectionName,
+    set: setName,
   };
 }
 
