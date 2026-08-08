@@ -41,3 +41,12 @@ test("supported interface languages survive reload and unsupported values fall b
   settingsStore.setUserSettings({ interface_language_code: "tu" }, { queue: false });
   assert.equal(settingsStore.reloadUserSettings().interface_language_code, "tr");
 });
+
+test("dynamic station size is fixed at 30 for new and legacy settings", () => {
+  for (const value of [20, 30, 40, null, undefined]) {
+    const saved = settingsStore.setUserSettings({ station_size: value }, { queue: false });
+    assert.equal(saved.station_size, 30);
+    assert.equal(settingsStore.getStationSize(), 30);
+    assert.equal(settingsStore.reloadUserSettings().station_size, 30);
+  }
+});
