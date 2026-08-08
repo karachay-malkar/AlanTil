@@ -1,4 +1,4 @@
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.9.0";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.12";
 import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.9.0";
 
@@ -9,7 +9,7 @@ export const learnState = {
   currentScreen: "catalog",
   currentDict: "",
   currentSection: "",
-  currentSet: 1,
+  currentSet: "",
   currentStudyMode: "kb",
   menuHidden: new Set(),
   mainQueue: [],
@@ -44,17 +44,7 @@ function toIdSet(values) {
 
 export function getHiddenSet(dict, section, setNumber) {
   const map = readScopedJson(HIDDEN_KEY, {});
-  const direct = toIdSet(map[keyOf(dict, section, setNumber)]);
-  if (!String(setNumber || "").startsWith("dynamic-section-")) return direct;
-
-  // Dynamic stations are only a view over the section. Combine historic
-  // station selections so changing 20 ↔ 40 words never loses hidden words.
-  const prefix = `${String(dict || "")}:${String(section || "")}:`;
-  Object.entries(map).forEach(([key, values]) => {
-    if (!key.startsWith(prefix)) return;
-    toIdSet(values).forEach((wordId) => direct.add(wordId));
-  });
-  return direct;
+  return toIdSet(map[keyOf(dict, section, setNumber)]);
 }
 
 export function setHiddenSet(dict, section, setNumber, ids) {
@@ -70,7 +60,7 @@ export function setHiddenSet(dict, section, setNumber, ids) {
     if (before.has(wordId) === after.has(wordId)) return;
     enqueueProgress("hidden_word", {
       dictionary_id: String(dict || ""),
-      section_id: String(section || ""),
+      section_id: String(section || dict || ""),
       set_id: String(setNumber || ""),
       word_id: wordId,
       is_hidden: after.has(wordId),
@@ -94,7 +84,7 @@ export function toggleSetFinished(dict, section, setNumber) {
   writeScopedJson(FINISHED_KEY, map);
   enqueueProgress("set_progress", {
     dictionary_id: String(dict || ""),
-    section_id: String(section || ""),
+    section_id: String(section || dict || ""),
     set_id: String(setNumber || ""),
     is_finished: next,
     updated_at: new Date().toISOString(),
