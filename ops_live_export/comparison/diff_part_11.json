@@ -1,0 +1,387 @@
+[
+  {
+    "legacy_id": "A743",
+    "global_order": 744,
+    "word_id": "0744",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 боран сызгъырады"
+    ],
+    "desired": [
+      "мюйюз саблы бычакъ"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A743",
+    "global_order": 744,
+    "word_id": "0744",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 вьюга свищет"
+    ],
+    "desired": [
+      "нож с роговой ручкой"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A747",
+    "global_order": 748,
+    "word_id": "0748",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "ханс",
+    "desired": "чырай",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A747",
+    "global_order": 748,
+    "word_id": "0748",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "трава",
+    "desired": "внешний облик, черты лица",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A747",
+    "global_order": 748,
+    "word_id": "0748",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [],
+    "desired": [
+      "облик",
+      "внешний вид"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A747",
+    "global_order": 748,
+    "word_id": "0748",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 ханс арытыргъа"
+    ],
+    "desired": [
+      "ариу чырайы болгъан адам"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A747",
+    "global_order": 748,
+    "word_id": "0748",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 пропалывать траву"
+    ],
+    "desired": [
+      "человек с красивой внешностью"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A756",
+    "global_order": 757,
+    "word_id": "0757",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "тон",
+    "desired": "керох",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A756",
+    "global_order": 757,
+    "word_id": "0757",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "шуба",
+    "desired": "пистолет",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A756",
+    "global_order": 757,
+    "word_id": "0757",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къысха тон"
+    ],
+    "desired": [
+      "керохну тонаргъа"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A756",
+    "global_order": 757,
+    "word_id": "0757",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 полушубок"
+    ],
+    "desired": [
+      "разбирать пистолет"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A762",
+    "global_order": 763,
+    "word_id": "0763",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "җаяу",
+    "desired": "къозгъаргъа",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A762",
+    "global_order": 763,
+    "word_id": "0763",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "пешком",
+    "desired": "взволновывать, обострять, тревожить",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A762",
+    "global_order": 763,
+    "word_id": "0763",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "adv",
+    "desired": "verb",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A762",
+    "global_order": 763,
+    "word_id": "0763",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 ол җаяу келди\n1.2 җаяу аскер"
+    ],
+    "desired": [
+      "мени къозгъама",
+      "букъуну къозургъа",
+      "сууукъ җел аурууну къозгъаб къояды"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A762",
+    "global_order": 763,
+    "word_id": "0763",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 он пришёл пешком\n1.2 пехота"
+    ],
+    "desired": [
+      "не нервируй меня",
+      "вздымать пыль",
+      "холод обостряет ревматизм"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A766",
+    "global_order": 767,
+    "word_id": "0767",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "къабыл",
+    "desired": "ёпкелеу, кёлкъалды, гурушха",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A766",
+    "global_order": 767,
+    "word_id": "0767",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "одобренный, утверждённый, исполненный",
+    "desired": "обида",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A766",
+    "global_order": 767,
+    "word_id": "0767",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "adj",
+    "desired": "noun",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A766",
+    "global_order": 767,
+    "word_id": "0767",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 тилегинги Аллах къабыл этсин!"
+    ],
+    "desired": [
+      "кёлкъалды болуб къараргъа",
+      "ууакъ гурушхала",
+      "гурушха болургъа"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  }
+]

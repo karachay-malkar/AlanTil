@@ -1,0 +1,402 @@
+[
+  {
+    "legacy_id": "A158",
+    "global_order": 158,
+    "word_id": "0158",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 эртде җаз\n1.2 бек эртде заманда"
+    ],
+    "desired": [
+      "чуругъум аягъымы къысады",
+      "столну терезе таба къыс",
+      "эшикни къысаргъа",
+      "бауну быргъагъа къысаргъа"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A158",
+    "global_order": 158,
+    "word_id": "0158",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 ранняя весна\n1.2 в глубокой древности"
+    ],
+    "desired": [
+      "сапог жмёт мне ногу",
+      "придвинь стол к окну",
+      "закрыть дверь",
+      "привязать веревку к трубе"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A225",
+    "global_order": 225,
+    "word_id": "0225",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "орта",
+    "desired": "къарыу",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A225",
+    "global_order": 225,
+    "word_id": "0225",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "середина, промежуток",
+    "desired": "сила, мощь, возможность, состояние",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A225",
+    "global_order": 225,
+    "word_id": "0225",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [],
+    "desired": [
+      "сила",
+      "состояние"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A225",
+    "global_order": 225,
+    "word_id": "0225",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 айны ортасы\n1.2 ортаны бузаргъа"
+    ],
+    "desired": [
+      "турур къарыуу җокъду",
+      "юй сатыб алыргъа аны къарыуу җокъду"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A225",
+    "global_order": 225,
+    "word_id": "0225",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 середина месяца\n1.2 испортить чьи взаимоотношения"
+    ],
+    "desired": [
+      "у него нет сил встать",
+      "у него нет возможности купить дом"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A238",
+    "global_order": 238,
+    "word_id": "0238",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "къычырыкъ",
+    "desired": "айыб",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A238",
+    "global_order": 238,
+    "word_id": "0238",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "крик",
+    "desired": "1. позор, вина, проступок; \n2. недостаток, дефект",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A238",
+    "global_order": 238,
+    "word_id": "0238",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 ачы къычырыкъ"
+    ],
+    "desired": [
+      "1. саннга айыб тюлмюдю?",
+      "айыбны биреуге салыргъа",
+      "2. айыб табаргъа"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A238",
+    "global_order": 238,
+    "word_id": "0238",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 истошный крик"
+    ],
+    "desired": [
+      "тебе не стыдно?",
+      "валить вину на другого",
+      "находить изъян"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A286",
+    "global_order": 286,
+    "word_id": "0286",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "къанат",
+    "desired": "багъа",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A286",
+    "global_order": 286,
+    "word_id": "0286",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "крыло, пола, край",
+    "desired": "цена, ценность",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A286",
+    "global_order": 286,
+    "word_id": "0286",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [
+      "край",
+      "пола"
+    ],
+    "desired": [],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A286",
+    "global_order": 286,
+    "word_id": "0286",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къуш къанатла къагъады\n1.2 җамчыны къанатлары"
+    ],
+    "desired": [
+      "юч къат багъа бериб алыргъа",
+      "базар багъасы",
+      "уллу багъасы болгъан зат"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A286",
+    "global_order": 286,
+    "word_id": "0286",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 орёл машет крыльями\n1.2 полы бурки"
+    ],
+    "desired": [
+      "купить втридорога",
+      "рыночная цена",
+      "вещь высокой ценности"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A288",
+    "global_order": 288,
+    "word_id": "0288",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "бала, сабий",
+    "desired": "хата",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A288",
+    "global_order": 288,
+    "word_id": "0288",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "дитя, ребёнок",
+    "desired": "ущерб, убыток, вред",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A288",
+    "global_order": 288,
+    "word_id": "0288",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [],
+    "desired": [
+      "ущерб"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A288",
+    "global_order": 288,
+    "word_id": "0288",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җангыз бала\n1.2 сабийни җумушха ий да, кесинг ызындан бар"
+    ],
+    "desired": [
+      "хатам җокъду"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  }
+]

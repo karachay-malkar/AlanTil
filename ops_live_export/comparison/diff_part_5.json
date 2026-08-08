@@ -1,0 +1,398 @@
+[
+  {
+    "legacy_id": "A335",
+    "global_order": 335,
+    "word_id": "0335",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "особенно, очень",
+    "desired": "1. масло, жир; \n2. враг, неприятель",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A335",
+    "global_order": 335,
+    "word_id": "0335",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "adv",
+    "desired": "noun",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A335",
+    "global_order": 335,
+    "word_id": "0335",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 алай этсе бютюн да аламат\n1.2 тюнене халкъ бютюн кёб эди"
+    ],
+    "desired": [
+      "1. җау чайкъаргъа",
+      "җау суугъа къатышмаз",
+      "2. җауну аягъан кеси ёлюр"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A335",
+    "global_order": 335,
+    "word_id": "0335",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 если он это сделает, будет особенно хорошо\n1.2 вчера народу было особенно много"
+    ],
+    "desired": [
+      "сбивать масло",
+      "масло с водой не перемешивается",
+      "кто врага щадит, тот сам погибает"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A337",
+    "global_order": 337,
+    "word_id": "0337",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "тараргъа",
+    "desired": "юйюр",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A337",
+    "global_order": 337,
+    "word_id": "0337",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "развевать, чесать, скрести, размывать",
+    "desired": "семья",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A337",
+    "global_order": 337,
+    "word_id": "0337",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "verb",
+    "desired": "noun",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A337",
+    "global_order": 337,
+    "word_id": "0337",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җел байракъланы тарайды\n1.2 чачынгы тара\n1.3 суу җагъасын тарайды\n1.4 җюн тараргъа"
+    ],
+    "desired": [
+      "бютеу юйюрю бла"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A337",
+    "global_order": 337,
+    "word_id": "0337",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 ветер развевает знамёна\n1.2 причеши волосы\n1.3 река размывает берег\n1.4 чесать шерсть"
+    ],
+    "desired": [
+      "всем семейством"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "мадар, амал",
+    "desired": "ачы",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "возможность, способ, средство, метод",
+    "desired": "горький, кислый, жгучий, едкий",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "noun",
+    "desired": "adj",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [
+      "способ"
+    ],
+    "desired": [],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 мадаргъа кёре\n1.2 амал табаргъа\n1.3 мени бусагъат амалым җокъду"
+    ],
+    "desired": [
+      "ачы шибижи",
+      "шорпа ачыды",
+      "ачы сууукъ",
+      "җаула бла ачы кюреш",
+      "ачы бла татлыны татхан билир"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 по мере возможностей\n1.2 найти способ\n1.3 у меня сейчас нет возможности"
+    ],
+    "desired": [
+      "горький перец",
+      "суп горький",
+      "лютый мороз",
+      "жестокая борьба с врагами",
+      "горькое или сладкое знает тот, кто пробует на вкус"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A362",
+    "global_order": 362,
+    "word_id": "0362",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "хорларгъа",
+    "desired": "җаяргъа",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A362",
+    "global_order": 362,
+    "word_id": "0362",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "побеждать, преодолевать",
+    "desired": "расстилать, распространять",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A362",
+    "global_order": 362,
+    "word_id": "0362",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [
+      "побеждать"
+    ],
+    "desired": [],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A362",
+    "global_order": 362,
+    "word_id": "0362",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җауну хорларгъа\n1.2 аурууну хорларгъа"
+    ],
+    "desired": [
+      "полгъа кюйюз җаяргъа",
+      "билимни җаяргъа",
+      "бармакъларынгы җаяргъа",
+      "къойланы отлаугъа җаяргъа",
+      "ауукъланы җаяргъа"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A362",
+    "global_order": 362,
+    "word_id": "0362",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 победить врага\n1.2 осилить болезнь"
+    ],
+    "desired": [
+      "застлать пол ковром",
+      "распространять знания",
+      "растопырить пальцы",
+      "пускать овец пастись",
+      "развести много кур"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  }
+]

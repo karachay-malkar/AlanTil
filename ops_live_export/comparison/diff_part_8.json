@@ -1,0 +1,388 @@
+[
+  {
+    "legacy_id": "A590",
+    "global_order": 591,
+    "word_id": "0591",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "noun",
+    "desired": "verb",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A590",
+    "global_order": 591,
+    "word_id": "0591",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къонакъла бла шагъырей этерге"
+    ],
+    "desired": [
+      "1. ёлгенни асыраргъа",
+      "2. ол китабны кюбюрде асырайма",
+      "юч сабий асырайма",
+      "эмчек бла асыраргъа"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A590",
+    "global_order": 591,
+    "word_id": "0591",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 познакомить кого с гостями"
+    ],
+    "desired": [
+      "похоронить умершего",
+      "я ту книгу держу в сундуке",
+      "я ращу (кормлю) троих детей",
+      "кормить грудью"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A602",
+    "global_order": 603,
+    "word_id": "0603",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "челек",
+    "desired": "чурукъ",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A602",
+    "global_order": 603,
+    "word_id": "0603",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "ведро",
+    "desired": "сапог",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A602",
+    "global_order": 603,
+    "word_id": "0603",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 челекни кириую"
+    ],
+    "desired": [
+      "башлы чурукъла"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A602",
+    "global_order": 603,
+    "word_id": "0603",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 ободок ведра"
+    ],
+    "desired": [
+      "сапоги с голенищами"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A603",
+    "global_order": 604,
+    "word_id": "0604",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "омакъ",
+    "desired": "бишерге",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A603",
+    "global_order": 604,
+    "word_id": "0604",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "нарядный",
+    "desired": "вариться, печься, жариться, созревать",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A603",
+    "global_order": 604,
+    "word_id": "0604",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "adj",
+    "desired": "verb",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A603",
+    "global_order": 604,
+    "word_id": "0604",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 омакъ адам нарядно\n1.2 омакъ сёлеширге"
+    ],
+    "desired": [
+      "эт иги бишмегенди",
+      "кёгет бишген заман",
+      "иссиден бишиб къалабыз"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A603",
+    "global_order": 604,
+    "word_id": "0604",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 одетый человек\n1.2 говорить витиевато"
+    ],
+    "desired": [
+      "мясо недоварилось",
+      "время созревания фруктов",
+      "от жары мы скоро изжаримся (перен.)"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A659",
+    "global_order": 660,
+    "word_id": "0660",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "хоншу / къоншу",
+    "desired": "байрам",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A659",
+    "global_order": 660,
+    "word_id": "0660",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "сосед",
+    "desired": "праздник, торжество",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A659",
+    "global_order": 660,
+    "word_id": "0660",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 хоншу эл"
+    ],
+    "desired": [
+      "байрам этерге"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A659",
+    "global_order": 660,
+    "word_id": "0660",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 со­седнее село"
+    ],
+    "desired": [
+      "праздновать"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A662",
+    "global_order": 663,
+    "word_id": "0663",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "базыкъ",
+    "desired": "хоншу / къоншу",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A662",
+    "global_order": 663,
+    "word_id": "0663",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "толстый, жирный",
+    "desired": "сосед",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A662",
+    "global_order": 663,
+    "word_id": "0663",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "adj",
+    "desired": "noun",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A662",
+    "global_order": 663,
+    "word_id": "0663",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 базыкъ агъач\n1.2 базыкъ бел\n1.3 базыкъ ауаз"
+    ],
+    "desired": [
+      "хоншу эл"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  }
+]

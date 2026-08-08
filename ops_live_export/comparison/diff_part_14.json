@@ -1,0 +1,455 @@
+[
+  {
+    "legacy_id": "B21",
+    "global_order": 902,
+    "word_id": "0902",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 эм къыяма кюнле\n1.2 къышны къыяматы"
+    ],
+    "desired": [
+      "эм къыяма кюнле",
+      "къышны къыямасы"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B21",
+    "global_order": 902,
+    "word_id": "0902",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 тяжелешие дни\n1.2 разгар зимы"
+    ],
+    "desired": [
+      "тяжелейшие дни",
+      "разгар зимы"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B22",
+    "global_order": 903,
+    "word_id": "0903",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 ит сынҗырдан ычхыннганды\n1.2 къолдан ычхыныргъа\n1.3 ол адамдан кючден ычхындым"
+    ],
+    "desired": [
+      "ит сынҗырдан ычхыннганды",
+      "къолдан ычхыныргъа",
+      "ол адамдан кючден ычхындым"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B22",
+    "global_order": 903,
+    "word_id": "0903",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 собака сорвалась цепи\n1.2 выпасть из рук\n1.3 я еле отвязался от этого человека"
+    ],
+    "desired": [
+      "собака сорвалась с цепи",
+      "выпасть из рук",
+      "я еле отвязался от этого человека"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B36",
+    "global_order": 917,
+    "word_id": "0917",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 тюгел алай тюлдю немного\n1.2 тай алкъын тюгел ауузлукъ билиб бошамагъанды\n1.3 тюгел ёлмей\n1.4 мен тюгел җетгинчи"
+    ],
+    "desired": [
+      "тюгел алай тюлдю",
+      "тай алкъын тюгел ауузлукъ билиб бошамагъанды",
+      "тюгел ёлмей",
+      "мен тюгел җетгинчи"
+    ],
+    "legacy_comment": "Удалено русское слово, ошибочно попавшее в карачаево-балкарскую часть примера"
+  },
+  {
+    "legacy_id": "B36",
+    "global_order": 917,
+    "word_id": "0917",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 не совсем так\n1.2 жеребёнок ещё не совсем привык к узде\n1.3 едва живой\n1.4 чуть раньше моего прихода"
+    ],
+    "desired": [
+      "не совсем так",
+      "жеребёнок ещё не совсем привык к узде",
+      "едва живой",
+      "чуть раньше моего прихода"
+    ],
+    "legacy_comment": "Удалено русское слово, ошибочно попавшее в карачаево-балкарскую часть примера"
+  },
+  {
+    "legacy_id": "B42",
+    "global_order": 923,
+    "word_id": "0923",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 отну къармаргъа\n2.1 ишде къармаргъа\n3.1 ёчешиуде къармаргъа\n4.1 урушда къармаргъъа\n4.2 онунчу классны къармагъанды\n5.1 бачханы къармаргъа\n5.2 ёлгенни къармаргъа\n6.1 сокъур тёгерегин къармады"
+    ],
+    "desired": [
+      "1. отну къармаргъа",
+      "2. ишде къармаргъа",
+      "3. ёчешиуде къармаргъа",
+      "4. урушда къармаргъа",
+      "онунчу классны къармагъанды",
+      "5. бачханы къармаргъа",
+      "ёлгенни къармаргъа",
+      "6. сокъур тёгерегин къармады"
+    ],
+    "legacy_comment": "Удалена лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B42",
+    "global_order": 923,
+    "word_id": "0923",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 потушить огонь\n2.1 подвести по работе\n3.1 выиграть в споре\n4.1 убить в бою\n4.2 он окончил десятый класс\n5.1 вскопать огород\n5.2 похоронить умершего\n6.1 слепой ощу­пал вокруг себя"
+    ],
+    "desired": [
+      "потушить огонь",
+      "подвести по работе",
+      "выиграть в споре",
+      "убить в бою",
+      "он окончил десятый класс",
+      "вскопать огород",
+      "похоронить умершего",
+      "слепой ощупал вокруг себя"
+    ],
+    "legacy_comment": "Удалена лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B53",
+    "global_order": 934,
+    "word_id": "0934",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 таудан тигелерге"
+    ],
+    "desired": [
+      "таудан тигелерге"
+    ],
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог"
+  },
+  {
+    "legacy_id": "B53",
+    "global_order": 934,
+    "word_id": "0934",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 спуститься горы"
+    ],
+    "desired": [
+      "спуститься с горы"
+    ],
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог"
+  },
+  {
+    "legacy_id": "B54",
+    "global_order": 935,
+    "word_id": "0935",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 сериуюн отда биширирге варить\n2.1 сен не эсе да сериуюнсе бюгюн"
+    ],
+    "desired": [
+      "1. сериуюн отда биширирге",
+      "2. сен не эсе да сериуюнсе бюгюн"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B54",
+    "global_order": 935,
+    "word_id": "0935",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 на медленном огне\n2.1 ты сегодня что-то печален"
+    ],
+    "desired": [
+      "варить на медленном огне",
+      "ты сегодня что-то печален"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B83",
+    "global_order": 964,
+    "word_id": "0964",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 бышлакъ гыбыт\n1.2 гыбытын тургъузуб"
+    ],
+    "desired": [
+      "бышлакъ гыбыт",
+      "гыбытын тургъузуб"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B83",
+    "global_order": 964,
+    "word_id": "0964",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 бурдюк сыром\n1.2 выпятив брюхо"
+    ],
+    "desired": [
+      "бурдюк с сыром",
+      "выпятив брюхо"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B103",
+    "global_order": 984,
+    "word_id": "0984",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 кефи бузулгъанды\n1.2 не эсе да кефинг къолай тюлдю\n1.3 кефи аман тюлдю"
+    ],
+    "desired": [
+      "1. кефи бузулгъанды",
+      "не эсе да кефинг къолай тюлдю",
+      "кефи аман тюлдю",
+      "2. кефи барды"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B103",
+    "global_order": 984,
+    "word_id": "0984",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 у него испортилось настроение\n1.2 что-то ты не в духе\n1.3 вид у него неплохой"
+    ],
+    "desired": [
+      "у него испортилось настроение",
+      "что-то ты не в духе",
+      "вид у него неплохой",
+      "он под хмельком"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B106",
+    "global_order": 987,
+    "word_id": "0987",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "постоянно, неуклонно, беспрерывно",
+    "desired": "постоянно, всегда, беспрерывно",
+    "legacy_comment": "Удалены значения и примеры слова «таймаздан»; добавлена общая группа синонимов"
+  },
+  {
+    "legacy_id": "B106",
+    "global_order": 987,
+    "word_id": "0987",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җауун таймай җаууб турады\n1.2 таймаздан ишлеу\n1.3 ол таймаздан ишлейди"
+    ],
+    "desired": [
+      "җауун таймай җаууб турады"
+    ],
+    "legacy_comment": "Удалены значения и примеры слова «таймаздан»; добавлена общая группа синонимов"
+  },
+  {
+    "legacy_id": "B106",
+    "global_order": 987,
+    "word_id": "0987",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 беспрерывно идёт дождь\n1.2 постоянная работа\n1.3 он всё время работает"
+    ],
+    "desired": [
+      "беспрерывно идёт дождь"
+    ],
+    "legacy_comment": "Удалены значения и примеры слова «таймаздан»; добавлена общая группа синонимов"
+  },
+  {
+    "legacy_id": "B316",
+    "global_order": 988,
+    "word_id": "0988",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 таймаздан ишлеу\n1.2 ол таймаздан ишлейди"
+    ],
+    "desired": [
+      "таймаздан ишлеу",
+      "ол таймаздан ишлейди"
+    ],
+    "legacy_comment": "Выделено из строки «таймай» в отдельную карточку; добавлена общая группа синонимов"
+  }
+]

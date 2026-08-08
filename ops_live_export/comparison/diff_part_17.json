@@ -1,0 +1,137 @@
+[
+  {
+    "legacy_id": "B313",
+    "global_order": 1196,
+    "word_id": "1196",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 чакъгъыч таш\n1.2 чакъгъычсыз къуу къабынмаз, муҗуралы киши абынмаз"
+    ],
+    "desired": [
+      "чакъгъыч таш",
+      "чакъгъычсыз къуу къабынмаз, муҗуралы киши абынмаз"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B313",
+    "global_order": 1196,
+    "word_id": "1196",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 кремень\n1.2 без онива трут не загорится, человек с посохом не споткнётся"
+    ],
+    "desired": [
+      "кремень",
+      "без огнива трут не загорится, человек с посохом не споткнётся"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "T449",
+    "global_order": 2209,
+    "word_id": "2209",
+    "story_id": 3,
+    "story_name": "Тропы",
+    "dictionary_id": 3,
+    "dictionary_name": "Тематические слова",
+    "section_id": 7,
+    "section_name": "Растения",
+    "set_id": 19,
+    "set_name": "Деревья",
+    "field": "word_alan_cyrillic",
+    "current": "айуа, таш кертме",
+    "desired": "къошун",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "T449",
+    "global_order": 2209,
+    "word_id": "2209",
+    "story_id": 3,
+    "story_name": "Тропы",
+    "dictionary_id": 3,
+    "dictionary_name": "Тематические слова",
+    "section_id": 7,
+    "section_name": "Растения",
+    "set_id": 19,
+    "set_name": "Деревья",
+    "field": "translation_ru",
+    "current": "айва",
+    "desired": "горшок, черепица, керамика",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "T449",
+    "global_order": 2209,
+    "word_id": "2209",
+    "story_id": 3,
+    "story_name": "Тропы",
+    "dictionary_id": 3,
+    "dictionary_name": "Тематические слова",
+    "section_id": 7,
+    "section_name": "Растения",
+    "set_id": 19,
+    "set_name": "Деревья",
+    "field": "pos",
+    "current": "Деревья",
+    "desired": "Прочие материалы",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "T449",
+    "global_order": 2209,
+    "word_id": "2209",
+    "story_id": 3,
+    "story_name": "Тропы",
+    "dictionary_id": 3,
+    "dictionary_name": "Тематические слова",
+    "section_id": 7,
+    "section_name": "Растения",
+    "set_id": 19,
+    "set_name": "Деревья",
+    "field": "phrases_alan_cyrillic",
+    "current": [],
+    "desired": [
+      "къошун аякъ",
+      "башы къошун юй"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "T449",
+    "global_order": 2209,
+    "word_id": "2209",
+    "story_id": 3,
+    "story_name": "Тропы",
+    "dictionary_id": 3,
+    "dictionary_name": "Тематические слова",
+    "section_id": 7,
+    "section_name": "Растения",
+    "set_id": 19,
+    "set_name": "Деревья",
+    "field": "phrases_ru",
+    "current": [],
+    "desired": [
+      "глиняная чашка",
+      "дом, крытый черепицей"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  }
+]

@@ -1,0 +1,422 @@
+[
+  {
+    "legacy_id": "A151",
+    "seq": 151,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къайгъы",
+    "current_word": "тууаргъа",
+    "other_orders": [
+      150
+    ]
+  },
+  {
+    "legacy_id": "A157",
+    "seq": 157,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "ара",
+    "current_word": "къысаргъа",
+    "other_orders": [
+      156
+    ]
+  },
+  {
+    "legacy_id": "A158",
+    "seq": 158,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къысаргъа",
+    "current_word": "эртде",
+    "other_orders": [
+      157
+    ]
+  },
+  {
+    "legacy_id": "A225",
+    "seq": 225,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къарыу",
+    "current_word": "орта",
+    "other_orders": [
+      224
+    ]
+  },
+  {
+    "legacy_id": "A238",
+    "seq": 238,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "айыб",
+    "current_word": "къычырыкъ",
+    "other_orders": [
+      237
+    ]
+  },
+  {
+    "legacy_id": "A286",
+    "seq": 286,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "багъа",
+    "current_word": "къанат",
+    "other_orders": [
+      285
+    ]
+  },
+  {
+    "legacy_id": "A288",
+    "seq": 288,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "хата",
+    "current_word": "бала, сабий",
+    "other_orders": [
+      287
+    ]
+  },
+  {
+    "legacy_id": "A295",
+    "seq": 295,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "җабаргъа",
+    "current_word": "намыс",
+    "other_orders": [
+      294
+    ]
+  },
+  {
+    "legacy_id": "A302",
+    "seq": 302,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "юренирге / юйренирге",
+    "current_word": "магъана",
+    "other_orders": [
+      301
+    ]
+  },
+  {
+    "legacy_id": "A304",
+    "seq": 304,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къураргъа",
+    "current_word": "җумушакъ",
+    "other_orders": [
+      303
+    ]
+  },
+  {
+    "legacy_id": "A335",
+    "seq": 335,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "җау",
+    "current_word": "бютюн",
+    "other_orders": [
+      334
+    ]
+  },
+  {
+    "legacy_id": "A337",
+    "seq": 337,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "юйюр",
+    "current_word": "тараргъа",
+    "other_orders": [
+      336
+    ]
+  },
+  {
+    "legacy_id": "A345",
+    "seq": 345,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "ачы",
+    "current_word": "мадар, амал",
+    "other_orders": [
+      344
+    ]
+  },
+  {
+    "legacy_id": "A365",
+    "seq": 365,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "тёзерге",
+    "current_word": "тели",
+    "other_orders": [
+      364
+    ]
+  },
+  {
+    "legacy_id": "A381",
+    "seq": 381,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "уу",
+    "current_word": "тенгиз",
+    "other_orders": [
+      380
+    ]
+  },
+  {
+    "legacy_id": "A437",
+    "seq": 437,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къоюн",
+    "current_word": "бичен",
+    "other_orders": [
+      436
+    ]
+  },
+  {
+    "legacy_id": "A441",
+    "seq": 442,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "сыфат",
+    "current_word": "ышаныргъа",
+    "other_orders": [
+      439
+    ]
+  },
+  {
+    "legacy_id": "A462",
+    "seq": 463,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "теберге",
+    "current_word": "мангылай",
+    "other_orders": [
+      460
+    ]
+  },
+  {
+    "legacy_id": "A524",
+    "seq": 525,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "җаулукъ",
+    "current_word": "хакъ",
+    "other_orders": [
+      522
+    ]
+  },
+  {
+    "legacy_id": "A538",
+    "seq": 539,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "сыгъаргъа",
+    "current_word": "дау",
+    "other_orders": [
+      536
+    ]
+  },
+  {
+    "legacy_id": "A546",
+    "seq": 547,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къобуз",
+    "current_word": "улан",
+    "other_orders": [
+      544
+    ]
+  },
+  {
+    "legacy_id": "A590",
+    "seq": 591,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "асыраргъа",
+    "current_word": "шагъырей",
+    "other_orders": [
+      588
+    ]
+  },
+  {
+    "legacy_id": "A602",
+    "seq": 603,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "чурукъ",
+    "current_word": "челек",
+    "other_orders": [
+      600
+    ]
+  },
+  {
+    "legacy_id": "A603",
+    "seq": 604,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "бишерге",
+    "current_word": "омакъ",
+    "other_orders": [
+      601
+    ]
+  },
+  {
+    "legacy_id": "A659",
+    "seq": 660,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "байрам",
+    "current_word": "хоншу / къоншу",
+    "other_orders": [
+      657
+    ]
+  },
+  {
+    "legacy_id": "A662",
+    "seq": 663,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "хоншу / къоншу",
+    "current_word": "базыкъ",
+    "other_orders": [
+      660
+    ]
+  },
+  {
+    "legacy_id": "A671",
+    "seq": 672,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "тик",
+    "current_word": "сыйдам",
+    "other_orders": [
+      669
+    ]
+  },
+  {
+    "legacy_id": "A672",
+    "seq": 673,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къолтукъ",
+    "current_word": "мыллык",
+    "other_orders": [
+      670
+    ]
+  },
+  {
+    "legacy_id": "A690",
+    "seq": 691,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "азаб",
+    "current_word": "чепкен",
+    "other_orders": [
+      688
+    ]
+  },
+  {
+    "legacy_id": "A709",
+    "seq": 710,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къаршчы",
+    "current_word": "җазыкъ",
+    "other_orders": [
+      709
+    ]
+  },
+  {
+    "legacy_id": "A716",
+    "seq": 717,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къолан",
+    "current_word": "хаман",
+    "other_orders": [
+      716
+    ]
+  },
+  {
+    "legacy_id": "A723",
+    "seq": 724,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "анча",
+    "current_word": "таурух",
+    "other_orders": [
+      723
+    ]
+  },
+  {
+    "legacy_id": "A733",
+    "seq": 734,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "абыныргъа",
+    "current_word": "бешик",
+    "other_orders": [
+      733
+    ]
+  },
+  {
+    "legacy_id": "A743",
+    "seq": 744,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "мюйюз",
+    "current_word": "боран",
+    "other_orders": [
+      743
+    ]
+  },
+  {
+    "legacy_id": "A747",
+    "seq": 748,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "чырай",
+    "current_word": "ханс",
+    "other_orders": [
+      747
+    ]
+  },
+  {
+    "legacy_id": "A756",
+    "seq": 757,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "керох",
+    "current_word": "тон",
+    "other_orders": [
+      756
+    ]
+  },
+  {
+    "legacy_id": "A762",
+    "seq": 763,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къозгъаргъа",
+    "current_word": "җаяу",
+    "other_orders": [
+      762
+    ]
+  },
+  {
+    "legacy_id": "A766",
+    "seq": 767,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "ёпкелеу, кёлкъалды, гурушха",
+    "current_word": "къабыл",
+    "other_orders": [
+      766
+    ]
+  },
+  {
+    "legacy_id": "A781",
+    "seq": 782,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "алам",
+    "current_word": "къанаргъа",
+    "other_orders": [
+      781
+    ]
+  },
+  {
+    "legacy_id": "A784",
+    "seq": 785,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "шиндик",
+    "current_word": "җастыкъ",
+    "other_orders": [
+      784
+    ]
+  },
+  {
+    "legacy_id": "A797",
+    "seq": 798,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "җукъа",
+    "current_word": "тюрсюн",
+    "other_orders": [
+      797
+    ]
+  },
+  {
+    "legacy_id": "T449",
+    "seq": 2209,
+    "reason": "word mismatch and desired word exists at another global_order",
+    "desired_word": "къошун",
+    "current_word": "айуа, таш кертме",
+    "other_orders": [
+      2208
+    ]
+  }
+]

@@ -1,0 +1,1457 @@
+[
+  {
+    "legacy_id": "A3",
+    "global_order": 3,
+    "word_id": "0003",
+    "current_word": "этерге",
+    "desired_word": "этерге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "eterge",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A13",
+    "global_order": 13,
+    "word_id": "0013",
+    "current_word": "къараргъа",
+    "desired_word": "къараргъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qararğa",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A16",
+    "global_order": 16,
+    "word_id": "0016",
+    "current_word": "къалыргъа",
+    "desired_word": "къалыргъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qalırğa",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A24",
+    "global_order": 24,
+    "word_id": "0024",
+    "current_word": "ал",
+    "desired_word": "ал",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "al",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A26",
+    "global_order": 26,
+    "word_id": "0026",
+    "current_word": "къол",
+    "desired_word": "къол",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qol",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A28",
+    "global_order": 28,
+    "word_id": "0028",
+    "current_word": "кёз",
+    "desired_word": "кёз",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "köz",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A45",
+    "global_order": 45,
+    "word_id": "0045",
+    "current_word": "җетерге",
+    "desired_word": "җетерге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "ceterge",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A49",
+    "global_order": 49,
+    "word_id": "0049",
+    "current_word": "ат",
+    "desired_word": "ат",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "at",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A55",
+    "global_order": 55,
+    "word_id": "0055",
+    "current_word": "ич",
+    "desired_word": "ич",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "iç",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A81",
+    "global_order": 81,
+    "word_id": "0081",
+    "current_word": "тюб",
+    "desired_word": "тюб",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "tüb",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A95",
+    "global_order": 95,
+    "word_id": "0095",
+    "current_word": "акъыл",
+    "desired_word": "акъыл",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "aqıl",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A151",
+    "global_order": 151,
+    "word_id": "0151",
+    "current_word": "тууаргъа",
+    "desired_word": "къайгъы",
+    "word_similarity": 0.4,
+    "word_alan_turkic": "tuwarğa",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A157",
+    "global_order": 157,
+    "word_id": "0157",
+    "current_word": "къысаргъа",
+    "desired_word": "ара",
+    "word_similarity": 0.5,
+    "word_alan_turkic": "qısarğa",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A158",
+    "global_order": 158,
+    "word_id": "0158",
+    "current_word": "эртде",
+    "desired_word": "къысаргъа",
+    "word_similarity": 0.14285714285714285,
+    "word_alan_turkic": "ertde",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A225",
+    "global_order": 225,
+    "word_id": "0225",
+    "current_word": "орта",
+    "desired_word": "къарыу",
+    "word_similarity": 0.2,
+    "word_alan_turkic": "orta",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A238",
+    "global_order": 238,
+    "word_id": "0238",
+    "current_word": "къычырыкъ",
+    "desired_word": "айыб",
+    "word_similarity": 0.15384615384615385,
+    "word_alan_turkic": "qıçırıq",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A286",
+    "global_order": 286,
+    "word_id": "0286",
+    "current_word": "къанат",
+    "desired_word": "багъа",
+    "word_similarity": 0.36363636363636365,
+    "word_alan_turkic": "qanat",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A288",
+    "global_order": 288,
+    "word_id": "0288",
+    "current_word": "бала, сабий",
+    "desired_word": "хата",
+    "word_similarity": 0.26666666666666666,
+    "word_alan_turkic": "bala, sabiy",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A295",
+    "global_order": 295,
+    "word_id": "0295",
+    "current_word": "намыс",
+    "desired_word": "җабаргъа",
+    "word_similarity": 0.15384615384615385,
+    "word_alan_turkic": "namıs",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A302",
+    "global_order": 302,
+    "word_id": "0302",
+    "current_word": "магъана",
+    "desired_word": "юренирге / юйренирге",
+    "word_similarity": 0.14814814814814814,
+    "word_alan_turkic": "mağana",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A304",
+    "global_order": 304,
+    "word_id": "0304",
+    "current_word": "җумушакъ",
+    "desired_word": "къураргъа",
+    "word_similarity": 0.23529411764705882,
+    "word_alan_turkic": "cumuşaq",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A335",
+    "global_order": 335,
+    "word_id": "0335",
+    "current_word": "бютюн",
+    "desired_word": "җау",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "bütün",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A337",
+    "global_order": 337,
+    "word_id": "0337",
+    "current_word": "тараргъа",
+    "desired_word": "юйюр",
+    "word_similarity": 0.16666666666666666,
+    "word_alan_turkic": "tararğa",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A345",
+    "global_order": 345,
+    "word_id": "0345",
+    "current_word": "мадар, амал",
+    "desired_word": "ачы",
+    "word_similarity": 0.14285714285714285,
+    "word_alan_turkic": "madar, amal",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A362",
+    "global_order": 362,
+    "word_id": "0362",
+    "current_word": "хорларгъа",
+    "desired_word": "җаяргъа",
+    "word_similarity": 0.625,
+    "word_alan_turkic": "xorlarğa",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A365",
+    "global_order": 365,
+    "word_id": "0365",
+    "current_word": "тели",
+    "desired_word": "тёзерге",
+    "word_similarity": 0.36363636363636365,
+    "word_alan_turkic": "teli",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A381",
+    "global_order": 381,
+    "word_id": "0381",
+    "current_word": "тенгиз",
+    "desired_word": "уу",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "teñiz",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A437",
+    "global_order": 437,
+    "word_id": "0437",
+    "current_word": "бичен",
+    "desired_word": "къоюн",
+    "word_similarity": 0.2,
+    "word_alan_turkic": "biçen",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A441",
+    "global_order": 442,
+    "word_id": "0442",
+    "current_word": "ышаныргъа",
+    "desired_word": "сыфат",
+    "word_similarity": 0.2857142857142857,
+    "word_alan_turkic": "ışanırğa",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A462",
+    "global_order": 463,
+    "word_id": "0463",
+    "current_word": "мангылай",
+    "desired_word": "теберге",
+    "word_similarity": 0.13333333333333333,
+    "word_alan_turkic": "mañılay",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A524",
+    "global_order": 525,
+    "word_id": "0525",
+    "current_word": "хакъ",
+    "desired_word": "җаулукъ",
+    "word_similarity": 0.5454545454545454,
+    "word_alan_turkic": "xaq",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A538",
+    "global_order": 539,
+    "word_id": "0539",
+    "current_word": "дау",
+    "desired_word": "сыгъаргъа",
+    "word_similarity": 0.16666666666666666,
+    "word_alan_turkic": "daw",
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A546",
+    "global_order": 547,
+    "word_id": "0547",
+    "current_word": "улан",
+    "desired_word": "къобуз",
+    "word_similarity": 0.2,
+    "word_alan_turkic": "ulan",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A590",
+    "global_order": 591,
+    "word_id": "0591",
+    "current_word": "шагъырей",
+    "desired_word": "асыраргъа",
+    "word_similarity": 0.35294117647058826,
+    "word_alan_turkic": "şağırey",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A602",
+    "global_order": 603,
+    "word_id": "0603",
+    "current_word": "челек",
+    "desired_word": "чурукъ",
+    "word_similarity": 0.36363636363636365,
+    "word_alan_turkic": "çelek",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A603",
+    "global_order": 604,
+    "word_id": "0604",
+    "current_word": "омакъ",
+    "desired_word": "бишерге",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "omaq",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A659",
+    "global_order": 660,
+    "word_id": "0660",
+    "current_word": "хоншу / къоншу",
+    "desired_word": "байрам",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "xonşu / qonşu",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A662",
+    "global_order": 663,
+    "word_id": "0663",
+    "current_word": "базыкъ",
+    "desired_word": "хоншу / къоншу",
+    "word_similarity": 0.2,
+    "word_alan_turkic": "bazıq",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A671",
+    "global_order": 672,
+    "word_id": "0672",
+    "current_word": "сыйдам",
+    "desired_word": "тик",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "sıydam",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A672",
+    "global_order": 673,
+    "word_id": "0673",
+    "current_word": "мыллык",
+    "desired_word": "къолтукъ",
+    "word_similarity": 0.2857142857142857,
+    "word_alan_turkic": "mıllık",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A690",
+    "global_order": 691,
+    "word_id": "0691",
+    "current_word": "чепкен",
+    "desired_word": "азаб",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "çepken",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A709",
+    "global_order": 710,
+    "word_id": "0710",
+    "current_word": "җазыкъ",
+    "desired_word": "къаршчы",
+    "word_similarity": 0.3076923076923077,
+    "word_alan_turkic": "cazıq",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A716",
+    "global_order": 717,
+    "word_id": "0717",
+    "current_word": "хаман",
+    "desired_word": "къолан",
+    "word_similarity": 0.36363636363636365,
+    "word_alan_turkic": "xaman",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A723",
+    "global_order": 724,
+    "word_id": "0724",
+    "current_word": "таурух",
+    "desired_word": "анча",
+    "word_similarity": 0.2,
+    "word_alan_turkic": "tawrux",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A733",
+    "global_order": 734,
+    "word_id": "0734",
+    "current_word": "бешик",
+    "desired_word": "абыныргъа",
+    "word_similarity": 0.14285714285714285,
+    "word_alan_turkic": "beşik",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A743",
+    "global_order": 744,
+    "word_id": "0744",
+    "current_word": "боран",
+    "desired_word": "мюйюз",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "boran",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A747",
+    "global_order": 748,
+    "word_id": "0748",
+    "current_word": "ханс",
+    "desired_word": "чырай",
+    "word_similarity": 0.2222222222222222,
+    "word_alan_turkic": "xans",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A756",
+    "global_order": 757,
+    "word_id": "0757",
+    "current_word": "тон",
+    "desired_word": "керох",
+    "word_similarity": 0.25,
+    "word_alan_turkic": "ton",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A762",
+    "global_order": 763,
+    "word_id": "0763",
+    "current_word": "җаяу",
+    "desired_word": "къозгъаргъа",
+    "word_similarity": 0.13333333333333333,
+    "word_alan_turkic": "cayaw",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A766",
+    "global_order": 767,
+    "word_id": "0767",
+    "current_word": "къабыл",
+    "desired_word": "ёпкелеу, кёлкъалды, гурушха",
+    "word_similarity": 0.24242424242424243,
+    "word_alan_turkic": "qabıl",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "current_word": "къанаргъа",
+    "desired_word": "алам",
+    "word_similarity": 0.3076923076923077,
+    "word_alan_turkic": "qanarğa",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A784",
+    "global_order": 785,
+    "word_id": "0785",
+    "current_word": "җастыкъ",
+    "desired_word": "шиндик",
+    "word_similarity": 0.15384615384615385,
+    "word_alan_turkic": "castıq",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "current_word": "тюрсюн",
+    "desired_word": "җукъа",
+    "word_similarity": 0.0,
+    "word_alan_turkic": "türsün",
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "synonyms",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A803",
+    "global_order": 804,
+    "word_id": "0804",
+    "current_word": "чёргерге",
+    "desired_word": "чёргерге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "çörgerge",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A804",
+    "global_order": 805,
+    "word_id": "0805",
+    "current_word": "чартларгъа",
+    "desired_word": "чартларгъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "çartlarğa",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A809",
+    "global_order": 810,
+    "word_id": "0810",
+    "current_word": "ингичге / иничге",
+    "desired_word": "ингичге / иничге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "iñiçge / iniçge",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A818",
+    "global_order": 819,
+    "word_id": "0819",
+    "current_word": "адаргы / адыргы",
+    "desired_word": "адаргы / адыргы",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "adargı / adırgı",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A825",
+    "global_order": 826,
+    "word_id": "0826",
+    "current_word": "тюйме",
+    "desired_word": "тюйме",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "tüyme",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A842",
+    "global_order": 843,
+    "word_id": "0843",
+    "current_word": "саркъаргъа",
+    "desired_word": "саркъаргъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "sarqarğa",
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A847",
+    "global_order": 848,
+    "word_id": "0848",
+    "current_word": "чууакъ",
+    "desired_word": "чууакъ",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "çuwaq",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "A860",
+    "global_order": 861,
+    "word_id": "0861",
+    "current_word": "аргъы",
+    "desired_word": "аргъы",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "arğı",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B1",
+    "global_order": 882,
+    "word_id": "0882",
+    "current_word": "шоркъа",
+    "desired_word": "шоркъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "şorqa",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B2",
+    "global_order": 883,
+    "word_id": "0883",
+    "current_word": "маҗал",
+    "desired_word": "маҗал",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "macal",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B4",
+    "global_order": 885,
+    "word_id": "0885",
+    "current_word": "ауана",
+    "desired_word": "ауана",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "awana",
+    "legacy_comment": "Добавлена группа синонимов «тень»",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B21",
+    "global_order": 902,
+    "word_id": "0902",
+    "current_word": "къыяма",
+    "desired_word": "къыяма",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qıyama",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B22",
+    "global_order": 903,
+    "word_id": "0903",
+    "current_word": "ычхыныргъа",
+    "desired_word": "ычхыныргъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "ıçxınırğa",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B36",
+    "global_order": 917,
+    "word_id": "0917",
+    "current_word": "тюгел",
+    "desired_word": "тюгел",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "tügel",
+    "legacy_comment": "Удалено русское слово, ошибочно попавшее в карачаево-балкарскую часть примера",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B42",
+    "global_order": 923,
+    "word_id": "0923",
+    "current_word": "къармаргъа",
+    "desired_word": "къармаргъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qarmarğa",
+    "legacy_comment": "Удалена лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B53",
+    "global_order": 934,
+    "word_id": "0934",
+    "current_word": "тигелерге",
+    "desired_word": "тигелерге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "tigelerge",
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B54",
+    "global_order": 935,
+    "word_id": "0935",
+    "current_word": "сериуюн",
+    "desired_word": "сериуюн",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "seriwün",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B83",
+    "global_order": 964,
+    "word_id": "0964",
+    "current_word": "гыбыт",
+    "desired_word": "гыбыт",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "gıbıt",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B103",
+    "global_order": 984,
+    "word_id": "0984",
+    "current_word": "кеф",
+    "desired_word": "кеф",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "kef",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B106",
+    "global_order": 987,
+    "word_id": "0987",
+    "current_word": "таймай",
+    "desired_word": "таймай",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "taymay",
+    "legacy_comment": "Удалены значения и примеры слова «таймаздан»; добавлена общая группа синонимов",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B316",
+    "global_order": 988,
+    "word_id": "0988",
+    "current_word": "таймаздан",
+    "desired_word": "таймаздан",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "taymazdan",
+    "legacy_comment": "Выделено из строки «таймай» в отдельную карточку; добавлена общая группа синонимов",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B113",
+    "global_order": 995,
+    "word_id": "0995",
+    "current_word": "ауа",
+    "desired_word": "ауа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "awa",
+    "legacy_comment": "Добавлена группа синонимов «тень»",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B118",
+    "global_order": 1000,
+    "word_id": "1000",
+    "current_word": "ёт",
+    "desired_word": "ёт",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "öt",
+    "legacy_comment": "Добавлено переносное значение; значения пронумерованы",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B129",
+    "global_order": 1011,
+    "word_id": "1011",
+    "current_word": "бегитирге",
+    "desired_word": "бегитирге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "begitirge",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B131",
+    "global_order": 1013,
+    "word_id": "1013",
+    "current_word": "улургъа",
+    "desired_word": "улургъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "ulurğa",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B152",
+    "global_order": 1034,
+    "word_id": "1034",
+    "current_word": "гунч",
+    "desired_word": "гунч",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "gunç",
+    "legacy_comment": "Исправлено разделение примера и перевода; убраны вспомогательные слова; сохранена историческая помета",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B154",
+    "global_order": 1036,
+    "word_id": "1036",
+    "current_word": "къонгурау",
+    "desired_word": "къонгурау",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qoñuraw",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B173",
+    "global_order": 1055,
+    "word_id": "1055",
+    "current_word": "сингерге",
+    "desired_word": "сингерге",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "siñerge",
+    "legacy_comment": "В примере восстановлена пропущенная начальная буква",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B174",
+    "global_order": 1056,
+    "word_id": "1056",
+    "current_word": "сескекли",
+    "desired_word": "сескекли",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "seskekli",
+    "legacy_comment": "Исправлена опечатка в русском переводе",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B190",
+    "global_order": 1072,
+    "word_id": "1072",
+    "current_word": "хат",
+    "desired_word": "хат",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "xat",
+    "legacy_comment": "В русском переводе восстановлена пропущенная буква",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B196",
+    "global_order": 1078,
+    "word_id": "1078",
+    "current_word": "аралатыргъа",
+    "desired_word": "аралатыргъа",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "aralatırğa",
+    "legacy_comment": "Добавлены пропущенные значения и пример из словаря; значения пронумерованы",
+    "diff_fields": [
+      "translation_ru",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B198",
+    "global_order": 1080,
+    "word_id": "1080",
+    "current_word": "айланч",
+    "desired_word": "айланч",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "aylanç",
+    "legacy_comment": "Слово «айланма» выделено в отдельную строку",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B317",
+    "global_order": 1081,
+    "word_id": "1081",
+    "current_word": "айланма",
+    "desired_word": "айланма",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "aylanma",
+    "legacy_comment": "Выделено из строки «айланч, айланма» в отдельную карточку; добавлены значения из словаря; для значения «водоворот, омут, пучина» пример в источнике отсутствует",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B202",
+    "global_order": 1085,
+    "word_id": "1085",
+    "current_word": "мюкюл",
+    "desired_word": "мюкюл",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "mükül",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B203",
+    "global_order": 1086,
+    "word_id": "1086",
+    "current_word": "къагъанакъ",
+    "desired_word": "къагъанакъ",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qağanaq",
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B255",
+    "global_order": 1138,
+    "word_id": "1138",
+    "current_word": "къаст",
+    "desired_word": "къаст",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qast",
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B265",
+    "global_order": 1148,
+    "word_id": "1148",
+    "current_word": "зауаллы",
+    "desired_word": "зауаллы",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "zawallı",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B294",
+    "global_order": 1177,
+    "word_id": "1177",
+    "current_word": "җенг",
+    "desired_word": "җенг",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "ceñ",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B309",
+    "global_order": 1192,
+    "word_id": "1192",
+    "current_word": "къаза",
+    "desired_word": "къаза",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "qaza",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "B313",
+    "global_order": 1196,
+    "word_id": "1196",
+    "current_word": "чакъгъыч",
+    "desired_word": "чакъгъыч",
+    "word_similarity": 1.0,
+    "word_alan_turkic": "çaqğıç",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "diff_fields": [
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  },
+  {
+    "legacy_id": "T449",
+    "global_order": 2209,
+    "word_id": "2209",
+    "current_word": "айуа, таш кертме",
+    "desired_word": "къошун",
+    "word_similarity": 0.09090909090909091,
+    "word_alan_turkic": "aywa, taş kertme",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "diff_fields": [
+      "word_alan_cyrillic",
+      "translation_ru",
+      "pos",
+      "phrases_alan_cyrillic",
+      "phrases_ru"
+    ]
+  }
+]

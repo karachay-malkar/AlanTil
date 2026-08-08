@@ -1,0 +1,445 @@
+[
+  {
+    "legacy_id": "A804",
+    "global_order": 805,
+    "word_id": "0805",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 эмаль на посуде потрескалась\n1.2 в огне трещат поленья\n1.3 овца отстала\n1.4 брыз­нула кровь"
+    ],
+    "desired": [
+      "эмаль на посуде потрескалась",
+      "в огне трещат поленья",
+      "овца отстала",
+      "брызнула кровь"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A809",
+    "global_order": 810,
+    "word_id": "0810",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 чыбыкъдан ингичге\n1.2 ингичге ауаз"
+    ],
+    "desired": [
+      "чыбыкъдан ингичге",
+      "ингичге ауаз"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A809",
+    "global_order": 810,
+    "word_id": "0810",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 тоньше прута\n1.2 вы­сокий голос"
+    ],
+    "desired": [
+      "тоньше прута",
+      "высокий голос"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A818",
+    "global_order": 819,
+    "word_id": "0819",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 адаргы зат"
+    ],
+    "desired": [
+      "адаргы зат"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A818",
+    "global_order": 819,
+    "word_id": "0819",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 малень­кий по размеру"
+    ],
+    "desired": [
+      "маленький по размеру"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A825",
+    "global_order": 826,
+    "word_id": "0826",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 тюёмелерин этмегенлей\n1.2 алтын тюйме"
+    ],
+    "desired": [
+      "тюймелерин этмегенлей",
+      "алтын тюйме"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A825",
+    "global_order": 826,
+    "word_id": "0826",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 нарас­пашку\n1.2 золотой нагрудник"
+    ],
+    "desired": [
+      "нараспашку",
+      "золотой нагрудник"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A842",
+    "global_order": 843,
+    "word_id": "0843",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 суу таудан саркъады\n2.1 аякъларым саркъыб, тоблукъ болуб турадыла"
+    ],
+    "desired": [
+      "1. суу таудан саркъады",
+      "2. аякъларым саркъыб, тоблукъ болуб турадыла"
+    ],
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог"
+  },
+  {
+    "legacy_id": "A842",
+    "global_order": 843,
+    "word_id": "0843",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 вода течёт горы\n2.1 у меня ноги отекли и онемели"
+    ],
+    "desired": [
+      "вода течёт с горы",
+      "у меня ноги отекли и онемели"
+    ],
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог"
+  },
+  {
+    "legacy_id": "A847",
+    "global_order": 848,
+    "word_id": "0848",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 чууакъ кюн\n1.2 чууакъ кёк"
+    ],
+    "desired": [
+      "чууакъ кюн",
+      "чууакъ кёк"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A847",
+    "global_order": 848,
+    "word_id": "0848",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 ясное нёбо\n1.2 погожий день"
+    ],
+    "desired": [
+      "ясное небо",
+      "погожий день"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A860",
+    "global_order": 861,
+    "word_id": "0861",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къойла аргъы бетдедиле\n1.2 къагъытны аргъы җанында\n1.3 мын­дан аргъысы къолай тюлдю"
+    ],
+    "desired": [
+      "къойла аргъы бетдедиле",
+      "къагъытны аргъы җанында",
+      "мындан аргъысы къолай тюлдю"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A860",
+    "global_order": 861,
+    "word_id": "0861",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 овцы на том склоне [горы]\n1.2 на другой стороне листа\n1.3 продолжение книги неинтересное"
+    ],
+    "desired": [
+      "овцы на том склоне [горы]",
+      "на другой стороне листа",
+      "продолжение книги неинтересное"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B1",
+    "global_order": 882,
+    "word_id": "0882",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "водопад, ручей, поток, струя, во­лна",
+    "desired": "водопад, ручей, поток, струя, волна",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B1",
+    "global_order": 882,
+    "word_id": "0882",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 суучукъ шоркъаладан секире барады\n1.2 җангур шоркъала бардырды\n1.3 сууну шоркъалары барадыла бир бирин къуууб"
+    ],
+    "desired": [
+      "суучукъ шоркъаладан секире барады",
+      "җангур шоркъала бардырды",
+      "сууну шоркъалары барадыла бир бирин къуууб"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B1",
+    "global_order": 882,
+    "word_id": "0882",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 речка течёт по порогам\n1.2 от дождя образовались ручьи\n1.3 волны реки бегут, догоняя друг друга"
+    ],
+    "desired": [
+      "речка течёт по порогам",
+      "от дождя образовались ручьи",
+      "волны реки бегут, догоняя друг друга"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B2",
+    "global_order": 883,
+    "word_id": "0883",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 маҗал кийим\n1.2 ауругъан маҗал болду"
+    ],
+    "desired": [
+      "маҗал кийим",
+      "ауругъан маҗал болду"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B2",
+    "global_order": 883,
+    "word_id": "0883",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 лучшая одежда\n1.2 больной попра­вился"
+    ],
+    "desired": [
+      "лучшая одежда",
+      "больной поправился"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B4",
+    "global_order": 885,
+    "word_id": "0885",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къарангыда бир ауанала кёрюнедиле\n1.2 тауну ауанасы\n1.3 җынгыз ауанасы къалгъанды\n1.4 аллыма бир акъ ауанала чыкъдыла"
+    ],
+    "desired": [
+      "къарангыда бир ауанала кёрюнедиле",
+      "тауну ауанасы",
+      "җынгыз ауанасы къалгъанды",
+      "аллыма бир акъ ауанала чыкъдыла"
+    ],
+    "legacy_comment": "Добавлена группа синонимов «тень»"
+  },
+  {
+    "legacy_id": "B4",
+    "global_order": 885,
+    "word_id": "0885",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 в темноте заметны какие-то силуэты\n1.2 очертания горы\n1.3 от него осталась одна тень\n1.4 передо мной появились какие-то белые призраки"
+    ],
+    "desired": [
+      "в темноте заметны какие-то силуэты",
+      "очертания горы",
+      "от него осталась одна тень",
+      "передо мной появились какие-то белые призраки"
+    ],
+    "legacy_comment": "Добавлена группа синонимов «тень»"
+  }
+]

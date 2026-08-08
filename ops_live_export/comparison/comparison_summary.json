@@ -1,0 +1,18 @@
+{
+  "legacy_source_sha256": "80ca3458b636248562fb54aa1bf2b9b123e802d62d4c921faa0ef139eed2352d",
+  "legacy_marked_rows": 94,
+  "current_rows": 2355,
+  "matched_by_global_order": 94,
+  "risky_matches": 42,
+  "changed_rows": 94,
+  "changed_fields": 327,
+  "field_counts": {
+    "phrases_alan_cyrillic": 94,
+    "phrases_ru": 94,
+    "translation_ru": 51,
+    "word_alan_cyrillic": 43,
+    "pos": 25,
+    "synonyms": 20
+  },
+  "already_equal_rows": 0
+}

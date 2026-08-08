@@ -1,0 +1,412 @@
+[
+  {
+    "legacy_id": "A766",
+    "global_order": 767,
+    "word_id": "0767",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 да услышит Аллах твою молитву!"
+    ],
+    "desired": [
+      "посмотреть с укоризной",
+      "мелкие обиды",
+      "обидеться"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "къанаргъа",
+    "desired": "алам",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "1. кровоточить; \n2. утоляться, успокаиваться, охладевать",
+    "desired": "вселенная, галактика, мир, свет",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "verb",
+    "desired": "noun",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [
+      "успокаивать"
+    ],
+    "desired": [],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җарам къанайды\n2.1 сусабым къанды\n2.2 залимлигинг алкъын къанмагъанды\n2.3 сенден къаннганбыз"
+    ],
+    "desired": [
+      "биз аламны кесекчигин да англаялмайбыз"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A781",
+    "global_order": 782,
+    "word_id": "0782",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 моя рана кровоточит\n2.1 я утолил жажду\n2.2 твоя злость ещё не унялась\n2.3 ты нам надоел"
+    ],
+    "desired": [
+      "мы не понимаем даже частицу вселенной"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A784",
+    "global_order": 785,
+    "word_id": "0785",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "җастыкъ",
+    "desired": "шиндик",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A784",
+    "global_order": 785,
+    "word_id": "0785",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "подушка",
+    "desired": "табуретка, стул",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A784",
+    "global_order": 785,
+    "word_id": "0785",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къуш җастыкъ"
+    ],
+    "desired": [
+      "сыртлы шиндик",
+      "узун шиндик"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A784",
+    "global_order": 785,
+    "word_id": "0785",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 пуховая подушка"
+    ],
+    "desired": [
+      "стул",
+      "скамейка, лавка"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "тюрсюн",
+    "desired": "җукъа",
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "1. лицо, облик; \n2. странный",
+    "desired": "1. тонкий; \n2. худой, худощавый; \n3. лёгкий; \n4. жидкий, редкий; \n5. нервный, горячий, вспыльчивый (перен.); \n6. несостоятельный, бедный",
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "noun",
+    "desired": "adj",
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "synonyms",
+    "current": [
+      "облик",
+      "внешний вид"
+    ],
+    "desired": [
+      "худой"
+    ],
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 бет тюрсюн\n1.2 бет тюрсюнюнг къууаннганнга ушамайды\n1.3 къумачны тюрсюню\n2.1 тюрсюн адам"
+    ],
+    "desired": [
+      "1. җукъа къанга",
+      "2. җукъа адам",
+      "3. җукъа кийим",
+      "4. җукъа шорпа",
+      "терекле җукъа орнатылгъандыла",
+      "5. җукъа адам сёзлю болур",
+      "6. къолу җукъа адам"
+    ],
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A797",
+    "global_order": 798,
+    "word_id": "0798",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 черты лица\n1.2 по твоему лицу не видно, что ты обрадовался\n1.3 цвет ткани\n2.1 странный человек"
+    ],
+    "desired": [
+      "тонкая доска",
+      "худощавый человек",
+      "лёгкая одежда",
+      "жидкий суп",
+      "деревья посажены редко",
+      "горячий человек бывает болтливым",
+      "бедный человек"
+    ],
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A803",
+    "global_order": 804,
+    "word_id": "0804",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 машокну тышы бла җыҗым чёргерге\n1.2 җамчыгъа чёргерге\n1.3 къагъытха чёргерге"
+    ],
+    "desired": [
+      "машокну тышы бла җыҗым чёргерге",
+      "җамчыгъа чёргерге",
+      "къагъытха чёргерге"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A803",
+    "global_order": 804,
+    "word_id": "0804",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 обмотать мешок верёвкой\n1.2 укутать в бурку\n1.3 завора­чивать в бумагу"
+    ],
+    "desired": [
+      "обмотать мешок верёвкой",
+      "укутать в бурку",
+      "заворачивать в бумагу"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A804",
+    "global_order": 805,
+    "word_id": "0805",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 сауутну бояуу чартлагъанды\n1.2 җана тургъан отну кёсеулери чартлайдыла\n1.3 къой чартлагъанды\n1.4 къан чартлады"
+    ],
+    "desired": [
+      "сауутну бояуу чартлагъанды",
+      "җана тургъан отну кёсеулери чартлайдыла",
+      "къой чартлагъанды",
+      "къан чартлады"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "public": {
+    "words": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.v_words_app'\",\"message\":\"Could not find the table 'public.words' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "word_languages": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.user_word_favorites'\",\"message\":\"Could not find the table 'public.word_languages' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "word_translations": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.content_sections'\",\"message\":\"Could not find the table 'public.word_translations' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "word_localizations": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.content_sections'\",\"message\":\"Could not find the table 'public.word_localizations' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "content_words": {
+      "status": 200,
+      "body_prefix": "[{\"word_id\":\"0001\",\"global_order\":1,\"story_id\":1,\"dictionary_id\":1,\"section_id\":1,\"set_id\":null,\"pos\":\"verb\",\"synonyms\":\"быть\",\"created_at\":\"2026-07-15T16:29:56.219626+00:00\",\"updated_at\":\"2026-07-15T16:29:56.219626+00:00\"}]"
+    },
+    "content_word_languages": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.content_word_texts'\",\"message\":\"Could not find the table 'public.content_word_languages' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "dictionary_words": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.dictionary_metadata'\",\"message\":\"Could not find the table 'public.dictionary_words' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "stories": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.profiles'\",\"message\":\"Could not find the table 'public.stories' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "dictionaries": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.content_dictionaries'\",\"message\":\"Could not find the table 'public.dictionaries' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "sections": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.content_sections'\",\"message\":\"Could not find the table 'public.sections' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "sets": {
+      "status": 404,
+      "body_prefix": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.content_sets'\",\"message\":\"Could not find the table 'public.sets' in the schema cache\"}",
+      "error": "HTTP Error 404: Not Found"
+    }
+  }
+}

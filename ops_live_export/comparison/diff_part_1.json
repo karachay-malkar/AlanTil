@@ -1,0 +1,452 @@
+[
+  {
+    "legacy_id": "A3",
+    "global_order": 3,
+    "word_id": "0003",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 ашарыкъ этерге\n1.2 җол этерге\n1.3 җыр этерге\n1.4 аҗым этерге\n1.5 алчылыкъ этерге"
+    ],
+    "desired": [
+      "ашарыкъ этерге",
+      "җол этерге",
+      "җыр этерге",
+      "аҗым этерге",
+      "алчылыкъ этерге"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A3",
+    "global_order": 3,
+    "word_id": "0003",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 варить обед\n1.2 построить дорогу\n1.3 сложить песню\n1.4 сомневаться\n1.5 предводительство­вать"
+    ],
+    "desired": [
+      "варить обед",
+      "построить дорогу",
+      "сложить песню",
+      "сомневаться",
+      "предводительствовать"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A13",
+    "global_order": 13,
+    "word_id": "0013",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 терезеден къараргъа\n1.2 тёгерекге къараргъа\n1.3 ауругъанга къараргъа\n1.4 малгъа къараргъа"
+    ],
+    "desired": [
+      "терезеден къараргъа",
+      "тёгерекге къараргъа",
+      "ауругъанга къараргъа",
+      "малгъа къараргъа"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A13",
+    "global_order": 13,
+    "word_id": "0013",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 посмотреть из окна\n1.2 озираться, огля­деться\n1.3 ухаживать за больным\n1.4 следить за скотом"
+    ],
+    "desired": [
+      "посмотреть из окна",
+      "озираться, оглядеться",
+      "ухаживать за больным",
+      "следить за скотом"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A16",
+    "global_order": 16,
+    "word_id": "0016",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 тёрт орун бош къалды\n1.2 җукълаб къалыргъа\n1.3 палахгъа къалыргъа"
+    ],
+    "desired": [
+      "тёрт орун бош къалды",
+      "җукълаб къалыргъа",
+      "палахгъа къалыргъа"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A16",
+    "global_order": 16,
+    "word_id": "0016",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 четыре места остались свобод­ными\n1.2 уснуть\n1.3 попасть в беду"
+    ],
+    "desired": [
+      "четыре места остались свободными",
+      "уснуть",
+      "попасть в беду"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A24",
+    "global_order": 24,
+    "word_id": "0024",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 ал аякъ\n1.2 юйню ал җаны\n1.3 назмуну алындан окъу!\n1.4 ал сёз"
+    ],
+    "desired": [
+      "ал аякъ",
+      "юйню ал җаны",
+      "назмуну алындан окъу!",
+      "ал сёз"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A24",
+    "global_order": 24,
+    "word_id": "0024",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 передняя нога\n1.2 фасад дома\n1.3 читай стих с начала!\n1.4 вступи­тельное слово"
+    ],
+    "desired": [
+      "передняя нога",
+      "фасад дома",
+      "читай стих с начала!",
+      "вступительное слово"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A26",
+    "global_order": 26,
+    "word_id": "0026",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "1. рука, кисть; \n2. балка, долина, ущелье (неболь­шое)",
+    "desired": "1. рука, кисть; \n2. балка, долина, ущелье (небольшое)",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A26",
+    "global_order": 26,
+    "word_id": "0026",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къол бла этилген\n1.2 къол тирмен\n2.1 нызылы къол"
+    ],
+    "desired": [
+      "1. къол бла этилген",
+      "къол тирмен",
+      "2. нызылы къол"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A26",
+    "global_order": 26,
+    "word_id": "0026",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 сделанный вручную\n1.2 ручная мельница\n2.1 еловая балка"
+    ],
+    "desired": [
+      "сделанный вручную",
+      "ручная мельница",
+      "еловая балка"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A28",
+    "global_order": 28,
+    "word_id": "0028",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 кёз ачаргъа\n1.2 ийнени кёзю\n1.3 терезе кёз"
+    ],
+    "desired": [
+      "кёз ачаргъа",
+      "ийнени кёзю",
+      "терезе кёз"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A28",
+    "global_order": 28,
+    "word_id": "0028",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 открыть глаза\n1.2 ушко иголки\n1.3 отверстие в окон­ной раме для стекла"
+    ],
+    "desired": [
+      "открыть глаза",
+      "ушко иголки",
+      "отверстие в оконной раме для стекла"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A45",
+    "global_order": 45,
+    "word_id": "0045",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 юйге кючден җетдим\n1.2 маннга җеталлыкъ тюлсе\n1.3 бу ишге сынамы җетмейди"
+    ],
+    "desired": [
+      "юйге кючден җетдим",
+      "маннга җеталлыкъ тюлсе",
+      "бу ишге сынамы җетмейди"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A45",
+    "global_order": 45,
+    "word_id": "0045",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 я еле добрался до дому\n1.2 ты меня не достанешь\n1.3 для этой работы ему не хватаем опыта"
+    ],
+    "desired": [
+      "я еле добрался до дому",
+      "ты меня не достанешь",
+      "для этой работы ему не хватает опыта"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A49",
+    "global_order": 49,
+    "word_id": "0049",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 мени атым Бонд… җеймс Бонд"
+    ],
+    "desired": [
+      "мени атым Бонд… җеймс Бонд"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A49",
+    "global_order": 49,
+    "word_id": "0049",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 меня зоут Бонд… Джеймс Бонд"
+    ],
+    "desired": [
+      "меня зовут Бонд… Джеймс Бонд"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A55",
+    "global_order": 55,
+    "word_id": "0055",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "внутреность, середина",
+    "desired": "внутренность, середина",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A55",
+    "global_order": 55,
+    "word_id": "0055",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къозну ичи\n1.2 ич җаны"
+    ],
+    "desired": [
+      "къозну ичи",
+      "ич җаны"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A55",
+    "global_order": 55,
+    "word_id": "0055",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 ядро ореха\n1.2 внутренняя сторона"
+    ],
+    "desired": [
+      "ядро ореха",
+      "внутренняя сторона"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  }
+]

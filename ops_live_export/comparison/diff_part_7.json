@@ -1,0 +1,380 @@
+[
+  {
+    "legacy_id": "A462",
+    "global_order": 463,
+    "word_id": "0463",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "мангылай",
+    "desired": "теберге",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A462",
+    "global_order": 463,
+    "word_id": "0463",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "лоб, фасад",
+    "desired": "двигаться, трястись, пульсировать",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A462",
+    "global_order": 463,
+    "word_id": "0463",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "noun",
+    "desired": "verb",
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A462",
+    "global_order": 463,
+    "word_id": "0463",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 кенг мангылай\n1.2 юйню мангылайы"
+    ],
+    "desired": [
+      "арлакъ теберге",
+      "җер тебеди",
+      "ёшюнюнг бла теберирге"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A462",
+    "global_order": 463,
+    "word_id": "0463",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 широкий лоб\n1.2 фасад дома"
+    ],
+    "desired": [
+      "отодвинуться",
+      "земля трясётся",
+      "толкать грудью"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A524",
+    "global_order": 525,
+    "word_id": "0525",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "хакъ",
+    "desired": "җаулукъ",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A524",
+    "global_order": 525,
+    "word_id": "0525",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "1. доля, заработок; \n2. истинный, реальный, объективно существующий",
+    "desired": "платок",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A524",
+    "global_order": 525,
+    "word_id": "0525",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 айлыкъ хакъ\n2.1 хаух дуниядан хакъ дуниягъа кетди"
+    ],
+    "desired": [
+      "ауругъаннга - кийик саулукъ, җетген къызгъа - чилле җаулукъ"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A524",
+    "global_order": 525,
+    "word_id": "0525",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 месячный заработок\n2.1 ушёл из бренного мира в мир истинный"
+    ],
+    "desired": [
+      "больному - бычье здоровье, девушке на выданье - шёлковый платок"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A538",
+    "global_order": 539,
+    "word_id": "0539",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "дау",
+    "desired": "сыгъаргъа",
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода"
+  },
+  {
+    "legacy_id": "A538",
+    "global_order": 539,
+    "word_id": "0539",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "разбирательства, спор, иск",
+    "desired": "выжимать, отжимать, заставлять (перен.)",
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода"
+  },
+  {
+    "legacy_id": "A538",
+    "global_order": 539,
+    "word_id": "0539",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "pos",
+    "current": "noun",
+    "desired": "verb",
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода"
+  },
+  {
+    "legacy_id": "A538",
+    "global_order": 539,
+    "word_id": "0539",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 даугъа кирирге\n1.2 манга кимни дауу барды?"
+    ],
+    "desired": [
+      "быстырланы сыгъыб җаяргъа",
+      "сыгъыб ишлетирге"
+    ],
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода"
+  },
+  {
+    "legacy_id": "A538",
+    "global_order": 539,
+    "word_id": "0539",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 вступить в тяжбу\n1.2 кому какое дело до меня?"
+    ],
+    "desired": [
+      "выжать бельё и повесить",
+      "заставлять усиленно работать"
+    ],
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода"
+  },
+  {
+    "legacy_id": "A546",
+    "global_order": 547,
+    "word_id": "0547",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "улан",
+    "desired": "къобуз",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A546",
+    "global_order": 547,
+    "word_id": "0547",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "сын,  дитя",
+    "desired": "гармонь",
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A546",
+    "global_order": 547,
+    "word_id": "0547",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 улан җигит болмаз, җыгъылыб бурнун урмаса"
+    ],
+    "desired": [
+      "къобуз согъаргъа"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A546",
+    "global_order": 547,
+    "word_id": "0547",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 юноша не станет героем, пока не ударится носом об землю"
+    ],
+    "desired": [
+      "играть на гармони"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A590",
+    "global_order": 591,
+    "word_id": "0591",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "word_alan_cyrillic",
+    "current": "шагъырей",
+    "desired": "асыраргъа",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A590",
+    "global_order": 591,
+    "word_id": "0591",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "знакомый",
+    "desired": "1. хоронить; \n2. хранить, кормить, растить",
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  }
+]

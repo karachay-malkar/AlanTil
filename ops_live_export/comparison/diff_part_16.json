@@ -1,0 +1,438 @@
+[
+  {
+    "legacy_id": "B190",
+    "global_order": 1072,
+    "word_id": "1072",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 у него красивый почер"
+    ],
+    "desired": [
+      "у него красивый почерк"
+    ],
+    "legacy_comment": "В русском переводе восстановлена пропущенная буква"
+  },
+  {
+    "legacy_id": "B196",
+    "global_order": 1078,
+    "word_id": "1078",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "translation_ru",
+    "current": "перемежаться, чередоваться",
+    "desired": "1. окружать, брать в окружение; \n2. брать в оборот (перен.); \n3. перемежаться, чередоваться",
+    "legacy_comment": "Добавлены пропущенные значения и пример из словаря; значения пронумерованы"
+  },
+  {
+    "legacy_id": "B196",
+    "global_order": 1078,
+    "word_id": "1078",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 бир бирлери бла аралашадыла"
+    ],
+    "desired": [
+      "1. фронтдан келгенлени аралатхандыла",
+      "3. бир бирлери бла аралашадыла"
+    ],
+    "legacy_comment": "Добавлены пропущенные значения и пример из словаря; значения пронумерованы"
+  },
+  {
+    "legacy_id": "B196",
+    "global_order": 1078,
+    "word_id": "1078",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 они чередуются друг с другом"
+    ],
+    "desired": [
+      "окружили вернувшихся с фронта",
+      "они чередуются друг с другом"
+    ],
+    "legacy_comment": "Добавлены пропущенные значения и пример из словаря; значения пронумерованы"
+  },
+  {
+    "legacy_id": "B198",
+    "global_order": 1080,
+    "word_id": "1080",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 айланч суу\n1.2 айланч җол"
+    ],
+    "desired": [
+      "айланч суу",
+      "айланч җол"
+    ],
+    "legacy_comment": "Слово «айланма» выделено в отдельную строку"
+  },
+  {
+    "legacy_id": "B198",
+    "global_order": 1080,
+    "word_id": "1080",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 извилистая река\n1.2 обходная дорога"
+    ],
+    "desired": [
+      "извилистая река",
+      "обходная дорога"
+    ],
+    "legacy_comment": "Слово «айланма» выделено в отдельную строку"
+  },
+  {
+    "legacy_id": "B317",
+    "global_order": 1081,
+    "word_id": "1081",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къайдаса, айланма?\n2.1 җолну айланмасы"
+    ],
+    "desired": [
+      "1. къайдаса, айланма?",
+      "3. җолну айланмасы"
+    ],
+    "legacy_comment": "Выделено из строки «айланч, айланма» в отдельную карточку; добавлены значения из словаря; для значения «водоворот, омут, пучина» пример в источнике отсутствует"
+  },
+  {
+    "legacy_id": "B317",
+    "global_order": 1081,
+    "word_id": "1081",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 где ты, непоседа?\n2.1 поворот дороги"
+    ],
+    "desired": [
+      "где ты, непоседа?",
+      "поворот дороги"
+    ],
+    "legacy_comment": "Выделено из строки «айланч, айланма» в отдельную карточку; добавлены значения из словаря; для значения «водоворот, омут, пучина» пример в источнике отсутствует"
+  },
+  {
+    "legacy_id": "B202",
+    "global_order": 1085,
+    "word_id": "1085",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җангылычларынга мюкюл болургъа\n1.2 мюкюл этеррге\n1.3 ауузун мюкюл этерге"
+    ],
+    "desired": [
+      "җангылычларынга мюкюл болургъа",
+      "мюкюл этерге",
+      "ауузун мюкюл этерге"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B202",
+    "global_order": 1085,
+    "word_id": "1085",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 признать свои ошибки\n1.2 добиться признания\n1.3 поймать кого на слове"
+    ],
+    "desired": [
+      "признать свои ошибки",
+      "добиться признания",
+      "поймать кого на слове"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B203",
+    "global_order": 1086,
+    "word_id": "1086",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къагъъанакъ сабий"
+    ],
+    "desired": [
+      "къагъанакъ сабий"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B203",
+    "global_order": 1086,
+    "word_id": "1086",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 новорождённый ребёнок"
+    ],
+    "desired": [
+      "новорождённый ребёнок"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B255",
+    "global_order": 1138,
+    "word_id": "1138",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къаст этиб\n1.2 алагъа бармазгъа къастым барды"
+    ],
+    "desired": [
+      "къаст этиб",
+      "алагъа бармазгъа къастым барды"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B255",
+    "global_order": 1138,
+    "word_id": "1138",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 намеренно\n1.2 я дал себе зарок не хо­дить к ним"
+    ],
+    "desired": [
+      "намеренно",
+      "я дал себе зарок не ходить к ним"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B265",
+    "global_order": 1148,
+    "word_id": "1148",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 зауаллы адам\n1.2 ай зауаллы уа\n1.3 сууукъдан ёлдю ол зауаллы"
+    ],
+    "desired": [
+      "зауаллы адам",
+      "ай зауаллы уа",
+      "сууукъдан ёлдю ол зауаллы"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B265",
+    "global_order": 1148,
+    "word_id": "1148",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 горемыка\n1.2 ах, какой-же он несчастный\n1.3 этот несчастный умер от холода"
+    ],
+    "desired": [
+      "горемыка",
+      "ах, какой же он несчастный",
+      "этот несчастный умер от холода"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B294",
+    "global_order": 1177,
+    "word_id": "1177",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 җенгиден алыргъа\n1.2 җенг уч"
+    ],
+    "desired": [
+      "җенгиден алыргъа",
+      "җенг уч"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B294",
+    "global_order": 1177,
+    "word_id": "1177",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 взять зарукав\n1.2 манжета"
+    ],
+    "desired": [
+      "взять за рукав",
+      "манжета"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B309",
+    "global_order": 1192,
+    "word_id": "1192",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_alan_cyrillic",
+    "current": [
+      "1.1 къаза салыргъа\n1.2 бу башыбызгъа къара къазады"
+    ],
+    "desired": [
+      "къаза салыргъа",
+      "бу башыбызгъа къара къазады"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B309",
+    "global_order": 1192,
+    "word_id": "1192",
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "field": "phrases_ru",
+    "current": [
+      "1.1 наказать кого, расправиться кем\n1.2 это для нас большое наказание"
+    ],
+    "desired": [
+      "наказать кого, расправиться с кем",
+      "это для нас большое наказание"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  }
+]
