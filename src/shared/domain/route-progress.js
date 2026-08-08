@@ -1,9 +1,5 @@
-import { getAllStationProgress } from "../progress/station-progress-store.js?v=13.9.0";
+import { getAllStationProgress } from "../progress/station-progress-store.js?v=13.13";
 import { getWordProgress, getWordProgressMap, wordProgressSummary } from "../progress/word-progress-store.js?v=13.9.0";
-
-function percent(done, total) {
-  return total ? Math.round((done / total) * 100) : 0;
-}
 
 function uniqueWords(stations = []) {
   const map = new Map();
@@ -41,12 +37,12 @@ export function stationWordProgress(station, snapshot = null) {
 }
 
 export function storyProgress(route, storyType, snapshot = createRouteProgressSnapshot()) {
-  const story = route?.stories?.[storyType] || { stations: [], groups: [], catalogs: [] };
+  const story = route?.stories?.[storyType] || { stations: [], sections: [], catalogs: [] };
   const words = uniqueWords(story.stations);
   const summary = summaryFromMap(words, snapshot.progressMap);
   const completedStations = story.stations.filter((station) => stationWordProgress(station, snapshot).percent === 100);
-  const completedGroups = story.groups.filter((group) => group.stations.every((station) => stationWordProgress(station, snapshot).percent === 100));
-  const completedCatalogs = story.catalogs.filter((catalog) => catalog.groups.every((group) => group.stations.every((station) => stationWordProgress(station, snapshot).percent === 100)));
+  const completedSections = story.sections.filter((section) => section.stations.every((station) => stationWordProgress(station, snapshot).percent === 100));
+  const completedCatalogs = story.catalogs.filter((catalog) => catalog.sections.every((section) => section.stations.every((station) => stationWordProgress(station, snapshot).percent === 100)));
   return {
     totalStations: story.stations.length,
     masteredStations: completedStations.length,
@@ -54,8 +50,8 @@ export function storyProgress(route, storyType, snapshot = createRouteProgressSn
     totalWords: summary.total,
     masteredWords: summary.mastered,
     reviewWords: summary.review,
-    totalGroups: story.groups.length,
-    completedGroups: completedGroups.length,
+    totalSections: story.sections.length,
+    completedSections: completedSections.length,
     totalCatalogs: story.catalogs.length,
     completedCatalogs: completedCatalogs.length,
   };
