@@ -1,9 +1,6 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
-import { msg } from "../i18n/index.js?v=13.9.0";
+import { PATH_CONFIG } from "../../config/path.js?v=13.12";
 import { createSlugMap, toSlug } from "./slugs.js?v=13.9.0";
-import { sortNatural } from "./word-selection.js?v=13.9.0";
-
-const FIXED_STATION_SIZE = 30;
+import { sortNatural } from "./word-selection.js?v=13.12";
 
 export function normalizeRouteText(value) {
   return String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
@@ -27,7 +24,7 @@ function storyDescriptor(word, sourceOrder) {
   return {
     id,
     name: normalizeRouteText(word?.story_name) || id,
-    order: numericOrder(word?.story_order, numericOrder(id, sourceOrder)),
+    order: numericOrder(word?.story_order, sourceOrder),
   };
 }
 
@@ -36,31 +33,22 @@ function dictionaryDescriptor(word, sourceOrder) {
   return {
     id,
     name: normalizeRouteText(word?.dictionary_name || word?.dict) || id,
-    order: numericOrder(word?.dictionary_order, numericOrder(id, sourceOrder)),
+    order: routeOrder(word, sourceOrder),
   };
 }
 
-function sectionDescriptor(word, sourceOrder) {
-  const id = stableId(word?.section_id || word?.group_id || word?.section, "section");
-  return {
-    id,
-    name: normalizeRouteText(word?.section_name || word?.section) || id,
-    order: numericOrder(word?.section_order, numericOrder(id, sourceOrder)),
-  };
-}
-
-function namedSetDescriptor(word, sourceOrder) {
-  const id = normalizeRouteText(word?.set_id);
+function setDescriptor(word, sourceOrder) {
+  const id = normalizeRouteText(word?.set_id || word?.set);
   if (!id) return null;
   return {
     id,
     name: normalizeRouteText(word?.set_name || word?.set) || id,
-    order: numericOrder(word?.set_order, numericOrder(id, sourceOrder)),
+    order: routeOrder(word, sourceOrder),
   };
 }
 
 function makeStationKey(station) {
-  return [station.storyType, station.dictionaryId, station.catalogId, station.groupId, station.setId]
+  return [station.storyType, station.dictionaryId, station.setId]
     .map(normalizeRouteText)
     .join("::");
 }
@@ -70,8 +58,14 @@ export function stationKey(station) {
 }
 
 export function routeKeyParts(key) {
-  const [storyType = "", dictionaryId = "", catalogId = "", groupId = "", setId = ""] = String(key || "").split("::");
-  return { storyType, dictionaryId, catalogId, groupId, setId };
+  const [storyType = "", dictionaryId = "", setId = ""] = String(key || "").split("::");
+  return {
+    storyType,
+    dictionaryId,
+    catalogId: dictionaryId,
+    groupId: dictionaryId,
+    setId,
+  };
 }
 
 function createStationSlugMap(stations = []) {
@@ -80,7 +74,7 @@ function createStationSlugMap(stations = []) {
   const occupied = new Set();
   stations.forEach((station, index) => {
     const value = String(station.setId || "");
-    let base = String(station.slug || toSlug(value, `station-${index + 1}`));
+    const base = String(station.slug || toSlug(value, `station-${index + 1}`));
     let slug = base;
     let suffix = 2;
     while (occupied.has(slug)) {
@@ -97,20 +91,16 @@ function createStationSlugMap(stations = []) {
   };
 }
 
-function dynamicStationName(start, end) {
-  return start === end
-    ? msg("learn.slovo", { first: start })
-    : msg("learn.top", { first: start, last: end });
-}
-
-function createNamedStation({ story, dictionary, section, set, words }) {
+function createStation({ story, dictionary, set, words }) {
   const sortedWords = words.slice().sort((left, right) => routeOrder(left, 0) - routeOrder(right, 0));
   const station = {
     dictionaryId: dictionary.id,
     catalogId: dictionary.id,
     catalogName: dictionary.name,
-    groupId: section.id,
-    groupName: section.name,
+    // Progress/session tables still have legacy catalog/group columns. Both
+    // now point to the real dictionary; there is no content section entity.
+    groupId: dictionary.id,
+    groupName: dictionary.name,
     setId: set.id,
     sourceSetId: set.id,
     selectionSetId: set.id,
@@ -128,79 +118,29 @@ function createNamedStation({ story, dictionary, section, set, words }) {
   return station;
 }
 
-function createDynamicStations({ story, dictionary, section, words, stationSize }) {
-  const sortedWords = words.slice().sort((left, right) => routeOrder(left, 0) - routeOrder(right, 0));
-  const output = [];
-  for (let offset = 0; offset < sortedWords.length; offset += stationSize) {
-    const stationWords = sortedWords.slice(offset, offset + stationSize);
-    if (!stationWords.length) continue;
-    const first = offset + 1;
-    const last = offset + stationWords.length;
-    const anchorWordId = String(stationWords[0]?.id || `row-${first}`);
-    const station = {
-      dictionaryId: dictionary.id,
-      catalogId: dictionary.id,
-      catalogName: dictionary.name,
-      groupId: section.id,
-      groupName: section.name,
-      setId: `dynamic:${anchorWordId}`,
-      sourceSetId: "",
-      selectionSetId: `dynamic-section-${section.id}`,
-      name: dynamicStationName(first, last),
-      words: stationWords,
-      storyType: story.id,
-      storyName: story.name,
-      isNamedSet: false,
-      requiredAccuracy: PATH_CONFIG.stationRequiredAccuracy,
-      order: routeOrder(stationWords[0], first),
-      anchorWordId,
-      chunkIndex: output.length + 1,
-      stationSize,
-    };
-    station.key = makeStationKey(station);
-    station.slug = `words-${toSlug(anchorWordId, `station-${output.length + 1}`)}`;
-    output.push(station);
-  }
-  return output;
-}
-
-export function buildLearningRoute(words, _options = {}) {
-  const size = FIXED_STATION_SIZE;
-  const source = Array.isArray(words) ? words.filter((word) => word?.id) : [];
+export function buildLearningRoute(words) {
+  const source = Array.isArray(words) ? words.filter((word) => word?.id && word?.dictionary_id && word?.set_id) : [];
   const storiesMap = new Map();
 
   source.forEach((word, index) => {
     const sourceOrder = index + 1;
     const story = storyDescriptor(word, sourceOrder);
     const dictionary = dictionaryDescriptor(word, sourceOrder);
-    const section = sectionDescriptor(word, sourceOrder);
-    const namedSet = namedSetDescriptor(word, sourceOrder);
+    const set = setDescriptor(word, sourceOrder);
+    if (!set) return;
 
     if (!storiesMap.has(story.id)) {
       storiesMap.set(story.id, { ...story, dictionariesMap: new Map(), sourceOrder });
     }
     const storyNode = storiesMap.get(story.id);
     if (!storyNode.dictionariesMap.has(dictionary.id)) {
-      storyNode.dictionariesMap.set(dictionary.id, { ...dictionary, sectionsMap: new Map(), sourceOrder });
+      storyNode.dictionariesMap.set(dictionary.id, { ...dictionary, setsMap: new Map(), sourceOrder });
     }
     const dictionaryNode = storyNode.dictionariesMap.get(dictionary.id);
-    if (!dictionaryNode.sectionsMap.has(section.id)) {
-      dictionaryNode.sectionsMap.set(section.id, {
-        ...section,
-        dynamicWords: [],
-        setsMap: new Map(),
-        sourceOrder,
-      });
+    if (!dictionaryNode.setsMap.has(set.id)) {
+      dictionaryNode.setsMap.set(set.id, { ...set, words: [], sourceOrder });
     }
-    const sectionNode = dictionaryNode.sectionsMap.get(section.id);
-    if (namedSet) {
-      if (!sectionNode.setsMap.has(namedSet.id)) {
-        sectionNode.setsMap.set(namedSet.id, { ...namedSet, words: [], sourceOrder });
-      }
-      sectionNode.setsMap.get(namedSet.id).words.push(word);
-    } else {
-      sectionNode.dynamicWords.push(word);
-    }
+    dictionaryNode.setsMap.get(set.id).words.push(word);
   });
 
   const storyOrder = Array.from(storiesMap.values())
@@ -213,52 +153,38 @@ export function buildLearningRoute(words, _options = {}) {
     const storyNode = storiesMap.get(storyId);
     const catalogs = Array.from(storyNode.dictionariesMap.values())
       .map((dictionaryNode) => {
-        const groups = Array.from(dictionaryNode.sectionsMap.values())
-          .map((sectionNode) => {
-            const dynamicStations = createDynamicStations({
-              story: storyNode,
-              dictionary: dictionaryNode,
-              section: sectionNode,
-              words: sectionNode.dynamicWords,
-              stationSize: size,
-            });
-            const namedStations = Array.from(sectionNode.setsMap.values())
-              .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name))
-              .map((setNode) => createNamedStation({
-                story: storyNode,
-                dictionary: dictionaryNode,
-                section: sectionNode,
-                set: setNode,
-                words: setNode.words,
-              }));
-            const stations = [...dynamicStations, ...namedStations]
-              .sort((left, right) => left.order - right.order || sortNatural(left.name, right.name));
-            return {
-              dictionaryId: dictionaryNode.id,
-              catalogId: dictionaryNode.id,
-              groupId: sectionNode.id,
-              name: sectionNode.name,
-              order: sectionNode.order,
-              stations,
-              sourceOrder: sectionNode.sourceOrder,
-            };
-          })
-          .filter((group) => group.stations.length)
-          .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name));
+        const stations = Array.from(dictionaryNode.setsMap.values())
+          .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name))
+          .map((setNode) => createStation({
+            story: storyNode,
+            dictionary: dictionaryNode,
+            set: setNode,
+            words: setNode.words,
+          }));
         return {
           dictionaryId: dictionaryNode.id,
           catalogId: dictionaryNode.id,
           name: dictionaryNode.name,
           order: dictionaryNode.order,
           sourceOrder: dictionaryNode.sourceOrder,
-          groups,
+          stations,
+          // Compatibility for existing route/progress presentation only.
+          groups: [{
+            dictionaryId: dictionaryNode.id,
+            catalogId: dictionaryNode.id,
+            groupId: dictionaryNode.id,
+            name: dictionaryNode.name,
+            order: dictionaryNode.order,
+            sourceOrder: dictionaryNode.sourceOrder,
+            stations,
+          }],
         };
       })
-      .filter((catalog) => catalog.groups.length)
+      .filter((catalog) => catalog.stations.length)
       .sort((left, right) => left.order - right.order || left.sourceOrder - right.sourceOrder || sortNatural(left.name, right.name));
 
     const groups = catalogs.flatMap((catalog) => catalog.groups);
-    const stations = groups.flatMap((group) => group.stations);
+    const stations = catalogs.flatMap((catalog) => catalog.stations);
     stories[storyId] = {
       type: storyId,
       label: storyNode.name,
@@ -267,7 +193,7 @@ export function buildLearningRoute(words, _options = {}) {
       groups,
       stations,
       stationCount: stations.length,
-      groupCount: groups.length,
+      groupCount: catalogs.length,
       wordCount: stations.reduce((sum, station) => sum + station.words.length, 0),
     };
     allCatalogs.push(...catalogs);
@@ -287,11 +213,9 @@ export function buildLearningRoute(words, _options = {}) {
     slugMaps.catalogByStory.set(storyId, createSlugMap(story.catalogs.map((catalog) => catalog.catalogId)));
     story.catalogs.forEach((catalog) => {
       const catalogKey = `${storyId}::${catalog.catalogId}`;
-      slugMaps.groupByCatalog.set(catalogKey, createSlugMap(catalog.groups.map((group) => group.groupId)));
-      catalog.groups.forEach((group) => {
-        const groupKey = `${storyId}::${catalog.catalogId}::${group.groupId}`;
-        slugMaps.setByGroup.set(groupKey, createStationSlugMap(group.stations));
-      });
+      slugMaps.groupByCatalog.set(catalogKey, createSlugMap([catalog.catalogId]));
+      const groupKey = `${storyId}::${catalog.catalogId}::${catalog.catalogId}`;
+      slugMaps.setByGroup.set(groupKey, createStationSlugMap(catalog.stations));
     });
   });
 
@@ -300,7 +224,6 @@ export function buildLearningRoute(words, _options = {}) {
     : (storyOrder[0] || PATH_CONFIG.defaultStoryType);
 
   return {
-    stationSize: size,
     storyOrder,
     storyLabels: Object.fromEntries(storyOrder.map((type) => [type, stories[type].label])),
     catalogs: allCatalogs,
@@ -314,11 +237,11 @@ export function buildLearningRoute(words, _options = {}) {
 export function stationPathParams(route, station) {
   const storyType = station.storyType;
   const catalogKey = `${storyType}::${station.catalogId}`;
-  const groupKey = `${storyType}::${station.catalogId}::${station.groupId}`;
+  const groupKey = `${storyType}::${station.catalogId}::${station.catalogId}`;
   return {
     storyType,
     catalogSlug: route.slugMaps.catalogByStory.get(storyType)?.slugFor(station.catalogId) || toSlug(station.catalogId),
-    groupSlug: route.slugMaps.groupByCatalog.get(catalogKey)?.slugFor(station.groupId) || toSlug(station.groupId),
+    groupSlug: route.slugMaps.groupByCatalog.get(catalogKey)?.slugFor(station.catalogId) || toSlug(station.catalogId),
     setSlug: station.slug || route.slugMaps.setByGroup.get(groupKey)?.slugFor(station.setId) || toSlug(station.setId),
   };
 }
@@ -328,15 +251,13 @@ export function resolveStationFromParams(route, params = {}) {
   if (!story) return null;
   const catalogId = route.slugMaps.catalogByStory.get(params.storyType)?.valueFor(params.catalogSlug);
   if (!catalogId) return null;
+  const catalog = story.catalogs.find((item) => item.catalogId === catalogId);
+  if (!catalog) return null;
   const catalogKey = `${params.storyType}::${catalogId}`;
   const groupId = route.slugMaps.groupByCatalog.get(catalogKey)?.valueFor(params.groupSlug);
-  if (!groupId) return null;
-  const groupKey = `${params.storyType}::${catalogId}::${groupId}`;
+  if (groupId !== catalogId) return null;
+  const groupKey = `${params.storyType}::${catalogId}::${catalogId}`;
   const setId = route.slugMaps.setByGroup.get(groupKey)?.valueFor(params.setSlug);
-  const group = story.groups.find((item) => item.catalogId === catalogId && item.groupId === groupId);
-  if (!group) return null;
-  if (setId) return group.stations.find((station) => station.setId === setId) || null;
-  const anchorSlug = String(params.setSlug || "").replace(/^words-/, "");
-  if (!anchorSlug) return null;
-  return group.stations.find((station) => station.words.some((word) => toSlug(word.id) === anchorSlug)) || null;
+  if (!setId) return null;
+  return catalog.stations.find((station) => station.setId === setId) || null;
 }
