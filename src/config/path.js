@@ -7,18 +7,18 @@ export const PATH_CONFIG = Object.freeze({
   milestoneRequiredAccuracy: 90,
   summitUnlockAscentPercent: 60,
   routeBackground: "first-gorge",
-  defaultStoryType: "ascent",
+  defaultStoryType: "roots",
   storyColumn: "story_type",
-  storyOrder: ["ascent", "summit", "trails"],
+  storyOrder: ["roots", "ascent", "pathways"],
   storyLabels: Object.freeze({
-    get ascent() { return msg("path.voshozhdenie"); },
-    get summit() { return msg("path.na_vershine"); },
-    get trails() { return msg("path.tropy"); },
+    get roots() { return msg("path.voshozhdenie"); },
+    get ascent() { return msg("path.na_vershine"); },
+    get pathways() { return msg("path.tropy"); },
   }),
   mainPathWeights: Object.freeze({
-    easy: 50,
-    medium: 30,
-    hard: 20,
+    beginner: 50,
+    intermediate: 30,
+    advanced: 20,
   }),
 });
 
@@ -35,7 +35,7 @@ export const STATION_STATUSES = Object.freeze([
 ]);
 
 export const STORY_TYPES = Object.freeze({
+  ROOTS: "roots",
   ASCENT: "ascent",
-  SUMMIT: "summit",
-  TRAILS: "trails",
+  PATHWAYS: "pathways",
 });
