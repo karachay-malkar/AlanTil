@@ -1,0 +1,68 @@
+name: Safely probe AlanTil content update permission
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/probe-word-update-permission.yml
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: PATCH only nonexistent rows
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.parse, urllib.request
+          from pathlib import Path
+          base = "https://pybrzgedqjmosbmilcea.supabase.co/rest/v1"
+          key = "sb_publishable_11TY-fBEAogA9JKnAku3vg_hjRxTa_a"
+          out = Path("ops_live_export/write_probe")
+          out.mkdir(parents=True, exist_ok=True)
+
+          def patch(url, body):
+              req = urllib.request.Request(
+                  url,
+                  data=json.dumps(body).encode("utf-8"),
+                  method="PATCH",
+                  headers={
+                      "apikey": key,
+                      "Accept": "application/json",
+                      "Content-Type": "application/json",
+                      "Prefer": "return=representation",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as r:
+                      return {"status": r.status, "body": r.read().decode("utf-8", errors="replace")}
+              except Exception as exc:
+                  body_text = ""
+                  if hasattr(exc, "read"):
+                      try: body_text = exc.read().decode("utf-8", errors="replace")
+                      except Exception: pass
+                  return {"status": getattr(exc, "code", 0) or 0, "error": str(exc), "body": body_text}
+
+          impossible = urllib.parse.quote("__alan_til_nonexistent_probe__", safe="")
+          report = {
+              "content_word_texts": patch(f"{base}/content_word_texts?word_id=eq.{impossible}", {"phrases_text": "permission probe; no matching row"}),
+              "content_words": patch(f"{base}/content_words?word_id=eq.{impossible}", {"synonyms": "permission probe; no matching row"}),
+          }
+          (out / "patch_probe.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+      - name: Commit probe result
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/write_probe
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: record safe Supabase update permission probe"
+          git push origin HEAD:ops/word-sync-2026-08-08
