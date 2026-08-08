@@ -13,12 +13,18 @@ import { createShell } from "./shell.js?v=13.9.0";
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=13.10.12", { scope: "/" })
+    navigator.serviceWorker.register("/service-worker.js?v=13.12", { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
 
+function normalizeInitialLearningPath() {
+  if (!["/", "/path", "/path/"].includes(window.location.pathname)) return;
+  window.history.replaceState(null, "", `/path/roots${window.location.search}${window.location.hash}`);
+}
+
 async function bootstrap() {
+  normalizeInitialLearningPath();
   initializeI18n();
   prepareAnalytics();
   registerServiceWorker();
@@ -36,12 +42,9 @@ async function bootstrap() {
     },
   };
 
-  // Resolve the saved account before rendering settings-dependent screens. A
-  // guest resolves locally without loading the Supabase SDK.
   const authState = await waitForAuthInitialization();
   await initializeProgressSystem();
 
-  // The learning language must be understandable before any sign-in screen is shown.
   if (!callbackVisit && !authState.user) {
     const setupWasShown = await runLearningSetup({ shell });
     if (setupWasShown) {
