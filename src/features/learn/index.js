@@ -2,14 +2,14 @@ import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
 import { getWords } from "../../shared/data/word-repository.js?v=13.12";
-import { dictsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.12";
+import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.13";
 import { createSlugMap } from "../../shared/domain/slugs.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
-import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.12";
+import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.13";
 import { renderResults } from "./results.js?v=13.9.0";
-import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.12";
-import { finalizeLearnSession, renderStudy } from "./study.js?v=13.9.0";
+import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.13";
+import { finalizeLearnSession, renderStudy } from "./study.js?v=13.13";
 
 let controller = null;
 let activeContext = null;
@@ -19,17 +19,29 @@ function resolveDictionary(words, slug) {
   return createSlugMap(dictsFrom(words), { reserved: ["favorites"] }).valueFor(slug);
 }
 
-function resolveSet(words, dict, slug) {
-  if (dict === "__fav__") return "favorites";
+function resolveSection(words, dict, slug) {
   if (!slug) return null;
-  const sets = setsFrom(words, dict);
+  const sections = sectionsFrom(words, dict);
+  const value = createSlugMap(sections).valueFor(slug);
+  return sections.find((sectionId) => String(sectionId) === String(value)) ?? null;
+}
+
+function resolveSet(words, dict, section, slug) {
+  if (dict === "__fav__") return "favorites";
+  if (!slug || !section) return null;
+  const sets = setsFrom(words, dict, section);
   const value = createSlugMap(sets.map(String)).valueFor(slug);
   return sets.find((setId) => String(setId) === String(value)) ?? null;
 }
 
 function applyRouteState(words, params, requestedScreen) {
   let screen = requestedScreen;
-  if (screen === "catalog") return screen;
+  if (screen === "catalog") {
+    learnState.currentDict = "";
+    learnState.currentSection = "";
+    learnState.currentSet = "";
+    return screen;
+  }
 
   const dictionarySlug = String(params.dictionarySlug || "");
   if (dictionarySlug) {
@@ -46,13 +58,19 @@ function applyRouteState(words, params, requestedScreen) {
     return screen;
   }
 
-  // There is no content section level in 13.12. The current router may carry
-  // a middle compatibility segment, but application state points directly at
-  // the dictionary.
-  learnState.currentSection = learnState.currentDict;
+  const sectionSlug = String(params.sectionSlug || "");
+  if (sectionSlug) {
+    const section = resolveSection(words, learnState.currentDict, sectionSlug);
+    if (!section) return null;
+    learnState.currentSection = section;
+  } else {
+    learnState.currentSection = "";
+    learnState.currentSet = "";
+  }
 
   if (["set", "study", "results"].includes(screen)) {
-    const setId = resolveSet(words, learnState.currentDict, params.setSlug);
+    if (!learnState.currentSection) return null;
+    const setId = resolveSet(words, learnState.currentDict, learnState.currentSection, params.setSlug);
     if (setId === null) return null;
     learnState.currentSet = setId;
   }
@@ -65,7 +83,7 @@ function trackNavigation(screen) {
   } else if (screen === "set") {
     trackEvent(EVENTS.SET_OPEN, {
       dictionary_id: learnState.currentDict,
-      section_id: learnState.currentDict,
+      section_id: learnState.currentSection,
       set_id: String(learnState.currentSet),
     });
   }
