@@ -6,12 +6,12 @@ import {
   DICTIONARY_METADATA_TABLE,
   DICTIONARY_STORIES_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
-} from "../../config/words.js?v=13.12";
+} from "../../config/words.js?v=13.13";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
 import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=13.10.2";
-import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.9.0";
+import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.13";
 import { getUserSettings } from "../settings/user-settings-store.js?v=13.12";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.12";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.13";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
 const PAGE_SIZE = 1000;
@@ -91,7 +91,7 @@ function validateDictionary(collection) {
   if (!collection.length) throw new Error(msg("service.server_vernul_pustoy_slovar"));
   const identifiers = new Set();
   for (const word of collection) {
-    if (!word.id || !word.story_id || !word.dictionary_id || !word.set_id) {
+    if (!word.id || !word.story_id || !word.dictionary_id || !word.section_id || !word.set_id) {
       throw new Error(msg("service.struktura_slovarya_povrezhdena_otsutstvuyut_obyazatelnye_r"));
     }
     if ((!word.wordAlanCyrillic && !word.wordAlanTurkic) || !word.translationRu) {
