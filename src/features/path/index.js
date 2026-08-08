@@ -1,7 +1,7 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.12";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.12";
-import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.13";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.13";
+import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.13";
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";
 import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
@@ -10,11 +10,11 @@ import { bindResultRows, renderResultRow, renderResultScreen } from "../../share
 import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.9.0";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { getHiddenSet, learnState } from "../learn/state.js?v=13.12";
+import { getHiddenSet, learnState } from "../learn/state.js?v=13.13";
 import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.0";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.9.0";
-import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.9.0";
-import { renderStationView } from "./station-view.js?v=13.9.0";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.13";
+import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.13";
+import { renderStationView } from "./station-view.js?v=13.13";
 
 let controller = null;
 let activeStudy = false;
@@ -54,18 +54,18 @@ function stationButton(station, index, progressSnapshot) {
   </button>`;
 }
 
-function routeGroupSection(group, stationIndex, catalogId, progressSnapshot) {
-  const reversedStations = [...group.stations].reverse();
-  return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${group.groupId}`)}">
+function routeSection(section, stationIndex, catalogId, progressSnapshot) {
+  const reversedStations = [...section.stations].reverse();
+  return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${section.sectionId}`)}">
     <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key), progressSnapshot)).join("")}</div>
   </section>`;
 }
 
 function routeCatalogSection(catalog, stationIndex, progressSnapshot) {
-  const reversedGroups = [...catalog.groups].reverse();
+  const reversedSections = [...catalog.sections].reverse();
   return `<section class="routeCatalog" data-route-catalog="${escapeHtml(catalog.catalogId)}">
     <span class="routeCatalogEnd" data-catalog-end="${escapeHtml(catalog.catalogId)}" aria-hidden="true"></span>
-    <div class="routeCatalogGroups">${reversedGroups.map((group) => routeGroupSection(group, stationIndex, catalog.catalogId, progressSnapshot)).join("")}</div>
+    <div class="routeCatalogGroups">${reversedSections.map((section) => routeSection(section, stationIndex, catalog.catalogId, progressSnapshot)).join("")}</div>
     <h2 class="routeCatalogHeading">${escapeHtml(catalog.name)}</h2>
   </section>`;
 }
@@ -95,6 +95,11 @@ async function restoreMapPosition(viewport) {
   }
 }
 
+function renderStoryIntro(story) {
+  const intro = String(story?.intro || "").trim();
+  return intro ? `<div class="storyIntro">${escapeHtml(intro)}</div>` : "";
+}
+
 function renderRoute(context, route, activeStory, progressSnapshot) {
   const story = route.stories[activeStory];
   const progress = allStoryProgress(route, progressSnapshot)[activeStory];
@@ -116,6 +121,7 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
     <div class="pathMapViewport isPositioning">
       <div class="routeBackdrop" aria-hidden="true"></div>
       <div class="routeMap" data-story-map="${escapeHtml(activeStory)}">${reversedCatalogs.map((catalog) => routeCatalogSection(catalog, stationIndex, progressSnapshot)).join("")}</div>
+      ${renderStoryIntro(story)}
     </div>
     <nav class="routeScale" aria-label="${msg("path.rubezhi_marshruta")}"></nav>
   </section>`;
@@ -162,7 +168,7 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
 function selectedWordsForStation(station) {
   const pending = pendingSelections.get(station.key);
   if (Array.isArray(pending) && pending.length) return pending;
-  const hidden = getHiddenSet(station.dictionaryId, station.dictionaryId, station.setId);
+  const hidden = getHiddenSet(station.dictionaryId, station.sectionId, station.setId);
   const active = station.words.filter((word) => !hidden.has(word.id));
   return active.length ? active : station.words;
 }
@@ -266,13 +272,13 @@ export async function mount(context, params = {}) {
     activeStudy = true;
     const selectedWords = selectedWordsForStation(station);
     learnState.currentDict = station.dictionaryId;
-    learnState.currentSection = station.dictionaryId;
+    learnState.currentSection = station.sectionId;
     learnState.currentSet = station.setId;
     context.shell.setHeaderContent?.({ title: msg("path.uchit_slova"), subtitle: station.name, logo: true, brand: false });
     renderStudy(context, words, controller.signal, {
       mode: params.mode || learnState.currentStudyMode || "kb",
       wordsOverride: selectedWords,
-      stationContext: { key: station.key, wordIds: selectedWords.map((word) => word.id), ...routeParams(station, route) },
+      stationContext: { key: station.key, wordIds: selectedWords.map((word) => word.id), sectionId: station.sectionId, ...routeParams(station, route) },
       onComplete() {
         activeStudy = false;
         pendingSelections.delete(station.key);
