@@ -1,0 +1,162 @@
+name: Build exact point update plan
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/build-word-update-plan.yml
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Build field-level update plan
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, json, re
+          from pathlib import Path
+
+          out = Path("ops_live_export/update_plan")
+          out.mkdir(parents=True, exist_ok=True)
+
+          packed = Path("ops_source/corrected_rows_11_07_26.json.gz.b64").read_text(encoding="utf-8").strip()
+          raw = gzip.decompress(base64.b64decode(packed))
+          if hashlib.sha256(raw).hexdigest() != "80ca3458b636248562fb54aa1bf2b9b123e802d62d4c921faa0ef139eed2352d":
+              raise SystemExit("correction source checksum mismatch")
+          legacy = {r["legacy_id"]: r for r in json.loads(raw.decode("utf-8"))}
+
+          matches = []
+          for p in sorted(Path("ops_live_export/content_match").glob("matches_part_*.json")):
+              matches.extend(json.loads(p.read_text(encoding="utf-8")))
+
+          def clean(v):
+              if v is None: return ""
+              return str(v).replace("\r\n", "\n").replace("\r", "\n").strip()
+
+          def strip_num(line):
+              return re.sub(r"^\s*\d+(?:\.\d+)+\s+", "", clean(line))
+
+          def current_lines(value):
+              s = clean(value)
+              if not s: return []
+              return [strip_num(x) for x in s.split("\n") if clean(x)]
+
+          def parse_legacy_example(value):
+              s = clean(value)
+              if not s: return [], []
+              parts = [x.strip() for x in s.split(";")]
+              pairs = []
+              for part in parts:
+                  if "✦" in part:
+                      a, ru = part.split("✦", 1)
+                      pairs.append([a.strip(), ru.strip()])
+                  elif part and pairs:
+                      pairs[-1][1] = (pairs[-1][1] + "; " + part).strip()
+                  elif part:
+                      pairs.append([part, ""])
+              return [x[0] for x in pairs if x[0]], [x[1] for x in pairs if x[1]]
+
+          def numbered(lines):
+              return "\n".join(f"1.{i+1} {line}" for i, line in enumerate(lines))
+
+          def canon_syn(v):
+              s = clean(v)
+              if not s: return []
+              if isinstance(v, list): return [clean(x).casefold() for x in v if clean(x)]
+              return [x.strip().casefold() for x in re.split(r"[,;]", s) if x.strip()]
+
+          plan = []
+          review = []
+          row_status = []
+          for m in matches:
+              old = legacy[m["legacy_id"]]
+              best = m.get("best") or {}
+              wid = best.get("word_id")
+              if not wid:
+                  review.append({"legacy_id": m["legacy_id"], "reason": "no best word_id"})
+                  continue
+              desired_a, desired_ru = parse_legacy_example(old.get("example"))
+              curr_a = current_lines(best.get("phrases_alan_cyrillic"))
+              curr_ru = current_lines(best.get("phrases_ru"))
+              changes = []
+
+              desired_word = clean(old.get("word"))
+              current_word = clean(best.get("word_alan_cyrillic"))
+              if current_word != desired_word:
+                  changes.append({"target": "content_word_texts", "language_code": "alan", "script_code": "cyrillic", "column": "word_text", "current": current_word, "desired": desired_word})
+
+              desired_trans = clean(old.get("trans"))
+              current_trans = clean(best.get("translation_ru"))
+              if current_trans != desired_trans:
+                  changes.append({"target": "content_word_texts", "language_code": "ru", "script_code": "", "column": "translation_text", "current": current_trans, "desired": desired_trans})
+
+              if curr_a != desired_a:
+                  changes.append({"target": "content_word_texts", "language_code": "alan", "script_code": "cyrillic", "column": "phrases_text", "current": best.get("phrases_alan_cyrillic"), "desired": numbered(desired_a), "current_plain": curr_a, "desired_plain": desired_a})
+              if curr_ru != desired_ru:
+                  changes.append({"target": "content_word_texts", "language_code": "ru", "script_code": "", "column": "phrases_text", "current": best.get("phrases_ru"), "desired": numbered(desired_ru), "current_plain": curr_ru, "desired_plain": desired_ru})
+
+              synonym_change = canon_syn(best.get("synonyms")) != canon_syn(old.get("synonyms"))
+              synonym_explicit = "синоним" in clean(old.get("comment")).casefold()
+              if synonym_change and synonym_explicit:
+                  changes.append({"target": "content_words", "column": "synonyms", "current": best.get("synonyms"), "desired": clean(old.get("synonyms")) or None})
+              elif synonym_change:
+                  review.append({
+                      "legacy_id": m["legacy_id"], "word_id": wid, "reason": "synonyms differ but legacy comment does not explicitly mark synonyms",
+                      "current": best.get("synonyms"), "legacy": old.get("synonyms"), "legacy_comment": old.get("comment")
+                  })
+
+              item = {
+                  "legacy_id": m["legacy_id"], "word_id": wid, "global_order": best.get("global_order"),
+                  "story_id": best.get("story_id"), "story_name": best.get("story_name"),
+                  "dictionary_id": best.get("dictionary_id"), "dictionary_name": best.get("dictionary_name"),
+                  "section_id": best.get("section_id"), "section_name": best.get("section_name"),
+                  "set_id": best.get("set_id"), "set_name": best.get("set_name"),
+                  "word": desired_word, "confidence": m.get("confidence"), "margin": m.get("margin"),
+                  "legacy_comment": old.get("comment"), "changes": changes,
+              }
+              if m.get("confidence") == "low":
+                  review.append({"legacy_id": m["legacy_id"], "word_id": wid, "reason": "low content-match confidence", "match": m})
+              elif m.get("confidence") == "medium":
+                  review.append({"legacy_id": m["legacy_id"], "word_id": wid, "reason": "medium content-match confidence", "match": m})
+              if changes:
+                  plan.append(item)
+              row_status.append({"legacy_id": m["legacy_id"], "word_id": wid, "word": desired_word, "confidence": m.get("confidence"), "change_count": len(changes), "changed_columns": [c["target"]+"."+c["column"] for c in changes], "legacy_comment": old.get("comment")})
+
+          counts = {}
+          for item in plan:
+              for c in item["changes"]:
+                  key = c["target"] + "." + c["column"] + (f"[{c.get('language_code','')}/{c.get('script_code','')}]" if c["target"] == "content_word_texts" else "")
+                  counts[key] = counts.get(key, 0) + 1
+          summary = {
+              "legacy_marked_rows": len(matches),
+              "rows_requiring_update": len(plan),
+              "rows_already_equal": len(matches) - len(plan),
+              "field_updates": sum(len(x["changes"]) for x in plan),
+              "field_counts": counts,
+              "review_items": len(review),
+              "medium_matches": [x["legacy_id"] for x in row_status if x["confidence"] == "medium"],
+              "low_matches": [x["legacy_id"] for x in row_status if x["confidence"] == "low"],
+          }
+          (out / "plan_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+          (out / "review.json").write_text(json.dumps(review, ensure_ascii=False, indent=2), encoding="utf-8")
+          (out / "row_status.json").write_text(json.dumps(row_status, ensure_ascii=False, indent=2), encoding="utf-8")
+          for idx in range(0, len(plan), 10):
+              (out / f"plan_part_{idx//10+1}.json").write_text(json.dumps(plan[idx:idx+10], ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+      - name: Commit update plan
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/update_plan
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: build field-level corrected word update plan"
+          git push origin HEAD:ops/word-sync-2026-08-08
