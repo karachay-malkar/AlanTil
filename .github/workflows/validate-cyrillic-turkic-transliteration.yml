@@ -1,0 +1,96 @@
+name: Validate Alan Cyrillic to Turkic transliteration
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/validate-cyrillic-turkic-transliteration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Validate transliteration against current paired corpus
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+
+          rows = json.loads(Path('ops_live_export/content_words_ru.json').read_text(encoding='utf-8'))
+          out = Path('ops_live_export/translit_validation')
+          out.mkdir(parents=True, exist_ok=True)
+
+          vowels = set('аеёиоуыэюяАЕЁИОУЫЭЮЯ')
+          multi = {
+              'Къ':'Q','къ':'q','Гъ':'Ğ','гъ':'ğ','Нг':'Ñ','нг':'ñ',
+              'Дж':'C','дж':'c',
+          }
+          single = {
+              'А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d',
+              'Е':'E','е':'e','Ё':'Ö','ё':'ö','Ж':'J','ж':'j','Җ':'C','җ':'c','З':'Z','з':'z',
+              'И':'İ','и':'i','Й':'Y','й':'y','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m',
+              'Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s',
+              'Т':'T','т':'t','Ф':'F','ф':'f','Х':'X','х':'x','Ц':'Ţ','ц':'ţ','Ч':'Ç','ч':'ç',
+              'Ш':'Ş','ш':'ş','Щ':'Ş','щ':'ş','Ъ':'','ъ':'','Ь':'','ь':'','Ы':'I','ы':'ı',
+              'Э':'E','э':'e','Ю':'Ü','ю':'ü','Я':'Ya','я':'ya',
+          }
+
+          def translit(text):
+              s = str(text or '')
+              result=[]; i=0
+              while i < len(s):
+                  two=s[i:i+2]
+                  if two in multi:
+                      result.append(multi[two]); i+=2; continue
+                  ch=s[i]
+                  if ch in ('У','у'):
+                      prev = s[i-1] if i>0 else ''
+                      is_w = prev in vowels
+                      if ch == 'У': result.append('W' if is_w else 'U')
+                      else: result.append('w' if is_w else 'u')
+                  else:
+                      result.append(single.get(ch,ch))
+                  i+=1
+              return ''.join(result)
+
+          def phrase_lines(v):
+              s=str(v or '').strip()
+              if not s: return []
+              return [x.strip() for x in s.splitlines() if x.strip()]
+
+          tests=[]
+          for r in rows:
+              tests.append(('word',r['word_id'],str(r.get('word_alan_cyrillic') or ''),str(r.get('word_alan_turkic') or '')))
+              ca=phrase_lines(r.get('phrases_alan_cyrillic'))
+              ta=phrase_lines(r.get('phrases_alan_turkic'))
+              for idx,(c,t) in enumerate(zip(ca,ta),1):
+                  tests.append((f'phrase_{idx}',r['word_id'],c,t))
+
+          mism=[]; exact=0
+          for kind,wid,cyr,tur in tests:
+              got=translit(cyr)
+              if got == tur:
+                  exact+=1
+              else:
+                  mism.append({'kind':kind,'word_id':wid,'cyrillic':cyr,'expected':tur,'generated':got})
+          summary={'tests':len(tests),'exact':exact,'mismatches':len(mism),'exact_rate': exact/len(tests) if tests else 1}
+          (out/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'mismatches_sample.json').write_text(json.dumps(mism[:200],ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+      - name: Commit validation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/translit_validation
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: validate Cyrillic to Turkic transliteration"
+          git push origin HEAD:ops/word-sync-2026-08-08
