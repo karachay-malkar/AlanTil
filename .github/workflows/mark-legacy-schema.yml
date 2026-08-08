@@ -1,0 +1,41 @@
+name: Mark legacy schema snapshot
+
+on:
+  push:
+    branches:
+      - "13.13"
+
+jobs:
+  mark:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "13.13"
+      - name: Add current schema guidance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path=Path('supabase/schema.sql')
+          text=path.read_text(encoding='utf-8')
+          marker='-- LEGACY BOOTSTRAP SNAPSHOT: 13.7\n'
+          if not text.startswith(marker):
+              warning=(
+                  marker
+                  '-- DO NOT use this file as the current 13.13 schema definition.\n'
+                  '-- The authoritative current schema is the ordered set of files in supabase/migrations/.\n'
+                  '-- In particular, 13.13 restores Story -> Dictionary -> Section -> Set -> Word via\n'
+                  '-- 20260808230307_restore_content_hierarchy.sql and its follow-up grants migration.\n\n'
+              )
+              path.write_text(warning+text,encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add supabase/schema.sql
+          git commit -m '13.13 mark legacy schema snapshot as non-authoritative'
+          git push origin HEAD:13.13
