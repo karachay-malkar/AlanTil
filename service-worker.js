@@ -1,12 +1,12 @@
-const VERSION = "13.12";
+const VERSION = "13.13";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.10.12",
-  "/src/shared/styles/app.css?v=13.10.12",
+  "/src/app/bootstrap.js?v=13.13",
+  "/src/shared/styles/app.css?v=13.13",
   "/src/features/onboarding/index.js?v=13.10.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
@@ -18,7 +18,6 @@ const NETWORK_FIRST_PATHS = new Set([
   "/src/config/analytics.js",
   "/src/config/supabase.js",
   "/src/features/profile/index.js",
-  "/src/features/settings/version.js",
 ]);
 
 self.addEventListener("install", (event) => {
@@ -87,6 +86,7 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname.startsWith("/src/shared/auth/")
       || url.pathname.startsWith("/src/features/account/")
+      || url.pathname.startsWith("/src/features/settings/")
       || NETWORK_FIRST_PATHS.has(url.pathname)) {
     event.respondWith(networkFirstStaticResponse(request));
     return;
