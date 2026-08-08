@@ -1,10 +1,10 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
-import { stationKey } from "../domain/learning-route.js?v=13.9.0";
+import { PATH_CONFIG } from "../../config/path.js?v=13.12";
+import { stationKey } from "../domain/learning-route.js?v=13.12";
 import { getInterfaceLocale } from "../i18n/index.js?v=13.9.0";
 import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
 
-export const STATION_PROGRESS_KEY = "alantil_station_progress_v13_1";
+export const STATION_PROGRESS_KEY = "alantil_station_progress_v13_2";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const listeners = new Set();
 
@@ -25,10 +25,13 @@ function effectiveStatus(row, now = Date.now()) {
 }
 
 function normalizeRow(row = {}) {
+  const dictionaryId = String(row.dictionary_id || row.catalog_id || row.group_id || PATH_CONFIG.dictionaryId).trim();
   const normalized = {
-    dictionary_id: String(row.dictionary_id || PATH_CONFIG.dictionaryId),
-    catalog_id: String(row.catalog_id || "").trim(),
-    group_id: String(row.group_id || "").trim(),
+    dictionary_id: dictionaryId,
+    // These two columns remain in the persistence table for compatibility,
+    // but no longer represent content hierarchy. They mirror dictionary_id.
+    catalog_id: dictionaryId,
+    group_id: dictionaryId,
     set_id: String(row.set_id || "").trim(),
     story_type: String(row.story_type || "").trim(),
     status: String(row.status || "available"),
@@ -49,14 +52,16 @@ function normalizeRow(row = {}) {
 }
 
 function mapKey(row) {
-  return [row.dictionary_id, row.catalog_id, row.group_id, row.set_id].join("::");
+  return [row.story_type, row.dictionary_id, row.set_id].join("::");
 }
 
 function readMap() {
   const raw = readScopedJson(STATION_PROGRESS_KEY, {});
   const output = {};
-  Object.entries(raw && typeof raw === "object" ? raw : {}).forEach(([key, value]) => {
-    output[key] = normalizeRow(value);
+  Object.values(raw && typeof raw === "object" ? raw : {}).forEach((value) => {
+    const normalized = normalizeRow(value);
+    if (!normalized.story_type || !normalized.dictionary_id || !normalized.set_id) return;
+    output[mapKey(normalized)] = normalized;
   });
   return output;
 }
@@ -71,9 +76,7 @@ function writeMap(map) {
 
 function payloadForStation(station, updates = {}) {
   return normalizeRow({
-    dictionary_id: station.dictionaryId || PATH_CONFIG.dictionaryId,
-    catalog_id: station.catalogId,
-    group_id: station.groupId,
+    dictionary_id: station.dictionaryId,
     set_id: station.setId,
     story_type: station.storyType,
     ...updates,
@@ -108,7 +111,7 @@ export function replaceStationProgress(rows = [], { notify = true } = {}) {
   const map = {};
   (Array.isArray(rows) ? rows : []).forEach((row) => {
     const normalized = normalizeRow(row);
-    if (!normalized.catalog_id || !normalized.group_id || !normalized.set_id) return;
+    if (!normalized.story_type || !normalized.dictionary_id || !normalized.set_id) return;
     map[mapKey(normalized)] = normalized;
   });
   if (notify) writeMap(map);
@@ -181,6 +184,7 @@ export function mergeStationProgressRows(rows = []) {
   const map = readMap();
   (Array.isArray(rows) ? rows : []).forEach((row) => {
     const normalized = normalizeRow(row);
+    if (!normalized.story_type || !normalized.dictionary_id || !normalized.set_id) return;
     const key = mapKey(normalized);
     const existing = map[key];
     if (!existing || asTime(normalized.updated_at) >= asTime(existing.updated_at)) map[key] = normalized;
