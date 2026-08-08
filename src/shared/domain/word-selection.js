@@ -1,4 +1,4 @@
-import { normalizeId, normalizePos } from "./word-normalizer.js?v=13.12";
+import { normalizeId, normalizePos } from "./word-normalizer.js?v=13.13";
 
 const PRIORITY_POS = ["noun", "verb", "adjective", "adverb"];
 const PRIORITY_POS_SET = new Set(PRIORITY_POS);
@@ -21,49 +21,70 @@ export function shuffle(values) {
 }
 
 function dictionaryId(word) {
-  return String(word?.dictionary_id || word?.dict || "").trim();
+  return String(word?.dictionary_id || word?.dictionaryId || "").trim();
+}
+
+function sectionId(word) {
+  return String(word?.section_id || word?.sectionId || "").trim();
 }
 
 function sourceSetId(word) {
-  return String(word?.set_id || word?.set || "").trim();
+  return String(word?.set_id || word?.setId || "").trim();
 }
 
-export function dictsFrom(words) {
-  return uniq(words.map(dictionaryId).filter(Boolean)).sort(sortNatural);
-}
-
-// Since 13.12 a dictionary is the only grouping level above a set. Keep this
-// compatibility helper for existing screens until their route shape is direct
-// dictionary -> set; it returns exactly the dictionary itself, never a second
-// content hierarchy from the database.
-export function sectionsFrom(words, dict) {
-  return words.some((word) => dictionaryId(word) === String(dict || "").trim()) ? [String(dict || "").trim()] : [];
-}
-
-function orderedDictionaryWords(words, dict) {
-  const dictionary = String(dict || "").trim();
-  return words.filter((word) => dictionaryId(word) === dictionary)
+function orderedWords(words) {
+  return (Array.isArray(words) ? words : []).slice()
     .sort((left, right) => Number(left.global_order || left.dict_order || 0) - Number(right.global_order || right.dict_order || 0));
 }
 
-export function setsFrom(words, dict) {
-  const named = new Map();
-  orderedDictionaryWords(words, dict).forEach((word) => {
-    const id = sourceSetId(word);
-    if (!id) return;
-    const order = Number(word.global_order || word.dict_order || Number.MAX_SAFE_INTEGER);
-    named.set(id, Math.min(named.get(id) ?? Number.MAX_SAFE_INTEGER, order));
+export function dictsFrom(words) {
+  const order = new Map();
+  orderedWords(words).forEach((word, index) => {
+    const id = dictionaryId(word);
+    if (id && !order.has(id)) order.set(id, index);
   });
-  return Array.from(named.entries())
-    .map(([id, order]) => ({ id, order }))
-    .sort((left, right) => left.order - right.order || sortNatural(left.id, right.id))
-    .map((item) => item.id);
+  return Array.from(order.keys());
 }
 
-export function wordsForSet(words, dict, _section, setNumber) {
+export function sectionsFrom(words, dict) {
+  const dictionary = String(dict || "").trim();
+  const order = new Map();
+  orderedWords(words).forEach((word, index) => {
+    if (dictionaryId(word) !== dictionary) return;
+    const id = sectionId(word);
+    if (id && !order.has(id)) order.set(id, index);
+  });
+  return Array.from(order.keys());
+}
+
+export function setsFrom(words, dict, section = "") {
+  const dictionary = String(dict || "").trim();
+  const sectionScope = String(section || "").trim();
+  const named = new Map();
+  orderedWords(words).forEach((word, index) => {
+    if (dictionaryId(word) !== dictionary) return;
+    if (sectionScope && sectionId(word) !== sectionScope) return;
+    const id = sourceSetId(word);
+    if (id && !named.has(id)) named.set(id, index);
+  });
+  return Array.from(named.keys());
+}
+
+export function wordsForSection(words, dict, section) {
+  const dictionary = String(dict || "").trim();
+  const sectionScope = String(section || "").trim();
+  if (!dictionary || !sectionScope) return [];
+  return orderedWords(words).filter((word) => dictionaryId(word) === dictionary && sectionId(word) === sectionScope);
+}
+
+export function wordsForSet(words, dict, section, setNumber) {
+  const dictionary = String(dict || "").trim();
+  const sectionScope = String(section || "").trim();
   const setId = String(setNumber || "").trim();
-  if (!setId) return [];
-  return orderedDictionaryWords(words, dict).filter((word) => sourceSetId(word) === setId);
+  if (!dictionary || !sectionScope || !setId) return [];
+  return orderedWords(words).filter((word) => dictionaryId(word) === dictionary
+    && sectionId(word) === sectionScope
+    && sourceSetId(word) === setId);
 }
 
 export function isWordEnabledInTestModes(word) {
