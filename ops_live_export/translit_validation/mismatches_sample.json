@@ -1,0 +1,1248 @@
+[
+  {
+    "kind": "phrase_4",
+    "word_id": "0005",
+    "cyrillic": "1.4 кюн сууукъду, алай болса да барыргъа керекди",
+    "expected": "1.4 kün suwuqdu, alay bolsa da barırğa kerekdi",
+    "generated": "1.4 kün suwwqdu, alay bolsa da barırğa kerekdi"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0010",
+    "cyrillic": "1.2 къарыуунгу кёрюрге",
+    "expected": "1.2 qarıwuñu körürge",
+    "generated": "1.2 qarıwwñu körürge"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0054",
+    "cyrillic": "1.1 җюрек аууз",
+    "expected": "1.1 cürek awuz",
+    "generated": "1.1 cürek awwz"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0127",
+    "cyrillic": "2.1 аууруб къалмасын, ансы келликди",
+    "expected": "2.1 awurub qalmasın, ansı kellikdi",
+    "generated": "2.1 awwrub qalmasın, ansı kellikdi"
+  },
+  {
+    "kind": "word",
+    "word_id": "0144",
+    "cyrillic": "таууш",
+    "expected": "tawuş",
+    "generated": "tawwş"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0144",
+    "cyrillic": "1.1 чырт да таууш этмегиз!",
+    "expected": "1.1 çırt da tawuş etmegiz!",
+    "generated": "1.1 çırt da tawwş etmegiz!"
+  },
+  {
+    "kind": "word",
+    "word_id": "0166",
+    "cyrillic": "аууз",
+    "expected": "awuz",
+    "generated": "awwz"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0166",
+    "cyrillic": "1.1 аууз ачаргъа",
+    "expected": "1.1 awuz açarğa",
+    "generated": "1.1 awwz açarğa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0166",
+    "cyrillic": "1.2 тобну ауузу",
+    "expected": "1.2 tobnu awuzu",
+    "generated": "1.2 tobnu awwzu"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0166",
+    "cyrillic": "1.3 суу ауузу",
+    "expected": "1.3 suw awuzu",
+    "generated": "1.3 suw awwzu"
+  },
+  {
+    "kind": "phrase_4",
+    "word_id": "0166",
+    "cyrillic": "1.4 аууздан тюзге чыгъаргъа",
+    "expected": "1.4 awuzdan tüzge çığarğa",
+    "generated": "1.4 awwzdan tüzge çığarğa"
+  },
+  {
+    "kind": "phrase_5",
+    "word_id": "0166",
+    "cyrillic": "1.5 бычакъны ауузу",
+    "expected": "1.5 bıçaqnı awuzu",
+    "generated": "1.5 bıçaqnı awwzu"
+  },
+  {
+    "kind": "word",
+    "word_id": "0167",
+    "cyrillic": "җууукъ",
+    "expected": "cuwuq",
+    "generated": "cuwwq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0167",
+    "cyrillic": "1.1 юйге җууукъ бол!",
+    "expected": "1.1 üyge cuwuq bol!",
+    "generated": "1.1 üyge cuwwq bol!"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0167",
+    "cyrillic": "1.2 җууукъ кел",
+    "expected": "1.2 cuwuq kel",
+    "generated": "1.2 cuwwq kel"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0167",
+    "cyrillic": "1.3 җууукъ заманда",
+    "expected": "1.3 cuwuq zamanda",
+    "generated": "1.3 cuwwq zamanda"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0184",
+    "cyrillic": "1.2 къауумгъа къошулургъа",
+    "expected": "1.2 qawumğa qoşulurğa",
+    "generated": "1.2 qawwmğa qoşulurğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0208",
+    "cyrillic": "1.1 къашыкъны ауузуна элтди",
+    "expected": "1.1 qaşıqnı awuzuna eltdi",
+    "generated": "1.1 qaşıqnı awwzuna eltdi"
+  },
+  {
+    "kind": "word",
+    "word_id": "0213",
+    "cyrillic": "къауум",
+    "expected": "qawum",
+    "generated": "qawwm"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0213",
+    "cyrillic": "1.1 къауум адам",
+    "expected": "1.1 qawum adam",
+    "generated": "1.1 qawwm adam"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0213",
+    "cyrillic": "1.2 нёгерле эки къауум болдула",
+    "expected": "1.2 nögerle eki qawum boldula",
+    "generated": "1.2 nögerle eki qawwm boldula"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0213",
+    "cyrillic": "1.3 алмаланы къаууму",
+    "expected": "1.3 almalanı qawumu",
+    "generated": "1.3 almalanı qawwmu"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0224",
+    "cyrillic": "1.1 турур къарыуу җокъду",
+    "expected": "1.1 turur qarıwu coqdu",
+    "generated": "1.1 turur qarıww coqdu"
+  },
+  {
+    "kind": "word",
+    "word_id": "0232",
+    "cyrillic": "ауур",
+    "expected": "awur",
+    "generated": "awwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0232",
+    "cyrillic": "1.1 ауур машок",
+    "expected": "1.1 awur maşok",
+    "generated": "1.1 awwr maşok"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0232",
+    "cyrillic": "1.2 ауур ишни җенгил этеди",
+    "expected": "1.2 awur işni ceñil etedi",
+    "generated": "1.2 awwr işni ceñil etedi"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0253",
+    "cyrillic": "1.2 сабийни къызыуу барды",
+    "expected": "1.2 sabiyni qızıwu bardı",
+    "generated": "1.2 sabiyni qızıww bardı"
+  },
+  {
+    "kind": "word",
+    "word_id": "0271",
+    "cyrillic": "сууукъ",
+    "expected": "suwuq",
+    "generated": "suwwq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0271",
+    "cyrillic": "1.1 эртденнги сууукъ",
+    "expected": "1.1 ertdenñi suwuq",
+    "generated": "1.1 ertdenñi suwwq"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0271",
+    "cyrillic": "1.2 сууукъ тюберге",
+    "expected": "1.2 suwuq tüberge",
+    "generated": "1.2 suwwq tüberge"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0341",
+    "cyrillic": "1.1 ауур җара",
+    "expected": "1.1 awur cara",
+    "generated": "1.1 awwr cara"
+  },
+  {
+    "kind": "word",
+    "word_id": "0342",
+    "cyrillic": "җауум / җауун",
+    "expected": "cawum / cawun",
+    "generated": "cawwm / cawwn"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0342",
+    "cyrillic": "1.1 быйыл җауум азды",
+    "expected": "1.1 bıyıl cawum azdı",
+    "generated": "1.1 bıyıl cawwm azdı"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0344",
+    "cyrillic": "1.3 ачы сууукъ",
+    "expected": "1.3 açı suwuq",
+    "generated": "1.3 açı suwwq"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0346",
+    "cyrillic": "1.2 ауур хауа",
+    "expected": "1.2 awur xawa",
+    "generated": "1.2 awwr xawa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0348",
+    "cyrillic": "1.2 акъырын селешгенни сёзю ауур",
+    "expected": "1.2 aqırın seleşgenni sözü awur",
+    "generated": "1.2 aqırın seleşgenni sözü awwr"
+  },
+  {
+    "kind": "word",
+    "word_id": "0360",
+    "cyrillic": "шох / шуёх",
+    "expected": "şox / şwöx",
+    "generated": "şox / şuöx"
+  },
+  {
+    "kind": "phrase_5",
+    "word_id": "0361",
+    "cyrillic": "1.5 ауукъланы җаяргъа",
+    "expected": "1.5 awuqlanı cayarğa",
+    "generated": "1.5 awwqlanı cayarğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "0367",
+    "cyrillic": "къуяргъа",
+    "expected": "qwyarğa",
+    "generated": "quyarğa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0367",
+    "cyrillic": "1.2 къар къуяды",
+    "expected": "1.2 qar qwyadı",
+    "generated": "1.2 qar quyadı"
+  },
+  {
+    "kind": "word",
+    "word_id": "0372",
+    "cyrillic": "уялыргъа",
+    "expected": "wyalırğa",
+    "generated": "uyalırğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0372",
+    "cyrillic": "1.1 бюгюн алай эте тургъан тамбласында җукъдан уялмаз",
+    "expected": "1.1 bügün alay ete turğan tamblasında cuqdan wyalmaz",
+    "generated": "1.1 bügün alay ete turğan tamblasında cuqdan uyalmaz"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0372",
+    "cyrillic": "1.2 сен уялыр зат җокъду",
+    "expected": "1.2 sen wyalır zat coqdu",
+    "generated": "1.2 sen uyalır zat coqdu"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0375",
+    "cyrillic": "1.2 белибауунга такъ",
+    "expected": "1.2 belibawuña taq",
+    "generated": "1.2 belibawwña taq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0380",
+    "cyrillic": "1.1 ууу болгъан",
+    "expected": "1.1 uwu bolğan",
+    "generated": "1.1 uww bolğan"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0380",
+    "cyrillic": "1.2 ууу җетерге",
+    "expected": "1.2 uwu ceterge",
+    "generated": "1.2 uww ceterge"
+  },
+  {
+    "kind": "word",
+    "word_id": "0382",
+    "cyrillic": "сауут",
+    "expected": "sawut",
+    "generated": "sawwt"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0382",
+    "cyrillic": "1.1 агъач сауут",
+    "expected": "1.1 ağaç sawut",
+    "generated": "1.1 ağaç sawwt"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0382",
+    "cyrillic": "2.1 кезлик сауут",
+    "expected": "2.1 kezlik sawut",
+    "generated": "2.1 kezlik sawwt"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0430",
+    "cyrillic": "1.1 сууукъдан къалтыраргъа",
+    "expected": "1.1 suwuqdan qaltırarğa",
+    "generated": "1.1 suwwqdan qaltırarğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0433",
+    "cyrillic": "1.1 оноуунгу тюрлендирирге",
+    "expected": "1.1 onowuñu türlendirirge",
+    "generated": "1.1 onowwñu türlendirirge"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0446",
+    "cyrillic": "1.1 җангы сауулгъан сют",
+    "expected": "1.1 cañı sawulğan süt",
+    "generated": "1.1 cañı sawwlğan süt"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0448",
+    "cyrillic": "1.1 аны җюрегинде бушууу барды",
+    "expected": "1.1 anı cüreginde buşuwu bardı",
+    "generated": "1.1 anı cüreginde buşuww bardı"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0473",
+    "cyrillic": "1.2 сууун тёгерге",
+    "expected": "1.2 suwun tögerge",
+    "generated": "1.2 suwwn tögerge"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0490",
+    "cyrillic": "1.1 балтаны ауузу",
+    "expected": "1.1 baltanı awuzu",
+    "generated": "1.1 baltanı awwzu"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0495",
+    "cyrillic": "2.2 чегет бауур",
+    "expected": "2.2 çeget bawur",
+    "generated": "2.2 çeget bawwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0538",
+    "cyrillic": "1.1 къылыч җара бителир, аууз җара бителмез",
+    "expected": "1.1 qılıç cara bitelir, awuz cara bitelmez",
+    "generated": "1.1 qılıç cara bitelir, awwz cara bitelmez"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0539",
+    "cyrillic": "1.2 манга кимни дауу барды?",
+    "expected": "1.2 maña kimni dawu bardı?",
+    "generated": "1.2 maña kimni daww bardı?"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0546",
+    "cyrillic": "1.2 тауушну алаша эт",
+    "expected": "1.2 tawuşnu alaşa et",
+    "generated": "1.2 tawwşnu alaşa et"
+  },
+  {
+    "kind": "word",
+    "word_id": "0566",
+    "cyrillic": "хычыуун",
+    "expected": "xıçıwun",
+    "generated": "xıçıwwn"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0566",
+    "cyrillic": "1.1 хычыуун чууакъ кече",
+    "expected": "1.1 xıçıwun çuwaq keçe",
+    "generated": "1.1 xıçıwwn çuwaq keçe"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0566",
+    "cyrillic": "1.2 кюн бек хычыуунду",
+    "expected": "1.2 kün bek xıçıwundu",
+    "generated": "1.2 kün bek xıçıwwndu"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0567",
+    "cyrillic": "1.2 базынмагъан таугъа җууукъ къош салмаз",
+    "expected": "1.2 bazınmağan tawğa cuwuq qoş salmaz",
+    "generated": "1.2 bazınmağan tawğa cuwwq qoş salmaz"
+  },
+  {
+    "kind": "word",
+    "word_id": "0569",
+    "cyrillic": "уяныргъа",
+    "expected": "wyanırğa",
+    "generated": "uyanırğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0569",
+    "cyrillic": "1.1 җукъудан уяныргъа",
+    "expected": "1.1 cuqudan wyanırğa",
+    "generated": "1.1 cuqudan uyanırğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "0570",
+    "cyrillic": "дауур",
+    "expected": "dawur",
+    "generated": "dawwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0570",
+    "cyrillic": "1.1 неди бу дауур?",
+    "expected": "1.1 nedi bu dawur?",
+    "generated": "1.1 nedi bu dawwr?"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0570",
+    "cyrillic": "1.2 керексиз дауур",
+    "expected": "1.2 kereksiz dawur",
+    "generated": "1.2 kereksiz dawwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0574",
+    "cyrillic": "1.1 шыбырдагъан таууш",
+    "expected": "1.1 şıbırdağan tawuş",
+    "generated": "1.1 şıbırdağan tawwş"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0578",
+    "cyrillic": "1.1 кёлек ауушдурургъа",
+    "expected": "1.1 kölek awuşdururğa",
+    "generated": "1.1 kölek awwşdururğa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0594",
+    "cyrillic": "1.2 сабийни җууургъаннга чулгъаргъа",
+    "expected": "1.2 sabiyni cuwurğanña çulğarğa",
+    "generated": "1.2 sabiyni cuwwrğanña çulğarğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "0607",
+    "cyrillic": "уя",
+    "expected": "wya",
+    "generated": "uya"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0607",
+    "cyrillic": "1.1 къуш уя",
+    "expected": "1.1 quş wya",
+    "generated": "1.1 quş uya"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0607",
+    "cyrillic": "1.2 душманны уясы",
+    "expected": "1.2 duşmannı wyası",
+    "generated": "1.2 duşmannı uyası"
+  },
+  {
+    "kind": "word",
+    "word_id": "0623",
+    "cyrillic": "җууургъан",
+    "expected": "cuwurğan",
+    "generated": "cuwwrğan"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0623",
+    "cyrillic": "1.1 җууургъан ич",
+    "expected": "1.1 cuwurğan iç",
+    "generated": "1.1 cuwwrğan iç"
+  },
+  {
+    "kind": "word",
+    "word_id": "0631",
+    "cyrillic": "ауушдурургъа",
+    "expected": "awuşdururğa",
+    "generated": "awwşdururğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0631",
+    "cyrillic": "1.1 ич кийимни ауушдурургъа",
+    "expected": "1.1 iç kiyimni awuşdururğa",
+    "generated": "1.1 iç kiyimni awwşdururğa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0631",
+    "cyrillic": "1.2 муҗураны бир къолунган бир къолунга ауушдурургъа",
+    "expected": "1.2 mucuranı bir qoluñan bir qoluña awuşdururğa",
+    "generated": "1.2 mucuranı bir qoluñan bir qoluña awwşdururğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0636",
+    "cyrillic": "1.1 къаб да кёр, рысхы бюртюгю бар эсе уа",
+    "expected": "1.1 qab da kör, rısxı bürtügü bar ese wa",
+    "generated": "1.1 qab da kör, rısxı bürtügü bar ese ua"
+  },
+  {
+    "kind": "word",
+    "word_id": "0638",
+    "cyrillic": "зауукъ",
+    "expected": "zawuq",
+    "generated": "zawwq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0638",
+    "cyrillic": "1.1 зауукъ этиб җашаргъа",
+    "expected": "1.1 zawuq etib caşarğa",
+    "generated": "1.1 zawwq etib caşarğa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0638",
+    "cyrillic": "1.2 бюгюн бизни зауукъ кюнюбюздю",
+    "expected": "1.2 bügün bizni zawuq künübüzdü",
+    "generated": "1.2 bügün bizni zawwq künübüzdü"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0638",
+    "cyrillic": "1.3 зауукъ кёллю адам",
+    "expected": "1.3 zawuq köllü adam",
+    "generated": "1.3 zawwq köllü adam"
+  },
+  {
+    "kind": "phrase_4",
+    "word_id": "0638",
+    "cyrillic": "1.4 зауукъ сабий",
+    "expected": "1.4 zawuq sabiy",
+    "generated": "1.4 zawwq sabiy"
+  },
+  {
+    "kind": "word",
+    "word_id": "0658",
+    "cyrillic": "тауусургъа",
+    "expected": "tawusurğa",
+    "generated": "tawwsurğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0658",
+    "cyrillic": "1.1 ишни тауусургъа",
+    "expected": "1.1 işni tawusurğa",
+    "generated": "1.1 işni tawwsurğa"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0658",
+    "cyrillic": "1.2 аны ауруу тауусуб къойгъанды",
+    "expected": "1.2 anı awruw tawusub qoyğandı",
+    "generated": "1.2 anı awruw tawwsub qoyğandı"
+  },
+  {
+    "kind": "phrase_4",
+    "word_id": "0685",
+    "cyrillic": "2.2 сууукъдан бетинде битгенле битгендиле",
+    "expected": "2.2 suwuqdan betinde bitgenle bitgendile",
+    "generated": "2.2 suwwqdan betinde bitgenle bitgendile"
+  },
+  {
+    "kind": "word",
+    "word_id": "0712",
+    "cyrillic": "бауур",
+    "expected": "bawur",
+    "generated": "bawwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0712",
+    "cyrillic": "1.1 бауунг бла сюркелирге",
+    "expected": "1.1 bawuñ bla sürkelirge",
+    "generated": "1.1 bawwñ bla sürkelirge"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0721",
+    "cyrillic": "1.1 чынтты шуёхла",
+    "expected": "1.1 çınttı şwöxla",
+    "generated": "1.1 çınttı şuöxla"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0722",
+    "cyrillic": "1.1 сабийни җууургъаннга чырмаргъа",
+    "expected": "1.1 sabiyni cuwurğanña çırmarğa",
+    "generated": "1.1 sabiyni cuwwrğanña çırmarğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "0725",
+    "cyrillic": "къарауул / къалауур",
+    "expected": "qarawul / qalawur",
+    "generated": "qarawwl / qalawwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0725",
+    "cyrillic": "1.1 сен юйге къарауул бол",
+    "expected": "1.1 sen üyge qarawul bol",
+    "generated": "1.1 sen üyge qarawwl bol"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0736",
+    "cyrillic": "1.2 бюреуню саууб җашаргъа",
+    "expected": "1.2 bürewnü sawub caşarğa",
+    "generated": "1.2 bürewnü sawwb caşarğa"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0762",
+    "cyrillic": "1.3 сууукъ җел аурууну къозгъаб къояды",
+    "expected": "1.3 suwuq cel awruwnu qozğab qoyadı",
+    "generated": "1.3 suwwq cel awruwnu qozğab qoyadı"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0805",
+    "cyrillic": "1.1 сауутну бояуу чартлагъанды",
+    "expected": "1.1 sawutnu boyawu çartlağandı",
+    "generated": "1.1 sawwtnu boyaww çartlağandı"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0821",
+    "cyrillic": "1.1 буууб ёлтюрюрге",
+    "expected": "1.1 buwub öltürürge",
+    "generated": "1.1 buwwb öltürürge"
+  },
+  {
+    "kind": "phrase_4",
+    "word_id": "0837",
+    "cyrillic": "2.1 сауутланы чайкъаргъа",
+    "expected": "2.1 sawutlanı çayqarğa",
+    "generated": "2.1 sawwtlanı çayqarğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "0852",
+    "cyrillic": "хайуан",
+    "expected": "xaywan",
+    "generated": "xayuan"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0852",
+    "cyrillic": "1.1 юй хайуанла",
+    "expected": "1.1 üy xaywanla",
+    "generated": "1.1 üy xayuanla"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0852",
+    "cyrillic": "1.2 кийик хайуанла",
+    "expected": "1.2 kiyik xaywanla",
+    "generated": "1.2 kiyik xayuanla"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "0882",
+    "cyrillic": "1.3 сууну шоркъалары барадыла бир бирин къуууб",
+    "expected": "1.3 suwnu şorqaları baradıla bir birin quwub",
+    "generated": "1.3 suwnu şorqaları baradıla bir birin quwwb"
+  },
+  {
+    "kind": "word",
+    "word_id": "0910",
+    "cyrillic": "тауушлукъ",
+    "expected": "tawuşluq",
+    "generated": "tawwşluq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0910",
+    "cyrillic": "1.1 тауушлукъ назмучу",
+    "expected": "1.1 tawuşluq nazmuçu",
+    "generated": "1.1 tawwşluq nazmuçu"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0910",
+    "cyrillic": "1.2 дуниягъа тауушлукъ",
+    "expected": "1.2 duniyağa tawuşluq",
+    "generated": "1.2 duniyağa tawwşluq"
+  },
+  {
+    "kind": "word",
+    "word_id": "0912",
+    "cyrillic": "ушхууур",
+    "expected": "uşxuwur",
+    "generated": "uşxuwwr"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0912",
+    "cyrillic": "1.1 эртден ушхууур",
+    "expected": "1.1 ertden uşxuwur",
+    "generated": "1.1 ertden uşxuwwr"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0915",
+    "cyrillic": "1.2 таууш толкъун",
+    "expected": "1.2 tawuş tolqun",
+    "generated": "1.2 tawwş tolqun"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0917",
+    "cyrillic": "1.2 тай алкъын тюгел ауузлукъ билиб бошамагъанды",
+    "expected": "1.2 tay alqın tügel awuzluq bilib boşamağandı",
+    "generated": "1.2 tay alqın tügel awwzluq bilib boşamağandı"
+  },
+  {
+    "kind": "word",
+    "word_id": "0921",
+    "cyrillic": "чабыуул",
+    "expected": "çabıwul",
+    "generated": "çabıwwl"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0921",
+    "cyrillic": "1.1 къаты чабыуул",
+    "expected": "1.1 qatı çabıwul",
+    "generated": "1.1 qatı çabıwwl"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0924",
+    "cyrillic": "1.1 шорпаны җауу башына къалкъаб турады",
+    "expected": "1.1 şorpanı cawu başına qalqab turadı",
+    "generated": "1.1 şorpanı caww başına qalqab turadı"
+  },
+  {
+    "kind": "word",
+    "word_id": "0930",
+    "cyrillic": "ауукъ",
+    "expected": "awuq",
+    "generated": "awwq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0930",
+    "cyrillic": "1.1 кечени бир ауугъунда",
+    "expected": "1.1 keçeni bir awuğunda",
+    "generated": "1.1 keçeni bir awwğunda"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0930",
+    "cyrillic": "1.2 бир ауукъгъа дери",
+    "expected": "1.2 bir awuqğa deri",
+    "generated": "1.2 bir awwqğa deri"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0956",
+    "cyrillic": "1.2 сууукъ чабаргъа ёч",
+    "expected": "1.2 suwuq çabarğa öç",
+    "generated": "1.2 suwwq çabarğa öç"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "0979",
+    "cyrillic": "1.2 мамукъ җууургъан",
+    "expected": "1.2 mamuq cuwurğan",
+    "generated": "1.2 mamuq cuwwrğan"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0987",
+    "cyrillic": "1.1 җауун таймай җаууб турады",
+    "expected": "1.1 cawun taymay cawub turadı",
+    "generated": "1.1 cawwn taymay cawwb turadı"
+  },
+  {
+    "kind": "word",
+    "word_id": "0990",
+    "cyrillic": "аууш",
+    "expected": "awuş",
+    "generated": "awwş"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0990",
+    "cyrillic": "1.1 ауушдан ётдюк",
+    "expected": "1.1 awuşdan ötdük",
+    "generated": "1.1 awwşdan ötdük"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "0995",
+    "cyrillic": "1.1 адамдан къой, ауасындан да уялады",
+    "expected": "1.1 adamdan qoy, awasından da wyaladı",
+    "generated": "1.1 adamdan qoy, awasından da uyaladı"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1003",
+    "cyrillic": "1.1 къурч къуючу завод",
+    "expected": "1.1 qurç qwüçu zavod",
+    "generated": "1.1 qurç quüçu zavod"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "1004",
+    "cyrillic": "2.1 къач сууукъ",
+    "expected": "2.1 qaç suwuq",
+    "generated": "2.1 qaç suwwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1040",
+    "cyrillic": "җортууул",
+    "expected": "cortuwul",
+    "generated": "cortuwwl"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1040",
+    "cyrillic": "1.1 җортууулгъа хазырланырнгъа",
+    "expected": "1.1 cortuwulğa xazırlanırnğa",
+    "generated": "1.1 cortuwwlğa xazırlanırña"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "1055",
+    "cyrillic": "1.2 ууукъ мени җилигиме дери сингнгенди",
+    "expected": "1.2 uwuq meni ciligime deri siññendi",
+    "generated": "1.2 uwwq meni ciligime deri siññendi"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "1085",
+    "cyrillic": "1.3 ауузун мюкюл этерге",
+    "expected": "1.3 awuzun mükül eterge",
+    "generated": "1.3 awwzun mükül eterge"
+  },
+  {
+    "kind": "word",
+    "word_id": "1094",
+    "cyrillic": "осият / осуят",
+    "expected": "osiyat / oswyat",
+    "generated": "osiyat / osuyat"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1094",
+    "cyrillic": "1.1 барыгъызгъа барды сезюм, осуят этеди Кязим",
+    "expected": "1.1 barığızğa bardı sezüm, oswyat etedi Kyazim",
+    "generated": "1.1 barığızğa bardı sezüm, osuyat etedi Kyazim"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1095",
+    "cyrillic": "1.1 уюкълагъа ич олтанла салыргъа",
+    "expected": "1.1 wüqlağa iç oltanla salırğa",
+    "generated": "1.1 uüqlağa iç oltanla salırğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "1113",
+    "cyrillic": "туякъ",
+    "expected": "twyaq",
+    "generated": "tuyaq"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1113",
+    "cyrillic": "1.1 туякъ ыз",
+    "expected": "1.1 twyaq ız",
+    "generated": "1.1 tuyaq ız"
+  },
+  {
+    "kind": "word",
+    "word_id": "1119",
+    "cyrillic": "буюгъургъа",
+    "expected": "bwüğurğa",
+    "generated": "buüğurğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1119",
+    "cyrillic": "1.1 сууукъдан къолларым буюкъгъандыла",
+    "expected": "1.1 suwuqdan qollarım bwüqğandıla",
+    "generated": "1.1 suwwqdan qollarım buüqğandıla"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "1148",
+    "cyrillic": "1.2 ай зауаллы уа",
+    "expected": "1.2 ay zawallı wa",
+    "generated": "1.2 ay zawallı ua"
+  },
+  {
+    "kind": "phrase_3",
+    "word_id": "1148",
+    "cyrillic": "1.3 сууукъдан ёлдю ол зауаллы",
+    "expected": "1.3 suwuqdan öldü ol zawallı",
+    "generated": "1.3 suwwqdan öldü ol zawallı"
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "1154",
+    "cyrillic": "1.2 сууукъла узайыб къалдыла",
+    "expected": "1.2 suwuqla uzayıb qaldıla",
+    "generated": "1.2 suwwqla uzayıb qaldıla"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1180",
+    "cyrillic": "1.1 җууургъан сырыргъа",
+    "expected": "1.1 cuwurğan sırırğa",
+    "generated": "1.1 cuwwrğan sırırğa"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1181",
+    "cyrillic": "1.1 жауундан сора жол худур болгъанды",
+    "expected": "1.1 jawundan sora jol xudur bolğandı",
+    "generated": "1.1 jawwndan sora jol xudur bolğandı"
+  },
+  {
+    "kind": "word",
+    "word_id": "1189",
+    "cyrillic": "җелмаууз",
+    "expected": "celmawuz",
+    "generated": "celmawwz"
+  },
+  {
+    "kind": "phrase_1",
+    "word_id": "1195",
+    "cyrillic": "1.1 гюрбеге мюрзеу къуяргъа",
+    "expected": "1.1 gürbege mürzew qwyarğa",
+    "generated": "1.1 gürbege mürzew quyarğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "1243",
+    "cyrillic": "арнауут ",
+    "expected": "arnawut ",
+    "generated": "arnawwt "
+  },
+  {
+    "kind": "word",
+    "word_id": "1295",
+    "cyrillic": "белляуукъ, кюнтиймез ",
+    "expected": "bellyawuq, küntiymez ",
+    "generated": "bellyawwq, küntiymez "
+  },
+  {
+    "kind": "word",
+    "word_id": "1342",
+    "cyrillic": "гернеуул ",
+    "expected": "gernewul ",
+    "generated": "gernewwl "
+  },
+  {
+    "kind": "word",
+    "word_id": "1357",
+    "cyrillic": "горсай, сакълаууур ",
+    "expected": "gorsay, saqlawuwr ",
+    "generated": "gorsay, saqlawwwr "
+  },
+  {
+    "kind": "word",
+    "word_id": "1379",
+    "cyrillic": "къысхаууз, акъмадий",
+    "expected": "qısxawuz, aqmadiy",
+    "generated": "qısxawwz, aqmadiy"
+  },
+  {
+    "kind": "word",
+    "word_id": "1419",
+    "cyrillic": "къаууз ",
+    "expected": "qawuz ",
+    "generated": "qawwz "
+  },
+  {
+    "kind": "word",
+    "word_id": "1436",
+    "cyrillic": "җилямпыс, җылауукъ",
+    "expected": "cilyampıs, cılawuq",
+    "generated": "cilyampıs, cılawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1444",
+    "cyrillic": "ассуат ",
+    "expected": "asswat ",
+    "generated": "assuat "
+  },
+  {
+    "kind": "phrase_2",
+    "word_id": "1447",
+    "cyrillic": "1.2 сауутха бедек салыргъа",
+    "expected": "1.2 sawutxa bedek salırğa",
+    "generated": "1.2 sawwtxa bedek salırğa"
+  },
+  {
+    "kind": "word",
+    "word_id": "1453",
+    "cyrillic": "җанауул ",
+    "expected": "canawul ",
+    "generated": "canawwl "
+  },
+  {
+    "kind": "word",
+    "word_id": "1559",
+    "cyrillic": "къыстауул ",
+    "expected": "qıstawul ",
+    "generated": "qıstawwl "
+  },
+  {
+    "kind": "word",
+    "word_id": "1705",
+    "cyrillic": "ичкикъуюкъ ",
+    "expected": "içkiqwüq ",
+    "generated": "içkiquüq "
+  },
+  {
+    "kind": "word",
+    "word_id": "1722",
+    "cyrillic": "долуан ",
+    "expected": "dolwan ",
+    "generated": "doluan "
+  },
+  {
+    "kind": "word",
+    "word_id": "1735",
+    "cyrillic": "долай (долай-долуан) ",
+    "expected": "dolay (dolay-dolwan) ",
+    "generated": "dolay (dolay-doluan) "
+  },
+  {
+    "kind": "word",
+    "word_id": "1744",
+    "cyrillic": "бакауул ",
+    "expected": "bakawul ",
+    "generated": "bakawwl "
+  },
+  {
+    "kind": "word",
+    "word_id": "1773",
+    "cyrillic": "къыркъаууз ай, кюзню ал айы",
+    "expected": "qırqawuz ay, küznü al ayı",
+    "generated": "qırqawwz ay, küznü al ayı"
+  },
+  {
+    "kind": "word",
+    "word_id": "1804",
+    "cyrillic": "къандауур",
+    "expected": "qandawur",
+    "generated": "qandawwr"
+  },
+  {
+    "kind": "word",
+    "word_id": "1885",
+    "cyrillic": "тауукъ",
+    "expected": "tawuq",
+    "generated": "tawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1899",
+    "cyrillic": "җелмаууз, аҗдахай ",
+    "expected": "celmawuz, acdaxay ",
+    "generated": "celmawwz, acdaxay "
+  },
+  {
+    "kind": "word",
+    "word_id": "1901",
+    "cyrillic": "ангъач",
+    "expected": "anğaç",
+    "generated": "añaç"
+  },
+  {
+    "kind": "word",
+    "word_id": "1945",
+    "cyrillic": "ауузтос",
+    "expected": "awuztos",
+    "generated": "awwztos"
+  },
+  {
+    "kind": "word",
+    "word_id": "1950",
+    "cyrillic": "къырсауул",
+    "expected": "qırsawul",
+    "generated": "qırsawwl"
+  },
+  {
+    "kind": "word",
+    "word_id": "1968",
+    "cyrillic": "агъач тауукъ, агъач къакъгъыч",
+    "expected": "ağaç tawuq, ağaç qaqğıç",
+    "generated": "ağaç tawwq, ağaç qaqğıç"
+  },
+  {
+    "kind": "word",
+    "word_id": "1973",
+    "cyrillic": "җаз тауукъ",
+    "expected": "caz tawuq",
+    "generated": "caz tawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1977",
+    "cyrillic": "алтын тауукъ",
+    "expected": "altın tawuq",
+    "generated": "altın tawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1988",
+    "cyrillic": "тюе къуш, деу тауукъ",
+    "expected": "tüe quş, dew tawuq",
+    "generated": "tüe quş, dew tawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1991",
+    "cyrillic": "чегет тауукъ",
+    "expected": "çeget tawuq",
+    "generated": "çeget tawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "1993",
+    "cyrillic": "чын тауукъ",
+    "expected": "çın tawuq",
+    "generated": "çın tawwq"
+  },
+  {
+    "kind": "word",
+    "word_id": "2067",
+    "cyrillic": "ауур кюмюш",
+    "expected": "awur kümüş",
+    "generated": "awwr kümüş"
+  },
+  {
+    "kind": "word",
+    "word_id": "2116",
+    "cyrillic": "җаууз таш",
+    "expected": "cawuz taş",
+    "generated": "cawwz taş"
+  },
+  {
+    "kind": "word",
+    "word_id": "2209",
+    "cyrillic": "айуа, таш кертме",
+    "expected": "aywa, taş kertme",
+    "generated": "ayua, taş kertme"
+  },
+  {
+    "kind": "word",
+    "word_id": "2236",
+    "cyrillic": "бадам, гургухта, лаууз, сюеккъоз",
+    "expected": "badam, gurguxta, lawuz, süekqoz",
+    "generated": "badam, gurguxta, lawwz, süekqoz"
+  },
+  {
+    "kind": "word",
+    "word_id": "2237",
+    "cyrillic": "җаууз",
+    "expected": "cawuz",
+    "generated": "cawwz"
+  },
+  {
+    "kind": "word",
+    "word_id": "2266",
+    "cyrillic": "къылыч от, җакуорлу",
+    "expected": "qılıç ot, cakworlu",
+    "generated": "qılıç ot, cakuorlu"
+  },
+  {
+    "kind": "word",
+    "word_id": "2298",
+    "cyrillic": "хауун / хууан",
+    "expected": "xawun / xuwan",
+    "generated": "xawwn / xuwan"
+  }
+]
