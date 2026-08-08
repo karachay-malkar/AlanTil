@@ -1,0 +1,87 @@
+name: Ops DB URL Apply Live Guarded 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-apply-live-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Generate identity-guarded transaction from verified diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib
+          diffs=json.load(open('ops_final_bundle/word_corrections_diff.json',encoding='utf-8'))
+          def q(v):
+              if v is None: return 'NULL'
+              return "'"+str(v).replace("'","''")+"'"
+          allowed={'word_text','translation_text','phrases_text'}
+          lines=['BEGIN;','DO $sync$','DECLARE n integer;','BEGIN']
+          for i,d in enumerate(diffs,1):
+              col=d['column']
+              if col not in allowed: raise SystemExit(f'Unexpected column {col}')
+              lines.append(
+                  f"UPDATE public.content_word_texts t SET {col}={q(d['corrected'])}, updated_at=now() "
+                  f"WHERE t.word_id={q(d['word_id'])} AND t.language_code={q(d['language_code'])} AND t.script_code={q(d['script_code'])} "
+                  f"AND EXISTS (SELECT 1 FROM public.v_words_app v WHERE v.word_id=t.word_id AND v.word_alan_cyrillic={q(d['word_alan_cyrillic'])});"
+              )
+              lines.append('GET DIAGNOSTICS n = ROW_COUNT;')
+              lines.append(f"IF n <> 1 THEN RAISE EXCEPTION 'Identity guard failed on correction {i}, word_id={d['word_id']}'; END IF;")
+          lines += ['END $sync$;','COMMIT;']
+          pathlib.Path('/tmp/apply_live.sql').write_text('\n'.join(lines),encoding='utf-8')
+          vals=[]
+          for d in diffs:
+              vals.append(f"({q(d['word_id'])},{q(d['language_code'])},{q(d['script_code'])},{q(d['column'])},{q(d['corrected'])})")
+          validate="""WITH expected(word_id,language_code,script_code,column_name,expected_value) AS (VALUES\n%s\n), actual AS (\nSELECT e.*, CASE e.column_name WHEN 'word_text' THEN t.word_text WHEN 'translation_text' THEN t.translation_text WHEN 'phrases_text' THEN t.phrases_text END actual_value\nFROM expected e LEFT JOIN public.content_word_texts t ON t.word_id=e.word_id AND t.language_code=e.language_code AND t.script_code=e.script_code)\nSELECT count(*) FROM actual WHERE actual_value IS DISTINCT FROM expected_value;\n""" % (',\n'.join(vals))
+          pathlib.Path('/tmp/validate_live.sql').write_text(validate,encoding='utf-8')
+          PY
+      - name: Apply transaction and verify all 141 fields
+        shell: bash
+        run: |
+          set -u
+          mkdir -p ops_word_sync_dburl_20260808/live_apply
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          PRE_WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_words")
+          PRE_STRUCTURE_HASH=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select md5(string_agg(concat_ws('|',word_id,global_order::text,story_id::text,dictionary_id::text,section_id::text,coalesce(set_id::text,'')), E'\\n' order by global_order,word_id)) from public.content_words")
+          RC=0
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f /tmp/apply_live.sql > /tmp/live_tx.log 2>&1 || RC=$?
+          POST_WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_words")
+          POST_STRUCTURE_HASH=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select md5(string_agg(concat_ws('|',word_id,global_order::text,story_id::text,dictionary_id::text,section_id::text,coalesce(set_id::text,'')), E'\\n' order by global_order,word_id)) from public.content_words")
+          MISMATCHES=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atf /tmp/validate_live.sql)
+          export RC PRE_WORD_COUNT POST_WORD_COUNT PRE_STRUCTURE_HASH POST_STRUCTURE_HASH MISMATCHES
+          python - <<'PY'
+          import json,os,pathlib,datetime,re
+          log=pathlib.Path('/tmp/live_tx.log').read_text(encoding='utf-8',errors='replace')
+          errs=[]
+          for line in log.splitlines():
+              if 'ERROR:' in line or 'FATAL:' in line:
+                  line=re.sub(r'postgres(?:ql)?://\S+','[REDACTED_DB_URL]',line)
+                  errs.append(line[:500])
+              if len(errs)>=5: break
+          rc=int(os.environ['RC']); mism=int(os.environ['MISMATCHES'])
+          struct=os.environ['PRE_STRUCTURE_HASH']==os.environ['POST_STRUCTURE_HASH']
+          counts=(os.environ['PRE_WORD_COUNT']=='2355' and os.environ['POST_WORD_COUNT']=='2355')
+          passed=(rc==0 and mism==0 and struct and counts)
+          out={'completed_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'result':'PASSED' if passed else 'FAILED','transaction_exit_code':rc,'post_field_mismatches':mism,'word_count_before':int(os.environ['PRE_WORD_COUNT']),'word_count_after':int(os.environ['POST_WORD_COUNT']),'structure_hash_before':os.environ['PRE_STRUCTURE_HASH'],'structure_hash_after':os.environ['POST_STRUCTURE_HASH'],'structure_unchanged':struct,'database_changes_committed':rc==0,'error_summary':errs}
+          pathlib.Path('ops_word_sync_dburl_20260808/live_apply/status.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_word_sync_dburl_20260808/live_apply/status.json
+          git commit -m "ops: apply live-guarded AlanTil corrections"
+          git push origin HEAD:ops/word-sync-2026-08-08
