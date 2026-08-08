@@ -1,0 +1,96 @@
+name: Export current AlanTil word data
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/export-alantil-words.yml
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+
+      - name: Export current public word views
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          base = "https://pybrzgedqjmosbmilcea.supabase.co/rest/v1"
+          key = "sb_publishable_11TY-fBEAogA9JKnAku3vg_hjRxTa_a"
+          out = Path("ops_live_export")
+          out.mkdir(exist_ok=True)
+          headers = {
+              "apikey": key,
+              "Accept": "application/json",
+              "User-Agent": "AlanTil-word-sync/2026-08-08",
+          }
+
+          def request(url, accept=None):
+              h = dict(headers)
+              if accept:
+                  h["Accept"] = accept
+              req = urllib.request.Request(url, headers=h)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      return r.status, r.read().decode("utf-8")
+              except Exception as exc:
+                  if hasattr(exc, "read"):
+                      try:
+                          body = exc.read().decode("utf-8", errors="replace")
+                      except Exception:
+                          body = ""
+                  else:
+                      body = ""
+                  return getattr(exc, "code", 0) or 0, json.dumps({"error": str(exc), "body": body}, ensure_ascii=False)
+
+          status = {}
+          code, body = request(base + "/", "application/openapi+json")
+          status["openapi"] = code
+          (out / "openapi.json").write_text(body, encoding="utf-8")
+
+          for view in ("content_words_ru", "v_words_app"):
+              all_rows = []
+              view_status = []
+              for offset in range(0, 10000, 1000):
+                  params = urllib.parse.urlencode({
+                      "select": "*",
+                      "order": "global_order.asc",
+                      "limit": "1000",
+                      "offset": str(offset),
+                  })
+                  code, body = request(f"{base}/{view}?{params}")
+                  view_status.append({"offset": offset, "status": code})
+                  if code < 200 or code >= 300:
+                      (out / f"{view}_error.json").write_text(body, encoding="utf-8")
+                      break
+                  rows = json.loads(body)
+                  all_rows.extend(rows)
+                  if len(rows) < 1000:
+                      break
+              status[view] = {"requests": view_status, "rows": len(all_rows)}
+              (out / f"{view}.json").write_text(json.dumps(all_rows, ensure_ascii=False, indent=2), encoding="utf-8")
+
+          (out / "export_status.json").write_text(json.dumps(status, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+
+      - name: Commit export snapshot
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: capture current AlanTil word snapshot"
+          git push origin HEAD:ops/word-sync-2026-08-08
