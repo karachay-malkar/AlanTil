@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
+const RELEASE_URL_VERSION = "13.13";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -37,31 +38,42 @@ const singletonPaths = [
   "/src/shared/data/word-repository.js",
   "/src/shared/i18n/index.js",
   "/src/shared/i18n/messages-13-10.js",
+  "/src/shared/progress/progress-queue.js",
   "/src/shared/progress/progress-sync.js",
   "/src/shared/progress/storage-scope.js",
+  "/src/shared/progress/station-progress-store.js",
+  "/src/shared/progress/route-settings-store.js",
+  "/src/shared/progress/session-builders.js",
   "/src/shared/settings/learning-preview-data.js",
   "/src/shared/settings/learning-setup.js",
+  "/src/shared/settings/user-settings-store.js",
+  "/src/features/learn/state.js",
+  "/src/features/test/state.js",
+  "/src/features/match/state.js",
   "/src/features/path/station-view.js",
   "/src/features/test/view.js",
   "/src/shared/domain/alan-display.js",
   "/src/shared/ui/modal.js",
   "/src/shared/ui/word-renderers.js",
-  "/src/shared/settings/user-settings-store.js",
 ];
 
-test("13.11 is the published application version", async () => {
+function importMapFrom(index) {
+  return JSON.parse(index.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1] || "{}").imports || {};
+}
+
+test("13.13 is the published application version", async () => {
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const index = await read("index.html");
   const worker = await read("service-worker.js");
-  assert.match(analytics, /appVersion = "13\.11"/);
-  assert.match(versionScreen, /<dd>13\.11<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.11"/);
-  assert.match(index, /app\.css\?v=13\.10\.12/);
-  assert.match(index, /bootstrap\.js\?v=13\.10\.12/);
+  assert.match(analytics, /appVersion = "13\.13"/);
+  assert.match(versionScreen, /<dd>13\.13<\/dd>/);
+  assert.match(worker, /const VERSION = "13\.13"/);
+  assert.match(index, /app\.css\?v=13\.13/);
+  assert.match(index, /bootstrap\.js\?v=13\.13/);
 });
 
-test("profile uses both 13.11 PNG character assets and keeps the locked silhouette", async () => {
+test("profile keeps both 13.11 PNG character assets and the locked silhouette", async () => {
   const profile = await read("src/features/profile/index.js");
   const profileStyles = await read("src/features/profile/profile.css");
   const worker = await read("service-worker.js");
@@ -78,30 +90,18 @@ test("profile uses both 13.11 PNG character assets and keeps the locked silhouet
   assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
-test("singleton module URLs resolve to one 13.10.12 instance", async () => {
+test("every singleton module has a canonical 13.13 import-map target", async () => {
   const index = await read("index.html");
+  const importMap = importMapFrom(index);
   for (const path of singletonPaths) {
-    const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const target = new RegExp(`"${escaped}\?v=13\.10\.12"`);
-    assert.ok(target.test(index) || index.includes(`${path}?v=13.10.12`), `missing 13.10.12 reference for ${path}`);
+    assert.equal(importMap[`${path}?v=13.13`], `${path}?v=13.13`, `missing canonical alias for ${path}`);
   }
 });
 
-test("every current stateful import resolves to the canonical release URL", async () => {
+test("every current singleton import resolves to one 13.13 module instance", async () => {
   const index = await read("index.html");
-  const importMap = JSON.parse(index.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1] || "{}").imports || {};
-  const stateful = new Set([
-    "/src/app/router.js",
-    "/src/shared/auth/auth-service.js",
-    "/src/shared/auth/auth-store.js",
-    "/src/shared/auth/supabase-client.js",
-    "/src/shared/data/word-repository.js",
-    "/src/shared/i18n/index.js",
-    "/src/shared/progress/progress-queue.js",
-    "/src/shared/progress/progress-sync.js",
-    "/src/shared/progress/storage-scope.js",
-    "/src/shared/settings/user-settings-store.js",
-  ]);
+  const importMap = importMapFrom(index);
+  const stateful = new Set(singletonPaths);
   for (const file of await javascriptFiles(resolve(projectRoot, "src"))) {
     const source = await readFile(file, "utf8");
     for (const match of source.matchAll(/(?:from\s*|import\s*\()(["'])([^"']+\?v=[^"']+)\1/g)) {
@@ -112,8 +112,8 @@ test("every current stateful import resolves to the canonical release URL", asyn
         : `/${relative(projectRoot, resolve(dirname(file), pathPart)).split(sep).join("/")}`;
       if (!stateful.has(absolutePath)) continue;
       const absoluteSpecifier = `${absolutePath}?${query}`;
-      const resolved = absoluteSpecifier.endsWith("?v=13.10.12") ? absoluteSpecifier : importMap[absoluteSpecifier];
-      assert.equal(resolved, `${absolutePath}?v=13.10.12`, `${file} imports a second ${absoluteSpecifier} instance`);
+      const resolved = importMap[absoluteSpecifier] || absoluteSpecifier;
+      assert.equal(resolved, `${absolutePath}?v=${RELEASE_URL_VERSION}`, `${file} imports a second ${absoluteSpecifier} instance`);
     }
   }
 });
@@ -126,24 +126,18 @@ test("auth SDK is not part of the guest critical path", async () => {
   assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
 });
 
-test("changed display modules canonicalize every historical URL", async () => {
+test("historical singleton URLs canonicalize to the 13.13 release", async () => {
   const index = await read("index.html");
-  const paths = [
-    "/src/features/path/station-view.js",
-    "/src/features/test/view.js",
-    "/src/shared/domain/alan-display.js",
-    "/src/shared/ui/modal.js",
-    "/src/shared/ui/word-renderers.js",
-  ];
-  const versions = ["13.9.0", ...Array.from({ length: 12 }, (_, index) => `13.10.${index}`)];
-  for (const path of paths) {
+  const importMap = importMapFrom(index);
+  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13"];
+  for (const path of singletonPaths) {
     for (const version of versions) {
-      assert.ok(index.includes(`"${path}?v=${version}": "${path}?v=13.10.12"`), `missing ${path} alias for ${version}`);
+      assert.equal(importMap[`${path}?v=${version}`], `${path}?v=13.13`, `missing ${path} alias for ${version}`);
     }
   }
 });
 
-test("new shared helpers are imported at the 13.10.12 URL", async () => {
+test("shared display helpers keep their required dependencies", async () => {
   const alanDisplay = await read("src/shared/domain/alan-display.js");
   const wordRenderers = await read("src/shared/ui/word-renderers.js");
   const stationView = await read("src/features/path/station-view.js");
