@@ -1,0 +1,62 @@
+name: Ops Architecture Audit Simple 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-architecture-audit-simple-20260808.yml
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          mkdir -p ops_architecture_audit_simple_20260808
+          export PGCONNECT_TIMEOUT=20
+          psql "$SUPABASE_DB_URL" -X -q -At <<'SQL' > ops_architecture_audit_simple_20260808/audit.json
+          with cols as (
+            select table_name, json_agg(column_name order by ordinal_position) arr
+            from information_schema.columns
+            where table_schema='public' and table_name in ('content_words','content_word_texts','content_sets','user_settings','content_words_ru','v_words_app')
+            group by table_name
+          ), section_stats as (
+            select story_id,dictionary_id,section_id,
+              count(*) total_words,
+              count(*) filter(where set_id is null) dynamic_words,
+              count(*) filter(where set_id is not null) named_words,
+              count(distinct set_id) filter(where set_id is not null) named_sets
+            from public.content_words
+            group by story_id,dictionary_id,section_id
+          )
+          select json_build_object(
+            'columns',(select json_object_agg(table_name,arr) from cols),
+            'totals',(select json_build_object('words',count(*),'dynamic_words',count(*) filter(where set_id is null),'named_words',count(*) filter(where set_id is not null),'named_sets',count(distinct set_id) filter(where set_id is not null)) from public.content_words),
+            'sections',(select json_agg(json_build_object('story_id',story_id,'dictionary_id',dictionary_id,'section_id',section_id,'total_words',total_words,'dynamic_words',dynamic_words,'named_words',named_words,'named_sets',named_sets,'stations20',ceil(dynamic_words/20.0)::int,'stations40',ceil(dynamic_words/40.0)::int,'stations30',ceil(dynamic_words/30.0)::int,'last30',case when dynamic_words=0 then 0 when dynamic_words%30=0 then 30 else dynamic_words%30 end) order by story_id,dictionary_id,section_id) from section_stats),
+            'named_set_sizes',(select coalesce(json_agg(json_build_object('set_id',set_id,'count',cnt) order by set_id),'[]'::json) from (select set_id,count(*) cnt from public.content_words where set_id is not null group by set_id) s),
+            'sets',(select coalesce(json_agg(to_jsonb(s) order by set_id),'[]'::json) from public.content_sets s),
+            'view_words_app',(select pg_get_viewdef(c.oid,true) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='v_words_app' and c.relkind='v'),
+            'view_words_ru',(select pg_get_viewdef(c.oid,true) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname='content_words_ru' and c.relkind='v')
+          );
+          SQL
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('ops_architecture_audit_simple_20260808/audit.json')
+          d=json.loads(p.read_text())
+          p.write_text(json.dumps(d,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin ops/word-sync-2026-08-08
+          git add ops_architecture_audit_simple_20260808/audit.json
+          git commit -m "ops: save simplified architecture audit"
+          git push origin HEAD:ops/word-sync-2026-08-08
