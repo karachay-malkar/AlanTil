@@ -1,0 +1,33 @@
+name: Verify AlanTil 13.11.1
+
+on:
+  push:
+    branches:
+      - 13.11.1
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run tests
+        run: node --test tests/*.test.mjs
+      - name: Syntax check changed JavaScript
+        run: |
+          node --check src/shared/settings/user-settings-store.js
+          node --check src/shared/domain/learning-route.js
+          node --check src/features/settings/index.js
+          node --check service-worker.js
+      - name: Package full project
+        run: zip -r AlanTil-13.11.1.zip . -x '.git/*' 'AlanTil-13.11.1.zip'
+      - name: Upload full project archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-13.11.1
+          path: AlanTil-13.11.1.zip
+          if-no-files-found: error
