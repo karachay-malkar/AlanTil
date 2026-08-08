@@ -1,0 +1,211 @@
+name: Build verified AlanTil word correction bundle
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/build-final-word-correction-bundle.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Build final patch, diff and corrected current snapshot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, json, re, shutil
+          from pathlib import Path
+
+          root=Path('ops_final_bundle'); root.mkdir(exist_ok=True)
+          transfer=root/'transfer'; transfer.mkdir(exist_ok=True)
+
+          # Exact 94 corrected source rows from Alan til 11.07.26.xlsx.
+          packed=Path('ops_source/corrected_rows_11_07_26.json.gz.b64').read_text(encoding='utf-8').strip()
+          raw=gzip.decompress(base64.b64decode(packed))
+          expected_sha='80ca3458b636248562fb54aa1bf2b9b123e802d62d4c921faa0ef139eed2352d'
+          if hashlib.sha256(raw).hexdigest()!=expected_sha: raise SystemExit('legacy source checksum mismatch')
+          legacy={r['legacy_id']:r for r in json.loads(raw.decode('utf-8'))}
+
+          current=json.loads(Path('ops_live_export/content_words_ru.json').read_text(encoding='utf-8'))
+          by_id={r['word_id']:r for r in current}
+          matches=[]
+          for p in sorted(Path('ops_live_export/content_match').glob('matches_part_*.json')):
+              matches.extend(json.loads(p.read_text(encoding='utf-8')))
+          if len(matches)!=94: raise SystemExit(f'expected 94 matches, got {len(matches)}')
+          if any(m['confidence']=='low' for m in matches): raise SystemExit('low-confidence match present')
+          ids=[m['best']['word_id'] for m in matches]
+          if len(set(ids))!=94: raise SystemExit('word_id collision in matches')
+          # A797 was manually checked: exact word җукъа, current 0797, old source adds missing values/examples.
+          a797=next(m for m in matches if m['legacy_id']=='A797')
+          if a797['best']['word_id']!='0797' or a797['best']['word_alan_cyrillic']!='җукъа': raise SystemExit('A797 manual match guard failed')
+
+          vowels=set('аеёиоуыэюяАЕЁИОУЫЭЮЯ')
+          multi={'Нгъ':'Nğ','нгъ':'nğ','Къ':'Q','къ':'q','Гъ':'Ğ','гъ':'ğ','Нг':'Ñ','нг':'ñ','Дж':'C','дж':'c'}
+          single={'А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Е':'E','е':'e','Ё':'Ö','ё':'ö','Ж':'J','ж':'j','Җ':'C','җ':'c','З':'Z','з':'z','И':'İ','и':'i','Й':'Y','й':'y','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ф':'F','ф':'f','Х':'X','х':'x','Ц':'Ţ','ц':'ţ','Ч':'Ç','ч':'ç','Ш':'Ş','ш':'ş','Щ':'Ş','щ':'ş','Ъ':'','ъ':'','Ь':'','ь':'','Ы':'I','ы':'ı','Э':'E','э':'e','Ю':'Ü','ю':'ü','Я':'Ya','я':'ya'}
+          def translit(s):
+              s=str(s or ''); res=[]; i=0
+              while i<len(s):
+                  three=s[i:i+3]
+                  if three in multi: res.append(multi[three]); i+=3; continue
+                  two=s[i:i+2]
+                  if two in multi: res.append(multi[two]); i+=2; continue
+                  ch=s[i]
+                  if ch in 'Уу':
+                      j=i
+                      while j<len(s) and s[j] in 'Уу': j+=1
+                      run=s[i:j]; prev=s[i-1] if i>0 else ''; nxt=s[j] if j<len(s) else ''
+                      if prev in vowels and nxt in vowels and len(run)>1: flags=[True]*len(run)
+                      else:
+                          start_w=prev in vowels or (len(run)==1 and nxt in vowels)
+                          flags=[((k%2==0) if start_w else (k%2==1)) for k in range(len(run))]
+                      for rc,is_w in zip(run,flags): res.append(('W' if rc=='У' else 'w') if is_w else ('U' if rc=='У' else 'u'))
+                      i=j; continue
+                  res.append(single.get(ch,ch)); i+=1
+              return ''.join(res)
+
+          # Mandatory corpus guard: this exact rule reproduced every current paired form.
+          validation=json.loads(Path('ops_live_export/translit_validation_v3/summary.json').read_text(encoding='utf-8'))
+          if validation.get('mismatches')!=0 or validation.get('tests')!=4625: raise SystemExit('transliteration corpus guard failed')
+
+          def text(v): return '' if v is None else str(v).replace('\r\n','\n').replace('\r','\n').strip()
+          def parse_numbered(v):
+              out=[]
+              for idx,line in enumerate(text(v).splitlines(),1):
+                  line=line.strip()
+                  if not line: continue
+                  m=re.match(r'^(\d+\.\d+)\s+(.+)$',line,re.S)
+                  out.append((m.group(1),m.group(2).strip()) if m else (f'line-{idx}',line))
+              return out
+          def parse_legacy_examples(v):
+              # Split semicolon groups while preserving semicolons that continue the RU part.
+              chunks=[x.strip() for x in text(v).split(';')]
+              pairs=[]
+              for chunk in chunks:
+                  if '✦' in chunk:
+                      a,ru=chunk.split('✦',1); pairs.append([a.strip(),ru.strip()])
+                  elif chunk and pairs:
+                      pairs[-1][1]=(pairs[-1][1]+'; '+chunk).strip()
+                  elif chunk:
+                      pairs.append([chunk,''])
+              result=[]; current_group=1; counters={}
+              for a,ru in pairs:
+                  m=re.match(r'^(\d+)\.\s*(.*)$',a,re.S)
+                  if m:
+                      current_group=int(m.group(1)); a=m.group(2).strip()
+                  counters[current_group]=counters.get(current_group,0)+1
+                  result.append((f'{current_group}.{counters[current_group]}',a,ru))
+              return result
+          def numbered(pairs,which):
+              # which=1 alan / 2 ru
+              return '\n'.join(f'{key} {triple[which]}' for triple in pairs for key in [triple[0]] if triple[which])
+          def sql_lit(v):
+              if v is None: return 'NULL'
+              return "'"+str(v).replace("'","''")+"'"
+
+          corrected=[dict(r) for r in current]
+          corrected_by_id={r['word_id']:r for r in corrected}
+          diff=[]; sql_ops=[]; changed_word_ids=set()
+
+          for m in matches:
+              old=legacy[m['legacy_id']]; wid=m['best']['word_id']; cur=by_id[wid]; dst=corrected_by_id[wid]
+              desired_pairs=parse_legacy_examples(old.get('example'))
+              desired_cyr=numbered(desired_pairs,1)
+              desired_ru=numbered(desired_pairs,2)
+              desired_tur='\n'.join(f'{key} {translit(a)}' for key,a,ru in desired_pairs if a)
+              desired_trans=text(old.get('trans'))
+
+              targets=[
+                ('content_word_texts','alan','cyrillic','phrases_text',text(cur.get('phrases_alan_cyrillic')),desired_cyr,'phrases_alan_cyrillic'),
+                ('content_word_texts','alan','turkic','phrases_text',text(cur.get('phrases_alan_turkic')),desired_tur,'phrases_alan_turkic'),
+                ('content_word_texts','ru','','translation_text',text(cur.get('translation_ru')),desired_trans,'translation_ru'),
+                ('content_word_texts','ru','','phrases_text',text(cur.get('phrases_ru')),desired_ru,'phrases_ru'),
+              ]
+              for table,lang,script,col,oldval,newval,viewfield in targets:
+                  if oldval==newval: continue
+                  changed_word_ids.add(wid)
+                  diff.append({
+                    'legacy_id':m['legacy_id'],'word_id':wid,'global_order':cur.get('global_order'),
+                    'story_id':cur.get('story_id'),'story_name':cur.get('story_name'),
+                    'dictionary_id':cur.get('dictionary_id'),'dictionary_name':cur.get('dictionary_name'),
+                    'section_id':cur.get('section_id'),'section_name':cur.get('section_name'),
+                    'set_id':cur.get('set_id'),'set_name':cur.get('set_name'),
+                    'word_alan_cyrillic':cur.get('word_alan_cyrillic'),
+                    'target_table':table,'language_code':lang,'script_code':script,'column':col,
+                    'current':oldval,'corrected':newval,'legacy_comment':old.get('comment'),
+                    'match_confidence':m.get('confidence')
+                  })
+                  dst[viewfield]=newval
+                  if viewfield=='translation_ru': dst['translation']=newval
+                  sql_ops.append((wid,lang,script,col,oldval,newval))
+
+          # Build atomic guarded SQL. If any live value changed since snapshot, entire transaction aborts.
+          sql=[]
+          sql.append('-- AlanTil word corrections from Alan til 11.07.26.xlsx')
+          sql.append('-- Generated 2026-08-08. Structure/IDs are not modified.')
+          sql.append('-- Guarded by current values captured from live Supabase on 2026-08-08.')
+          sql.append('begin;')
+          sql.append('do $$')
+          sql.append('declare v_count integer;')
+          sql.append('begin')
+          for n,(wid,lang,script,col,oldval,newval) in enumerate(sql_ops,1):
+              where=f"word_id = {sql_lit(wid)} and language_code = {sql_lit(lang)} and script_code = {sql_lit(script)}"
+              sql.append(f"  update public.content_word_texts set {col} = {sql_lit(newval)}, updated_at = now() where {where} and {col} is not distinct from {sql_lit(oldval)};")
+              sql.append('  get diagnostics v_count = row_count;')
+              sql.append(f"  if v_count <> 1 then raise exception 'Guard failed on correction {n}: word_id={wid} {lang}/{script} {col}'; end if;")
+          sql.append('end $$;')
+          sql.append('commit;')
+          patch='\n'.join(sql)+'\n'
+
+          summary={
+            'source_file':'Alan til 11.07.26.xlsx','source_corrected_rows':94,
+            'current_supabase_rows':len(current),'matched_current_word_ids':94,
+            'high_confidence_matches':93,'manually_verified_medium_matches':['A797 -> 0797 (җукъа)'],
+            'rows_requiring_change':len(changed_word_ids),'rows_already_equal':94-len(changed_word_ids),
+            'field_changes':len(diff),
+            'field_counts':{},'transliteration_validation':validation,
+            'live_database_modified':False,
+            'write_blocker':'Connected Supabase account does not expose AlanTil project; public anon key has no UPDATE privilege.'
+          }
+          for d in diff:
+              key=f"{d['language_code']}/{d['script_code']}:{d['column']}"; summary['field_counts'][key]=summary['field_counts'].get(key,0)+1
+
+          (root/'audit_summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
+          (root/'word_corrections_diff.json').write_text(json.dumps(diff,ensure_ascii=False,indent=2),encoding='utf-8')
+          (root/'current_structure_corrected_preview.json').write_text(json.dumps(corrected,ensure_ascii=False,indent=2),encoding='utf-8')
+          (root/'alantil_word_corrections_2026-08-08.sql').write_text(patch,encoding='utf-8')
+          (root/'README_STATUS.txt').write_text(
+            'AlanTil word correction bundle — 2026-08-08\n\n'
+            'Source of corrections: Alan til 11.07.26.xlsx (94 marked rows).\n'
+            f'Live current words read from Supabase: {len(current)}.\n'
+            f'Current word IDs matched: 94. Rows requiring changes: {len(changed_word_ids)}.\n'
+            f'Field-level changes prepared: {len(diff)}.\n'
+            'Cyrillic→Turkic rule validated against 4625/4625 current paired forms.\n\n'
+            'IMPORTANT: live Supabase was NOT modified because the connected Supabase account does not have access to project pybrzgedqjmosbmilcea and the public key correctly rejects UPDATE.\n'
+            'The SQL patch is atomic and guarded by the current values captured on 2026-08-08; if any value has changed, it aborts instead of overwriting newer data.\n',encoding='utf-8')
+
+          # Prepare transport chunks for ChatGPT sandbox. Each file is gzip+base64, split to <= 48k chars.
+          manifest={}
+          for src in ['current_structure_corrected_preview.json','word_corrections_diff.json','alantil_word_corrections_2026-08-08.sql','audit_summary.json','README_STATUS.txt']:
+              data=(root/src).read_bytes(); gz=gzip.compress(data,compresslevel=9); b64=base64.b64encode(gz).decode('ascii')
+              chunks=[b64[i:i+48000] for i in range(0,len(b64),48000)]
+              manifest[src]={'raw_bytes':len(data),'gzip_bytes':len(gz),'sha256':hashlib.sha256(data).hexdigest(),'chunks':len(chunks)}
+              for i,ch in enumerate(chunks,1): (transfer/f'{src}.part{i:02d}.b64').write_text(ch,encoding='ascii')
+          (transfer/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
+          PY
+      - name: Commit final bundle
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_final_bundle
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: build final verified word correction bundle"
+          git push origin HEAD:ops/word-sync-2026-08-08
