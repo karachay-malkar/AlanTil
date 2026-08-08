@@ -1,0 +1,12 @@
+{
+  "content_word_texts": {
+    "status": 401,
+    "error": "HTTP Error 401: Unauthorized",
+    "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT UPDATE ON public.content_word_texts TO anon;\",\"message\":\"permission denied for table content_word_texts\"}"
+  },
+  "content_words": {
+    "status": 401,
+    "error": "HTTP Error 401: Unauthorized",
+    "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT UPDATE ON public.content_words TO anon;\",\"message\":\"permission denied for table content_words\"}"
+  }
+}
