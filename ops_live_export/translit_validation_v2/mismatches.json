@@ -1,0 +1,23 @@
+[
+  {
+    "kind": "phrase_1",
+    "word_id": "1040",
+    "cyrillic": "1.1 җортууулгъа хазырланырнгъа",
+    "expected": "1.1 cortuwulğa xazırlanırnğa",
+    "generated": "1.1 cortuwulğa xazırlanırña"
+  },
+  {
+    "kind": "word",
+    "word_id": "1901",
+    "cyrillic": "ангъач",
+    "expected": "anğaç",
+    "generated": "añaç"
+  },
+  {
+    "kind": "word",
+    "word_id": "2283",
+    "cyrillic": "аҗиууаз, дыхтен (дыхтел)",
+    "expected": "aciwwaz, dıxten (dıxtel)",
+    "generated": "aciwuaz, dıxten (dıxtel)"
+  }
+]
