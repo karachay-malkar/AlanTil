@@ -10,7 +10,7 @@ test("13.13 content source exposes the real hierarchy", async () => {
   const selection = await read("src/shared/domain/word-selection.js");
   const route = await read("src/shared/domain/learning-route.js");
   assert.match(config, /DICTIONARY_CONTENT_TABLE = "v_words_app"/);
-  assert.match(normalizer, /sectionId: normalizeId\(row\.section_id\)/);
+  assert.match(normalizer, /const sectionId = normalizeId\(row\.section_id\)/);
   assert.match(selection, /export function sectionsFrom/);
   assert.match(selection, /export function wordsForSection/);
   assert.match(route, /storyType, station\.dictionaryId, station\.sectionId, station\.setId/);
