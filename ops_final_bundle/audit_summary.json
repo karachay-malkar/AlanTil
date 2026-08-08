@@ -1,0 +1,27 @@
+{
+  "source_file": "Alan til 11.07.26.xlsx",
+  "source_corrected_rows": 94,
+  "current_supabase_rows": 2355,
+  "matched_current_word_ids": 94,
+  "high_confidence_matches": 93,
+  "manually_verified_medium_matches": [
+    "A797 -> 0797 (җукъа)"
+  ],
+  "rows_requiring_change": 90,
+  "rows_already_equal": 4,
+  "field_changes": 141,
+  "field_counts": {
+    "ru/:phrases_text": 63,
+    "ru/:translation_text": 12,
+    "alan/cyrillic:phrases_text": 34,
+    "alan/turkic:phrases_text": 32
+  },
+  "transliteration_validation": {
+    "tests": 4625,
+    "exact": 4625,
+    "mismatches": 0,
+    "exact_rate": 1.0
+  },
+  "live_database_modified": false,
+  "write_blocker": "Connected Supabase account does not expose AlanTil project; public anon key has no UPDATE privilege."
+}

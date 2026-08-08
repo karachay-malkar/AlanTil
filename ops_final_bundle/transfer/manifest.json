@@ -1,0 +1,32 @@
+{
+  "current_structure_corrected_preview.json": {
+    "raw_bytes": 2853588,
+    "gzip_bytes": 226292,
+    "sha256": "6d47c5321d4ff0a904e49878b062cdfae2ab31506524b4b7bc52b7c1a4f4e1f7",
+    "chunks": 7
+  },
+  "word_corrections_diff.json": {
+    "raw_bytes": 129214,
+    "gzip_bytes": 11014,
+    "sha256": "532eb4597e85bdc19490ba0939e94ef4a7c7ead7e5f8a295b951d2bede83906e",
+    "chunks": 1
+  },
+  "alantil_word_corrections_2026-08-08.sql": {
+    "raw_bytes": 75355,
+    "gzip_bytes": 9367,
+    "sha256": "2e68421d8110797a0a4db118d29b21852e8849786580a1440da6dac42e6be0c0",
+    "chunks": 1
+  },
+  "audit_summary.json": {
+    "raw_bytes": 771,
+    "gzip_bytes": 455,
+    "sha256": "6934a96afa82b4aeaeb5f8fa35de015c59c1f3a585a13ecec7f4b2091322587b",
+    "chunks": 1
+  },
+  "README_STATUS.txt": {
+    "raw_bytes": 655,
+    "gzip_bytes": 455,
+    "sha256": "08795c90771349e6c67ace4607a2d8eda2ebf7f17cb1bc3a159633f0dd01920a",
+    "chunks": 1
+  }
+}
