@@ -1,17 +1,16 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.12";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.12";
 import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";
 import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.9.0";
-import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.9.0";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { getHiddenSet, learnState } from "../learn/state.js?v=13.9.0";
+import { getHiddenSet, learnState } from "../learn/state.js?v=13.12";
 import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.0";
 import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.9.0";
 import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.9.0";
@@ -20,7 +19,7 @@ import { renderStationView } from "./station-view.js?v=13.9.0";
 let controller = null;
 let activeStudy = false;
 const pendingSelections = new Map();
-let routeCache = { words: null, stationSize: 0, route: null };
+let routeCache = { words: null, route: null };
 
 function activeStoryType(route, value) {
   const key = String(value || "").trim();
@@ -28,7 +27,7 @@ function activeStoryType(route, value) {
 }
 
 function routeParams(station, route) { return stationPathParams(route, station); }
-function routeScrollKey(story, stationSize) { return `route_scroll_v2_${story}_${stationSize}`; }
+function routeScrollKey(story) { return `route_scroll_v3_${story}`; }
 
 function stationMilestones(summary) {
   const count = Math.floor(summary.mastered / 20);
@@ -59,7 +58,6 @@ function routeGroupSection(group, stationIndex, catalogId, progressSnapshot) {
   const reversedStations = [...group.stations].reverse();
   return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${group.groupId}`)}">
     <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key), progressSnapshot)).join("")}</div>
-    <h3 class="routeSectionHeading">${escapeHtml(group.name)}</h3>
   </section>`;
 }
 
@@ -128,7 +126,7 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
       const next = activeStoryType(route, type);
       if (next === activeStory) return;
       const viewport = context.root.querySelector(".pathMapViewport");
-      updateRouteSettings({ [routeScrollKey(activeStory, route.stationSize)]: viewport?.scrollTop || 0 }, { queue: false });
+      updateRouteSettings({ [routeScrollKey(activeStory)]: viewport?.scrollTop || 0 }, { queue: false });
       updateRouteSettings({ active_story: next });
       context.router.navigate("path.home", { storyType: next });
     }, { signal: controller.signal });
@@ -139,7 +137,7 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
       const station = route.byKey.get(button.dataset.stationKey);
       if (!station) return;
       const viewport = context.root.querySelector(".pathMapViewport");
-      updateRouteSettings({ [routeScrollKey(activeStory, route.stationSize)]: viewport?.scrollTop || 0 }, { queue: false });
+      updateRouteSettings({ [routeScrollKey(activeStory)]: viewport?.scrollTop || 0 }, { queue: false });
       context.router.navigate("path.station", routeParams(station, route));
     }, { signal: controller.signal });
   });
@@ -156,7 +154,7 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
     if (saveFrame) return;
     saveFrame = requestAnimationFrame(() => {
       saveFrame = 0;
-      updateRouteSettings({ [routeScrollKey(activeStory, route.stationSize)]: viewport.scrollTop }, { queue: false });
+      updateRouteSettings({ [routeScrollKey(activeStory)]: viewport.scrollTop }, { queue: false });
     });
   }, { signal: controller.signal, passive: true });
 }
@@ -164,7 +162,7 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
 function selectedWordsForStation(station) {
   const pending = pendingSelections.get(station.key);
   if (Array.isArray(pending) && pending.length) return pending;
-  const hidden = getHiddenSet(station.dictionaryId, station.groupId, station.selectionSetId || station.setId || station.key);
+  const hidden = getHiddenSet(station.dictionaryId, station.dictionaryId, station.setId);
   const active = station.words.filter((word) => !hidden.has(word.id));
   return active.length ? active : station.words;
 }
@@ -241,9 +239,8 @@ function renderResult(context, route, station, result, allWords) {
 export async function mount(context, params = {}) {
   controller = new AbortController();
   const words = await getWords();
-  const stationSize = getStationSize();
-  if (routeCache.words !== words || routeCache.stationSize !== stationSize) {
-    routeCache = { words, stationSize, route: buildLearningRoute(words, { stationSize }) };
+  if (routeCache.words !== words) {
+    routeCache = { words, route: buildLearningRoute(words) };
   }
   const route = routeCache.route;
   const screen = params.screen || "home";
@@ -269,8 +266,8 @@ export async function mount(context, params = {}) {
     activeStudy = true;
     const selectedWords = selectedWordsForStation(station);
     learnState.currentDict = station.dictionaryId;
-    learnState.currentSection = station.groupId;
-    learnState.currentSet = station.selectionSetId || station.setId || station.key;
+    learnState.currentSection = station.dictionaryId;
+    learnState.currentSet = station.setId;
     context.shell.setHeaderContent?.({ title: msg("path.uchit_slova"), subtitle: station.name, logo: true, brand: false });
     renderStudy(context, words, controller.signal, {
       mode: params.mode || learnState.currentStudyMode || "kb",
