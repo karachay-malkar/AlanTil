@@ -1,0 +1,1228 @@
+TAP version 13
+# Subtest: a restored authenticated account URL is canonicalized before router startup
+ok 1 - a restored authenticated account URL is canonicalized before router startup
+  ---
+  duration_ms: 4.648697
+  type: 'test'
+  ...
+# Subtest: OAuth callback routing is excluded from restored-tab recovery
+ok 2 - OAuth callback routing is excluded from restored-tab recovery
+  ---
+  duration_ms: 3.319073
+  type: 'test'
+  ...
+# Subtest: 13.13 is the published application version
+ok 3 - 13.13 is the published application version
+  ---
+  duration_ms: 6.240013
+  type: 'test'
+  ...
+# Subtest: profile keeps both 13.11 PNG character assets and the locked silhouette
+ok 4 - profile keeps both 13.11 PNG character assets and the locked silhouette
+  ---
+  duration_ms: 6.660708
+  type: 'test'
+  ...
+# Subtest: every singleton module has a canonical 13.13 import-map target
+ok 5 - every singleton module has a canonical 13.13 import-map target
+  ---
+  duration_ms: 1.321422
+  type: 'test'
+  ...
+# Subtest: every current singleton import resolves to one 13.13 module instance
+ok 6 - every current singleton import resolves to one 13.13 module instance
+  ---
+  duration_ms: 58.346434
+  type: 'test'
+  ...
+# Subtest: auth SDK is not part of the guest critical path
+ok 7 - auth SDK is not part of the guest critical path
+  ---
+  duration_ms: 1.27052
+  type: 'test'
+  ...
+# Subtest: historical singleton URLs canonicalize to the 13.13 release
+ok 8 - historical singleton URLs canonicalize to the 13.13 release
+  ---
+  duration_ms: 1.587876
+  type: 'test'
+  ...
+# Subtest: shared display helpers keep their required dependencies
+ok 9 - shared display helpers keep their required dependencies
+  ---
+  duration_ms: 1.156071
+  type: 'test'
+  ...
+# Subtest: settings render local content before checking the remote dictionary version
+ok 10 - settings render local content before checking the remote dictionary version
+  ---
+  duration_ms: 4.240027
+  type: 'test'
+  ...
+# Subtest: dictionary checks are deduplicated and short in foreground
+ok 11 - dictionary checks are deduplicated and short in foreground
+  ---
+  duration_ms: 1.05635
+  type: 'test'
+  ...
+# Subtest: remote feature data has bounded waits
+ok 12 - remote feature data has bounded waits
+  ---
+  duration_ms: 1.067854
+  type: 'test'
+  ...
+# Subtest: song catalog does not eagerly import the player
+ok 13 - song catalog does not eagerly import the player
+  ---
+  duration_ms: 1.309131
+  type: 'test'
+  ...
+# Subtest: 13.13 content source exposes the real hierarchy
+not ok 14 - 13.13 content source exposes the real hierarchy
+  ---
+  duration_ms: 8.03851
+  type: 'test'
+  location: '/home/runner/work/AlanTil/AlanTil/tests/content-hierarchy-13-13.test.mjs:7:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /sectionId: normalizeId\(row\.section_id\)/. Input:
+    
+    'export function normalizeId(id) {\n' +
+      '  return String(id ?? "").trim();\n' +
+      '}\n' +
+      '\n' +
+      'export function normalizePos(value) {\n' +
+      '  return String(value || "").trim().toLowerCase();\n' +
+      '}\n' +
+      '\n' +
+      'export function parseSynonyms(raw) {\n' +
+      '  if (Array.isArray(raw)) {\n' +
+      '    return raw.map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);\n' +
+      '  }\n' +
+      '  return String(raw || "")\n' +
+      '    .toLowerCase()\n' +
+      '    .split(",")\n' +
+      '    .map((value) => value.trim())\n' +
+      '    .filter(Boolean);\n' +
+      '}\n' +
+      '\n' +
+      'export function parseUsedInTest(rawValue, hasColumn = true) {\n' +
+      '  if (!hasColumn) return true;\n' +
+      '  const normalized = String(rawValue ?? "").trim().toLowerCase();\n' +
+      '  return normalized === "1" || normalized === "true";\n' +
+      '}\n' +
+      '\n' +
+      'function text(value) {\n' +
+      '  if (Array.isArray(value)) return value.map((entry) => String(entry || "").trim()).filter(Boolean).join("\\n");\n' +
+      '  if (value && typeof value === "object") return text(Object.values(value));\n' +
+      '  return String(value || "").trim();\n' +
+      '}\n' +
+      '\n' +
+      'function numberValue(...values) {\n' +
+      '  for (const value of values) {\n' +
+      '    const number = Number(value);\n' +
+      '    if (Number.isFinite(number)) return number;\n' +
+      '  }\n' +
+      '  return 0;\n' +
+      '}\n' +
+      '\n' +
+      'function nullableNumber(value) {\n' +
+      '  if (value === "" || value === null || value === undefined) return null;\n' +
+      '  const number = Number(value);\n' +
+      '  return Number.isFinite(number) ? number : null;\n' +
+      '}\n' +
+      '\n' +
+      'function setOrdinal(setId) {\n' +
+      '  const match = String(setId || "").match(/(\\d+)$/);\n' +
+      '  return match ? Number(match[1]) : 0;\n' +
+      '}\n' +
+      '\n' +
+      'const THEMATIC_SECTION_BY_SET = Object.freeze({\n' +
+      '  "universe-01": "universe-seasons",\n' +
+      '  "universe-02": "universe-months",\n' +
+      '  "universe-03": "universe-weekdays",\n' +
+      '  "universe-04": "universe-space",\n' +
+      '  "universe-05": "universe-colours",\n' +
+      '  "animals-01": "animals-aquatic-fauna",\n' +
+      '  "animals-02": "animals-omnivores-herbivores-rodents",\n' +
+      '  "animals-03": "animals-domestic",\n' +
+      '  "animals-04": "animals-amphibians-reptiles",\n' +
+      '  "animals-05": "animals-spiders-worms-insects",\n' +
+      '  "animals-06": "animals-primates-marsupials",\n' +
+      '  "animals-07": "animals-birds",\n' +
+      '  "animals-08": "animals-predators-mammals",\n' +
+      '  "natural_materials-01": "natural-materials-rocks",\n' +
+      '  "natural_materials-02": "natural-materials-metals",\n' +
+      '  "natural_materials-03": "natural-materials-minerals",\n' +
+      '  "natural_materials-04": "natural-materials-non-metals",\n' +
+      '  "natural_materials-05": "natural-materials-other",\n' +
+      '  "plants-01": "plants-trees",\n' +
+      '  "plants-02": "plants-nuts-grains-legumes",\n' +
+      '  "plants-03": "plants-other",\n' +
+      '  "plants-04": "plants-spices-herbs",\n' +
+      '  "plants-05": "plants-fruit-vegetables",\n' +
+      '  "plants-06": "plants-flowers",\n' +
+      '  "plants-07": "plants-berries-shrubs",\n' +
+      '});\n' +
+      '\n' +
+      'export function permanentSectionId(dictionaryId, setId) {\n' +
+      '  const dictionary = normalizeId(dictionaryId);\n' +
+      '  const set = normalizeId(setId);\n' +
+      '  const ordinal = setOrdinal(set);\n' +
+      '  if (dictionary === "beginner") return ordinal > 0 && ordinal <= 15 ? "beginner-starter" : "beginner-elementary";\n' +
+      '  if (dictionary === "intermediate") return ordinal > 0 && ordinal <= 6 ? "intermediate-intermediate" : "intermediate-upper-intermediate";\n' +
+      '  if (dictionary === "advanced") return ordinal > 0 && ordinal <= 10 ? "advanced-advanced" : "advanced-proficiency";\n' +
+      '  return THEMATIC_SECTION_BY_SET[set] || "";\n' +
+      '}\n' +
+      '\n' +
+      'export function storyIdForDictionary(dictionaryId) {\n' +
+      '  const dictionary = normalizeId(dictionaryId);\n' +
+      '  if (dictionary === "beginner") return "oblivion";\n' +
+      '  if (dictionary === "intermediate") return "roots";\n' +
+      '  if (dictionary === "advanced") return "ascent";\n' +
+      '  if (["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return "pathways";\n' +
+      '  return "";\n' +
+      '}\n' +
+      '\n' +
+      'const LEGACY_DICTIONARY_NAMES_RU = Object.freeze({\n' +
+      '  beginner: "Начальный",\n' +
+      '  intermediate: "Средний",\n' +
+      '  advanced: "Продвинутый",\n' +
+      '  universe: "Вселенная",\n' +
+      '  animals: "Животные",\n' +
+      '  natural_materials: "Природные материалы",\n' +
+      '  plants: "Растения",\n' +
+      '});\n' +
+      '\n' +
+      'const LEGACY_SECTION_NAMES_RU = Object.freeze({\n' +
+      '  "beginner-starter": "Starter",\n' +
+      '  "beginner-elementary": "Elementary",\n' +
+      '  "intermediate-intermediate": "Intermediate",\n' +
+      '  "intermediate-upper-intermediate": "Upper-Intermediate",\n' +
+      '  "advanced-advanced": "Advanced",\n' +
+      '  "advanced-proficiency": "Proficiency",\n' +
+      '  "universe-seasons": "Времена года",\n' +
+      '  "universe-months": "Месяцы года",\n' +
+      '  "universe-weekdays": "Дни недели",\n' +
+      '  "universe-space": "Космос",\n' +
+      '  "universe-colours": "Цвета",\n' +
+      '  "animals-aquatic-fauna": "Водная фауна",\n' +
+      '  "animals-omnivores-herbivores-rodents": "Всеядные, травоядные и грызуны",\n' +
+      '  "animals-domestic": "Домашние животные",\n' +
+      '  "animals-amphibians-reptiles": "Земноводные и рептилии",\n' +
+      '  "animals-spiders-worms-insects": "Пауки, черви и насекомые",\n' +
+      '  "animals-primates-marsupials": "Приматы и сумчатые",\n' +
+      '  "animals-birds": "Птицы",\n' +
+      '  "animals-predators-mammals": "Хищники и млекопитающие",\n' +
+      '  "natural-materials-rocks": "Горные породы",\n' +
+      '  "natural-materials-metals": "Металлы",\n' +
+      '  "natural-materials-minerals": "Минералы",\n' +
+      '  "natural-materials-non-metals": "Неметаллы",\n' +
+      '  "natural-materials-other": "Другие материалы",\n' +
+      '  "plants-trees": "Деревья",\n' +
+      '  "plants-nuts-grains-legumes": "Орехи, злаки и бобовые",\n' +
+      '  "plants-other": "Другие растения",\n' +
+      '  "plants-spices-herbs": "Специи и зелень",\n' +
+      '  "plants-fruit-vegetables": "Фрукты, овощи",\n' +
+      '  "plants-flowers": "Цветы",\n' +
+      '  "plants-berries-shrubs": "Ягоды и кустарники",\n' +
+      '});\n' +
+      '\n' +
+      'function commonRouteFields(row) {\n' +
+      '  return {\n' +
+      '    order_override: numberValue(row.order_override),\n' +
+      '    background_segment: text(row.background_segment),\n' +
+      '    position_x: nullableNumber(row.position_x),\n' +
+      '    position_y: nullableNumber(row.position_y),\n' +
+      '    required_accuracy: nullableNumber(row.required_accuracy),\n' +
+      '    reward_id: text(row.reward_id),\n' +
+      '    is_optional: ["1", "true", "yes"].includes(text(row.is_optional).toLowerCase()),\n' +
+      '    review_schedule: text(row.review_schedule),\n' +
+      '  };\n' +
+      '}\n' +
+      '\n' +
+      'function completeModel(model, row = {}) {\n' +
+      '  const dictionaryId = normalizeId(model.dictionaryId);\n' +
+      '  const sectionId = normalizeId(model.sectionId);\n' +
+      '  const setId = normalizeId(model.setId);\n' +
+      '  const storyId = normalizeId(model.storyId);\n' +
+      '  const storyNameRu = text(model.storyNameRu);\n' +
+      '  const dictionaryNameRu = text(model.dictionaryNameRu);\n' +
+      '  const sectionNameRu = text(model.sectionNameRu);\n' +
+      '  const setNameRu = text(model.setNameRu);\n' +
+      '\n' +
+      '  const normalized = {\n' +
+      '    ...model,\n' +
+      '    id: normalizeId(model.id),\n' +
+      '    word_id: normalizeId(model.id),\n' +
+      '    global_order: numberValue(model.globalOrder),\n' +
+      '    dict_order: numberValue(model.globalOrder),\n' +
+      '    story_id: storyId,\n' +
+      '    story_type: storyId,\n' +
+      '    dictionary_id: dictionaryId,\n' +
+      '    catalog_id: dictionaryId,\n' +
+      '    section_id: sectionId,\n' +
+      '    group_id: sectionId,\n' +
+      '    set_id: setId,\n' +
+      '    pos: text(model.pos),\n' +
+      '    synonyms: parseSynonyms(model.synonyms),\n' +
+      '    word: text(model.wordAlanCyrillic),\n' +
+      '    trans: text(model.translationRu),\n' +
+      '    example: text(model.legacyExample),\n' +
+      '    story_name: storyNameRu,\n' +
+      '    story_intro: text(model.storyIntroRu),\n' +
+      '    dictionary_name: dictionaryNameRu,\n' +
+      '    section_name: sectionNameRu,\n' +
+      '    set_name: setNameRu,\n' +
+      '    dict: dictionaryNameRu,\n' +
+      '    section: sectionNameRu,\n' +
+      '    set: setNameRu,\n' +
+      '    usedInTest: typeof row.usedInTest === "boolean"\n' +
+      '      ? row.usedInTest\n' +
+      '      : parseUsedInTest(row.used_in_test, row.used_in_test !== undefined),\n' +
+      '    ...commonRouteFields(row),\n' +
+      '  };\n' +
+      '\n' +
+      '  if (!normalized.id || !storyId || !dictionaryId || !sectionId || !setId || !normalized.wordAlanCyrillic || !normalized.translationRu) return null;\n' +
+      '  return normalized;\n' +
+      '}\n' +
+      '\n' +
+      'function storyValue(story, row, key, fallbackKey = key) {\n' +
+      '  return text(story?.[key] ?? row?.[fallbackKey]);\n' +
+      '}\n' +
+      '\n' +
+      'export function normalizeSupabaseWordEntry(row, story = null) {\n' +
+      '  if (!row || typeof row !== "object") return null;\n' +
+      '  const dictionaryId = normalizeId(row.dictionary_id);\n' +
+      '  const sectionId = normalizeId(row.section_id);\n' +
+      '  const setId = normalizeId(row.set_id);\n' +
+      '  const model = {\n' +
+      '    sourceType: "v_words_app",\n' +
+      '    id: normalizeId(row.word_id),\n' +
+      '    globalOrder: numberValue(row.global_order),\n' +
+      '    storyId: normalizeId(story?.story_id || row.story_id || storyIdForDictionary(dictionaryId)),\n' +
+      '    dictionaryId,\n' +
+      '    sectionId,\n' +
+      '    setId,\n' +
+      '    pos: text(row.pos),\n' +
+      '    synonyms: row.synonyms,\n' +
+      '\n' +
+      '    wordAlanCyrillic: text(row.word_alan_cyrillic),\n' +
+      '    wordAlanTurkic: text(row.word_alan_turkic),\n' +
+      '    translationRu: text(row.translation_ru),\n' +
+      '    translationEn: text(row.translation_en),\n' +
+      '    translationTr: text(row.translation_tr),\n' +
+      '    phrasesAlanCyrillic: text(row.phrases_alan_cyrillic),\n' +
+      '    phrasesAlanTurkic: text(row.phrases_alan_turkic),\n' +
+      '    phrasesRu: text(row.phrases_ru),\n' +
+      '    phrasesEn: text(row.phrases_en),\n' +
+      '    phrasesTr: text(row.phrases_tr),\n' +
+      '\n' +
+      '    storyNameRu: storyValue(story, row, "name_ru", "story_name_ru"),\n' +
+      '    storyNameEn: storyValue(story, row, "name_en", "story_name_en"),\n' +
+      '    storyNameTr: storyValue(story, row, "name_tr", "story_name_tr"),\n' +
+      '    storyNameAlanCyrillic: storyValue(story, row, "name_alan_cyrillic", "story_name_alan_cyrillic"),\n' +
+      '    storyNameAlanTurkic: storyValue(story, row, "name_alan_turkic", "story_name_alan_turkic"),\n' +
+      '    storyIntroRu: storyValue(story, row, "intro_ru", "story_intro_ru"),\n' +
+      '    storyIntroEn: storyValue(story, row, "intro_en", "story_intro_en"),\n' +
+      '    storyIntroTr: storyValue(story, row, "intro_tr", "story_intro_tr"),\n' +
+      '    storyIntroAlanCyrillic: storyValue(story, row, "intro_alan_cyrillic", "story_intro_alan_cyrillic"),\n' +
+      '    storyIntroAlanTurkic: storyValue(story, row, "intro_alan_turkic", "story_intro_alan_turkic"),\n' +
+      '    dictionaryNameRu: text(row.dictionary_name_ru),\n' +
+      '    dictionaryNameEn: text(row.dictionary_name_en),\n' +
+      '    dictionaryNameTr: text(row.dictionary_name_tr),\n' +
+      '    dictionaryNameAlanCyrillic: text(row.dictionary_name_alan_cyrillic),\n' +
+      '    dictionaryNameAlanTurkic: text(row.dictionary_name_alan_turkic),\n' +
+      '    sectionNameRu: text(row.section_name_ru),\n' +
+      '    sectionNameEn: text(row.section_name_en),\n' +
+      '    sectionNameTr: text(row.section_name_tr),\n' +
+      '    sectionNameAlanCyrillic: text(row.section_name_alan_cyrillic),\n' +
+      '    sectionNameAlanTurkic: text(row.section_name_alan_turkic),\n' +
+      '    setNameRu: text(row.set_name_ru),\n' +
+      '    setNameEn: text(row.set_name_en),\n' +
+      '    setNameTr: text(row.set_name_tr),\n' +
+      '    setNameAlanCyrillic: text(row.set_name_alan_cyrillic),\n' +
+      '    setNameAlanTurkic: tex'... 7929 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    export function normalizeId(id) {
+      return String(id ?? "").trim();
+    }
+    
+    export function normalizePos(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+    
+    export function parseSynonyms(raw) {
+      if (Array.isArray(raw)) {
+        return raw.map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+      }
+      return String(raw || "")
+        .toLowerCase()
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+    }
+    
+    export function parseUsedInTest(rawValue, hasColumn = true) {
+      if (!hasColumn) return true;
+      const normalized = String(rawValue ?? "").trim().toLowerCase();
+      return normalized === "1" || normalized === "true";
+    }
+    
+    function text(value) {
+      if (Array.isArray(value)) return value.map((entry) => String(entry || "").trim()).filter(Boolean).join("\n");
+      if (value && typeof value === "object") return text(Object.values(value));
+      return String(value || "").trim();
+    }
+    
+    function numberValue(...values) {
+      for (const value of values) {
+        const number = Number(value);
+        if (Number.isFinite(number)) return number;
+      }
+      return 0;
+    }
+    
+    function nullableNumber(value) {
+      if (value === "" || value === null || value === undefined) return null;
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }
+    
+    function setOrdinal(setId) {
+      const match = String(setId || "").match(/(\d+)$/);
+      return match ? Number(match[1]) : 0;
+    }
+    
+    const THEMATIC_SECTION_BY_SET = Object.freeze({
+      "universe-01": "universe-seasons",
+      "universe-02": "universe-months",
+      "universe-03": "universe-weekdays",
+      "universe-04": "universe-space",
+      "universe-05": "universe-colours",
+      "animals-01": "animals-aquatic-fauna",
+      "animals-02": "animals-omnivores-herbivores-rodents",
+      "animals-03": "animals-domestic",
+      "animals-04": "animals-amphibians-reptiles",
+      "animals-05": "animals-spiders-worms-insects",
+      "animals-06": "animals-primates-marsupials",
+      "animals-07": "animals-birds",
+      "animals-08": "animals-predators-mammals",
+      "natural_materials-01": "natural-materials-rocks",
+      "natural_materials-02": "natural-materials-metals",
+      "natural_materials-03": "natural-materials-minerals",
+      "natural_materials-04": "natural-materials-non-metals",
+      "natural_materials-05": "natural-materials-other",
+      "plants-01": "plants-trees",
+      "plants-02": "plants-nuts-grains-legumes",
+      "plants-03": "plants-other",
+      "plants-04": "plants-spices-herbs",
+      "plants-05": "plants-fruit-vegetables",
+      "plants-06": "plants-flowers",
+      "plants-07": "plants-berries-shrubs",
+    });
+    
+    export function permanentSectionId(dictionaryId, setId) {
+      const dictionary = normalizeId(dictionaryId);
+      const set = normalizeId(setId);
+      const ordinal = setOrdinal(set);
+      if (dictionary === "beginner") return ordinal > 0 && ordinal <= 15 ? "beginner-starter" : "beginner-elementary";
+      if (dictionary === "intermediate") return ordinal > 0 && ordinal <= 6 ? "intermediate-intermediate" : "intermediate-upper-intermediate";
+      if (dictionary === "advanced") return ordinal > 0 && ordinal <= 10 ? "advanced-advanced" : "advanced-proficiency";
+      return THEMATIC_SECTION_BY_SET[set] || "";
+    }
+    
+    export function storyIdForDictionary(dictionaryId) {
+      const dictionary = normalizeId(dictionaryId);
+      if (dictionary === "beginner") return "oblivion";
+      if (dictionary === "intermediate") return "roots";
+      if (dictionary === "advanced") return "ascent";
+      if (["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return "pathways";
+      return "";
+    }
+    
+    const LEGACY_DICTIONARY_NAMES_RU = Object.freeze({
+      beginner: "Начальный",
+      intermediate: "Средний",
+      advanced: "Продвинутый",
+      universe: "Вселенная",
+      animals: "Животные",
+      natural_materials: "Природные материалы",
+      plants: "Растения",
+    });
+    
+    const LEGACY_SECTION_NAMES_RU = Object.freeze({
+      "beginner-starter": "Starter",
+      "beginner-elementary": "Elementary",
+      "intermediate-intermediate": "Intermediate",
+      "intermediate-upper-intermediate": "Upper-Intermediate",
+      "advanced-advanced": "Advanced",
+      "advanced-proficiency": "Proficiency",
+      "universe-seasons": "Времена года",
+      "universe-months": "Месяцы года",
+      "universe-weekdays": "Дни недели",
+      "universe-space": "Космос",
+      "universe-colours": "Цвета",
+      "animals-aquatic-fauna": "Водная фауна",
+      "animals-omnivores-herbivores-rodents": "Всеядные, травоядные и грызуны",
+      "animals-domestic": "Домашние животные",
+      "animals-amphibians-reptiles": "Земноводные и рептилии",
+      "animals-spiders-worms-insects": "Пауки, черви и насекомые",
+      "animals-primates-marsupials": "Приматы и сумчатые",
+      "animals-birds": "Птицы",
+      "animals-predators-mammals": "Хищники и млекопитающие",
+      "natural-materials-rocks": "Горные породы",
+      "natural-materials-metals": "Металлы",
+      "natural-materials-minerals": "Минералы",
+      "natural-materials-non-metals": "Неметаллы",
+      "natural-materials-other": "Другие материалы",
+      "plants-trees": "Деревья",
+      "plants-nuts-grains-legumes": "Орехи, злаки и бобовые",
+      "plants-other": "Другие растения",
+      "plants-spices-herbs": "Специи и зелень",
+      "plants-fruit-vegetables": "Фрукты, овощи",
+      "plants-flowers": "Цветы",
+      "plants-berries-shrubs": "Ягоды и кустарники",
+    });
+    
+    function commonRouteFields(row) {
+      return {
+        order_override: numberValue(row.order_override),
+        background_segment: text(row.background_segment),
+        position_x: nullableNumber(row.position_x),
+        position_y: nullableNumber(row.position_y),
+        required_accuracy: nullableNumber(row.required_accuracy),
+        reward_id: text(row.reward_id),
+        is_optional: ["1", "true", "yes"].includes(text(row.is_optional).toLowerCase()),
+        review_schedule: text(row.review_schedule),
+      };
+    }
+    
+    function completeModel(model, row = {}) {
+      const dictionaryId = normalizeId(model.dictionaryId);
+      const sectionId = normalizeId(model.sectionId);
+      const setId = normalizeId(model.setId);
+      const storyId = normalizeId(model.storyId);
+      const storyNameRu = text(model.storyNameRu);
+      const dictionaryNameRu = text(model.dictionaryNameRu);
+      const sectionNameRu = text(model.sectionNameRu);
+      const setNameRu = text(model.setNameRu);
+    
+      const normalized = {
+        ...model,
+        id: normalizeId(model.id),
+        word_id: normalizeId(model.id),
+        global_order: numberValue(model.globalOrder),
+        dict_order: numberValue(model.globalOrder),
+        story_id: storyId,
+        story_type: storyId,
+        dictionary_id: dictionaryId,
+        catalog_id: dictionaryId,
+        section_id: sectionId,
+        group_id: sectionId,
+        set_id: setId,
+        pos: text(model.pos),
+        synonyms: parseSynonyms(model.synonyms),
+        word: text(model.wordAlanCyrillic),
+        trans: text(model.translationRu),
+        example: text(model.legacyExample),
+        story_name: storyNameRu,
+        story_intro: text(model.storyIntroRu),
+        dictionary_name: dictionaryNameRu,
+        section_name: sectionNameRu,
+        set_name: setNameRu,
+        dict: dictionaryNameRu,
+        section: sectionNameRu,
+        set: setNameRu,
+        usedInTest: typeof row.usedInTest === "boolean"
+          ? row.usedInTest
+          : parseUsedInTest(row.used_in_test, row.used_in_test !== undefined),
+        ...commonRouteFields(row),
+      };
+    
+      if (!normalized.id || !storyId || !dictionaryId || !sectionId || !setId || !normalized.wordAlanCyrillic || !normalized.translationRu) return null;
+      return normalized;
+    }
+    
+    function storyValue(story, row, key, fallbackKey = key) {
+      return text(story?.[key] ?? row?.[fallbackKey]);
+    }
+    
+    export function normalizeSupabaseWordEntry(row, story = null) {
+      if (!row || typeof row !== "object") return null;
+      const dictionaryId = normalizeId(row.dictionary_id);
+      const sectionId = normalizeId(row.section_id);
+      const setId = normalizeId(row.set_id);
+      const model = {
+        sourceType: "v_words_app",
+        id: normalizeId(row.word_id),
+        globalOrder: numberValue(row.global_order),
+        storyId: normalizeId(story?.story_id || row.story_id || storyIdForDictionary(dictionaryId)),
+        dictionaryId,
+        sectionId,
+        setId,
+        pos: text(row.pos),
+        synonyms: row.synonyms,
+    
+        wordAlanCyrillic: text(row.word_alan_cyrillic),
+        wordAlanTurkic: text(row.word_alan_turkic),
+        translationRu: text(row.translation_ru),
+        translationEn: text(row.translation_en),
+        translationTr: text(row.translation_tr),
+        phrasesAlanCyrillic: text(row.phrases_alan_cyrillic),
+        phrasesAlanTurkic: text(row.phrases_alan_turkic),
+        phrasesRu: text(row.phrases_ru),
+        phrasesEn: text(row.phrases_en),
+        phrasesTr: text(row.phrases_tr),
+    
+        storyNameRu: storyValue(story, row, "name_ru", "story_name_ru"),
+        storyNameEn: storyValue(story, row, "name_en", "story_name_en"),
+        storyNameTr: storyValue(story, row, "name_tr", "story_name_tr"),
+        storyNameAlanCyrillic: storyValue(story, row, "name_alan_cyrillic", "story_name_alan_cyrillic"),
+        storyNameAlanTurkic: storyValue(story, row, "name_alan_turkic", "story_name_alan_turkic"),
+        storyIntroRu: storyValue(story, row, "intro_ru", "story_intro_ru"),
+        storyIntroEn: storyValue(story, row, "intro_en", "story_intro_en"),
+        storyIntroTr: storyValue(story, row, "intro_tr", "story_intro_tr"),
+        storyIntroAlanCyrillic: storyValue(story, row, "intro_alan_cyrillic", "story_intro_alan_cyrillic"),
+        storyIntroAlanTurkic: storyValue(story, row, "intro_alan_turkic", "story_intro_alan_turkic"),
+        dictionaryNameRu: text(row.dictionary_name_ru),
+        dictionaryNameEn: text(row.dictionary_name_en),
+        dictionaryNameTr: text(row.dictionary_name_tr),
+        dictionaryNameAlanCyrillic: text(row.dictionary_name_alan_cyrillic),
+        dictionaryNameAlanTurkic: text(row.dictionary_name_alan_turkic),
+        sectionNameRu: text(row.section_name_ru),
+        sectionNameEn: text(row.section_name_en),
+        sectionNameTr: text(row.section_name_tr),
+        sectionNameAlanCyrillic: text(row.section_name_alan_cyrillic),
+        sectionNameAlanTurkic: text(row.section_name_alan_turkic),
+        setNameRu: text(row.set_name_ru),
+        setNameEn: text(row.set_name_en),
+        setNameTr: text(row.set_name_tr),
+        setNameAlanCyrillic: text(row.set_name_alan_cyrillic),
+        setNameAlanTurkic: text(row.set_name_alan_turkic),
+        legacyExample: "",
+      };
+      return completeModel(model, row);
+    }
+    
+    function normalizeLegacyScope(row) {
+      const legacySection = normalizeId(row.section_id || row.group_id || row.section || row.folder);
+      let dictionaryId = normalizeId(row.dictionary_id || row.catalog_id || row.dict);
+      let setId = normalizeId(row.set_id || row.set);
+      const dictionaryBySection = {
+        "1": "beginner",
+        "2": "intermediate",
+        "3": "advanced",
+        "4": "universe",
+        "5": "animals",
+        "6": "natural_materials",
+        "7": "plants",
+      };
+      if (dictionaryBySection[legacySection]) dictionaryId = dictionaryBySection[legacySection];
+      if (!setId && dictionaryId) {
+        const order = numberValue(row.global_order, row.dict_order);
+        const starts = { beginner: 1, intermediate: 882, advanced: 1199 };
+        if (starts[dictionaryId]) {
+          setId = `${dictionaryId}-${String(Math.floor((order - starts[dictionaryId]) / 30) + 1).padStart(2, "0")}`;
+        }
+      } else if (/^\d+$/.test(setId) && dictionaryId) {
+        const offsets = { universe: 0, animals: 5, natural_materials: 13, plants: 18 };
+        const ordinal = Number(setId) - (offsets[dictionaryId] || 0);
+        if (ordinal > 0) setId = `${dictionaryId}-${String(ordinal).padStart(2, "0")}`;
+      }
+      return { dictionaryId, sectionId: permanentSectionId(dictionaryId, setId), setId };
+    }
+    
+    export function normalizeLegacyWordEntry(row) {
+      if (!row || typeof row !== "object") return null;
+      const id = normalizeId(row.id || row.word_id);
+      const scope = normalizeLegacyScope(row);
+      const storyId = storyIdForDictionary(scope.dictionaryId);
+      const model = {
+        sourceType: "legacy",
+        id,
+        globalOrder: numberValue(row.global_order, row.dict_order),
+        storyId,
+        dictionaryId: scope.dictionaryId,
+        sectionId: scope.sectionId,
+        setId: scope.setId,
+        pos: text(row.pos),
+        synonyms: row.synonyms,
+    
+        wordAlanCyrillic: text(row.word_alan_cyrillic || row.word),
+        wordAlanTurkic: text(row.word_alan_turkic),
+        translationRu: text(row.translation_ru || row.trans || row.translation),
+        translationEn: text(row.translation_en),
+        translationTr: text(row.translation_tr),
+        phrasesAlanCyrillic: text(row.phrases_alan_cyrillic),
+        phrasesAlanTurkic: text(row.phrases_alan_turkic),
+        phrasesRu: text(row.phrases_ru),
+        phrasesEn: text(row.phrases_en),
+        phrasesTr: text(row.phrases_tr),
+    
+        storyNameRu: storyId === "oblivion" ? "На пороге забвения" : text(row.story_name_ru || row.story_name),
+        storyNameEn: storyId === "oblivion" ? "" : text(row.story_name_en),
+        storyNameTr: storyId === "oblivion" ? "" : text(row.story_name_tr),
+        storyNameAlanCyrillic: storyId === "oblivion" ? "" : text(row.story_name_alan_cyrillic),
+        storyNameAlanTurkic: storyId === "oblivion" ? "" : text(row.story_name_alan_turkic),
+        storyIntroRu: storyId === "oblivion" ? "Это история о последних мгновениях жизни языка. Она написана скупо — простыми словами и примитивными понятиями, до которых беднеет некогда богатая речь, прежде чем умолкнуть навсегда. Это её последнее дыхание. Дальше — только забвение." : "",
+        storyIntroEn: "",
+        storyIntroTr: "",
+        storyIntroAlanCyrillic: "",
+        storyIntroAlanTurkic: "",
+        dictionaryNameRu: LEGACY_DICTIONARY_NAMES_RU[scope.dictionaryId] || "",
+        dictionaryNameEn: "",
+        dictionaryNameTr: "",
+        dictionaryNameAlanCyrillic: "",
+        dictionaryNameAlanTurkic: "",
+        sectionNameRu: LEGACY_SECTION_NAMES_RU[scope.sectionId] || "",
+        sectionNameEn: "",
+        sectionNameTr: "",
+        sectionNameAlanCyrillic: "",
+        sectionNameAlanTurkic: "",
+        setNameRu: "",
+        setNameEn: "",
+        setNameTr: "",
+        setNameAlanCyrillic: "",
+        setNameAlanTurkic: "",
+        legacyExample: text(row.example || row.phrases || row.phrases_ru_combined),
+      };
+      return completeModel(model, row);
+    }
+    
+    function normalizeCachedWordEntry(row) {
+      if (!row || typeof row !== "object") return null;
+      const dictionaryId = normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id);
+      const setId = normalizeId(row.setId || row.set_id);
+      const sectionId = normalizeId(row.sectionId || row.section_id || row.group_id || permanentSectionId(dictionaryId, setId));
+      const model = {
+        sourceType: text(row.sourceType) || "v_words_app",
+        id: normalizeId(row.id || row.word_id),
+        globalOrder: numberValue(row.globalOrder, row.global_order, row.dict_order),
+        storyId: normalizeId(row.storyId || row.story_id || row.story_type || storyIdForDictionary(dictionaryId)),
+        dictionaryId,
+        sectionId,
+        setId,
+        pos: text(row.pos),
+        synonyms: row.synonyms,
+    
+        wordAlanCyrillic: text(row.wordAlanCyrillic || row.word_alan_cyrillic || row.word),
+        wordAlanTurkic: text(row.wordAlanTurkic || row.word_alan_turkic),
+        translationRu: text(row.translationRu || row.translation_ru || row.trans),
+        translationEn: text(row.translationEn || row.translation_en),
+        translationTr: text(row.translationTr || row.translation_tr),
+        phrasesAlanCyrillic: text(row.phrasesAlanCyrillic || row.phrases_alan_cyrillic),
+        phrasesAlanTurkic: text(row.phrasesAlanTurkic || row.phrases_alan_turkic),
+        phrasesRu: text(row.phrasesRu || row.phrases_ru),
+        phrasesEn: text(row.phrasesEn || row.phrases_en),
+        phrasesTr: text(row.phrasesTr || row.phrases_tr),
+    
+        storyNameRu: text(row.storyNameRu || row.story_name_ru || row.story_name),
+        storyNameEn: text(row.storyNameEn || row.story_name_en),
+        storyNameTr: text(row.storyNameTr || row.story_name_tr),
+        storyNameAlanCyrillic: text(row.storyNameAlanCyrillic || row.story_name_alan_cyrillic),
+        storyNameAlanTurkic: text(row.storyNameAlanTurkic || row.story_name_alan_turkic),
+        storyIntroRu: text(row.storyIntroRu || row.story_intro_ru || row.story_intro),
+        storyIntroEn: text(row.storyIntroEn || row.story_intro_en),
+        storyIntroTr: text(row.storyIntroTr || row.story_intro_tr),
+        storyIntroAlanCyrillic: text(row.storyIntroAlanCyrillic || row.story_intro_alan_cyrillic),
+        storyIntroAlanTurkic: text(row.storyIntroAlanTurkic || row.story_intro_alan_turkic),
+        dictionaryNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_name),
+        dictionaryNameEn: text(row.dictionaryNameEn || row.dictionary_name_en),
+        dictionaryNameTr: text(row.dictionaryNameTr || row.dictionary_name_tr),
+        dictionaryNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic || row.dictionary_name_alan_cyrillic),
+        dictionaryNameAlanTurkic: text(row.dictionaryNameAlanTurkic || row.dictionary_name_alan_turkic),
+        sectionNameRu: text(row.sectionNameRu || row.section_name_ru || row.section_name),
+        sectionNameEn: text(row.sectionNameEn || row.section_name_en),
+        sectionNameTr: text(row.sectionNameTr || row.section_name_tr),
+        sectionNameAlanCyrillic: text(row.sectionNameAlanCyrillic || row.section_name_alan_cyrillic),
+        sectionNameAlanTurkic: text(row.sectionNameAlanTurkic || row.section_name_alan_turkic),
+        setNameRu: text(row.setNameRu || row.set_name_ru || row.set_name),
+        setNameEn: text(row.setNameEn || row.set_name_en),
+        setNameTr: text(row.setNameTr || row.set_name_tr),
+        setNameAlanCyrillic: text(row.setNameAlanCyrillic || row.set_name_alan_cyrillic),
+        setNameAlanTurkic: text(row.setNameAlanTurkic || row.set_name_alan_turkic),
+        legacyExample: text(row.legacyExample || row.example),
+      };
+      return completeModel(model, row);
+    }
+    
+    export function normalizeWordEntry(row, { source = "auto", story = null } = {}) {
+      if (source === "supabase") return normalizeSupabaseWordEntry(row, story);
+      if (source === "legacy") return normalizeLegacyWordEntry(row);
+      if (row?.wordAlanCyrillic !== undefined || row?.translationRu !== undefined) return normalizeCachedWordEntry(row);
+      if (row?.word_alan_cyrillic !== undefined && row?.dictionary_id !== undefined && row?.set_id !== undefined) {
+        return normalizeSupabaseWordEntry(row, story);
+      }
+      return normalizeLegacyWordEntry(row);
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/AlanTil/AlanTil/tests/content-hierarchy-13-13.test.mjs:13:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: Test and Match stop scope selection at Section and retain 20 40 80
+ok 15 - Test and Match stop scope selection at Section and retain 20 40 80
+  ---
+  duration_ms: 5.595818
+  type: 'test'
+  ...
+# Subtest: Settings has no station-size concept and is loaded as 13.13
+ok 16 - Settings has no station-size concept and is loaded as 13.13
+  ---
+  duration_ms: 1.24407
+  type: 'test'
+  ...
+# Subtest: missing structure names never fall back to internal IDs
+ok 17 - missing structure names never fall back to internal IDs
+  ---
+  duration_ms: 1.138927
+  type: 'test'
+  ...
+# Subtest: approved first story and hierarchy counts are locked in the forward migration
+ok 18 - approved first story and hierarchy counts are locked in the forward migration
+  ---
+  duration_ms: 1.268112
+  type: 'test'
+  ...
+# Subtest: numbered examples stay attached to their translation meaning
+ok 19 - numbered examples stay attached to their translation meaning
+  ---
+  duration_ms: 1.916459
+  type: 'test'
+  ...
+# Subtest: legacy unnumbered examples remain in the first meaning
+ok 20 - legacy unnumbered examples remain in the first meaning
+  ---
+  duration_ms: 0.283054
+  type: 'test'
+  ...
+# Subtest: guest prompt contains the approved Russian copy
+ok 21 - guest prompt contains the approved Russian copy
+  ---
+  duration_ms: 4.957657
+  type: 'test'
+  ...
+# Subtest: Google is rendered as an immediate local provider button
+ok 22 - Google is rendered as an immediate local provider button
+  ---
+  duration_ms: 1.90495
+  type: 'test'
+  ...
+# Subtest: Google redirect is built locally and does not wait for the Supabase SDK
+ok 23 - Google redirect is built locally and does not wait for the Supabase SDK
+  ---
+  duration_ms: 0.75808
+  type: 'test'
+  ...
+# Subtest: Google OAuth is prepared before the tap and uses synchronous navigation
+ok 24 - Google OAuth is prepared before the tap and uses synchronous navigation
+  ---
+  duration_ms: 0.856732
+  type: 'test'
+  ...
+# Subtest: auth and account modules bypass stale cache
+ok 25 - auth and account modules bypass stale cache
+  ---
+  duration_ms: 0.623477
+  type: 'test'
+  ...
+# Subtest: account screen warms the SDK without blocking the visible login button
+ok 26 - account screen warms the SDK without blocking the visible login button
+  ---
+  duration_ms: 1.527176
+  type: 'test'
+  ...
+# Subtest: Supabase SDK loading has a same-origin fallback
+ok 27 - Supabase SDK loading has a same-origin fallback
+  ---
+  duration_ms: 0.696559
+  type: 'test'
+  ...
+# Subtest: authentication has a bounded callback timeout and no automatic retry loop
+ok 28 - authentication has a bounded callback timeout and no automatic retry loop
+  ---
+  duration_ms: 0.740334
+  type: 'test'
+  ...
+# Subtest: guest action remains available independently of Google
+ok 29 - guest action remains available independently of Google
+  ---
+  duration_ms: 1.628441
+  type: 'test'
+  ...
+# Subtest: guest auth initialization avoids loading Supabase without a saved session
+ok 30 - guest auth initialization avoids loading Supabase without a saved session
+  ---
+  duration_ms: 0.944749
+  type: 'test'
+  ...
+# Subtest: cold start has a local dictionary and public REST uses only apikey
+ok 31 - cold start has a local dictionary and public REST uses only apikey
+  ---
+  duration_ms: 0.969311
+  type: 'test'
+  ...
+# Subtest: service worker caches only the guest shell eagerly
+ok 32 - service worker caches only the guest shell eagerly
+  ---
+  duration_ms: 0.660095
+  type: 'test'
+  ...
+# Subtest: the interface catalogue contains complete RU, EN and TR entries
+ok 33 - the interface catalogue contains complete RU, EN and TR entries
+  ---
+  duration_ms: 3.812705
+  type: 'test'
+  ...
+# Subtest: all literal msg keys used by the application exist in the catalogue
+ok 34 - all literal msg keys used by the application exist in the catalogue
+  ---
+  duration_ms: 37.886113
+  type: 'test'
+  ...
+# Subtest: placeholders remain deterministic without crossing into another language
+ok 35 - placeholders remain deterministic without crossing into another language
+  ---
+  duration_ms: 0.262383
+  type: 'test'
+  ...
+# Subtest: switching the interface language updates the document immediately
+ok 36 - switching the interface language updates the document immediately
+  ---
+  duration_ms: 0.293222
+  type: 'test'
+  ...
+# Subtest: separately imported i18n URLs share the selected language
+ok 37 - separately imported i18n URLs share the selected language
+  ---
+  duration_ms: 3.494176
+  type: 'test'
+  ...
+# Subtest: interface language and Alan script are independent
+ok 38 - interface language and Alan script are independent
+  ---
+  duration_ms: 0.928737
+  type: 'test'
+  ...
+# Subtest: missing Turkish structure text never falls back to another language
+not ok 39 - missing Turkish structure text never falls back to another language
+  ---
+  duration_ms: 0.739887
+  type: 'test'
+  location: '/home/runner/work/AlanTil/AlanTil/tests/language-display.test.mjs:49:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '' !== 'Yol ascent'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Yol ascent'
+  actual: ''
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/AlanTil/AlanTil/tests/language-display.test.mjs:69:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: navigation queues the latest intent instead of dropping taps
+ok 40 - navigation queues the latest intent instead of dropping taps
+  ---
+  duration_ms: 7.846423
+  type: 'test'
+  ...
+# Subtest: background refresh is coalesced and cannot follow the user to another route
+ok 41 - background refresh is coalesced and cannot follow the user to another route
+  ---
+  duration_ms: 1.179953
+  type: 'test'
+  ...
+# Subtest: account scope becomes visible from local settings before cloud synchronization
+ok 42 - account scope becomes visible from local settings before cloud synchronization
+  ---
+  duration_ms: 1.59127
+  type: 'test'
+  ...
+# Subtest: path rendering reuses dictionary, route and progress snapshots
+ok 43 - path rendering reuses dictionary, route and progress snapshots
+  ---
+  duration_ms: 4.740273
+  type: 'test'
+  ...
+# Subtest: versioned route assets are served cache-first while auth stays network-first
+ok 44 - versioned route assets are served cache-first while auth stays network-first
+  ---
+  duration_ms: 0.742275
+  type: 'test'
+  ...
+# Subtest: onboarding starts with only the multilingual language heading
+ok 45 - onboarding starts with only the multilingual language heading
+  ---
+  duration_ms: 5.042708
+  type: 'test'
+  ...
+# Subtest: onboarding reuses the shared settings segmented controls
+ok 46 - onboarding reuses the shared settings segmented controls
+  ---
+  duration_ms: 1.527596
+  type: 'test'
+  ...
+# Subtest: script controls contain labels only and stay progressively disclosed
+ok 47 - script controls contain labels only and stay progressively disclosed
+  ---
+  duration_ms: 1.258987
+  type: 'test'
+  ...
+# Subtest: preview card is always rendered with real learn-card classes
+ok 48 - preview card is always rendered with real learn-card classes
+  ---
+  duration_ms: 0.505437
+  type: 'test'
+  ...
+# Subtest: continue button uses the standard application button
+ok 49 - continue button uses the standard application button
+  ---
+  duration_ms: 0.65743
+  type: 'test'
+  ...
+# Subtest: content starts below the top chrome and centers when space is available
+ok 50 - content starts below the top chrome and centers when space is available
+  ---
+  duration_ms: 0.529892
+  type: 'test'
+  ...
+# Subtest: first-launch setup is rendered before router startup
+ok 51 - first-launch setup is rendered before router startup
+  ---
+  duration_ms: 5.075396
+  type: 'test'
+  ...
+# Subtest: preview uses the approved ciger example and diamond separator
+ok 52 - preview uses the approved ciger example and diamond separator
+  ---
+  duration_ms: 4.127489
+  type: 'test'
+  ...
+# Subtest: no option is preselected in an empty draft
+ok 53 - no option is preselected in an empty draft
+  ---
+  duration_ms: 0.764512
+  type: 'test'
+  ...
+# Subtest: ordinary settings reuse the learning-card preview and neutral Cyrillic labels
+ok 54 - ordinary settings reuse the learning-card preview and neutral Cyrillic labels
+  ---
+  duration_ms: 1.662806
+  type: 'test'
+  ...
+# Subtest: a failed entry does not hide later settings from the same queue pass
+ok 55 - a failed entry does not hide later settings from the same queue pass
+  ---
+  duration_ms: 0.700944
+  type: 'test'
+  ...
+# Subtest: only obsolete word favorite foreign keys are discarded
+ok 56 - only obsolete word favorite foreign keys are discarded
+  ---
+  duration_ms: 0.116511
+  type: 'test'
+  ...
+# Subtest: scroll positions remain local and never enter the Supabase payload
+ok 57 - scroll positions remain local and never enter the Supabase payload
+  ---
+  duration_ms: 1.20704
+  type: 'test'
+  ...
+# Subtest: session exit phrase follows only Alan script
+ok 58 - session exit phrase follows only Alan script
+  ---
+  duration_ms: 0.730896
+  type: 'test'
+  ...
+# Subtest: modal uses the script-aware phrase helper
+ok 59 - modal uses the script-aware phrase helper
+  ---
+  duration_ms: 3.176932
+  type: 'test'
+  ...
+# Subtest: guest setup replaces only a blank new-account settings entry
+ok 60 - guest setup replaces only a blank new-account settings entry
+  ---
+  duration_ms: 1.047607
+  type: 'test'
+  ...
+# Subtest: existing cloud or pending account settings are not overwritten
+ok 61 - existing cloud or pending account settings are not overwritten
+  ---
+  duration_ms: 0.200826
+  type: 'test'
+  ...
+# Subtest: all historical settings-store specifiers resolve to one module instance
+not ok 62 - all historical settings-store specifiers resolve to one module instance
+  ---
+  duration_ms: 4.499795
+  type: 'test'
+  location: '/home/runner/work/AlanTil/AlanTil/tests/settings-language-switch.test.mjs:7:1'
+  failureType: 'testCodeFailure'
+  error: 'missing settings-store alias for 13.9.0'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/AlanTil/AlanTil/tests/settings-language-switch.test.mjs:11:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: settings save applies the selected language before rerender
+ok 63 - settings save applies the selected language before rerender
+  ---
+  duration_ms: 1.648883
+  type: 'test'
+  ...
+# Subtest: startup hides unlocalized content and resolves account settings before routing
+ok 64 - startup hides unlocalized content and resolves account settings before routing
+  ---
+  duration_ms: 1.98829
+  type: 'test'
+  ...
+# Subtest: selected word-content language never falls back to Russian
+ok 65 - selected word-content language never falls back to Russian
+  ---
+  duration_ms: 0.729301
+  type: 'test'
+  ...
+# Subtest: stage test asks every stage word regardless of study checkboxes
+ok 66 - stage test asks every stage word regardless of study checkboxes
+  ---
+  duration_ms: 4.129434
+  type: 'test'
+  ...
+# Subtest: test distractors never fall back to another part of speech
+ok 67 - test distractors never fall back to another part of speech
+  ---
+  duration_ms: 0.291912
+  type: 'test'
+  ...
+# Subtest: stage words are static while only overflowing translations use the marquee
+ok 68 - stage words are static while only overflowing translations use the marquee
+  ---
+  duration_ms: 0.624331
+  type: 'test'
+  ...
+# Subtest: stage rows reserve fixed left-aligned content and action columns
+ok 69 - stage rows reserve fixed left-aligned content and action columns
+  ---
+  duration_ms: 0.176937
+  type: 'test'
+  ...
+# Subtest: every result mode uses one row renderer and one overflow motion
+ok 70 - every result mode uses one row renderer and one overflow motion
+  ---
+  duration_ms: 5.552556
+  type: 'test'
+  ...
+# Subtest: station list and test results share one marquee implementation
+ok 71 - station list and test results share one marquee implementation
+  ---
+  duration_ms: 2.621632
+  type: 'test'
+  ...
+# Subtest: all Cyrillic variants survive storage reload and enter the sync payload
+ok 72 - all Cyrillic variants survive storage reload and enter the sync payload
+  ---
+  duration_ms: 1.368777
+  type: 'test'
+  ...
+# Subtest: supported interface languages survive reload and unsupported values fall back to Russian
+ok 73 - supported interface languages survive reload and unsupported values fall back to Russian
+  ---
+  duration_ms: 0.222233
+  type: 'test'
+  ...
+# Subtest: legacy station_size input is discarded instead of becoming application state
+ok 74 - legacy station_size input is discarded instead of becoming application state
+  ---
+  duration_ms: 0.161519
+  type: 'test'
+  ...
+# Subtest: v_words_app is normalized strictly and keeps both Alan scripts
+ok 75 - v_words_app is normalized strictly and keeps both Alan scripts
+  ---
+  duration_ms: 1.28437
+  type: 'test'
+  ...
+# Subtest: legacy CSV normalization remains separate
+not ok 76 - legacy CSV normalization remains separate
+  ---
+  duration_ms: 3.010065
+  type: 'test'
+  location: '/home/runner/work/AlanTil/AlanTil/tests/word-model-display.test.mjs:72:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(word)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///home/runner/work/AlanTil/AlanTil/tests/word-model-display.test.mjs:82:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: Cyrillic dialect and stored Turkic text share one display layer
+ok 77 - Cyrillic dialect and stored Turkic text share one display layer
+  ---
+  duration_ms: 0.591943
+  type: 'test'
+  ...
+# Subtest: song lookup keeps working when the displayed word uses another script
+ok 78 - song lookup keeps working when the displayed word uses another script
+  ---
+  duration_ms: 4.354557
+  type: 'test'
+  ...
+# Subtest: local progress is idempotent per session and never decreases on cloud merge
+ok 79 - local progress is idempotent per session and never decreases on cloud merge
+  ---
+  duration_ms: 1.571655
+  type: 'test'
+  ...
+# Subtest: only a station test changes mastery and later station errors require review
+ok 80 - only a station test changes mastery and later station errors require review
+  ---
+  duration_ms: 0.404298
+  type: 'test'
+  ...
+1..80
+# tests 80
+# suites 0
+# pass 76
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 420.597038
+
+EXIT_CODE=1
