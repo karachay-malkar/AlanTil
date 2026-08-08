@@ -1,5 +1,6 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.12";
-import { stationKey } from "../domain/learning-route.js?v=13.12";
+import { PATH_CONFIG } from "../../config/path.js?v=13.13";
+import { stationKey } from "../domain/learning-route.js?v=13.13";
+import { permanentSectionId, storyIdForDictionary } from "../domain/word-normalizer.js?v=13.13";
 import { getInterfaceLocale } from "../i18n/index.js?v=13.9.0";
 import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
@@ -25,15 +26,21 @@ function effectiveStatus(row, now = Date.now()) {
 }
 
 function normalizeRow(row = {}) {
-  const dictionaryId = String(row.dictionary_id || row.catalog_id || row.group_id || PATH_CONFIG.dictionaryId).trim();
+  const dictionaryId = String(row.dictionary_id || row.catalog_id || PATH_CONFIG.dictionaryId).trim();
+  const setId = String(row.set_id || "").trim();
+  const persistedSection = String(row.section_id || row.group_id || "").trim();
+  const sectionId = persistedSection && persistedSection !== dictionaryId
+    ? persistedSection
+    : permanentSectionId(dictionaryId, setId);
+  const storyType = String(row.story_type || storyIdForDictionary(dictionaryId) || "").trim();
   const normalized = {
     dictionary_id: dictionaryId,
-    // These two columns remain in the persistence table for compatibility,
-    // but no longer represent content hierarchy. They mirror dictionary_id.
     catalog_id: dictionaryId,
-    group_id: dictionaryId,
-    set_id: String(row.set_id || "").trim(),
-    story_type: String(row.story_type || "").trim(),
+    // The persistence schema keeps the historical column name group_id.
+    // Its value is now the real Section ID.
+    group_id: sectionId,
+    set_id: setId,
+    story_type: storyType,
     status: String(row.status || "available"),
     current_phase: String(row.current_phase || "study"),
     study_sessions_total: Math.max(0, Number(row.study_sessions_total || 0)),
@@ -52,7 +59,7 @@ function normalizeRow(row = {}) {
 }
 
 function mapKey(row) {
-  return [row.story_type, row.dictionary_id, row.set_id].join("::");
+  return [row.story_type, row.dictionary_id, row.group_id, row.set_id].join("::");
 }
 
 function readMap() {
@@ -60,7 +67,7 @@ function readMap() {
   const output = {};
   Object.values(raw && typeof raw === "object" ? raw : {}).forEach((value) => {
     const normalized = normalizeRow(value);
-    if (!normalized.story_type || !normalized.dictionary_id || !normalized.set_id) return;
+    if (!normalized.story_type || !normalized.dictionary_id || !normalized.group_id || !normalized.set_id) return;
     output[mapKey(normalized)] = normalized;
   });
   return output;
@@ -77,6 +84,7 @@ function writeMap(map) {
 function payloadForStation(station, updates = {}) {
   return normalizeRow({
     dictionary_id: station.dictionaryId,
+    group_id: station.sectionId || station.groupId,
     set_id: station.setId,
     story_type: station.storyType,
     ...updates,
@@ -111,7 +119,7 @@ export function replaceStationProgress(rows = [], { notify = true } = {}) {
   const map = {};
   (Array.isArray(rows) ? rows : []).forEach((row) => {
     const normalized = normalizeRow(row);
-    if (!normalized.story_type || !normalized.dictionary_id || !normalized.set_id) return;
+    if (!normalized.story_type || !normalized.dictionary_id || !normalized.group_id || !normalized.set_id) return;
     map[mapKey(normalized)] = normalized;
   });
   if (notify) writeMap(map);
@@ -184,7 +192,7 @@ export function mergeStationProgressRows(rows = []) {
   const map = readMap();
   (Array.isArray(rows) ? rows : []).forEach((row) => {
     const normalized = normalizeRow(row);
-    if (!normalized.story_type || !normalized.dictionary_id || !normalized.set_id) return;
+    if (!normalized.story_type || !normalized.dictionary_id || !normalized.group_id || !normalized.set_id) return;
     const key = mapKey(normalized);
     const existing = map[key];
     if (!existing || asTime(normalized.updated_at) >= asTime(existing.updated_at)) map[key] = normalized;
