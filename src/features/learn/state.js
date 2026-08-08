@@ -1,4 +1,4 @@
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.12";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
 import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.9.0";
 
@@ -38,19 +38,36 @@ function keyOf(dict, section, setNumber) {
   return `${dict}:${section}:${setNumber}`;
 }
 
+function legacyKeyOf(dict, setNumber) {
+  return keyOf(dict, dict, setNumber);
+}
+
 function toIdSet(values) {
   return new Set((Array.isArray(values) ? values : []).map(normalizeId).filter(Boolean));
 }
 
+function readWithLegacyFallback(storageKey, dict, section, setNumber, fallback) {
+  const map = readScopedJson(storageKey, {});
+  const key = keyOf(dict, section, setNumber);
+  if (Object.prototype.hasOwnProperty.call(map, key)) return { map, key, value: map[key] };
+  const legacyKey = legacyKeyOf(dict, setNumber);
+  if (legacyKey !== key && Object.prototype.hasOwnProperty.call(map, legacyKey)) {
+    map[key] = map[legacyKey];
+    delete map[legacyKey];
+    writeScopedJson(storageKey, map);
+    return { map, key, value: map[key] };
+  }
+  return { map, key, value: fallback };
+}
+
 export function getHiddenSet(dict, section, setNumber) {
-  const map = readScopedJson(HIDDEN_KEY, {});
-  return toIdSet(map[keyOf(dict, section, setNumber)]);
+  return toIdSet(readWithLegacyFallback(HIDDEN_KEY, dict, section, setNumber, []).value);
 }
 
 export function setHiddenSet(dict, section, setNumber, ids) {
-  const map = readScopedJson(HIDDEN_KEY, {});
-  const key = keyOf(dict, section, setNumber);
-  const before = toIdSet(map[key]);
+  const result = readWithLegacyFallback(HIDDEN_KEY, dict, section, setNumber, []);
+  const { map, key } = result;
+  const before = toIdSet(result.value);
   const after = toIdSet(Array.from(ids || []));
   map[key] = Array.from(after);
   writeScopedJson(HIDDEN_KEY, map);
@@ -60,7 +77,7 @@ export function setHiddenSet(dict, section, setNumber, ids) {
     if (before.has(wordId) === after.has(wordId)) return;
     enqueueProgress("hidden_word", {
       dictionary_id: String(dict || ""),
-      section_id: String(section || dict || ""),
+      section_id: String(section || ""),
       set_id: String(setNumber || ""),
       word_id: wordId,
       is_hidden: after.has(wordId),
@@ -71,20 +88,19 @@ export function setHiddenSet(dict, section, setNumber, ids) {
 }
 
 export function isSetFinished(dict, section, setNumber) {
-  const map = readScopedJson(FINISHED_KEY, {});
-  return Boolean(map[keyOf(dict, section, setNumber)]);
+  return Boolean(readWithLegacyFallback(FINISHED_KEY, dict, section, setNumber, false).value);
 }
 
 export function toggleSetFinished(dict, section, setNumber) {
-  const map = readScopedJson(FINISHED_KEY, {});
-  const key = keyOf(dict, section, setNumber);
-  const next = !Boolean(map[key]);
+  const result = readWithLegacyFallback(FINISHED_KEY, dict, section, setNumber, false);
+  const { map, key } = result;
+  const next = !Boolean(result.value);
   if (next) map[key] = true;
   else delete map[key];
   writeScopedJson(FINISHED_KEY, map);
   enqueueProgress("set_progress", {
     dictionary_id: String(dict || ""),
-    section_id: String(section || dict || ""),
+    section_id: String(section || ""),
     set_id: String(setNumber || ""),
     is_finished: next,
     updated_at: new Date().toISOString(),
