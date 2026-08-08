@@ -2,18 +2,18 @@ import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { shuffle, wordsForSet } from "../../shared/domain/word-selection.js?v=13.13";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js?v=13.9.0";
+} from "../../shared/progress/session-builders.js?v=13.13";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=13.9.0";
 import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
 import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js?v=13.9.0";
+import { getHiddenSet, getLearnItemsCompleted, learnState } from "./state.js?v=13.13";
 import { captureLearnActionSnapshot, cloneLearnValue, restoreLearnActionSnapshot } from "./action-history.js?v=13.9.0";
 
 function currentQueue() {
@@ -289,9 +289,9 @@ export function renderStudy(context, words, signal, params = {}) {
       word_id: item.id,
       source: WORD_SOURCES.LEARN,
       result: known ? WORD_RESULTS.KNOWN : WORD_RESULTS.UNKNOWN,
-      dictionary_id: item.dict || learnState.currentDict,
-      section_id: item.section || learnState.currentSection,
-      set_id: String(item.set || learnState.currentSet),
+      dictionary_id: item.dictionary_id || learnState.currentDict,
+      section_id: item.section_id || learnState.currentSection,
+      set_id: String(item.set_id || learnState.currentSet),
       direction: directionFromMode(learnState.currentStudyMode),
     });
     if (learnState.round === "main" && learnState.mainQueue.length === 0) learnState.round = "repeat";
