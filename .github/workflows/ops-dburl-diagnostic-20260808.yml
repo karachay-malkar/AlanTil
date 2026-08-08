@@ -1,0 +1,57 @@
+name: Ops DB URL Diagnostic 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-diagnostic-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Diagnose without writes
+        shell: bash
+        run: |
+          set -u
+          mkdir -p ops_word_sync_dburl_20260808/diagnostic
+          SECRET_PRESENT=false
+          CONNECTION_OK=false
+          WORD_COUNT=""
+          ERROR_CLASS=""
+          if [ -n "${SUPABASE_DB_URL:-}" ]; then SECRET_PRESENT=true; else ERROR_CLASS="secret_missing"; fi
+          if [ "$SECRET_PRESENT" = true ]; then
+            if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+            export PGCONNECT_TIMEOUT=20
+            set +e
+            WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_words" 2>ops_word_sync_dburl_20260808/diagnostic/psql_error.txt)
+            RC=$?
+            set -e
+            if [ "$RC" -eq 0 ]; then CONNECTION_OK=true; else ERROR_CLASS="psql_connection_or_query_failed"; fi
+          fi
+          export SECRET_PRESENT CONNECTION_OK WORD_COUNT ERROR_CLASS
+          python - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path('ops_word_sync_dburl_20260808/diagnostic/status.json')
+          p.write_text(json.dumps({
+            'secret_present':os.environ['SECRET_PRESENT']=='true',
+            'connection_ok':os.environ['CONNECTION_OK']=='true',
+            'word_count':int(os.environ['WORD_COUNT']) if os.environ['WORD_COUNT'].isdigit() else None,
+            'error_class':os.environ['ERROR_CLASS'] or None
+          },indent=2),encoding='utf-8')
+          PY
+          rm -f ops_word_sync_dburl_20260808/diagnostic/psql_error.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_word_sync_dburl_20260808/diagnostic/status.json
+          git commit -m "ops: record DB URL diagnostic"
+          git push origin HEAD:ops/word-sync-2026-08-08
