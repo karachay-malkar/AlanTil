@@ -21,8 +21,7 @@ function sameSettings(left = {}, right = {}) {
   return left.interface_language_code === right.interface_language_code
     && left.translation_language_code === right.translation_language_code
     && left.alan_script_code === right.alan_script_code
-    && left.alan_dialect_code === right.alan_dialect_code
-    && Number(left.station_size) === Number(right.station_size);
+    && left.alan_dialect_code === right.alan_dialect_code;
 }
 
 function settingChoice({ name, value, label, checked, ariaLabel = "" }) {
@@ -150,13 +149,6 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     label,
     checked: draftSettings.alan_dialect_code === value,
   })).join("");
-  const sizeChoices = [20, 40].map((value) => settingChoice({
-    name: "stageSize",
-    value,
-    label: String(value),
-    ariaLabel: msg("settings.slov_v_etape", { value }),
-    checked: Number(draftSettings.station_size) === value,
-  })).join("");
 
   context.root.innerHTML = `<section class="view screen settingsHomeView">
     ${renderProfileNavigation("settings")}
@@ -172,11 +164,6 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
         ${settingRow(msg("settings.alfavit_alanskih_slov"), scriptChoices)}
         ${settingRow(msg("settings.variant_kirillitsy"), dialectChoices, { className: "settingsDialectRow", hidden: draftSettings.alan_script_code === "turkic" })}
         ${renderLearningPreview(draftSettings, { className: "settingsLearningPreview", marker: "settings" })}
-      </section>
-
-      <section class="settingsSection">
-        <h2 class="settingsSectionTitle">${msg("settings.izuchenie_slov")}</h2>
-        ${settingRow(msg("settings.slov_v_etape_2"), sizeChoices)}
       </section>
 
       <section class="settingsSection settingsDictionarySection">
@@ -232,11 +219,6 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
   context.root.querySelectorAll('input[name="alanDialect"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       if (radio.checked) markChanged({ alan_dialect_code: radio.value });
-    }, { signal });
-  });
-  context.root.querySelectorAll('input[name="stageSize"]').forEach((radio) => {
-    radio.addEventListener("change", () => {
-      if (radio.checked) markChanged({ station_size: Number(radio.value) });
     }, { signal });
   });
 
