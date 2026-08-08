@@ -3,16 +3,17 @@ import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analyt
 import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 
+const DEFAULT_STORY = "oblivion";
 const FEATURE_LOADERS = {
   practice: () => import("../features/practice/index.js?v=13.9.0"),
-  path: () => import("../features/path/index.js?v=13.9.0"),
+  path: () => import("../features/path/index.js?v=13.13"),
   profile: () => import("../features/profile/index.js?v=13.9.0"),
-  learn: () => import("../features/learn/index.js?v=13.9.0"),
-  test: () => import("../features/test/index.js?v=13.9.0"),
-  match: () => import("../features/match/index.js?v=13.9.0"),
+  learn: () => import("../features/learn/index.js?v=13.13"),
+  test: () => import("../features/test/index.js?v=13.13"),
+  match: () => import("../features/match/index.js?v=13.13"),
   songs: () => import("../features/songs/index.js?v=13.9.0"),
   account: () => import("../features/account/index.js?v=13.9.0"),
-  settings: () => import("../features/settings/index.js?v=13.9.0"),
+  settings: () => import("../features/settings/index.js?v=13.13"),
 };
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -52,12 +53,12 @@ function cleanPathname(pathname) {
 
 export function parsePathname(pathname) {
   const segments = cleanPathname(pathname).split("/").filter(Boolean).map(decodeSegment);
-  if (!segments.length) return { route: "path.home", params: { storyType: "ascent" } };
+  if (!segments.length) return { route: "path.home", params: { storyType: DEFAULT_STORY } };
 
   const [first, second, third, fourth, fifth, sixth] = segments;
   if (first === "practice" && !second) return { route: "practice.home", params: {} };
   if (first === "path") {
-    const storyType = String(second || "ascent").trim() || "ascent";
+    const storyType = String(second || DEFAULT_STORY).trim() || DEFAULT_STORY;
     if (!third) return { route: "path.home", params: { storyType } };
     if (third && fourth && fifth) {
       const params = { storyType, catalogSlug: third, groupSlug: fourth, setSlug: fifth };
@@ -94,7 +95,6 @@ export function parsePathname(pathname) {
   }
   if (first === "song" && second) return { route: "songs.song", params: { songId: second } };
 
-  // Legacy URLs are canonicalized to the profile structure.
   if (first === "account" && !second) return { route: "profile.home", params: {}, redirected: true };
   if (first === "settings") {
     if (!second) return { route: "settings.home", params: {}, redirected: true };
@@ -102,14 +102,14 @@ export function parsePathname(pathname) {
     if (second === "version") return { route: "settings.version", params: {}, redirected: true };
     if (second === "thanks") return { route: "settings.thanks", params: {}, redirected: true };
   }
-  return { route: "path.home", params: { storyType: "ascent" }, notFound: true };
+  return { route: "path.home", params: { storyType: DEFAULT_STORY }, notFound: true };
 }
 
 export function buildPath(routeName, params = {}) {
   const dictionary = params.dictionarySlug ? encodeSegment(params.dictionarySlug) : "";
   const section = params.sectionSlug ? encodeSegment(params.sectionSlug) : "";
   const set = params.setSlug ? encodeSegment(params.setSlug) : "";
-  const story = String(params.storyType || "ascent").trim() || "ascent";
+  const story = String(params.storyType || DEFAULT_STORY).trim() || DEFAULT_STORY;
   const stationBase = params.catalogSlug && params.groupSlug && params.setSlug
     ? `/path/${story}/${encodeSegment(params.catalogSlug)}/${encodeSegment(params.groupSlug)}/${encodeSegment(params.setSlug)}`
     : `/path/${story}`;
@@ -184,7 +184,7 @@ function safeReferrer(value) {
 export function createRouter({ shell, modal, context }) {
   const entries = [];
   const loadedModules = new Map();
-  let current = { route: "path.home", params: { storyType: "ascent" } };
+  let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
   let currentModule = null;
   let navigating = false;
   let queuedNavigation = null;
@@ -218,7 +218,7 @@ export function createRouter({ shell, modal, context }) {
       if (!["settings", "account"].includes(feature)) throw error;
       const module = feature === "account"
         ? await import(`../features/account/index.js?v=13.9.0&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.9.0&retry=${Date.now()}`);
+        : await import(`../features/settings/index.js?v=13.13&retry=${Date.now()}`);
       loadedModules.set(feature, module);
       return module;
     }
@@ -368,7 +368,6 @@ export function createRouter({ shell, modal, context }) {
     return getCurrent();
   }
 
-
   async function mountCurrentRoute(preloadedModule = null) {
     shell.setCounter("");
     shell.clearMode();
@@ -435,9 +434,6 @@ export function createRouter({ shell, modal, context }) {
 
     try {
       if (!skipLeaveCheck && !(await mayLeave(force))) return false;
-
-      // Keep the current screen in place while the destination bundle loads.
-      // This prevents the practice menu from flashing before a selected mode.
       const nextModule = await loadModule(featureOf(target.route));
       if (queuedNavigation && !initial) return false;
 
@@ -504,7 +500,7 @@ export function createRouter({ shell, modal, context }) {
   function fallbackBackTarget() {
     const params = { ...current.params };
     if (["path.study", "path.test"].includes(current.route)) return { route: "path.station", params };
-    if (current.route === "path.station") return { route: "path.home", params: { storyType: params.storyType || "ascent" } };
+    if (current.route === "path.station") return { route: "path.home", params: { storyType: params.storyType || DEFAULT_STORY } };
     if (current.route === "path.home") return null;
     if (["learn.study", "learn.results", "learn.set"].includes(current.route)) {
       if (params.dictionarySlug === "favorites") return { route: "learn.catalog", params: {} };
@@ -513,7 +509,7 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "learn.catalog-content") return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug }) };
     if (current.route === "learn.sections" && params.sectionSlug) return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug }) };
     if (current.route === "learn.sections") return { route: "learn.catalog", params: {} };
-    if (current.route.startsWith("learn.")) return { route: "path.home", params: { storyType: "ascent" } };
+    if (current.route.startsWith("learn.")) return { route: "path.home", params: { storyType: DEFAULT_STORY } };
     if (["test.session", "test.results"].includes(current.route)) return { route: "test.menu", params: {} };
     if (current.route === "test.menu") return { route: "practice.home", params: {} };
     if (["match.game", "match.results"].includes(current.route)) return { route: "match.menu", params: {} };
@@ -525,7 +521,7 @@ export function createRouter({ shell, modal, context }) {
     if (["profile.skills", "profile.statistics"].includes(current.route)) return { route: "profile.home", params: {} };
     if (["settings.privacy", "settings.version", "settings.thanks"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "profile.home", params: {} };
-    return { route: "path.home", params: { storyType: "ascent" } };
+    return { route: "path.home", params: { storyType: DEFAULT_STORY } };
   }
 
   async function back(options = {}) {
@@ -540,7 +536,7 @@ export function createRouter({ shell, modal, context }) {
     return show(fallback, { historyMode: "replace", force: true, reason: "back", skipLeaveCheck: true });
   }
 
-  async function reset(route = "path.home", params = { storyType: "ascent" }) {
+  async function reset(route = "path.home", params = { storyType: DEFAULT_STORY }) {
     const target = { route, params: compactParams(params) };
     historyIndex = 0;
     entries.length = 0;
@@ -652,6 +648,7 @@ export function createRouter({ shell, modal, context }) {
     handlePopState,
     mountCurrentRoute,
     attachTelegram,
+    releaseLaunchUrl: releaseTelegramLaunchUrl,
     releaseTelegramLaunchUrl,
     setAnalyticsActive,
     canonicalize,
