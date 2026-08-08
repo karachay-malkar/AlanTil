@@ -1,0 +1,67 @@
+name: Ops DB URL Verify State 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-verify-state-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Read and classify all 141 fields
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          mkdir -p ops_word_sync_dburl_20260808/verify_state
+          psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -Atc "COPY (SELECT row_to_json(x)::text FROM (SELECT word_id,language_code,script_code,word_text,translation_text,phrases_text FROM public.content_word_texts ORDER BY word_id,language_code,script_code) x) TO STDOUT" > /tmp/texts.jsonl
+          psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -Atc "COPY (SELECT row_to_json(v)::text FROM (SELECT * FROM public.v_words_app ORDER BY global_order,word_id) v) TO STDOUT" > /tmp/words.jsonl
+          WORD_COUNT=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select count(*) from public.content_words")
+          STRUCTURE_HASH=$(psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atc "select md5(string_agg(concat_ws('|',word_id,global_order::text,story_id::text,dictionary_id::text,section_id::text,coalesce(set_id::text,'')), E'\\n' order by global_order,word_id)) from public.content_words")
+          export WORD_COUNT STRUCTURE_HASH
+          python - <<'PY'
+          import json,os,pathlib
+          out=pathlib.Path('ops_word_sync_dburl_20260808/verify_state/status.json')
+          diffs=json.load(open('ops_final_bundle/word_corrections_diff.json',encoding='utf-8'))
+          source=json.load(open('ops_source/corrected_rows_11_07_26.json',encoding='utf-8'))
+          texts={}
+          for line in open('/tmp/texts.jsonl',encoding='utf-8'):
+              if line.strip():
+                  r=json.loads(line); texts[(r['word_id'],r['language_code'],r['script_code'])]=r
+          corrected=old=other=missing=0; other_rows=[]
+          for d in diffs:
+              r=texts.get((d['word_id'],d['language_code'],d['script_code']))
+              if r is None: missing+=1; continue
+              a=r.get(d['column'])
+              if a==d['corrected']: corrected+=1
+              elif a==d['current']: old+=1
+              else:
+                  other+=1; other_rows.append({'word_id':d['word_id'],'language_code':d['language_code'],'script_code':d['script_code'],'column':d['column']})
+          rows=[json.loads(x) for x in open('/tmp/words.jsonl',encoding='utf-8') if x.strip()]
+          unique=0; unresolved=[]
+          for s in source:
+              c=[r for r in rows if r.get('word_alan_cyrillic')==s['word'] and r.get('translation_ru')==s['trans']]
+              if len(c)==1: unique+=1
+              else: unresolved.append(s['legacy_id'])
+          status={'word_count':int(os.environ['WORD_COUNT']),'structure_hash':os.environ['STRUCTURE_HASH'],'planned_fields':len(diffs),'fields_corrected':corrected,'fields_still_old':old,'fields_other':other,'fields_missing':missing,'source_rows':len(source),'unique_source_matches':unique,'unresolved_source_rows':unresolved,'result':'ALL_CORRECTED' if corrected==len(diffs) and old==other==missing==0 and unique==94 else 'NOT_FULLY_CORRECTED'}
+          out.write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding='utf-8')
+          if other_rows: pathlib.Path('ops_word_sync_dburl_20260808/verify_state/other_rows.json').write_text(json.dumps(other_rows,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin ops/word-sync-2026-08-08
+          git add ops_word_sync_dburl_20260808/verify_state
+          git commit -m "ops: verify current word correction state"
+          git push origin HEAD:ops/word-sync-2026-08-08
