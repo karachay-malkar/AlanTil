@@ -1,11 +1,11 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
+import { PATH_CONFIG } from "../../config/path.js?v=13.13";
 import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
 
 export const ROUTE_SETTINGS_KEY = "alantil_route_settings_v13_1";
 const DEFAULTS = Object.freeze({
   selected_dictionary_id: PATH_CONFIG.dictionaryId,
-  active_story: "ascent",
+  active_story: PATH_CONFIG.defaultStoryType,
   selected_background_route: PATH_CONFIG.routeBackground,
   updated_at: null,
 });
