@@ -1,0 +1,74 @@
+name: Refine and validate Alan Cyrillic to Turkic transliteration
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/validate-transliteration-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Validate refined transliteration
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows=json.loads(Path('ops_live_export/content_words_ru.json').read_text(encoding='utf-8'))
+          out=Path('ops_live_export/translit_validation_v2'); out.mkdir(parents=True,exist_ok=True)
+          vowels=set('аеёиоуыэюяАЕЁИОУЫЭЮЯ')
+          multi={'Къ':'Q','къ':'q','Гъ':'Ğ','гъ':'ğ','Нг':'Ñ','нг':'ñ','Дж':'C','дж':'c'}
+          single={'А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Е':'E','е':'e','Ё':'Ö','ё':'ö','Ж':'J','ж':'j','Җ':'C','җ':'c','З':'Z','з':'z','И':'İ','и':'i','Й':'Y','й':'y','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ф':'F','ф':'f','Х':'X','х':'x','Ц':'Ţ','ц':'ţ','Ч':'Ç','ч':'ç','Ш':'Ş','ш':'ş','Щ':'Ş','щ':'ş','Ъ':'','ъ':'','Ь':'','ь':'','Ы':'I','ы':'ı','Э':'E','э':'e','Ю':'Ü','ю':'ü','Я':'Ya','я':'ya'}
+          def translit(s):
+              s=str(s or ''); res=[]; i=0
+              while i<len(s):
+                  two=s[i:i+2]
+                  if two in multi:
+                      res.append(multi[two]); i+=2; continue
+                  ch=s[i]
+                  if ch in 'Уу':
+                      j=i
+                      while j<len(s) and s[j] in 'Уу': j+=1
+                      run=s[i:j]
+                      prev=s[i-1] if i>0 else ''
+                      nxt=s[j] if j<len(s) else ''
+                      # U is semivocalic W adjacent to another vowel; repeated U alternates U/W.
+                      start_w = prev in vowels or (len(run)==1 and nxt in vowels)
+                      for k,rc in enumerate(run):
+                          is_w = (k % 2 == 0) if start_w else (k % 2 == 1)
+                          res.append(('W' if rc=='У' else 'w') if is_w else ('U' if rc=='У' else 'u'))
+                      i=j; continue
+                  res.append(single.get(ch,ch)); i+=1
+              return ''.join(res)
+          def lines(v): return [x.strip() for x in str(v or '').splitlines() if x.strip()]
+          tests=[]
+          for r in rows:
+              tests.append(('word',r['word_id'],r.get('word_alan_cyrillic',''),r.get('word_alan_turkic','')))
+              ca,ta=lines(r.get('phrases_alan_cyrillic')),lines(r.get('phrases_alan_turkic'))
+              for n,(c,t) in enumerate(zip(ca,ta),1): tests.append((f'phrase_{n}',r['word_id'],c,t))
+          mism=[]
+          for kind,wid,c,t in tests:
+              g=translit(c)
+              if g!=str(t or ''): mism.append({'kind':kind,'word_id':wid,'cyrillic':c,'expected':t,'generated':g})
+          summary={'tests':len(tests),'exact':len(tests)-len(mism),'mismatches':len(mism),'exact_rate':(len(tests)-len(mism))/len(tests)}
+          (out/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'mismatches.json').write_text(json.dumps(mism,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+      - name: Commit validation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/translit_validation_v2
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: refine Turkic transliteration validation"
+          git push origin HEAD:ops/word-sync-2026-08-08
