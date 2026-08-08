@@ -1,32 +1,32 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.12";
-import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.12";
+import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.13";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.13";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.9.0";
+import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.13";
 import { testState } from "./state.js?v=13.9.0";
 
-function dictionaryId(word) { return String(word.dictionary_id || word.catalog_id || word.dict || "").trim(); }
-function dictionaryName(word) { return String(word.dictionary_name || word.dict || dictionaryId(word) || msg("test.slovar")).trim(); }
-function setId(word) { return String(word.set_id || word.set || "").trim(); }
-function setName(word) { return String(word.set_name || word.set || setId(word)).trim(); }
-function scopeKey(dict, set) { return `${dict}||${set || ""}`; }
+function dictionaryId(word) { return String(word.dictionary_id || "").trim(); }
+function dictionaryName(word) { return String(word.dictionary_name || "").trim(); }
+function sectionId(word) { return String(word.section_id || "").trim(); }
+function sectionName(word) { return String(word.section_name || "").trim(); }
+function scopeKey(dict, section) { return `${dict}||${section || ""}`; }
 function enabledWords(words) { return words.filter(isWordEnabledInTestModes); }
 
 function buildScope(words) {
   const dictionaries = new Map();
   words.forEach((word) => {
     const dictId = dictionaryId(word);
-    const wordSetId = setId(word);
-    if (!dictId || !wordSetId) return;
-    if (!dictionaries.has(dictId)) dictionaries.set(dictId, { id: dictId, name: dictionaryName(word), sets: new Map(), count: 0 });
+    const wordSectionId = sectionId(word);
+    if (!dictId || !wordSectionId) return;
+    if (!dictionaries.has(dictId)) dictionaries.set(dictId, { id: dictId, name: dictionaryName(word), sections: new Map(), count: 0 });
     const dictionary = dictionaries.get(dictId);
     dictionary.count += 1;
-    if (!dictionary.sets.has(wordSetId)) dictionary.sets.set(wordSetId, { id: wordSetId, name: setName(word), count: 0 });
-    dictionary.sets.get(wordSetId).count += 1;
+    if (!dictionary.sections.has(wordSectionId)) dictionary.sections.set(wordSectionId, { id: wordSectionId, name: sectionName(word), count: 0 });
+    dictionary.sections.get(wordSectionId).count += 1;
   });
-  return Array.from(dictionaries.values()).map((dictionary) => ({ ...dictionary, sets: Array.from(dictionary.sets.values()) }));
+  return Array.from(dictionaries.values()).map((dictionary) => ({ ...dictionary, sections: Array.from(dictionary.sections.values()) }));
 }
 
 export function renderTestMenu(context, words, signal) {
@@ -35,9 +35,9 @@ export function renderTestMenu(context, words, signal) {
   const scope = buildScope(available);
   const scopeHtml = scope.map((dictionary) => `<div class="scopeBlock">
     <label class="scopeDictRow"><input class="scopeCheckbox scopeDict" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" checked /><span class="scopeLabel"><strong>${escapeHtml(dictionary.name)}</strong><small>${dictionary.count}</small></span></label>
-    ${dictionary.sets.map((set) => {
-      const checked = testState.selectedScopeKeys.size === 0 || testState.selectedScopeKeys.has(scopeKey(dictionary.id, set.id));
-      return `<label class="scopeSectionRow"><input class="scopeCheckbox scopeSet" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" data-set="${escapeHtml(set.id)}" ${checked ? "checked" : ""} /><span class="scopeLabel"><span>${escapeHtml(set.name)}</span><small>${set.count}</small></span></label>`;
+    ${dictionary.sections.map((section) => {
+      const checked = testState.selectedScopeKeys.size === 0 || testState.selectedScopeKeys.has(scopeKey(dictionary.id, section.id));
+      return `<label class="scopeSectionRow"><input class="scopeCheckbox scopeSection" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" data-section="${escapeHtml(section.id)}" ${checked ? "checked" : ""} /><span class="scopeLabel"><span>${escapeHtml(section.name)}</span><small>${section.count}</small></span></label>`;
     }).join("")}
   </div>`).join("");
 
@@ -65,19 +65,19 @@ export function renderTestMenu(context, words, signal) {
   const list = context.root.querySelector("#testScopeList");
   const info = context.root.querySelector("#globalTestInfo");
   const dictCheckboxes = Array.from(list.querySelectorAll(".scopeDict"));
-  const setCheckboxes = Array.from(list.querySelectorAll(".scopeSet"));
+  const sectionCheckboxes = Array.from(list.querySelectorAll(".scopeSection"));
 
   function syncParents() {
     dictCheckboxes.forEach((checkbox) => {
-      const children = setCheckboxes.filter((set) => set.dataset.dict === checkbox.dataset.dict);
-      const checked = children.filter((set) => set.checked).length;
+      const children = sectionCheckboxes.filter((section) => section.dataset.dict === checkbox.dataset.dict);
+      const checked = children.filter((section) => section.checked).length;
       checkbox.checked = children.length > 0 && checked === children.length;
       checkbox.indeterminate = checked > 0 && checked < children.length;
     });
   }
   function selectedPool() {
-    const keys = new Set(setCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.set)));
-    return available.filter((word) => keys.has(scopeKey(dictionaryId(word), setId(word))));
+    const keys = new Set(sectionCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
+    return available.filter((word) => keys.has(scopeKey(dictionaryId(word), sectionId(word))));
   }
   function selectedLimit() { return Number(context.root.querySelector('input[name="testLimit"]:checked')?.value || 40); }
   function updateInfo() { const pool = selectedPool(); info.textContent = msg("test.vybrano_test", { pool: pool.length, limit: Math.min(selectedLimit(), pool.length) }); }
@@ -91,22 +91,22 @@ export function renderTestMenu(context, words, signal) {
   syncParents(); updateInfo(); updateMode();
 
   dictCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => {
-    setCheckboxes.filter((set) => set.dataset.dict === checkbox.dataset.dict).forEach((set) => { set.checked = checkbox.checked; });
+    sectionCheckboxes.filter((section) => section.dataset.dict === checkbox.dataset.dict).forEach((section) => { section.checked = checkbox.checked; });
     checkbox.indeterminate = false; updateInfo();
   }, { signal }));
-  setCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => { syncParents(); updateInfo(); }, { signal }));
+  sectionCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", () => { syncParents(); updateInfo(); }, { signal }));
   context.root.querySelectorAll('input[name="testLimit"]').forEach((radio) => radio.addEventListener("change", updateInfo, { signal }));
 
   async function launch(mode) {
     const pool = selectedPool();
     if (!pool.length) { context.telegram?.showAlert?.(msg("test.net_slov_dlya_vybrannogo_rezhima")) || window.alert(msg("test.net_slov_dlya_vybrannogo_rezhima")); return; }
     testState.limit = selectedLimit();
-    const selected = setCheckboxes.filter((checkbox) => checkbox.checked);
-    testState.selectedScopeKeys = new Set(selected.map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.set)));
+    const selected = sectionCheckboxes.filter((checkbox) => checkbox.checked);
+    testState.selectedScopeKeys = new Set(selected.map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
     startTest(pool, mode, testState.limit, {
       dictionaryCount: new Set(selected.map((checkbox) => checkbox.dataset.dict)).size,
       sectionCount: selected.length,
-      selectedSources: buildSelectedSources(selected.map((checkbox) => ({ dictionaryId: checkbox.dataset.dict, setId: checkbox.dataset.set }))),
+      selectedSources: buildSelectedSources(selected.map((checkbox) => ({ dictionaryId: checkbox.dataset.dict, sectionId: checkbox.dataset.section }))),
     });
     await context.router.navigate("test.session", {}, { force: true });
   }
