@@ -1,0 +1,48 @@
+name: Ops DB URL Apply Minimal 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-apply-minimal-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Run guarded SQL and persist status
+        shell: bash
+        run: |
+          set -u
+          mkdir -p ops_word_sync_dburl_20260808/minimal_apply
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          RC=0
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f ops_final_bundle/alantil_word_corrections_2026-08-08.sql > /tmp/tx.log 2>&1 || RC=$?
+          export RC
+          python - <<'PY'
+          import json,os,pathlib,datetime,re
+          log=pathlib.Path('/tmp/tx.log').read_text(encoding='utf-8',errors='replace')
+          lines=[]
+          for line in log.splitlines():
+              if 'ERROR:' in line or 'Guard failed' in line or 'FATAL:' in line:
+                  line=re.sub(r'postgres(?:ql)?://\S+','[REDACTED_DB_URL]',line)
+                  lines.append(line[:500])
+              if len(lines)>=5: break
+          out={'completed_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'result':'SUCCESS' if int(os.environ['RC'])==0 else 'FAILED','exit_code':int(os.environ['RC']),'error_summary':lines}
+          pathlib.Path('ops_word_sync_dburl_20260808/minimal_apply/status.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_word_sync_dburl_20260808/minimal_apply/status.json
+          git commit -m "ops: record minimal correction transaction result"
+          git push origin HEAD:ops/word-sync-2026-08-08
