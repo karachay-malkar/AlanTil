@@ -5,7 +5,7 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.12",
+  "/src/app/bootstrap.js?v=13.10.12",
   "/src/shared/styles/app.css?v=13.10.12",
   "/src/features/onboarding/index.js?v=13.10.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
