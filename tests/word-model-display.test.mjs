@@ -72,14 +72,17 @@ test("v_words_app is normalized strictly and keeps both Alan scripts", () => {
 test("legacy CSV normalization remains separate", () => {
   const word = normalizeLegacyWordEntry({
     id: "legacy-1",
-    dict: "Словарь",
-    section: "Раздел",
+    section_id: "1",
     set: "1",
     word: "тау",
     trans: "гора",
     example: "бийик тау ✦ высокая гора",
   });
   assert.ok(word);
+  assert.equal(word.dictionary_id, "beginner");
+  assert.equal(word.section_id, "beginner-starter");
+  assert.equal(word.set_id, "beginner-01");
+  assert.equal(word.story_id, "oblivion");
   assert.equal(word.wordAlanCyrillic, "тау");
   assert.equal(word.translationRu, "гора");
   assert.equal(word.legacyExample, "бийик тау ✦ высокая гора");
