@@ -1,0 +1,43 @@
+name: Ops Live Export Artifact 20260808
+
+on:
+  pull_request:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-live-export-artifact-20260808.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Export current live v_words_app
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          export PGCONNECT_TIMEOUT=20
+          mkdir -p live_export
+          psql "$SUPABASE_DB_URL" -X -q -Atc "select coalesce(json_agg(v order by global_order,word_id),'[]'::json) from public.v_words_app v" > live_export/live_v_words_app.json
+          python - <<'PY'
+          import gzip,hashlib,json,pathlib
+          p=pathlib.Path('live_export/live_v_words_app.json')
+          rows=json.loads(p.read_text(encoding='utf-8'))
+          if len(rows)!=2355: raise SystemExit(f'Expected 2355 rows, got {len(rows)}')
+          raw=json.dumps(rows,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+          pathlib.Path('live_export/live_v_words_app.json.gz').write_bytes(gzip.compress(raw,compresslevel=9))
+          pathlib.Path('live_export/manifest.json').write_text(json.dumps({'rows':len(rows),'raw_sha256':hashlib.sha256(raw).hexdigest()},indent=2),encoding='utf-8')
+          p.unlink()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alantil-live-v-words-20260808
+          path: live_export/
+          if-no-files-found: error
+          retention-days: 1
