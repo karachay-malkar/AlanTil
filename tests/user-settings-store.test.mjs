@@ -12,7 +12,7 @@ globalThis.CustomEvent = class CustomEvent {
 };
 globalThis.window = { dispatchEvent() {} };
 
-const settingsStore = await import("../src/shared/settings/user-settings-store.js?v=13.9.0");
+const settingsStore = await import("../src/shared/settings/user-settings-store.js?v=13.12");
 const progressQueue = await import("../src/shared/progress/progress-queue.js?v=13.9.0");
 
 test("all Cyrillic variants survive storage reload and enter the sync payload", () => {
@@ -42,11 +42,8 @@ test("supported interface languages survive reload and unsupported values fall b
   assert.equal(settingsStore.reloadUserSettings().interface_language_code, "tr");
 });
 
-test("dynamic station size is fixed at 30 for new and legacy settings", () => {
-  for (const value of [20, 30, 40, null, undefined]) {
-    const saved = settingsStore.setUserSettings({ station_size: value }, { queue: false });
-    assert.equal(saved.station_size, 30);
-    assert.equal(settingsStore.getStationSize(), 30);
-    assert.equal(settingsStore.reloadUserSettings().station_size, 30);
-  }
+test("legacy station_size input is discarded instead of becoming application state", () => {
+  const saved = settingsStore.setUserSettings({ station_size: 20 }, { queue: false });
+  assert.equal(Object.prototype.hasOwnProperty.call(saved, "station_size"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(settingsStore.reloadUserSettings(), "station_size"), false);
 });
