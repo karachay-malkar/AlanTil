@@ -1,0 +1,56 @@
+name: Ops DB URL Drift Check 20260808
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/ops-dburl-drift-20260808.yml
+
+permissions:
+  contents: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Compare live fields with captured pre-state
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then sudo apt-get update -y >/dev/null && sudo apt-get install -y postgresql-client >/dev/null; fi
+          mkdir -p ops_word_sync_dburl_20260808/drift
+          psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -Atc "COPY (SELECT row_to_json(x)::text FROM (SELECT word_id,language_code,script_code,word_text,translation_text,phrases_text FROM public.content_word_texts ORDER BY word_id,language_code,script_code) x) TO STDOUT" > /tmp/texts.jsonl
+          python - <<'PY'
+          import json,pathlib
+          diffs=json.load(open('ops_final_bundle/word_corrections_diff.json',encoding='utf-8'))
+          texts={}
+          for line in open('/tmp/texts.jsonl',encoding='utf-8'):
+              if line.strip():
+                  r=json.loads(line); texts[(r['word_id'],r['language_code'],r['script_code'])]=r
+          old=corrected=other=missing=0; rows=[]
+          for i,d in enumerate(diffs,1):
+              r=texts.get((d['word_id'],d['language_code'],d['script_code']))
+              if r is None:
+                  missing+=1; state='missing'; actual=None
+              else:
+                  actual=r.get(d['column'])
+                  if actual==d['current']: old+=1; state='captured_old'
+                  elif actual==d['corrected']: corrected+=1; state='already_corrected'
+                  else: other+=1; state='other_live_value'
+              if state!='captured_old':
+                  rows.append({'correction_number':i,'word_id':d['word_id'],'language_code':d['language_code'],'script_code':d['script_code'],'column':d['column'],'state':state,'actual':actual,'captured_old':d['current'],'desired':d['corrected']})
+          status={'planned_fields':len(diffs),'captured_old':old,'already_corrected':corrected,'other_live_value':other,'missing':missing,'non_matching_prestate_total':corrected+other+missing}
+          pathlib.Path('ops_word_sync_dburl_20260808/drift/status.json').write_text(json.dumps(status,ensure_ascii=False,indent=2),encoding='utf-8')
+          pathlib.Path('ops_word_sync_dburl_20260808/drift/non_matching_fields.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_word_sync_dburl_20260808/drift
+          git commit -m "ops: record live drift for correction guards"
+          git push origin HEAD:ops/word-sync-2026-08-08
