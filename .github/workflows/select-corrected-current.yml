@@ -1,0 +1,67 @@
+name: Select current rows for corrected legacy IDs
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/select-corrected-current.yml
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+
+      - name: Select corrected IDs from current snapshot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          ids = [
+            "A3","A13","A16","A24","A26","A28","A45","A49","A55","A81","A95","A151","A157","A158","A225","A238","A286","A288","A295","A302","A304","A335","A337","A345","A362","A365","A381","A437","A441","A462","A524","A538","A546","A590","A602","A603","A659","A662","A671","A672","A690","A709","A716","A723","A733","A743","A747","A756","A762","A766","A781","A784","A797","A803","A804","A809","A818","A825","A842","A847","A860","B1","B2","B4","B21","B22","B36","B42","B53","B54","B83","B103","B106","B316","B113","B118","B129","B131","B152","B154","B173","B174","B190","B196","B198","B317","B202","B203","B255","B265","B294","B309","B313","T449"
+          ]
+          idset = set(ids)
+          rows = json.loads(Path("ops_live_export/content_words_ru.json").read_text(encoding="utf-8"))
+          out = Path("ops_live_export/selected")
+          out.mkdir(parents=True, exist_ok=True)
+
+          keys = sorted(rows[0].keys()) if rows else []
+          (out / "current_keys.json").write_text(json.dumps(keys, ensure_ascii=False, indent=2), encoding="utf-8")
+
+          selected = {}
+          for row in rows:
+              matches = []
+              for k, v in row.items():
+                  if isinstance(v, (str, int, float)) and str(v) in idset:
+                      matches.append(str(v))
+              for mid in matches:
+                  if mid not in selected:
+                      selected[mid] = row
+
+          ordered = [{"legacy_id": i, "current": selected.get(i)} for i in ids]
+          unmatched = [i for i in ids if i not in selected]
+          (out / "unmatched.json").write_text(json.dumps(unmatched, ensure_ascii=False, indent=2), encoding="utf-8")
+          (out / "selected_summary.json").write_text(json.dumps({"requested": len(ids), "matched": len(ids)-len(unmatched), "unmatched": unmatched}, ensure_ascii=False, indent=2), encoding="utf-8")
+
+          for idx in range(0, len(ordered), 16):
+              part = ordered[idx:idx+16]
+              (out / f"part_{idx//16+1}.json").write_text(json.dumps(part, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+
+      - name: Commit selected rows
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/selected
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: select corrected current word rows"
+          git push origin HEAD:ops/word-sync-2026-08-08
