@@ -1,0 +1,122 @@
+{
+  "exported_at_utc": "2026-08-08T16:53:56.260600+00:00",
+  "rows": 2355,
+  "raw_bytes": 3253446,
+  "gzip_bytes": 332853,
+  "sha256": "14b20f9ef0bbf920eadcaa5fdf1f34b43d633a7c8a9f7f4a31497c20999219eb",
+  "chunks": 12,
+  "soft_hyphen_hits_in_probe_ids": [
+    {
+      "word_id": "0003",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0013",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0016",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0024",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0026",
+      "field": "translation_ru"
+    },
+    {
+      "word_id": "0028",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0156",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0237",
+      "field": "phrases_alan_cyrillic"
+    },
+    {
+      "word_id": "0237",
+      "field": "phrases_alan_turkic"
+    },
+    {
+      "word_id": "0285",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0301",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0334",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0344",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0361",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0364",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0436",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0522",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0588",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0601",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0657",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0660",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0669",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0688",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0826",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0882",
+      "field": "translation_ru"
+    },
+    {
+      "word_id": "0883",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "0923",
+      "field": "phrases_ru"
+    },
+    {
+      "word_id": "1138",
+      "field": "phrases_ru"
+    }
+  ]
+}
