@@ -7,7 +7,6 @@ import {
 } from "../progress/storage-scope.js?v=13.10.12";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
-export const FIXED_STATION_SIZE = 30;
 const LEGACY_SETUP_COMPLETED_AT = "2026-07-18T00:00:00.000Z";
 
 export const DEFAULT_USER_SETTINGS = Object.freeze({
@@ -15,7 +14,6 @@ export const DEFAULT_USER_SETTINGS = Object.freeze({
   translation_language_code: "ru",
   alan_script_code: "cyrillic",
   alan_dialect_code: "canonical",
-  station_size: FIXED_STATION_SIZE,
   learning_setup_completed_at: null,
 });
 
@@ -31,10 +29,6 @@ function normalizeInterfaceLanguageCode(value) {
   const source = normalizeLanguageCode(value, DEFAULT_USER_SETTINGS.interface_language_code).split("-")[0];
   const normalized = source === "tu" ? "tr" : source;
   return ["ru", "en", "tr"].includes(normalized) ? normalized : DEFAULT_USER_SETTINGS.interface_language_code;
-}
-
-function normalizeStationSize() {
-  return FIXED_STATION_SIZE;
 }
 
 function normalizeAlanScriptCode(value) {
@@ -55,11 +49,9 @@ function normalizeSettings(value = {}) {
   const interfaceLanguage = normalizeInterfaceLanguageCode(value.interface_language_code);
   return {
     interface_language_code: interfaceLanguage,
-    // The selected interface language is also the learning translation language.
     translation_language_code: interfaceLanguage,
     alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
     alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),
-    station_size: normalizeStationSize(value.station_size),
     learning_setup_completed_at: normalizeCompletionTimestamp(value.learning_setup_completed_at),
   };
 }
@@ -93,7 +85,6 @@ export function reloadUserSettings({ preserveLanguageIfMissing = false } = {}) {
         translation_language_code: state.translation_language_code,
         alan_script_code: state.alan_script_code,
         alan_dialect_code: state.alan_dialect_code,
-        station_size: state.station_size,
       }
     : DEFAULT_USER_SETTINGS;
   state = normalizeSettings(storedSettings(fallback));
@@ -108,10 +99,6 @@ export function getUserSettings() {
 
 export function getTranslationLanguageCode() {
   return state.translation_language_code;
-}
-
-export function getStationSize() {
-  return normalizeStationSize(state.station_size);
 }
 
 export function hasCompletedLearningSetup(settings = state) {
@@ -129,7 +116,6 @@ export function setUserSettings(updates = {}, {
     || next.translation_language_code !== state.translation_language_code
     || next.alan_script_code !== state.alan_script_code
     || next.alan_dialect_code !== state.alan_dialect_code
-    || next.station_size !== state.station_size
     || next.learning_setup_completed_at !== state.learning_setup_completed_at;
   state = next;
   const stored = writeScopedJson(USER_SETTINGS_KEY, state);
