@@ -43,6 +43,102 @@ function nullableNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+function setOrdinal(setId) {
+  const match = String(setId || "").match(/(\d+)$/);
+  return match ? Number(match[1]) : 0;
+}
+
+const THEMATIC_SECTION_BY_SET = Object.freeze({
+  "universe-01": "universe-seasons",
+  "universe-02": "universe-months",
+  "universe-03": "universe-weekdays",
+  "universe-04": "universe-space",
+  "universe-05": "universe-colours",
+  "animals-01": "animals-aquatic-fauna",
+  "animals-02": "animals-omnivores-herbivores-rodents",
+  "animals-03": "animals-domestic",
+  "animals-04": "animals-amphibians-reptiles",
+  "animals-05": "animals-spiders-worms-insects",
+  "animals-06": "animals-primates-marsupials",
+  "animals-07": "animals-birds",
+  "animals-08": "animals-predators-mammals",
+  "natural_materials-01": "natural-materials-rocks",
+  "natural_materials-02": "natural-materials-metals",
+  "natural_materials-03": "natural-materials-minerals",
+  "natural_materials-04": "natural-materials-non-metals",
+  "natural_materials-05": "natural-materials-other",
+  "plants-01": "plants-trees",
+  "plants-02": "plants-nuts-grains-legumes",
+  "plants-03": "plants-other",
+  "plants-04": "plants-spices-herbs",
+  "plants-05": "plants-fruit-vegetables",
+  "plants-06": "plants-flowers",
+  "plants-07": "plants-berries-shrubs",
+});
+
+export function permanentSectionId(dictionaryId, setId) {
+  const dictionary = normalizeId(dictionaryId);
+  const set = normalizeId(setId);
+  const ordinal = setOrdinal(set);
+  if (dictionary === "beginner") return ordinal > 0 && ordinal <= 15 ? "beginner-starter" : "beginner-elementary";
+  if (dictionary === "intermediate") return ordinal > 0 && ordinal <= 6 ? "intermediate-intermediate" : "intermediate-upper-intermediate";
+  if (dictionary === "advanced") return ordinal > 0 && ordinal <= 10 ? "advanced-advanced" : "advanced-proficiency";
+  return THEMATIC_SECTION_BY_SET[set] || "";
+}
+
+export function storyIdForDictionary(dictionaryId) {
+  const dictionary = normalizeId(dictionaryId);
+  if (dictionary === "beginner") return "oblivion";
+  if (dictionary === "intermediate") return "roots";
+  if (dictionary === "advanced") return "ascent";
+  if (["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return "pathways";
+  return "";
+}
+
+const LEGACY_DICTIONARY_NAMES_RU = Object.freeze({
+  beginner: "Начальный",
+  intermediate: "Средний",
+  advanced: "Продвинутый",
+  universe: "Вселенная",
+  animals: "Животные",
+  natural_materials: "Природные материалы",
+  plants: "Растения",
+});
+
+const LEGACY_SECTION_NAMES_RU = Object.freeze({
+  "beginner-starter": "Starter",
+  "beginner-elementary": "Elementary",
+  "intermediate-intermediate": "Intermediate",
+  "intermediate-upper-intermediate": "Upper-Intermediate",
+  "advanced-advanced": "Advanced",
+  "advanced-proficiency": "Proficiency",
+  "universe-seasons": "Времена года",
+  "universe-months": "Месяцы года",
+  "universe-weekdays": "Дни недели",
+  "universe-space": "Космос",
+  "universe-colours": "Цвета",
+  "animals-aquatic-fauna": "Водная фауна",
+  "animals-omnivores-herbivores-rodents": "Всеядные, травоядные и грызуны",
+  "animals-domestic": "Домашние животные",
+  "animals-amphibians-reptiles": "Земноводные и рептилии",
+  "animals-spiders-worms-insects": "Пауки, черви и насекомые",
+  "animals-primates-marsupials": "Приматы и сумчатые",
+  "animals-birds": "Птицы",
+  "animals-predators-mammals": "Хищники и млекопитающие",
+  "natural-materials-rocks": "Горные породы",
+  "natural-materials-metals": "Металлы",
+  "natural-materials-minerals": "Минералы",
+  "natural-materials-non-metals": "Неметаллы",
+  "natural-materials-other": "Другие материалы",
+  "plants-trees": "Деревья",
+  "plants-nuts-grains-legumes": "Орехи, злаки и бобовые",
+  "plants-other": "Другие растения",
+  "plants-spices-herbs": "Специи и зелень",
+  "plants-fruit-vegetables": "Фрукты, овощи",
+  "plants-flowers": "Цветы",
+  "plants-berries-shrubs": "Ягоды и кустарники",
+});
+
 function commonRouteFields(row) {
   return {
     order_override: numberValue(row.order_override),
@@ -58,11 +154,13 @@ function commonRouteFields(row) {
 
 function completeModel(model, row = {}) {
   const dictionaryId = normalizeId(model.dictionaryId);
+  const sectionId = normalizeId(model.sectionId);
   const setId = normalizeId(model.setId);
   const storyId = normalizeId(model.storyId);
   const storyNameRu = text(model.storyNameRu);
-  const dictionaryName = text(model.dictionaryNameRu) || dictionaryId;
-  const setName = text(model.setNameRu) || setId;
+  const dictionaryNameRu = text(model.dictionaryNameRu);
+  const sectionNameRu = text(model.sectionNameRu);
+  const setNameRu = text(model.setNameRu);
 
   const normalized = {
     ...model,
@@ -74,30 +172,29 @@ function completeModel(model, row = {}) {
     story_type: storyId,
     dictionary_id: dictionaryId,
     catalog_id: dictionaryId,
-    // The physical content model no longer has sections. These compatibility
-    // aliases keep older menus stable while pointing at the real dictionary.
-    section_id: dictionaryId,
-    group_id: dictionaryId,
+    section_id: sectionId,
+    group_id: sectionId,
     set_id: setId,
     pos: text(model.pos),
     synonyms: parseSynonyms(model.synonyms),
     word: text(model.wordAlanCyrillic),
     trans: text(model.translationRu),
     example: text(model.legacyExample),
-    story_name: storyNameRu || storyId,
-    dictionary_name: dictionaryName,
-    section_name: dictionaryName,
-    set_name: setName,
-    dict: dictionaryName,
-    section: dictionaryName,
-    set: setName,
+    story_name: storyNameRu,
+    story_intro: text(model.storyIntroRu),
+    dictionary_name: dictionaryNameRu,
+    section_name: sectionNameRu,
+    set_name: setNameRu,
+    dict: dictionaryNameRu,
+    section: sectionNameRu,
+    set: setNameRu,
     usedInTest: typeof row.usedInTest === "boolean"
       ? row.usedInTest
       : parseUsedInTest(row.used_in_test, row.used_in_test !== undefined),
     ...commonRouteFields(row),
   };
 
-  if (!normalized.id || !dictionaryId || !setId || !normalized.wordAlanCyrillic || !normalized.translationRu) return null;
+  if (!normalized.id || !storyId || !dictionaryId || !sectionId || !setId || !normalized.wordAlanCyrillic || !normalized.translationRu) return null;
   return normalized;
 }
 
@@ -108,14 +205,15 @@ function storyValue(story, row, key, fallbackKey = key) {
 export function normalizeSupabaseWordEntry(row, story = null) {
   if (!row || typeof row !== "object") return null;
   const dictionaryId = normalizeId(row.dictionary_id);
+  const sectionId = normalizeId(row.section_id);
   const setId = normalizeId(row.set_id);
   const model = {
-    sourceType: "content_words",
+    sourceType: "v_words_app",
     id: normalizeId(row.word_id),
     globalOrder: numberValue(row.global_order),
-    storyId: normalizeId(story?.story_id || row.story_id),
+    storyId: normalizeId(story?.story_id || row.story_id || storyIdForDictionary(dictionaryId)),
     dictionaryId,
-    sectionId: dictionaryId,
+    sectionId,
     setId,
     pos: text(row.pos),
     synonyms: row.synonyms,
@@ -136,35 +234,35 @@ export function normalizeSupabaseWordEntry(row, story = null) {
     storyNameTr: storyValue(story, row, "name_tr", "story_name_tr"),
     storyNameAlanCyrillic: storyValue(story, row, "name_alan_cyrillic", "story_name_alan_cyrillic"),
     storyNameAlanTurkic: storyValue(story, row, "name_alan_turkic", "story_name_alan_turkic"),
-    dictionaryNameRu: dictionaryId,
-    dictionaryNameEn: dictionaryId,
-    dictionaryNameTr: dictionaryId,
-    dictionaryNameAlanCyrillic: dictionaryId,
-    dictionaryNameAlanTurkic: dictionaryId,
-    sectionNameRu: dictionaryId,
-    sectionNameEn: dictionaryId,
-    sectionNameTr: dictionaryId,
-    sectionNameAlanCyrillic: dictionaryId,
-    sectionNameAlanTurkic: dictionaryId,
-    setNameRu: setId,
-    setNameEn: setId,
-    setNameTr: setId,
-    setNameAlanCyrillic: setId,
-    setNameAlanTurkic: setId,
+    storyIntroRu: storyValue(story, row, "intro_ru", "story_intro_ru"),
+    storyIntroEn: storyValue(story, row, "intro_en", "story_intro_en"),
+    storyIntroTr: storyValue(story, row, "intro_tr", "story_intro_tr"),
+    storyIntroAlanCyrillic: storyValue(story, row, "intro_alan_cyrillic", "story_intro_alan_cyrillic"),
+    storyIntroAlanTurkic: storyValue(story, row, "intro_alan_turkic", "story_intro_alan_turkic"),
+    dictionaryNameRu: text(row.dictionary_name_ru),
+    dictionaryNameEn: text(row.dictionary_name_en),
+    dictionaryNameTr: text(row.dictionary_name_tr),
+    dictionaryNameAlanCyrillic: text(row.dictionary_name_alan_cyrillic),
+    dictionaryNameAlanTurkic: text(row.dictionary_name_alan_turkic),
+    sectionNameRu: text(row.section_name_ru),
+    sectionNameEn: text(row.section_name_en),
+    sectionNameTr: text(row.section_name_tr),
+    sectionNameAlanCyrillic: text(row.section_name_alan_cyrillic),
+    sectionNameAlanTurkic: text(row.section_name_alan_turkic),
+    setNameRu: text(row.set_name_ru),
+    setNameEn: text(row.set_name_en),
+    setNameTr: text(row.set_name_tr),
+    setNameAlanCyrillic: text(row.set_name_alan_cyrillic),
+    setNameAlanTurkic: text(row.set_name_alan_turkic),
     legacyExample: "",
   };
   return completeModel(model, row);
 }
 
-export function normalizeLegacyWordEntry(row) {
-  if (!row || typeof row !== "object") return null;
-  const id = normalizeId(row.id || row.word_id);
+function normalizeLegacyScope(row) {
   const legacySection = normalizeId(row.section_id || row.group_id || row.section || row.folder);
   let dictionaryId = normalizeId(row.dictionary_id || row.catalog_id || row.dict);
   let setId = normalizeId(row.set_id || row.set);
-
-  // Starter data from releases before 13.12 used numeric section IDs. Map it
-  // into the permanent flat dictionary/set model without touching lexical text.
   const dictionaryBySection = {
     "1": "beginner",
     "2": "intermediate",
@@ -186,16 +284,22 @@ export function normalizeLegacyWordEntry(row) {
     const ordinal = Number(setId) - (offsets[dictionaryId] || 0);
     if (ordinal > 0) setId = `${dictionaryId}-${String(ordinal).padStart(2, "0")}`;
   }
+  return { dictionaryId, sectionId: permanentSectionId(dictionaryId, setId), setId };
+}
 
-  const storyId = normalizeId(row.story_id || row.story_type);
+export function normalizeLegacyWordEntry(row) {
+  if (!row || typeof row !== "object") return null;
+  const id = normalizeId(row.id || row.word_id);
+  const scope = normalizeLegacyScope(row);
+  const storyId = storyIdForDictionary(scope.dictionaryId);
   const model = {
     sourceType: "legacy",
     id,
     globalOrder: numberValue(row.global_order, row.dict_order),
-    storyId: storyId === "1" ? "roots" : storyId === "2" ? "ascent" : storyId === "3" ? "pathways" : storyId,
-    dictionaryId,
-    sectionId: dictionaryId,
-    setId,
+    storyId,
+    dictionaryId: scope.dictionaryId,
+    sectionId: scope.sectionId,
+    setId: scope.setId,
     pos: text(row.pos),
     synonyms: row.synonyms,
 
@@ -210,26 +314,31 @@ export function normalizeLegacyWordEntry(row) {
     phrasesEn: text(row.phrases_en),
     phrasesTr: text(row.phrases_tr),
 
-    storyNameRu: text(row.story_name_ru || row.story_name),
-    storyNameEn: text(row.story_name_en),
-    storyNameTr: text(row.story_name_tr),
-    storyNameAlanCyrillic: text(row.story_name_alan_cyrillic),
-    storyNameAlanTurkic: text(row.story_name_alan_turkic),
-    dictionaryNameRu: dictionaryId,
-    dictionaryNameEn: dictionaryId,
-    dictionaryNameTr: dictionaryId,
-    dictionaryNameAlanCyrillic: dictionaryId,
-    dictionaryNameAlanTurkic: dictionaryId,
-    sectionNameRu: dictionaryId,
-    sectionNameEn: dictionaryId,
-    sectionNameTr: dictionaryId,
-    sectionNameAlanCyrillic: dictionaryId,
-    sectionNameAlanTurkic: dictionaryId,
-    setNameRu: setId,
-    setNameEn: setId,
-    setNameTr: setId,
-    setNameAlanCyrillic: setId,
-    setNameAlanTurkic: setId,
+    storyNameRu: storyId === "oblivion" ? "На пороге забвения" : text(row.story_name_ru || row.story_name),
+    storyNameEn: storyId === "oblivion" ? "" : text(row.story_name_en),
+    storyNameTr: storyId === "oblivion" ? "" : text(row.story_name_tr),
+    storyNameAlanCyrillic: storyId === "oblivion" ? "" : text(row.story_name_alan_cyrillic),
+    storyNameAlanTurkic: storyId === "oblivion" ? "" : text(row.story_name_alan_turkic),
+    storyIntroRu: storyId === "oblivion" ? "Это история о последних мгновениях жизни языка. Она написана скупо — простыми словами и примитивными понятиями, до которых беднеет некогда богатая речь, прежде чем умолкнуть навсегда. Это её последнее дыхание. Дальше — только забвение." : "",
+    storyIntroEn: "",
+    storyIntroTr: "",
+    storyIntroAlanCyrillic: "",
+    storyIntroAlanTurkic: "",
+    dictionaryNameRu: LEGACY_DICTIONARY_NAMES_RU[scope.dictionaryId] || "",
+    dictionaryNameEn: "",
+    dictionaryNameTr: "",
+    dictionaryNameAlanCyrillic: "",
+    dictionaryNameAlanTurkic: "",
+    sectionNameRu: LEGACY_SECTION_NAMES_RU[scope.sectionId] || "",
+    sectionNameEn: "",
+    sectionNameTr: "",
+    sectionNameAlanCyrillic: "",
+    sectionNameAlanTurkic: "",
+    setNameRu: "",
+    setNameEn: "",
+    setNameTr: "",
+    setNameAlanCyrillic: "",
+    setNameAlanTurkic: "",
     legacyExample: text(row.example || row.phrases || row.phrases_ru_combined),
   };
   return completeModel(model, row);
@@ -237,14 +346,17 @@ export function normalizeLegacyWordEntry(row) {
 
 function normalizeCachedWordEntry(row) {
   if (!row || typeof row !== "object") return null;
+  const dictionaryId = normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id);
+  const setId = normalizeId(row.setId || row.set_id);
+  const sectionId = normalizeId(row.sectionId || row.section_id || row.group_id || permanentSectionId(dictionaryId, setId));
   const model = {
-    sourceType: text(row.sourceType) || "content_words",
+    sourceType: text(row.sourceType) || "v_words_app",
     id: normalizeId(row.id || row.word_id),
     globalOrder: numberValue(row.globalOrder, row.global_order, row.dict_order),
-    storyId: normalizeId(row.storyId || row.story_id || row.story_type),
-    dictionaryId: normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id || row.dict),
-    sectionId: normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id || row.dict),
-    setId: normalizeId(row.setId || row.set_id || row.set),
+    storyId: normalizeId(row.storyId || row.story_id || row.story_type || storyIdForDictionary(dictionaryId)),
+    dictionaryId,
+    sectionId,
+    setId,
     pos: text(row.pos),
     synonyms: row.synonyms,
 
@@ -264,21 +376,26 @@ function normalizeCachedWordEntry(row) {
     storyNameTr: text(row.storyNameTr || row.story_name_tr),
     storyNameAlanCyrillic: text(row.storyNameAlanCyrillic || row.story_name_alan_cyrillic),
     storyNameAlanTurkic: text(row.storyNameAlanTurkic || row.story_name_alan_turkic),
-    dictionaryNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_id),
-    dictionaryNameEn: text(row.dictionaryNameEn || row.dictionary_name_en || row.dictionary_id),
-    dictionaryNameTr: text(row.dictionaryNameTr || row.dictionary_name_tr || row.dictionary_id),
-    dictionaryNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic || row.dictionary_name_alan_cyrillic || row.dictionary_id),
-    dictionaryNameAlanTurkic: text(row.dictionaryNameAlanTurkic || row.dictionary_name_alan_turkic || row.dictionary_id),
-    sectionNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_id),
-    sectionNameEn: text(row.dictionaryNameEn || row.dictionary_name_en || row.dictionary_id),
-    sectionNameTr: text(row.dictionaryNameTr || row.dictionary_name_tr || row.dictionary_id),
-    sectionNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic || row.dictionary_name_alan_cyrillic || row.dictionary_id),
-    sectionNameAlanTurkic: text(row.dictionaryNameAlanTurkic || row.dictionary_name_alan_turkic || row.dictionary_id),
-    setNameRu: text(row.setNameRu || row.set_name_ru || row.set_id),
-    setNameEn: text(row.setNameEn || row.set_name_en || row.set_id),
-    setNameTr: text(row.setNameTr || row.set_name_tr || row.set_id),
-    setNameAlanCyrillic: text(row.setNameAlanCyrillic || row.set_name_alan_cyrillic || row.set_id),
-    setNameAlanTurkic: text(row.setNameAlanTurkic || row.set_name_alan_turkic || row.set_id),
+    storyIntroRu: text(row.storyIntroRu || row.story_intro_ru || row.story_intro),
+    storyIntroEn: text(row.storyIntroEn || row.story_intro_en),
+    storyIntroTr: text(row.storyIntroTr || row.story_intro_tr),
+    storyIntroAlanCyrillic: text(row.storyIntroAlanCyrillic || row.story_intro_alan_cyrillic),
+    storyIntroAlanTurkic: text(row.storyIntroAlanTurkic || row.story_intro_alan_turkic),
+    dictionaryNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_name),
+    dictionaryNameEn: text(row.dictionaryNameEn || row.dictionary_name_en),
+    dictionaryNameTr: text(row.dictionaryNameTr || row.dictionary_name_tr),
+    dictionaryNameAlanCyrillic: text(row.dictionaryNameAlanCyrillic || row.dictionary_name_alan_cyrillic),
+    dictionaryNameAlanTurkic: text(row.dictionaryNameAlanTurkic || row.dictionary_name_alan_turkic),
+    sectionNameRu: text(row.sectionNameRu || row.section_name_ru || row.section_name),
+    sectionNameEn: text(row.sectionNameEn || row.section_name_en),
+    sectionNameTr: text(row.sectionNameTr || row.section_name_tr),
+    sectionNameAlanCyrillic: text(row.sectionNameAlanCyrillic || row.section_name_alan_cyrillic),
+    sectionNameAlanTurkic: text(row.sectionNameAlanTurkic || row.section_name_alan_turkic),
+    setNameRu: text(row.setNameRu || row.set_name_ru || row.set_name),
+    setNameEn: text(row.setNameEn || row.set_name_en),
+    setNameTr: text(row.setNameTr || row.set_name_tr),
+    setNameAlanCyrillic: text(row.setNameAlanCyrillic || row.set_name_alan_cyrillic),
+    setNameAlanTurkic: text(row.setNameAlanTurkic || row.set_name_alan_turkic),
     legacyExample: text(row.legacyExample || row.example),
   };
   return completeModel(model, row);
