@@ -27,18 +27,18 @@ function bindLifecycle() {
   window.addEventListener("beforeunload", persistBeforePageExit);
 }
 
-export function buildSelectedSources(selectedSets = []) {
+export function buildSelectedSources(selectedSections = []) {
   const grouped = new Map();
-  selectedSets.forEach(({ dictionaryId, setId }) => {
+  selectedSections.forEach(({ dictionaryId, sectionId }) => {
     const dictionary = String(dictionaryId || "").trim();
-    const set = String(setId || "").trim();
-    if (!dictionary || !set) return;
+    const section = String(sectionId || "").trim();
+    if (!dictionary || !section) return;
     if (!grouped.has(dictionary)) grouped.set(dictionary, new Set());
-    grouped.get(dictionary).add(set);
+    grouped.get(dictionary).add(section);
   });
-  return Array.from(grouped.entries()).map(([dictionary_id, sets]) => ({
+  return Array.from(grouped.entries()).map(([dictionary_id, sections]) => ({
     dictionary_id,
-    set_ids: Array.from(sets),
+    section_ids: Array.from(sections),
   }));
 }
 
