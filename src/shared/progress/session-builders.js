@@ -1,4 +1,4 @@
-import { getTranslationLanguageCode } from "../settings/user-settings-store.js?v=13.9.0";
+import { getTranslationLanguageCode } from "../settings/user-settings-store.js?v=13.12";
 import { createActivityClock } from "./activity-clock.js?v=13.9.0";
 import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
 import { createSessionId, removeActiveSession, saveActiveSession } from "./session-store.js?v=13.9.0";
@@ -27,17 +27,18 @@ function bindLifecycle() {
   window.addEventListener("beforeunload", persistBeforePageExit);
 }
 
-export function buildSelectedSources(selectedSections = []) {
+export function buildSelectedSources(selectedSets = []) {
   const grouped = new Map();
-  selectedSections.forEach(({ dictionaryId, sectionId }) => {
+  selectedSets.forEach(({ dictionaryId, setId }) => {
     const dictionary = String(dictionaryId || "").trim();
-    if (!dictionary) return;
+    const set = String(setId || "").trim();
+    if (!dictionary || !set) return;
     if (!grouped.has(dictionary)) grouped.set(dictionary, new Set());
-    grouped.get(dictionary).add(String(sectionId || ""));
+    grouped.get(dictionary).add(set);
   });
-  return Array.from(grouped.entries()).map(([dictionary_id, sections]) => ({
+  return Array.from(grouped.entries()).map(([dictionary_id, sets]) => ({
     dictionary_id,
-    section_ids: Array.from(sections),
+    set_ids: Array.from(sets),
   }));
 }
 
