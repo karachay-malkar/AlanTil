@@ -1,0 +1,398 @@
+[
+  {
+    "legacy_id": "A524",
+    "word_id": "0522",
+    "global_order": 522,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "җаулукъ",
+    "confidence": "high",
+    "margin": 0.437965,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 больному - бычье здоровье, девушке на выданье - шёл­ковый платок",
+        "desired": "1.1 больному - бычье здоровье, девушке на выданье - шёлковый платок",
+        "current_plain": [
+          "больному - бычье здоровье, девушке на выданье - шёл­ковый платок"
+        ],
+        "desired_plain": [
+          "больному - бычье здоровье, девушке на выданье - шёлковый платок"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A538",
+    "word_id": "0536",
+    "global_order": 536,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "сыгъаргъа",
+    "confidence": "high",
+    "margin": 0.302032,
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "выжимать, отжимать, заставлять",
+        "desired": "выжимать, отжимать, заставлять (перен.)"
+      }
+    ]
+  },
+  {
+    "legacy_id": "A546",
+    "word_id": "0544",
+    "global_order": 544,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къобуз",
+    "confidence": "high",
+    "margin": 0.501456,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къобуз согъаргъа играть",
+        "desired": "1.1 къобуз согъаргъа",
+        "current_plain": [
+          "къобуз согъаргъа играть"
+        ],
+        "desired_plain": [
+          "къобуз согъаргъа"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 на гармони",
+        "desired": "1.1 играть на гармони",
+        "current_plain": [
+          "на гармони"
+        ],
+        "desired_plain": [
+          "играть на гармони"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A590",
+    "word_id": "0588",
+    "global_order": 588,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "асыраргъа",
+    "confidence": "high",
+    "margin": 0.341236,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 ёлгенни асыраргъа\n2.1 ол китабны кюбюрде асырайма\n2.2 юч сабий асырайма\n2.3 эмчек бла асыраргъа",
+        "desired": "1.1 1. ёлгенни асыраргъа\n1.2 2. ол китабны кюбюрде асырайма\n1.3 юч сабий асырайма\n1.4 эмчек бла асыраргъа",
+        "current_plain": [
+          "ёлгенни асыраргъа",
+          "ол китабны кюбюрде асырайма",
+          "юч сабий асырайма",
+          "эмчек бла асыраргъа"
+        ],
+        "desired_plain": [
+          "1. ёлгенни асыраргъа",
+          "2. ол китабны кюбюрде асырайма",
+          "юч сабий асырайма",
+          "эмчек бла асыраргъа"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 похоронить умершего\n2.1 я ту книгу держу в сундуке\n2.2 я ращу (кормлю) троих де­тей\n2.3 кормить грудью",
+        "desired": "1.1 похоронить умершего\n1.2 я ту книгу держу в сундуке\n1.3 я ращу (кормлю) троих детей\n1.4 кормить грудью",
+        "current_plain": [
+          "похоронить умершего",
+          "я ту книгу держу в сундуке",
+          "я ращу (кормлю) троих де­тей",
+          "кормить грудью"
+        ],
+        "desired_plain": [
+          "похоронить умершего",
+          "я ту книгу держу в сундуке",
+          "я ращу (кормлю) троих детей",
+          "кормить грудью"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A602",
+    "word_id": "0600",
+    "global_order": 600,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "чурукъ",
+    "confidence": "high",
+    "margin": 0.43153,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 сапоги голенищами",
+        "desired": "1.1 сапоги с голенищами",
+        "current_plain": [
+          "сапоги голенищами"
+        ],
+        "desired_plain": [
+          "сапоги с голенищами"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A603",
+    "word_id": "0601",
+    "global_order": 601,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "бишерге",
+    "confidence": "high",
+    "margin": 0.390157,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 мясо недоварилось\n1.2 время созревания фруктов\n1.3 от жары мы скоро изжа­римся (перен.)",
+        "desired": "1.1 мясо недоварилось\n1.2 время созревания фруктов\n1.3 от жары мы скоро изжаримся (перен.)",
+        "current_plain": [
+          "мясо недоварилось",
+          "время созревания фруктов",
+          "от жары мы скоро изжа­римся (перен.)"
+        ],
+        "desired_plain": [
+          "мясо недоварилось",
+          "время созревания фруктов",
+          "от жары мы скоро изжаримся (перен.)"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A659",
+    "word_id": "0657",
+    "global_order": 657,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "байрам",
+    "confidence": "high",
+    "margin": 0.416276,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 празд­новать",
+        "desired": "1.1 праздновать",
+        "current_plain": [
+          "празд­новать"
+        ],
+        "desired_plain": [
+          "праздновать"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A662",
+    "word_id": "0660",
+    "global_order": 660,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "хоншу / къоншу",
+    "confidence": "high",
+    "margin": 0.638982,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 со­седнее село",
+        "desired": "1.1 соседнее село",
+        "current_plain": [
+          "со­седнее село"
+        ],
+        "desired_plain": [
+          "соседнее село"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A671",
+    "word_id": "0669",
+    "global_order": 669,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "тик",
+    "confidence": "high",
+    "margin": 0.516546,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 сууну тик җагъалары\n1.2 арабыз тикди\n1.3 тик сёз\n2.1 тик къарау",
+        "desired": "1.1 1. сууну тик җагъалары\n1.2 арабыз тикди\n1.3 тик сёз\n1.4 2. тик къарау",
+        "current_plain": [
+          "сууну тик җагъалары",
+          "арабыз тикди",
+          "тик сёз",
+          "тик къарау"
+        ],
+        "desired_plain": [
+          "1. сууну тик җагъалары",
+          "арабыз тикди",
+          "тик сёз",
+          "2. тик къарау"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 крутые берега реки\n1.2 у нас натянутые отношения (перен.)\n1.3 грубое слово (перен.)\n2.1 при­стальный взгляд",
+        "desired": "1.1 крутые берега реки\n1.2 у нас натянутые отношения (перен.)\n1.3 грубое слово (перен.)\n1.4 пристальный взгляд",
+        "current_plain": [
+          "крутые берега реки",
+          "у нас натянутые отношения (перен.)",
+          "грубое слово (перен.)",
+          "при­стальный взгляд"
+        ],
+        "desired_plain": [
+          "крутые берега реки",
+          "у нас натянутые отношения (перен.)",
+          "грубое слово (перен.)",
+          "пристальный взгляд"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A672",
+    "word_id": "0670",
+    "global_order": 670,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къолтукъ",
+    "confidence": "high",
+    "margin": 0.462603,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къолтугъунга къысаргъа\n2.1 җолну колтугъу",
+        "desired": "1.1 1. къолтугъунга къысаргъа\n1.2 2. җолну къолтугъу",
+        "current_plain": [
+          "къолтугъунга къысаргъа",
+          "җолну колтугъу"
+        ],
+        "desired_plain": [
+          "1. къолтугъунга къысаргъа",
+          "2. җолну къолтугъу"
+        ]
+      }
+    ]
+  }
+]

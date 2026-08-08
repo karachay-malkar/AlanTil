@@ -1,0 +1,424 @@
+[
+  {
+    "legacy_id": "A781",
+    "word_id": "0781",
+    "global_order": 781,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "алам",
+    "confidence": "high",
+    "margin": 0.459987,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 мы не понимаем даже частику вселенной",
+        "desired": "1.1 мы не понимаем даже частицу вселенной",
+        "current_plain": [
+          "мы не понимаем даже частику вселенной"
+        ],
+        "desired_plain": [
+          "мы не понимаем даже частицу вселенной"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A784",
+    "word_id": "0784",
+    "global_order": 784,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "шиндик",
+    "confidence": "high",
+    "margin": 0.543104,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 стол (сыртлы) шиндик\n1.2 узун шиндик",
+        "desired": "1.1 сыртлы шиндик\n1.2 узун шиндик",
+        "current_plain": [
+          "стол (сыртлы) шиндик",
+          "узун шиндик"
+        ],
+        "desired_plain": [
+          "сыртлы шиндик",
+          "узун шиндик"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A797",
+    "word_id": "0797",
+    "global_order": 797,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "җукъа",
+    "confidence": "medium",
+    "margin": 0.238393,
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "тонкий, худой",
+        "desired": "1. тонкий; \n2. худой, худощавый; \n3. лёгкий; \n4. жидкий, редкий; \n5. нервный, горячий, вспыльчивый (перен.); \n6. несостоятельный, бедный"
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 җукъа къанга\n1.2 җукъа адам\n1.3 җукъ шорпа\n1.4 терекле җукъа орнатылгъандыла",
+        "desired": "1.1 1. җукъа къанга\n1.2 2. җукъа адам\n1.3 3. җукъа кийим\n1.4 4. җукъа шорпа\n1.5 терекле җукъа орнатылгъандыла\n1.6 5. җукъа адам сёзлю болур\n1.7 6. къолу җукъа адам",
+        "current_plain": [
+          "җукъа къанга",
+          "җукъа адам",
+          "җукъ шорпа",
+          "терекле җукъа орнатылгъандыла"
+        ],
+        "desired_plain": [
+          "1. җукъа къанга",
+          "2. җукъа адам",
+          "3. җукъа кийим",
+          "4. җукъа шорпа",
+          "терекле җукъа орнатылгъандыла",
+          "5. җукъа адам сёзлю болур",
+          "6. къолу җукъа адам"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 тонкая доска\n1.2 худощавый человек\n1.3 жидкий суп\n1.4 деревья посажены редко",
+        "desired": "1.1 тонкая доска\n1.2 худощавый человек\n1.3 лёгкая одежда\n1.4 жидкий суп\n1.5 деревья посажены редко\n1.6 горячий человек бывает болтливым\n1.7 бедный человек",
+        "current_plain": [
+          "тонкая доска",
+          "худощавый человек",
+          "жидкий суп",
+          "деревья посажены редко"
+        ],
+        "desired_plain": [
+          "тонкая доска",
+          "худощавый человек",
+          "лёгкая одежда",
+          "жидкий суп",
+          "деревья посажены редко",
+          "горячий человек бывает болтливым",
+          "бедный человек"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A803",
+    "word_id": "0804",
+    "global_order": 804,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "чёргерге",
+    "confidence": "high",
+    "margin": 0.364196,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 обмотать мешок верёвкой\n1.2 укутать в бурку\n1.3 завора­чивать в бумагу",
+        "desired": "1.1 обмотать мешок верёвкой\n1.2 укутать в бурку\n1.3 заворачивать в бумагу",
+        "current_plain": [
+          "обмотать мешок верёвкой",
+          "укутать в бурку",
+          "завора­чивать в бумагу"
+        ],
+        "desired_plain": [
+          "обмотать мешок верёвкой",
+          "укутать в бурку",
+          "заворачивать в бумагу"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A804",
+    "word_id": "0805",
+    "global_order": 805,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "чартларгъа",
+    "confidence": "high",
+    "margin": 0.374,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 эмаль на посуде потрескалась\n1.2 в огне трещат поленья\n1.3 овца отстала\n1.4 брыз­нула кровь",
+        "desired": "1.1 эмаль на посуде потрескалась\n1.2 в огне трещат поленья\n1.3 овца отстала\n1.4 брызнула кровь",
+        "current_plain": [
+          "эмаль на посуде потрескалась",
+          "в огне трещат поленья",
+          "овца отстала",
+          "брыз­нула кровь"
+        ],
+        "desired_plain": [
+          "эмаль на посуде потрескалась",
+          "в огне трещат поленья",
+          "овца отстала",
+          "брызнула кровь"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A809",
+    "word_id": "0810",
+    "global_order": 810,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ингичге / иничге",
+    "confidence": "high",
+    "margin": 0.564551,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 тоньше прута\n1.2 вы­сокий голос",
+        "desired": "1.1 тоньше прута\n1.2 высокий голос",
+        "current_plain": [
+          "тоньше прута",
+          "вы­сокий голос"
+        ],
+        "desired_plain": [
+          "тоньше прута",
+          "высокий голос"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A818",
+    "word_id": "0819",
+    "global_order": 819,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "адаргы / адыргы",
+    "confidence": "high",
+    "margin": 0.504192,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 малень­кий по размеру",
+        "desired": "1.1 маленький по размеру",
+        "current_plain": [
+          "малень­кий по размеру"
+        ],
+        "desired_plain": [
+          "маленький по размеру"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A825",
+    "word_id": "0826",
+    "global_order": 826,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "тюйме",
+    "confidence": "high",
+    "margin": 0.447647,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 тюёмелерин этмегенлей\n1.2 алтын тюйме",
+        "desired": "1.1 тюймелерин этмегенлей\n1.2 алтын тюйме",
+        "current_plain": [
+          "тюёмелерин этмегенлей",
+          "алтын тюйме"
+        ],
+        "desired_plain": [
+          "тюймелерин этмегенлей",
+          "алтын тюйме"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 нарас­пашку\n1.2 золотой нагрудник",
+        "desired": "1.1 нараспашку\n1.2 золотой нагрудник",
+        "current_plain": [
+          "нарас­пашку",
+          "золотой нагрудник"
+        ],
+        "desired_plain": [
+          "нараспашку",
+          "золотой нагрудник"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A842",
+    "word_id": "0843",
+    "global_order": 843,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "саркъаргъа",
+    "confidence": "high",
+    "margin": 0.29797,
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 суу таудан саркъады\n2.1 аякъларым саркъыб, тоблукъ болуб турадыла",
+        "desired": "1.1 1. суу таудан саркъады\n1.2 2. аякъларым саркъыб, тоблукъ болуб турадыла",
+        "current_plain": [
+          "суу таудан саркъады",
+          "аякъларым саркъыб, тоблукъ болуб турадыла"
+        ],
+        "desired_plain": [
+          "1. суу таудан саркъады",
+          "2. аякъларым саркъыб, тоблукъ болуб турадыла"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 вода течёт горы\n2.1 у меня ноги отекли и онемели",
+        "desired": "1.1 вода течёт с горы\n1.2 у меня ноги отекли и онемели",
+        "current_plain": [
+          "вода течёт горы",
+          "у меня ноги отекли и онемели"
+        ],
+        "desired_plain": [
+          "вода течёт с горы",
+          "у меня ноги отекли и онемели"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A847",
+    "word_id": "0848",
+    "global_order": 848,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "чууакъ",
+    "confidence": "high",
+    "margin": 0.372907,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 ясное нёбо\n1.2 погожий день",
+        "desired": "1.1 ясное небо\n1.2 погожий день",
+        "current_plain": [
+          "ясное нёбо",
+          "погожий день"
+        ],
+        "desired_plain": [
+          "ясное небо",
+          "погожий день"
+        ]
+      }
+    ]
+  }
+]

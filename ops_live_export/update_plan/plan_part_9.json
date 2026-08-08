@@ -1,0 +1,392 @@
+[
+  {
+    "legacy_id": "B196",
+    "word_id": "1078",
+    "global_order": 1078,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "аралатыргъа",
+    "confidence": "high",
+    "margin": 0.216649,
+    "legacy_comment": "Добавлены пропущенные значения и пример из словаря; значения пронумерованы",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "перемежаться, чередоваться",
+        "desired": "1. окружать, брать в окружение; \n2. брать в оборот (перен.); \n3. перемежаться, чередоваться"
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 бир бирлери бла аралашадыла",
+        "desired": "1.1 1. фронтдан келгенлени аралатхандыла\n1.2 3. бир бирлери бла аралашадыла",
+        "current_plain": [
+          "бир бирлери бла аралашадыла"
+        ],
+        "desired_plain": [
+          "1. фронтдан келгенлени аралатхандыла",
+          "3. бир бирлери бла аралашадыла"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 они чередуются друг с другом",
+        "desired": "1.1 окружили вернувшихся с фронта\n1.2 они чередуются друг с другом",
+        "current_plain": [
+          "они чередуются друг с другом"
+        ],
+        "desired_plain": [
+          "окружили вернувшихся с фронта",
+          "они чередуются друг с другом"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B317",
+    "word_id": "1081",
+    "global_order": 1081,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "айланма",
+    "confidence": "high",
+    "margin": 0.423425,
+    "legacy_comment": "Выделено из строки «айланч, айланма» в отдельную карточку; добавлены значения из словаря; для значения «водоворот, омут, пучина» пример в источнике отсутствует",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къайдаса, айланма?\n2.1 җолну айланмасы",
+        "desired": "1.1 1. къайдаса, айланма?\n1.2 3. җолну айланмасы",
+        "current_plain": [
+          "къайдаса, айланма?",
+          "җолну айланмасы"
+        ],
+        "desired_plain": [
+          "1. къайдаса, айланма?",
+          "3. җолну айланмасы"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B202",
+    "word_id": "1085",
+    "global_order": 1085,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "мюкюл",
+    "confidence": "high",
+    "margin": 0.45816,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 җангылычларынга мюкюл болургъа\n1.2 мюкюл этеррге\n1.3 ауузун мюкюл этерге",
+        "desired": "1.1 җангылычларынга мюкюл болургъа\n1.2 мюкюл этерге\n1.3 ауузун мюкюл этерге",
+        "current_plain": [
+          "җангылычларынга мюкюл болургъа",
+          "мюкюл этеррге",
+          "ауузун мюкюл этерге"
+        ],
+        "desired_plain": [
+          "җангылычларынга мюкюл болургъа",
+          "мюкюл этерге",
+          "ауузун мюкюл этерге"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B203",
+    "word_id": "1086",
+    "global_order": 1086,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "къагъанакъ",
+    "confidence": "high",
+    "margin": 0.487107,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къагъъанакъ сабий",
+        "desired": "1.1 къагъанакъ сабий",
+        "current_plain": [
+          "къагъъанакъ сабий"
+        ],
+        "desired_plain": [
+          "къагъанакъ сабий"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B255",
+    "word_id": "1138",
+    "global_order": 1138,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "къаст",
+    "confidence": "high",
+    "margin": 0.436517,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 намеренно\n1.2 я дал себе зарок не хо­дить к ним",
+        "desired": "1.1 намеренно\n1.2 я дал себе зарок не ходить к ним",
+        "current_plain": [
+          "намеренно",
+          "я дал себе зарок не хо­дить к ним"
+        ],
+        "desired_plain": [
+          "намеренно",
+          "я дал себе зарок не ходить к ним"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B265",
+    "word_id": "1148",
+    "global_order": 1148,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "зауаллы",
+    "confidence": "high",
+    "margin": 0.460303,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 горемыка\n1.2 ах, какой-же он несчастный\n1.3 этот несчастный умер от холода",
+        "desired": "1.1 горемыка\n1.2 ах, какой же он несчастный\n1.3 этот несчастный умер от холода",
+        "current_plain": [
+          "горемыка",
+          "ах, какой-же он несчастный",
+          "этот несчастный умер от холода"
+        ],
+        "desired_plain": [
+          "горемыка",
+          "ах, какой же он несчастный",
+          "этот несчастный умер от холода"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B294",
+    "word_id": "1177",
+    "global_order": 1177,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "җенг",
+    "confidence": "high",
+    "margin": 0.420781,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 взять зарукав\n1.2 манжета",
+        "desired": "1.1 взять за рукав\n1.2 манжета",
+        "current_plain": [
+          "взять зарукав",
+          "манжета"
+        ],
+        "desired_plain": [
+          "взять за рукав",
+          "манжета"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B309",
+    "word_id": "1192",
+    "global_order": 1192,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "къаза",
+    "confidence": "high",
+    "margin": 0.357577,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 наказать кого, расправиться кем\n1.2 это для нас большое наказание",
+        "desired": "1.1 наказать кого, расправиться с кем\n1.2 это для нас большое наказание",
+        "current_plain": [
+          "наказать кого, расправиться кем",
+          "это для нас большое наказание"
+        ],
+        "desired_plain": [
+          "наказать кого, расправиться с кем",
+          "это для нас большое наказание"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B313",
+    "word_id": "1196",
+    "global_order": 1196,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "чакъгъыч",
+    "confidence": "high",
+    "margin": 0.520483,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 кремень\n1.2 без онива трут не загорится, человек с посохом не споткнётся",
+        "desired": "1.1 кремень\n1.2 без огнива трут не загорится, человек с посохом не споткнётся",
+        "current_plain": [
+          "кремень",
+          "без онива трут не загорится, человек с посохом не споткнётся"
+        ],
+        "desired_plain": [
+          "кремень",
+          "без огнива трут не загорится, человек с посохом не споткнётся"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "T449",
+    "word_id": "2208",
+    "global_order": 2208,
+    "story_id": 3,
+    "story_name": "Тропы",
+    "dictionary_id": 3,
+    "dictionary_name": "Тематические слова",
+    "section_id": 6,
+    "section_name": "Природные материалы",
+    "set_id": 18,
+    "set_name": "Прочие материалы",
+    "word": "къошун",
+    "confidence": "high",
+    "margin": 0.472862,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къошун аякъ\n1.2 башы къошун юй дом",
+        "desired": "1.1 къошун аякъ\n1.2 башы къошун юй",
+        "current_plain": [
+          "къошун аякъ",
+          "башы къошун юй дом"
+        ],
+        "desired_plain": [
+          "къошун аякъ",
+          "башы къошун юй"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 глиняная чашка\n1.2 крытый черепицей",
+        "desired": "1.1 глиняная чашка\n1.2 дом, крытый черепицей",
+        "current_plain": [
+          "глиняная чашка",
+          "крытый черепицей"
+        ],
+        "desired_plain": [
+          "глиняная чашка",
+          "дом, крытый черепицей"
+        ]
+      }
+    ]
+  }
+]

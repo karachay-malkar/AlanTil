@@ -1,0 +1,360 @@
+[
+  {
+    "legacy_id": "A690",
+    "word_id": "0688",
+    "global_order": 688,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "азаб",
+    "confidence": "high",
+    "margin": 0.43347,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 мучительная ра­бота\n1.2 испытать страдания\n1.3 попасть в беду",
+        "desired": "1.1 мучительная работа\n1.2 испытать страдания\n1.3 попасть в беду",
+        "current_plain": [
+          "мучительная ра­бота",
+          "испытать страдания",
+          "попасть в беду"
+        ],
+        "desired_plain": [
+          "мучительная работа",
+          "испытать страдания",
+          "попасть в беду"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A709",
+    "word_id": "0709",
+    "global_order": 709,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къаршчы",
+    "confidence": "high",
+    "margin": 0.452022,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къаршчы болмай\n1.2 бизни юйге къаршчы\n1.3 арбала бизге къаршчы",
+        "desired": "1.1 къаршчы болмай\n1.2 бизни юйге къаршчы\n1.3 арбала бизге къаршчы келедиле",
+        "current_plain": [
+          "къаршчы болмай",
+          "бизни юйге къаршчы",
+          "арбала бизге къаршчы"
+        ],
+        "desired_plain": [
+          "къаршчы болмай",
+          "бизни юйге къаршчы",
+          "арбала бизге къаршчы келедиле"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 не сопротивляясь\n1.2 напротив нашего дома\n1.3 келедиле подводы идут нам навстречу",
+        "desired": "1.1 не сопротивляясь\n1.2 напротив нашего дома\n1.3 подводы идут нам навстречу",
+        "current_plain": [
+          "не сопротивляясь",
+          "напротив нашего дома",
+          "келедиле подводы идут нам навстречу"
+        ],
+        "desired_plain": [
+          "не сопротивляясь",
+          "напротив нашего дома",
+          "подводы идут нам навстречу"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A716",
+    "word_id": "0716",
+    "global_order": 716,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къолан",
+    "confidence": "high",
+    "margin": 0.478725,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къолан къумач\n1.2 коълан бузоу",
+        "desired": "1.1 къолан къумач\n1.2 къолан бузоу",
+        "current_plain": [
+          "къолан къумач",
+          "коълан бузоу"
+        ],
+        "desired_plain": [
+          "къолан къумач",
+          "къолан бузоу"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A723",
+    "word_id": "0723",
+    "global_order": 723,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "анча",
+    "confidence": "high",
+    "margin": 0.350526,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 где ты ходишь столько вре­мени?",
+        "desired": "1.1 где ты ходишь столько времени?",
+        "current_plain": [
+          "где ты ходишь столько вре­мени?"
+        ],
+        "desired_plain": [
+          "где ты ходишь столько времени?"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A733",
+    "word_id": "0733",
+    "global_order": 733,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "абыныргъа",
+    "confidence": "high",
+    "margin": 0.324659,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 спот­кнуться о камень\n1.2 за­пнуться на слове",
+        "desired": "1.1 споткнуться о камень\n1.2 запнуться на слове",
+        "current_plain": [
+          "спот­кнуться о камень",
+          "за­пнуться на слове"
+        ],
+        "desired_plain": [
+          "споткнуться о камень",
+          "запнуться на слове"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A743",
+    "word_id": "0743",
+    "global_order": 743,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "мюйюз",
+    "confidence": "high",
+    "margin": 0.47517,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 нож роговой ручкой",
+        "desired": "1.1 нож с роговой ручкой",
+        "current_plain": [
+          "нож роговой ручкой"
+        ],
+        "desired_plain": [
+          "нож с роговой ручкой"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A747",
+    "word_id": "0747",
+    "global_order": 747,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "чырай",
+    "confidence": "high",
+    "margin": 0.458016,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 человек красивой внешностью",
+        "desired": "1.1 человек с красивой внешностью",
+        "current_plain": [
+          "человек красивой внешностью"
+        ],
+        "desired_plain": [
+          "человек с красивой внешностью"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A756",
+    "word_id": "0756",
+    "global_order": 756,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "керох",
+    "confidence": "high",
+    "margin": 0.546802,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 разбирать питсолет",
+        "desired": "1.1 разбирать пистолет",
+        "current_plain": [
+          "разбирать питсолет"
+        ],
+        "desired_plain": [
+          "разбирать пистолет"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A762",
+    "word_id": "0762",
+    "global_order": 762,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къозгъаргъа",
+    "confidence": "high",
+    "margin": 0.35739,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "взовлновывать, обострять, тревожить",
+        "desired": "взволновывать, обострять, тревожить"
+      }
+    ]
+  },
+  {
+    "legacy_id": "A766",
+    "word_id": "0766",
+    "global_order": 766,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ёпкелеу, кёлкъалды, гурушха",
+    "confidence": "high",
+    "margin": 0.647773,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 кёлкъады болуб къараргъа\n1.2 ууакъ гурушхала\n1.3 гурушха болургъа",
+        "desired": "1.1 кёлкъалды болуб къараргъа\n1.2 ууакъ гурушхала\n1.3 гурушха болургъа",
+        "current_plain": [
+          "кёлкъады болуб къараргъа",
+          "ууакъ гурушхала",
+          "гурушха болургъа"
+        ],
+        "desired_plain": [
+          "кёлкъалды болуб къараргъа",
+          "ууакъ гурушхала",
+          "гурушха болургъа"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "legacy_marked_rows": 94,
+  "rows_requiring_update": 90,
+  "rows_already_equal": 4,
+  "field_updates": 115,
+  "field_counts": {
+    "content_word_texts.phrases_text[ru/]": 62,
+    "content_word_texts.translation_text[ru/]": 12,
+    "content_word_texts.phrases_text[alan/cyrillic]": 41
+  },
+  "review_items": 1,
+  "medium_matches": [
+    "A797"
+  ],
+  "low_matches": []
+}

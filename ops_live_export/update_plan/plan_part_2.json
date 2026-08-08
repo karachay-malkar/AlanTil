@@ -1,0 +1,398 @@
+[
+  {
+    "legacy_id": "A95",
+    "word_id": "0095",
+    "global_order": 95,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "акъыл",
+    "confidence": "high",
+    "margin": 0.360999,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 аны акъылы теренди\n1.2 акъылггъа келирге\n1.3 акъылынг къалайды?",
+        "desired": "1.1 аны акъылы теренди\n1.2 акъылгъа келирге\n1.3 акъылынг къалайды?",
+        "current_plain": [
+          "аны акъылы теренди",
+          "акъылггъа келирге",
+          "акъылынг къалайды?"
+        ],
+        "desired_plain": [
+          "аны акъылы теренди",
+          "акъылгъа келирге",
+          "акъылынг къалайды?"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A151",
+    "word_id": "0150",
+    "global_order": 150,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къайгъы",
+    "confidence": "high",
+    "margin": 0.373409,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 аны ючюн къайгъы этме\n1.2 башыбызгъа къайгы тюшгенди\n1.3 къайгъы чыгъарыргъа",
+        "desired": "1.1 аны ючюн къайгъы этме\n1.2 башыбызгъа къайгъы тюшгенди\n1.3 къайгъы чыгъарыргъа",
+        "current_plain": [
+          "аны ючюн къайгъы этме",
+          "башыбызгъа къайгы тюшгенди",
+          "къайгъы чыгъарыргъа"
+        ],
+        "desired_plain": [
+          "аны ючюн къайгъы этме",
+          "башыбызгъа къайгъы тюшгенди",
+          "къайгъы чыгъарыргъа"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A157",
+    "word_id": "0156",
+    "global_order": 156,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ара",
+    "confidence": "high",
+    "margin": 0.381532,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 җолубузну арасына җетдик\n1.2 Хасанья - дунияны арасыды\n1.3 кёпюрню эки беҗенини арасы\n1.4 эки суу арасы\n1.5 арабыз игиди\n2.1 ара мюлк\n2.2 бу ара ишди",
+        "desired": "1.1 1. җолубузну арасына җетдик\n1.2 Хасанья - дунияны арасыды\n1.3 кёпюрню эки беҗенини арасы\n1.4 эки суу арасы\n1.5 арабыз игиди\n1.6 2. ара мюлк\n1.7 бу ара ишди",
+        "current_plain": [
+          "җолубузну арасына җетдик",
+          "Хасанья - дунияны арасыды",
+          "кёпюрню эки беҗенини арасы",
+          "эки суу арасы",
+          "арабыз игиди",
+          "ара мюлк",
+          "бу ара ишди"
+        ],
+        "desired_plain": [
+          "1. җолубузну арасына җетдик",
+          "Хасанья - дунияны арасыды",
+          "кёпюрню эки беҗенини арасы",
+          "эки суу арасы",
+          "арабыз игиди",
+          "2. ара мюлк",
+          "бу ара ишди"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 мы дошли до сере­дины пути\n1.2 Хасанья - столица мира\n1.3 пролёт моста между двумя опорами\n1.4 междуречье\n1.5 у нас хорошие отношения\n2.1 общее достояние, общественное хозяйство\n2.2 это общее дело",
+        "desired": "1.1 мы дошли до середины пути\n1.2 Хасанья - столица мира\n1.3 пролёт моста между двумя опорами\n1.4 междуречье\n1.5 у нас хорошие отношения\n1.6 общее достояние, общественное хозяйство\n1.7 это общее дело",
+        "current_plain": [
+          "мы дошли до сере­дины пути",
+          "Хасанья - столица мира",
+          "пролёт моста между двумя опорами",
+          "междуречье",
+          "у нас хорошие отношения",
+          "общее достояние, общественное хозяйство",
+          "это общее дело"
+        ],
+        "desired_plain": [
+          "мы дошли до середины пути",
+          "Хасанья - столица мира",
+          "пролёт моста между двумя опорами",
+          "междуречье",
+          "у нас хорошие отношения",
+          "общее достояние, общественное хозяйство",
+          "это общее дело"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A158",
+    "word_id": "0157",
+    "global_order": 157,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къысаргъа",
+    "confidence": "high",
+    "margin": 0.336498,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 чуругъум аягъымы къысады\n1.2 столну терезе таба къыс\n1.3 эшкини къысаргъа\n1.4 бауну быргъагъа къысаргъа",
+        "desired": "1.1 чуругъум аягъымы къысады\n1.2 столну терезе таба къыс\n1.3 эшикни къысаргъа\n1.4 бауну быргъагъа къысаргъа",
+        "current_plain": [
+          "чуругъум аягъымы къысады",
+          "столну терезе таба къыс",
+          "эшкини къысаргъа",
+          "бауну быргъагъа къысаргъа"
+        ],
+        "desired_plain": [
+          "чуругъум аягъымы къысады",
+          "столну терезе таба къыс",
+          "эшикни къысаргъа",
+          "бауну быргъагъа къысаргъа"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A225",
+    "word_id": "0224",
+    "global_order": 224,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къарыу",
+    "confidence": "high",
+    "margin": 0.378366,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 турур къарыуу җокъду\n1.2 юй сатыб алыргъа аны къарыу җокъду",
+        "desired": "1.1 турур къарыуу җокъду\n1.2 юй сатыб алыргъа аны къарыуу җокъду",
+        "current_plain": [
+          "турур къарыуу җокъду",
+          "юй сатыб алыргъа аны къарыу җокъду"
+        ],
+        "desired_plain": [
+          "турур къарыуу җокъду",
+          "юй сатыб алыргъа аны къарыуу җокъду"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A238",
+    "word_id": "0237",
+    "global_order": 237,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "айыб",
+    "confidence": "high",
+    "margin": 0.494606,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 саннга айыб тюлмюдю?\n1.2 айыбны биреуге салыр­гъа\n2.1 айыб табаргъа",
+        "desired": "1.1 1. саннга айыб тюлмюдю?\n1.2 айыбны биреуге салыргъа\n1.3 2. айыб табаргъа",
+        "current_plain": [
+          "саннга айыб тюлмюдю?",
+          "айыбны биреуге салыр­гъа",
+          "айыб табаргъа"
+        ],
+        "desired_plain": [
+          "1. саннга айыб тюлмюдю?",
+          "айыбны биреуге салыргъа",
+          "2. айыб табаргъа"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A286",
+    "word_id": "0285",
+    "global_order": 285,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "багъа",
+    "confidence": "high",
+    "margin": 0.416383,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 купить втридорога\n1.2 рыночная цена\n1.3 вещь высокой ценно­сти",
+        "desired": "1.1 купить втридорога\n1.2 рыночная цена\n1.3 вещь высокой ценности",
+        "current_plain": [
+          "купить втридорога",
+          "рыночная цена",
+          "вещь высокой ценно­сти"
+        ],
+        "desired_plain": [
+          "купить втридорога",
+          "рыночная цена",
+          "вещь высокой ценности"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A288",
+    "word_id": "0287",
+    "global_order": 287,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "хата",
+    "confidence": "high",
+    "margin": 0.391769,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 хата җокъду",
+        "desired": "1.1 хатам җокъду",
+        "current_plain": [
+          "хата җокъду"
+        ],
+        "desired_plain": [
+          "хатам җокъду"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A295",
+    "word_id": "0294",
+    "global_order": 294,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "җабаргъа",
+    "confidence": "high",
+    "margin": 0.296911,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 места, покрыытые лесом\n1.2 тучи заволокли нёбо",
+        "desired": "1.1 места, покрытые лесом\n1.2 тучи заволокли небо",
+        "current_plain": [
+          "места, покрыытые лесом",
+          "тучи заволокли нёбо"
+        ],
+        "desired_plain": [
+          "места, покрытые лесом",
+          "тучи заволокли небо"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A302",
+    "word_id": "0301",
+    "global_order": 301,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "юренирге / юйренирге",
+    "confidence": "high",
+    "margin": 0.527979,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 перенимать что друг у друга\n1.2 при­выкнуть к почерку",
+        "desired": "1.1 перенимать что друг у друга\n1.2 привыкнуть к почерку",
+        "current_plain": [
+          "перенимать что друг у друга",
+          "при­выкнуть к почерку"
+        ],
+        "desired_plain": [
+          "перенимать что друг у друга",
+          "привыкнуть к почерку"
+        ]
+      }
+    ]
+  }
+]

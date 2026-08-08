@@ -1,0 +1,414 @@
+[
+  {
+    "legacy_id": "A304",
+    "word_id": "0303",
+    "global_order": 303,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къураргъа",
+    "confidence": "high",
+    "margin": 0.31172,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 аскер къараргъа\n1.2 җолгъа къараргъа",
+        "desired": "1.1 аскер къураргъа\n1.2 җолгъа къураргъа",
+        "current_plain": [
+          "аскер къараргъа",
+          "җолгъа къараргъа"
+        ],
+        "desired_plain": [
+          "аскер къураргъа",
+          "җолгъа къураргъа"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A335",
+    "word_id": "0334",
+    "global_order": 334,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "җау",
+    "confidence": "high",
+    "margin": 0.415041,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 җау чайкъаргъа\n1.2 җау суугъа къатышмаз\n2.1 җауну аягъан кеси ёлюр",
+        "desired": "1.1 1. җау чайкъаргъа\n1.2 җау суугъа къатышмаз\n1.3 2. җауну аягъан кеси ёлюр",
+        "current_plain": [
+          "җау чайкъаргъа",
+          "җау суугъа къатышмаз",
+          "җауну аягъан кеси ёлюр"
+        ],
+        "desired_plain": [
+          "1. җау чайкъаргъа",
+          "җау суугъа къатышмаз",
+          "2. җауну аягъан кеси ёлюр"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 сбивать масло\n1.2 масло с водой не перемешива­ется\n2.1 кто врага щадит, тот сам погибает",
+        "desired": "1.1 сбивать масло\n1.2 масло с водой не перемешивается\n1.3 кто врага щадит, тот сам погибает",
+        "current_plain": [
+          "сбивать масло",
+          "масло с водой не перемешива­ется",
+          "кто врага щадит, тот сам погибает"
+        ],
+        "desired_plain": [
+          "сбивать масло",
+          "масло с водой не перемешивается",
+          "кто врага щадит, тот сам погибает"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A337",
+    "word_id": "0336",
+    "global_order": 336,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "юйюр",
+    "confidence": "high",
+    "margin": 0.521806,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 бютеу юйюр бла",
+        "desired": "1.1 бютеу юйюрю бла",
+        "current_plain": [
+          "бютеу юйюр бла"
+        ],
+        "desired_plain": [
+          "бютеу юйюрю бла"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A345",
+    "word_id": "0344",
+    "global_order": 344,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ачы",
+    "confidence": "high",
+    "margin": 0.317335,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 горький перец\n1.2 суп горький\n1.3 лютый мороз\n1.4 жестокая борьба с вра­гами\n1.5 горькое или сладкое знает тот, кто пробует на вкус",
+        "desired": "1.1 горький перец\n1.2 суп горький\n1.3 лютый мороз\n1.4 жестокая борьба с врагами\n1.5 горькое или сладкое знает тот, кто пробует на вкус",
+        "current_plain": [
+          "горький перец",
+          "суп горький",
+          "лютый мороз",
+          "жестокая борьба с вра­гами",
+          "горькое или сладкое знает тот, кто пробует на вкус"
+        ],
+        "desired_plain": [
+          "горький перец",
+          "суп горький",
+          "лютый мороз",
+          "жестокая борьба с врагами",
+          "горькое или сладкое знает тот, кто пробует на вкус"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A362",
+    "word_id": "0361",
+    "global_order": 361,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "җаяргъа",
+    "confidence": "high",
+    "margin": 0.28519,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 застлать пол ковром\n1.2 распро­странять знания\n1.3 растопырить пальцы\n1.4 пускать овец пастись\n1.5 развести много кур",
+        "desired": "1.1 застлать пол ковром\n1.2 распространять знания\n1.3 растопырить пальцы\n1.4 пускать овец пастись\n1.5 развести много кур",
+        "current_plain": [
+          "застлать пол ковром",
+          "распро­странять знания",
+          "растопырить пальцы",
+          "пускать овец пастись",
+          "развести много кур"
+        ],
+        "desired_plain": [
+          "застлать пол ковром",
+          "распространять знания",
+          "растопырить пальцы",
+          "пускать овец пастись",
+          "развести много кур"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A365",
+    "word_id": "0364",
+    "global_order": 364,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "тёзерге",
+    "confidence": "high",
+    "margin": 0.373568,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 нестерпимый\n1.2 мириться с недостат­ками",
+        "desired": "1.1 нестерпимый\n1.2 мириться с недостатками",
+        "current_plain": [
+          "нестерпимый",
+          "мириться с недостат­ками"
+        ],
+        "desired_plain": [
+          "нестерпимый",
+          "мириться с недостатками"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A381",
+    "word_id": "0380",
+    "global_order": 380,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "уу",
+    "confidence": "high",
+    "margin": 0.397352,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 ууу болгъан\n1.2 ууу җетерге\n2.1 уугъа барыргъа выйти",
+        "desired": "1.1 1. ууу болгъан\n1.2 ууу җетерге\n1.3 2. уугъа барыргъа",
+        "current_plain": [
+          "ууу болгъан",
+          "ууу җетерге",
+          "уугъа барыргъа выйти"
+        ],
+        "desired_plain": [
+          "1. ууу болгъан",
+          "ууу җетерге",
+          "2. уугъа барыргъа"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 ядовитый\n1.2 оказывать вредное влияние\n2.1 на охоту",
+        "desired": "1.1 ядовитый\n1.2 оказывать вредное влияние\n1.3 выйти на охоту",
+        "current_plain": [
+          "ядовитый",
+          "оказывать вредное влияние",
+          "на охоту"
+        ],
+        "desired_plain": [
+          "ядовитый",
+          "оказывать вредное влияние",
+          "выйти на охоту"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A437",
+    "word_id": "0436",
+    "global_order": 436,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къоюн",
+    "confidence": "high",
+    "margin": 0.447353,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 место изгиба\n1.2 положи себе за пазуху\n1.3 прижать к груди\n1.4 жен­щина взяла своего ребёнка на руки",
+        "desired": "1.1 место изгиба\n1.2 положи себе за пазуху\n1.3 прижать к груди\n1.4 женщина взяла своего ребёнка на руки",
+        "current_plain": [
+          "место изгиба",
+          "положи себе за пазуху",
+          "прижать к груди",
+          "жен­щина взяла своего ребёнка на руки"
+        ],
+        "desired_plain": [
+          "место изгиба",
+          "положи себе за пазуху",
+          "прижать к груди",
+          "женщина взяла своего ребёнка на руки"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A441",
+    "word_id": "0439",
+    "global_order": 439,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "сыфат",
+    "confidence": "high",
+    "margin": 0.427223,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 сыфаты ариу красивый\n1.2 ол сыфатынг неди?",
+        "desired": "1.1 сыфаты ариу\n1.2 ол сыфатынг неди?",
+        "current_plain": [
+          "сыфаты ариу красивый",
+          "ол сыфатынг неди?"
+        ],
+        "desired_plain": [
+          "сыфаты ариу",
+          "ол сыфатынг неди?"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 на вид\n1.2 что у тебя за вид?",
+        "desired": "1.1 красивый на вид\n1.2 что у тебя за вид?",
+        "current_plain": [
+          "на вид",
+          "что у тебя за вид?"
+        ],
+        "desired_plain": [
+          "красивый на вид",
+          "что у тебя за вид?"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A462",
+    "word_id": "0460",
+    "global_order": 460,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "теберге",
+    "confidence": "high",
+    "margin": 0.290995,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "двигаться, трястись, пульсирвать",
+        "desired": "двигаться, трястись, пульсировать"
+      }
+    ]
+  }
+]

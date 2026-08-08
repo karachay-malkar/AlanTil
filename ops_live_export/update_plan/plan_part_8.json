@@ -1,0 +1,424 @@
+[
+  {
+    "legacy_id": "B103",
+    "word_id": "0984",
+    "global_order": 984,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "кеф",
+    "confidence": "high",
+    "margin": 0.548135,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 кефи бузулгъанды\n1.2 не эсе да кефинг къолай тюлдю\n1.3 кефи аман тюлдю",
+        "desired": "1.1 1. кефи бузулгъанды\n1.2 не эсе да кефинг къолай тюлдю\n1.3 кефи аман тюлдю\n1.4 2. кефи барды",
+        "current_plain": [
+          "кефи бузулгъанды",
+          "не эсе да кефинг къолай тюлдю",
+          "кефи аман тюлдю"
+        ],
+        "desired_plain": [
+          "1. кефи бузулгъанды",
+          "не эсе да кефинг къолай тюлдю",
+          "кефи аман тюлдю",
+          "2. кефи барды"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 у него испортилось настроение\n1.2 что-то ты не в духе\n1.3 вид у него неплохой",
+        "desired": "1.1 у него испортилось настроение\n1.2 что-то ты не в духе\n1.3 вид у него неплохой\n1.4 он под хмельком",
+        "current_plain": [
+          "у него испортилось настроение",
+          "что-то ты не в духе",
+          "вид у него неплохой"
+        ],
+        "desired_plain": [
+          "у него испортилось настроение",
+          "что-то ты не в духе",
+          "вид у него неплохой",
+          "он под хмельком"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B106",
+    "word_id": "0987",
+    "global_order": 987,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "таймай",
+    "confidence": "high",
+    "margin": 0.369414,
+    "legacy_comment": "Удалены значения и примеры слова «таймаздан»; добавлена общая группа синонимов",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "постоянно, неуклонно, беспрерывно",
+        "desired": "постоянно, всегда, беспрерывно"
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 җауун таймай җаууб турады\n1.2 таймаздан ишлеу\n1.3 ол таймаздан ишлейди",
+        "desired": "1.1 җауун таймай җаууб турады",
+        "current_plain": [
+          "җауун таймай җаууб турады",
+          "таймаздан ишлеу",
+          "ол таймаздан ишлейди"
+        ],
+        "desired_plain": [
+          "җауун таймай җаууб турады"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 беспрерывно идёт дождь\n1.2 постоянная работа\n1.3 он всё время работает",
+        "desired": "1.1 беспрерывно идёт дождь",
+        "current_plain": [
+          "беспрерывно идёт дождь",
+          "постоянная работа",
+          "он всё время работает"
+        ],
+        "desired_plain": [
+          "беспрерывно идёт дождь"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B118",
+    "word_id": "1000",
+    "global_order": 1000,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "ёт",
+    "confidence": "high",
+    "margin": 0.389425,
+    "legacy_comment": "Добавлено переносное значение; значения пронумерованы",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "желчь",
+        "desired": "1. желчь; \n2. смелость, храбрость (перен.)"
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 ёт орун\n2.1 ётю болгъан адам",
+        "desired": "1.1 1. ёт орун\n1.2 2. ётю болгъан адам",
+        "current_plain": [
+          "ёт орун",
+          "ётю болгъан адам"
+        ],
+        "desired_plain": [
+          "1. ёт орун",
+          "2. ётю болгъан адам"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B129",
+    "word_id": "1011",
+    "global_order": 1011,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "бегитирге",
+    "confidence": "high",
+    "margin": 0.440934,
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 чюй бла бегитирге прибить",
+        "desired": "1.1 чюй бла бегитирге",
+        "current_plain": [
+          "чюй бла бегитирге прибить"
+        ],
+        "desired_plain": [
+          "чюй бла бегитирге"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 забить гвоздём",
+        "desired": "1.1 прибить, забить гвоздём",
+        "current_plain": [
+          "забить гвоздём"
+        ],
+        "desired_plain": [
+          "прибить, забить гвоздём"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B131",
+    "word_id": "1013",
+    "global_order": 1013,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "улургъа",
+    "confidence": "high",
+    "margin": 0.371144,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 ветер воет\n1.2 мы улсышали вой собаки",
+        "desired": "1.1 ветер воет\n1.2 мы услышали вой собаки",
+        "current_plain": [
+          "ветер воет",
+          "мы улсышали вой собаки"
+        ],
+        "desired_plain": [
+          "ветер воет",
+          "мы услышали вой собаки"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B152",
+    "word_id": "1034",
+    "global_order": 1034,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "гунч",
+    "confidence": "high",
+    "margin": 0.578066,
+    "legacy_comment": "Исправлено разделение примера и перевода; убраны вспомогательные слова; сохранена историческая помета",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 гунч этерге стереть кого",
+        "desired": "1.1 гунч этерге",
+        "current_plain": [
+          "гунч этерге стереть кого"
+        ],
+        "desired_plain": [
+          "гунч этерге"
+        ]
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 что лица земли, опустошить что (как гунны)",
+        "desired": "1.1 стереть с лица земли, опустошить (как гунны - ист.)",
+        "current_plain": [
+          "что лица земли, опустошить что (как гунны)"
+        ],
+        "desired_plain": [
+          "стереть с лица земли, опустошить (как гунны - ист.)"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B154",
+    "word_id": "1036",
+    "global_order": 1036,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "къонгурау",
+    "confidence": "high",
+    "margin": 0.479862,
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къонгурау зынгырдайды\n1.2 къонгурай къаргъаргъа",
+        "desired": "1.1 къонгурау зынгырдайды\n1.2 къонгурау къаргъаргъа",
+        "current_plain": [
+          "къонгурау зынгырдайды",
+          "къонгурай къаргъаргъа"
+        ],
+        "desired_plain": [
+          "къонгурау зынгырдайды",
+          "къонгурау къаргъаргъа"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B173",
+    "word_id": "1055",
+    "global_order": 1055,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "сингерге",
+    "confidence": "high",
+    "margin": 0.36326,
+    "legacy_comment": "В примере восстановлена пропущенная начальная буква",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 суу җерге сингиб бошагъанды\n1.2 ууукъ мени җилигиме дери сингнгенди\n1.3 җангы адетле терк сингиб барадыла\n1.4 ишге сингерге",
+        "desired": "1.1 суу җерге сингиб бошагъанды\n1.2 сууукъ мени җилигиме дери сингнгенди\n1.3 җангы адетле терк сингиб барадыла\n1.4 ишге сингерге",
+        "current_plain": [
+          "суу җерге сингиб бошагъанды",
+          "ууукъ мени җилигиме дери сингнгенди",
+          "җангы адетле терк сингиб барадыла",
+          "ишге сингерге"
+        ],
+        "desired_plain": [
+          "суу җерге сингиб бошагъанды",
+          "сууукъ мени җилигиме дери сингнгенди",
+          "җангы адетле терк сингиб барадыла",
+          "ишге сингерге"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "B174",
+    "word_id": "1056",
+    "global_order": 1056,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "сескекли",
+    "confidence": "high",
+    "margin": 0.431424,
+    "legacy_comment": "Исправлена опечатка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "настороженный, встревожженный",
+        "desired": "настороженный, встревоженный"
+      }
+    ]
+  },
+  {
+    "legacy_id": "B190",
+    "word_id": "1072",
+    "global_order": 1072,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 2,
+    "section_name": "Средний",
+    "set_id": null,
+    "set_name": null,
+    "word": "хат",
+    "confidence": "high",
+    "margin": 0.394869,
+    "legacy_comment": "В русском переводе восстановлена пропущенная буква",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 у него красивый почер",
+        "desired": "1.1 у него красивый почерк",
+        "current_plain": [
+          "у него красивый почер"
+        ],
+        "desired_plain": [
+          "у него красивый почерк"
+        ]
+      }
+    ]
+  }
+]

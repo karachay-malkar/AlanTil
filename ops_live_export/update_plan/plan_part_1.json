@@ -1,0 +1,364 @@
+[
+  {
+    "legacy_id": "A3",
+    "word_id": "0003",
+    "global_order": 3,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "этерге",
+    "confidence": "high",
+    "margin": 0.331233,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 варить обед\n1.2 построить дорогу\n1.3 сложить песню\n1.4 сомневаться\n1.5 предводительство­вать",
+        "desired": "1.1 варить обед\n1.2 построить дорогу\n1.3 сложить песню\n1.4 сомневаться\n1.5 предводительствовать",
+        "current_plain": [
+          "варить обед",
+          "построить дорогу",
+          "сложить песню",
+          "сомневаться",
+          "предводительство­вать"
+        ],
+        "desired_plain": [
+          "варить обед",
+          "построить дорогу",
+          "сложить песню",
+          "сомневаться",
+          "предводительствовать"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A13",
+    "word_id": "0013",
+    "global_order": 13,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къараргъа",
+    "confidence": "high",
+    "margin": 0.303947,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 посмотреть из окна\n1.2 озираться, огля­деться\n1.3 ухаживать за больным\n1.4 следить за скотом",
+        "desired": "1.1 посмотреть из окна\n1.2 озираться, оглядеться\n1.3 ухаживать за больным\n1.4 следить за скотом",
+        "current_plain": [
+          "посмотреть из окна",
+          "озираться, огля­деться",
+          "ухаживать за больным",
+          "следить за скотом"
+        ],
+        "desired_plain": [
+          "посмотреть из окна",
+          "озираться, оглядеться",
+          "ухаживать за больным",
+          "следить за скотом"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A16",
+    "word_id": "0016",
+    "global_order": 16,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къалыргъа",
+    "confidence": "high",
+    "margin": 0.307764,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 четыре места остались свобод­ными\n1.2 уснуть\n1.3 попасть в беду",
+        "desired": "1.1 четыре места остались свободными\n1.2 уснуть\n1.3 попасть в беду",
+        "current_plain": [
+          "четыре места остались свобод­ными",
+          "уснуть",
+          "попасть в беду"
+        ],
+        "desired_plain": [
+          "четыре места остались свободными",
+          "уснуть",
+          "попасть в беду"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A24",
+    "word_id": "0024",
+    "global_order": 24,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ал",
+    "confidence": "high",
+    "margin": 0.435433,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 передняя нога\n1.2 фасад дома\n1.3 читай стих с начала!\n1.4 вступи­тельное слово",
+        "desired": "1.1 передняя нога\n1.2 фасад дома\n1.3 читай стих с начала!\n1.4 вступительное слово",
+        "current_plain": [
+          "передняя нога",
+          "фасад дома",
+          "читай стих с начала!",
+          "вступи­тельное слово"
+        ],
+        "desired_plain": [
+          "передняя нога",
+          "фасад дома",
+          "читай стих с начала!",
+          "вступительное слово"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A26",
+    "word_id": "0026",
+    "global_order": 26,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "къол",
+    "confidence": "high",
+    "margin": 0.393884,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "1. рука, кисть; \n2. балка, долина, ущелье (неболь­шое)",
+        "desired": "1. рука, кисть; \n2. балка, долина, ущелье (небольшое)"
+      },
+      {
+        "target": "content_word_texts",
+        "language_code": "alan",
+        "script_code": "cyrillic",
+        "column": "phrases_text",
+        "current": "1.1 къол бла этилген\n1.2 къол тирмен\n2.1 нызылы къол",
+        "desired": "1.1 1. къол бла этилген\n1.2 къол тирмен\n1.3 2. нызылы къол",
+        "current_plain": [
+          "къол бла этилген",
+          "къол тирмен",
+          "нызылы къол"
+        ],
+        "desired_plain": [
+          "1. къол бла этилген",
+          "къол тирмен",
+          "2. нызылы къол"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A28",
+    "word_id": "0028",
+    "global_order": 28,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "кёз",
+    "confidence": "high",
+    "margin": 0.500597,
+    "legacy_comment": "Удалён скрытый перенос внутри слова",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 открыть глаза\n1.2 ушко иголки\n1.3 отверстие в окон­ной раме для стекла",
+        "desired": "1.1 открыть глаза\n1.2 ушко иголки\n1.3 отверстие в оконной раме для стекла",
+        "current_plain": [
+          "открыть глаза",
+          "ушко иголки",
+          "отверстие в окон­ной раме для стекла"
+        ],
+        "desired_plain": [
+          "открыть глаза",
+          "ушко иголки",
+          "отверстие в оконной раме для стекла"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A45",
+    "word_id": "0045",
+    "global_order": 45,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "җетерге",
+    "confidence": "high",
+    "margin": 0.327925,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 я еле добрался до дому\n1.2 ты меня не достанешь\n1.3 для этой работы ему не хватаем опыта",
+        "desired": "1.1 я еле добрался до дому\n1.2 ты меня не достанешь\n1.3 для этой работы ему не хватает опыта",
+        "current_plain": [
+          "я еле добрался до дому",
+          "ты меня не достанешь",
+          "для этой работы ему не хватаем опыта"
+        ],
+        "desired_plain": [
+          "я еле добрался до дому",
+          "ты меня не достанешь",
+          "для этой работы ему не хватает опыта"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A49",
+    "word_id": "0049",
+    "global_order": 49,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ат",
+    "confidence": "high",
+    "margin": 0.355994,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "phrases_text",
+        "current": "1.1 меня зоут Бонд… Джеймс Бонд",
+        "desired": "1.1 меня зовут Бонд… Джеймс Бонд",
+        "current_plain": [
+          "меня зоут Бонд… Джеймс Бонд"
+        ],
+        "desired_plain": [
+          "меня зовут Бонд… Джеймс Бонд"
+        ]
+      }
+    ]
+  },
+  {
+    "legacy_id": "A55",
+    "word_id": "0055",
+    "global_order": 55,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "ич",
+    "confidence": "high",
+    "margin": 0.564707,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "внутреность, середина",
+        "desired": "внутренность, середина"
+      }
+    ]
+  },
+  {
+    "legacy_id": "A81",
+    "word_id": "0081",
+    "global_order": 81,
+    "story_id": 1,
+    "story_name": "Возвращение к истокам",
+    "dictionary_id": 1,
+    "dictionary_name": "Основа языка",
+    "section_id": 1,
+    "section_name": "Легкий",
+    "set_id": null,
+    "set_name": null,
+    "word": "тюб",
+    "confidence": "high",
+    "margin": 0.457676,
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе",
+    "changes": [
+      {
+        "target": "content_word_texts",
+        "language_code": "ru",
+        "script_code": "",
+        "column": "translation_text",
+        "current": "низ, дно, оносвание",
+        "desired": "низ, дно, основание"
+      }
+    ]
+  }
+]

@@ -1,0 +1,1053 @@
+[
+  {
+    "legacy_id": "A3",
+    "word_id": "0003",
+    "word": "этерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A13",
+    "word_id": "0013",
+    "word": "къараргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A16",
+    "word_id": "0016",
+    "word": "къалыргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A24",
+    "word_id": "0024",
+    "word": "ал",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A26",
+    "word_id": "0026",
+    "word": "къол",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.translation_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A28",
+    "word_id": "0028",
+    "word": "кёз",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A45",
+    "word_id": "0045",
+    "word": "җетерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A49",
+    "word_id": "0049",
+    "word": "ат",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A55",
+    "word_id": "0055",
+    "word": "ич",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A81",
+    "word_id": "0081",
+    "word": "тюб",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A95",
+    "word_id": "0095",
+    "word": "акъыл",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A151",
+    "word_id": "0150",
+    "word": "къайгъы",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A157",
+    "word_id": "0156",
+    "word": "ара",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A158",
+    "word_id": "0157",
+    "word": "къысаргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A225",
+    "word_id": "0224",
+    "word": "къарыу",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A238",
+    "word_id": "0237",
+    "word": "айыб",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A286",
+    "word_id": "0285",
+    "word": "багъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A288",
+    "word_id": "0287",
+    "word": "хата",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A295",
+    "word_id": "0294",
+    "word": "җабаргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A302",
+    "word_id": "0301",
+    "word": "юренирге / юйренирге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A304",
+    "word_id": "0303",
+    "word": "къураргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A335",
+    "word_id": "0334",
+    "word": "җау",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A337",
+    "word_id": "0336",
+    "word": "юйюр",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A345",
+    "word_id": "0344",
+    "word": "ачы",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A362",
+    "word_id": "0361",
+    "word": "җаяргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A365",
+    "word_id": "0364",
+    "word": "тёзерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A381",
+    "word_id": "0380",
+    "word": "уу",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A437",
+    "word_id": "0436",
+    "word": "къоюн",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A441",
+    "word_id": "0439",
+    "word": "сыфат",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A462",
+    "word_id": "0460",
+    "word": "теберге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A524",
+    "word_id": "0522",
+    "word": "җаулукъ",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A538",
+    "word_id": "0536",
+    "word": "сыгъаргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Переносное значение оформлено пометой после соответствующего перевода"
+  },
+  {
+    "legacy_id": "A546",
+    "word_id": "0544",
+    "word": "къобуз",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A590",
+    "word_id": "0588",
+    "word": "асыраргъа",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A602",
+    "word_id": "0600",
+    "word": "чурукъ",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A603",
+    "word_id": "0601",
+    "word": "бишерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A659",
+    "word_id": "0657",
+    "word": "байрам",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A662",
+    "word_id": "0660",
+    "word": "хоншу / къоншу",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A671",
+    "word_id": "0669",
+    "word": "тик",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A672",
+    "word_id": "0670",
+    "word": "къолтукъ",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A690",
+    "word_id": "0688",
+    "word": "азаб",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A709",
+    "word_id": "0709",
+    "word": "къаршчы",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A716",
+    "word_id": "0716",
+    "word": "къолан",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A723",
+    "word_id": "0723",
+    "word": "анча",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A733",
+    "word_id": "0733",
+    "word": "абыныргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A743",
+    "word_id": "0743",
+    "word": "мюйюз",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A747",
+    "word_id": "0747",
+    "word": "чырай",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A756",
+    "word_id": "0756",
+    "word": "керох",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A762",
+    "word_id": "0762",
+    "word": "къозгъаргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A766",
+    "word_id": "0766",
+    "word": "ёпкелеу, кёлкъалды, гурушха",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "A781",
+    "word_id": "0781",
+    "word": "алам",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A784",
+    "word_id": "0784",
+    "word": "шиндик",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "A797",
+    "word_id": "0797",
+    "word": "җукъа",
+    "confidence": "medium",
+    "change_count": 3,
+    "changed_columns": [
+      "content_word_texts.translation_text",
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная буква; добавлены недостающие значения и примеры из словаря"
+  },
+  {
+    "legacy_id": "A803",
+    "word_id": "0804",
+    "word": "чёргерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A804",
+    "word_id": "0805",
+    "word": "чартларгъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A809",
+    "word_id": "0810",
+    "word": "ингичге / иничге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A818",
+    "word_id": "0819",
+    "word": "адаргы / адыргы",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A825",
+    "word_id": "0826",
+    "word": "тюйме",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "A842",
+    "word_id": "0843",
+    "word": "саркъаргъа",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог"
+  },
+  {
+    "legacy_id": "A847",
+    "word_id": "0848",
+    "word": "чууакъ",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "A860",
+    "word_id": "0861",
+    "word": "аргъы",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B1",
+    "word_id": "0882",
+    "word": "шоркъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B2",
+    "word_id": "0883",
+    "word": "маҗал",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B4",
+    "word_id": "0885",
+    "word": "ауана",
+    "confidence": "high",
+    "change_count": 0,
+    "changed_columns": [],
+    "legacy_comment": "Добавлена группа синонимов «тень»"
+  },
+  {
+    "legacy_id": "B21",
+    "word_id": "0902",
+    "word": "къыяма",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B22",
+    "word_id": "0903",
+    "word": "ычхыныргъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B36",
+    "word_id": "0917",
+    "word": "тюгел",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалено русское слово, ошибочно попавшее в карачаево-балкарскую часть примера"
+  },
+  {
+    "legacy_id": "B42",
+    "word_id": "0923",
+    "word": "къармаргъа",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалена лишняя буква в карачаево-балкарском примере; Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B53",
+    "word_id": "0934",
+    "word": "тигелерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "В русском переводе восстановлен пропущенный предлог"
+  },
+  {
+    "legacy_id": "B54",
+    "word_id": "0935",
+    "word": "сериуюн",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B83",
+    "word_id": "0964",
+    "word": "гыбыт",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B103",
+    "word_id": "0984",
+    "word": "кеф",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B106",
+    "word_id": "0987",
+    "word": "таймай",
+    "confidence": "high",
+    "change_count": 3,
+    "changed_columns": [
+      "content_word_texts.translation_text",
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалены значения и примеры слова «таймаздан»; добавлена общая группа синонимов"
+  },
+  {
+    "legacy_id": "B316",
+    "word_id": "0988",
+    "word": "таймаздан",
+    "confidence": "high",
+    "change_count": 0,
+    "changed_columns": [],
+    "legacy_comment": "Выделено из строки «таймай» в отдельную карточку; добавлена общая группа синонимов"
+  },
+  {
+    "legacy_id": "B113",
+    "word_id": "0995",
+    "word": "ауа",
+    "confidence": "high",
+    "change_count": 0,
+    "changed_columns": [],
+    "legacy_comment": "Добавлена группа синонимов «тень»"
+  },
+  {
+    "legacy_id": "B118",
+    "word_id": "1000",
+    "word": "ёт",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.translation_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Добавлено переносное значение; значения пронумерованы"
+  },
+  {
+    "legacy_id": "B129",
+    "word_id": "1011",
+    "word": "бегитирге",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  },
+  {
+    "legacy_id": "B131",
+    "word_id": "1013",
+    "word": "улургъа",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B152",
+    "word_id": "1034",
+    "word": "гунч",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено разделение примера и перевода; убраны вспомогательные слова; сохранена историческая помета"
+  },
+  {
+    "legacy_id": "B154",
+    "word_id": "1036",
+    "word": "къонгурау",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B173",
+    "word_id": "1055",
+    "word": "сингерге",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "В примере восстановлена пропущенная начальная буква"
+  },
+  {
+    "legacy_id": "B174",
+    "word_id": "1056",
+    "word": "сескекли",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.translation_text"
+    ],
+    "legacy_comment": "Исправлена опечатка в русском переводе"
+  },
+  {
+    "legacy_id": "B190",
+    "word_id": "1072",
+    "word": "хат",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "В русском переводе восстановлена пропущенная буква"
+  },
+  {
+    "legacy_id": "B196",
+    "word_id": "1078",
+    "word": "аралатыргъа",
+    "confidence": "high",
+    "change_count": 3,
+    "changed_columns": [
+      "content_word_texts.translation_text",
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Добавлены пропущенные значения и пример из словаря; значения пронумерованы"
+  },
+  {
+    "legacy_id": "B198",
+    "word_id": "1080",
+    "word": "айланч",
+    "confidence": "high",
+    "change_count": 0,
+    "changed_columns": [],
+    "legacy_comment": "Слово «айланма» выделено в отдельную строку"
+  },
+  {
+    "legacy_id": "B317",
+    "word_id": "1081",
+    "word": "айланма",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Выделено из строки «айланч, айланма» в отдельную карточку; добавлены значения из словаря; для значения «водоворот, омут, пучина» пример в источнике отсутствует"
+  },
+  {
+    "legacy_id": "B202",
+    "word_id": "1085",
+    "word": "мюкюл",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B203",
+    "word_id": "1086",
+    "word": "къагъанакъ",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена пропущенная или лишняя буква в карачаево-балкарском примере"
+  },
+  {
+    "legacy_id": "B255",
+    "word_id": "1138",
+    "word": "къаст",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Удалён скрытый перенос внутри слова"
+  },
+  {
+    "legacy_id": "B265",
+    "word_id": "1148",
+    "word": "зауаллы",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B294",
+    "word_id": "1177",
+    "word": "җенг",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B309",
+    "word_id": "1192",
+    "word": "къаза",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "B313",
+    "word_id": "1196",
+    "word": "чакъгъыч",
+    "confidence": "high",
+    "change_count": 1,
+    "changed_columns": [
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлена опечатка или грамматическая ошибка в русском переводе"
+  },
+  {
+    "legacy_id": "T449",
+    "word_id": "2208",
+    "word": "къошун",
+    "confidence": "high",
+    "change_count": 2,
+    "changed_columns": [
+      "content_word_texts.phrases_text",
+      "content_word_texts.phrases_text"
+    ],
+    "legacy_comment": "Исправлено ошибочное разделение карачаево-балкарского примера и русского перевода"
+  }
+]
