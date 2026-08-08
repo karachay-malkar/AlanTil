@@ -1,14 +1,14 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
-import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { getWords } from "../../shared/data/word-repository.js?v=13.12";
+import { dictsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.12";
 import { createSlugMap } from "../../shared/domain/slugs.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
-import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.9.0";
+import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.12";
 import { renderResults } from "./results.js?v=13.9.0";
-import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.9.0";
+import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.12";
 import { finalizeLearnSession, renderStudy } from "./study.js?v=13.9.0";
 
 let controller = null;
@@ -19,17 +19,12 @@ function resolveDictionary(words, slug) {
   return createSlugMap(dictsFrom(words), { reserved: ["favorites"] }).valueFor(slug);
 }
 
-function resolveSection(words, dict, slug) {
-  if (!slug || dict === "__fav__") return dict === "__fav__" ? msg("learn.izbrannoe") : "";
-  return createSlugMap(sectionsFrom(words, dict)).valueFor(slug);
-}
-
-function resolveSet(words, dict, section, slug) {
-  if (dict === "__fav__") return 1;
+function resolveSet(words, dict, slug) {
+  if (dict === "__fav__") return "favorites";
   if (!slug) return null;
-  const sets = setsFrom(words, dict, section);
+  const sets = setsFrom(words, dict);
   const value = createSlugMap(sets.map(String)).valueFor(slug);
-  return sets.find((setNumber) => String(setNumber) === String(value)) ?? null;
+  return sets.find((setId) => String(setId) === String(value)) ?? null;
 }
 
 function applyRouteState(words, params, requestedScreen) {
@@ -45,40 +40,32 @@ function applyRouteState(words, params, requestedScreen) {
 
   if (!learnState.currentDict) return null;
   if (learnState.currentDict === "__fav__") {
-    learnState.currentSection = msg("learn.izbrannoe");
-    learnState.currentSet = 1;
+    learnState.currentSection = "__fav__";
+    learnState.currentSet = "favorites";
     if (screen === "sections") screen = "set";
     return screen;
   }
 
-  if (params.sectionSlug) {
-    const section = resolveSection(words, learnState.currentDict, params.sectionSlug);
-    if (!section) return null;
-    learnState.currentSection = section;
-  } else if (screen === "sections" || screen === "catalog-content") {
-    learnState.currentSection = "";
-  }
+  // There is no content section level in 13.12. The current router may carry
+  // a middle compatibility segment, but application state points directly at
+  // the dictionary.
+  learnState.currentSection = learnState.currentDict;
 
   if (["set", "study", "results"].includes(screen)) {
-    const setNumber = resolveSet(words, learnState.currentDict, learnState.currentSection, params.setSlug);
-    if (setNumber === null) return null;
-    learnState.currentSet = setNumber;
+    const setId = resolveSet(words, learnState.currentDict, params.setSlug);
+    if (setId === null) return null;
+    learnState.currentSet = setId;
   }
   return screen;
 }
 
 function trackNavigation(screen) {
-  if (screen === "sections" && learnState.currentSection) {
-    trackEvent(EVENTS.SECTION_OPEN, {
-      dictionary_id: learnState.currentDict,
-      section_id: learnState.currentSection,
-    });
-  } else if (screen === "sections" || screen === "catalog-content") {
+  if (screen === "sections" || screen === "catalog-content") {
     trackEvent(EVENTS.DICTIONARY_OPEN, { dictionary_id: learnState.currentDict });
   } else if (screen === "set") {
     trackEvent(EVENTS.SET_OPEN, {
       dictionary_id: learnState.currentDict,
-      section_id: learnState.currentSection,
+      section_id: learnState.currentDict,
       set_id: String(learnState.currentSet),
     });
   }
