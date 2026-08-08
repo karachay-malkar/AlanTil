@@ -1,0 +1,43 @@
+name: Repack correction diff in small transfer chunks
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/repack-diff-small.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+      - name: Repack
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64,gzip,hashlib,json
+          from pathlib import Path
+          src=Path('ops_final_bundle/word_corrections_diff.json')
+          data=src.read_bytes(); b64=base64.b64encode(gzip.compress(data,9)).decode('ascii')
+          out=Path('ops_final_bundle/transfer_small'); out.mkdir(exist_ok=True)
+          size=3000
+          chunks=[b64[i:i+size] for i in range(0,len(b64),size)]
+          for p in out.glob('diff_*.b64'): p.unlink()
+          for i,ch in enumerate(chunks,1): (out/f'diff_{i:02d}.b64').write_text(ch,encoding='ascii')
+          (out/'manifest.json').write_text(json.dumps({'chunks':len(chunks),'sha256':hashlib.sha256(data).hexdigest(),'raw_bytes':len(data),'base64_chars':len(b64)},indent=2),encoding='utf-8')
+          PY
+      - name: Commit transfer chunks
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_final_bundle/transfer_small
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: repack correction diff in small chunks"
+          git push origin HEAD:ops/word-sync-2026-08-08
