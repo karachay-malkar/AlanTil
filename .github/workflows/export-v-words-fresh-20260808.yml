@@ -1,0 +1,77 @@
+name: Export fresh AlanTil words
+
+on:
+  push:
+    branches: ["ops/word-sync-2026-08-08"]
+    paths:
+      - ".github/workflows/export-v-words-fresh-20260808.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "ops/word-sync-2026-08-08"
+      - name: Export v_words_app
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, gzip, hashlib, json, re, urllib.parse, urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          cfg = Path('src/config/supabase.js').read_text(encoding='utf-8')
+          url = re.search(r'supabaseUrl\s*=\s*"([^"]+)"', cfg).group(1)
+          key = re.search(r'supabasePublishableKey\s*=\s*"([^"]+)"', cfg).group(1)
+          headers = {'apikey': key, 'Authorization': f'Bearer {key}'}
+          rows = []
+          for offset in (0, 1000, 2000):
+              query = urllib.parse.urlencode({'select':'*','order':'global_order.asc','limit':'1000','offset':str(offset)})
+              req = urllib.request.Request(f'{url}/rest/v1/v_words_app?{query}', headers=headers)
+              with urllib.request.urlopen(req, timeout=30) as resp:
+                  part = json.load(resp)
+              rows.extend(part)
+              if len(part) < 1000:
+                  break
+
+          out = Path('ops_live_export/fresh_20260808')
+          out.mkdir(parents=True, exist_ok=True)
+          raw = json.dumps(rows, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+          gz = gzip.compress(raw, compresslevel=9)
+          b64 = base64.b64encode(gz).decode('ascii')
+          chunk_size = 40000
+          chunks = [b64[i:i+chunk_size] for i in range(0, len(b64), chunk_size)]
+          for i, chunk in enumerate(chunks, 1):
+              (out / f'v_words_{i:02d}.b64').write_text(chunk, encoding='utf-8')
+
+          check_ids = {'0003','0013','0016','0024','0026','0028','0156','0237','0285','0301','0334','0344','0361','0364','0436','0522','0588','0601','0657','0660','0669','0688','0721','0731','0801','0802','0807','0816','0826','0859','0882','0883','0923','1138'}
+          soft = []
+          for r in rows:
+              if r.get('word_id') in check_ids:
+                  for k in ('word_alan_cyrillic','word_alan_turkic','translation_ru','phrases_alan_cyrillic','phrases_alan_turkic','phrases_ru'):
+                      if '\u00ad' in str(r.get(k) or ''):
+                          soft.append({'word_id':r['word_id'],'field':k})
+          manifest = {
+              'exported_at_utc': datetime.now(timezone.utc).isoformat(),
+              'rows': len(rows),
+              'raw_bytes': len(raw),
+              'gzip_bytes': len(gz),
+              'sha256': hashlib.sha256(raw).hexdigest(),
+              'chunks': len(chunks),
+              'soft_hyphen_hits_in_probe_ids': soft,
+          }
+          (out / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+      - name: Commit export
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/fresh_20260808
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: export fresh v_words_app 2026-08-08"
+          git push origin HEAD:ops/word-sync-2026-08-08
