@@ -1,0 +1,251 @@
+name: Compare corrected word rows with current Supabase
+
+on:
+  push:
+    branches:
+      - ops/word-sync-2026-08-08
+    paths:
+      - .github/workflows/compare-word-corrections.yml
+
+permissions:
+  contents: write
+
+env:
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/word-sync-2026-08-08
+
+      - name: Compare corrected values and inspect safe write paths
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import gzip
+          import hashlib
+          import json
+          import os
+          import re
+          import urllib.parse
+          import urllib.request
+          from difflib import SequenceMatcher
+          from pathlib import Path
+
+          root = Path("ops_live_export/comparison")
+          root.mkdir(parents=True, exist_ok=True)
+
+          packed = Path("ops_source/corrected_rows_11_07_26.json.gz.b64").read_text(encoding="utf-8").strip()
+          legacy_raw = gzip.decompress(base64.b64decode(packed))
+          source_sha = hashlib.sha256(legacy_raw).hexdigest()
+          expected_sha = "80ca3458b636248562fb54aa1bf2b9b123e802d62d4c921faa0ef139eed2352d"
+          if source_sha != expected_sha:
+              raise SystemExit(f"Legacy correction source checksum mismatch: {source_sha}")
+          legacy = json.loads(legacy_raw.decode("utf-8"))
+          current = json.loads(Path("ops_live_export/content_words_ru.json").read_text(encoding="utf-8"))
+          by_order = {int(r["global_order"]): r for r in current}
+
+          def norm_text(value):
+              if value is None:
+                  return ""
+              return str(value).replace("\r\n", "\n").replace("\r", "\n").strip()
+
+          def as_list(value):
+              if value is None:
+                  return []
+              if isinstance(value, list):
+                  return [norm_text(x) for x in value if norm_text(x)]
+              if isinstance(value, tuple):
+                  return [norm_text(x) for x in value if norm_text(x)]
+              s = norm_text(value)
+              if not s:
+                  return []
+              if s.startswith("["):
+                  try:
+                      parsed = json.loads(s)
+                      if isinstance(parsed, list):
+                          return [norm_text(x) for x in parsed if norm_text(x)]
+                  except Exception:
+                      pass
+              return [norm_text(x) for x in s.split(";") if norm_text(x)]
+
+          def parse_legacy_examples(text):
+              text = norm_text(text)
+              if not text:
+                  return [], []
+              chunks = [x.strip() for x in text.split(";")]
+              pairs = []
+              for chunk in chunks:
+                  if "✦" in chunk:
+                      a, ru = chunk.split("✦", 1)
+                      pairs.append([a.strip(), ru.strip()])
+                  elif chunk and pairs:
+                      pairs[-1][1] = (pairs[-1][1] + "; " + chunk).strip()
+                  elif chunk:
+                      pairs.append([chunk, ""])
+              return [p[0] for p in pairs if p[0]], [p[1] for p in pairs if p[1]]
+
+          def canon_syn(value):
+              if value is None:
+                  return []
+              if isinstance(value, list):
+                  vals = value
+              else:
+                  s = norm_text(value)
+                  if not s:
+                      return []
+                  if s.startswith("["):
+                      try:
+                          vals = json.loads(s)
+                          if not isinstance(vals, list):
+                              vals = [s]
+                      except Exception:
+                          vals = re.split(r"[,;]", s)
+                  else:
+                      vals = re.split(r"[,;]", s)
+              return [norm_text(x) for x in vals if norm_text(x)]
+
+          diffs = []
+          rows_report = []
+          risky = []
+          for old in legacy:
+              seq = int(old["seq"])
+              cur = by_order.get(seq)
+              if cur is None:
+                  risky.append({"legacy_id": old["legacy_id"], "seq": seq, "reason": "missing global_order"})
+                  continue
+
+              desired_ph_a, desired_ph_ru = parse_legacy_examples(old.get("example"))
+              cur_word = norm_text(cur.get("word_alan_cyrillic") or cur.get("word"))
+              desired_word = norm_text(old.get("word"))
+              similarity = SequenceMatcher(None, cur_word, desired_word).ratio() if cur_word or desired_word else 1.0
+              exact_elsewhere = [int(r["global_order"]) for r in current if norm_text(r.get("word_alan_cyrillic") or r.get("word")) == desired_word and int(r["global_order"]) != seq]
+              if similarity < 0.55 and exact_elsewhere:
+                  risky.append({
+                      "legacy_id": old["legacy_id"], "seq": seq,
+                      "reason": "word mismatch and desired word exists at another global_order",
+                      "desired_word": desired_word, "current_word": cur_word,
+                      "other_orders": exact_elsewhere,
+                  })
+
+              checks = [
+                  ("word_alan_cyrillic", cur_word, desired_word),
+                  ("translation_ru", norm_text(cur.get("translation_ru") or cur.get("translation")), norm_text(old.get("trans"))),
+                  ("pos", norm_text(cur.get("pos")), norm_text(old.get("pos"))),
+                  ("synonyms", canon_syn(cur.get("synonyms")), canon_syn(old.get("synonyms"))),
+                  ("phrases_alan_cyrillic", as_list(cur.get("phrases_alan_cyrillic")), desired_ph_a),
+                  ("phrases_ru", as_list(cur.get("phrases_ru")), desired_ph_ru),
+              ]
+              row_diffs = []
+              for field, current_value, desired_value in checks:
+                  if current_value != desired_value:
+                      item = {
+                          "legacy_id": old["legacy_id"],
+                          "global_order": seq,
+                          "word_id": cur.get("word_id"),
+                          "story_id": cur.get("story_id"),
+                          "story_name": cur.get("story_name"),
+                          "dictionary_id": cur.get("dictionary_id"),
+                          "dictionary_name": cur.get("dictionary_name"),
+                          "section_id": cur.get("section_id"),
+                          "section_name": cur.get("section_name"),
+                          "set_id": cur.get("set_id"),
+                          "set_name": cur.get("set_name"),
+                          "field": field,
+                          "current": current_value,
+                          "desired": desired_value,
+                          "legacy_comment": old.get("comment"),
+                      }
+                      diffs.append(item)
+                      row_diffs.append(item)
+              rows_report.append({
+                  "legacy_id": old["legacy_id"],
+                  "global_order": seq,
+                  "word_id": cur.get("word_id"),
+                  "current_word": cur_word,
+                  "desired_word": desired_word,
+                  "word_similarity": similarity,
+                  "word_alan_turkic": cur.get("word_alan_turkic"),
+                  "legacy_comment": old.get("comment"),
+                  "diff_fields": [d["field"] for d in row_diffs],
+              })
+
+          changed_rows = sorted({d["legacy_id"] for d in diffs})
+          field_counts = {}
+          for d in diffs:
+              field_counts[d["field"]] = field_counts.get(d["field"], 0) + 1
+
+          summary = {
+              "legacy_source_sha256": source_sha,
+              "legacy_marked_rows": len(legacy),
+              "current_rows": len(current),
+              "matched_by_global_order": len(rows_report),
+              "risky_matches": len(risky),
+              "changed_rows": len(changed_rows),
+              "changed_fields": len(diffs),
+              "field_counts": field_counts,
+              "already_equal_rows": len(rows_report) - len(changed_rows),
+          }
+          (root / "comparison_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+          (root / "risky_matches.json").write_text(json.dumps(risky, ensure_ascii=False, indent=2), encoding="utf-8")
+          (root / "row_status.json").write_text(json.dumps(rows_report, ensure_ascii=False, indent=2), encoding="utf-8")
+          for idx in range(0, len(diffs), 20):
+              (root / f"diff_part_{idx//20+1}.json").write_text(json.dumps(diffs[idx:idx+20], ensure_ascii=False, indent=2), encoding="utf-8")
+
+          secret_presence = {
+              "SUPABASE_SERVICE_ROLE_KEY": bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+              "SUPABASE_SECRET_KEY": bool(os.getenv("SUPABASE_SECRET_KEY")),
+              "SUPABASE_ACCESS_TOKEN": bool(os.getenv("SUPABASE_ACCESS_TOKEN")),
+              "SUPABASE_DB_PASSWORD": bool(os.getenv("SUPABASE_DB_PASSWORD")),
+              "SUPABASE_DB_URL": bool(os.getenv("SUPABASE_DB_URL")),
+          }
+          (root / "secret_presence.json").write_text(json.dumps(secret_presence, indent=2), encoding="utf-8")
+
+          base = "https://pybrzgedqjmosbmilcea.supabase.co/rest/v1"
+          public_key = "sb_publishable_11TY-fBEAogA9JKnAku3vg_hjRxTa_a"
+          secret_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_SECRET_KEY") or ""
+          candidates = [
+              "words", "word_languages", "word_translations", "word_localizations",
+              "content_words", "content_word_languages", "dictionary_words",
+              "stories", "dictionaries", "sections", "sets"
+          ]
+
+          def probe(relation, key):
+              params = urllib.parse.urlencode({"select": "*", "limit": "1"})
+              req = urllib.request.Request(f"{base}/{relation}?{params}", headers={"apikey": key, "Accept": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=20) as resp:
+                      body = resp.read().decode("utf-8", errors="replace")
+                      return {"status": resp.status, "body_prefix": body[:500]}
+              except Exception as exc:
+                  body = ""
+                  if hasattr(exc, "read"):
+                      try:
+                          body = exc.read().decode("utf-8", errors="replace")
+                      except Exception:
+                          pass
+                  return {"status": getattr(exc, "code", 0) or 0, "body_prefix": body[:500], "error": str(exc)}
+
+          probes = {"public": {name: probe(name, public_key) for name in candidates}}
+          if secret_key:
+              probes["service"] = {name: probe(name, secret_key) for name in candidates}
+          (root / "relation_probes.json").write_text(json.dumps(probes, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+
+      - name: Commit comparison report
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ops_live_export/comparison
+          git diff --cached --quiet && exit 0
+          git commit -m "ops: compare legacy corrections with current Supabase"
+          git push origin HEAD:ops/word-sync-2026-08-08
