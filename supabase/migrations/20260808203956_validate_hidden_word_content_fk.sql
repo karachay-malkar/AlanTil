@@ -1,0 +1,1 @@
+alter table public.user_hidden_words validate constraint user_hidden_words_content_word_fk;
