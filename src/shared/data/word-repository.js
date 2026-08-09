@@ -11,7 +11,7 @@ import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=
 import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=13.10.2";
 import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.13";
 import { getUserSettings } from "../settings/user-settings-store.js?v=13.12";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-normalizer.js?v=13.13";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=13.15";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 
 const PAGE_SIZE = 1000;
