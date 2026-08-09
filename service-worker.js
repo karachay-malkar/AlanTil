@@ -1,26 +1,17 @@
-const VERSION = "13.14";
+const VERSION = "13.15";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.14",
-  "/src/shared/styles/app.css?v=13.14",
+  "/src/app/bootstrap.js?v=13.15",
+  "/src/shared/styles/app.css?v=13.15",
   "/src/features/onboarding/index.js?v=13.10.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
-  "/assets/images/profile/avatar_male.png?v=13.11",
-  "/assets/images/profile/avatar_female.png?v=13.11",
 ];
-
-const MODULE_REWRITES = new Map([
-  ["/src/features/path/index.js", "/src/features/path/entry-13-14.js?v=13.14"],
-  ["/src/features/learn/index.js", "/src/features/learn/entry-13-14.js?v=13.14"],
-  ["/src/features/settings/index.js", "/src/features/settings/entry-13-14.js?v=13.14"],
-  ["/src/shared/domain/word-normalizer.js", "/src/shared/domain/word-normalizer-13-14.js?v=13.14"],
-]);
 
 const NETWORK_FIRST_PATHS = new Set([
   "/src/config/analytics.js",
@@ -29,6 +20,7 @@ const NETWORK_FIRST_PATHS = new Set([
   "/src/features/profile/index.js",
   "/src/shared/data/word-repository.js",
   "/src/shared/domain/alan-display.js",
+  "/src/shared/domain/word-structure-compat.js",
   "/src/shared/domain/word-normalizer.js",
   "/src/shared/i18n/index.js",
   "/src/shared/progress/progress-queue.js",
@@ -50,19 +42,35 @@ self.addEventListener("activate", (event) => {
     const staleAlanTilCaches = names.filter((name) => name.startsWith("alantil-") && ![SHELL_CACHE, RUNTIME_CACHE].includes(name));
     await Promise.all(staleAlanTilCaches.map((name) => caches.delete(name)));
     await self.clients.claim();
-    const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    await Promise.allSettled(clients.map((client) => client.navigate(client.url)));
   })());
 });
+
+async function freshIndexResponse() {
+  try {
+    const response = await fetch("/index.html", { cache: "no-store", credentials: "same-origin" });
+    if (response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      await cache.put("/index.html", response.clone());
+      return response;
+    }
+  } catch {
+    // Fall through to the cached shell.
+  }
+  return (await caches.match("/index.html")) || (await caches.match("/")) || Response.error();
+}
 
 async function navigationResponse(request) {
   try {
     const response = await fetch(request, { cache: "no-store" });
-    const cache = await caches.open(RUNTIME_CACHE);
-    cache.put(request, response.clone());
+    if (response.ok) {
+      const cache = await caches.open(RUNTIME_CACHE);
+      await cache.put(request, response.clone());
+      return response;
+    }
+    if (response.status === 404) return freshIndexResponse();
     return response;
   } catch {
-    return (await caches.match(request)) || (await caches.match("/index.html")) || (await caches.match("/"));
+    return (await caches.match(request)) || freshIndexResponse();
   }
 }
 
@@ -71,27 +79,11 @@ async function networkFirstStaticResponse(request) {
     const response = await fetch(request, { cache: "no-store" });
     if (response.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   } catch {
     return (await caches.match(request)) || Response.error();
-  }
-}
-
-async function rewrittenModuleResponse(targetPath) {
-  const target = new URL(targetPath, self.location.origin);
-  try {
-    const response = await fetch(target.toString(), {
-      cache: "no-store",
-      credentials: "same-origin",
-    });
-    if (!response.ok) return response;
-    const cache = await caches.open(RUNTIME_CACHE);
-    cache.put(target.toString(), response.clone());
-    return response;
-  } catch {
-    return (await caches.match(target.toString())) || Response.error();
   }
 }
 
@@ -100,7 +92,7 @@ async function staticResponse(request) {
   const network = fetch(request).then(async (response) => {
     if (response.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   }).catch(() => null);
@@ -116,12 +108,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
-
-  const rewrite = MODULE_REWRITES.get(url.pathname);
-  if (rewrite && url.searchParams.get("base") !== "1") {
-    event.respondWith(rewrittenModuleResponse(rewrite));
-    return;
-  }
 
   if (url.pathname.startsWith("/src/shared/auth/")
       || url.pathname.startsWith("/src/shared/settings/")
