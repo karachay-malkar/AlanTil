@@ -1,0 +1,374 @@
+name: Apply AlanTil 13.14 client refactor
+
+on:
+  push:
+    branches: ["13.14"]
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "13.14"
+      - name: Apply reviewed 13.14 changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          def read(path): return Path(path).read_text(encoding='utf-8')
+          def write(path, text): Path(path).write_text(text, encoding='utf-8')
+          def replace_once(path, old, new):
+              text=read(path)
+              if old not in text:
+                  raise SystemExit(f'pattern missing in {path}: {old[:100]}')
+              write(path,text.replace(old,new,1))
+
+          # ----- Canonical 13.14 legacy/offline structure normalization -----
+          path='src/shared/domain/word-normalizer.js'
+          text=read(path)
+          thematic='''const THEMATIC_SECTION_BY_SET = Object.freeze({
+            "universe-01": "universe",
+            "universe-02": "universe",
+            "universe-03": "universe",
+            "universe-04": "universe",
+            "universe-05": "universe",
+            "animals-01": "animals",
+            "animals-02": "animals",
+            "animals-03": "animals",
+            "animals-04": "animals",
+            "animals-05": "animals",
+            "animals-06": "animals",
+            "animals-07": "animals",
+            "animals-08": "animals",
+            "natural_materials-01": "natural_materials",
+            "natural_materials-02": "natural_materials",
+            "natural_materials-03": "natural_materials",
+            "natural_materials-04": "natural_materials",
+            "natural_materials-05": "natural_materials",
+            "plants-01": "plants",
+            "plants-02": "plants",
+            "plants-03": "plants",
+            "plants-04": "plants",
+            "plants-05": "plants",
+            "plants-06": "plants",
+            "plants-07": "plants",
+          });'''
+          text,n=re.subn(r'const THEMATIC_SECTION_BY_SET = Object\.freeze\(\{.*?\n\}\);',thematic,text,count=1,flags=re.S)
+          if n!=1: raise SystemExit('THEMATIC_SECTION_BY_SET replacement failed')
+          text=text.replace('''  if (dictionary === "advanced") return ordinal > 0 && ordinal <= 10 ? "advanced-advanced" : "advanced-proficiency";
+            return THEMATIC_SECTION_BY_SET[set] || "";''','''  if (dictionary === "advanced") return ordinal > 0 && ordinal <= 10 ? "advanced-advanced" : "advanced-proficiency";
+            if (dictionary === "thematic") return THEMATIC_SECTION_BY_SET[set] || "";
+            if (["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return dictionary;
+            return "";''')
+          text=text.replace('''  if (["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return "pathways";''','''  if (dictionary === "thematic" || ["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return "pathways";''')
+          dict_block='''const LEGACY_DICTIONARY_NAMES_RU = Object.freeze({
+            beginner: "Начальный",
+            intermediate: "Средний",
+            advanced: "Продвинутый",
+            thematic: "Тематические слова",
+          });'''
+          text,n=re.subn(r'const LEGACY_DICTIONARY_NAMES_RU = Object\.freeze\(\{.*?\n\}\);',dict_block,text,count=1,flags=re.S)
+          if n!=1: raise SystemExit('LEGACY_DICTIONARY_NAMES_RU replacement failed')
+          section_and_sets='''const LEGACY_SECTION_NAMES_RU = Object.freeze({
+            "beginner-starter": "Вводный",
+            "beginner-elementary": "Базовый",
+            "intermediate-intermediate": "Средний",
+            "intermediate-upper-intermediate": "Выше среднего",
+            "advanced-advanced": "Продвинутый",
+            "advanced-proficiency": "Мастер",
+            universe: "Вселенная",
+            animals: "Животные",
+            natural_materials: "Природные материалы",
+            plants: "Растения",
+          });
+
+          const LEGACY_SET_NAMES_RU = Object.freeze({
+            "universe-01": "Времена года",
+            "universe-02": "Месяцы года",
+            "universe-03": "Дни недели",
+            "universe-04": "Космос",
+            "universe-05": "Цвета",
+            "animals-01": "Водная фауна",
+            "animals-02": "Всеядные, травоядные и грызуны",
+            "animals-03": "Домашние животные",
+            "animals-04": "Земноводные и рептилии",
+            "animals-05": "Пауки, черви и насекомые",
+            "animals-06": "Приматы и сумчатые",
+            "animals-07": "Птицы",
+            "animals-08": "Хищники и млекопитающие",
+            "natural_materials-01": "Горные породы",
+            "natural_materials-02": "Металлы",
+            "natural_materials-03": "Минералы",
+            "natural_materials-04": "Неметаллы",
+            "natural_materials-05": "Другие материалы",
+            "plants-01": "Деревья",
+            "plants-02": "Орехи, злаки и бобовые",
+            "plants-03": "Другие растения",
+            "plants-04": "Специи и зелень",
+            "plants-05": "Фрукты, овощи",
+            "plants-06": "Цветы",
+            "plants-07": "Ягоды и кустарники",
+          });'''
+          text,n=re.subn(r'const LEGACY_SECTION_NAMES_RU = Object\.freeze\(\{.*?\n\}\);',section_and_sets,text,count=1,flags=re.S)
+          if n!=1: raise SystemExit('LEGACY_SECTION_NAMES_RU replacement failed')
+          new_scope='''function normalizeLegacyScope(row) {
+            const legacySection = normalizeId(row.section_id || row.group_id || row.section || row.folder);
+            let dictionaryId = normalizeId(row.dictionary_id || row.catalog_id || row.dict);
+            let setId = normalizeId(row.set_id || row.set);
+            const dictionaryBySection = {
+              "1": "beginner",
+              "2": "intermediate",
+              "3": "advanced",
+              "4": "universe",
+              "5": "animals",
+              "6": "natural_materials",
+              "7": "plants",
+            };
+            if (dictionaryBySection[legacySection]) dictionaryId = dictionaryBySection[legacySection];
+            if (!setId && dictionaryId) {
+              const order = numberValue(row.global_order, row.dict_order);
+              const starts = { beginner: 1, intermediate: 882, advanced: 1199 };
+              if (starts[dictionaryId]) {
+                setId = `${dictionaryId}-${String(Math.floor((order - starts[dictionaryId]) / 30) + 1).padStart(2, "0")}`;
+              }
+            } else if (/^\\d+$/.test(setId) && dictionaryId) {
+              const offsets = { universe: 0, animals: 5, natural_materials: 13, plants: 18 };
+              const ordinal = Number(setId) - (offsets[dictionaryId] || 0);
+              if (ordinal > 0) setId = `${dictionaryId}-${String(ordinal).padStart(2, "0")}`;
+            }
+            const thematicSection = ["universe", "animals", "natural_materials", "plants"].includes(dictionaryId)
+              ? dictionaryId
+              : "";
+            if (thematicSection) dictionaryId = "thematic";
+            return {
+              dictionaryId,
+              sectionId: thematicSection || permanentSectionId(dictionaryId, setId),
+              setId,
+            };
+          }'''
+          text,n=re.subn(r'function normalizeLegacyScope\(row\) \{.*?\n\}',new_scope,text,count=1,flags=re.S)
+          if n!=1: raise SystemExit('normalizeLegacyScope replacement failed')
+          text=text.replace('''    setNameRu: "",''','''    setNameRu: LEGACY_SET_NAMES_RU[scope.setId] || "",''',1)
+          write(path,text)
+
+          # ----- Learning route: unnamed level Sets remain visually unnamed -----
+          path='src/shared/domain/learning-route.js'
+          text=read(path)
+          if 'name: set.name || numberLabel,' not in text: raise SystemExit('station name fallback missing')
+          text=text.replace('name: set.name || numberLabel,','name: set.name,\n    fallbackName: set.name || section.name || numberLabel,',1)
+          write(path,text)
+
+          # ----- Path: real Section headings + scroll-discoverable story tabs -----
+          path='src/features/path/index.js'
+          text=read(path)
+          old_station=re.search(r'function stationButton\(station, index, progressSnapshot\) \{.*?\n\}',text,re.S)
+          if not old_station: raise SystemExit('stationButton not found')
+          new_station='''function stationButton(station, index, progressSnapshot) {
+            const status = computedStationStatus(null, station, progressSnapshot);
+            const progress = stationWordProgress(station, progressSnapshot);
+            const ordinal = String(index + 1).padStart(2, "0");
+            const accessibleName = station.fallbackName || station.sectionName || ordinal;
+            const visibleName = String(station.name || "").trim();
+            return `<button
+              id="station-${escapeHtml(station.key)}"
+              class="choiceControl stationNode ${status}"
+              style="--station-progress:${progress.percent * 3.6}deg"
+              type="button"
+              data-station-key="${escapeHtml(station.key)}"
+              aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(accessibleName), mastered: progress.mastered, total: progress.total })}"
+            >
+              <span class="stationProgressRing" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span>
+              ${visibleName ? `<span class="stationLabel">${escapeHtml(visibleName)}</span>` : ""}
+              <span class="stationWordCount">${progress.mastered}/${progress.total}</span>
+              ${stationMilestones(progress)}
+            </button>`;
+          }'''
+          text=text[:old_station.start()]+new_station+text[old_station.end():]
+          old_section='''  return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${section.sectionId}`)}">
+            <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key), progressSnapshot)).join("")}</div>
+          </section>`;'''
+          new_section='''  return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${section.sectionId}`)}">
+            <div class="routeSectionStations">${reversedStations.map((station) => stationButton(station, stationIndex.get(station.key), progressSnapshot)).join("")}</div>
+            ${section.name ? `<h3 class="routeSectionHeading">${escapeHtml(section.name)}</h3>` : ""}
+          </section>`;'''
+          if old_section not in text: raise SystemExit('routeSection body not found')
+          text=text.replace(old_section,new_section,1)
+          marker='''function renderStoryIntro(story) {'''
+          tabs_helper='''function setupStoryTabs(root, signal) {
+            const shell = root.querySelector(".storyTabsShell");
+            const scroller = root.querySelector(".storyTabs");
+            if (!shell || !scroller) return;
+            const active = scroller.querySelector(".storyTab.active");
+            let frame = 0;
+            const sync = () => {
+              frame = 0;
+              const max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+              const scrollable = max > 3;
+              shell.classList.toggle("isScrollable", scrollable);
+              shell.classList.toggle("canScrollStart", scrollable && scroller.scrollLeft > 3);
+              shell.classList.toggle("canScrollEnd", scrollable && scroller.scrollLeft < max - 3);
+            };
+            const schedule = () => {
+              if (frame) return;
+              frame = requestAnimationFrame(sync);
+            };
+            requestAnimationFrame(() => {
+              active?.scrollIntoView({ behavior: "auto", block: "nearest", inline: "center" });
+              sync();
+            });
+            scroller.addEventListener("scroll", schedule, { signal, passive: true });
+            const observer = typeof ResizeObserver === "function" ? new ResizeObserver(schedule) : null;
+            observer?.observe(scroller);
+            signal.addEventListener("abort", () => {
+              if (frame) cancelAnimationFrame(frame);
+              observer?.disconnect();
+            }, { once: true });
+          }
+
+          function renderStoryIntro(story) {'''
+          if marker not in text: raise SystemExit('renderStoryIntro marker missing')
+          text=text.replace(marker,tabs_helper,1)
+          old_tabs='''      <nav class="storyTabs" aria-label="${msg("path.istoriya_puti")}">
+                ${route.storyOrder.map((type) => `<button class="tabAction storyTab ${type === activeStory ? "active" : ""}" type="button" data-story-tab="${escapeHtml(type)}" ${type === activeStory ? 'aria-current="page"' : ""}>[ ${escapeHtml(route.storyLabels[type])} ]</button>`).join("")}
+              </nav>'''
+          new_tabs='''      <div class="storyTabsShell">
+                <nav class="storyTabs" aria-label="${msg("path.istoriya_puti")}">
+                  ${route.storyOrder.map((type) => `<button class="tabAction storyTab ${type === activeStory ? "active" : ""}" type="button" data-story-tab="${escapeHtml(type)}" ${type === activeStory ? 'aria-current="page"' : ""}>[ ${escapeHtml(route.storyLabels[type])} ]</button>`).join("")}
+                </nav>
+              </div>'''
+          if old_tabs not in text: raise SystemExit('storyTabs markup missing')
+          text=text.replace(old_tabs,new_tabs,1)
+          needle='''  context.root.querySelectorAll("[data-story-tab]").forEach((button) => {'''
+          if needle not in text: raise SystemExit('story tab binding marker missing')
+          text=text.replace(needle,'  setupStoryTabs(context.root, controller.signal);\n\n'+needle,1)
+          write(path,text)
+
+          # ----- Responsive story-tab affordance -----
+          path='src/features/path/path.css'
+          text=read(path)
+          start=text.index('.pathStickyControls')
+          end=text.index('.storyProgress')
+          replacement='''.pathStickyControls{position:relative;z-index:var(--z-path-controls);height:58px;padding:0 30px 4px 8px;display:grid;grid-template-rows:32px 22px;background:transparent;border:0}
+          .storyTabsShell{position:relative;min-width:0;height:32px;overflow:hidden}
+          .storyTabsShell::before,.storyTabsShell::after{position:absolute;z-index:3;top:0;width:22px;height:32px;display:grid;place-items:center;color:var(--text-2);font:800 18px/1 var(--font-terminal);pointer-events:none;opacity:0;transition:opacity var(--duration-fast);text-shadow:0 1px 0 var(--path-label-shadow)}
+          .storyTabsShell::before{content:"‹";left:0;background:linear-gradient(90deg,var(--app-bg) 28%,transparent)}
+          .storyTabsShell::after{content:"›";right:0;background:linear-gradient(270deg,var(--app-bg) 28%,transparent)}
+          .storyTabsShell.canScrollStart::before,.storyTabsShell.canScrollEnd::after{opacity:.72}
+          .storyTabs{height:32px;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto;overflow-y:hidden;padding:0 18px;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain}
+          .storyTabs::-webkit-scrollbar{display:none}
+          .storyTab{appearance:none;flex:0 0 auto;max-width:min(78vw,280px);height:32px;padding:1px 5px;border:0;background:transparent;color:var(--text-3);font:700 clamp(10px,3vw,13px)/1.1 var(--font-terminal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;scroll-snap-align:center}
+          .storyTab.active{color:var(--text-1)}.storyTab:not(.active){opacity:.64}.storyTab:active{opacity:.68;transform:translateY(1px)}
+          @media (min-width:760px){.storyTabsShell:not(.isScrollable) .storyTabs{justify-content:center}.storyTab{max-width:360px}.storyTabsShell:not(.isScrollable)::before,.storyTabsShell:not(.isScrollable)::after{display:none}}
+          '''
+          text=text[:start]+replacement+text[end:]
+          write(path,text)
+
+          # ----- Learn: named thematic Sets, numeric level Sets -----
+          path='src/features/learn/catalog.js'
+          text=read(path)
+          marker='''function dictionarySlugMap(words) {'''
+          helper='''function setLabel(words, dict, section, setId) {
+            const word = words.find((entry) => String(entry.dictionary_id || "") === String(dict || "")
+              && String(entry.section_id || "") === String(section || "")
+              && String(entry.set_id || "") === String(setId || ""));
+            return String(word?.set_name || "").trim();
+          }
+
+          function dictionarySlugMap(words) {'''
+          if marker not in text: raise SystemExit('learn setLabel marker missing')
+          text=text.replace(marker,helper,1)
+          old='<div class="setTileTitle">${escapeHtml(setNumberLabel(setId))}</div>'
+          new='<div class="setTileTitle">${escapeHtml(setLabel(words, dict, section, setId) || setNumberLabel(setId))}</div>'
+          if old not in text: raise SystemExit('learn set tile title missing')
+          text=text.replace(old,new,1)
+          write(path,text)
+
+          # ----- Settings/router release boundary -----
+          path='src/features/settings/index.js'
+          text=read(path).replace('const SETTINGS_ASSET_VERSION = "13.13";','const SETTINGS_ASSET_VERSION = "13.14";')
+          text=text.replace('msg("settings.versiya_prilozheniya"), "13.13"','msg("settings.versiya_prilozheniya"), "13.14"')
+          write(path,text)
+
+          path='src/app/router.js'
+          text=read(path)
+          block=re.search(r'const FEATURE_LOADERS = \{.*?\n\};',text,re.S)
+          if not block: raise SystemExit('FEATURE_LOADERS missing')
+          loaders='''const FEATURE_LOADERS = {
+            practice: () => import("../features/practice/index.js?v=13.14"),
+            path: () => import("../features/path/index.js?v=13.14"),
+            profile: () => import("../features/profile/index.js?v=13.14"),
+            learn: () => import("../features/learn/index.js?v=13.14"),
+            test: () => import("../features/test/index.js?v=13.14"),
+            match: () => import("../features/match/index.js?v=13.14"),
+            songs: () => import("../features/songs/index.js?v=13.14"),
+            account: () => import("../features/account/index.js?v=13.14"),
+            settings: () => import("../features/settings/index.js?v=13.14"),
+          };'''
+          text=text[:block.start()]+loaders+text[block.end():]
+          text=text.replace('../features/settings/index.js?v=13.13&retry=', '../features/settings/index.js?v=13.14&retry=')
+          write(path,text)
+
+          # Force changed dictionary/display modules to fresh URLs.
+          for path in ['src/shared/data/word-repository.js','src/features/path/index.js','src/features/learn/catalog.js']:
+              text=read(path)
+              text=text.replace('?v=13.13','?v=13.14')
+              write(path,text)
+
+          # App CSS must actually request the changed Path stylesheet.
+          path='src/shared/styles/app.css'
+          text=read(path).replace('../../features/path/path.css?v=13.10.12','../../features/path/path.css?v=13.14')
+          text=text.replace('../../features/path/story-intro.css?v=13.13','../../features/path/story-intro.css?v=13.14')
+          write(path,text)
+
+          # Service worker: new release = new shell/runtime cache and forced old-cache eviction.
+          path='service-worker.js'
+          text=read(path).replace('const VERSION = "13.13";','const VERSION = "13.14";')
+          text=text.replace('/src/app/bootstrap.js?v=13.13','/src/app/bootstrap.js?v=13.14')
+          text=text.replace('/src/shared/styles/app.css?v=13.13','/src/shared/styles/app.css?v=13.14')
+          write(path,text)
+
+          # Import map: every historical singleton alias resolves to one 13.14 instance.
+          path='index.html'
+          html=read(path)
+          match=re.search(r'(<script type="importmap">\s*)(\{[\s\S]*?\})(\s*</script>)',html)
+          if not match: raise SystemExit('importmap missing')
+          data=json.loads(match.group(2))
+          imports=data.setdefault('imports',{})
+          targets=set()
+          for key,value in list(imports.items()):
+              if isinstance(value,str) and value.startswith('/src/'):
+                  base=value.split('?',1)[0]
+                  target=f'{base}?v=13.14'
+                  imports[key]=target
+                  targets.add(target)
+          for target in targets:
+              imports[target]=target
+          rewritten=json.dumps(data,ensure_ascii=False,indent=4)
+          html=html[:match.start()]+match.group(1)+rewritten+match.group(3)+html[match.end():]
+          html=html.replace('/src/shared/styles/app.css?v=13.13','/src/shared/styles/app.css?v=13.14')
+          html=html.replace('/src/app/bootstrap.js?v=13.13','/src/app/bootstrap.js?v=13.14')
+          write(path,html)
+
+          # Existing tests that intentionally lock release/version behavior move to 13.14.
+          for path in Path('tests').glob('*.test.mjs'):
+              text=path.read_text(encoding='utf-8')
+              text=text.replace('13.13 is the published application version','13.14 is the published application version')
+              text=text.replace('one 13.13 module instance','one 13.14 module instance')
+              text=text.replace('13.13 release','13.14 release')
+              text=text.replace('resolves to one 13.13 module instance','resolves to one 13.14 module instance')
+              text=text.replace('?v=13.13"', '?v=13.14"')
+              text=text.replace('appVersion = "13.13"','appVersion = "13.14"')
+              path.write_text(text,encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html service-worker.js src tests
+          git commit -m '13.14 refactor thematic navigation and release cache boundary'
+          git push origin HEAD:13.14
