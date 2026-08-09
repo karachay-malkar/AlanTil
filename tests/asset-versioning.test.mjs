@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const RELEASE_URL_VERSION = "13.13";
+const SINGLETON_URL_VERSION = "13.13";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -61,16 +61,39 @@ function importMapFrom(index) {
   return JSON.parse(index.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1] || "{}").imports || {};
 }
 
-test("13.13 is the published application version", async () => {
+test("13.14 is the published application and cache release", async () => {
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
-  const index = await read("index.html");
+  const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
-  assert.match(analytics, /appVersion = "13\.13"/);
-  assert.match(versionScreen, /<dd>13\.13<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.13"/);
-  assert.match(index, /app\.css\?v=13\.13/);
-  assert.match(index, /bootstrap\.js\?v=13\.13/);
+  const wordsConfig = await read("src/config/words.js");
+  assert.match(analytics, /appVersion = "13\.14"/);
+  assert.match(versionScreen, /<dd>13\.14<\/dd>/);
+  assert.match(worker, /const VERSION = "13\.14"/);
+  assert.match(bootstrap, /service-worker\.js\?v=13\.14/);
+  assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
+  assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
+});
+
+test("13.14 feature entries are enforced by the service worker without duplicating base modules", async () => {
+  const worker = await read("service-worker.js");
+  assert.match(worker, /features\/path\/entry-13-14\.js\?v=13\.14/);
+  assert.match(worker, /features\/learn\/entry-13-14\.js\?v=13\.14/);
+  assert.match(worker, /features\/settings\/entry-13-14\.js\?v=13\.14/);
+  assert.match(worker, /word-normalizer-13-14\.js\?v=13\.14/);
+  assert.match(worker, /url\.searchParams\.get\("base"\) !== "1"/);
+});
+
+test("Settings dependencies are refreshed through one canonical shared-module identity", async () => {
+  const settings = await read("src/features/settings/index.js");
+  const worker = await read("service-worker.js");
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "13\.14"/);
+  assert.match(settings, /word-repository\.js\?v=13\.13/);
+  assert.match(settings, /auth-service\.js\?v=13\.13/);
+  assert.match(settings, /user-settings-store\.js\?v=13\.13/);
+  assert.match(worker, /url\.pathname\.startsWith\("\/src\/shared\/settings\/"\)/);
+  assert.match(worker, /"\/src\/shared\/data\/word-repository\.js"/);
+  assert.match(worker, /"\/src\/shared\/progress\/progress-sync\.js"/);
 });
 
 test("profile keeps both 13.11 PNG character assets and the locked silhouette", async () => {
@@ -90,15 +113,19 @@ test("profile keeps both 13.11 PNG character assets and the locked silhouette", 
   assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
-test("every singleton module has a canonical 13.13 import-map target", async () => {
+test("historical singleton URLs still canonicalize to one 13.13 in-memory instance", async () => {
   const index = await read("index.html");
   const importMap = importMapFrom(index);
+  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13"];
   for (const path of singletonPaths) {
     assert.equal(importMap[`${path}?v=13.13`], `${path}?v=13.13`, `missing canonical alias for ${path}`);
+    for (const version of versions) {
+      assert.equal(importMap[`${path}?v=${version}`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing ${path} alias for ${version}`);
+    }
   }
 });
 
-test("every current singleton import resolves to one 13.13 module instance", async () => {
+test("current singleton imports do not create a second state instance", async () => {
   const index = await read("index.html");
   const importMap = importMapFrom(index);
   const stateful = new Set(singletonPaths);
@@ -106,6 +133,7 @@ test("every current singleton import resolves to one 13.13 module instance", asy
     const source = await readFile(file, "utf8");
     for (const match of source.matchAll(/(?:from\s*|import\s*\()(["'])([^"']+\?v=[^"']+)\1/g)) {
       const specifier = match[2];
+      if (specifier.includes("base=1")) continue;
       const [pathPart, query = ""] = specifier.split("?");
       const absolutePath = pathPart.startsWith("/")
         ? pathPart
@@ -113,7 +141,7 @@ test("every current singleton import resolves to one 13.13 module instance", asy
       if (!stateful.has(absolutePath)) continue;
       const absoluteSpecifier = `${absolutePath}?${query}`;
       const resolved = importMap[absoluteSpecifier] || absoluteSpecifier;
-      assert.equal(resolved, `${absolutePath}?v=${RELEASE_URL_VERSION}`, `${file} imports a second ${absoluteSpecifier} instance`);
+      assert.equal(resolved, `${absolutePath}?v=${SINGLETON_URL_VERSION}`, `${file} imports a second ${absoluteSpecifier} instance`);
     }
   }
 });
@@ -124,17 +152,6 @@ test("auth SDK is not part of the guest critical path", async () => {
   assert.doesNotMatch(index, /modulepreload[^>]+supabase-js/);
   const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
   assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
-});
-
-test("historical singleton URLs canonicalize to the 13.13 release", async () => {
-  const index = await read("index.html");
-  const importMap = importMapFrom(index);
-  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13"];
-  for (const path of singletonPaths) {
-    for (const version of versions) {
-      assert.equal(importMap[`${path}?v=${version}`], `${path}?v=13.13`, `missing ${path} alias for ${version}`);
-    }
-  }
 });
 
 test("shared display helpers keep their required dependencies", async () => {
