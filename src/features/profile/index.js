@@ -6,7 +6,6 @@ import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=
 import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.9.0";
 import { activitySummary } from "../../shared/progress/activity-history-store.js?v=13.9.0";
 import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=13.9.0";
-import { getStationSize } from "../../shared/settings/user-settings-store.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
@@ -75,7 +74,7 @@ function storyProgressRows(route, path) {
 async function loadStoryProgress() {
   try {
     const words = await getWords();
-    const route = buildLearningRoute(words, { stationSize: getStationSize() });
+    const route = buildLearningRoute(words);
     return { route, path: dictionaryPathProgress(route) };
   } catch (error) {
     console.warn("profile: story progress is temporarily unavailable", error);
@@ -156,8 +155,6 @@ async function renderStatus(context, auth, profile) {
 function renderSkills(context, auth, profile) {
   const primaryNavigation = setProfileHeaderNavigation(context, "profile");
   const locked = !auth.user || !profile?.avatar_gender;
-  // TODO(avatar-skills): replace this placeholder with a multilingual table that maps
-  // skill names to parts of speech or set_id values. Do not hardcode skill taxonomy here.
   const body = locked
     ? `<div class="profileLockedState profileSkillsLocked"><span class="profileLockedIcon">${uiIcon("locked")}</span><strong>${msg("profile.navyki_nedostupny")}</strong><span>${msg("profile.snachala_voydite_i_nastroyte_avatar")}</span></div>`
     : `<div class="profileFutureFeature"><strong>${msg("profile.navyki_2")}</strong><span>${msg("profile.pozzhe_etot_razdel_budet_podklyuchen_iz_otdelnoy")}</span></div>`;
@@ -173,7 +170,7 @@ async function renderStatistics(context) {
   let body = "";
   try {
     const words = await getWords();
-    const route = buildLearningRoute(words, { stationSize: getStationSize() });
+    const route = buildLearningRoute(words);
     const path = dictionaryPathProgress(route);
     const mastery = allWordMasterySummary(words);
     const activity = activitySummary();
@@ -218,17 +215,16 @@ async function loadProfile(auth) {
   }
 }
 
-export async function mount(context, params = {}) {
-  controller = new AbortController();
-  const auth = getCurrentAuthState();
-  const profile = await loadProfile(auth);
-  const screen = params.screen || "home";
+function renderProfileLoading(context, screen = "home") {
+  const primaryNavigation = setProfileHeaderNavigation(context, "profile");
+  context.root.innerHTML = `<section class="view screen profileView">
+    ${primaryNavigation}
+    ${subNavigation(screen === "skills" ? "skills" : "status")}
+    <div class="profileScroll"><div class="loadingState">${msg("common.otkryvaem")}</div></div>
+  </section>`;
+}
 
-  if (screen === "statistics") await renderStatistics(context);
-  else if (screen === "skills") renderSkills(context, auth, profile);
-  else await renderStatus(context, auth, profile);
-
-  const signal = controller.signal;
+function bindProfileActions(context, auth, signal) {
   bindProfileNavigation(context, signal);
   bindLocalNavigation(context, signal);
   context.root.querySelectorAll("[data-profile-story]").forEach((button) => {
@@ -253,6 +249,37 @@ export async function mount(context, params = {}) {
         choices.forEach((choice) => { if (choice.isConnected) choice.disabled = false; });
       }
     }, { signal });
+  });
+}
+
+export async function mount(context, params = {}) {
+  controller = new AbortController();
+  const signal = controller.signal;
+  const auth = getCurrentAuthState();
+  const screen = params.screen || "home";
+
+  if (screen === "statistics") {
+    await renderStatistics(context);
+    if (!signal.aborted) bindProfileNavigation(context, signal);
+    return;
+  }
+
+  if (!auth.user) {
+    if (screen === "skills") renderSkills(context, auth, null);
+    else await renderStatus(context, auth, null);
+    if (!signal.aborted) bindProfileActions(context, auth, signal);
+    return;
+  }
+
+  renderProfileLoading(context, screen);
+  bindProfileNavigation(context, signal);
+  bindLocalNavigation(context, signal);
+  void loadProfile(auth).then(async (profile) => {
+    if (signal.aborted) return;
+    if (screen === "skills") renderSkills(context, auth, profile);
+    else await renderStatus(context, auth, profile);
+    if (signal.aborted) return;
+    bindProfileActions(context, auth, signal);
   });
 }
 
