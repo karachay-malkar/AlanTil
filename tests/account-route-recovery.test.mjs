@@ -1,22 +1,30 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const source = (relativePath) => readFile(path.join(root, relativePath), "utf8");
+const source = (relativePath) => readFile(new URL(`../${relativePath}`, import.meta.url), "utf8");
 
-test("a restored authenticated account URL is canonicalized before router startup", async () => {
+test("authenticated account URLs remain valid direct routes", async () => {
   const index = await source("index.html");
-  assert.match(index, /location\.pathname === "\/profile\/account"/);
-  assert.match(index, /localStorage\.getItem\("alantil_auth_session_v1"\)/);
-  assert.match(index, /history\.replaceState\(null, "", "\/profile"\)/);
-  assert.ok(index.indexOf('localStorage.getItem("alantil_auth_session_v1")') < index.indexOf('<script type="module"'));
+  const router = await source("src/app/router.js");
+  assert.doesNotMatch(index, /location\.pathname === "\/profile\/account"[\s\S]*?history\.replaceState\(null, "", "\/profile"\)/);
+  assert.match(router, /second === "account"\) return \{ route: "account\.home"/);
+  assert.match(router, /routeName === "account\.home"\) return "\/profile\/account"/);
 });
 
-test("OAuth callback routing is excluded from restored-tab recovery", async () => {
-  const index = await source("index.html");
-  assert.match(index, /const callbackKeys = \["code", "error", "error_code", "error_description"\]/);
-  assert.match(index, /if \(!callbackVisit/);
+test("GitHub Pages deep links are restored without requiring sessionStorage", async () => {
+  const fallback = await source("404.html");
+  const bootstrap = await source("src/app/bootstrap.js");
+  assert.match(fallback, /__alantil_route/);
+  assert.match(fallback, /searchParams\.set\("__alantil_route", target\)/);
+  assert.doesNotMatch(fallback, /sessionStorage/);
+  assert.match(bootstrap, /restoreFallbackRoute\(\)/);
+  assert.ok(bootstrap.indexOf("restoreFallbackRoute();") < bootstrap.indexOf("normalizeInitialLearningPath();"));
+});
+
+test("OAuth callback detection remains independent from deep-link recovery", async () => {
+  const bootstrap = await source("src/app/bootstrap.js");
+  assert.match(bootstrap, /hasAuthCallback\(\)/);
+  assert.match(bootstrap, /window\.location\.pathname === "\/auth\/callback"/);
+  assert.match(bootstrap, /if \(callbackVisit\) await authInitialization/);
 });
