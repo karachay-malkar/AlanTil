@@ -8,13 +8,10 @@
 <body>
   <script>
     (() => {
-      const originalPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      try {
-        sessionStorage.setItem("alantil_spa_path", originalPath);
-      } catch {
-        // The redirect still opens the SPA even when storage is restricted.
-      }
-      window.location.replace("/");
+      const target = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const redirect = new URL("/", window.location.origin);
+      redirect.searchParams.set("__alantil_route", target);
+      window.location.replace(redirect.toString());
     })();
   </script>
 </body>
