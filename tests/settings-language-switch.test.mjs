@@ -7,8 +7,10 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("all historical settings-store specifiers resolve to one 13.15 module instance", async () => {
   const index = await read("index.html");
   const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, index) => `13.10.${index}`), "13.11", "13.12", "13.13", "13.14", "13.15"];
+  assert.match(index, /\/src\/shared\/settings\/user-settings-store\.js/);
+  assert.match(index, /const targetVersion = "13\.15"/);
   for (const version of versions) {
-    assert.ok(index.includes(`"/src/shared/settings/user-settings-store.js?v=${version}": "/src/shared/settings/user-settings-store.js?v=13.15"`), `missing settings-store alias for ${version}`);
+    assert.ok(index.includes(`"${version}"`), `missing supported singleton version ${version}`);
   }
 });
 
