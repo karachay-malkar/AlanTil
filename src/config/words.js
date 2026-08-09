@@ -1,9 +1,10 @@
-export const DICTIONARY_CACHE_KEY = "alantil_dictionary_cache_v4";
+export const DICTIONARY_CACHE_KEY = "alantil_dictionary_cache_v5";
 export const LEGACY_DICTIONARY_CACHE_KEYS = Object.freeze([
   "fc_words_cache_v30",
   "alantil_dictionary_cache_v1",
   "alantil_dictionary_cache_v2",
   "alantil_dictionary_cache_v3",
+  "alantil_dictionary_cache_v4",
 ]);
 export const DICTIONARY_METADATA_TABLE = "dictionary_metadata";
 export const DICTIONARY_CONTENT_TABLE = "v_words_app";
