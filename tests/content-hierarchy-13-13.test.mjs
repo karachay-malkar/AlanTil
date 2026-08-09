@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("13.13 content source exposes the real hierarchy", async () => {
+test("13.13 hierarchy foundation remains intact", async () => {
   const config = await read("src/config/words.js");
   const normalizer = await read("src/shared/domain/word-normalizer.js");
   const selection = await read("src/shared/domain/word-selection.js");
@@ -32,13 +32,12 @@ test("Test and Match stop scope selection at Section and retain 20 40 80", async
   assert.match(matchEngine, /\[20, 40, 80\]\.includes/);
 });
 
-test("Settings has no station-size concept and is loaded as 13.13", async () => {
+test("Settings has no station-size concept and uses the 13.14 release boundary", async () => {
   const settings = await read("src/features/settings/index.js");
-  const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
   assert.doesNotMatch(settings, /station_size|getStationSize|stationSize/);
-  assert.match(settings, /SETTINGS_ASSET_VERSION = "13\.13"/);
-  assert.match(router, /features\/settings\/index\.js\?v=13\.13/);
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "13\.14"/);
+  assert.match(worker, /features\/settings\/entry-13-14\.js\?v=13\.14/);
   assert.match(worker, /url\.pathname\.startsWith\("\/src\/features\/settings\/"\)/);
 });
 
@@ -51,7 +50,7 @@ test("missing structure names never fall back to internal IDs", async () => {
   assert.match(learnCatalog, /setNumberLabel/);
 });
 
-test("approved first story and hierarchy counts are locked in the forward migration", async () => {
+test("approved first story and original hierarchy migration remain immutable", async () => {
   const migration = await read("supabase/migrations/20260808230307_restore_content_hierarchy.sql");
   assert.match(migration, /'oblivion','story',null,1/);
   assert.match(migration, /'На пороге забвения'/);
