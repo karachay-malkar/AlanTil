@@ -57,8 +57,15 @@ const singletonPaths = [
   "/src/shared/ui/word-renderers.js",
 ];
 
-function importMapFrom(index) {
-  return JSON.parse(index.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1] || "{}").imports || {};
+function generatedImportMapFrom(index) {
+  const pathSource = index.match(/const singletonPaths = (\[[^;]+\]);/)?.[1] || "[]";
+  const versionSource = index.match(/const versions = (\[[^;]+\]);/)?.[1] || "[]";
+  const targetVersion = index.match(/const targetVersion = "([^"]+)"/)?.[1] || "";
+  const paths = JSON.parse(pathSource);
+  const versions = JSON.parse(versionSource);
+  const imports = {};
+  for (const path of paths) for (const version of versions) imports[`${path}?v=${version}`] = `${path}?v=${targetVersion}`;
+  return { imports, paths, versions, targetVersion };
 }
 
 test("13.15 is the published application and cache release", async () => {
@@ -117,11 +124,15 @@ test("profile keeps character assets but they are lazy and not part of the servi
 
 test("historical singleton URLs canonicalize to one 13.15 in-memory instance", async () => {
   const index = await read("index.html");
-  const importMap = importMapFrom(index);
+  const generated = generatedImportMapFrom(index);
+  const importMap = generated.imports;
   const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13", "13.14", "13.15"];
+  assert.equal(generated.targetVersion, SINGLETON_URL_VERSION);
   for (const path of singletonPaths) {
+    assert.ok(generated.paths.includes(path), `missing singleton path ${path}`);
     assert.equal(importMap[`${path}?v=13.15`], `${path}?v=13.15`, `missing canonical alias for ${path}`);
     for (const version of versions) {
+      assert.ok(generated.versions.includes(version), `missing supported version ${version}`);
       assert.equal(importMap[`${path}?v=${version}`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing ${path} alias for ${version}`);
     }
   }
@@ -129,7 +140,7 @@ test("historical singleton URLs canonicalize to one 13.15 in-memory instance", a
 
 test("current singleton imports do not create a second state instance", async () => {
   const index = await read("index.html");
-  const importMap = importMapFrom(index);
+  const importMap = generatedImportMapFrom(index).imports;
   const stateful = new Set(singletonPaths);
   for (const file of await javascriptFiles(resolve(projectRoot, "src"))) {
     const source = await readFile(file, "utf8");
