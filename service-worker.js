@@ -1,12 +1,12 @@
-const VERSION = "13.13";
+const VERSION = "13.14";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.13",
-  "/src/shared/styles/app.css?v=13.13",
+  "/src/app/bootstrap.js?v=13.14",
+  "/src/shared/styles/app.css?v=13.14",
   "/src/features/onboarding/index.js?v=13.10.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
@@ -14,10 +14,26 @@ const CORE_ASSETS = [
   "/assets/images/profile/avatar_male.png?v=13.11",
   "/assets/images/profile/avatar_female.png?v=13.11",
 ];
+
+const MODULE_REWRITES = new Map([
+  ["/src/features/path/index.js", "/src/features/path/entry-13-14.js?v=13.14"],
+  ["/src/features/learn/index.js", "/src/features/learn/entry-13-14.js?v=13.14"],
+  ["/src/features/settings/index.js", "/src/features/settings/entry-13-14.js?v=13.14"],
+  ["/src/shared/domain/word-normalizer.js", "/src/shared/domain/word-normalizer-13-14.js?v=13.14"],
+]);
+
 const NETWORK_FIRST_PATHS = new Set([
   "/src/config/analytics.js",
   "/src/config/supabase.js",
+  "/src/config/words.js",
   "/src/features/profile/index.js",
+  "/src/shared/data/word-repository.js",
+  "/src/shared/domain/alan-display.js",
+  "/src/shared/domain/word-normalizer.js",
+  "/src/shared/i18n/index.js",
+  "/src/shared/progress/progress-queue.js",
+  "/src/shared/progress/progress-sync.js",
+  "/src/shared/ui/profile-navigation.js",
 ]);
 
 self.addEventListener("install", (event) => {
@@ -66,6 +82,22 @@ async function networkFirstStaticResponse(request) {
   }
 }
 
+async function rewrittenModuleResponse(targetPath) {
+  const target = new URL(targetPath, self.location.origin);
+  try {
+    const response = await fetch(target.toString(), {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (!response.ok) return response;
+    const cache = await caches.open(RUNTIME_CACHE);
+    cache.put(target.toString(), response.clone());
+    return response;
+  } catch {
+    return (await caches.match(target.toString())) || Response.error();
+  }
+}
+
 async function staticResponse(request) {
   const cached = await caches.match(request);
   const network = fetch(request).then(async (response) => {
@@ -88,7 +120,14 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
+  const rewrite = MODULE_REWRITES.get(url.pathname);
+  if (rewrite && url.searchParams.get("base") !== "1") {
+    event.respondWith(rewrittenModuleResponse(rewrite));
+    return;
+  }
+
   if (url.pathname.startsWith("/src/shared/auth/")
+      || url.pathname.startsWith("/src/shared/settings/")
       || url.pathname.startsWith("/src/features/account/")
       || url.pathname.startsWith("/src/features/settings/")
       || NETWORK_FIRST_PATHS.has(url.pathname)) {
