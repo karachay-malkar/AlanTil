@@ -1,5 +1,5 @@
 import * as basePath from "/src/features/path/index.js?v=13.13&base=1";
-import { getWords } from "/src/shared/data/word-repository.js?v=13.14";
+import { getWords } from "/src/shared/data/word-repository.js?v=13.13";
 
 let enhancementController = null;
 let resizeObserver = null;
