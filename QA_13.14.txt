@@ -1,0 +1,534 @@
+TAP version 13
+# Subtest: a restored authenticated account URL is canonicalized before router startup
+ok 1 - a restored authenticated account URL is canonicalized before router startup
+  ---
+  duration_ms: 12.168795
+  type: 'test'
+  ...
+# Subtest: OAuth callback routing is excluded from restored-tab recovery
+ok 2 - OAuth callback routing is excluded from restored-tab recovery
+  ---
+  duration_ms: 3.279944
+  type: 'test'
+  ...
+# Subtest: 13.14 is the published application and cache release
+ok 3 - 13.14 is the published application and cache release
+  ---
+  duration_ms: 8.871802
+  type: 'test'
+  ...
+# Subtest: 13.14 feature entries are enforced by the service worker without duplicating base modules
+ok 4 - 13.14 feature entries are enforced by the service worker without duplicating base modules
+  ---
+  duration_ms: 1.587023
+  type: 'test'
+  ...
+# Subtest: Settings dependencies are refreshed through one canonical shared-module identity
+ok 5 - Settings dependencies are refreshed through one canonical shared-module identity
+  ---
+  duration_ms: 2.401108
+  type: 'test'
+  ...
+# Subtest: profile keeps both 13.11 PNG character assets and the locked silhouette
+ok 6 - profile keeps both 13.11 PNG character assets and the locked silhouette
+  ---
+  duration_ms: 5.935228
+  type: 'test'
+  ...
+# Subtest: historical singleton URLs still canonicalize to one 13.13 in-memory instance
+ok 7 - historical singleton URLs still canonicalize to one 13.13 in-memory instance
+  ---
+  duration_ms: 2.960713
+  type: 'test'
+  ...
+# Subtest: current singleton imports do not create a second state instance
+ok 8 - current singleton imports do not create a second state instance
+  ---
+  duration_ms: 96.331365
+  type: 'test'
+  ...
+# Subtest: auth SDK is not part of the guest critical path
+ok 9 - auth SDK is not part of the guest critical path
+  ---
+  duration_ms: 3.505907
+  type: 'test'
+  ...
+# Subtest: shared display helpers keep their required dependencies
+ok 10 - shared display helpers keep their required dependencies
+  ---
+  duration_ms: 3.487465
+  type: 'test'
+  ...
+# Subtest: settings render local content before checking the remote dictionary version
+ok 11 - settings render local content before checking the remote dictionary version
+  ---
+  duration_ms: 11.610599
+  type: 'test'
+  ...
+# Subtest: dictionary checks are deduplicated and short in foreground
+ok 12 - dictionary checks are deduplicated and short in foreground
+  ---
+  duration_ms: 3.179146
+  type: 'test'
+  ...
+# Subtest: remote feature data has bounded waits
+ok 13 - remote feature data has bounded waits
+  ---
+  duration_ms: 3.265568
+  type: 'test'
+  ...
+# Subtest: song catalog does not eagerly import the player
+ok 14 - song catalog does not eagerly import the player
+  ---
+  duration_ms: 2.232322
+  type: 'test'
+  ...
+# Subtest: 13.13 hierarchy foundation remains intact
+ok 15 - 13.13 hierarchy foundation remains intact
+  ---
+  duration_ms: 11.163051
+  type: 'test'
+  ...
+# Subtest: Test and Match stop scope selection at Section and retain 20 40 80
+ok 16 - Test and Match stop scope selection at Section and retain 20 40 80
+  ---
+  duration_ms: 4.074261
+  type: 'test'
+  ...
+# Subtest: Settings has no station-size concept and uses the 13.14 release boundary
+ok 17 - Settings has no station-size concept and uses the 13.14 release boundary
+  ---
+  duration_ms: 2.290741
+  type: 'test'
+  ...
+# Subtest: missing structure names never fall back to internal IDs
+ok 18 - missing structure names never fall back to internal IDs
+  ---
+  duration_ms: 2.160527
+  type: 'test'
+  ...
+# Subtest: approved first story and original hierarchy migration remain immutable
+ok 19 - approved first story and original hierarchy migration remain immutable
+  ---
+  duration_ms: 1.101043
+  type: 'test'
+  ...
+# Subtest: 13.14 migration creates one thematic dictionary and preserves permanent Set IDs
+ok 20 - 13.14 migration creates one thematic dictionary and preserves permanent Set IDs
+  ---
+  duration_ms: 6.612708
+  type: 'test'
+  ...
+# Subtest: six level sections are localized and the final Russian level is Master
+ok 21 - six level sections are localized and the final Russian level is Master
+  ---
+  duration_ms: 1.543562
+  type: 'test'
+  ...
+# Subtest: Path removes level Set text labels, restores Section headings and exposes horizontal story navigation
+ok 22 - Path removes level Set text labels, restores Section headings and exposes horizontal story navigation
+  ---
+  duration_ms: 1.699294
+  type: 'test'
+  ...
+# Subtest: Learn uses real thematic Set names while leaving unnamed level Sets numeric
+ok 23 - Learn uses real thematic Set names while leaving unnamed level Sets numeric
+  ---
+  duration_ms: 4.183778
+  type: 'test'
+  ...
+# Subtest: cached and starter dictionaries are adapted to the new hierarchy and localization
+ok 24 - cached and starter dictionaries are adapted to the new hierarchy and localization
+  ---
+  duration_ms: 1.462119
+  type: 'test'
+  ...
+# Subtest: oblivion story has interface-language titles without changing the approved Russian intro
+ok 25 - oblivion story has interface-language titles without changing the approved Russian intro
+  ---
+  duration_ms: 1.619534
+  type: 'test'
+  ...
+# Subtest: numbered examples stay attached to their translation meaning
+ok 26 - numbered examples stay attached to their translation meaning
+  ---
+  duration_ms: 3.726501
+  type: 'test'
+  ...
+# Subtest: legacy unnumbered examples remain in the first meaning
+ok 27 - legacy unnumbered examples remain in the first meaning
+  ---
+  duration_ms: 0.390041
+  type: 'test'
+  ...
+# Subtest: guest prompt contains the approved Russian copy
+ok 28 - guest prompt contains the approved Russian copy
+  ---
+  duration_ms: 10.883147
+  type: 'test'
+  ...
+# Subtest: Google is rendered as an immediate local provider button
+ok 29 - Google is rendered as an immediate local provider button
+  ---
+  duration_ms: 1.796145
+  type: 'test'
+  ...
+# Subtest: Google redirect is built locally and does not wait for the Supabase SDK
+ok 30 - Google redirect is built locally and does not wait for the Supabase SDK
+  ---
+  duration_ms: 2.972087
+  type: 'test'
+  ...
+# Subtest: Google OAuth is prepared before the tap and uses synchronous navigation
+ok 31 - Google OAuth is prepared before the tap and uses synchronous navigation
+  ---
+  duration_ms: 1.720343
+  type: 'test'
+  ...
+# Subtest: auth and account modules bypass stale cache
+ok 32 - auth and account modules bypass stale cache
+  ---
+  duration_ms: 1.74526
+  type: 'test'
+  ...
+# Subtest: account screen warms the SDK without blocking the visible login button
+ok 33 - account screen warms the SDK without blocking the visible login button
+  ---
+  duration_ms: 2.213767
+  type: 'test'
+  ...
+# Subtest: Supabase SDK loading has a same-origin fallback
+ok 34 - Supabase SDK loading has a same-origin fallback
+  ---
+  duration_ms: 1.603484
+  type: 'test'
+  ...
+# Subtest: authentication has a bounded callback timeout and no automatic retry loop
+ok 35 - authentication has a bounded callback timeout and no automatic retry loop
+  ---
+  duration_ms: 1.544313
+  type: 'test'
+  ...
+# Subtest: guest action remains available independently of Google
+ok 36 - guest action remains available independently of Google
+  ---
+  duration_ms: 1.397208
+  type: 'test'
+  ...
+# Subtest: guest auth initialization avoids loading Supabase without a saved session
+ok 37 - guest auth initialization avoids loading Supabase without a saved session
+  ---
+  duration_ms: 2.186857
+  type: 'test'
+  ...
+# Subtest: cold start has a local dictionary and public REST uses only apikey
+ok 38 - cold start has a local dictionary and public REST uses only apikey
+  ---
+  duration_ms: 1.585911
+  type: 'test'
+  ...
+# Subtest: service worker caches only the guest shell eagerly
+ok 39 - service worker caches only the guest shell eagerly
+  ---
+  duration_ms: 1.15297
+  type: 'test'
+  ...
+# Subtest: the interface catalogue contains complete RU, EN and TR entries
+ok 40 - the interface catalogue contains complete RU, EN and TR entries
+  ---
+  duration_ms: 6.477113
+  type: 'test'
+  ...
+# Subtest: all literal msg keys used by the application exist in the catalogue
+ok 41 - all literal msg keys used by the application exist in the catalogue
+  ---
+  duration_ms: 82.77587
+  type: 'test'
+  ...
+# Subtest: placeholders remain deterministic without crossing into another language
+ok 42 - placeholders remain deterministic without crossing into another language
+  ---
+  duration_ms: 0.906158
+  type: 'test'
+  ...
+# Subtest: switching the interface language updates the document immediately
+ok 43 - switching the interface language updates the document immediately
+  ---
+  duration_ms: 1.738166
+  type: 'test'
+  ...
+# Subtest: separately imported i18n URLs share the selected language
+ok 44 - separately imported i18n URLs share the selected language
+  ---
+  duration_ms: 4.876866
+  type: 'test'
+  ...
+# Subtest: interface language and Alan script are independent
+ok 45 - interface language and Alan script are independent
+  ---
+  duration_ms: 2.527705
+  type: 'test'
+  ...
+# Subtest: missing Turkish structure text stays blank and never exposes ids or another language
+ok 46 - missing Turkish structure text stays blank and never exposes ids or another language
+  ---
+  duration_ms: 0.56051
+  type: 'test'
+  ...
+# Subtest: navigation queues the latest intent instead of dropping taps
+ok 47 - navigation queues the latest intent instead of dropping taps
+  ---
+  duration_ms: 10.242384
+  type: 'test'
+  ...
+# Subtest: background refresh is coalesced and cannot follow the user to another route
+ok 48 - background refresh is coalesced and cannot follow the user to another route
+  ---
+  duration_ms: 2.810605
+  type: 'test'
+  ...
+# Subtest: account scope becomes visible from local settings before cloud synchronization
+ok 49 - account scope becomes visible from local settings before cloud synchronization
+  ---
+  duration_ms: 3.209963
+  type: 'test'
+  ...
+# Subtest: path rendering reuses dictionary, route and progress snapshots
+ok 50 - path rendering reuses dictionary, route and progress snapshots
+  ---
+  duration_ms: 6.788486
+  type: 'test'
+  ...
+# Subtest: versioned route assets are served cache-first while auth stays network-first
+ok 51 - versioned route assets are served cache-first while auth stays network-first
+  ---
+  duration_ms: 1.422886
+  type: 'test'
+  ...
+# Subtest: onboarding starts with only the multilingual language heading
+ok 52 - onboarding starts with only the multilingual language heading
+  ---
+  duration_ms: 9.433151
+  type: 'test'
+  ...
+# Subtest: onboarding reuses the shared settings segmented controls
+ok 53 - onboarding reuses the shared settings segmented controls
+  ---
+  duration_ms: 2.464938
+  type: 'test'
+  ...
+# Subtest: script controls contain labels only and stay progressively disclosed
+ok 54 - script controls contain labels only and stay progressively disclosed
+  ---
+  duration_ms: 3.09598
+  type: 'test'
+  ...
+# Subtest: preview card is always rendered with real learn-card classes
+ok 55 - preview card is always rendered with real learn-card classes
+  ---
+  duration_ms: 1.174039
+  type: 'test'
+  ...
+# Subtest: continue button uses the standard application button
+ok 56 - continue button uses the standard application button
+  ---
+  duration_ms: 1.632708
+  type: 'test'
+  ...
+# Subtest: content starts below the top chrome and centers when space is available
+ok 57 - content starts below the top chrome and centers when space is available
+  ---
+  duration_ms: 1.292682
+  type: 'test'
+  ...
+# Subtest: first-launch setup is rendered before router startup
+ok 58 - first-launch setup is rendered before router startup
+  ---
+  duration_ms: 9.830225
+  type: 'test'
+  ...
+# Subtest: preview uses the approved ciger example and diamond separator
+ok 59 - preview uses the approved ciger example and diamond separator
+  ---
+  duration_ms: 2.391359
+  type: 'test'
+  ...
+# Subtest: no option is preselected in an empty draft
+ok 60 - no option is preselected in an empty draft
+  ---
+  duration_ms: 1.578777
+  type: 'test'
+  ...
+# Subtest: ordinary settings reuse the learning-card preview and neutral Cyrillic labels
+ok 61 - ordinary settings reuse the learning-card preview and neutral Cyrillic labels
+  ---
+  duration_ms: 3.070161
+  type: 'test'
+  ...
+# Subtest: a failed entry does not hide later settings from the same queue pass
+ok 62 - a failed entry does not hide later settings from the same queue pass
+  ---
+  duration_ms: 1.31343
+  type: 'test'
+  ...
+# Subtest: only obsolete word favorite foreign keys are discarded
+ok 63 - only obsolete word favorite foreign keys are discarded
+  ---
+  duration_ms: 0.30552
+  type: 'test'
+  ...
+# Subtest: scroll positions remain local and never enter the Supabase payload
+ok 64 - scroll positions remain local and never enter the Supabase payload
+  ---
+  duration_ms: 31.457188
+  type: 'test'
+  ...
+# Subtest: session exit phrase follows only Alan script
+ok 65 - session exit phrase follows only Alan script
+  ---
+  duration_ms: 1.103895
+  type: 'test'
+  ...
+# Subtest: modal uses the script-aware phrase helper
+ok 66 - modal uses the script-aware phrase helper
+  ---
+  duration_ms: 5.404624
+  type: 'test'
+  ...
+# Subtest: guest setup replaces only a blank new-account settings entry
+ok 67 - guest setup replaces only a blank new-account settings entry
+  ---
+  duration_ms: 1.143602
+  type: 'test'
+  ...
+# Subtest: existing cloud or pending account settings are not overwritten
+ok 68 - existing cloud or pending account settings are not overwritten
+  ---
+  duration_ms: 0.238617
+  type: 'test'
+  ...
+# Subtest: all historical settings-store specifiers resolve to one 13.13 module instance
+ok 69 - all historical settings-store specifiers resolve to one 13.13 module instance
+  ---
+  duration_ms: 8.652386
+  type: 'test'
+  ...
+# Subtest: settings save applies the selected language before rerender
+ok 70 - settings save applies the selected language before rerender
+  ---
+  duration_ms: 2.112367
+  type: 'test'
+  ...
+# Subtest: startup hides unlocalized content and resolves account settings before routing
+ok 71 - startup hides unlocalized content and resolves account settings before routing
+  ---
+  duration_ms: 4.029318
+  type: 'test'
+  ...
+# Subtest: selected word-content language never falls back to Russian
+ok 72 - selected word-content language never falls back to Russian
+  ---
+  duration_ms: 2.277917
+  type: 'test'
+  ...
+# Subtest: stage test asks every stage word regardless of study checkboxes
+ok 73 - stage test asks every stage word regardless of study checkboxes
+  ---
+  duration_ms: 18.351033
+  type: 'test'
+  ...
+# Subtest: test distractors never fall back to another part of speech
+ok 74 - test distractors never fall back to another part of speech
+  ---
+  duration_ms: 0.561763
+  type: 'test'
+  ...
+# Subtest: stage words are static while only overflowing translations use the marquee
+ok 75 - stage words are static while only overflowing translations use the marquee
+  ---
+  duration_ms: 1.256204
+  type: 'test'
+  ...
+# Subtest: stage rows reserve fixed left-aligned content and action columns
+ok 76 - stage rows reserve fixed left-aligned content and action columns
+  ---
+  duration_ms: 0.369222
+  type: 'test'
+  ...
+# Subtest: every result mode uses one row renderer and one overflow motion
+ok 77 - every result mode uses one row renderer and one overflow motion
+  ---
+  duration_ms: 9.958856
+  type: 'test'
+  ...
+# Subtest: station list and test results share one marquee implementation
+ok 78 - station list and test results share one marquee implementation
+  ---
+  duration_ms: 5.430102
+  type: 'test'
+  ...
+# Subtest: all Cyrillic variants survive storage reload and enter the sync payload
+ok 79 - all Cyrillic variants survive storage reload and enter the sync payload
+  ---
+  duration_ms: 2.420113
+  type: 'test'
+  ...
+# Subtest: supported interface languages survive reload and unsupported values fall back to Russian
+ok 80 - supported interface languages survive reload and unsupported values fall back to Russian
+  ---
+  duration_ms: 0.46486
+  type: 'test'
+  ...
+# Subtest: legacy station_size input is discarded instead of becoming application state
+ok 81 - legacy station_size input is discarded instead of becoming application state
+  ---
+  duration_ms: 0.294643
+  type: 'test'
+  ...
+# Subtest: v_words_app is normalized strictly and keeps both Alan scripts
+ok 82 - v_words_app is normalized strictly and keeps both Alan scripts
+  ---
+  duration_ms: 2.438929
+  type: 'test'
+  ...
+# Subtest: legacy CSV normalization remains separate
+ok 83 - legacy CSV normalization remains separate
+  ---
+  duration_ms: 0.865652
+  type: 'test'
+  ...
+# Subtest: Cyrillic dialect and stored Turkic text share one display layer
+ok 84 - Cyrillic dialect and stored Turkic text share one display layer
+  ---
+  duration_ms: 1.507274
+  type: 'test'
+  ...
+# Subtest: song lookup keeps working when the displayed word uses another script
+ok 85 - song lookup keeps working when the displayed word uses another script
+  ---
+  duration_ms: 10.457018
+  type: 'test'
+  ...
+# Subtest: local progress is idempotent per session and never decreases on cloud merge
+ok 86 - local progress is idempotent per session and never decreases on cloud merge
+  ---
+  duration_ms: 2.024923
+  type: 'test'
+  ...
+# Subtest: only a station test changes mastery and later station errors require review
+ok 87 - only a station test changes mastery and later station errors require review
+  ---
+  duration_ms: 0.451586
+  type: 'test'
+  ...
+1..87
+# tests 87
+# suites 0
+# pass 87
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 766.079088
+
+EXIT_CODE=0
