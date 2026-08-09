@@ -4,17 +4,18 @@ import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 
 const DEFAULT_STORY = "oblivion";
-const FEATURE_LOADERS = {
-  practice: () => import("../features/practice/index.js?v=13.9.0"),
-  path: () => import("../features/path/index.js?v=13.13"),
-  profile: () => import("../features/profile/index.js?v=13.9.0"),
-  learn: () => import("../features/learn/index.js?v=13.13"),
-  test: () => import("../features/test/index.js?v=13.13"),
-  match: () => import("../features/match/index.js?v=13.13"),
-  songs: () => import("../features/songs/index.js?v=13.9.0"),
-  account: () => import("../features/account/index.js?v=13.9.0"),
-  settings: () => import("../features/settings/index.js?v=13.13"),
-};
+const RELEASE_VERSION = "13.15";
+const FEATURE_PATHS = Object.freeze({
+  practice: "../features/practice/index.js",
+  path: "../features/path/feature.js",
+  profile: "../features/profile/index.js",
+  learn: "../features/learn/feature.js",
+  test: "../features/test/index.js",
+  match: "../features/match/index.js",
+  songs: "../features/songs/index.js",
+  account: "../features/account/index.js",
+  settings: "../features/settings/feature.js",
+});
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
 const TITLE_KEY_BY_SCREEN = Object.freeze({
@@ -64,7 +65,7 @@ export function parsePathname(pathname) {
       const params = { storyType, catalogSlug: third, groupSlug: fourth, setSlug: fifth };
       if (sixth === "study") return { route: "path.study", params };
       if (sixth === "test") return { route: "path.test", params };
-      return { route: "path.station", params };
+      if (!sixth) return { route: "path.station", params };
     }
     return { route: "path.home", params: { storyType }, notFound: true };
   }
@@ -83,12 +84,31 @@ export function parsePathname(pathname) {
   }
   if (first === "learn") {
     if (!second) return { route: "learn.catalog", params: {} };
+    if (second === "favorites") {
+      if (!third) return { route: "learn.set", params: { dictionarySlug: "favorites" } };
+      if (third === "study" && !fourth) return { route: "learn.study", params: { dictionarySlug: "favorites" } };
+      if (third === "results" && !fourth) return { route: "learn.results", params: { dictionarySlug: "favorites" } };
+      return { route: "learn.catalog", params: {}, notFound: true };
+    }
+    if (third === "contents" && !fourth) return { route: "learn.catalog-content", params: { dictionarySlug: second } };
     if (!third) return { route: "learn.sections", params: { dictionarySlug: second } };
     if (!fourth) return { route: "learn.sections", params: { dictionarySlug: second, sectionSlug: third } };
-    return { route: "learn.set", params: { dictionarySlug: second, sectionSlug: third, setSlug: fourth } };
+    const params = { dictionarySlug: second, sectionSlug: third, setSlug: fourth };
+    if (!fifth) return { route: "learn.set", params };
+    if (fifth === "study" && !sixth) return { route: "learn.study", params };
+    if (fifth === "results" && !sixth) return { route: "learn.results", params };
+    return { route: "learn.catalog", params: {}, notFound: true };
   }
-  if (first === "test" && !second) return { route: "test.menu", params: {} };
-  if (first === "match" && !second) return { route: "match.menu", params: {} };
+  if (first === "test") {
+    if (!second) return { route: "test.menu", params: {} };
+    if (second === "session" && !third) return { route: "test.session", params: {} };
+    if (second === "results" && !third) return { route: "test.results", params: {} };
+  }
+  if (first === "match") {
+    if (!second) return { route: "match.menu", params: {} };
+    if (second === "game" && !third) return { route: "match.game", params: {} };
+    if (second === "results" && !third) return { route: "match.results", params: {} };
+  }
   if (first === "songs") {
     if (!second) return { route: "songs.playlists", params: {} };
     return { route: "songs.catalog", params: { playlistSlug: second } };
@@ -123,17 +143,23 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "profile.skills") return "/profile/skills";
   if (routeName === "profile.statistics") return "/profile/statistics";
   if (routeName === "learn.catalog") return "/learn";
-  if (["learn.sections", "learn.catalog-content"].includes(routeName)) {
+  if (routeName === "learn.catalog-content") return dictionary ? `/learn/${dictionary}/contents` : "/learn";
+  if (routeName === "learn.sections") {
     if (!dictionary) return "/learn";
     return section ? `/learn/${dictionary}/${section}` : `/learn/${dictionary}`;
   }
   if (["learn.set", "learn.study", "learn.results"].includes(routeName)) {
-    if (dictionary === "favorites") return "/learn/favorites";
-    if (dictionary && section && set) return `/learn/${dictionary}/${section}/${set}`;
+    const suffix = routeName === "learn.study" ? "/study" : routeName === "learn.results" ? "/results" : "";
+    if (dictionary === "favorites") return `/learn/favorites${suffix}`;
+    if (dictionary && section && set) return `/learn/${dictionary}/${section}/${set}${suffix}`;
     return "/learn";
   }
-  if (routeName.startsWith("test.")) return "/test";
-  if (routeName.startsWith("match.")) return "/match";
+  if (routeName === "test.menu") return "/test";
+  if (routeName === "test.session") return "/test/session";
+  if (routeName === "test.results") return "/test/results";
+  if (routeName === "match.menu") return "/match";
+  if (routeName === "match.game") return "/match/game";
+  if (routeName === "match.results") return "/match/results";
   if (routeName === "songs.playlists") return "/songs";
   if (routeName === "songs.catalog") return params.playlistSlug ? `/songs/${encodeSegment(params.playlistSlug)}` : "/songs";
   if (routeName === "songs.song") return params.songId ? `/song/${encodeSegment(params.songId)}` : "/songs";
@@ -205,20 +231,22 @@ export function createRouter({ shell, modal, context }) {
   let activeStartedAt = 0;
   let isDocumentVisible = document.visibilityState !== "hidden";
 
+  async function importFeature(feature, retry = false) {
+    const path = FEATURE_PATHS[feature];
+    if (!path) throw new Error(`Unknown feature: ${feature}`);
+    const suffix = retry ? `&retry=${Date.now()}` : "";
+    return import(`${path}?v=${RELEASE_VERSION}${suffix}`);
+  }
+
   async function loadModule(feature) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);
-    const loader = FEATURE_LOADERS[feature];
-    if (!loader) throw new Error(`Unknown feature: ${feature}`);
-
     try {
-      const module = await loader();
+      const module = await importFeature(feature);
       loadedModules.set(feature, module);
       return module;
     } catch (error) {
-      if (!["settings", "account"].includes(feature)) throw error;
-      const module = feature === "account"
-        ? await import(`../features/account/index.js?v=13.9.0&retry=${Date.now()}`)
-        : await import(`../features/settings/index.js?v=13.13&retry=${Date.now()}`);
+      console.warn(`Feature import retry: ${feature}`, error);
+      const module = await importFeature(feature, true);
       loadedModules.set(feature, module);
       return module;
     }
@@ -426,7 +454,7 @@ export function createRouter({ shell, modal, context }) {
     const options = { historyMode, force, reason, skipLeaveCheck, initial };
     shell.setNavigationPending?.(target.route, true);
     if (navigating) return queueNavigation(target, options);
-    if (!initial && targetsEqual(target, current)) {
+    if (!initial && !force && targetsEqual(target, current)) {
       shell.setNavigationPending?.(target.route, false);
       return true;
     }
