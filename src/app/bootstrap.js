@@ -1,5 +1,6 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=13.10.12";
+import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=13.10.12";
 import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.12";
 import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.10.12";
 import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.10.12";
@@ -7,15 +8,26 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=13.13";
+import { createRouter } from "./router.js?v=13.15";
 import { createShell } from "./shell.js?v=13.9.0";
+
+const RELEASE_VERSION = "13.15";
+const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=13.14", { scope: "/" })
+    navigator.serviceWorker.register(`/service-worker.js?v=${RELEASE_VERSION}`, { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
+}
+
+function restoreFallbackRoute() {
+  const url = new URL(window.location.href);
+  const target = String(url.searchParams.get(FALLBACK_ROUTE_PARAM) || "");
+  if (!target.startsWith("/") || target.startsWith("//")) return false;
+  window.history.replaceState(null, "", target);
+  return true;
 }
 
 function normalizeInitialLearningPath() {
@@ -24,11 +36,15 @@ function normalizeInitialLearningPath() {
 }
 
 async function bootstrap() {
+  restoreFallbackRoute();
   normalizeInitialLearningPath();
   initializeI18n();
   prepareAnalytics();
   registerServiceWorker();
+
   const callbackVisit = hasAuthCallback() || window.location.pathname === "/auth/callback";
+  const persistedAuth = hasPersistedAuthSession();
+  const authInitialization = waitForAuthInitialization();
   const telegram = createTelegramAdapter();
   const shell = createShell();
   const modal = createModalService(shell.modalRoot);
@@ -42,10 +58,13 @@ async function bootstrap() {
     },
   };
 
-  const authState = await waitForAuthInitialization();
+  // OAuth callbacks must finish before routing because they rewrite the URL to
+  // /profile/account. Ordinary restored sessions initialize in the background
+  // so a slow auth network request cannot hold the whole application hostage.
+  if (callbackVisit) await authInitialization;
   await initializeProgressSystem();
 
-  if (!callbackVisit && !authState.user) {
+  if (!callbackVisit && !persistedAuth) {
     const setupWasShown = await runLearningSetup({ shell });
     if (setupWasShown) {
       window.history.replaceState(null, "", "/profile/account");
@@ -72,6 +91,11 @@ async function bootstrap() {
   });
 
   await router.start();
+
+  if (persistedAuth && !callbackVisit) {
+    void authInitialization.then(() => router.refresh({ background: true, reason: "auth_ready" }));
+  }
+
   void initPrivacyController({ appRouter: router });
   if (!callbackVisit) initGuestProfilePrompt({ modal, router });
 
