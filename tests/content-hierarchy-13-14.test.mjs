@@ -48,12 +48,14 @@ test("Learn uses real thematic Set names while leaving unnamed level Sets numeri
   assert.match(catalog, /setNumberLabel\(setId\)/);
 });
 
-test("old cached thematic dictionaries are adapted to the new hierarchy", async () => {
+test("cached and starter dictionaries are adapted to the new hierarchy and localization", async () => {
   const adapter = await read("src/shared/domain/word-normalizer-13-14.js");
   const config = await read("src/config/words.js");
-  assert.match(adapter, /dictionaryId: "thematic"/);
-  assert.match(adapter, /sectionId: oldDictionary/);
-  assert.match(adapter, /setNameRu: oldTopicNameRu/);
+  assert.match(adapter, /dictionaryId = "thematic"/);
+  assert.match(adapter, /sectionId = dictionaryId/);
+  assert.match(adapter, /"advanced-proficiency": \{ ru: "Мастер", en: "Proficiency", tr: "Usta"/);
+  assert.match(adapter, /thematic: \{ ru: "Тематические слова", en: "Thematic Words", tr: "Tematik Kelimeler"/);
+  assert.match(adapter, /"animals-07": \{ ru: "Птицы", en: "Birds", tr: "Kuşlar"/);
   assert.match(config, /DICTIONARY_CACHE_KEY = "alantil_dictionary_cache_v5"/);
   assert.match(config, /"alantil_dictionary_cache_v4"/);
 });
