@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "13.13";
+const SINGLETON_URL_VERSION = "13.15";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -61,33 +61,36 @@ function importMapFrom(index) {
   return JSON.parse(index.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1] || "{}").imports || {};
 }
 
-test("13.14 is the published application and cache release", async () => {
+test("13.15 is the published application and cache release", async () => {
+  const index = await read("index.html");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
-  assert.match(analytics, /appVersion = "13\.14"/);
-  assert.match(versionScreen, /<dd>13\.14<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.14"/);
-  assert.match(bootstrap, /service-worker\.js\?v=13\.14/);
+  assert.match(index, /app\.css\?v=13\.15/);
+  assert.match(index, /bootstrap\.js\?v=13\.15/);
+  assert.match(analytics, /appVersion = "13\.15"/);
+  assert.match(versionScreen, /<dd>13\.15<\/dd>/);
+  assert.match(worker, /const VERSION = "13\.15"/);
+  assert.match(bootstrap, /RELEASE_VERSION = "13\.15"/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
 });
 
-test("13.14 feature entries are enforced by the service worker without duplicating base modules", async () => {
+test("13.15 feature modules are loaded explicitly and the service worker does not rewrite JavaScript modules", async () => {
+  const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
-  assert.match(worker, /features\/path\/entry-13-14\.js\?v=13\.14/);
-  assert.match(worker, /features\/learn\/entry-13-14\.js\?v=13\.14/);
-  assert.match(worker, /features\/settings\/entry-13-14\.js\?v=13\.14/);
-  assert.match(worker, /word-normalizer-13-14\.js\?v=13\.14/);
-  assert.match(worker, /url\.searchParams\.get\("base"\) !== "1"/);
+  assert.match(router, /features\/path\/feature\.js/);
+  assert.match(router, /features\/learn\/feature\.js/);
+  assert.match(router, /features\/settings\/feature\.js/);
+  assert.doesNotMatch(worker, /MODULE_REWRITES|rewrittenModuleResponse|entry-13-14|word-normalizer-13-14/);
 });
 
-test("Settings dependencies are refreshed through one canonical shared-module identity", async () => {
-  const settings = await read("src/features/settings/index.js");
+test("Settings dependencies resolve through one 13.15 singleton identity", async () => {
+  const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
-  assert.match(settings, /SETTINGS_ASSET_VERSION = "13\.14"/);
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "13\.15"/);
   assert.match(settings, /word-repository\.js\?v=13\.13/);
   assert.match(settings, /auth-service\.js\?v=13\.13/);
   assert.match(settings, /user-settings-store\.js\?v=13\.13/);
@@ -96,7 +99,7 @@ test("Settings dependencies are refreshed through one canonical shared-module id
   assert.match(worker, /"\/src\/shared\/progress\/progress-sync\.js"/);
 });
 
-test("profile keeps both 13.11 PNG character assets and the locked silhouette", async () => {
+test("profile keeps character assets but they are lazy and not part of the service-worker shell", async () => {
   const profile = await read("src/features/profile/index.js");
   const profileStyles = await read("src/features/profile/profile.css");
   const worker = await read("service-worker.js");
@@ -104,21 +107,20 @@ test("profile keeps both 13.11 PNG character assets and the locked silhouette", 
   const female = await readFile(new URL("../assets/images/profile/avatar_female.png", import.meta.url));
   assert.match(profile, /avatar_male\.png\?v=13\.11/);
   assert.match(profile, /avatar_female\.png\?v=13\.11/);
-  assert.doesNotMatch(profile, /avatar-(?:male|female)\.(?:svg|png)/);
-  assert.match(worker, /avatar_male\.png\?v=13\.11/);
-  assert.match(worker, /avatar_female\.png\?v=13\.11/);
+  const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
+  assert.doesNotMatch(coreAssets, /avatar_male|avatar_female/);
   assert.match(profile, /profileAvatarSvg/);
   assert.match(profileStyles, /\.profileAvatarImage/);
   assert.equal(male.subarray(1, 4).toString("ascii"), "PNG");
   assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
-test("historical singleton URLs still canonicalize to one 13.13 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one 13.15 in-memory instance", async () => {
   const index = await read("index.html");
   const importMap = importMapFrom(index);
-  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13"];
+  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13", "13.14", "13.15"];
   for (const path of singletonPaths) {
-    assert.equal(importMap[`${path}?v=13.13`], `${path}?v=13.13`, `missing canonical alias for ${path}`);
+    assert.equal(importMap[`${path}?v=13.15`], `${path}?v=13.15`, `missing canonical alias for ${path}`);
     for (const version of versions) {
       assert.equal(importMap[`${path}?v=${version}`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing ${path} alias for ${version}`);
     }
@@ -146,12 +148,12 @@ test("current singleton imports do not create a second state instance", async ()
   }
 });
 
-test("auth SDK is not part of the guest critical path", async () => {
+test("auth SDK and profile avatars are not part of the guest critical path", async () => {
   const index = await read("index.html");
   const worker = await read("service-worker.js");
   assert.doesNotMatch(index, /modulepreload[^>]+supabase-js/);
   const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
-  assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
+  assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]|avatar_male|avatar_female/);
 });
 
 test("shared display helpers keep their required dependencies", async () => {
