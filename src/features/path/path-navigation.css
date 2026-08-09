@@ -1,0 +1,10 @@
+.storyTabsShell{position:relative;min-width:0;height:32px;overflow:hidden}
+.storyTabsShell::before,.storyTabsShell::after{position:absolute;z-index:4;top:0;width:24px;height:32px;display:grid;place-items:center;color:var(--text-2);font:800 18px/1 var(--font-terminal);pointer-events:none;opacity:0;transition:opacity var(--duration-fast);text-shadow:0 1px 0 var(--path-label-shadow)}
+.storyTabsShell::before{content:"‹";left:0;background:linear-gradient(90deg,var(--app-bg) 30%,transparent)}
+.storyTabsShell::after{content:"›";right:0;background:linear-gradient(270deg,var(--app-bg) 30%,transparent)}
+.storyTabsShell.canScrollStart::before,.storyTabsShell.canScrollEnd::after{opacity:.72}
+.storyTabsShell .storyTabs{height:32px;display:flex;align-items:center;gap:8px;min-width:0;overflow-x:auto;overflow-y:hidden;padding:0 18px;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain}
+.storyTabsShell .storyTabs::-webkit-scrollbar{display:none}
+.storyTabsShell .storyTab{flex:0 0 auto;max-width:min(78vw,280px);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;scroll-snap-align:center}
+.routeSectionHeading{margin:6px auto 0;max-width:min(88%,360px);text-align:center}
+@media (min-width:760px){.storyTabsShell:not(.isScrollable) .storyTabs{justify-content:center}.storyTabsShell .storyTab{max-width:360px}.storyTabsShell:not(.isScrollable)::before,.storyTabsShell:not(.isScrollable)::after{display:none}}
