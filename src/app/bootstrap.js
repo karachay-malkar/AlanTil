@@ -7,13 +7,13 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.9.0";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=13.13";
+import { createRouter } from "./router.js?v=13.14";
 import { createShell } from "./shell.js?v=13.9.0";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js?v=13.13", { scope: "/" })
+    navigator.serviceWorker.register("/service-worker.js?v=13.14", { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
