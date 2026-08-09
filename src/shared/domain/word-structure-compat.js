@@ -2,11 +2,27 @@ import * as base from "./word-normalizer.js?v=13.15&base=1";
 
 const THEMATIC_SECTIONS = new Set(["universe", "animals", "natural_materials", "plants"]);
 
-const STORY_NAMES = Object.freeze({
-  oblivion: { ru: "На пороге забвения", en: "On the Threshold of Oblivion", tr: "Unutuluşun Eşiğinde" },
-  roots: { ru: "Возвращение к истокам", en: "Back to the Roots", tr: "Köklere Dönüş" },
-  ascent: { ru: "Восхождение", en: "Ascent", tr: "Tırmanış" },
-  pathways: { ru: "Тропы", en: "Pathways", tr: "Patikalar" },
+const STORY_CONTENT = Object.freeze({
+  oblivion: {
+    ru: { name: "На пороге забвения", intro: "Это история о последних мгновениях жизни языка. Она написана скупо — простыми словами и примитивными понятиями, до которых беднеет некогда богатая речь, прежде чем умолкнуть навсегда. Это её последнее дыхание. Дальше — только забвение." },
+    en: { name: "On the Threshold of Oblivion", intro: "This is the story of the final moments in the life of a language. It is written sparsely — in simple words and primitive concepts, to which a once-rich tongue is reduced before falling silent forever. This is its last breath. Beyond it lies only oblivion." },
+    tr: { name: "Unutuluşun Eşiğinde", intro: "Bu, bir dilin ömrünün son anlarının hikâyesidir. Bir zamanlar zengin olan bir dilin sonsuza dek susmadan önce yoksullaştığı basit sözcükler ve ilkel kavramlarla, yalın bir dille yazılmıştır. Bu onun son nefesidir. Sonrası — yalnızca unutuluş." },
+  },
+  roots: {
+    ru: { name: "Возвращение к истокам", intro: "Ты чувствуешь это давно. Что-то в этой жизни не так.\n\nСистема обещает счастье, изобилие и свободу выбора, но снова и снова возвращает тебя в один и тот же круг — работать, потреблять, желать большего и продолжать бежать. Так проходят годы — растворяясь среди тысяч таких же странствующих судеб, ты постепенно забываешь, кто ты на самом деле.\n\nВырваться из этих крысиных бегов — настоящий подвиг. Но эта история не про подвиг тела, она про подвиг духа и разума — суметь вырваться из ловушки, вновь услышать себя и вернуться к своим корням, к своему подлинному «я».\n\nНастало время действовать!" },
+    en: { name: "Back to the Roots", intro: "You have felt it for a long time. Something about this life is not right.\n\nThe system promises happiness, abundance, and freedom of choice, yet again and again it brings you back into the same cycle — to work, consume, want more, and keep running. Years pass this way — dissolving among thousands of other wandering lives like your own, you gradually forget who you really are.\n\nBreaking free from this rat race is a true feat. But this story is not about a feat of the body; it is about a feat of spirit and mind — finding the strength to escape the trap, hear yourself again, and return to your roots, to your true self.\n\nIt is time to act!" },
+    tr: { name: "Köklere Dönüş", intro: "Bunu uzun zamandır hissediyorsun. Bu hayatta bir şeyler yolunda değil.\n\nSistem mutluluk, bolluk ve seçme özgürlüğü vaat ediyor, ama seni tekrar tekrar aynı döngüye geri getiriyor — çalışmak, tüketmek, daha fazlasını istemek ve koşmaya devam etmek. Yıllar böyle geçiyor — senin gibi binlerce sürüklenen hayatın arasında eriyip giderken, aslında kim olduğunu yavaş yavaş unutuyorsun.\n\nBu fare yarışından kurtulmak gerçek bir kahramanlıktır. Ama bu hikâye bedenin kahramanlığıyla ilgili değil; ruhun ve zihnin kahramanlığıyla ilgili — tuzaktan çıkabilmek, kendini yeniden duyabilmek ve köklerine, gerçek benliğine dönebilmek.\n\nHarekete geçme zamanı!" },
+  },
+  ascent: {
+    ru: { name: "На вершине", intro: "Ты прошёл большой путь. Идя дорогой знаний, ты обрёл богатство и научился понимать речь этих мест. Шаг за шагом дорога поднимала тебя всё выше, приведя к нему.\n\nПеред тобой — Минги-Тау. Вечная гора. Вызов для тех, кому мало достигнутого.\n\nНа его склонах знания по-настоящему уникальные. А взойдя на вершину, ты уже никогда не будешь прежним.\n\nЕсли уверен в своих силах и чётко осознаёшь, зачем тебе это восхождение — в путь, на вершину!\n\nПусть Аллах поможет!" },
+    en: { name: "At the Summit", intro: "You have come a long way. Walking the road of knowledge, you have grown richer and learned to understand the speech of these lands. Step by step, the road has taken you higher and higher, leading you to him.\n\nBefore you stands Mingi-Tau. The eternal mountain. A challenge for those for whom what they have already achieved is not enough.\n\nThe knowledge on his slopes is truly unique. And once you reach the summit, you will never be the same again.\n\nIf you are confident in your strength and clearly understand why you need this ascent — set out, to the summit!\n\nMay Allah help you!" },
+    tr: { name: "Zirvede", intro: "Uzun bir yol katettin. Bilginin yolunda yürürken zenginleştin ve bu toprakların dilini anlamayı öğrendin. Yol, adım adım seni daha da yükseğe çıkararak ona getirdi.\n\nKarşında Mingi-Tau. Ebedî dağ. Elde ettikleriyle yetinmeyenler için bir meydan okuma.\n\nOnun yamaçlarındaki bilgi gerçekten eşsizdir. Ve zirveye çıktığında artık asla eskisi gibi olmayacaksın.\n\nGücüne güveniyor ve bu tırmanışa neden ihtiyaç duyduğunu açıkça biliyorsan — yola çık, zirveye!\n\nAllah yardımcın olsun!" },
+  },
+  pathways: {
+    ru: { name: "Тропы", intro: "Не все дороги отмечены на картах.\n\nНекоторые начинаются там, где заканчивается привычный путь, и ведут к вещам, которые открываются только тем, кто решился свернуть в сторону. Здесь можно встретить забытое, неожиданное, странное — то, мимо чего другие прошли, даже не заметив.\n\nУ каждой тропы своя тайна.\n\nИ узнать её можно лишь одним способом — пройдя по ней." },
+    en: { name: "Trails", intro: "Not all roads are marked on maps.\n\nSome begin where the familiar road ends and lead to things revealed only to those who dare to turn aside. Here you may encounter the forgotten, the unexpected, the strange — things others passed by without even noticing.\n\nEvery trail has a secret of its own.\n\nAnd there is only one way to discover it — by walking it." },
+    tr: { name: "Patikalar", intro: "Her yol haritalarda işaretli değildir.\n\nBazıları alışılmış yolun bittiği yerde başlar ve ancak yolundan ayrılmaya cesaret edenlere açılan şeylere götürür. Burada unutulmuş, beklenmedik, tuhaf şeylerle karşılaşabilirsin — başkalarının farkına bile varmadan yanından geçtiği şeylerle.\n\nHer patikanın kendine ait bir sırrı vardır.\n\nVe onu öğrenmenin yalnızca bir yolu vardır — o patikadan geçmek." },
+  }
 });
 
 const DICTIONARY_NAMES = Object.freeze({
@@ -58,17 +74,21 @@ const SET_NAMES = Object.freeze({
 });
 
 function applyNames(word, storyId, dictionaryId, sectionId, setId) {
-  const story = STORY_NAMES[storyId];
+  const story = STORY_CONTENT[storyId];
   const dictionary = DICTIONARY_NAMES[dictionaryId];
   const section = SECTION_NAMES[sectionId];
   const set = SET_NAMES[setId];
   return {
     ...word,
     ...(story ? {
-      storyNameRu: story.ru,
-      storyNameEn: story.en,
-      storyNameTr: story.tr,
-      story_name: story.ru,
+      storyNameRu: story.ru.name,
+      storyNameEn: story.en.name,
+      storyNameTr: story.tr.name,
+      storyIntroRu: story.ru.intro,
+      storyIntroEn: story.en.intro,
+      storyIntroTr: story.tr.intro,
+      story_name: story.ru.name,
+      story_intro: story.ru.intro,
     } : {}),
     ...(dictionary ? {
       dictionaryNameRu: dictionary.ru,
