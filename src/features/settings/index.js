@@ -1,16 +1,16 @@
-import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.14";
+import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.13";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=13.14";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.14";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.14";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.14";
-import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.14";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.14";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.14";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.14";
+} from "../../shared/data/word-repository.js?v=13.13";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.13";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.13";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.13";
+import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.13";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.13";
+import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
 const SETTINGS_ASSET_VERSION = "13.14";
 let controller = null;
