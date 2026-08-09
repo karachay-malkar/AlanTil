@@ -23,16 +23,21 @@ async function loadSongScreen() {
   return view.renderSongView;
 }
 
-export async function mount(context, params = {}) {
-  activeContext = context;
-  controller = new AbortController();
-  disposeActivePlayer = null;
+function renderLoading(context) {
+  context.root.innerHTML = `<section class="view screen"><div class="loadingState" role="status">${msg("common.otkryvaem")}</div></section>`;
+}
+
+function renderLoadError(context) {
+  context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`;
+}
+
+async function renderRequestedScreen(context, params, signal) {
   const screen = params.screen || "playlists";
-  songsState.currentScreen = screen;
 
   if (screen === "playlists") {
     const playlists = await getPlaylists();
-    renderPlaylists(context, playlists, controller.signal);
+    if (signal.aborted) return;
+    renderPlaylists(context, playlists, signal);
     trackEvent(EVENTS.SONGS_OPEN, { playlist_count: playlists.length });
     return;
   }
@@ -41,19 +46,22 @@ export async function mount(context, params = {}) {
     const playlistSlug = String(params.playlistSlug || "");
     if (playlistSlug === "favorites") {
       const songs = await getSongs();
+      if (signal.aborted) return;
       songFavorites.reload();
       const favoriteCount = songs.filter((song) => songFavorites.has(song.id)).length;
-      renderSongsCatalog(context, { id: "__fav__", title: msg("songs.izbrannye_pesni"), slug: "favorites" }, songs, controller.signal);
+      renderSongsCatalog(context, { id: "__fav__", title: msg("songs.izbrannye_pesni"), slug: "favorites" }, songs, signal);
       trackEvent(EVENTS.PLAYLIST_OPEN, { playlist_id: "__fav__", song_count: favoriteCount });
       return;
     }
 
     const playlists = await getPlaylists();
+    if (signal.aborted) return;
     const playlist = params.playlistId
       ? playlists.find((item) => item.id === String(params.playlistId)) || null
       : resolvePlaylistBySlug(playlists, playlistSlug);
     const songs = playlist ? await getSongsByPlaylist(playlist.id) : [];
-    renderSongsCatalog(context, playlist ? { ...playlist, slug: slugForPlaylist(playlists, playlist.id) } : null, songs, controller.signal);
+    if (signal.aborted) return;
+    renderSongsCatalog(context, playlist ? { ...playlist, slug: slugForPlaylist(playlists, playlist.id) } : null, songs, signal);
     if (playlist) trackEvent(EVENTS.PLAYLIST_OPEN, { playlist_id: playlist.id, song_count: songs.length });
     return;
   }
@@ -65,12 +73,26 @@ export async function mount(context, params = {}) {
       getSongById(songId),
       getWords(),
     ]);
-    if (controller.signal.aborted) return;
-    renderSongView(context, song, words, controller.signal);
+    if (signal.aborted) return;
+    renderSongView(context, song, words, signal);
     return;
   }
 
   context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("songs.neizvestnyy_ekran_pesen")}</div></div></section>`;
+}
+
+export function mount(context, params = {}) {
+  activeContext = context;
+  controller = new AbortController();
+  disposeActivePlayer = null;
+  const screen = params.screen || "playlists";
+  songsState.currentScreen = screen;
+  renderLoading(context);
+  void renderRequestedScreen(context, params, controller.signal).catch((error) => {
+    if (controller?.signal.aborted) return;
+    console.warn("songs: screen load failed", error);
+    renderLoadError(context);
+  });
 }
 
 export function unmount() {
