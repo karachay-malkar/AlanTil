@@ -9,7 +9,7 @@ test("story stele keeps scoped seen state and uses the approved full-resolution 
   assert.match(source, /alantil_story_intro_seen_v1/);
   assert.match(source, /readScopedJson/);
   assert.match(source, /writeScopedJson/);
-  assert.match(source, /story-stele\.avif\?v=13\.15\.3/);
+  assert.match(source, /story-stele\.avif\?v=13\.15\.4/);
   assert.match(source, /✦/);
   assert.match(source, /autoOpen && !hasSeenStoryStele\(storyId\)/);
 });
@@ -33,35 +33,45 @@ test("stele closes from the dimmed backdrop and from stone outside its text area
   assert.match(source, /event\.target\.closest\("\[data-stele-content\]"\)/);
   assert.match(css, /storySteleOverlay[\s\S]*position:fixed/);
   assert.match(css, /z-index:var\(--z-modal\)/);
-  assert.match(css, /background:rgba\(24,22,19,\.62\)/);
+  assert.match(css, /background:rgba\(22,20,17,\.72\)/);
   assert.match(css, /storySteleDialog[\s\S]*pointer-events:none/);
   assert.match(css, /storySteleCard[\s\S]*pointer-events:auto/);
 });
 
-test("production stele geometry matches the 772 by 1536 artwork", async () => {
+test("production stele geometry matches the new 832 by 1517 artwork", async () => {
   const css = await read("src/features/path/story-stele.css");
-  assert.match(css, /aspect-ratio:772\/1536/);
-  assert.match(css, /--stele-zone-left:23%/);
-  assert.match(css, /--stele-zone-width:54%/);
-  assert.match(css, /--stele-zone-top:14\.3%/);
-  assert.match(css, /--stele-zone-bottom:16\.9%/);
+  assert.match(css, /aspect-ratio:832\/1517/);
+  assert.match(css, /--stele-zone-left:20\.1%/);
+  assert.match(css, /--stele-zone-width:59\.8%/);
+  assert.match(css, /--stele-zone-top:18\.3%/);
+  assert.match(css, /--stele-zone-bottom:9\.8%/);
+  assert.match(css, /width:min\(calc\(100vw - 6px\),53dvh,832px\)/);
   assert.match(css, /"Palatino Linotype","Book Antiqua",Palatino/);
   assert.match(css, /prefers-reduced-motion:reduce/);
 });
 
-test("cache busting points the app and service worker to 13.15.3", async () => {
+test("path trigger is a route-aligned special point with a soft four-point-star pulse", async () => {
+  const css = await read("src/features/path/story-stele.css");
+  assert.match(css, /\.storySteleTrigger\{[\s\S]*right:0;top:80%/);
+  assert.match(css, /storySteleTrigger::before/);
+  assert.match(css, /storySteleStarPulse 4\.8s ease-in-out infinite/);
+  assert.match(css, /storySteleStarHalo 4\.8s ease-in-out infinite/);
+  assert.match(css, /storySteleCard::before[\s\S]*content:"✦"/);
+});
+
+test("cache busting points the app and service worker to 13.15.4", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const appCss = await read("src/shared/styles/app.css");
   const sw = await read("service-worker.js");
-  assert.match(index, /targetVersion = "13\.15\.3"/);
+  assert.match(index, /targetVersion = "13\.15\.4"/);
   assert.match(index, /\/src\/features\/path\/story-stele\.js/);
-  assert.match(index, /app\.css\?v=13\.15\.3/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.3/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.3"/);
-  assert.match(bootstrap, /router\.js\?v=13\.15\.3/);
-  assert.match(appCss, /story-stele\.css\?v=13\.15\.3/);
+  assert.match(index, /app\.css\?v=13\.15\.4/);
+  assert.match(index, /bootstrap\.js\?v=13\.15\.4/);
+  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.4"/);
+  assert.match(bootstrap, /router\.js\?v=13\.15\.4/);
+  assert.match(appCss, /story-stele\.css\?v=13\.15\.4/);
   assert.doesNotMatch(appCss, /story-intro\.css/);
-  assert.match(sw, /VERSION = "13\.15\.3"/);
-  assert.match(sw, /story-stele\.avif\?v=13\.15\.3/);
+  assert.match(sw, /VERSION = "13\.15\.4"/);
+  assert.match(sw, /story-stele\.avif\?v=13\.15\.4/);
 });

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "13.15";
+const SINGLETON_URL_VERSION = "13.15.4";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -68,19 +68,19 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("13.15 is the published application and cache release", async () => {
+test("13.15 remains the published semantic version while 13.15.4 is the cache release", async () => {
   const index = await read("index.html");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
-  assert.match(index, /app\.css\?v=13\.15/);
-  assert.match(index, /bootstrap\.js\?v=13\.15/);
+  assert.match(index, /app\.css\?v=13\.15\.4/);
+  assert.match(index, /bootstrap\.js\?v=13\.15\.4/);
   assert.match(analytics, /appVersion = "13\.15"/);
   assert.match(versionScreen, /<dd>13\.15<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.15"/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15"/);
+  assert.match(worker, /const VERSION = "13\.15\.4"/);
+  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.4"/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
 });
@@ -122,7 +122,7 @@ test("profile keeps character assets but they are lazy and not part of the servi
   assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
-test("historical singleton URLs canonicalize to one 13.15 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one 13.15.4 in-memory instance", async () => {
   const index = await read("index.html");
   const generated = generatedImportMapFrom(index);
   const importMap = generated.imports;
@@ -130,7 +130,7 @@ test("historical singleton URLs canonicalize to one 13.15 in-memory instance", a
   assert.equal(generated.targetVersion, SINGLETON_URL_VERSION);
   for (const path of singletonPaths) {
     assert.ok(generated.paths.includes(path), `missing singleton path ${path}`);
-    assert.equal(importMap[`${path}?v=13.15`], `${path}?v=13.15`, `missing canonical alias for ${path}`);
+    assert.equal(importMap[`${path}?v=13.15`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing canonical alias for ${path}`);
     for (const version of versions) {
       assert.ok(generated.versions.includes(version), `missing supported version ${version}`);
       assert.equal(importMap[`${path}?v=${version}`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing ${path} alias for ${version}`);
