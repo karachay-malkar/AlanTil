@@ -2,7 +2,7 @@ import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-s
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 
 export const STORY_STELE_SEEN_KEY = "alantil_story_intro_seen_v1";
-const ASSET_URL = "/assets/path/story-stele.webp?v=13.15.2";
+const ASSET_URL = "/assets/path/story-stele.avif?v=13.15.3";
 const STYLE_CLASSES = ["storySteleStyleBronze"];
 const CLOSE_DELAY_MS = 220;
 const AUTO_SCROLL_START_DELAY_MS = 1600;
@@ -251,6 +251,10 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
 
   trigger.addEventListener("click", () => openStele(), { signal });
   backdrop?.addEventListener("click", () => closeStele(), { signal });
+  card?.addEventListener("click", (event) => {
+    if (event.target.closest("[data-stele-content]")) return;
+    closeStele();
+  }, { signal });
   overlay.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     event.preventDefault();
