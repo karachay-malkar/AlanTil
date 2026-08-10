@@ -15,6 +15,7 @@ import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.
 import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.13";
 import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.13";
 import { renderStationView } from "./station-view.js?v=13.13";
+import { mountStoryStele } from "./story-stele.js?v=13.15.1";
 
 let controller = null;
 let activeStudy = false;
@@ -100,9 +101,13 @@ async function restoreMapPosition(viewport) {
   }
 }
 
-function renderStoryIntro(story) {
-  const intro = String(story?.intro || "").trim();
-  return intro ? `<div class="storyIntro">${escapeHtml(intro)}</div>` : "";
+function localizedStoryIntro(words, storyId, fallback = "") {
+  const key = String(storyId || "").trim();
+  const entry = (Array.isArray(words) ? words : []).find((word) =>
+    String(word?.story_id || word?.story_type || "").trim() === key
+      && String(word?.story_intro || "").trim()
+  );
+  return String(entry?.story_intro || fallback || "").trim();
 }
 
 function syncStoryTabEdges(shell, scroller) {
@@ -141,7 +146,7 @@ function bindStoryTabs(root, signal) {
   }, { once: true });
 }
 
-function renderRoute(context, route, activeStory, progressSnapshot) {
+function renderRoute(context, route, activeStory, progressSnapshot, storyIntro) {
   const story = route.stories[activeStory];
   const progress = allStoryProgress(route, progressSnapshot)[activeStory];
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
@@ -164,12 +169,18 @@ function renderRoute(context, route, activeStory, progressSnapshot) {
     <div class="pathMapViewport isPositioning">
       <div class="routeBackdrop" aria-hidden="true"></div>
       <div class="routeMap" data-story-map="${escapeHtml(activeStory)}">${reversedCatalogs.map((catalog) => routeCatalogSection(catalog, stationIndex, progressSnapshot)).join("")}</div>
-      ${renderStoryIntro(story)}
     </div>
     <nav class="routeScale" aria-label="${msg("path.rubezhi_marshruta")}"></nav>
   </section>`;
 
   bindStoryTabs(context.root, controller.signal);
+  mountStoryStele({
+    root: context.root,
+    modalRoot: context.shell.modalRoot,
+    story: { id: activeStory, name: route.storyLabels[activeStory], intro: storyIntro },
+    autoOpen: true,
+    signal: controller.signal,
+  });
   context.root.querySelectorAll("[data-story-tab]").forEach((button) => {
     button.addEventListener("click", () => {
       const type = button.dataset.storyTab;
@@ -295,18 +306,19 @@ export async function mount(context, params = {}) {
   const route = routeCache.route;
   const screen = params.screen || "home";
   const activeStory = activeStoryType(route, params.storyType || getRouteSettings().active_story);
+  const storyIntro = localizedStoryIntro(words, activeStory, route.stories[activeStory]?.intro);
   updateRouteSettings({ active_story: activeStory }, { queue: false });
 
   if (screen === "home") {
     const progressSnapshot = createRouteProgressSnapshot();
     if (String(params.storyType || "") !== activeStory) context.router.canonicalize?.("path.home", { storyType: activeStory });
-    renderRoute(context, route, activeStory, progressSnapshot);
+    renderRoute(context, route, activeStory, progressSnapshot, storyIntro);
     return;
   }
   const station = resolveStationFromParams(route, { ...params, storyType: activeStory });
   if (!station) {
     context.router.canonicalize?.("path.home", { storyType: activeStory });
-    renderRoute(context, route, activeStory, createRouteProgressSnapshot());
+    renderRoute(context, route, activeStory, createRouteProgressSnapshot(), storyIntro);
     return;
   }
 
