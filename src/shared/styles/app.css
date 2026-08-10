@@ -8,7 +8,7 @@
 @import url("./privacy.css?v=13.9.0") layer(components);
 @import url("../../features/onboarding/onboarding.css?v=13.10.9") layer(features);
 @import url("../../features/path/path.css?v=13.10.12") layer(features);
-@import url("../../features/path/story-stele.css?v=13.15.1") layer(features);
+@import url("../../features/path/story-stele.css?v=13.15.2") layer(features);
 @import url("../../features/path/path-navigation.css?v=13.15") layer(features);
 @import url("../../features/learn/learn.css?v=13.9.0") layer(features);
 @import url("../../features/test/test.css?v=13.10.12") layer(features);

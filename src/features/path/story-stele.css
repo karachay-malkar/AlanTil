@@ -13,24 +13,30 @@
 @keyframes storySteleMysteryPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
 @keyframes storySteleMysteryGlow{0%,100%{opacity:.18}50%{opacity:.48}}
 
-.storySteleOverlay{position:fixed;z-index:var(--z-modal);inset:0;display:grid;place-items:center;padding:calc(var(--safe-top) + 6px) 0 calc(var(--safe-bottom) + 6px);opacity:0;pointer-events:none;transition:opacity 220ms var(--ease-standard)}
+.storySteleOverlay{
+  position:fixed;z-index:var(--z-modal);inset:0;display:grid;place-items:center;padding:6px 0;
+  opacity:0;pointer-events:none;transition:opacity 220ms var(--ease-standard);
+}
 .storySteleOverlay[hidden]{display:none}
 .storySteleOverlay.isOpen{opacity:1;pointer-events:auto}
-.storySteleBackdrop{position:absolute;inset:0;background:rgba(33,30,25,.26)}
+.storySteleBackdrop{
+  position:absolute;z-index:0;inset:0;background:rgba(24,22,19,.62);cursor:pointer;
+  -webkit-backdrop-filter:brightness(.76) saturate(.84);backdrop-filter:brightness(.76) saturate(.84);
+}
 .storySteleDialog{position:relative;z-index:1;width:100%;height:100%;display:grid;place-items:center;outline:0;pointer-events:none}
 .storySteleCard{
-  --stele-zone-left:28.9%;--stele-zone-width:42.2%;--stele-zone-top:14.2%;--stele-zone-bottom:18.9%;
-  --stele-zone-pad-x:4.2%;--stele-zone-pad-top:4.2%;--stele-zone-pad-bottom:5%;
-  position:relative;width:min(calc(100vw - 2px),820px);max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 12px);aspect-ratio:2/3;
-  transform:translateY(26px) scale(.965);opacity:.96;filter:drop-shadow(0 18px 24px rgba(57,40,24,.13));
-  transition:transform 250ms cubic-bezier(.2,.76,.2,1),opacity 220ms var(--ease-standard);pointer-events:auto;cursor:pointer;
+  --stele-zone-left:23%;--stele-zone-width:54%;--stele-zone-top:14.3%;--stele-zone-bottom:16.9%;
+  --stele-zone-pad-x:4%;--stele-zone-pad-top:1.2%;--stele-zone-pad-bottom:1.8%;
+  position:relative;width:min(calc(100vw - 8px),49dvh,772px);aspect-ratio:772/1536;
+  transform:translateY(26px) scale(.965);opacity:.96;filter:drop-shadow(0 18px 28px rgba(25,18,12,.24));
+  transition:transform 250ms cubic-bezier(.2,.76,.2,1),opacity 220ms var(--ease-standard);pointer-events:auto;cursor:default;
 }
 .storySteleOverlay.isOpen .storySteleCard{transform:translateY(0) scale(1);opacity:1}
 .storySteleArtwork{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;pointer-events:none;user-select:none}
 .storySteleContent{
   position:absolute;left:var(--stele-zone-left);width:var(--stele-zone-width);top:var(--stele-zone-top);bottom:var(--stele-zone-bottom);
   padding:var(--stele-zone-pad-top) var(--stele-zone-pad-x) var(--stele-zone-pad-bottom);display:grid;grid-template-rows:auto minmax(0,1fr);
-  gap:clamp(10px,1.7vw,20px);overflow:hidden;cursor:default;
+  gap:clamp(7px,1.4vw,15px);overflow:hidden;cursor:default;
   font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,"Times New Roman",serif;
 }
 .storySteleTitle{
@@ -38,11 +44,11 @@
   -webkit-text-stroke:.12px rgba(97,67,35,.06);text-shadow:0 1px 0 rgba(255,245,225,.18),0 1.2px 1.1px rgba(80,57,31,.14);
 }
 .storySteleBody{
-  min-height:0;padding:0 2.2%;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow-y:auto;overflow-x:hidden;
-  overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none;text-align:center;color:#5b5147;letter-spacing:0;line-height:1.44;
+  min-height:0;padding:0 1.4%;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:none;text-align:center;color:#5b5147;letter-spacing:0;line-height:1.42;
   text-shadow:0 1px 0 rgba(255,252,244,.12);cursor:auto;
 }
 .storySteleBody::-webkit-scrollbar{display:none}.storySteleBody p{margin:0}.storySteleBody p+p{margin-top:0}
-body.story-stele-open{overscroll-behavior:none}
-@media(max-width:360px){.storySteleTrigger{right:9px;width:50px;height:63px}.storySteleCard{width:100vw}}
+body.story-stele-open{overflow:hidden;overscroll-behavior:none}
+@media(max-width:360px){.storySteleTrigger{right:9px;width:50px;height:63px}.storySteleCard{width:min(calc(100vw - 4px),49dvh)}}
 @media(prefers-reduced-motion:reduce){.storySteleTriggerGlyph,.storySteleTriggerGlyph::after{animation:none!important}.storySteleOverlay,.storySteleCard{transition:none!important}}
