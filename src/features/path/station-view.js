@@ -11,7 +11,6 @@ function storageKey(station) {
   return station.selectionSetId || station.setId || station.key;
 }
 
-
 function masteryMark(percent) {
   if (percent >= 100) return { level: 3, label: msg("stage.iii_znak"), symbol: "⌃⌃⌃" };
   if (percent >= 90) return { level: 2, label: msg("stage.ii_znak"), symbol: "⌃⌃" };
@@ -142,7 +141,7 @@ export function renderStationView(context, station, {
           </div>
         </div>
         <div class="stationLaunchActions">
-          <button class="btn actionText stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>${msg("stage.uchit_slova")}</button>
+          <button class="btn stationStudyButton" type="button" data-station-study ${selected.length ? "" : "disabled"}>${msg("stage.uchit_slova")}</button>
           <button class="btn actionPrimary stationTestButton" type="button" data-station-test>${msg("stage.zavershit_etap_test")}</button>
         </div>
       </footer>

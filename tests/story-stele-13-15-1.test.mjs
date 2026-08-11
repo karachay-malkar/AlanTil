@@ -38,7 +38,7 @@ test("stele closes from the dimmed backdrop and from stone outside its text area
   assert.match(css, /storySteleCard[\s\S]*pointer-events:auto/);
 });
 
-test("production stele geometry matches the new 832 by 1517 artwork", async () => {
+test("production stele geometry matches the approved 832 by 1517 artwork", async () => {
   const css = await read("src/features/path/story-stele.css");
   assert.match(css, /aspect-ratio:832\/1517/);
   assert.match(css, /--stele-zone-left:20\.1%/);
@@ -50,28 +50,37 @@ test("production stele geometry matches the new 832 by 1517 artwork", async () =
   assert.match(css, /prefers-reduced-motion:reduce/);
 });
 
-test("path trigger is a route-aligned special point with a soft four-point-star pulse", async () => {
+test("path trigger and route scale share one axis with a soft four-point-star pulse", async () => {
   const css = await read("src/features/path/story-stele.css");
-  assert.match(css, /\.storySteleTrigger\{[\s\S]*right:0;top:80%/);
+  assert.match(css, /\.storySteleTrigger\{[\s\S]*right:8px;top:80%/);
+  assert.match(css, /\.pathView>\.routeScale\{right:12px\}/);
+  assert.match(css, /@media\(max-width:360px\)\{\.storySteleTrigger\{width:32px;height:58px;right:9px\}/);
   assert.match(css, /storySteleTrigger::before/);
   assert.match(css, /storySteleStarPulse 4\.8s ease-in-out infinite/);
   assert.match(css, /storySteleStarHalo 4\.8s ease-in-out infinite/);
   assert.match(css, /storySteleCard::before[\s\S]*content:"✦"/);
 });
 
-test("cache busting points the app and service worker to 13.15.4", async () => {
+test("study action uses the normal light button without changing its handler", async () => {
+  const source = await read("src/features/path/station-view.js");
+  assert.match(source, /class="btn stationStudyButton"/);
+  assert.doesNotMatch(source, /class="btn actionText stationStudyButton"/);
+  assert.match(source, /\[data-station-study\][\s\S]*onStartStudy\?\.\(studyMode, activeWords\(\)\)/);
+});
+
+test("cache busting points the app and service worker to 13.15.5", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const appCss = await read("src/shared/styles/app.css");
   const sw = await read("service-worker.js");
-  assert.match(index, /targetVersion = "13\.15\.4"/);
+  assert.match(index, /targetVersion = "13\.15\.5"/);
   assert.match(index, /\/src\/features\/path\/story-stele\.js/);
-  assert.match(index, /app\.css\?v=13\.15\.4/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.4/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.4"/);
-  assert.match(bootstrap, /router\.js\?v=13\.15\.4/);
-  assert.match(appCss, /story-stele\.css\?v=13\.15\.4/);
+  assert.match(index, /app\.css\?v=13\.15\.5/);
+  assert.match(index, /bootstrap\.js\?v=13\.15\.5/);
+  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.5"/);
+  assert.match(bootstrap, /router\.js\?v=13\.15\.5/);
+  assert.match(appCss, /story-stele\.css\?v=13\.15\.5/);
   assert.doesNotMatch(appCss, /story-intro\.css/);
-  assert.match(sw, /VERSION = "13\.15\.4"/);
+  assert.match(sw, /VERSION = "13\.15\.5"/);
   assert.match(sw, /story-stele\.avif\?v=13\.15\.4/);
 });
