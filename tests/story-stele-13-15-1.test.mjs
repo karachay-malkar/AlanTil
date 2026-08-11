@@ -53,14 +53,15 @@ test("production stele geometry matches the approved 932 by 1688 artwork", async
   assert.match(css, /prefers-reduced-motion:reduce/);
 });
 
-test("text remains live HTML with the approved mountain-stone palette", async () => {
+test("text remains live HTML with the approved high-contrast mountain-stone palette", async () => {
   const source = await read("src/features/path/story-stele.js");
   const css = await read("src/features/path/story-stele.css");
   assert.match(source, /<h2 class="storySteleTitle"/);
   assert.match(source, /<div class="storySteleBody" data-stele-scroll>/);
-  assert.match(css, /storySteleTitle[\s\S]*color:#5A4633/);
-  assert.match(css, /storySteleBody[\s\S]*color:#4E4338/);
-  assert.match(css, /storySteleCard::before[\s\S]*color:#8A6A3F/);
+  assert.match(css, /storySteleTitle[\s\S]*color:#F0E3CB/);
+  assert.match(css, /storySteleBody[\s\S]*color:#E6DDCC/);
+  assert.match(css, /storySteleCard::before[\s\S]*color:#D09A43/);
+  assert.match(css, /--stele-zone-width:56%/);
 });
 
 test("path trigger and route scale share one axis with a soft four-point-star pulse", async () => {
@@ -81,19 +82,19 @@ test("study action uses the normal light button without changing its handler", a
   assert.match(source, /\[data-station-study\][\s\S]*onStartStudy\?\.\(studyMode, activeWords\(\)\)/);
 });
 
-test("cache busting points the app and service worker to 13.15.6", async () => {
+test("cache busting points the app and service worker to 13.15.7", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const appCss = await read("src/shared/styles/app.css");
   const sw = await read("service-worker.js");
-  assert.match(index, /targetVersion = "13\.15\.6"/);
+  assert.match(index, /targetVersion = "13\.15\.7"/);
   assert.match(index, /\/src\/features\/path\/story-stele\.js/);
-  assert.match(index, /app\.css\?v=13\.15\.6/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.6/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.6"/);
-  assert.match(bootstrap, /router\.js\?v=13\.15\.6/);
-  assert.match(appCss, /story-stele\.css\?v=13\.15\.6/);
+  assert.match(index, /app\.css\?v=13\.15\.7/);
+  assert.match(index, /bootstrap\.js\?v=13\.15\.7/);
+  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.7"/);
+  assert.match(bootstrap, /router\.js\?v=13\.15\.7/);
+  assert.match(appCss, /story-stele\.css\?v=13\.15\.7/);
   assert.doesNotMatch(appCss, /story-intro\.css/);
-  assert.match(sw, /VERSION = "13\.15\.6"/);
+  assert.match(sw, /VERSION = "13\.15\.7"/);
   assert.match(sw, /story-stele\.webp\?v=13\.15\.6/);
 });
