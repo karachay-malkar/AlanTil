@@ -4,11 +4,12 @@ import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "13.15";
+const RELEASE_VERSION = "13.15.9";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   path: "../features/path/feature.js",
   profile: "../features/profile/index.js",
+  admin: "../features/admin/index.js",
   learn: "../features/learn/feature.js",
   test: "../features/test/index.js",
   match: "../features/match/index.js",
@@ -22,6 +23,7 @@ const TITLE_KEY_BY_SCREEN = Object.freeze({
   path: "common.put_alan_til",
   practice: "common.praktika_alan_til",
   profile: "common.profil_alan_til",
+  admin: "admin.users_alan_til",
   learn: "common.uchit_slova_alan_til",
   test: "common.test_alan_til",
   match: "common.sopostavlenie_alan_til",
@@ -74,6 +76,12 @@ export function parsePathname(pathname) {
     if (second === "status") return { route: "profile.home", params: {}, redirected: true };
     if (second === "skills") return { route: "profile.skills", params: {} };
     if (second === "statistics") return { route: "profile.statistics", params: {} };
+    if (second === "users") {
+      if (!third) return { route: "admin.users", params: {} };
+      if (third && fourth === "test" && fifth && !sixth) return { route: "admin.test", params: { userId: third, sessionId: fifth } };
+      if (third && !fourth) return { route: "admin.user", params: { userId: third } };
+      return { route: "admin.users", params: {}, notFound: true };
+    }
     if (second === "account") return { route: "account.home", params: {} };
     if (second === "settings") {
       if (!third) return { route: "settings.home", params: {} };
@@ -142,6 +150,11 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "profile.home") return "/profile";
   if (routeName === "profile.skills") return "/profile/skills";
   if (routeName === "profile.statistics") return "/profile/statistics";
+  if (routeName === "admin.users") return "/profile/users";
+  if (routeName === "admin.user") return params.userId ? `/profile/users/${encodeSegment(params.userId)}` : "/profile/users";
+  if (routeName === "admin.test") return params.userId && params.sessionId
+    ? `/profile/users/${encodeSegment(params.userId)}/test/${encodeSegment(params.sessionId)}`
+    : "/profile/users";
   if (routeName === "learn.catalog") return "/learn";
   if (routeName === "learn.catalog-content") return dictionary ? `/learn/${dictionary}/contents` : "/learn";
   if (routeName === "learn.sections") {
@@ -352,7 +365,7 @@ export function createRouter({ shell, modal, context }) {
   }
 
   function syncBackControls() {
-    const visible = !["home", "path.home", "practice.home", "profile.home", "profile.skills", "profile.statistics", "settings.home"].includes(current.route);
+    const visible = !["home", "path.home", "practice.home", "profile.home", "profile.skills", "profile.statistics", "admin.users", "settings.home"].includes(current.route);
     shell.setBackVisible(visible);
     const backButton = telegramWebApp?.BackButton;
     try {
@@ -547,6 +560,9 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "songs.playlists") return { route: "practice.home", params: {} };
     if (current.route === "account.home") return { route: "profile.home", params: {} };
     if (["profile.skills", "profile.statistics"].includes(current.route)) return { route: "profile.home", params: {} };
+    if (current.route === "admin.test") return { route: "admin.user", params: { userId: params.userId } };
+    if (current.route === "admin.user") return { route: "admin.users", params: {} };
+    if (current.route === "admin.users") return { route: "profile.home", params: {} };
     if (["settings.privacy", "settings.version", "settings.thanks"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "profile.home", params: {} };
     return { route: "path.home", params: { storyType: DEFAULT_STORY } };

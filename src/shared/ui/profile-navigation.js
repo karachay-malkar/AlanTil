@@ -1,12 +1,14 @@
-import { msg } from "../i18n/index.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=13.15.9";
+
 export function renderProfileNavigation(active = "profile") {
   const items = [
     { id: "profile", label: msg("common.profil"), route: "profile.home" },
     { id: "statistics", label: msg("common.statistika"), route: "profile.statistics" },
+    { id: "users", label: msg("admin.users"), route: "admin.users", activityOnly: true },
     { id: "settings", label: msg("common.nastroyki"), route: "settings.home" },
   ];
   return `<nav class="profilePrimaryNav" aria-label="${msg("common.razdely_profilya")}">
-    ${items.map((item) => `<button class="tabAction profilePrimaryTab ${active === item.id ? "active" : ""}" type="button" data-profile-navigation="${item.route}" ${active === item.id ? 'aria-current="page"' : ""}>[ ${item.label} ]</button>`).join("")}
+    ${items.map((item) => `<button class="tabAction profilePrimaryTab ${active === item.id ? "active" : ""}" type="button" data-profile-navigation="${item.route}" ${item.activityOnly ? 'data-activity-only="true"' : ""} ${active === item.id ? 'aria-current="page"' : ""}>[ ${item.label} ]</button>`).join("")}
   </nav>`;
 }
 

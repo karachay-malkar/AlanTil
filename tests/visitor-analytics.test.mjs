@@ -22,7 +22,7 @@ async function loadVisitorModule() {
   return import(`../src/shared/analytics/visitor-analytics.js?test=${Date.now()}-${Math.random()}`);
 }
 
-test("anonymous visitor id persists while the session id is reused inside 30 minutes", async () => {
+test("visitor id persists while the session id is reused inside 30 minutes", async () => {
   const { resolveAnonymousIdentity, anonymousAnalyticsConfig } = await loadVisitorModule();
   const storage = new MemoryStorage();
   let index = 0;
@@ -37,7 +37,22 @@ test("anonymous visitor id persists while the session id is reused inside 30 min
   assert.equal(anonymousAnalyticsConfig.sessionTimeoutMs, 30 * 60 * 1000);
 });
 
-test("a new anonymous session is created after more than 30 minutes without a tracked page view", async () => {
+test("a restored account can claim a guest session while another account starts a new session", async () => {
+  const { resolveAnonymousIdentity } = await loadVisitorModule();
+  const storage = new MemoryStorage();
+  let index = 0;
+  const uuidFactory = () => UUIDS[index++];
+  const guest = resolveAnonymousIdentity({ storage, nowMs: 2_000, uuidFactory });
+  const signed = resolveAnonymousIdentity({ storage, nowMs: 3_000, uuidFactory, scopeId: UUIDS[2] });
+  const other = resolveAnonymousIdentity({ storage, nowMs: 4_000, uuidFactory, scopeId: UUIDS[3] });
+  assert.equal(signed.visitorId, guest.visitorId);
+  assert.equal(signed.sessionId, guest.sessionId);
+  assert.equal(signed.isNewSession, false);
+  assert.notEqual(other.sessionId, signed.sessionId);
+  assert.equal(other.isNewSession, true);
+});
+
+test("a new visit session is created after more than 30 minutes without activity", async () => {
   const { resolveAnonymousIdentity } = await loadVisitorModule();
   const storage = new MemoryStorage();
   let index = 0;
@@ -50,7 +65,7 @@ test("a new anonymous session is created after more than 30 minutes without a tr
   assert.equal(second.isNewSession, true);
 });
 
-test("disabling analytics can remove both persistent anonymous identifiers", async () => {
+test("persistent visit identity can still be explicitly cleared", async () => {
   const { resolveAnonymousIdentity, clearAnonymousAnalyticsIdentity, anonymousAnalyticsConfig } = await loadVisitorModule();
   const storage = new MemoryStorage();
   let index = 0;
@@ -60,25 +75,30 @@ test("disabling analytics can remove both persistent anonymous identifiers", asy
   assert.equal(storage.getItem(anonymousAnalyticsConfig.sessionStorageKey), null);
 });
 
-test("page views write through the restricted RPC and only after the existing analytics gate", async () => {
+test("internal visit recording is independent from the Google Analytics consent gate", async () => {
   const analytics = await read("src/shared/analytics/analytics.js");
   const visitor = await read("src/shared/analytics/visitor-analytics.js");
   const index = await read("index.html");
-  assert.match(analytics, /if \(!analyticsAvailable \|\| !runtimeEnabled \|\| !eventName\) return false/);
+  assert.match(analytics, /trackEvent\("page_view", parameters\)/);
   assert.match(analytics, /recordAnonymousPageView/);
+  assert.doesNotMatch(analytics, /if \(!sent\) return false/);
+  assert.doesNotMatch(analytics, /clearAnonymousAnalyticsIdentity/);
+  assert.match(visitor, /getCurrentAuthState/);
   assert.match(visitor, /client\.rpc\("record_anonymous_visit"/);
-  assert.match(index, /analyticsTargetVersion = "13\.15\.8"/);
-  assert.match(index, /\/src\/shared\/analytics\/analytics\.js/);
+  assert.match(index, /analyticsTargetVersion = "13\.15\.9"/);
   assert.doesNotMatch(visitor, /\.from\("anonymous_visit_sessions"\)/);
 });
 
-test("database migration keeps anonymous rows private and exposes only the validated write RPC", async () => {
-  const migration = await read("supabase/migrations/20260821174000_anonymous_visit_analytics.sql");
-  assert.match(migration, /alter table public\.anonymous_visit_sessions enable row level security/i);
-  assert.match(migration, /revoke all on table public\.anonymous_visit_sessions from public, anon, authenticated/i);
+test("13.15.9 migration links authenticated visits and keeps activity reads behind protected RPCs", async () => {
+  const migration = await read("supabase/migrations/20260822211130_user_activity_admin.sql");
+  assert.match(migration, /add column if not exists activity_access boolean not null default false/i);
+  assert.match(migration, /where nickname = 'Taulu07'/);
+  assert.match(migration, /add column if not exists user_id uuid/i);
+  assert.match(migration, /v_user_id uuid := auth\.uid\(\)/i);
   assert.match(migration, /security definer/i);
-  assert.match(migration, /set search_path = pg_catalog, public/i);
-  assert.match(migration, /revoke all on function public\.record_anonymous_visit\(uuid, uuid, text, text, text\) from public, anon, authenticated/i);
-  assert.match(migration, /grant execute on function public\.record_anonymous_visit\(uuid, uuid, text, text, text\) to anon, authenticated/i);
-  assert.match(migration, /where public\.anonymous_visit_sessions\.visitor_id = excluded\.visitor_id/i);
+  assert.match(migration, /set search_path = ''/i);
+  assert.match(migration, /admin_user_activity_list/);
+  assert.match(migration, /activity access denied/);
+  assert.match(migration, /grant execute on function public\.admin_user_activity_list\(\) to authenticated/i);
+  assert.doesNotMatch(migration, /grant execute on function public\.admin_user_activity_list\(\) to anon/i);
 });

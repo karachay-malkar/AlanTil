@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "13.15.7";
+const SINGLETON_URL_VERSION = "13.15.9";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -68,19 +68,19 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("13.15 remains the published semantic version while 13.15.7 is the cache release", async () => {
+test("13.15.9 is the published app and cache release", async () => {
   const index = await read("index.html");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
-  assert.match(index, /app\.css\?v=13\.15\.7/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.7/);
-  assert.match(analytics, /appVersion = "13\.15"/);
-  assert.match(versionScreen, /<dd>13\.15<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.15\.7"/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.7"/);
+  assert.match(index, /app\.css\?v=13\.15\.9/);
+  assert.match(index, /bootstrap\.js\?v=13\.15\.9/);
+  assert.match(analytics, /appVersion = "13\.15\.9"/);
+  assert.match(versionScreen, /<dd>13\.15\.9<\/dd>/);
+  assert.match(worker, /const VERSION = "13\.15\.9"/);
+  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.9"/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
 });
@@ -91,10 +91,11 @@ test("13.15 feature modules are loaded explicitly and the service worker does no
   assert.match(router, /features\/path\/feature\.js/);
   assert.match(router, /features\/learn\/feature\.js/);
   assert.match(router, /features\/settings\/feature\.js/);
+  assert.match(router, /features\/admin\/index\.js/);
   assert.doesNotMatch(worker, /MODULE_REWRITES|rewrittenModuleResponse|entry-13-14|word-normalizer-13-14/);
 });
 
-test("Settings dependencies resolve through one 13.15 singleton identity", async () => {
+test("Settings dependencies resolve through one 13.15.9 singleton identity", async () => {
   const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
   assert.match(settings, /SETTINGS_ASSET_VERSION = "13\.15"/);
@@ -102,6 +103,7 @@ test("Settings dependencies resolve through one 13.15 singleton identity", async
   assert.match(settings, /auth-service\.js\?v=13\.13/);
   assert.match(settings, /user-settings-store\.js\?v=13\.13/);
   assert.match(worker, /url\.pathname\.startsWith\("\/src\/shared\/settings\/"\)/);
+  assert.match(worker, /url\.pathname\.startsWith\("\/src\/shared\/admin\/"\)/);
   assert.match(worker, /"\/src\/shared\/data\/word-repository\.js"/);
   assert.match(worker, /"\/src\/shared\/progress\/progress-sync\.js"/);
 });
@@ -122,11 +124,11 @@ test("profile keeps character assets but they are lazy and not part of the servi
   assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
-test("historical singleton URLs canonicalize to one 13.15.7 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one 13.15.9 in-memory instance", async () => {
   const index = await read("index.html");
   const generated = generatedImportMapFrom(index);
   const importMap = generated.imports;
-  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13", "13.14", "13.15", "13.15.1", "13.15.2", "13.15.3", "13.15.4", "13.15.5", "13.15.6", "13.15.7"];
+  const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, i) => `13.10.${i}`), "13.11", "13.12", "13.13", "13.14", "13.15", "13.15.1", "13.15.2", "13.15.3", "13.15.4", "13.15.5", "13.15.6", "13.15.7", "13.15.8"];
   assert.equal(generated.targetVersion, SINGLETON_URL_VERSION);
   for (const path of singletonPaths) {
     assert.ok(generated.paths.includes(path), `missing singleton path ${path}`);

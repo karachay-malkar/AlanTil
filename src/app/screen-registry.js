@@ -1,4 +1,4 @@
-import { msg } from "../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../shared/i18n/index.js?v=13.15.9";
 const DEFAULT_SCREEN = Object.freeze({
   layout: "detail",
   header: "standard",
@@ -16,6 +16,9 @@ const SCREENS = Object.freeze({
   "profile.home": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
   "profile.skills": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
   "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "admin.users": { layout: "root", header: "minimal", bottomNav: true, titleKey: "common.alan_til_2" },
+  "admin.user": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.user" },
+  "admin.test": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.test_result" },
 
   "learn.catalog": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.uchit_slova" },
   "learn.sections": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.slovar" },

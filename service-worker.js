@@ -1,12 +1,12 @@
-const VERSION = "13.15.7";
+const VERSION = "13.15.9";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.15.7",
-  "/src/shared/styles/app.css?v=13.15.7",
+  "/src/app/bootstrap.js?v=13.15.9",
+  "/src/shared/styles/app.css?v=13.15.9",
   "/src/features/onboarding/index.js?v=13.10.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
@@ -111,7 +111,9 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith("/src/shared/auth/")
+      || url.pathname.startsWith("/src/shared/admin/")
       || url.pathname.startsWith("/src/shared/settings/")
+      || url.pathname.startsWith("/src/features/admin/")
       || url.pathname.startsWith("/src/features/account/")
       || url.pathname.startsWith("/src/features/settings/")
       || NETWORK_FIRST_PATHS.has(url.pathname)) {

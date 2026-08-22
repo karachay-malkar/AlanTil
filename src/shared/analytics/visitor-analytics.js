@@ -1,3 +1,5 @@
+import { getCurrentAuthState } from "../auth/auth-service.js?v=13.15.9";
+
 const VISITOR_STORAGE_KEY = "alantil_analytics_visitor_id_v1";
 const SESSION_STORAGE_KEY = "alantil_analytics_session_v1";
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -32,6 +34,11 @@ function validUuid(value) {
   return UUID_PATTERN.test(String(value || ""));
 }
 
+function cleanScopeId(value) {
+  const scope = String(value || "").trim();
+  return validUuid(scope) ? scope : "";
+}
+
 function readVisitorId(storage) {
   try {
     const value = storage?.getItem?.(VISITOR_STORAGE_KEY) || "";
@@ -57,14 +64,18 @@ function readSession(storage) {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (validUuid(parsed?.sessionId) && Number.isFinite(Number(parsed?.lastActivityAt))) {
-        return { sessionId: parsed.sessionId, lastActivityAt: Number(parsed.lastActivityAt) };
+        return {
+          sessionId: parsed.sessionId,
+          lastActivityAt: Number(parsed.lastActivityAt),
+          scopeId: cleanScopeId(parsed.scopeId),
+        };
       }
     }
   } catch {
     // Ignore malformed or unavailable storage.
   }
   if (validUuid(memorySession?.sessionId) && Number.isFinite(Number(memorySession?.lastActivityAt))) {
-    return { ...memorySession };
+    return { ...memorySession, scopeId: cleanScopeId(memorySession.scopeId) };
   }
   return null;
 }
@@ -82,21 +93,27 @@ export function resolveAnonymousIdentity({
   storage = storageOrNull(),
   nowMs = Date.now(),
   uuidFactory = makeUuid,
+  scopeId = "",
 } = {}) {
   let visitorId = readVisitorId(storage);
   if (!visitorId) {
     visitorId = uuidFactory();
-    if (!validUuid(visitorId)) throw new Error("Anonymous analytics UUID factory returned an invalid visitor id.");
+    if (!validUuid(visitorId)) throw new Error("Visit UUID factory returned an invalid visitor id.");
     writeVisitorId(storage, visitorId);
   }
 
+  const normalizedScope = cleanScopeId(scopeId);
   const previous = readSession(storage);
   const elapsed = previous ? Number(nowMs) - Number(previous.lastActivityAt) : Number.POSITIVE_INFINITY;
-  const reuse = previous && elapsed >= 0 && elapsed <= SESSION_TIMEOUT_MS;
+  const scopeCompatible = previous && (
+    previous.scopeId === normalizedScope
+    || (!previous.scopeId && Boolean(normalizedScope))
+  );
+  const reuse = previous && scopeCompatible && elapsed >= 0 && elapsed <= SESSION_TIMEOUT_MS;
   const sessionId = reuse ? previous.sessionId : uuidFactory();
-  if (!validUuid(sessionId)) throw new Error("Anonymous analytics UUID factory returned an invalid session id.");
+  if (!validUuid(sessionId)) throw new Error("Visit UUID factory returned an invalid session id.");
 
-  writeSession(storage, { sessionId, lastActivityAt: Number(nowMs) });
+  writeSession(storage, { sessionId, lastActivityAt: Number(nowMs), scopeId: normalizedScope });
   return { visitorId, sessionId, isNewSession: !reuse };
 }
 
@@ -123,7 +140,7 @@ function cleanAppVersion(value) {
 
 async function getAnalyticsSupabaseClient() {
   if (!supabaseClientPromise) {
-    supabaseClientPromise = import("../auth/supabase-client.js?v=13.10.12")
+    supabaseClientPromise = import("../auth/supabase-client.js?v=13.15.9")
       .then(({ getSupabaseClient }) => getSupabaseClient())
       .catch((error) => {
         supabaseClientPromise = null;
@@ -135,7 +152,8 @@ async function getAnalyticsSupabaseClient() {
 
 export async function recordAnonymousPageView({ pagePath, pageReferrer, appVersion } = {}) {
   try {
-    const { visitorId, sessionId } = resolveAnonymousIdentity();
+    const scopeId = String(getCurrentAuthState().user?.id || "").trim();
+    const { visitorId, sessionId } = resolveAnonymousIdentity({ scopeId });
     const client = await getAnalyticsSupabaseClient();
     const { error } = await client.rpc("record_anonymous_visit", {
       p_visitor_id: visitorId,

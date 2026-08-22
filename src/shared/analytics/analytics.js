@@ -7,7 +7,7 @@ const FORBIDDEN_PARAMETER_NAMES = new Set([
 ]);
 
 const GA_DISABLE_KEY = `ga-disable-${measurementId}`;
-const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=13.15.8";
+const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=13.15.9";
 let initialized = false;
 let scriptRequested = false;
 let defaultConsentSet = false;
@@ -151,9 +151,6 @@ function disableAnalytics() {
   window[GA_DISABLE_KEY] = true;
   updateConsent("denied");
   deleteAnalyticsCookies();
-  void loadVisitorAnalytics()
-    .then(({ clearAnonymousAnalyticsIdentity }) => clearAnonymousAnalyticsIdentity())
-    .catch(() => {});
   return true;
 }
 
@@ -179,8 +176,7 @@ export function trackEvent(eventName, parameters = {}) {
 }
 
 export function trackPageView(parameters = {}) {
-  const sent = trackEvent("page_view", parameters);
-  if (!sent) return false;
+  trackEvent("page_view", parameters);
   void loadVisitorAnalytics()
     .then(({ recordAnonymousPageView }) => recordAnonymousPageView({
       pagePath: parameters.page_path || analyticsContext.page_path || window.location.pathname,
@@ -188,10 +184,10 @@ export function trackPageView(parameters = {}) {
       appVersion,
     }))
     .then((recorded) => {
-      if (debugMode && recorded === false) console.warn("[analytics] Supabase anonymous visit was not recorded");
+      if (debugMode && recorded === false) console.warn("[analytics] Supabase visit was not recorded");
     })
     .catch((error) => {
-      if (debugMode) console.warn("[analytics] Supabase anonymous visit failed", error);
+      if (debugMode) console.warn("[analytics] Supabase visit failed", error);
     });
   return true;
 }

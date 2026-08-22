@@ -4,12 +4,14 @@ import {
 } from "../settings/user-settings-store.js?v=13.10.12";
 import { INTERFACE_MESSAGES } from "./messages.js?v=13.9.0";
 import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=13.10.0";
+import { RELEASE_MESSAGES_13_15_9 } from "./messages-13-15-9.js?v=13.15.9";
 
 export const SUPPORTED_INTERFACE_LANGUAGES = Object.freeze(["ru", "en", "tr"]);
 
 const ALL_INTERFACE_MESSAGES = Object.freeze({
   ...INTERFACE_MESSAGES,
   ...RELEASE_MESSAGES_13_10,
+  ...RELEASE_MESSAGES_13_15_9,
 });
 const I18N_STATE_KEY = Symbol.for("alantil.i18n.state.v1");
 const LANGUAGE_MIRROR_KEY = "alantil_interface_language_v1";

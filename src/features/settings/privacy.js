@@ -1,4 +1,4 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=13.15.9";
 import {
   getPrivacyState,
   subscribePrivacyState,
@@ -28,6 +28,9 @@ export function renderPrivacy(context, signal, params = {}) {
         <p>${msg("privacy.dlya_avtorizovannogo_polzovatelya_supabase_mozhet_hranit_i")}</p>
         <p>${msg("privacy.v_oblachnyy_progress_peredayutsya_tehnicheskie_id_slov")}</p>
 
+        <h2>${msg("privacy.visit_activity_title")}</h2>
+        <p>${msg("privacy.visit_activity_text")}</p>
+
         <h2>${msg("privacy.kakie_dannye_peredayutsya_v_google_analytics")}</h2>
         <p>${msg("privacy.pri_vklyuchennoy_statistike_mogut_peredavatsya_prosmotry_r")}</p>
 
@@ -43,6 +46,7 @@ export function renderPrivacy(context, signal, params = {}) {
         <section id="analytics-settings" class="analyticsSettingsSection" aria-labelledby="analytics-settings-title">
           <h2 id="analytics-settings-title">${msg("privacy.statistika_ispolzovaniya")}</h2>
           <p>${msg("privacy.statistika_ispolzovaniya_pomogaet_nam_uluchshat_prilozheni")}</p>
+          <p>${msg("privacy.google_analytics_choice_note")}</p>
           <label class="analyticsPreferenceRow">
             <input id="analyticsPreferenceCheckbox" class="analyticsPreferenceCheckbox" type="checkbox" ${initialState.enabled ? "checked" : ""} />
             <span>${msg("privacy.razreshit_statistiku_ispolzovaniya")}</span>
@@ -51,7 +55,7 @@ export function renderPrivacy(context, signal, params = {}) {
           <div id="analyticsPreferenceMessage" class="analyticsPreferenceMessage hidden" role="status">${msg("privacy.nastroyki_statistiki_sohraneny")}</div>
         </section>
 
-        <p class="settingsDocumentDate">${msg("privacy.redaktsiya_iyul_2026_goda")}</p>
+        <p class="settingsDocumentDate">${msg("privacy.revision_august_2026")}</p>
       </article>`,
   });
 

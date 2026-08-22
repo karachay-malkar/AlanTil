@@ -1,4 +1,4 @@
-import { screenConfig } from "./screen-registry.js?v=13.9.0";
+import { screenConfig } from "./screen-registry.js?v=13.15.9";
 import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js?v=13.9.0";
 
 export function createShell() {
@@ -78,7 +78,7 @@ export function createShell() {
     const feature = String(route).split(".")[0];
     const active = ["test", "match", "songs", "practice"].includes(feature)
       ? "practice.home"
-      : ["profile", "account", "settings"].includes(feature)
+      : ["profile", "account", "settings", "admin"].includes(feature)
         ? "profile.home"
         : "path.home";
     bottomNav.querySelectorAll("[data-route]").forEach((button) => {
@@ -97,7 +97,7 @@ export function createShell() {
     const feature = String(route || "").split(".")[0];
     const pendingRoute = ["test", "match", "songs", "practice"].includes(feature)
       ? "practice.home"
-      : ["profile", "account", "settings"].includes(feature)
+      : ["profile", "account", "settings", "admin"].includes(feature)
         ? "profile.home"
         : "path.home";
     appShell.dataset.navigationPending = String(Boolean(pending));

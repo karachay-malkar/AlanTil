@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=13.15.9";
 let panel = null;
 let controller = null;
 
@@ -23,12 +23,12 @@ export function showAnalyticsConsentPanel({ onDecline, onAccept, onPrivacy } = {
   panel.innerHTML = `
     <div class="analyticsConsentText">
       <strong>${msg("common.pomogite_alan_til_stanovitsya_luchshe")}</strong>
-      ${msg("common.statistika_ispolzovaniya_pomogaet_nam_uluchshat_prilozheni")}
+      ${msg("common.google_analytics_consent_text")}
       <a href="/settings/privacy" data-consent-privacy>${msg("common.politika_konfidentsialnosti")}</a>
     </div>
     <div class="analyticsConsentActions">
-      <button class="btn actionText analyticsConsentButton analyticsConsentDecline" type="button" data-consent-decline>${msg("common.ne_sobirat_statistiku")}</button>
-      <button class="btn actionPrimary analyticsConsentButton analyticsConsentAccept" type="button" data-consent-accept>${msg("common.prodolzhit_so_statistikoy")}</button>
+      <button class="btn actionText analyticsConsentButton analyticsConsentDecline" type="button" data-consent-decline>${msg("common.without_google_analytics")}</button>
+      <button class="btn actionPrimary analyticsConsentButton analyticsConsentAccept" type="button" data-consent-accept>${msg("common.allow_google_analytics")}</button>
     </div>`;
 
   panel.querySelector("[data-consent-decline]")?.addEventListener("click", () => onDecline?.(), { signal: controller.signal });
