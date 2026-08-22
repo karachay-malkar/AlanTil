@@ -7,10 +7,12 @@ const FORBIDDEN_PARAMETER_NAMES = new Set([
 ]);
 
 const GA_DISABLE_KEY = `ga-disable-${measurementId}`;
+const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=13.15.8";
 let initialized = false;
 let scriptRequested = false;
 let defaultConsentSet = false;
 let runtimeEnabled = false;
+let visitorAnalyticsPromise = null;
 let analyticsContext = { screen_name: "unknown", page_path: window.location.pathname || "/" };
 
 function ensureDataLayer() {
@@ -21,6 +23,16 @@ function ensureDataLayer() {
     };
   }
   return window.gtag;
+}
+
+function loadVisitorAnalytics() {
+  if (!visitorAnalyticsPromise) {
+    visitorAnalyticsPromise = import(VISITOR_ANALYTICS_MODULE_URL).catch((error) => {
+      visitorAnalyticsPromise = null;
+      throw error;
+    });
+  }
+  return visitorAnalyticsPromise;
 }
 
 function sanitizeValue(value) {
@@ -139,6 +151,9 @@ function disableAnalytics() {
   window[GA_DISABLE_KEY] = true;
   updateConsent("denied");
   deleteAnalyticsCookies();
+  void loadVisitorAnalytics()
+    .then(({ clearAnonymousAnalyticsIdentity }) => clearAnonymousAnalyticsIdentity())
+    .catch(() => {});
   return true;
 }
 
@@ -164,5 +179,19 @@ export function trackEvent(eventName, parameters = {}) {
 }
 
 export function trackPageView(parameters = {}) {
-  return trackEvent("page_view", parameters);
+  const sent = trackEvent("page_view", parameters);
+  if (!sent) return false;
+  void loadVisitorAnalytics()
+    .then(({ recordAnonymousPageView }) => recordAnonymousPageView({
+      pagePath: parameters.page_path || analyticsContext.page_path || window.location.pathname,
+      pageReferrer: parameters.page_referrer || document.referrer,
+      appVersion,
+    }))
+    .then((recorded) => {
+      if (debugMode && recorded === false) console.warn("[analytics] Supabase anonymous visit was not recorded");
+    })
+    .catch((error) => {
+      if (debugMode) console.warn("[analytics] Supabase anonymous visit failed", error);
+    });
+  return true;
 }
