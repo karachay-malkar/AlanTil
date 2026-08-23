@@ -18,14 +18,13 @@ const AVATAR_IMAGE_BY_GENDER = Object.freeze({
   female: "/assets/images/profile/avatar_female.png?v=13.11",
 });
 
-function setProfileHeaderNavigation(context, active = "profile") {
-  context.shell.setHeaderContent?.({ title: "Alan Til!" });
+function profileNavigation(active = "profile") {
   return renderProfileNavigation(active);
 }
 
 function durationLabel(seconds) {
   const minutes = Math.round(Math.max(0, Number(seconds || 0)) / 60);
-  if (minutes < 60) return msg("profile.min", { minutes: minutes });
+  if (minutes < 60) return msg("profile.min", { minutes });
   return msg("profile.ch_min", { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
 }
 
@@ -42,17 +41,7 @@ function avatarFigure(gender = "") {
   </svg>`;
 }
 
-function subNavigation(active = "status") {
-  return `<nav class="profileSubNav" aria-label="${msg("profile.soderzhimoe_profilya")}">
-    <button class="tabAction profileSubTab ${active === "status" ? "active" : ""}" type="button" data-profile-subroute="profile.home">${msg("profile.status")}</button>
-    <button class="tabAction profileSubTab ${active === "skills" ? "active" : ""}" type="button" data-profile-subroute="profile.skills">${msg("profile.navyki")}</button>
-  </nav>`;
-}
-
-function bindLocalNavigation(context, signal) {
-  context.root.querySelectorAll("[data-profile-subroute]").forEach((button) => {
-    button.addEventListener("click", () => context.router.navigate(button.dataset.profileSubroute), { signal });
-  });
+function bindAccountNavigation(context, signal) {
   context.root.querySelectorAll("[data-profile-account]").forEach((button) => {
     button.addEventListener("click", () => context.router.navigate("account.home"), { signal });
   });
@@ -65,7 +54,7 @@ function storyProgressRows(route, path) {
       const label = route.storyLabels[type];
       return `<button class="profileStoryRow" type="button" data-profile-story="${escapeHtml(type)}">
         <span class="profileStoryHead"><strong>${escapeHtml(label)}</strong><span>${value.percent}%</span></span>
-        ${renderSegmentedProgress({ value: value.percent, segments: 10, label: msg("profile.progress", { label: label }), className: "profileStoryProgress" })}
+        ${renderSegmentedProgress({ value: value.percent, segments: 10, label: msg("profile.progress", { label }), className: "profileStoryProgress" })}
       </button>`;
     }).join("")}
   </div>`;
@@ -88,7 +77,7 @@ function unavailableStoryProgress() {
   </div>`;
 }
 
-function lockedStatus() {
+function lockedProfile() {
   return `<div class="profileLockedState">
     <div class="profileAvatarFrame isLocked" data-status-label="${msg("profile.status_label")}">
       <div class="profileAvatarFigure">${avatarFigure()}</div>
@@ -113,11 +102,11 @@ function genderSelection(error = "") {
   </section>`;
 }
 
-async function renderStatus(context, auth, profile) {
-  const primaryNavigation = setProfileHeaderNavigation(context, "profile");
+async function renderProfileHome(context, auth, profile) {
+  const primaryNavigation = profileNavigation("profile");
   let body = "";
   if (!auth.user) {
-    body = lockedStatus();
+    body = lockedProfile();
   } else if (!profile) {
     body = `<div class="profileLockedState"><strong>${msg("profile.zavershite_nastroyku_akkaunta")}</strong><span>${msg("profile.sozdayte_nikneym_chtoby_otkryt_profil")}</span><button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>${msg("profile.prodolzhit")}</button></div>`;
   } else if (!profile.avatar_gender) {
@@ -147,26 +136,12 @@ async function renderStatus(context, auth, profile) {
 
   context.root.innerHTML = `<section class="view screen profileView">
     ${primaryNavigation}
-    ${subNavigation("status")}
-    <div class="profileScroll">${body}</div>
-  </section>`;
-}
-
-function renderSkills(context, auth, profile) {
-  const primaryNavigation = setProfileHeaderNavigation(context, "profile");
-  const locked = !auth.user || !profile?.avatar_gender;
-  const body = locked
-    ? `<div class="profileLockedState profileSkillsLocked"><span class="profileLockedIcon">${uiIcon("locked")}</span><strong>${msg("profile.navyki_nedostupny")}</strong><span>${msg("profile.snachala_voydite_i_nastroyte_avatar")}</span></div>`
-    : `<div class="profileFutureFeature"><strong>${msg("profile.navyki_2")}</strong><span>${msg("profile.pozzhe_etot_razdel_budet_podklyuchen_iz_otdelnoy")}</span></div>`;
-  context.root.innerHTML = `<section class="view screen profileView">
-    ${primaryNavigation}
-    ${subNavigation("skills")}
     <div class="profileScroll">${body}</div>
   </section>`;
 }
 
 async function renderStatistics(context) {
-  const primaryNavigation = setProfileHeaderNavigation(context, "statistics");
+  const primaryNavigation = profileNavigation("statistics");
   let body = "";
   try {
     const words = await getWords();
@@ -215,18 +190,16 @@ async function loadProfile(auth) {
   }
 }
 
-function renderProfileLoading(context, screen = "home") {
-  const primaryNavigation = setProfileHeaderNavigation(context, "profile");
+function renderProfileLoading(context) {
   context.root.innerHTML = `<section class="view screen profileView">
-    ${primaryNavigation}
-    ${subNavigation(screen === "skills" ? "skills" : "status")}
+    ${profileNavigation("profile")}
     <div class="profileScroll"><div class="loadingState">${msg("common.otkryvaem")}</div></div>
   </section>`;
 }
 
 function bindProfileActions(context, auth, signal) {
   bindProfileNavigation(context, signal);
-  bindLocalNavigation(context, signal);
+  bindAccountNavigation(context, signal);
   context.root.querySelectorAll("[data-profile-story]").forEach((button) => {
     button.addEventListener("click", () => context.router.navigate("path.home", { storyType: button.dataset.profileStory }), { signal });
   });
@@ -258,6 +231,11 @@ export async function mount(context, params = {}) {
   const auth = getCurrentAuthState();
   const screen = params.screen || "home";
 
+  if (screen === "skills") {
+    context.router.replace("profile.home", {}, { force: true });
+    return;
+  }
+
   if (screen === "statistics") {
     await renderStatistics(context);
     if (!signal.aborted) bindProfileNavigation(context, signal);
@@ -265,19 +243,17 @@ export async function mount(context, params = {}) {
   }
 
   if (!auth.user) {
-    if (screen === "skills") renderSkills(context, auth, null);
-    else await renderStatus(context, auth, null);
+    await renderProfileHome(context, auth, null);
     if (!signal.aborted) bindProfileActions(context, auth, signal);
     return;
   }
 
-  renderProfileLoading(context, screen);
+  renderProfileLoading(context);
   bindProfileNavigation(context, signal);
-  bindLocalNavigation(context, signal);
+  bindAccountNavigation(context, signal);
   void loadProfile(auth).then(async (profile) => {
     if (signal.aborted) return;
-    if (screen === "skills") renderSkills(context, auth, profile);
-    else await renderStatus(context, auth, profile);
+    await renderProfileHome(context, auth, profile);
     if (signal.aborted) return;
     bindProfileActions(context, auth, signal);
   });

@@ -32,11 +32,11 @@
   </script>
   <script>
     (() => {
-      const targetVersion = "13.15.10";
+      const targetVersion = "13.15.10.1";
       const analyticsTargetVersion = "13.15.9";
       const analyticsPath = "/src/shared/analytics/analytics.js";
       const singletonPaths = ["/src/app/router.js","/src/app/shell.js","/src/app/screen-registry.js","/src/config/analytics.js","/src/config/auth-providers.js","/src/config/supabase.js","/src/features/account/index.js","/src/features/account/login.js","/src/features/admin/index.js","/src/features/onboarding/index.js","/src/features/path/index.js","/src/features/path/feature.js","/src/features/path/story-stele.js","/src/features/settings/index.js","/src/features/settings/privacy.js","/src/features/settings/version.js","/src/features/songs/index.js","/src/shared/admin/admin-activity-service.js","/src/shared/auth/auth-service.js","/src/shared/auth/auth-store.js","/src/shared/auth/google-identity.js","/src/shared/auth/guest-profile-prompt.js","/src/shared/auth/supabase-client.js","/src/shared/data/word-repository.js","/src/shared/i18n/index.js","/src/shared/i18n/messages-13-10.js","/src/shared/progress/progress-queue.js","/src/shared/progress/progress-sync.js","/src/shared/progress/storage-scope.js","/src/shared/progress/station-progress-store.js","/src/shared/progress/route-settings-store.js","/src/shared/progress/session-builders.js","/src/shared/settings/learning-preview-data.js","/src/shared/settings/learning-setup.js","/src/shared/settings/user-settings-store.js","/src/features/learn/state.js","/src/features/test/state.js","/src/features/match/state.js","/src/features/path/station-view.js","/src/features/test/view.js","/src/shared/domain/alan-display.js","/src/shared/ui/modal.js","/src/shared/ui/profile-navigation.js","/src/shared/ui/analytics-consent-panel.js","/src/shared/ui/word-renderers.js"];
-      const versions = ["13.9.0","13.10.0","13.10.1","13.10.2","13.10.3","13.10.4","13.10.5","13.10.6","13.10.7","13.10.8","13.10.9","13.10.10","13.10.11","13.10.12","13.11","13.12","13.13","13.14","13.15","13.15.1","13.15.2","13.15.3","13.15.4","13.15.5","13.15.6","13.15.7","13.15.8","13.15.9"];
+      const versions = ["13.9.0","13.10.0","13.10.1","13.10.2","13.10.3","13.10.4","13.10.5","13.10.6","13.10.7","13.10.8","13.10.9","13.10.10","13.10.11","13.10.12","13.11","13.12","13.13","13.14","13.15","13.15.1","13.15.2","13.15.3","13.15.4","13.15.5","13.15.6","13.15.7","13.15.8","13.15.9","13.15.10"];
       const imports = {};
       for (const path of singletonPaths) {
         for (const version of versions) imports[`${path}?v=${version}`] = `${path}?v=${targetVersion}`;
@@ -50,7 +50,7 @@
       document.currentScript.after(importMap);
     })();
   </script>
-  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.15.10" />
+  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.15.10.1" />
 </head>
 <body>
   <div id="appShell" class="appShell" data-feature="path" data-screen="home" data-layout="map" data-header="minimal" data-bottom-nav="true">
@@ -70,12 +70,12 @@
     </header>
     <main id="appViewport" class="appViewport"><div id="appRoot" class="appScreenHost" aria-live="polite" aria-busy="false"></div></main>
     <nav id="bottomNav" class="bottomNav" aria-label="Основная навигация" data-i18n-aria-label="common.osnovnaya_navigatsiya">
-      <button class="tabAction bottomNavItem" type="button" data-route="practice.home"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg><span data-i18n="common.praktika">Практика</span></button>
-      <button class="tabAction bottomNavItem active" type="button" data-route="path.home"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg><span data-i18n="common.put">Путь</span></button>
-      <button class="tabAction bottomNavItem" type="button" data-route="profile.home"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg><span data-i18n="common.profil">Профиль</span></button>
+      <button class="tabAction bottomNavItem" type="button" data-route="practice.home"><span class="bottomNavIconBubble"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg></span><span class="bottomNavLabel" data-i18n="common.praktika">Практика</span></button>
+      <button class="tabAction bottomNavItem active" type="button" data-route="path.home"><span class="bottomNavIconBubble bottomNavPathBubble"><img class="bottomNavElbrus" src="/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1" alt="" aria-hidden="true" decoding="async" /></span><span class="bottomNavLabel" data-i18n="common.put">Путь</span></button>
+      <button class="tabAction bottomNavItem" type="button" data-route="profile.home"><span class="bottomNavIconBubble"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></span><span class="bottomNavLabel" data-i18n="common.profil">Профиль</span></button>
     </nav>
   </div>
   <div id="modalRoot" class="modalRoot"></div>
-  <script type="module" src="/src/app/bootstrap.js?v=13.15.10"></script>
+  <script type="module" src="/src/app/bootstrap.js?v=13.15.10.1"></script>
 </body>
 </html>

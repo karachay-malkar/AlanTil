@@ -9,10 +9,10 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=13.15.10";
-import { createShell } from "./shell.js?v=13.15.10";
+import { createRouter } from "./router.js?v=13.15.10.1";
+import { createShell } from "./shell.js?v=13.15.10.1";
 
-const RELEASE_VERSION = "13.15.10";
+const RELEASE_VERSION = "13.15.10.1";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {

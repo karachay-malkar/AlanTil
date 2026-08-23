@@ -1,4 +1,4 @@
-import { screenConfig } from "./screen-registry.js?v=13.15.9";
+import { screenConfig } from "./screen-registry.js?v=13.15.10.1";
 import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js?v=13.9.0";
 
 export function createShell() {
@@ -30,11 +30,13 @@ export function createShell() {
   }
 
   function setHeaderContent({ title = "", subtitle = "" } = {}) {
-    headerText.classList.remove("hidden");
-    headerTitle.textContent = title;
-    headerSubtitle.textContent = subtitle;
-    headerSubtitle.classList.toggle("hidden", !subtitle);
-    headerText.classList.toggle("hidden", !title && !subtitle);
+    const rootNavigationScreen = currentConfig.header === "minimal" && currentConfig.bottomNav;
+    const visibleTitle = rootNavigationScreen ? "" : title;
+    const visibleSubtitle = rootNavigationScreen ? "" : subtitle;
+    headerTitle.textContent = visibleTitle;
+    headerSubtitle.textContent = visibleSubtitle;
+    headerSubtitle.classList.toggle("hidden", !visibleSubtitle);
+    headerText.classList.toggle("hidden", !visibleTitle && !visibleSubtitle);
   }
 
   function setHeaderAction(html = "") {

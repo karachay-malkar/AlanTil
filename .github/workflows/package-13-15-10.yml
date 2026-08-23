@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build exact release archive
-        run: git archive --format=zip --prefix=AlanTil-13.15.10/ --output=AlanTil_13.15.10.zip 6631c20d353b3e588c9be4e8c907ba0b66cf829c
+        run: git archive --format=zip --prefix=AlanTil-13.15.10/ --output=AlanTil_13.15.10.zip "$GITHUB_SHA"
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
