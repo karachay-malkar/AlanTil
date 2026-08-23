@@ -230,8 +230,8 @@ function wordTiles(rows = []) {
 function problemWords(rows = []) {
   if (!rows.length) return `<div class="adminEmpty">${msg("admin.no_problem_words")}</div>`;
   return `<div class="adminProblemRows">${rows.map((row) => `<div class="adminProblemRow">
-    <span><strong>${escapeHtml(currentAlanWord(row))}</strong><small>${escapeHtml(currentTranslation(row))}</small></span>
-    <span class="adminProblemCounts">${escapeHtml(msg("admin.test_errors_short", { count: Math.max(0, numberValue(row.test_wrong_count)) }))}<br>${escapeHtml(msg("admin.unknown_short", { count: Math.max(0, numberValue(row.unknown_count)) }))}</span>
+    <strong>${escapeHtml(currentAlanWord(row))}</strong>
+    <small class="adminProblemCounts">${escapeHtml(msg("admin.test_errors_short", { count: Math.max(0, numberValue(row.test_wrong_count)) }))}<br>${escapeHtml(msg("admin.unknown_short", { count: Math.max(0, numberValue(row.unknown_count)) }))}</small>
   </div>`).join("")}</div>`;
 }
 

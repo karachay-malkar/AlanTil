@@ -35,7 +35,7 @@ test("users table uses the same full-height scroll architecture as the station w
   assert.match(styles, /\.adminUsersScroll\{position:absolute;z-index:1;inset:0[^}]*overflow:auto/);
   assert.match(styles, /scroll-padding-bottom:calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ var\(--content-rest-gap\)\)/);
   assert.match(chrome, /adminUsersScroll[\s\S]*padding:calc\(var\(--safe-top\) \+ 42px\) 0 calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ var\(--content-rest-gap\)\)!important/);
-  assert.match(styles, /\.adminUsersTable thead th\{position:sticky;top:calc\(var\(--safe-top\) \+ 42px\);z-index:2/);
+  assert.match(styles, /\.adminUsersTable thead th\{position:sticky;top:0;z-index:2/);
   assert.match(styles, /\.adminUserStickyCell\{position:sticky;left:0[^}]*z-index:3/);
   assert.match(styles, /\.adminUserStickyHead\{z-index:4!important/);
   assert.match(styles, /tbody tr:last-child>th[^}]*border-bottom:0/);
@@ -50,6 +50,19 @@ test("general table contains only agreed comparison fields", async () => {
   assert.match(feature, /STORY_ORDER\.map/);
   const usersFunction = feature.match(/async function renderUsers[\s\S]*?\n}\n\nfunction storyProgressSection/)?.[0] || "";
   assert.doesNotMatch(usersFunction, /admin\.accuracy|admin\.station_tests|last station/i);
+});
+
+test("other-user problem words use the same compact tile principle as profile statistics", async () => {
+  const feature = await read("src/features/admin/index.js");
+  const styles = await read("src/features/admin/admin.css");
+  const renderer = feature.match(/function problemWords[\s\S]*?\n}\n\nfunction bindTestLinks/)?.[0] || "";
+  assert.match(renderer, /adminProblemRows/);
+  assert.match(renderer, /adminProblemRow/);
+  assert.match(renderer, /adminProblemCounts/);
+  assert.doesNotMatch(renderer, /currentTranslation/);
+  assert.match(styles, /\.adminProblemRows\{display:flex;flex-wrap:wrap;gap:7px/);
+  assert.match(styles, /\.adminProblemRow\{min-width:92px[^}]*border:1px solid var\(--line-soft\)/);
+  assert.match(styles, /\.adminProblemCounts\{[^}]*color:var\(--danger-strong\)/);
 });
 
 test("detail screen contains story progress, station test history, favorites and problem words", async () => {
