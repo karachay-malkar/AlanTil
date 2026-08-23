@@ -1,4 +1,4 @@
-import { msg, getInterfaceLanguage, getInterfaceLocale } from "../../shared/i18n/index.js?v=13.15.9";
+import { msg, getInterfaceLanguage, getInterfaceLocale } from "../../shared/i18n/index.js?v=13.15.10";
 import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.9";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.15.9";
@@ -7,7 +7,9 @@ import {
   fetchStationTestDetail,
   fetchUserActivityDetail,
   fetchUserActivityList,
-} from "../../shared/admin/admin-activity-service.js?v=13.15.9";
+  fetchUserFavorites,
+  fetchUserTestHistory,
+} from "../../shared/admin/admin-activity-service.js?v=13.15.10";
 
 const STORY_ORDER = Object.freeze(["oblivion", "roots", "ascent", "pathways"]);
 const STORY_KEYS = Object.freeze({
@@ -18,6 +20,7 @@ const STORY_KEYS = Object.freeze({
 });
 
 let controller = null;
+let activeModalClose = null;
 
 function storyLabel(type) {
   return msg(STORY_KEYS[type] || "admin.user");
@@ -93,6 +96,11 @@ function stationCode(test = {}) {
   return `${story}.${String(station).padStart(2, "0")}`;
 }
 
+function setNumber(test = {}) {
+  const station = Math.max(0, numberValue(test.station_number));
+  return station ? String(station) : msg("admin.no_data");
+}
+
 function currentAlanWord(row = {}, prefix = "") {
   const settings = getUserSettings();
   const key = settings.alan_script_code === "turkic"
@@ -110,20 +118,41 @@ function deniedError(error) {
   return /42501|activity access denied|permission denied/i.test(String(error?.code || "") + " " + String(error?.message || error || ""));
 }
 
+function failureMessage(error) {
+  return deniedError(error) ? msg("admin.activity_access_denied") : msg("admin.data_unavailable");
+}
+
 function renderFailure(context, error) {
-  const message = deniedError(error) ? msg("admin.activity_access_denied") : msg("admin.data_unavailable");
-  context.root.innerHTML = `<section class="view screen adminStateView"><div class="adminStateMessage">${escapeHtml(message)}</div></section>`;
+  context.root.innerHTML = `<section class="view screen adminStateView"><div class="adminStateMessage">${escapeHtml(failureMessage(error))}</div></section>`;
+}
+
+function medalIcon(rank) {
+  if (rank < 1 || rank > 3) return "";
+  return `<svg class="adminRankMedal" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M7 2h4l1 5-4.4 3.1L4 2h3Z"></path>
+    <path d="M13 2h4l3 8.1L15.6 7 13 2Z"></path>
+    <circle cx="12" cy="15" r="5.2"></circle>
+    <circle class="adminRankMedalInner" cx="12" cy="15" r="2.7"></circle>
+  </svg>`;
 }
 
 function usersTableRows(rows = []) {
-  return rows.map((row) => {
+  return rows.map((row, index) => {
+    const rank = Math.max(1, Math.round(numberValue(row.rank) || index + 1));
     const stories = row.stories || {};
     const storyCells = STORY_ORDER.map((type) => {
       const value = storyProgress(stories[type]);
       return `<td class="adminTableNumber">${value.passed} / ${value.total}</td>`;
     }).join("");
-    return `<tr>
-      <th class="adminUserStickyCell" scope="row"><button class="adminUserLink" type="button" data-admin-user-id="${escapeHtml(row.user_id)}">${escapeHtml(row.nickname)}</button></th>
+    const rankClass = rank <= 3 ? ` adminRankRow adminRank${rank}` : "";
+    return `<tr class="${rankClass.trim()}">
+      <th class="adminUserStickyCell" scope="row">
+        <div class="adminUserIdentity">
+          <span class="adminRankLabel">№${rank}</span>
+          ${medalIcon(rank)}
+          <button class="adminUserLink" type="button" data-admin-user-id="${escapeHtml(row.user_id)}">${escapeHtml(row.nickname)}</button>
+        </div>
+      </th>
       <td>${escapeHtml(formatLastVisit(row.last_seen_at))}</td>
       <td class="adminTableNumber">${escapeHtml(msg("admin.days_short", { count: Math.max(0, numberValue(row.streak_days)) }))}</td>
       ${storyCells}
@@ -189,18 +218,15 @@ function testHistory(tests = []) {
   if (!tests.length) return `<div class="adminEmpty">${msg("admin.no_tests")}</div>`;
   return `<div class="adminTestRows">${tests.map((test) => `<button class="adminTestRow" type="button" data-admin-test-id="${escapeHtml(test.session_id)}">
     <span class="adminTestDate">${escapeHtml(formatTestDate(test.ended_at || test.started_at))}</span>
-    <strong>${escapeHtml(stationCode(test))}</strong>
-    <span>${Math.max(0, numberValue(test.correct_total))}/${Math.max(0, numberValue(test.questions_total))}</span>
-    <span>${escapeHtml(formatAccuracy(test.accuracy))}</span>
+    <span class="adminTestStory">${escapeHtml(storyLabel(test.story_type))}</span>
+    <strong class="adminTestSet">${escapeHtml(setNumber(test))}</strong>
+    <span class="adminTestResult">${escapeHtml(formatAccuracy(test.accuracy))}</span>
   </button>`).join("")}</div>`;
 }
 
-function wordList(rows = []) {
+function wordTiles(rows = []) {
   if (!rows.length) return `<div class="adminEmpty">${msg("admin.no_favorites")}</div>`;
-  return `<div class="adminWordList">${rows.map((row) => `<div class="adminWordRow">
-    <strong>${escapeHtml(currentAlanWord(row))}</strong>
-    <span>${escapeHtml(currentTranslation(row))}</span>
-  </div>`).join("")}</div>`;
+  return `<div class="adminWordTiles">${rows.map((row) => `<div class="adminWordTile"><strong>${escapeHtml(currentAlanWord(row))}</strong></div>`).join("")}</div>`;
 }
 
 function problemWords(rows = []) {
@@ -209,6 +235,65 @@ function problemWords(rows = []) {
     <span><strong>${escapeHtml(currentAlanWord(row))}</strong><small>${escapeHtml(currentTranslation(row))}</small></span>
     <span class="adminProblemCounts">${escapeHtml(msg("admin.test_errors_short", { count: Math.max(0, numberValue(row.test_wrong_count)) }))}<br>${escapeHtml(msg("admin.unknown_short", { count: Math.max(0, numberValue(row.unknown_count)) }))}</span>
   </div>`).join("")}</div>`;
+}
+
+function bindTestLinks(scope, context, userId, signal, { closeModal = false } = {}) {
+  scope?.querySelectorAll("[data-admin-test-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (closeModal) context.modal.close();
+      context.router.navigate("admin.test", {
+        userId,
+        sessionId: button.dataset.adminTestId,
+      });
+    }, { signal });
+  });
+}
+
+async function openHistoryModal(context, signal, userId) {
+  activeModalClose?.();
+  const panel = context.modal.openContent({
+    title: escapeHtml(msg("admin.station_tests")),
+    className: "adminActivityModal adminHistoryModal",
+    contentHtml: `<div class="adminModalState">${msg("common.otkryvaem")}</div>`,
+  });
+  const closeCurrent = () => {
+    if (panel.element?.isConnected) panel.close();
+    if (activeModalClose === closeCurrent) activeModalClose = null;
+  };
+  activeModalClose = closeCurrent;
+  try {
+    const rows = await fetchUserTestHistory(userId);
+    if (signal.aborted || !panel.body?.isConnected) return;
+    panel.body.innerHTML = testHistory(rows);
+    bindTestLinks(panel.body, context, userId, signal, { closeModal: true });
+  } catch (error) {
+    if (!signal.aborted && panel.body?.isConnected) {
+      panel.body.innerHTML = `<div class="adminModalState">${escapeHtml(failureMessage(error))}</div>`;
+    }
+  }
+}
+
+async function openFavoritesModal(context, signal, userId) {
+  activeModalClose?.();
+  const panel = context.modal.openContent({
+    title: escapeHtml(msg("admin.favorite_words")),
+    className: "adminActivityModal adminFavoritesModal",
+    contentHtml: `<div class="adminModalState">${msg("common.otkryvaem")}</div>`,
+  });
+  const closeCurrent = () => {
+    if (panel.element?.isConnected) panel.close();
+    if (activeModalClose === closeCurrent) activeModalClose = null;
+  };
+  activeModalClose = closeCurrent;
+  try {
+    const rows = await fetchUserFavorites(userId);
+    if (signal.aborted || !panel.body?.isConnected) return;
+    panel.body.innerHTML = wordTiles(rows);
+  } catch (error) {
+    if (!signal.aborted && panel.body?.isConnected) {
+      panel.body.innerHTML = `<div class="adminModalState">${escapeHtml(failureMessage(error))}</div>`;
+    }
+  }
 }
 
 async function renderUserDetail(context, signal, userId) {
@@ -221,8 +306,9 @@ async function renderUserDetail(context, signal, userId) {
     context.shell.setHeaderContent?.({ title: detail.nickname || msg("admin.user") });
     const scroll = context.root.querySelector(".adminDetailScroll");
     if (!scroll) return;
+    const tests = Array.isArray(detail.tests) ? detail.tests : [];
+    const favorites = Array.isArray(detail.favorites) ? detail.favorites : [];
     scroll.innerHTML = `<div class="adminDetailContent">
-      <header class="adminUserSummaryHead"><h1>${escapeHtml(detail.nickname || "")}</h1></header>
       <section class="adminSummaryGrid">
         <div><span>${msg("admin.last_visit")}</span><strong>${escapeHtml(formatLastVisit(detail.last_seen_at))}</strong></div>
         <div><span>${msg("admin.streak")}</span><strong>${escapeHtml(msg("admin.days_short", { count: Math.max(0, numberValue(detail.streak_days)) }))}</strong></div>
@@ -231,12 +317,18 @@ async function renderUserDetail(context, signal, userId) {
       </section>
       ${storyProgressSection(detail.stories)}
       <section class="adminDetailSection">
-        <h2>${msg("admin.station_tests")}</h2>
-        ${testHistory(Array.isArray(detail.tests) ? detail.tests : [])}
+        <div class="adminSectionHead">
+          <h2>${msg("admin.station_tests")}</h2>
+          ${Math.max(0, numberValue(detail.test_sessions)) ? `<button class="adminInlineAction" type="button" data-admin-tests-all>${msg("admin.all_history")}</button>` : ""}
+        </div>
+        ${testHistory(tests)}
       </section>
       <section class="adminDetailSection">
-        <div class="adminSectionHead"><h2>${msg("admin.favorite_words")}</h2><button class="adminInlineAction" type="button" data-admin-favorites-toggle>${msg("admin.show_words")}</button></div>
-        <div data-admin-favorites-list hidden>${wordList(Array.isArray(detail.favorites) ? detail.favorites : [])}</div>
+        <div class="adminSectionHead">
+          <h2>${msg("admin.favorite_words")}</h2>
+          ${Math.max(0, numberValue(detail.favorite_words)) ? `<button class="adminInlineAction" type="button" data-admin-favorites-all>${msg("admin.all_words")}</button>` : ""}
+        </div>
+        ${wordTiles(favorites)}
       </section>
       <section class="adminDetailSection">
         <h2>${msg("admin.problem_words")}</h2>
@@ -244,19 +336,12 @@ async function renderUserDetail(context, signal, userId) {
       </section>
     </div>`;
 
-    scroll.querySelectorAll("[data-admin-test-id]").forEach((button) => {
-      button.addEventListener("click", () => context.router.navigate("admin.test", {
-        userId,
-        sessionId: button.dataset.adminTestId,
-      }), { signal });
-    });
-
-    const toggle = scroll.querySelector("[data-admin-favorites-toggle]");
-    const list = scroll.querySelector("[data-admin-favorites-list]");
-    toggle?.addEventListener("click", () => {
-      const nextHidden = !list?.hidden;
-      if (list) list.hidden = nextHidden;
-      toggle.textContent = nextHidden ? msg("admin.show_words") : msg("admin.hide_words");
+    bindTestLinks(scroll, context, userId, signal);
+    scroll.querySelector("[data-admin-tests-all]")?.addEventListener("click", () => {
+      void openHistoryModal(context, signal, userId);
+    }, { signal });
+    scroll.querySelector("[data-admin-favorites-all]")?.addEventListener("click", () => {
+      void openFavoritesModal(context, signal, userId);
     }, { signal });
   } catch (error) {
     if (!signal.aborted) renderFailure(context, error);
@@ -313,6 +398,8 @@ export async function mount(context, params = {}) {
 }
 
 export function unmount() {
+  activeModalClose?.();
+  activeModalClose = null;
   controller?.abort();
   controller = null;
 }

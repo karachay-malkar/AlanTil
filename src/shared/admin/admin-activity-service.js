@@ -22,6 +22,20 @@ export async function fetchUserActivityDetail(userId) {
   return runAdminRpc("admin_user_activity_detail", { p_user_id: id });
 }
 
+export async function fetchUserTestHistory(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return [];
+  const data = await runAdminRpc("admin_user_test_history", { p_user_id: id });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function fetchUserFavorites(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return [];
+  const data = await runAdminRpc("admin_user_favorites", { p_user_id: id });
+  return Array.isArray(data) ? data : [];
+}
+
 export async function fetchStationTestDetail(sessionId) {
   const id = String(sessionId || "").trim();
   if (!id) return null;

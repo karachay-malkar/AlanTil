@@ -1,0 +1,291 @@
+/* AlanTil 13.15.10 — user activity presentation fixes. */
+
+[data-feature="admin"][data-screen="users"] .adminUsersView{
+  position:relative;
+  display:block;
+  height:100%;
+  min-height:0;
+  padding:0!important;
+  overflow:hidden;
+}
+
+[data-feature="admin"][data-screen="users"] .profilePrimaryNav{
+  position:absolute!important;
+  z-index:32;
+  top:calc(var(--safe-top) + var(--header-h) + 4px);
+  left:10px;
+  right:10px;
+  height:40px;
+  min-height:40px;
+}
+
+[data-feature="admin"][data-screen="users"] .adminUsersScroll{
+  position:absolute;
+  inset:0;
+  box-sizing:border-box;
+  min-height:0;
+  overflow:hidden;
+  padding:
+    calc(var(--safe-top) + var(--header-h) + 50px)
+    8px
+    calc(var(--safe-bottom) + var(--nav-h) + 12px);
+}
+
+[data-feature="admin"][data-screen="users"] .adminTableScroller{
+  width:100%;
+  height:100%;
+  max-width:100%;
+  overflow:auto;
+  overscroll-behavior:contain;
+  touch-action:pan-x pan-y;
+  border:1px solid color-mix(in srgb,var(--line-soft) 72%,transparent);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--surface-0) 34%,transparent);
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+
+[data-feature="admin"] .adminUsersTable{
+  background:transparent;
+}
+
+[data-feature="admin"] .adminUsersTable thead th{
+  height:50px;
+  background:color-mix(in srgb,var(--surface-0) 90%,var(--app-bg-deep));
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+}
+
+[data-feature="admin"] .adminUserStickyCell{
+  width:150px;
+  min-width:150px;
+  max-width:150px;
+}
+
+[data-feature="admin"] .adminUserIdentity{
+  width:100%;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+[data-feature="admin"] .adminRankLabel{
+  flex:0 0 auto;
+  min-width:21px;
+  color:var(--text-3);
+  font:800 9px/1 var(--font-terminal);
+  font-variant-numeric:tabular-nums;
+}
+
+[data-feature="admin"] .adminRankMedal{
+  flex:0 0 16px;
+  width:16px;
+  height:16px;
+  fill:currentColor;
+  opacity:.92;
+}
+
+[data-feature="admin"] .adminRankMedalInner{
+  fill:color-mix(in srgb,var(--surface-0) 58%,transparent);
+}
+
+[data-feature="admin"] .adminUserIdentity .adminUserLink{
+  min-width:0;
+  flex:1 1 auto;
+}
+
+[data-feature="admin"] .adminRank1 .adminRankMedal{color:#b58b23}
+[data-feature="admin"] .adminRank2 .adminRankMedal{color:#8f969c}
+[data-feature="admin"] .adminRank3 .adminRankMedal{color:#a8693d}
+
+[data-feature="admin"] .adminUsersTable tbody tr.adminRank1>th,
+[data-feature="admin"] .adminUsersTable tbody tr.adminRank1>td{
+  background:color-mix(in srgb,#d4af37 9%,var(--surface-0));
+}
+[data-feature="admin"] .adminUsersTable tbody tr.adminRank2>th,
+[data-feature="admin"] .adminUsersTable tbody tr.adminRank2>td{
+  background:color-mix(in srgb,#aeb4ba 9%,var(--surface-0));
+}
+[data-feature="admin"] .adminUsersTable tbody tr.adminRank3>th,
+[data-feature="admin"] .adminUsersTable tbody tr.adminRank3>td{
+  background:color-mix(in srgb,#b87333 8%,var(--surface-0));
+}
+
+[data-feature="admin"] .adminDetailScroll{
+  box-sizing:border-box;
+  height:100%;
+  min-height:0;
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding:
+    calc(var(--safe-top) + var(--header-h) + 16px)
+    14px
+    calc(var(--safe-bottom) + 24px)!important;
+  scroll-padding-top:calc(var(--safe-top) + var(--header-h) + 16px);
+  scroll-padding-bottom:calc(var(--safe-bottom) + 24px);
+  -webkit-mask-image:linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 calc(var(--safe-top) + var(--header-h) + 10px),
+    #000 calc(100% - 22px),
+    transparent 100%
+  )!important;
+  mask-image:linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 calc(var(--safe-top) + var(--header-h) + 10px),
+    #000 calc(100% - 22px),
+    transparent 100%
+  )!important;
+}
+
+[data-feature="admin"] .adminDetailContent{
+  width:min(100%,620px);
+  margin:0 auto;
+}
+
+[data-feature="admin"] .adminSummaryGrid{
+  margin-top:0;
+}
+
+[data-feature="admin"] .adminSectionHead{
+  align-items:center;
+}
+
+[data-feature="admin"] .adminInlineAction{
+  appearance:none;
+  flex:0 0 auto;
+  min-height:32px;
+  padding:0 12px;
+  border:1px solid color-mix(in srgb,var(--line) 72%,transparent);
+  border-radius:999px;
+  background:color-mix(in srgb,var(--surface-0) 70%,transparent);
+  color:var(--text-2);
+  box-shadow:0 3px 10px rgba(41,39,33,.05);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  font:800 9px/1 var(--font-terminal);
+  text-decoration:none;
+  transition:transform var(--duration-fast),background var(--duration-fast),border-color var(--duration-fast);
+}
+
+[data-feature="admin"] .adminInlineAction:active{
+  opacity:1;
+  transform:scale(.97);
+  background:color-mix(in srgb,var(--surface-0) 88%,transparent);
+  border-color:var(--line);
+}
+
+[data-feature="admin"] .adminTestRows{
+  border-top:1px solid var(--line-soft);
+}
+
+[data-feature="admin"] .adminTestRow{
+  min-height:48px;
+  grid-template-columns:52px minmax(0,1fr) 34px 46px;
+  gap:8px;
+  padding:5px 2px;
+}
+
+[data-feature="admin"] .adminTestDate{
+  white-space:nowrap;
+}
+
+[data-feature="admin"] .adminTestStory{
+  min-width:0;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  white-space:normal;
+  color:var(--text-1);
+  font-size:10.5px;
+  line-height:1.22;
+}
+
+[data-feature="admin"] .adminTestSet,
+[data-feature="admin"] .adminTestResult{
+  justify-self:end;
+  white-space:nowrap;
+  font:850 11px/1 var(--font-terminal);
+}
+
+[data-feature="admin"] .adminWordTiles{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding-top:8px;
+}
+
+[data-feature="admin"] .adminWordTile{
+  min-width:0;
+  min-height:44px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--line-soft);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--surface-0) 52%,transparent);
+  text-align:center;
+}
+
+[data-feature="admin"] .adminWordTile strong{
+  max-width:100%;
+  font:850 12px/1.25 var(--font-terminal);
+  overflow-wrap:anywhere;
+}
+
+.adminActivityModal{
+  width:min(100%,560px);
+  max-height:min(84dvh,760px);
+}
+
+.adminActivityModal .modalBody{
+  padding:12px;
+}
+
+.adminActivityModal .adminTestRows{
+  border-top:0;
+}
+
+.adminFavoritesModal .adminWordTiles{
+  padding-top:0;
+}
+
+.adminModalState{
+  min-height:120px;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  color:var(--text-2);
+  font-size:12px;
+  text-align:center;
+}
+
+@media(max-width:360px){
+  [data-feature="admin"][data-screen="users"] .adminUsersScroll{
+    padding-left:6px;
+    padding-right:6px;
+  }
+  [data-feature="admin"] .adminUserStickyCell{
+    width:138px;
+    min-width:138px;
+    max-width:138px;
+  }
+  [data-feature="admin"] .adminRankLabel{
+    min-width:19px;
+    font-size:8px;
+  }
+  [data-feature="admin"] .adminRankMedal{
+    flex-basis:14px;
+    width:14px;
+    height:14px;
+  }
+  [data-feature="admin"] .adminTestRow{
+    grid-template-columns:48px minmax(0,1fr) 30px 43px;
+    gap:6px;
+  }
+}
