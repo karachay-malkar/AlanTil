@@ -1,11 +1,11 @@
-const VERSION = "13.15.10.5";
+const VERSION = "13.15.10.6";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.15.10.5",
+  "/src/app/bootstrap.js?v=13.15.10.6",
   "/src/shared/styles/app.css?v=13.15.10.4",
   "/src/features/onboarding/index.js?v=13.10.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",

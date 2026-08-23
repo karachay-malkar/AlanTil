@@ -9,27 +9,28 @@ const STORY_GUIDE = Object.freeze({
   oblivion: {
     title: "На пороге забвения — лёгкий уровень",
     body: `
-      <p>Здесь собрана самая простая и базовая лексика, которую знает большинство носителей языка.</p>
-      <p>Этот раздел предназначен прежде всего для тех, кто начинает изучать язык с нуля или пока знает совсем немного слов.</p>`,
+      <p>Это словарь для тех, кто только начинает изучать язык.</p>
+      <p>Однако, зная только эти слова, твоя речь по-прежнему будет скудной. К сожалению, большая часть людей сегодня владеет лишь этой базовой лексикой. <strong>И потому наш язык постепенно исчезает.</strong></p>
+      <p>Если хочешь действительно хорошо знать свой язык, следующий раздел — для тебя.</p>`,
   },
   roots: {
     title: "Возвращение к истокам — средний уровень",
     body: `
-      <p><strong>Это главный раздел приложения.</strong> Каждый, кому небезразлична судьба языка, должен овладеть этим словарём.</p>
-      <p>Здесь собраны слова, которые употребляются всё реже и которые сегодня знает далеко не каждый. Именно владение такими словами отличает хорошее знание языка от знания только самой простой, базовой лексики.</p>
-      <p><strong>Если мы сможем вернуть эту лексику в родную речь и снова сделать её частью повседневной жизни, наш язык будет жить.</strong></p>`,
+      <p><strong>Это главный раздел приложения.</strong></p>
+      <p>Этот раздел соответствует хорошему уровню владения языком — уровню полноценного носителя. Здесь собраны слова, которыми сегодня, к сожалению, владеет уже меньшинство.</p>
+      <p><strong>Проверь себя: знаешь ли ты эти слова?</strong></p>`,
   },
   ascent: {
     title: "На вершине — сложный уровень",
     body: `
-      <p>Здесь собраны редкие, старые и более сложные слова, которые сегодня употребляются значительно реже.</p>
-      <p>Этот раздел предназначен для тех, кто уже хорошо знает язык и хочет углубить свои знания.</p>`,
+      <p>Здесь собраны редкие, старые и сложные слова, которые сегодня знают немногие.</p>
+      <p>Этот раздел — для тех, кто уже хорошо владеет языком и хочет углубить свои знания.</p>`,
   },
   pathways: {
     title: "Тропы — тематические наборы",
     body: `
-      <p>Здесь слова распределены не по уровню сложности, а по темам: животные, растения, материалы и другие области жизни.</p>
-      <p>Выбирай интересующие темы и отдельно расширяй свой словарный запас.</p>`,
+      <p>Здесь слова собраны по темам: животные, растения, материалы и другие области жизни.</p>
+      <p>Выбирай интересующую тему и отдельно расширяй свой словарный запас.</p>`,
   },
 });
 
@@ -44,34 +45,48 @@ const STYLE_TEXT = `
 .alantilGuideTrigger:active{transform:translateY(calc(-50% + 1px)) scale(.97)}
 body.alantilGuideGeneral .alantilGuideTrigger{opacity:0;pointer-events:none}
 body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-.alantilGuideOverlay{position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none}
-.alantilGuideShade,.alantilGuideFullShade{position:fixed;background:rgba(20,19,17,.68);-webkit-backdrop-filter:brightness(.82);backdrop-filter:brightness(.82)}
-.alantilGuideOverlay.isBlocking .alantilGuideShade,.alantilGuideOverlay.isBlocking .alantilGuideFullShade{pointer-events:auto}
-.alantilGuideFullShade{inset:0}
-.alantilGuideTargetBlocker{position:fixed;background:transparent;pointer-events:auto}
-.alantilGuideBubble{
-  position:fixed;z-index:4;width:min(390px,calc(100vw - 24px));max-height:min(56dvh,470px);overflow:auto;padding:14px 14px 13px;
-  border:1px solid color-mix(in srgb,var(--line) 88%,transparent);border-radius:18px;background:color-mix(in srgb,var(--surface-0) 94%,transparent);
-  color:var(--text-1);box-shadow:0 16px 48px rgba(24,22,19,.28);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);pointer-events:auto;
+.alantilGuideOverlay{position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:#fff}
+.alantilGuideSpotlight{position:fixed;z-index:0;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.alantilGuideSpotlightShade{fill:rgba(16,15,13,.66)}
+.alantilGuideHalo{position:fixed;z-index:1;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 26px rgba(255,255,255,.10);transition:left .18s ease,top .18s ease,width .18s ease,height .18s ease,border-radius .18s ease}
+.alantilGuideInputBlocker{position:fixed;z-index:2;background:transparent;pointer-events:auto}
+.alantilGuideContent{position:fixed;z-index:3;inset:0;pointer-events:none;outline:none}
+.alantilGuideTitle{
+  position:fixed;left:50%;top:max(18px,calc(env(safe-area-inset-top) + 12px));width:min(460px,calc(100vw - 32px));margin:0;
+  transform:translateX(-50%);color:rgba(255,255,255,.98);font:900 19px/1.2 var(--font-terminal);text-align:center;text-wrap:balance;
+  text-shadow:0 2px 18px rgba(0,0,0,.58);pointer-events:none;
 }
-.alantilGuideBubble.isCentered{left:50%!important;top:50%!important;transform:translate(-50%,-50%)}
-.alantilGuideMeta{display:flex;align-items:center;justify-content:flex-end;min-height:20px;margin-bottom:3px}
-.alantilGuideSkip{appearance:none;padding:2px 0;border:0;background:transparent;color:var(--text-3);font:700 10px/1.2 var(--font-terminal);cursor:pointer}
-.alantilGuideTitle{margin:0;color:var(--text-1);font-size:17px;font-weight:900;line-height:1.18;text-wrap:balance}
-.alantilGuideBody{margin-top:8px;color:var(--text-2);font-size:13px;line-height:1.48}
-.alantilGuideBody p{margin:0}.alantilGuideBody p+p{margin-top:8px}.alantilGuideBody strong{color:var(--text-1);font-weight:850}
-.alantilGuideFooter{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-.alantilGuideNext{appearance:none;min-height:36px;padding:8px 14px;border:1px solid color-mix(in srgb,var(--text-1) 22%,transparent);border-radius:999px;background:var(--text-1);color:var(--surface-0);font:800 11px/1 var(--font-terminal);cursor:pointer}
-.alantilGuideHighlighted{outline:2px solid color-mix(in srgb,var(--accent-strong) 82%,white);outline-offset:5px;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent-strong) 24%,transparent))}
-.alantilGuideGesture{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;color:var(--text-1);font:800 11px/1.2 var(--font-terminal)}
-.alantilGuideGesture span{display:flex;align-items:center;gap:5px}.alantilGuideGesture b{font-size:17px}
-@media(max-width:390px){.alantilGuideTrigger{left:9px;width:34px;height:34px}.alantilGuideBubble{padding:12px;border-radius:16px}.alantilGuideTitle{font-size:16px}.alantilGuideBody{font-size:12.5px}}
-@media(prefers-reduced-motion:reduce){.alantilGuideTrigger,.alantilGuideBubble{transition:none!important}}
+.alantilGuideBody{
+  position:fixed;left:50%;width:min(440px,calc(100vw - 38px));margin:0;transform:translateX(-50%);color:rgba(255,255,255,.88);
+  font-size:14px;line-height:1.48;text-align:center;text-wrap:pretty;text-shadow:0 2px 16px rgba(0,0,0,.62);pointer-events:none;
+}
+.alantilGuideBody p{margin:0}.alantilGuideBody p+p{margin-top:10px}.alantilGuideBody strong{color:#fff;font-weight:850}
+.alantilGuideNav{
+  position:fixed;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;z-index:5;pointer-events:none;
+}
+.alantilGuideSkip,.alantilGuideNext{
+  appearance:none;width:max-content;min-height:36px;padding:7px 2px;border:0;background:transparent;color:rgba(255,255,255,.94);
+  font:800 11px/1 var(--font-terminal);text-shadow:0 2px 14px rgba(0,0,0,.7);cursor:pointer;pointer-events:auto;
+}
+.alantilGuideSkip{justify-self:start;color:rgba(255,255,255,.68)}
+.alantilGuideNext{justify-self:end}
+.alantilGuideSkip:active,.alantilGuideNext:active{transform:translateY(1px);opacity:.78}
+.alantilGuideGesture{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:10px;color:#fff;font:850 12px/1.2 var(--font-terminal)}
+.alantilGuideGesture span{display:flex;align-items:center;gap:6px}.alantilGuideGesture b{font-size:18px}
+@media(max-width:390px){
+  .alantilGuideTrigger{left:9px;width:34px;height:34px}
+  .alantilGuideTitle{width:calc(100vw - 28px);font-size:17px}
+  .alantilGuideBody{width:calc(100vw - 32px);font-size:13px}
+  .alantilGuideNav{left:14px;right:14px}
+}
+@media(prefers-reduced-motion:reduce){.alantilGuideTrigger,.alantilGuideHalo{transition:none!important}}
 `;
 
 let activeOverlay = null;
 let observer = null;
 let scanQueued = false;
+let overlayCounter = 0;
 let generalGuide = { active: false, phase: "", storyIndex: 0 };
 let learningBinding = null;
 let learningFlow = { active: false, phase: "", decisionWordId: "" };
@@ -122,49 +137,156 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function targetRect(target, padding = 7) {
+function numericRadius(value, width, height) {
+  const text = String(value || "").trim();
+  if (text.includes("%")) return Math.min(width, height) / 2;
+  const parsed = Number.parseFloat(text);
+  return Number.isFinite(parsed) ? parsed : 14;
+}
+
+function targetGeometry(target, { padding = 9, shape = "auto" } = {}) {
   if (!target?.isConnected) return null;
   const rect = target.getBoundingClientRect();
   if (!rect.width || !rect.height) return null;
+
+  let resolvedShape = shape;
+  if (resolvedShape === "auto") {
+    if (target.matches?.(".storyTab,.sessionStatus")) resolvedShape = "pill";
+    else if (target.matches?.(".stationProgressRing,#btnFavAction")) resolvedShape = "circle";
+    else resolvedShape = "rounded";
+  }
+
+  let left = rect.left - padding;
+  let top = rect.top - padding;
+  let width = rect.width + padding * 2;
+  let height = rect.height + padding * 2;
+
+  if (resolvedShape === "circle") {
+    const side = Math.max(rect.width, rect.height) + padding * 2;
+    left = rect.left + rect.width / 2 - side / 2;
+    top = rect.top + rect.height / 2 - side / 2;
+    width = side;
+    height = side;
+  }
+
+  left = clamp(left, 2, Math.max(2, window.innerWidth - width - 2));
+  top = clamp(top, 2, Math.max(2, window.innerHeight - height - 2));
+  width = Math.min(width, window.innerWidth - left - 2);
+  height = Math.min(height, window.innerHeight - top - 2);
+
+  const computed = getComputedStyle(target);
+  let radius = numericRadius(computed.borderTopLeftRadius, width, height) + padding;
+  if (resolvedShape === "circle" || resolvedShape === "pill") radius = Math.min(width, height) / 2;
+  else radius = clamp(radius, 14, Math.min(width, height) / 2);
+
   return {
-    left: clamp(rect.left - padding, 0, window.innerWidth),
-    top: clamp(rect.top - padding, 0, window.innerHeight),
-    right: clamp(rect.right + padding, 0, window.innerWidth),
-    bottom: clamp(rect.bottom + padding, 0, window.innerHeight),
+    left,
+    top,
+    right: left + width,
+    bottom: top + height,
+    width,
+    height,
+    radius,
   };
 }
 
-function applyRect(element, { left, top, right, bottom }) {
-  element.style.left = `${left}px`;
-  element.style.top = `${top}px`;
-  element.style.width = `${Math.max(0, right - left)}px`;
-  element.style.height = `${Math.max(0, bottom - top)}px`;
+function applyRect(element, rect) {
+  if (!element || !rect) return;
+  element.style.left = `${rect.left}px`;
+  element.style.top = `${rect.top}px`;
+  element.style.width = `${Math.max(0, rect.right - rect.left)}px`;
+  element.style.height = `${Math.max(0, rect.bottom - rect.top)}px`;
 }
 
-function positionBubble(bubble, rect, placement = "auto") {
-  if (!rect) {
-    bubble.classList.add("isCentered");
-    bubble.style.left = "50%";
-    bubble.style.top = "50%";
+function updateSpotlight(svg, hole, shade, halo, geometry) {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  shade.setAttribute("width", String(width));
+  shade.setAttribute("height", String(height));
+  const base = svg.querySelector("[data-mask-base]");
+  base?.setAttribute("width", String(width));
+  base?.setAttribute("height", String(height));
+
+  if (!geometry) {
+    hole.setAttribute("width", "0");
+    hole.setAttribute("height", "0");
+    halo.hidden = true;
     return;
   }
-  bubble.classList.remove("isCentered");
-  const margin = 12;
-  const gap = 14;
-  const width = Math.min(390, window.innerWidth - margin * 2);
-  bubble.style.width = `${width}px`;
-  bubble.style.left = `${clamp((rect.left + rect.right - width) / 2, margin, window.innerWidth - width - margin)}px`;
-  bubble.style.top = `${margin}px`;
-  const bubbleRect = bubble.getBoundingClientRect();
-  const above = rect.top - gap - bubbleRect.height;
-  const below = rect.bottom + gap;
-  let top;
-  if (placement === "top") top = above;
-  else if (placement === "bottom") top = below;
-  else if (below + bubbleRect.height <= window.innerHeight - margin) top = below;
-  else if (above >= margin) top = above;
-  else top = clamp(window.innerHeight - bubbleRect.height - margin, margin, window.innerHeight - bubbleRect.height - margin);
-  bubble.style.top = `${clamp(top, margin, Math.max(margin, window.innerHeight - bubbleRect.height - margin))}px`;
+
+  hole.setAttribute("x", String(geometry.left));
+  hole.setAttribute("y", String(geometry.top));
+  hole.setAttribute("width", String(geometry.width));
+  hole.setAttribute("height", String(geometry.height));
+  hole.setAttribute("rx", String(geometry.radius));
+  hole.setAttribute("ry", String(geometry.radius));
+  halo.hidden = false;
+  halo.style.left = `${geometry.left}px`;
+  halo.style.top = `${geometry.top}px`;
+  halo.style.width = `${geometry.width}px`;
+  halo.style.height = `${geometry.height}px`;
+  halo.style.borderRadius = `${geometry.radius}px`;
+}
+
+function positionBody(body, title, geometry) {
+  const margin = 16;
+  const gap = 22;
+  const titleRect = title.getBoundingClientRect();
+  const navReserve = 76 + Math.max(0, Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-bottom")) || 0);
+  const usableTop = Math.max(titleRect.bottom + 18, 86);
+  const usableBottom = Math.max(usableTop + 40, window.innerHeight - navReserve);
+  const bodyHeight = body.getBoundingClientRect().height;
+
+  const placeInZone = (start, end) => {
+    const available = Math.max(0, end - start);
+    return clamp(start + (available - bodyHeight) / 2, margin, Math.max(margin, window.innerHeight - bodyHeight - margin));
+  };
+
+  if (!geometry) {
+    body.style.top = `${placeInZone(usableTop, usableBottom)}px`;
+    return;
+  }
+
+  const zones = [
+    { start: usableTop, end: geometry.top - gap },
+    { start: geometry.bottom + gap, end: usableBottom },
+  ].map((zone) => ({ ...zone, available: zone.end - zone.start }))
+    .filter((zone) => zone.available >= bodyHeight + 8)
+    .sort((left, right) => right.available - left.available);
+
+  if (zones.length) {
+    body.style.top = `${placeInZone(zones[0].start, zones[0].end)}px`;
+    return;
+  }
+
+  const fallbackTop = placeInZone(usableTop, usableBottom);
+  body.style.top = `${fallbackTop}px`;
+}
+
+function createInputBlockers(overlay, geometry, blockTarget) {
+  overlay.querySelectorAll("[data-guide-blocker]").forEach((node) => node.remove());
+  if (!overlay.classList.contains("isBlocking")) return;
+
+  const makeBlocker = (rect) => {
+    const blocker = document.createElement("div");
+    blocker.className = "alantilGuideInputBlocker";
+    blocker.dataset.guideBlocker = "";
+    applyRect(blocker, rect);
+    overlay.appendChild(blocker);
+  };
+
+  if (!geometry || blockTarget) {
+    makeBlocker({ left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight });
+    return;
+  }
+
+  makeBlocker({ left: 0, top: 0, right: window.innerWidth, bottom: geometry.top });
+  makeBlocker({ left: 0, top: geometry.bottom, right: window.innerWidth, bottom: window.innerHeight });
+  makeBlocker({ left: 0, top: geometry.top, right: geometry.left, bottom: geometry.bottom });
+  makeBlocker({ left: geometry.right, top: geometry.top, right: window.innerWidth, bottom: geometry.bottom });
 }
 
 function showStep({
@@ -177,44 +299,58 @@ function showStep({
   showSkip = true,
   blocking = true,
   blockTarget = false,
-  placement = "auto",
+  spotlightShape = "auto",
+  spotlightPadding = 9,
 } = {}) {
   destroyOverlay();
   const modalRoot = document.getElementById("modalRoot") || document.body;
   const overlay = document.createElement("div");
   overlay.className = `alantilGuideOverlay${blocking ? " isBlocking" : ""}`;
-  overlay.innerHTML = target
-    ? `<div class="alantilGuideShade" data-shade="top"></div><div class="alantilGuideShade" data-shade="bottom"></div><div class="alantilGuideShade" data-shade="left"></div><div class="alantilGuideShade" data-shade="right"></div>${blockTarget ? '<div class="alantilGuideTargetBlocker" data-target-blocker></div>' : ""}`
-    : `<div class="alantilGuideFullShade"></div>`;
-  const bubble = document.createElement("section");
-  bubble.className = "alantilGuideBubble";
-  bubble.setAttribute("role", "dialog");
-  bubble.setAttribute("aria-modal", blocking ? "true" : "false");
-  bubble.innerHTML = `
-    <div class="alantilGuideMeta">${showSkip ? '<button class="alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}</div>
+
+  const maskId = `alantil-guide-mask-${++overlayCounter}`;
+  overlay.innerHTML = `
+    <svg class="alantilGuideSpotlight" aria-hidden="true">
+      <defs>
+        <mask id="${maskId}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+          <rect data-mask-base x="0" y="0" width="0" height="0" fill="white"></rect>
+          <rect data-mask-hole x="0" y="0" width="0" height="0" rx="0" ry="0" fill="black"></rect>
+        </mask>
+      </defs>
+      <rect class="alantilGuideSpotlightShade" data-mask-shade x="0" y="0" width="0" height="0" mask="url(#${maskId})"></rect>
+    </svg>
+    <div class="alantilGuideHalo" data-guide-halo hidden></div>`;
+
+  const content = document.createElement("section");
+  content.className = "alantilGuideContent";
+  content.setAttribute("role", "dialog");
+  content.setAttribute("aria-modal", blocking ? "true" : "false");
+  content.tabIndex = -1;
+  content.innerHTML = `
     <h2 class="alantilGuideTitle">${title}</h2>
     <div class="alantilGuideBody">${body}</div>
-    ${nextLabel ? `<div class="alantilGuideFooter"><button class="alantilGuideNext" type="button" data-guide-next>${nextLabel}</button></div>` : ""}`;
-  overlay.appendChild(bubble);
+    <nav class="alantilGuideNav" aria-label="Навигация по подсказке">
+      ${showSkip ? '<button class="alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : '<span></span>'}
+      ${nextLabel ? `<button class="alantilGuideNext" type="button" data-guide-next>${nextLabel}</button>` : ""}
+    </nav>`;
+  overlay.appendChild(content);
   modalRoot.appendChild(overlay);
-  target?.classList.add("alantilGuideHighlighted");
+
+  const svg = overlay.querySelector(".alantilGuideSpotlight");
+  const hole = overlay.querySelector("[data-mask-hole]");
+  const shade = overlay.querySelector("[data-mask-shade]");
+  const halo = overlay.querySelector("[data-guide-halo]");
+  const titleNode = overlay.querySelector(".alantilGuideTitle");
+  const bodyNode = overlay.querySelector(".alantilGuideBody");
 
   let resizeFrame = 0;
   const reposition = () => {
     if (resizeFrame) return;
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
-      const rect = targetRect(target);
-      const shades = overlay.querySelectorAll("[data-shade]");
-      if (rect && shades.length === 4) {
-        applyRect(shades[0], { left: 0, top: 0, right: window.innerWidth, bottom: rect.top });
-        applyRect(shades[1], { left: 0, top: rect.bottom, right: window.innerWidth, bottom: window.innerHeight });
-        applyRect(shades[2], { left: 0, top: rect.top, right: rect.left, bottom: rect.bottom });
-        applyRect(shades[3], { left: rect.right, top: rect.top, right: window.innerWidth, bottom: rect.bottom });
-        const blocker = overlay.querySelector("[data-target-blocker]");
-        if (blocker) applyRect(blocker, rect);
-      }
-      positionBubble(bubble, rect, placement);
+      const geometry = targetGeometry(target, { padding: spotlightPadding, shape: spotlightShape });
+      updateSpotlight(svg, hole, shade, halo, geometry);
+      createInputBlockers(overlay, geometry, blockTarget);
+      positionBody(bodyNode, titleNode, geometry);
     });
   };
 
@@ -222,11 +358,11 @@ function showStep({
     window.removeEventListener("resize", reposition);
     window.removeEventListener("scroll", reposition, true);
     if (resizeFrame) cancelAnimationFrame(resizeFrame);
-    target?.classList.remove("alantilGuideHighlighted");
     overlay.remove();
   };
   const api = { destroy: cleanup, overlay };
   activeOverlay = api;
+
   const finishAction = (callback) => {
     if (activeOverlay === api) activeOverlay = null;
     cleanup();
@@ -235,7 +371,7 @@ function showStep({
 
   overlay.querySelector("[data-guide-next]")?.addEventListener("click", () => finishAction(onNext));
   overlay.querySelector("[data-guide-skip]")?.addEventListener("click", () => finishAction(onSkip));
-  overlay.addEventListener("keydown", (event) => {
+  content.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || !showSkip) return;
     event.preventDefault();
     finishAction(onSkip);
@@ -244,7 +380,7 @@ function showStep({
   window.addEventListener("scroll", reposition, { capture: true, passive: true });
   requestAnimationFrame(() => {
     reposition();
-    bubble.focus?.({ preventScroll: true });
+    content.focus({ preventScroll: true });
   });
   return api;
 }
@@ -265,9 +401,8 @@ function showGeneralIntro() {
   showStep({
     title: "Ассаламу алейкум, алан!",
     body: `
-      <p>Это приложение создано для изучения аланской (карачаево-балкарской) лексики и расширения словарного запаса.</p>
-      <p>Здесь ты сможешь узнавать новые слова, вспоминать забытые и постепенно возвращать их в свою речь.</p>
-      <p>Главное — не просто выучить слова в приложении, а начать использовать их в повседневной жизни. Только так они снова станут частью живого языка и будут передаваться дальше.</p>`,
+      <p>Это приложение создано для изучения аланских (карачаево-балкарских) слов и расширения словарного запаса.</p>
+      <p>Учи новые слова, а затем старайся использовать их в повседневной жизни. <strong>Только тогда твоя речь действительно станет богаче, и ты увидишь свой прогресс.</strong></p>`,
     onNext: showStoriesIntro,
     onSkip: skipGeneralGuide,
   });
@@ -280,10 +415,12 @@ function showStoriesIntro() {
   showStep({
     target,
     title: "Истории",
-    body: `<p>Здесь находятся разделы слов разной сложности и назначения.</p><p>Сейчас мы коротко познакомимся с каждым из них.</p>`,
+    body: `<p>Здесь слова разделены по сложности и назначению.</p><p>Сейчас коротко познакомимся с каждым разделом.</p>`,
     onNext: () => showStory(0),
     onSkip: skipGeneralGuide,
     blockTarget: true,
+    spotlightShape: "rounded",
+    spotlightPadding: 7,
   });
 }
 
@@ -318,6 +455,8 @@ function showStory(index) {
     },
     onSkip: skipGeneralGuide,
     blockTarget: true,
+    spotlightShape: "pill",
+    spotlightPadding: 7,
   });
 }
 
@@ -329,11 +468,13 @@ function showStorySummary() {
   if (!target) { scheduleScan(); return; }
   showStep({
     target,
-    title: "Выбери свою историю",
-    body: `<p>Ты можешь свободно переключаться между историями и выбирать подходящий уровень.</p><p>Основной путь приложения — <strong>«Возвращение к истокам»</strong>.</p>`,
+    title: "Выбери свой путь",
+    body: `<p>Начни с подходящего тебе уровня и переключайся между историями в любое время.</p><p><strong>Основной путь приложения — «Возвращение к истокам».</strong></p>`,
     onNext: showStages,
     onSkip: skipGeneralGuide,
     blockTarget: true,
+    spotlightShape: "rounded",
+    spotlightPadding: 7,
   });
 }
 
@@ -341,11 +482,15 @@ function visibleStationTarget() {
   const viewport = document.querySelector(".pathMapViewport");
   const viewportRect = viewport?.getBoundingClientRect();
   const stations = Array.from(document.querySelectorAll("[data-station-key]"));
-  if (!viewportRect) return stations[0] || document.querySelector(".routeMap");
-  return stations.find((station) => {
-    const rect = station.getBoundingClientRect();
-    return rect.bottom > viewportRect.top + 20 && rect.top < viewportRect.bottom - 20;
-  }) || stations.at(-1) || document.querySelector(".routeMap");
+  let station = null;
+  if (!viewportRect) station = stations[0] || null;
+  else {
+    station = stations.find((item) => {
+      const rect = item.getBoundingClientRect();
+      return rect.bottom > viewportRect.top + 20 && rect.top < viewportRect.bottom - 20;
+    }) || stations.at(-1) || null;
+  }
+  return station?.querySelector(".stationProgressRing") || station || document.querySelector(".routeMap");
 }
 
 function showStages() {
@@ -355,7 +500,7 @@ function showStages() {
   showStep({
     target,
     title: "Проходи этапы",
-    body: `<p>Каждая история состоит из этапов. В каждом этапе ты изучаешь новую группу слов, а затем проверяешь свои знания в тесте.</p><p>После подсказки открой любой этап.</p>`,
+    body: `<p>В каждом этапе сначала изучи новые слова, а затем проверь себя в тесте.</p>`,
     nextLabel: "Понятно",
     onNext: () => {
       generalGuide.phase = "await-station";
@@ -363,6 +508,8 @@ function showStages() {
     },
     onSkip: skipGeneralGuide,
     blockTarget: true,
+    spotlightShape: target.matches?.(".stationProgressRing") ? "circle" : "rounded",
+    spotlightPadding: 8,
   });
 }
 
@@ -373,11 +520,12 @@ function showStationStudy() {
   showStep({
     target,
     title: "Учить слова",
-    body: `<p>Сначала изучи слова этого этапа с помощью флеш-карточек.</p>`,
+    body: `<p>Запоминай новые слова с помощью флеш-карточек.</p>`,
     onNext: showStationTest,
     onSkip: skipGeneralGuide,
     blockTarget: true,
-    placement: "top",
+    spotlightShape: "rounded",
+    spotlightPadding: 8,
   });
 }
 
@@ -388,12 +536,13 @@ function showStationTest() {
   showStep({
     target,
     title: "Тест",
-    body: `<p>После обучения проверь, насколько хорошо ты усвоил слова. Чтобы завершить этап, нужно набрать не менее <strong>${PATH_CONFIG.stationRequiredAccuracy}% правильных ответов</strong>.</p>`,
+    body: `<p>Проверь свои знания и заверши этап.</p><p>Для прохождения нужно набрать <strong>не менее ${PATH_CONFIG.stationRequiredAccuracy}%</strong>.</p>`,
     nextLabel: "Понятно",
     onNext: finishGeneralGuide,
     onSkip: skipGeneralGuide,
     blockTarget: true,
-    placement: "top",
+    spotlightShape: "rounded",
+    spotlightPadding: 8,
   });
 }
 
@@ -435,27 +584,29 @@ function showLearningCardStep(binding) {
   learningFlow = { active: true, phase: "card", decisionWordId: "" };
   showStep({
     target: binding.card,
-    title: "Вспомни значение",
-    body: `<p>Сначала попробуй вспомнить перевод слова самостоятельно.</p><p>Нажми на карточку, чтобы перевернуть её.</p>`,
+    title: "Вспомни перевод",
+    body: `<p>Попробуй вспомнить значение слова и нажми на карточку.</p>`,
     nextLabel: "",
     onSkip: skipLearningGuide,
     blocking: false,
-    placement: "auto",
+    spotlightShape: "rounded",
+    spotlightPadding: 8,
   });
 }
 
 function showLearningTranslation(binding) {
   if (!learningFlow.active || learningFlow.phase !== "card") return;
   learningFlow.phase = "translation";
-  const target = binding.session.querySelector(".cardBack") || binding.card;
   showStep({
-    target,
+    target: binding.card,
     title: "Проверь себя",
-    body: `<p>На обратной стороне карточки находится перевод слова.</p>`,
+    body: `<p>На обратной стороне находится перевод слова.</p>`,
     onNext: () => showLearningDecision(binding),
     onSkip: skipLearningGuide,
     blocking: true,
     blockTarget: true,
+    spotlightShape: "rounded",
+    spotlightPadding: 8,
   });
 }
 
@@ -465,12 +616,13 @@ function showLearningDecision(binding) {
   const target = binding.session.querySelector(".learnDecisionGroup") || binding.card;
   showStep({
     target,
-    title: "Оцени слово",
-    body: `<p>Свайпни <strong>вправо</strong>, если знаешь слово, и <strong>влево</strong>, если пока не знаешь.</p><p>Незнакомые слова будут возвращаться снова, пока ты их не запомнишь.</p><div class="alantilGuideGesture"><span><b>←</b> Не знаю</span><span>Знаю <b>→</b></span></div>`,
+    title: "Знаешь слово?",
+    body: `<div class="alantilGuideGesture"><span><b>←</b> Не знаю</span><span>Знаю <b>→</b></span></div><p>Незнакомые слова будут возвращаться, пока ты их не запомнишь.</p>`,
     nextLabel: "",
     onSkip: skipLearningGuide,
     blocking: false,
-    placement: "top",
+    spotlightShape: "rounded",
+    spotlightPadding: 8,
   });
 }
 
@@ -481,13 +633,14 @@ function showLearningCounter(binding) {
   if (!target) { scheduleScan(); return; }
   showStep({
     target,
-    title: "Следи за прогрессом",
-    body: `<p>Здесь видно, сколько слов текущей сессии ты уже прошёл.</p>`,
+    title: "Прогресс",
+    body: `<p>Здесь видно, сколько слов осталось пройти.</p>`,
     onNext: () => showLearningFavorite(binding),
     onSkip: skipLearningGuide,
     blocking: true,
     blockTarget: true,
-    placement: "bottom",
+    spotlightShape: "pill",
+    spotlightPadding: 7,
   });
 }
 
@@ -499,28 +652,18 @@ function showLearningFavorite(binding) {
   showStep({
     target,
     title: "Избранное",
-    body: `<p>Добавляй сложные или важные слова в избранное, чтобы быстро вернуться к ним позже.</p>`,
-    onNext: showLearningDone,
+    body: `<p>Сохраняй нужные слова, чтобы вернуться к ним позже.</p>`,
+    nextLabel: "Готово",
+    onNext: finishLearningGuide,
     onSkip: skipLearningGuide,
     blocking: true,
     blockTarget: true,
+    spotlightShape: "circle",
+    spotlightPadding: 7,
   });
 }
 
-function showLearningDone() {
-  if (!learningFlow.active) return;
-  learningFlow.phase = "done";
-  showStep({
-    title: "Всё готово",
-    body: `<p>Продолжай учить слова. Когда будешь готов — вернись к этапу и пройди тест.</p>`,
-    nextLabel: "Продолжить",
-    onNext: finishLearningGuide,
-    onSkip: finishLearningGuide,
-    showSkip: false,
-  });
-}
-
-function registerLearningDecision(binding, known) {
+function registerLearningDecision(binding) {
   if (!learningFlow.active || learningFlow.phase !== "decision") return;
   learningFlow.phase = "decision-wait";
   learningFlow.decisionWordId = String(learnState.currentStudyId || "");
@@ -542,10 +685,12 @@ function showRepeatHint(binding) {
   showStep({
     target: binding.card,
     title: "Слово вернулось",
-    body: `<p>Ты отметил его как незнакомое. Оно будет повторяться, пока ты его не запомнишь.</p>`,
+    body: `<p>Ты отметил его как незнакомое. Повтори его ещё раз.</p>`,
     nextLabel: "Понятно",
     showSkip: false,
     blocking: false,
+    spotlightShape: "rounded",
+    spotlightPadding: 8,
     onNext: () => {
       updateGuideState({ repeat_hint_shown: true });
       scheduleScan();
@@ -571,8 +716,8 @@ function bindLearningSession(session) {
       if (card.classList.contains("flipped")) showLearningTranslation(binding);
     }, 0);
   }, { signal });
-  yes.addEventListener("click", () => registerLearningDecision(binding, true), { signal });
-  no.addEventListener("click", () => registerLearningDecision(binding, false), { signal });
+  yes.addEventListener("click", () => registerLearningDecision(binding), { signal });
+  no.addEventListener("click", () => registerLearningDecision(binding), { signal });
   card.addEventListener("touchstart", (event) => {
     binding.touchStartX = event.touches?.[0]?.clientX || 0;
   }, { signal, passive: true });
@@ -581,8 +726,7 @@ function bindLearningSession(session) {
     const endX = event.changedTouches?.[0]?.clientX ?? binding.touchStartX;
     const delta = endX - binding.touchStartX;
     const threshold = card.offsetWidth * 0.3;
-    if (delta > threshold) registerLearningDecision(binding, true);
-    else if (delta < -threshold) registerLearningDecision(binding, false);
+    if (delta > threshold || delta < -threshold) registerLearningDecision(binding);
   }, { signal, passive: true });
   signal.addEventListener("abort", () => {
     if (learningBinding === binding) learningBinding = null;
