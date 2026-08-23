@@ -81,7 +81,7 @@ export function renderProfileCreation(context, user, {
           </label>
           <label class="accountField" for="accountNickname">
             <span>${msg("account.nikneym")}</span>
-            <input id="accountNickname" class="${nicknameClass.trim()}" name="nickname" type="text" minlength="3" maxlength="30" autocomplete="nickname" spellcheck="false" value="${escapeHtml(nickname)}" ${unavailable ? "disabled" : ""} aria-invalid="${nicknameState === "invalid" ? "true" : "false"}" required />
+            <input id="accountNickname" class="${nicknameClass.trim()}" name="nickname" type="text" minlength="3" maxlength="15" pattern="[A-Za-z0-9_]{3,15}" inputmode="text" autocomplete="nickname" autocapitalize="none" lang="en" spellcheck="false" value="${escapeHtml(nickname)}" ${unavailable ? "disabled" : ""} aria-invalid="${nicknameState === "invalid" ? "true" : "false"}" required />
           </label>
           <div id="accountNicknameMessage" class="accountNicknameMessage ${escapeHtml(nicknameState)}" role="status">${escapeHtml(nicknameMessage)}</div>
           <button id="accountCreateProfile" class="btn actionPrimary accountAction" type="submit" ${submitEnabled && !unavailable ? "" : "disabled"}>${msg("account.sohranit")}</button>
@@ -104,7 +104,9 @@ export function bindProfileCreation(context, signal, {
   const signOutButton = context.root.querySelector("#accountSignOut");
 
   nicknameInput?.addEventListener("input", () => {
-    onNicknameInput?.(nicknameInput.value, {
+    const filteredValue = nicknameInput.value.replace(/[^A-Za-z0-9_]/g, "").slice(0, 15);
+    if (nicknameInput.value !== filteredValue) nicknameInput.value = filteredValue;
+    onNicknameInput?.(filteredValue, {
       inputElement: nicknameInput,
       messageElement: context.root.querySelector("#accountNicknameMessage"),
       submitButton: context.root.querySelector("#accountCreateProfile"),

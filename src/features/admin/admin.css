@@ -8,18 +8,19 @@ html[data-activity-access="true"] .profilePrimaryTab{font-size:clamp(8px,2.45vw,
 [data-feature="admin"] .adminUsersView::before,[data-feature="admin"] .adminDetailView::before,[data-feature="admin"] .adminTestDetailView::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;background-image:var(--topographic-lines);background-size:420px 420px;background-position:center top}
 [data-feature="admin"] .adminUsersView>*,[data-feature="admin"] .adminDetailView>*,[data-feature="admin"] .adminTestDetailView>*{position:relative;z-index:1}
 [data-feature="admin"] .profilePrimaryNav{z-index:25}
-[data-feature="admin"] .adminUsersScroll{position:absolute;inset:0;box-sizing:border-box;min-height:0;overflow:hidden;padding:calc(var(--safe-top) + 42px) 8px calc(var(--safe-bottom) + var(--nav-h) + 12px)}
-[data-feature="admin"] .adminTableScroller{width:100%;height:100%;max-width:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;border:1px solid color-mix(in srgb,var(--line-soft) 72%,transparent);border-radius:14px;background:color-mix(in srgb,var(--surface-0) 34%,transparent);scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+[data-feature="admin"] .adminUsersScroll{position:absolute;inset:0;box-sizing:border-box;min-height:0;overflow:hidden;padding:calc(var(--safe-top) + 42px) 0 0}
+[data-feature="admin"] .adminTableScroller{width:100%;height:100%;max-width:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;border:0;border-radius:0;background:transparent;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+[data-feature="admin"] .adminTableScroller::after{content:"";display:block;width:1px;height:calc(var(--safe-bottom) + var(--nav-h) + 18px)}
 [data-feature="admin"] .adminUsersTable{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;color:var(--text-1);font-size:11px;background:transparent}
-[data-feature="admin"] .adminUsersTable th,[data-feature="admin"] .adminUsersTable td{height:46px;box-sizing:border-box;padding:5px 8px;border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);vertical-align:middle;white-space:nowrap;text-align:center}
-[data-feature="admin"] .adminUsersTable thead th{position:sticky;top:0;z-index:5;height:50px;background:color-mix(in srgb,var(--surface-0) 90%,var(--app-bg-deep));-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font:800 9px/1.18 var(--font-terminal);letter-spacing:.02em;color:var(--text-2)}
+[data-feature="admin"] .adminUsersTable th,[data-feature="admin"] .adminUsersTable td{height:46px;box-sizing:border-box;padding:5px 8px;border-bottom:1px solid var(--line-soft);vertical-align:middle;white-space:nowrap;text-align:center}
+[data-feature="admin"] .adminUsersTable thead th{position:sticky;top:0;z-index:3;height:38px;min-height:38px;padding-top:2px;padding-bottom:2px;background:color-mix(in srgb,var(--surface-0) 94%,var(--app-bg-deep));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font:800 9px/1.08 var(--font-terminal);letter-spacing:.02em;color:var(--text-2)}
 [data-feature="admin"] .adminUsersTable th:nth-child(2),[data-feature="admin"] .adminUsersTable td:nth-child(2){width:92px;min-width:92px}
 [data-feature="admin"] .adminUsersTable th:nth-child(3),[data-feature="admin"] .adminUsersTable td:nth-child(3){width:72px;min-width:72px}
 [data-feature="admin"] .adminUsersTable th:nth-child(8),[data-feature="admin"] .adminUsersTable td:nth-child(8){width:94px;min-width:94px}
 [data-feature="admin"] .adminUsersTable .adminStoryHead,[data-feature="admin"] .adminUsersTable td:nth-child(4),[data-feature="admin"] .adminUsersTable td:nth-child(5),[data-feature="admin"] .adminUsersTable td:nth-child(6),[data-feature="admin"] .adminUsersTable td:nth-child(7){width:132px;min-width:132px;max-width:132px}
-[data-feature="admin"] .adminUsersTable .adminStoryHead{white-space:normal;overflow-wrap:normal;word-break:normal;text-wrap:balance;padding-left:10px;padding-right:10px}
-[data-feature="admin"] .adminUserStickyCell{position:sticky;left:0;width:150px;min-width:150px;max-width:150px;text-align:left!important;background:color-mix(in srgb,var(--surface-0) 97%,var(--app-bg-deep));z-index:4;box-shadow:1px 0 0 var(--line-strong)}
-[data-feature="admin"] thead .adminUserStickyCell{z-index:8}
+[data-feature="admin"] .adminUsersTable .adminStoryHead{white-space:normal;overflow:hidden;overflow-wrap:normal;word-break:normal;text-wrap:balance;padding-left:10px;padding-right:10px;line-height:1.08}
+[data-feature="admin"] .adminUserStickyCell{position:sticky;left:0;width:150px;min-width:150px;max-width:150px;text-align:left!important;background:var(--surface-0);z-index:4}
+[data-feature="admin"] .adminUserStickyHead{z-index:6!important;background:var(--surface-0)!important}
 [data-feature="admin"] .adminUserIdentity{width:100%;min-width:0;display:flex;align-items:center;gap:5px}
 [data-feature="admin"] .adminRankLabel{flex:0 0 auto;min-width:21px;color:var(--text-3);font:800 9px/1 var(--font-terminal);font-variant-numeric:tabular-nums}
 [data-feature="admin"] .adminRankMedal{flex:0 0 16px;width:16px;height:16px;fill:currentColor;opacity:.92}
@@ -53,13 +54,13 @@ html[data-activity-access="true"] .profilePrimaryTab{font-size:clamp(8px,2.45vw,
 [data-feature="admin"] .adminStoryRowHead strong{max-width:80%;font-weight:800}
 [data-feature="admin"] .adminStoryRowHead span{font:800 11px/1.25 var(--font-terminal);white-space:nowrap}
 [data-feature="admin"] .adminStoryProgress{max-width:100%}
-[data-feature="admin"] .adminTestRows{border-top:1px solid var(--line-soft)}
-[data-feature="admin"] .adminTestRow{appearance:none;width:100%;min-height:48px;display:grid;grid-template-columns:52px minmax(0,1fr) 34px 46px;align-items:center;gap:8px;padding:5px 2px;border:0;border-bottom:1px solid var(--line-soft);background:transparent;color:var(--text-1);text-align:left;font-size:11px}
-[data-feature="admin"] .adminTestRow strong,[data-feature="admin"] .adminTestRow>span:last-child{font:850 11px/1 var(--font-terminal)}
-[data-feature="admin"] .adminTestDate{color:var(--text-3);font:700 10px/1 var(--font-terminal);white-space:nowrap}
-[data-feature="admin"] .adminTestStory{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;color:var(--text-1);font-size:10.5px;line-height:1.22}
-[data-feature="admin"] .adminTestSet,[data-feature="admin"] .adminTestResult{justify-self:end;white-space:nowrap;font:850 11px/1 var(--font-terminal)}
-[data-feature="admin"] .adminTestRow:active{background:color-mix(in srgb,var(--surface-paper-soft) 62%,transparent)}
+:where([data-feature="admin"],.adminActivityModal) .adminTestRows{border-top:1px solid var(--line-soft)}
+:where([data-feature="admin"],.adminActivityModal) .adminTestRow{appearance:none;width:100%;min-height:48px;display:grid;grid-template-columns:52px minmax(0,1fr) 34px 46px;align-items:center;gap:8px;padding:5px 2px;border:0;border-bottom:1px solid var(--line-soft);border-radius:0;background:transparent;color:var(--text-1);text-align:left;font-family:inherit;font-size:11px;line-height:1.2}
+:where([data-feature="admin"],.adminActivityModal) .adminTestRow strong,:where([data-feature="admin"],.adminActivityModal) .adminTestRow>span:last-child{font:850 11px/1 var(--font-terminal)}
+:where([data-feature="admin"],.adminActivityModal) .adminTestDate{color:var(--text-3);font:700 10px/1 var(--font-terminal);white-space:nowrap}
+:where([data-feature="admin"],.adminActivityModal) .adminTestStory{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;color:var(--text-1);font-size:10.5px;line-height:1.22}
+:where([data-feature="admin"],.adminActivityModal) .adminTestSet,:where([data-feature="admin"],.adminActivityModal) .adminTestResult{justify-self:end;white-space:nowrap;font:850 11px/1 var(--font-terminal)}
+:where([data-feature="admin"],.adminActivityModal) .adminTestRow:active{background:color-mix(in srgb,var(--surface-paper-soft) 62%,transparent)}
 [data-feature="admin"] .adminSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line-soft);padding-bottom:7px}
 [data-feature="admin"] .adminSectionHead h2{border:0;padding:0;margin:0}
 [data-feature="admin"] .adminInlineAction{appearance:none;flex:0 0 auto;min-height:32px;padding:0 12px;border:1px solid color-mix(in srgb,var(--line) 72%,transparent);border-radius:999px;background:color-mix(in srgb,var(--surface-0) 70%,transparent);color:var(--text-2);box-shadow:0 3px 10px rgba(41,39,33,.05);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font:800 9px/1 var(--font-terminal);text-decoration:none;transition:transform var(--duration-fast),background var(--duration-fast),border-color var(--duration-fast)}
@@ -71,9 +72,9 @@ html[data-activity-access="true"] .profilePrimaryTab{font-size:clamp(8px,2.45vw,
 [data-feature="admin"] .adminProblemRow small{color:var(--text-2);font-size:10px;overflow-wrap:anywhere}
 [data-feature="admin"] .adminProblemCounts{flex:0 0 auto;color:var(--text-3);font:700 9px/1.45 var(--font-terminal);text-align:right}
 [data-feature="admin"] .adminEmpty{padding:12px 2px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);color:var(--text-3);font-size:11px}
-[data-feature="admin"] .adminWordTiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:8px}
-[data-feature="admin"] .adminWordTile{min-width:0;min-height:44px;padding:8px 10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-soft);border-radius:14px;background:color-mix(in srgb,var(--surface-0) 52%,transparent);text-align:center}
-[data-feature="admin"] .adminWordTile strong{max-width:100%;font:850 12px/1.25 var(--font-terminal);overflow-wrap:anywhere}
+:where([data-feature="admin"],.adminActivityModal) .adminWordTiles{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--line-soft);padding-top:9px}
+:where([data-feature="admin"],.adminActivityModal) .adminWordTile{min-width:92px;max-width:100%;min-height:0;padding:6px 8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-soft);border-radius:0;background:transparent;text-align:center}
+:where([data-feature="admin"],.adminActivityModal) .adminWordTile strong{max-width:100%;font:850 12px/1.25 var(--font-terminal);overflow-wrap:anywhere}
 [data-feature="admin"] .adminTestTitle{padding:5px 0 12px;border-bottom:1px solid var(--line-soft)}
 [data-feature="admin"] .adminTestTitle>span{display:block;margin-bottom:5px;color:var(--text-3);font:750 10px/1 var(--font-terminal)}
 [data-feature="admin"] .adminTestFacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:14px 0 0;border-top:1px solid var(--line-soft)}
@@ -96,16 +97,15 @@ html[data-activity-access="true"] .profilePrimaryTab{font-size:clamp(8px,2.45vw,
 .adminActivityModal{width:min(100%,560px);max-height:min(84dvh,760px)}
 .adminActivityModal .modalBody{padding:12px}
 .adminActivityModal .adminTestRows{border-top:0}
-.adminFavoritesModal .adminWordTiles{padding-top:0}
+.adminFavoritesModal .adminWordTiles{margin-top:0}
 .adminModalState{min-height:120px;display:grid;place-items:center;padding:18px;color:var(--text-2);font-size:12px;text-align:center}
 
 @media(max-width:360px){
   html[data-activity-access="true"] .profilePrimaryTab{font-size:7.5px}
-  [data-feature="admin"] .adminUsersScroll{padding-left:6px;padding-right:6px}
   [data-feature="admin"] .adminUserStickyCell{width:138px;min-width:138px;max-width:138px}
   [data-feature="admin"] .adminUsersTable .adminStoryHead,[data-feature="admin"] .adminUsersTable td:nth-child(4),[data-feature="admin"] .adminUsersTable td:nth-child(5),[data-feature="admin"] .adminUsersTable td:nth-child(6),[data-feature="admin"] .adminUsersTable td:nth-child(7){width:122px;min-width:122px;max-width:122px}
   [data-feature="admin"] .adminRankLabel{min-width:19px;font-size:8px}
   [data-feature="admin"] .adminRankMedal{flex-basis:14px;width:14px;height:14px}
-  [data-feature="admin"] .adminTestRow{grid-template-columns:48px minmax(0,1fr) 30px 43px;gap:6px}
+  :where([data-feature="admin"],.adminActivityModal) .adminTestRow{grid-template-columns:48px minmax(0,1fr) 30px 43px;gap:6px}
   [data-feature="admin"] .adminDetailScroll{padding-left:10px!important;padding-right:10px!important}
 }

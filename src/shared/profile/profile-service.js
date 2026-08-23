@@ -5,7 +5,8 @@ import {
   normalizeSupabaseError,
 } from "../errors/supabase-error.js?v=13.9.0";
 
-const NICKNAME_PATTERN = /^[\p{L}\p{N}_]{3,30}$/u;
+const NICKNAME_PATTERN = /^[A-Za-z0-9_]{3,15}$/;
+const LATIN_LETTER_PATTERN = /[A-Za-z]/g;
 const AVATAR_GENDERS = new Set(["male", "female"]);
 const PROFILE_REQUEST_TIMEOUT_MS = 12000;
 
@@ -35,11 +36,15 @@ export function normalizeNickname(value) {
 export function validateNickname(value) {
   const nickname = normalizeNickname(value);
   if (!nickname) return { valid: false, nickname, message: msg("service.vvedite_nikneym") };
-  if (nickname.length < 3 || nickname.length > 30) {
-    return { valid: false, nickname, message: msg("service.nikneym_dolzhen_soderzhat_ot_3_do_30") };
+  const requirementsMessage = msg("service.nickname_requirements");
+  if (nickname.length < 3 || nickname.length > 15) {
+    return { valid: false, nickname, message: requirementsMessage };
   }
   if (!NICKNAME_PATTERN.test(nickname)) {
-    return { valid: false, nickname, message: msg("service.ispolzuyte_tolko_bukvy_tsifry_i_znak_podcherkivaniya") };
+    return { valid: false, nickname, message: requirementsMessage };
+  }
+  if ((nickname.match(LATIN_LETTER_PATTERN) || []).length < 3) {
+    return { valid: false, nickname, message: requirementsMessage };
   }
   return { valid: true, nickname, message: "" };
 }
