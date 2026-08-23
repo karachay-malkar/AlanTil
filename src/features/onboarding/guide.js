@@ -1,6 +1,6 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.15.10.7";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.15.10.7";
-import { learnState } from "../learn/state.js?v=13.15.10.7";
+import { PATH_CONFIG } from "../../config/path.js?v=13.15.10.8";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.15.10.8";
+import { learnState } from "../learn/state.js?v=13.15.10.8";
 
 const GUIDE_STATE_KEY = "alantil_guided_help_v1";
 const GUIDE_STYLE_ID = "alantil-guided-help-style";
@@ -35,7 +35,7 @@ const STORY_GUIDE = Object.freeze({
 });
 
 const STYLE_TEXT = `
-/* Story controls: keep the existing layout, add only vertical breathing room. */
+/* Keep the current Path architecture; only give the story controls more air. */
 .pathView{grid-template-rows:68px minmax(0,1fr)!important}
 .pathStickyControls{height:68px!important;padding-top:10px!important}
 
@@ -51,14 +51,27 @@ body.alantilGuideGeneral .alantilGuideTrigger{opacity:0;pointer-events:none}
 body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 
 .alantilGuideOverlay{
-  position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:#fff;
+  position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:var(--text-inverse);
 }
-.alantilGuideSpotlight{position:fixed;z-index:0;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-.alantilGuideSpotlightShade{fill:rgba(15,14,12,.67)}
+.alantilGuideSpotlight{
+  position:fixed;z-index:0;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
+}
+.alantilGuideSpotlightShade{fill:rgba(10,9,8,.82);pointer-events:none}
+.alantilGuidePanel{
+  fill:rgba(19,18,16,.94);stroke:rgba(255,255,255,.07);stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none;
+}
 .alantilGuideHalo{
   position:fixed;z-index:1;pointer-events:none;
-  box-shadow:0 0 0 1px rgba(255,255,255,.16),0 0 14px rgba(255,255,255,.07);
+  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 12px rgba(255,255,255,.08);
   transition:left .16s ease,top .16s ease,width .16s ease,height .16s ease,border-radius .16s ease;
+}
+.alantilGuideHalo.isPrimary{
+  box-shadow:0 0 0 1px rgba(255,255,255,.32),0 0 16px rgba(255,255,255,.16);
+  animation:alantilGuidePulse 1.9s ease-in-out infinite;
+}
+@keyframes alantilGuidePulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.26),0 0 10px rgba(255,255,255,.10)}
+  50%{box-shadow:0 0 0 2px rgba(255,255,255,.52),0 0 26px rgba(255,255,255,.24)}
 }
 .alantilGuideInputBlocker{position:fixed;z-index:2;background:transparent;pointer-events:auto}
 
@@ -67,12 +80,12 @@ body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:
   transform:translateX(-50%);text-align:center;pointer-events:none;outline:none;
 }
 .alantilGuideTitle{
-  margin:0;color:rgba(255,255,255,.98);font:900 19px/1.2 var(--font-terminal);text-wrap:balance;
-  text-shadow:0 2px 18px rgba(0,0,0,.66);
+  margin:0;color:rgba(255,255,255,.99);font:900 19px/1.2 var(--font-terminal);text-wrap:balance;
+  text-shadow:0 2px 18px rgba(0,0,0,.76);
 }
 .alantilGuideBody{
-  margin-top:11px;color:rgba(255,255,255,.90);font-size:14px;line-height:1.48;text-wrap:pretty;
-  text-shadow:0 2px 16px rgba(0,0,0,.68);
+  margin-top:11px;color:rgba(255,255,255,.92);font-size:14px;line-height:1.48;text-wrap:pretty;
+  text-shadow:0 2px 16px rgba(0,0,0,.74);
 }
 .alantilGuideBody p{margin:0}
 .alantilGuideBody p+p{margin-top:9px}
@@ -85,21 +98,13 @@ body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:
 .alantilGuideGesture b{font-size:18px}
 
 .alantilGuideNav{
-  display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;pointer-events:none;
 }
-.alantilGuideSkip,.alantilGuideNext{
-  appearance:none;min-width:112px;min-height:38px;padding:8px 17px;border-radius:999px;
-  font:800 11px/1 var(--font-terminal);cursor:pointer;pointer-events:auto;
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+.alantilGuideSkip.btn,.alantilGuideNext.btn{
+  min-width:112px;min-height:38px;padding:7px 14px;pointer-events:auto;font:800 11px/1 var(--font-terminal);
 }
-.alantilGuideSkip{
-  border:1px solid rgba(255,255,255,.48);background:rgba(20,19,17,.10);color:rgba(255,255,255,.90);
-}
-.alantilGuideNext{
-  border:1px solid rgba(248,246,240,.92);background:rgba(248,246,240,.96);color:#24211d;
-  box-shadow:0 4px 18px rgba(0,0,0,.16);
-}
-.alantilGuideSkip:active,.alantilGuideNext:active{transform:translateY(1px);opacity:.82}
+.alantilGuideSkip.btn{color:var(--text-inverse)}
+.alantilGuideNext.btn{box-shadow:none}
 
 @media(max-width:390px){
   .pathView{grid-template-rows:66px minmax(0,1fr)!important}
@@ -108,10 +113,11 @@ body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:
   .alantilGuideContent{width:calc(100vw - 28px)}
   .alantilGuideTitle{font-size:17px}
   .alantilGuideBody{font-size:13px}
-  .alantilGuideSkip,.alantilGuideNext{min-width:104px;min-height:36px;padding:7px 14px}
+  .alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:104px;min-height:36px;padding:6px 12px}
 }
 @media(prefers-reduced-motion:reduce){
   .alantilGuideTrigger,.alantilGuideHalo{transition:none!important}
+  .alantilGuideHalo.isPrimary{animation:none!important}
 }
 `;
 
@@ -176,7 +182,12 @@ function numericRadius(value, width, height) {
   return Number.isFinite(parsed) ? parsed : 14;
 }
 
-function targetGeometry(target, { padding = 6, shape = "auto" } = {}) {
+function targetGeometry(target, {
+  padding = 7,
+  shape = "auto",
+  minWidth = 0,
+  minHeight = 0,
+} = {}) {
   if (!target?.isConnected) return null;
   const rect = target.getBoundingClientRect();
   if (!rect.width || !rect.height) return null;
@@ -184,21 +195,21 @@ function targetGeometry(target, { padding = 6, shape = "auto" } = {}) {
   let resolvedShape = shape;
   if (resolvedShape === "auto") {
     if (target.matches?.(".storyTab,.sessionStatus")) resolvedShape = "pill";
-    else if (target.matches?.(".stationProgressRing")) resolvedShape = "circle";
+    else if (target.matches?.(".stationProgressRing,#btnFavAction")) resolvedShape = "circle";
     else resolvedShape = "rounded";
   }
 
-  let left = rect.left - padding;
-  let top = rect.top - padding;
-  let width = rect.width + padding * 2;
-  let height = rect.height + padding * 2;
+  let width = Math.max(rect.width + padding * 2, minWidth);
+  let height = Math.max(rect.height + padding * 2, minHeight);
+  let left = rect.left + rect.width / 2 - width / 2;
+  let top = rect.top + rect.height / 2 - height / 2;
 
   if (resolvedShape === "circle") {
-    const side = Math.max(rect.width, rect.height) + padding * 2;
-    left = rect.left + rect.width / 2 - side / 2;
-    top = rect.top + rect.height / 2 - side / 2;
+    const side = Math.max(width, height);
     width = side;
     height = side;
+    left = rect.left + rect.width / 2 - side / 2;
+    top = rect.top + rect.height / 2 - side / 2;
   }
 
   left = clamp(left, 2, Math.max(2, window.innerWidth - width - 2));
@@ -219,7 +230,18 @@ function targetGeometry(target, { padding = 6, shape = "auto" } = {}) {
     width,
     height,
     radius,
+    shape: resolvedShape,
   };
+}
+
+function geometryUnion(geometries) {
+  const list = geometries.filter(Boolean);
+  if (!list.length) return null;
+  const left = Math.min(...list.map((item) => item.left));
+  const top = Math.min(...list.map((item) => item.top));
+  const right = Math.max(...list.map((item) => item.right));
+  const bottom = Math.max(...list.map((item) => item.bottom));
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
 }
 
 function applyRect(element, rect) {
@@ -230,7 +252,11 @@ function applyRect(element, rect) {
   element.style.height = `${Math.max(0, rect.bottom - rect.top)}px`;
 }
 
-function updateSpotlight(svg, hole, shade, halo, geometry) {
+function svgElement(name) {
+  return document.createElementNS("http://www.w3.org/2000/svg", name);
+}
+
+function updateMask(svg, holesGroup, shade, geometries) {
   const width = window.innerWidth;
   const height = window.innerHeight;
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -238,29 +264,39 @@ function updateSpotlight(svg, hole, shade, halo, geometry) {
   svg.setAttribute("height", String(height));
   shade.setAttribute("width", String(width));
   shade.setAttribute("height", String(height));
+
   const base = svg.querySelector("[data-mask-base]");
   base?.setAttribute("width", String(width));
   base?.setAttribute("height", String(height));
 
-  if (!geometry) {
-    hole.setAttribute("width", "0");
-    hole.setAttribute("height", "0");
-    halo.hidden = true;
-    return;
-  }
+  holesGroup.replaceChildren();
+  geometries.forEach((geometry) => {
+    if (!geometry) return;
+    const hole = svgElement("rect");
+    hole.setAttribute("x", String(geometry.left));
+    hole.setAttribute("y", String(geometry.top));
+    hole.setAttribute("width", String(geometry.width));
+    hole.setAttribute("height", String(geometry.height));
+    hole.setAttribute("rx", String(geometry.radius));
+    hole.setAttribute("ry", String(geometry.radius));
+    hole.setAttribute("fill", "black");
+    holesGroup.appendChild(hole);
+  });
+}
 
-  hole.setAttribute("x", String(geometry.left));
-  hole.setAttribute("y", String(geometry.top));
-  hole.setAttribute("width", String(geometry.width));
-  hole.setAttribute("height", String(geometry.height));
-  hole.setAttribute("rx", String(geometry.radius));
-  hole.setAttribute("ry", String(geometry.radius));
-  halo.hidden = false;
-  halo.style.left = `${geometry.left}px`;
-  halo.style.top = `${geometry.top}px`;
-  halo.style.width = `${geometry.width}px`;
-  halo.style.height = `${geometry.height}px`;
-  halo.style.borderRadius = `${geometry.radius}px`;
+function updateHalos(root, geometries, primaryIndex) {
+  root.replaceChildren();
+  geometries.forEach((geometry, index) => {
+    if (!geometry) return;
+    const halo = document.createElement("div");
+    halo.className = `alantilGuideHalo${index === primaryIndex ? " isPrimary" : ""}`;
+    halo.style.left = `${geometry.left}px`;
+    halo.style.top = `${geometry.top}px`;
+    halo.style.width = `${geometry.width}px`;
+    halo.style.height = `${geometry.height}px`;
+    halo.style.borderRadius = `${geometry.radius}px`;
+    root.appendChild(halo);
+  });
 }
 
 function elementViewportRect(element) {
@@ -310,7 +346,7 @@ function uniqueNumbers(values) {
   return result;
 }
 
-function positionGuideContent(content, geometry, {
+function positionGuideContent(content, geometries, {
   preference = "center",
   avoidHeader = true,
   avoidBottomNav = true,
@@ -325,25 +361,26 @@ function positionGuideContent(content, geometry, {
   const width = measured.width;
   const height = measured.height;
   const maxTop = Math.max(edge, viewportHeight - height - edge);
+  const union = geometryUnion(geometries);
 
   const header = avoidHeader ? elementViewportRect(document.getElementById("appHeader")) : null;
   const bottomNav = avoidBottomNav ? elementViewportRect(document.getElementById("bottomNav")) : null;
-  const targetAvoid = expandRect(geometry, gap);
+  const targetAvoids = geometries.filter(Boolean).map((geometry) => expandRect(geometry, gap));
 
   const candidates = [
     (viewportHeight - height) / 2,
-    geometry ? geometry.top - gap - height : NaN,
-    geometry ? geometry.bottom + gap : NaN,
+    union ? union.top - gap - height : NaN,
+    union ? union.bottom + gap : NaN,
     edge,
     maxTop,
-    viewportHeight * 0.33 - height / 2,
-    viewportHeight * 0.67 - height / 2,
+    viewportHeight * 0.30 - height / 2,
+    viewportHeight * 0.70 - height / 2,
   ].filter(Number.isFinite).map((top) => clamp(top, edge, maxTop));
 
   const tops = uniqueNumbers(candidates);
   const evaluated = tops.map((top) => {
     const rect = contentRectFor(top, width, height);
-    const targetOverlap = intersectionArea(rect, targetAvoid);
+    const targetOverlap = targetAvoids.reduce((sum, targetRect) => sum + intersectionArea(rect, targetRect), 0);
     const headerOverlap = intersectionArea(rect, header);
     const navOverlap = intersectionArea(rect, bottomNav);
     const centerDistance = Math.abs((top + height / 2) - viewportHeight / 2);
@@ -363,12 +400,52 @@ function positionGuideContent(content, geometry, {
   );
 
   content.style.top = `${evaluated[0]?.top ?? clamp((viewportHeight - height) / 2, edge, maxTop)}px`;
+  return content.getBoundingClientRect();
 }
 
-function createInputBlockers(overlay, geometry, blockTarget) {
+function organicPanelPath(contentRect, primaryGeometry) {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const contentCenter = contentRect.top + contentRect.height / 2;
+
+  if (!primaryGeometry) {
+    const edgeY = clamp(contentRect.bottom + 72, height * 0.56, height * 0.78);
+    return `M0 0H${width}V${edgeY - 26}C${width * .82} ${edgeY + 18},${width * .66} ${edgeY - 6},${width * .50} ${edgeY + 20}C${width * .34} ${edgeY + 46},${width * .18} ${edgeY + 4},0 ${edgeY + 30}Z`;
+  }
+
+  const targetCenter = primaryGeometry.top + primaryGeometry.height / 2;
+  const notchX = clamp(primaryGeometry.left + primaryGeometry.width / 2, width * .18, width * .82);
+
+  if (contentCenter <= targetCenter) {
+    const edgeY = clamp(
+      Math.max(contentRect.bottom + 34, primaryGeometry.bottom + 28),
+      contentRect.bottom + 24,
+      height - 18
+    );
+    const leftShoulder = clamp(notchX - Math.max(86, primaryGeometry.width * .72), 0, width);
+    const rightShoulder = clamp(notchX + Math.max(86, primaryGeometry.width * .72), 0, width);
+    return `M0 0H${width}V${edgeY - 30}C${width * .88} ${edgeY + 8},${rightShoulder} ${edgeY + 14},${notchX + 52} ${edgeY + 2}C${notchX + 20} ${edgeY - 12},${notchX - 20} ${edgeY - 12},${notchX - 52} ${edgeY + 2}C${leftShoulder} ${edgeY + 14},${width * .12} ${edgeY + 8},0 ${edgeY - 20}Z`;
+  }
+
+  const edgeY = clamp(
+    Math.min(contentRect.top - 34, primaryGeometry.top - 28),
+    18,
+    contentRect.top - 24
+  );
+  const leftShoulder = clamp(notchX - Math.max(86, primaryGeometry.width * .72), 0, width);
+  const rightShoulder = clamp(notchX + Math.max(86, primaryGeometry.width * .72), 0, width);
+  return `M0 ${edgeY + 20}C${width * .12} ${edgeY - 8},${leftShoulder} ${edgeY - 14},${notchX - 52} ${edgeY - 2}C${notchX - 20} ${edgeY + 12},${notchX + 20} ${edgeY + 12},${notchX + 52} ${edgeY - 2}C${rightShoulder} ${edgeY - 14},${width * .88} ${edgeY - 8},${width} ${edgeY + 30}V${height}H0Z`;
+}
+
+function pointInsideRect(x, y, rect) {
+  return Boolean(rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+}
+
+function createInputBlockers(overlay, interactiveGeometries) {
   overlay.querySelectorAll("[data-guide-blocker]").forEach((node) => node.remove());
   if (!overlay.classList.contains("isBlocking")) return;
 
+  const holes = interactiveGeometries.filter(Boolean);
   const makeBlocker = (rect) => {
     if (rect.right <= rect.left || rect.bottom <= rect.top) return;
     const blocker = document.createElement("div");
@@ -378,19 +455,72 @@ function createInputBlockers(overlay, geometry, blockTarget) {
     overlay.appendChild(blocker);
   };
 
-  if (!geometry || blockTarget) {
+  if (!holes.length) {
     makeBlocker({ left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight });
     return;
   }
 
-  makeBlocker({ left: 0, top: 0, right: window.innerWidth, bottom: geometry.top });
-  makeBlocker({ left: 0, top: geometry.bottom, right: window.innerWidth, bottom: window.innerHeight });
-  makeBlocker({ left: 0, top: geometry.top, right: geometry.left, bottom: geometry.bottom });
-  makeBlocker({ left: geometry.right, top: geometry.top, right: window.innerWidth, bottom: geometry.bottom });
+  const xs = [0, window.innerWidth];
+  const ys = [0, window.innerHeight];
+  holes.forEach((geometry) => {
+    xs.push(clamp(geometry.left, 0, window.innerWidth), clamp(geometry.right, 0, window.innerWidth));
+    ys.push(clamp(geometry.top, 0, window.innerHeight), clamp(geometry.bottom, 0, window.innerHeight));
+  });
+  xs.sort((a, b) => a - b);
+  ys.sort((a, b) => a - b);
+
+  const uniqueXs = uniqueNumbers(xs);
+  const uniqueYs = uniqueNumbers(ys);
+  for (let xi = 0; xi < uniqueXs.length - 1; xi += 1) {
+    for (let yi = 0; yi < uniqueYs.length - 1; yi += 1) {
+      const left = uniqueXs[xi];
+      const right = uniqueXs[xi + 1];
+      const top = uniqueYs[yi];
+      const bottom = uniqueYs[yi + 1];
+      const centerX = (left + right) / 2;
+      const centerY = (top + bottom) / 2;
+      if (holes.some((geometry) => pointInsideRect(centerX, centerY, geometry))) continue;
+      makeBlocker({ left, top, right, bottom });
+    }
+  }
+}
+
+function normalizedTargets({
+  target,
+  targets,
+  spotlightShape,
+  spotlightPadding,
+  interactiveTarget,
+  minSpotlightWidth,
+  minSpotlightHeight,
+} = {}) {
+  if (Array.isArray(targets) && targets.length) {
+    return targets
+      .filter((item) => item?.element?.isConnected)
+      .map((item) => ({
+        element: item.element,
+        shape: item.shape || "auto",
+        padding: Number.isFinite(item.padding) ? item.padding : 7,
+        minWidth: Number.isFinite(item.minWidth) ? item.minWidth : 0,
+        minHeight: Number.isFinite(item.minHeight) ? item.minHeight : 0,
+        interactive: Boolean(item.interactive),
+      }));
+  }
+  if (!target?.isConnected) return [];
+  return [{
+    element: target,
+    shape: spotlightShape || "auto",
+    padding: Number.isFinite(spotlightPadding) ? spotlightPadding : 7,
+    minWidth: Number.isFinite(minSpotlightWidth) ? minSpotlightWidth : 0,
+    minHeight: Number.isFinite(minSpotlightHeight) ? minSpotlightHeight : 0,
+    interactive: Boolean(interactiveTarget),
+  }];
 }
 
 function showStep({
   target = null,
+  targets = null,
+  primaryTargetIndex = 0,
   title,
   body,
   nextLabel = "Далее",
@@ -398,30 +528,44 @@ function showStep({
   onSkip = null,
   showSkip = true,
   blocking = true,
-  blockTarget = false,
+  interactiveTarget = false,
   spotlightShape = "auto",
-  spotlightPadding = 6,
+  spotlightPadding = 7,
+  minSpotlightWidth = 0,
+  minSpotlightHeight = 0,
   contentPreference = "center",
   avoidHeader = true,
   avoidBottomNav = true,
+  closeBeforeNext = true,
 } = {}) {
   destroyOverlay();
   const modalRoot = document.getElementById("modalRoot") || document.body;
   const overlay = document.createElement("div");
   overlay.className = `alantilGuideOverlay${blocking ? " isBlocking" : ""}`;
 
+  const descriptors = normalizedTargets({
+    target,
+    targets,
+    spotlightShape,
+    spotlightPadding,
+    interactiveTarget,
+    minSpotlightWidth,
+    minSpotlightHeight,
+  });
   const maskId = `alantil-guide-mask-${++overlayCounter}`;
+
   overlay.innerHTML = `
     <svg class="alantilGuideSpotlight" aria-hidden="true">
       <defs>
         <mask id="${maskId}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
           <rect data-mask-base x="0" y="0" width="0" height="0" fill="white"></rect>
-          <rect data-mask-hole x="0" y="0" width="0" height="0" rx="0" ry="0" fill="black"></rect>
+          <g data-mask-holes></g>
         </mask>
       </defs>
       <rect class="alantilGuideSpotlightShade" data-mask-shade x="0" y="0" width="0" height="0" mask="url(#${maskId})"></rect>
+      <path class="alantilGuidePanel" data-guide-panel d="" mask="url(#${maskId})"></path>
     </svg>
-    <div class="alantilGuideHalo" data-guide-halo hidden></div>`;
+    <div data-guide-halos></div>`;
 
   const content = document.createElement("section");
   content.className = "alantilGuideContent";
@@ -432,42 +576,63 @@ function showStep({
     <h2 class="alantilGuideTitle">${title}</h2>
     <div class="alantilGuideBody">${body}</div>
     ${(showSkip || nextLabel) ? `<nav class="alantilGuideNav" aria-label="Навигация по подсказке">
-      ${showSkip ? '<button class="alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}
-      ${nextLabel ? `<button class="alantilGuideNext" type="button" data-guide-next>${nextLabel}</button>` : ""}
+      ${showSkip ? '<button class="btn actionText alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}
+      ${nextLabel ? `<button class="btn actionPrimary alantilGuideNext" type="button" data-guide-next>${nextLabel}</button>` : ""}
     </nav>` : ""}`;
   overlay.appendChild(content);
   modalRoot.appendChild(overlay);
 
   const svg = overlay.querySelector(".alantilGuideSpotlight");
-  const hole = overlay.querySelector("[data-mask-hole]");
+  const holesGroup = overlay.querySelector("[data-mask-holes]");
   const shade = overlay.querySelector("[data-mask-shade]");
-  const halo = overlay.querySelector("[data-guide-halo]");
+  const panel = overlay.querySelector("[data-guide-panel]");
+  const halosRoot = overlay.querySelector("[data-guide-halos]");
 
   let resizeFrame = 0;
+  let currentGeometries = [];
+
   const reposition = () => {
     if (resizeFrame) return;
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
-      const geometry = targetGeometry(target, { padding: spotlightPadding, shape: spotlightShape });
-      updateSpotlight(svg, hole, shade, halo, geometry);
-      createInputBlockers(overlay, geometry, blockTarget);
-      positionGuideContent(content, geometry, {
+      currentGeometries = descriptors.map((descriptor) => targetGeometry(descriptor.element, descriptor));
+      const safePrimaryIndex = clamp(primaryTargetIndex, 0, Math.max(0, currentGeometries.length - 1));
+      const primaryGeometry = currentGeometries[safePrimaryIndex] || currentGeometries[0] || null;
+      updateMask(svg, holesGroup, shade, currentGeometries);
+      updateHalos(halosRoot, currentGeometries, safePrimaryIndex);
+      const interactiveGeometries = currentGeometries.filter((geometry, index) => geometry && descriptors[index]?.interactive);
+      createInputBlockers(overlay, interactiveGeometries);
+      const contentRect = positionGuideContent(content, currentGeometries, {
         preference: contentPreference,
         avoidHeader,
         avoidBottomNav,
       });
+      panel.setAttribute("d", organicPanelPath(contentRect, primaryGeometry));
     });
+  };
+
+  const allowedInteractiveElements = descriptors.filter((item) => item.interactive).map((item) => item.element);
+  const focusGuard = (event) => {
+    const focused = event.target;
+    if (overlay.contains(focused)) return;
+    if (allowedInteractiveElements.some((element) => element === focused || element.contains?.(focused))) return;
+    const fallback = overlay.querySelector("[data-guide-next],[data-guide-skip]");
+    if (fallback instanceof HTMLElement) {
+      event.stopPropagation();
+      fallback.focus({ preventScroll: true });
+    }
   };
 
   const cleanup = () => {
     window.removeEventListener("resize", reposition);
     window.removeEventListener("orientationchange", reposition);
     window.removeEventListener("scroll", reposition, true);
+    document.removeEventListener("focusin", focusGuard, true);
     if (resizeFrame) cancelAnimationFrame(resizeFrame);
     overlay.remove();
   };
 
-  const api = { destroy: cleanup, overlay };
+  const api = { destroy: cleanup, overlay, reposition };
   activeOverlay = api;
 
   const finishAction = (callback) => {
@@ -476,8 +641,16 @@ function showStep({
     callback?.();
   };
 
-  overlay.querySelector("[data-guide-next]")?.addEventListener("click", () => finishAction(onNext));
+  const nextButton = overlay.querySelector("[data-guide-next]");
+  nextButton?.addEventListener("click", () => {
+    if (closeBeforeNext) {
+      finishAction(onNext);
+      return;
+    }
+    onNext?.();
+  });
   overlay.querySelector("[data-guide-skip]")?.addEventListener("click", () => finishAction(onSkip));
+
   content.addEventListener("keydown", (event) => {
     if (event.key !== "Escape" || !showSkip) return;
     event.preventDefault();
@@ -487,6 +660,7 @@ function showStep({
   window.addEventListener("resize", reposition, { passive: true });
   window.addEventListener("orientationchange", reposition, { passive: true });
   window.addEventListener("scroll", reposition, { capture: true, passive: true });
+  document.addEventListener("focusin", focusGuard, true);
 
   requestAnimationFrame(() => {
     reposition();
@@ -530,9 +704,8 @@ function showStoriesIntro() {
     body: `<p>Здесь слова разделены по сложности и назначению.</p><p>Сейчас коротко познакомимся с каждым разделом.</p>`,
     onNext: () => showStory(0),
     onSkip: skipGeneralGuide,
-    blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 6,
+    spotlightPadding: 8,
     contentPreference: "center",
   });
 }
@@ -555,9 +728,11 @@ function showStory(index) {
   const storyId = STORY_SEQUENCE[safeIndex];
   if (!requestStory(storyId)) return;
   closeOpenStele();
+
   const target = document.querySelector(`[data-story-tab="${storyId}"]`);
   const copy = STORY_GUIDE[storyId];
   if (!target || !copy) { scheduleScan(); return; }
+
   showStep({
     target,
     title: copy.title,
@@ -567,9 +742,8 @@ function showStory(index) {
       else showStorySummary();
     },
     onSkip: skipGeneralGuide,
-    blockTarget: true,
     spotlightShape: "pill",
-    spotlightPadding: 6,
+    spotlightPadding: 8,
     contentPreference: "center",
   });
 }
@@ -578,6 +752,7 @@ function showStorySummary() {
   generalGuide.phase = "summary";
   if (!requestStory("roots")) return;
   closeOpenStele();
+
   const target = document.querySelector(".storyTabsShell") || document.querySelector(".storyTabs");
   if (!target) { scheduleScan(); return; }
   showStep({
@@ -586,9 +761,8 @@ function showStorySummary() {
     body: `<p>Начни с подходящего тебе уровня и переключайся между историями в любое время.</p><p><strong>Основной путь приложения — «Возвращение к истокам».</strong></p>`,
     onNext: showStages,
     onSkip: skipGeneralGuide,
-    blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 6,
+    spotlightPadding: 8,
     contentPreference: "center",
   });
 }
@@ -598,6 +772,7 @@ function visibleStationTarget() {
   const viewportRect = viewport?.getBoundingClientRect();
   const stations = Array.from(document.querySelectorAll("[data-station-key]"));
   let station = null;
+
   if (!viewportRect) station = stations[0] || null;
   else {
     station = stations.find((item) => {
@@ -612,6 +787,7 @@ function showStages() {
   generalGuide.phase = "stages";
   const target = visibleStationTarget();
   if (!target) { scheduleScan(); return; }
+
   showStep({
     target,
     title: "Проходи этапы",
@@ -622,9 +798,8 @@ function showStages() {
       scheduleScan();
     },
     onSkip: skipGeneralGuide,
-    blockTarget: true,
     spotlightShape: target.matches?.(".stationProgressRing") ? "circle" : "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 10,
     contentPreference: "center",
   });
 }
@@ -633,15 +808,15 @@ function showStationStudy() {
   generalGuide.phase = "station-study";
   const target = document.querySelector("[data-station-study]");
   if (!target) { scheduleScan(); return; }
+
   showStep({
     target,
     title: "Учить слова",
     body: `<p>Запоминай новые слова с помощью флеш-карточек.</p>`,
     onNext: showStationTest,
     onSkip: skipGeneralGuide,
-    blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 6,
+    spotlightPadding: 9,
     contentPreference: "center",
   });
 }
@@ -650,6 +825,7 @@ function showStationTest() {
   generalGuide.phase = "station-test";
   const target = document.querySelector("[data-station-test]");
   if (!target) { scheduleScan(); return; }
+
   showStep({
     target,
     title: "Тест",
@@ -657,9 +833,8 @@ function showStationTest() {
     nextLabel: "Понятно",
     onNext: finishGeneralGuide,
     onSkip: skipGeneralGuide,
-    blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 6,
+    spotlightPadding: 9,
     contentPreference: "center",
   });
 }
@@ -675,6 +850,7 @@ function startGeneralGuide() {
 function mountHelpTrigger() {
   const pathView = document.querySelector(".pathView");
   if (!pathView || pathView.querySelector("[data-alantil-guide-trigger]")) return;
+
   const button = document.createElement("button");
   button.type = "button";
   button.className = "alantilGuideTrigger";
@@ -697,37 +873,60 @@ function skipLearningGuide() {
   finishLearningGuide();
 }
 
+function advanceLearningCard(binding) {
+  if (!learningFlow.active || learningFlow.phase !== "card" || !binding?.card?.isConnected) return;
+  learningFlow.phase = "card-wait";
+
+  if (!binding.card.classList.contains("flipped")) binding.card.click();
+
+  globalThis.setTimeout(() => {
+    if (!learningFlow.active || learningFlow.phase !== "card-wait" || !binding.card.isConnected) return;
+    if (!binding.card.classList.contains("flipped")) {
+      learningFlow.phase = "card";
+      return;
+    }
+    learningFlow.phase = "card";
+    showLearningTranslation(binding);
+  }, 460);
+}
+
 function showLearningCardStep(binding) {
   if (!binding?.card?.isConnected || learnState.totalPlanned <= 0) return;
   learningFlow = { active: true, phase: "card", decisionWordId: "" };
+
   showStep({
     target: binding.card,
     title: "Вспомни перевод",
-    body: `<p>Попробуй вспомнить значение слова и нажми на карточку.</p>`,
-    nextLabel: "",
+    body: `<p>Попробуй вспомнить значение слова.</p><p>Нажми на карточку, чтобы увидеть перевод.</p>`,
+    nextLabel: "Далее",
+    onNext: () => advanceLearningCard(binding),
     onSkip: skipLearningGuide,
-    blocking: false,
+    blocking: true,
+    interactiveTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 5,
+    spotlightPadding: 7,
     contentPreference: "top",
     avoidHeader: false,
     avoidBottomNav: true,
+    closeBeforeNext: false,
   });
 }
 
 function showLearningTranslation(binding) {
   if (!learningFlow.active || learningFlow.phase !== "card") return;
   learningFlow.phase = "translation";
+
   showStep({
     target: binding.card,
     title: "Проверь себя",
     body: `<p>На обратной стороне находится перевод слова.</p>`,
+    nextLabel: "Далее",
     onNext: () => showLearningDecision(binding),
     onSkip: skipLearningGuide,
     blocking: true,
-    blockTarget: true,
+    interactiveTarget: false,
     spotlightShape: "rounded",
-    spotlightPadding: 5,
+    spotlightPadding: 7,
     contentPreference: "top",
     avoidHeader: false,
     avoidBottomNav: true,
@@ -737,37 +936,70 @@ function showLearningTranslation(binding) {
 function showLearningDecision(binding) {
   if (!learningFlow.active) return;
   learningFlow.phase = "decision";
-  const target = binding.session.querySelector(".learnDecisionGroup") || binding.card;
+
+  const decision = binding.session.querySelector(".learnDecisionGroup");
+  if (!decision) { scheduleScan(); return; }
+
   showStep({
-    target,
+    targets: [
+      {
+        element: binding.card,
+        shape: "rounded",
+        padding: 7,
+        interactive: true,
+      },
+      {
+        element: decision,
+        shape: "rounded",
+        padding: 10,
+        minWidth: 178,
+        minHeight: 84,
+        interactive: true,
+      },
+    ],
+    primaryTargetIndex: 1,
     title: "Знаешь слово?",
-    body: `<div class="alantilGuideGesture"><span><b>←</b> Не знаю</span><span>Знаю <b>→</b></span></div><p>Незнакомые слова будут возвращаться позже.</p>`,
-    nextLabel: "",
+    body: `
+      <p>Если знаешь — <strong>свайпай вправо или нажми «Знаю».</strong></p>
+      <p>Если не знаешь — <strong>свайпай влево или нажми «Не знаю».</strong></p>
+      <p>Незнакомое слово вернётся позже.</p>`,
+    nextLabel: "Далее",
+    onNext: () => showLearningCounter(binding),
     onSkip: skipLearningGuide,
-    blocking: false,
-    spotlightShape: "rounded",
-    spotlightPadding: 6,
+    blocking: true,
     contentPreference: "center",
     avoidHeader: false,
     avoidBottomNav: true,
   });
 }
 
+function visibleCounterTarget() {
+  const status = document.getElementById("sessionStatus");
+  if (elementViewportRect(status)) return status;
+  const counter = document.getElementById("counter");
+  return elementViewportRect(counter) ? counter : null;
+}
+
 function showLearningCounter(binding) {
   if (!learningFlow.active) return;
   learningFlow.phase = "counter";
-  const target = document.getElementById("sessionStatus") || document.getElementById("counter");
+
+  const target = visibleCounterTarget();
   if (!target) { scheduleScan(); return; }
+
   showStep({
     target,
     title: "Прогресс",
     body: `<p>Здесь видно, сколько слов осталось пройти.</p>`,
+    nextLabel: "Далее",
     onNext: () => showLearningFavorite(binding),
     onSkip: skipLearningGuide,
     blocking: true,
-    blockTarget: true,
+    interactiveTarget: false,
     spotlightShape: "pill",
-    spotlightPadding: 6,
+    spotlightPadding: 12,
+    minSpotlightWidth: 96,
+    minSpotlightHeight: 48,
     contentPreference: "center",
     avoidHeader: false,
     avoidBottomNav: true,
@@ -777,8 +1009,10 @@ function showLearningCounter(binding) {
 function showLearningFavorite(binding) {
   if (!learningFlow.active) return;
   learningFlow.phase = "favorite";
+
   const target = binding.session.querySelector("#btnFavAction");
   if (!target) { scheduleScan(); return; }
+
   showStep({
     target,
     title: "Избранное",
@@ -787,9 +1021,11 @@ function showLearningFavorite(binding) {
     onNext: finishLearningGuide,
     onSkip: skipLearningGuide,
     blocking: true,
-    blockTarget: true,
-    spotlightShape: "auto",
-    spotlightPadding: 5,
+    interactiveTarget: true,
+    spotlightShape: "circle",
+    spotlightPadding: 11,
+    minSpotlightWidth: 62,
+    minSpotlightHeight: 62,
     contentPreference: "center",
     avoidHeader: false,
     avoidBottomNav: true,
@@ -801,15 +1037,23 @@ function registerLearningDecision(binding) {
   learningFlow.phase = "decision-wait";
   learningFlow.decisionWordId = String(learnState.currentStudyId || "");
   destroyOverlay();
+
   globalThis.setTimeout(() => {
     if (!binding.session.isConnected || !learningFlow.active || learningFlow.phase !== "decision-wait") return;
     showLearningCounter(binding);
   }, 620);
 }
 
+function dismissRepeatHint() {
+  updateGuideState({ repeat_hint_shown: true });
+  destroyOverlay();
+  scheduleScan();
+}
+
 function showRepeatHint(binding) {
   const state = storedGuideState();
   if (!state.learning_completed || state.repeat_hint_shown || activeOverlay) return false;
+
   const id = String(learnState.currentStudyId || "");
   if (!id) return false;
   const stats = learnState.studySession?.wordStats?.[id];
@@ -821,17 +1065,16 @@ function showRepeatHint(binding) {
     title: "Слово вернулось",
     body: `<p>Ты отметил его как незнакомое. Повтори его ещё раз.</p>`,
     nextLabel: "Понятно",
-    showSkip: false,
-    blocking: false,
+    showSkip: true,
+    blocking: true,
+    interactiveTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 5,
+    spotlightPadding: 7,
     contentPreference: "top",
     avoidHeader: false,
     avoidBottomNav: true,
-    onNext: () => {
-      updateGuideState({ repeat_hint_shown: true });
-      scheduleScan();
-    },
+    onNext: dismissRepeatHint,
+    onSkip: dismissRepeatHint,
   });
   return true;
 }
@@ -850,9 +1093,16 @@ function bindLearningSession(session) {
 
   card.addEventListener("click", () => {
     if (!learningFlow.active || learningFlow.phase !== "card") return;
+    learningFlow.phase = "card-wait";
     globalThis.setTimeout(() => {
-      if (card.classList.contains("flipped")) showLearningTranslation(binding);
-    }, 0);
+      if (!learningFlow.active || learningFlow.phase !== "card-wait" || !card.isConnected) return;
+      if (!card.classList.contains("flipped")) {
+        learningFlow.phase = "card";
+        return;
+      }
+      learningFlow.phase = "card";
+      showLearningTranslation(binding);
+    }, 460);
   }, { signal });
 
   yes.addEventListener("click", () => registerLearningDecision(binding), { signal });
