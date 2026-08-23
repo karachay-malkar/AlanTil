@@ -1,6 +1,6 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.15.10.5";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.15.10.5";
-import { learnState } from "../learn/state.js?v=13.15.10.5";
+import { PATH_CONFIG } from "../../config/path.js?v=13.15.10.7";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.15.10.7";
+import { learnState } from "../learn/state.js?v=13.15.10.7";
 
 const GUIDE_STATE_KEY = "alantil_guided_help_v1";
 const GUIDE_STYLE_ID = "alantil-guided-help-style";
@@ -35,6 +35,10 @@ const STORY_GUIDE = Object.freeze({
 });
 
 const STYLE_TEXT = `
+/* Story controls: keep the existing layout, add only vertical breathing room. */
+.pathView{grid-template-rows:68px minmax(0,1fr)!important}
+.pathStickyControls{height:68px!important;padding-top:10px!important}
+
 .alantilGuideTrigger{
   appearance:none;position:absolute;z-index:calc(var(--z-path-controls) + 4);left:10px;top:80%;width:36px;height:36px;
   display:grid;place-items:center;padding:0;border:1px solid color-mix(in srgb,var(--text-1) 22%,transparent);border-radius:50%;
@@ -45,42 +49,70 @@ const STYLE_TEXT = `
 .alantilGuideTrigger:active{transform:translateY(calc(-50% + 1px)) scale(.97)}
 body.alantilGuideGeneral .alantilGuideTrigger{opacity:0;pointer-events:none}
 body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-.alantilGuideOverlay{position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:#fff}
+
+.alantilGuideOverlay{
+  position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:#fff;
+}
 .alantilGuideSpotlight{position:fixed;z-index:0;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-.alantilGuideSpotlightShade{fill:rgba(16,15,13,.66)}
-.alantilGuideHalo{position:fixed;z-index:1;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 26px rgba(255,255,255,.10);transition:left .18s ease,top .18s ease,width .18s ease,height .18s ease,border-radius .18s ease}
+.alantilGuideSpotlightShade{fill:rgba(15,14,12,.67)}
+.alantilGuideHalo{
+  position:fixed;z-index:1;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.16),0 0 14px rgba(255,255,255,.07);
+  transition:left .16s ease,top .16s ease,width .16s ease,height .16s ease,border-radius .16s ease;
+}
 .alantilGuideInputBlocker{position:fixed;z-index:2;background:transparent;pointer-events:auto}
-.alantilGuideContent{position:fixed;z-index:3;inset:0;pointer-events:none;outline:none}
+
+.alantilGuideContent{
+  position:fixed;z-index:4;left:50%;top:0;width:min(440px,calc(100vw - 32px));margin:0;
+  transform:translateX(-50%);text-align:center;pointer-events:none;outline:none;
+}
 .alantilGuideTitle{
-  position:fixed;left:50%;top:max(18px,calc(env(safe-area-inset-top) + 12px));width:min(460px,calc(100vw - 32px));margin:0;
-  transform:translateX(-50%);color:rgba(255,255,255,.98);font:900 19px/1.2 var(--font-terminal);text-align:center;text-wrap:balance;
-  text-shadow:0 2px 18px rgba(0,0,0,.58);pointer-events:none;
+  margin:0;color:rgba(255,255,255,.98);font:900 19px/1.2 var(--font-terminal);text-wrap:balance;
+  text-shadow:0 2px 18px rgba(0,0,0,.66);
 }
 .alantilGuideBody{
-  position:fixed;left:50%;width:min(440px,calc(100vw - 38px));margin:0;transform:translateX(-50%);color:rgba(255,255,255,.88);
-  font-size:14px;line-height:1.48;text-align:center;text-wrap:pretty;text-shadow:0 2px 16px rgba(0,0,0,.62);pointer-events:none;
+  margin-top:11px;color:rgba(255,255,255,.90);font-size:14px;line-height:1.48;text-wrap:pretty;
+  text-shadow:0 2px 16px rgba(0,0,0,.68);
 }
-.alantilGuideBody p{margin:0}.alantilGuideBody p+p{margin-top:10px}.alantilGuideBody strong{color:#fff;font-weight:850}
+.alantilGuideBody p{margin:0}
+.alantilGuideBody p+p{margin-top:9px}
+.alantilGuideBody strong{color:#fff;font-weight:850}
+.alantilGuideGesture{
+  display:flex;align-items:center;justify-content:center;gap:28px;margin:0 0 8px;color:#fff;
+  font:850 12px/1.2 var(--font-terminal);
+}
+.alantilGuideGesture span{display:flex;align-items:center;gap:6px}
+.alantilGuideGesture b{font-size:18px}
+
 .alantilGuideNav{
-  position:fixed;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));
-  display:grid;grid-template-columns:1fr 1fr;align-items:center;z-index:5;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;pointer-events:none;
 }
 .alantilGuideSkip,.alantilGuideNext{
-  appearance:none;width:max-content;min-height:36px;padding:7px 2px;border:0;background:transparent;color:rgba(255,255,255,.94);
-  font:800 11px/1 var(--font-terminal);text-shadow:0 2px 14px rgba(0,0,0,.7);cursor:pointer;pointer-events:auto;
+  appearance:none;min-width:112px;min-height:38px;padding:8px 17px;border-radius:999px;
+  font:800 11px/1 var(--font-terminal);cursor:pointer;pointer-events:auto;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
 }
-.alantilGuideSkip{justify-self:start;color:rgba(255,255,255,.68)}
-.alantilGuideNext{justify-self:end}
-.alantilGuideSkip:active,.alantilGuideNext:active{transform:translateY(1px);opacity:.78}
-.alantilGuideGesture{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:10px;color:#fff;font:850 12px/1.2 var(--font-terminal)}
-.alantilGuideGesture span{display:flex;align-items:center;gap:6px}.alantilGuideGesture b{font-size:18px}
+.alantilGuideSkip{
+  border:1px solid rgba(255,255,255,.48);background:rgba(20,19,17,.10);color:rgba(255,255,255,.90);
+}
+.alantilGuideNext{
+  border:1px solid rgba(248,246,240,.92);background:rgba(248,246,240,.96);color:#24211d;
+  box-shadow:0 4px 18px rgba(0,0,0,.16);
+}
+.alantilGuideSkip:active,.alantilGuideNext:active{transform:translateY(1px);opacity:.82}
+
 @media(max-width:390px){
+  .pathView{grid-template-rows:66px minmax(0,1fr)!important}
+  .pathStickyControls{height:66px!important;padding-top:8px!important}
   .alantilGuideTrigger{left:9px;width:34px;height:34px}
-  .alantilGuideTitle{width:calc(100vw - 28px);font-size:17px}
-  .alantilGuideBody{width:calc(100vw - 32px);font-size:13px}
-  .alantilGuideNav{left:14px;right:14px}
+  .alantilGuideContent{width:calc(100vw - 28px)}
+  .alantilGuideTitle{font-size:17px}
+  .alantilGuideBody{font-size:13px}
+  .alantilGuideSkip,.alantilGuideNext{min-width:104px;min-height:36px;padding:7px 14px}
 }
-@media(prefers-reduced-motion:reduce){.alantilGuideTrigger,.alantilGuideHalo{transition:none!important}}
+@media(prefers-reduced-motion:reduce){
+  .alantilGuideTrigger,.alantilGuideHalo{transition:none!important}
+}
 `;
 
 let activeOverlay = null;
@@ -144,7 +176,7 @@ function numericRadius(value, width, height) {
   return Number.isFinite(parsed) ? parsed : 14;
 }
 
-function targetGeometry(target, { padding = 9, shape = "auto" } = {}) {
+function targetGeometry(target, { padding = 6, shape = "auto" } = {}) {
   if (!target?.isConnected) return null;
   const rect = target.getBoundingClientRect();
   if (!rect.width || !rect.height) return null;
@@ -152,7 +184,7 @@ function targetGeometry(target, { padding = 9, shape = "auto" } = {}) {
   let resolvedShape = shape;
   if (resolvedShape === "auto") {
     if (target.matches?.(".storyTab,.sessionStatus")) resolvedShape = "pill";
-    else if (target.matches?.(".stationProgressRing,#btnFavAction")) resolvedShape = "circle";
+    else if (target.matches?.(".stationProgressRing")) resolvedShape = "circle";
     else resolvedShape = "rounded";
   }
 
@@ -177,7 +209,7 @@ function targetGeometry(target, { padding = 9, shape = "auto" } = {}) {
   const computed = getComputedStyle(target);
   let radius = numericRadius(computed.borderTopLeftRadius, width, height) + padding;
   if (resolvedShape === "circle" || resolvedShape === "pill") radius = Math.min(width, height) / 2;
-  else radius = clamp(radius, 14, Math.min(width, height) / 2);
+  else radius = clamp(radius, 12, Math.min(width, height) / 2);
 
   return {
     left,
@@ -231,39 +263,106 @@ function updateSpotlight(svg, hole, shade, halo, geometry) {
   halo.style.borderRadius = `${geometry.radius}px`;
 }
 
-function positionBody(body, title, geometry) {
-  const margin = 16;
-  const gap = 22;
-  const titleRect = title.getBoundingClientRect();
-  const navReserve = 76 + Math.max(0, Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-bottom")) || 0);
-  const usableTop = Math.max(titleRect.bottom + 18, 86);
-  const usableBottom = Math.max(usableTop + 40, window.innerHeight - navReserve);
-  const bodyHeight = body.getBoundingClientRect().height;
-
-  const placeInZone = (start, end) => {
-    const available = Math.max(0, end - start);
-    return clamp(start + (available - bodyHeight) / 2, margin, Math.max(margin, window.innerHeight - bodyHeight - margin));
+function elementViewportRect(element) {
+  if (!element || element.hidden || !element.isConnected) return null;
+  const style = getComputedStyle(element);
+  if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return null;
+  const rect = element.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  return {
+    left: rect.left,
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    width: rect.width,
+    height: rect.height,
   };
+}
 
-  if (!geometry) {
-    body.style.top = `${placeInZone(usableTop, usableBottom)}px`;
-    return;
-  }
+function expandRect(rect, amount) {
+  if (!rect) return null;
+  return {
+    left: rect.left - amount,
+    top: rect.top - amount,
+    right: rect.right + amount,
+    bottom: rect.bottom + amount,
+  };
+}
 
-  const zones = [
-    { start: usableTop, end: geometry.top - gap },
-    { start: geometry.bottom + gap, end: usableBottom },
-  ].map((zone) => ({ ...zone, available: zone.end - zone.start }))
-    .filter((zone) => zone.available >= bodyHeight + 8)
-    .sort((left, right) => right.available - left.available);
+function intersectionArea(left, right) {
+  if (!left || !right) return 0;
+  const width = Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left));
+  const height = Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
+  return width * height;
+}
 
-  if (zones.length) {
-    body.style.top = `${placeInZone(zones[0].start, zones[0].end)}px`;
-    return;
-  }
+function contentRectFor(top, width, height) {
+  const left = (window.innerWidth - width) / 2;
+  return { left, top, right: left + width, bottom: top + height, width, height };
+}
 
-  const fallbackTop = placeInZone(usableTop, usableBottom);
-  body.style.top = `${fallbackTop}px`;
+function uniqueNumbers(values) {
+  const result = [];
+  values.forEach((value) => {
+    const rounded = Math.round(value * 10) / 10;
+    if (!result.some((item) => Math.abs(item - rounded) < 1)) result.push(rounded);
+  });
+  return result;
+}
+
+function positionGuideContent(content, geometry, {
+  preference = "center",
+  avoidHeader = true,
+  avoidBottomNav = true,
+} = {}) {
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const edge = viewportWidth <= 390 ? 14 : 18;
+  const gap = viewportWidth <= 390 ? 16 : 20;
+
+  content.style.top = `${edge}px`;
+  const measured = content.getBoundingClientRect();
+  const width = measured.width;
+  const height = measured.height;
+  const maxTop = Math.max(edge, viewportHeight - height - edge);
+
+  const header = avoidHeader ? elementViewportRect(document.getElementById("appHeader")) : null;
+  const bottomNav = avoidBottomNav ? elementViewportRect(document.getElementById("bottomNav")) : null;
+  const targetAvoid = expandRect(geometry, gap);
+
+  const candidates = [
+    (viewportHeight - height) / 2,
+    geometry ? geometry.top - gap - height : NaN,
+    geometry ? geometry.bottom + gap : NaN,
+    edge,
+    maxTop,
+    viewportHeight * 0.33 - height / 2,
+    viewportHeight * 0.67 - height / 2,
+  ].filter(Number.isFinite).map((top) => clamp(top, edge, maxTop));
+
+  const tops = uniqueNumbers(candidates);
+  const evaluated = tops.map((top) => {
+    const rect = contentRectFor(top, width, height);
+    const targetOverlap = intersectionArea(rect, targetAvoid);
+    const headerOverlap = intersectionArea(rect, header);
+    const navOverlap = intersectionArea(rect, bottomNav);
+    const centerDistance = Math.abs((top + height / 2) - viewportHeight / 2);
+    const preferenceCost = preference === "top"
+      ? top
+      : preference === "bottom"
+        ? Math.abs((top + height) - viewportHeight)
+        : centerDistance;
+    const penalty = targetOverlap * 100000 + headerOverlap * 50000 + navOverlap * 50000;
+    return { top, penalty, preferenceCost, centerDistance };
+  });
+
+  evaluated.sort((a, b) =>
+    (a.penalty - b.penalty)
+    || (a.preferenceCost - b.preferenceCost)
+    || (a.centerDistance - b.centerDistance)
+  );
+
+  content.style.top = `${evaluated[0]?.top ?? clamp((viewportHeight - height) / 2, edge, maxTop)}px`;
 }
 
 function createInputBlockers(overlay, geometry, blockTarget) {
@@ -271,6 +370,7 @@ function createInputBlockers(overlay, geometry, blockTarget) {
   if (!overlay.classList.contains("isBlocking")) return;
 
   const makeBlocker = (rect) => {
+    if (rect.right <= rect.left || rect.bottom <= rect.top) return;
     const blocker = document.createElement("div");
     blocker.className = "alantilGuideInputBlocker";
     blocker.dataset.guideBlocker = "";
@@ -300,7 +400,10 @@ function showStep({
   blocking = true,
   blockTarget = false,
   spotlightShape = "auto",
-  spotlightPadding = 9,
+  spotlightPadding = 6,
+  contentPreference = "center",
+  avoidHeader = true,
+  avoidBottomNav = true,
 } = {}) {
   destroyOverlay();
   const modalRoot = document.getElementById("modalRoot") || document.body;
@@ -328,10 +431,10 @@ function showStep({
   content.innerHTML = `
     <h2 class="alantilGuideTitle">${title}</h2>
     <div class="alantilGuideBody">${body}</div>
-    <nav class="alantilGuideNav" aria-label="Навигация по подсказке">
-      ${showSkip ? '<button class="alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : '<span></span>'}
+    ${(showSkip || nextLabel) ? `<nav class="alantilGuideNav" aria-label="Навигация по подсказке">
+      ${showSkip ? '<button class="alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}
       ${nextLabel ? `<button class="alantilGuideNext" type="button" data-guide-next>${nextLabel}</button>` : ""}
-    </nav>`;
+    </nav>` : ""}`;
   overlay.appendChild(content);
   modalRoot.appendChild(overlay);
 
@@ -339,8 +442,6 @@ function showStep({
   const hole = overlay.querySelector("[data-mask-hole]");
   const shade = overlay.querySelector("[data-mask-shade]");
   const halo = overlay.querySelector("[data-guide-halo]");
-  const titleNode = overlay.querySelector(".alantilGuideTitle");
-  const bodyNode = overlay.querySelector(".alantilGuideBody");
 
   let resizeFrame = 0;
   const reposition = () => {
@@ -350,16 +451,22 @@ function showStep({
       const geometry = targetGeometry(target, { padding: spotlightPadding, shape: spotlightShape });
       updateSpotlight(svg, hole, shade, halo, geometry);
       createInputBlockers(overlay, geometry, blockTarget);
-      positionBody(bodyNode, titleNode, geometry);
+      positionGuideContent(content, geometry, {
+        preference: contentPreference,
+        avoidHeader,
+        avoidBottomNav,
+      });
     });
   };
 
   const cleanup = () => {
     window.removeEventListener("resize", reposition);
+    window.removeEventListener("orientationchange", reposition);
     window.removeEventListener("scroll", reposition, true);
     if (resizeFrame) cancelAnimationFrame(resizeFrame);
     overlay.remove();
   };
+
   const api = { destroy: cleanup, overlay };
   activeOverlay = api;
 
@@ -376,12 +483,16 @@ function showStep({
     event.preventDefault();
     finishAction(onSkip);
   });
+
   window.addEventListener("resize", reposition, { passive: true });
+  window.addEventListener("orientationchange", reposition, { passive: true });
   window.addEventListener("scroll", reposition, { capture: true, passive: true });
+
   requestAnimationFrame(() => {
     reposition();
     content.focus({ preventScroll: true });
   });
+
   return api;
 }
 
@@ -405,6 +516,7 @@ function showGeneralIntro() {
       <p>Учи новые слова, а затем старайся использовать их в повседневной жизни. <strong>Только тогда твоя речь действительно станет богаче, и ты увидишь свой прогресс.</strong></p>`,
     onNext: showStoriesIntro,
     onSkip: skipGeneralGuide,
+    contentPreference: "center",
   });
 }
 
@@ -420,7 +532,8 @@ function showStoriesIntro() {
     onSkip: skipGeneralGuide,
     blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 7,
+    spotlightPadding: 6,
+    contentPreference: "center",
   });
 }
 
@@ -456,7 +569,8 @@ function showStory(index) {
     onSkip: skipGeneralGuide,
     blockTarget: true,
     spotlightShape: "pill",
-    spotlightPadding: 7,
+    spotlightPadding: 6,
+    contentPreference: "center",
   });
 }
 
@@ -474,7 +588,8 @@ function showStorySummary() {
     onSkip: skipGeneralGuide,
     blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 7,
+    spotlightPadding: 6,
+    contentPreference: "center",
   });
 }
 
@@ -510,6 +625,7 @@ function showStages() {
     blockTarget: true,
     spotlightShape: target.matches?.(".stationProgressRing") ? "circle" : "rounded",
     spotlightPadding: 8,
+    contentPreference: "center",
   });
 }
 
@@ -525,7 +641,8 @@ function showStationStudy() {
     onSkip: skipGeneralGuide,
     blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 6,
+    contentPreference: "center",
   });
 }
 
@@ -542,7 +659,8 @@ function showStationTest() {
     onSkip: skipGeneralGuide,
     blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 6,
+    contentPreference: "center",
   });
 }
 
@@ -590,7 +708,10 @@ function showLearningCardStep(binding) {
     onSkip: skipLearningGuide,
     blocking: false,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 5,
+    contentPreference: "top",
+    avoidHeader: false,
+    avoidBottomNav: true,
   });
 }
 
@@ -606,7 +727,10 @@ function showLearningTranslation(binding) {
     blocking: true,
     blockTarget: true,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 5,
+    contentPreference: "top",
+    avoidHeader: false,
+    avoidBottomNav: true,
   });
 }
 
@@ -617,12 +741,15 @@ function showLearningDecision(binding) {
   showStep({
     target,
     title: "Знаешь слово?",
-    body: `<div class="alantilGuideGesture"><span><b>←</b> Не знаю</span><span>Знаю <b>→</b></span></div><p>Незнакомые слова будут возвращаться, пока ты их не запомнишь.</p>`,
+    body: `<div class="alantilGuideGesture"><span><b>←</b> Не знаю</span><span>Знаю <b>→</b></span></div><p>Незнакомые слова будут возвращаться позже.</p>`,
     nextLabel: "",
     onSkip: skipLearningGuide,
     blocking: false,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 6,
+    contentPreference: "center",
+    avoidHeader: false,
+    avoidBottomNav: true,
   });
 }
 
@@ -640,7 +767,10 @@ function showLearningCounter(binding) {
     blocking: true,
     blockTarget: true,
     spotlightShape: "pill",
-    spotlightPadding: 7,
+    spotlightPadding: 6,
+    contentPreference: "center",
+    avoidHeader: false,
+    avoidBottomNav: true,
   });
 }
 
@@ -658,8 +788,11 @@ function showLearningFavorite(binding) {
     onSkip: skipLearningGuide,
     blocking: true,
     blockTarget: true,
-    spotlightShape: "circle",
-    spotlightPadding: 7,
+    spotlightShape: "auto",
+    spotlightPadding: 5,
+    contentPreference: "center",
+    avoidHeader: false,
+    avoidBottomNav: true,
   });
 }
 
@@ -682,6 +815,7 @@ function showRepeatHint(binding) {
   const stats = learnState.studySession?.wordStats?.[id];
   const failCount = Number(learnState.sessionFailMap?.[id] || 0);
   if (!stats || Number(stats.show_count || 0) < 2 || failCount < 1) return false;
+
   showStep({
     target: binding.card,
     title: "Слово вернулось",
@@ -690,7 +824,10 @@ function showRepeatHint(binding) {
     showSkip: false,
     blocking: false,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
+    spotlightPadding: 5,
+    contentPreference: "top",
+    avoidHeader: false,
+    avoidBottomNav: true,
     onNext: () => {
       updateGuideState({ repeat_hint_shown: true });
       scheduleScan();
@@ -707,6 +844,7 @@ function bindLearningSession(session) {
   const yes = session.querySelector("#btnYes");
   const no = session.querySelector("#btnNo");
   if (!card || !yes || !no) return;
+
   const binding = { session, card, abort: () => abortController.abort(), touchStartX: 0 };
   learningBinding = binding;
 
@@ -716,11 +854,14 @@ function bindLearningSession(session) {
       if (card.classList.contains("flipped")) showLearningTranslation(binding);
     }, 0);
   }, { signal });
+
   yes.addEventListener("click", () => registerLearningDecision(binding), { signal });
   no.addEventListener("click", () => registerLearningDecision(binding), { signal });
+
   card.addEventListener("touchstart", (event) => {
     binding.touchStartX = event.touches?.[0]?.clientX || 0;
   }, { signal, passive: true });
+
   card.addEventListener("touchend", (event) => {
     if (!learningFlow.active || learningFlow.phase !== "decision") return;
     const endX = event.changedTouches?.[0]?.clientX ?? binding.touchStartX;
@@ -728,6 +869,7 @@ function bindLearningSession(session) {
     const threshold = card.offsetWidth * 0.3;
     if (delta > threshold || delta < -threshold) registerLearningDecision(binding);
   }, { signal, passive: true });
+
   signal.addEventListener("abort", () => {
     if (learningBinding === binding) learningBinding = null;
     if (learningFlow.active) {
