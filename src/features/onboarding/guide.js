@@ -9,9 +9,10 @@ const STORY_GUIDE = Object.freeze({
   oblivion: {
     title: "На пороге забвения — лёгкий уровень",
     body: `
-      <p>Это словарь для тех, кто только начинает изучать язык.</p>
-      <p>Однако, зная только эти слова, твоя речь по-прежнему будет скудной. К сожалению, большая часть людей сегодня владеет лишь этой базовой лексикой. <strong>И потому наш язык постепенно исчезает.</strong></p>
-      <p>Если хочешь действительно хорошо знать свой язык, следующий раздел — для тебя.</p>`,
+      <p>Это базовая лексика для начинающих.</p>
+      <p>Освоив её, ты достигнешь лишь начального уровня владения языком. Увы, большинство людей сегодня знают язык только на этом уровне.</p>
+      <p>Именно поэтому наш язык находится на грани исчезновения.</p>
+      <p>Чтобы действительно хорошо знать язык, двигайся дальше.</p>`,
   },
   roots: {
     title: "Возвращение к истокам — средний уровень",
@@ -35,10 +36,6 @@ const STORY_GUIDE = Object.freeze({
 });
 
 const STYLE_TEXT = `
-/* Keep the current Path architecture; only give the story controls more air. */
-.pathView{grid-template-rows:68px minmax(0,1fr)!important}
-.pathStickyControls{height:68px!important;padding-top:10px!important}
-
 .alantilGuideTrigger{
   appearance:none;position:absolute;z-index:calc(var(--z-path-controls) + 4);left:10px;top:80%;width:36px;height:36px;
   display:grid;place-items:center;padding:0;border:1px solid color-mix(in srgb,var(--text-1) 22%,transparent);border-radius:50%;
@@ -51,72 +48,50 @@ body.alantilGuideGeneral .alantilGuideTrigger{opacity:0;pointer-events:none}
 body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 
 .alantilGuideOverlay{
-  position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:var(--text-inverse);
+  position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:var(--text-1);
+  opacity:0;transition:opacity .18s var(--ease-standard);
 }
-.alantilGuideSpotlight{
-  position:fixed;z-index:0;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
-}
-.alantilGuideSpotlightShade{fill:rgba(10,9,8,.82);pointer-events:none}
-.alantilGuidePanel{
-  fill:rgba(19,18,16,.94);stroke:rgba(255,255,255,.07);stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none;
-}
+.alantilGuideOverlay.isVisible{opacity:1}
+.alantilGuideOverlay.isLeaving{opacity:0}
+.alantilGuideSpotlight{position:fixed;z-index:0;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.alantilGuideSpotlightShade{fill:rgba(25,25,25,.54);pointer-events:none}
 .alantilGuideHalo{
   position:fixed;z-index:1;pointer-events:none;
-  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 12px rgba(255,255,255,.08);
-  transition:left .16s ease,top .16s ease,width .16s ease,height .16s ease,border-radius .16s ease;
+  box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 10px rgba(255,255,255,.06);
+  transition:left .26s var(--ease-standard),top .26s var(--ease-standard),width .26s var(--ease-standard),height .26s var(--ease-standard),border-radius .26s var(--ease-standard),opacity .16s ease;
 }
 .alantilGuideHalo.isPrimary{
-  box-shadow:0 0 0 1px rgba(255,255,255,.32),0 0 16px rgba(255,255,255,.16);
-  animation:alantilGuidePulse 1.9s ease-in-out infinite;
+  box-shadow:0 0 0 1px rgba(255,255,255,.26),0 0 14px rgba(255,255,255,.09);
+  animation:alantilGuidePulse 2.15s ease-in-out infinite;
 }
 @keyframes alantilGuidePulse{
-  0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.26),0 0 10px rgba(255,255,255,.10)}
-  50%{box-shadow:0 0 0 2px rgba(255,255,255,.52),0 0 26px rgba(255,255,255,.24)}
+  0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.22),0 0 10px rgba(255,255,255,.06)}
+  50%{box-shadow:0 0 0 2px rgba(255,255,255,.34),0 0 22px rgba(255,255,255,.13)}
 }
-.alantilGuideInputBlocker{position:fixed;z-index:2;background:transparent;pointer-events:auto}
-
+.alantilGuideInputBlocker{position:fixed;z-index:2;background:transparent;pointer-events:auto;touch-action:none}
 .alantilGuideContent{
-  position:fixed;z-index:4;left:50%;top:0;width:min(440px,calc(100vw - 32px));margin:0;
-  transform:translateX(-50%);text-align:center;pointer-events:none;outline:none;
+  position:fixed;z-index:4;left:50%;top:14px;width:min(360px,calc(100vw - 28px));max-height:calc(100vh - 28px);overflow:auto;
+  margin:0;padding:15px 16px 13px;transform:translateX(-50%);text-align:left;pointer-events:auto;outline:none;
+  border:1px solid color-mix(in srgb,var(--line) 88%,transparent);border-radius:var(--radius-lg);
+  background:color-mix(in srgb,var(--surface-0) 94%,transparent);box-shadow:var(--shadow-sm);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  opacity:1;transition:top .24s var(--ease-standard),opacity .16s ease,transform .24s var(--ease-standard);
 }
-.alantilGuideTitle{
-  margin:0;color:rgba(255,255,255,.99);font:900 19px/1.2 var(--font-terminal);text-wrap:balance;
-  text-shadow:0 2px 18px rgba(0,0,0,.76);
-}
-.alantilGuideBody{
-  margin-top:11px;color:rgba(255,255,255,.92);font-size:14px;line-height:1.48;text-wrap:pretty;
-  text-shadow:0 2px 16px rgba(0,0,0,.74);
-}
-.alantilGuideBody p{margin:0}
-.alantilGuideBody p+p{margin-top:9px}
-.alantilGuideBody strong{color:#fff;font-weight:850}
-.alantilGuideGesture{
-  display:flex;align-items:center;justify-content:center;gap:28px;margin:0 0 8px;color:#fff;
-  font:850 12px/1.2 var(--font-terminal);
-}
-.alantilGuideGesture span{display:flex;align-items:center;gap:6px}
-.alantilGuideGesture b{font-size:18px}
-
-.alantilGuideNav{
-  display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;pointer-events:none;
-}
-.alantilGuideSkip.btn,.alantilGuideNext.btn{
-  min-width:112px;min-height:38px;padding:7px 14px;pointer-events:auto;font:800 11px/1 var(--font-terminal);
-}
-.alantilGuideSkip.btn{color:var(--text-inverse)}
-.alantilGuideNext.btn{box-shadow:none}
-
+.alantilGuideContent.isSwapping{opacity:.72;transform:translateX(-50%) translateY(2px)}
+.alantilGuideTitle{margin:0;color:var(--text-1);font:900 17px/1.24 var(--font-terminal);text-wrap:balance}
+.alantilGuideBody{margin-top:9px;color:var(--text-2);font-size:13px;line-height:1.46;text-wrap:pretty}
+.alantilGuideBody p{margin:0}.alantilGuideBody p+p{margin-top:8px}.alantilGuideBody strong{color:var(--text-1);font-weight:850}
+.alantilGuideNav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;pointer-events:auto}
+.alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:104px;min-height:36px;padding:6px 12px;font:800 11px/1 var(--font-terminal)}
+.alantilGuideNext.btn{margin-left:auto;box-shadow:none}
 @media(max-width:390px){
-  .pathView{grid-template-rows:66px minmax(0,1fr)!important}
-  .pathStickyControls{height:66px!important;padding-top:8px!important}
   .alantilGuideTrigger{left:9px;width:34px;height:34px}
-  .alantilGuideContent{width:calc(100vw - 28px)}
-  .alantilGuideTitle{font-size:17px}
-  .alantilGuideBody{font-size:13px}
-  .alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:104px;min-height:36px;padding:6px 12px}
+  .alantilGuideContent{width:calc(100vw - 28px);padding:14px 14px 12px}
+  .alantilGuideTitle{font-size:16px}.alantilGuideBody{font-size:12.5px}
+  .alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:98px;min-height:35px;padding:6px 10px}
 }
 @media(prefers-reduced-motion:reduce){
-  .alantilGuideTrigger,.alantilGuideHalo{transition:none!important}
+  .alantilGuideTrigger,.alantilGuideOverlay,.alantilGuideContent,.alantilGuideHalo{transition:none!important}
   .alantilGuideHalo.isPrimary{animation:none!important}
 }
 `;
@@ -165,10 +140,11 @@ function closeOpenStele() {
   openStele?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 }
 
-function destroyOverlay() {
+function destroyOverlay({ smooth = true } = {}) {
   if (!activeOverlay) return;
-  activeOverlay.destroy();
+  const overlay = activeOverlay;
   activeOverlay = null;
+  overlay.destroy({ smooth });
 }
 
 function clamp(value, min, max) {
@@ -222,16 +198,7 @@ function targetGeometry(target, {
   if (resolvedShape === "circle" || resolvedShape === "pill") radius = Math.min(width, height) / 2;
   else radius = clamp(radius, 12, Math.min(width, height) / 2);
 
-  return {
-    left,
-    top,
-    right: left + width,
-    bottom: top + height,
-    width,
-    height,
-    radius,
-    shape: resolvedShape,
-  };
+  return { left, top, right: left + width, bottom: top + height, width, height, radius, shape: resolvedShape };
 }
 
 function geometryUnion(geometries) {
@@ -244,12 +211,97 @@ function geometryUnion(geometries) {
   return { left, top, right, bottom, width: right - left, height: bottom - top };
 }
 
-function applyRect(element, rect) {
-  if (!element || !rect) return;
-  element.style.left = `${rect.left}px`;
-  element.style.top = `${rect.top}px`;
-  element.style.width = `${Math.max(0, rect.right - rect.left)}px`;
-  element.style.height = `${Math.max(0, rect.bottom - rect.top)}px`;
+function elementViewportRect(element) {
+  if (!element || element.hidden || !element.isConnected) return null;
+  const style = getComputedStyle(element);
+  if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return null;
+  const rect = element.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height };
+}
+
+function expandRect(rect, amount) {
+  if (!rect) return null;
+  return { left: rect.left - amount, top: rect.top - amount, right: rect.right + amount, bottom: rect.bottom + amount };
+}
+
+function intersectionArea(left, right) {
+  if (!left || !right) return 0;
+  const width = Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left));
+  const height = Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
+  return width * height;
+}
+
+function uniqueNumbers(values) {
+  const result = [];
+  values.forEach((value) => {
+    if (!Number.isFinite(value)) return;
+    const rounded = Math.round(value * 10) / 10;
+    if (!result.some((item) => Math.abs(item - rounded) < 1)) result.push(rounded);
+  });
+  return result;
+}
+
+function positionGuideContent(content, geometries, {
+  preference = "auto",
+  avoidHeader = true,
+  avoidBottomNav = true,
+  avoidElements = [],
+} = {}) {
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const edge = viewportWidth <= 390 ? 14 : 18;
+  const gap = viewportWidth <= 390 ? 14 : 18;
+
+  content.style.top = `${edge}px`;
+  const measured = content.getBoundingClientRect();
+  const height = measured.height;
+  const maxTop = Math.max(edge, viewportHeight - height - edge);
+  const union = geometryUnion(geometries);
+  const targetCenter = union ? union.top + union.height / 2 : viewportHeight / 2;
+
+  const protectedRects = geometries.filter(Boolean).map((geometry) => expandRect(geometry, gap));
+  avoidElements.forEach((element) => {
+    const rect = elementViewportRect(element);
+    if (rect) protectedRects.push(expandRect(rect, gap));
+  });
+  const header = avoidHeader ? elementViewportRect(document.getElementById("appHeader")) : null;
+  const bottomNav = avoidBottomNav ? elementViewportRect(document.getElementById("bottomNav")) : null;
+
+  const opposite = !union
+    ? (viewportHeight - height) / 2
+    : targetCenter <= viewportHeight / 2
+      ? Math.max(union.bottom + gap, viewportHeight * .61 - height / 2)
+      : Math.min(union.top - gap - height, viewportHeight * .27 - height / 2);
+  const above = union ? union.top - gap - height : edge;
+  const below = union ? union.bottom + gap : maxTop;
+  const center = (viewportHeight - height) / 2;
+  const topZone = viewportHeight * .24 - height / 2;
+  const bottomZone = viewportHeight * .72 - height / 2;
+
+  let candidates;
+  if (preference === "top") candidates = [above, topZone, opposite, below, center, edge, maxTop];
+  else if (preference === "bottom") candidates = [below, bottomZone, opposite, above, center, maxTop, edge];
+  else candidates = [opposite, above, below, center, topZone, bottomZone, edge, maxTop];
+
+  const tops = uniqueNumbers(candidates.map((top) => clamp(top, edge, maxTop)));
+  let best = null;
+  for (let index = 0; index < tops.length; index += 1) {
+    content.style.top = `${tops[index]}px`;
+    const actual = content.getBoundingClientRect();
+    const targetOverlap = protectedRects.reduce((sum, rect) => sum + intersectionArea(actual, rect), 0);
+    const chromeOverlap = intersectionArea(actual, header) + intersectionArea(actual, bottomNav);
+    const penalty = targetOverlap * 100000 + chromeOverlap * 50000 + index;
+    const candidate = { top: tops[index], penalty, targetOverlap, chromeOverlap };
+    if (!best || candidate.penalty < best.penalty) best = candidate;
+    if (targetOverlap === 0 && chromeOverlap === 0) {
+      best = candidate;
+      break;
+    }
+  }
+
+  content.style.top = `${best?.top ?? clamp(center, edge, maxTop)}px`;
+  return content.getBoundingClientRect();
 }
 
 function svgElement(name) {
@@ -264,177 +316,53 @@ function updateMask(svg, holesGroup, shade, geometries) {
   svg.setAttribute("height", String(height));
   shade.setAttribute("width", String(width));
   shade.setAttribute("height", String(height));
-
   const base = svg.querySelector("[data-mask-base]");
   base?.setAttribute("width", String(width));
   base?.setAttribute("height", String(height));
 
-  holesGroup.replaceChildren();
-  geometries.forEach((geometry) => {
+  while (holesGroup.children.length > geometries.length) holesGroup.lastElementChild?.remove();
+  geometries.forEach((geometry, index) => {
     if (!geometry) return;
-    const hole = svgElement("rect");
+    let hole = holesGroup.children[index];
+    if (!hole) {
+      hole = svgElement("rect");
+      hole.setAttribute("fill", "black");
+      holesGroup.appendChild(hole);
+    }
     hole.setAttribute("x", String(geometry.left));
     hole.setAttribute("y", String(geometry.top));
     hole.setAttribute("width", String(geometry.width));
     hole.setAttribute("height", String(geometry.height));
     hole.setAttribute("rx", String(geometry.radius));
     hole.setAttribute("ry", String(geometry.radius));
-    hole.setAttribute("fill", "black");
-    holesGroup.appendChild(hole);
   });
 }
 
 function updateHalos(root, geometries, primaryIndex) {
-  root.replaceChildren();
+  while (root.children.length > geometries.length) root.lastElementChild?.remove();
   geometries.forEach((geometry, index) => {
     if (!geometry) return;
-    const halo = document.createElement("div");
-    halo.className = `alantilGuideHalo${index === primaryIndex ? " isPrimary" : ""}`;
+    let halo = root.children[index];
+    if (!halo) {
+      halo = document.createElement("div");
+      halo.className = "alantilGuideHalo";
+      root.appendChild(halo);
+    }
+    halo.classList.toggle("isPrimary", index === primaryIndex);
     halo.style.left = `${geometry.left}px`;
     halo.style.top = `${geometry.top}px`;
     halo.style.width = `${geometry.width}px`;
     halo.style.height = `${geometry.height}px`;
     halo.style.borderRadius = `${geometry.radius}px`;
-    root.appendChild(halo);
   });
 }
 
-function elementViewportRect(element) {
-  if (!element || element.hidden || !element.isConnected) return null;
-  const style = getComputedStyle(element);
-  if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return null;
-  const rect = element.getBoundingClientRect();
-  if (!rect.width || !rect.height) return null;
-  return {
-    left: rect.left,
-    top: rect.top,
-    right: rect.right,
-    bottom: rect.bottom,
-    width: rect.width,
-    height: rect.height,
-  };
-}
-
-function expandRect(rect, amount) {
-  if (!rect) return null;
-  return {
-    left: rect.left - amount,
-    top: rect.top - amount,
-    right: rect.right + amount,
-    bottom: rect.bottom + amount,
-  };
-}
-
-function intersectionArea(left, right) {
-  if (!left || !right) return 0;
-  const width = Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left));
-  const height = Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
-  return width * height;
-}
-
-function contentRectFor(top, width, height) {
-  const left = (window.innerWidth - width) / 2;
-  return { left, top, right: left + width, bottom: top + height, width, height };
-}
-
-function uniqueNumbers(values) {
-  const result = [];
-  values.forEach((value) => {
-    const rounded = Math.round(value * 10) / 10;
-    if (!result.some((item) => Math.abs(item - rounded) < 1)) result.push(rounded);
-  });
-  return result;
-}
-
-function positionGuideContent(content, geometries, {
-  preference = "center",
-  avoidHeader = true,
-  avoidBottomNav = true,
-} = {}) {
-  const viewportHeight = window.innerHeight;
-  const viewportWidth = window.innerWidth;
-  const edge = viewportWidth <= 390 ? 14 : 18;
-  const gap = viewportWidth <= 390 ? 16 : 20;
-
-  content.style.top = `${edge}px`;
-  const measured = content.getBoundingClientRect();
-  const width = measured.width;
-  const height = measured.height;
-  const maxTop = Math.max(edge, viewportHeight - height - edge);
-  const union = geometryUnion(geometries);
-
-  const header = avoidHeader ? elementViewportRect(document.getElementById("appHeader")) : null;
-  const bottomNav = avoidBottomNav ? elementViewportRect(document.getElementById("bottomNav")) : null;
-  const targetAvoids = geometries.filter(Boolean).map((geometry) => expandRect(geometry, gap));
-
-  const candidates = [
-    (viewportHeight - height) / 2,
-    union ? union.top - gap - height : NaN,
-    union ? union.bottom + gap : NaN,
-    edge,
-    maxTop,
-    viewportHeight * 0.30 - height / 2,
-    viewportHeight * 0.70 - height / 2,
-  ].filter(Number.isFinite).map((top) => clamp(top, edge, maxTop));
-
-  const tops = uniqueNumbers(candidates);
-  const evaluated = tops.map((top) => {
-    const rect = contentRectFor(top, width, height);
-    const targetOverlap = targetAvoids.reduce((sum, targetRect) => sum + intersectionArea(rect, targetRect), 0);
-    const headerOverlap = intersectionArea(rect, header);
-    const navOverlap = intersectionArea(rect, bottomNav);
-    const centerDistance = Math.abs((top + height / 2) - viewportHeight / 2);
-    const preferenceCost = preference === "top"
-      ? top
-      : preference === "bottom"
-        ? Math.abs((top + height) - viewportHeight)
-        : centerDistance;
-    const penalty = targetOverlap * 100000 + headerOverlap * 50000 + navOverlap * 50000;
-    return { top, penalty, preferenceCost, centerDistance };
-  });
-
-  evaluated.sort((a, b) =>
-    (a.penalty - b.penalty)
-    || (a.preferenceCost - b.preferenceCost)
-    || (a.centerDistance - b.centerDistance)
-  );
-
-  content.style.top = `${evaluated[0]?.top ?? clamp((viewportHeight - height) / 2, edge, maxTop)}px`;
-  return content.getBoundingClientRect();
-}
-
-function organicPanelPath(contentRect, primaryGeometry) {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const contentCenter = contentRect.top + contentRect.height / 2;
-
-  if (!primaryGeometry) {
-    const edgeY = clamp(contentRect.bottom + 72, height * 0.56, height * 0.78);
-    return `M0 0H${width}V${edgeY - 26}C${width * .82} ${edgeY + 18},${width * .66} ${edgeY - 6},${width * .50} ${edgeY + 20}C${width * .34} ${edgeY + 46},${width * .18} ${edgeY + 4},0 ${edgeY + 30}Z`;
-  }
-
-  const targetCenter = primaryGeometry.top + primaryGeometry.height / 2;
-  const notchX = clamp(primaryGeometry.left + primaryGeometry.width / 2, width * .18, width * .82);
-
-  if (contentCenter <= targetCenter) {
-    const edgeY = clamp(
-      Math.max(contentRect.bottom + 34, primaryGeometry.bottom + 28),
-      contentRect.bottom + 24,
-      height - 18
-    );
-    const leftShoulder = clamp(notchX - Math.max(86, primaryGeometry.width * .72), 0, width);
-    const rightShoulder = clamp(notchX + Math.max(86, primaryGeometry.width * .72), 0, width);
-    return `M0 0H${width}V${edgeY - 30}C${width * .88} ${edgeY + 8},${rightShoulder} ${edgeY + 14},${notchX + 52} ${edgeY + 2}C${notchX + 20} ${edgeY - 12},${notchX - 20} ${edgeY - 12},${notchX - 52} ${edgeY + 2}C${leftShoulder} ${edgeY + 14},${width * .12} ${edgeY + 8},0 ${edgeY - 20}Z`;
-  }
-
-  const edgeY = clamp(
-    Math.min(contentRect.top - 34, primaryGeometry.top - 28),
-    18,
-    contentRect.top - 24
-  );
-  const leftShoulder = clamp(notchX - Math.max(86, primaryGeometry.width * .72), 0, width);
-  const rightShoulder = clamp(notchX + Math.max(86, primaryGeometry.width * .72), 0, width);
-  return `M0 ${edgeY + 20}C${width * .12} ${edgeY - 8},${leftShoulder} ${edgeY - 14},${notchX - 52} ${edgeY - 2}C${notchX - 20} ${edgeY + 12},${notchX + 20} ${edgeY + 12},${notchX + 52} ${edgeY - 2}C${rightShoulder} ${edgeY - 14},${width * .88} ${edgeY - 8},${width} ${edgeY + 30}V${height}H0Z`;
+function applyRect(element, rect) {
+  if (!element || !rect) return;
+  element.style.left = `${rect.left}px`;
+  element.style.top = `${rect.top}px`;
+  element.style.width = `${Math.max(0, rect.right - rect.left)}px`;
+  element.style.height = `${Math.max(0, rect.bottom - rect.top)}px`;
 }
 
 function pointInsideRect(x, y, rect) {
@@ -444,7 +372,6 @@ function pointInsideRect(x, y, rect) {
 function createInputBlockers(overlay, interactiveGeometries) {
   overlay.querySelectorAll("[data-guide-blocker]").forEach((node) => node.remove());
   if (!overlay.classList.contains("isBlocking")) return;
-
   const holes = interactiveGeometries.filter(Boolean);
   const makeBlocker = (rect) => {
     if (rect.right <= rect.left || rect.bottom <= rect.top) return;
@@ -454,7 +381,6 @@ function createInputBlockers(overlay, interactiveGeometries) {
     applyRect(blocker, rect);
     overlay.appendChild(blocker);
   };
-
   if (!holes.length) {
     makeBlocker({ left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight });
     return;
@@ -466,11 +392,8 @@ function createInputBlockers(overlay, interactiveGeometries) {
     xs.push(clamp(geometry.left, 0, window.innerWidth), clamp(geometry.right, 0, window.innerWidth));
     ys.push(clamp(geometry.top, 0, window.innerHeight), clamp(geometry.bottom, 0, window.innerHeight));
   });
-  xs.sort((a, b) => a - b);
-  ys.sort((a, b) => a - b);
-
-  const uniqueXs = uniqueNumbers(xs);
-  const uniqueYs = uniqueNumbers(ys);
+  const uniqueXs = uniqueNumbers(xs.sort((a, b) => a - b));
+  const uniqueYs = uniqueNumbers(ys.sort((a, b) => a - b));
   for (let xi = 0; xi < uniqueXs.length - 1; xi += 1) {
     for (let yi = 0; yi < uniqueYs.length - 1; yi += 1) {
       const left = uniqueXs[xi];
@@ -495,16 +418,14 @@ function normalizedTargets({
   minSpotlightHeight,
 } = {}) {
   if (Array.isArray(targets) && targets.length) {
-    return targets
-      .filter((item) => item?.element?.isConnected)
-      .map((item) => ({
-        element: item.element,
-        shape: item.shape || "auto",
-        padding: Number.isFinite(item.padding) ? item.padding : 7,
-        minWidth: Number.isFinite(item.minWidth) ? item.minWidth : 0,
-        minHeight: Number.isFinite(item.minHeight) ? item.minHeight : 0,
-        interactive: Boolean(item.interactive),
-      }));
+    return targets.filter((item) => item?.element?.isConnected).map((item) => ({
+      element: item.element,
+      shape: item.shape || "auto",
+      padding: Number.isFinite(item.padding) ? item.padding : 7,
+      minWidth: Number.isFinite(item.minWidth) ? item.minWidth : 0,
+      minHeight: Number.isFinite(item.minHeight) ? item.minHeight : 0,
+      interactive: Boolean(item.interactive),
+    }));
   }
   if (!target?.isConnected) return [];
   return [{
@@ -517,43 +438,11 @@ function normalizedTargets({
   }];
 }
 
-function showStep({
-  target = null,
-  targets = null,
-  primaryTargetIndex = 0,
-  title,
-  body,
-  nextLabel = "Далее",
-  onNext = null,
-  onSkip = null,
-  showSkip = true,
-  blocking = true,
-  interactiveTarget = false,
-  spotlightShape = "auto",
-  spotlightPadding = 7,
-  minSpotlightWidth = 0,
-  minSpotlightHeight = 0,
-  contentPreference = "center",
-  avoidHeader = true,
-  avoidBottomNav = true,
-  closeBeforeNext = true,
-} = {}) {
-  destroyOverlay();
+function createOverlay() {
   const modalRoot = document.getElementById("modalRoot") || document.body;
   const overlay = document.createElement("div");
-  overlay.className = `alantilGuideOverlay${blocking ? " isBlocking" : ""}`;
-
-  const descriptors = normalizedTargets({
-    target,
-    targets,
-    spotlightShape,
-    spotlightPadding,
-    interactiveTarget,
-    minSpotlightWidth,
-    minSpotlightHeight,
-  });
+  overlay.className = "alantilGuideOverlay";
   const maskId = `alantil-guide-mask-${++overlayCounter}`;
-
   overlay.innerHTML = `
     <svg class="alantilGuideSpotlight" aria-hidden="true">
       <defs>
@@ -563,111 +452,200 @@ function showStep({
         </mask>
       </defs>
       <rect class="alantilGuideSpotlightShade" data-mask-shade x="0" y="0" width="0" height="0" mask="url(#${maskId})"></rect>
-      <path class="alantilGuidePanel" data-guide-panel d="" mask="url(#${maskId})"></path>
     </svg>
-    <div data-guide-halos></div>`;
-
-  const content = document.createElement("section");
-  content.className = "alantilGuideContent";
-  content.setAttribute("role", "dialog");
-  content.setAttribute("aria-modal", blocking ? "true" : "false");
-  content.tabIndex = -1;
-  content.innerHTML = `
-    <h2 class="alantilGuideTitle">${title}</h2>
-    <div class="alantilGuideBody">${body}</div>
-    ${(showSkip || nextLabel) ? `<nav class="alantilGuideNav" aria-label="Навигация по подсказке">
-      ${showSkip ? '<button class="btn actionText alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}
-      ${nextLabel ? `<button class="btn actionPrimary alantilGuideNext" type="button" data-guide-next>${nextLabel}</button>` : ""}
-    </nav>` : ""}`;
-  overlay.appendChild(content);
+    <div data-guide-halos></div>
+    <section class="alantilGuideContent" role="dialog" aria-modal="true"></section>`;
   modalRoot.appendChild(overlay);
 
   const svg = overlay.querySelector(".alantilGuideSpotlight");
   const holesGroup = overlay.querySelector("[data-mask-holes]");
   const shade = overlay.querySelector("[data-mask-shade]");
-  const panel = overlay.querySelector("[data-guide-panel]");
   const halosRoot = overlay.querySelector("[data-guide-halos]");
-
+  const content = overlay.querySelector(".alantilGuideContent");
+  let descriptors = [];
+  let allowedElements = [];
+  let avoidElements = [];
+  let primaryIndex = 0;
+  let preference = "auto";
+  let avoidHeader = true;
+  let avoidBottomNav = true;
   let resizeFrame = 0;
-  let currentGeometries = [];
+  let motionFrame = 0;
+  let resizeObserver = null;
+  let removeTimer = 0;
+  let isDestroyed = false;
+  let currentStepKey = "";
 
   const reposition = () => {
-    if (resizeFrame) return;
+    if (isDestroyed || resizeFrame) return;
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
-      currentGeometries = descriptors.map((descriptor) => targetGeometry(descriptor.element, descriptor));
-      const safePrimaryIndex = clamp(primaryTargetIndex, 0, Math.max(0, currentGeometries.length - 1));
-      const primaryGeometry = currentGeometries[safePrimaryIndex] || currentGeometries[0] || null;
-      updateMask(svg, holesGroup, shade, currentGeometries);
-      updateHalos(halosRoot, currentGeometries, safePrimaryIndex);
-      const interactiveGeometries = currentGeometries.filter((geometry, index) => geometry && descriptors[index]?.interactive);
+      const pairs = descriptors.map((descriptor, index) => ({
+        descriptor,
+        descriptorIndex: index,
+        geometry: targetGeometry(descriptor.element, descriptor),
+      })).filter((item) => item.geometry);
+      const geometries = pairs.map((item) => item.geometry);
+      const requestedPrimary = pairs.findIndex((item) => item.descriptorIndex === primaryIndex);
+      const safePrimaryIndex = requestedPrimary >= 0 ? requestedPrimary : 0;
+      updateMask(svg, holesGroup, shade, geometries);
+      updateHalos(halosRoot, geometries, safePrimaryIndex);
+      const interactiveGeometries = pairs.filter((item) => item.descriptor.interactive).map((item) => item.geometry);
       createInputBlockers(overlay, interactiveGeometries);
-      const contentRect = positionGuideContent(content, currentGeometries, {
-        preference: contentPreference,
-        avoidHeader,
-        avoidBottomNav,
-      });
-      panel.setAttribute("d", organicPanelPath(contentRect, primaryGeometry));
+      positionGuideContent(content, geometries, { preference, avoidHeader, avoidBottomNav, avoidElements });
     });
   };
 
-  const allowedInteractiveElements = descriptors.filter((item) => item.interactive).map((item) => item.element);
-  const focusGuard = (event) => {
-    const focused = event.target;
-    if (overlay.contains(focused)) return;
-    if (allowedInteractiveElements.some((element) => element === focused || element.contains?.(focused))) return;
-    const fallback = overlay.querySelector("[data-guide-next],[data-guide-skip]");
-    if (fallback instanceof HTMLElement) {
-      event.stopPropagation();
-      fallback.focus({ preventScroll: true });
+  const trackMotion = (duration = 720) => {
+    const until = performance.now() + duration;
+    if (motionFrame) cancelAnimationFrame(motionFrame);
+    const tick = (now) => {
+      reposition();
+      if (now < until && !isDestroyed) motionFrame = requestAnimationFrame(tick);
+      else motionFrame = 0;
+    };
+    motionFrame = requestAnimationFrame(tick);
+  };
+
+  const eventAllowed = (event) => {
+    if (!overlay.classList.contains("isBlocking") || event.isTrusted === false) return true;
+    const node = event.target;
+    if (!(node instanceof Element)) return false;
+    if (content.contains(node)) return true;
+    if (allowedElements.some((element) => element?.isConnected && (element === node || element.contains(node)))) return true;
+    for (const descriptor of descriptors) {
+      if (!descriptor.interactive || !descriptor.element?.contains(node)) continue;
+      const nestedControl = node.closest("button,a,input,select,textarea,[role='button'],[contenteditable='true']");
+      if (nestedControl && nestedControl !== descriptor.element
+        && !allowedElements.some((element) => element === nestedControl || element?.contains(nestedControl))) return false;
+      return true;
     }
+    return false;
+  };
+
+  const inputGuard = (event) => {
+    if (eventAllowed(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+  };
+
+  const interactionMotionGuard = (event) => {
+    if (!eventAllowed(event)) return;
+    const node = event.target;
+    if (node instanceof Element && !content.contains(node)) trackMotion();
+  };
+
+  const focusGuard = (event) => {
+    if (eventAllowed(event)) return;
+    event.stopPropagation();
+    const fallback = content.querySelector("[data-guide-next],[data-guide-skip]");
+    fallback?.focus?.({ preventScroll: true });
+  };
+
+  const observeTargets = () => {
+    resizeObserver?.disconnect();
+    if (!("ResizeObserver" in globalThis)) return;
+    resizeObserver = new ResizeObserver(reposition);
+    [...descriptors.map((item) => item.element), ...avoidElements, content].filter(Boolean).forEach((element) => {
+      if (element?.isConnected) resizeObserver.observe(element);
+    });
   };
 
   const cleanup = () => {
+    if (isDestroyed) return;
+    isDestroyed = true;
     window.removeEventListener("resize", reposition);
     window.removeEventListener("orientationchange", reposition);
     window.removeEventListener("scroll", reposition, true);
+    window.removeEventListener("pointermove", reposition, true);
+    window.removeEventListener("touchmove", reposition, true);
+    document.removeEventListener("pointerdown", inputGuard, true);
+    document.removeEventListener("click", inputGuard, true);
+    document.removeEventListener("touchstart", inputGuard, true);
+    document.removeEventListener("click", interactionMotionGuard, false);
+    document.removeEventListener("touchend", interactionMotionGuard, false);
     document.removeEventListener("focusin", focusGuard, true);
+    resizeObserver?.disconnect();
     if (resizeFrame) cancelAnimationFrame(resizeFrame);
+    if (motionFrame) cancelAnimationFrame(motionFrame);
+    if (removeTimer) clearTimeout(removeTimer);
     overlay.remove();
   };
 
-  const api = { destroy: cleanup, overlay, reposition };
-  activeOverlay = api;
-
-  const finishAction = (callback) => {
-    if (activeOverlay === api) activeOverlay = null;
-    cleanup();
-    callback?.();
+  const api = {
+    overlay,
+    get stepKey() { return currentStepKey; },
+    hasDisconnectedTargets() { return descriptors.some((item) => !item.element?.isConnected); },
+    reposition,
+    update(config = {}) {
+      currentStepKey = String(config.stepKey || "");
+      descriptors = normalizedTargets(config);
+      allowedElements = (config.allowedElements || []).filter((element) => element?.isConnected);
+      avoidElements = (config.avoidElements || []).filter((element) => element?.isConnected);
+      primaryIndex = Number.isFinite(config.primaryTargetIndex) ? config.primaryTargetIndex : 0;
+      preference = config.contentPreference || "auto";
+      avoidHeader = config.avoidHeader !== false;
+      avoidBottomNav = config.avoidBottomNav !== false;
+      overlay.classList.toggle("isBlocking", config.blocking !== false);
+      content.setAttribute("aria-modal", config.blocking === false ? "false" : "true");
+      content.classList.add("isSwapping");
+      content.innerHTML = `
+        <h2 class="alantilGuideTitle">${config.title || ""}</h2>
+        <div class="alantilGuideBody">${config.body || ""}</div>
+        ${(config.showSkip !== false || config.nextLabel) ? `<nav class="alantilGuideNav" aria-label="Навигация по подсказке">
+          ${config.showSkip !== false ? '<button class="btn actionText alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}
+          ${config.nextLabel ? `<button class="btn actionPrimary alantilGuideNext" type="button" data-guide-next>${config.nextLabel}</button>` : ""}
+        </nav>` : ""}`;
+      content.querySelector("[data-guide-next]")?.addEventListener("click", () => config.onNext?.());
+      content.querySelector("[data-guide-skip]")?.addEventListener("click", () => config.onSkip?.());
+      observeTargets();
+      reposition();
+      requestAnimationFrame(() => requestAnimationFrame(() => content.classList.remove("isSwapping")));
+    },
+    destroy({ smooth = true } = {}) {
+      if (isDestroyed) return;
+      if (!smooth || globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+        cleanup();
+        return;
+      }
+      overlay.classList.add("isLeaving");
+      removeTimer = globalThis.setTimeout(cleanup, 190);
+    },
   };
-
-  const nextButton = overlay.querySelector("[data-guide-next]");
-  nextButton?.addEventListener("click", () => {
-    if (closeBeforeNext) {
-      finishAction(onNext);
-      return;
-    }
-    onNext?.();
-  });
-  overlay.querySelector("[data-guide-skip]")?.addEventListener("click", () => finishAction(onSkip));
-
-  content.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !showSkip) return;
-    event.preventDefault();
-    finishAction(onSkip);
-  });
 
   window.addEventListener("resize", reposition, { passive: true });
   window.addEventListener("orientationchange", reposition, { passive: true });
   window.addEventListener("scroll", reposition, { capture: true, passive: true });
+  window.addEventListener("pointermove", reposition, { capture: true, passive: true });
+  window.addEventListener("touchmove", reposition, { capture: true, passive: true });
+  document.addEventListener("pointerdown", inputGuard, true);
+  document.addEventListener("click", inputGuard, true);
+  document.addEventListener("touchstart", inputGuard, true);
+  document.addEventListener("click", interactionMotionGuard, false);
+  document.addEventListener("touchend", interactionMotionGuard, false);
   document.addEventListener("focusin", focusGuard, true);
-
-  requestAnimationFrame(() => {
-    reposition();
-    content.focus({ preventScroll: true });
-  });
-
+  requestAnimationFrame(() => overlay.classList.add("isVisible"));
   return api;
+}
+
+function showStep(config = {}) {
+  if (!activeOverlay) activeOverlay = createOverlay();
+  activeOverlay.update({
+    showSkip: true,
+    blocking: true,
+    interactiveTarget: false,
+    spotlightShape: "auto",
+    spotlightPadding: 7,
+    minSpotlightWidth: 0,
+    minSpotlightHeight: 0,
+    contentPreference: "auto",
+    avoidHeader: true,
+    avoidBottomNav: true,
+    nextLabel: "Далее",
+    ...config,
+  });
+  return activeOverlay;
 }
 
 function finishGeneralGuide() {
@@ -684,29 +662,35 @@ function skipGeneralGuide() {
 function showGeneralIntro() {
   generalGuide.phase = "intro";
   showStep({
+    stepKey: "general:intro",
     title: "Ассаламу алейкум, алан!",
     body: `
       <p>Это приложение создано для изучения аланских (карачаево-балкарских) слов и расширения словарного запаса.</p>
       <p>Учи новые слова, а затем старайся использовать их в повседневной жизни. <strong>Только тогда твоя речь действительно станет богаче, и ты увидишь свой прогресс.</strong></p>`,
     onNext: showStoriesIntro,
     onSkip: skipGeneralGuide,
-    contentPreference: "center",
+    contentPreference: "auto",
   });
+}
+
+function storyPanelTarget() {
+  return document.querySelector(".pathStickyControls") || document.querySelector(".storyTabs");
 }
 
 function showStoriesIntro() {
   generalGuide.phase = "stories-intro";
-  const target = document.querySelector(".storyTabsShell") || document.querySelector(".storyTabs");
+  const target = storyPanelTarget();
   if (!target) { scheduleScan(); return; }
   showStep({
+    stepKey: "general:stories-intro",
     target,
     title: "Истории",
     body: `<p>Здесь слова разделены по сложности и назначению.</p><p>Сейчас коротко познакомимся с каждым разделом.</p>`,
     onNext: () => showStory(0),
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
-    contentPreference: "center",
+    spotlightPadding: 6,
+    contentPreference: "bottom",
   });
 }
 
@@ -715,7 +699,6 @@ function requestStory(storyId) {
   if (active === storyId) return true;
   const button = document.querySelector(`[data-story-tab="${storyId}"]`);
   if (!button) return false;
-  destroyOverlay();
   button.click();
   scheduleScan();
   return false;
@@ -728,23 +711,20 @@ function showStory(index) {
   const storyId = STORY_SEQUENCE[safeIndex];
   if (!requestStory(storyId)) return;
   closeOpenStele();
-
   const target = document.querySelector(`[data-story-tab="${storyId}"]`);
   const copy = STORY_GUIDE[storyId];
   if (!target || !copy) { scheduleScan(); return; }
-
   showStep({
+    stepKey: `general:story:${storyId}`,
     target,
     title: copy.title,
     body: copy.body,
-    onNext: () => {
-      if (safeIndex < STORY_SEQUENCE.length - 1) showStory(safeIndex + 1);
-      else showStorySummary();
-    },
+    onNext: () => safeIndex < STORY_SEQUENCE.length - 1 ? showStory(safeIndex + 1) : showStorySummary(),
     onSkip: skipGeneralGuide,
     spotlightShape: "pill",
-    spotlightPadding: 8,
-    contentPreference: "center",
+    spotlightPadding: 7,
+    contentPreference: "bottom",
+    avoidElements: [storyPanelTarget()].filter(Boolean),
   });
 }
 
@@ -752,55 +732,92 @@ function showStorySummary() {
   generalGuide.phase = "summary";
   if (!requestStory("roots")) return;
   closeOpenStele();
-
-  const target = document.querySelector(".storyTabsShell") || document.querySelector(".storyTabs");
+  const target = storyPanelTarget();
   if (!target) { scheduleScan(); return; }
   showStep({
+    stepKey: "general:summary",
     target,
     title: "Выбери свой путь",
     body: `<p>Начни с подходящего тебе уровня и переключайся между историями в любое время.</p><p><strong>Основной путь приложения — «Возвращение к истокам».</strong></p>`,
     onNext: showStages,
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
-    spotlightPadding: 8,
-    contentPreference: "center",
+    spotlightPadding: 6,
+    contentPreference: "bottom",
   });
 }
 
 function visibleStationTarget() {
   const viewport = document.querySelector(".pathMapViewport");
   const viewportRect = viewport?.getBoundingClientRect();
+  if (viewport?.classList.contains("isPositioning")) return null;
   const stations = Array.from(document.querySelectorAll("[data-station-key]"));
-  let station = null;
-
-  if (!viewportRect) station = stations[0] || null;
-  else {
-    station = stations.find((item) => {
-      const rect = item.getBoundingClientRect();
-      return rect.bottom > viewportRect.top + 20 && rect.top < viewportRect.bottom - 20;
-    }) || stations.at(-1) || null;
+  if (!viewportRect || !stations.length) {
+    const station = stations.at(-1) || stations[0] || null;
+    return station ? { station, target: station.querySelector(".stationProgressRing") || station, preference: "top" } : null;
   }
-  return station?.querySelector(".stationProgressRing") || station || document.querySelector(".routeMap");
+
+  const viewportHeight = viewportRect.height;
+  const centerY = viewportRect.top + viewportHeight / 2;
+  const hardTop = viewportRect.top + viewportHeight * .28;
+  const preferredTop = viewportRect.top + viewportHeight * .40;
+  const preferredBottom = viewportRect.top + viewportHeight * .65;
+  const visible = stations.map((station, index) => {
+    const rect = station.getBoundingClientRect();
+    const center = rect.top + rect.height / 2;
+    const intersects = rect.bottom > viewportRect.top && rect.top < viewportRect.bottom;
+    return { station, index, rect, center, intersects };
+  }).filter((item) => item.intersects && item.center >= hardTop && item.center <= viewportRect.bottom - 8);
+
+  if (!visible.length) {
+    const fallback = stations.map((station, index) => {
+      const rect = station.getBoundingClientRect();
+      return { station, index, rect, center: rect.top + rect.height / 2 };
+    }).filter((item) => item.center >= hardTop).sort((a, b) => Math.abs(a.center - centerY) - Math.abs(b.center - centerY))[0];
+    if (!fallback) return null;
+    return {
+      station: fallback.station,
+      target: fallback.station.querySelector(".stationProgressRing") || fallback.station,
+      preference: fallback.center >= centerY ? "top" : "bottom",
+    };
+  }
+
+  const comfortable = visible.filter((item) => item.center >= preferredTop && item.center <= preferredBottom);
+  const pool = comfortable.length ? comfortable : visible;
+  pool.sort((a, b) => {
+    const aDistance = Math.abs(a.center - centerY);
+    const bDistance = Math.abs(b.center - centerY);
+    if (Math.abs(aDistance - bDistance) > 12) return aDistance - bDistance;
+    return b.index - a.index;
+  });
+  const selected = pool[0];
+  return {
+    station: selected.station,
+    target: selected.station.querySelector(".stationProgressRing") || selected.station,
+    preference: selected.center >= centerY ? "top" : "bottom",
+  };
 }
 
 function showStages() {
   generalGuide.phase = "stages";
-  const target = visibleStationTarget();
-  if (!target) { scheduleScan(); return; }
-
+  const selection = visibleStationTarget();
+  if (!selection?.target) { scheduleScan(); return; }
   showStep({
-    target,
+    stepKey: `general:stages:${selection.station.dataset.stationKey || "visible"}`,
+    target: selection.target,
     title: "Проходи этапы",
     body: `<p>В каждом этапе сначала изучи новые слова, а затем проверь себя в тесте.</p>`,
     nextLabel: "Понятно",
     onNext: () => {
       generalGuide.phase = "await-station";
+      destroyOverlay();
       scheduleScan();
     },
     onSkip: skipGeneralGuide,
-    spotlightShape: target.matches?.(".stationProgressRing") ? "circle" : "rounded",
+    spotlightShape: selection.target.matches?.(".stationProgressRing") ? "circle" : "rounded",
     spotlightPadding: 10,
-    contentPreference: "center",
+    contentPreference: selection.preference,
+    avoidElements: [selection.station],
   });
 }
 
@@ -808,8 +825,8 @@ function showStationStudy() {
   generalGuide.phase = "station-study";
   const target = document.querySelector("[data-station-study]");
   if (!target) { scheduleScan(); return; }
-
   showStep({
+    stepKey: "general:station-study",
     target,
     title: "Учить слова",
     body: `<p>Запоминай новые слова с помощью флеш-карточек.</p>`,
@@ -817,7 +834,6 @@ function showStationStudy() {
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
     spotlightPadding: 9,
-    contentPreference: "center",
   });
 }
 
@@ -825,8 +841,8 @@ function showStationTest() {
   generalGuide.phase = "station-test";
   const target = document.querySelector("[data-station-test]");
   if (!target) { scheduleScan(); return; }
-
   showStep({
+    stepKey: "general:station-test",
     target,
     title: "Тест",
     body: `<p>Проверь свои знания и заверши этап.</p><p>Для прохождения нужно набрать <strong>не менее ${PATH_CONFIG.stationRequiredAccuracy}%</strong>.</p>`,
@@ -835,13 +851,12 @@ function showStationTest() {
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
     spotlightPadding: 9,
-    contentPreference: "center",
   });
 }
 
 function startGeneralGuide() {
   closeOpenStele();
-  destroyOverlay();
+  destroyOverlay({ smooth: false });
   generalGuide = { active: true, phase: "intro", storyIndex: 0 };
   document.body.classList.add("alantilGuideGeneral");
   showGeneralIntro();
@@ -850,7 +865,6 @@ function startGeneralGuide() {
 function mountHelpTrigger() {
   const pathView = document.querySelector(".pathView");
   if (!pathView || pathView.querySelector("[data-alantil-guide-trigger]")) return;
-
   const button = document.createElement("button");
   button.type = "button";
   button.className = "alantilGuideTrigger";
@@ -873,32 +887,46 @@ function skipLearningGuide() {
   finishLearningGuide();
 }
 
+function waitForRealFlip(binding, callback) {
+  const card = binding?.card;
+  const inner = card?.querySelector(".cardInner");
+  if (!card?.isConnected || !inner) return;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    inner.removeEventListener("transitionend", onEnd);
+    clearTimeout(timer);
+    if (card.classList.contains("flipped")) callback();
+    else learningFlow.phase = "card";
+  };
+  const onEnd = (event) => {
+    if (event.target !== inner || event.propertyName !== "transform") return;
+    finish();
+  };
+  const timer = globalThis.setTimeout(finish, 540);
+  inner.addEventListener("transitionend", onEnd);
+}
+
 function advanceLearningCard(binding) {
   if (!learningFlow.active || learningFlow.phase !== "card" || !binding?.card?.isConnected) return;
   learningFlow.phase = "card-wait";
-
-  if (!binding.card.classList.contains("flipped")) binding.card.click();
-
-  globalThis.setTimeout(() => {
-    if (!learningFlow.active || learningFlow.phase !== "card-wait" || !binding.card.isConnected) return;
-    if (!binding.card.classList.contains("flipped")) {
-      learningFlow.phase = "card";
-      return;
-    }
+  waitForRealFlip(binding, () => {
+    if (!learningFlow.active || learningFlow.phase !== "card-wait") return;
     learningFlow.phase = "card";
     showLearningTranslation(binding);
-  }, 460);
+  });
+  if (!binding.card.classList.contains("flipped")) binding.card.click();
 }
 
 function showLearningCardStep(binding) {
   if (!binding?.card?.isConnected || learnState.totalPlanned <= 0) return;
   learningFlow = { active: true, phase: "card", decisionWordId: "" };
-
   showStep({
+    stepKey: "learning:card",
     target: binding.card,
     title: "Вспомни перевод",
     body: `<p>Попробуй вспомнить значение слова.</p><p>Нажми на карточку, чтобы увидеть перевод.</p>`,
-    nextLabel: "Далее",
     onNext: () => advanceLearningCard(binding),
     onSkip: skipLearningGuide,
     blocking: true,
@@ -908,23 +936,20 @@ function showLearningCardStep(binding) {
     contentPreference: "top",
     avoidHeader: false,
     avoidBottomNav: true,
-    closeBeforeNext: false,
   });
 }
 
 function showLearningTranslation(binding) {
   if (!learningFlow.active || learningFlow.phase !== "card") return;
   learningFlow.phase = "translation";
-
   showStep({
+    stepKey: "learning:translation",
     target: binding.card,
     title: "Проверь себя",
     body: `<p>На обратной стороне находится перевод слова.</p>`,
-    nextLabel: "Далее",
     onNext: () => showLearningDecision(binding),
     onSkip: skipLearningGuide,
     blocking: true,
-    interactiveTarget: false,
     spotlightShape: "rounded",
     spotlightPadding: 7,
     contentPreference: "top",
@@ -936,38 +961,27 @@ function showLearningTranslation(binding) {
 function showLearningDecision(binding) {
   if (!learningFlow.active) return;
   learningFlow.phase = "decision";
-
   const decision = binding.session.querySelector(".learnDecisionGroup");
-  if (!decision) { scheduleScan(); return; }
-
+  const yes = binding.session.querySelector("#btnYes");
+  const no = binding.session.querySelector("#btnNo");
+  if (!decision || !yes || !no) { scheduleScan(); return; }
   showStep({
+    stepKey: "learning:decision",
     targets: [
-      {
-        element: binding.card,
-        shape: "rounded",
-        padding: 7,
-        interactive: true,
-      },
-      {
-        element: decision,
-        shape: "rounded",
-        padding: 10,
-        minWidth: 178,
-        minHeight: 84,
-        interactive: true,
-      },
+      { element: binding.card, shape: "rounded", padding: 7, interactive: true },
+      { element: decision, shape: "rounded", padding: 10, minWidth: 178, minHeight: 84, interactive: true },
     ],
+    allowedElements: [yes, no],
     primaryTargetIndex: 1,
     title: "Знаешь слово?",
     body: `
-      <p>Если знаешь — <strong>свайпай вправо или нажми «Знаю».</strong></p>
-      <p>Если не знаешь — <strong>свайпай влево или нажми «Не знаю».</strong></p>
+      <p>Если знаешь — свайпай вправо или нажми «Знаю».</p>
+      <p>Если не знаешь — свайпай влево или нажми «Не знаю».</p>
       <p>Незнакомое слово вернётся позже.</p>`,
-    nextLabel: "Далее",
     onNext: () => showLearningCounter(binding),
     onSkip: skipLearningGuide,
     blocking: true,
-    contentPreference: "center",
+    contentPreference: "auto",
     avoidHeader: false,
     avoidBottomNav: true,
   });
@@ -983,24 +997,21 @@ function visibleCounterTarget() {
 function showLearningCounter(binding) {
   if (!learningFlow.active) return;
   learningFlow.phase = "counter";
-
   const target = visibleCounterTarget();
   if (!target) { scheduleScan(); return; }
-
   showStep({
+    stepKey: "learning:counter",
     target,
     title: "Прогресс",
     body: `<p>Здесь видно, сколько слов осталось пройти.</p>`,
-    nextLabel: "Далее",
     onNext: () => showLearningFavorite(binding),
     onSkip: skipLearningGuide,
     blocking: true,
-    interactiveTarget: false,
     spotlightShape: "pill",
-    spotlightPadding: 12,
-    minSpotlightWidth: 96,
-    minSpotlightHeight: 48,
-    contentPreference: "center",
+    spotlightPadding: 14,
+    minSpotlightWidth: 90,
+    minSpotlightHeight: 44,
+    contentPreference: "bottom",
     avoidHeader: false,
     avoidBottomNav: true,
   });
@@ -1009,12 +1020,12 @@ function showLearningCounter(binding) {
 function showLearningFavorite(binding) {
   if (!learningFlow.active) return;
   learningFlow.phase = "favorite";
-
   const target = binding.session.querySelector("#btnFavAction");
   if (!target) { scheduleScan(); return; }
-
   showStep({
+    stepKey: "learning:favorite",
     target,
+    allowedElements: [target],
     title: "Избранное",
     body: `<p>Сохраняй нужные слова, чтобы вернуться к ним позже.</p>`,
     nextLabel: "Готово",
@@ -1023,10 +1034,10 @@ function showLearningFavorite(binding) {
     blocking: true,
     interactiveTarget: true,
     spotlightShape: "circle",
-    spotlightPadding: 11,
-    minSpotlightWidth: 62,
-    minSpotlightHeight: 62,
-    contentPreference: "center",
+    spotlightPadding: 14,
+    minSpotlightWidth: 64,
+    minSpotlightHeight: 64,
+    contentPreference: "bottom",
     avoidHeader: false,
     avoidBottomNav: true,
   });
@@ -1036,8 +1047,6 @@ function registerLearningDecision(binding) {
   if (!learningFlow.active || learningFlow.phase !== "decision") return;
   learningFlow.phase = "decision-wait";
   learningFlow.decisionWordId = String(learnState.currentStudyId || "");
-  destroyOverlay();
-
   globalThis.setTimeout(() => {
     if (!binding.session.isConnected || !learningFlow.active || learningFlow.phase !== "decision-wait") return;
     showLearningCounter(binding);
@@ -1053,19 +1062,17 @@ function dismissRepeatHint() {
 function showRepeatHint(binding) {
   const state = storedGuideState();
   if (!state.learning_completed || state.repeat_hint_shown || activeOverlay) return false;
-
   const id = String(learnState.currentStudyId || "");
   if (!id) return false;
   const stats = learnState.studySession?.wordStats?.[id];
   const failCount = Number(learnState.sessionFailMap?.[id] || 0);
   if (!stats || Number(stats.show_count || 0) < 2 || failCount < 1) return false;
-
   showStep({
+    stepKey: "learning:repeat",
     target: binding.card,
     title: "Слово вернулось",
     body: `<p>Ты отметил его как незнакомое. Повтори его ещё раз.</p>`,
     nextLabel: "Понятно",
-    showSkip: true,
     blocking: true,
     interactiveTarget: true,
     spotlightShape: "rounded",
@@ -1087,31 +1094,24 @@ function bindLearningSession(session) {
   const yes = session.querySelector("#btnYes");
   const no = session.querySelector("#btnNo");
   if (!card || !yes || !no) return;
-
   const binding = { session, card, abort: () => abortController.abort(), touchStartX: 0 };
   learningBinding = binding;
 
   card.addEventListener("click", () => {
     if (!learningFlow.active || learningFlow.phase !== "card") return;
     learningFlow.phase = "card-wait";
-    globalThis.setTimeout(() => {
+    waitForRealFlip(binding, () => {
       if (!learningFlow.active || learningFlow.phase !== "card-wait" || !card.isConnected) return;
-      if (!card.classList.contains("flipped")) {
-        learningFlow.phase = "card";
-        return;
-      }
       learningFlow.phase = "card";
       showLearningTranslation(binding);
-    }, 460);
+    });
   }, { signal });
 
   yes.addEventListener("click", () => registerLearningDecision(binding), { signal });
   no.addEventListener("click", () => registerLearningDecision(binding), { signal });
-
   card.addEventListener("touchstart", (event) => {
     binding.touchStartX = event.touches?.[0]?.clientX || 0;
   }, { signal, passive: true });
-
   card.addEventListener("touchend", (event) => {
     if (!learningFlow.active || learningFlow.phase !== "decision") return;
     const endX = event.changedTouches?.[0]?.clientX ?? binding.touchStartX;
@@ -1124,7 +1124,7 @@ function bindLearningSession(session) {
     if (learningBinding === binding) learningBinding = null;
     if (learningFlow.active) {
       learningFlow = { active: false, phase: "", decisionWordId: "" };
-      destroyOverlay();
+      destroyOverlay({ smooth: false });
     }
   }, { once: true });
 
@@ -1146,16 +1146,23 @@ function scanLearning() {
   if (!learningFlow.active) showRepeatHint(learningBinding);
 }
 
+function overlayNeeds(stepKey) {
+  return !activeOverlay || activeOverlay.stepKey !== stepKey || activeOverlay.hasDisconnectedTargets();
+}
+
 function scanGeneral() {
   if (!generalGuide.active) return;
   closeOpenStele();
-  if (generalGuide.phase === "stories-intro" && !activeOverlay) showStoriesIntro();
-  else if (generalGuide.phase === "story" && !activeOverlay) showStory(generalGuide.storyIndex);
-  else if (generalGuide.phase === "summary" && !activeOverlay) showStorySummary();
-  else if (generalGuide.phase === "stages" && !activeOverlay) showStages();
+  if (generalGuide.phase === "stories-intro" && overlayNeeds("general:stories-intro")) showStoriesIntro();
+  else if (generalGuide.phase === "story") {
+    const storyId = STORY_SEQUENCE[generalGuide.storyIndex];
+    if (overlayNeeds(`general:story:${storyId}`)) showStory(generalGuide.storyIndex);
+  } else if (generalGuide.phase === "summary" && overlayNeeds("general:summary")) showStorySummary();
+  else if (generalGuide.phase === "stages"
+    && (!activeOverlay || !activeOverlay.stepKey.startsWith("general:stages:") || activeOverlay.hasDisconnectedTargets())) showStages();
   else if (generalGuide.phase === "await-station" && document.querySelector("[data-station-study]")) showStationStudy();
-  else if (generalGuide.phase === "station-study" && !activeOverlay) showStationStudy();
-  else if (generalGuide.phase === "station-test" && !activeOverlay) showStationTest();
+  else if (generalGuide.phase === "station-study" && overlayNeeds("general:station-study")) showStationStudy();
+  else if (generalGuide.phase === "station-test" && overlayNeeds("general:station-test")) showStationTest();
 }
 
 function scan() {
