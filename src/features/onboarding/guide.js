@@ -248,6 +248,7 @@ function positionGuideContent(content, geometries, {
   avoidHeader = true,
   avoidBottomNav = true,
   avoidElements = [],
+  placementGeometries = [],
 } = {}) {
   const viewportHeight = window.innerHeight;
   const viewportWidth = window.innerWidth;
@@ -258,7 +259,8 @@ function positionGuideContent(content, geometries, {
   const measured = content.getBoundingClientRect();
   const height = measured.height;
   const maxTop = Math.max(edge, viewportHeight - height - edge);
-  const union = geometryUnion(geometries);
+  const placement = placementGeometries.filter(Boolean);
+  const union = geometryUnion(placement.length ? placement : geometries);
   const targetCenter = union ? union.top + union.height / 2 : viewportHeight / 2;
   const insideBottom = preference === "inside-bottom";
 
@@ -478,6 +480,7 @@ function createOverlay() {
   let descriptors = [];
   let allowedElements = [];
   let avoidElements = [];
+  let contentAnchor = null;
   let primaryIndex = 0;
   let preference = "auto";
   let avoidHeader = true;
@@ -505,7 +508,16 @@ function createOverlay() {
       updateHalos(halosRoot, geometries, safePrimaryIndex);
       const interactiveGeometries = pairs.filter((item) => item.descriptor.interactive).map((item) => item.geometry);
       createInputBlockers(overlay, interactiveGeometries);
-      positionGuideContent(content, geometries, { preference, avoidHeader, avoidBottomNav, avoidElements });
+      const placementGeometries = contentAnchor?.isConnected
+        ? [targetGeometry(contentAnchor, { padding: 7, shape: "rounded" })].filter(Boolean)
+        : [];
+      positionGuideContent(content, geometries, {
+        preference,
+        avoidHeader,
+        avoidBottomNav,
+        avoidElements,
+        placementGeometries,
+      });
     });
   };
 
@@ -560,7 +572,7 @@ function createOverlay() {
     resizeObserver?.disconnect();
     if (!("ResizeObserver" in globalThis)) return;
     resizeObserver = new ResizeObserver(reposition);
-    [...descriptors.map((item) => item.element), ...avoidElements, content].filter(Boolean).forEach((element) => {
+    [...descriptors.map((item) => item.element), ...avoidElements, contentAnchor, content].filter(Boolean).forEach((element) => {
       if (element?.isConnected) resizeObserver.observe(element);
     });
   };
@@ -589,13 +601,17 @@ function createOverlay() {
   const api = {
     overlay,
     get stepKey() { return currentStepKey; },
-    hasDisconnectedTargets() { return descriptors.some((item) => !item.element?.isConnected); },
+    hasDisconnectedTargets() {
+      return descriptors.some((item) => !item.element?.isConnected)
+        || Boolean(contentAnchor && !contentAnchor.isConnected);
+    },
     reposition,
     update(config = {}) {
       currentStepKey = String(config.stepKey || "");
       descriptors = normalizedTargets(config);
       allowedElements = (config.allowedElements || []).filter((element) => element?.isConnected);
       avoidElements = (config.avoidElements || []).filter((element) => element?.isConnected);
+      contentAnchor = config.contentAnchor?.isConnected ? config.contentAnchor : null;
       primaryIndex = Number.isFinite(config.primaryTargetIndex) ? config.primaryTargetIndex : 0;
       preference = config.contentPreference || "auto";
       avoidHeader = config.avoidHeader !== false;
@@ -990,6 +1006,16 @@ function mountLearningHelpTrigger(binding) {
   session.appendChild(button);
 }
 
+function learningGuidePlacement(binding) {
+  const undoButton = binding?.session?.querySelector("#btnUndo");
+  const favoriteButton = binding?.session?.querySelector("#btnFavAction");
+  return {
+    contentAnchor: binding?.card || null,
+    contentPreference: "inside-bottom",
+    avoidElements: [undoButton, favoriteButton].filter(Boolean),
+  };
+}
+
 function showLearningCardStep(binding) {
   if (!binding?.card?.isConnected || learnState.totalPlanned <= 0) return;
   learningFlow = { active: true, phase: "card", decisionWordId: "" };
@@ -1005,17 +1031,15 @@ function showLearningCardStep(binding) {
     interactiveTarget: true,
     spotlightShape: "rounded",
     spotlightPadding: 7,
-    contentPreference: "top",
     avoidHeader: false,
     avoidBottomNav: true,
+    ...learningGuidePlacement(binding),
   });
 }
 
 function showLearningTranslation(binding) {
   if (!learningFlow.active || learningFlow.phase !== "card") return;
   learningFlow.phase = "translation";
-  const undoButton = binding.session.querySelector("#btnUndo");
-  const favoriteButton = binding.session.querySelector("#btnFavAction");
   showStep({
     stepKey: "learning:translation",
     target: binding.card,
@@ -1026,10 +1050,9 @@ function showLearningTranslation(binding) {
     blocking: true,
     spotlightShape: "rounded",
     spotlightPadding: 7,
-    contentPreference: "inside-bottom",
     avoidHeader: false,
     avoidBottomNav: true,
-    avoidElements: [undoButton, favoriteButton].filter(Boolean),
+    ...learningGuidePlacement(binding),
   });
 }
 
@@ -1056,9 +1079,9 @@ function showLearningDecision(binding) {
     onNext: () => showLearningCounter(binding),
     onSkip: skipLearningGuide,
     blocking: true,
-    contentPreference: "auto",
     avoidHeader: false,
     avoidBottomNav: true,
+    ...learningGuidePlacement(binding),
   });
 }
 
@@ -1086,9 +1109,9 @@ function showLearningCounter(binding) {
     spotlightPadding: 14,
     minSpotlightWidth: 90,
     minSpotlightHeight: 44,
-    contentPreference: "bottom",
     avoidHeader: false,
     avoidBottomNav: true,
+    ...learningGuidePlacement(binding),
   });
 }
 
@@ -1112,9 +1135,9 @@ function showLearningFavorite(binding) {
     spotlightPadding: 14,
     minSpotlightWidth: 64,
     minSpotlightHeight: 64,
-    contentPreference: "bottom",
     avoidHeader: false,
     avoidBottomNav: true,
+    ...learningGuidePlacement(binding),
   });
 }
 
@@ -1152,9 +1175,9 @@ function showRepeatHint(binding) {
     interactiveTarget: true,
     spotlightShape: "rounded",
     spotlightPadding: 7,
-    contentPreference: "top",
     avoidHeader: false,
     avoidBottomNav: true,
+    ...learningGuidePlacement(binding),
     onNext: dismissRepeatHint,
     onSkip: dismissRepeatHint,
   });

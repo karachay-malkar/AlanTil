@@ -152,7 +152,7 @@ html[data-theme="alan-paper"]{
   --ease-standard:cubic-bezier(.2,.7,.2,1);
 
 
-  --route-station-gap:44px;
+  --route-station-gap:30px;
   --route-section-gap:92px;
   --route-dictionary-gap:118px;
   --route-catalog-gap:118px;
