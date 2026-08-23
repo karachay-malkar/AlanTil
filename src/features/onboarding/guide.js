@@ -1,38 +1,16 @@
 import { PATH_CONFIG } from "../../config/path.js?v=13.15.10.8";
 import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.15.10.8";
 import { learnState } from "../learn/state.js?v=13.15.10.8";
+import { msg } from "../../shared/i18n/index.js?v=13.15.10.12";
 
 const GUIDE_STATE_KEY = "alantil_guided_help_v1";
 const GUIDE_STYLE_ID = "alantil-guided-help-style";
 const STORY_SEQUENCE = ["oblivion", "roots", "ascent", "pathways"];
 const STORY_GUIDE = Object.freeze({
-  oblivion: {
-    title: "На пороге забвения — лёгкий уровень",
-    body: `
-      <p>Это базовая лексика для начинающих.</p>
-      <p>Освоив её, ты достигнешь лишь начального уровня владения языком. Увы, большинство людей сегодня знают язык только на этом уровне.</p>
-      <p>Именно поэтому наш язык находится на грани исчезновения.</p>
-      <p>Чтобы действительно хорошо знать язык, двигайся дальше.</p>`,
-  },
-  roots: {
-    title: "Возвращение к истокам — средний уровень",
-    body: `
-      <p><strong>Это главный раздел приложения.</strong></p>
-      <p>Этот раздел соответствует хорошему уровню владения языком — уровню полноценного носителя. Здесь собраны слова, которыми сегодня, к сожалению, владеет уже меньшинство.</p>
-      <p><strong>Проверь себя: знаешь ли ты эти слова?</strong></p>`,
-  },
-  ascent: {
-    title: "На вершине — сложный уровень",
-    body: `
-      <p>Здесь собраны редкие, старые и сложные слова, которые сегодня знают немногие.</p>
-      <p>Этот раздел — для тех, кто уже хорошо владеет языком и хочет углубить свои знания.</p>`,
-  },
-  pathways: {
-    title: "Тропы — тематические наборы",
-    body: `
-      <p>Здесь слова собраны по темам: животные, растения, материалы и другие области жизни.</p>
-      <p>Выбирай интересующую тему и отдельно расширяй свой словарный запас.</p>`,
-  },
+  oblivion: Object.freeze({ titleKey: "guide.story.oblivion.title", bodyKey: "guide.story.oblivion.body" }),
+  roots: Object.freeze({ titleKey: "guide.story.roots.title", bodyKey: "guide.story.roots.body" }),
+  ascent: Object.freeze({ titleKey: "guide.story.ascent.title", bodyKey: "guide.story.ascent.body" }),
+  pathways: Object.freeze({ titleKey: "guide.story.pathways.title", bodyKey: "guide.story.pathways.body" }),
 });
 
 const STYLE_TEXT = `
@@ -622,8 +600,8 @@ function createOverlay() {
       content.innerHTML = `
         <h2 class="alantilGuideTitle">${config.title || ""}</h2>
         <div class="alantilGuideBody">${config.body || ""}</div>
-        ${(config.showSkip !== false || config.nextLabel) ? `<nav class="alantilGuideNav" aria-label="Навигация по подсказке">
-          ${config.showSkip !== false ? '<button class="btn actionText alantilGuideSkip" type="button" data-guide-skip>Пропустить</button>' : ""}
+        ${(config.showSkip !== false || config.nextLabel) ? `<nav class="alantilGuideNav" aria-label="${msg("guide.nav_aria")}">
+          ${config.showSkip !== false ? `<button class="btn actionText alantilGuideSkip" type="button" data-guide-skip>${msg("guide.skip")}</button>` : ""}
           ${config.nextLabel ? `<button class="btn actionPrimary alantilGuideNext" type="button" data-guide-next>${config.nextLabel}</button>` : ""}
         </nav>` : ""}`;
       content.querySelector("[data-guide-next]")?.addEventListener("click", () => config.onNext?.());
@@ -671,7 +649,7 @@ function showStep(config = {}) {
     contentPreference: "auto",
     avoidHeader: true,
     avoidBottomNav: true,
-    nextLabel: "Далее",
+    nextLabel: msg("guide.next"),
     ...config,
   });
   return activeOverlay;
@@ -692,10 +670,8 @@ function showGeneralIntro() {
   generalGuide.phase = "intro";
   showStep({
     stepKey: "general:intro",
-    title: "Ассаламу алейкум, алан!",
-    body: `
-      <p>Это приложение создано для изучения аланских (карачаево-балкарских) слов и расширения словарного запаса.</p>
-      <p>Учи новые слова, а затем старайся использовать их в повседневной жизни. <strong>Только тогда твоя речь действительно станет богаче, и ты увидишь свой прогресс.</strong></p>`,
+    title: msg("guide.general.intro.title"),
+    body: msg("guide.general.intro.body"),
     onNext: showStoriesIntro,
     onSkip: skipGeneralGuide,
     contentPreference: "auto",
@@ -713,8 +689,8 @@ function showStoriesIntro() {
   showStep({
     stepKey: "general:stories-intro",
     target,
-    title: "Истории",
-    body: `<p>Здесь слова разделены по сложности и назначению.</p><p>Сейчас коротко познакомимся с каждым разделом.</p>`,
+    title: msg("guide.general.stories.title"),
+    body: msg("guide.general.stories.body"),
     onNext: () => showStory(0),
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
@@ -746,8 +722,8 @@ function showStory(index) {
   showStep({
     stepKey: `general:story:${storyId}`,
     target,
-    title: copy.title,
-    body: copy.body,
+    title: msg(copy.titleKey),
+    body: msg(copy.bodyKey),
     onNext: () => safeIndex < STORY_SEQUENCE.length - 1 ? showStory(safeIndex + 1) : showStorySummary(),
     onSkip: skipGeneralGuide,
     spotlightShape: "pill",
@@ -766,8 +742,8 @@ function showStorySummary() {
   showStep({
     stepKey: "general:summary",
     target,
-    title: "Выбери свой путь",
-    body: `<p>Начни с подходящего тебе уровня и переключайся между историями в любое время.</p><p><strong>Основной путь приложения — «Возвращение к истокам».</strong></p>`,
+    title: msg("guide.general.summary.title"),
+    body: msg("guide.general.summary.body"),
     onNext: showStages,
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
@@ -834,9 +810,9 @@ function showStages() {
   showStep({
     stepKey: `general:stages:${selection.station.dataset.stationKey || "visible"}`,
     target: selection.target,
-    title: "Проходи этапы",
-    body: `<p>В каждом этапе сначала изучи новые слова, а затем проверь себя в тесте.</p>`,
-    nextLabel: "Понятно",
+    title: msg("guide.general.stages.title"),
+    body: msg("guide.general.stages.body"),
+    nextLabel: msg("guide.understood"),
     onNext: () => {
       generalGuide.phase = "await-station";
       destroyOverlay();
@@ -857,8 +833,8 @@ function showStationStudy() {
   showStep({
     stepKey: "general:station-study",
     target,
-    title: "Учить слова",
-    body: `<p>Запоминай новые слова с помощью флеш-карточек.</p>`,
+    title: msg("guide.general.study.title"),
+    body: msg("guide.general.study.body"),
     onNext: showStationTest,
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
@@ -873,9 +849,9 @@ function showStationTest() {
   showStep({
     stepKey: "general:station-test",
     target,
-    title: "Тест",
-    body: `<p>Проверь свои знания и заверши этап.</p><p>Для прохождения нужно набрать <strong>не менее ${PATH_CONFIG.stationRequiredAccuracy}%</strong>.</p>`,
-    nextLabel: "Понятно",
+    title: msg("guide.general.test.title"),
+    body: msg("guide.general.test.body", { required: PATH_CONFIG.stationRequiredAccuracy }),
+    nextLabel: msg("guide.understood"),
     onNext: finishGeneralGuide,
     onSkip: skipGeneralGuide,
     spotlightShape: "rounded",
@@ -898,8 +874,10 @@ function mountHelpTrigger() {
   button.type = "button";
   button.className = "alantilGuideTrigger";
   button.dataset.alantilGuideTrigger = "";
-  button.setAttribute("aria-label", "Как пользоваться приложением");
-  button.title = "Как пользоваться приложением";
+  button.dataset.i18nAriaLabel = "guide.help_app";
+  button.dataset.i18nTitle = "guide.help_app";
+  button.setAttribute("aria-label", msg("guide.help_app"));
+  button.title = msg("guide.help_app");
   button.textContent = "?";
   button.addEventListener("click", startGeneralGuide);
   pathView.appendChild(button);
@@ -995,8 +973,10 @@ function mountLearningHelpTrigger(binding) {
   button.type = "button";
   button.className = "alantilGuideTrigger isLearningGuideTrigger";
   button.dataset.alantilLearningGuideTrigger = "";
-  button.setAttribute("aria-label", "Подсказки по изучению слов");
-  button.title = "Подсказки по изучению слов";
+  button.dataset.i18nAriaLabel = "guide.help_learning";
+  button.dataset.i18nTitle = "guide.help_learning";
+  button.setAttribute("aria-label", msg("guide.help_learning"));
+  button.title = msg("guide.help_learning");
   button.textContent = "?";
   button.addEventListener("click", (event) => {
     event.preventDefault();
@@ -1023,8 +1003,8 @@ function showLearningCardStep(binding) {
   showStep({
     stepKey: "learning:card",
     target: binding.card,
-    title: "Вспомни перевод",
-    body: `<p>Попробуй вспомнить значение слова.</p><p>Нажми на карточку, чтобы увидеть перевод.</p>`,
+    title: msg("guide.learning.card.title"),
+    body: msg("guide.learning.card.body"),
     onNext: () => advanceLearningCard(binding),
     onSkip: skipLearningGuide,
     blocking: true,
@@ -1043,8 +1023,8 @@ function showLearningTranslation(binding) {
   showStep({
     stepKey: "learning:translation",
     target: binding.card,
-    title: "Проверь себя",
-    body: `<p>На обратной стороне находится перевод слова.</p>`,
+    title: msg("guide.learning.translation.title"),
+    body: msg("guide.learning.translation.body"),
     onNext: () => showLearningDecision(binding),
     onSkip: skipLearningGuide,
     blocking: true,
@@ -1071,11 +1051,8 @@ function showLearningDecision(binding) {
     ],
     allowedElements: [yes, no],
     primaryTargetIndex: 1,
-    title: "Знаешь слово?",
-    body: `
-      <p>Если знаешь — свайпай вправо или нажми «Знаю».</p>
-      <p>Если не знаешь — свайпай влево или нажми «Не знаю».</p>
-      <p>Незнакомое слово вернётся позже.</p>`,
+    title: msg("guide.learning.decision.title"),
+    body: msg("guide.learning.decision.body"),
     onNext: () => showLearningCounter(binding),
     onSkip: skipLearningGuide,
     blocking: true,
@@ -1100,8 +1077,8 @@ function showLearningCounter(binding) {
   showStep({
     stepKey: "learning:counter",
     target,
-    title: "Прогресс",
-    body: `<p>Здесь видно, сколько слов осталось пройти.</p>`,
+    title: msg("guide.learning.counter.title"),
+    body: msg("guide.learning.counter.body"),
     onNext: () => showLearningFavorite(binding),
     onSkip: skipLearningGuide,
     blocking: true,
@@ -1124,9 +1101,9 @@ function showLearningFavorite(binding) {
     stepKey: "learning:favorite",
     target,
     allowedElements: [target],
-    title: "Избранное",
-    body: `<p>Сохраняй нужные слова, чтобы вернуться к ним позже.</p>`,
-    nextLabel: "Готово",
+    title: msg("guide.learning.favorite.title"),
+    body: msg("guide.learning.favorite.body"),
+    nextLabel: msg("guide.done"),
     onNext: finishLearningGuide,
     onSkip: skipLearningGuide,
     blocking: true,
@@ -1168,9 +1145,9 @@ function showRepeatHint(binding) {
   showStep({
     stepKey: "learning:repeat",
     target: binding.card,
-    title: "Слово вернулось",
-    body: `<p>Ты отметил его как незнакомое. Повтори его ещё раз.</p>`,
-    nextLabel: "Понятно",
+    title: msg("guide.learning.repeat.title"),
+    body: msg("guide.learning.repeat.body"),
+    nextLabel: msg("guide.understood"),
     blocking: true,
     interactiveTarget: true,
     spotlightShape: "rounded",
