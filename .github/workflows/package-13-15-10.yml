@@ -1,0 +1,29 @@
+name: Package AlanTil 13.15.10
+
+on:
+  push:
+    branches:
+      - 13.15.10
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build exact release archive
+        run: git archive --format=zip --prefix=AlanTil-13.15.10/ --output=AlanTil_13.15.10.zip 6631c20d353b3e588c9be4e8c907ba0b66cf829c
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-13.15.10-full-project
+          path: AlanTil_13.15.10.zip
+          if-no-files-found: error
+          retention-days: 7
