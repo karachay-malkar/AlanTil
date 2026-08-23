@@ -44,7 +44,8 @@ const STYLE_TEXT = `
   font:850 17px/1 var(--font-terminal);transition:opacity var(--duration-fast),transform var(--duration-fast),background var(--duration-fast);
 }
 .alantilGuideTrigger:active{transform:translateY(calc(-50% + 1px)) scale(.97)}
-body.alantilGuideGeneral .alantilGuideTrigger{opacity:0;pointer-events:none}
+.alantilGuideTrigger.isLearningGuideTrigger{position:fixed;left:10px;top:80%}
+body.alantilGuideGeneral .alantilGuideTrigger,body.alantilGuideLearning .alantilGuideTrigger{opacity:0;pointer-events:none}
 body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 
 .alantilGuideOverlay{
@@ -878,6 +879,7 @@ function mountHelpTrigger() {
 
 function finishLearningGuide() {
   learningFlow = { active: false, phase: "", decisionWordId: "" };
+  document.body.classList.remove("alantilGuideLearning");
   updateGuideState({ learning_completed: true });
   destroyOverlay();
   scheduleScan();
@@ -919,9 +921,67 @@ function advanceLearningCard(binding) {
   if (!binding.card.classList.contains("flipped")) binding.card.click();
 }
 
+function startLearningGuide(binding = learningBinding) {
+  if (!binding?.session?.isConnected || !binding.card?.isConnected || learnState.totalPlanned <= 0) return;
+  destroyOverlay({ smooth: false });
+  learningFlow = { active: false, phase: "", decisionWordId: "" };
+
+  const launch = () => {
+    if (!binding.session.isConnected || !binding.card.isConnected) return;
+    showLearningCardStep(binding);
+  };
+
+  if (!binding.card.classList.contains("flipped")) {
+    launch();
+    return;
+  }
+
+  const inner = binding.card.querySelector(".cardInner");
+  if (!inner) {
+    binding.card.click();
+    globalThis.setTimeout(launch, 0);
+    return;
+  }
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    inner.removeEventListener("transitionend", onEnd);
+    clearTimeout(timer);
+    launch();
+  };
+  const onEnd = (event) => {
+    if (event.target !== inner || event.propertyName !== "transform") return;
+    finish();
+  };
+  const timer = globalThis.setTimeout(finish, 540);
+  inner.addEventListener("transitionend", onEnd);
+  binding.card.click();
+}
+
+function mountLearningHelpTrigger(binding) {
+  const session = binding?.session;
+  if (!session?.isConnected || session.querySelector("[data-alantil-learning-guide-trigger]")) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "alantilGuideTrigger isLearningGuideTrigger";
+  button.dataset.alantilLearningGuideTrigger = "";
+  button.setAttribute("aria-label", "Подсказки по изучению слов");
+  button.title = "Подсказки по изучению слов";
+  button.textContent = "?";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    startLearningGuide(binding);
+  });
+  session.appendChild(button);
+}
+
 function showLearningCardStep(binding) {
   if (!binding?.card?.isConnected || learnState.totalPlanned <= 0) return;
   learningFlow = { active: true, phase: "card", decisionWordId: "" };
+  document.body.classList.add("alantilGuideLearning");
   showStep({
     stepKey: "learning:card",
     target: binding.card,
@@ -1096,6 +1156,7 @@ function bindLearningSession(session) {
   if (!card || !yes || !no) return;
   const binding = { session, card, abort: () => abortController.abort(), touchStartX: 0 };
   learningBinding = binding;
+  mountLearningHelpTrigger(binding);
 
   card.addEventListener("click", () => {
     if (!learningFlow.active || learningFlow.phase !== "card") return;
@@ -1124,6 +1185,7 @@ function bindLearningSession(session) {
     if (learningBinding === binding) learningBinding = null;
     if (learningFlow.active) {
       learningFlow = { active: false, phase: "", decisionWordId: "" };
+      document.body.classList.remove("alantilGuideLearning");
       destroyOverlay({ smooth: false });
     }
   }, { once: true });
@@ -1143,6 +1205,7 @@ function scanLearning() {
     bindLearningSession(session);
     return;
   }
+  mountLearningHelpTrigger(learningBinding);
   if (!learningFlow.active) showRepeatHint(learningBinding);
 }
 
