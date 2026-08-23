@@ -260,12 +260,15 @@ function positionGuideContent(content, geometries, {
   const maxTop = Math.max(edge, viewportHeight - height - edge);
   const union = geometryUnion(geometries);
   const targetCenter = union ? union.top + union.height / 2 : viewportHeight / 2;
+  const insideBottom = preference === "inside-bottom";
 
-  const protectedRects = geometries.filter(Boolean).map((geometry) => expandRect(geometry, gap));
+  const targetProtectedRects = geometries.filter(Boolean).map((geometry) => expandRect(geometry, gap));
+  const avoidProtectedRects = [];
   avoidElements.forEach((element) => {
     const rect = elementViewportRect(element);
-    if (rect) protectedRects.push(expandRect(rect, gap));
+    if (rect) avoidProtectedRects.push(expandRect(rect, gap));
   });
+  const protectedRects = insideBottom ? avoidProtectedRects : [...targetProtectedRects, ...avoidProtectedRects];
   const header = avoidHeader ? elementViewportRect(document.getElementById("appHeader")) : null;
   const bottomNav = avoidBottomNav ? elementViewportRect(document.getElementById("bottomNav")) : null;
 
@@ -279,13 +282,22 @@ function positionGuideContent(content, geometries, {
   const center = (viewportHeight - height) / 2;
   const topZone = viewportHeight * .24 - height / 2;
   const bottomZone = viewportHeight * .72 - height / 2;
+  const targetBottom = union ? union.bottom - gap - height : maxTop;
+  const aboveAvoided = avoidProtectedRects.length
+    ? Math.min(...avoidProtectedRects.map((rect) => rect.top)) - height
+    : targetBottom;
 
   let candidates;
   if (preference === "top") candidates = [above, topZone, opposite, below, center, edge, maxTop];
   else if (preference === "bottom") candidates = [below, bottomZone, opposite, above, center, maxTop, edge];
+  else if (insideBottom) candidates = [aboveAvoided, targetBottom, bottomZone, center, topZone];
   else candidates = [opposite, above, below, center, topZone, bottomZone, edge, maxTop];
 
-  const tops = uniqueNumbers(candidates.map((top) => clamp(top, edge, maxTop)));
+  const minCandidateTop = insideBottom && union ? Math.max(edge, union.top + gap) : edge;
+  const maxCandidateTop = insideBottom && union
+    ? Math.max(minCandidateTop, Math.min(maxTop, union.bottom - gap - height))
+    : maxTop;
+  const tops = uniqueNumbers(candidates.map((top) => clamp(top, minCandidateTop, maxCandidateTop)));
   let best = null;
   for (let index = 0; index < tops.length; index += 1) {
     content.style.top = `${tops[index]}px`;
@@ -301,7 +313,7 @@ function positionGuideContent(content, geometries, {
     }
   }
 
-  content.style.top = `${best?.top ?? clamp(center, edge, maxTop)}px`;
+  content.style.top = `${best?.top ?? clamp(center, minCandidateTop, maxCandidateTop)}px`;
   return content.getBoundingClientRect();
 }
 
@@ -1002,6 +1014,8 @@ function showLearningCardStep(binding) {
 function showLearningTranslation(binding) {
   if (!learningFlow.active || learningFlow.phase !== "card") return;
   learningFlow.phase = "translation";
+  const undoButton = binding.session.querySelector("#btnUndo");
+  const favoriteButton = binding.session.querySelector("#btnFavAction");
   showStep({
     stepKey: "learning:translation",
     target: binding.card,
@@ -1012,9 +1026,10 @@ function showLearningTranslation(binding) {
     blocking: true,
     spotlightShape: "rounded",
     spotlightPadding: 7,
-    contentPreference: "top",
+    contentPreference: "inside-bottom",
     avoidHeader: false,
     avoidBottomNav: true,
+    avoidElements: [undoButton, favoriteButton].filter(Boolean),
   });
 }
 
