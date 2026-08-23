@@ -165,7 +165,7 @@ async function renderUsers(context, signal) {
   context.shell.setHeaderContent?.({ title: "Alan Til!" });
   context.root.innerHTML = `<section class="view screen adminUsersView">
     ${renderProfileNavigation("users")}
-    <div class="adminUsersScroll"><div class="loadingState">${msg("common.otkryvaem")}</div></div>
+    <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0"><div class="loadingState">${msg("common.otkryvaem")}</div></div>
   </section>`;
   bindProfileNavigation(context, signal);
 
@@ -174,18 +174,16 @@ async function renderUsers(context, signal) {
     if (signal.aborted) return;
     const scroll = context.root.querySelector(".adminUsersScroll");
     if (!scroll) return;
-    scroll.innerHTML = `<div class="adminTableScroller" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
-      <table class="adminUsersTable">
-        <thead><tr>
-          <th class="adminUserStickyCell adminUserStickyHead" scope="col">${msg("admin.user")}</th>
-          <th scope="col">${msg("admin.last_visit")}</th>
-          <th scope="col">${msg("admin.streak")}</th>
-          ${STORY_ORDER.map((type) => `<th class="adminStoryHead" scope="col">${escapeHtml(storyLabel(type))}</th>`).join("")}
-          <th scope="col">${msg("admin.mastered_words")}</th>
-        </tr></thead>
-        <tbody>${usersTableRows(rows)}</tbody>
-      </table>
-    </div>`;
+    scroll.innerHTML = `<table class="adminUsersTable">
+      <thead><tr>
+        <th class="adminUserStickyCell adminUserStickyHead" scope="col">${msg("admin.user")}</th>
+        <th scope="col">${msg("admin.last_visit")}</th>
+        <th scope="col">${msg("admin.streak")}</th>
+        ${STORY_ORDER.map((type) => `<th class="adminStoryHead" scope="col">${escapeHtml(storyLabel(type))}</th>`).join("")}
+        <th scope="col">${msg("admin.mastered_words")}</th>
+      </tr></thead>
+      <tbody>${usersTableRows(rows)}</tbody>
+    </table>`;
 
     scroll.querySelectorAll("[data-admin-user-id]").forEach((button) => {
       button.addEventListener("click", () => {

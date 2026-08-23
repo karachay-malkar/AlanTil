@@ -11,6 +11,7 @@
   .pathMapViewport,
   .stationWordList,
   .stationStatisticsPane,
+  .adminUsersScroll,
   .profileScroll,
   .settingsHomeScroll,
   .setPreparationWords,
@@ -111,7 +112,11 @@
 }
 .appShell[data-feature="profile"],.appShell[data-feature="settings"][data-screen="home"],.appShell[data-feature="admin"][data-screen="users"]{--chrome-top-depth:calc(var(--safe-top) + 42px)}
 [data-feature="admin"][data-screen="users"] .adminUsersScroll{
-  padding:calc(var(--safe-top) + 42px) 8px calc(var(--safe-bottom) + var(--nav-h) + 12px)!important;
+  --scroll-fade-top:calc(var(--safe-top) + 42px);
+  --scroll-fade-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
+  padding:calc(var(--safe-top) + 42px) 0 calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))!important;
+  scroll-padding-top:calc(var(--safe-top) + 42px)!important;
+  scroll-padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))!important;
 }
 
 /* Set preparation: full-height list behind a small toolbar and transparent action zone. */

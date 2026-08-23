@@ -22,13 +22,23 @@ test("profile navigation exposes Users only through the activity-access marker",
   assert.match(styles, /data-activity-access="true"/);
 });
 
-test("only nickname cells carry the navigation action in the scrollable users table", async () => {
+test("users table uses the same full-height scroll architecture as the station word list", async () => {
   const feature = await read("src/features/admin/index.js");
   const styles = await read("src/features/admin/admin.css");
+  const chrome = await read("src/shared/styles/chrome.css");
+  const pathStyles = await read("src/features/path/path.css");
   assert.match(feature, /class="adminUserLink"[^>]+data-admin-user-id/);
   assert.doesNotMatch(feature, /<tr[^>]+data-admin-user-id/);
-  assert.match(styles, /\.adminTableScroller\{[^}]*overflow:auto/);
-  assert.match(styles, /\.adminUserStickyCell\{position:sticky;left:0/);
+  assert.doesNotMatch(feature, /adminTableScroller/);
+  assert.match(feature, /class="adminUsersScroll" role="region"/);
+  assert.match(pathStyles, /\.stationWordList\{position:absolute;z-index:1;inset:0[^}]*overflow-y:auto/);
+  assert.match(styles, /\.adminUsersScroll\{position:absolute;z-index:1;inset:0[^}]*overflow:auto/);
+  assert.match(styles, /scroll-padding-bottom:calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ var\(--content-rest-gap\)\)/);
+  assert.match(chrome, /adminUsersScroll[\s\S]*padding:calc\(var\(--safe-top\) \+ 42px\) 0 calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ var\(--content-rest-gap\)\)!important/);
+  assert.match(styles, /\.adminUsersTable thead th\{position:sticky;top:calc\(var\(--safe-top\) \+ 42px\);z-index:2/);
+  assert.match(styles, /\.adminUserStickyCell\{position:sticky;left:0[^}]*z-index:3/);
+  assert.match(styles, /\.adminUserStickyHead\{z-index:4!important/);
+  assert.match(styles, /tbody tr:last-child>th[^}]*border-bottom:0/);
   assert.match(styles, /height:46px/);
 });
 
