@@ -17,6 +17,6 @@ test("profile navigation follows the story-tab horizontal overflow contract", as
 
 test("profile-navigation patch refreshes the service-worker cache namespace", async () => {
   const worker = await read("service-worker.js");
-  assert.match(worker, /const VERSION = "13\.15\.12\.3"/);
+  assert.match(worker, /const VERSION = "13\.15\.12\.4"/);
   assert.match(worker, /\/src\/shared\/styles\/app\.css\?v=13\.15\.12/);
 });

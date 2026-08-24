@@ -32,19 +32,16 @@
 }
 
 .pathView{
-  --route-station-gap:25px;
-  --route-wave-amplitude:clamp(46px,16vw,64px);
+  --route-station-gap:58px;
+  --route-wave-amplitude:clamp(64px,22vw,90px);
 }
-.pathView .routeCatalogGroups{padding-bottom:56px}
+.pathView .routeCatalogGroups{padding-bottom:64px}
 .stationWordCount{top:84px}
 
-.stationNode[data-route-step="1"]{--station-shift:clamp(-48px,-12vw,-34px)}
+.stationNode[data-route-step="1"]{--station-shift:calc(0px - var(--route-wave-amplitude))}
 .stationNode[data-route-step="2"]{--station-shift:0px}
-.stationNode[data-route-step="3"]{--station-shift:clamp(34px,12vw,48px)}
-.stationNode[data-route-step="4"]{--station-shift:var(--route-wave-amplitude)}
-.stationNode[data-route-step="5"]{--station-shift:clamp(21px,7.2vw,29px)}
-.stationNode[data-route-step="6"]{--station-shift:clamp(-29px,-7.2vw,-21px)}
-.stationNode[data-route-step="7"]{--station-shift:clamp(-64px,-16vw,-46px)}
+.stationNode[data-route-step="3"]{--station-shift:var(--route-wave-amplitude)}
+.stationNode[data-route-step="4"]{--station-shift:0px}
 
 /* Profile sections use the same horizontal overflow contract as story tabs. */
 .profilePrimaryNav{

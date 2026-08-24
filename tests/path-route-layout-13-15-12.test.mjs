@@ -4,14 +4,14 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("13.15.12 keeps 60px path stations with a 25px vertical gap and clear catalog spacing", async () => {
+test("13.15.12 keeps 60px path stations with safe vertical spacing and clear catalog spacing", async () => {
   const pathStyles = await read("src/features/path/path.css");
   const appStyles = await read("src/shared/styles/app.css");
   assert.match(pathStyles, /\.pathView\{--station-size:60px;/);
   assert.match(pathStyles, /\.stationNode\{[^}]*width:var\(--station-size\);height:60px;min-height:60px;/);
-  assert.match(appStyles, /--route-station-gap:25px/);
+  assert.match(appStyles, /--route-station-gap:58px/);
   assert.match(appStyles, /\.stationWordCount\{top:84px\}/);
-  assert.match(appStyles, /\.pathView \.routeCatalogGroups\{padding-bottom:56px\}/);
+  assert.match(appStyles, /\.pathView \.routeCatalogGroups\{padding-bottom:64px\}/);
 });
 
 test("13.15.12 lets story tabs use the full viewport width", async () => {
@@ -22,14 +22,18 @@ test("13.15.12 lets story tabs use the full viewport width", async () => {
   assert.match(appStyles, /\.storyTab:last-child\{margin-right:8px\}/);
 });
 
-test("13.15.12 repeats one global seven-step route wave", async () => {
+test("13.15.12 repeats one global three-lane snake pattern", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const routeScale = await read("src/shared/ui/route-scale.js");
-  assert.match(appStyles, /--route-wave-amplitude:clamp\(46px,16vw,64px\)/);
-  for (let step = 1; step <= 7; step += 1) {
+  assert.match(appStyles, /--route-wave-amplitude:clamp\(64px,22vw,90px\)/);
+  for (let step = 1; step <= 4; step += 1) {
     assert.match(appStyles, new RegExp(`\\.stationNode\\[data-route-step="${step}"\\]`));
   }
-  assert.match(routeScale, /const ROUTE_WAVE_STEPS = 7/);
+  assert.match(appStyles, /data-route-step="1"[^}]*calc\(0px - var\(--route-wave-amplitude\)\)/);
+  assert.match(appStyles, /data-route-step="2"[^}]*--station-shift:0px/);
+  assert.match(appStyles, /data-route-step="3"[^}]*--station-shift:var\(--route-wave-amplitude\)/);
+  assert.match(appStyles, /data-route-step="4"[^}]*--station-shift:0px/);
+  assert.match(routeScale, /const ROUTE_WAVE_STEPS = 4/);
   assert.match(routeScale, /node\.querySelector\("\.stationOrdinal"\)/);
   assert.match(routeScale, /node\.dataset\.routeStep = String\(\(sequenceIndex % ROUTE_WAVE_STEPS\) \+ 1\)/);
 });
@@ -55,5 +59,5 @@ test("13.15.12 cache-busts typography and application entrypoints", async () => 
   assert.match(appStyles, /theme\.css\?v=13\.15\.12/);
   assert.match(appStyles, /typography\.css\?v=13\.15\.12/);
   assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.12"/);
-  assert.match(worker, /const VERSION = "13\.15\.12\.3"/);
+  assert.match(worker, /const VERSION = "13\.15\.12\.4"/);
 });

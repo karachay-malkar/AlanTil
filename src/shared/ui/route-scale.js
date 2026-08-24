@@ -1,7 +1,7 @@
 import { msg } from "../i18n/index.js?v=13.9.0";
 import { escapeHtml } from "./html.js?v=13.9.0";
 
-const ROUTE_WAVE_STEPS = 7;
+const ROUTE_WAVE_STEPS = 4;
 
 function dotCount(height, routeHeight) {
   if (!routeHeight) return 4;
