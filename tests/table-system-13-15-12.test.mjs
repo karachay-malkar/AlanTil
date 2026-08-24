@@ -8,7 +8,7 @@ test("table geometry follows the three text-size modes from one shared source", 
   const css = await read("src/shared/styles/table-system.css");
   assert.match(css, /data-text-size="small"[\s\S]*--table-row-height:46px/);
   assert.match(css, /data-text-size="medium"[\s\S]*--table-row-height:52px/);
-  assert.match(css, /data-text-size="large"[\s\S]*--table-row-height:64px/);
+  assert.match(css, /data-text-size="large"[\s\S]*--table-row-height:58px/);
   assert.match(css, /--table-head-height:38px/);
   assert.match(css, /\.stationWordRow[\s\S]*height:var\(--table-row-height\)/);
   assert.match(css, /\.adminUsersTable tbody tr\{height:var\(--table-row-height\)\}/);

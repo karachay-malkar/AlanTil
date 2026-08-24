@@ -1,4 +1,4 @@
-/* 13.15.12.5 — one shared geometry source for table-like rows.
+/* 13.15.12.6 — one shared geometry source for table-like rows.
    Data rows stay fixed-height for each text-size mode. Table headers may grow
    if wrapping is required. */
 
@@ -16,7 +16,7 @@ html[data-text-size="small"]{
 }
 
 html[data-text-size="large"]{
-  --table-row-height:64px;
+  --table-row-height:58px;
   --table-head-height:46px;
   --table-row-padding-y:7px;
 }
