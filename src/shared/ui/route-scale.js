@@ -11,14 +11,69 @@ function selectorValue(value) {
   return CSS.escape(String(value ?? ""));
 }
 
+function ensureRouteConnector(routeMap) {
+  let svg = routeMap.querySelector(":scope > .routeConnector");
+  if (!svg) {
+    const ns = "http://www.w3.org/2000/svg";
+    svg = document.createElementNS(ns, "svg");
+    svg.classList.add("routeConnector");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const path = document.createElementNS(ns, "path");
+    path.classList.add("routeConnectorPath");
+    svg.append(path);
+    routeMap.prepend(svg);
+  }
+  return { svg, path: svg.querySelector(".routeConnectorPath") };
+}
+
+function drawRouteConnector(routeMap, connector) {
+  const { svg, path } = connector || {};
+  if (!svg || !path) return;
+  const nodes = Array.from(routeMap.querySelectorAll(".stationNode"));
+  if (nodes.length < 2) {
+    path.setAttribute("d", "");
+    return;
+  }
+
+  const mapRect = routeMap.getBoundingClientRect();
+  const points = nodes.map((node) => {
+    const target = node.querySelector(".stationProgressRing") || node;
+    const rect = target.getBoundingClientRect();
+    return {
+      x: rect.left - mapRect.left + rect.width / 2,
+      y: rect.top - mapRect.top + rect.height / 2,
+    };
+  });
+
+  const width = Math.max(1, routeMap.clientWidth);
+  const height = Math.max(1, routeMap.scrollHeight);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.style.width = `${width}px`;
+  svg.style.height = `${height}px`;
+
+  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1];
+    const current = points[index];
+    const middleY = (previous.y + current.y) / 2;
+    d += ` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;
+  }
+  path.setAttribute("d", d);
+}
+
 export function createRouteScale({ root, viewport, catalogs = [], signal }) {
   const scale = root.querySelector(".routeScale");
   const routeMap = root.querySelector(".routeMap");
   if (!scale || !viewport || !routeMap) return;
+  const connector = ensureRouteConnector(routeMap);
   let frame = 0;
   let progressItems = [];
 
   function measureAndRender() {
+    drawRouteConnector(routeMap, connector);
     const routeHeight = Math.max(1, routeMap.scrollHeight);
     const parts = [];
 
@@ -67,5 +122,6 @@ export function createRouteScale({ root, viewport, catalogs = [], signal }) {
   viewport.addEventListener("scroll", schedule, { signal, passive: true });
   window.addEventListener("resize", measureAndRender, { signal });
   requestAnimationFrame(measureAndRender);
+  Promise.resolve(document.fonts?.ready).catch(() => {}).then(() => requestAnimationFrame(measureAndRender));
   signal?.addEventListener("abort", () => frame && cancelAnimationFrame(frame), { once: true });
 }
