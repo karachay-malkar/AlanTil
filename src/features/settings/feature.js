@@ -1,4 +1,4 @@
-import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.13";
+import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.15.12";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
@@ -8,11 +8,11 @@ import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.13";
 import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.13";
 import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.13";
 import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.13";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.13";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.12";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
 
-const SETTINGS_ASSET_VERSION = "13.15";
+const SETTINGS_ASSET_VERSION = "13.15.12";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;
@@ -21,7 +21,8 @@ function sameSettings(left = {}, right = {}) {
   return left.interface_language_code === right.interface_language_code
     && left.translation_language_code === right.translation_language_code
     && left.alan_script_code === right.alan_script_code
-    && left.alan_dialect_code === right.alan_dialect_code;
+    && left.alan_dialect_code === right.alan_dialect_code
+    && left.text_size_code === right.text_size_code;
 }
 
 function settingChoice({ name, value, label, checked, ariaLabel = "" }) {
@@ -149,6 +150,16 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
     label,
     checked: draftSettings.alan_dialect_code === value,
   })).join("");
+  const textSizeChoices = [
+    ["small", msg("settings.razmer_teksta_malenkiy")],
+    ["medium", msg("settings.razmer_teksta_sredniy")],
+    ["large", msg("settings.razmer_teksta_bolshoy")],
+  ].map(([value, label]) => settingChoice({
+    name: "textSize",
+    value,
+    label,
+    checked: draftSettings.text_size_code === value,
+  })).join("");
 
   context.root.innerHTML = `<section class="view screen settingsHomeView">
     ${renderProfileNavigation("settings")}
@@ -163,6 +174,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
         ${settingRow(msg("settings.yazyk_interfeysa"), languageChoices)}
         ${settingRow(msg("settings.alfavit_alanskih_slov"), scriptChoices)}
         ${settingRow(msg("settings.variant_kirillitsy"), dialectChoices, { className: "settingsDialectRow", hidden: draftSettings.alan_script_code === "turkic" })}
+        ${settingRow(msg("settings.razmer_teksta"), textSizeChoices, { className: "settingsTextSizeRow" })}
         ${renderLearningPreview(draftSettings, { className: "settingsLearningPreview", marker: "settings" })}
       </section>
 
@@ -185,7 +197,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.15")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.15.12")}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>
@@ -219,6 +231,11 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
   context.root.querySelectorAll('input[name="alanDialect"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       if (radio.checked) markChanged({ alan_dialect_code: radio.value });
+    }, { signal });
+  });
+  context.root.querySelectorAll('input[name="textSize"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (radio.checked) markChanged({ text_size_code: radio.value });
     }, { signal });
   });
 

@@ -3,16 +3,16 @@ import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-
 import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=13.10.12";
 import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.12";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.10.12";
-import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.10";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.15.12";
+import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=13.15.10.1";
+import { createRouter } from "./router.js?v=13.15.12";
 import { createShell } from "./shell.js?v=13.15.10.1";
 
-const RELEASE_VERSION = "13.15.11";
+const RELEASE_VERSION = "13.15.12";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {

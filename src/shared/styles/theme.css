@@ -7,6 +7,15 @@ html[data-theme="alan-paper"]{
   --font-brand:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --font-terminal:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
 
+  /* Single typography source. Medium is the application default. */
+  --text-micro:10px;
+  --text-caption:12px;
+  --text-body:14px;
+  --text-emphasis:16px;
+  --text-title:20px;
+  --text-display:clamp(28px,8vw,48px);
+  --text-result:clamp(40px,14vw,64px);
+
   --text-1:#292722;
   --text-2:#666158;
   --text-3:#918b80;
@@ -151,8 +160,7 @@ html[data-theme="alan-paper"]{
   --duration-normal:145ms;
   --ease-standard:cubic-bezier(.2,.7,.2,1);
 
-
-  --route-station-gap:30px;
+  --route-station-gap:25px;
   --route-section-gap:92px;
   --route-dictionary-gap:118px;
   --route-catalog-gap:118px;
@@ -165,7 +173,7 @@ html[data-theme="alan-paper"]{
   --route-scale-passed:color-mix(in srgb,var(--text-1) 72%,transparent);
   --route-scale-section-color:color-mix(in srgb,var(--text-1) 34%,transparent);
   --route-scale-diamond-color:color-mix(in srgb,var(--text-1) 55%,transparent);
-  --station-size:82px;
+  --station-size:60px;
   --station-progress-track:color-mix(in srgb,var(--text-1) 10%,transparent);
   --station-progress-fill:var(--accent-strong);
   --header-blur:5px;
@@ -190,12 +198,12 @@ html[data-theme="alan-paper"]{
   --fw-bold:850;
   --fw-semibold:720;
   --fw-regular:400;
-  --fs-24px:24px;
-  --fs-22px:22px;
-  --fs-20px:20px;
-  --fs-18px:18px;
-  --fs-16px:16px;
-  --fs-14px:14px;
+  --fs-24px:var(--text-title);
+  --fs-22px:var(--text-title);
+  --fs-20px:var(--text-title);
+  --fs-18px:var(--text-emphasis);
+  --fs-16px:var(--text-emphasis);
+  --fs-14px:var(--text-body);
   --color-main:var(--text-1);
   --color-muted:var(--text-2);
   --color-white:#fff;
@@ -238,4 +246,34 @@ html[data-theme="alan-paper"]{
   --control-padding-inline:14px;
   --control-background:var(--surface-component);
   --control-border:var(--line);
+}
+
+html[data-text-size="small"]{
+  --text-micro:10px;
+  --text-caption:10px;
+  --text-body:12px;
+  --text-emphasis:14px;
+  --text-title:16px;
+  --text-display:clamp(24px,7vw,40px);
+  --text-result:clamp(36px,12vw,54px);
+}
+
+html[data-text-size="medium"]{
+  --text-micro:10px;
+  --text-caption:12px;
+  --text-body:14px;
+  --text-emphasis:16px;
+  --text-title:20px;
+  --text-display:clamp(28px,8vw,48px);
+  --text-result:clamp(40px,14vw,64px);
+}
+
+html[data-text-size="large"]{
+  --text-micro:12px;
+  --text-caption:14px;
+  --text-body:16px;
+  --text-emphasis:20px;
+  --text-title:20px;
+  --text-display:clamp(32px,9vw,56px);
+  --text-result:clamp(44px,15vw,72px);
 }

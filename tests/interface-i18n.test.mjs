@@ -37,15 +37,21 @@ globalThis.CustomEvent = class CustomEvent {
 
 const { INTERFACE_MESSAGES } = await import("../src/shared/i18n/messages.js?v=13.9.0");
 const { RELEASE_MESSAGES_13_10 } = await import("../src/shared/i18n/messages-13-10.js?v=13.10.0");
+const { RELEASE_MESSAGES_13_15_9 } = await import("../src/shared/i18n/messages-13-15-9.js?v=13.15.9");
+const { RELEASE_MESSAGES_13_15_10 } = await import("../src/shared/i18n/messages-13-15-10.js?v=13.15.10.12");
+const { RELEASE_MESSAGES_13_15_12 } = await import("../src/shared/i18n/messages-13-15-12.js?v=13.15.12");
 const ALL_INTERFACE_MESSAGES = Object.freeze({
   ...INTERFACE_MESSAGES,
   ...RELEASE_MESSAGES_13_10,
+  ...RELEASE_MESSAGES_13_15_9,
+  ...RELEASE_MESSAGES_13_15_10,
+  ...RELEASE_MESSAGES_13_15_12,
 });
 const {
   hasCompleteTranslations,
   messageForLanguage,
   setInterfaceLanguage,
-} = await import("../src/shared/i18n/index.js?v=13.10.0");
+} = await import("../src/shared/i18n/index.js?v=13.15.12");
 
 async function javascriptFiles(directory) {
   const files = [];

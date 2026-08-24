@@ -14,6 +14,7 @@ export const DEFAULT_USER_SETTINGS = Object.freeze({
   translation_language_code: "ru",
   alan_script_code: "cyrillic",
   alan_dialect_code: "canonical",
+  text_size_code: "medium",
   learning_setup_completed_at: null,
 });
 
@@ -39,6 +40,18 @@ function normalizeAlanDialectCode(value) {
   return ["canonical", "karachay", "balkar"].includes(value) ? value : "canonical";
 }
 
+function normalizeTextSizeCode(value) {
+  return ["small", "medium", "large"].includes(value) ? value : DEFAULT_USER_SETTINGS.text_size_code;
+}
+
+function applyTextSizeCode(value) {
+  const normalized = normalizeTextSizeCode(value);
+  if (typeof document !== "undefined" && document.documentElement) {
+    document.documentElement.dataset.textSize = normalized;
+  }
+  return normalized;
+}
+
 function normalizeCompletionTimestamp(value) {
   if (!value) return null;
   const timestamp = Date.parse(value);
@@ -52,6 +65,7 @@ function normalizeSettings(value = {}) {
     translation_language_code: interfaceLanguage,
     alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
     alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),
+    text_size_code: normalizeTextSizeCode(value.text_size_code),
     learning_setup_completed_at: normalizeCompletionTimestamp(value.learning_setup_completed_at),
   };
 }
@@ -85,9 +99,11 @@ export function reloadUserSettings({ preserveLanguageIfMissing = false } = {}) {
         translation_language_code: state.translation_language_code,
         alan_script_code: state.alan_script_code,
         alan_dialect_code: state.alan_dialect_code,
+        text_size_code: state.text_size_code,
       }
     : DEFAULT_USER_SETTINGS;
   state = normalizeSettings(storedSettings(fallback));
+  applyTextSizeCode(state.text_size_code);
   writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
   return getUserSettings();
@@ -116,11 +132,14 @@ export function setUserSettings(updates = {}, {
     || next.translation_language_code !== state.translation_language_code
     || next.alan_script_code !== state.alan_script_code
     || next.alan_dialect_code !== state.alan_dialect_code
+    || next.text_size_code !== state.text_size_code
     || next.learning_setup_completed_at !== state.learning_setup_completed_at;
   state = next;
+  applyTextSizeCode(state.text_size_code);
   const stored = writeScopedJson(USER_SETTINGS_KEY, state);
   if (!stored && requireStorage) {
     state = previous;
+    applyTextSizeCode(state.text_size_code);
     throw new Error("User settings could not be written to local storage.");
   }
   if ((changed || forceQueue) && queue) {
@@ -142,10 +161,14 @@ export function completeLearningSetup(updates = {}) {
 
 export function replaceUserSettings(settings = {}) {
   const incoming = settings && typeof settings === "object" ? settings : {};
-  const merged = Object.prototype.hasOwnProperty.call(incoming, "learning_setup_completed_at")
+  const withLocalTextSize = Object.prototype.hasOwnProperty.call(incoming, "text_size_code")
     ? incoming
-    : { ...incoming, learning_setup_completed_at: state.learning_setup_completed_at };
+    : { ...incoming, text_size_code: state.text_size_code };
+  const merged = Object.prototype.hasOwnProperty.call(withLocalTextSize, "learning_setup_completed_at")
+    ? withLocalTextSize
+    : { ...withLocalTextSize, learning_setup_completed_at: state.learning_setup_completed_at };
   state = normalizeSettings(merged);
+  applyTextSizeCode(state.text_size_code);
   writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
   return getUserSettings();

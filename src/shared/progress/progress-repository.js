@@ -67,7 +67,17 @@ export async function executeProgressEntry(entry) {
     return throwIfError(await client.from("user_route_settings").upsert(withUser(routePayload), { onConflict: "user_id" }));
   }
   if (entry.type === "user_settings") {
-    const full = await client.from("user_settings").upsert(withUser(payload), { onConflict: "user_id" });
+    // text_size_code is a scoped UI preference and deliberately stays local.
+    // Keep the cloud schema compatible with existing installations.
+    const cloudPayload = {
+      interface_language_code: payload.interface_language_code,
+      translation_language_code: payload.translation_language_code,
+      alan_script_code: payload.alan_script_code,
+      alan_dialect_code: payload.alan_dialect_code,
+      learning_setup_completed_at: payload.learning_setup_completed_at,
+      updated_at: payload.updated_at,
+    };
+    const full = await client.from("user_settings").upsert(withUser(cloudPayload), { onConflict: "user_id" });
     if (!full?.error) return full.data;
     if (!["PGRST204", "42703"].includes(full.error?.code)) throw full.error;
     const legacyPayload = {

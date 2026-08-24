@@ -1,9 +1,9 @@
-name: Package AlanTil 13.15.11
+name: Package AlanTil 13.15.12
 
 on:
   push:
     branches:
-      - 13.15.11
+      - 13.15.12
 
 permissions:
   contents: read
@@ -18,12 +18,12 @@ jobs:
           fetch-depth: 0
 
       - name: Build exact release archive
-        run: git archive --format=zip --prefix=AlanTil-13.15.11/ --output=AlanTil_13.15.11.zip "$GITHUB_SHA"
+        run: git archive --format=zip --prefix=AlanTil-13.15.12/ --output=AlanTil_13.15.12.zip "$GITHUB_SHA"
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-13.15.11-full-project
-          path: AlanTil_13.15.11.zip
+          name: AlanTil-13.15.12-full-project
+          path: AlanTil_13.15.12.zip
           if-no-files-found: error
           retention-days: 7

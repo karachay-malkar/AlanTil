@@ -1,13 +1,13 @@
-const VERSION = "13.15.11";
+const VERSION = "13.15.12";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=13.15.11",
-  "/src/shared/styles/app.css?v=13.15.11",
-  "/src/features/onboarding/index.js?v=13.15.11",
+  "/src/app/bootstrap.js?v=13.15.12",
+  "/src/shared/styles/app.css?v=13.15.12",
+  "/src/features/onboarding/index.js?v=13.15.12",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/auth/google.svg",
@@ -26,7 +26,9 @@ const NETWORK_FIRST_PATHS = new Set([
   "/src/shared/domain/word-normalizer.js",
   "/src/shared/i18n/index.js",
   "/src/shared/progress/progress-queue.js",
+  "/src/shared/progress/progress-repository.js",
   "/src/shared/progress/progress-sync.js",
+  "/src/shared/settings/user-settings-store.js",
   "/src/shared/ui/profile-navigation.js",
 ]);
 

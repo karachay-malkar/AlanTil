@@ -1,5 +1,5 @@
 @import url("./reset.css?v=13.9.0") layer(reset);
-@import url("./theme.css?v=13.15.10.11") layer(theme);
+@import url("./theme.css?v=13.15.12") layer(theme);
 @import url("./base.css?v=13.9.0") layer(base);
 @import url("./shell.css?v=13.15.10.1") layer(shell);
 @import url("./components.css?v=13.10.12") layer(components);
@@ -17,13 +17,16 @@
 @import url("../../features/profile/profile.css?v=13.15.10.1") layer(features);
 @import url("../../features/admin/admin.css?v=13.15.10.4") layer(features);
 @import url("../../features/account/account.css?v=13.10.2") layer(features);
-@import url("../../features/settings/settings.css?v=13.10.9") layer(features);
+@import url("../../features/settings/settings.css?v=13.15.12") layer(features);
 @import url("../../features/songs/songs.css?v=13.9.0") layer(features);
 @import url("./paper-components.css?v=13.10.12") layer(utilities);
 @import url("./chrome.css?v=13.15.10.3") layer(utilities);
 @import url("./utilities.css?v=13.9.0") layer(utilities);
+@import url("./typography.css?v=13.15.12") layer(typography);
 
+.pathView{--route-station-gap:25px}
 .pathView .routeCatalogGroups{padding-bottom:39px}
+.stationWordCount{top:84px}
 .appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger{
   position:fixed;z-index:calc(var(--z-header) + 2);left:auto;right:10px;top:auto;
   bottom:max(12px,calc(var(--safe-bottom) + 10px));transform:none;
