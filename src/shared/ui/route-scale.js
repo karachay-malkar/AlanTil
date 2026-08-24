@@ -1,6 +1,8 @@
 import { msg } from "../i18n/index.js?v=13.9.0";
 import { escapeHtml } from "./html.js?v=13.9.0";
 
+const ROUTE_WAVE_STEPS = 7;
+
 function dotCount(height, routeHeight) {
   if (!routeHeight) return 4;
   const share = height / routeHeight;
@@ -9,6 +11,16 @@ function dotCount(height, routeHeight) {
 
 function selectorValue(value) {
   return CSS.escape(String(value ?? ""));
+}
+
+function applyRouteWavePattern(routeMap) {
+  const nodes = Array.from(routeMap.querySelectorAll(".stationNode"));
+  nodes.forEach((node, index) => {
+    const ordinal = Number.parseInt(node.querySelector(".stationOrdinal")?.textContent || "", 10);
+    const sequenceIndex = Number.isFinite(ordinal) && ordinal > 0 ? ordinal - 1 : index;
+    node.dataset.routeStep = String((sequenceIndex % ROUTE_WAVE_STEPS) + 1);
+  });
+  return nodes;
 }
 
 function ensureRouteConnector(routeMap) {
@@ -30,7 +42,7 @@ function ensureRouteConnector(routeMap) {
 function drawRouteConnector(routeMap, connector) {
   const { svg, path } = connector || {};
   if (!svg || !path) return;
-  const nodes = Array.from(routeMap.querySelectorAll(".stationNode"));
+  const nodes = applyRouteWavePattern(routeMap);
   if (nodes.length < 2) {
     path.setAttribute("d", "");
     return;
@@ -68,6 +80,7 @@ export function createRouteScale({ root, viewport, catalogs = [], signal }) {
   const scale = root.querySelector(".routeScale");
   const routeMap = root.querySelector(".routeMap");
   if (!scale || !viewport || !routeMap) return;
+  applyRouteWavePattern(routeMap);
   const connector = ensureRouteConnector(routeMap);
   let frame = 0;
   let progressItems = [];
