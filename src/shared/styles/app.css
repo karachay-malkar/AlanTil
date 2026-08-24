@@ -27,6 +27,17 @@
 .pathView{--route-station-gap:25px}
 .pathView .routeCatalogGroups{padding-bottom:39px}
 .stationWordCount{top:84px}
+
+/* Profile sections use the same horizontal overflow contract as story tabs. */
+.profilePrimaryNav{
+  width:100%;min-width:0;display:grid;grid-template-columns:none;
+  grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);align-items:center;gap:3px;
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.profilePrimaryNav::-webkit-scrollbar{display:none}
+.profilePrimaryTab{min-width:0;padding:1px 4px;white-space:nowrap;scroll-snap-align:center}
+
 .appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger{
   position:fixed;z-index:calc(var(--z-header) + 2);left:auto;right:10px;top:auto;
   bottom:max(12px,calc(var(--safe-bottom) + 10px));transform:none;
