@@ -1,0 +1,4 @@
+import test from "node:test"; import assert from "node:assert/strict"; import { readFile } from "node:fs/promises";
+const read=(p)=>readFile(new URL(`../${p}`,import.meta.url),"utf8");
+test("path exposes a read-only story word list",async()=>{const [feature,list]=await Promise.all([read("src/features/path/feature.js"),read("src/features/path/story-word-list.js")]);assert.match(feature,/data-story-words/);assert.match(feature,/mountStoryWordList/);assert.match(list,/Список слов/);assert.match(list,/type="search"/);assert.match(list,/wordFavorites\.toggle/);assert.doesNotMatch(list,/startStudy|startTest|data-start/);});
+test("list preserves story order and thematic section markers",async()=>{const list=await read("src/features/path/story-word-list.js");for(const token of [/story\?\.catalogs/,/catalog\.sections/,/section\.stations/,/station\.words/,/seen\.has/,/storyWordSection/,/ordinal:\s*\+\+ordinal/])assert.match(list,token);});
