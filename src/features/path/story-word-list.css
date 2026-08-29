@@ -8,7 +8,7 @@
 .storyWordCatalogGroup,.storyWordSectionGroup{display:contents}
 .storyWordCatalogGroup[hidden],.storyWordSectionGroup[hidden],.storyWordRow[hidden]{display:none!important}
 .storyWordCatalog{margin:8px 0 0;padding:10px 7px 8px;border-bottom:1px solid var(--line-soft);color:var(--text-1);font:850 15px/1.2 var(--font-body)}
-.storyWordSection{position:sticky;z-index:3;top:calc(var(--safe-top) + var(--header-h));margin:0;padding:7px;background:color-mix(in srgb,var(--app-bg) 78%,transparent);color:var(--accent-strong);font:800 11px/1.2 var(--font-terminal);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.storyWordSection{margin:0;padding:7px;color:var(--accent-strong);font:800 11px/1.2 var(--font-terminal)}
 .storyWordRow{grid-template-columns:36px minmax(0,1fr) 36px!important;height:52px;min-height:52px;padding:3px 2px;border:0!important;background:transparent!important;overflow:hidden}
 .storyWordRow::after{content:"";position:absolute;left:43px;right:42px;bottom:0;height:1px;background:color-mix(in srgb,var(--line-soft) 72%,transparent);pointer-events:none}
 .storyWordOrdinal{width:36px;color:var(--text-3);font:700 10px/1 var(--font-terminal);text-align:center}
