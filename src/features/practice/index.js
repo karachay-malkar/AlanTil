@@ -15,11 +15,15 @@ export function mount(context) {
       <div class="practiceMenu">
         <button class="menuItem" type="button" data-practice-route="test.menu"><span class="menuIcon">${uiIcon("listChecks")}</span><span class="menuItemText"><strong>${msg("practice.test")}</strong><small>${msg("practice.proverka_slov_iz_vybrannyh_razdelov")}</small></span></button>
         <button class="menuItem" type="button" data-practice-route="match.menu"><span class="menuIcon">${uiIcon("puzzle")}</span><span class="menuItemText"><strong>${msg("practice.sopostavlenie")}</strong><small>${msg("practice.soedinenie_slov_i_perevodov")}</small></span></button>
+        <button class="menuItem" type="button" data-practice-route="learn.set" data-dictionary-slug="favorites"><span class="menuIcon">${uiIcon("favorite")}</span><span class="menuItemText"><strong>${msg("common.izbrannoe")}</strong><small>${msg("learn.uchit_slova")}</small></span></button>
         <button class="menuItem" type="button" data-practice-route="songs.playlists"><span class="menuIcon">${uiIcon("music2")}</span><span class="menuItemText"><strong>${msg("practice.pesni")}</strong><small>${msg("practice.yazyk_v_zhivom_kontekste")}</small></span></button>
       </div>`,
   });
   context.root.querySelectorAll("[data-practice-route]").forEach((button) => {
-    button.addEventListener("click", () => context.router.navigate(button.dataset.practiceRoute), { signal: controller.signal });
+    button.addEventListener("click", () => {
+      const params = button.dataset.dictionarySlug ? { dictionarySlug: button.dataset.dictionarySlug } : {};
+      context.router.navigate(button.dataset.practiceRoute, params);
+    }, { signal: controller.signal });
   });
 }
 

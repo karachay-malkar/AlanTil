@@ -1,7 +1,8 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { buildWordsByPOSRounds, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
+import { normalizePos } from "../../shared/domain/word-normalizer.js?v=13.9.0";
+import { buildWordsByPOSRounds, hasWordConflict, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
@@ -77,11 +78,12 @@ function abandonPreviousSession() {
   });
 }
 
-export function startTest(pool, mode, limit, metadata = {}) {
+export function startTest(pool, mode, limit, metadata = {}, optionPool = pool) {
   abandonPreviousSession();
   testState.mode = mode === "ru" ? "ru" : "kb";
   testState.limit = [20, 40, 80].includes(Number(limit)) ? Number(limit) : 40;
-  testState.optionPool = pool.slice();
+  const sourceOptions = Array.isArray(optionPool) && optionPool.length ? optionPool : pool;
+  testState.optionPool = sourceOptions.slice();
   testState.items = buildWordsByPOSRounds(pool, testState.limit).items;
   testState.index = 0;
   testState.correct = 0;
@@ -111,20 +113,22 @@ export function startTest(pool, mode, limit, metadata = {}) {
 
 export function pickOptions(item) {
   const correctText = testState.mode === "kb" ? item.trans : item.word;
-  const targetPOS = String(item.pos || "").trim();
-  let pool = testState.optionPool.filter((candidate) => candidate.id !== item.id && (!targetPOS || String(candidate.pos || "").trim() === targetPOS));
-  if (pool.length < 3) pool = testState.optionPool.filter((candidate) => candidate.id !== item.id);
+  const targetPOS = normalizePos(item.pos);
+  const pool = shuffle(testState.optionPool.filter((candidate) => (
+    String(candidate.id) !== String(item.id)
+    && normalizePos(candidate.pos) === targetPOS
+  )).slice());
 
   const options = [{ id: item.id, text: correctText }];
+  const selectedWords = [];
   const usedTexts = new Set([correctText]);
-  let guard = 0;
-  while (options.length < 4 && guard < 2000) {
-    guard += 1;
-    const candidate = pool[Math.floor(Math.random() * pool.length)];
-    if (!candidate) break;
+  for (const candidate of pool) {
+    if (options.length >= 4) break;
+    if (hasWordConflict(candidate, [item, ...selectedWords])) continue;
     const text = testState.mode === "kb" ? candidate.trans : candidate.word;
     if (!text || usedTexts.has(text)) continue;
     usedTexts.add(text);
+    selectedWords.push(candidate);
     options.push({ id: candidate.id, text });
   }
   return shuffle(options);

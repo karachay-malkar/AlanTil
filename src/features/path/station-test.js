@@ -1,6 +1,7 @@
 import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
+import { getCachedWords } from "../../shared/data/word-repository.js?v=13.13";
 import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.9.0";
 import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.9.0";
 import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.9.0";
@@ -45,17 +46,9 @@ function isAmbiguous(candidate, item, selected) {
   return false;
 }
 
-function difficultyDistance(candidate, item) {
-  const candidateOrder = Number(candidate.global_order || candidate.dict_order || 0);
-  const itemOrder = Number(item.global_order || item.dict_order || 0);
-  if (!candidateOrder || !itemOrder) return Number.MAX_SAFE_INTEGER;
-  return Math.abs(candidateOrder - itemOrder);
-}
-
 export function distractorsFor(item, allWords, count = 3) {
   const targetPos = normalizePos(item.pos);
-  const samePos = shuffle(allWords.filter((candidate) => normalizePos(candidate.pos) === targetPos))
-    .sort((a, b) => difficultyDistance(a, item) - difficultyDistance(b, item));
+  const samePos = shuffle(allWords.filter((candidate) => normalizePos(candidate.pos) === targetPos));
   const selected = [];
   for (const candidate of samePos) {
     if (selected.length >= count) break;
@@ -139,6 +132,8 @@ export function getInterruptedStationTest() { return readScopedJson(ACTIVE_KEY, 
 
 export function createStationTestSession(station, allWords, mode = "kb") {
   const sourceWords = Array.isArray(station.words) ? station.words : [];
+  const globalWords = getCachedWords();
+  const optionWords = Array.isArray(globalWords) && globalWords.length ? globalWords : allWords;
   const normalizedMode = mode === "ru" ? "ru" : "kb";
   const signature = selectionSignature(sourceWords);
   const interrupted = getInterruptedStationTest();
@@ -152,7 +147,7 @@ export function createStationTestSession(station, allWords, mode = "kb") {
     station,
     mode: normalizedMode,
     selectionSignature: signature,
-    questions: orderedWords.map((item) => buildQuestion(item, allWords, normalizedMode)),
+    questions: orderedWords.map((item) => buildQuestion(item, optionWords, normalizedMode)),
     index: canResume ? Math.min(Number(interrupted.index || 0), orderedWords.length) : 0,
     answers: canResume && Array.isArray(interrupted.answers) ? interrupted.answers.slice(0, orderedWords.length) : [],
     startedAt: canResume ? interrupted.startedAt : new Date().toISOString(),

@@ -107,7 +107,7 @@ export function renderTestMenu(context, words, signal) {
       dictionaryCount: new Set(selected.map((checkbox) => checkbox.dataset.dict)).size,
       sectionCount: selected.length,
       selectedSources: buildSelectedSources(selected.map((checkbox) => ({ dictionaryId: checkbox.dataset.dict, sectionId: checkbox.dataset.section }))),
-    });
+    }, words);
     await context.router.navigate("test.session", {}, { force: true });
   }
   context.root.querySelectorAll("[data-test-mode]").forEach((button) => {
@@ -148,7 +148,10 @@ export function renderTestResults(context, signal) {
   });
   bindResultRows(context.root, { signal });
   context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button) => button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.wordId)), { signal }));
-  context.root.querySelector("#btnTestAgain2")?.addEventListener("click", async () => { startTest(testState.session.wordsPool, testState.mode, testState.limit, testState.session.metadata); await context.router.replace("test.session", {}, { force: true }); }, { signal });
+  context.root.querySelector("#btnTestAgain2")?.addEventListener("click", async () => {
+    startTest(testState.session.wordsPool, testState.mode, testState.limit, testState.session.metadata, testState.optionPool);
+    await context.router.replace("test.session", {}, { force: true });
+  }, { signal });
 }
 
 export function renderTestSession(context, signal) {
