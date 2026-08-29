@@ -1,176 +1,89 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
-import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
 import { getWords } from "../../shared/data/word-repository.js?v=13.12";
-import { dictsFrom, sectionsFrom, setsFrom } from "../../shared/domain/word-selection.js?v=13.13";
-import { createSlugMap } from "../../shared/domain/slugs.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { panel } from "../../shared/ui/panel.js?v=13.9.0";
-import { renderCatalog, renderDictionaryContent, renderSections, renderSetMenu } from "./catalog.js?v=13.13";
+import { renderSetPreparation } from "./set-preparation.js?v=13.13";
 import { renderResults } from "./results.js?v=13.9.0";
-import { clearStudySession, getLearnItemsCompleted, learnState } from "./state.js?v=13.13";
-import { finalizeLearnSession, renderStudy } from "./study.js?v=13.13";
+import { clearStudySession, learnState } from "./state.js?v=13.13";
+import { finalizeLearnSession, initializeStudy, renderStudy } from "./study.js?v=13.13";
+import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 
 let controller = null;
-let activeContext = null;
+let activeScreen = "set";
 
-function resolveDictionary(words, slug) {
-  if (slug === "favorites") return "__fav__";
-  return createSlugMap(dictsFrom(words), { reserved: ["favorites"] }).valueFor(slug);
+function favoriteWords(words) {
+  return words.filter((word) => wordFavorites.has(word.id));
 }
 
-function resolveSection(words, dict, slug) {
-  if (!slug) return null;
-  const sections = sectionsFrom(words, dict);
-  const value = createSlugMap(sections).valueFor(slug);
-  return sections.find((sectionId) => String(sectionId) === String(value)) ?? null;
+function canonicalFavoritesParams() {
+  return { dictionarySlug: "favorites" };
 }
 
-function resolveSet(words, dict, section, slug) {
-  if (dict === "__fav__") return "favorites";
-  if (!slug || !section) return null;
-  const sets = setsFrom(words, dict, section);
-  const value = createSlugMap(sets.map(String)).valueFor(slug);
-  return sets.find((setId) => String(setId) === String(value)) ?? null;
-}
-
-function applyRouteState(words, params, requestedScreen) {
-  let screen = requestedScreen;
-  if (screen === "catalog") {
-    learnState.currentDict = "";
-    learnState.currentSection = "";
-    learnState.currentSet = "";
-    return screen;
-  }
-
-  const dictionarySlug = String(params.dictionarySlug || "");
-  if (dictionarySlug) {
-    const dict = resolveDictionary(words, dictionarySlug);
-    if (!dict) return null;
-    learnState.currentDict = dict;
-  }
-
-  if (!learnState.currentDict) return null;
-  if (learnState.currentDict === "__fav__") {
-    learnState.currentSection = "__fav__";
-    learnState.currentSet = "favorites";
-    if (screen === "sections") screen = "set";
-    return screen;
-  }
-
-  const sectionSlug = String(params.sectionSlug || "");
-  if (sectionSlug) {
-    const section = resolveSection(words, learnState.currentDict, sectionSlug);
-    if (!section) return null;
-    learnState.currentSection = section;
-  } else {
-    learnState.currentSection = "";
-    learnState.currentSet = "";
-  }
-
-  if (["set", "study", "results"].includes(screen)) {
-    if (!learnState.currentSection) return null;
-    const setId = resolveSet(words, learnState.currentDict, learnState.currentSection, params.setSlug);
-    if (setId === null) return null;
-    learnState.currentSet = setId;
-  }
-  return screen;
-}
-
-function enhanceSetLabels(context, words = []) {
-  const names = new Map();
-  for (const word of words) {
-    const setId = String(word?.set_id || "");
-    const name = String(word?.set_name || "").trim();
-    if (setId && name && !names.has(setId)) names.set(setId, name);
-  }
-  context.root.querySelectorAll(".setTile[data-set]").forEach((tile) => {
-    const name = names.get(String(tile.dataset.set || "")) || "";
-    if (!name) return;
-    const title = tile.querySelector(".setTileTitle");
-    if (title) title.textContent = name;
+function renderFavorites(context, words) {
+  clearStudySession();
+  renderSetPreparation(context, {
+    title: msg("common.izbrannoe"),
+    words: favoriteWords(words),
+    dictionaryId: "favorites",
+    sectionId: "favorites",
+    setId: "favorites",
+    signal: controller.signal,
+    favoritesOnly: true,
+    onStart(mode, selectedWords) {
+      initializeStudy(words, mode, { wordsOverride: selectedWords });
+      void context.router.navigate("learn.study", canonicalFavoritesParams());
+    },
   });
 }
 
-function trackNavigation(screen) {
-  if (screen === "sections" || screen === "catalog-content") {
-    trackEvent(EVENTS.DICTIONARY_OPEN, { dictionary_id: learnState.currentDict });
-  } else if (screen === "set") {
-    trackEvent(EVENTS.SET_OPEN, {
-      dictionary_id: learnState.currentDict,
-      section_id: learnState.currentSection,
-      set_id: String(learnState.currentSet),
-    });
+function renderFavoritesStudy(context, words) {
+  if (!learnState.studySession.inProgress) {
+    void context.router.replace("learn.set", canonicalFavoritesParams(), { force: true });
+    return;
   }
+  renderStudy(context, words, controller.signal, {
+    onComplete() { void context.router.replace("learn.results", canonicalFavoritesParams(), { force: true }); },
+  });
+}
+
+function renderFavoritesResults(context, words) {
+  if (!learnState.studySession.completed) {
+    void context.router.replace("learn.set", canonicalFavoritesParams(), { force: true });
+    return;
+  }
+  renderResults(context, words, controller.signal, {
+    onDone() { void context.router.replace("learn.set", canonicalFavoritesParams(), { force: true }); },
+  });
 }
 
 export async function mount(context, params = {}) {
-  activeContext = context;
-  context.ensureStyle("/src/features/learn/learn.css", "learn-feature-style");
   controller = new AbortController();
   wordFavorites.reload();
   const words = await getWords();
-  const requestedScreen = params.screen || "catalog";
-  const screen = applyRouteState(words, params, requestedScreen);
-  learnState.currentScreen = screen || requestedScreen;
+  const requested = params.screen || "set";
+  const isFavorites = String(params.dictionarySlug || "") === "favorites";
 
-  if (!words.length) {
-    context.root.innerHTML = panel({ title: msg("learn.uchit_slova"), body: `<div class="smallNote">${msg("learn.net_dannyh_prover_tablitsu_i_zagolovki_id")}</div>` });
-    return;
-  }
-  if (!screen) {
-    context.root.innerHTML = panel({ title: msg("learn.uchit_slova"), body: `<div class="errorState">${msg("learn.slovar_razdel_ili_set_po_etoy_ssylke")}</div>` });
+  // Every historical /learn route is now only a compatibility alias. It can
+  // never render the removed dictionary/section/set hierarchy.
+  if (!isFavorites || !["set", "study", "results"].includes(requested)) {
+    void context.router.replace("learn.set", canonicalFavoritesParams(), { force: true });
     return;
   }
 
-  if (screen === "study" && !learnState.studySession.inProgress) {
-    await context.router.replace("learn.set", {}, { force: true });
-    return;
-  }
-  if (screen === "results" && !learnState.studySession.completed) {
-    await context.router.replace("learn.set", {}, { force: true });
-    return;
-  }
-
-  if (screen === "set") clearStudySession();
-
-  switch (screen) {
-    case "catalog": renderCatalog(context, words, controller.signal); break;
-    case "sections": renderSections(context, words, controller.signal); break;
-    case "catalog-content": renderDictionaryContent(context, words, controller.signal); break;
-    case "set": renderSetMenu(context, words, controller.signal); break;
-    case "study": renderStudy(context, words, controller.signal, params); break;
-    case "results": renderResults(context, words, controller.signal); break;
-    default: context.router.replace("learn.catalog", {}, { force: true }); return;
-  }
-  if (screen === "sections") enhanceSetLabels(context, words);
-  trackNavigation(screen);
+  activeScreen = requested;
+  if (requested === "study") return renderFavoritesStudy(context, words);
+  if (requested === "results") return renderFavoritesResults(context, words);
+  renderFavorites(context, words);
 }
 
 export function onLeave(reason = "route_change") {
-  const tracker = learnState.studySession.tracker;
-  if (tracker?.getStatus() === "active") {
-    const itemsCompleted = getLearnItemsCompleted();
-    const progress = learnState.studySession.progressData || {};
-    tracker.abandon(reason, {
-      items_total: learnState.totalPlanned,
-      items_completed: itemsCompleted,
-      progress_percent: Math.round((itemsCompleted / Math.max(1, learnState.totalPlanned)) * 100),
-      known_count: progress.known || 0,
-      unknown_count: progress.unknown || 0,
-    });
-  }
-  if (learnState.studySession.inProgress) finalizeLearnSession("interrupted", reason);
+  if (activeScreen === "study" && learnState.studySession.inProgress) finalizeLearnSession("interrupted", reason);
+}
+
+export function canLeave() {
+  return !(activeScreen === "study" && learnState.studySession.inProgress && !learnState.studySession.completed);
 }
 
 export function unmount() {
   controller?.abort();
   controller = null;
-  activeContext?.shell.setCounter("");
-  if (learnState.currentScreen === "study" && learnState.studySession.inProgress) clearStudySession();
-  activeContext = null;
-}
-
-export function canLeave() {
-  return !(learnState.currentScreen === "study" && learnState.studySession.inProgress && !learnState.studySession.completed);
+  activeScreen = "set";
 }

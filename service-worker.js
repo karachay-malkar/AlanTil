@@ -1,4 +1,4 @@
-const VERSION = "13.15.12.4";
+const VERSION = "13.15.12.5";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
@@ -125,7 +125,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   if (url.pathname.startsWith("/src/") && ["script", "style", "worker"].includes(request.destination)) {
-    event.respondWith(staticResponse(request));
+    event.respondWith(networkFirstStaticResponse(request));
     return;
   }
   if (["image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {

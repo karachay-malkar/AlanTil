@@ -19,9 +19,6 @@ const SCREENS = Object.freeze({
   "admin.user": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.user" },
   "admin.test": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.test_result" },
 
-  "learn.catalog": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.uchit_slova" },
-  "learn.sections": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.slovar" },
-  "learn.catalog-content": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.soderzhanie_slovarya" },
   "learn.set": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.nabor_slov" },
   "learn.study": { layout: "session", header: "session", bottomNav: false, titleKey: "common.uchit_slova" },
   "learn.results": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.rezultat_obucheniya" },
