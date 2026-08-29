@@ -1,6 +1,7 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { renderContentListRow } from "../../shared/ui/list.js?v=13.9.0";
+import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=13.10.12";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=13.9.0";
 
@@ -38,6 +39,7 @@ export function renderSetPreparation(context, {
   };
   prepareSelection(storageContext);
   let selectedMode = learnState.currentStudyMode === "ru" ? "ru" : "kb";
+  let stopMarquees = () => {};
 
   context.shell.setHeaderContent?.({ title, subtitle });
 
@@ -110,7 +112,7 @@ export function renderSetPreparation(context, {
       rowAttributes: `data-word-row="${escapeHtml(word.id)}"`,
       leadingHtml: `<label class="bracketCheckbox"><input class="contentListCheckbox" type="checkbox" ${learnState.menuHidden.has(word.id) ? "" : "checked"} aria-label="${msg("learn.dobavit_slovo_v_obuchenie")}" /><span class="bracketCheckboxMark" aria-hidden="true"></span></label>`,
       primary: word.word,
-      secondary: word.trans,
+      secondaryHtml: renderOverflowMarquee(word.trans),
       trailingHtml: renderStarButton(word.id, `data-word-id="${escapeHtml(word.id)}"`),
       className: "setPreparationWord",
     })).join("");
@@ -125,6 +127,8 @@ export function renderSetPreparation(context, {
       }, { signal });
     });
     wireFavorites();
+    stopMarquees();
+    stopMarquees = bindOverflowMarquees(list, { signal, scrollRoot: list });
     updateState();
   }
 
@@ -158,5 +162,6 @@ export function renderSetPreparation(context, {
     if (typeof onTest === "function") onTest();
   }, { signal });
 
+  signal?.addEventListener?.("abort", () => stopMarquees(), { once: true });
   draw();
 }

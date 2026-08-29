@@ -8,6 +8,7 @@ const DEFAULT_SCREEN = Object.freeze({
 
 const SCREENS = Object.freeze({
   "path.home": { layout: "map", header: "minimal", bottomNav: true, title: "" },
+  "path.story-words": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.spisok_slov" },
   "path.station": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.etap" },
   "path.study": { layout: "session", header: "session", bottomNav: false, titleKey: "common.uchit_slova" },
   "path.test": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya" },

@@ -1,43 +1,118 @@
+import { msg } from "../../shared/i18n/index.js?v=13.15.12";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { SEARCH_ICON_SVG } from "../../shared/ui/icons.js?v=13.9.0";
+import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=13.10.12";
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 
 function normalized(value) { return String(value || "").normalize("NFC").trim().toLocaleLowerCase(); }
-function entriesFor(story) {
-  const seen = new Set(); let ordinal = 0; const entries = [];
-  (story?.catalogs || []).forEach((catalog) => (catalog.sections || []).forEach((section) =>
-    (section.stations || []).forEach((station) => (station.words || []).forEach((word) => {
-      const id = String(word?.id || ""); if (!id || seen.has(id)) return;
-      seen.add(id); entries.push({ word, ordinal: ++ordinal, catalog, section });
-    }))));
-  return entries;
-}
+
 function thematic(catalog) {
   const id = normalized(catalog?.dictionaryId || catalog?.catalogId);
   return id.includes("thematic") || id.includes("temat") || (catalog?.sections?.length || 0) > 2;
 }
-function row(entry) {
-  return `<div class="storyWordRow" data-story-word-row data-search="${escapeHtml(normalized(`${entry.word.word} ${entry.word.trans}`))}"><span class="storyWordOrdinal">${entry.ordinal}.</span><span class="storyWordText"><strong>${escapeHtml(entry.word.word)}</strong><small>${escapeHtml(entry.word.trans)}</small></span>${renderStarButton(entry.word.id, `data-story-favorite="${escapeHtml(entry.word.id)}"`)}</div>`;
+
+function groupedEntries(story) {
+  const seen = new Set();
+  let ordinal = 0;
+  return (story?.catalogs || []).map((catalog) => ({
+    catalog,
+    sections: (catalog.sections || []).map((section) => ({
+      section,
+      entries: (section.stations || []).flatMap((station) => (station.words || []).flatMap((word) => {
+        const id = String(word?.id || "");
+        if (!id || seen.has(id)) return [];
+        seen.add(id);
+        return [{ word, ordinal: ++ordinal }];
+      })),
+    })).filter((group) => group.entries.length),
+  })).filter((group) => group.sections.length);
 }
-export function mountStoryWordList({ context, route, storyType, signal } = {}) {
-  const story = route?.stories?.[storyType]; if (!story || !context?.shell?.modalRoot) return null;
-  wordFavorites.reload(); const entries = entriesFor(story);
-  let catalog = null; let section = null;
-  const content = entries.map((entry) => {
-    const catalogChanged = entry.catalog !== catalog; const sectionChanged = entry.section !== section;
-    catalog = entry.catalog; section = entry.section;
-    const catalogHeading = catalogChanged && catalog?.name ? `<h2 class="storyWordCatalog">${escapeHtml(catalog.name)}</h2>` : "";
-    const sectionHeading = sectionChanged && thematic(catalog) && section?.name ? `<h3 class="storyWordSection">${escapeHtml(section.name)}</h3>` : "";
-    return `${catalogHeading}${sectionHeading}${row(entry)}`;
-  }).join("");
-  const overlay = document.createElement("div"); overlay.className = "storyWordsOverlay"; overlay.hidden = true;
-  overlay.innerHTML = `<section class="storyWordsPanel" role="dialog" aria-modal="true" aria-label="Список слов"><header class="storyWordsHeader"><button type="button" data-story-words-close aria-label="Назад">‹</button><h1>Список слов</h1></header><div class="storyWordsSearch"><span aria-hidden="true">⌕</span><input type="search" inputmode="search" autocomplete="off" aria-label="Поиск слова" placeholder="Поиск слова"></div><div class="storyWordsList">${content || '<div class="storyWordsEmpty">Слов нет</div>'}</div></section>`;
-  context.shell.modalRoot.appendChild(overlay);
-  const input = overlay.querySelector("input"); const rows = [...overlay.querySelectorAll("[data-story-word-row]")]; const headings = [...overlay.querySelectorAll(".storyWordCatalog,.storyWordSection")];
-  input?.addEventListener("input", () => { const q = normalized(input.value); rows.forEach((r) => { r.hidden = Boolean(q && !r.dataset.search.includes(q)); }); headings.forEach((h) => { let n=h.nextElementSibling,v=false; while(n&&!n.matches(".storyWordCatalog,.storyWordSection")){if(n.matches("[data-story-word-row]")&&!n.hidden){v=true;break}n=n.nextElementSibling} h.hidden=!v; }); }, { signal });
-  overlay.querySelectorAll("[data-story-favorite]").forEach((b) => b.addEventListener("click", () => b.classList.toggle("on", wordFavorites.toggle(b.dataset.storyFavorite)), { signal }));
-  const close = () => { overlay.hidden = true; document.body.classList.remove("story-words-open"); };
-  overlay.querySelector("[data-story-words-close]")?.addEventListener("click", close, { signal });
-  signal?.addEventListener("abort", () => { close(); overlay.remove(); }, { once:true });
-  return { open(){ overlay.hidden=false; document.body.classList.add("story-words-open"); input?.focus({preventScroll:true}); }, close };
+
+function wordRow(entry) {
+  const searchText = normalized(`${entry.word.word} ${entry.word.trans}`);
+  return `<div class="contentListRow stationWordRow storyWordRow" data-story-word-row data-search="${escapeHtml(searchText)}">
+    <span class="storyWordOrdinal">${entry.ordinal}.</span>
+    <span class="contentListMain storyWordMain">
+      <span data-station-line><span class="contentListPrimary stationTextClip stationStaticText" title="${escapeHtml(entry.word.word)}">${escapeHtml(entry.word.word)}</span></span>
+      <span data-station-line>${renderOverflowMarquee(entry.word.trans, { clipClass: "contentListSecondary stationTextClip", trackClass: "stationMarquee" })}</span>
+    </span>
+    ${renderStarButton(entry.word.id, `data-story-favorite="${escapeHtml(entry.word.id)}"`)}
+  </div>`;
+}
+
+function listMarkup(groups) {
+  return groups.map(({ catalog, sections }) => `<section class="storyWordCatalogGroup" data-story-catalog-group>
+    ${catalog?.name ? `<h2 class="storyWordCatalog">${escapeHtml(catalog.name)}</h2>` : ""}
+    ${sections.map(({ section, entries }) => `<section class="storyWordSectionGroup" data-story-section-group>
+      ${thematic(catalog) && section?.name ? `<h3 class="storyWordSection">${escapeHtml(section.name)}</h3>` : ""}
+      ${entries.map(wordRow).join("")}
+    </section>`).join("")}
+  </section>`).join("");
+}
+
+export function renderStoryWordList({ context, route, storyType, signal } = {}) {
+  const story = route?.stories?.[storyType];
+  if (!story) return;
+
+  wordFavorites.reload();
+  const groups = groupedEntries(story);
+  context.shell.setHeaderContent?.({ title: msg("common.spisok_slov") });
+  context.shell.setHeaderAction?.(`<div class="storyWordHeaderSearch" data-story-search-control>
+    <input class="storyWordHeaderSearchInput" type="search" inputmode="search" autocomplete="off" aria-label="${escapeHtml(msg("common.poisk_slova"))}" placeholder="${escapeHtml(msg("common.poisk_slova"))}">
+    <button class="appHeaderAction storyWordSearchToggle" type="button" aria-label="${escapeHtml(msg("common.otkryt_poisk"))}" aria-expanded="false">
+      <span class="storyWordSearchIcon" aria-hidden="true">${SEARCH_ICON_SVG}</span><span class="storyWordSearchClose" aria-hidden="true">×</span>
+    </button>
+  </div>`);
+
+  context.root.innerHTML = `<section class="view screen storyWordsView">
+    <div class="contentList storyWordsList">${listMarkup(groups) || '<div class="storyWordsEmpty">Слов нет</div>'}</div>
+  </section>`;
+
+  const searchControl = context.shell.headerActionSlot?.querySelector("[data-story-search-control]");
+  const input = searchControl?.querySelector(".storyWordHeaderSearchInput");
+  const toggle = searchControl?.querySelector(".storyWordSearchToggle");
+  const list = context.root.querySelector(".storyWordsList");
+  const rows = [...context.root.querySelectorAll("[data-story-word-row]")];
+  const sectionGroups = [...context.root.querySelectorAll("[data-story-section-group]")];
+  const catalogGroups = [...context.root.querySelectorAll("[data-story-catalog-group]")];
+  let searchOpen = false;
+  let stopMarquees = () => {};
+
+  function bindMarquees() {
+    stopMarquees();
+    stopMarquees = bindOverflowMarquees(context.root, { signal, scrollRoot: list });
+  }
+
+  function applyFilter() {
+    const query = normalized(input?.value);
+    rows.forEach((row) => { row.hidden = Boolean(query && !row.dataset.search.includes(query)); });
+    sectionGroups.forEach((group) => { group.hidden = !group.querySelector("[data-story-word-row]:not([hidden])"); });
+    catalogGroups.forEach((group) => { group.hidden = !group.querySelector("[data-story-section-group]:not([hidden])"); });
+    requestAnimationFrame(bindMarquees);
+  }
+
+  function setSearchOpen(next) {
+    searchOpen = Boolean(next);
+    searchControl?.classList.toggle("isOpen", searchOpen);
+    toggle?.setAttribute("aria-expanded", String(searchOpen));
+    toggle?.setAttribute("aria-label", searchOpen ? msg("common.zakryt_poisk") : msg("common.otkryt_poisk"));
+    context.shell.setHeaderContent?.({ title: searchOpen ? "" : msg("common.spisok_slov") });
+    if (searchOpen) {
+      requestAnimationFrame(() => input?.focus({ preventScroll: true }));
+    } else {
+      if (input) input.value = "";
+      input?.blur();
+      applyFilter();
+    }
+  }
+
+  input?.addEventListener("input", applyFilter, { signal });
+  input?.addEventListener("keydown", (event) => { if (event.key === "Escape") setSearchOpen(false); }, { signal });
+  toggle?.addEventListener("click", () => setSearchOpen(!searchOpen), { signal });
+  context.root.querySelectorAll("[data-story-favorite]").forEach((button) => {
+    button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.storyFavorite)), { signal });
+  });
+  signal?.addEventListener("abort", () => stopMarquees(), { once: true });
+  bindMarquees();
 }

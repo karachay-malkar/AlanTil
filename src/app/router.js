@@ -63,6 +63,7 @@ export function parsePathname(pathname) {
   if (first === "path") {
     const storyType = String(second || DEFAULT_STORY).trim() || DEFAULT_STORY;
     if (!third) return { route: "path.home", params: { storyType } };
+    if (third === "words" && !fourth) return { route: "path.story-words", params: { storyType } };
     if (third && fourth && fifth) {
       const params = { storyType, catalogSlug: third, groupSlug: fourth, setSlug: fifth };
       if (sixth === "study") return { route: "path.study", params };
@@ -143,6 +144,7 @@ export function buildPath(routeName, params = {}) {
     : `/path/${story}`;
 
   if (routeName === "home" || routeName === "path.home") return `/path/${story}`;
+  if (routeName === "path.story-words") return `/path/${story}/words`;
   if (routeName === "path.station") return stationBase;
   if (routeName === "path.study") return `${stationBase}/study`;
   if (routeName === "path.test") return `${stationBase}/test`;
