@@ -22,52 +22,30 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('mobile/src/mobile/path.tsx')
           text = path.read_text()
-          text = text.replace("import { useEffect, useMemo, useRef, useState } from 'react';", "import { useEffect, useMemo, useRef, useState } from 'react';")
           marker = "import { useSession } from '@/src/mobile/session';\n"
           if "@/src/mobile/progress/repository" not in text:
               text = text.replace(marker, "import { loadSetProgress, loadWordProgress } from '@/src/mobile/progress/repository';\n" + marker)
-          old = '''async function loadProgress(userId?: string): Promise<{ wordRows: WordProgress[]; setRows: Record<string, unknown>[] }> {
-            if (!userId) {
-              const raw = await AsyncStorage.getItem(GUEST_PROGRESS_KEY).catch(() => null);
-              const parsed = raw ? JSON.parse(raw) : [];
-              return { wordRows: normalizeProgressRows(parsed), setRows: [] };
-            }
 
-            const [wordResult, setResult] = await Promise.all([
-              supabase.from('user_word_progress').select('*').eq('user_id', userId),
-              supabase.from('user_set_progress').select('*').eq('user_id', userId),
-            ]);
-            if (wordResult.error) throw wordResult.error;
-            if (setResult.error) throw setResult.error;
-            return {
-              wordRows: normalizeProgressRows(wordResult.data),
-              setRows: (setResult.data ?? []) as Record<string, unknown>[],
-            };
-          }'''
-          new = '''async function loadProgress(userId?: string): Promise<{ wordRows: WordProgress[]; setRows: Record<string, unknown>[] }> {
+          replacement = '''async function loadProgress(userId?: string): Promise<{ wordRows: WordProgress[]; setRows: Record<string, unknown>[] }> {
             const [wordRows, setRows] = await Promise.all([loadWordProgress(userId), loadSetProgress(userId)]);
             return { wordRows: normalizeProgressRows(wordRows), setRows };
-          }'''
-          if old not in text:
-              raise SystemExit('loadProgress block not found')
-          text = text.replace(old, new)
-          old_buttons = '''              <Pressable disabled style={[styles.launchButton, styles.launchButtonDisabled]}><Text style={styles.launchButtonText}>ТЕСТ</Text></Pressable>
-              <Pressable disabled style={[styles.launchButton, styles.launchPrimary, styles.launchButtonDisabled]}><Text style={styles.launchPrimaryText}>УЧИТЬ СЛОВА</Text></Pressable>'''
-          new_buttons = '''              <Pressable
-                disabled={!selected.size}
-                onPress={() => router.push({ pathname: '/path/station-test', params: { storyId: station.storyId, dictionaryId: station.dictionaryId, sectionId: station.sectionId, setId: station.setId, direction: 'alan_ru' } })}
-                style={[styles.launchButton, !selected.size && styles.launchButtonDisabled]}
-              ><Text style={styles.launchButtonText}>ТЕСТ</Text></Pressable>
-              <Pressable
-                disabled={!selected.size}
-                onPress={() => router.push({ pathname: '/path/learn', params: { source: 'station', storyId: station.storyId, dictionaryId: station.dictionaryId, sectionId: station.sectionId, setId: station.setId, direction: 'alan_ru' } })}
-                style={[styles.launchButton, styles.launchPrimary, !selected.size && styles.launchButtonDisabled]}
-              ><Text style={styles.launchPrimaryText}>УЧИТЬ СЛОВА</Text></Pressable>'''
+          }
+
+          async function loadPathBundle'''
+          text, count = re.subn(r"async function loadProgress\(userId\?: string\): Promise<\{ wordRows: WordProgress\[\]; setRows: Record<string, unknown>\[\] \}> \{.*?\n\}\n\nasync function loadPathBundle", replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('loadProgress patch failed')
+
+          old_buttons = """              <Pressable disabled style={[styles.launchButton, styles.launchButtonDisabled]}><Text style={styles.launchButtonText}>ТЕСТ</Text></Pressable>
+              <Pressable disabled style={[styles.launchButton, styles.launchPrimary, styles.launchButtonDisabled]}><Text style={styles.launchPrimaryText}>УЧИТЬ СЛОВА</Text></Pressable>"""
+          new_buttons = """              <Pressable disabled={!selected.size} onPress={() => router.push({ pathname: '/path/station-test', params: { storyId: station.storyId, dictionaryId: station.dictionaryId, sectionId: station.sectionId, setId: station.setId, direction: 'alan_ru' } })} style={[styles.launchButton, !selected.size && styles.launchButtonDisabled]}><Text style={styles.launchButtonText}>ТЕСТ</Text></Pressable>
+              <Pressable disabled={!selected.size} onPress={() => router.push({ pathname: '/path/learn', params: { source: 'station', storyId: station.storyId, dictionaryId: station.dictionaryId, sectionId: station.sectionId, setId: station.setId, direction: 'alan_ru' } })} style={[styles.launchButton, styles.launchPrimary, !selected.size && styles.launchButtonDisabled]}><Text style={styles.launchPrimaryText}>УЧИТЬ СЛОВА</Text></Pressable>"""
           if old_buttons not in text:
-              raise SystemExit('station buttons block not found')
+              raise SystemExit('station buttons patch failed')
           path.write_text(text.replace(old_buttons, new_buttons))
 
           for filename in ['mobile/package-lock.json', '.github/workflows/mobile-14-1-android.yml', '.github/workflows/mobile-14-1-source.yml']:
@@ -75,12 +53,12 @@ jobs:
               if p.exists():
                   p.write_text(p.read_text().replace('14.1.5', '14.1.6'))
 
-          for filename in ['mobile/src/mobile/learn/engine.tsx', 'mobile/src/mobile/learn/station-test.tsx']:
-              p = Path(filename)
-              body = p.read_text()
-              body = body.replace("router.replace(source === 'favorites' ? '/practice/favorites' : { pathname: '/path/station', params: { key: [station!.storyId, station!.dictionaryId, station!.sectionId, station!.setId].join('::') } });", "router.replace(source === 'favorites' ? '/practice/favorites' : '/(tabs)/path');")
-              body = body.replace("router.replace({ pathname: '/path/station', params: { key: [station.storyId, station.dictionaryId, station.sectionId, station.setId].join('::') } });", "router.replace('/(tabs)/path');")
-              p.write_text(body)
+          p = Path('mobile/src/mobile/learn/engine.tsx')
+          body = p.read_text().replace("router.replace(source === 'favorites' ? '/practice/favorites' : { pathname: '/path/station', params: { key: [station!.storyId, station!.dictionaryId, station!.sectionId, station!.setId].join('::') } });", "router.replace(source === 'favorites' ? '/practice/favorites' : '/(tabs)/path');")
+          p.write_text(body)
+          p = Path('mobile/src/mobile/learn/station-test.tsx')
+          body = p.read_text().replace("router.replace({ pathname: '/path/station', params: { key: [station.storyId, station.dictionaryId, station.sectionId, station.setId].join('::') } });", "router.replace('/(tabs)/path');")
+          p.write_text(body)
 
           Path('.github/workflows/apply-mobile-14-1-6-finalize.yml').unlink()
           PY
