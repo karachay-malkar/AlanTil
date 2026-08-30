@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { supabase } from '@/src/lib/supabase';
+import { useSession } from '@/src/mobile/session';
+
 const STORAGE_KEY = 'alantil_user_settings_v1';
 
 export type InterfaceLanguage = 'ru' | 'en' | 'tr';
@@ -44,6 +47,9 @@ function normalize(raw: Partial<UserSettings> | null | undefined): UserSettings 
   const language: InterfaceLanguage = ['ru', 'en', 'tr'].includes(String(raw?.interface_language_code))
     ? (raw?.interface_language_code as InterfaceLanguage)
     : 'ru';
+  const translationLanguage: InterfaceLanguage = ['ru', 'en', 'tr'].includes(String(raw?.translation_language_code))
+    ? (raw?.translation_language_code as InterfaceLanguage)
+    : language;
   const script: AlanScript = raw?.alan_script_code === 'turkic' ? 'turkic' : 'cyrillic';
   const dialect: AlanDialect = ['canonical', 'karachay', 'balkar'].includes(String(raw?.alan_dialect_code))
     ? (raw?.alan_dialect_code as AlanDialect)
@@ -54,7 +60,7 @@ function normalize(raw: Partial<UserSettings> | null | undefined): UserSettings 
 
   return {
     interface_language_code: language,
-    translation_language_code: language,
+    translation_language_code: translationLanguage,
     alan_script_code: script,
     alan_dialect_code: dialect,
     text_size_code: textSize,
@@ -62,7 +68,20 @@ function normalize(raw: Partial<UserSettings> | null | undefined): UserSettings 
   };
 }
 
+function cloudPayload(settings: UserSettings, userId: string) {
+  return {
+    user_id: userId,
+    interface_language_code: settings.interface_language_code,
+    translation_language_code: settings.translation_language_code,
+    alan_script_code: settings.alan_script_code,
+    alan_dialect_code: settings.alan_dialect_code,
+    learning_setup_completed_at: settings.learning_setup_completed_at,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export function SettingsProvider({ children }: PropsWithChildren) {
+  const session = useSession();
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
 
@@ -84,15 +103,46 @@ export function SettingsProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!ready || !session.ready || !session.user) return;
+    let mounted = true;
+    const userId = session.user.id;
+
+    void (async () => {
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (!mounted || error) return;
+
+      if (data) {
+        const cloud = normalize({ ...data, text_size_code: settings.text_size_code });
+        setSettings(cloud);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(cloud));
+        return;
+      }
+
+      await supabase.from('user_settings').upsert(cloudPayload(settings, userId), { onConflict: 'user_id' });
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [ready, session.ready, session.user?.id]);
+
   const save = useCallback(async (updates: Partial<UserSettings>) => {
-    let next: UserSettings | null = null;
-    setSettings((current) => {
-      next = normalize({ ...current, ...updates });
-      return next;
-    });
-    if (!next) return;
+    const next = normalize({ ...settings, ...updates });
+    setSettings(next);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }, []);
+
+    if (session.user) {
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert(cloudPayload(next, session.user.id), { onConflict: 'user_id' });
+      if (error) throw error;
+    }
+  }, [settings, session.user]);
 
   const completeLearningSetup = useCallback(async (updates: Partial<UserSettings>) => {
     await save({ ...updates, learning_setup_completed_at: new Date().toISOString() });
