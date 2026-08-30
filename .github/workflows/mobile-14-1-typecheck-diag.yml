@@ -1,0 +1,40 @@
+name: AlanTil 14.1.6 TypeScript diagnostics
+
+on:
+  push:
+    branches:
+      - agent/14.1-mobile-foundation
+    paths:
+      - '.github/workflows/mobile-14-1-typecheck-diag.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/14.1-mobile-foundation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.1'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - working-directory: mobile
+        run: npm ci
+      - name: Capture typecheck output
+        shell: bash
+        run: |
+          set +e
+          cd mobile
+          npm run typecheck > ../TYPECHECK_14_1_6.txt 2>&1
+          STATUS=$?
+          cd ..
+          echo "exit_code=$STATUS" >> TYPECHECK_14_1_6.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add TYPECHECK_14_1_6.txt
+          git commit -m "14.1.6: record TypeScript diagnostics" || true
+          git push origin HEAD:agent/14.1-mobile-foundation
