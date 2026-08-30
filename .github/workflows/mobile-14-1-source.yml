@@ -22,18 +22,16 @@ jobs:
       - name: Package complete mobile source
         shell: bash
         run: |
-          mkdir -p AlanTil_14.1.5_source/.github/workflows
-          cp -R mobile AlanTil_14.1.5_source/mobile
-          cp .github/workflows/mobile-14-1-android.yml AlanTil_14.1.5_source/.github/workflows/
-          cp .github/workflows/mobile-14-1-source.yml AlanTil_14.1.5_source/.github/workflows/
-          zip -qr AlanTil_14.1.5_mobile_source.zip AlanTil_14.1.5_source
+          mkdir -p AlanTil_14.1.6_source/.github/workflows
+          cp -R mobile AlanTil_14.1.6_source/mobile
+          cp .github/workflows/mobile-14-1-android.yml AlanTil_14.1.6_source/.github/workflows/
+          cp .github/workflows/mobile-14-1-source.yml AlanTil_14.1.6_source/.github/workflows/
+          zip -qr AlanTil_14.1.6_mobile_source.zip AlanTil_14.1.6_source
 
       - name: Upload source archive
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-14.1.5-Mobile-Source
-          path: AlanTil_14.1.5_mobile_source.zip
+          name: AlanTil-14.1.6-Mobile-Source
+          path: AlanTil_14.1.6_mobile_source.zip
           if-no-files-found: error
           retention-days: 14
-
-# Final 14.1.5 package trigger.
