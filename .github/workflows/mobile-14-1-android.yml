@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: mobile-14-1-${{ github.ref }}
@@ -29,6 +29,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.13.1'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -41,25 +43,7 @@ jobs:
 
       - name: Install pinned dependencies
         working-directory: mobile
-        shell: bash
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-
-      - name: Persist dependency lockfile
-        shell: bash
-        run: |
-          git add mobile/package-lock.json
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "14.1.1: lock mobile dependencies"
-          git push origin HEAD:agent/14.1-mobile-foundation
+        run: npm ci
 
       - name: Expo Doctor
         working-directory: mobile
@@ -87,12 +71,12 @@ jobs:
         run: |
           APK_PATH="$(find mobile/android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
           test -n "$APK_PATH"
-          cp "$APK_PATH" AlanTil-14.1.1.apk
+          cp "$APK_PATH" AlanTil-14.1.2.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-14.1.1-Android-APK
-          path: AlanTil-14.1.1.apk
+          name: AlanTil-14.1.2-Android-APK
+          path: AlanTil-14.1.2.apk
           if-no-files-found: error
           retention-days: 14

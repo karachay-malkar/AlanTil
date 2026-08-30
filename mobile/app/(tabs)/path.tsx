@@ -1,3 +1,1 @@
-import { PathRoot } from '@/src/mobile/shell';
-
-export default PathRoot;
+export { PathRoot as default } from '@/src/mobile/path';

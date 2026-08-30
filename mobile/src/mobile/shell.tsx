@@ -4,23 +4,6 @@ import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { theme } from '@/src/mobile/theme';
 
-export function PathRoot() {
-  return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.pathContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.pathHeader}>
-        <Text style={styles.brand}>Алан тил</Text>
-        <Text style={styles.pathTitle}>Путь</Text>
-      </View>
-      <View style={styles.pathPreview}>
-        <View style={styles.routeLine} />
-        <View style={styles.stationStone}><View style={styles.stationHole} /></View>
-        <Text style={styles.pathPreviewTitle}>Маршрут</Text>
-        <Text style={styles.muted}>Полные истории, станции, стелы и прогресс подключаются следующим этапом из текущей логики сайта.</Text>
-      </View>
-    </ScrollView>
-  );
-}
-
 export function PracticeRoot() {
   const items = [
     ['Тест', 'Проверка слов из выбранных разделов'],
@@ -42,7 +25,6 @@ export function PracticeRoot() {
           </Pressable>
         ))}
       </View>
-      <Text style={styles.stageNote}>Функциональные экраны этих режимов подключаются в 14.1.3.</Text>
     </ScrollView>
   );
 }
@@ -85,9 +67,8 @@ export function ProfileRoot() {
       <View style={styles.cardList}>
         <View style={styles.infoRow}><Text style={styles.infoLabel}>Язык интерфейса</Text><Text style={styles.infoValue}>{settings.interface_language_code.toUpperCase()}</Text></View>
         <View style={styles.infoRow}><Text style={styles.infoLabel}>Аланские слова</Text><Text style={styles.infoValue}>{dialect}</Text></View>
-        <View style={styles.infoRow}><Text style={styles.infoLabel}>Версия</Text><Text style={styles.infoValue}>14.1.1</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoLabel}>Версия</Text><Text style={styles.infoValue}>14.1.2</Text></View>
       </View>
-      <Text style={styles.stageNote}>Полный профиль, статистика и настройки подключаются в 14.1.4.</Text>
     </ScrollView>
   );
 }
@@ -95,16 +76,7 @@ export function ProfileRoot() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.colors.background },
   rootContent: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 32, gap: 20 },
-  pathContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 50, minHeight: 650 },
-  pathHeader: { marginBottom: 34 },
-  brand: { color: theme.colors.textSoft, fontSize: 13, fontWeight: '600', letterSpacing: 0.4, marginBottom: 6 },
-  pathTitle: { color: theme.colors.text, fontSize: 36, fontWeight: '700' },
   muted: { color: theme.colors.textMuted, fontSize: 13, lineHeight: 19 },
-  pathPreview: { flex: 1, minHeight: 380, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  routeLine: { position: 'absolute', top: 34, bottom: 34, width: 2, backgroundColor: 'rgba(54,50,43,0.10)' },
-  stationStone: { width: 78, height: 78, borderRadius: 39, backgroundColor: '#d8d0c2', borderWidth: 1, borderColor: 'rgba(75,70,61,0.42)', alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  stationHole: { width: 14, height: 14, borderRadius: 7, backgroundColor: theme.colors.background, borderWidth: 1, borderColor: theme.colors.lineSoft },
-  pathPreviewTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '700', marginBottom: 8 },
   rootTitle: { color: theme.colors.text, fontSize: 32, fontWeight: '700' },
   cardList: { borderTopWidth: 1, borderTopColor: theme.colors.lineSoft },
   menuCard: { minHeight: 68, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
@@ -112,7 +84,6 @@ const styles = StyleSheet.create({
   menuCardTitle: { color: theme.colors.text, fontSize: 16, fontWeight: '700' },
   menuCardSubtitle: { color: theme.colors.textMuted, fontSize: 12, marginTop: 3 },
   chevron: { color: theme.colors.textSoft, fontSize: 28 },
-  stageNote: { color: theme.colors.textSoft, fontSize: 12, lineHeight: 18 },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 6 },
   avatar: { width: 58, height: 58, borderRadius: 29, backgroundColor: theme.colors.surface3, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line },
   avatarText: { color: theme.colors.accentStrong, fontSize: 22, fontWeight: '700' },

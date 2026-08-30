@@ -2,7 +2,7 @@
   "expo": {
     "name": "Алан тил",
     "slug": "alantil",
-    "version": "14.1.1",
+    "version": "14.1.2",
     "orientation": "portrait",
     "scheme": "alantil",
     "userInterfaceStyle": "light",
@@ -24,7 +24,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "releaseVersion": "14.1.1"
+      "releaseVersion": "14.1.2"
     }
   }
 }
