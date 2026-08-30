@@ -1,5 +1,6 @@
 import type { Session, User } from '@supabase/supabase-js';
-import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import * as Linking from 'expo-linking';
 
 import { bindSupabaseAuthLifecycle, supabase } from '@/src/lib/supabase';
 
@@ -8,6 +9,9 @@ type SessionState = {
   session: Session | null;
   user: User | null;
   error: string | null;
+  authBusy: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionState>({
@@ -15,46 +19,93 @@ const SessionContext = createContext<SessionState>({
   session: null,
   user: null,
   error: null,
+  authBusy: false,
+  signInWithGoogle: async () => {},
+  signOut: async () => {},
 });
 
+function authCodeFromUrl(url: string) {
+  const parsed = Linking.parse(url);
+  const code = parsed.queryParams?.code;
+  return typeof code === 'string' ? code : null;
+}
+
 export function SessionProvider({ children }: PropsWithChildren) {
-  const [state, setState] = useState<SessionState>({
+  const [state, setState] = useState<Omit<SessionState, 'signInWithGoogle' | 'signOut'>>({
     ready: false,
     session: null,
     user: null,
     error: null,
+    authBusy: false,
   });
 
   useEffect(() => {
     let mounted = true;
     const unbindLifecycle = bindSupabaseAuthLifecycle();
 
+    async function consumeAuthUrl(url: string | null) {
+      if (!url) return;
+      const code = authCodeFromUrl(url);
+      if (!code) return;
+      setState((current) => ({ ...current, authBusy: true, error: null }));
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!mounted) return;
+      setState((current) => ({ ...current, authBusy: false, error: error?.message ?? null }));
+    }
+
     supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
-      setState({
+      setState((current) => ({
+        ...current,
         ready: true,
         session: data.session ?? null,
         user: data.session?.user ?? null,
         error: error?.message ?? null,
-      });
+      }));
     }).catch((error: unknown) => {
       if (!mounted) return;
-      setState({ ready: true, session: null, user: null, error: String(error) });
+      setState((current) => ({ ...current, ready: true, session: null, user: null, error: String(error) }));
     });
+
+    void Linking.getInitialURL().then(consumeAuthUrl);
+    const linkSubscription = Linking.addEventListener('url', ({ url }) => { void consumeAuthUrl(url); });
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-      setState({ ready: true, session, user: session?.user ?? null, error: null });
+      setState((current) => ({ ...current, ready: true, session, user: session?.user ?? null, error: null, authBusy: false }));
     });
 
     return () => {
       mounted = false;
+      linkSubscription.remove();
       data.subscription.unsubscribe();
       unbindLifecycle();
     };
   }, []);
 
-  const value = useMemo(() => state, [state]);
+  const signInWithGoogle = useCallback(async () => {
+    setState((current) => ({ ...current, authBusy: true, error: null }));
+    try {
+      const redirectTo = Linking.createURL('auth/callback');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo, skipBrowserRedirect: true },
+      });
+      if (error) throw error;
+      if (!data.url) throw new Error('Supabase did not return an OAuth URL.');
+      await Linking.openURL(data.url);
+    } catch (error: unknown) {
+      setState((current) => ({ ...current, authBusy: false, error: String((error as { message?: string })?.message ?? error) }));
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    setState((current) => ({ ...current, authBusy: true, error: null }));
+    const { error } = await supabase.auth.signOut();
+    setState((current) => ({ ...current, authBusy: false, error: error?.message ?? null }));
+  }, []);
+
+  const value = useMemo<SessionState>(() => ({ ...state, signInWithGoogle, signOut }), [state, signInWithGoogle, signOut]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
