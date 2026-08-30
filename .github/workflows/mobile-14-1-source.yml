@@ -1,0 +1,37 @@
+name: Package AlanTil 14.1 Mobile Source
+
+on:
+  push:
+    branches:
+      - agent/14.1-mobile-foundation
+    paths:
+      - '.github/workflows/mobile-14-1-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package complete mobile source
+        shell: bash
+        run: |
+          mkdir -p AlanTil_14.1.2_source/.github/workflows
+          cp -R mobile AlanTil_14.1.2_source/mobile
+          cp .github/workflows/mobile-14-1-android.yml AlanTil_14.1.2_source/.github/workflows/
+          cp .github/workflows/mobile-14-1-source.yml AlanTil_14.1.2_source/.github/workflows/
+          zip -qr AlanTil_14.1.2_mobile_source.zip AlanTil_14.1.2_source
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-14.1.2-Mobile-Source
+          path: AlanTil_14.1.2_mobile_source.zip
+          if-no-files-found: error
+          retention-days: 14
