@@ -35,13 +35,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install dependencies
+      - name: Install pinned dependencies
         working-directory: mobile
         run: npm install
-
-      - name: Normalize Expo SDK 57 dependencies
-        working-directory: mobile
-        run: npx expo install --fix
 
       - name: Expo Doctor
         working-directory: mobile
