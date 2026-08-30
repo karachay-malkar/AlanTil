@@ -11,7 +11,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SessionProvider>
         <SettingsProvider>
-          <StatusBar style="dark" backgroundColor={theme.colors.background} />
+          <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
