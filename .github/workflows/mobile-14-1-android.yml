@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: mobile-14-1-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   android-apk:
     runs-on: ubuntu-latest
@@ -25,6 +29,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.13.1'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -37,7 +43,22 @@ jobs:
 
       - name: Install pinned dependencies
         working-directory: mobile
-        run: npm install
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Upload dependency lockfile
+        if: ${{ hashFiles('mobile/package-lock.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-14.1-package-lock
+          path: mobile/package-lock.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Expo Doctor
         working-directory: mobile
@@ -65,12 +86,12 @@ jobs:
         run: |
           APK_PATH="$(find mobile/android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
           test -n "$APK_PATH"
-          cp "$APK_PATH" AlanTil-14.1.apk
+          cp "$APK_PATH" AlanTil-14.1.1.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-14.1-Android-APK
-          path: AlanTil-14.1.apk
+          name: AlanTil-14.1.1-Android-APK
+          path: AlanTil-14.1.1.apk
           if-no-files-found: error
           retention-days: 14
