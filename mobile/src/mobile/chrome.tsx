@@ -6,7 +6,7 @@ import { theme } from '@/src/mobile/theme';
 export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.header, { paddingTop: insets.top }] }>
+    <View style={[styles.header, { height: 42 + insets.top, paddingTop: insets.top }] }>
       <View style={styles.headerCenter}>
         <Text numberOfLines={1} style={styles.headerTitle}>{title}</Text>
         {subtitle ? <Text numberOfLines={1} style={styles.headerSubtitle}>{subtitle}</Text> : null}
@@ -68,7 +68,7 @@ export function AlanTabBar({ state, descriptors, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  header: { height: 42, position: 'relative', zIndex: 40, backgroundColor: 'transparent' },
+  header: { position: 'relative', zIndex: 40, backgroundColor: 'rgba(238,233,223,0.62)' },
   headerCenter: { position: 'absolute', left: 56, right: 56, bottom: 0, height: 42, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { maxWidth: '100%', color: theme.colors.text, fontSize: 17, lineHeight: 19, fontWeight: '800', textAlign: 'center' },
   headerSubtitle: { maxWidth: '100%', marginTop: 2, color: theme.colors.textMuted, fontSize: 10, lineHeight: 11, fontWeight: '600', textAlign: 'center' },
