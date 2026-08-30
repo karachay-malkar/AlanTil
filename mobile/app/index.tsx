@@ -1,7 +1,7 @@
+import { Redirect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { OnboardingScreen } from '@/src/mobile/onboarding';
-import { AppShell } from '@/src/mobile/shell';
 import { useSettings } from '@/src/mobile/settings';
 import { theme } from '@/src/mobile/theme';
 
@@ -20,7 +20,7 @@ export default function HomeScreen() {
     return <OnboardingScreen />;
   }
 
-  return <AppShell />;
+  return <Redirect href="/(tabs)/path" />;
 }
 
 const styles = StyleSheet.create({
