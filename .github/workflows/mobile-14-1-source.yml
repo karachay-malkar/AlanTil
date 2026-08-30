@@ -22,6 +22,7 @@ jobs:
       - name: Package complete mobile source
         shell: bash
         run: |
+          # 14.1.3 final visual-parity source package
           mkdir -p AlanTil_14.1.3_source/.github/workflows
           cp -R mobile AlanTil_14.1.3_source/mobile
           cp .github/workflows/mobile-14-1-android.yml AlanTil_14.1.3_source/.github/workflows/
