@@ -24,13 +24,18 @@ jobs:
           p = Path('mobile/src/mobile/path.tsx')
           s = p.read_text()
           changes = [
-            ("<View style={[styles.pathHeader, { paddingTop: insets.top + 10 }] }>", "<View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 68 + insets.top }] }>") ,
-            ("<View style={[styles.detailHeader, { paddingTop: insets.top + 8 }] }>", "<View style={[styles.detailHeader, { height: 42 + insets.top, paddingTop: insets.top }] }>") ,
+            ("<View style={[styles.pathHeader, { paddingTop: insets.top + 10 }]}> ", ""),
           ]
-          for old, new in changes:
-              if old not in s:
-                  raise SystemExit(f'Expected source not found: {old}')
-              s = s.replace(old, new, 1)
+          old = "<View style={[styles.pathHeader, { paddingTop: insets.top + 10 }]}>"
+          new = "<View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 68 + insets.top }]}>"
+          if old not in s:
+              raise SystemExit(f'Expected path header source not found: {old}')
+          s = s.replace(old, new, 1)
+          old = "<View style={[styles.detailHeader, { paddingTop: insets.top + 8 }] }>"
+          new = "<View style={[styles.detailHeader, { height: 42 + insets.top, paddingTop: insets.top }]}>"
+          if old not in s:
+              raise SystemExit(f'Expected detail header source not found: {old}')
+          s = s.replace(old, new, 1)
           p.write_text(s)
           PY
       - name: Commit safe area fix
