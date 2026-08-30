@@ -3,6 +3,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 import * as Linking from 'expo-linking';
 
 import { bindSupabaseAuthLifecycle, supabase } from '@/src/lib/supabase';
+import { migrateGuestData } from '@/src/mobile/migration/guest-to-user';
 
 type SessionState = {
   ready: boolean;
@@ -86,6 +87,13 @@ export function SessionProvider({ children }: PropsWithChildren) {
       unbindLifecycle();
     };
   }, []);
+
+  useEffect(() => {
+    if (!state.user?.id) return;
+    void migrateGuestData(state.user.id).catch((error: unknown) => {
+      setState((current) => ({ ...current, error: String((error as { message?: string })?.message ?? error) }));
+    });
+  }, [state.user?.id]);
 
   const signInWithGoogle = useCallback(async () => {
     setState((current) => ({ ...current, authBusy: true, error: null }));
