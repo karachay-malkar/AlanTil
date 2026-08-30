@@ -1,0 +1,37 @@
+name: Refresh AlanTil 14.1.5 Lockfile
+
+on:
+  push:
+    branches:
+      - agent/14.1-mobile-foundation
+    paths:
+      - '.github/workflows/mobile-14-1-5-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.1'
+      - name: Update package lock
+        working-directory: mobile
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Verify lock
+        working-directory: mobile
+        run: npm ci --ignore-scripts
+      - name: Commit lockfile
+        shell: bash
+        run: |
+          git config user.name taulu
+          git config user.email taulantau5@gmail.com
+          git add mobile/package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "14.1.5: lock expo asset dependency"
+          git push origin HEAD:${GITHUB_REF_NAME}
