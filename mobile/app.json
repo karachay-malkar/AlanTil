@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Алан тил",
+    "slug": "alantil",
+    "version": "14.1.0",
+    "orientation": "portrait",
+    "scheme": "alantil",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.alantil.mobile"
+    },
+    "android": {
+      "package": "app.alantil.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0b1830"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "releaseVersion": "14.1"
+    }
+  }
+}
