@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: mobile-14-1-${{ github.ref }}
@@ -49,18 +49,21 @@ jobs:
             npm install
           fi
 
-      - name: Upload dependency lockfile
-        if: ${{ hashFiles('mobile/package-lock.json') != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: AlanTil-14.1-package-lock
-          path: mobile/package-lock.json
-          if-no-files-found: error
-          retention-days: 14
+      - name: Persist dependency lockfile
+        shell: bash
+        run: |
+          git add mobile/package-lock.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "14.1.1: lock mobile dependencies"
+          git push origin HEAD:agent/14.1-mobile-foundation
 
       - name: Expo Doctor
         working-directory: mobile
-        run: npx expo-doctor@latest
+        run: npx expo-doctor@1.20.4
 
       - name: TypeScript check
         working-directory: mobile
