@@ -22,7 +22,7 @@ jobs:
       - name: Package complete mobile source
         shell: bash
         run: |
-          # 14.1.4 practice source package
+          # 14.1.4 practice source package - final
           mkdir -p AlanTil_14.1.4_source/.github/workflows
           cp -R mobile AlanTil_14.1.4_source/mobile
           cp .github/workflows/mobile-14-1-android.yml AlanTil_14.1.4_source/.github/workflows/
