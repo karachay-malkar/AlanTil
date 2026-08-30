@@ -4,24 +4,18 @@ import { supabase } from '@/src/lib/supabase';
 import { loadAllWords } from '@/src/mobile/dictionary';
 import type { UserSettings } from '@/src/mobile/settings';
 import { toPracticeWord, type PracticeWord } from '@/src/mobile/practice/selection';
+import {
+  createActivitySession,
+  completeActivitySession,
+  persistActivitySession,
+  resumeActivitySession,
+  type ActivityRuntime,
+} from '@/src/mobile/activity-session';
 
 const FAVORITES_PREFIX = 'fc_favorites_v1';
-const ACTIVE_SESSION_PREFIX = 'alantil_mobile_active_session_v1';
-const SESSION_HISTORY_PREFIX = 'alantil_mobile_session_history_v1';
 
 export type SessionKind = 'test' | 'match';
-export type SessionRuntime = {
-  id: string;
-  kind: SessionKind;
-  startedAt: string;
-  startedMs: number;
-  translationLanguage: string;
-  userId: string | null;
-};
-
-function randomId() {
-  return `mob-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
+export type SessionRuntime = ActivityRuntime;
 
 function scope(userId?: string | null) {
   return userId ? `user:${userId}` : 'guest';
@@ -88,47 +82,17 @@ export async function favoriteWords(settings: UserSettings, userId?: string | nu
 }
 
 export async function createSessionRuntime(kind: SessionKind, settings: UserSettings, userId?: string | null): Promise<SessionRuntime> {
-  const runtime: SessionRuntime = {
-    id: randomId(),
-    kind,
-    startedAt: new Date().toISOString(),
-    startedMs: Date.now(),
-    translationLanguage: settings.translation_language_code,
-    userId: userId ?? null,
-  };
-  await AsyncStorage.setItem(scopedKey(`${ACTIVE_SESSION_PREFIX}:${kind}`, userId), JSON.stringify(runtime));
-  return runtime;
+  return createActivitySession(kind, settings, userId);
+}
+
+export async function resumeSessionRuntime(kind: SessionKind, userId?: string | null) {
+  return resumeActivitySession(kind, userId);
 }
 
 export async function persistActiveSession(runtime: SessionRuntime, payload: Record<string, unknown>) {
-  await AsyncStorage.setItem(scopedKey(`${ACTIVE_SESSION_PREFIX}:${runtime.kind}`, runtime.userId), JSON.stringify({ runtime, payload }));
+  return persistActivitySession(runtime, payload);
 }
 
 export async function finalizeSession(runtime: SessionRuntime, payload: Record<string, unknown>, status: 'completed' | 'interrupted' = 'completed', exitReason: string | null = null) {
-  const endedAt = new Date().toISOString();
-  const duration = Math.max(0, Math.round((Date.now() - runtime.startedMs) / 1000));
-  const finalPayload = {
-    id: runtime.id,
-    translation_language_code: runtime.translationLanguage,
-    started_at: runtime.startedAt,
-    ended_at: endedAt,
-    duration_sec: duration,
-    active_duration_sec: duration,
-    ...payload,
-    status,
-    exit_reason: status === 'completed' ? null : (exitReason || 'route_change'),
-  };
-  await AsyncStorage.removeItem(scopedKey(`${ACTIVE_SESSION_PREFIX}:${runtime.kind}`, runtime.userId));
-  if (runtime.userId) {
-    const rpc = runtime.kind === 'test' ? 'save_test_session' : 'save_match_session';
-    const { error } = await supabase.rpc(rpc, { payload: finalPayload });
-    if (error) throw error;
-  } else {
-    const key = scopedKey(`${SESSION_HISTORY_PREFIX}:${runtime.kind}`, null);
-    const raw = await AsyncStorage.getItem(key);
-    const history = raw ? JSON.parse(raw) : [];
-    history.unshift(finalPayload);
-    await AsyncStorage.setItem(key, JSON.stringify(history.slice(0, 40)));
-  }
-  return finalPayload;
+  return completeActivitySession(runtime, payload, status, exitReason);
 }
