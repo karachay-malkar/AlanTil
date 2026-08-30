@@ -1,4 +1,5 @@
 # Final 14.1.6 validation
+# Final build trigger after TypeScript integration fix.
 name: Build AlanTil 14.1 Android APK
 
 on:
