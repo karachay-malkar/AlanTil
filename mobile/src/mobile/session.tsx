@@ -24,10 +24,14 @@ const SessionContext = createContext<SessionState>({
   signOut: async () => {},
 });
 
-function authCodeFromUrl(url: string) {
+function authParamsFromUrl(url: string) {
   const parsed = Linking.parse(url);
   const code = parsed.queryParams?.code;
-  return typeof code === 'string' ? code : null;
+  const flowId = parsed.queryParams?.sb_flow_id;
+  return {
+    code: typeof code === 'string' ? code : null,
+    flowId: typeof flowId === 'string' ? flowId : null,
+  };
 }
 
 export function SessionProvider({ children }: PropsWithChildren) {
@@ -45,10 +49,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
     async function consumeAuthUrl(url: string | null) {
       if (!url) return;
-      const code = authCodeFromUrl(url);
+      const { code, flowId } = authParamsFromUrl(url);
       if (!code) return;
       setState((current) => ({ ...current, authBusy: true, error: null }));
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
       if (!mounted) return;
       setState((current) => ({ ...current, authBusy: false, error: error?.message ?? null }));
     }
