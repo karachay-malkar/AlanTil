@@ -1,3 +1,1 @@
-import { ProfileRoot } from '@/src/mobile/shell';
-
-export default ProfileRoot;
+export { ProfileHomeScreen as default } from '@/src/mobile/profile';

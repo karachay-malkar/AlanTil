@@ -2,32 +2,22 @@
   "expo": {
     "name": "Алан тил",
     "slug": "alantil",
-    "version": "14.1.4",
+    "version": "14.1.5",
     "orientation": "portrait",
     "scheme": "alantil",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "3"
+      "buildNumber": "4"
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 4,
-      "adaptiveIcon": {
-        "backgroundColor": "#eee9df"
-      }
+      "versionCode": 5,
+      "adaptiveIcon": { "backgroundColor": "#eee9df" }
     },
-    "plugins": [
-      "expo-router",
-      "expo-splash-screen"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "releaseVersion": "14.1.4",
-      "visualParity": "shell-path-final"
-    }
+    "plugins": ["expo-router", "expo-splash-screen"],
+    "experiments": { "typedRoutes": true },
+    "extra": { "releaseVersion": "14.1.5", "visualParity": "shell-path-practice-profile" }
   }
 }
