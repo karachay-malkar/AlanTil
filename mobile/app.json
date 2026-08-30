@@ -26,7 +26,8 @@
       "typedRoutes": true
     },
     "extra": {
-      "releaseVersion": "14.1.3"
+      "releaseVersion": "14.1.3",
+      "visualParity": "shell-path"
     }
   }
 }
