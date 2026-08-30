@@ -1,1 +1,1 @@
-export { StationScreen as default } from '@/src/mobile/path';
+export { default } from '@/src/mobile/station';
