@@ -24,7 +24,7 @@ export default function StationScreen() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<'words' | 'stats'>('words');
   const [progress, setProgress] = useState<Map<string, Record<string, unknown>>>(new Map());
-  const [setProgress, setSetProgress] = useState<Record<string, unknown>[]>([]);
+  const [setProgressRows, setSetProgressRows] = useState<Record<string, unknown>[]>([]);
   const [stationProgress, setStationProgress] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +42,7 @@ export default function StationScreen() {
         setWords(filtered);
         setSelected(new Set(filtered.map((word) => word.word_id)));
         setProgress(new Map(wordRows.map((row) => [row.word_id, row as unknown as Record<string, unknown>])));
-        setSetProgress(setRows);
+        setSetProgressRows(setRows);
         setStationProgress(stationRow as unknown as Record<string, unknown>);
       } catch (reason) {
         if (active) setError(String((reason as { message?: string })?.message ?? reason));
@@ -100,7 +100,7 @@ export default function StationScreen() {
       <View style={styles.statHero}><View><Text style={styles.statLabel}>ОСВОЕНО</Text><Text style={styles.statBig}>{percent}%</Text></View><Text style={styles.phase}>{String(stationProgress?.status || 'available')}</Text></View>
       <View style={styles.metrics}><View style={styles.metric}><Text style={styles.metricValue}>{mastered}</Text><Text style={styles.metricLabel}>освоено</Text></View><View style={styles.metric}><Text style={styles.metricValue}>{review}</Text><Text style={styles.metricLabel}>повторить</Text></View><View style={styles.metric}><Text style={styles.metricValue}>{attempts}</Text><Text style={styles.metricLabel}>ответов</Text></View></View>
       <View style={styles.statsLine}><Text style={styles.statsLineText}>Слова</Text><Text style={styles.statsLineValue}>{mastered}/{words.length}</Text></View>
-      <View style={styles.statsLine}><Text style={styles.statsLineText}>Синхронизация</Text><Text style={styles.statsLineValue}>{auth.user?.id && setProgress.length ? 'облако' : 'локально'}</Text></View>
+      <View style={styles.statsLine}><Text style={styles.statsLineText}>Синхронизация</Text><Text style={styles.statsLineValue}>{auth.user?.id && setProgressRows.length ? 'облако' : 'локально'}</Text></View>
     </ScrollView>}
   </View>;
 }

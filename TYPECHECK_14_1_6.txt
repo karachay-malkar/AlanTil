@@ -1,9 +1,0 @@
-
-> alantil-mobile@14.1.6 typecheck
-> tsc --noEmit
-
-src/mobile/learn/engine.tsx(39,39): error TS2344: Type 'Record<string, string | string[] | undefined>' does not satisfy the constraint 'string'.
-src/mobile/learn/station-test.tsx(35,39): error TS2344: Type 'Record<string, string | string[] | undefined>' does not satisfy the constraint 'string'.
-src/mobile/station.tsx(26,20): error TS2451: Cannot redeclare block-scoped variable 'setProgress'.
-src/mobile/station.tsx(27,10): error TS2451: Cannot redeclare block-scoped variable 'setProgress'.
-exit_code=2

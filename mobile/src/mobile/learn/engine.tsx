@@ -36,7 +36,7 @@ function entryFor(state: LearnState, id: string) {
 }
 
 export default function LearnSessionScreen() {
-  const params = useLocalSearchParams<Record<string, string | string[] | undefined>>();
+  const params = useLocalSearchParams<{ source?: string; storyId?: string; dictionaryId?: string; sectionId?: string; setId?: string; direction?: string }>();
   const auth = useSession();
   const { settings } = useSettings();
   const source = String(params.source ?? 'station') === 'favorites' ? 'favorites' : 'station';

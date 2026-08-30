@@ -32,7 +32,7 @@ function optionsFor(item: PracticeWord, all: PracticeWord[]) {
 }
 
 export default function StationTestScreen() {
-  const params = useLocalSearchParams<Record<string, string | string[] | undefined>>();
+  const params = useLocalSearchParams<{ source?: string; storyId?: string; dictionaryId?: string; sectionId?: string; setId?: string; direction?: string }>();
   const station = stationFrom(params);
   const auth = useSession();
   const { settings } = useSettings();
