@@ -398,7 +398,7 @@ function StoryStele({ story }: { story: RouteStory }) {
   const session = useSession();
   const [open, setOpen] = useState(false);
   const scope = session.user?.id ? `user:${session.user.id}` : 'guest';
-  const storageKey = `${STORY_STELE_SEEN_KEY}:${scope}`;
+  const storageKey = `${STELE_SEEN_KEY}:${scope}`;
 
   useEffect(() => {
     let active = true;
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
   detailSubtitle: { marginTop: 2, color: theme.colors.textMuted, fontSize: 11, textAlign: 'center' },
   wordList: { flex: 1 },
   wordListContent: { paddingHorizontal: 14, paddingBottom: 28 },
-  wordCatalogHeading: { marginTop: 20, paddingBottom: 8, color: theme.colors.text, fontSize: 17, fontWeight: '850', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
+  wordCatalogHeading: { marginTop: 20, paddingBottom: 8, color: theme.colors.text, fontSize: 17, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
   wordSectionHeading: { marginTop: 16, paddingBottom: 6, color: theme.colors.text, fontSize: 14, fontWeight: '800' },
   storyWordRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft, gap: 9 },
   wordOrder: { width: 34, color: theme.colors.textSoft, fontSize: 10, textAlign: 'right' },
