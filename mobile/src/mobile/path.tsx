@@ -510,13 +510,12 @@ export function PathRoot() {
   };
 
   return (
-    <View style={[styles.pathScreen, { paddingTop: insets.top }] }>
-      <View style={styles.pathHeader}>
-        <Text style={styles.pathBrand}>Алан тил</Text>
+    <View style={styles.pathScreen}>
+      <View style={[styles.pathHeader, { paddingTop: insets.top + 10 }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
           {bundle.route.storyOrder.map((id) => (
             <Pressable key={id} onPress={() => switchStory(id)} style={styles.storyTabButton}>
-              <Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>[ {bundle.route.stories[id].name} ]</Text>
+              <Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>{bundle.route.stories[id].name}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -708,8 +707,7 @@ const styles = StyleSheet.create({
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, backgroundColor: theme.colors.background },
   errorText: { color: theme.colors.danger, fontSize: 13, textAlign: 'center' },
   pathScreen: { flex: 1, backgroundColor: theme.colors.background, overflow: 'hidden' },
-  pathHeader: { zIndex: 10, paddingTop: 6, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: theme.colors.background },
-  pathBrand: { marginLeft: 8, marginBottom: 3, color: theme.colors.text, fontSize: 16, fontWeight: '700' },
+  pathHeader: { zIndex: 30, height: 68, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: 'rgba(238,233,223,0.62)' },
   storyTabs: { minWidth: '100%', alignItems: 'center', gap: 3, paddingHorizontal: 4 },
   storyTabButton: { minHeight: 30, justifyContent: 'center', paddingHorizontal: 3 },
   storyTab: { color: theme.colors.textSoft, fontSize: 11, fontWeight: '700' },
@@ -721,7 +719,7 @@ const styles = StyleSheet.create({
   progressPercent: { color: theme.colors.accentStrong, fontSize: 10, fontWeight: '800' },
   progressCount: { color: theme.colors.textSoft, fontSize: 10, fontWeight: '700' },
   pathViewport: { flex: 1 },
-  routeMap: { minHeight: 720, alignItems: 'center', paddingTop: 76, paddingBottom: 108, paddingHorizontal: 50, gap: 64 },
+  routeMap: { minHeight: 720, alignItems: 'center', paddingTop: 76, paddingRight: 50, paddingBottom: 108, paddingLeft: 20, gap: 64 },
   routeConnector: { position: 'absolute', top: 42, bottom: 42, left: '50%', width: 1, borderLeftWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(77,69,56,0.24)' },
   catalogBlock: { alignItems: 'center', gap: 28 },
   catalogSections: { alignItems: 'center', gap: 54 },
@@ -729,26 +727,26 @@ const styles = StyleSheet.create({
   sectionBlock: { alignItems: 'center', gap: 28 },
   sectionHeading: { color: theme.colors.text, fontSize: 14, fontWeight: '800', textAlign: 'center', maxWidth: 260 },
   stationList: { alignItems: 'center', gap: 43 },
-  stationNode: { width: 160, minHeight: 116, alignItems: 'center', overflow: 'visible' },
-  stationRing: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: 'rgba(105,92,70,0.22)', padding: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139,107,59,0.06)' },
+  stationNode: { width: 60, minHeight: 108, alignItems: 'center', overflow: 'visible' },
+  stationRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: 'rgba(105,92,70,0.22)', padding: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139,107,59,0.05)' },
   stationRingStudying: { borderColor: theme.colors.accentStrong },
   stationRingMastered: { borderColor: '#557a5c' },
   stationRingReview: { borderColor: '#9b7134' },
-  millstone: { width: 56, height: 56, borderRadius: 27, borderTopLeftRadius: 25, borderBottomRightRadius: 24, borderWidth: 1, borderColor: 'rgba(83,74,61,0.34)', backgroundColor: '#d6cdbd', alignItems: 'center', justifyContent: 'center' },
+  millstone: { width: 54, height: 54, borderRadius: 27, borderTopLeftRadius: 25, borderBottomRightRadius: 24, borderWidth: 1, borderColor: 'rgba(83,74,61,0.34)', backgroundColor: '#d6cdbd', alignItems: 'center', justifyContent: 'center' },
   millstoneMastered: { backgroundColor: '#c9d0bd' },
   millstoneHole: { position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: theme.colors.background, borderWidth: 1, borderColor: 'rgba(83,74,61,0.24)' },
   stationOrdinal: { position: 'absolute', bottom: 7, color: theme.colors.textMuted, fontSize: 8, fontWeight: '800' },
-  stationMilestones: { position: 'absolute', top: -2, zIndex: 3, color: theme.colors.accentStrong, fontSize: 9, fontWeight: '900', letterSpacing: -1 },
-  stationLabel: { width: 142, marginTop: 5, color: theme.colors.text, fontSize: 10, lineHeight: 12, fontWeight: '700', textAlign: 'center' },
+  stationMilestones: { position: 'absolute', top: 49, zIndex: 3, color: theme.colors.accentStrong, fontSize: 8, fontWeight: '900', letterSpacing: -1 },
+  stationLabel: { position: 'absolute', top: 65, left: -41, width: 142, color: theme.colors.text, fontSize: 10, lineHeight: 12, fontWeight: '700', textAlign: 'center' },
   stationLabelReview: { color: '#9b7134' },
-  stationCount: { marginTop: 3, color: theme.colors.textSoft, fontSize: 8, fontWeight: '700' },
-  routeScale: { position: 'absolute', right: 4, top: '30%', bottom: '18%', width: 26, alignItems: 'center', justifyContent: 'space-evenly', zIndex: 20 },
+  stationCount: { position: 'absolute', top: 91, left: -41, width: 142, color: theme.colors.textSoft, fontSize: 8, fontWeight: '700', textAlign: 'center' },
+  routeScale: { position: 'absolute', right: 4, top: '24%', bottom: '18%', width: 26, alignItems: 'center', justifyContent: 'space-evenly', zIndex: 31 },
   scaleDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(73,66,56,0.28)' },
   scaleSection: { width: 6, height: 6, borderWidth: 1, borderColor: 'rgba(73,66,56,0.42)', transform: [{ rotate: '45deg' }] },
   scaleDiamond: { width: 8, height: 8, borderWidth: 1, borderColor: theme.colors.accentStrong, transform: [{ rotate: '45deg' }] },
-  steleTrigger: { position: 'absolute', left: 14, bottom: 18, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
+  steleTrigger: { position: 'absolute', left: 10, bottom: 12, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
   steleTriggerGlyph: { color: theme.colors.accentStrong, fontSize: 18 },
-  storyWordsTrigger: { position: 'absolute', right: 38, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
+  storyWordsTrigger: { position: 'absolute', right: 10, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
   storyWordsGlyph: { color: theme.colors.text, fontSize: 24, lineHeight: 25, transform: [{ rotate: '90deg' }] },
   steleBackdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 14, backgroundColor: 'rgba(24,20,16,0.72)' },
   steleDialog: { width: '100%', maxWidth: 430, aspectRatio: 0.66 },
@@ -759,11 +757,11 @@ const styles = StyleSheet.create({
   steleBody: { width: '100%' },
   steleParagraph: { color: '#30291f', fontSize: 13, lineHeight: 18, textAlign: 'center', marginBottom: 9 },
   detailScreen: { flex: 1, backgroundColor: theme.colors.background },
-  detailHeader: { minHeight: 76, paddingHorizontal: 12, paddingBottom: 9, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  backGlyph: { color: theme.colors.text, fontSize: 38, lineHeight: 39, fontWeight: '300' },
+  detailHeader: { minHeight: 42, paddingHorizontal: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(238,233,223,0.62)' },
+  backButton: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(54,50,43,0.10)', backgroundColor: 'rgba(246,242,233,0.28)' },
+  backGlyph: { color: theme.colors.textMuted, fontSize: 29, lineHeight: 31, fontWeight: '300', marginTop: -2 },
   detailHeaderCopy: { flex: 1, minWidth: 0, paddingRight: 40 },
-  detailTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
+  detailTitle: { color: theme.colors.text, fontSize: 17, lineHeight: 19, fontWeight: '800', textAlign: 'center' },
   detailSubtitle: { marginTop: 2, color: theme.colors.textMuted, fontSize: 11, textAlign: 'center' },
   wordList: { flex: 1 },
   wordListContent: { paddingHorizontal: 14, paddingBottom: 28 },
@@ -786,7 +784,7 @@ const styles = StyleSheet.create({
   checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.line, alignItems: 'center', justifyContent: 'center' },
   checkCircleOn: { borderColor: theme.colors.accentStrong, backgroundColor: 'rgba(139,107,59,0.10)' },
   checkMark: { color: theme.colors.accentStrong, fontSize: 13, fontWeight: '900' },
-  stationLaunchPanel: { position: 'absolute', left: 12, right: 12, bottom: 10, paddingTop: 7, gap: 7, backgroundColor: 'rgba(238,233,223,0.96)' },
+  stationLaunchPanel: { position: 'absolute', left: 12, right: 12, bottom: 10, paddingTop: 7, gap: 7, backgroundColor: 'rgba(238,233,223,0.76)' },
   directionControl: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   directionLabel: { color: theme.colors.textSoft, fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   directionPill: { borderWidth: 1, borderColor: theme.colors.line, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12 },
