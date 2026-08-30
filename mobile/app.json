@@ -2,7 +2,7 @@
   "expo": {
     "name": "Алан тил",
     "slug": "alantil",
-    "version": "14.1.3",
+    "version": "14.1.4",
     "orientation": "portrait",
     "scheme": "alantil",
     "userInterfaceStyle": "light",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#eee9df"
       }
@@ -26,7 +26,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "releaseVersion": "14.1.3",
+      "releaseVersion": "14.1.4",
       "visualParity": "shell-path-final"
     }
   }

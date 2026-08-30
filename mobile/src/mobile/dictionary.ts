@@ -23,6 +23,7 @@ export type MobileWord = {
   set_name_en: string | null;
   set_name_tr: string | null;
   pos: string | null;
+  synonyms: string[] | string | null;
   word_alan_cyrillic: string | null;
   word_alan_turkic: string | null;
   translation_ru: string | null;
@@ -94,7 +95,7 @@ export async function loadAllWords({ force = false } = {}): Promise<MobileWord[]
     'dictionary_id', 'dictionary_name_ru', 'dictionary_name_en', 'dictionary_name_tr',
     'section_id', 'section_name_ru', 'section_name_en', 'section_name_tr',
     'set_id', 'set_name_ru', 'set_name_en', 'set_name_tr',
-    'pos', 'word_alan_cyrillic', 'word_alan_turkic',
+    'pos', 'synonyms', 'word_alan_cyrillic', 'word_alan_turkic',
     'translation_ru', 'translation_en', 'translation_tr',
   ].join(',');
 

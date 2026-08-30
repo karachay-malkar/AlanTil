@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 
 import { ScreenHeader } from '@/src/mobile/chrome';
 import { useSession } from '@/src/mobile/session';
@@ -7,18 +8,18 @@ import { theme } from '@/src/mobile/theme';
 
 export function PracticeRoot() {
   const items = [
-    ['Тест', 'Проверка слов из выбранных разделов'],
-    ['Сопоставление', 'Соединение слов и переводов'],
-    ['Избранное', 'Учить слова'],
-    ['Песни', 'Язык в живом контексте'],
-  ];
+    ['Тест', 'Проверка слов из выбранных разделов', '/practice/test'],
+    ['Сопоставление', 'Соединение слов и переводов', '/practice/match'],
+    ['Избранное', 'Учить слова', '/practice/favorites'],
+    ['Песни', 'Язык в живом контексте', '/practice/songs'],
+  ] as const;
   return (
     <View style={styles.screen}>
       <ScreenHeader title="Практика" />
       <ScrollView contentContainerStyle={styles.rootContent} showsVerticalScrollIndicator={false}>
         <View style={styles.cardList}>
-          {items.map(([title, subtitle]) => (
-            <Pressable key={title} style={({ pressed }) => [styles.menuCard, pressed && styles.pressed]}>
+          {items.map(([title, subtitle, href]) => (
+            <Pressable key={title} onPress={() => router.push(href)} style={({ pressed }) => [styles.menuCard, pressed && styles.pressed]}>
               <View style={styles.menuCopy}>
                 <Text style={styles.menuCardTitle}>{title}</Text>
                 <Text style={styles.menuCardSubtitle}>{subtitle}</Text>
@@ -71,7 +72,7 @@ export function ProfileRoot() {
         <View style={styles.cardList}>
           <View style={styles.infoRow}><Text style={styles.infoLabel}>Язык интерфейса</Text><Text style={styles.infoValue}>{settings.interface_language_code.toUpperCase()}</Text></View>
           <View style={styles.infoRow}><Text style={styles.infoLabel}>Аланские слова</Text><Text style={styles.infoValue}>{dialect}</Text></View>
-          <View style={styles.infoRow}><Text style={styles.infoLabel}>Версия</Text><Text style={styles.infoValue}>14.1.3</Text></View>
+          <View style={styles.infoRow}><Text style={styles.infoLabel}>Версия</Text><Text style={styles.infoValue}>14.1.4</Text></View>
         </View>
       </ScrollView>
     </View>
