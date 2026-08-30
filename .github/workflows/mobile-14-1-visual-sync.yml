@@ -1,0 +1,73 @@
+name: Sync AlanTil 14.1.3 Visual Parity
+
+on:
+  push:
+    branches:
+      - agent/14.1-mobile-foundation
+    paths:
+      - '.github/workflows/mobile-14-1-visual-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-visuals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply exact web visual metrics
+        shell: bash
+        run: |
+          cp assets/icons/ui/path-elbrus-white.png mobile/assets/path/path-elbrus-white.png
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('mobile/src/mobile/path.tsx')
+          s = p.read_text()
+          replacements = [
+            ("<View style={[styles.pathScreen, { paddingTop: insets.top }] }>", "<View style={styles.pathScreen}>"),
+            ("<View style={styles.pathHeader}>\n        <Text style={styles.pathBrand}>Алан тил</Text>", "<View style={[styles.pathHeader, { paddingTop: insets.top + 10 }]}>") ,
+            ("<Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>[ {bundle.route.stories[id].name} ]</Text>", "<Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>{bundle.route.stories[id].name}</Text>"),
+            ("pathHeader: { zIndex: 10, paddingTop: 6, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: theme.colors.background },\n  pathBrand: { marginLeft: 8, marginBottom: 3, color: theme.colors.text, fontSize: 16, fontWeight: '700' },", "pathHeader: { zIndex: 30, height: 68, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: 'rgba(238,233,223,0.62)' },"),
+            ("routeMap: { minHeight: 720, alignItems: 'center', paddingTop: 76, paddingBottom: 108, paddingHorizontal: 50, gap: 64 },", "routeMap: { minHeight: 720, alignItems: 'center', paddingTop: 76, paddingRight: 50, paddingBottom: 108, paddingLeft: 20, gap: 64 },"),
+            ("stationNode: { width: 160, minHeight: 116, alignItems: 'center', overflow: 'visible' },", "stationNode: { width: 60, minHeight: 108, alignItems: 'center', overflow: 'visible' },"),
+            ("stationRing: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: 'rgba(105,92,70,0.22)', padding: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139,107,59,0.06)' },", "stationRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: 'rgba(105,92,70,0.22)', padding: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139,107,59,0.05)' },"),
+            ("millstone: { width: 56, height: 56, borderRadius: 27, borderTopLeftRadius: 25, borderBottomRightRadius: 24, borderWidth: 1, borderColor: 'rgba(83,74,61,0.34)', backgroundColor: '#d6cdbd', alignItems: 'center', justifyContent: 'center' },", "millstone: { width: 54, height: 54, borderRadius: 27, borderTopLeftRadius: 25, borderBottomRightRadius: 24, borderWidth: 1, borderColor: 'rgba(83,74,61,0.34)', backgroundColor: '#d6cdbd', alignItems: 'center', justifyContent: 'center' },"),
+            ("stationMilestones: { position: 'absolute', top: -2, zIndex: 3, color: theme.colors.accentStrong, fontSize: 9, fontWeight: '900', letterSpacing: -1 },", "stationMilestones: { position: 'absolute', top: 49, zIndex: 3, color: theme.colors.accentStrong, fontSize: 8, fontWeight: '900', letterSpacing: -1 },"),
+            ("stationLabel: { width: 142, marginTop: 5, color: theme.colors.text, fontSize: 10, lineHeight: 12, fontWeight: '700', textAlign: 'center' },", "stationLabel: { position: 'absolute', top: 65, left: -41, width: 142, color: theme.colors.text, fontSize: 10, lineHeight: 12, fontWeight: '700', textAlign: 'center' },"),
+            ("stationCount: { marginTop: 3, color: theme.colors.textSoft, fontSize: 8, fontWeight: '700' },", "stationCount: { position: 'absolute', top: 91, left: -41, width: 142, color: theme.colors.textSoft, fontSize: 8, fontWeight: '700', textAlign: 'center' },"),
+            ("routeScale: { position: 'absolute', right: 4, top: '30%', bottom: '18%', width: 26, alignItems: 'center', justifyContent: 'space-evenly', zIndex: 20 },", "routeScale: { position: 'absolute', right: 4, top: '24%', bottom: '18%', width: 26, alignItems: 'center', justifyContent: 'space-evenly', zIndex: 31 },"),
+            ("steleTrigger: { position: 'absolute', left: 14, bottom: 18, width: 40, height: 40, borderRadius: 20,", "steleTrigger: { position: 'absolute', left: 10, bottom: 12, width: 36, height: 36, borderRadius: 18,"),
+            ("storyWordsTrigger: { position: 'absolute', right: 38, width: 40, height: 40, borderRadius: 20,", "storyWordsTrigger: { position: 'absolute', right: 10, width: 36, height: 36, borderRadius: 18,"),
+            ("detailHeader: { minHeight: 76, paddingHorizontal: 12, paddingBottom: 9, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },", "detailHeader: { minHeight: 42, paddingHorizontal: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(238,233,223,0.62)' },"),
+            ("backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },", "backButton: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(54,50,43,0.10)', backgroundColor: 'rgba(246,242,233,0.28)' },"),
+            ("backGlyph: { color: theme.colors.text, fontSize: 38, lineHeight: 39, fontWeight: '300' },", "backGlyph: { color: theme.colors.textMuted, fontSize: 29, lineHeight: 31, fontWeight: '300', marginTop: -2 },"),
+            ("detailTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },", "detailTitle: { color: theme.colors.text, fontSize: 17, lineHeight: 19, fontWeight: '800', textAlign: 'center' },"),
+            ("stationLaunchPanel: { position: 'absolute', left: 12, right: 12, bottom: 10, paddingTop: 7, gap: 7, backgroundColor: 'rgba(238,233,223,0.96)' },", "stationLaunchPanel: { position: 'absolute', left: 12, right: 12, bottom: 10, paddingTop: 7, gap: 7, backgroundColor: 'rgba(238,233,223,0.76)' },"),
+          ]
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit(f'Expected visual source not found: {old[:90]}')
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          app = Path('mobile/app.json')
+          t = app.read_text().replace('"version": "14.1.2"', '"version": "14.1.3"').replace('"releaseVersion": "14.1.2"', '"releaseVersion": "14.1.3"')
+          app.write_text(t)
+
+          wf = Path('.github/workflows/mobile-14-1-android.yml')
+          t = wf.read_text().replace('AlanTil-14.1.2.apk', 'AlanTil-14.1.3.apk').replace('AlanTil-14.1.2-Android-APK', 'AlanTil-14.1.3-Android-APK')
+          wf.write_text(t)
+          PY
+
+      - name: Commit visual parity
+        shell: bash
+        run: |
+          git config user.name taulu
+          git config user.email taulantau5@gmail.com
+          git add mobile .github/workflows/mobile-14-1-android.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "14.1.3: align shell and path visuals"
+          git push
