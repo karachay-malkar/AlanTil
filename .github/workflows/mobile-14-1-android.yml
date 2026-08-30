@@ -71,12 +71,12 @@ jobs:
         run: |
           APK_PATH="$(find mobile/android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
           test -n "$APK_PATH"
-          cp "$APK_PATH" AlanTil-14.1.4.apk
+          cp "$APK_PATH" AlanTil-14.1.5.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-14.1.4-Android-APK
-          path: AlanTil-14.1.4.apk
+          name: AlanTil-14.1.5-Android-APK
+          path: AlanTil-14.1.5.apk
           if-no-files-found: error
           retention-days: 14
