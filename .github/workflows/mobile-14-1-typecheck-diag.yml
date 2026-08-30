@@ -1,4 +1,4 @@
-name: AlanTil 14.1.6 TypeScript diagnostics
+name: AlanTil 14.1.6 TypeScript fixes
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  diagnose:
+  fix:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,21 +20,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.13.1'
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
-      - working-directory: mobile
-        run: npm ci
-      - name: Capture typecheck output
+      - name: Apply exact TypeScript fixes and verify
         shell: bash
         run: |
-          set +e
+          python - <<'PY'
+          from pathlib import Path
+
+          for filename in ['mobile/src/mobile/learn/engine.tsx', 'mobile/src/mobile/learn/station-test.tsx']:
+              path = Path(filename)
+              text = path.read_text()
+              text = text.replace("useLocalSearchParams<Record<string, string | string[] | undefined>>()", "useLocalSearchParams<{ source?: string; storyId?: string; dictionaryId?: string; sectionId?: string; setId?: string; direction?: string }>()")
+              path.write_text(text)
+
+          path = Path('mobile/src/mobile/station.tsx')
+          text = path.read_text()
+          text = text.replace("const [setProgress, setSetProgress] = useState<Record<string, unknown>[]>([]);", "const [setProgressRows, setSetProgressRows] = useState<Record<string, unknown>[]>([]);")
+          text = text.replace("setSetProgress(setRows);", "setSetProgressRows(setRows);")
+          text = text.replace("auth.user?.id && setProgress.length", "auth.user?.id && setProgressRows.length")
+          path.write_text(text)
+
+          lock = Path('mobile/package-lock.json')
+          text = lock.read_text()
+          text = text.replace('"version": "14.1.5"', '"version": "14.1.6"', 2)
+          lock.write_text(text)
+
+          diag = Path('TYPECHECK_14_1_6.txt')
+          if diag.exists(): diag.unlink()
+          Path('.github/workflows/mobile-14-1-typecheck-diag.yml').unlink()
+          PY
           cd mobile
-          npm run typecheck > ../TYPECHECK_14_1_6.txt 2>&1
-          STATUS=$?
+          npm ci
+          npm run typecheck
           cd ..
-          echo "exit_code=$STATUS" >> TYPECHECK_14_1_6.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add TYPECHECK_14_1_6.txt
-          git commit -m "14.1.6: record TypeScript diagnostics" || true
+          git add -A
+          git commit -m "14.1.6: fix TypeScript integration"
           git push origin HEAD:agent/14.1-mobile-foundation
