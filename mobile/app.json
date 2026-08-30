@@ -8,10 +8,12 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.alantil.mobile"
+      "bundleIdentifier": "app.alantil.mobile",
+      "buildNumber": "3"
     },
     "android": {
       "package": "app.alantil.mobile",
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#eee9df"
       }
