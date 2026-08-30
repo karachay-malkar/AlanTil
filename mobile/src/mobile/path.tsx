@@ -511,7 +511,7 @@ export function PathRoot() {
 
   return (
     <View style={styles.pathScreen}>
-      <View style={[styles.pathHeader, { paddingTop: insets.top + 10 }]}>
+      <View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 68 + insets.top }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
           {bundle.route.storyOrder.map((id) => (
             <Pressable key={id} onPress={() => switchStory(id)} style={styles.storyTabButton}>
@@ -570,7 +570,7 @@ export function PathRoot() {
 function DetailHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.detailHeader, { paddingTop: insets.top + 8 }] }>
+    <View style={[styles.detailHeader, { height: 42 + insets.top, paddingTop: insets.top }]}>
       <Pressable onPress={() => router.back()} style={styles.backButton}><Text style={styles.backGlyph}>‹</Text></Pressable>
       <View style={styles.detailHeaderCopy}>
         <Text numberOfLines={1} style={styles.detailTitle}>{title}</Text>
