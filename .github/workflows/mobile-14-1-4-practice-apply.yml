@@ -37,7 +37,7 @@ jobs:
         run: |
           git config user.name taulu
           git config user.email taulantau5@gmail.com
-          git add mobile .github/workflows/mobile-14-1-android.yml .github/workflows/mobile-14-1-source.yml
+          git add mobile
           git diff --cached --quiet && exit 0
           git commit -m "14.1.4: add native practice modes"
           git push origin HEAD:${GITHUB_REF_NAME}
