@@ -39,13 +39,6 @@ function key(station: StationDescriptor) {
 
 function nowIso() { return new Date().toISOString(); }
 function asTime(value?: string | null) { return Date.parse(value || '') || 0; }
-function effectiveStatus(row?: Partial<StationProgress> | null) {
-  const status = String(row?.status || 'available');
-  const now = Date.now();
-  if (status === 'review_1_waiting' && asTime(row?.review_1_due_at) <= now) return 'review_1_due';
-  if (status === 'review_2_waiting' && asTime(row?.review_2_due_at) <= now) return 'review_2_due';
-  return status;
-}
 
 function empty(station: StationDescriptor): StationProgress {
   return {
@@ -85,15 +78,13 @@ async function saveGuest(station: StationDescriptor, row: StationProgress) {
 export async function getStationProgress(station: StationDescriptor, userId?: string | null): Promise<StationProgress> {
   if (!userId) {
     const map = await guestMap();
-    const row = map[key(station)] ?? empty(station);
-    return { ...row, status: effectiveStatus(row) };
+    return map[key(station)] ?? empty(station);
   }
   const { data, error } = await supabase.from('user_station_progress').select('*')
     .eq('user_id', userId).eq('dictionary_id', station.dictionaryId).eq('catalog_id', station.dictionaryId)
     .eq('group_id', station.sectionId).eq('set_id', station.setId).maybeSingle();
   if (error) throw error;
-  const row = data ? { ...empty(station), ...data } as StationProgress : empty(station);
-  return { ...row, status: effectiveStatus(row) };
+  return data ? { ...empty(station), ...data } as StationProgress : empty(station);
 }
 
 async function saveCloud(station: StationDescriptor, userId: string, row: StationProgress) {
@@ -110,7 +101,7 @@ async function save(station: StationDescriptor, userId: string | null | undefine
 
 export async function markStationStarted(station: StationDescriptor, userId?: string | null) {
   const current = await getStationProgress(station, userId);
-  if (['mastered','review_1_waiting','review_1_due','review_2_waiting','review_2_due','test_ready'].includes(current.status)) return current;
+  if (['mastered', 'test_ready'].includes(current.status)) return current;
   return save(station, userId, { ...current, status: 'studying', current_phase: 'study', study_sessions_total: current.study_sessions_total + 1, updated_at: nowIso() });
 }
 
@@ -122,8 +113,9 @@ export async function markStationCardsCompleted(station: StationDescriptor, user
 
 export async function stationTestPhase(station: StationDescriptor, userId?: string | null) {
   const current = await getStationProgress(station, userId);
-  if (current.status === 'review_1_due') return 'review_1';
-  if (current.status === 'review_2_due') return 'review_2';
+  const now = Date.now();
+  if (current.first_test_completed_at && !current.review_1_completed_at && asTime(current.review_1_due_at) > 0 && asTime(current.review_1_due_at) <= now) return 'review_1';
+  if (current.review_1_completed_at && !current.review_2_completed_at && asTime(current.review_2_due_at) > 0 && asTime(current.review_2_due_at) <= now) return 'review_2';
   if (current.status === 'mastered') return 'practice';
   return 'first_test';
 }
@@ -138,13 +130,21 @@ export async function recordStationTest(station: StationDescriptor, userId: stri
   };
   if (!passed || phase === 'practice') return save(station, userId, next);
   if (phase === 'first_test') {
-    next.status = 'review_1_waiting'; next.current_phase = 'review_1'; next.first_test_completed_at = completedAt;
+    next.status = 'mastered';
+    next.current_phase = 'review_1';
+    next.first_test_completed_at = completedAt;
+    next.mastered_at = next.mastered_at ?? completedAt;
     next.review_1_due_at = new Date(Date.parse(completedAt) + DAY_MS).toISOString();
   } else if (phase === 'review_1') {
-    next.status = 'review_2_waiting'; next.current_phase = 'review_2'; next.review_1_completed_at = completedAt;
+    next.status = 'mastered';
+    next.current_phase = 'review_2';
+    next.review_1_completed_at = completedAt;
     next.review_2_due_at = new Date(Date.parse(completedAt) + 3 * DAY_MS).toISOString();
   } else if (phase === 'review_2') {
-    next.status = 'mastered'; next.current_phase = 'mastered'; next.review_2_completed_at = completedAt; next.mastered_at = completedAt;
+    next.status = 'mastered';
+    next.current_phase = 'mastered';
+    next.review_2_completed_at = completedAt;
+    next.mastered_at = next.mastered_at ?? completedAt;
   }
   return save(station, userId, next);
 }
