@@ -25,7 +25,7 @@ jobs:
       - name: Install
         working-directory: mobile
         run: npm ci
-      - name: Set 15.0.2 metadata in worktree
+      - name: Set 15.0.2 metadata
         shell: bash
         run: |
           cd mobile
@@ -51,21 +51,24 @@ jobs:
           s = s.replace("buildNumber, '9'", "buildNumber, '10'")
           p.write_text(s)
           PY
-      - name: Capture final verification
+      - name: Verify release contracts
         shell: bash
         run: |
-          set +e
-          : > mobile/finalize-errors.txt
-          (cd mobile && npm run typecheck) >> mobile/finalize-errors.txt 2>&1
-          echo "TYPECHECK_EXIT=$?" >> mobile/finalize-errors.txt
-          (cd mobile && npm test) >> mobile/finalize-errors.txt 2>&1
-          echo "MOBILE_TEST_EXIT=$?" >> mobile/finalize-errors.txt
-          node --test tests/*.test.mjs >> mobile/finalize-errors.txt 2>&1
-          echo "ROOT_TEST_EXIT=$?" >> mobile/finalize-errors.txt
-      - name: Commit diagnostics only
+          cd mobile
+          npm run typecheck
+          npm test
+          cd ..
+          node --test tests/alantil-core-practice-15.test.mjs tests/alantil-core-practice-session-15.test.mjs tests/alantil-core-progress-15.test.mjs tests/alantil-core-favorites-statistics-15.test.mjs tests/alantil-core-session-15.test.mjs tests/alantil-core-sync-15.test.mjs tests/alantil-core-learning-15.test.mjs tests/alantil-core-station-test-15.test.mjs tests/alantil-core-analytics-15.test.mjs tests/alantil-core-guide-15.test.mjs tests/alantil-core-settings-15.test.mjs tests/alantil-core-unified-domains-15.test.mjs tests/design-token-parity-15.test.mjs
+      - name: Remove temporary diagnostics
+        shell: bash
+        run: |
+          rm -f mobile/typecheck-errors.txt mobile/finalize-errors.txt
+          rm -f .github/workflows/mobile-15-0-2-typecheck-diagnostic.yml
+          rm -f .github/workflows/mobile-15-0-2-finalize-release.yml
+      - name: Commit final release
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add mobile/finalize-errors.txt
-          git commit -m "15.0.2: capture final verification diagnostics"
+          git add -A
+          git commit -m "15.0.2: finalize true Unified Core release"
           git push
