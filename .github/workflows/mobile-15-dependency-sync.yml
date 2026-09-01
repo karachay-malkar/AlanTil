@@ -22,6 +22,9 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: mobile/package-lock.json
+      - name: Install pinned project dependencies
+        working-directory: mobile
+        run: npm ci
       - name: Install Expo-compatible auth browser
         working-directory: mobile
         run: npx expo install expo-web-browser
