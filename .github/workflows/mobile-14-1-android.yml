@@ -1,4 +1,3 @@
-# Keep the workflow path stable so previous Android build history remains accessible.
 name: Build AlanTil Android APK
 
 on:
@@ -9,37 +8,20 @@ on:
     paths:
       - 'mobile/**'
       - 'packages/**'
-      - 'src/shared/**'
-      - 'src/features/learn/**'
-      - 'src/features/path/station-test.js'
-      - 'src/features/songs/**'
-      - 'tests/alantil-core-practice-15.test.mjs'
-      - 'tests/alantil-core-progress-15.test.mjs'
-      - 'tests/alantil-core-favorites-statistics-15.test.mjs'
-      - 'tests/alantil-core-session-15.test.mjs'
-      - 'tests/alantil-core-sync-15.test.mjs'
-      - 'tests/alantil-core-learning-15.test.mjs'
-      - 'tests/alantil-core-station-test-15.test.mjs'
-      - 'tests/alantil-core-analytics-15.test.mjs'
-      - 'tests/alantil-core-guide-15.test.mjs'
-      - 'tests/alantil-core-settings-15.test.mjs'
-      - 'tests/alantil-core-unified-domains-15.test.mjs'
-      - 'tests/design-token-parity-15.test.mjs'
+      - 'src/**'
+      - 'tests/**'
+      - 'public/**'
+      - 'supabase/**'
       - '.github/workflows/mobile-14-1-android.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: mobile-android-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   android-apk:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,7 +63,7 @@ jobs:
         run: npm test
 
       - name: Shared 15.0 core parity tests
-        run: node --test tests/alantil-core-practice-15.test.mjs tests/alantil-core-progress-15.test.mjs tests/alantil-core-favorites-statistics-15.test.mjs tests/alantil-core-session-15.test.mjs tests/alantil-core-sync-15.test.mjs tests/alantil-core-learning-15.test.mjs tests/alantil-core-station-test-15.test.mjs tests/alantil-core-analytics-15.test.mjs tests/alantil-core-guide-15.test.mjs tests/alantil-core-settings-15.test.mjs tests/alantil-core-unified-domains-15.test.mjs tests/design-token-parity-15.test.mjs
+        run: node --test tests/alantil-core-practice-15.test.mjs tests/alantil-core-practice-session-15.test.mjs tests/alantil-core-progress-15.test.mjs tests/alantil-core-favorites-statistics-15.test.mjs tests/alantil-core-session-15.test.mjs tests/alantil-core-sync-15.test.mjs tests/alantil-core-learning-15.test.mjs tests/alantil-core-station-test-15.test.mjs tests/alantil-core-analytics-15.test.mjs tests/alantil-core-guide-15.test.mjs tests/alantil-core-settings-15.test.mjs tests/alantil-core-unified-domains-15.test.mjs tests/design-token-parity-15.test.mjs
 
       - name: Verify Android JavaScript bundle
         working-directory: mobile
@@ -130,6 +112,5 @@ jobs:
           path: |
             ${{ steps.release.outputs.apk_filename }}
             ${{ steps.release.outputs.apk_filename }}.sha256
-          compression-level: 0
           if-no-files-found: error
           retention-days: 14
