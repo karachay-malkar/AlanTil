@@ -1,0 +1,38 @@
+name: AlanTil 15 dependency sync
+
+on:
+  push:
+    branches:
+      - agent/15.0-unified-core
+    paths:
+      - '.github/workflows/mobile-15-dependency-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/15.0-unified-core
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install Expo-compatible auth browser
+        working-directory: mobile
+        run: npx expo install expo-web-browser
+      - name: Commit generated dependency metadata
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mobile/package.json mobile/package-lock.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m '15.0: add Expo auth browser dependency'
+          git push origin HEAD:agent/15.0-unified-core
