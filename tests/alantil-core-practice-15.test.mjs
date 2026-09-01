@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { combineNumberedExamples, parseExampleGroups } from '../packages/alantil-core/example-groups.js';
 import {
   buildScope,
   buildSelectedSources,
@@ -12,6 +13,7 @@ import {
   setsFrom,
   wordsForSet,
 } from '../packages/alantil-core/practice.js';
+import { createSlugMap, toSlug } from '../packages/alantil-core/slugs.js';
 
 function makeWords(count, posCycle = ['noun', 'verb', 'adjective', 'adverb']) {
   return Array.from({ length: count }, (_, index) => ({
@@ -84,4 +86,20 @@ test('15.0 shared core owns practice scope and selected source contracts used by
   }]);
   assert.deepEqual(buildSelectedSources(words), [{ dictionary_id: 'beginner', section_ids: ['starter', 'elementary'] }]);
   assert.deepEqual(parseSynonyms(' Один, Два '), ['один', 'два']);
+});
+
+test('15.0 shared core owns stable route slugs', () => {
+  assert.equal(toSlug('На вершине'), 'na-vershine');
+  const map = createSlugMap(['Тест', 'Test', 'Test']);
+  assert.equal(map.slugFor('Тест'), 'test');
+  assert.equal(map.slugFor('Test'), 'test-2');
+  assert.equal(map.valueFor('test-2'), 'Test');
+});
+
+test('15.0 shared core owns example grouping and pairing', () => {
+  assert.equal(combineNumberedExamples('1.1 Бир\n1.2 Эки', '1.1 Один\n1.2 Два'), '1.1 Бир ✦ Один; 1.2 Эки ✦ Два');
+  assert.deepEqual(parseExampleGroups('1.1 Бир; 1.2 Эки; 2.1 Юч'), [
+    { index: 0, lines: ['Бир', 'Эки'] },
+    { index: 1, lines: ['Юч'] },
+  ]);
 });
