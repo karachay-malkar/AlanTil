@@ -1,7 +1,9 @@
 export {
+  buildMatchRounds,
   buildRoundPOSList,
   buildSelectedSources,
   buildScope,
+  buildTestWords,
   buildWordsByPOSRounds,
   dictsFrom,
   hasWordConflict,
