@@ -65,6 +65,7 @@ test('release CLI prints safe GitHub outputs for the actual source tree', () => 
 test('APK workflow targets the working branch and verifies the native artifact', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/mobile-14-1-android.yml', import.meta.url), 'utf8');
   assert.match(workflow, /agent\/14\.2-mobile-parity/);
+  assert.match(workflow, /agent\/15\.0-unified-core/);
   assert.doesNotMatch(workflow, /agent\/14\.1-mobile-foundation|AlanTil-14\.1\.6/);
   assert.match(workflow, /node-version: '24'/);
   assert.match(workflow, /npm test/);
@@ -80,11 +81,13 @@ test('APK workflow targets the working branch and verifies the native artifact',
   assert.doesNotMatch(workflow, /contents: write|pull_request:/);
 });
 
-test('source archive packages only committed files and remains distinct from APK', () => {
+test('source archive packages the complete committed unified project and remains distinct from APK', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/mobile-14-1-source.yml', import.meta.url), 'utf8');
   assert.match(workflow, /agent\/14\.2-mobile-parity/);
+  assert.match(workflow, /agent\/15\.0-unified-core/);
   assert.match(workflow, /git archive --format=zip/);
-  assert.match(workflow, /HEAD mobile/);
+  assert.match(workflow, /--output="\$ALANTIL_SOURCE_FILENAME" HEAD/);
+  assert.match(workflow, /--prefix="\$ALANTIL_SOURCE_PREFIX\/"/);
   assert.match(workflow, /steps\.release\.outputs\.source_artifact/);
-  assert.doesNotMatch(workflow, /cp -R mobile|14\.1\.6/);
+  assert.doesNotMatch(workflow, /cp -R mobile|HEAD mobile|14\.1\.6/);
 });
