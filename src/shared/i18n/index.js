@@ -7,8 +7,15 @@ import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=13.10.0";
 import { RELEASE_MESSAGES_13_15_9 } from "./messages-13-15-9.js?v=13.15.9";
 import { RELEASE_MESSAGES_13_15_10 } from "./messages-13-15-10.js?v=13.15.10.12";
 import { RELEASE_MESSAGES_13_15_12 } from "./messages-13-15-12.js?v=13.15.12";
+import {
+  SUPPORTED_INTERFACE_LANGUAGES,
+  hasCompleteCatalog,
+  interfaceLocale,
+  interpolateMessage,
+  normalizeInterfaceLanguage,
+} from "../../../packages/alantil-core/i18n.js";
 
-export const SUPPORTED_INTERFACE_LANGUAGES = Object.freeze(["ru", "en", "tr"]);
+export { SUPPORTED_INTERFACE_LANGUAGES };
 
 const ALL_INTERFACE_MESSAGES = Object.freeze({
   ...INTERFACE_MESSAGES,
@@ -31,18 +38,6 @@ function createSharedState() {
 
 const sharedState = globalThis[I18N_STATE_KEY] || createSharedState();
 globalThis[I18N_STATE_KEY] = sharedState;
-
-function normalizeLanguage(value) {
-  const source = String(value || "").trim().toLowerCase().split("-")[0];
-  const normalized = source === "tu" ? "tr" : source;
-  return SUPPORTED_INTERFACE_LANGUAGES.includes(normalized) ? normalized : "ru";
-}
-
-function interpolate(template, params = {}) {
-  return String(template || "").replace(/\{([a-zA-Z0-9_]+)\}/g, (placeholder, name) => (
-    Object.prototype.hasOwnProperty.call(params, name) ? String(params[name] ?? "") : placeholder
-  ));
-}
 
 function translatedMessage(language, key) {
   const translated = ALL_INTERFACE_MESSAGES[key]?.[language];
@@ -68,12 +63,12 @@ export function getInterfaceLanguage() {
 }
 
 export function getInterfaceLocale() {
-  return { ru: "ru-RU", en: "en-GB", tr: "tr-TR" }[sharedState.currentLanguage] || "ru-RU";
+  return interfaceLocale(sharedState.currentLanguage);
 }
 
 export function messageForLanguage(language, key, params = {}) {
-  const locale = normalizeLanguage(language);
-  return interpolate(translatedMessage(locale, key), params);
+  const locale = normalizeInterfaceLanguage(language);
+  return interpolateMessage(translatedMessage(locale, key), params);
 }
 
 export function msg(key, params = {}) {
@@ -96,7 +91,7 @@ export function applyStaticTranslations(root = document) {
 }
 
 export function setInterfaceLanguage(language, { notify = true } = {}) {
-  const next = normalizeLanguage(language);
+  const next = normalizeInterfaceLanguage(language);
   const changed = next !== sharedState.currentLanguage;
   sharedState.currentLanguage = next;
   document.documentElement.lang = next;
@@ -128,6 +123,5 @@ export function initializeI18n() {
 }
 
 export function hasCompleteTranslations(language) {
-  const locale = normalizeLanguage(language);
-  return Object.values(ALL_INTERFACE_MESSAGES).every((entry) => Boolean(entry?.[locale]));
+  return hasCompleteCatalog(ALL_INTERFACE_MESSAGES, language);
 }
