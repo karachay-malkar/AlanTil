@@ -1,9 +1,14 @@
+import {
+  buildStationTestQuestion,
+  stationTestDistractors,
+  stationTestResult,
+  stationTestSelectionSignature,
+} from "../../../packages/alantil-core/station-test.js";
 import { PATH_CONFIG } from "../../config/path.js?v=13.9.0";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
 import { getCachedWords } from "../../shared/data/word-repository.js?v=13.13";
-import { normalizePos, parseSynonyms } from "../../shared/domain/word-normalizer.js?v=13.9.0";
-import { hasWordConflict, shuffle, splitGroups } from "../../shared/domain/word-selection.js?v=13.9.0";
+import { shuffle } from "../../shared/domain/word-selection.js?v=13.9.0";
 import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.9.0";
 import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
 import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.9.0";
@@ -19,54 +24,12 @@ function uuid() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function normalizedLexeme(value) {
-  return String(value || "").normalize("NFC").toLowerCase().replace(/[’'`ʼъь\s\-–—.,;:!?()[\]{}]/g, "").trim();
-}
-
-function approximateStem(value) {
-  const lexeme = normalizedLexeme(value);
-  return lexeme.length > 6 ? lexeme.slice(0, Math.max(4, lexeme.length - 3)) : lexeme;
-}
-
-function normalizedTranslationSet(item) {
-  return new Set(splitGroups(item?.trans).map(normalizedLexeme).filter(Boolean));
-}
-
-function isAmbiguous(candidate, item, selected) {
-  if (!candidate || String(candidate.id) === String(item.id)) return true;
-  if (hasWordConflict(candidate, [item, ...selected])) return true;
-  const candidateWord = normalizedLexeme(candidate.word);
-  const correctWord = normalizedLexeme(item.word);
-  if (!candidateWord || candidateWord === correctWord) return true;
-  if (approximateStem(candidate.word) && approximateStem(candidate.word) === approximateStem(item.word)) return true;
-  const correctTranslations = normalizedTranslationSet(item);
-  for (const translation of normalizedTranslationSet(candidate)) if (correctTranslations.has(translation)) return true;
-  const correctSynonyms = new Set(parseSynonyms(item.synonyms));
-  for (const synonym of parseSynonyms(candidate.synonyms)) if (correctSynonyms.has(synonym)) return true;
-  return false;
-}
-
 export function distractorsFor(item, allWords, count = 3) {
-  const targetPos = normalizePos(item.pos);
-  const samePos = shuffle(allWords.filter((candidate) => normalizePos(candidate.pos) === targetPos));
-  const selected = [];
-  for (const candidate of samePos) {
-    if (selected.length >= count) break;
-    if (isAmbiguous(candidate, item, selected)) continue;
-    selected.push(candidate);
-  }
-  return selected;
+  return stationTestDistractors(item, allWords, count);
 }
 
 function buildQuestion(item, allWords, mode = "kb") {
-  return {
-    item,
-    options: shuffle([item, ...distractorsFor(item, allWords)]).map((word) => ({
-      id: String(word.id),
-      text: String(mode === "ru" ? word.word : word.trans || ""),
-      word,
-    })),
-  };
+  return buildStationTestQuestion(item, allWords, mode);
 }
 
 function sessionPayload(session) {
@@ -74,6 +37,8 @@ function sessionPayload(session) {
   const total = session.questions.length;
   const ended = new Date().toISOString();
   const durationSec = Math.max(0, Math.round((Date.now() - Date.parse(session.startedAt)) / 1000));
+  const required = Number(session.station.requiredAccuracy || PATH_CONFIG.stationRequiredAccuracy || 80);
+  const accuracy = stationTestResult(session.answers, required, total).accuracy;
   return {
     id: session.id,
     attempt_id: session.id,
@@ -89,8 +54,8 @@ function sessionPayload(session) {
     questions_total: total,
     correct_total: correct,
     wrong_total: Math.max(0, session.answers.length - correct),
-    accuracy: total ? Math.round((correct / total) * 100) : 0,
-    score_percent: total ? Math.round((correct / total) * 100) : 0,
+    accuracy,
+    score_percent: accuracy,
     direction: session.mode === "ru" ? "ru_to_alan" : "alan_to_ru",
     started_at: session.startedAt,
     ended_at: ended,
@@ -98,7 +63,7 @@ function sessionPayload(session) {
     duration_sec: durationSec,
     active_duration_sec: durationSec,
     created_at: session.startedAt,
-    required_accuracy: Number(session.station.requiredAccuracy || PATH_CONFIG.stationRequiredAccuracy || 80),
+    required_accuracy: required,
     word_ids: session.questions.map((question) => String(question.item.id)),
     words: session.answers.map((answer, index) => ({
       word_id: answer.wordId,
@@ -111,7 +76,7 @@ function sessionPayload(session) {
 }
 
 function selectionSignature(words) {
-  return words.map((word) => String(word.id)).join("|");
+  return stationTestSelectionSignature(words);
 }
 
 function saveActive(session) {
@@ -206,7 +171,8 @@ export function completeStationTest(context, session, onComplete) {
   session.completed = true;
   const payload = sessionPayload(session);
   const required = Number(session.station.requiredAccuracy || PATH_CONFIG.stationRequiredAccuracy || 80);
-  const passed = payload.accuracy >= required;
+  const sharedResult = stationTestResult(payload.words, required, payload.questions_total);
+  const passed = sharedResult.passed;
   recordTestWordResults({
     sessionId: payload.id,
     answers: payload.words,
@@ -219,7 +185,7 @@ export function completeStationTest(context, session, onComplete) {
   recordActivitySession("station_test", payload);
   clearActive();
   context.shell.setCounter("");
-  const result = { payload, passed, required, masteryLevel: payload.accuracy >= 100 ? 3 : payload.accuracy >= 90 ? 2 : payload.accuracy >= 80 ? 1 : 0 };
+  const result = { payload, passed, required, masteryLevel: sharedResult.masteryLevel };
   onComplete?.(result);
   return result;
 }
