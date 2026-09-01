@@ -284,3 +284,11 @@ export function buildWordsByPOSRounds(pool, totalLimit, options = {}) {
     complete: items.length === effectiveLimit,
   };
 }
+
+export function buildTestWords(pool, totalLimit) {
+  return buildWordsByPOSRounds(pool, totalLimit, { requireConflictFree: false });
+}
+
+export function buildMatchRounds(pool, totalLimit) {
+  return buildWordsByPOSRounds(pool, totalLimit, { requireConflictFree: true, allowConflictFallback: false });
+}
