@@ -7,13 +7,16 @@ const read = (path) => readFile(new URL(path, root), 'utf8');
 const readRepo = (path) => readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
 
 test('first launch persists setup, account choice and guide stages', async () => {
-  const [onboarding, settings] = await Promise.all([
+  const [onboarding, settings, settingsCoreTypes, settingsCore] = await Promise.all([
     read('onboarding.tsx'),
     read('settings.tsx'),
+    readRepo('packages/alantil-core/settings.d.ts'),
+    readRepo('packages/alantil-core/settings.js'),
   ]);
-  assert.match(settings, /onboarding_step: OnboardingStep/);
-  assert.match(settings, /onboarding_access_mode: OnboardingAccessMode/);
-  assert.match(settings, /onboarding_step: 'done'/);
+  assert.match(settings, /packages\/alantil-core\/settings\.js/);
+  assert.match(settingsCoreTypes, /onboarding_step: OnboardingStep/);
+  assert.match(settingsCoreTypes, /onboarding_access_mode: OnboardingAccessMode/);
+  assert.match(settingsCore, /onboarding_step: 'done'/);
   assert.match(onboarding, /saveConfiguration/);
   assert.match(onboarding, /chooseAccess\('account'\)/);
   assert.match(onboarding, /chooseAccess\('guest'\)/);
