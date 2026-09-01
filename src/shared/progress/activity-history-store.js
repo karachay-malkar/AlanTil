@@ -1,4 +1,5 @@
 import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
+import { summarizeActivityHistory } from "../../../packages/alantil-core/statistics.js";
 
 export const ACTIVITY_HISTORY_KEY = "alantil_activity_history_v13_1";
 const LIMIT = 300;
@@ -34,30 +35,5 @@ export function recordActivitySession(type, payload) {
 }
 
 export function activitySummary() {
-  const rows = getActivityHistory();
-  const completed = rows.filter((row) => row.status === "completed");
-  const activeSeconds = rows.reduce((sum, row) => sum + Math.max(0, Number(row.active_duration_sec || 0)), 0);
-  const testCorrect = rows.reduce((sum, row) => sum + Number(row.correct_total || 0), 0);
-  const testWrong = rows.reduce((sum, row) => sum + Number(row.wrong_total || 0), 0);
-  const difficult = new Map();
-  rows.forEach((row) => {
-    (row.words || []).forEach((word) => {
-      const wrong = word.result === "wrong" || Number(word.left_swipe_count || 0) > 0;
-      if (!wrong) return;
-      const id = String(word.word_id || "").trim();
-      if (id) difficult.set(id, (difficult.get(id) || 0) + 1);
-    });
-  });
-  return {
-    sessionsTotal: rows.length,
-    learnSessions: rows.filter((row) => row.type === "learn").length,
-    testAttempts: rows.filter((row) => ["test", "station_test"].includes(row.type)).length,
-    matchSessions: rows.filter((row) => row.type === "match").length,
-    sessionsCompleted: completed.length,
-    activeSeconds,
-    accuracy: testCorrect + testWrong ? Math.round((testCorrect / (testCorrect + testWrong)) * 100) : 0,
-    leftSwipes: rows.reduce((sum, row) => sum + Number(row.left_swipes_total || 0), 0),
-    problemWordIds: Array.from(difficult.entries()).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([id]) => id),
-    recent: rows.slice(0, 8),
-  };
+  return summarizeActivityHistory(getActivityHistory());
 }
