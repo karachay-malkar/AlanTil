@@ -1,0 +1,75 @@
+name: Finalize AlanTil 15.0.2 Unified Core
+
+on:
+  push:
+    branches:
+      - agent/15.0-unified-core
+    paths:
+      - '.github/workflows/mobile-15-0-2-finalize-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/15.0-unified-core
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install
+        working-directory: mobile
+        run: npm ci
+      - name: Set 15.0.2 metadata
+        shell: bash
+        run: |
+          cd mobile
+          npm version 15.0.2 --no-git-tag-version
+          cd ..
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('mobile/app.json')
+          data = json.loads(p.read_text())
+          expo = data['expo']
+          expo['version'] = '15.0.2'
+          expo['android']['versionCode'] = 10
+          expo['ios']['buildNumber'] = '10'
+          expo['extra']['releaseVersion'] = '15.0.2'
+          expo['extra']['visualParity'] = '15.0.2-unified-core-web-parity-4options'
+          p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+
+          p = Path('mobile/tests/p0-contract.test.mjs')
+          s = p.read_text()
+          s = s.replace("'15.0.1-web-path-parity-4options-final'", "'15.0.2-unified-core-web-parity-4options'")
+          s = s.replace("'15.0.1'", "'15.0.2'")
+          s = s.replace('versionCode, 9', 'versionCode, 10')
+          s = s.replace("buildNumber, '9'", "buildNumber, '10'")
+          p.write_text(s)
+          PY
+      - name: Verify before commit
+        shell: bash
+        run: |
+          cd mobile
+          npm run typecheck
+          npm test
+          cd ..
+          node --test tests/*.test.mjs
+      - name: Remove temporary diagnostics
+        shell: bash
+        run: |
+          rm -f mobile/typecheck-errors.txt
+          rm -f .github/workflows/mobile-15-0-2-typecheck-diagnostic.yml
+          rm -f .github/workflows/mobile-15-0-2-finalize-release.yml
+      - name: Commit final release
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "15.0.2: finalize true Unified Core release"
+          git push
