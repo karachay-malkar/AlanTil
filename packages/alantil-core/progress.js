@@ -64,27 +64,43 @@ export function stationTestPhaseFromProgress(row) {
   return 'first_test';
 }
 
-export function markStationStartedProgress(row, now = new Date().toISOString()) {
+export function transitionStationStarted(row, now = new Date().toISOString()) {
   const current = normalizeStationProgressRow(row, {}, now);
-  if (['mastered', 'review_1_waiting', 'review_1_due', 'review_2_waiting', 'review_2_due', 'test_ready'].includes(current.status)) return current;
-  return normalizeStationProgressRow({
-    ...current,
-    status: 'studying',
-    current_phase: 'study',
-    study_sessions_total: current.study_sessions_total + 1,
-    updated_at: now,
-  }, {}, now);
+  if (['mastered', 'review_1_waiting', 'review_1_due', 'review_2_waiting', 'review_2_due', 'test_ready'].includes(current.status)) {
+    return { row: current, changed: false };
+  }
+  return {
+    changed: true,
+    row: normalizeStationProgressRow({
+      ...current,
+      status: 'studying',
+      current_phase: 'study',
+      study_sessions_total: current.study_sessions_total + 1,
+      updated_at: now,
+    }, {}, now),
+  };
+}
+
+export function markStationStartedProgress(row, now = new Date().toISOString()) {
+  return transitionStationStarted(row, now).row;
+}
+
+export function transitionStationCardsCompleted(row, now = new Date().toISOString()) {
+  const current = normalizeStationProgressRow(row, {}, now);
+  if (current.status === 'mastered') return { row: current, changed: false };
+  return {
+    changed: true,
+    row: normalizeStationProgressRow({
+      ...current,
+      status: 'test_ready',
+      current_phase: 'first_test',
+      updated_at: now,
+    }, {}, now),
+  };
 }
 
 export function markStationCardsCompletedProgress(row, now = new Date().toISOString()) {
-  const current = normalizeStationProgressRow(row, {}, now);
-  if (current.status === 'mastered') return current;
-  return normalizeStationProgressRow({
-    ...current,
-    status: 'test_ready',
-    current_phase: 'first_test',
-    updated_at: now,
-  }, {}, now);
+  return transitionStationCardsCompleted(row, now).row;
 }
 
 export function recordStationTestProgress(row, {
