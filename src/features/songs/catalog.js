@@ -8,34 +8,17 @@ import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { songsState } from "./state.js?v=13.9.0";
+import {
+  FAVORITES_PLAYLIST_ID,
+  filterSongs,
+  songArtists,
+} from "../../../packages/alantil-core/songs.js";
 
-const FAVORITES_PLAYLIST_ID = "__fav__";
 const SEARCH_MODES = [
   { value: "title", label: msg("songs.nazvanie") },
   { value: "artist", label: msg("songs.ispolnitel") },
   { value: "lyrics", label: msg("songs.tekst") },
 ];
-
-function normalizeSearchValue(value) {
-  return String(value || "")
-    .normalize("NFC")
-    .toLocaleLowerCase("ru")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function valueForMode(song, mode) {
-  if (mode === "artist") return song.artist;
-  if (mode === "lyrics") return song.lyrics;
-  return song.title;
-}
-
-function artistsFrom(value) {
-  return String(value || "")
-    .split(/\s*\/\s*/g)
-    .map((artist) => artist.trim())
-    .filter(Boolean);
-}
 
 export function renderSongsCatalog(context, playlist, songs, signal) {
   if (!playlist) {
@@ -77,18 +60,20 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
   let searchOpenTracked = false;
 
   function draw() {
-    const query = normalizeSearchValue(songsState.searchQuery);
-    const available = favoritesOnly ? songs.filter((song) => songFavorites.has(song.id)) : songs;
-    const filtered = available.filter((song) => {
-      if (!query) return true;
-      return normalizeSearchValue(valueForMode(song, songsState.searchMode)).includes(query);
+    const favoriteIds = new Set(songFavorites.values());
+    const filtered = filterSongs(songs, {
+      playlistId: playlist.id,
+      searchQuery: songsState.searchQuery,
+      searchMode: songsState.searchMode,
+      favoriteIds,
     });
+    const query = songsState.searchQuery.trim();
 
     list.innerHTML = filtered.length
       ? filtered.map((song) => renderContentListRow({
           id: song.id,
           primary: song.title,
-          pills: artistsFrom(song.artist),
+          pills: songArtists(song.artist),
           clickable: true,
           openAttributes: `data-song-open="${escapeHtml(song.id)}"`,
           trailingHtml: renderFavoriteButton({
