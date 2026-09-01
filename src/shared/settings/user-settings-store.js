@@ -5,44 +5,23 @@ import {
   subscribeStorageScope,
   writeScopedJson,
 } from "../progress/storage-scope.js?v=13.10.12";
+import {
+  DEFAULT_USER_SETTINGS,
+  applyUserSettingsUpdate,
+  completeLearningSetupSettings,
+  hasCompletedLearningSetup as hasCompletedLearningSetupCore,
+  migrateStoredUserSettings,
+  normalizeTextSizeCode,
+  normalizeUserSettings,
+  replaceUserSettingsValue,
+  userSettingsChanged,
+} from "../../../packages/alantil-core/settings.js";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
-const LEGACY_SETUP_COMPLETED_AT = "2026-07-18T00:00:00.000Z";
-
-export const DEFAULT_USER_SETTINGS = Object.freeze({
-  interface_language_code: "ru",
-  translation_language_code: "ru",
-  alan_script_code: "cyrillic",
-  alan_dialect_code: "canonical",
-  text_size_code: "medium",
-  learning_setup_completed_at: null,
-});
+export { DEFAULT_USER_SETTINGS };
 
 const listeners = new Set();
 let state = { ...DEFAULT_USER_SETTINGS };
-
-function normalizeLanguageCode(value, fallback = "ru") {
-  const normalized = String(value || "").trim().toLowerCase();
-  return /^[a-z]{2,8}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : fallback;
-}
-
-function normalizeInterfaceLanguageCode(value) {
-  const source = normalizeLanguageCode(value, DEFAULT_USER_SETTINGS.interface_language_code).split("-")[0];
-  const normalized = source === "tu" ? "tr" : source;
-  return ["ru", "en", "tr"].includes(normalized) ? normalized : DEFAULT_USER_SETTINGS.interface_language_code;
-}
-
-function normalizeAlanScriptCode(value) {
-  return value === "turkic" ? "turkic" : "cyrillic";
-}
-
-function normalizeAlanDialectCode(value) {
-  return ["canonical", "karachay", "balkar"].includes(value) ? value : "canonical";
-}
-
-function normalizeTextSizeCode(value) {
-  return ["small", "medium", "large"].includes(value) ? value : DEFAULT_USER_SETTINGS.text_size_code;
-}
 
 function applyTextSizeCode(value) {
   const normalized = normalizeTextSizeCode(value);
@@ -52,32 +31,10 @@ function applyTextSizeCode(value) {
   return normalized;
 }
 
-function normalizeCompletionTimestamp(value) {
-  if (!value) return null;
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
-}
-
-function normalizeSettings(value = {}) {
-  const interfaceLanguage = normalizeInterfaceLanguageCode(value.interface_language_code);
-  return {
-    interface_language_code: interfaceLanguage,
-    translation_language_code: interfaceLanguage,
-    alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
-    alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),
-    text_size_code: normalizeTextSizeCode(value.text_size_code),
-    learning_setup_completed_at: normalizeCompletionTimestamp(value.learning_setup_completed_at),
-  };
-}
-
 function storedSettings(fallback = DEFAULT_USER_SETTINGS) {
   const hasStoredSettings = hasScopedValue(USER_SETTINGS_KEY);
   const stored = readScopedJson(USER_SETTINGS_KEY, fallback);
-  if (hasStoredSettings && stored && typeof stored === "object"
-      && !Object.prototype.hasOwnProperty.call(stored, "learning_setup_completed_at")) {
-    return { ...stored, learning_setup_completed_at: LEGACY_SETUP_COMPLETED_AT };
-  }
-  return stored;
+  return migrateStoredUserSettings(stored, hasStoredSettings);
 }
 
 function notify() {
@@ -102,7 +59,7 @@ export function reloadUserSettings({ preserveLanguageIfMissing = false } = {}) {
         text_size_code: state.text_size_code,
       }
     : DEFAULT_USER_SETTINGS;
-  state = normalizeSettings(storedSettings(fallback));
+  state = normalizeUserSettings(storedSettings(fallback));
   applyTextSizeCode(state.text_size_code);
   writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
@@ -118,7 +75,7 @@ export function getTranslationLanguageCode() {
 }
 
 export function hasCompletedLearningSetup(settings = state) {
-  return Boolean(normalizeCompletionTimestamp(settings?.learning_setup_completed_at));
+  return hasCompletedLearningSetupCore(settings);
 }
 
 export function setUserSettings(updates = {}, {
@@ -127,13 +84,8 @@ export function setUserSettings(updates = {}, {
   requireStorage = false,
 } = {}) {
   const previous = state;
-  const next = normalizeSettings({ ...state, ...updates });
-  const changed = next.interface_language_code !== state.interface_language_code
-    || next.translation_language_code !== state.translation_language_code
-    || next.alan_script_code !== state.alan_script_code
-    || next.alan_dialect_code !== state.alan_dialect_code
-    || next.text_size_code !== state.text_size_code
-    || next.learning_setup_completed_at !== state.learning_setup_completed_at;
+  const next = applyUserSettingsUpdate(state, updates);
+  const changed = userSettingsChanged(state, next);
   state = next;
   applyTextSizeCode(state.text_size_code);
   const stored = writeScopedJson(USER_SETTINGS_KEY, state);
@@ -153,21 +105,12 @@ export function setUserSettings(updates = {}, {
 }
 
 export function completeLearningSetup(updates = {}) {
-  return setUserSettings({
-    ...updates,
-    learning_setup_completed_at: new Date().toISOString(),
-  }, { requireStorage: true });
+  const next = completeLearningSetupSettings(state, updates);
+  return setUserSettings(next, { requireStorage: true });
 }
 
 export function replaceUserSettings(settings = {}) {
-  const incoming = settings && typeof settings === "object" ? settings : {};
-  const withLocalTextSize = Object.prototype.hasOwnProperty.call(incoming, "text_size_code")
-    ? incoming
-    : { ...incoming, text_size_code: state.text_size_code };
-  const merged = Object.prototype.hasOwnProperty.call(withLocalTextSize, "learning_setup_completed_at")
-    ? withLocalTextSize
-    : { ...withLocalTextSize, learning_setup_completed_at: state.learning_setup_completed_at };
-  state = normalizeSettings(merged);
+  state = replaceUserSettingsValue(state, settings);
   applyTextSizeCode(state.text_size_code);
   writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
