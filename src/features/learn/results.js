@@ -1,3 +1,4 @@
+import { learningSessionSummary } from "../../../packages/alantil-core/learning.js";
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
@@ -7,14 +8,8 @@ import { learnState } from "./state.js?v=13.9.0";
 export function renderResults(context, words, signal, { onDone } = {}) {
   context.shell.setHeaderContent?.({ title: msg("learn.rezultat_obucheniya") });
   context.shell.setCounter("");
-  const sessionRows = Object.values(learnState.studySession.wordStats || {}).filter((row) => Number(row?.show_count || 0) > 0);
-  const studiedTotal = sessionRows.length;
-  const unknownRows = sessionRows.filter((row) => Number(row.left_swipe_count || 0) > 0);
-  const leftSwipesTotal = unknownRows.reduce((sum, row) => sum + Number(row.left_swipe_count || 0), 0);
-  const problemWords = unknownRows
-    .map((row) => ({ ...words.find((word) => String(word.id) === String(row.word_id)), fails: Number(row.left_swipe_count || 0) }))
-    .filter((word) => word.id)
-    .sort((a, b) => b.fails - a.fails);
+  const summary = learningSessionSummary(learnState.studySession.wordStats || {}, words);
+  const { studiedTotal, unknownTotal, leftSwipesTotal, problemWords } = summary;
 
   const content = problemWords.length
     ? problemWords.map((word) => renderResultRow({
@@ -33,7 +28,7 @@ export function renderResults(context, words, signal, { onDone } = {}) {
     summaryClass: "learnResultScreenSummary",
     summaryHtml: `<div class="learnResultSummary" aria-label="${msg("learn.itogi_obucheniya")}">
       <div><strong>${studiedTotal}</strong><span>${msg("learn.izucheno")}</span></div>
-      <div><strong>${unknownRows.length}</strong><span>${msg("learn.slov_ne_znayu")}</span></div>
+      <div><strong>${unknownTotal}</strong><span>${msg("learn.slov_ne_znayu")}</span></div>
       <div><strong>${leftSwipesTotal}</strong><span>${msg("learn.svaypov_vlevo_2")}</span></div>
     </div>`,
     contentHtml: content,
