@@ -4,17 +4,19 @@ import test from 'node:test';
 
 const root = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, root), 'utf8');
+const readRepo = (path) => readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
 
 test('analytics is consent-gated, scoped, sanitized and cleared when disabled', async () => {
-  const [analytics, storage] = await Promise.all([
+  const [analytics, storage, analyticsCore] = await Promise.all([
     read('src/mobile/analytics.ts'),
     read('src/mobile/storage.ts'),
+    readRepo('packages/alantil-core/analytics.js'),
   ]);
   assert.match(analytics, /preference\.enabled !== true/);
-  assert.match(analytics, /safeParameters/);
-  assert.match(analytics, /FORBIDDEN_PARAMETER_NAMES/);
-  assert.match(analytics, /'query'.*'search_query'/s);
-  assert.match(analytics, /'word'.*'translation'/s);
+  assert.match(analytics, /sanitizeAnalyticsParameters/);
+  assert.match(analyticsCore, /FORBIDDEN_ANALYTICS_PARAMETER_NAMES/);
+  assert.match(analyticsCore, /"query", "search_query"/);
+  assert.match(analyticsCore, /"word", "translation"/);
   assert.match(analytics, /slice\(-499\)/);
   assert.match(analytics, /writeScopedJson\(STORAGE_KEYS\.analyticsEvents, \[\]/);
   assert.match(storage, /analyticsPreference/);
