@@ -1,6 +1,7 @@
 import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
 import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.9.0";
+import { getLearnItemsCompleted as getSharedLearnItemsCompleted } from "../../../packages/alantil-core/learning.js";
 
 export const HIDDEN_KEY = "fc_hidden_by_set_v7";
 export const FINISHED_KEY = "fc_finished_sets_v1";
@@ -109,8 +110,7 @@ export function toggleSetFinished(dict, section, setNumber) {
 }
 
 export function getLearnItemsCompleted() {
-  const pending = new Set([...learnState.mainQueue, ...learnState.repeatQueue].map((word) => word?.id).filter(Boolean));
-  return Math.max(0, learnState.totalPlanned - pending.size);
+  return getSharedLearnItemsCompleted(learnState);
 }
 
 export function clearStudySession() {
