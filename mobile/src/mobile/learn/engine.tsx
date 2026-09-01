@@ -26,7 +26,13 @@ import { AlanIcon } from '@/src/mobile/icons';
 import { useI18n } from '@/src/mobile/i18n';
 import {
   applyLearnDecision,
+  createLearnState,
+  filterLearnWordsBySelection,
+  learningSessionPayload,
   learnQueue,
+  normalizeLearnDirection,
+  normalizeLearnSource,
+  restoreLearnState,
   splitMeaningGroups,
   undoLearnDecision,
   type LearnEntry,
@@ -50,15 +56,6 @@ type LearnWord = {
   source: MobileWord;
   examples: { example: string; translation: string }[];
 };
-
-function shuffled<T>(items: T[]) {
-  const next = items.slice();
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [next[i], next[j]] = [next[j], next[i]];
-  }
-  return next;
-}
 
 function stationFrom(params: Record<string, string | string[] | undefined>): StationDescriptor | null {
   const value = (key: string) => String(params[key] ?? '').trim();
@@ -99,8 +96,8 @@ export default function LearnSessionScreen() {
   const auth = useSession();
   const { settings } = useSettings();
   const { t } = useI18n();
-  const source: LearnState['source'] = String(params.source ?? 'station') === 'favorites' ? 'favorites' : 'station';
-  const routeDirection: LearnState['direction'] = String(params.direction ?? 'alan_ru') === 'ru_alan' ? 'ru_alan' : 'alan_ru';
+  const source: LearnState['source'] = normalizeLearnSource(params.source);
+  const routeDirection: LearnState['direction'] = normalizeLearnDirection(params.direction);
   const station = useMemo(() => stationFrom(params), [params.storyId, params.dictionaryId, params.sectionId, params.setId]);
   const [runtime, setRuntime] = useState<ActivityRuntime | null>(null);
   const [pool, setPool] = useState<LearnWord[]>([]);
@@ -165,35 +162,16 @@ export default function LearnSessionScreen() {
             }))
             .filter((word) => word.id && word.word && word.trans);
         }
-        const selectedIds = new Set(String(params.selectedIds ?? '').split(',').map((value) => value.trim()).filter(Boolean));
-        if (selectedIds.size) words = words.filter((word) => selectedIds.has(word.id));
+        words = filterLearnWordsBySelection(words, params.selectedIds);
         if (!words.length) throw new Error(t('learn.no_words'));
 
         const resumed = await resumeActivitySession<LearnState>('learn', auth.user?.id);
-        const availableIds = new Set(words.map((word) => word.id));
-        const savedIds = Array.isArray(resumed?.payload?.ids) ? resumed.payload.ids.map(String) : [];
-        const canResume = resumed?.payload?.source === source && savedIds.length > 0 && savedIds.every((id) => availableIds.has(id));
+        const restored = resumed?.payload?.source === source
+          ? restoreLearnState(resumed.payload, words, { source })
+          : null;
+        const canResume = Boolean(restored && resumed);
         const nextRuntime = canResume && resumed ? resumed.runtime : await createActivitySession('learn', settings, auth.user?.id);
-        const nextState: LearnState = canResume && resumed ? {
-          ...resumed.payload,
-          source,
-          ids: savedIds,
-          index: Math.min(savedIds.length, Math.max(0, Number(resumed.payload.index || 0))),
-          repeatIds: Array.isArray(resumed.payload.repeatIds) ? resumed.payload.repeatIds.map(String).filter((id) => availableIds.has(id)) : [],
-          entries: resumed.payload.entries && typeof resumed.payload.entries === 'object' ? resumed.payload.entries : {},
-          direction: resumed.payload.direction === 'ru_alan' ? 'ru_alan' : 'alan_ru',
-          undo: resumed.payload.undo ?? null,
-          undo_count: Math.max(0, Number(resumed.payload.undo_count || 0)),
-        } : {
-          source,
-          ids: shuffled(words.map((word) => word.id)),
-          index: 0,
-          repeatIds: [],
-          entries: {},
-          direction: routeDirection,
-          undo: null,
-          undo_count: 0,
-        };
+        const nextState = restored ?? createLearnState(words, { source, direction: routeDirection });
         if (station && source === 'station' && !canResume) {
           await Promise.all([
             markSetStarted(auth.user?.id, station.dictionaryId, station.sectionId, station.setId),
@@ -234,23 +212,11 @@ export default function LearnSessionScreen() {
   const currentId = queue[0];
   const current = currentId ? byId.get(currentId) : null;
 
-  const sessionPayload = useCallback((value: LearnState) => {
-    const entries = Object.values(value.entries);
-    return {
-      dictionary_id: station?.dictionaryId ?? 'favorites',
-      section_id: station?.sectionId ?? 'favorites',
-      set_id: station?.setId ?? 'favorites',
-      direction: value.direction,
-      words_planned: value.ids.length,
-      unique_words_shown: entries.length,
-      card_shows_total: entries.reduce((sum, entry) => sum + entry.show_count, 0),
-      left_swipes_total: entries.reduce((sum, entry) => sum + entry.left_swipe_count, 0),
-      known_words_total: entries.filter((entry) => entry.final_result === 'known').length,
-      unfinished_words_total: entries.filter((entry) => entry.final_result !== 'known').length,
-      undo_count: Math.max(0, Number(value.undo_count || 0)),
-      words: entries,
-    };
-  }, [station?.dictionaryId, station?.sectionId, station?.setId]);
+  const sessionPayload = useCallback((value: LearnState) => learningSessionPayload(value, {
+    dictionaryId: station?.dictionaryId ?? 'favorites',
+    sectionId: station?.sectionId ?? 'favorites',
+    setId: station?.setId ?? 'favorites',
+  }), [station?.dictionaryId, station?.sectionId, station?.setId]);
 
   const requestLeave = useSessionExitGuard(Boolean(runtime && state && !result), useCallback(async (reason: string) => {
     if (!runtime || !state) return;
