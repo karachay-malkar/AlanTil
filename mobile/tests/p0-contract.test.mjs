@@ -13,7 +13,7 @@ test('release version is aligned across Expo, npm and lockfile', async () => {
   ]);
   assert.equal(app.expo.version, '15.0.1');
   assert.equal(app.expo.extra.releaseVersion, '15.0.1');
-  assert.equal(app.expo.extra.visualParity, '15.0-unified-core');
+  assert.equal(app.expo.extra.visualParity, '15.0.1-web-path-parity-4options-final');
   assert.equal(app.expo.android.versionCode, 9);
   assert.equal(app.expo.ios.buildNumber, '9');
   assert.equal(pkg.version, '15.0.1');
