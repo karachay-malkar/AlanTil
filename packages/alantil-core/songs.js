@@ -1,7 +1,55 @@
 import { applyAlanCyrillicDialect } from './alan-display.js';
+import { toSlug } from './slugs.js';
+
+export const FAVORITES_PLAYLIST_ID = '__fav__';
 
 const CHORUS_MARKER = /^(?:припев|рефрен|chorus|къайтарыу|къайтарыуу|кайтарыу)\s*\d*\s*[:.]?$/iu;
 const VERSE_MARKER = /^(?:куплет|строфа|verse)\s*\d*\s*[:.]?$/iu;
+
+export function normalizeSongSearchValue(value) {
+  return String(value || '').normalize('NFC').toLocaleLowerCase('ru').replace(/\s+/g, ' ').trim();
+}
+
+export function songValueForSearchMode(song, mode) {
+  if (mode === 'artist') return song?.artist;
+  if (mode === 'lyrics') return song?.lyrics;
+  return song?.title;
+}
+
+export function songArtists(value) {
+  return String(value || '').split(/\s*\/\s*/g).map((artist) => artist.trim()).filter(Boolean);
+}
+
+export function filterSongs(songs, { playlistId = '', searchQuery = '', searchMode = 'title', favoriteIds = new Set() } = {}) {
+  const query = normalizeSongSearchValue(searchQuery);
+  const available = playlistId === FAVORITES_PLAYLIST_ID
+    ? (Array.isArray(songs) ? songs : []).filter((song) => favoriteIds.has(song.id))
+    : (Array.isArray(songs) ? songs : []);
+  return available.filter((song) => !query || normalizeSongSearchValue(songValueForSearchMode(song, searchMode)).includes(query));
+}
+
+export function buildPlaylistRoutes(playlists) {
+  const occupied = new Set(['favorites']);
+  return (Array.isArray(playlists) ? playlists : []).map((playlist) => {
+    const base = toSlug(playlist.title || playlist.id, 'playlist');
+    let slug = base;
+    let suffix = 2;
+    while (occupied.has(slug)) {
+      slug = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    occupied.add(slug);
+    return { playlist, slug };
+  });
+}
+
+export function resolvePlaylistBySlug(playlists, slug) {
+  return buildPlaylistRoutes(playlists).find((entry) => entry.slug === String(slug || '').toLowerCase())?.playlist || null;
+}
+
+export function slugForPlaylist(playlists, playlistId) {
+  return buildPlaylistRoutes(playlists).find((entry) => entry.playlist.id === playlistId)?.slug || '';
+}
 
 export function normalizeSongToken(value) {
   return String(value || '')
