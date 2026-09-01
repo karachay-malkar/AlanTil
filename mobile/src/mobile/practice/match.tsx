@@ -3,13 +3,22 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  advanceMatchRound,
+  applyMatchPair,
+  createMatchSessionState,
+  matchSessionPayload,
+  matchSessionSummary,
+  matchTranslationOptions,
+  restoreMatchSessionState,
+} from '../../../../packages/alantil-core/practice-session.js';
 import { theme } from '@/src/mobile/theme';
 import { useI18n } from '@/src/mobile/i18n';
 import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
-import { buildMatchRounds, buildScope, buildSelectedSources, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
+import { buildScope, scopeKey, type PracticeWord } from '@/src/mobile/practice/selection';
 import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
 import { getMatchSession, setMatchSession, type MatchSessionState } from '@/src/mobile/practice/state';
 import { scopedTestId, testIds } from '@/src/mobile/test-ids';
@@ -18,60 +27,13 @@ import { AppText as Text } from '@/src/mobile/typography';
 
 const LIMITS = [20, 40, 80] as const;
 
-function matchPayload(session = getMatchSession()) {
-  if (!session) return {};
-  const shownIds = Array.from(session.shown);
-  const words = shownIds.map((wordId) => ({
-    word_id: wordId,
-    matched: session.solved.has(wordId),
-    error_count: Math.max(0, Number(session.failMap[wordId]) || 0),
-  }));
-  const errors = Object.values(session.errorPairs).filter((entry) => entry.error_count > 0);
-  return {
-    selected_sources: session.selectedSources,
-    pairs_planned: session.rounds.reduce((sum, round) => sum + round.length, 0),
-    pairs_completed: session.solved.size,
-    errors_total: session.errorsCount,
-    rounds_total: session.roundIndex + 1,
-    words,
-    errors,
-    session_snapshot: {
-      limit: session.limit,
-      item_ids: session.items.map((item) => item.id),
-      rounds: session.rounds.map((round) => round.map((item) => item.id)),
-      round_index: session.roundIndex,
-      solved: Array.from(session.solved),
-      shown: Array.from(session.shown),
-      fail_map: session.failMap,
-      error_pairs: session.errorPairs,
-      errors_count: session.errorsCount,
-      selected_sources: session.selectedSources,
-    },
-  };
-}
-
-async function restoreMatchSession(settings: ReturnType<typeof useSettings>['settings'], userId?: string | null) {
+async function restoreMatchSessionFromStorage(settings: ReturnType<typeof useSettings>['settings'], userId?: string | null) {
   const resumed = await resumeSessionRuntime('match', userId);
   const snapshot = resumed?.payload?.session_snapshot as Record<string, unknown> | undefined;
   if (!resumed || !snapshot) return null;
   const words = await loadPracticeWords(settings);
-  const byId = new Map(words.map((word) => [word.id, word]));
-  const rounds = (Array.isArray(snapshot.rounds) ? snapshot.rounds : []).map((ids) => (Array.isArray(ids) ? ids : []).map((wordId) => byId.get(String(wordId))).filter((word): word is PracticeWord => Boolean(word))).filter((round) => round.length);
-  if (!rounds.length) return null;
-  const items = (Array.isArray(snapshot.item_ids) ? snapshot.item_ids : []).map((wordId) => byId.get(String(wordId))).filter((word): word is PracticeWord => Boolean(word));
-  const restored = {
-    runtime: resumed.runtime,
-    limit: Number(snapshot.limit || items.length),
-    items: items.length ? items : rounds.flat(),
-    rounds,
-    roundIndex: Math.min(rounds.length - 1, Math.max(0, Number(snapshot.round_index || 0))),
-    solved: new Set((Array.isArray(snapshot.solved) ? snapshot.solved : []).map(String)),
-    shown: new Set((Array.isArray(snapshot.shown) ? snapshot.shown : []).map(String)),
-    failMap: (snapshot.fail_map ?? {}) as Record<string, number>,
-    errorPairs: (snapshot.error_pairs ?? {}) as Record<string, { word_id_a: string; word_id_b: string; error_count: number }>,
-    errorsCount: Math.max(0, Number(snapshot.errors_count || 0)),
-    selectedSources: Array.isArray(snapshot.selected_sources) ? snapshot.selected_sources as { dictionary_id: string; section_ids: string[] }[] : [],
-  };
+  const restored = restoreMatchSessionState(resumed.runtime, snapshot, words) as MatchSessionState | null;
+  if (!restored) return null;
   setMatchSession(restored);
   return restored;
 }
@@ -116,26 +78,11 @@ export function MatchMenuScreen() {
     if (!pool.length || starting) return;
     setStarting(true);
     try {
-      const built = buildMatchRounds(pool, limit);
-      const rounds = built.rounds.filter((round) => round.length);
-      if (!rounds.length) throw new Error(t('match.not_enough_words'));
       const runtime = await createSessionRuntime('match', settings, auth.user?.id);
-      const state = {
-        runtime,
-        limit,
-        items: built.items,
-        rounds,
-        roundIndex: 0,
-        solved: new Set<string>(),
-        shown: new Set<string>(),
-        failMap: {},
-        errorPairs: {},
-        errorsCount: 0,
-        selectedSources: buildSelectedSources(pool),
-      };
-      rounds[0].forEach((word) => state.shown.add(word.id));
+      const state = createMatchSessionState({ pool, limit, runtime }) as MatchSessionState;
+      if (!state.rounds.length) throw new Error(t('match.not_enough_words'));
       setMatchSession(state);
-      await persistActiveSession(runtime, matchPayload(state));
+      await persistActiveSession(runtime, matchSessionPayload(state));
       router.push('/practice/match/session');
     } catch (reason) {
       setError(String((reason as { message?: string })?.message ?? reason));
@@ -183,19 +130,19 @@ export function MatchSessionScreen() {
   const session = getMatchSession();
   const round = session?.rounds[session.roundIndex] ?? [];
   const remaining = round.filter((word) => !session?.solved.has(word.id));
-  const translations = useMemo(() => shuffle(round.map((word) => ({ id: word.id, text: word.trans }))), [session?.roundIndex]);
+  const translations = useMemo(() => matchTranslationOptions(round), [session?.roundIndex]);
 
   const requestLeave = useSessionExitGuard(Boolean(session), useCallback(async (reason: string) => {
     const current = getMatchSession();
     if (!current) return;
-    await finalizeSession(current.runtime, matchPayload(current), 'interrupted', reason);
+    await finalizeSession(current.runtime, matchSessionPayload(current), 'interrupted', reason);
     setMatchSession(null);
   }, []));
 
   useEffect(() => {
     if (session) return;
     let active = true;
-    void restoreMatchSession(settings, auth.user?.id).then((restored) => {
+    void restoreMatchSessionFromStorage(settings, auth.user?.id).then((restored) => {
       if (!active) return;
       if (restored) setVersion((value) => value + 1); else router.replace('/practice/match');
     });
@@ -206,7 +153,7 @@ export function MatchSessionScreen() {
     setBusy(true);
     setSaveError('');
     try {
-      await finalizeSession(current.runtime, matchPayload(current), 'completed');
+      await finalizeSession(current.runtime, matchSessionPayload(current), 'completed');
       router.replace('/practice/match/results');
     } catch {
       setCompletionPending(true);
@@ -223,28 +170,24 @@ export function MatchSessionScreen() {
     </>}
   </View>;
 
-  const completeRoundIfNeeded = async (current: MatchSessionState) => {
-    const currentRound = current.rounds[current.roundIndex];
-    const done = currentRound.every((word) => current.solved.has(word.id));
-    if (!done) {
+  const persistRoundTransition = async (current: MatchSessionState) => {
+    const transition = advanceMatchRound(current);
+    if (!transition.advanced && !transition.completed) {
       setMatchSession(current);
       setSelected(null);
       setBusy(false);
       setVersion((value) => value + 1);
       return;
     }
-    if (current.roundIndex >= current.rounds.length - 1) {
+    if (transition.completed) {
       setMatchSession(current);
       setCompletionPending(true);
       await finalizeCompletedMatch(current);
       return;
     }
-    const nextShown = new Set(current.shown);
-    const nextRoundIndex = current.roundIndex + 1;
-    current.rounds[nextRoundIndex].forEach((word) => nextShown.add(word.id));
-    const next = { ...current, roundIndex: nextRoundIndex, shown: nextShown };
+    const next = transition.state as MatchSessionState;
     try {
-      await persistActiveSession(next.runtime, matchPayload(next));
+      await persistActiveSession(next.runtime, matchSessionPayload(next));
     } catch {
       setMatchSession(current);
       setSaveError(t('match.save_error'));
@@ -271,39 +214,22 @@ export function MatchSessionScreen() {
     }
     setBusy(true);
     setSaveError('');
-    const first = selected;
-    const correct = first.id === pick.id;
-    if (correct) {
-      const solved = new Set(session.solved);
-      solved.add(pick.id);
-      const next = { ...session, solved };
-      try {
-        await persistActiveSession(next.runtime, matchPayload(next));
-      } catch {
-        setSaveError(t('match.save_error'));
-        setBusy(false);
-        return;
-      }
-      await completeRoundIfNeeded(next);
-      return;
-    }
-    const failMap = { ...session.failMap };
-    failMap[first.id] = (failMap[first.id] || 0) + 1;
-    failMap[pick.id] = (failMap[pick.id] || 0) + 1;
-    const pair = [first.id, pick.id].sort();
-    const key = `${pair[0]}||${pair[1]}`;
-    const previous = session.errorPairs[key] ?? { word_id_a: pair[0], word_id_b: pair[1], error_count: 0 };
-    const errorPairs = { ...session.errorPairs, [key]: { ...previous, error_count: previous.error_count + 1 } };
-    const next = { ...session, errorsCount: session.errorsCount + 1, failMap, errorPairs };
+    const transition = applyMatchPair(session, selected.id, pick.id);
+    if (!transition) { setBusy(false); return; }
+    const next = transition.state as MatchSessionState;
     try {
-      await persistActiveSession(next.runtime, matchPayload(next));
+      await persistActiveSession(next.runtime, matchSessionPayload(next));
     } catch {
       setSaveError(t('match.save_error'));
       setBusy(false);
       return;
     }
+    if (transition.correct) {
+      await persistRoundTransition(next);
+      return;
+    }
     setMatchSession(next);
-    setWrongIds(new Set([first.id, pick.id]));
+    setWrongIds(new Set(transition.wrongIds));
     setSelected(null);
     setBusy(false);
     setTimeout(() => setWrongIds(new Set()), 500);
@@ -340,7 +266,7 @@ export function MatchSessionScreen() {
           })}
         </View>
       </View>
-      {saveError ? <View style={styles.sessionErrorBox}><Text accessibilityRole="alert" style={styles.sessionError}>{saveError}</Text>{!remaining.length ? <Pressable accessibilityRole="button" onPress={() => { setBusy(true); void completeRoundIfNeeded(session); }} style={styles.inlineRetry}><Text style={styles.retryText}>{t('common.retry').toUpperCase()}</Text></Pressable> : null}</View> : null}
+      {saveError ? <View style={styles.sessionErrorBox}><Text accessibilityRole="alert" style={styles.sessionError}>{saveError}</Text>{!remaining.length ? <Pressable accessibilityRole="button" onPress={() => { setBusy(true); void persistRoundTransition(session); }} style={styles.inlineRetry}><Text style={styles.retryText}>{t('common.retry').toUpperCase()}</Text></Pressable> : null}</View> : null}
       {!remaining.length ? <ActivityIndicator color={theme.colors.accentStrong} style={styles.roundSpinner} /> : null}
     </View>
   );
@@ -357,9 +283,7 @@ export function MatchResultsScreen() {
     void loadFavoriteIds(auth.user?.id).then(setFavorites);
   }, [match, auth.user?.id]);
   if (!match) return <View style={styles.fullLoader}><ActivityIndicator color={theme.colors.accentStrong} /></View>;
-  const total = match.rounds.reduce((sum, round) => sum + round.length, 0);
-  const clean = Math.max(0, total - Object.keys(match.failMap).length);
-  const problemWords = match.items.filter((word) => Number(match.failMap[word.id] || 0) > 0);
+  const summary = matchSessionSummary(match);
   const toggleFavorite = async (word: PracticeWord) => {
     const active = !favorites.has(word.id);
     setFavorites((current) => {
@@ -377,13 +301,13 @@ export function MatchResultsScreen() {
   return (
     <PracticeScreen testID={testIds.match.result} header={<PracticeHeader title={t('match.results')} />}>
       <View style={commonStyles.resultSummary}>
-        <Text style={commonStyles.resultPercent}>{total}/{total}</Text>
-        <Text style={commonStyles.resultText}>{t('match.matched_errors', { errors: match.errorsCount })}</Text>
-        <Text style={styles.cleanText}>{problemWords.length ? t('match.without_errors', { count: clean }) : t('match.perfect')}</Text>
+        <Text style={commonStyles.resultPercent}>{summary.total}/{summary.total}</Text>
+        <Text style={commonStyles.resultText}>{t('match.matched_errors', { errors: summary.errors })}</Text>
+        <Text style={styles.cleanText}>{summary.problemWords.length ? t('match.without_errors', { count: summary.clean }) : t('match.perfect')}</Text>
       </View>
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
       <View style={styles.resultList}>
-        {problemWords.map((word) => {
+        {summary.problemWords.map((word) => {
           const errors = match.failMap[word.id] || 0;
           return (
             <View key={word.id} style={styles.matchResultRow}>
