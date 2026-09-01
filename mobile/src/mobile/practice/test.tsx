@@ -9,7 +9,7 @@ import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
-import { buildScope, buildSelectedSources, buildWordsByPOSRounds, hasWordConflict, normalizePos, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
+import { buildScope, buildSelectedSources, buildTestWords, hasWordConflict, normalizePos, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
 import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
 import { getTestSession, setTestSession, type TestMode, type TestResult, type TestSessionState } from '@/src/mobile/practice/state';
 import { useSessionExitGuard } from '@/src/mobile/use-session-exit';
@@ -131,7 +131,7 @@ export function TestMenuScreen() {
     if (!pool.length || starting) return;
     setStarting(true);
     try {
-      const built = buildWordsByPOSRounds(pool, limit);
+      const built = buildTestWords(pool, limit);
       if (!built.items.length) throw new Error(t('test.not_enough_words'));
       const runtime = await createSessionRuntime('test', settings, session.user?.id);
       setTestSession({
