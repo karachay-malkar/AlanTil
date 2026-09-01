@@ -3,13 +3,24 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { stationTestDistractors, stationTestMasteryLevel, stationTestResult } from '../../../../packages/alantil-core/station-test.js';
+import {
+  buildStationTestOptions,
+  createStationTestState,
+  restartStationTestState,
+  restoreStationTestState,
+  stationTestMasteryLevel,
+  stationTestResult,
+  stationTestSessionPayload,
+  submitStationTestAnswer,
+  type StationTestAnswer,
+  type StationTestState,
+} from '../../../../packages/alantil-core/station-test.js';
 import { loadAllWords } from '@/src/mobile/dictionary';
 import { createActivitySession, completeActivitySession, interruptActivitySession, persistActivitySession, resumeActivitySession, type ActivityRuntime } from '@/src/mobile/activity-session';
 import { AlanIcon } from '@/src/mobile/icons';
 import { useI18n } from '@/src/mobile/i18n';
 import { loadFavoriteIds, setFavorite } from '@/src/mobile/practice/repository';
-import { shuffle, toPracticeWord, type PracticeWord } from '@/src/mobile/practice/selection';
+import { toPracticeWord, type PracticeWord } from '@/src/mobile/practice/selection';
 import { recordLocalStationTest } from '@/src/mobile/progress/guest';
 import { recordStationTest, REQUIRED_ACCURACY, stationTestPhase, type StationDescriptor } from '@/src/mobile/progress/station';
 import { useSession } from '@/src/mobile/session';
@@ -19,17 +30,10 @@ import { scopedTestId, testIds } from '@/src/mobile/test-ids';
 import { AppText as Text } from '@/src/mobile/typography';
 import { useSessionExitGuard } from '@/src/mobile/use-session-exit';
 
-type Answer = { word_id: string; result: 'correct' | 'wrong'; wrong_word_id: string | null };
-type State = { ids: string[]; index: number; answers: Answer[]; direction: 'alan_ru' | 'ru_alan'; phase: string };
-
 function stationFrom(params: Record<string, string | string[] | undefined>): StationDescriptor | null {
   const v = (key: string) => String(params[key] ?? '').trim();
   const station = { storyId: v('storyId'), dictionaryId: v('dictionaryId'), sectionId: v('sectionId'), setId: v('setId') };
   return Object.values(station).every(Boolean) ? station : null;
-}
-
-function optionsFor(item: PracticeWord, all: PracticeWord[]) {
-  return shuffle([item, ...stationTestDistractors(item, all, 3)]);
 }
 
 export default function StationTestScreen() {
@@ -40,12 +44,12 @@ export default function StationTestScreen() {
   const { settings } = useSettings();
   const { t } = useI18n();
   const [runtime, setRuntime] = useState<ActivityRuntime | null>(null);
-  const [state, setState] = useState<State | null>(null);
+  const [state, setState] = useState<StationTestState | null>(null);
   const [all, setAll] = useState<PracticeWord[]>([]);
   const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<{ answers: Answer[]; accuracy: number; passed: boolean } | null>(null);
+  const [result, setResult] = useState<{ answers: StationTestAnswer[]; accuracy: number; passed: boolean } | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState('');
 
@@ -59,17 +63,18 @@ export default function StationTestScreen() {
         const pool = words.filter((word) => word.dictionary_id === station.dictionaryId && word.section_id === station.sectionId && word.set_id === station.setId);
         if (!pool.length) throw new Error(t('station_test.no_words'));
         const phase = await stationTestPhase(station, auth.user?.id);
-        const resumed = await resumeActivitySession<State>('station_test', auth.user?.id);
-        const validIds = new Set(pool.map((word) => word.id));
-        const canResume = Boolean(resumed?.payload?.ids?.length && resumed.payload.ids.every((id) => validIds.has(id)));
-        const runtimeNext = canResume && resumed ? resumed.runtime : await createActivitySession('station_test', settings, auth.user?.id);
-        const stateNext: State = canResume && resumed ? resumed.payload : {
-          ids: shuffle(pool.map((word) => word.id)), index: 0, answers: [], direction: String(params.direction ?? 'alan_ru') === 'ru_alan' ? 'ru_alan' : 'alan_ru', phase,
-        };
+        const resumed = await resumeActivitySession<StationTestState>('station_test', auth.user?.id);
+        const restored = resumed ? restoreStationTestState(resumed.payload as Record<string, unknown>, pool) : null;
+        const runtimeNext = restored && resumed ? resumed.runtime : await createActivitySession('station_test', settings, auth.user?.id);
+        const stateNext = restored ?? createStationTestState(pool, params.direction, phase);
         if (!active) return;
         const favoriteIds = await loadFavoriteIds(auth.user?.id);
         if (!active) return;
-        setFavorites(favoriteIds); setAll(words); setRuntime(runtimeNext); setState(stateNext); setBusy(false);
+        setFavorites(favoriteIds);
+        setAll(words);
+        setRuntime(runtimeNext);
+        setState(stateNext);
+        setBusy(false);
       } catch (reason) {
         if (active) { setError(String((reason as { message?: string })?.message ?? reason)); setBusy(false); }
       }
@@ -80,18 +85,9 @@ export default function StationTestScreen() {
 
   const map = useMemo(() => new Map(all.map((word) => [word.id, word])), [all]);
   const item = state ? map.get(state.ids[state.index]) : null;
-  const options = useMemo(() => item ? optionsFor(item, all) : [], [item?.id, all]);
+  const options = useMemo(() => item ? buildStationTestOptions(item, all, state?.direction ?? 'alan_ru', 3) : [], [item?.id, all, state?.direction]);
 
-  const payloadFor = useCallback((value: State) => {
-    if (!station) return {};
-    const correctTotal = value.answers.filter((entry) => entry.result === 'correct').length;
-    const testResult = stationTestResult(value.answers, REQUIRED_ACCURACY, value.answers.length);
-    return {
-      dictionary_id: station.dictionaryId, catalog_id: station.dictionaryId, group_id: station.sectionId, section_id: station.sectionId, set_id: station.setId,
-      story_type: station.storyId, phase: value.phase, questions_total: value.answers.length, correct_total: correctTotal, wrong_total: value.answers.length - correctTotal,
-      accuracy: testResult.accuracy, required_accuracy: REQUIRED_ACCURACY, words: value.answers, direction: value.direction === 'ru_alan' ? 'ru_to_alan' : 'alan_to_translation',
-    };
-  }, [station?.storyId, station?.dictionaryId, station?.sectionId, station?.setId]);
+  const payloadFor = useCallback((value: StationTestState) => stationTestSessionPayload(value, station, REQUIRED_ACCURACY), [station?.storyId, station?.dictionaryId, station?.sectionId, station?.setId]);
 
   const requestLeave = useSessionExitGuard(Boolean(runtime && state && !result), useCallback(async (reason: string) => {
     if (!runtime || !state) return;
@@ -100,10 +96,11 @@ export default function StationTestScreen() {
 
   async function submit() {
     if (!state || !runtime || !station || !item || !selected) return;
-    const correct = selected === item.id;
-    const answer: Answer = { word_id: item.id, result: correct ? 'correct' : 'wrong', wrong_word_id: correct ? null : selected };
-    const next = { ...state, index: state.index + 1, answers: [...state.answers, answer] };
-    setSelected(''); setState(next);
+    const transition = submitStationTestAnswer(state, item.id, selected);
+    if (!transition) return;
+    const next = transition.state;
+    setSelected('');
+    setState(next);
     await persistActivitySession(runtime, next);
     if (next.index < next.ids.length) return;
     setBusy(true);
@@ -148,19 +145,23 @@ export default function StationTestScreen() {
   };
 
   if (result && station) {
-    const map = new Map(all.map((word) => [word.id, word]));
+    const resultMap = new Map(all.map((word) => [word.id, word]));
     const level = stationTestMasteryLevel(result.accuracy);
     const returnToStation = () => router.replace({ pathname: '/path/station', params: { key: [station.storyId, station.dictionaryId, station.sectionId, station.setId].join('::') } });
     const repeat = async () => {
-      setResult(null); setBusy(true);
+      setResult(null);
+      setBusy(true);
       const phase = await stationTestPhase(station, auth.user?.id);
       const nextRuntime = await createActivitySession('station_test', settings, auth.user?.id);
-      setRuntime(nextRuntime); setState({ ids: shuffle(result.answers.map((answer) => answer.word_id)), index: 0, answers: [], direction: state?.direction ?? 'alan_ru', phase }); setBusy(false);
+      const retryWords = result.answers.map((answer) => resultMap.get(answer.word_id)).filter((word): word is PracticeWord => Boolean(word));
+      setRuntime(nextRuntime);
+      setState(restartStationTestState(state, retryWords, phase));
+      setBusy(false);
     };
     return <View testID={testIds.stationTest.result} style={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 8) }]}>
       <Text style={styles.resultTitle}>{t('station_test.result_title')}</Text><Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text><Text style={styles.resultPercent}>{result.accuracy}%</Text><Text style={styles.resultSubtitle}>{result.passed ? t('station_test.passed') : t('station_test.threshold', { percent: REQUIRED_ACCURACY })}</Text>
       {notice ? <Text accessibilityRole="alert" style={styles.notice}>{notice}</Text> : null}
-      <ScrollView style={styles.resultList}>{result.answers.map((answer) => { const word = map.get(answer.word_id); const wrong = answer.wrong_word_id ? map.get(answer.wrong_word_id) : null; if (!word) return null; const correct = state?.direction === 'ru_alan' ? word.word : word.trans; const chosen = wrong ? (state?.direction === 'ru_alan' ? wrong.word : wrong.trans) : correct; const favorite = favorites.has(word.id); return <View key={answer.word_id} style={styles.resultRow}><View style={styles.resultStatus}><Text style={[styles.resultStatusText, answer.result === 'wrong' && styles.resultWrong]}>{answer.result === 'correct' ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text style={styles.resultQuestion}>{state?.direction === 'ru_alan' ? word.trans : word.word}</Text>{answer.result === 'wrong' ? <Text style={styles.resultWrong}>{t('station_test.answer')}: {chosen}</Text> : null}<Text style={styles.resultCorrect}>{t('station_test.correct')}: {correct}</Text></View><Pressable accessibilityRole="button" accessibilityLabel={favorite ? t('learn.remove_favorite', { word: word.word }) : t('learn.add_favorite', { word: word.word })} accessibilityState={{ selected: favorite }} testID={scopedTestId('station-test.favorite', word.id)} onPress={() => toggleFavorite(word.id)} style={({ pressed }) => [styles.starButton, pressed && styles.pressed]}><Text style={[styles.star, favorite && styles.starOn]}>★</Text></Pressable></View>; })}</ScrollView>
+      <ScrollView style={styles.resultList}>{result.answers.map((answer) => { const word = resultMap.get(answer.word_id); const wrong = answer.wrong_word_id ? resultMap.get(answer.wrong_word_id) : null; if (!word) return null; const correct = state?.direction === 'ru_alan' ? word.word : word.trans; const chosen = wrong ? (state?.direction === 'ru_alan' ? wrong.word : wrong.trans) : correct; const favorite = favorites.has(word.id); return <View key={answer.word_id} style={styles.resultRow}><View style={styles.resultStatus}><Text style={[styles.resultStatusText, answer.result === 'wrong' && styles.resultWrong]}>{answer.result === 'correct' ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text style={styles.resultQuestion}>{state?.direction === 'ru_alan' ? word.trans : word.word}</Text>{answer.result === 'wrong' ? <Text style={styles.resultWrong}>{t('station_test.answer')}: {chosen}</Text> : null}<Text style={styles.resultCorrect}>{t('station_test.correct')}: {correct}</Text></View><Pressable accessibilityRole="button" accessibilityLabel={favorite ? t('learn.remove_favorite', { word: word.word }) : t('learn.add_favorite', { word: word.word })} accessibilityState={{ selected: favorite }} testID={scopedTestId('station-test.favorite', word.id)} onPress={() => toggleFavorite(word.id)} style={({ pressed }) => [styles.starButton, pressed && styles.pressed]}><Text style={[styles.star, favorite && styles.starOn]}>★</Text></Pressable></View>; })}</ScrollView>
       <View style={styles.resultActions}><Pressable accessibilityRole="button" testID={testIds.stationTest.backToStation} onPress={returnToStation} style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}><Text style={styles.secondaryText}>{t('learn.to_stage').toUpperCase()}</Text></Pressable>{!result.passed ? <Pressable accessibilityRole="button" testID={testIds.stationTest.retry} onPress={() => { void repeat(); }} style={({ pressed }) => [styles.submit, pressed && styles.pressed]}><Text style={styles.submitText}>{t('common.retry').toUpperCase()}</Text></Pressable> : null}</View>
     </View>;
   }
@@ -169,10 +170,9 @@ export default function StationTestScreen() {
   const question = state.direction === 'ru_alan' ? item.trans : item.word;
   return <View testID={testIds.stationTest.screen} style={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 8) }]}>
     <View style={styles.header}><Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={() => requestLeave('header_back')} style={styles.backButton}><AlanIcon color={theme.colors.textMuted} name="back" size={22} /></Pressable><Text style={styles.title}>{t('station_test.title')}</Text><Text style={styles.counter}>{state.index + 1}/{state.ids.length}</Text></View>
-    <View style={styles.body}><Text style={styles.question}>{question}</Text><View style={styles.options}>{options.map((option) => {
-      const label = state.direction === 'ru_alan' ? option.word : option.trans;
-      return <Pressable key={option.id} accessibilityRole="radio" accessibilityState={{ checked: selected === option.id }} testID={scopedTestId('station-test.answer', option.id)} onPress={() => setSelected(option.id)} style={({ pressed }) => [styles.option, selected === option.id && styles.optionOn, pressed && styles.pressed]}><Text style={styles.optionText}>{label}</Text></Pressable>;
-    })}</View></View>
+    <View style={styles.body}><Text style={styles.question}>{question}</Text><View style={styles.options}>{options.map((option) => (
+      <Pressable key={option.id} accessibilityRole="radio" accessibilityState={{ checked: selected === option.id }} testID={scopedTestId('station-test.answer', option.id)} onPress={() => setSelected(option.id)} style={({ pressed }) => [styles.option, selected === option.id && styles.optionOn, pressed && styles.pressed]}><Text style={styles.optionText}>{option.text}</Text></Pressable>
+    ))}</View></View>
     <Pressable accessibilityRole="button" accessibilityState={{ disabled: !selected }} testID={testIds.stationTest.submit} disabled={!selected} onPress={() => { void submit(); }} style={({ pressed }) => [styles.submit, !selected && styles.disabled, pressed && styles.pressed]}><Text style={styles.submitText}>{t('station_test.submit').toUpperCase()}</Text></Pressable>
   </View>;
 }
