@@ -64,7 +64,8 @@ test('station selection affects learning but never limits the station test', asy
   ]);
   assert.match(station, /selectedIds: Array\.from\(selected\)\.join\(','\)/);
   assert.match(station, /pathname: '\/path\/station-test', params: commonParams/);
-  assert.match(learn, /words = words\.filter\(\(word\) => selectedIds\.has\(word\.id\)\)/);
+  assert.match(learn, /filterLearnWordsBySelection\(words, params\.selectedIds\)/);
+  assert.doesNotMatch(station, /station-test[^\n]*selectedIds/);
 });
 
 test('startup waits for session/settings and Test/Match restore guarded snapshots', async () => {
