@@ -3,12 +3,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { stationTestDistractors, stationTestMasteryLevel, stationTestResult } from '../../../../packages/alantil-core/station-test.js';
 import { loadAllWords } from '@/src/mobile/dictionary';
 import { createActivitySession, completeActivitySession, interruptActivitySession, persistActivitySession, resumeActivitySession, type ActivityRuntime } from '@/src/mobile/activity-session';
 import { AlanIcon } from '@/src/mobile/icons';
 import { useI18n } from '@/src/mobile/i18n';
 import { loadFavoriteIds, setFavorite } from '@/src/mobile/practice/repository';
-import { hasWordConflict, shuffle, toPracticeWord, type PracticeWord } from '@/src/mobile/practice/selection';
+import { shuffle, toPracticeWord, type PracticeWord } from '@/src/mobile/practice/selection';
 import { recordLocalStationTest } from '@/src/mobile/progress/guest';
 import { recordStationTest, REQUIRED_ACCURACY, stationTestPhase, type StationDescriptor } from '@/src/mobile/progress/station';
 import { useSession } from '@/src/mobile/session';
@@ -28,14 +29,7 @@ function stationFrom(params: Record<string, string | string[] | undefined>): Sta
 }
 
 function optionsFor(item: PracticeWord, all: PracticeWord[]) {
-  const candidates = shuffle(all.filter((candidate) => candidate.id !== item.id && candidate.pos === item.pos));
-  const selected: PracticeWord[] = [];
-  for (const candidate of candidates) {
-    if (selected.length >= 3) break;
-    if (hasWordConflict(candidate, [item, ...selected])) continue;
-    selected.push(candidate);
-  }
-  return shuffle([item, ...selected]);
+  return shuffle([item, ...stationTestDistractors(item, all, 3)]);
 }
 
 export default function StationTestScreen() {
@@ -91,11 +85,11 @@ export default function StationTestScreen() {
   const payloadFor = useCallback((value: State) => {
     if (!station) return {};
     const correctTotal = value.answers.filter((entry) => entry.result === 'correct').length;
-    const accuracy = value.answers.length ? Math.round((correctTotal / value.answers.length) * 100) : 0;
+    const testResult = stationTestResult(value.answers, REQUIRED_ACCURACY, value.answers.length);
     return {
       dictionary_id: station.dictionaryId, catalog_id: station.dictionaryId, group_id: station.sectionId, section_id: station.sectionId, set_id: station.setId,
       story_type: station.storyId, phase: value.phase, questions_total: value.answers.length, correct_total: correctTotal, wrong_total: value.answers.length - correctTotal,
-      accuracy, required_accuracy: REQUIRED_ACCURACY, words: value.answers, direction: value.direction === 'ru_alan' ? 'ru_to_alan' : 'alan_to_translation',
+      accuracy: testResult.accuracy, required_accuracy: REQUIRED_ACCURACY, words: value.answers, direction: value.direction === 'ru_alan' ? 'ru_to_alan' : 'alan_to_translation',
     };
   }, [station?.storyId, station?.dictionaryId, station?.sectionId, station?.setId]);
 
@@ -114,8 +108,9 @@ export default function StationTestScreen() {
     if (next.index < next.ids.length) return;
     setBusy(true);
     const payload = payloadFor(next);
-    const accuracy = Number(payload.accuracy || 0);
-    const passed = accuracy >= REQUIRED_ACCURACY;
+    const finalResult = stationTestResult(next.answers, REQUIRED_ACCURACY, next.ids.length);
+    const accuracy = finalResult.accuracy;
+    const passed = finalResult.passed;
     let endedAt = new Date().toISOString();
     const warnings: string[] = [];
     try {
@@ -154,7 +149,7 @@ export default function StationTestScreen() {
 
   if (result && station) {
     const map = new Map(all.map((word) => [word.id, word]));
-    const level = result.accuracy === 100 ? 3 : result.accuracy >= 90 ? 2 : result.accuracy >= REQUIRED_ACCURACY ? 1 : 0;
+    const level = stationTestMasteryLevel(result.accuracy);
     const returnToStation = () => router.replace({ pathname: '/path/station', params: { key: [station.storyId, station.dictionaryId, station.sectionId, station.setId].join('::') } });
     const repeat = async () => {
       setResult(null); setBusy(true);
