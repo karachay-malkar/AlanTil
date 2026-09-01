@@ -1,0 +1,32 @@
+name: Sync AlanTil 15.0.1 Expo patches
+
+on:
+  push:
+    branches:
+      - agent/15.0-unified-core
+    paths:
+      - '.github/workflows/mobile-15-0-1-expo-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/15.0-unified-core
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Sync Expo SDK patch versions
+        working-directory: mobile
+        run: npm install expo@~57.0.19 expo-asset@~57.0.16 expo-constants@~57.0.17 expo-linking@~57.0.9 expo-router@~57.0.18 --save
+      - name: Commit lockfile sync
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/package.json mobile/package-lock.json
+          git commit -m "15.0.1: sync Expo SDK patch dependencies"
+          git push origin HEAD:agent/15.0-unified-core
