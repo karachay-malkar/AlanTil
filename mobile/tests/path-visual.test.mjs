@@ -13,9 +13,9 @@ import {
 const root = new URL('../', import.meta.url);
 const read = (path) => readFile(new URL(path, root), 'utf8');
 
-test('Path follows the final web four-step left, center, right, center wave', () => {
+test('Path follows the final Web 13.15.12 alternating left/right station wave', () => {
   const shifts = Array.from({ length: 8 }, (_, index) => routeWaveShift(index, 360));
-  assert.deepEqual(shifts, [-79.2, 0, 79.2, 0, -79.2, 0, 79.2, 0]);
+  assert.deepEqual(shifts, [-79.2, 79.2, -79.2, 79.2, -79.2, 79.2, -79.2, 79.2]);
   assert.equal(routeWaveAmplitude(200), 64);
   assert.equal(routeWaveAmplitude(1000), 90);
 });

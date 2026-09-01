@@ -22,8 +22,8 @@ export function routeWaveAmplitude(routeWidth: number) {
 
 export function routeWaveShift(index: number, routeWidth: number) {
   const amplitude = routeWaveAmplitude(routeWidth);
-  const pattern = [-amplitude, 0, amplitude, 0] as const;
-  return pattern[Math.max(0, Math.floor(index)) % designTokens.path.waveSteps];
+  // Web 13.15.12 alternates stations left/right with no center stop.
+  return Math.max(0, Math.floor(index)) % 2 === 0 ? -amplitude : amplitude;
 }
 
 export function routeConnectorSegment(from: RoutePoint, to: RoutePoint): RouteConnectorSegment {

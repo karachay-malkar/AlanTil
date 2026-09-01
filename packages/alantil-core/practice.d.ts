@@ -55,5 +55,6 @@ export function buildSelectedSources<T extends CorePracticeWord>(words: T[]): { 
 export function hasWordConflict<T extends CorePracticeWord>(candidate: T, selected: T[]): boolean;
 export function buildRoundPOSList<T extends CorePracticeWord>(pool: T[], roundsCount: number): string[];
 export function buildWordsByPOSRounds<T extends CorePracticeWord>(pool: T[], totalLimit: number, options?: BuildWordsOptions): BuildWordsResult<T>;
+export function buildTestOptions<T extends CorePracticeWord>(item: T, optionPool: T[], mode?: "kb" | "ru", count?: number): { id: string; text: string }[];
 export function buildTestWords<T extends CorePracticeWord>(pool: T[], totalLimit: number): BuildWordsResult<T>;
 export function buildMatchRounds<T extends CorePracticeWord>(pool: T[], totalLimit: number): BuildWordsResult<T>;

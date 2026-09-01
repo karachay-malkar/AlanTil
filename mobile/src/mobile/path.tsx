@@ -193,7 +193,8 @@ function routeVisualItems(story?: RouteStory): RouteVisualItem[] {
   const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
   const items: RouteVisualItem[] = [];
   [...story.catalogs].reverse().forEach((catalog) => {
-    [...catalog.sections].reverse().forEach((section) => {
+    const reversedSections = [...catalog.sections].reverse();
+    reversedSections.forEach((section, sectionIndex) => {
       [...section.stations].reverse().forEach((station) => {
         items.push({
           type: 'station',
@@ -202,7 +203,11 @@ function routeVisualItems(story?: RouteStory): RouteVisualItem[] {
           index: stationIndex.get(station.key) ?? 0,
         });
       });
-      items.push({ type: 'section', key: `section:${catalog.id}:${section.id}`, section, catalog });
+      // Web 13.15.12 does not render section titles on the route map.
+      // Keep only an invisible boundary spacer between sections for connector/scale anchors.
+      if (sectionIndex < reversedSections.length - 1) {
+        items.push({ type: 'section', key: `section:${catalog.id}:${section.id}`, section, catalog });
+      }
     });
     items.push({ type: 'catalog', key: `catalog:${catalog.id}`, catalog });
   });
@@ -985,7 +990,7 @@ export function PathRoot() {
   return (
     <View testID={testIds.path.screen} style={styles.pathScreen}>
       <TopographicBackdrop />
-      <View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 82 + insets.top }]}>
+      <View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 68 + insets.top }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
           {bundle.route.storyOrder.map((id) => (
             <Pressable
@@ -996,7 +1001,7 @@ export function PathRoot() {
               onPress={() => switchStory(id)}
               style={styles.storyTabButton}
             >
-              <Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>{bundle.route.stories[id].name}</Text>
+              <Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>[ {bundle.route.stories[id].name} ]</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -1041,7 +1046,6 @@ export function PathRoot() {
                   onLayout={(event) => rememberRouteLayout(item.key, event.nativeEvent.layout)}
                   style={styles.sectionHeadingBlock}
                 >
-                  {item.section.name ? <Text style={styles.sectionHeading}>{item.section.name}</Text> : null}
                 </View>
               );
             }
@@ -1058,7 +1062,7 @@ export function PathRoot() {
         </View>
       </ScrollView>
 
-      <View pointerEvents="none" style={[styles.pathTopMask, { height: insets.top + 94 }]} />
+      <View pointerEvents="none" style={[styles.pathTopMask, { height: insets.top + 78 }]} />
       <View pointerEvents="none" style={[styles.pathBottomMask, { height: 34 + Math.max(insets.bottom, 4) }]} />
       <RouteScale
         story={story}
@@ -1237,11 +1241,11 @@ const styles = StyleSheet.create({
   sceneShade: { position: 'absolute', right: -120, bottom: -110, width: 420, height: 360, borderRadius: 210, backgroundColor: 'rgba(188,176,151,0.16)' },
   contourGroup: { position: 'absolute' },
   contourRing: { position: 'absolute', borderWidth: 1, borderColor: 'rgba(73,78,57,0.075)', borderRadius: 999 },
-  pathTopMask: { position: 'absolute', left: 0, right: 0, top: 0, zIndex: 20, backgroundColor: 'rgba(238,233,223,0.76)' },
+  pathTopMask: { position: 'absolute', left: 0, right: 0, top: 0, zIndex: 20, backgroundColor: 'rgba(238,233,223,0.62)' },
   pathBottomMask: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(238,233,223,0.82)' },
-  pathHeader: { zIndex: 30, height: 82, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: 'transparent' },
+  pathHeader: { zIndex: 30, height: 68, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: 'transparent' },
   storyTabs: { minWidth: '100%', alignItems: 'center', gap: 3, paddingHorizontal: 4 },
-  storyTabButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 5 },
+  storyTabButton: { height: 32, justifyContent: 'center', paddingHorizontal: 4 },
   storyTab: { color: theme.colors.textSoft, fontSize: 11, fontWeight: '700' },
   storyTabActive: { color: theme.colors.text },
   storyProgressRow: { height: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
@@ -1255,11 +1259,11 @@ const styles = StyleSheet.create({
   routeMap: { position: 'relative', zIndex: 1, width: '100%', maxWidth: 560, minHeight: 720, alignItems: 'center', paddingTop: 76, paddingRight: 50, paddingBottom: 108, paddingLeft: 20 },
   routeConnector: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 0 },
   routeConnectorSegment: { position: 'absolute', height: 0, borderTopWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(77,69,56,0.34)' },
-  catalogHeadingBlock: { zIndex: 1, minHeight: 28, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 64 },
+  catalogHeadingBlock: { zIndex: 1, minHeight: 28, width: '100%', alignItems: 'center', justifyContent: 'center', marginTop: 22, marginBottom: 118 },
   catalogHeading: { color: theme.colors.text, fontSize: 17, fontWeight: '800', letterSpacing: 0.6, textAlign: 'center' },
-  sectionHeadingBlock: { zIndex: 1, minHeight: 24, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 52 },
+  sectionHeadingBlock: { zIndex: 1, height: 92, width: '100%' },
   sectionHeading: { color: theme.colors.text, fontSize: 14, fontWeight: '800', textAlign: 'center', maxWidth: 260 },
-  stationNode: { zIndex: 1, width: 60, height: 108, marginBottom: 30, alignItems: 'center', overflow: 'visible' },
+  stationNode: { zIndex: 1, width: 60, height: 60, marginBottom: 43, alignItems: 'center', overflow: 'visible' },
   stationPressed: { opacity: 0.8 },
   stationRing: { position: 'relative', width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
   stationRingMark: { position: 'absolute', width: 3, height: 6, borderRadius: 2, backgroundColor: 'rgba(105,92,70,0.18)' },

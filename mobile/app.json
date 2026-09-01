@@ -2,18 +2,18 @@
   "expo": {
     "name": "Алан тил",
     "slug": "alantil",
-    "version": "15.0.0",
+    "version": "15.0.1",
     "orientation": "portrait",
     "scheme": "alantil",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "8"
+      "buildNumber": "9"
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "backgroundColor": "#eee9df"
       }
@@ -26,7 +26,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "releaseVersion": "15.0.0",
+      "releaseVersion": "15.0.1",
       "visualParity": "15.0-unified-core"
     }
   }

@@ -9,7 +9,7 @@ import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
-import { buildScope, buildSelectedSources, buildTestWords, hasWordConflict, normalizePos, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
+import { buildScope, buildSelectedSources, buildTestOptions, buildTestWords, scopeKey, type PracticeWord } from '@/src/mobile/practice/selection';
 import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
 import { getTestSession, setTestSession, type TestMode, type TestResult, type TestSessionState } from '@/src/mobile/practice/state';
 import { useSessionExitGuard } from '@/src/mobile/use-session-exit';
@@ -19,22 +19,7 @@ import { AppText as Text } from '@/src/mobile/typography';
 const LIMITS = [20, 40, 80] as const;
 
 function optionsFor(item: PracticeWord, optionPool: PracticeWord[], mode: TestMode) {
-  const correctText = mode === 'kb' ? item.trans : item.word;
-  const targetPOS = normalizePos(item.pos);
-  const pool = shuffle(optionPool.filter((candidate) => candidate.id !== item.id && normalizePos(candidate.pos) === targetPOS).slice());
-  const options = [{ id: item.id, text: correctText }];
-  const selectedWords: PracticeWord[] = [];
-  const usedTexts = new Set([correctText]);
-  for (const candidate of pool) {
-    if (options.length >= 4) break;
-    if (hasWordConflict(candidate, [item, ...selectedWords])) continue;
-    const text = mode === 'kb' ? candidate.trans : candidate.word;
-    if (!text || usedTexts.has(text)) continue;
-    usedTexts.add(text);
-    selectedWords.push(candidate);
-    options.push({ id: candidate.id, text });
-  }
-  return shuffle(options);
+  return buildTestOptions(item, optionPool, mode, 4);
 }
 
 function sessionPayload(session = getTestSession()) {

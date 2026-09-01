@@ -285,6 +285,45 @@ export function buildWordsByPOSRounds(pool, totalLimit, options = {}) {
   };
 }
 
+export function buildTestOptions(item, optionPool, mode = "kb", count = 4) {
+  if (!item) return [];
+  const desired = Math.max(1, Math.floor(Number(count) || 4));
+  const answerText = (word) => normalizeId(mode === "kb" ? word?.trans : word?.word);
+  const itemId = normalizeId(item?.id ?? item?.word_id);
+  const correctText = answerText(item);
+  const targetPOS = normalizePos(item?.pos);
+  const source = (Array.isArray(optionPool) ? optionPool : []).filter(Boolean);
+  const selectedWords = [];
+  const options = [{ id: itemId, text: correctText }];
+  const usedIds = new Set([itemId]);
+  const usedTexts = new Set([correctText]);
+
+  const appendFrom = (candidates, requireConflictFree) => {
+    for (const candidate of shuffle(candidates.slice())) {
+      if (options.length >= desired) break;
+      const id = normalizeId(candidate?.id ?? candidate?.word_id);
+      const text = answerText(candidate);
+      if (!id || usedIds.has(id) || !text || usedTexts.has(text)) continue;
+      if (requireConflictFree && hasWordConflict(candidate, [item, ...selectedWords])) continue;
+      usedIds.add(id);
+      usedTexts.add(text);
+      selectedWords.push(candidate);
+      options.push({ id, text });
+    }
+  };
+
+  const samePOS = source.filter((candidate) => normalizePos(candidate?.pos) === targetPOS);
+  appendFrom(samePOS, true);
+  if (options.length < desired) appendFrom(source, true);
+  // If a very narrow scope has too few conflict-free distractors, preserve four visible
+  // alternatives rather than degrading the UI to two or three buttons. Exact duplicate
+  // answer texts are still forbidden.
+  if (options.length < desired) appendFrom(samePOS, false);
+  if (options.length < desired) appendFrom(source, false);
+
+  return shuffle(options.slice(0, desired));
+}
+
 export function buildTestWords(pool, totalLimit) {
   return buildWordsByPOSRounds(pool, totalLimit, { requireConflictFree: false });
 }

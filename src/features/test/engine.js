@@ -1,8 +1,7 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { normalizePos } from "../../shared/domain/word-normalizer.js?v=13.9.0";
-import { buildTestWords, hasWordConflict, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
+import { buildTestOptions, buildTestWords } from "../../shared/domain/word-selection.js?v=15.0.1";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
@@ -112,26 +111,7 @@ export function startTest(pool, mode, limit, metadata = {}, optionPool = pool) {
 }
 
 export function pickOptions(item) {
-  const correctText = testState.mode === "kb" ? item.trans : item.word;
-  const targetPOS = normalizePos(item.pos);
-  const pool = shuffle(testState.optionPool.filter((candidate) => (
-    String(candidate.id) !== String(item.id)
-    && normalizePos(candidate.pos) === targetPOS
-  )).slice());
-
-  const options = [{ id: item.id, text: correctText }];
-  const selectedWords = [];
-  const usedTexts = new Set([correctText]);
-  for (const candidate of pool) {
-    if (options.length >= 4) break;
-    if (hasWordConflict(candidate, [item, ...selectedWords])) continue;
-    const text = testState.mode === "kb" ? candidate.trans : candidate.word;
-    if (!text || usedTexts.has(text)) continue;
-    usedTexts.add(text);
-    selectedWords.push(candidate);
-    options.push({ id: candidate.id, text });
-  }
-  return shuffle(options);
+  return buildTestOptions(item, testState.optionPool, testState.mode, 4);
 }
 
 export function submitAnswer(answer) {

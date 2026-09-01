@@ -3,6 +3,7 @@ export {
   buildRoundPOSList,
   buildSelectedSources,
   buildScope,
+  buildTestOptions,
   buildTestWords,
   buildWordsByPOSRounds,
   dictsFrom,

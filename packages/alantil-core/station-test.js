@@ -1,4 +1,4 @@
-import { hasWordConflict, normalizePos, parseSynonyms, shuffle, splitGroups } from './practice.js';
+import { buildTestOptions, hasWordConflict, normalizePos, parseSynonyms, shuffle, splitGroups } from './practice.js';
 
 export function normalizedLexeme(value) {
   return String(value || '').normalize('NFC').toLowerCase().replace(/[’'`ʼъь\s\-–—.,;:!?()[\]{}]/g, '').trim();
@@ -33,22 +33,35 @@ export function stationTestCandidateIsAmbiguous(candidate, item, selected = []) 
 
 export function stationTestDistractors(item, allWords, count = 3) {
   const targetPos = normalizePos(item?.pos);
-  const samePos = shuffle((Array.isArray(allWords) ? allWords : []).filter((candidate) => normalizePos(candidate?.pos) === targetPos).slice());
+  const source = (Array.isArray(allWords) ? allWords : []).filter(Boolean);
   const selected = [];
-  for (const candidate of samePos) {
-    if (selected.length >= Math.max(0, Number(count || 0))) break;
-    if (stationTestCandidateIsAmbiguous(candidate, item, selected)) continue;
-    selected.push(candidate);
-  }
+  const appendSafe = (candidates) => {
+    for (const candidate of shuffle(candidates.slice())) {
+      if (selected.length >= Math.max(0, Number(count || 0))) break;
+      if (stationTestCandidateIsAmbiguous(candidate, item, selected)) continue;
+      selected.push(candidate);
+    }
+  };
+  appendSafe(source.filter((candidate) => normalizePos(candidate?.pos) === targetPos));
+  if (selected.length < count) appendSafe(source);
   return selected;
 }
 
 export function buildStationTestOptions(item, allWords, mode = 'kb', count = 3) {
-  const words = [item, ...stationTestDistractors(item, allWords, count)].filter(Boolean);
-  return shuffle(words).map((word) => ({
-    id: String(word.id),
-    text: String(mode === 'ru' || mode === 'ru_alan' ? word.word : word.trans || ''),
-    word,
+  const desired = Math.max(1, Math.floor(Number(count || 0)) + 1);
+  const strictWords = [item, ...stationTestDistractors(item, allWords, count)].filter(Boolean);
+  if (strictWords.length >= desired) {
+    return shuffle(strictWords).map((word) => ({
+      id: String(word.id),
+      text: String(mode === 'ru' || mode === 'ru_alan' ? word.word : word.trans || ''),
+      word,
+    }));
+  }
+  const normalizedMode = mode === 'ru' || mode === 'ru_alan' ? 'ru' : 'kb';
+  const byId = new Map((Array.isArray(allWords) ? allWords : []).map((word) => [String(word?.id ?? ''), word]));
+  return buildTestOptions(item, allWords, normalizedMode, desired).map((option) => ({
+    ...option,
+    word: byId.get(String(option.id)) || item,
   }));
 }
 

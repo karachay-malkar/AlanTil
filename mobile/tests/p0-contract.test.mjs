@@ -11,14 +11,14 @@ test('release version is aligned across Expo, npm and lockfile', async () => {
     read('package.json').then(JSON.parse),
     read('package-lock.json').then(JSON.parse),
   ]);
-  assert.equal(app.expo.version, '15.0.0');
-  assert.equal(app.expo.extra.releaseVersion, '15.0.0');
+  assert.equal(app.expo.version, '15.0.1');
+  assert.equal(app.expo.extra.releaseVersion, '15.0.1');
   assert.equal(app.expo.extra.visualParity, '15.0-unified-core');
-  assert.equal(app.expo.android.versionCode, 8);
-  assert.equal(app.expo.ios.buildNumber, '8');
-  assert.equal(pkg.version, '15.0.0');
-  assert.equal(lock.version, '15.0.0');
-  assert.equal(lock.packages[''].version, '15.0.0');
+  assert.equal(app.expo.android.versionCode, 9);
+  assert.equal(app.expo.ios.buildNumber, '9');
+  assert.equal(pkg.version, '15.0.1');
+  assert.equal(lock.version, '15.0.1');
+  assert.equal(lock.packages[''].version, '15.0.1');
   assert.equal(pkg.scripts.test, 'node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.mjs');
   const runtimeVersion = await read('src/mobile/version.ts');
   assert.match(runtimeVersion, /expoConfig\?\.version/);

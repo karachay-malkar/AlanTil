@@ -26,7 +26,7 @@ test('station test normalization and ambiguity follow web rules', () => {
 test('station test options preserve one correct answer and safe distractors', () => {
   const options = buildStationTestOptions(words[0], words, 'kb', 3);
   assert.equal(options.filter((option) => option.id === '1').length, 1);
-  assert.ok(options.length >= 1 && options.length <= 4);
+  assert.equal(options.length, 4);
   const distractors = options.filter((option) => option.id !== '1').map((option) => option.word);
   distractors.forEach((candidate, index) => {
     assert.equal(stationTestCandidateIsAmbiguous(candidate, words[0], distractors.slice(0, index)), false);

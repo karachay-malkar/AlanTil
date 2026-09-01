@@ -7,6 +7,7 @@ import {
   buildMatchRounds,
   buildScope,
   buildSelectedSources,
+  buildTestOptions,
   buildTestWords,
   buildWordsByPOSRounds,
   dictsFrom,
@@ -37,6 +38,20 @@ test('15.0 shared test policy returns the requested 20/40/80 items when the pool
     assert.equal(new Set(result.items.map((item) => item.id)).size, limit);
     assert.equal(result.complete, true);
   }
+});
+
+test('15.0 shared test options stay at four choices even when same-POS distractors are sparse', () => {
+  const pool = [
+    { id: 'n1', word: 'alan-1', trans: 'one', pos: 'noun', synonyms: [] },
+    { id: 'n2', word: 'alan-2', trans: 'two', pos: 'noun', synonyms: [] },
+    { id: 'v1', word: 'alan-3', trans: 'three', pos: 'verb', synonyms: [] },
+    { id: 'a1', word: 'alan-4', trans: 'four', pos: 'adjective', synonyms: [] },
+    { id: 'd1', word: 'alan-5', trans: 'five', pos: 'adverb', synonyms: [] },
+  ];
+  const options = buildTestOptions(pool[0], pool, 'kb', 4);
+  assert.equal(options.length, 4);
+  assert.equal(new Set(options.map((option) => option.text)).size, 4);
+  assert.equal(options.filter((option) => option.id === 'n1').length, 1);
 });
 
 test('15.0 shared practice core fills sparse POS test rounds from other parts of speech', () => {
