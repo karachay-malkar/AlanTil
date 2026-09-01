@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { combineNumberedExamples, parseExampleGroups } from '../packages/alantil-core/example-groups.js';
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from '../packages/alantil-core/learning-route.js';
 import {
   buildScope,
   buildSelectedSources,
@@ -14,6 +15,7 @@ import {
   wordsForSet,
 } from '../packages/alantil-core/practice.js';
 import { createSlugMap, toSlug } from '../packages/alantil-core/slugs.js';
+import { normalizeLegacyWordEntry, normalizeSupabaseWordEntry, permanentSectionId, storyIdForDictionary } from '../packages/alantil-core/word-normalizer.js';
 
 function makeWords(count, posCycle = ['noun', 'verb', 'adjective', 'adverb']) {
   return Array.from({ length: count }, (_, index) => ({
@@ -102,4 +104,37 @@ test('15.0 shared core owns example grouping and pairing', () => {
     { index: 0, lines: ['Бир', 'Эки'] },
     { index: 1, lines: ['Юч'] },
   ]);
+});
+
+test('15.0 shared core owns legacy and Supabase word normalization', () => {
+  assert.equal(storyIdForDictionary('beginner'), 'oblivion');
+  assert.equal(permanentSectionId('beginner', 'beginner-16'), 'beginner-elementary');
+  const legacy = normalizeLegacyWordEntry({ id: '7', section: '1', set: '1', word: 'Сёз', trans: 'Слово', global_order: 1 });
+  assert.equal(legacy?.story_id, 'oblivion');
+  assert.equal(legacy?.dictionary_id, 'beginner');
+  assert.equal(legacy?.section_id, 'beginner-starter');
+  const modern = normalizeSupabaseWordEntry({
+    word_id: '8', global_order: 2, story_id: 'roots', dictionary_id: 'intermediate', section_id: 'intermediate-intermediate', set_id: 'intermediate-01',
+    word_alan_cyrillic: 'Тил', translation_ru: 'Язык', dictionary_name_ru: 'Средний', section_name_ru: 'Intermediate', set_name_ru: '01', used_in_test: true,
+  });
+  assert.equal(modern?.word_id, '8');
+  assert.equal(modern?.story_id, 'roots');
+  assert.equal(modern?.usedInTest, true);
+});
+
+test('15.0 shared core builds and resolves the same learning route for every client', () => {
+  const base = {
+    story_id: 'oblivion', story_name: 'На пороге забвения', dictionary_id: 'beginner', dictionary_name: 'Начальный', section_id: 'beginner-starter', section_name: 'Starter',
+  };
+  const words = [
+    { ...base, id: 'w1', set_id: 'beginner-01', set_name: '', global_order: 1 },
+    { ...base, id: 'w2', set_id: 'beginner-01', set_name: '', global_order: 2 },
+    { ...base, id: 'w3', set_id: 'beginner-02', set_name: '', global_order: 3 },
+  ];
+  const route = buildLearningRoute(words);
+  assert.deepEqual(route.storyOrder, ['oblivion']);
+  assert.equal(route.stories.oblivion.stationCount, 2);
+  const station = route.stories.oblivion.stations[1];
+  const params = stationPathParams(route, station);
+  assert.equal(resolveStationFromParams(route, params)?.key, station.key);
 });
