@@ -1,4 +1,4 @@
-name: AlanTil 15 dependency sync
+name: AlanTil 15 release metadata sync
 
 on:
   push:
@@ -25,17 +25,30 @@ jobs:
       - name: Install pinned project dependencies
         working-directory: mobile
         run: npm ci
-      - name: Install Expo-compatible auth browser
-        working-directory: mobile
-        run: npx expo install expo-web-browser
-      - name: Commit generated dependency metadata
+      - name: Set 15.0 release version
+        shell: bash
+        run: |
+          cd mobile
+          npm version 15.0.0 --no-git-tag-version
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const app = JSON.parse(readFileSync('app.json', 'utf8'));
+          app.expo.version = '15.0.0';
+          app.expo.android.versionCode = 8;
+          app.expo.ios.buildNumber = '8';
+          app.expo.extra = {
+            ...(app.expo.extra || {}),
+            releaseVersion: '15.0.0',
+            visualParity: '15.0-unified-core',
+          };
+          writeFileSync('app.json', `${JSON.stringify(app, null, 2)}\n`);
+          NODE
+          node scripts/release-metadata.mjs >/dev/null
+      - name: Commit generated release metadata
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add mobile/package.json mobile/package-lock.json
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m '15.0: add Expo auth browser dependency'
+          git add mobile/package.json mobile/package-lock.json mobile/app.json
+          git commit -m '15.0: set mobile release version' || exit 0
           git push origin HEAD:agent/15.0-unified-core
