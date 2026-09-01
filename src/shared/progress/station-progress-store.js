@@ -1,74 +1,30 @@
-import { PATH_CONFIG } from "../../config/path.js?v=13.13";
 import { stationKey } from "../domain/learning-route.js?v=13.13";
-import { permanentSectionId, storyIdForDictionary } from "../domain/word-normalizer.js?v=13.13";
 import { getInterfaceLocale } from "../i18n/index.js?v=13.9.0";
 import { enqueueProgress } from "./progress-queue.js?v=13.9.0";
 import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
+import {
+  createStationProgressRow,
+  effectiveStationStatus,
+  markStationCardsCompletedProgress,
+  markStationStartedProgress,
+  mergeStationProgress,
+  normalizeStationProgressRow,
+  recordStationTestProgress,
+  stationProgressMapKey,
+  stationProgressTime,
+  stationTestPhaseFromProgress,
+} from "../../../packages/alantil-core/progress.js";
 
 export const STATION_PROGRESS_KEY = "alantil_station_progress_v13_2";
-const DAY_MS = 24 * 60 * 60 * 1000;
 const listeners = new Set();
-
-function nowIso() {
-  return new Date().toISOString();
-}
-
-function asTime(value) {
-  const parsed = Date.parse(value || "");
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function effectiveStatus(row, now = Date.now()) {
-  const status = String(row?.status || "");
-  if (status === "review_1_waiting" && asTime(row.review_1_due_at) <= now) return "review_1_due";
-  if (status === "review_2_waiting" && asTime(row.review_2_due_at) <= now) return "review_2_due";
-  return status || "available";
-}
-
-function normalizeRow(row = {}) {
-  const dictionaryId = String(row.dictionary_id || row.catalog_id || PATH_CONFIG.dictionaryId).trim();
-  const setId = String(row.set_id || "").trim();
-  const persistedSection = String(row.section_id || row.group_id || "").trim();
-  const sectionId = persistedSection && persistedSection !== dictionaryId
-    ? persistedSection
-    : permanentSectionId(dictionaryId, setId);
-  const storyType = String(row.story_type || storyIdForDictionary(dictionaryId) || "").trim();
-  const normalized = {
-    dictionary_id: dictionaryId,
-    catalog_id: dictionaryId,
-    // The persistence schema keeps the historical column name group_id.
-    // Its value is now the real Section ID.
-    group_id: sectionId,
-    set_id: setId,
-    story_type: storyType,
-    status: String(row.status || "available"),
-    current_phase: String(row.current_phase || "study"),
-    study_sessions_total: Math.max(0, Number(row.study_sessions_total || 0)),
-    test_attempts_total: Math.max(0, Number(row.test_attempts_total || 0)),
-    best_accuracy: Math.max(0, Math.min(100, Number(row.best_accuracy || 0))),
-    first_test_completed_at: row.first_test_completed_at || null,
-    review_1_due_at: row.review_1_due_at || null,
-    review_1_completed_at: row.review_1_completed_at || null,
-    review_2_due_at: row.review_2_due_at || null,
-    review_2_completed_at: row.review_2_completed_at || null,
-    mastered_at: row.mastered_at || null,
-    updated_at: row.updated_at || nowIso(),
-  };
-  normalized.status = effectiveStatus(normalized);
-  return normalized;
-}
-
-function mapKey(row) {
-  return [row.story_type, row.dictionary_id, row.group_id, row.set_id].join("::");
-}
 
 function readMap() {
   const raw = readScopedJson(STATION_PROGRESS_KEY, {});
   const output = {};
   Object.values(raw && typeof raw === "object" ? raw : {}).forEach((value) => {
-    const normalized = normalizeRow(value);
+    const normalized = normalizeStationProgressRow(value);
     if (!normalized.story_type || !normalized.dictionary_id || !normalized.group_id || !normalized.set_id) return;
-    output[mapKey(normalized)] = normalized;
+    output[stationProgressMapKey(normalized)] = normalized;
   });
   return output;
 }
@@ -82,23 +38,17 @@ function writeMap(map) {
 }
 
 function payloadForStation(station, updates = {}) {
-  return normalizeRow({
-    dictionary_id: station.dictionaryId,
-    group_id: station.sectionId || station.groupId,
-    set_id: station.setId,
-    story_type: station.storyType,
-    ...updates,
-  });
+  return createStationProgressRow(station, updates);
 }
 
 function save(station, row, { queue = true } = {}) {
   const map = readMap();
-  const normalized = normalizeRow(row);
+  const normalized = normalizeStationProgressRow(row, station);
   map[stationKey(station)] = normalized;
   writeMap(map);
   if (queue) {
     enqueueProgress("station_progress", normalized, {
-      id: `station_progress:${mapKey(normalized)}`,
+      id: `station_progress:${stationProgressMapKey(normalized)}`,
       replace: true,
     });
   }
@@ -108,19 +58,19 @@ function save(station, row, { queue = true } = {}) {
 export function getStationProgress(station) {
   if (!station) return null;
   const row = readMap()[stationKey(station)];
-  return row ? normalizeRow(row) : null;
+  return row ? normalizeStationProgressRow(row, station) : null;
 }
 
 export function getAllStationProgress() {
-  return Object.values(readMap()).map(normalizeRow);
+  return Object.values(readMap()).map((row) => normalizeStationProgressRow(row));
 }
 
 export function replaceStationProgress(rows = [], { notify = true } = {}) {
   const map = {};
   (Array.isArray(rows) ? rows : []).forEach((row) => {
-    const normalized = normalizeRow(row);
+    const normalized = normalizeStationProgressRow(row);
     if (!normalized.story_type || !normalized.dictionary_id || !normalized.group_id || !normalized.set_id) return;
-    map[mapKey(normalized)] = normalized;
+    map[stationProgressMapKey(normalized)] = normalized;
   });
   if (notify) writeMap(map);
   else writeScopedJson(STATION_PROGRESS_KEY, map);
@@ -129,74 +79,27 @@ export function replaceStationProgress(rows = [], { notify = true } = {}) {
 
 export function markStationStarted(station) {
   const current = getStationProgress(station) || payloadForStation(station);
-  if (["mastered", "review_1_waiting", "review_1_due", "review_2_waiting", "review_2_due", "test_ready"].includes(current.status)) return current;
-  return save(station, {
-    ...current,
-    status: "studying",
-    current_phase: "study",
-    study_sessions_total: current.study_sessions_total + 1,
-    updated_at: nowIso(),
-  });
+  return save(station, markStationStartedProgress(current));
 }
 
 export function markStationCardsCompleted(station) {
   const current = getStationProgress(station) || payloadForStation(station);
-  if (current.status === "mastered") return current;
-  return save(station, {
-    ...current,
-    status: "test_ready",
-    current_phase: "first_test",
-    updated_at: nowIso(),
-  });
+  return save(station, markStationCardsCompletedProgress(current));
 }
 
 export function stationTestPhase(station) {
-  const current = getStationProgress(station);
-  const status = effectiveStatus(current || { status: "test_ready" });
-  if (status === "review_1_due") return "review_1";
-  if (status === "review_2_due") return "review_2";
-  if (status === "mastered") return "practice";
-  return "first_test";
+  return stationTestPhaseFromProgress(getStationProgress(station));
 }
 
-export function recordStationTest(station, { accuracy, passed, phase = stationTestPhase(station), completedAt = nowIso() }) {
+export function recordStationTest(station, { accuracy, passed, phase = stationTestPhase(station), completedAt = new Date().toISOString() }) {
   const current = getStationProgress(station) || payloadForStation(station, { status: "test_ready" });
-  const next = {
-    ...current,
-    test_attempts_total: current.test_attempts_total + 1,
-    best_accuracy: Math.max(current.best_accuracy, Number(accuracy || 0)),
-    updated_at: completedAt,
-  };
-
-  if (!passed || phase === "practice") return save(station, next);
-  if (phase === "first_test") {
-    next.status = "review_1_waiting";
-    next.current_phase = "review_1";
-    next.first_test_completed_at = completedAt;
-    next.review_1_due_at = new Date(Date.parse(completedAt) + PATH_CONFIG.review1DelayDays * DAY_MS).toISOString();
-  } else if (phase === "review_1") {
-    next.status = "review_2_waiting";
-    next.current_phase = "review_2";
-    next.review_1_completed_at = completedAt;
-    next.review_2_due_at = new Date(Date.parse(completedAt) + PATH_CONFIG.review2DelayDays * DAY_MS).toISOString();
-  } else if (phase === "review_2") {
-    next.status = "mastered";
-    next.current_phase = "mastered";
-    next.review_2_completed_at = completedAt;
-    next.mastered_at = completedAt;
-  }
-  return save(station, next);
+  return save(station, recordStationTestProgress(current, { accuracy, passed, phase, completedAt }));
 }
 
 export function mergeStationProgressRows(rows = []) {
-  const map = readMap();
-  (Array.isArray(rows) ? rows : []).forEach((row) => {
-    const normalized = normalizeRow(row);
-    if (!normalized.story_type || !normalized.dictionary_id || !normalized.group_id || !normalized.set_id) return;
-    const key = mapKey(normalized);
-    const existing = map[key];
-    if (!existing || asTime(normalized.updated_at) >= asTime(existing.updated_at)) map[key] = normalized;
-  });
+  const merged = mergeStationProgress(Object.values(readMap()), rows);
+  const map = {};
+  merged.forEach((row) => { map[stationProgressMapKey(row)] = row; });
   return writeMap(map);
 }
 
@@ -206,7 +109,11 @@ export function subscribeStationProgress(listener) {
 }
 
 export function formatDueDate(value) {
-  const time = asTime(value);
+  const time = stationProgressTime(value);
   if (!time) return "";
   return new Intl.DateTimeFormat(getInterfaceLocale(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(time));
+}
+
+export function canonicalStationStatus(row) {
+  return effectiveStationStatus(row);
 }
