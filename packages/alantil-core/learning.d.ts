@@ -25,6 +25,11 @@ export type LearnState = {
 };
 
 export declare function cloneLearnValue<T>(value: T): T;
+export declare function normalizeLearnDirection(value: unknown): 'alan_ru' | 'ru_alan';
+export declare function normalizeLearnSource(value: unknown): 'station' | 'favorites';
+export declare function filterLearnWordsBySelection<T extends { id?: string; word_id?: string }>(words: T[], selectedIds: unknown): T[];
+export declare function createLearnState<T extends { id?: string; word_id?: string }>(words: T[], options?: { source?: unknown; direction?: unknown; randomize?: boolean }): LearnState;
+export declare function restoreLearnState<T extends { id?: string; word_id?: string }>(snapshot: Partial<LearnState> | null | undefined, words: T[], options?: { source?: unknown; direction?: unknown }): LearnState | null;
 export declare function captureLearnActionSnapshot(state: any): any;
 export declare function restoreLearnActionSnapshot(state: any, snapshot: any): any;
 export declare function entryFor(state: LearnState, wordId: string): LearnEntry;
