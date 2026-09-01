@@ -4,10 +4,12 @@ import {
   logSupabaseError,
   normalizeSupabaseError,
 } from "../errors/supabase-error.js?v=13.9.0";
+import {
+  normalizeAvatarGender as normalizeAvatarGenderCore,
+  normalizeNickname as normalizeNicknameCore,
+  validateNickname as validateNicknameCore,
+} from "../../../packages/alantil-core/profile.js";
 
-const NICKNAME_PATTERN = /^[A-Za-z0-9_]{3,15}$/;
-const LATIN_LETTER_PATTERN = /[A-Za-z]/g;
-const AVATAR_GENDERS = new Set(["male", "female"]);
 const PROFILE_REQUEST_TIMEOUT_MS = 12000;
 
 function throwProfileError(scope, error, operation) {
@@ -30,23 +32,18 @@ function withProfileTimeout(value, label) {
 }
 
 export function normalizeNickname(value) {
-  return String(value || "").trim();
+  return normalizeNicknameCore(value);
 }
 
 export function validateNickname(value) {
-  const nickname = normalizeNickname(value);
-  if (!nickname) return { valid: false, nickname, message: msg("service.vvedite_nikneym") };
-  const requirementsMessage = msg("service.nickname_requirements");
-  if (nickname.length < 3 || nickname.length > 15) {
-    return { valid: false, nickname, message: requirementsMessage };
-  }
-  if (!NICKNAME_PATTERN.test(nickname)) {
-    return { valid: false, nickname, message: requirementsMessage };
-  }
-  if ((nickname.match(LATIN_LETTER_PATTERN) || []).length < 3) {
-    return { valid: false, nickname, message: requirementsMessage };
-  }
-  return { valid: true, nickname, message: "" };
+  const validation = validateNicknameCore(value);
+  if (validation.valid) return { ...validation, message: "" };
+  return {
+    ...validation,
+    message: validation.reason === "required"
+      ? msg("service.vvedite_nikneym")
+      : msg("service.nickname_requirements"),
+  };
 }
 
 export async function getProfile(userId) {
@@ -91,8 +88,7 @@ export async function createProfile(userId, value) {
 }
 
 export function normalizeAvatarGender(value) {
-  const gender = String(value || "").trim().toLowerCase();
-  return AVATAR_GENDERS.has(gender) ? gender : "";
+  return normalizeAvatarGenderCore(value);
 }
 
 export async function setAvatarGender(userId, value) {
