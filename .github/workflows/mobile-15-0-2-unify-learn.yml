@@ -1,0 +1,48 @@
+name: Unify AlanTil Learn core
+
+on:
+  push:
+    branches:
+      - agent/15.0-unified-core
+    paths:
+      - '.github/workflows/mobile-15-0-2-unify-learn.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/15.0-unified-core
+      - name: Move Learn initialization into shared core
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('mobile/src/mobile/learn/engine.tsx')
+          s = p.read_text()
+          s = s.replace("  applyLearnDecision,\n  learnQueue,\n  splitMeaningGroups,\n  undoLearnDecision,", "  applyLearnDecision,\n  createLearnState,\n  filterLearnWordsBySelection,\n  learningSessionPayload,\n  learnQueue,\n  normalizeLearnDirection,\n  normalizeLearnSource,\n  restoreLearnState,\n  splitMeaningGroups,\n  undoLearnDecision,")
+          old = '''function shuffled<T>(items: T[]) {\n  const next = items.slice();\n  for (let i = next.length - 1; i > 0; i -= 1) {\n    const j = Math.floor(Math.random() * (i + 1));\n    [next[i], next[j]] = [next[j], next[i]];\n  }\n  return next;\n}\n\n'''
+          assert old in s
+          s = s.replace(old, '')
+          s = s.replace("  const source: LearnState['source'] = String(params.source ?? 'station') === 'favorites' ? 'favorites' : 'station';\n  const routeDirection: LearnState['direction'] = String(params.direction ?? 'alan_ru') === 'ru_alan' ? 'ru_alan' : 'alan_ru';", "  const source: LearnState['source'] = normalizeLearnSource(params.source);\n  const routeDirection: LearnState['direction'] = normalizeLearnDirection(params.direction);")
+          old = '''        const selectedIds = new Set(String(params.selectedIds ?? '').split(',').map((value) => value.trim()).filter(Boolean));\n        if (selectedIds.size) words = words.filter((word) => selectedIds.has(word.id));\n        if (!words.length) throw new Error(t('learn.no_words'));\n\n        const resumed = await resumeActivitySession<LearnState>('learn', auth.user?.id);\n        const availableIds = new Set(words.map((word) => word.id));\n        const savedIds = Array.isArray(resumed?.payload?.ids) ? resumed.payload.ids.map(String) : [];\n        const canResume = resumed?.payload?.source === source && savedIds.length > 0 && savedIds.every((id) => availableIds.has(id));\n        const nextRuntime = canResume && resumed ? resumed.runtime : await createActivitySession('learn', settings, auth.user?.id);\n        const nextState: LearnState = canResume && resumed ? {\n          ...resumed.payload,\n          source,\n          ids: savedIds,\n          index: Math.min(savedIds.length, Math.max(0, Number(resumed.payload.index || 0))),\n          repeatIds: Array.isArray(resumed.payload.repeatIds) ? resumed.payload.repeatIds.map(String).filter((id) => availableIds.has(id)) : [],\n          entries: resumed.payload.entries && typeof resumed.payload.entries === 'object' ? resumed.payload.entries : {},\n          direction: resumed.payload.direction === 'ru_alan' ? 'ru_alan' : 'alan_ru',\n          undo: resumed.payload.undo ?? null,\n          undo_count: Math.max(0, Number(resumed.payload.undo_count || 0)),\n        } : {\n          source,\n          ids: shuffled(words.map((word) => word.id)),\n          index: 0,\n          repeatIds: [],\n          entries: {},\n          direction: routeDirection,\n          undo: null,\n          undo_count: 0,\n        };\n        if (station && source === 'station' && !canResume) {'''
+          new = '''        words = filterLearnWordsBySelection(words, params.selectedIds);\n        if (!words.length) throw new Error(t('learn.no_words'));\n\n        const resumed = await resumeActivitySession<LearnState>('learn', auth.user?.id);\n        const restored = resumed?.payload?.source === source\n          ? restoreLearnState(resumed.payload, words, { source })\n          : null;\n        const canResume = Boolean(restored && resumed);\n        const nextRuntime = canResume && resumed ? resumed.runtime : await createActivitySession('learn', settings, auth.user?.id);\n        const nextState = restored ?? createLearnState(words, { source, direction: routeDirection });\n        if (station && source === 'station' && !canResume) {'''
+          assert old in s
+          s = s.replace(old, new)
+          old = '''  const sessionPayload = useCallback((value: LearnState) => {\n    const entries = Object.values(value.entries);\n    return {\n      dictionary_id: station?.dictionaryId ?? 'favorites',\n      section_id: station?.sectionId ?? 'favorites',\n      set_id: station?.setId ?? 'favorites',\n      direction: value.direction,\n      words_planned: value.ids.length,\n      unique_words_shown: entries.length,\n      card_shows_total: entries.reduce((sum, entry) => sum + entry.show_count, 0),\n      left_swipes_total: entries.reduce((sum, entry) => sum + entry.left_swipe_count, 0),\n      known_words_total: entries.filter((entry) => entry.final_result === 'known').length,\n      unfinished_words_total: entries.filter((entry) => entry.final_result !== 'known').length,\n      undo_count: Math.max(0, Number(value.undo_count || 0)),\n      words: entries,\n    };\n  }, [station?.dictionaryId, station?.sectionId, station?.setId]);'''
+          new = '''  const sessionPayload = useCallback((value: LearnState) => learningSessionPayload(value, {\n    dictionaryId: station?.dictionaryId ?? 'favorites',\n    sectionId: station?.sectionId ?? 'favorites',\n    setId: station?.setId ?? 'favorites',\n  }), [station?.dictionaryId, station?.sectionId, station?.setId]);'''
+          assert old in s
+          s = s.replace(old, new)
+          p.write_text(s)
+          PY
+      - name: Commit migration
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add mobile/src/mobile/learn/engine.tsx
+          git commit -m "15.0.2: make Learn a thin shared-core client"
+          git push
