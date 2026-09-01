@@ -9,7 +9,7 @@ import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
-import { buildScope, buildSelectedSources, buildWordsByPOSRounds, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
+import { buildMatchRounds, buildScope, buildSelectedSources, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
 import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
 import { getMatchSession, setMatchSession, type MatchSessionState } from '@/src/mobile/practice/state';
 import { scopedTestId, testIds } from '@/src/mobile/test-ids';
@@ -116,7 +116,7 @@ export function MatchMenuScreen() {
     if (!pool.length || starting) return;
     setStarting(true);
     try {
-      const built = buildWordsByPOSRounds(pool, limit);
+      const built = buildMatchRounds(pool, limit);
       const rounds = built.rounds.filter((round) => round.length);
       if (!rounds.length) throw new Error(t('match.not_enough_words'));
       const runtime = await createSessionRuntime('match', settings, auth.user?.id);
