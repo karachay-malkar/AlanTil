@@ -26,6 +26,60 @@ function count(value) {
   return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 }
 
+export function stationProgressKey(row = {}) {
+  return [row.dictionary_id, row.catalog_id, row.group_id, row.set_id].map(normalizedId).join("::");
+}
+
+export function setProgressKey(row = {}) {
+  return [row.dictionary_id, row.section_id, row.set_id].map(normalizedId).join("::");
+}
+
+export function hiddenWordKey(row = {}) {
+  return `${setProgressKey(row)}::${normalizedId(row.word_id)}`;
+}
+
+export function mergeFavoriteIds(...collections) {
+  const values = collections.flat().map(normalizedId).filter(Boolean);
+  return Array.from(new Set(values));
+}
+
+export function mergeHiddenWordMaps(...maps) {
+  const merged = {};
+  maps.forEach((source) => {
+    if (!source || typeof source !== "object" || Array.isArray(source)) return;
+    Object.entries(source).forEach(([key, values]) => {
+      const normalizedKey = normalizedId(key);
+      if (!normalizedKey) return;
+      merged[normalizedKey] = mergeFavoriteIds(merged[normalizedKey] || [], Array.isArray(values) ? values : []);
+    });
+  });
+  return merged;
+}
+
+export function buildActiveHiddenWordMap(rows = []) {
+  const map = {};
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    if (!row?.is_hidden) return;
+    const key = setProgressKey(row);
+    const wordId = normalizedId(row.word_id);
+    if (!key.replaceAll(":", "") || !wordId) return;
+    map[key] = mergeFavoriteIds(map[key] || [], [wordId]);
+  });
+  return map;
+}
+
+export function mergeActivityHistoryRows(...collections) {
+  const byId = new Map();
+  collections.flat().forEach((row) => {
+    const id = normalizedId(row?.id);
+    if (!id) return;
+    byId.set(id, { ...(byId.get(id) || {}), ...row, id });
+  });
+  return Array.from(byId.values()).sort((left, right) => (
+    timestamp(right.ended_at || right.started_at) - timestamp(left.ended_at || left.started_at)
+  ));
+}
+
 export function mergeWordProgressRows(...collections) {
   const map = new Map();
   collections.flat().forEach((source) => {
@@ -96,6 +150,33 @@ export function remoteSupersedes(local, remote) {
   const remoteTime = timestamp(remote.updated_at);
   const localTime = timestamp(local.updated_at);
   return remoteTime > 0 && (!localTime || remoteTime >= localTime);
+}
+
+export function claimableRows(localRows, remoteRows, keyFor) {
+  const remote = new Map((Array.isArray(remoteRows) ? remoteRows : []).map((row) => [keyFor(row), row]));
+  return (Array.isArray(localRows) ? localRows : []).filter((row) => !remoteSupersedes(row, remote.get(keyFor(row))));
+}
+
+export function claimableFavoriteIds(localIds, remoteRows, idField) {
+  const remote = new Set((Array.isArray(remoteRows) ? remoteRows : [])
+    .filter((row) => row?.is_active !== false)
+    .map((row) => normalizedId(row?.[idField]))
+    .filter(Boolean));
+  return mergeFavoriteIds(localIds).filter((id) => !remote.has(id));
+}
+
+export function claimableHiddenWordMap(localMap, remoteRows) {
+  const remote = new Set((Array.isArray(remoteRows) ? remoteRows : [])
+    .filter((row) => row?.is_hidden !== false)
+    .map(hiddenWordKey)
+    .filter((key) => key.replaceAll(":", "")));
+  const claimed = {};
+  Object.entries(localMap && typeof localMap === "object" ? localMap : {}).forEach(([key, values]) => {
+    const ids = mergeFavoriteIds(Array.isArray(values) ? values : [])
+      .filter((id) => !remote.has(`${key}::${id}`));
+    if (ids.length) claimed[key] = ids;
+  });
+  return claimed;
 }
 
 export function retryDelayMs(attempts) {
