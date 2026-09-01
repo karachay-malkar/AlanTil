@@ -6,6 +6,8 @@ import {
   writeScopedJson,
 } from "./storage-scope.js?v=13.9.0";
 import { awardReward } from "./reward-store.js?v=13.9.0";
+import { summarizeWordProgress } from "../../../packages/alantil-core/progress.js";
+import { buildProblemWordRows } from "../../../packages/alantil-core/statistics.js";
 
 export const WORD_PROGRESS_LOCAL_KEY = "alantil_word_progress_v13_5";
 const MAX_PROCESSED_SESSIONS = 600;
@@ -243,37 +245,11 @@ export function getWordProgressMap() {
 }
 
 export function wordProgressSummary(words = []) {
-  const map = getWordProgressMap();
-  const ids = (Array.isArray(words) ? words : []).map((word) => normalizeId(word?.id || word)).filter(Boolean);
-  let mastered = 0;
-  let review = 0;
-  ids.forEach((id) => {
-    const status = map.get(id)?.mastery_status;
-    if (status === "mastered" || status === "review") mastered += 1;
-    if (status === "review") review += 1;
-  });
-  return {
-    total: ids.length,
-    mastered,
-    review,
-    percent: ids.length ? Math.round((mastered / ids.length) * 100) : 0,
-  };
+  return summarizeWordProgress(words, getWordProgressMap());
 }
 
 export function problemWordRows(words = [], limit = 7) {
-  const map = getWordProgressMap();
-  return (Array.isArray(words) ? words : [])
-    .map((word) => {
-      const progress = map.get(normalizeId(word.id)) || emptyRow(word.id);
-      const evaluated = progress.study_shown_count;
-      const unknownRate = evaluated ? Math.round((progress.unknown_count / evaluated) * 100) : 0;
-      return { word, progress, evaluated, unknownRate };
-    })
-    .filter((item) => item.progress.unknown_count > 0 || item.progress.test_wrong_count > 0)
-    .sort((left, right) => right.unknownRate - left.unknownRate
-      || right.progress.unknown_count - left.progress.unknown_count
-      || right.progress.test_wrong_count - left.progress.test_wrong_count)
-    .slice(0, Math.max(1, Number(limit || 7)));
+  return buildProblemWordRows(words, getWordProgressMap(), limit);
 }
 
 export function testSummariesForWords(words = []) {
