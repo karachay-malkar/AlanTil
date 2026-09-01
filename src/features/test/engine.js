@@ -1,8 +1,6 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { normalizePos } from "../../shared/domain/word-normalizer.js?v=13.9.0";
-import { buildWordsByPOSRounds, hasWordConflict, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
@@ -10,34 +8,23 @@ import {
 } from "../../shared/progress/session-builders.js?v=13.13";
 import { testState } from "./state.js?v=13.9.0";
 import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
-
-function sessionWords() {
-  return testState.results.map((result) => ({
-    word_id: result.id,
-    result: result.isCorrect ? "correct" : "wrong",
-    wrong_word_id: result.isCorrect ? null : result.wrongWordId || null,
-  }));
-}
-
-function testSessionPayload() {
-  const words = sessionWords();
-  return {
-    questions_planned: testState.items.length,
-    questions_answered: words.length,
-    correct_total: words.filter((word) => word.result === "correct").length,
-    wrong_total: words.filter((word) => word.result === "wrong").length,
-    words,
-  };
-}
+import {
+  applyTestAnswer,
+  buildTestOptions,
+  initializeTestState,
+  testAbandonSummary,
+  testCompletionSummary,
+  testSessionPayload,
+} from "../../../packages/alantil-core/test.js";
 
 function persistTestSession() {
-  persistSessionRuntime(testState.session.runtime, testSessionPayload());
+  persistSessionRuntime(testState.session.runtime, testSessionPayload(testState));
 }
 
 export function finalizeTestSession(status = "interrupted", exitReason = "route_change") {
   const session = testState.session;
   if (!session.runtime || session.runtime.finalized) return false;
-  const payload = testSessionPayload();
+  const payload = testSessionPayload(testState);
   const result = finalizeSessionRuntime(session.runtime, {
     status,
     exitReason,
@@ -67,33 +54,12 @@ function abandonPreviousSession() {
   }
   const tracker = testState.session.tracker;
   if (tracker?.getStatus() !== "active") return;
-  tracker.abandon(CANCEL_REASONS.NEW_SESSION, {
-    questions_total: testState.items.length,
-    questions_answered: testState.index,
-    items_total: testState.items.length,
-    items_completed: testState.index,
-    progress_percent: Math.round((testState.index / Math.max(1, testState.items.length)) * 100),
-    correct_count: testState.correct,
-    wrong_count: Math.max(0, testState.index - testState.correct),
-  });
+  tracker.abandon(CANCEL_REASONS.NEW_SESSION, testAbandonSummary(testState));
 }
 
 export function startTest(pool, mode, limit, metadata = {}, optionPool = pool) {
   abandonPreviousSession();
-  testState.mode = mode === "ru" ? "ru" : "kb";
-  testState.limit = [20, 40, 80].includes(Number(limit)) ? Number(limit) : 40;
-  const sourceOptions = Array.isArray(optionPool) && optionPool.length ? optionPool : pool;
-  testState.optionPool = sourceOptions.slice();
-  testState.items = buildWordsByPOSRounds(pool, testState.limit).items;
-  testState.index = 0;
-  testState.correct = 0;
-  testState.selectedAnswer = null;
-  testState.results = [];
-  testState.session.inProgress = true;
-  testState.session.completed = false;
-  testState.session.wordsPool = pool.slice();
-  testState.session.progressData = { index: 0, total: testState.items.length, correct: 0 };
-  testState.session.metadata = { ...metadata };
+  initializeTestState(testState, pool, mode, limit, metadata, optionPool);
   testState.session.runtime = testState.items.length ? createSessionRuntime("test", {
     selected_sources: Array.isArray(metadata.selectedSources) ? metadata.selectedSources : [],
     direction: directionFromMode(testState.mode),
@@ -112,46 +78,13 @@ export function startTest(pool, mode, limit, metadata = {}, optionPool = pool) {
 }
 
 export function pickOptions(item) {
-  const correctText = testState.mode === "kb" ? item.trans : item.word;
-  const targetPOS = normalizePos(item.pos);
-  const pool = shuffle(testState.optionPool.filter((candidate) => (
-    String(candidate.id) !== String(item.id)
-    && normalizePos(candidate.pos) === targetPOS
-  )).slice());
-
-  const options = [{ id: item.id, text: correctText }];
-  const selectedWords = [];
-  const usedTexts = new Set([correctText]);
-  for (const candidate of pool) {
-    if (options.length >= 4) break;
-    if (hasWordConflict(candidate, [item, ...selectedWords])) continue;
-    const text = testState.mode === "kb" ? candidate.trans : candidate.word;
-    if (!text || usedTexts.has(text)) continue;
-    usedTexts.add(text);
-    selectedWords.push(candidate);
-    options.push({ id: candidate.id, text });
-  }
-  return shuffle(options);
+  return buildTestOptions(testState, item);
 }
 
 export function submitAnswer(answer) {
-  if (testState.index >= testState.items.length || !answer?.id || !answer?.text) return false;
-  const item = testState.items[testState.index];
-  const questionText = testState.mode === "kb" ? item.word : item.trans;
-  const correctAnswer = testState.mode === "kb" ? item.trans : item.word;
-  const isCorrect = String(answer.id) === String(item.id);
-  if (isCorrect) testState.correct += 1;
-
-  testState.results.push({
-    id: item.id,
-    questionText,
-    word: item.word,
-    trans: item.trans,
-    correctAnswer,
-    userAnswer: answer.text,
-    wrongWordId: isCorrect ? null : String(answer.id),
-    isCorrect,
-  });
+  const transition = applyTestAnswer(testState, answer);
+  if (!transition) return false;
+  const { item, isCorrect } = transition;
   trackEvent(EVENTS.WORD_RESULT, {
     word_id: item.id,
     source: WORD_SOURCES.TEST,
@@ -161,10 +94,6 @@ export function submitAnswer(answer) {
     set_id: String(item.set_id),
     direction: directionFromMode(testState.mode),
   });
-  testState.index += 1;
-  testState.selectedAnswer = null;
-  testState.session.progressData.index = testState.index;
-  testState.session.progressData.correct = testState.correct;
   persistTestSession();
   return true;
 }
@@ -172,17 +101,5 @@ export function submitAnswer(answer) {
 export function completeTest() {
   if (!testState.session.inProgress || testState.session.completed) return false;
   finalizeTestSession("completed", null);
-  const total = testState.items.length;
-  const wrong = Math.max(0, total - testState.correct);
-  return testState.session.tracker?.complete({
-    items_total: total,
-    items_completed: total,
-    questions_total: total,
-    questions_answered: total,
-    correct_count: testState.correct,
-    wrong_count: wrong,
-    accuracy_percent: Math.round((testState.correct / Math.max(1, total)) * 100),
-    dictionary_count: testState.session.metadata.dictionaryCount || 0,
-    section_count: testState.session.metadata.sectionCount || 0,
-  }) || false;
+  return testState.session.tracker?.complete(testCompletionSummary(testState)) || false;
 }
