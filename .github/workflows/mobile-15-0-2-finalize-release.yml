@@ -25,7 +25,7 @@ jobs:
       - name: Install
         working-directory: mobile
         run: npm ci
-      - name: Set 15.0.2 metadata
+      - name: Set 15.0.2 metadata in worktree
         shell: bash
         run: |
           cd mobile
@@ -43,7 +43,6 @@ jobs:
           expo['extra']['releaseVersion'] = '15.0.2'
           expo['extra']['visualParity'] = '15.0.2-unified-core-web-parity-4options'
           p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
-
           p = Path('mobile/tests/p0-contract.test.mjs')
           s = p.read_text()
           s = s.replace("'15.0.1-web-path-parity-4options-final'", "'15.0.2-unified-core-web-parity-4options'")
@@ -52,24 +51,21 @@ jobs:
           s = s.replace("buildNumber, '9'", "buildNumber, '10'")
           p.write_text(s)
           PY
-      - name: Verify before commit
+      - name: Capture final verification
         shell: bash
         run: |
-          cd mobile
-          npm run typecheck
-          npm test
-          cd ..
-          node --test tests/*.test.mjs
-      - name: Remove temporary diagnostics
-        shell: bash
-        run: |
-          rm -f mobile/typecheck-errors.txt
-          rm -f .github/workflows/mobile-15-0-2-typecheck-diagnostic.yml
-          rm -f .github/workflows/mobile-15-0-2-finalize-release.yml
-      - name: Commit final release
+          set +e
+          : > mobile/finalize-errors.txt
+          (cd mobile && npm run typecheck) >> mobile/finalize-errors.txt 2>&1
+          echo "TYPECHECK_EXIT=$?" >> mobile/finalize-errors.txt
+          (cd mobile && npm test) >> mobile/finalize-errors.txt 2>&1
+          echo "MOBILE_TEST_EXIT=$?" >> mobile/finalize-errors.txt
+          node --test tests/*.test.mjs >> mobile/finalize-errors.txt 2>&1
+          echo "ROOT_TEST_EXIT=$?" >> mobile/finalize-errors.txt
+      - name: Commit diagnostics only
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A
-          git commit -m "15.0.2: finalize true Unified Core release"
+          git add mobile/finalize-errors.txt
+          git commit -m "15.0.2: capture final verification diagnostics"
           git push
