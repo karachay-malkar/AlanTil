@@ -3,18 +3,12 @@ import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
 import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
 import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
 import { learnState } from "./state.js?v=13.9.0";
+import { buildLearnResultSummary } from "../../../packages/alantil-core/learning.js";
 
 export function renderResults(context, words, signal, { onDone } = {}) {
   context.shell.setHeaderContent?.({ title: msg("learn.rezultat_obucheniya") });
   context.shell.setCounter("");
-  const sessionRows = Object.values(learnState.studySession.wordStats || {}).filter((row) => Number(row?.show_count || 0) > 0);
-  const studiedTotal = sessionRows.length;
-  const unknownRows = sessionRows.filter((row) => Number(row.left_swipe_count || 0) > 0);
-  const leftSwipesTotal = unknownRows.reduce((sum, row) => sum + Number(row.left_swipe_count || 0), 0);
-  const problemWords = unknownRows
-    .map((row) => ({ ...words.find((word) => String(word.id) === String(row.word_id)), fails: Number(row.left_swipe_count || 0) }))
-    .filter((word) => word.id)
-    .sort((a, b) => b.fails - a.fails);
+  const { studiedTotal, unknownRows, leftSwipesTotal, problemWords } = buildLearnResultSummary(learnState, words);
 
   const content = problemWords.length
     ? problemWords.map((word) => renderResultRow({
