@@ -1,4 +1,4 @@
-name: Package AlanTil Mobile Source
+name: Package AlanTil Unified Source
 
 on:
   push:
@@ -8,7 +8,10 @@ on:
     paths:
       - 'mobile/**'
       - 'packages/**'
-      - 'src/shared/**'
+      - 'src/**'
+      - 'public/**'
+      - 'tests/**'
+      - 'supabase/**'
       - '.github/workflows/mobile-14-1-android.yml'
       - '.github/workflows/mobile-14-1-source.yml'
   workflow_dispatch:
@@ -33,16 +36,14 @@ jobs:
         id: release
         run: node mobile/scripts/release-metadata.mjs >> "$GITHUB_OUTPUT"
 
-      - name: Package complete mobile source
+      - name: Package complete unified source
         shell: bash
         env:
           ALANTIL_SOURCE_PREFIX: ${{ steps.release.outputs.source_prefix }}
           ALANTIL_SOURCE_FILENAME: ${{ steps.release.outputs.source_filename }}
         run: |
           git archive --format=zip --prefix="$ALANTIL_SOURCE_PREFIX/" \
-            --output="$ALANTIL_SOURCE_FILENAME" HEAD mobile packages src/shared \
-            .github/workflows/mobile-14-1-android.yml \
-            .github/workflows/mobile-14-1-source.yml
+            --output="$ALANTIL_SOURCE_FILENAME" HEAD
 
       - name: Upload source archive
         uses: actions/upload-artifact@v4
