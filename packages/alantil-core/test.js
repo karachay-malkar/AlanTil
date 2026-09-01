@@ -1,0 +1,124 @@
+import { normalizePos } from './word-normalizer.js';
+import { buildWordsByPOSRounds, hasWordConflict, shuffle } from './word-selection.js';
+
+export function normalizeTestMode(mode) {
+  return mode === 'ru' ? 'ru' : 'kb';
+}
+
+export function normalizeTestLimit(limit) {
+  return [20, 40, 80].includes(Number(limit)) ? Number(limit) : 40;
+}
+
+export function initializeTestState(state, pool, mode, limit, metadata = {}, optionPool = pool) {
+  state.mode = normalizeTestMode(mode);
+  state.limit = normalizeTestLimit(limit);
+  const sourceOptions = Array.isArray(optionPool) && optionPool.length ? optionPool : pool;
+  state.optionPool = sourceOptions.slice();
+  state.items = buildWordsByPOSRounds(pool, state.limit).items;
+  state.index = 0;
+  state.correct = 0;
+  state.selectedAnswer = null;
+  state.results = [];
+  state.session.inProgress = true;
+  state.session.completed = false;
+  state.session.wordsPool = pool.slice();
+  state.session.progressData = { index: 0, total: state.items.length, correct: 0 };
+  state.session.metadata = { ...metadata };
+  return state;
+}
+
+export function testSessionWords(state) {
+  return state.results.map((result) => ({
+    word_id: result.id,
+    result: result.isCorrect ? 'correct' : 'wrong',
+    wrong_word_id: result.isCorrect ? null : result.wrongWordId || null,
+  }));
+}
+
+export function testSessionPayload(state) {
+  const words = testSessionWords(state);
+  return {
+    questions_planned: state.items.length,
+    questions_answered: words.length,
+    correct_total: words.filter((word) => word.result === 'correct').length,
+    wrong_total: words.filter((word) => word.result === 'wrong').length,
+    words,
+  };
+}
+
+export function testAbandonSummary(state) {
+  return {
+    questions_total: state.items.length,
+    questions_answered: state.index,
+    items_total: state.items.length,
+    items_completed: state.index,
+    progress_percent: Math.round((state.index / Math.max(1, state.items.length)) * 100),
+    correct_count: state.correct,
+    wrong_count: Math.max(0, state.index - state.correct),
+  };
+}
+
+export function buildTestOptions(state, item) {
+  const correctText = state.mode === 'kb' ? item.trans : item.word;
+  const targetPOS = normalizePos(item.pos);
+  const pool = shuffle(state.optionPool.filter((candidate) => (
+    String(candidate.id) !== String(item.id)
+    && normalizePos(candidate.pos) === targetPOS
+  )).slice());
+
+  const options = [{ id: item.id, text: correctText }];
+  const selectedWords = [];
+  const usedTexts = new Set([correctText]);
+  for (const candidate of pool) {
+    if (options.length >= 4) break;
+    if (hasWordConflict(candidate, [item, ...selectedWords])) continue;
+    const text = state.mode === 'kb' ? candidate.trans : candidate.word;
+    if (!text || usedTexts.has(text)) continue;
+    usedTexts.add(text);
+    selectedWords.push(candidate);
+    options.push({ id: candidate.id, text });
+  }
+  return shuffle(options);
+}
+
+export function applyTestAnswer(state, answer) {
+  if (state.index >= state.items.length || !answer?.id || !answer?.text) return null;
+  const item = state.items[state.index];
+  const questionText = state.mode === 'kb' ? item.word : item.trans;
+  const correctAnswer = state.mode === 'kb' ? item.trans : item.word;
+  const isCorrect = String(answer.id) === String(item.id);
+  if (isCorrect) state.correct += 1;
+
+  const result = {
+    id: item.id,
+    questionText,
+    word: item.word,
+    trans: item.trans,
+    correctAnswer,
+    userAnswer: answer.text,
+    wrongWordId: isCorrect ? null : String(answer.id),
+    isCorrect,
+  };
+  state.results.push(result);
+  state.index += 1;
+  state.selectedAnswer = null;
+  state.session.progressData.index = state.index;
+  state.session.progressData.correct = state.correct;
+  return { item, result, isCorrect };
+}
+
+export function testCompletionSummary(state) {
+  const total = state.items.length;
+  const wrong = Math.max(0, total - state.correct);
+  return {
+    items_total: total,
+    items_completed: total,
+    questions_total: total,
+    questions_answered: total,
+    correct_count: state.correct,
+    wrong_count: wrong,
+    accuracy_percent: Math.round((state.correct / Math.max(1, total)) * 100),
+    dictionary_count: state.session.metadata.dictionaryCount || 0,
+    section_count: state.session.metadata.sectionCount || 0,
+  };
+}
