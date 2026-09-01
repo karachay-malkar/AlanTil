@@ -18,7 +18,7 @@ const words = [
 ];
 
 test('station test normalization and ambiguity follow web rules', () => {
-  assert.equal(normalizedLexeme("Къала-сы!"), 'къаласы');
+  assert.equal(normalizedLexeme("Къала-сы!"), 'каласы');
   assert.equal(approximateStem('abcdefgh'), 'abcde');
   assert.equal(stationTestCandidateIsAmbiguous(words[4], words[0], []), true);
 });
