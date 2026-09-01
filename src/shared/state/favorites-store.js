@@ -3,6 +3,13 @@ import {
   subscribeStorageScope,
   writeScopedJson,
 } from "../progress/storage-scope.js?v=13.9.0";
+import {
+  favoriteHas,
+  favoriteValues,
+  normalizeFavoriteIds,
+  setFavoriteActive,
+  toggleFavorite,
+} from "../../../packages/alantil-core/favorites.js";
 
 export function createFavoritesStore(key, normalizeId = (value) => String(value || "").trim()) {
   const listeners = new Set();
@@ -14,46 +21,50 @@ export function createFavoritesStore(key, normalizeId = (value) => String(value 
 
   function reload() {
     const stored = readScopedJson(key, []);
-    ids = new Set((Array.isArray(stored) ? stored : []).map(normalizeId).filter(Boolean));
+    ids = normalizeFavoriteIds(stored, normalizeId);
     notify();
     return new Set(ids);
   }
 
   function persist() {
-    return writeScopedJson(key, Array.from(ids));
+    return writeScopedJson(key, favoriteValues(ids));
   }
 
   function has(id) {
-    return ids.has(normalizeId(id));
+    return favoriteHas(ids, id, normalizeId);
   }
 
   function setActive(id, active, { notifyListeners = true } = {}) {
-    const normalized = normalizeId(id);
-    if (!normalized) return false;
-    const before = ids.has(normalized);
-    if (active) ids.add(normalized);
-    else ids.delete(normalized);
-    if (before !== ids.has(normalized)) {
+    const result = setFavoriteActive(ids, id, active, normalizeId);
+    if (!result.id) return false;
+    ids = result.ids;
+    if (result.changed) {
       persist();
       if (notifyListeners) notify();
     }
-    return ids.has(normalized);
+    return result.active;
   }
 
   function toggle(id) {
-    const normalized = normalizeId(id);
-    return setActive(normalized, !ids.has(normalized));
+    const result = toggleFavorite(ids, id, normalizeId);
+    if (!result.id) return false;
+    ids = result.ids;
+    if (result.changed) {
+      persist();
+      notify();
+    }
+    return result.active;
   }
 
   function replace(values, { notifyListeners = true } = {}) {
-    ids = new Set((Array.isArray(values) ? values : []).map(normalizeId).filter(Boolean));
+    ids = normalizeFavoriteIds(values, normalizeId);
     persist();
     if (notifyListeners) notify();
     return new Set(ids);
   }
 
   function values() {
-    return Array.from(ids);
+    return favoriteValues(ids);
   }
 
   function subscribe(listener) {
