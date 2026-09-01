@@ -2,7 +2,7 @@ import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
 import { normalizePos } from "../../shared/domain/word-normalizer.js?v=13.9.0";
-import { buildWordsByPOSRounds, hasWordConflict, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
+import { buildTestWords, hasWordConflict, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
@@ -84,7 +84,7 @@ export function startTest(pool, mode, limit, metadata = {}, optionPool = pool) {
   testState.limit = [20, 40, 80].includes(Number(limit)) ? Number(limit) : 40;
   const sourceOptions = Array.isArray(optionPool) && optionPool.length ? optionPool : pool;
   testState.optionPool = sourceOptions.slice();
-  testState.items = buildWordsByPOSRounds(pool, testState.limit).items;
+  testState.items = buildTestWords(pool, testState.limit).items;
   testState.index = 0;
   testState.correct = 0;
   testState.selectedAnswer = null;
