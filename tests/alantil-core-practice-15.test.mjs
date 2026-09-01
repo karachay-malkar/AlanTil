@@ -4,8 +4,10 @@ import test from 'node:test';
 import { combineNumberedExamples, parseExampleGroups } from '../packages/alantil-core/example-groups.js';
 import { buildLearningRoute, resolveStationFromParams, stationPathParams } from '../packages/alantil-core/learning-route.js';
 import {
+  buildMatchRounds,
   buildScope,
   buildSelectedSources,
+  buildTestWords,
   buildWordsByPOSRounds,
   dictsFrom,
   hasWordConflict,
@@ -27,36 +29,43 @@ function makeWords(count, posCycle = ['noun', 'verb', 'adjective', 'adverb']) {
   }));
 }
 
-test('15.0 shared practice core returns the requested 20/40/80 test items when the pool is large enough', () => {
+test('15.0 shared test policy returns the requested 20/40/80 items when the pool is large enough', () => {
   const pool = makeWords(100);
   for (const limit of [20, 40, 80]) {
-    const result = buildWordsByPOSRounds(pool, limit, { requireConflictFree: false });
+    const result = buildTestWords(pool, limit);
     assert.equal(result.items.length, limit);
     assert.equal(new Set(result.items.map((item) => item.id)).size, limit);
     assert.equal(result.complete, true);
   }
 });
 
-test('15.0 shared practice core fills sparse POS rounds from other parts of speech', () => {
+test('15.0 shared practice core fills sparse POS test rounds from other parts of speech', () => {
   const pool = [
     ...makeWords(2, ['noun']),
     ...makeWords(30, ['verb']).map((word, index) => ({ ...word, id: `v-${index}`, trans: `verb-${index}` })),
   ];
-  const result = buildWordsByPOSRounds(pool, 20, { requireConflictFree: false });
+  const result = buildTestWords(pool, 20);
   assert.equal(result.items.length, 20);
   assert.equal(new Set(result.items.map((item) => item.id)).size, 20);
 });
 
-test('15.0 match-safe selection preserves conflict filtering inside each round', () => {
+test('15.0 match policy preserves conflict filtering inside each round', () => {
   const pool = makeWords(25);
   pool[1].trans = pool[0].trans;
   assert.equal(hasWordConflict(pool[1], [pool[0]]), true);
-  const result = buildWordsByPOSRounds(pool, 20);
+  const result = buildMatchRounds(pool, 20);
   for (const round of result.rounds) {
     for (let index = 0; index < round.length; index += 1) {
       assert.equal(hasWordConflict(round[index], round.slice(0, index)), false);
     }
   }
+});
+
+test('15.0 low-level round builder still supports explicit conflict options', () => {
+  const pool = makeWords(20);
+  const result = buildWordsByPOSRounds(pool, 20, { requireConflictFree: false });
+  assert.equal(result.items.length, 20);
+  assert.equal(result.complete, true);
 });
 
 test('15.0 shared core owns dictionary, section and set traversal used by web', () => {
