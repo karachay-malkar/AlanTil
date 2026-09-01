@@ -4,8 +4,11 @@ on:
   push:
     branches:
       - agent/14.2-mobile-parity
+      - agent/15.0-unified-core
     paths:
       - 'mobile/**'
+      - 'packages/**'
+      - 'src/shared/**'
       - '.github/workflows/mobile-14-1-android.yml'
       - '.github/workflows/mobile-14-1-source.yml'
   workflow_dispatch:
@@ -37,7 +40,7 @@ jobs:
           ALANTIL_SOURCE_FILENAME: ${{ steps.release.outputs.source_filename }}
         run: |
           git archive --format=zip --prefix="$ALANTIL_SOURCE_PREFIX/" \
-            --output="$ALANTIL_SOURCE_FILENAME" HEAD mobile \
+            --output="$ALANTIL_SOURCE_FILENAME" HEAD mobile packages src/shared \
             .github/workflows/mobile-14-1-android.yml \
             .github/workflows/mobile-14-1-source.yml
 
