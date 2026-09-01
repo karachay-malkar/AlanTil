@@ -3,13 +3,17 @@ import {
   readScopedJson,
   writeScopedJson,
 } from "./storage-scope.js?v=13.9.0";
+import {
+  enqueueProgressEntry,
+  mergeProgressQueueEntries,
+  normalizeProgressQueue,
+  progressQueueEntryId,
+  removeProgressQueueEntry,
+  updateProgressQueueEntry,
+} from "../../../packages/alantil-core/sync-policy.js";
 
 export const PROGRESS_QUEUE_KEY = "alantil_progress_queue_v1";
 const listeners = new Set();
-
-function normalizeQueue(value) {
-  return Array.isArray(value) ? value.filter((entry) => entry && entry.id && entry.type) : [];
-}
 
 function notify(scope = getStorageScope()) {
   const queue = readProgressQueue(scope);
@@ -23,23 +27,21 @@ function notify(scope = getStorageScope()) {
 }
 
 export function readProgressQueue(scope = getStorageScope()) {
-  return normalizeQueue(readScopedJson(PROGRESS_QUEUE_KEY, [], scope));
+  return normalizeProgressQueue(readScopedJson(PROGRESS_QUEUE_KEY, [], scope));
 }
 
 export function writeProgressQueue(queue, scope = getStorageScope()) {
-  const saved = writeScopedJson(PROGRESS_QUEUE_KEY, normalizeQueue(queue), scope);
+  const saved = writeScopedJson(PROGRESS_QUEUE_KEY, normalizeProgressQueue(queue), scope);
   if (saved) notify(scope);
   return saved;
 }
 
+function generatedQueueId() {
+  return String(globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+}
+
 export function queueEntryId(type, payload = {}) {
-  const typeName = String(type || "").trim();
-  const stableId = payload.id
-    || payload.session_id
-    || [payload.dictionary_id, payload.section_id, payload.set_id, payload.word_id, payload.song_id]
-      .filter((value) => value !== undefined && value !== null && value !== "")
-      .join(":");
-  return `${typeName}:${String(stableId || globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`)}`;
+  return progressQueueEntryId(type, payload, generatedQueueId());
 }
 
 export function enqueueProgress(type, payload, {
@@ -48,55 +50,32 @@ export function enqueueProgress(type, payload, {
   replace = true,
   claimId = "",
 } = {}) {
-  if (!type || !payload) return null;
-  const queue = readProgressQueue(scope);
-  const entry = {
+  const result = enqueueProgressEntry(readProgressQueue(scope), type, payload, {
     id,
-    type: String(type),
-    payload,
-    claim_id: String(claimId || ""),
-    created_at: new Date().toISOString(),
-    attempts: 0,
-  };
-  const index = queue.findIndex((item) => item.id === id);
-  if (index >= 0 && replace) queue[index] = { ...queue[index], ...entry, created_at: queue[index].created_at || entry.created_at };
-  else if (index < 0) queue.push(entry);
-  writeProgressQueue(queue, scope);
+    replace,
+    claimId,
+    createdAt: new Date().toISOString(),
+  });
+  if (!result.entry) return null;
+  writeProgressQueue(result.queue, scope);
   window.dispatchEvent(new CustomEvent("alantil:progress-queued", { detail: { scope, id } }));
-  return entry;
+  return result.entry;
 }
 
 export function removeProgressEntry(id, scope = getStorageScope()) {
-  const queue = readProgressQueue(scope);
-  const next = queue.filter((entry) => entry.id !== id);
-  if (next.length === queue.length) return false;
-  return writeProgressQueue(next, scope);
+  const result = removeProgressQueueEntry(readProgressQueue(scope), id);
+  if (!result.changed) return false;
+  return writeProgressQueue(result.queue, scope);
 }
 
 export function updateProgressEntry(id, updates, scope = getStorageScope()) {
-  const queue = readProgressQueue(scope);
-  const index = queue.findIndex((entry) => entry.id === id);
-  if (index < 0) return false;
-  queue[index] = { ...queue[index], ...updates };
-  return writeProgressQueue(queue, scope);
+  const result = updateProgressQueueEntry(readProgressQueue(scope), id, updates);
+  if (!result.changed) return false;
+  return writeProgressQueue(result.queue, scope);
 }
 
 export function mergeProgressQueues(sourceEntries, scope = getStorageScope(), { claimId = "" } = {}) {
-  const queue = readProgressQueue(scope);
-  const byId = new Map(queue.map((entry) => [entry.id, entry]));
-  normalizeQueue(sourceEntries).forEach((entry) => {
-    const current = byId.get(entry.id);
-    if (entry.type === "user_settings") {
-      // Guest setup may replace only the blank settings entry prepared for a
-      // brand-new account. Existing cloud or pending account settings win.
-      if (!current || current.payload?.learning_setup_completed_at) return;
-      byId.set(entry.id, { ...entry, claim_id: claimId || entry.claim_id || "" });
-      return;
-    }
-    if (current) return;
-    byId.set(entry.id, { ...entry, claim_id: claimId || entry.claim_id || "" });
-  });
-  return writeProgressQueue(Array.from(byId.values()), scope);
+  return writeProgressQueue(mergeProgressQueueEntries(readProgressQueue(scope), sourceEntries, { claimId }), scope);
 }
 
 export function subscribeProgressQueue(listener) {
