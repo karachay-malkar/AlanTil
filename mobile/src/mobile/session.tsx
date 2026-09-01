@@ -1,10 +1,13 @@
 import type { Session, User } from '@supabase/supabase-js';
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 
 import { readAuthCallback } from '../../../packages/alantil-core/session.js';
 import { bindSupabaseAuthLifecycle, supabase } from '@/src/lib/supabase';
 import { initializeSyncLifecycle, migrateLegacyMobileStorage } from '@/src/mobile/sync';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type SessionState = {
   ready: boolean;
@@ -44,26 +47,31 @@ export function SessionProvider({ children }: PropsWithChildren) {
     error: null,
     authBusy: false,
   });
+  const exchangedCodes = useRef(new Set<string>());
+
+  const consumeAuthUrl = useCallback(async (url: string | null) => {
+    if (!url) return false;
+    const { code, flowId, error: callbackError } = authParamsFromUrl(url);
+    if (callbackError) {
+      setState((current) => ({ ...current, authBusy: false, error: callbackError }));
+      return false;
+    }
+    if (!code) return false;
+    if (exchangedCodes.current.has(code)) return true;
+
+    exchangedCodes.current.add(code);
+    setState((current) => ({ ...current, authBusy: true, error: null }));
+    const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
+    if (error) exchangedCodes.current.delete(code);
+    setState((current) => ({ ...current, authBusy: false, error: error?.message ?? null }));
+    return !error;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     const unbindLifecycle = bindSupabaseAuthLifecycle();
 
     void migrateLegacyMobileStorage();
-
-    async function consumeAuthUrl(url: string | null) {
-      if (!url) return;
-      const { code, flowId, error: callbackError } = authParamsFromUrl(url);
-      if (callbackError) {
-        if (mounted) setState((current) => ({ ...current, authBusy: false, error: callbackError }));
-        return;
-      }
-      if (!code) return;
-      setState((current) => ({ ...current, authBusy: true, error: null }));
-      const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
-      if (!mounted) return;
-      setState((current) => ({ ...current, authBusy: false, error: error?.message ?? null }));
-    }
 
     supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
@@ -93,7 +101,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       data.subscription.unsubscribe();
       unbindLifecycle();
     };
-  }, []);
+  }, [consumeAuthUrl]);
 
   useEffect(() => {
     initializeSyncLifecycle(state.user?.id);
@@ -109,11 +117,17 @@ export function SessionProvider({ children }: PropsWithChildren) {
       });
       if (error) throw error;
       if (!data.url) throw new Error('Supabase did not return an OAuth URL.');
-      await Linking.openURL(data.url);
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      if (result.type === 'success') {
+        await consumeAuthUrl(result.url);
+      } else {
+        setState((current) => ({ ...current, authBusy: false }));
+      }
     } catch (error: unknown) {
       setState((current) => ({ ...current, authBusy: false, error: String((error as { message?: string })?.message ?? error) }));
     }
-  }, []);
+  }, [consumeAuthUrl]);
 
   const signOut = useCallback(async () => {
     setState((current) => ({ ...current, authBusy: true, error: null }));
