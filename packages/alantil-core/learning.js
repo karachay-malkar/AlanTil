@@ -3,8 +3,68 @@ function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 }
 
+function normalizedId(value) {
+  return String(value ?? '').normalize('NFC').trim();
+}
+
 export function cloneLearnValue(value) {
   return cloneJson(value);
+}
+
+export function normalizeLearnDirection(value) {
+  return value === 'ru_alan' || value === 'ru' ? 'ru_alan' : 'alan_ru';
+}
+
+export function normalizeLearnSource(value) {
+  return value === 'favorites' ? 'favorites' : 'station';
+}
+
+export function filterLearnWordsBySelection(words, selectedIds) {
+  const source = Array.isArray(words) ? words : [];
+  const selected = selectedIds instanceof Set
+    ? selectedIds
+    : new Set(Array.isArray(selectedIds) ? selectedIds.map(normalizedId).filter(Boolean) : String(selectedIds ?? '').split(',').map(normalizedId).filter(Boolean));
+  return selected.size ? source.filter((word) => selected.has(normalizedId(word?.id ?? word?.word_id))) : source.slice();
+}
+
+export function createLearnState(words, { source = 'station', direction = 'alan_ru', randomize = true } = {}) {
+  const ids = (Array.isArray(words) ? words : []).map((word) => normalizedId(word?.id ?? word?.word_id)).filter(Boolean);
+  const ordered = ids.slice();
+  if (randomize) {
+    for (let index = ordered.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [ordered[index], ordered[randomIndex]] = [ordered[randomIndex], ordered[index]];
+    }
+  }
+  return {
+    source: normalizeLearnSource(source),
+    ids: ordered,
+    index: 0,
+    repeatIds: [],
+    entries: {},
+    direction: normalizeLearnDirection(direction),
+    undo: null,
+    undo_count: 0,
+  };
+}
+
+export function restoreLearnState(snapshot, words, { source = snapshot?.source, direction = snapshot?.direction } = {}) {
+  if (!snapshot || !Array.isArray(words)) return null;
+  const availableIds = new Set(words.map((word) => normalizedId(word?.id ?? word?.word_id)).filter(Boolean));
+  const ids = (Array.isArray(snapshot.ids) ? snapshot.ids : []).map(normalizedId).filter(Boolean);
+  if (!ids.length || !ids.every((id) => availableIds.has(id))) return null;
+  const repeatIds = (Array.isArray(snapshot.repeatIds) ? snapshot.repeatIds : []).map(normalizedId).filter((id) => availableIds.has(id));
+  return {
+    ...snapshot,
+    source: normalizeLearnSource(source),
+    ids,
+    index: Math.min(ids.length, Math.max(0, Number(snapshot.index || 0))),
+    repeatIds,
+    entries: snapshot.entries && typeof snapshot.entries === 'object' ? cloneEntries(snapshot.entries) : {},
+    direction: normalizeLearnDirection(direction),
+    undo: snapshot.undo ?? null,
+    undo_count: Math.max(0, Number(snapshot.undo_count || 0)),
+  };
 }
 
 export function captureLearnActionSnapshot(state) {
