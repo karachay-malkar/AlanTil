@@ -11,6 +11,7 @@ on:
       - 'packages/**'
       - 'src/shared/**'
       - 'tests/alantil-core-practice-15.test.mjs'
+      - 'tests/alantil-core-progress-15.test.mjs'
       - 'tests/design-token-parity-15.test.mjs'
       - '.github/workflows/mobile-14-1-android.yml'
   workflow_dispatch:
@@ -68,7 +69,7 @@ jobs:
         run: npm test
 
       - name: Shared 15.0 core parity tests
-        run: node --test tests/alantil-core-practice-15.test.mjs tests/design-token-parity-15.test.mjs
+        run: node --test tests/alantil-core-practice-15.test.mjs tests/alantil-core-progress-15.test.mjs tests/design-token-parity-15.test.mjs
 
       - name: Verify Android JavaScript bundle
         working-directory: mobile
