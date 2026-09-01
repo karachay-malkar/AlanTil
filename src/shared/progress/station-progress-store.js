@@ -5,14 +5,14 @@ import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
 import {
   createStationProgressRow,
   effectiveStationStatus,
-  markStationCardsCompletedProgress,
-  markStationStartedProgress,
   mergeStationProgress,
   normalizeStationProgressRow,
   recordStationTestProgress,
   stationProgressMapKey,
   stationProgressTime,
   stationTestPhaseFromProgress,
+  transitionStationCardsCompleted,
+  transitionStationStarted,
 } from "../../../packages/alantil-core/progress.js";
 
 export const STATION_PROGRESS_KEY = "alantil_station_progress_v13_2";
@@ -79,12 +79,14 @@ export function replaceStationProgress(rows = [], { notify = true } = {}) {
 
 export function markStationStarted(station) {
   const current = getStationProgress(station) || payloadForStation(station);
-  return save(station, markStationStartedProgress(current));
+  const transition = transitionStationStarted(current);
+  return transition.changed ? save(station, transition.row) : current;
 }
 
 export function markStationCardsCompleted(station) {
   const current = getStationProgress(station) || payloadForStation(station);
-  return save(station, markStationCardsCompletedProgress(current));
+  const transition = transitionStationCardsCompleted(current);
+  return transition.changed ? save(station, transition.row) : current;
 }
 
 export function stationTestPhase(station) {
