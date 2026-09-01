@@ -1,3 +1,5 @@
+import { designTokens } from '../../../packages/alantil-design/tokens.js';
+
 export type RoutePoint = { x: number; y: number };
 
 export type RouteConnectorSegment = {
@@ -9,12 +11,19 @@ export type RouteConnectorSegment = {
 
 export function routeWaveAmplitude(routeWidth: number) {
   const width = Number.isFinite(routeWidth) ? Math.max(0, routeWidth) : 0;
-  return Math.max(42, Math.min(90, width * 0.22 || 64));
+  return Math.max(
+    designTokens.path.waveAmplitudeMin,
+    Math.min(
+      designTokens.path.waveAmplitudeMax,
+      width * 0.22 || designTokens.path.waveAmplitudeMin,
+    ),
+  );
 }
 
 export function routeWaveShift(index: number, routeWidth: number) {
   const amplitude = routeWaveAmplitude(routeWidth);
-  return [-amplitude, 0, amplitude, 0][Math.max(0, Math.floor(index)) % 4];
+  const pattern = [-amplitude, 0, amplitude, 0] as const;
+  return pattern[Math.max(0, Math.floor(index)) % designTokens.path.waveSteps];
 }
 
 export function routeConnectorSegment(from: RoutePoint, to: RoutePoint): RouteConnectorSegment {
