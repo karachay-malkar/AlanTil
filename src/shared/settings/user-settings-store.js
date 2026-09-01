@@ -5,6 +5,13 @@ import {
   subscribeStorageScope,
   writeScopedJson,
 } from "../progress/storage-scope.js?v=13.10.12";
+import {
+  normalizeAlanDialectCode,
+  normalizeAlanScriptCode,
+  normalizeInterfaceLanguageCode,
+  normalizeTextSizeCode,
+  normalizeTimestamp,
+} from "../../../packages/alantil-core/settings.js";
 
 export const USER_SETTINGS_KEY = "alantil_user_settings_v1";
 const LEGACY_SETUP_COMPLETED_AT = "2026-07-18T00:00:00.000Z";
@@ -21,41 +28,12 @@ export const DEFAULT_USER_SETTINGS = Object.freeze({
 const listeners = new Set();
 let state = { ...DEFAULT_USER_SETTINGS };
 
-function normalizeLanguageCode(value, fallback = "ru") {
-  const normalized = String(value || "").trim().toLowerCase();
-  return /^[a-z]{2,8}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : fallback;
-}
-
-function normalizeInterfaceLanguageCode(value) {
-  const source = normalizeLanguageCode(value, DEFAULT_USER_SETTINGS.interface_language_code).split("-")[0];
-  const normalized = source === "tu" ? "tr" : source;
-  return ["ru", "en", "tr"].includes(normalized) ? normalized : DEFAULT_USER_SETTINGS.interface_language_code;
-}
-
-function normalizeAlanScriptCode(value) {
-  return value === "turkic" ? "turkic" : "cyrillic";
-}
-
-function normalizeAlanDialectCode(value) {
-  return ["canonical", "karachay", "balkar"].includes(value) ? value : "canonical";
-}
-
-function normalizeTextSizeCode(value) {
-  return ["small", "medium", "large"].includes(value) ? value : DEFAULT_USER_SETTINGS.text_size_code;
-}
-
 function applyTextSizeCode(value) {
   const normalized = normalizeTextSizeCode(value);
   if (typeof document !== "undefined" && document.documentElement) {
     document.documentElement.dataset.textSize = normalized;
   }
   return normalized;
-}
-
-function normalizeCompletionTimestamp(value) {
-  if (!value) return null;
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
 }
 
 function normalizeSettings(value = {}) {
@@ -66,7 +44,7 @@ function normalizeSettings(value = {}) {
     alan_script_code: normalizeAlanScriptCode(value.alan_script_code),
     alan_dialect_code: normalizeAlanDialectCode(value.alan_dialect_code),
     text_size_code: normalizeTextSizeCode(value.text_size_code),
-    learning_setup_completed_at: normalizeCompletionTimestamp(value.learning_setup_completed_at),
+    learning_setup_completed_at: normalizeTimestamp(value.learning_setup_completed_at),
   };
 }
 
@@ -118,7 +96,7 @@ export function getTranslationLanguageCode() {
 }
 
 export function hasCompletedLearningSetup(settings = state) {
-  return Boolean(normalizeCompletionTimestamp(settings?.learning_setup_completed_at));
+  return Boolean(normalizeTimestamp(settings?.learning_setup_completed_at));
 }
 
 export function setUserSettings(updates = {}, {
