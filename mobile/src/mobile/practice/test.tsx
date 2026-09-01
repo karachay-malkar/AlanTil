@@ -3,72 +3,37 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  buildTestSessionOptions,
+  createTestSessionState,
+  restartTestSessionState,
+  restoreTestSessionState,
+  submitTestAnswer,
+  testSessionPayload,
+  testSessionSummary,
+} from '../../../../packages/alantil-core/practice-session.js';
 import { theme } from '@/src/mobile/theme';
 import { useI18n } from '@/src/mobile/i18n';
 import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
-import { buildScope, buildSelectedSources, buildTestOptions, buildTestWords, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
+import { buildScope, scopeKey, type PracticeWord } from '@/src/mobile/practice/selection';
 import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
-import { getTestSession, setTestSession, type TestMode, type TestResult, type TestSessionState } from '@/src/mobile/practice/state';
+import { getTestSession, setTestSession, type TestMode, type TestSessionState } from '@/src/mobile/practice/state';
 import { useSessionExitGuard } from '@/src/mobile/use-session-exit';
 import { scopedTestId, testIds } from '@/src/mobile/test-ids';
 import { AppText as Text } from '@/src/mobile/typography';
 
 const LIMITS = [20, 40, 80] as const;
 
-function optionsFor(item: PracticeWord, optionPool: PracticeWord[], mode: TestMode) {
-  return buildTestOptions(item, optionPool, mode, 4);
-}
-
-function sessionPayload(session = getTestSession()) {
-  if (!session) return {};
-  return {
-    selected_sources: session.selectedSources,
-    direction: session.mode === 'kb' ? 'alan_to_translation' : 'translation_to_alan',
-    questions_planned: session.items.length,
-    questions_answered: session.results.length,
-    correct_total: session.results.filter((result) => result.isCorrect).length,
-    wrong_total: session.results.filter((result) => !result.isCorrect).length,
-    words: session.results.map((result) => ({
-      word_id: result.id,
-      result: result.isCorrect ? 'correct' : 'wrong',
-      wrong_word_id: result.isCorrect ? null : result.wrongWordId,
-    })),
-    session_snapshot: {
-      mode: session.mode,
-      limit: session.limit,
-      item_ids: session.items.map((item) => item.id),
-      option_pool_ids: session.optionPool.map((item) => item.id),
-      index: session.index,
-      correct: session.correct,
-      results: session.results,
-      selected_sources: session.selectedSources,
-    },
-  };
-}
-
-async function restoreTestSession(settings: ReturnType<typeof useSettings>['settings'], userId?: string | null) {
+async function restoreTestSessionFromStorage(settings: ReturnType<typeof useSettings>['settings'], userId?: string | null) {
   const resumed = await resumeSessionRuntime('test', userId);
   const snapshot = resumed?.payload?.session_snapshot as Record<string, unknown> | undefined;
   if (!resumed || !snapshot) return null;
   const words = await loadPracticeWords(settings);
-  const byId = new Map(words.map((word) => [word.id, word]));
-  const items = (Array.isArray(snapshot.item_ids) ? snapshot.item_ids : []).map((wordId) => byId.get(String(wordId))).filter((word): word is PracticeWord => Boolean(word));
-  const optionPool = (Array.isArray(snapshot.option_pool_ids) ? snapshot.option_pool_ids : []).map((wordId) => byId.get(String(wordId))).filter((word): word is PracticeWord => Boolean(word));
-  if (!items.length || Number(snapshot.index || 0) >= items.length) return null;
-  const restored = {
-    runtime: resumed.runtime,
-    mode: snapshot.mode === 'ru' ? 'ru' as const : 'kb' as const,
-    limit: Number(snapshot.limit || items.length),
-    items,
-    optionPool: optionPool.length ? optionPool : words,
-    index: Math.max(0, Number(snapshot.index || 0)),
-    correct: Math.max(0, Number(snapshot.correct || 0)),
-    results: Array.isArray(snapshot.results) ? snapshot.results as TestResult[] : [],
-    selectedSources: Array.isArray(snapshot.selected_sources) ? snapshot.selected_sources as { dictionary_id: string; section_ids: string[] }[] : [],
-  };
+  const restored = restoreTestSessionState(resumed.runtime, snapshot, words) as TestSessionState | null;
+  if (!restored) return null;
   setTestSession(restored);
   return restored;
 }
@@ -116,21 +81,11 @@ export function TestMenuScreen() {
     if (!pool.length || starting) return;
     setStarting(true);
     try {
-      const built = buildTestWords(pool, limit);
-      if (!built.items.length) throw new Error(t('test.not_enough_words'));
       const runtime = await createSessionRuntime('test', settings, session.user?.id);
-      setTestSession({
-        runtime,
-        mode,
-        limit,
-        items: built.items,
-        optionPool: words,
-        index: 0,
-        correct: 0,
-        results: [],
-        selectedSources: buildSelectedSources(pool),
-      });
-      await persistActiveSession(runtime, sessionPayload());
+      const next = createTestSessionState({ pool, optionPool: words, mode, limit, runtime }) as TestSessionState;
+      if (!next.items.length) throw new Error(t('test.not_enough_words'));
+      setTestSession(next);
+      await persistActiveSession(runtime, testSessionPayload(next));
       router.push('/practice/test/session');
     } catch (reason) {
       setError(String((reason as { message?: string })?.message ?? reason));
@@ -182,19 +137,19 @@ export function TestSessionScreen() {
   const [completionPending, setCompletionPending] = useState(false);
   const session = getTestSession();
   const item = session?.items[session.index];
-  const options = useMemo(() => item && session ? optionsFor(item, session.optionPool, session.mode) : [], [session?.index, item?.id]);
+  const options = useMemo(() => item && session ? buildTestSessionOptions(session, item, 4) : [], [session?.index, item?.id]);
 
   const requestLeave = useSessionExitGuard(Boolean(session), useCallback(async (reason: string) => {
     const current = getTestSession();
     if (!current) return;
-    await finalizeSession(current.runtime, sessionPayload(current), 'interrupted', reason);
+    await finalizeSession(current.runtime, testSessionPayload(current), 'interrupted', reason);
     setTestSession(null);
   }, []));
 
   useEffect(() => {
     if (session) return;
     let active = true;
-    void restoreTestSession(settings, auth.user?.id).then((restored) => {
+    void restoreTestSessionFromStorage(settings, auth.user?.id).then((restored) => {
       if (!active) return;
       if (restored) setVersion((value) => value + 1); else router.replace('/practice/test');
     });
@@ -205,7 +160,7 @@ export function TestSessionScreen() {
     setBusy(true);
     setSaveError('');
     try {
-      await finalizeSession(current.runtime, sessionPayload(current), 'completed');
+      await finalizeSession(current.runtime, testSessionPayload(current), 'completed');
       router.replace('/practice/test/results');
     } catch {
       setCompletionPending(true);
@@ -230,28 +185,11 @@ export function TestSessionScreen() {
     setSaveError('');
     const current = getTestSession();
     if (!current) { setBusy(false); return; }
-    const currentItem = current.items[current.index];
-    const correctAnswer = current.mode === 'kb' ? currentItem.trans : currentItem.word;
-    const questionText = current.mode === 'kb' ? currentItem.word : currentItem.trans;
-    const isCorrect = selectedAnswer.id === currentItem.id;
-    const result: TestResult = {
-      id: currentItem.id,
-      questionText,
-      word: currentItem.word,
-      trans: currentItem.trans,
-      correctAnswer,
-      userAnswer: selectedAnswer.text,
-      wrongWordId: isCorrect ? null : selectedAnswer.id,
-      isCorrect,
-    };
-    const next: TestSessionState = {
-      ...current,
-      correct: current.correct + (isCorrect ? 1 : 0),
-      results: [...current.results, result],
-      index: current.index + 1,
-    };
+    const transition = submitTestAnswer(current, selectedAnswer);
+    if (!transition) { setBusy(false); return; }
+    const next = transition.state as TestSessionState;
     try {
-      await persistActiveSession(next.runtime, sessionPayload(next));
+      await persistActiveSession(next.runtime, testSessionPayload(next));
     } catch {
       setSaveError(t('test.save_error'));
       setBusy(false);
@@ -304,8 +242,7 @@ export function TestResultsScreen() {
   }, [sessionAuth.user?.id]);
 
   if (!test) return <View style={styles.fullLoader}><ActivityIndicator color={theme.colors.accentStrong} /></View>;
-  const percentage = Math.round((test.correct / Math.max(1, test.items.length)) * 100);
-  const level = percentage >= 100 ? 3 : percentage >= 90 ? 2 : percentage >= 80 ? 1 : 0;
+  const summary = testSessionSummary(test);
 
   const restart = async () => {
     if (restarting) return;
@@ -313,9 +250,9 @@ export function TestResultsScreen() {
     setError('');
     try {
       const runtime = await createSessionRuntime('test', settings, sessionAuth.user?.id);
-      const next = { ...test, runtime, items: shuffle(test.items.slice()), index: 0, correct: 0, results: [] };
+      const next = restartTestSessionState(test, runtime) as TestSessionState;
       setTestSession(next);
-      await persistActiveSession(runtime, sessionPayload(next));
+      await persistActiveSession(runtime, testSessionPayload(next));
       router.replace('/practice/test/session');
     } catch {
       setError(t('test.restart_error'));
@@ -353,9 +290,9 @@ export function TestResultsScreen() {
       }
     >
       <View style={styles.resultHero}>
-        <Text style={styles.resultPercentage}>{percentage}%</Text>
-        <Text style={styles.resultCount}>{`${test.correct}/${test.items.length}`}</Text>
-        {level > 0 ? <Text style={styles.resultLevel}>{'I'.repeat(level)}</Text> : null}
+        <Text style={styles.resultPercentage}>{summary.percentage}%</Text>
+        <Text style={styles.resultCount}>{`${summary.correct}/${summary.total}`}</Text>
+        {summary.level > 0 ? <Text style={styles.resultLevel}>{'I'.repeat(summary.level)}</Text> : null}
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <View style={styles.resultsList}>
