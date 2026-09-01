@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildWordsByPOSRounds, hasWordConflict } from '../packages/alantil-core/practice.js';
+import {
+  buildScope,
+  buildSelectedSources,
+  buildWordsByPOSRounds,
+  dictsFrom,
+  hasWordConflict,
+  parseSynonyms,
+  sectionsFrom,
+  setsFrom,
+  wordsForSet,
+} from '../packages/alantil-core/practice.js';
 
 function makeWords(count, posCycle = ['noun', 'verb', 'adjective', 'adverb']) {
   return Array.from({ length: count }, (_, index) => ({
@@ -43,4 +53,35 @@ test('15.0 match-safe selection preserves conflict filtering inside each round',
       assert.equal(hasWordConflict(round[index], round.slice(0, index)), false);
     }
   }
+});
+
+test('15.0 shared core owns dictionary, section and set traversal used by web', () => {
+  const words = [
+    { id: '1', dictionary_id: 'beginner', dictionary_name: 'Beginner', section_id: 'starter', section_name: 'Starter', set_id: 'beginner-01', global_order: 1 },
+    { id: '2', dictionary_id: 'beginner', dictionary_name: 'Beginner', section_id: 'starter', section_name: 'Starter', set_id: 'beginner-02', global_order: 2 },
+    { id: '3', dictionary_id: 'advanced', dictionary_name: 'Advanced', section_id: 'advanced', section_name: 'Advanced', set_id: 'advanced-01', global_order: 3 },
+  ];
+  assert.deepEqual(dictsFrom(words), ['beginner', 'advanced']);
+  assert.deepEqual(sectionsFrom(words, 'beginner'), ['starter']);
+  assert.deepEqual(setsFrom(words, 'beginner', 'starter'), ['beginner-01', 'beginner-02']);
+  assert.deepEqual(wordsForSet(words, 'beginner', 'starter', 'beginner-02').map((word) => word.id), ['2']);
+});
+
+test('15.0 shared core owns practice scope and selected source contracts used by mobile', () => {
+  const words = [
+    { id: '1', dictionary_id: 'beginner', dictionary_name: 'Начальный', section_id: 'starter', section_name: 'Starter' },
+    { id: '2', dictionary_id: 'beginner', dictionary_name: 'Начальный', section_id: 'starter', section_name: 'Starter' },
+    { id: '3', dictionary_id: 'beginner', dictionary_name: 'Начальный', section_id: 'elementary', section_name: 'Elementary' },
+  ];
+  assert.deepEqual(buildScope(words), [{
+    id: 'beginner',
+    name: 'Начальный',
+    count: 3,
+    sections: [
+      { id: 'starter', name: 'Starter', count: 2 },
+      { id: 'elementary', name: 'Elementary', count: 1 },
+    ],
+  }]);
+  assert.deepEqual(buildSelectedSources(words), [{ dictionary_id: 'beginner', section_ids: ['starter', 'elementary'] }]);
+  assert.deepEqual(parseSynonyms(' Один, Два '), ['один', 'два']);
 });
