@@ -1,4 +1,4 @@
-export type AuthQuerySource = URLSearchParams | Record<string, unknown> | null | undefined;
+export type AuthQuerySource = ({ get?: (key: string) => unknown } & Record<string, unknown>) | null | undefined;
 
 export type AuthCallback = {
   code: string;
