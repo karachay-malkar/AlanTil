@@ -24,12 +24,14 @@ test('Test and Match retain retryable state when local persistence fails', async
     read('src/mobile/practice/test.tsx'),
     read('src/mobile/practice/match.tsx'),
   ]);
-  assert.match(testSource, /const next: TestSessionState/);
-  assert.match(testSource, /await persistActiveSession\(next\.runtime, sessionPayload\(next\)\)/);
+  assert.match(testSource, /submitTestAnswer/);
+  assert.match(testSource, /const next = transition\.state as TestSessionState/);
+  assert.match(testSource, /await persistActiveSession\(next\.runtime, testSessionPayload\(next\)\)/);
   assert.match(testSource, /completionPending/);
   assert.match(testSource, /test\.save_error/);
-  assert.match(matchSource, /const solved = new Set\(session\.solved\)/);
-  assert.match(matchSource, /const failMap = \{ \.\.\.session\.failMap \}/);
+  assert.match(matchSource, /applyMatchPair/);
+  assert.match(matchSource, /const next = transition\.state as MatchSessionState/);
+  assert.match(matchSource, /await persistActiveSession\(next\.runtime, matchSessionPayload\(next\)\)/);
   assert.match(matchSource, /completionPending/);
   assert.match(matchSource, /match\.save_error/);
 });
