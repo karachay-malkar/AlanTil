@@ -18,6 +18,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!ready || !auth.ready || !settings.learning_setup_completed_at) return;
     let active = true;
+    setResumeChecked(false);
     void Promise.all([
       resumeActivitySession('test', auth.user?.id),
       resumeActivitySession('match', auth.user?.id),
@@ -33,7 +34,7 @@ export default function HomeScreen() {
     return () => { active = false; };
   }, [ready, auth.ready, auth.user?.id, settings.learning_setup_completed_at]);
 
-  if (!ready) {
+  if (!ready || !auth.ready) {
     return (
       <View testID={testIds.app.loading} style={styles.loading}>
         <ActivityIndicator color={theme.colors.accentStrong} size="large" />
