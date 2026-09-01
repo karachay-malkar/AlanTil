@@ -1,8 +1,17 @@
 import { readScopedJson, STORAGE_KEYS, writeScopedJson } from '@/src/mobile/storage';
 import { enqueueSync } from '@/src/mobile/sync';
+import {
+  canonicalStationStatus,
+  createStationProgressRow,
+  markStationCardsCompletedProgress,
+  markStationStartedProgress,
+  normalizeStationLifecycle,
+  recordStationTestProgress,
+  stationTestPhaseFromProgress,
+} from '../../../../packages/alantil-core/progress.js';
+import { CORE_PATH_CONFIG } from '../../../../packages/alantil-core/path-config.js';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-export const REQUIRED_ACCURACY = 80;
+export const REQUIRED_ACCURACY = CORE_PATH_CONFIG.stationRequiredAccuracy;
 
 export type StationDescriptor = {
   storyId: string;
@@ -35,29 +44,21 @@ function key(station: StationDescriptor) {
   return [station.storyId, station.dictionaryId, station.sectionId, station.setId].join('::');
 }
 
-function nowIso() { return new Date().toISOString(); }
-function asTime(value?: string | null) { return Date.parse(value || '') || 0; }
+function fallback(station: StationDescriptor) {
+  return {
+    storyId: station.storyId,
+    dictionaryId: station.dictionaryId,
+    sectionId: station.sectionId,
+    setId: station.setId,
+  };
+}
 
 function empty(station: StationDescriptor): StationProgress {
-  return {
-    dictionary_id: station.dictionaryId,
-    catalog_id: station.dictionaryId,
-    group_id: station.sectionId,
-    set_id: station.setId,
-    story_type: station.storyId,
-    status: 'available',
-    current_phase: 'study',
-    study_sessions_total: 0,
-    test_attempts_total: 0,
-    best_accuracy: 0,
-    first_test_completed_at: null,
-    review_1_due_at: null,
-    review_1_completed_at: null,
-    review_2_due_at: null,
-    review_2_completed_at: null,
-    mastered_at: null,
-    updated_at: nowIso(),
-  };
+  return createStationProgressRow(fallback(station)) as StationProgress;
+}
+
+function normalize(row: Partial<StationProgress> | null | undefined, station: StationDescriptor): StationProgress {
+  return normalizeStationLifecycle(row ?? {}, fallback(station)) as StationProgress;
 }
 
 async function localRows(userId?: string | null) {
@@ -68,66 +69,53 @@ async function localRows(userId?: string | null) {
 
 export async function getStationProgress(station: StationDescriptor, userId?: string | null): Promise<StationProgress> {
   const row = (await localRows(userId)).find((entry) => key(station) === [entry.story_type, entry.dictionary_id, entry.group_id, entry.set_id].join('::'));
-  return row ? { ...empty(station), ...row } : empty(station);
+  return row ? normalize(row, station) : empty(station);
+}
+
+export async function getCanonicalStationStatus(station: StationDescriptor, userId?: string | null) {
+  return canonicalStationStatus(await getStationProgress(station, userId));
 }
 
 async function save(station: StationDescriptor, userId: string | null | undefined, row: StationProgress) {
   const rows = await localRows(userId);
   const stationKey = key(station);
+  const normalized = normalize(row, station);
   await writeScopedJson(STORAGE_KEYS.stationProgress, [
     ...rows.filter((entry) => [entry.story_type, entry.dictionary_id, entry.group_id, entry.set_id].join('::') !== stationKey),
-    row,
+    normalized,
   ], userId);
-  await enqueueSync('station_progress', row as unknown as Record<string, unknown>, userId, { entryId: `station_progress:${stationKey}` });
-  return row;
+  await enqueueSync('station_progress', normalized as unknown as Record<string, unknown>, userId, { entryId: `station_progress:${stationKey}` });
+  return normalized;
 }
 
 export async function markStationStarted(station: StationDescriptor, userId?: string | null) {
   const current = await getStationProgress(station, userId);
-  if (['mastered', 'test_ready'].includes(current.status)) return current;
-  return save(station, userId, { ...current, status: 'studying', current_phase: 'study', study_sessions_total: current.study_sessions_total + 1, updated_at: nowIso() });
+  return save(station, userId, markStationStartedProgress(current) as StationProgress);
 }
 
 export async function markStationCardsCompleted(station: StationDescriptor, userId?: string | null) {
   const current = await getStationProgress(station, userId);
-  if (current.status === 'mastered') return current;
-  return save(station, userId, { ...current, status: 'test_ready', current_phase: 'first_test', updated_at: nowIso() });
+  return save(station, userId, markStationCardsCompletedProgress(current) as StationProgress);
 }
 
 export async function stationTestPhase(station: StationDescriptor, userId?: string | null) {
-  const current = await getStationProgress(station, userId);
-  const now = Date.now();
-  if (current.first_test_completed_at && !current.review_1_completed_at && asTime(current.review_1_due_at) > 0 && asTime(current.review_1_due_at) <= now) return 'review_1';
-  if (current.review_1_completed_at && !current.review_2_completed_at && asTime(current.review_2_due_at) > 0 && asTime(current.review_2_due_at) <= now) return 'review_2';
-  if (current.status === 'mastered') return 'practice';
-  return 'first_test';
+  return stationTestPhaseFromProgress(await getStationProgress(station, userId));
 }
 
-export async function recordStationTest(station: StationDescriptor, userId: string | null | undefined, accuracy: number, passed: boolean, phase: string, completedAt: string) {
+export async function recordStationTest(
+  station: StationDescriptor,
+  userId: string | null | undefined,
+  accuracy: number,
+  passed: boolean,
+  phase: string,
+  completedAt: string,
+) {
   const current = await getStationProgress(station, userId);
-  const next: StationProgress = {
-    ...current,
-    test_attempts_total: current.test_attempts_total + 1,
-    best_accuracy: Math.max(current.best_accuracy, accuracy),
-    updated_at: completedAt,
-  };
-  if (!passed || phase === 'practice') return save(station, userId, next);
-  if (phase === 'first_test') {
-    next.status = 'mastered';
-    next.current_phase = 'review_1';
-    next.first_test_completed_at = completedAt;
-    next.mastered_at = next.mastered_at ?? completedAt;
-    next.review_1_due_at = new Date(Date.parse(completedAt) + DAY_MS).toISOString();
-  } else if (phase === 'review_1') {
-    next.status = 'mastered';
-    next.current_phase = 'review_2';
-    next.review_1_completed_at = completedAt;
-    next.review_2_due_at = new Date(Date.parse(completedAt) + 3 * DAY_MS).toISOString();
-  } else if (phase === 'review_2') {
-    next.status = 'mastered';
-    next.current_phase = 'mastered';
-    next.review_2_completed_at = completedAt;
-    next.mastered_at = next.mastered_at ?? completedAt;
-  }
+  const next = recordStationTestProgress(current, {
+    accuracy,
+    passed,
+    phase,
+    completedAt,
+  }) as StationProgress;
   return save(station, userId, next);
 }
