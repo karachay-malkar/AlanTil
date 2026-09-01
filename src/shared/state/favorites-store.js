@@ -3,6 +3,11 @@ import {
   subscribeStorageScope,
   writeScopedJson,
 } from "../progress/storage-scope.js?v=13.9.0";
+import {
+  normalizeFavoriteIds,
+  setFavoriteActive as applyFavoriteActive,
+  toggleFavorite as applyFavoriteToggle,
+} from "../../../packages/alantil-core/favorites.js";
 
 export function createFavoritesStore(key, normalizeId = (value) => String(value || "").trim()) {
   const listeners = new Set();
@@ -14,7 +19,7 @@ export function createFavoritesStore(key, normalizeId = (value) => String(value 
 
   function reload() {
     const stored = readScopedJson(key, []);
-    ids = new Set((Array.isArray(stored) ? stored : []).map(normalizeId).filter(Boolean));
+    ids = new Set(normalizeFavoriteIds(stored, normalizeId));
     notify();
     return new Set(ids);
   }
@@ -28,25 +33,27 @@ export function createFavoritesStore(key, normalizeId = (value) => String(value 
   }
 
   function setActive(id, active, { notifyListeners = true } = {}) {
-    const normalized = normalizeId(id);
-    if (!normalized) return false;
-    const before = ids.has(normalized);
-    if (active) ids.add(normalized);
-    else ids.delete(normalized);
-    if (before !== ids.has(normalized)) {
+    const result = applyFavoriteActive(Array.from(ids), id, active, normalizeId);
+    ids = new Set(result.ids);
+    if (result.changed) {
       persist();
       if (notifyListeners) notify();
     }
-    return ids.has(normalized);
+    return result.active;
   }
 
   function toggle(id) {
-    const normalized = normalizeId(id);
-    return setActive(normalized, !ids.has(normalized));
+    const result = applyFavoriteToggle(Array.from(ids), id, normalizeId);
+    ids = new Set(result.ids);
+    if (result.changed) {
+      persist();
+      notify();
+    }
+    return result.active;
   }
 
   function replace(values, { notifyListeners = true } = {}) {
-    ids = new Set((Array.isArray(values) ? values : []).map(normalizeId).filter(Boolean));
+    ids = new Set(normalizeFavoriteIds(values, normalizeId));
     persist();
     if (notifyListeners) notify();
     return new Set(ids);
