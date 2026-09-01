@@ -1,6 +1,7 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { filterNickname } from "../../../packages/alantil-core/profile.js";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
@@ -104,7 +105,7 @@ export function bindProfileCreation(context, signal, {
   const signOutButton = context.root.querySelector("#accountSignOut");
 
   nicknameInput?.addEventListener("input", () => {
-    const filteredValue = nicknameInput.value.replace(/[^A-Za-z0-9_]/g, "").slice(0, 15);
+    const filteredValue = filterNickname(nicknameInput.value);
     if (nicknameInput.value !== filteredValue) nicknameInput.value = filteredValue;
     onNicknameInput?.(filteredValue, {
       inputElement: nicknameInput,
