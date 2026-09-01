@@ -4,10 +4,12 @@ import {
   logSupabaseError,
   normalizeSupabaseError,
 } from "../errors/supabase-error.js?v=13.9.0";
+import {
+  normalizeAvatarGender,
+  normalizeNickname,
+  validateNicknameRule,
+} from "../../../packages/alantil-core/profile.js";
 
-const NICKNAME_PATTERN = /^[A-Za-z0-9_]{3,15}$/;
-const LATIN_LETTER_PATTERN = /[A-Za-z]/g;
-const AVATAR_GENDERS = new Set(["male", "female"]);
 const PROFILE_REQUEST_TIMEOUT_MS = 12000;
 
 function throwProfileError(scope, error, operation) {
@@ -29,24 +31,18 @@ function withProfileTimeout(value, label) {
   ]).finally(() => globalThis.clearTimeout(timer));
 }
 
-export function normalizeNickname(value) {
-  return String(value || "").trim();
-}
+export { normalizeNickname, normalizeAvatarGender };
 
 export function validateNickname(value) {
-  const nickname = normalizeNickname(value);
-  if (!nickname) return { valid: false, nickname, message: msg("service.vvedite_nikneym") };
-  const requirementsMessage = msg("service.nickname_requirements");
-  if (nickname.length < 3 || nickname.length > 15) {
-    return { valid: false, nickname, message: requirementsMessage };
+  const validation = validateNicknameRule(value);
+  if (!validation.valid) {
+    return {
+      valid: false,
+      nickname: validation.nickname,
+      message: validation.reason === "required" ? msg("service.vvedite_nikneym") : msg("service.nickname_requirements"),
+    };
   }
-  if (!NICKNAME_PATTERN.test(nickname)) {
-    return { valid: false, nickname, message: requirementsMessage };
-  }
-  if ((nickname.match(LATIN_LETTER_PATTERN) || []).length < 3) {
-    return { valid: false, nickname, message: requirementsMessage };
-  }
-  return { valid: true, nickname, message: "" };
+  return { valid: true, nickname: validation.nickname, message: "" };
 }
 
 export async function getProfile(userId) {
@@ -88,11 +84,6 @@ export async function createProfile(userId, value) {
     .single(), "Profile create");
   if (error) throwProfileError("create_profile", error, "create_profile");
   return data;
-}
-
-export function normalizeAvatarGender(value) {
-  const gender = String(value || "").trim().toLowerCase();
-  return AVATAR_GENDERS.has(gender) ? gender : "";
 }
 
 export async function setAvatarGender(userId, value) {
