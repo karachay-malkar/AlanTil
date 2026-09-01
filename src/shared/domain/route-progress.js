@@ -1,27 +1,11 @@
 import { getAllStationProgress } from "../progress/station-progress-store.js?v=13.13";
 import { getWordProgress, getWordProgressMap, wordProgressSummary } from "../progress/word-progress-store.js?v=13.9.0";
+import { summarizeWordProgress } from "../../../packages/alantil-core/progress.js";
 
 function uniqueWords(stations = []) {
   const map = new Map();
   stations.forEach((station) => (station.words || []).forEach((word) => map.set(String(word.id), word)));
   return Array.from(map.values());
-}
-
-function summaryFromMap(words = [], progressMap) {
-  const ids = (Array.isArray(words) ? words : []).map((word) => String(word?.id || word || "").trim()).filter(Boolean);
-  let mastered = 0;
-  let review = 0;
-  ids.forEach((id) => {
-    const status = progressMap.get(id)?.mastery_status;
-    if (status === "mastered" || status === "review") mastered += 1;
-    if (status === "review") review += 1;
-  });
-  return {
-    total: ids.length,
-    mastered,
-    review,
-    percent: ids.length ? Math.round((mastered / ids.length) * 100) : 0,
-  };
 }
 
 export function createRouteProgressSnapshot() {
@@ -31,7 +15,7 @@ export function createRouteProgressSnapshot() {
 export function stationWordProgress(station, snapshot = null) {
   if (!snapshot?.progressMap) return wordProgressSummary(station?.words || []);
   if (!snapshot.stationSummaries.has(station)) {
-    snapshot.stationSummaries.set(station, summaryFromMap(station?.words || [], snapshot.progressMap));
+    snapshot.stationSummaries.set(station, summarizeWordProgress(station?.words || [], snapshot.progressMap));
   }
   return snapshot.stationSummaries.get(station);
 }
@@ -39,7 +23,7 @@ export function stationWordProgress(station, snapshot = null) {
 export function storyProgress(route, storyType, snapshot = createRouteProgressSnapshot()) {
   const story = route?.stories?.[storyType] || { stations: [], sections: [], catalogs: [] };
   const words = uniqueWords(story.stations);
-  const summary = summaryFromMap(words, snapshot.progressMap);
+  const summary = summarizeWordProgress(words, snapshot.progressMap);
   const completedStations = story.stations.filter((station) => stationWordProgress(station, snapshot).percent === 100);
   const completedSections = story.sections.filter((section) => section.stations.every((station) => stationWordProgress(station, snapshot).percent === 100));
   const completedCatalogs = story.catalogs.filter((catalog) => catalog.sections.every((section) => section.stations.every((station) => stationWordProgress(station, snapshot).percent === 100)));
@@ -65,7 +49,7 @@ export function dictionaryPathProgress(route) {
   const snapshot = createRouteProgressSnapshot();
   const stories = allStoryProgress(route, snapshot);
   const words = uniqueWords((route?.storyOrder || []).flatMap((type) => route.stories[type]?.stations || []));
-  const summary = summaryFromMap(words, snapshot.progressMap);
+  const summary = summarizeWordProgress(words, snapshot.progressMap);
   return { percent: summary.percent, rarePercent: 0, stories, totalWords: summary.total, masteredWords: summary.mastered };
 }
 
