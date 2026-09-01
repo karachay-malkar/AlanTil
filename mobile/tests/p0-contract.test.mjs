@@ -11,13 +11,14 @@ test('release version is aligned across Expo, npm and lockfile', async () => {
     read('package.json').then(JSON.parse),
     read('package-lock.json').then(JSON.parse),
   ]);
-  assert.equal(app.expo.version, '14.2.0');
-  assert.equal(app.expo.extra.releaseVersion, '14.2.0');
-  assert.equal(app.expo.android.versionCode, 7);
-  assert.equal(app.expo.ios.buildNumber, '7');
-  assert.equal(pkg.version, '14.2.0');
-  assert.equal(lock.version, '14.2.0');
-  assert.equal(lock.packages[''].version, '14.2.0');
+  assert.equal(app.expo.version, '15.0.0');
+  assert.equal(app.expo.extra.releaseVersion, '15.0.0');
+  assert.equal(app.expo.extra.visualParity, '15.0-unified-core');
+  assert.equal(app.expo.android.versionCode, 8);
+  assert.equal(app.expo.ios.buildNumber, '8');
+  assert.equal(pkg.version, '15.0.0');
+  assert.equal(lock.version, '15.0.0');
+  assert.equal(lock.packages[''].version, '15.0.0');
   assert.equal(pkg.scripts.test, 'node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.mjs');
   const runtimeVersion = await read('src/mobile/version.ts');
   assert.match(runtimeVersion, /expoConfig\?\.version/);
@@ -30,6 +31,22 @@ test('release version is aligned across Expo, npm and lockfile', async () => {
   ]) {
     assert.doesNotMatch(await read(path), /14\.2\.0/);
   }
+});
+
+test('native OAuth returns through the app callback and exchanges PKCE once', async () => {
+  const [app, pkg, source] = await Promise.all([
+    read('app.json').then(JSON.parse),
+    read('package.json').then(JSON.parse),
+    read('src/mobile/session.tsx'),
+  ]);
+  assert.equal(app.expo.scheme, 'alantil');
+  assert.ok(pkg.dependencies['expo-web-browser']);
+  assert.match(source, /Linking\.createURL\('auth\/callback'\)/);
+  assert.match(source, /skipBrowserRedirect: true/);
+  assert.match(source, /WebBrowser\.openAuthSessionAsync\(data\.url, redirectTo\)/);
+  assert.match(source, /supabase\.auth\.exchangeCodeForSession/);
+  assert.match(source, /exchangedCodes\.current\.has\(code\)/);
+  assert.doesNotMatch(source, /Linking\.openURL\(data\.url\)/);
 });
 
 test('dictionary starts locally and refreshes in the background', async () => {
@@ -50,13 +67,14 @@ test('station selection affects learning but never limits the station test', asy
   assert.match(learn, /words = words\.filter\(\(word\) => selectedIds\.has\(word\.id\)\)/);
 });
 
-test('Test and Match restore snapshots and guarded routes disable swipe dismissal', async () => {
+test('startup waits for session/settings and Test/Match restore guarded snapshots', async () => {
   const [home, layout, testSource, matchSource] = await Promise.all([
     read('app/index.tsx'),
     read('app/_layout.tsx'),
     read('src/mobile/practice/test.tsx'),
     read('src/mobile/practice/match.tsx'),
   ]);
+  assert.match(home, /if \(!ready \|\| !auth\.ready\)/);
   assert.match(home, /resumeActivitySession\('test'/);
   assert.match(home, /resumeActivitySession\('match'/);
   assert.match(layout, /practice\/test\/session" options=\{\{ gestureEnabled: false \}\}/);
