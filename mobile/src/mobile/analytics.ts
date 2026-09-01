@@ -1,3 +1,4 @@
+import { sanitizeAnalyticsParameters } from '../../../packages/alantil-core/analytics.js';
 import { readScopedJson, STORAGE_KEYS, updateScopedJson, writeScopedJson } from '@/src/mobile/storage';
 
 export type AnalyticsPreference = { enabled: boolean | null; updated_at: string | null };
@@ -10,11 +11,6 @@ export type MobileAnalyticsEvent = {
 
 const DEFAULT_PREFERENCE: AnalyticsPreference = { enabled: null, updated_at: null };
 const preferenceCache = new Map<string, AnalyticsPreference>();
-const FORBIDDEN_PARAMETER_NAMES = new Set([
-  'name', 'email', 'phone', 'telephone', 'telegram_id', 'telegram_username', 'username',
-  'exact_location', 'latitude', 'longitude', 'message', 'messages', 'query', 'search_query',
-  'free_text', 'word', 'translation', 'lyrics', 'text',
-]);
 
 function cacheKey(userId?: string | null) {
   return String(userId ?? '') || 'guest';
@@ -41,18 +37,6 @@ export async function saveAnalyticsPreference(enabled: boolean, userId?: string 
   return preference;
 }
 
-function safeParameters(parameters: Record<string, unknown>) {
-  const safe: Record<string, string | number | boolean> = {};
-  Object.entries(parameters).slice(0, 32).forEach(([rawKey, value]) => {
-    const key = rawKey.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 40);
-    if (!key || FORBIDDEN_PARAMETER_NAMES.has(key.toLowerCase())) return;
-    if (typeof value === 'boolean') safe[key] = value;
-    else if (typeof value === 'number' && Number.isFinite(value)) safe[key] = value;
-    else if (typeof value === 'string') safe[key] = value.slice(0, 100);
-  });
-  return safe;
-}
-
 export async function trackMobileEvent(name: string, parameters: Record<string, unknown> = {}, userId?: string | null) {
   const preference = await readAnalyticsPreference(userId);
   if (preference.enabled !== true || !name.trim()) return false;
@@ -60,7 +44,12 @@ export async function trackMobileEvent(name: string, parameters: Record<string, 
   const event: MobileAnalyticsEvent = {
     id: `${createdAt}:${Math.random().toString(36).slice(2, 10)}`,
     name: name.trim().slice(0, 64),
-    parameters: safeParameters(parameters),
+    parameters: sanitizeAnalyticsParameters(parameters, {
+      maxEntries: 32,
+      keyMaxLength: 40,
+      stringMaxLength: 100,
+      normalizeKeys: true,
+    }),
     created_at: createdAt,
   };
   await updateScopedJson<MobileAnalyticsEvent[]>(STORAGE_KEYS.analyticsEvents, [], (current) => [...current.slice(-499), event], userId);
