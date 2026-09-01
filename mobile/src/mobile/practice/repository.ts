@@ -10,12 +10,17 @@ import {
 } from '@/src/mobile/activity-session';
 import { readScopedJson, STORAGE_KEYS, updateScopedJson } from '@/src/mobile/storage';
 import { enqueueSync } from '@/src/mobile/sync';
+import {
+  filterFavoriteItems,
+  normalizeFavoriteIds,
+  setFavoriteActive,
+} from '../../../../packages/alantil-core/favorites.js';
 
 export type SessionKind = 'test' | 'match';
 export type SessionRuntime = ActivityRuntime;
 
 async function readIds(userId?: string | null) {
-  return new Set((await readScopedJson<unknown[]>(STORAGE_KEYS.wordFavorites, [], userId)).map((value) => String(value ?? '').trim()).filter(Boolean));
+  return new Set(normalizeFavoriteIds(await readScopedJson<unknown[]>(STORAGE_KEYS.wordFavorites, [], userId)));
 }
 
 export async function loadPracticeWords(settings: UserSettings): Promise<PracticeWord[]> {
@@ -28,20 +33,23 @@ export async function loadFavoriteIds(userId?: string | null) {
 }
 
 export async function setFavorite(userId: string | null | undefined, wordId: string, active: boolean) {
-  const id = String(wordId ?? '').trim();
-  if (!id) return false;
+  let result = { ids: [] as string[], active: false, changed: false };
   await updateScopedJson<unknown[]>(STORAGE_KEYS.wordFavorites, [], (current) => {
-    const ids = new Set(current.map((value) => String(value ?? '').trim()).filter(Boolean));
-    if (active) ids.add(id); else ids.delete(id);
-    return Array.from(ids);
+    result = setFavoriteActive(current, wordId, active);
+    return result.ids;
   }, userId);
-  await enqueueSync('word_favorite', { word_id: id, is_active: active, updated_at: new Date().toISOString() }, userId, { entryId: `word_favorite:${id}` });
-  return active;
+  if (!result.ids.length && !String(wordId ?? '').trim()) return false;
+  const id = String(wordId ?? '').normalize('NFC').trim();
+  if (!id) return false;
+  if (result.changed) {
+    await enqueueSync('word_favorite', { word_id: id, is_active: result.active, updated_at: new Date().toISOString() }, userId, { entryId: `word_favorite:${id}` });
+  }
+  return result.active;
 }
 
 export async function favoriteWords(settings: UserSettings, userId?: string | null) {
   const [words, ids] = await Promise.all([loadPracticeWords(settings), loadFavoriteIds(userId)]);
-  return words.filter((word) => ids.has(word.id));
+  return filterFavoriteItems(words, Array.from(ids));
 }
 
 export async function createSessionRuntime(kind: SessionKind, settings: UserSettings, userId?: string | null): Promise<SessionRuntime> {
