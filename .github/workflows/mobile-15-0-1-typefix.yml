@@ -1,0 +1,54 @@
+name: Fix AlanTil 15.0.1 test result types
+
+on:
+  push:
+    branches:
+      - agent/15.0-unified-core
+    paths:
+      - '.github/workflows/mobile-15-0-1-typefix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/15.0-unified-core
+      - name: Align test result UI with current contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('mobile/src/mobile/practice/test.tsx')
+          s=p.read_text()
+          s=s.replace("t('test.favorite_error')", "t('statistics.favorite_error')")
+          s=s.replace('testIds.generalTest.results', 'testIds.generalTest.result')
+          s=s.replace("t('test.results_title')", "t('test.results')")
+          s=s.replace('testIds.generalTest.restart', 'testIds.generalTest.again')
+          s=s.replace("t('test.restart')", "t('test.again')")
+          s=s.replace('testIds.generalTest.toPractice', "'general-test.to-practice'")
+          s=s.replace("t('test.to_practice')", "t('tabs.practice')")
+          s=s.replace(' secondary onPress=', ' onPress=')
+          s=s.replace("t('test.correct_count', { correct: test.correct, total: test.items.length })", "`${test.correct}/${test.items.length}`")
+          s=s.replace("<OverflowMarquee style={styles.resultWrong}>{t('test.your_answer')}: {result.userAnswer}</OverflowMarquee>", "<OverflowMarquee style={styles.resultWrong}>{`${t('station_test.answer')}: ${result.userAnswer}`}</OverflowMarquee>")
+          s=s.replace("favorites.has(result.id) ? t('favorites.remove') : t('favorites.add')", "favorites.has(result.id) ? t('statistics.remove_favorite') : t('statistics.add_favorite')")
+          s=s.replace('theme.colors.panel', 'theme.colors.surface')
+          s=s.replace('theme.colors.accentSoft', 'theme.colors.surface2')
+          s=s.replace('theme.colors.textFaint', 'theme.colors.textSoft')
+          p.write_text(s)
+
+          p=Path('mobile/src/mobile/i18n.ts')
+          s=p.read_text()
+          s=s.replace("'test.selection_help': { ru: 'Выберите словари и разделы. Варианты ответа подбираются по той же части речи и с проверкой конфликтующих переводов и синонимов.', en: 'Choose dictionaries and sections. Answers use the same part of speech and exclude conflicting translations and synonyms.', tr: 'Sözlükleri ve bölümleri seç. Yanıtlar aynı sözcük türünden seçilir; çakışan çeviriler ve eş anlamlılar elenir.' },", "'test.selection_help': { ru: 'Выберите словари и разделы. В тесте всегда четыре уникальных варианта ответа: сначала подбираются безопасные варианты той же части речи, затем при необходимости выбор расширяется.', en: 'Choose dictionaries and sections. The test always shows four unique answer choices: safe distractors from the same part of speech are preferred, then the pool expands if needed.', tr: 'Sözlükleri ve bölümleri seç. Test her zaman dört benzersiz yanıt seçeneği gösterir: önce aynı sözcük türünden güvenli seçenekler, gerekirse daha geniş havuz kullanılır.' },")
+          p.write_text(s)
+          PY
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/src/mobile/practice/test.tsx mobile/src/mobile/i18n.ts
+          git commit -m "15.0.1: align test results with mobile contracts"
+          git push origin HEAD:agent/15.0-unified-core
