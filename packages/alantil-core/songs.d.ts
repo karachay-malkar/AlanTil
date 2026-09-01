@@ -13,7 +13,6 @@ export type SongWordLike = {
   wordAlanCyrillic?: unknown;
   word_alan_turkic?: unknown;
   wordAlanTurkic?: unknown;
-  [key: string]: unknown;
 };
 
 export const SONG_PROGRESS_THRESHOLDS: readonly number[];
