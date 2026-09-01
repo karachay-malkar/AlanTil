@@ -32,7 +32,8 @@ export function normalizeInterfaceLanguageCode(value) {
 
 export function normalizeTranslationLanguageCode(value, fallback = DEFAULT_USER_SETTINGS.translation_language_code) {
   const normalizedFallback = normalizeInterfaceLanguageCode(fallback);
-  const normalized = normalizeInterfaceLanguageCode(value);
+  const source = String(value || '').trim().toLowerCase().split('-')[0];
+  const normalized = source === 'tu' ? 'tr' : source;
   return INTERFACE_LANGUAGE_CODES.includes(normalized) ? normalized : normalizedFallback;
 }
 
