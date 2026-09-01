@@ -2,6 +2,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as Linking from 'expo-linking';
 
+import { readAuthCallback } from '../../../packages/alantil-core/session.js';
 import { bindSupabaseAuthLifecycle, supabase } from '@/src/lib/supabase';
 import { initializeSyncLifecycle, migrateLegacyMobileStorage } from '@/src/mobile/sync';
 
@@ -27,11 +28,11 @@ const SessionContext = createContext<SessionState>({
 
 function authParamsFromUrl(url: string) {
   const parsed = Linking.parse(url);
-  const code = parsed.queryParams?.code;
-  const flowId = parsed.queryParams?.sb_flow_id;
+  const callback = readAuthCallback(parsed.queryParams as Record<string, unknown>);
   return {
-    code: typeof code === 'string' ? code : null,
-    flowId: typeof flowId === 'string' ? flowId : null,
+    code: callback.code || null,
+    flowId: callback.flowId || null,
+    error: callback.error || null,
   };
 }
 
@@ -52,7 +53,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
     async function consumeAuthUrl(url: string | null) {
       if (!url) return;
-      const { code, flowId } = authParamsFromUrl(url);
+      const { code, flowId, error: callbackError } = authParamsFromUrl(url);
+      if (callbackError) {
+        if (mounted) setState((current) => ({ ...current, authBusy: false, error: callbackError }));
+        return;
+      }
       if (!code) return;
       setState((current) => ({ ...current, authBusy: true, error: null }));
       const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
