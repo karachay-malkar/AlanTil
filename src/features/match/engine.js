@@ -1,7 +1,7 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { ACTIVITY_TYPES, CANCEL_REASONS, DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { buildWordsByPOSRounds } from "../../shared/domain/word-selection.js?v=13.13";
+import { buildMatchRounds } from "../../shared/domain/word-selection.js?v=13.13";
 import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
 import {
   createSessionRuntime,
@@ -104,7 +104,7 @@ export function startMatch(pool, limit, metadata = {}) {
   abandonPreviousSession();
   matchState.limit = [20, 40, 80].includes(Number(limit)) ? Number(limit) : 40;
   matchState.items = pool.slice();
-  matchState.rounds = buildWordsByPOSRounds(pool, matchState.limit).rounds.filter((round) => round.length);
+  matchState.rounds = buildMatchRounds(pool, matchState.limit).rounds.filter((round) => round.length);
   matchState.roundIndex = 0;
   matchState.solvedCount = 0;
   matchState.total = matchState.rounds.reduce((sum, round) => sum + round.length, 0);
