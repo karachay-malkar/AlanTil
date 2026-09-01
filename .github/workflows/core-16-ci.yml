@@ -1,0 +1,28 @@
+name: AlanTil 16.0 Clean Core CI
+
+on:
+  push:
+    branches:
+      - agent/16.0-clean-web-core
+  workflow_dispatch:
+
+jobs:
+  core-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Shared core frozen parity tests
+        run: node --test tests/alantil-core-16.test.mjs
+
+      - name: Architecture boundary tests
+        run: node --test tests/unified-core-boundary-16.test.mjs
+
+      - name: Existing Web regression tests
+        run: node --test tests/*.test.mjs
