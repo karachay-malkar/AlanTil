@@ -1,10 +1,8 @@
 import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../config/analytics.js?v=13.9.0";
-
-const FORBIDDEN_PARAMETER_NAMES = new Set([
-  "name", "email", "phone", "telephone", "telegram_id", "telegram_username", "username",
-  "exact_location", "latitude", "longitude", "message", "messages", "query", "search_query",
-  "free_text", "word", "translation", "lyrics", "text",
-]);
+import {
+  mergeAnalyticsContext,
+  sanitizeAnalyticsParameters,
+} from "../../../packages/alantil-core/analytics.js";
 
 const GA_DISABLE_KEY = `ga-disable-${measurementId}`;
 const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=13.15.9";
@@ -35,11 +33,8 @@ function loadVisitorAnalytics() {
   return visitorAnalyticsPromise;
 }
 
-function sanitizeValue(value) {
-  if (value === null || value === undefined) return undefined;
-  if (typeof value === "boolean" || typeof value === "number") return value;
-  if (typeof value === "string") return value.slice(0, 300);
-  return undefined;
+function analyticsSanitizeOptions() {
+  return { appVersion, debugMode };
 }
 
 function consentPayload(analyticsStorage) {
@@ -93,22 +88,11 @@ function deleteAnalyticsCookies() {
 }
 
 export function sanitizeParameters(parameters = {}) {
-  const safe = {};
-  Object.entries(parameters || {}).forEach(([key, value]) => {
-    const normalizedKey = String(key || "").trim();
-    if (!normalizedKey || FORBIDDEN_PARAMETER_NAMES.has(normalizedKey.toLowerCase())) return;
-    const sanitized = sanitizeValue(value);
-    if (sanitized !== undefined) safe[normalizedKey] = sanitized;
-  });
-  safe.app_version = appVersion;
-  if (debugMode) safe.debug_mode = true;
-  return safe;
+  return sanitizeAnalyticsParameters(parameters, analyticsSanitizeOptions());
 }
 
 export function setAnalyticsContext(nextContext = {}) {
-  analyticsContext = { ...analyticsContext, ...sanitizeParameters(nextContext) };
-  delete analyticsContext.app_version;
-  delete analyticsContext.debug_mode;
+  analyticsContext = mergeAnalyticsContext(analyticsContext, nextContext, analyticsSanitizeOptions());
 }
 
 export function getAnalyticsContext() {
