@@ -2,35 +2,22 @@ import { createContext, type PropsWithChildren, useContext, useMemo, useState } 
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { type MobileMessageKey, useI18n } from '@/src/mobile/i18n';
+import { GENERAL_GUIDE_STEPS, guideMessage } from '../../../packages/alantil-core/guide.js';
+import { useI18n } from '@/src/mobile/i18n';
+import { useSettings } from '@/src/mobile/settings';
 import { theme } from '@/src/mobile/theme';
 import { testIds } from '@/src/mobile/test-ids';
 import { AppText as Text } from '@/src/mobile/typography';
 
-type GuideStep = {
-  title: MobileMessageKey;
-  body: MobileMessageKey;
-  symbol: string;
-};
-
-const GUIDE_STEPS: GuideStep[] = [
-  { title: 'guide.intro.title', body: 'guide.intro.body', symbol: 'A' },
-  { title: 'guide.stories.title', body: 'guide.stories.body', symbol: '☰' },
-  { title: 'guide.path.title', body: 'guide.path.body', symbol: '◇' },
-  { title: 'guide.card.title', body: 'guide.card.body', symbol: '↻' },
-  { title: 'guide.gestures.title', body: 'guide.gestures.body', symbol: '↔' },
-  { title: 'guide.favorite.title', body: 'guide.favorite.body', symbol: '★' },
-  { title: 'guide.counter.title', body: 'guide.counter.body', symbol: '7/12' },
-  { title: 'guide.offline.title', body: 'guide.offline.body', symbol: '⌁' },
-  { title: 'guide.ready.title', body: 'guide.ready.body', symbol: '⌃' },
-];
-
 export function GuideCarousel({ onDone, onSkip }: { onDone: () => void | Promise<void>; onSkip?: () => void | Promise<void> }) {
   const { t } = useI18n();
+  const { settings } = useSettings();
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
-  const step = GUIDE_STEPS[index];
-  const last = index === GUIDE_STEPS.length - 1;
+  const step = GENERAL_GUIDE_STEPS[index];
+  const last = index === GENERAL_GUIDE_STEPS.length - 1;
+  const title = guideMessage(settings.interface_language_code, step.titleKey, step.params ?? {}, { plain: true });
+  const body = guideMessage(settings.interface_language_code, step.bodyKey, step.params ?? {}, { plain: true });
 
   const finish = async (skipped = false) => {
     if (busy) return;
@@ -64,13 +51,13 @@ export function GuideCarousel({ onDone, onSkip }: { onDone: () => void | Promise
     </View>
 
     <View style={styles.guideCopy} accessibilityLiveRegion="polite">
-      <Text style={styles.guideProgress}>{t('guide.progress', { current: index + 1, total: GUIDE_STEPS.length })}</Text>
-      <Text style={styles.guideTitle}>{t(step.title)}</Text>
-      <Text style={styles.guideBody}>{t(step.body)}</Text>
+      <Text style={styles.guideProgress}>{t('guide.progress', { current: index + 1, total: GENERAL_GUIDE_STEPS.length })}</Text>
+      <Text style={styles.guideTitle}>{title}</Text>
+      <Text style={styles.guideBody}>{body}</Text>
     </View>
 
-    <View accessibilityLabel={t('guide.progress', { current: index + 1, total: GUIDE_STEPS.length })} style={styles.dots}>
-      {GUIDE_STEPS.map((item, dotIndex) => <View key={item.title} style={[styles.dot, dotIndex === index && styles.dotActive]} />)}
+    <View accessibilityLabel={t('guide.progress', { current: index + 1, total: GENERAL_GUIDE_STEPS.length })} style={styles.dots}>
+      {GENERAL_GUIDE_STEPS.map((item, dotIndex) => <View key={item.id} style={[styles.dot, dotIndex === index && styles.dotActive]} />)}
     </View>
 
     <View style={styles.guideActions}>
@@ -90,7 +77,7 @@ export function GuideCarousel({ onDone, onSkip }: { onDone: () => void | Promise
         testID={testIds.onboarding.guideNext}
         accessibilityState={{ disabled: busy, busy }}
         disabled={busy}
-        onPress={() => { if (last) void finish(); else setIndex((value) => Math.min(GUIDE_STEPS.length - 1, value + 1)); }}
+        onPress={() => { if (last) void finish(); else setIndex((value) => Math.min(GENERAL_GUIDE_STEPS.length - 1, value + 1)); }}
         style={({ pressed }) => [styles.primaryButton, busy && styles.disabled, pressed && styles.pressed]}
       >
         <Text style={styles.primaryText}>{last ? t('common.done') : t('common.next')}</Text>
