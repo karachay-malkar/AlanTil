@@ -68,14 +68,14 @@ test('16.0 learn decision and undo preserve Web queue semantics', () => {
 
 test('16.0 station lifecycle preserves frozen Web review schedule', () => {
   const base = { dictionary_id: 'd', group_id: 's', set_id: 'set', story_type: 'story', status: 'available' };
-  const started = transitionStationStarted(base, '2026-01-01T00:00:00.000Z');
+  const started = transitionStationStarted(base, '2099-01-01T00:00:00.000Z');
   assert.equal(started.changed, true);
   assert.equal(started.row.status, 'studying');
-  const ready = transitionStationCardsCompleted(started.row, '2026-01-01T00:01:00.000Z');
+  const ready = transitionStationCardsCompleted(started.row, '2099-01-01T00:01:00.000Z');
   assert.equal(ready.row.status, 'test_ready');
-  const tested = recordStationTestProgress(ready.row, { accuracy: 80, passed: true, phase: 'first_test', completedAt: '2026-01-01T00:02:00.000Z' });
+  const tested = recordStationTestProgress(ready.row, { accuracy: 80, passed: true, phase: 'first_test', completedAt: '2099-01-01T00:02:00.000Z' });
   assert.equal(tested.status, 'review_1_waiting');
-  assert.equal(tested.review_1_due_at, '2026-01-02T00:02:00.000Z');
+  assert.equal(tested.review_1_due_at, '2099-01-02T00:02:00.000Z');
 });
 
 test('16.0 settings preserve Web normalization', () => {
