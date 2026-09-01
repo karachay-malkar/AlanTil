@@ -5,8 +5,13 @@ on:
   push:
     branches:
       - agent/14.2-mobile-parity
+      - agent/15.0-unified-core
     paths:
       - 'mobile/**'
+      - 'packages/**'
+      - 'src/shared/**'
+      - 'tests/alantil-core-practice-15.test.mjs'
+      - 'tests/design-token-parity-15.test.mjs'
       - '.github/workflows/mobile-14-1-android.yml'
   workflow_dispatch:
 
@@ -61,6 +66,9 @@ jobs:
       - name: Mobile unit and contract tests
         working-directory: mobile
         run: npm test
+
+      - name: Shared 15.0 core parity tests
+        run: node --test tests/alantil-core-practice-15.test.mjs tests/design-token-parity-15.test.mjs
 
       - name: Verify Android JavaScript bundle
         working-directory: mobile
