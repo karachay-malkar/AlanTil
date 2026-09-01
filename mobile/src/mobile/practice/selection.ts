@@ -2,9 +2,11 @@ import type { MobileWord } from '@/src/mobile/dictionary';
 import type { UserSettings } from '@/src/mobile/settings';
 import { displayedAlanWord, displayedStructureName, displayedTranslation } from '@/src/mobile/dictionary';
 import {
+  buildMatchRounds,
   buildRoundPOSList,
   buildSelectedSources,
   buildScope,
+  buildTestWords,
   buildWordsByPOSRounds,
   hasWordConflict,
   normalizeId,
@@ -16,9 +18,11 @@ import {
 } from '../../../../packages/alantil-core/practice.js';
 
 export {
+  buildMatchRounds,
   buildRoundPOSList,
   buildSelectedSources,
   buildScope,
+  buildTestWords,
   buildWordsByPOSRounds,
   hasWordConflict,
   normalizeId,
