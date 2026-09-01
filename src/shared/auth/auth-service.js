@@ -1,10 +1,14 @@
+import {
+  AUTH_CALLBACK_KEYS,
+  authProviderCode,
+  normalizeOAuthProvider as normalizeCoreOAuthProvider,
+  readAuthCallback,
+} from "../../../packages/alantil-core/session.js";
 import { msg } from "../i18n/index.js?v=13.10.12";
 import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.12";
 import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.12";
 import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.12";
 
-const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
-const OAUTH_PROVIDERS = new Set(["google", "apple"]);
 const AUTH_REQUEST_TIMEOUT_MS = 15000;
 const AUTH_DESTINATION_PATH = "/profile/account";
 const PKCE_VERIFIER_KEY = `${AUTH_STORAGE_KEY}-code-verifier`;
@@ -90,8 +94,8 @@ async function buildOAuthRedirectUrl(provider) {
 }
 
 function normalizeOAuthProvider(provider) {
-  const normalized = String(provider || "").trim().toLowerCase();
-  if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+  const normalized = normalizeCoreOAuthProvider(provider);
+  if (!normalized) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
   return normalized;
 }
 
@@ -126,24 +130,18 @@ function bindAuthEvents(client) {
 }
 
 function callbackParams() {
-  const params = new URLSearchParams(window.location.search || "");
-  return {
-    code: String(params.get("code") || "").trim(),
-    error: String(params.get("error_description") || params.get("error") || "").trim(),
-    present: CALLBACK_KEYS.some((key) => params.has(key)),
-  };
+  return readAuthCallback(new URLSearchParams(window.location.search || ""));
 }
 
 function clearCallbackUrl() {
   const url = new URL(window.location.href);
-  CALLBACK_KEYS.forEach((key) => url.searchParams.delete(key));
+  AUTH_CALLBACK_KEYS.forEach((key) => url.searchParams.delete(key));
   const search = url.searchParams.toString();
   window.history.replaceState(window.history.state, "", `${AUTH_DESTINATION_PATH}${search ? `?${search}` : ""}${url.hash}`);
 }
 
 export function hasAuthCallback(locationObject = window.location) {
-  const params = new URLSearchParams(locationObject.search || "");
-  return CALLBACK_KEYS.some((key) => params.has(key));
+  return readAuthCallback(new URLSearchParams(locationObject.search || "")).present;
 }
 
 async function handleAuthCallback(client) {
@@ -265,10 +263,10 @@ export async function signOut() {
 export function getCurrentAuthState() { return getAuthState(); }
 export function subscribeToAuth(subscriber) { return subscribeAuthState(subscriber); }
 export function getUserProvider(user) {
-  const provider = String(user?.app_metadata?.provider || "").toLowerCase();
+  const provider = authProviderCode(user);
   if (provider === "google") return "Google";
   if (provider === "apple") return "Apple";
-  return provider || msg("service.ne_opredelen");
+  return String(user?.app_metadata?.provider || "").toLowerCase() || msg("service.ne_opredelen");
 }
 
 export function disposeAuth() {
