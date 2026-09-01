@@ -27,7 +27,7 @@
     },
     "extra": {
       "releaseVersion": "15.0.1",
-      "visualParity": "15.0-unified-core"
+      "visualParity": "15.0.1-web-path-parity"
     }
   }
 }
