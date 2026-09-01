@@ -14,6 +14,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { buildLearningRoute } from '../../../packages/alantil-core/learning-route.js';
+import { routeStationStatus, uniqueRouteWords } from '../../../packages/alantil-core/route-progress.js';
+import { summarizeWordProgress } from '../../../packages/alantil-core/progress.js';
+
 import {
   displayedAlanWord,
   displayedStoryCopy,
@@ -214,135 +218,76 @@ function routeVisualItems(story?: RouteStory): RouteVisualItem[] {
   return items;
 }
 
-function setOrdinal(id: string) {
-  const match = id.match(/(\d+)$/);
-  return match ? Number(match[1]) : 0;
-}
-
-function firstOrder(words: MobileWord[]) {
-  return Math.min(...words.map((word, index) => numeric(word.global_order, index + 1)));
-}
-
-function localizedFallbackStoryName(storyId: string, words: MobileWord[], settings: UserSettings) {
-  const sample = words.find((word) => word.story_id === storyId);
-  return sample ? displayedStructureName(sample, 'story_name', settings) : storyId;
-}
-
-function buildRoute(words: MobileWord[], copy: StoryCopyRow[], settings: UserSettings): MobileRoute {
+function buildRouteFromCore(words: MobileWord[], copy: StoryCopyRow[], settings: UserSettings): MobileRoute {
   const storyCopy = new Map(copy.map((row) => [text(row.entity_id), row]));
-  const storyBuckets = new Map<string, MobileWord[]>();
-  words.forEach((word) => {
+  const projected = words.map((word) => {
     const storyId = text(word.story_id);
-    if (!storyId) return;
-    const bucket = storyBuckets.get(storyId) ?? [];
-    bucket.push(word);
-    storyBuckets.set(storyId, bucket);
+    const localizedCopy = displayedStoryCopy(storyCopy.get(storyId), settings);
+    return {
+      id: word.word_id,
+      global_order: Number(word.global_order || 0),
+      story_id: storyId,
+      story_name: localizedCopy.name || displayedStructureName(word, 'story_name', settings),
+      story_intro: localizedCopy.intro,
+      dictionary_id: text(word.dictionary_id),
+      dictionary_name: displayedStructureName(word, 'dictionary_name', settings),
+      section_id: text(word.section_id),
+      section_name: displayedStructureName(word, 'section_name', settings),
+      set_id: text(word.set_id),
+      set_name: displayedStructureName(word, 'set_name', settings),
+      source: word,
+    };
   });
-
-  const preferred = new Map(STORY_ORDER.map((id, index) => [id, index]));
-  const storyOrder = [...storyBuckets.keys()].sort((left, right) => {
-    const leftRank = preferred.get(left as (typeof STORY_ORDER)[number]) ?? 999;
-    const rightRank = preferred.get(right as (typeof STORY_ORDER)[number]) ?? 999;
-    if (leftRank !== rightRank) return leftRank - rightRank;
-    return firstOrder(storyBuckets.get(left) ?? []) - firstOrder(storyBuckets.get(right) ?? []);
-  });
-
+  const core = buildLearningRoute(projected);
   const stories: Record<string, RouteStory> = {};
   const byKey = new Map<string, RouteStation>();
-
-  storyOrder.forEach((storyId) => {
-    const storyWords = (storyBuckets.get(storyId) ?? []).slice().sort((a, b) => numeric(a.global_order) - numeric(b.global_order));
-    const catalogBuckets = new Map<string, MobileWord[]>();
-    storyWords.forEach((word) => {
-      const id = text(word.dictionary_id);
-      if (!id) return;
-      const bucket = catalogBuckets.get(id) ?? [];
-      bucket.push(word);
-      catalogBuckets.set(id, bucket);
-    });
-
-    const catalogs = [...catalogBuckets.entries()]
-      .map(([dictionaryId, dictionaryWords]) => {
-        const sectionBuckets = new Map<string, MobileWord[]>();
-        dictionaryWords.forEach((word) => {
-          const id = text(word.section_id);
-          if (!id) return;
-          const bucket = sectionBuckets.get(id) ?? [];
-          bucket.push(word);
-          sectionBuckets.set(id, bucket);
+  core.storyOrder.forEach((storyId) => {
+    const sourceStory = core.stories[storyId];
+    const catalogs = sourceStory.catalogs.map((sourceCatalog) => {
+      const sections = sourceCatalog.sections.map((sourceSection) => {
+        const stations = sourceSection.stations.map((sourceStation) => {
+          const station: RouteStation = {
+            key: sourceStation.key,
+            storyId: sourceStation.storyType,
+            dictionaryId: sourceStation.dictionaryId,
+            dictionaryName: sourceStation.catalogName,
+            sectionId: sourceStation.sectionId,
+            sectionName: sourceStation.sectionName,
+            setId: sourceStation.setId,
+            setName: sourceStation.name,
+            setNumber: sourceStation.setNumber,
+            name: sourceStation.name,
+            order: sourceStation.order,
+            words: sourceStation.words.map((entry) => entry.source as MobileWord).filter(Boolean),
+          };
+          byKey.set(station.key, station);
+          return station;
         });
-
-        const sections = [...sectionBuckets.entries()]
-          .map(([sectionId, sectionWords]) => {
-            const setBuckets = new Map<string, MobileWord[]>();
-            sectionWords.forEach((word) => {
-              const id = text(word.set_id);
-              if (!id) return;
-              const bucket = setBuckets.get(id) ?? [];
-              bucket.push(word);
-              setBuckets.set(id, bucket);
-            });
-
-            const stations = [...setBuckets.entries()]
-              .map(([setId, setWords]) => {
-                const sorted = setWords.slice().sort((a, b) => numeric(a.global_order) - numeric(b.global_order));
-                const sample = sorted[0];
-                const number = setOrdinal(setId);
-                const setName = displayedStructureName(sample, 'set_name', settings);
-                const station: RouteStation = {
-                  key: [storyId, dictionaryId, sectionId, setId].join('::'),
-                  storyId,
-                  dictionaryId,
-                  dictionaryName: displayedStructureName(sample, 'dictionary_name', settings),
-                  sectionId,
-                  sectionName: displayedStructureName(sample, 'section_name', settings),
-                  setId,
-                  setName,
-                  setNumber: number,
-                  name: setName || (number ? String(number).padStart(2, '0') : setId),
-                  order: firstOrder(sorted),
-                  words: sorted,
-                };
-                byKey.set(station.key, station);
-                return station;
-              })
-              .sort((a, b) => a.order - b.order || a.setId.localeCompare(b.setId));
-
-            const sample = sectionWords[0];
-            return {
-              id: sectionId,
-              name: displayedStructureName(sample, 'section_name', settings),
-              order: firstOrder(sectionWords),
-              stations,
-            } satisfies RouteSection;
-          })
-          .filter((section) => section.stations.length)
-          .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-
-        const sample = dictionaryWords[0];
         return {
-          id: dictionaryId,
-          name: displayedStructureName(sample, 'dictionary_name', settings),
-          order: firstOrder(dictionaryWords),
-          sections,
-          stations: sections.flatMap((section) => section.stations),
-        } satisfies RouteCatalog;
-      })
-      .filter((catalog) => catalog.stations.length)
-      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-
-    const localizedCopy = displayedStoryCopy(storyCopy.get(storyId), settings);
+          id: sourceSection.sectionId,
+          name: sourceSection.name,
+          order: sourceSection.order,
+          stations,
+        } satisfies RouteSection;
+      });
+      return {
+        id: sourceCatalog.catalogId,
+        name: sourceCatalog.name,
+        order: sourceCatalog.order,
+        sections,
+        stations: sections.flatMap((section) => section.stations),
+      } satisfies RouteCatalog;
+    });
     stories[storyId] = {
       id: storyId,
-      name: localizedCopy.name || localizedFallbackStoryName(storyId, storyWords, settings),
-      intro: localizedCopy.intro,
+      name: sourceStory.label,
+      intro: sourceStory.intro,
       catalogs,
       sections: catalogs.flatMap((catalog) => catalog.sections),
       stations: catalogs.flatMap((catalog) => catalog.stations),
     };
   });
-
-  return { storyOrder, stories, byKey };
+  return { storyOrder: core.storyOrder, stories, byKey };
 }
 
 function normalizeProgressRows(rows: unknown): WordProgress[] {
@@ -363,45 +308,22 @@ async function loadPathBundle(settings: UserSettings, userId?: string): Promise<
     loadProgress(userId),
   ]);
   return {
-    route: buildRoute(words, copy, settings),
+    route: buildRouteFromCore(words, copy, settings),
     progressMap: new Map(progress.wordRows.map((row) => [text(row.word_id), row])),
     setProgressRows: progress.setRows,
   };
 }
 
 function summary(words: MobileWord[], progressMap: Map<string, WordProgress>): ProgressSummary {
-  let mastered = 0;
-  let review = 0;
-  words.forEach((word) => {
-    const status = progressMap.get(word.word_id)?.mastery_status;
-    if (status === 'mastered' || status === 'review') mastered += 1;
-    if (status === 'review') review += 1;
-  });
-  return {
-    total: words.length,
-    mastered,
-    review,
-    percent: words.length ? Math.round((mastered / words.length) * 100) : 0,
-  };
+  return summarizeWordProgress(words, progressMap);
 }
 
 function stationStatus(station: RouteStation, progressMap: Map<string, WordProgress>) {
-  const state = summary(station.words, progressMap);
-  if (state.percent === 100) return state.review ? 'review' : 'mastered';
-  if (state.mastered > 0 || state.review > 0) return 'studying';
-  const hasActivity = station.words.some((word) => {
-    const progress = progressMap.get(word.word_id);
-    return Number(progress?.study_shown_count || 0) > 0
-      || Number(progress?.test_correct_count || 0) > 0
-      || Number(progress?.test_wrong_count || 0) > 0;
-  });
-  return hasActivity ? 'studying' : 'available';
+  return routeStationStatus(station, progressMap);
 }
 
 function uniqueStoryWords(story: RouteStory) {
-  const map = new Map<string, MobileWord>();
-  story.stations.forEach((station) => station.words.forEach((word) => map.set(word.word_id, word)));
-  return [...map.values()].sort((a, b) => numeric(a.global_order) - numeric(b.global_order));
+  return uniqueRouteWords(story.stations) as MobileWord[];
 }
 
 function usePathBundle() {
