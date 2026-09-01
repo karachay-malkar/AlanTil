@@ -1,0 +1,47 @@
+name: Unify AlanTil Path core
+
+on:
+  push:
+    branches:
+      - agent/15.0-unified-core
+    paths:
+      - '.github/workflows/mobile-15-0-2-unify-path.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/15.0-unified-core
+      - name: Replace Mobile route construction with shared core
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('mobile/src/mobile/path.tsx')
+          s = p.read_text()
+          anchor = "import { useSafeAreaInsets } from 'react-native-safe-area-context';\n"
+          assert anchor in s
+          s = s.replace(anchor, anchor + "\nimport { buildLearningRoute } from '../../../packages/alantil-core/learning-route.js';\nimport { routeStationStatus, uniqueRouteWords } from '../../../packages/alantil-core/route-progress.js';\nimport { summarizeWordProgress } from '../../../packages/alantil-core/progress.js';\n")
+          start = s.index('function setOrdinal(id: string) {')
+          end = s.index('\nfunction normalizeProgressRows', start)
+          new = '''function buildRouteFromCore(words: MobileWord[], copy: StoryCopyRow[], settings: UserSettings): MobileRoute {\n  const storyCopy = new Map(copy.map((row) => [text(row.entity_id), row]));\n  const projected = words.map((word) => {\n    const storyId = text(word.story_id);\n    const localizedCopy = displayedStoryCopy(storyCopy.get(storyId), settings);\n    return {\n      id: word.word_id,\n      global_order: Number(word.global_order || 0),\n      story_id: storyId,\n      story_name: localizedCopy.name || displayedStructureName(word, 'story_name', settings),\n      story_intro: localizedCopy.intro,\n      dictionary_id: text(word.dictionary_id),\n      dictionary_name: displayedStructureName(word, 'dictionary_name', settings),\n      section_id: text(word.section_id),\n      section_name: displayedStructureName(word, 'section_name', settings),\n      set_id: text(word.set_id),\n      set_name: displayedStructureName(word, 'set_name', settings),\n      source: word,\n    };\n  });\n  const core = buildLearningRoute(projected);\n  const stories: Record<string, RouteStory> = {};\n  const byKey = new Map<string, RouteStation>();\n  core.storyOrder.forEach((storyId) => {\n    const sourceStory = core.stories[storyId];\n    const catalogs = sourceStory.catalogs.map((sourceCatalog) => {\n      const sections = sourceCatalog.sections.map((sourceSection) => {\n        const stations = sourceSection.stations.map((sourceStation) => {\n          const station: RouteStation = {\n            key: sourceStation.key,\n            storyId: sourceStation.storyType,\n            dictionaryId: sourceStation.dictionaryId,\n            dictionaryName: sourceStation.catalogName,\n            sectionId: sourceStation.sectionId,\n            sectionName: sourceStation.sectionName,\n            setId: sourceStation.setId,\n            setName: sourceStation.name,\n            setNumber: sourceStation.setNumber,\n            name: sourceStation.name,\n            order: sourceStation.order,\n            words: sourceStation.words.map((entry) => entry.source as MobileWord).filter(Boolean),\n          };\n          byKey.set(station.key, station);\n          return station;\n        });\n        return {\n          id: sourceSection.sectionId,\n          name: sourceSection.name,\n          order: sourceSection.order,\n          stations,\n        } satisfies RouteSection;\n      });\n      return {\n        id: sourceCatalog.catalogId,\n        name: sourceCatalog.name,\n        order: sourceCatalog.order,\n        sections,\n        stations: sections.flatMap((section) => section.stations),\n      } satisfies RouteCatalog;\n    });\n    stories[storyId] = {\n      id: storyId,\n      name: sourceStory.label,\n      intro: sourceStory.intro,\n      catalogs,\n      sections: catalogs.flatMap((catalog) => catalog.sections),\n      stations: catalogs.flatMap((catalog) => catalog.stations),\n    };\n  });\n  return { storyOrder: core.storyOrder, stories, byKey };\n}\n'''
+          s = s[:start] + new + s[end:]
+          s = s.replace('    route: buildRoute(words, copy, settings),', '    route: buildRouteFromCore(words, copy, settings),')
+          old = '''function summary(words: MobileWord[], progressMap: Map<string, WordProgress>): ProgressSummary {\n  let mastered = 0;\n  let review = 0;\n  words.forEach((word) => {\n    const status = progressMap.get(word.word_id)?.mastery_status;\n    if (status === 'mastered' || status === 'review') mastered += 1;\n    if (status === 'review') review += 1;\n  });\n  return {\n    total: words.length,\n    mastered,\n    review,\n    percent: words.length ? Math.round((mastered / words.length) * 100) : 0,\n  };\n}\n\nfunction stationStatus(station: RouteStation, progressMap: Map<string, WordProgress>) {\n  const state = summary(station.words, progressMap);\n  if (state.percent === 100) return state.review ? 'review' : 'mastered';\n  if (state.mastered > 0 || state.review > 0) return 'studying';\n  const hasActivity = station.words.some((word) => {\n    const progress = progressMap.get(word.word_id);\n    return Number(progress?.study_shown_count || 0) > 0\n      || Number(progress?.test_correct_count || 0) > 0\n      || Number(progress?.test_wrong_count || 0) > 0;\n  });\n  return hasActivity ? 'studying' : 'available';\n}\n\nfunction uniqueStoryWords(story: RouteStory) {\n  const map = new Map<string, MobileWord>();\n  story.stations.forEach((station) => station.words.forEach((word) => map.set(word.word_id, word)));\n  return [...map.values()].sort((a, b) => numeric(a.global_order) - numeric(b.global_order));\n}\n'''
+          new2 = '''function summary(words: MobileWord[], progressMap: Map<string, WordProgress>): ProgressSummary {\n  return summarizeWordProgress(words, progressMap);\n}\n\nfunction stationStatus(station: RouteStation, progressMap: Map<string, WordProgress>) {\n  return routeStationStatus(station, progressMap);\n}\n\nfunction uniqueStoryWords(story: RouteStory) {\n  return uniqueRouteWords(story.stations) as MobileWord[];\n}\n'''
+          assert old in s
+          s = s.replace(old, new2)
+          p.write_text(s)
+          PY
+      - name: Commit migration
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add mobile/src/mobile/path.tsx
+          git commit -m "15.0.2: build Mobile Path from shared learning route"
+          git push
