@@ -335,7 +335,7 @@ export function TestResultsScreen() {
         return next;
       });
     } catch {
-      setError(t('test.favorite_error'));
+      setError(t('statistics.favorite_error'));
     } finally {
       setBusyId('');
     }
@@ -343,18 +343,18 @@ export function TestResultsScreen() {
 
   return (
     <PracticeScreen
-      testID={testIds.generalTest.results}
-      header={<PracticeHeader title={t('test.results_title')} />}
+      testID={testIds.generalTest.result}
+      header={<PracticeHeader title={t('test.results')} />}
       footer={
         <View style={styles.footerStack}>
-          <PrimaryButton testID={testIds.generalTest.restart} title={t('test.restart')} loading={restarting} onPress={() => { void restart(); }} />
-          <PrimaryButton testID={testIds.generalTest.toPractice} title={t('test.to_practice')} secondary onPress={() => { setTestSession(null); router.replace('/practice'); }} />
+          <PrimaryButton testID={testIds.generalTest.again} title={t('test.again')} loading={restarting} onPress={() => { void restart(); }} />
+          <PrimaryButton testID={'general-test.to-practice'} title={t('tabs.practice')} onPress={() => { setTestSession(null); router.replace('/practice'); }} />
         </View>
       }
     >
       <View style={styles.resultHero}>
         <Text style={styles.resultPercentage}>{percentage}%</Text>
-        <Text style={styles.resultCount}>{t('test.correct_count', { correct: test.correct, total: test.items.length })}</Text>
+        <Text style={styles.resultCount}>{`${test.correct}/${test.items.length}`}</Text>
         {level > 0 ? <Text style={styles.resultLevel}>{'I'.repeat(level)}</Text> : null}
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -364,9 +364,9 @@ export function TestResultsScreen() {
             <View style={styles.resultCopy}>
               <OverflowMarquee style={styles.resultWord}>{result.word}</OverflowMarquee>
               <OverflowMarquee style={styles.resultTranslation}>{result.trans}</OverflowMarquee>
-              {!result.isCorrect ? <OverflowMarquee style={styles.resultWrong}>{t('test.your_answer')}: {result.userAnswer}</OverflowMarquee> : null}
+              {!result.isCorrect ? <OverflowMarquee style={styles.resultWrong}>{`${t('station_test.answer')}: ${result.userAnswer}`}</OverflowMarquee> : null}
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={favorites.has(result.id) ? t('favorites.remove') : t('favorites.add')} disabled={busyId === result.id} onPress={() => { void toggleFavorite(result.id); }} style={({ pressed }) => [styles.favoriteButton, pressed && styles.pressed]}>
+            <Pressable accessibilityRole="button" accessibilityLabel={favorites.has(result.id) ? t('statistics.remove_favorite') : t('statistics.add_favorite')} disabled={busyId === result.id} onPress={() => { void toggleFavorite(result.id); }} style={({ pressed }) => [styles.favoriteButton, pressed && styles.pressed]}>
               <Text style={[styles.favoriteGlyph, favorites.has(result.id) && styles.favoriteGlyphActive]}>{favorites.has(result.id) ? '★' : '☆'}</Text>
             </Pressable>
           </View>
@@ -390,8 +390,8 @@ const styles = StyleSheet.create({
   questionArea: { minHeight: 128, justifyContent: 'center', alignItems: 'center' },
   question: { fontSize: 28, fontWeight: '800', color: theme.colors.text, textAlign: 'center' },
   options: { gap: 10 },
-  option: { minHeight: 56, borderWidth: 1, borderColor: theme.colors.line, borderRadius: 13, backgroundColor: theme.colors.panel, justifyContent: 'center', paddingHorizontal: 14 },
-  optionActive: { borderColor: theme.colors.accentStrong, backgroundColor: theme.colors.accentSoft },
+  option: { minHeight: 56, borderWidth: 1, borderColor: theme.colors.line, borderRadius: 13, backgroundColor: theme.colors.surface, justifyContent: 'center', paddingHorizontal: 14 },
+  optionActive: { borderColor: theme.colors.accentStrong, backgroundColor: theme.colors.surface2 },
   optionText: { fontSize: 16, fontWeight: '700', color: theme.colors.text, textAlign: 'center' },
   optionTextActive: { color: theme.colors.accentStrong },
   pressed: { opacity: 0.75 },
@@ -408,6 +408,6 @@ const styles = StyleSheet.create({
   resultTranslation: { marginTop: 3, fontSize: 13, color: theme.colors.textSoft },
   resultWrong: { marginTop: 4, fontSize: 11, color: theme.colors.danger },
   favoriteButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
-  favoriteGlyph: { fontSize: 25, color: theme.colors.textFaint },
+  favoriteGlyph: { fontSize: 25, color: theme.colors.textSoft },
   favoriteGlyphActive: { color: theme.colors.accentStrong },
 });

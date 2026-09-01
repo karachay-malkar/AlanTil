@@ -107,7 +107,7 @@ export const MOBILE_MESSAGES = {
   'test.saving': { ru: 'Сохраняю…', en: 'Saving…', tr: 'Kaydediliyor…' },
   'test.not_enough_words': { ru: 'Для выбранных разделов недостаточно слов для теста.', en: 'The selected sections do not contain enough words for a test.', tr: 'Seçilen bölümlerde test için yeterli kelime yok.' },
   'test.selection_summary': { ru: 'Выбрано {selected} · в тесте до {count}', en: '{selected} selected · up to {count} in the test', tr: '{selected} seçildi · testte en fazla {count}' },
-  'test.selection_help': { ru: 'Выберите словари и разделы. Варианты ответа подбираются по той же части речи и с проверкой конфликтующих переводов и синонимов.', en: 'Choose dictionaries and sections. Answers use the same part of speech and exclude conflicting translations and synonyms.', tr: 'Sözlükleri ve bölümleri seç. Yanıtlar aynı sözcük türünden seçilir; çakışan çeviriler ve eş anlamlılar elenir.' },
+  'test.selection_help': { ru: 'Выберите словари и разделы. В тесте всегда четыре уникальных варианта ответа: сначала подбираются безопасные варианты той же части речи, затем при необходимости выбор расширяется.', en: 'Choose dictionaries and sections. The test always shows four unique answer choices: safe distractors from the same part of speech are preferred, then the pool expands if needed.', tr: 'Sözlükleri ve bölümleri seç. Test her zaman dört benzersiz yanıt seçeneği gösterir: önce aynı sözcük türünden güvenli seçenekler, gerekirse daha geniş havuz kullanılır.' },
   'test.word_count': { ru: 'Количество слов', en: 'Number of words', tr: 'Kelime sayısı' },
   'test.results': { ru: 'Результаты теста', en: 'Test results', tr: 'Test sonuçları' },
   'test.again': { ru: 'Пройти ещё раз', en: 'Take again', tr: 'Tekrar çöz' },
