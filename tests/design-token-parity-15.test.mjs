@@ -41,8 +41,8 @@ test('15.0 shared design tokens stay equal to the 13.15.12 web reference', () =>
 });
 
 test('15.0 path tokens follow the effective final web 13.15.12 overrides', () => {
-  assert.match(appCss, new RegExp(`--route-station-gap:\\s*${designTokens.path.stationGap}px\\s*;`));
-  assert.match(appCss, new RegExp(`--route-wave-amplitude:\\s*clamp\\(${designTokens.path.waveAmplitudeMin}px,22vw,${designTokens.path.waveAmplitudeMax}px\\)\\s*;`));
+  assert.match(appCss, new RegExp(`--route-station-gap:\\s*${designTokens.path.stationGap}px(?:\\s*;|(?=\\}))`));
+  assert.match(appCss, new RegExp(`--route-wave-amplitude:\\s*clamp\\(${designTokens.path.waveAmplitudeMin}px,22vw,${designTokens.path.waveAmplitudeMax}px\\)(?:\\s*;|(?=\\}))`));
   assert.match(appCss, new RegExp(`\\.pathView \\.routeCatalogGroups\\{padding-bottom:${designTokens.path.catalogBottomPadding}px\\}`));
   assert.equal(designTokens.path.waveSteps, 4);
   assert.match(appCss, /stationNode\[data-route-step="1"\]\{--station-shift:calc\(0px - var\(--route-wave-amplitude\)\)\}/);
