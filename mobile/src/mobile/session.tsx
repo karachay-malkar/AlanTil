@@ -3,7 +3,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 import * as Linking from 'expo-linking';
 
 import { bindSupabaseAuthLifecycle, supabase } from '@/src/lib/supabase';
-import { migrateGuestData } from '@/src/mobile/migration/guest-to-user';
+import { initializeSyncLifecycle, migrateLegacyMobileStorage } from '@/src/mobile/sync';
 
 type SessionState = {
   ready: boolean;
@@ -48,6 +48,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
     let mounted = true;
     const unbindLifecycle = bindSupabaseAuthLifecycle();
 
+    void migrateLegacyMobileStorage();
+
     async function consumeAuthUrl(url: string | null) {
       if (!url) return;
       const { code, flowId } = authParamsFromUrl(url);
@@ -89,10 +91,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    if (!state.user?.id) return;
-    void migrateGuestData(state.user.id).catch((error: unknown) => {
-      setState((current) => ({ ...current, error: String((error as { message?: string })?.message ?? error) }));
-    });
+    initializeSyncLifecycle(state.user?.id);
   }, [state.user?.id]);
 
   const signInWithGoogle = useCallback(async () => {

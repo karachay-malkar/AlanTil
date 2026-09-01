@@ -1,19 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   ImageBackground,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { supabase } from '@/src/lib/supabase';
 import {
   displayedAlanWord,
   displayedStoryCopy,
@@ -21,16 +21,32 @@ import {
   displayedTranslation,
   loadAllWords,
   loadStoryCopy,
+  subscribeDictionary,
   type MobileWord,
   type StoryCopyRow,
 } from '@/src/mobile/dictionary';
+import { useGuide } from '@/src/mobile/guide';
+import { AlanIcon } from '@/src/mobile/icons';
+import { useI18n } from '@/src/mobile/i18n';
+import {
+  routeConnectorSegment,
+  routeScaleState,
+  routeSectionDotCount,
+  routeWaveShift,
+} from '@/src/mobile/path-visual-policy';
+import { loadSetProgress, loadWordProgress } from '@/src/mobile/progress/repository';
+import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
+import { PracticeHeader } from '@/src/mobile/practice/common';
+import { loadFavoriteIds, setFavorite } from '@/src/mobile/practice/repository';
 import { useSession } from '@/src/mobile/session';
 import { useSettings, type UserSettings } from '@/src/mobile/settings';
+import { readScopedJson, STORAGE_KEYS, subscribeScopedValue, writeScopedJson } from '@/src/mobile/storage';
 import { theme } from '@/src/mobile/theme';
+import { scopedTestId, testIds } from '@/src/mobile/test-ids';
+import { AppText as Text } from '@/src/mobile/typography';
 
 const STORY_ORDER = ['oblivion', 'roots', 'ascent', 'pathways'] as const;
 const LEVEL_DICTIONARIES = new Set(['beginner', 'intermediate', 'advanced']);
-const GUEST_PROGRESS_KEY = 'alantil_mobile_word_progress_guest_v1';
 const STELE_SEEN_KEY = 'alantil_story_intro_seen_v1';
 
 type WordProgress = {
@@ -99,6 +115,43 @@ type ProgressSummary = {
   percent: number;
 };
 
+type PathViewState = {
+  active_story_id?: string;
+  scroll_offsets?: Record<string, number>;
+  updated_at?: string;
+};
+
+type StoryWordEntry = { word: MobileWord; ordinal: number };
+type StoryWordSectionGroup = { section: RouteSection; entries: StoryWordEntry[] };
+type StoryWordCatalogGroup = { catalog: RouteCatalog; sections: StoryWordSectionGroup[] };
+type RouteAnchorLayout = { x: number; y: number; width: number; height: number };
+type RouteVisualItem =
+  | { type: 'station'; key: string; station: RouteStation; index: number }
+  | { type: 'section'; key: string; section: RouteSection; catalog: RouteCatalog }
+  | { type: 'catalog'; key: string; catalog: RouteCatalog };
+
+const STATION_RING_MARKS = Array.from({ length: 28 }, (_, index) => {
+  const angle = 180 + (index / 28) * 360;
+  const radians = (angle * Math.PI) / 180;
+  return {
+    left: 30 + Math.cos(radians) * 27.5 - 1.5,
+    top: 30 + Math.sin(radians) * 27.5 - 3,
+    rotate: `${angle + 90}deg`,
+  };
+});
+
+const TOPOGRAPHIC_GROUPS = [
+  { left: '-23%', top: '3%', width: 250, height: 170, rotate: '-12deg' },
+  { left: '52%', top: '34%', width: 230, height: 180, rotate: '18deg' },
+  { left: '7%', top: '72%', width: 310, height: 210, rotate: '-7deg' },
+] as const;
+
+const WORD_LIST_COPY = {
+  ru: { title: 'Список слов', search: 'Поиск слова', open: 'Открыть поиск', close: 'Закрыть поиск', empty: 'Слов нет', noResults: 'Ничего не найдено', notFound: 'История не найдена.', add: 'Добавить в избранное', remove: 'Удалить из избранного' },
+  en: { title: 'Word list', search: 'Search words', open: 'Open search', close: 'Close search', empty: 'No words', noResults: 'No results', notFound: 'Story not found.', add: 'Add to favorites', remove: 'Remove from favorites' },
+  tr: { title: 'Kelime listesi', search: 'Kelime ara', open: 'Aramayı aç', close: 'Aramayı kapat', empty: 'Kelime yok', noResults: 'Sonuç bulunamadı', notFound: 'Hikâye bulunamadı.', add: 'Favorilere ekle', remove: 'Favorilerden kaldır' },
+} as const;
+
 function text(value: unknown) {
   return String(value ?? '').normalize('NFC').trim().replace(/\s+/g, ' ');
 }
@@ -106,6 +159,54 @@ function text(value: unknown) {
 function numeric(value: unknown, fallback = Number.MAX_SAFE_INTEGER) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalizedSearch(value: unknown, language: UserSettings['interface_language_code']) {
+  return text(value).toLocaleLowerCase(language === 'tr' ? 'tr' : language === 'en' ? 'en' : 'ru');
+}
+
+function thematicCatalog(catalog: RouteCatalog) {
+  const id = text(catalog.id).toLocaleLowerCase();
+  return id.includes('thematic') || id.includes('temat') || catalog.sections.length > 2;
+}
+
+function groupedStoryWords(story?: RouteStory): StoryWordCatalogGroup[] {
+  if (!story) return [];
+  const seen = new Set<string>();
+  let ordinal = 0;
+  return story.catalogs.map((catalog) => ({
+    catalog,
+    sections: catalog.sections.map((section) => ({
+      section,
+      entries: section.stations.flatMap((station) => station.words.flatMap((word) => {
+        const id = text(word.word_id);
+        if (!id || seen.has(id)) return [];
+        seen.add(id);
+        return [{ word, ordinal: ++ordinal }];
+      })),
+    })).filter((group) => group.entries.length),
+  })).filter((group) => group.sections.length);
+}
+
+function routeVisualItems(story?: RouteStory): RouteVisualItem[] {
+  if (!story) return [];
+  const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
+  const items: RouteVisualItem[] = [];
+  [...story.catalogs].reverse().forEach((catalog) => {
+    [...catalog.sections].reverse().forEach((section) => {
+      [...section.stations].reverse().forEach((station) => {
+        items.push({
+          type: 'station',
+          key: `station:${station.key}`,
+          station,
+          index: stationIndex.get(station.key) ?? 0,
+        });
+      });
+      items.push({ type: 'section', key: `section:${catalog.id}:${section.id}`, section, catalog });
+    });
+    items.push({ type: 'catalog', key: `catalog:${catalog.id}`, catalog });
+  });
+  return items;
 }
 
 function setOrdinal(id: string) {
@@ -246,22 +347,8 @@ function normalizeProgressRows(rows: unknown): WordProgress[] {
 }
 
 async function loadProgress(userId?: string): Promise<{ wordRows: WordProgress[]; setRows: Record<string, unknown>[] }> {
-  if (!userId) {
-    const raw = await AsyncStorage.getItem(GUEST_PROGRESS_KEY).catch(() => null);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return { wordRows: normalizeProgressRows(parsed), setRows: [] };
-  }
-
-  const [wordResult, setResult] = await Promise.all([
-    supabase.from('user_word_progress').select('*').eq('user_id', userId),
-    supabase.from('user_set_progress').select('*').eq('user_id', userId),
-  ]);
-  if (wordResult.error) throw wordResult.error;
-  if (setResult.error) throw setResult.error;
-  return {
-    wordRows: normalizeProgressRows(wordResult.data),
-    setRows: (setResult.data ?? []) as Record<string, unknown>[],
-  };
+  const [wordRows, setRows] = await Promise.all([loadWordProgress(userId), loadSetProgress(userId)]);
+  return { wordRows: normalizeProgressRows(wordRows), setRows };
 }
 
 async function loadPathBundle(settings: UserSettings, userId?: string): Promise<PathBundle> {
@@ -317,6 +404,9 @@ function usePathBundle() {
   const { settings } = useSettings();
   const [bundle, setBundle] = useState<PathBundle | null>(null);
   const [error, setError] = useState('');
+  const [dictionaryRevision, setDictionaryRevision] = useState(0);
+
+  useEffect(() => subscribeDictionary(() => setDictionaryRevision((value) => value + 1)), []);
 
   useEffect(() => {
     let active = true;
@@ -337,6 +427,7 @@ function usePathBundle() {
     settings.translation_language_code,
     settings.alan_script_code,
     settings.alan_dialect_code,
+    dictionaryRevision,
   ]);
 
   return { bundle, error, settings };
@@ -366,28 +457,153 @@ function StoryProgress({ story, progressMap }: { story: RouteStory; progressMap:
   );
 }
 
-function StationStone({ station, index, progressMap }: { station: RouteStation; index: number; progressMap: Map<string, WordProgress> }) {
+function TopographicBackdrop() {
+  return (
+    <View pointerEvents="none" style={styles.topographicBackdrop}>
+      <View style={styles.sceneLight} />
+      <View style={styles.sceneShade} />
+      {TOPOGRAPHIC_GROUPS.map((group, groupIndex) => (
+        <View
+          key={groupIndex}
+          style={[
+            styles.contourGroup,
+            {
+              left: group.left,
+              top: group.top,
+              width: group.width,
+              height: group.height,
+              transform: [{ rotate: group.rotate }],
+            },
+          ]}
+        >
+          {[1, 0.78, 0.56, 0.36].map((scale) => (
+            <View
+              key={scale}
+              style={[
+                styles.contourRing,
+                {
+                  width: group.width * scale,
+                  height: group.height * scale,
+                  left: group.width * (1 - scale) / 2,
+                  top: group.height * (1 - scale) / 2,
+                },
+              ]}
+            />
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function StationProgressRing({ state, status, ordinal }: { state: ProgressSummary; status: string; ordinal: number }) {
+  const fillCount = Math.round((Math.max(0, Math.min(100, state.percent)) / 100) * STATION_RING_MARKS.length);
+  const fillColor = status === 'review'
+    ? '#9b7134'
+    : status === 'mastered'
+      ? '#557a5c'
+      : theme.colors.accentStrong;
+  return (
+    <View style={styles.stationRing}>
+      {STATION_RING_MARKS.map((mark, index) => (
+        <View
+          key={index}
+          style={[
+            styles.stationRingMark,
+            { left: mark.left, top: mark.top, transform: [{ rotate: mark.rotate }] },
+            index < fillCount && { backgroundColor: fillColor },
+          ]}
+        />
+      ))}
+      <View style={[styles.millstone, status === 'mastered' && styles.millstoneMastered]}>
+        <View style={styles.millstoneGrainOne} />
+        <View style={styles.millstoneGrainTwo} />
+        <View style={styles.millstoneHole} />
+        <Text style={styles.stationOrdinal}>{String(ordinal + 1).padStart(2, '0')}</Text>
+      </View>
+    </View>
+  );
+}
+
+function RouteConnector({
+  story,
+  layouts,
+  routeWidth,
+}: {
+  story: RouteStory;
+  layouts: Record<string, RouteAnchorLayout>;
+  routeWidth: number;
+}) {
+  const segments = useMemo(() => {
+    const points = story.stations.flatMap((station, index) => {
+      const layout = layouts[`station:${station.key}`];
+      if (!layout) return [];
+      return [{
+        key: station.key,
+        x: layout.x + layout.width / 2 + routeWaveShift(index, routeWidth),
+        y: layout.y + 30,
+      }];
+    });
+    return points.slice(1).map((point, index) => ({
+      key: `${points[index].key}:${point.key}`,
+      ...routeConnectorSegment(points[index], point),
+    }));
+  }, [layouts, routeWidth, story]);
+
+  return (
+    <View pointerEvents="none" style={styles.routeConnector}>
+      {segments.map((segment) => (
+        <View
+          key={segment.key}
+          style={[
+            styles.routeConnectorSegment,
+            {
+              left: segment.left,
+              top: segment.top,
+              width: segment.width,
+              transform: [{ rotate: `${segment.angle}deg` }],
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
+function StationStone({
+  station,
+  index,
+  progressMap,
+  routeWidth,
+  onLayout,
+}: {
+  station: RouteStation;
+  index: number;
+  progressMap: Map<string, WordProgress>;
+  routeWidth: number;
+  onLayout: (layout: RouteAnchorLayout) => void;
+}) {
   const state = summary(station.words, progressMap);
   const status = stationStatus(station, progressMap);
   const milestones = Math.min(4, Math.floor(state.mastered / 20));
   const hideLabel = LEVEL_DICTIONARIES.has(station.dictionaryId);
+  const shift = routeWaveShift(index, routeWidth);
   return (
     <Pressable
+      accessibilityLabel={`${station.name}, ${state.mastered}/${state.total}`}
+      accessibilityRole="button"
+      accessibilityState={{ selected: state.percent === 100 }}
+      testID={scopedTestId('path.station', station.key)}
+      onLayout={(event) => onLayout(event.nativeEvent.layout)}
       onPress={() => router.push({ pathname: '/path/station', params: { key: station.key } })}
-      style={[styles.stationNode, { transform: [{ translateX: index % 2 === 0 ? -64 : 64 }] }]}
+      style={({ pressed }) => [
+        styles.stationNode,
+        { transform: [{ translateX: shift }, ...(pressed ? [{ translateY: -2 }] : [])] },
+        pressed && styles.stationPressed,
+      ]}
     >
       {milestones ? <Text style={styles.stationMilestones}>{'⌃'.repeat(milestones)}</Text> : null}
-      <View style={[
-        styles.stationRing,
-        status === 'studying' && styles.stationRingStudying,
-        status === 'mastered' && styles.stationRingMastered,
-        status === 'review' && styles.stationRingReview,
-      ]}>
-        <View style={[styles.millstone, status === 'mastered' && styles.millstoneMastered]}>
-          <View style={styles.millstoneHole} />
-          <Text style={styles.stationOrdinal}>{String(index + 1).padStart(2, '0')}</Text>
-        </View>
-      </View>
+      <StationProgressRing state={state} status={status} ordinal={index} />
       {!hideLabel ? <Text numberOfLines={2} style={[styles.stationLabel, status === 'review' && styles.stationLabelReview]}>{station.name}</Text> : null}
       <Text style={styles.stationCount}>{state.mastered}/{state.total}</Text>
     </Pressable>
@@ -395,10 +611,39 @@ function StationStone({ station, index, progressMap }: { station: RouteStation; 
 }
 
 function StoryStele({ story }: { story: RouteStory }) {
+  const insets = useSafeAreaInsets();
   const session = useSession();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const steleScrollRef = useRef<ScrollView>(null);
+  const autoDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const steleContentHeightRef = useRef(0);
+  const steleViewportHeightRef = useRef(0);
+  const steleOffsetRef = useRef(0);
+  const manualScrollRef = useRef(false);
   const scope = session.user?.id ? `user:${session.user.id}` : 'guest';
   const storageKey = `${STELE_SEEN_KEY}:${scope}`;
+
+  const stopAutoScroll = useCallback(() => {
+    if (autoDelayRef.current) clearTimeout(autoDelayRef.current);
+    if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    autoDelayRef.current = null;
+    autoScrollRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (active) setReducedMotion(enabled);
+    }).catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReducedMotion);
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -411,6 +656,29 @@ function StoryStele({ story }: { story: RouteStory }) {
     return () => { active = false; };
   }, [story.id, story.intro, storageKey]);
 
+  useEffect(() => {
+    stopAutoScroll();
+    steleOffsetRef.current = 0;
+    manualScrollRef.current = false;
+    if (!open || reducedMotion) return stopAutoScroll;
+    autoDelayRef.current = setTimeout(() => {
+      autoScrollRef.current = setInterval(() => {
+        if (manualScrollRef.current) {
+          stopAutoScroll();
+          return;
+        }
+        const maxOffset = Math.max(0, steleContentHeightRef.current - steleViewportHeightRef.current);
+        if (maxOffset <= 0 || steleOffsetRef.current >= maxOffset) {
+          stopAutoScroll();
+          return;
+        }
+        steleOffsetRef.current = Math.min(maxOffset, steleOffsetRef.current + 0.8);
+        steleScrollRef.current?.scrollTo({ y: steleOffsetRef.current, animated: false });
+      }, 32);
+    }, 1300);
+    return stopAutoScroll;
+  }, [open, reducedMotion, stopAutoScroll, story.id]);
+
   const markSeen = async () => {
     const raw = await AsyncStorage.getItem(storageKey).catch(() => null);
     const state = raw ? JSON.parse(raw) as Record<string, boolean> : {};
@@ -418,6 +686,7 @@ function StoryStele({ story }: { story: RouteStory }) {
   };
 
   const close = () => {
+    stopAutoScroll();
     setOpen(false);
     void markSeen();
   };
@@ -425,12 +694,26 @@ function StoryStele({ story }: { story: RouteStory }) {
   if (!story.intro) return null;
   return (
     <>
-      <Pressable accessibilityLabel={story.name} onPress={() => setOpen(true)} style={styles.steleTrigger}>
-        <Text style={styles.steleTriggerGlyph}>✦</Text>
+      <Pressable
+        accessibilityLabel={story.name}
+        accessibilityRole="button"
+        onPress={() => setOpen(true)}
+        style={[styles.steleTrigger, { bottom: 18 + Math.max(insets.bottom, 4) }]}
+      >
+        <AlanIcon color={theme.colors.accentStrong} name="artifact" size={20} />
       </Pressable>
       <Modal transparent visible={open} animationType="fade" onRequestClose={close}>
-        <Pressable style={styles.steleBackdrop} onPress={close}>
-          <Pressable style={styles.steleDialog} onPress={(event) => event.stopPropagation()}>
+        <Pressable accessible={false} style={styles.steleBackdrop} onPress={close}>
+          <Pressable accessible={false} style={styles.steleDialog} onPress={(event) => event.stopPropagation()}>
+            <Pressable
+              accessibilityLabel={t('common.close')}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={close}
+              style={({ pressed }) => [styles.steleClose, pressed && styles.stationPressed]}
+            >
+              <AlanIcon color={theme.colors.textMuted} name="close" size={18} />
+            </Pressable>
             <ImageBackground
               source={require('../../assets/path/story-stele.webp')}
               resizeMode="contain"
@@ -439,7 +722,19 @@ function StoryStele({ story }: { story: RouteStory }) {
             >
               <View style={styles.steleContent}>
                 <Text numberOfLines={2} adjustsFontSizeToFit style={styles.steleTitle}>{story.name}</Text>
-                <ScrollView style={styles.steleBody} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  ref={steleScrollRef}
+                  style={styles.steleBody}
+                  showsVerticalScrollIndicator={false}
+                  onContentSizeChange={(_width, height) => { steleContentHeightRef.current = height; }}
+                  onLayout={(event) => { steleViewportHeightRef.current = event.nativeEvent.layout.height; }}
+                  onScroll={(event) => { steleOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+                  onScrollBeginDrag={() => {
+                    manualScrollRef.current = true;
+                    stopAutoScroll();
+                  }}
+                  scrollEventThrottle={32}
+                >
                   {story.intro.split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => (
                     <Text key={index} style={styles.steleParagraph}>{paragraph.replace(/\s*\n\s*/g, ' ')}</Text>
                   ))}
@@ -453,68 +748,254 @@ function StoryStele({ story }: { story: RouteStory }) {
   );
 }
 
-function RouteScale({ story }: { story: RouteStory }) {
+function RouteScale({
+  story,
+  scrollY,
+  contentHeight,
+  viewportHeight,
+  onSelect,
+}: {
+  story: RouteStory;
+  scrollY: number;
+  contentHeight: number;
+  viewportHeight: number;
+  onSelect: (anchorKey: string) => void;
+}) {
   const marks = useMemo(() => {
-    const result: { key: string; type: 'dot' | 'section' | 'diamond' }[] = [];
+    const result: { key: string; type: 'dot' | 'section' | 'diamond'; targetKey: string; label: string }[] = [];
+    const totalStations = Math.max(1, story.stations.length);
     story.catalogs.forEach((catalog) => {
-      result.push({ key: `d:${catalog.id}`, type: 'diamond' });
-      catalog.sections.forEach((section) => {
-        result.push({ key: `s:${catalog.id}:${section.id}`, type: 'section' });
-        section.stations.forEach((station) => result.push({ key: `w:${station.key}`, type: 'dot' }));
+      result.push({
+        key: `d:${catalog.id}`,
+        type: 'diamond',
+        targetKey: `catalog:${catalog.id}`,
+        label: catalog.name,
+      });
+      catalog.sections.forEach((section, sectionIndex) => {
+        const count = routeSectionDotCount(section.stations.length, totalStations);
+        Array.from({ length: count }, (_, index) => {
+          const stationIndex = count === 1
+            ? 0
+            : Math.round((index / (count - 1)) * Math.max(0, section.stations.length - 1));
+          const station = section.stations[stationIndex];
+          if (!station) return;
+          result.push({
+            key: `w:${section.id}:${index}:${station.key}`,
+            type: 'dot',
+            targetKey: `station:${station.key}`,
+            label: station.name,
+          });
+        });
+        if (sectionIndex < catalog.sections.length - 1) {
+          result.push({
+            key: `s:${catalog.id}:${section.id}`,
+            type: 'section',
+            targetKey: `section:${catalog.id}:${section.id}`,
+            label: section.name || catalog.name,
+          });
+        }
       });
     });
-    const max = 42;
-    if (result.length <= max) return result;
-    const step = result.length / max;
-    return Array.from({ length: max }, (_, index) => result[Math.floor(index * step)]);
+    return result;
   }, [story]);
+  const scaleState = routeScaleState(scrollY, contentHeight, viewportHeight, marks.length);
 
   return (
-    <View pointerEvents="none" style={styles.routeScale}>
-      {marks.map((mark) => (
-        <View
+    <View style={styles.routeScale}>
+      {marks.map((mark, index) => {
+        const passed = index >= marks.length - scaleState.passed;
+        const current = index === scaleState.currentIndex;
+        return (
+        <Pressable
+          accessibilityLabel={mark.label}
+          accessibilityRole="button"
+          accessibilityState={{ selected: current }}
+          hitSlop={3}
           key={mark.key}
-          style={mark.type === 'diamond' ? styles.scaleDiamond : mark.type === 'section' ? styles.scaleSection : styles.scaleDot}
-        />
-      ))}
+          onPress={() => onSelect(mark.targetKey)}
+          style={({ pressed }) => [styles.scaleMarkButton, pressed && styles.scaleMarkPressed]}
+        >
+          <View style={[
+            mark.type === 'diamond' ? styles.scaleDiamond : mark.type === 'section' ? styles.scaleSection : styles.scaleDot,
+            passed && styles.scaleMarkPassed,
+            current && styles.scaleMarkCurrent,
+          ]} />
+        </Pressable>
+        );
+      })}
     </View>
   );
 }
 
 export function PathRoot() {
   const insets = useSafeAreaInsets();
+  const pathParams = useLocalSearchParams<{ storyId?: string; storyRequest?: string }>();
+  const session = useSession();
+  const { openGuide } = useGuide();
+  const { t } = useI18n();
   const { bundle, error } = usePathBundle();
-  const [activeStoryId, setActiveStoryId] = useState('oblivion');
+  const userId = session.user?.id;
+  const [activeStoryId, setActiveStoryId] = useState('');
+  const [pathStateReady, setPathStateReady] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const positionedStory = useRef('');
+  const activeStoryRef = useRef('');
+  const appliedStoryRequestRef = useRef('');
+  const scrollOffsetsRef = useRef<Record<string, number>>({});
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [routeLayouts, setRouteLayouts] = useState<Record<string, RouteAnchorLayout>>({});
+  const [routeWidth, setRouteWidth] = useState(0);
+  const [routeContentHeight, setRouteContentHeight] = useState(0);
+  const [routeViewportHeight, setRouteViewportHeight] = useState(0);
+  const [routeScrollY, setRouteScrollY] = useState(0);
+  const story = bundle
+    ? bundle.route.stories[activeStoryId] ?? bundle.route.stories[bundle.route.storyOrder[0]]
+    : undefined;
+  const visualItems = useMemo(() => routeVisualItems(story), [story]);
 
   useEffect(() => {
-    if (!bundle) return;
-    if (!bundle.route.stories[activeStoryId]) setActiveStoryId(bundle.route.storyOrder[0] || 'oblivion');
-  }, [bundle, activeStoryId]);
+    setRouteLayouts({});
+    setRouteContentHeight(0);
+    setRouteScrollY(0);
+  }, [story?.id]);
 
-  if (!bundle) return <LoadingState error={error} />;
-  const story = bundle.route.stories[activeStoryId] ?? bundle.route.stories[bundle.route.storyOrder[0]];
-  if (!story) return <LoadingState error="Маршрут пока пуст." />;
-  const stationIndex = new Map(story.stations.map((station, index) => [station.key, index]));
+  const rememberRouteLayout = useCallback((key: string, layout: RouteAnchorLayout) => {
+    setRouteLayouts((current) => {
+      const previous = current[key];
+      if (previous
+        && previous.x === layout.x
+        && previous.y === layout.y
+        && previous.width === layout.width
+        && previous.height === layout.height) return current;
+      return { ...current, [key]: layout };
+    });
+  }, []);
 
-  const positionAtBottom = () => {
+  const scrollToRouteAnchor = useCallback((anchorKey: string) => {
+    const layout = routeLayouts[anchorKey];
+    if (!layout) return;
+    const y = Math.max(0, layout.y - routeViewportHeight * 0.16);
+    scrollRef.current?.scrollTo({ y, animated: true });
+  }, [routeLayouts, routeViewportHeight]);
+
+  useEffect(() => {
+    let active = true;
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = null;
+    positionedStory.current = '';
+    activeStoryRef.current = '';
+    scrollOffsetsRef.current = {};
+    setActiveStoryId('');
+    setPathStateReady(false);
+
+    void readScopedJson<PathViewState>(STORAGE_KEYS.pathState, {}, userId).then((stored) => {
+      if (!active) return;
+      const offsets = Object.fromEntries(
+        Object.entries(stored.scroll_offsets ?? {})
+          .map(([storyId, offset]) => [text(storyId), Math.max(0, Number(offset))] as const)
+          .filter(([storyId, offset]) => Boolean(storyId) && Number.isFinite(offset)),
+      );
+      const storedStoryId = text(stored.active_story_id);
+      activeStoryRef.current = storedStoryId;
+      scrollOffsetsRef.current = offsets;
+      setActiveStoryId(storedStoryId);
+      setPathStateReady(true);
+    });
+
+    return () => {
+      active = false;
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+      persistTimerRef.current = null;
+      if (!activeStoryRef.current) return;
+      void writeScopedJson(STORAGE_KEYS.pathState, {
+        active_story_id: activeStoryRef.current,
+        scroll_offsets: scrollOffsetsRef.current,
+        updated_at: new Date().toISOString(),
+      } satisfies PathViewState, userId).catch(() => {});
+    };
+  }, [userId]);
+
+  const persistPathState = (storyId = activeStoryRef.current) => {
+    if (!pathStateReady || !storyId) return;
+    activeStoryRef.current = storyId;
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      persistTimerRef.current = null;
+      void writeScopedJson(STORAGE_KEYS.pathState, {
+        active_story_id: activeStoryRef.current,
+        scroll_offsets: scrollOffsetsRef.current,
+        updated_at: new Date().toISOString(),
+      } satisfies PathViewState, userId).catch(() => {});
+    }, 250);
+  };
+
+  useEffect(() => {
+    if (!bundle || !pathStateReady) return;
+    const requestedStoryId = text(pathParams.storyId);
+    const requestId = text(pathParams.storyRequest) || requestedStoryId;
+    if (!requestId || appliedStoryRequestRef.current === requestId || !bundle.route.stories[requestedStoryId]) return;
+    appliedStoryRequestRef.current = requestId;
+    positionedStory.current = '';
+    activeStoryRef.current = requestedStoryId;
+    setActiveStoryId(requestedStoryId);
+    persistPathState(requestedStoryId);
+  }, [bundle, pathParams.storyId, pathParams.storyRequest, pathStateReady]);
+
+  useEffect(() => {
+    if (!bundle || !pathStateReady) return;
+    if (bundle.route.stories[activeStoryId]) {
+      activeStoryRef.current = activeStoryId;
+      return;
+    }
+    const fallbackStoryId = bundle.route.storyOrder[0] || 'oblivion';
+    activeStoryRef.current = fallbackStoryId;
+    setActiveStoryId(fallbackStoryId);
+    persistPathState(fallbackStoryId);
+  }, [bundle, activeStoryId, pathStateReady]);
+
+  if (!bundle || !pathStateReady) return <LoadingState error={error} />;
+  if (!story) return <LoadingState error={t('path.empty')} />;
+
+  const restoreStoryPosition = () => {
     if (positionedStory.current === story.id) return;
     positionedStory.current = story.id;
-    requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: false }));
+    const storedOffset = scrollOffsetsRef.current[story.id];
+    requestAnimationFrame(() => {
+      if (Number.isFinite(storedOffset)) scrollRef.current?.scrollTo({ y: storedOffset, animated: false });
+      else scrollRef.current?.scrollToEnd({ animated: false });
+    });
   };
 
   const switchStory = (storyId: string) => {
+    if (storyId === story.id) return;
     positionedStory.current = '';
+    activeStoryRef.current = storyId;
     setActiveStoryId(storyId);
+    persistPathState(storyId);
+  };
+
+  const rememberScrollPosition = (offset: number) => {
+    if (!Number.isFinite(offset)) return;
+    const bounded = Math.max(0, offset);
+    scrollOffsetsRef.current[story.id] = bounded;
+    setRouteScrollY((current) => Math.abs(current - bounded) >= 2 ? bounded : current);
+    persistPathState(story.id);
   };
 
   return (
-    <View style={styles.pathScreen}>
-      <View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 68 + insets.top }]}>
+    <View testID={testIds.path.screen} style={styles.pathScreen}>
+      <TopographicBackdrop />
+      <View style={[styles.pathHeader, { paddingTop: insets.top + 10, height: 82 + insets.top }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
           {bundle.route.storyOrder.map((id) => (
-            <Pressable key={id} onPress={() => switchStory(id)} style={styles.storyTabButton}>
+            <Pressable
+              key={id}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: id === story.id }}
+              testID={scopedTestId('path.story', id)}
+              onPress={() => switchStory(id)}
+              style={styles.storyTabButton}
+            >
               <Text style={[styles.storyTab, id === story.id && styles.storyTabActive]}>{bundle.route.stories[id].name}</Text>
             </Pressable>
           ))}
@@ -525,87 +1006,219 @@ export function PathRoot() {
       <ScrollView
         ref={scrollRef}
         style={styles.pathViewport}
-        contentContainerStyle={styles.routeMap}
+        contentContainerStyle={styles.pathScrollContent}
         showsVerticalScrollIndicator={false}
-        onContentSizeChange={positionAtBottom}
+        onContentSizeChange={(_width, height) => {
+          setRouteContentHeight(height);
+          restoreStoryPosition();
+        }}
+        onLayout={(event) => setRouteViewportHeight(event.nativeEvent.layout.height)}
+        onScroll={(event) => rememberScrollPosition(event.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={100}
       >
-        <View pointerEvents="none" style={styles.routeConnector} />
-        {[...story.catalogs].reverse().map((catalog) => (
-          <View key={catalog.id} style={styles.catalogBlock}>
-            <View style={styles.catalogSections}>
-              {[...catalog.sections].reverse().map((section) => (
-                <View key={section.id} style={styles.sectionBlock}>
-                  <View style={styles.stationList}>
-                    {[...section.stations].reverse().map((station) => (
-                      <StationStone
-                        key={station.key}
-                        station={station}
-                        index={stationIndex.get(station.key) ?? 0}
-                        progressMap={bundle.progressMap}
-                      />
-                    ))}
-                  </View>
-                  {section.name ? <Text style={styles.sectionHeading}>{section.name}</Text> : null}
+        <View
+          onLayout={(event) => setRouteWidth(event.nativeEvent.layout.width)}
+          style={styles.routeMap}
+        >
+          <RouteConnector story={story} layouts={routeLayouts} routeWidth={routeWidth} />
+          {visualItems.map((item) => {
+            if (item.type === 'station') {
+              return (
+                <StationStone
+                  key={item.key}
+                  station={item.station}
+                  index={item.index}
+                  progressMap={bundle.progressMap}
+                  routeWidth={routeWidth}
+                  onLayout={(layout) => rememberRouteLayout(item.key, layout)}
+                />
+              );
+            }
+            if (item.type === 'section') {
+              return (
+                <View
+                  key={item.key}
+                  onLayout={(event) => rememberRouteLayout(item.key, event.nativeEvent.layout)}
+                  style={styles.sectionHeadingBlock}
+                >
+                  {item.section.name ? <Text style={styles.sectionHeading}>{item.section.name}</Text> : null}
                 </View>
-              ))}
-            </View>
-            <Text style={styles.catalogHeading}>{catalog.name}</Text>
-          </View>
-        ))}
+              );
+            }
+            return (
+              <View
+                key={item.key}
+                onLayout={(event) => rememberRouteLayout(item.key, event.nativeEvent.layout)}
+                style={styles.catalogHeadingBlock}
+              >
+                <Text style={styles.catalogHeading}>{item.catalog.name}</Text>
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
 
-      <RouteScale story={story} />
+      <View pointerEvents="none" style={[styles.pathTopMask, { height: insets.top + 94 }]} />
+      <View pointerEvents="none" style={[styles.pathBottomMask, { height: 34 + Math.max(insets.bottom, 4) }]} />
+      <RouteScale
+        story={story}
+        scrollY={routeScrollY}
+        contentHeight={routeContentHeight}
+        viewportHeight={routeViewportHeight}
+        onSelect={scrollToRouteAnchor}
+      />
       <StoryStele story={story} />
       <Pressable
-        accessibilityLabel="Список слов"
+        accessibilityLabel={t('guide.help_app')}
+        accessibilityRole="button"
+        testID={testIds.path.help}
+        onPress={openGuide}
+        style={[styles.guideTrigger, { bottom: 70 + Math.max(insets.bottom, 4) }]}
+      >
+        <AlanIcon color={theme.colors.text} name="help" size={20} />
+      </Pressable>
+      <Pressable
+        accessibilityLabel={t('path.words')}
+        accessibilityRole="button"
+        testID={testIds.path.words}
         onPress={() => router.push({ pathname: '/path/story-words', params: { storyId: story.id } })}
         style={[styles.storyWordsTrigger, { bottom: 18 + Math.max(insets.bottom, 4) }]}
       >
-        <Text style={styles.storyWordsGlyph}>≡</Text>
+        <AlanIcon color={theme.colors.text} name="list" size={21} />
       </Pressable>
     </View>
   );
 }
 
-function DetailHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.detailHeader, { height: 42 + insets.top, paddingTop: insets.top }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}><Text style={styles.backGlyph}>‹</Text></Pressable>
-      <View style={styles.detailHeaderCopy}>
-        <Text numberOfLines={1} style={styles.detailTitle}>{title}</Text>
-        {subtitle ? <Text numberOfLines={1} style={styles.detailSubtitle}>{subtitle}</Text> : null}
-      </View>
-    </View>
-  );
-}
-
 export function StoryWordsScreen() {
+  const insets = useSafeAreaInsets();
+  const session = useSession();
   const params = useLocalSearchParams<{ storyId?: string }>();
   const { bundle, error, settings } = usePathBundle();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const searchRef = useRef<TextInput>(null);
+  const userId = session.user?.id;
+  const story = bundle?.route.stories[text(params.storyId)] ?? bundle?.route.stories[bundle.route.storyOrder[0]];
+  const copy = WORD_LIST_COPY[settings.interface_language_code];
+  const groups = useMemo(() => groupedStoryWords(story), [story]);
+  const normalizedQuery = normalizedSearch(query, settings.interface_language_code);
+  const visibleGroups = useMemo(() => groups.map(({ catalog, sections }) => ({
+    catalog,
+    sections: sections.map(({ section, entries }) => ({
+      section,
+      entries: entries.filter(({ word }) => !normalizedQuery || normalizedSearch(
+        `${displayedAlanWord(word, settings)} ${displayedTranslation(word, settings)}`,
+        settings.interface_language_code,
+      ).includes(normalizedQuery)),
+    })).filter((group) => group.entries.length),
+  })).filter((group) => group.sections.length), [groups, normalizedQuery, settings]);
+
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      void loadFavoriteIds(userId).then((ids) => {
+        if (active) setFavorites(ids);
+      });
+    };
+    refresh();
+    const unsubscribe = subscribeScopedValue(STORAGE_KEYS.wordFavorites, userId, refresh);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    setSearchOpen(false);
+    setQuery('');
+  }, [story?.id]);
+
   if (!bundle) return <LoadingState error={error} />;
-  const story = bundle.route.stories[text(params.storyId)] ?? bundle.route.stories[bundle.route.storyOrder[0]];
-  if (!story) return <LoadingState error="История не найдена." />;
+  if (!story) return <LoadingState error={copy.notFound} />;
+
+  const toggleSearch = () => {
+    if (searchOpen) {
+      setSearchOpen(false);
+      setQuery('');
+      searchRef.current?.blur();
+      return;
+    }
+    setSearchOpen(true);
+    requestAnimationFrame(() => searchRef.current?.focus());
+  };
+
+  const toggleFavorite = (wordId: string) => {
+    const active = !favorites.has(wordId);
+    setFavorites((current) => {
+      const next = new Set(current);
+      if (active) next.add(wordId); else next.delete(wordId);
+      return next;
+    });
+    void setFavorite(userId, wordId, active).catch(() => {
+      void loadFavoriteIds(userId).then(setFavorites);
+    });
+  };
 
   return (
     <View style={styles.detailScreen}>
-      <DetailHeader title={story.name} subtitle="Слова истории" />
-      <ScrollView style={styles.wordList} contentContainerStyle={styles.wordListContent} showsVerticalScrollIndicator={false}>
-        {story.catalogs.map((catalog) => (
+      <PracticeHeader
+        title={copy.title}
+        center={searchOpen ? <TextInput
+          ref={searchRef}
+          accessibilityLabel={copy.search}
+          autoCorrect={false}
+          onChangeText={setQuery}
+          placeholder={copy.search}
+          placeholderTextColor={theme.colors.textSoft}
+          returnKeyType="search"
+          style={styles.storySearchInput}
+          value={query}
+        /> : undefined}
+        action={<Pressable
+          accessibilityLabel={searchOpen ? copy.close : copy.open}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: searchOpen }}
+          onPress={toggleSearch}
+          style={({ pressed }) => [styles.storySearchButton, pressed && styles.controlPressed]}
+        >
+          <AlanIcon color={theme.colors.text} name={searchOpen ? 'close' : 'search'} size={searchOpen ? 22 : 21} />
+        </Pressable>}
+      />
+      <ScrollView
+        style={styles.wordList}
+        contentContainerStyle={[styles.wordListContent, { paddingBottom: 28 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {!visibleGroups.length ? <Text style={styles.storyWordsEmpty}>{normalizedQuery ? copy.noResults : copy.empty}</Text> : null}
+        {visibleGroups.map(({ catalog, sections }) => (
           <View key={catalog.id}>
-            <Text style={styles.wordCatalogHeading}>{catalog.name}</Text>
-            {catalog.sections.map((section) => (
+            {catalog.name ? <Text style={styles.wordCatalogHeading}>{catalog.name}</Text> : null}
+            {sections.map(({ section, entries }) => (
               <View key={section.id}>
-                {section.name ? <Text style={styles.wordSectionHeading}>{section.name}</Text> : null}
-                {section.stations.flatMap((station) => station.words).map((word) => (
-                  <View key={word.word_id} style={styles.storyWordRow}>
-                    <Text style={styles.wordOrder}>{word.global_order ?? ''}</Text>
-                    <View style={styles.wordCopy}>
-                      <Text numberOfLines={1} style={styles.wordPrimary}>{displayedAlanWord(word, settings)}</Text>
-                      <Text numberOfLines={2} style={styles.wordSecondary}>{displayedTranslation(word, settings)}</Text>
+                {thematicCatalog(catalog) && section.name ? <Text style={styles.wordSectionHeading}>{section.name}</Text> : null}
+                {entries.map(({ word, ordinal }) => {
+                  const favorite = favorites.has(word.word_id);
+                  return (
+                    <View key={word.word_id} style={styles.storyWordRow}>
+                      <Text style={styles.wordOrder}>{ordinal}.</Text>
+                      <View style={styles.wordCopy}>
+                        <Text numberOfLines={1} style={styles.wordPrimary}>{displayedAlanWord(word, settings)}</Text>
+                        <OverflowMarquee style={styles.wordSecondary}>{displayedTranslation(word, settings)}</OverflowMarquee>
+                      </View>
+                      <Pressable
+                        accessibilityLabel={favorite ? copy.remove : copy.add}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: favorite }}
+                        onPress={() => toggleFavorite(word.word_id)}
+                        style={({ pressed }) => [styles.wordStarButton, pressed && styles.controlPressed]}
+                      >
+                        <Text style={[styles.wordStar, favorite && styles.wordStarActive]}>{favorite ? '★' : '☆'}</Text>
+                      </Pressable>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             ))}
           </View>
@@ -615,139 +1228,63 @@ export function StoryWordsScreen() {
   );
 }
 
-export function StationScreen() {
-  const params = useLocalSearchParams<{ key?: string }>();
-  const { bundle, error, settings } = usePathBundle();
-  const [tab, setTab] = useState<'words' | 'stats'>('words');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  const station = bundle?.route.byKey.get(text(params.key));
-  useEffect(() => {
-    if (station) setSelected(new Set(station.words.map((word) => word.word_id)));
-  }, [station?.key]);
-
-  if (!bundle) return <LoadingState error={error} />;
-  if (!station) return <LoadingState error="Этап не найден." />;
-  const state = summary(station.words, bundle.progressMap);
-  const attempts = station.words.reduce((total, word) => {
-    const progress = bundle.progressMap.get(word.word_id);
-    return total + Number(progress?.test_correct_count || 0) + Number(progress?.test_wrong_count || 0);
-  }, 0);
-
-  const toggle = (id: string) => {
-    setSelected((previous) => {
-      const next = new Set(previous);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
-  return (
-    <View style={styles.detailScreen}>
-      <DetailHeader title={station.name} subtitle={station.sectionName || station.dictionaryName} />
-      <View style={styles.stationTabs}>
-        <Pressable onPress={() => setTab('words')}><Text style={[styles.stationTab, tab === 'words' && styles.stationTabActive]}>СЛОВА</Text></Pressable>
-        <Pressable onPress={() => setTab('stats')}><Text style={[styles.stationTab, tab === 'stats' && styles.stationTabActive]}>СТАТИСТИКА</Text></Pressable>
-      </View>
-
-      {tab === 'words' ? (
-        <>
-          <View style={styles.stationToolbar}>
-            <Text style={styles.stationToolbarText}>Выбрано {selected.size}/{station.words.length}</Text>
-            <Pressable onPress={() => setSelected(new Set(station.words.map((word) => word.word_id)))}>
-              <Text style={styles.toolbarAction}>Все</Text>
-            </Pressable>
-          </View>
-          <ScrollView style={styles.stationWordList} contentContainerStyle={styles.stationWordListContent}>
-            {station.words.map((word) => {
-              const on = selected.has(word.word_id);
-              return (
-                <Pressable key={word.word_id} onPress={() => toggle(word.word_id)} style={styles.stationWordRow}>
-                  <View style={[styles.checkCircle, on && styles.checkCircleOn]}>{on ? <Text style={styles.checkMark}>✓</Text> : null}</View>
-                  <View style={styles.wordCopy}>
-                    <Text numberOfLines={1} style={styles.wordPrimary}>{displayedAlanWord(word, settings)}</Text>
-                    <Text numberOfLines={1} style={styles.wordSecondary}>{displayedTranslation(word, settings)}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-          <View style={styles.stationLaunchPanel}>
-            <View style={styles.directionControl}>
-              <Text style={styles.directionLabel}>НАПРАВЛЕНИЕ</Text>
-              <View style={styles.directionPill}><Text style={styles.directionActive}>Алан → перевод</Text></View>
-            </View>
-            <View style={styles.launchActions}>
-              <Pressable disabled style={[styles.launchButton, styles.launchButtonDisabled]}><Text style={styles.launchButtonText}>ТЕСТ</Text></Pressable>
-              <Pressable disabled style={[styles.launchButton, styles.launchPrimary, styles.launchButtonDisabled]}><Text style={styles.launchPrimaryText}>УЧИТЬ СЛОВА</Text></Pressable>
-            </View>
-          </View>
-        </>
-      ) : (
-        <ScrollView contentContainerStyle={styles.statsContent}>
-          <View style={styles.statsSummary}>
-            <View><Text style={styles.statLabel}>ОСВОЕНО</Text><Text style={styles.statBig}>{state.percent}%</Text></View>
-            <View style={styles.masteryBadge}><Text style={styles.masteryGlyph}>{state.percent === 100 ? '⌃⌃⌃' : state.mastered ? '⌃' : '—'}</Text><Text style={styles.masterySmall}>ЭТАП</Text></View>
-          </View>
-          <View style={styles.metricGrid}>
-            <View style={styles.metric}><Text style={styles.metricValue}>{state.mastered}</Text><Text style={styles.metricLabel}>освоено</Text></View>
-            <View style={styles.metric}><Text style={styles.metricValue}>{state.review}</Text><Text style={styles.metricLabel}>повторить</Text></View>
-            <View style={styles.metric}><Text style={styles.metricValue}>{attempts}</Text><Text style={styles.metricLabel}>ответов</Text></View>
-          </View>
-          <Text style={styles.statsHeading}>Прогресс этапа</Text>
-          <View style={styles.statsLine}><Text style={styles.statsLineLabel}>Слова</Text><Text style={styles.statsLineValue}>{state.mastered}/{state.total}</Text></View>
-          <View style={styles.statsLine}><Text style={styles.statsLineLabel}>Синхронизация</Text><Text style={styles.statsLineValue}>{bundle.setProgressRows.length ? 'облако' : 'локально'}</Text></View>
-        </ScrollView>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   loadingState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, backgroundColor: theme.colors.background },
   errorText: { color: theme.colors.danger, fontSize: 13, textAlign: 'center' },
   pathScreen: { flex: 1, backgroundColor: theme.colors.background, overflow: 'hidden' },
-  pathHeader: { zIndex: 30, height: 68, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: 'rgba(238,233,223,0.62)' },
+  topographicBackdrop: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, overflow: 'hidden' },
+  sceneLight: { position: 'absolute', top: -90, left: -80, width: 360, height: 300, borderRadius: 180, backgroundColor: 'rgba(255,252,242,0.34)' },
+  sceneShade: { position: 'absolute', right: -120, bottom: -110, width: 420, height: 360, borderRadius: 210, backgroundColor: 'rgba(188,176,151,0.16)' },
+  contourGroup: { position: 'absolute' },
+  contourRing: { position: 'absolute', borderWidth: 1, borderColor: 'rgba(73,78,57,0.075)', borderRadius: 999 },
+  pathTopMask: { position: 'absolute', left: 0, right: 0, top: 0, zIndex: 20, backgroundColor: 'rgba(238,233,223,0.76)' },
+  pathBottomMask: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(238,233,223,0.82)' },
+  pathHeader: { zIndex: 30, height: 82, paddingHorizontal: 8, paddingBottom: 4, backgroundColor: 'transparent' },
   storyTabs: { minWidth: '100%', alignItems: 'center', gap: 3, paddingHorizontal: 4 },
-  storyTabButton: { minHeight: 30, justifyContent: 'center', paddingHorizontal: 3 },
+  storyTabButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 5 },
   storyTab: { color: theme.colors.textSoft, fontSize: 11, fontWeight: '700' },
   storyTabActive: { color: theme.colors.text },
   storyProgressRow: { height: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   segmentedProgress: { width: 118, height: 5, flexDirection: 'row', gap: 2 },
   progressSegment: { flex: 1, borderRadius: 2, backgroundColor: 'rgba(84,76,64,0.13)' },
   progressSegmentFilled: { backgroundColor: theme.colors.accentStrong },
-  progressPercent: { color: theme.colors.accentStrong, fontSize: 10, fontWeight: '800' },
-  progressCount: { color: theme.colors.textSoft, fontSize: 10, fontWeight: '700' },
+  progressPercent: { color: theme.colors.accentStrong, fontSize: 10, fontWeight: '800', fontFamily: theme.fonts.mono, fontVariant: ['tabular-nums'] },
+  progressCount: { color: theme.colors.textSoft, fontSize: 10, fontWeight: '700', fontFamily: theme.fonts.mono, fontVariant: ['tabular-nums'] },
   pathViewport: { flex: 1 },
-  routeMap: { minHeight: 720, alignItems: 'center', paddingTop: 76, paddingRight: 50, paddingBottom: 108, paddingLeft: 20, gap: 64 },
-  routeConnector: { position: 'absolute', top: 42, bottom: 42, left: '50%', width: 1, borderLeftWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(77,69,56,0.24)' },
-  catalogBlock: { alignItems: 'center', gap: 28 },
-  catalogSections: { alignItems: 'center', gap: 54 },
+  pathScrollContent: { alignItems: 'center' },
+  routeMap: { position: 'relative', zIndex: 1, width: '100%', maxWidth: 560, minHeight: 720, alignItems: 'center', paddingTop: 76, paddingRight: 50, paddingBottom: 108, paddingLeft: 20 },
+  routeConnector: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 0 },
+  routeConnectorSegment: { position: 'absolute', height: 0, borderTopWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(77,69,56,0.34)' },
+  catalogHeadingBlock: { zIndex: 1, minHeight: 28, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 64 },
   catalogHeading: { color: theme.colors.text, fontSize: 17, fontWeight: '800', letterSpacing: 0.6, textAlign: 'center' },
-  sectionBlock: { alignItems: 'center', gap: 28 },
+  sectionHeadingBlock: { zIndex: 1, minHeight: 24, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 52 },
   sectionHeading: { color: theme.colors.text, fontSize: 14, fontWeight: '800', textAlign: 'center', maxWidth: 260 },
-  stationList: { alignItems: 'center', gap: 43 },
-  stationNode: { width: 60, minHeight: 108, alignItems: 'center', overflow: 'visible' },
-  stationRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: 'rgba(105,92,70,0.22)', padding: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139,107,59,0.05)' },
-  stationRingStudying: { borderColor: theme.colors.accentStrong },
-  stationRingMastered: { borderColor: '#557a5c' },
-  stationRingReview: { borderColor: '#9b7134' },
-  millstone: { width: 54, height: 54, borderRadius: 27, borderTopLeftRadius: 25, borderBottomRightRadius: 24, borderWidth: 1, borderColor: 'rgba(83,74,61,0.34)', backgroundColor: '#d6cdbd', alignItems: 'center', justifyContent: 'center' },
+  stationNode: { zIndex: 1, width: 60, height: 108, marginBottom: 30, alignItems: 'center', overflow: 'visible' },
+  stationPressed: { opacity: 0.8 },
+  stationRing: { position: 'relative', width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
+  stationRingMark: { position: 'absolute', width: 3, height: 6, borderRadius: 2, backgroundColor: 'rgba(105,92,70,0.18)' },
+  millstone: { position: 'absolute', left: 4, top: 4, width: 52, height: 52, borderRadius: 26, borderTopLeftRadius: 24, borderBottomRightRadius: 23, borderWidth: 1, borderColor: 'rgba(83,74,61,0.38)', backgroundColor: '#d6cdbd', alignItems: 'center', justifyContent: 'center', shadowColor: '#36322b', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   millstoneMastered: { backgroundColor: '#c9d0bd' },
+  millstoneGrainOne: { position: 'absolute', left: 10, top: 9, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.3)' },
+  millstoneGrainTwo: { position: 'absolute', right: 9, bottom: 11, width: 4, height: 3, borderRadius: 2, backgroundColor: 'rgba(81,75,65,0.12)' },
   millstoneHole: { position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: theme.colors.background, borderWidth: 1, borderColor: 'rgba(83,74,61,0.24)' },
-  stationOrdinal: { position: 'absolute', bottom: 7, color: theme.colors.textMuted, fontSize: 8, fontWeight: '800' },
+  stationOrdinal: { position: 'absolute', bottom: 7, color: theme.colors.textMuted, fontSize: 8, fontWeight: '800', fontFamily: theme.fonts.mono, fontVariant: ['tabular-nums'] },
   stationMilestones: { position: 'absolute', top: 49, zIndex: 3, color: theme.colors.accentStrong, fontSize: 8, fontWeight: '900', letterSpacing: -1 },
   stationLabel: { position: 'absolute', top: 65, left: -41, width: 142, color: theme.colors.text, fontSize: 10, lineHeight: 12, fontWeight: '700', textAlign: 'center' },
   stationLabelReview: { color: '#9b7134' },
-  stationCount: { position: 'absolute', top: 91, left: -41, width: 142, color: theme.colors.textSoft, fontSize: 8, fontWeight: '700', textAlign: 'center' },
-  routeScale: { position: 'absolute', right: 4, top: '24%', bottom: '18%', width: 26, alignItems: 'center', justifyContent: 'space-evenly', zIndex: 31 },
+  stationCount: { position: 'absolute', top: 91, left: -41, width: 142, color: theme.colors.textSoft, fontSize: 8, fontWeight: '700', fontFamily: theme.fonts.mono, fontVariant: ['tabular-nums'], textAlign: 'center' },
+  routeScale: { position: 'absolute', right: 4, top: '22%', bottom: '17%', width: 26, alignItems: 'center', justifyContent: 'space-evenly', zIndex: 31 },
+  scaleMarkButton: { flex: 1, width: 26, minHeight: 5, maxHeight: 17, alignItems: 'center', justifyContent: 'center' },
+  scaleMarkPressed: { opacity: 0.55 },
   scaleDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(73,66,56,0.28)' },
   scaleSection: { width: 6, height: 6, borderWidth: 1, borderColor: 'rgba(73,66,56,0.42)', transform: [{ rotate: '45deg' }] },
   scaleDiamond: { width: 8, height: 8, borderWidth: 1, borderColor: theme.colors.accentStrong, transform: [{ rotate: '45deg' }] },
-  steleTrigger: { position: 'absolute', left: 10, bottom: 12, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
-  steleTriggerGlyph: { color: theme.colors.accentStrong, fontSize: 18 },
-  storyWordsTrigger: { position: 'absolute', right: 10, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
-  storyWordsGlyph: { color: theme.colors.text, fontSize: 24, lineHeight: 25, transform: [{ rotate: '90deg' }] },
+  scaleMarkPassed: { borderColor: theme.colors.accentStrong, backgroundColor: 'rgba(101,73,31,0.72)' },
+  scaleMarkCurrent: { borderWidth: 2, borderColor: theme.colors.accentStrong, backgroundColor: theme.colors.accentStrong },
+  steleTrigger: { position: 'absolute', right: 10, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
+  steleClose: { position: 'absolute', right: 10, top: 10, zIndex: 3, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(246,242,233,0.88)' },
+  guideTrigger: { position: 'absolute', left: 10, bottom: 70, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
+  storyWordsTrigger: { position: 'absolute', left: 10, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(238,233,223,0.94)', zIndex: 30 },
   steleBackdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 14, backgroundColor: 'rgba(24,20,16,0.72)' },
   steleDialog: { width: '100%', maxWidth: 430, aspectRatio: 0.66 },
   steleArtwork: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -757,57 +1294,20 @@ const styles = StyleSheet.create({
   steleBody: { width: '100%' },
   steleParagraph: { color: '#30291f', fontSize: 13, lineHeight: 18, textAlign: 'center', marginBottom: 9 },
   detailScreen: { flex: 1, backgroundColor: theme.colors.background },
-  detailHeader: { minHeight: 42, paddingHorizontal: 10, paddingBottom: 0, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(238,233,223,0.62)' },
-  backButton: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(54,50,43,0.10)', backgroundColor: 'rgba(246,242,233,0.28)' },
-  backGlyph: { color: theme.colors.textMuted, fontSize: 29, lineHeight: 31, fontWeight: '300', marginTop: -2 },
-  detailHeaderCopy: { flex: 1, minWidth: 0, paddingRight: 40 },
-  detailTitle: { color: theme.colors.text, fontSize: 17, lineHeight: 19, fontWeight: '800', textAlign: 'center' },
-  detailSubtitle: { marginTop: 2, color: theme.colors.textMuted, fontSize: 11, textAlign: 'center' },
+  storySearchInput: { width: '100%', height: 44, borderBottomWidth: 1, borderBottomColor: theme.colors.line, color: theme.colors.text, paddingHorizontal: 8, fontSize: 13, fontWeight: '600' },
+  storySearchButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  controlPressed: { opacity: 0.55, transform: [{ scale: 0.96 }] },
   wordList: { flex: 1 },
-  wordListContent: { paddingHorizontal: 14, paddingBottom: 28 },
-  wordCatalogHeading: { marginTop: 20, paddingBottom: 8, color: theme.colors.text, fontSize: 17, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  wordSectionHeading: { marginTop: 16, paddingBottom: 6, color: theme.colors.text, fontSize: 14, fontWeight: '800' },
-  storyWordRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft, gap: 9 },
-  wordOrder: { width: 34, color: theme.colors.textSoft, fontSize: 10, textAlign: 'right' },
-  wordCopy: { flex: 1, minWidth: 0, paddingVertical: 7 },
+  wordListContent: { paddingHorizontal: 12, paddingBottom: 28 },
+  wordCatalogHeading: { marginTop: 8, paddingHorizontal: 7, paddingTop: 10, paddingBottom: 8, color: theme.colors.text, fontSize: 15, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
+  wordSectionHeading: { paddingHorizontal: 7, paddingVertical: 7, color: theme.colors.accentStrong, fontSize: 11, fontWeight: '800' },
+  storyWordRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center' },
+  wordOrder: { width: 36, color: theme.colors.textSoft, fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  wordCopy: { flex: 1, minWidth: 0, height: 52, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
   wordPrimary: { color: theme.colors.text, fontSize: 15, fontWeight: '800' },
-  wordSecondary: { color: theme.colors.textMuted, fontSize: 12, lineHeight: 16, marginTop: 2 },
-  stationTabs: { height: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 58, borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  stationTab: { color: theme.colors.textSoft, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
-  stationTabActive: { color: theme.colors.text },
-  stationToolbar: { height: 38, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 },
-  stationToolbarText: { color: theme.colors.textMuted, fontSize: 10, fontWeight: '700' },
-  toolbarAction: { color: theme.colors.accentStrong, fontSize: 11, fontWeight: '800' },
-  stationWordList: { flex: 1 },
-  stationWordListContent: { paddingHorizontal: 12, paddingBottom: 126 },
-  stationWordRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 9, borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.line, alignItems: 'center', justifyContent: 'center' },
-  checkCircleOn: { borderColor: theme.colors.accentStrong, backgroundColor: 'rgba(139,107,59,0.10)' },
-  checkMark: { color: theme.colors.accentStrong, fontSize: 13, fontWeight: '900' },
-  stationLaunchPanel: { position: 'absolute', left: 12, right: 12, bottom: 10, paddingTop: 7, gap: 7, backgroundColor: 'rgba(238,233,223,0.76)' },
-  directionControl: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  directionLabel: { color: theme.colors.textSoft, fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
-  directionPill: { borderWidth: 1, borderColor: theme.colors.line, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12 },
-  directionActive: { color: theme.colors.text, fontSize: 10, fontWeight: '700' },
-  launchActions: { flexDirection: 'row', gap: 7 },
-  launchButton: { flex: 0.78, minHeight: 38, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line, borderRadius: 8 },
-  launchPrimary: { flex: 1.22, backgroundColor: theme.colors.accentStrong, borderColor: theme.colors.accentStrong },
-  launchButtonDisabled: { opacity: 0.42 },
-  launchButtonText: { color: theme.colors.text, fontSize: 10, fontWeight: '800' },
-  launchPrimaryText: { color: theme.colors.inverse, fontSize: 10, fontWeight: '800' },
-  statsContent: { padding: 14, paddingBottom: 40 },
-  statsSummary: { minHeight: 92, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  statLabel: { color: theme.colors.textMuted, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  statBig: { marginTop: 6, color: theme.colors.text, fontSize: 28, fontWeight: '800' },
-  masteryBadge: { width: 78, height: 64, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.line },
-  masteryGlyph: { color: theme.colors.accentStrong, fontSize: 17, fontWeight: '900' },
-  masterySmall: { marginTop: 4, color: theme.colors.textMuted, fontSize: 8 },
-  metricGrid: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  metric: { flex: 1, minHeight: 68, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: theme.colors.lineSoft },
-  metricValue: { color: theme.colors.text, fontSize: 18, fontWeight: '800' },
-  metricLabel: { marginTop: 4, color: theme.colors.textMuted, fontSize: 10 },
-  statsHeading: { marginTop: 18, paddingBottom: 8, color: theme.colors.text, fontSize: 15, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  statsLine: { minHeight: 48, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
-  statsLineLabel: { flex: 1, color: theme.colors.text, fontSize: 13 },
-  statsLineValue: { color: theme.colors.textMuted, fontSize: 12 },
+  wordSecondary: { color: theme.colors.textMuted, fontSize: 12, lineHeight: 16, marginTop: 1 },
+  wordStarButton: { width: 44, height: 52, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft },
+  wordStar: { color: theme.colors.textSoft, fontSize: 22 },
+  wordStarActive: { color: theme.colors.accentStrong },
+  storyWordsEmpty: { paddingVertical: 42, color: theme.colors.textMuted, fontSize: 13, textAlign: 'center' },
 });

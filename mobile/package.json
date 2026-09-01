@@ -1,9 +1,17 @@
 {
   "name": "alantil-mobile",
-  "version": "14.1.6",
+  "version": "14.2.0",
   "private": true,
   "main": "expo-router/entry",
-  "scripts": { "start": "expo start", "android": "expo start --android", "ios": "expo start --ios", "web": "expo start --web", "typecheck": "tsc --noEmit" },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.mjs",
+    "e2e": "maestro test .maestro/*_flow.yaml"
+  },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "2.112.4",
@@ -23,9 +31,13 @@
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "5.7.0",
     "react-native-screens": "4.26.0",
+    "react-native-svg": "15.15.4",
     "react-native-url-polyfill": "2.0.0",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "0.10.1"
   },
-  "devDependencies": { "@types/react": "~19.2.4", "typescript": "6.0.3" }
+  "devDependencies": {
+    "@types/react": "~19.2.4",
+    "typescript": "6.0.3"
+  }
 }

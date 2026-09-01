@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readScopedJson, STORAGE_KEYS, writeScopedJson } from '@/src/mobile/storage';
 
 export type WordProgress = {
   word_id: string;
@@ -16,9 +16,6 @@ export type WordProgress = {
   mastered_at?: string | null;
 };
 
-export const GUEST_WORD_PROGRESS_KEY = 'alantil_mobile_word_progress_guest_v1';
-export const GUEST_STATION_PROGRESS_KEY = 'alantil_mobile_station_progress_guest_v14_1_6';
-
 function empty(wordId: string): WordProgress {
   return {
     word_id: wordId,
@@ -31,23 +28,21 @@ function empty(wordId: string): WordProgress {
   };
 }
 
+export async function loadLocalWordProgress(userId?: string | null) {
+  const parsed = await readScopedJson<unknown>(STORAGE_KEYS.wordProgress, [], userId);
+  return Array.isArray(parsed) ? parsed as WordProgress[] : [];
+}
+
 export async function loadGuestWordProgress() {
-  const raw = await AsyncStorage.getItem(GUEST_WORD_PROGRESS_KEY);
-  if (!raw) return [] as WordProgress[];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed as WordProgress[] : [];
-  } catch {
-    return [];
-  }
+  return loadLocalWordProgress(null);
 }
 
-async function save(rows: WordProgress[]) {
-  await AsyncStorage.setItem(GUEST_WORD_PROGRESS_KEY, JSON.stringify(rows));
+async function save(rows: WordProgress[], userId?: string | null) {
+  await writeScopedJson(STORAGE_KEYS.wordProgress, rows, userId);
 }
 
-export async function recordGuestLearn(words: { word_id: string; show_count: number; left_swipe_count: number; final_result: string }[], completedAt: string) {
-  const rows = await loadGuestWordProgress();
+export async function recordLocalLearn(words: { word_id: string; show_count: number; left_swipe_count: number; final_result: string }[], completedAt: string, userId?: string | null) {
+  const rows = await loadLocalWordProgress(userId);
   const map = new Map(rows.map((row) => [row.word_id, { ...empty(row.word_id), ...row }]));
   words.forEach((entry) => {
     const row = map.get(entry.word_id) ?? empty(entry.word_id);
@@ -61,11 +56,11 @@ export async function recordGuestLearn(words: { word_id: string; show_count: num
     row.last_studied_at = completedAt;
     map.set(entry.word_id, row);
   });
-  await save(Array.from(map.values()));
+  await save(Array.from(map.values()), userId);
 }
 
-export async function recordGuestStationTest(words: { word_id: string; result: string }[], passed: boolean, completedAt: string) {
-  const rows = await loadGuestWordProgress();
+export async function recordLocalStationTest(words: { word_id: string; result: string }[], passed: boolean, completedAt: string, userId?: string | null) {
+  const rows = await loadLocalWordProgress(userId);
   const map = new Map(rows.map((row) => [row.word_id, { ...empty(row.word_id), ...row }]));
   words.forEach((entry) => {
     const row = map.get(entry.word_id) ?? empty(entry.word_id);
@@ -85,5 +80,8 @@ export async function recordGuestStationTest(words: { word_id: string; result: s
     row.last_tested_at = completedAt;
     map.set(entry.word_id, row);
   });
-  await save(Array.from(map.values()));
+  await save(Array.from(map.values()), userId);
 }
+
+export const recordGuestLearn = recordLocalLearn;
+export const recordGuestStationTest = recordLocalStationTest;

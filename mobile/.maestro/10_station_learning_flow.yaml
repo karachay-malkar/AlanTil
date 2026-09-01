@@ -1,0 +1,42 @@
+appId: app.alantil.mobile
+name: Selected station words and learning result
+tags:
+  - path
+  - learning
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/onboard-guest.yaml
+- tapOn:
+    id: "path.station.oblivion-beginner-beginner-starter-beginner-01"
+- extendedWaitUntil:
+    visible:
+      id: "screen.station"
+    timeout: 15000
+- tapOn:
+    id: "station.hide-all"
+- tapOn:
+    id: "station.word.0001"
+- tapOn:
+    id: "station.direction.translation-alan"
+- takeScreenshot: artifacts/screenshots/station-selected-reverse
+- tapOn:
+    id: "station.study"
+- extendedWaitUntil:
+    visible:
+      id: "screen.learn"
+    timeout: 15000
+- tapOn:
+    id: "learn.reveal"
+- takeScreenshot: artifacts/screenshots/learning-card-back
+- tapOn:
+    id: "learn.known"
+- extendedWaitUntil:
+    visible:
+      id: "screen.learn.result"
+    timeout: 15000
+- takeScreenshot: artifacts/screenshots/learning-result
+- tapOn:
+    id: "learn.done"
+- assertVisible:
+    id: "screen.station"

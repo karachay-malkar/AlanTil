@@ -1,7 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { supabase } from '@/src/lib/supabase';
-import { GUEST_STATION_PROGRESS_KEY } from '@/src/mobile/progress/guest';
+import { readScopedJson, STORAGE_KEYS, writeScopedJson } from '@/src/mobile/storage';
+import { enqueueSync } from '@/src/mobile/sync';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const REQUIRED_ACCURACY = 80;
@@ -62,41 +60,26 @@ function empty(station: StationDescriptor): StationProgress {
   };
 }
 
-async function guestMap() {
-  const raw = await AsyncStorage.getItem(GUEST_STATION_PROGRESS_KEY);
-  if (!raw) return {} as Record<string, StationProgress>;
-  try { return JSON.parse(raw) as Record<string, StationProgress>; } catch { return {}; }
-}
-
-async function saveGuest(station: StationDescriptor, row: StationProgress) {
-  const map = await guestMap();
-  map[key(station)] = row;
-  await AsyncStorage.setItem(GUEST_STATION_PROGRESS_KEY, JSON.stringify(map));
-  return row;
+async function localRows(userId?: string | null) {
+  const raw = await readScopedJson<unknown>(STORAGE_KEYS.stationProgress, [], userId);
+  if (Array.isArray(raw)) return raw as StationProgress[];
+  return Object.values((raw ?? {}) as Record<string, StationProgress>);
 }
 
 export async function getStationProgress(station: StationDescriptor, userId?: string | null): Promise<StationProgress> {
-  if (!userId) {
-    const map = await guestMap();
-    return map[key(station)] ?? empty(station);
-  }
-  const { data, error } = await supabase.from('user_station_progress').select('*')
-    .eq('user_id', userId).eq('dictionary_id', station.dictionaryId).eq('catalog_id', station.dictionaryId)
-    .eq('group_id', station.sectionId).eq('set_id', station.setId).maybeSingle();
-  if (error) throw error;
-  return data ? { ...empty(station), ...data } as StationProgress : empty(station);
-}
-
-async function saveCloud(station: StationDescriptor, userId: string, row: StationProgress) {
-  const { error } = await supabase.from('user_station_progress').upsert({ user_id: userId, ...row }, {
-    onConflict: 'user_id,dictionary_id,catalog_id,group_id,set_id',
-  });
-  if (error) throw error;
-  return row;
+  const row = (await localRows(userId)).find((entry) => key(station) === [entry.story_type, entry.dictionary_id, entry.group_id, entry.set_id].join('::'));
+  return row ? { ...empty(station), ...row } : empty(station);
 }
 
 async function save(station: StationDescriptor, userId: string | null | undefined, row: StationProgress) {
-  return userId ? saveCloud(station, userId, row) : saveGuest(station, row);
+  const rows = await localRows(userId);
+  const stationKey = key(station);
+  await writeScopedJson(STORAGE_KEYS.stationProgress, [
+    ...rows.filter((entry) => [entry.story_type, entry.dictionary_id, entry.group_id, entry.set_id].join('::') !== stationKey),
+    row,
+  ], userId);
+  await enqueueSync('station_progress', row as unknown as Record<string, unknown>, userId, { entryId: `station_progress:${stationKey}` });
+  return row;
 }
 
 export async function markStationStarted(station: StationDescriptor, userId?: string | null) {

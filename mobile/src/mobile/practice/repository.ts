@@ -1,6 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { supabase } from '@/src/lib/supabase';
 import { loadAllWords } from '@/src/mobile/dictionary';
 import type { UserSettings } from '@/src/mobile/settings';
 import { toPracticeWord, type PracticeWord } from '@/src/mobile/practice/selection';
@@ -11,31 +8,14 @@ import {
   resumeActivitySession,
   type ActivityRuntime,
 } from '@/src/mobile/activity-session';
-
-const FAVORITES_PREFIX = 'fc_favorites_v1';
+import { readScopedJson, STORAGE_KEYS, updateScopedJson } from '@/src/mobile/storage';
+import { enqueueSync } from '@/src/mobile/sync';
 
 export type SessionKind = 'test' | 'match';
 export type SessionRuntime = ActivityRuntime;
 
-function scope(userId?: string | null) {
-  return userId ? `user:${userId}` : 'guest';
-}
-
-function scopedKey(prefix: string, userId?: string | null) {
-  return `${prefix}:${scope(userId)}`;
-}
-
-async function readIds(key: string) {
-  try {
-    const raw = await AsyncStorage.getItem(key);
-    return new Set<string>((raw ? JSON.parse(raw) : []).map((value: unknown) => String(value ?? '').trim()).filter(Boolean));
-  } catch {
-    return new Set<string>();
-  }
-}
-
-async function writeIds(key: string, ids: Set<string>) {
-  await AsyncStorage.setItem(key, JSON.stringify(Array.from(ids)));
+async function readIds(userId?: string | null) {
+  return new Set((await readScopedJson<unknown[]>(STORAGE_KEYS.wordFavorites, [], userId)).map((value) => String(value ?? '').trim()).filter(Boolean));
 }
 
 export async function loadPracticeWords(settings: UserSettings): Promise<PracticeWord[]> {
@@ -44,35 +24,18 @@ export async function loadPracticeWords(settings: UserSettings): Promise<Practic
 }
 
 export async function loadFavoriteIds(userId?: string | null) {
-  const key = scopedKey(FAVORITES_PREFIX, userId);
-  const local = await readIds(key);
-  if (!userId) return local;
-  const { data, error } = await supabase
-    .from('user_word_favorites')
-    .select('word_id,is_active')
-    .eq('user_id', userId);
-  if (error) return local;
-  const cloud = new Set<string>((data ?? []).filter((row) => row.is_active).map((row) => String(row.word_id ?? '').trim()).filter(Boolean));
-  await writeIds(key, cloud);
-  return cloud;
+  return readIds(userId);
 }
 
 export async function setFavorite(userId: string | null | undefined, wordId: string, active: boolean) {
   const id = String(wordId ?? '').trim();
   if (!id) return false;
-  const key = scopedKey(FAVORITES_PREFIX, userId);
-  const ids = await readIds(key);
-  if (active) ids.add(id); else ids.delete(id);
-  await writeIds(key, ids);
-  if (userId) {
-    const { error } = await supabase.from('user_word_favorites').upsert({
-      user_id: userId,
-      word_id: id,
-      is_active: active,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,word_id' });
-    if (error) throw error;
-  }
+  await updateScopedJson<unknown[]>(STORAGE_KEYS.wordFavorites, [], (current) => {
+    const ids = new Set(current.map((value) => String(value ?? '').trim()).filter(Boolean));
+    if (active) ids.add(id); else ids.delete(id);
+    return Array.from(ids);
+  }, userId);
+  await enqueueSync('word_favorite', { word_id: id, is_active: active, updated_at: new Date().toISOString() }, userId, { entryId: `word_favorite:${id}` });
   return active;
 }
 

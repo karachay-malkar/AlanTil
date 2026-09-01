@@ -1,0 +1,30 @@
+appId: app.alantil.mobile
+name: Match survives process restart
+tags:
+  - match
+  - recovery
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/onboard-guest.yaml
+- tapOn:
+    id: "tab.practice"
+- tapOn:
+    id: "practice.match"
+- extendedWaitUntil:
+    visible:
+      id: "screen.match.menu"
+    timeout: 15000
+- tapOn:
+    id: "match.start"
+- extendedWaitUntil:
+    visible:
+      id: "screen.match.session"
+    timeout: 15000
+- killApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "screen.match.session"
+    timeout: 20000
+- takeScreenshot: artifacts/screenshots/match-restored

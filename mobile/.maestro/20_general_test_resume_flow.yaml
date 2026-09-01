@@ -1,0 +1,35 @@
+appId: app.alantil.mobile
+name: General test survives process restart
+tags:
+  - test
+  - recovery
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/onboard-guest.yaml
+- tapOn:
+    id: "tab.practice"
+- tapOn:
+    id: "practice.test"
+- extendedWaitUntil:
+    visible:
+      id: "screen.general-test.menu"
+    timeout: 15000
+- tapOn:
+    id: "general-test.start"
+- extendedWaitUntil:
+    visible:
+      id: "screen.general-test.session"
+    timeout: 15000
+- tapOn:
+    id: "general-test.answer.*"
+    index: 0
+- tapOn:
+    id: "general-test.submit"
+- killApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "screen.general-test.session"
+    timeout: 20000
+- takeScreenshot: artifacts/screenshots/general-test-restored

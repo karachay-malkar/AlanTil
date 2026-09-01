@@ -1,0 +1,40 @@
+name: mobile-e2e
+
+jobs:
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: e2e-test
+
+  build_ios:
+    type: build
+    params:
+      platform: ios
+      profile: e2e-test
+
+  test_android:
+    needs: [build_android]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      flow_path:
+        - .maestro/00_guest_onboarding_flow.yaml
+        - .maestro/10_station_learning_flow.yaml
+        - .maestro/11_station_test_flow.yaml
+        - .maestro/20_general_test_resume_flow.yaml
+        - .maestro/30_match_resume_flow.yaml
+        - .maestro/40_settings_flow.yaml
+
+  test_ios:
+    needs: [build_ios]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      flow_path:
+        - .maestro/00_guest_onboarding_flow.yaml
+        - .maestro/10_station_learning_flow.yaml
+        - .maestro/11_station_test_flow.yaml
+        - .maestro/20_general_test_resume_flow.yaml
+        - .maestro/30_match_resume_flow.yaml
+        - .maestro/40_settings_flow.yaml

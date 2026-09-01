@@ -1,14 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { theme } from '@/src/mobile/theme';
+import { useI18n } from '@/src/mobile/i18n';
+import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
 import { buildScope, buildSelectedSources, buildWordsByPOSRounds, hasWordConflict, normalizePos, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
-import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, setFavorite } from '@/src/mobile/practice/repository';
-import { getTestSession, setTestSession, type TestMode } from '@/src/mobile/practice/state';
+import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
+import { getTestSession, setTestSession, type TestMode, type TestResult, type TestSessionState } from '@/src/mobile/practice/state';
+import { useSessionExitGuard } from '@/src/mobile/use-session-exit';
+import { scopedTestId, testIds } from '@/src/mobile/test-ids';
+import { AppText as Text } from '@/src/mobile/typography';
 
 const LIMITS = [20, 40, 80] as const;
 
@@ -45,11 +51,46 @@ function sessionPayload(session = getTestSession()) {
       result: result.isCorrect ? 'correct' : 'wrong',
       wrong_word_id: result.isCorrect ? null : result.wrongWordId,
     })),
+    session_snapshot: {
+      mode: session.mode,
+      limit: session.limit,
+      item_ids: session.items.map((item) => item.id),
+      option_pool_ids: session.optionPool.map((item) => item.id),
+      index: session.index,
+      correct: session.correct,
+      results: session.results,
+      selected_sources: session.selectedSources,
+    },
   };
+}
+
+async function restoreTestSession(settings: ReturnType<typeof useSettings>['settings'], userId?: string | null) {
+  const resumed = await resumeSessionRuntime('test', userId);
+  const snapshot = resumed?.payload?.session_snapshot as Record<string, unknown> | undefined;
+  if (!resumed || !snapshot) return null;
+  const words = await loadPracticeWords(settings);
+  const byId = new Map(words.map((word) => [word.id, word]));
+  const items = (Array.isArray(snapshot.item_ids) ? snapshot.item_ids : []).map((wordId) => byId.get(String(wordId))).filter((word): word is PracticeWord => Boolean(word));
+  const optionPool = (Array.isArray(snapshot.option_pool_ids) ? snapshot.option_pool_ids : []).map((wordId) => byId.get(String(wordId))).filter((word): word is PracticeWord => Boolean(word));
+  if (!items.length || Number(snapshot.index || 0) >= items.length) return null;
+  const restored = {
+    runtime: resumed.runtime,
+    mode: snapshot.mode === 'ru' ? 'ru' as const : 'kb' as const,
+    limit: Number(snapshot.limit || items.length),
+    items,
+    optionPool: optionPool.length ? optionPool : words,
+    index: Math.max(0, Number(snapshot.index || 0)),
+    correct: Math.max(0, Number(snapshot.correct || 0)),
+    results: Array.isArray(snapshot.results) ? snapshot.results as TestResult[] : [],
+    selectedSources: Array.isArray(snapshot.selected_sources) ? snapshot.selected_sources as { dictionary_id: string; section_ids: string[] }[] : [],
+  };
+  setTestSession(restored);
+  return restored;
 }
 
 export function TestMenuScreen() {
   const { settings } = useSettings();
+  const { t } = useI18n();
   const session = useSession();
   const [words, setWords] = useState<PracticeWord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +132,7 @@ export function TestMenuScreen() {
     setStarting(true);
     try {
       const built = buildWordsByPOSRounds(pool, limit);
-      if (!built.items.length) throw new Error('Для выбранных разделов недостаточно слов для теста.');
+      if (!built.items.length) throw new Error(t('test.not_enough_words'));
       const runtime = await createSessionRuntime('test', settings, session.user?.id);
       setTestSession({
         runtime,
@@ -115,14 +156,15 @@ export function TestMenuScreen() {
 
   return (
     <PracticeScreen
-      header={<PracticeHeader title="Проверь знания" />}
+      testID={testIds.generalTest.menu}
+      header={<PracticeHeader title={t('test.title')} />}
       footer={
         <View style={styles.footerStack}>
           <View style={styles.directionRow}>
-            <Text style={styles.directionLabel}>Направление</Text>
-            <Segment values={['Алан → перевод', 'Перевод → алан'] as const} value={mode === 'kb' ? 'Алан → перевод' : 'Перевод → алан'} onChange={(value) => setMode(value === 'Алан → перевод' ? 'kb' : 'ru')} />
+            <Text style={styles.directionLabel}>{t('favorites.direction')}</Text>
+            <Segment testID="general-test.direction" values={[t('favorites.alan_translation'), t('favorites.translation_alan')] as const} value={mode === 'kb' ? t('favorites.alan_translation') : t('favorites.translation_alan')} onChange={(value) => setMode(value === t('favorites.alan_translation') ? 'kb' : 'ru')} />
           </View>
-          <PrimaryButton title={starting ? 'Запуск…' : 'Начать тест'} disabled={!pool.length || starting} onPress={() => { void launch(); }} />
+          <PrimaryButton testID={testIds.generalTest.start} title={t('test.start')} loading={starting} disabled={!pool.length} onPress={() => { void launch(); }} />
         </View>
       }
     >
@@ -131,12 +173,12 @@ export function TestMenuScreen() {
       {!loading ? (
         <>
           <View style={commonStyles.lead}>
-            <Text style={commonStyles.leadStrong}>Выбрано {pool.length} · в тесте до {effectiveCount}</Text>
-            <Text style={commonStyles.leadMuted}>Выберите словари и разделы. Варианты ответа подбираются по той же части речи и с проверкой конфликтующих переводов/синонимов.</Text>
+            <Text style={commonStyles.leadStrong}>{t('test.selection_summary', { selected: pool.length, count: effectiveCount })}</Text>
+            <Text style={commonStyles.leadMuted}>{t('test.selection_help')}</Text>
           </View>
           <ScopeSelector scope={scope} selected={selected} onToggle={toggle} />
-          <Text style={commonStyles.sectionLabel}>Количество слов</Text>
-          <Segment values={[...LIMITS]} value={limit} onChange={setLimit} />
+          <Text style={commonStyles.sectionLabel}>{t('test.word_count')}</Text>
+          <Segment testID="general-test.limit" values={[...LIMITS]} value={limit} onChange={setLimit} />
         </>
       ) : null}
     </PracticeScreen>
@@ -144,31 +186,70 @@ export function TestMenuScreen() {
 }
 
 export function TestSessionScreen() {
+  const auth = useSession();
+  const { settings } = useSettings();
+  const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   const [version, setVersion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<{ id: string; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [completionPending, setCompletionPending] = useState(false);
   const session = getTestSession();
   const item = session?.items[session.index];
   const options = useMemo(() => item && session ? optionsFor(item, session.optionPool, session.mode) : [], [session?.index, item?.id]);
 
-  useEffect(() => {
-    if (!session) router.replace('/practice/test');
-  }, [session]);
+  const requestLeave = useSessionExitGuard(Boolean(session), useCallback(async (reason: string) => {
+    const current = getTestSession();
+    if (!current) return;
+    await finalizeSession(current.runtime, sessionPayload(current), 'interrupted', reason);
+    setTestSession(null);
+  }, []));
 
-  if (!session || !item) return <View style={styles.fullLoader}><ActivityIndicator color={theme.colors.accentStrong} /></View>;
+  useEffect(() => {
+    if (session) return;
+    let active = true;
+    void restoreTestSession(settings, auth.user?.id).then((restored) => {
+      if (!active) return;
+      if (restored) setVersion((value) => value + 1); else router.replace('/practice/test');
+    });
+    return () => { active = false; };
+  }, [session, auth.user?.id]);
+
+  const finalizeCompletedTest = async (current: TestSessionState) => {
+    setBusy(true);
+    setSaveError('');
+    try {
+      await finalizeSession(current.runtime, sessionPayload(current), 'completed');
+      router.replace('/practice/test/results');
+    } catch {
+      setCompletionPending(true);
+      setSaveError(t('test.save_error'));
+      setBusy(false);
+    }
+  };
+
+  if (!session) return <View style={styles.fullLoader}><ActivityIndicator color={theme.colors.accentStrong} /></View>;
+  if (completionPending || session.index >= session.items.length) return <View style={styles.fullLoader}>
+    {busy ? <ActivityIndicator color={theme.colors.accentStrong} /> : <>
+      <Text accessibilityRole="alert" style={styles.errorCentered}>{saveError || t('test.save_error')}</Text>
+      <Pressable accessibilityRole="button" onPress={() => { void finalizeCompletedTest(session); }} style={styles.retryButton}><Text style={styles.retryText}>{t('common.retry').toUpperCase()}</Text></Pressable>
+    </>}
+  </View>;
+  if (!item) return <View style={styles.fullLoader}><ActivityIndicator color={theme.colors.accentStrong} /></View>;
   const question = session.mode === 'kb' ? item.word : item.trans;
 
   const answer = async () => {
     if (!selectedAnswer || busy) return;
     setBusy(true);
+    setSaveError('');
     const current = getTestSession();
-    if (!current) return;
+    if (!current) { setBusy(false); return; }
     const currentItem = current.items[current.index];
     const correctAnswer = current.mode === 'kb' ? currentItem.trans : currentItem.word;
     const questionText = current.mode === 'kb' ? currentItem.word : currentItem.trans;
     const isCorrect = selectedAnswer.id === currentItem.id;
-    if (isCorrect) current.correct += 1;
-    current.results.push({
+    const result: TestResult = {
       id: currentItem.id,
       questionText,
       word: currentItem.word,
@@ -177,16 +258,25 @@ export function TestSessionScreen() {
       userAnswer: selectedAnswer.text,
       wrongWordId: isCorrect ? null : selectedAnswer.id,
       isCorrect,
-    });
-    current.index += 1;
-    await persistActiveSession(current.runtime, sessionPayload(current));
+    };
+    const next: TestSessionState = {
+      ...current,
+      correct: current.correct + (isCorrect ? 1 : 0),
+      results: [...current.results, result],
+      index: current.index + 1,
+    };
+    try {
+      await persistActiveSession(next.runtime, sessionPayload(next));
+    } catch {
+      setSaveError(t('test.save_error'));
+      setBusy(false);
+      return;
+    }
+    setTestSession(next);
     setSelectedAnswer(null);
-    if (current.index >= current.items.length) {
-      try {
-        await finalizeSession(current.runtime, sessionPayload(current), 'completed');
-      } finally {
-        router.replace('/practice/test/results');
-      }
+    if (next.index >= next.items.length) {
+      setCompletionPending(true);
+      await finalizeCompletedTest(next);
       return;
     }
     setBusy(false);
@@ -194,29 +284,34 @@ export function TestSessionScreen() {
   };
 
   return (
-    <View key={version} style={styles.sessionScreen}>
-      <PracticeHeader title="Проверь знания" subtitle={`${session.index + 1}/${session.items.length}`} />
-      <View style={styles.questionArea}><Text adjustsFontSizeToFit numberOfLines={4} style={styles.question}>{question}</Text></View>
+    <View key={version} testID={testIds.generalTest.session} style={styles.sessionScreen}>
+      <PracticeHeader title={t('test.title')} subtitle={`${session.index + 1}/${session.items.length}`} onBack={() => requestLeave('header_back')} />
+      <View style={styles.questionArea}><OverflowMarquee style={styles.question}>{question}</OverflowMarquee></View>
       <View style={styles.options}>
         {options.map((option) => {
           const active = selectedAnswer?.id === option.id;
           return (
-            <Pressable key={option.id} disabled={busy} onPress={() => setSelectedAnswer(option)} style={({ pressed }) => [styles.option, active && styles.optionActive, pressed && styles.pressed]}>
-              <Text style={[styles.optionText, active && styles.optionTextActive]}>{option.text}</Text>
+            <Pressable key={option.id} accessibilityRole="radio" accessibilityState={{ checked: active, disabled: busy }} testID={scopedTestId('general-test.answer', option.id)} disabled={busy} onPress={() => setSelectedAnswer(option)} style={({ pressed }) => [styles.option, active && styles.optionActive, pressed && styles.pressed]}>
+              <OverflowMarquee style={[styles.optionText, active && styles.optionTextActive]}>{option.text}</OverflowMarquee>
             </Pressable>
           );
         })}
       </View>
-      <View style={styles.sessionFooter}><PrimaryButton title={busy ? 'Сохраняю…' : 'Ответить'} disabled={!selectedAnswer || busy} onPress={() => { void answer(); }} /></View>
+      {saveError ? <Text accessibilityRole="alert" style={styles.sessionError}>{saveError}</Text> : null}
+      <View style={[styles.sessionFooter, { bottom: Math.max(insets.bottom, 8) }]}><PrimaryButton testID={testIds.generalTest.submit} title={t('station_test.submit')} loading={busy} disabled={!selectedAnswer} onPress={() => { void answer(); }} /></View>
     </View>
   );
 }
 
 export function TestResultsScreen() {
   const sessionAuth = useSession();
+  const { settings } = useSettings();
+  const { t } = useI18n();
   const test = getTestSession();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState('');
+  const [error, setError] = useState('');
+  const [restarting, setRestarting] = useState(false);
 
   useEffect(() => {
     void loadFavoriteIds(sessionAuth.user?.id).then(setFavorites);
@@ -226,6 +321,22 @@ export function TestResultsScreen() {
   if (!test) return <View style={styles.fullLoader}><ActivityIndicator color={theme.colors.accentStrong} /></View>;
   const percentage = Math.round((test.correct / Math.max(1, test.items.length)) * 100);
   const level = percentage >= 100 ? 3 : percentage >= 90 ? 2 : percentage >= 80 ? 1 : 0;
+
+  const restart = async () => {
+    if (restarting) return;
+    setRestarting(true);
+    setError('');
+    try {
+      const runtime = await createSessionRuntime('test', settings, sessionAuth.user?.id);
+      const next = { ...test, runtime, items: shuffle(test.items.slice()), index: 0, correct: 0, results: [] };
+      setTestSession(next);
+      await persistActiveSession(runtime, sessionPayload(next));
+      router.replace('/practice/test/session');
+    } catch {
+      setError(t('test.restart_error'));
+      setRestarting(false);
+    }
+  };
 
   const toggleFavorite = async (wordId: string) => {
     if (busyId) return;
@@ -238,6 +349,8 @@ export function TestResultsScreen() {
         if (active) next.add(wordId); else next.delete(wordId);
         return next;
       });
+    } catch {
+      setError(t('learn.favorite_error'));
     } finally {
       setBusyId('');
     }
@@ -245,22 +358,23 @@ export function TestResultsScreen() {
 
 
   return (
-    <PracticeScreen header={<PracticeHeader title="Результаты теста" />} footer={<PrimaryButton title="Пройти ещё раз" onPress={() => router.replace('/practice/test')} />}>
+    <PracticeScreen testID={testIds.generalTest.result} header={<PracticeHeader title={t('test.results')} />} footer={<PrimaryButton testID={testIds.generalTest.again} title={t('test.again')} loading={restarting} onPress={() => { void restart(); }} />}>
       <View style={commonStyles.resultSummary}>
         <Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text>
         <Text style={commonStyles.resultPercent}>{percentage}%</Text>
-        <Text style={commonStyles.resultText}>{percentage >= 80 ? 'Тест сдан' : 'Тест не сдан'} · {test.correct}/{test.items.length}</Text>
+        <Text style={commonStyles.resultText}>{percentage >= 80 ? t('station_test.passed') : t('test.not_passed')} · {test.correct}/{test.items.length}</Text>
       </View>
+      {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
       <View style={styles.resultList}>
         {test.results.map((result) => (
           <View key={`${result.id}:${result.questionText}`} style={styles.resultRow}>
             <View style={[styles.resultStatus, result.isCorrect ? styles.resultStatusOk : styles.resultStatusBad]}><Text style={styles.resultStatusText}>{result.isCorrect ? '✓' : '×'}</Text></View>
             <View style={styles.resultCopy}>
-              <Text style={styles.resultPrimary}>{result.questionText}</Text>
-              {!result.isCorrect ? <Text style={styles.resultWrong}>Ответ: {result.userAnswer || '—'}</Text> : null}
-              <Text style={styles.resultCorrect}>Правильно: {result.correctAnswer}</Text>
+              <OverflowMarquee style={styles.resultPrimary}>{result.questionText}</OverflowMarquee>
+              {!result.isCorrect ? <OverflowMarquee style={styles.resultWrong}>{`${t('station_test.answer')}: ${result.userAnswer || '—'}`}</OverflowMarquee> : null}
+              <OverflowMarquee style={styles.resultCorrect}>{`${t('station_test.correct')}: ${result.correctAnswer}`}</OverflowMarquee>
             </View>
-            <Pressable disabled={busyId === result.id} onPress={() => { void toggleFavorite(result.id); }} style={styles.starButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel={favorites.has(result.id) ? t('learn.remove_favorite', { word: result.word }) : t('learn.add_favorite', { word: result.word })} accessibilityState={{ selected: favorites.has(result.id), disabled: busyId === result.id }} testID={scopedTestId('general-test.favorite', result.id)} disabled={busyId === result.id} onPress={() => { void toggleFavorite(result.id); }} style={({ pressed }) => [styles.starButton, pressed && styles.pressed]}>
               <Text style={[styles.star, favorites.has(result.id) && styles.starOn]}>★</Text>
             </Pressable>
           </View>
@@ -273,6 +387,9 @@ export function TestResultsScreen() {
 const styles = StyleSheet.create({
   loader: { paddingVertical: 40 },
   error: { color: theme.colors.danger, fontSize: 12, lineHeight: 17, paddingVertical: 8 },
+  errorCentered: { maxWidth: 320, color: theme.colors.danger, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  retryButton: { minWidth: 150, minHeight: 46, marginTop: 14, borderRadius: 10, borderWidth: 1, borderColor: theme.colors.line, alignItems: 'center', justifyContent: 'center' },
+  retryText: { color: theme.colors.text, fontSize: 11, fontWeight: '900' },
   footerStack: { gap: 9 },
   directionRow: { gap: 6 },
   directionLabel: { color: theme.colors.textMuted, fontSize: 10, fontWeight: '700' },
@@ -286,6 +403,7 @@ const styles = StyleSheet.create({
   optionText: { color: theme.colors.text, fontSize: 16, lineHeight: 21, fontWeight: '700', textAlign: 'center' },
   optionTextActive: { color: theme.colors.inverse },
   sessionFooter: { position: 'absolute', left: 16, right: 16, bottom: 12 },
+  sessionError: { position: 'absolute', left: 20, right: 20, bottom: 72, color: theme.colors.danger, fontSize: 10, lineHeight: 14, textAlign: 'center' },
   pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
   resultMark: { color: theme.colors.accentStrong, fontSize: 14, fontWeight: '900', letterSpacing: -1 },
   resultList: { borderTopWidth: 1, borderTopColor: theme.colors.lineSoft },
@@ -298,7 +416,7 @@ const styles = StyleSheet.create({
   resultPrimary: { color: theme.colors.text, fontSize: 14, fontWeight: '800', marginBottom: 4 },
   resultWrong: { color: theme.colors.danger, fontSize: 11, lineHeight: 15 },
   resultCorrect: { color: theme.colors.success, fontSize: 11, lineHeight: 15 },
-  starButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  starButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   star: { color: theme.colors.textSoft, fontSize: 20 },
   starOn: { color: theme.colors.accentStrong },
 });

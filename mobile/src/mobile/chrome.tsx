@@ -1,7 +1,10 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AlanIcon } from '@/src/mobile/icons';
 import { theme } from '@/src/mobile/theme';
+import { testIds } from '@/src/mobile/test-ids';
+import { AppText as Text } from '@/src/mobile/typography';
 
 export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const insets = useSafeAreaInsets();
@@ -15,25 +18,8 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
   );
 }
 
-function PracticeIcon({ active }: { active: boolean }) {
-  return (
-    <View style={styles.practiceIcon}>
-      {[0, 1, 2, 3].map((item) => <View key={item} style={[styles.practiceSquare, active && styles.iconFillActive]} />)}
-    </View>
-  );
-}
-
-function ProfileIcon({ active }: { active: boolean }) {
-  return (
-    <View style={styles.profileIcon}>
-      <View style={[styles.profileHead, active && styles.iconFillActive]} />
-      <View style={[styles.profileBody, active && styles.iconFillActive]} />
-    </View>
-  );
-}
-
-function PathIcon() {
-  return <Image source={require('../../assets/path/path-elbrus-white.png')} resizeMode="contain" style={styles.elbrus} />;
+function PathIcon({ active }: { active: boolean }) {
+  return <Image source={require('../../assets/path/path-elbrus-white.png')} resizeMode="contain" style={[styles.elbrus, { tintColor: active ? theme.colors.inverse : theme.colors.textMuted }]} />;
 }
 
 export function AlanTabBar({ state, descriptors, navigation }: any) {
@@ -52,12 +38,20 @@ export function AlanTabBar({ state, descriptors, navigation }: any) {
           <Pressable
             key={route.key}
             accessibilityRole="button"
-            accessibilityState={focused ? { selected: true } : {}}
+            accessibilityLabel={String(label)}
+            accessibilityState={{ selected: focused }}
+            testID={route.name === 'path' ? testIds.tab.path : route.name === 'practice' ? testIds.tab.practice : testIds.tab.profile}
             onPress={onPress}
             style={({ pressed }) => [styles.tabItem, pressed && styles.tabItemPressed]}
           >
             <View style={[styles.iconBubble, focused && styles.iconBubbleActive]}>
-              {route.name === 'path' ? <PathIcon /> : route.name === 'practice' ? <PracticeIcon active={focused} /> : <ProfileIcon active={focused} />}
+              {route.name === 'path'
+                ? <PathIcon active={focused} />
+                : <AlanIcon
+                  color={focused ? theme.colors.inverse : theme.colors.textMuted}
+                  name={route.name === 'practice' ? 'practice' : 'profile'}
+                  size={20}
+                />}
             </View>
             <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
           </Pressable>
@@ -80,10 +74,4 @@ const styles = StyleSheet.create({
   tabLabel: { color: 'rgba(102,97,88,0.62)', fontSize: 10, lineHeight: 11, fontWeight: '600' },
   tabLabelActive: { color: theme.colors.text },
   elbrus: { width: 29, height: 17, opacity: 0.96 },
-  practiceIcon: { width: 20, height: 20, flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
-  practiceSquare: { width: 9, height: 9, backgroundColor: theme.colors.textMuted },
-  profileIcon: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
-  profileHead: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.textMuted, marginBottom: 1 },
-  profileBody: { width: 16, height: 8, borderTopLeftRadius: 8, borderTopRightRadius: 8, backgroundColor: theme.colors.textMuted },
-  iconFillActive: { backgroundColor: theme.colors.inverse },
 });

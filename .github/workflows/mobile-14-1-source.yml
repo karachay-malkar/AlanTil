@@ -1,11 +1,12 @@
-# Final 14.1.6 source package after review/mastered fix
-name: Package AlanTil 14.1 Mobile Source
+name: Package AlanTil Mobile Source
 
 on:
   push:
     branches:
-      - agent/14.1-mobile-foundation
+      - agent/14.2-mobile-parity
     paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-14-1-android.yml'
       - '.github/workflows/mobile-14-1-source.yml'
   workflow_dispatch:
 
@@ -20,19 +21,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Validate release metadata
+        id: release
+        run: node mobile/scripts/release-metadata.mjs >> "$GITHUB_OUTPUT"
+
       - name: Package complete mobile source
         shell: bash
+        env:
+          ALANTIL_SOURCE_PREFIX: ${{ steps.release.outputs.source_prefix }}
+          ALANTIL_SOURCE_FILENAME: ${{ steps.release.outputs.source_filename }}
         run: |
-          mkdir -p AlanTil_14.1.6_source/.github/workflows
-          cp -R mobile AlanTil_14.1.6_source/mobile
-          cp .github/workflows/mobile-14-1-android.yml AlanTil_14.1.6_source/.github/workflows/
-          cp .github/workflows/mobile-14-1-source.yml AlanTil_14.1.6_source/.github/workflows/
-          zip -qr AlanTil_14.1.6_mobile_source.zip AlanTil_14.1.6_source
+          git archive --format=zip --prefix="$ALANTIL_SOURCE_PREFIX/" \
+            --output="$ALANTIL_SOURCE_FILENAME" HEAD mobile \
+            .github/workflows/mobile-14-1-android.yml \
+            .github/workflows/mobile-14-1-source.yml
 
       - name: Upload source archive
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-14.1.6-Mobile-Source
-          path: AlanTil_14.1.6_mobile_source.zip
+          name: ${{ steps.release.outputs.source_artifact }}
+          path: ${{ steps.release.outputs.source_filename }}
           if-no-files-found: error
           retention-days: 14

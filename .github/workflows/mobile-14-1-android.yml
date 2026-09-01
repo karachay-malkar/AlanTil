@@ -1,11 +1,10 @@
-# Final 14.1.6 validation
-# Final build trigger after TypeScript integration fix.
-name: Build AlanTil 14.1 Android APK
+# Keep the workflow path stable so previous Android build history remains accessible.
+name: Build AlanTil Android APK
 
 on:
   push:
     branches:
-      - agent/14.1-mobile-foundation
+      - agent/14.2-mobile-parity
     paths:
       - 'mobile/**'
       - '.github/workflows/mobile-14-1-android.yml'
@@ -15,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mobile-14-1-${{ github.ref }}
+  group: mobile-android-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -30,9 +29,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.13.1'
+          node-version: '24'
           cache: npm
           cache-dependency-path: mobile/package-lock.json
+
+      - name: Validate release metadata
+        id: release
+        run: node mobile/scripts/release-metadata.mjs >> "$GITHUB_OUTPUT"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -55,12 +58,23 @@ jobs:
         working-directory: mobile
         run: npm run typecheck
 
+      - name: Mobile unit and contract tests
+        working-directory: mobile
+        run: npm test
+
+      - name: Verify Android JavaScript bundle
+        working-directory: mobile
+        env:
+          CI: '1'
+          NODE_ENV: production
+        run: npx expo export --platform android --output-dir dist/android-check
+
       - name: Generate Android native project
         working-directory: mobile
         env:
           CI: '1'
           NODE_ENV: production
-        run: npx expo prebuild --platform android
+        run: npx expo prebuild --platform android --no-install
 
       - name: Build standalone release APK
         working-directory: mobile/android
@@ -68,17 +82,33 @@ jobs:
           NODE_ENV: production
         run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
 
-      - name: Rename APK
+      - name: Verify and package standalone APK
         shell: bash
+        env:
+          ALANTIL_APP_ID: ${{ steps.release.outputs.app_id }}
+          ALANTIL_VERSION: ${{ steps.release.outputs.version }}
+          ALANTIL_BUILD_NUMBER: ${{ steps.release.outputs.build_number }}
+          ALANTIL_APK_FILENAME: ${{ steps.release.outputs.apk_filename }}
         run: |
-          APK_PATH="$(find mobile/android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
-          test -n "$APK_PATH"
-          cp "$APK_PATH" AlanTil-14.1.6.apk
+          ALANTIL_APK_PATH=mobile/android/app/build/outputs/apk/release/app-release.apk
+          ALANTIL_APK_ANALYZER="$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer"
+          test -s "$ALANTIL_APK_PATH"
+          test -x "$ALANTIL_APK_ANALYZER"
+          test "$("$ALANTIL_APK_ANALYZER" manifest application-id "$ALANTIL_APK_PATH")" = "$ALANTIL_APP_ID"
+          test "$("$ALANTIL_APK_ANALYZER" manifest version-name "$ALANTIL_APK_PATH")" = "$ALANTIL_VERSION"
+          test "$("$ALANTIL_APK_ANALYZER" manifest version-code "$ALANTIL_APK_PATH")" = "$ALANTIL_BUILD_NUMBER"
+          test "$("$ALANTIL_APK_ANALYZER" manifest debuggable "$ALANTIL_APK_PATH")" = false
+          unzip -l "$ALANTIL_APK_PATH" assets/index.android.bundle
+          cp "$ALANTIL_APK_PATH" "$ALANTIL_APK_FILENAME"
+          sha256sum "$ALANTIL_APK_FILENAME" > "$ALANTIL_APK_FILENAME.sha256"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-14.1.6-Android-APK
-          path: AlanTil-14.1.6.apk
+          name: ${{ steps.release.outputs.apk_artifact }}
+          path: |
+            ${{ steps.release.outputs.apk_filename }}
+            ${{ steps.release.outputs.apk_filename }}.sha256
+          compression-level: 0
           if-no-files-found: error
           retention-days: 14

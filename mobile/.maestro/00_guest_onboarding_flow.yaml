@@ -1,0 +1,22 @@
+appId: app.alantil.mobile
+name: Guest onboarding and root navigation
+tags:
+  - smoke
+  - offline
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/onboard-guest.yaml
+- assertVisible:
+    id: "screen.path"
+- takeScreenshot: artifacts/screenshots/guest-path
+- tapOn:
+    id: "tab.practice"
+- assertVisible:
+    id: "screen.practice"
+- takeScreenshot: artifacts/screenshots/practice-root
+- tapOn:
+    id: "tab.profile"
+- assertVisible:
+    id: "screen.profile"
+- takeScreenshot: artifacts/screenshots/profile-guest

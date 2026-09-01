@@ -1,4 +1,7 @@
 export const theme = {
+  fonts: {
+    mono: 'monospace',
+  },
   colors: {
     text: '#292722',
     textMuted: '#666158',

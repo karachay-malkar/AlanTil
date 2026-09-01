@@ -1,0 +1,35 @@
+- extendedWaitUntil:
+    visible:
+      id: "screen.onboarding.setup"
+    timeout: 15000
+- tapOn:
+    id: "onboarding.language.ru"
+- tapOn:
+    id: "onboarding.script.cyrillic"
+- tapOn:
+    id: "onboarding.dialect.canonical"
+- tapOn:
+    id: "onboarding.continue"
+- extendedWaitUntil:
+    visible:
+      id: "screen.onboarding.access"
+    timeout: 10000
+- tapOn:
+    id: "onboarding.continue-guest"
+- extendedWaitUntil:
+    visible:
+      id: "screen.onboarding.guide"
+    timeout: 10000
+- tapOn:
+    id: "onboarding.guide.skip"
+- extendedWaitUntil:
+    visible:
+      id: "screen.path"
+    timeout: 15000
+- runFlow:
+    when:
+      visible:
+        id: "analytics.consent"
+    commands:
+      - tapOn:
+          id: "analytics.decline"

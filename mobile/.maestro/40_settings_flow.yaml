@@ -1,0 +1,38 @@
+appId: app.alantil.mobile
+name: Settings save language and application-wide text size
+tags:
+  - settings
+  - localization
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/onboard-guest.yaml
+- tapOn:
+    id: "tab.profile"
+- tapOn:
+    id: "profile.nav.settings"
+- extendedWaitUntil:
+    visible:
+      id: "screen.settings"
+    timeout: 15000
+- tapOn:
+    id: "settings.language.en"
+- tapOn:
+    id: "settings.text-size.large"
+- tapOn:
+    id: "settings.save"
+- assertVisible:
+    id: "screen.settings"
+- takeScreenshot: artifacts/screenshots/settings-en-large
+- killApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "screen.path"
+    timeout: 20000
+- tapOn:
+    id: "tab.profile"
+- tapOn:
+    id: "profile.nav.settings"
+- assertVisible:
+    id: "screen.settings"

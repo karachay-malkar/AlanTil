@@ -1,0 +1,43 @@
+appId: app.alantil.mobile
+name: Station test always uses the complete station
+tags:
+  - path
+  - station-test
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/onboard-guest.yaml
+- tapOn:
+    id: "path.station.oblivion-beginner-beginner-starter-beginner-01"
+- extendedWaitUntil:
+    visible:
+      id: "screen.station"
+    timeout: 15000
+- tapOn:
+    id: "station.hide-all"
+- tapOn:
+    id: "station.test"
+- extendedWaitUntil:
+    visible:
+      id: "screen.station-test"
+    timeout: 15000
+- repeat:
+    times: 80
+    while:
+      visible:
+        id: "station-test.submit"
+    commands:
+      - tapOn:
+          id: "station-test.answer.*"
+          index: 0
+      - tapOn:
+          id: "station-test.submit"
+- extendedWaitUntil:
+    visible:
+      id: "screen.station-test.result"
+    timeout: 30000
+- takeScreenshot: artifacts/screenshots/station-test-result
+- tapOn:
+    id: "station-test.back-to-station"
+- assertVisible:
+    id: "screen.station"
