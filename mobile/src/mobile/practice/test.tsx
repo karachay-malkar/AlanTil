@@ -9,7 +9,7 @@ import { OverflowMarquee } from '@/src/mobile/overflow-marquee';
 import { useSession } from '@/src/mobile/session';
 import { useSettings } from '@/src/mobile/settings';
 import { PracticeHeader, PracticeScreen, PrimaryButton, ScopeSelector, Segment, commonStyles } from '@/src/mobile/practice/common';
-import { buildScope, buildSelectedSources, buildTestOptions, buildTestWords, scopeKey, type PracticeWord } from '@/src/mobile/practice/selection';
+import { buildScope, buildSelectedSources, buildTestOptions, buildTestWords, scopeKey, shuffle, type PracticeWord } from '@/src/mobile/practice/selection';
 import { createSessionRuntime, finalizeSession, loadFavoriteIds, loadPracticeWords, persistActiveSession, resumeSessionRuntime, setFavorite } from '@/src/mobile/practice/repository';
 import { getTestSession, setTestSession, type TestMode, type TestResult, type TestSessionState } from '@/src/mobile/practice/state';
 import { useSessionExitGuard } from '@/src/mobile/use-session-exit';
@@ -335,32 +335,39 @@ export function TestResultsScreen() {
         return next;
       });
     } catch {
-      setError(t('learn.favorite_error'));
+      setError(t('test.favorite_error'));
     } finally {
       setBusyId('');
     }
   };
 
-
   return (
-    <PracticeScreen testID={testIds.generalTest.result} header={<PracticeHeader title={t('test.results')} />} footer={<PrimaryButton testID={testIds.generalTest.again} title={t('test.again')} loading={restarting} onPress={() => { void restart(); }} />}>
-      <View style={commonStyles.resultSummary}>
-        <Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text>
-        <Text style={commonStyles.resultPercent}>{percentage}%</Text>
-        <Text style={commonStyles.resultText}>{percentage >= 80 ? t('station_test.passed') : t('test.not_passed')} · {test.correct}/{test.items.length}</Text>
+    <PracticeScreen
+      testID={testIds.generalTest.results}
+      header={<PracticeHeader title={t('test.results_title')} />}
+      footer={
+        <View style={styles.footerStack}>
+          <PrimaryButton testID={testIds.generalTest.restart} title={t('test.restart')} loading={restarting} onPress={() => { void restart(); }} />
+          <PrimaryButton testID={testIds.generalTest.toPractice} title={t('test.to_practice')} secondary onPress={() => { setTestSession(null); router.replace('/practice'); }} />
+        </View>
+      }
+    >
+      <View style={styles.resultHero}>
+        <Text style={styles.resultPercentage}>{percentage}%</Text>
+        <Text style={styles.resultCount}>{t('test.correct_count', { correct: test.correct, total: test.items.length })}</Text>
+        {level > 0 ? <Text style={styles.resultLevel}>{'I'.repeat(level)}</Text> : null}
       </View>
-      {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-      <View style={styles.resultList}>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <View style={styles.resultsList}>
         {test.results.map((result) => (
-          <View key={`${result.id}:${result.questionText}`} style={styles.resultRow}>
-            <View style={[styles.resultStatus, result.isCorrect ? styles.resultStatusOk : styles.resultStatusBad]}><Text style={styles.resultStatusText}>{result.isCorrect ? '✓' : '×'}</Text></View>
+          <View key={`${result.id}-${result.questionText}`} style={styles.resultRow}>
             <View style={styles.resultCopy}>
-              <OverflowMarquee style={styles.resultPrimary}>{result.questionText}</OverflowMarquee>
-              {!result.isCorrect ? <OverflowMarquee style={styles.resultWrong}>{`${t('station_test.answer')}: ${result.userAnswer || '—'}`}</OverflowMarquee> : null}
-              <OverflowMarquee style={styles.resultCorrect}>{`${t('station_test.correct')}: ${result.correctAnswer}`}</OverflowMarquee>
+              <OverflowMarquee style={styles.resultWord}>{result.word}</OverflowMarquee>
+              <OverflowMarquee style={styles.resultTranslation}>{result.trans}</OverflowMarquee>
+              {!result.isCorrect ? <OverflowMarquee style={styles.resultWrong}>{t('test.your_answer')}: {result.userAnswer}</OverflowMarquee> : null}
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={favorites.has(result.id) ? t('learn.remove_favorite', { word: result.word }) : t('learn.add_favorite', { word: result.word })} accessibilityState={{ selected: favorites.has(result.id), disabled: busyId === result.id }} testID={scopedTestId('general-test.favorite', result.id)} disabled={busyId === result.id} onPress={() => { void toggleFavorite(result.id); }} style={({ pressed }) => [styles.starButton, pressed && styles.pressed]}>
-              <Text style={[styles.star, favorites.has(result.id) && styles.starOn]}>★</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel={favorites.has(result.id) ? t('favorites.remove') : t('favorites.add')} disabled={busyId === result.id} onPress={() => { void toggleFavorite(result.id); }} style={({ pressed }) => [styles.favoriteButton, pressed && styles.pressed]}>
+              <Text style={[styles.favoriteGlyph, favorites.has(result.id) && styles.favoriteGlyphActive]}>{favorites.has(result.id) ? '★' : '☆'}</Text>
             </Pressable>
           </View>
         ))}
@@ -370,38 +377,37 @@ export function TestResultsScreen() {
 }
 
 const styles = StyleSheet.create({
-  loader: { paddingVertical: 40 },
-  error: { color: theme.colors.danger, fontSize: 12, lineHeight: 17, paddingVertical: 8 },
-  errorCentered: { maxWidth: 320, color: theme.colors.danger, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  retryButton: { minWidth: 150, minHeight: 46, marginTop: 14, borderRadius: 10, borderWidth: 1, borderColor: theme.colors.line, alignItems: 'center', justifyContent: 'center' },
-  retryText: { color: theme.colors.text, fontSize: 11, fontWeight: '900' },
-  footerStack: { gap: 9 },
-  directionRow: { gap: 6 },
-  directionLabel: { color: theme.colors.textMuted, fontSize: 10, fontWeight: '700' },
-  sessionScreen: { flex: 1, backgroundColor: theme.colors.background },
-  fullLoader: { flex: 1, backgroundColor: theme.colors.background, alignItems: 'center', justifyContent: 'center' },
-  questionArea: { flex: 0.42, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center' },
-  question: { color: theme.colors.text, fontSize: 30, lineHeight: 37, fontWeight: '800', textAlign: 'center' },
-  options: { flex: 0.58, paddingHorizontal: 16, gap: 10, justifyContent: 'center', paddingBottom: 84 },
-  option: { minHeight: 58, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.line, backgroundColor: 'rgba(246,242,233,0.55)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 10 },
-  optionActive: { borderColor: theme.colors.text, backgroundColor: theme.colors.text },
-  optionText: { color: theme.colors.text, fontSize: 16, lineHeight: 21, fontWeight: '700', textAlign: 'center' },
-  optionTextActive: { color: theme.colors.inverse },
-  sessionFooter: { position: 'absolute', left: 16, right: 16, bottom: 12 },
-  sessionError: { position: 'absolute', left: 20, right: 20, bottom: 72, color: theme.colors.danger, fontSize: 10, lineHeight: 14, textAlign: 'center' },
-  pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
-  resultMark: { color: theme.colors.accentStrong, fontSize: 14, fontWeight: '900', letterSpacing: -1 },
-  resultList: { borderTopWidth: 1, borderTopColor: theme.colors.lineSoft },
-  resultRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft, paddingVertical: 10 },
-  resultStatus: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  resultStatusOk: { backgroundColor: 'rgba(93,118,84,0.16)' },
-  resultStatusBad: { backgroundColor: 'rgba(152,86,76,0.16)' },
-  resultStatusText: { color: theme.colors.text, fontSize: 16, fontWeight: '900' },
+  loader: { marginTop: 40 },
+  error: { color: theme.colors.danger, textAlign: 'center', marginVertical: 12, fontSize: 13 },
+  footerStack: { gap: 8 },
+  directionRow: { gap: 8 },
+  directionLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.3, textTransform: 'uppercase', color: theme.colors.textSoft },
+  sessionScreen: { flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 14 },
+  fullLoader: { flex: 1, backgroundColor: theme.colors.background, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
+  errorCentered: { color: theme.colors.danger, textAlign: 'center' },
+  retryButton: { minHeight: 42, borderWidth: 1, borderColor: theme.colors.line, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  retryText: { fontSize: 11, fontWeight: '900', color: theme.colors.text },
+  questionArea: { minHeight: 128, justifyContent: 'center', alignItems: 'center' },
+  question: { fontSize: 28, fontWeight: '800', color: theme.colors.text, textAlign: 'center' },
+  options: { gap: 10 },
+  option: { minHeight: 56, borderWidth: 1, borderColor: theme.colors.line, borderRadius: 13, backgroundColor: theme.colors.panel, justifyContent: 'center', paddingHorizontal: 14 },
+  optionActive: { borderColor: theme.colors.accentStrong, backgroundColor: theme.colors.accentSoft },
+  optionText: { fontSize: 16, fontWeight: '700', color: theme.colors.text, textAlign: 'center' },
+  optionTextActive: { color: theme.colors.accentStrong },
+  pressed: { opacity: 0.75 },
+  sessionError: { color: theme.colors.danger, textAlign: 'center', marginTop: 10, fontSize: 12 },
+  sessionFooter: { position: 'absolute', left: 14, right: 14 },
+  resultHero: { minHeight: 150, alignItems: 'center', justifyContent: 'center', gap: 5 },
+  resultPercentage: { fontSize: 42, fontWeight: '900', color: theme.colors.text },
+  resultCount: { fontSize: 13, color: theme.colors.textSoft },
+  resultLevel: { fontSize: 18, fontWeight: '900', letterSpacing: 4, color: theme.colors.accentStrong },
+  resultsList: { borderTopWidth: 1, borderTopColor: theme.colors.line },
+  resultRow: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.lineSoft, paddingVertical: 8 },
   resultCopy: { flex: 1, minWidth: 0 },
-  resultPrimary: { color: theme.colors.text, fontSize: 14, fontWeight: '800', marginBottom: 4 },
-  resultWrong: { color: theme.colors.danger, fontSize: 11, lineHeight: 15 },
-  resultCorrect: { color: theme.colors.success, fontSize: 11, lineHeight: 15 },
-  starButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  star: { color: theme.colors.textSoft, fontSize: 20 },
-  starOn: { color: theme.colors.accentStrong },
+  resultWord: { fontSize: 16, fontWeight: '800', color: theme.colors.text },
+  resultTranslation: { marginTop: 3, fontSize: 13, color: theme.colors.textSoft },
+  resultWrong: { marginTop: 4, fontSize: 11, color: theme.colors.danger },
+  favoriteButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
+  favoriteGlyph: { fontSize: 25, color: theme.colors.textFaint },
+  favoriteGlyphActive: { color: theme.colors.accentStrong },
 });
