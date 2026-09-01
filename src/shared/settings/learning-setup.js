@@ -4,6 +4,12 @@ import {
   previewContent,
   setupText,
 } from "./learning-preview-data.js?v=13.10.9";
+import {
+  emptyLearningSetupDraft,
+  isLearningSetupDraftComplete,
+} from "../../../packages/alantil-core/settings.js";
+
+export { emptyLearningSetupDraft, isLearningSetupDraftComplete };
 
 function flagSvg(language) {
   if (language === "ru") {
@@ -29,23 +35,6 @@ function capitalizeWord(value) {
 
 function segmentedControl(choices, className = "") {
   return `<div class="segmentControl settingsSegments ${escapeHtml(className)}" role="radiogroup">${choices}</div>`;
-}
-
-export function emptyLearningSetupDraft() {
-  return {
-    interface_language_code: "",
-    translation_language_code: "",
-    alan_script_code: "",
-    alan_dialect_code: "",
-  };
-}
-
-export function isLearningSetupDraftComplete(draft = {}) {
-  if (!["ru", "en", "tr"].includes(draft.interface_language_code)) return false;
-  if (!["cyrillic", "turkic"].includes(draft.alan_script_code)) return false;
-  if (draft.alan_script_code === "cyrillic"
-      && !["canonical", "karachay", "balkar"].includes(draft.alan_dialect_code)) return false;
-  return true;
 }
 
 export function renderLearningPreview(settings = {}, { className = "", marker = "" } = {}) {
