@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { favoriteHas, toggleFavorite } from '../../packages/alantil-core/favorites.js';
+import { stationHiddenSelectionContext } from '../../packages/alantil-core/hidden-selection.js';
 import { masteryMarkForPercent } from '../../packages/alantil-core/mastery.js';
 import { Button, FavoriteButton, Header, ProgressBar, Screen } from '../ui/components.js';
 import { CompactSegmentedControl, EmptyState, MetricStrip, MonoLabel, ScreenSection, SurfaceCard } from '../ui/parity.js';
@@ -41,17 +42,19 @@ export function StationScreen({ station, favorites, setFavorites, onBack, onLear
   const [hiddenIds, setHiddenIds] = useState(() => new Set());
   const [hiddenReady, setHiddenReady] = useState(false);
   const words = Array.isArray(station?.words) ? station.words : [];
+  const hiddenContext = useMemo(() => stationHiddenSelectionContext(station), [station?.key, station?.dictionaryId, station?.catalogId, station?.sectionId, station?.groupId, station?.sourceSetId, station?.setId]);
 
   useEffect(() => {
     let alive = true;
-    loadNativeHiddenWords().then((set) => { if (alive) { setHiddenIds(set); setHiddenReady(true); } });
+    setHiddenReady(false);
+    loadNativeHiddenWords(hiddenContext).then((set) => { if (alive) { setHiddenIds(set); setHiddenReady(true); } });
     return () => { alive = false; };
   }, [station?.key]);
 
   const activeWords = useMemo(() => words.filter((word) => !hiddenIds.has(String(word.id))), [words, hiddenIds]);
   const updateHidden = (next, changed) => {
     setHiddenIds(next);
-    saveNativeHiddenWords(next, changed).catch(() => {});
+    saveNativeHiddenWords(hiddenContext, next, changed).catch(() => {});
   };
   const toggleWord = (id) => {
     const next = new Set(hiddenIds);
