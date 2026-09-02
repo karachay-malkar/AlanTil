@@ -11,21 +11,6 @@ import { testState } from "./state.js?v=13.9.0";
 
 function enabledWords(words) { return words.filter(isWordEnabledInTestModes); }
 
-function buildScope(words) {
-  const dictionaries = new Map();
-  words.forEach((word) => {
-    const dictId = dictionaryId(word);
-    const wordSectionId = sectionId(word);
-    if (!dictId || !wordSectionId) return;
-    if (!dictionaries.has(dictId)) dictionaries.set(dictId, { id: dictId, name: dictionaryName(word), sections: new Map(), count: 0 });
-    const dictionary = dictionaries.get(dictId);
-    dictionary.count += 1;
-    if (!dictionary.sections.has(wordSectionId)) dictionary.sections.set(wordSectionId, { id: wordSectionId, name: sectionName(word), count: 0 });
-    dictionary.sections.get(wordSectionId).count += 1;
-  });
-  return Array.from(dictionaries.values()).map((dictionary) => ({ ...dictionary, sections: Array.from(dictionary.sections.values()) }));
-}
-
 export function renderTestMenu(context, words, signal) {
   const available = enabledWords(words);
   let selectedMode = testState.mode === "ru" ? "ru" : "kb";
