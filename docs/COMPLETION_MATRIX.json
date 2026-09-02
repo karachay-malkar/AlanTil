@@ -11,15 +11,18 @@
       {"id":"A05","requirement":"Storage scope semantics originate from Web and are shared","source":"src/shared/progress/storage-scope.js","implementation":"packages/alantil-core/storage-scope.js + mobile/platform/storage-scope.js","verification":"mobile/tests/foundation-completion-16-4-1.test.mjs","status":"PASS"},
       {"id":"A06","requirement":"Progress merge/queue policy is shared","source":"src/shared/progress/progress-queue.js","implementation":"packages/alantil-core/sync-policy.js + word-progress.js","verification":"tests/progress-sync-policy.test.mjs + mobile tests","status":"PASS"},
       {"id":"A07","requirement":"No declared MOBILE_REIMPLEMENTATION rows","source":"Web-origin registry","implementation":"docs/WEB_ORIGIN_16_4.json","verification":"CI provenance gate","status":"PASS"},
-      {"id":"A08","requirement":"Full repository inventory proves no remaining portable duplicate business algorithms","source":"all src/features + src/shared","implementation":"all packages/alantil-core + mobile","verification":"manual+automated inventory still incomplete","status":"FAIL"}
+      {"id":"A08","requirement":"Practice dictionary/section scope construction has one shared owner consumed by Web Test, Web Match and Mobile","source":"src/features/test/view.js + src/features/match/view.js","implementation":"packages/alantil-core/practice-scope.js","verification":"shared contract exists but three consumers still contain local scope builders","status":"FAIL"},
+      {"id":"A09","requirement":"Resumable Test/Match snapshot serialization and restoration are consumed from shared core","source":"Web session contract + Mobile resumable sessions","implementation":"packages/alantil-core/test.js + match.js","verification":"shared round-trip tests pass but mobile/screens/practice-games.js still contains local snapshot copies","status":"FAIL"},
+      {"id":"A10","requirement":"Mastery thresholds 80/90/100 have one shared owner","source":"Web Test + Station Test","implementation":"packages/alantil-core/mastery.js","verification":"shared owner exists but Web/Mobile result views still contain local threshold expressions","status":"FAIL"}
     ]},
     {"id":2,"name":"Dictionary / data","criteria":[
       {"id":"D01","requirement":"Mobile reads v_words_app","source":"v_words_app","implementation":"mobile/platform/dictionary.js","verification":"web-origin parity test","status":"PASS"},
       {"id":"D02","requirement":"Mobile reads content_stories","source":"content_stories","implementation":"mobile/platform/dictionary.js","verification":"web-origin parity test","status":"PASS"},
       {"id":"D03","requirement":"Mobile version follows dictionary_metadata","source":"dictionary_metadata","implementation":"dictionary generator + refresh","verification":"CI snapshot generation","status":"PASS"},
-      {"id":"D04","requirement":"Bundled snapshot contains full current dataset","source":"production Supabase","implementation":"mobile/data/dictionary-snapshot.json","verification":"scripts/generate-mobile-dictionary-snapshot.mjs","status":"PASS"},
-      {"id":"D05","requirement":"First-ever offline boot uses full bundled snapshot","source":"Web data contract","implementation":"bootstrapNativeDictionary bundled-snapshot path","verification":"foundation-completion test","status":"PASS"},
-      {"id":"D06","requirement":"Snapshot validates IDs, hierarchy and required text fields","source":"v_words_app contract","implementation":"generator validation","verification":"CI generator exits non-zero on mismatch","status":"PASS"}
+      {"id":"D04","requirement":"Bundled snapshot contains full current dataset","source":"production Supabase","implementation":"mobile/data/dictionary-snapshot.json","verification":"2,976 unique word_id, version 2026.08.30.1","status":"PASS"},
+      {"id":"D05","requirement":"First-ever offline bootstrap selects full bundled snapshot before starter fallback","source":"Web data contract","implementation":"bootstrapNativeDictionary bundled-snapshot path","verification":"foundation-completion test","status":"PASS"},
+      {"id":"D06","requirement":"Snapshot validates IDs, hierarchy, required text and contiguous unique global_order","source":"v_words_app contract","implementation":"scripts/generate-mobile-dictionary-snapshot.mjs","verification":"CI generator exits non-zero on mismatch and is stable when source is unchanged","status":"PASS"},
+      {"id":"D07","requirement":"Physical-device clean install in airplane mode renders the full bundled dictionary","source":"native runtime","implementation":"bundled snapshot bootstrap","verification":"physical Android/iOS offline boot","status":"BLOCKED"}
     ]},
     {"id":3,"name":"Auth / account","criteria":[
       {"id":"U01","requirement":"Google OAuth redirect is alantil://auth/callback","source":"Web Google auth semantics","implementation":"mobile/platform/auth.js","verification":"architecture tests","status":"PASS"},
@@ -30,7 +33,7 @@
       {"id":"U06","requirement":"Guest data is explicitly claimed once into first account scope","source":"Web scoped storage + account sync","implementation":"claimNativeGuestStateToAccount","verification":"foundation source contract test","status":"PASS"},
       {"id":"U07","requirement":"Physical Android clean-install Google OAuth returns to app","source":"native runtime","implementation":"native OAuth","verification":"physical Android device","status":"BLOCKED"},
       {"id":"U08","requirement":"Physical iOS clean-install Google OAuth returns to app","source":"native runtime","implementation":"native OAuth","verification":"physical iOS device","status":"BLOCKED"},
-      {"id":"U09","requirement":"Physical device logout/restart/refresh profile flow verified end-to-end","source":"native runtime","implementation":"auth + profile adapters","verification":"physical-device E2E","status":"BLOCKED"}
+      {"id":"U09","requirement":"Physical device logout/restart/token-refresh/profile flow verified end-to-end","source":"native runtime","implementation":"auth + profile adapters","verification":"physical-device E2E","status":"BLOCKED"}
     ]},
     {"id":4,"name":"Session / offline / sync","criteria":[
       {"id":"S01","requirement":"Guest and account progress storage are isolated","source":"Web storage scope","implementation":"mobile scoped progress keys","verification":"foundation test","status":"PASS"},
@@ -40,7 +43,9 @@
       {"id":"S05","requirement":"Legacy unscoped mobile state migrates only to guest","source":"Web legacy guest migration","implementation":"migrateLegacyNativeValueToGuest","verification":"foundation test","status":"PASS"},
       {"id":"S06","requirement":"Progress cloud merge is deterministic and monotonic","source":"Web progress sync","implementation":"mergeCloudWordProgressState","verification":"shared core tests","status":"PASS"},
       {"id":"S07","requirement":"Failed cloud writes stay queued and retry","source":"Web queue semantics","implementation":"flushNativeCloudQueue","verification":"foundation source contract test","status":"PASS"},
-      {"id":"S08","requirement":"Favorite/settings conflicts resolve by comparable updated_at rather than union-only semantics","source":"Web/cloud timestamps","implementation":"mobile cloud pull","verification":"not yet implemented","status":"FAIL"}
+      {"id":"S08","requirement":"Favorite and settings conflicts resolve by comparable updated_at rather than union/cloud overwrite","source":"Web/cloud timestamps","implementation":"resolveFavoriteSyncRows + resolveTimestampedUserSettings","verification":"foundation deterministic conflict tests","status":"PASS"},
+      {"id":"S09","requirement":"Hidden words are guest/account scoped and preserve cloud deletion through timestamped tombstones","source":"user_hidden_words","implementation":"mobile/platform/hidden-words.js","verification":"foundation source contract test","status":"PASS"},
+      {"id":"S10","requirement":"Native offline -> restart -> reconnect -> account merge is verified end-to-end without cross-user leakage","source":"native runtime","implementation":"scoped storage + queue + guest claim","verification":"physical-device E2E","status":"BLOCKED"}
     ]},
     {"id":5,"name":"Path / Station functional parity","criteria":[
       {"id":"P01","requirement":"Path uses shared learning route","verification":"architecture tests","status":"PASS"},
