@@ -7,8 +7,7 @@ import { normalizeLegacyWordEntry } from '../packages/alantil-core/word-normaliz
 import { buildLearningRoute } from '../packages/alantil-core/learning-route.js';
 import { toggleFavorite } from '../packages/alantil-core/favorites.js';
 import { DEFAULT_USER_SETTINGS } from '../packages/alantil-core/settings.js';
-import { BottomNav, FavoriteButton, Header, MenuItem, Screen, SectionLabel, uiStyles } from './ui/components.js';
-import { FavoriteIcon, ListChecksIcon, MusicIcon, PuzzleIcon } from './ui/icons.js';
+import { BottomNav, FavoriteButton, Header, Screen, SectionLabel, uiStyles } from './ui/components.js';
 import { theme } from './ui/theme.js';
 import { ProfileArea, AccountScreen } from './screens/profile.js';
 import { StationScreen } from './screens/station.js';
@@ -17,6 +16,7 @@ import { StationTestScreen } from './screens/station-test.js';
 import { SongsScreen } from './screens/songs.js';
 import { OnboardingScreen } from './screens/onboarding.js';
 import { PathScreen } from './screens/path.js';
+import { PracticeScreen } from './screens/practice.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
 import { hasCompletedNativeOnboarding, loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, markNativeOnboardingComplete, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
 
@@ -24,10 +24,6 @@ const C = theme.colors;
 function starterWords() { return STARTER_DICTIONARY.map((row) => normalizeLegacyWordEntry(row)).filter(Boolean); }
 const WORDS = starterWords();
 const ROUTE = buildLearningRoute(WORDS);
-
-function PracticeHome({ openTest, openMatch, openFavorites, openSongs }) {
-  return <Screen><Header title="" /><ScrollView contentContainerStyle={uiStyles.scrollContent}><SectionLabel>ПРАКТИКА</SectionLabel><MenuItem title="Тест" subtitle="Проверка слов из выбранных разделов" icon={<ListChecksIcon size={22} color={C.text2} />} onPress={openTest} /><MenuItem title="Сопоставление" subtitle="Соединение слов и переводов" icon={<PuzzleIcon size={22} color={C.text2} />} onPress={openMatch} /><MenuItem title="Избранное" subtitle="Учить слова" icon={<FavoriteIcon size={22} color={C.favorite} filled />} onPress={openFavorites} /><MenuItem title="Песни" subtitle="Язык в живом контексте" icon={<MusicIcon size={22} color={C.text2} />} onPress={openSongs} /></ScrollView></Screen>;
-}
 
 function FavoritesScreen({ favorites, setFavorites, onBack, onLearn }) {
   const rows = WORDS.filter((word) => favorites.has(String(word.id)));
@@ -118,7 +114,7 @@ export default function AppRoot() {
     content = <SongsScreen words={WORDS} onBack={() => setScreen('home')} favoriteIds={songFavorites} onFavorite={(id) => setSongFavorites(toggleFavorite(songFavorites, id).ids)} />;
     showNav = false;
   } else if (tab === 'practice') {
-    content = <PracticeHome openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} openSongs={() => setScreen('songs')} />;
+    content = <PracticeScreen openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} openSongs={() => setScreen('songs')} />;
   } else if (tab === 'profile' && screen === 'account') {
     content = <AccountScreen onBack={() => setScreen('home')} />;
     showNav = false;
