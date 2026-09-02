@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { applyTestAnswer, buildTestOptions, initializeTestState, testCompletionSummary } from '../../packages/alantil-core/test.js';
-import { initializeMatchState, markMatchSolved, matchCompletionSummary, matchSessionWords, recordMatchMismatch, takeNextMatchRound } from '../../packages/alantil-core/match.js';
+import { applyTestAnswer, buildTestOptions, initializeTestState, restoreTestStateSnapshot, testCompletionSummary, testStateSnapshot } from '../../packages/alantil-core/test.js';
+import { initializeMatchState, markMatchSolved, matchCompletionSummary, matchSessionWords, matchStateSnapshot, recordMatchMismatch, restoreMatchStateSnapshot, takeNextMatchRound } from '../../packages/alantil-core/match.js';
+import { toggleFavorite } from '../../packages/alantil-core/favorites.js';
+import { masteryLevelForPercent } from '../../packages/alantil-core/mastery.js';
+import { buildPracticeScope, practiceScopeKey, practiceSelectedPool, practiceWordScopeKey } from '../../packages/alantil-core/practice-scope.js';
 import { shuffle } from '../../packages/alantil-core/word-selection.js';
 import { Button, FavoriteButton, Header, Screen } from '../ui/components.js';
 import { theme } from '../ui/theme.js';
@@ -11,49 +14,30 @@ import { recordNativeMatchSession, recordNativeTestSession } from '../platform/p
 const C = theme.colors;
 const T = theme.type;
 
-function scopeKey(word) {
-  return `${String(word.dictionary_id || '')}||${String(word.section_id || '')}`;
-}
-
-function buildScope(words) {
-  const map = new Map();
-  words.forEach((word) => {
-    const dictionaryId = String(word.dictionary_id || '');
-    const sectionId = String(word.section_id || '');
-    if (!dictionaryId || !sectionId) return;
-    if (!map.has(dictionaryId)) map.set(dictionaryId, { id: dictionaryId, name: String(word.dictionary_name || dictionaryId), count: 0, sections: new Map() });
-    const dictionary = map.get(dictionaryId);
-    dictionary.count += 1;
-    if (!dictionary.sections.has(sectionId)) dictionary.sections.set(sectionId, { id: sectionId, name: String(word.section_name || sectionId), count: 0 });
-    dictionary.sections.get(sectionId).count += 1;
-  });
-  return [...map.values()].map((dictionary) => ({ ...dictionary, sections: [...dictionary.sections.values()] }));
-}
-
 function BracketCheck({ checked, onPress }) {
   return <Pressable onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked }} style={styles.checkHit}><View style={styles.bracketCheck}><Text style={[styles.bracketGlyph, checked && styles.bracketGlyphOn]}>[</Text><Text style={[styles.bracketMark, checked && styles.bracketMarkOn]}>{checked ? '✓' : ' '}</Text><Text style={[styles.bracketGlyph, checked && styles.bracketGlyphOn]}>]</Text></View></Pressable>;
 }
 
 function ScopePicker({ words, selectedKeys, setSelectedKeys }) {
-  const scope = useMemo(() => buildScope(words), [words]);
+  const scope = useMemo(() => buildPracticeScope(words), [words]);
   const toggleSection = (dictionaryId, sectionId) => setSelectedKeys((current) => {
     const next = new Set(current);
-    const key = `${dictionaryId}||${sectionId}`;
+    const key = practiceScopeKey(dictionaryId, sectionId);
     if (next.has(key)) next.delete(key); else next.add(key);
     return next;
   });
   const toggleDictionary = (dictionary) => setSelectedKeys((current) => {
     const next = new Set(current);
-    const keys = dictionary.sections.map((section) => `${dictionary.id}||${section.id}`);
+    const keys = dictionary.sections.map((section) => practiceScopeKey(dictionary.id, section.id));
     const all = keys.every((key) => next.has(key));
     keys.forEach((key) => all ? next.delete(key) : next.add(key));
     return next;
   });
   return <View style={styles.scopeList}>{scope.map((dictionary) => {
-    const keys = dictionary.sections.map((section) => `${dictionary.id}||${section.id}`);
+    const keys = dictionary.sections.map((section) => practiceScopeKey(dictionary.id, section.id));
     const all = keys.length > 0 && keys.every((key) => selectedKeys.has(key));
     return <View key={dictionary.id} style={styles.scopeBlock}><View style={styles.scopeDictRow}><BracketCheck checked={all} onPress={() => toggleDictionary(dictionary)} /><View style={styles.scopeCopy}><Text numberOfLines={1} style={styles.scopeDict}>{dictionary.name}</Text><Text style={styles.scopeCount}>{dictionary.count}</Text></View></View>{dictionary.sections.map((section) => {
-      const key = `${dictionary.id}||${section.id}`;
+      const key = practiceScopeKey(dictionary.id, section.id);
       return <View key={key} style={styles.scopeSectionRow}><BracketCheck checked={selectedKeys.has(key)} onPress={() => toggleSection(dictionary.id, section.id)} /><View style={styles.scopeCopy}><Text numberOfLines={1} style={styles.scopeSection}>{section.name}</Text><Text style={styles.scopeCount}>{section.count}</Text></View></View>;
     })}</View>;
   })}</View>;
@@ -68,34 +52,13 @@ function DirectionControl({ value, onChange }) {
 }
 
 function GameMenu({ type, words, onBack, onStart }) {
-  const allKeys = useMemo(() => new Set(words.map(scopeKey)), [words]);
+  const allKeys = useMemo(() => new Set(words.map(practiceWordScopeKey)), [words]);
   const [selectedKeys, setSelectedKeys] = useState(allKeys);
   const [limit, setLimit] = useState(40);
   const [mode, setMode] = useState('kb');
-  const pool = useMemo(() => words.filter((word) => selectedKeys.has(scopeKey(word))), [words, selectedKeys]);
+  const pool = useMemo(() => practiceSelectedPool(words, selectedKeys), [words, selectedKeys]);
   const selectedCount = Math.min(limit, pool.length);
   return <Screen><Header title={type === 'test' ? 'Проверь знания' : 'Сопоставление'} onBack={onBack} /><ScrollView contentContainerStyle={styles.menuScroll}><View style={styles.modeLead}><Text style={styles.modeLeadValue}>Выбрано: {pool.length}</Text><Text style={styles.modeLeadHint}>игра: {selectedCount}</Text></View><ScopePicker words={words} selectedKeys={selectedKeys} setSelectedKeys={setSelectedKeys} /><View style={styles.optionSection}><Text style={styles.optionLabel}>Количество слов</Text><LimitControl value={limit} onChange={setLimit} /></View></ScrollView><View style={styles.launchBar}>{type === 'test' ? <DirectionControl value={mode} onChange={setMode} /> : null}<View style={styles.launchButton}><Button primary disabled={!pool.length} onPress={() => onStart(pool, limit, mode)}>{type === 'test' ? 'Начать тест' : 'Начать игру'}</Button></View></View></Screen>;
-}
-
-function testSnapshot(state) {
-  return { id: state.session.id, startedAt: state.session.startedAt, mode: state.mode, limit: state.limit, poolIds: state.session.wordsPool.map((word) => String(word.id)), itemIds: state.items.map((word) => String(word.id)), index: state.index, correct: state.correct, results: state.results };
-}
-
-function restoreTestSnapshot(snapshot, words) {
-  if (!snapshot?.id) return null;
-  const byId = new Map(words.map((word) => [String(word.id), word]));
-  const pool = (snapshot.poolIds || []).map((id) => byId.get(String(id))).filter(Boolean);
-  if (!pool.length) return null;
-  const state = { mode: snapshot.mode, limit: snapshot.limit, items: [], optionPool: [], index: 0, correct: 0, selectedAnswer: null, results: [], session: { id: snapshot.id, startedAt: snapshot.startedAt } };
-  initializeTestState(state, pool, snapshot.mode, snapshot.limit, {}, words);
-  const ordered = (snapshot.itemIds || []).map((id) => byId.get(String(id))).filter(Boolean);
-  if (ordered.length) state.items = ordered;
-  state.index = Math.min(Number(snapshot.index || 0), state.items.length);
-  state.correct = Math.max(0, Number(snapshot.correct || 0));
-  state.results = Array.isArray(snapshot.results) ? snapshot.results.slice(0, state.index) : [];
-  state.session.id = snapshot.id;
-  state.session.startedAt = snapshot.startedAt;
-  return state;
 }
 
 function SessionProgress({ current, total }) {
@@ -113,7 +76,7 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
     let alive = true;
     loadNativeSessionSnapshot('test').then((snapshot) => {
       if (!alive) return;
-      const restored = restoreTestSnapshot(snapshot, words);
+      const restored = restoreTestStateSnapshot(snapshot, words, words);
       if (restored) {
         setState(restored);
         setPhase(restored.index >= restored.items.length ? 'results' : 'session');
@@ -132,10 +95,10 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
     setState(next);
     setSelected(null);
     setPhase('session');
-    saveNativeSessionSnapshot('test', testSnapshot(next)).catch(() => {});
+    saveNativeSessionSnapshot('test', testStateSnapshot(next)).catch(() => {});
   };
   const leave = () => {
-    if (phase === 'session' && state) saveNativeSessionSnapshot('test', testSnapshot(state)).catch(() => {});
+    if (phase === 'session' && state) saveNativeSessionSnapshot('test', testStateSnapshot(state)).catch(() => {});
     onBack();
   };
   useEffect(() => { const sub = BackHandler.addEventListener('hardwareBackPress', () => { leave(); return true; }); return () => sub.remove(); }, [phase, state, onBack]);
@@ -151,8 +114,8 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
   if (phase === 'menu') return <GameMenu type="test" words={words} onBack={leave} onStart={start} />;
   if (phase === 'results') {
     const result = testCompletionSummary(state);
-    const level = result.accuracy_percent >= 100 ? 3 : result.accuracy_percent >= 90 ? 2 : result.accuracy_percent >= 80 ? 1 : 0;
-    return <Screen><Header title="Результаты теста" onBack={leave} /><View style={styles.resultsView}><View style={styles.resultSummary}><Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text><Text style={styles.resultScore}>{result.accuracy_percent}%</Text><Text style={styles.resultStatus}>{result.accuracy_percent >= 80 ? 'Тест сдан' : 'Тест не сдан'} · {result.correct_count}/{result.questions_total}</Text></View><ScrollView contentContainerStyle={styles.resultList}>{state.results.map((row) => <View key={`${row.id}-${row.questionText}`} style={styles.resultRow}><View style={[styles.resultStatusDot, row.isCorrect ? styles.okDot : styles.badDot]}><Text style={styles.resultStatusGlyph}>{row.isCorrect ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text numberOfLines={1} style={styles.resultPrimary}>{row.questionText || row.word}</Text>{!row.isCorrect ? <View style={styles.answerLine}><Text style={styles.answerWrongLabel}>Ответ</Text><Text numberOfLines={1} style={styles.resultWrong}>{row.userAnswer || '—'}</Text></View> : null}<View style={styles.answerLine}><Text style={styles.answerCorrectLabel}>Правильно</Text><Text numberOfLines={1} style={styles.resultCorrect}>{row.correctAnswer}</Text></View></View><FavoriteButton active={favorites.has(String(row.id))} onPress={() => setFavorites(toggleFavoriteSet(favorites, row.id))} /></View>)}</ScrollView><View style={styles.retryBar}><View style={styles.retryButton}><Button primary onPress={() => start(state.session.wordsPool, state.limit, state.mode)}>Пройти ещё раз</Button></View></View></View></Screen>;
+    const level = masteryLevelForPercent(result.accuracy_percent);
+    return <Screen><Header title="Результаты теста" onBack={leave} /><View style={styles.resultsView}><View style={styles.resultSummary}><Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text><Text style={styles.resultScore}>{result.accuracy_percent}%</Text><Text style={styles.resultStatus}>{result.accuracy_percent >= 80 ? 'Тест сдан' : 'Тест не сдан'} · {result.correct_count}/{result.questions_total}</Text></View><ScrollView contentContainerStyle={styles.resultList}>{state.results.map((row) => <View key={`${row.id}-${row.questionText}`} style={styles.resultRow}><View style={[styles.resultStatusDot, row.isCorrect ? styles.okDot : styles.badDot]}><Text style={styles.resultStatusGlyph}>{row.isCorrect ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text numberOfLines={1} style={styles.resultPrimary}>{row.questionText || row.word}</Text>{!row.isCorrect ? <View style={styles.answerLine}><Text style={styles.answerWrongLabel}>Ответ</Text><Text numberOfLines={1} style={styles.resultWrong}>{row.userAnswer || '—'}</Text></View> : null}<View style={styles.answerLine}><Text style={styles.answerCorrectLabel}>Правильно</Text><Text numberOfLines={1} style={styles.resultCorrect}>{row.correctAnswer}</Text></View></View><FavoriteButton active={favorites.has(String(row.id))} onPress={() => setFavorites(toggleFavorite(favorites, row.id).ids)} /></View>)}</ScrollView><View style={styles.retryBar}><View style={styles.retryButton}><Button primary onPress={() => start(state.session.wordsPool, state.limit, state.mode)}>Пройти ещё раз</Button></View></View></View></Screen>;
   }
 
   const item = state.items[state.index];
@@ -163,41 +126,9 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
     applyTestAnswer(state, selected);
     setSelected(null);
     setState({ ...state });
-    if (state.index >= state.items.length) setPhase('results'); else saveNativeSessionSnapshot('test', testSnapshot(state)).catch(() => {});
+    if (state.index >= state.items.length) setPhase('results'); else saveNativeSessionSnapshot('test', testStateSnapshot(state)).catch(() => {});
   };
   return <Screen><Header title="Проверь знания" onBack={leave} sessionStatus={{ counter: `${state.index + 1}/${state.items.length}` }} /><View style={styles.session}><SessionProgress current={state.index + 1} total={state.items.length} /><View style={styles.question}><Text style={styles.questionText}>{state.mode === 'kb' ? item.word : item.trans}</Text></View><ScrollView contentContainerStyle={styles.options}>{options.map((option) => <Pressable key={`${item.id}-${option.id}`} onPress={() => setSelected(option)} style={({ pressed }) => [styles.choice, selected?.id === option.id && styles.choiceSelected, pressed && styles.choicePressed]}><Text style={[styles.choiceText, selected?.id === option.id && styles.choiceTextSelected]}>{option.text}</Text></Pressable>)}</ScrollView><View style={styles.answerBar}><View style={styles.answerButton}><Button primary disabled={!selected} onPress={answer}>Ответить</Button></View></View></View></Screen>;
-}
-
-function toggleFavoriteSet(set, id) {
-  const next = new Set(set);
-  const key = String(id);
-  if (next.has(key)) next.delete(key); else next.add(key);
-  return next;
-}
-
-function matchSnapshot(state) {
-  return { id: state.session.id, startedAt: state.session.startedAt, limit: state.limit, poolIds: state.items.map((word) => String(word.id)), rounds: state.rounds.map((round) => round.map((word) => String(word.id))), roundIndex: state.roundIndex, solvedCount: state.solvedCount, total: state.total, errorsCount: state.errorsCount, failMap: state.failMap, errorPairs: state.errorPairs, solved: [...state.solved], shown: [...state.shown] };
-}
-
-function restoreMatchSnapshot(snapshot, words) {
-  if (!snapshot?.id) return null;
-  const byId = new Map(words.map((word) => [String(word.id), word]));
-  const pool = (snapshot.poolIds || []).map((id) => byId.get(String(id))).filter(Boolean);
-  if (!pool.length) return null;
-  const state = { session: { id: snapshot.id, startedAt: snapshot.startedAt } };
-  initializeMatchState(state, pool, snapshot.limit, {});
-  state.rounds = (snapshot.rounds || []).map((ids) => ids.map((id) => byId.get(String(id))).filter(Boolean)).filter((round) => round.length);
-  state.roundIndex = Math.max(0, Number(snapshot.roundIndex || 0));
-  state.solvedCount = Math.max(0, Number(snapshot.solvedCount || 0));
-  state.total = Math.max(0, Number(snapshot.total || state.total));
-  state.errorsCount = Math.max(0, Number(snapshot.errorsCount || 0));
-  state.failMap = snapshot.failMap || {};
-  state.errorPairs = snapshot.errorPairs || {};
-  state.solved = new Set((snapshot.solved || []).map(String));
-  state.shown = new Set((snapshot.shown || []).map(String));
-  state.session.id = snapshot.id;
-  state.session.startedAt = snapshot.startedAt;
-  return state;
 }
 
 export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
@@ -222,7 +153,7 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
     let alive = true;
     loadNativeSessionSnapshot('match').then((snapshot) => {
       if (!alive) return;
-      const restored = restoreMatchSnapshot(snapshot, words);
+      const restored = restoreMatchStateSnapshot(snapshot, words);
       if (restored) {
         setState(restored);
         const current = restored.rounds[Math.max(0, restored.roundIndex - 1)] || takeNextMatchRound(restored);
@@ -245,10 +176,10 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
     installRound(first);
     setWrongPair(null);
     setPhase('game');
-    saveNativeSessionSnapshot('match', matchSnapshot(next)).catch(() => {});
+    saveNativeSessionSnapshot('match', matchStateSnapshot(next)).catch(() => {});
   };
   const leave = () => {
-    if (phase === 'game' && state) saveNativeSessionSnapshot('match', matchSnapshot(state)).catch(() => {});
+    if (phase === 'game' && state) saveNativeSessionSnapshot('match', matchStateSnapshot(state)).catch(() => {});
     onBack();
   };
   useEffect(() => { const sub = BackHandler.addEventListener('hardwareBackPress', () => { leave(); return true; }); return () => sub.remove(); }, [phase, state, onBack]);
@@ -272,7 +203,7 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
     if (state.solvedCount >= state.total) setTimeout(() => setPhase('results'), 0);
     else {
       const next = takeNextMatchRound(state);
-      saveNativeSessionSnapshot('match', matchSnapshot(state)).catch(() => {});
+      saveNativeSessionSnapshot('match', matchStateSnapshot(state)).catch(() => {});
       setTimeout(() => installRound(next), 0);
     }
     return <Screen />;
@@ -289,7 +220,7 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
       setLeft(null);
       setRight(null);
       setState({ ...state });
-      saveNativeSessionSnapshot('match', matchSnapshot(state)).catch(() => {});
+      saveNativeSessionSnapshot('match', matchStateSnapshot(state)).catch(() => {});
       return;
     }
     lockRef.current = true;
@@ -301,7 +232,7 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
       setLeft(null);
       setRight(null);
       setState({ ...state });
-      saveNativeSessionSnapshot('match', matchSnapshot(state)).catch(() => {});
+      saveNativeSessionSnapshot('match', matchStateSnapshot(state)).catch(() => {});
       lockRef.current = false;
     }, 240);
   };

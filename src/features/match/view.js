@@ -1,4 +1,5 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
 import { isWordEnabledInTestModes, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
 import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
 import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.13";
@@ -8,33 +9,12 @@ import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?
 import { completeMatch, markSolved, nextRound, recordMismatch, startMatch } from "./engine.js?v=13.13";
 import { matchState } from "./state.js?v=13.9.0";
 
-function dictionaryId(word) { return String(word.dictionary_id || "").trim(); }
-function dictionaryName(word) { return String(word.dictionary_name || "").trim(); }
-function sectionId(word) { return String(word.section_id || "").trim(); }
-function sectionName(word) { return String(word.section_name || "").trim(); }
-function scopeKey(dict, section) { return `${dict}||${section || ""}`; }
-
-function buildScope(words) {
-  const map = new Map();
-  words.forEach((word) => {
-    const dictionary = dictionaryId(word);
-    const wordSection = sectionId(word);
-    if (!dictionary || !wordSection) return;
-    if (!map.has(dictionary)) map.set(dictionary, { id: dictionary, name: dictionaryName(word), count: 0, sections: new Map() });
-    const dict = map.get(dictionary);
-    dict.count += 1;
-    if (!dict.sections.has(wordSection)) dict.sections.set(wordSection, { id: wordSection, name: sectionName(word), count: 0 });
-    dict.sections.get(wordSection).count += 1;
-  });
-  return Array.from(map.values()).map((dict) => ({ ...dict, sections: Array.from(dict.sections.values()) }));
-}
-
 export function renderMatchMenu(context, words, signal) {
   const available = words.filter(isWordEnabledInTestModes);
-  const scopeHtml = buildScope(available).map((dictionary) => `<div class="scopeBlock">
+  const scopeHtml = buildPracticeScope(available).map((dictionary) => `<div class="scopeBlock">
     <label class="scopeDictRow"><input class="scopeCheckbox matchScopeDict" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" checked /><span class="scopeLabel"><strong>${escapeHtml(dictionary.name)}</strong><small>${dictionary.count}</small></span></label>
     ${dictionary.sections.map((section) => {
-      const checked = matchState.selectedScopeKeys.size === 0 || matchState.selectedScopeKeys.has(scopeKey(dictionary.id, section.id));
+      const checked = matchState.selectedScopeKeys.size === 0 || matchState.selectedScopeKeys.has(practiceScopeKey(dictionary.id, section.id));
       return `<label class="scopeSectionRow"><input class="scopeCheckbox matchScopeSection" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" data-section="${escapeHtml(section.id)}" ${checked ? "checked" : ""} /><span class="scopeLabel"><span>${escapeHtml(section.name)}</span><small>${section.count}</small></span></label>`;
     }).join("")}
   </div>`).join("");
@@ -51,7 +31,7 @@ export function renderMatchMenu(context, words, signal) {
   const list = context.root.querySelector("#matchScopeList"); const info = context.root.querySelector("#matchInfo");
   const parents = Array.from(list.querySelectorAll(".matchScopeDict")); const children = Array.from(list.querySelectorAll(".matchScopeSection"));
   function syncParents() { parents.forEach((parent) => { const rows = children.filter((child) => child.dataset.dict === parent.dataset.dict); const checked = rows.filter((child) => child.checked).length; parent.checked = rows.length > 0 && checked === rows.length; parent.indeterminate = checked > 0 && checked < rows.length; }); }
-  function selectedPool() { const keys = new Set(children.filter((child) => child.checked).map((child) => scopeKey(child.dataset.dict, child.dataset.section))); return available.filter((word) => keys.has(scopeKey(dictionaryId(word), sectionId(word)))); }
+  function selectedPool() { const keys = new Set(children.filter((child) => child.checked).map((child) => practiceScopeKey(child.dataset.dict, child.dataset.section))); return practiceSelectedPool(available, keys); }
   function selectedLimit() { return Number(context.root.querySelector('input[name="matchLimit"]:checked')?.value || 40); }
   function updateInfo() { const pool = selectedPool(); info.textContent = msg("match.vybrano_igra", { pool: pool.length, limit: Math.min(selectedLimit(), pool.length) }); }
   syncParents(); updateInfo();
@@ -61,7 +41,7 @@ export function renderMatchMenu(context, words, signal) {
   context.root.querySelector("#btnMatchStart").addEventListener("click", async () => {
     const pool = selectedPool(); if (!pool.length) { context.telegram?.showAlert?.(msg("match.net_slov_dlya_vybrannogo_rezhima")) || window.alert(msg("match.net_slov_dlya_vybrannogo_rezhima")); return; }
     matchState.limit = selectedLimit(); const selected = children.filter((child) => child.checked);
-    matchState.selectedScopeKeys = new Set(selected.map((child) => scopeKey(child.dataset.dict, child.dataset.section)));
+    matchState.selectedScopeKeys = new Set(selected.map((child) => practiceScopeKey(child.dataset.dict, child.dataset.section)));
     startMatch(pool, matchState.limit, {
       dictionaryCount: new Set(selected.map((child) => child.dataset.dict)).size,
       sectionCount: selected.length,

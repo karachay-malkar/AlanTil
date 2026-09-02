@@ -1,4 +1,6 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { masteryLevelForPercent } from "../../../packages/alantil-core/mastery.js";
+import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
 import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.13";
 import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.13";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
@@ -7,11 +9,6 @@ import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?
 import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.13";
 import { testState } from "./state.js?v=13.9.0";
 
-function dictionaryId(word) { return String(word.dictionary_id || "").trim(); }
-function dictionaryName(word) { return String(word.dictionary_name || "").trim(); }
-function sectionId(word) { return String(word.section_id || "").trim(); }
-function sectionName(word) { return String(word.section_name || "").trim(); }
-function scopeKey(dict, section) { return `${dict}||${section || ""}`; }
 function enabledWords(words) { return words.filter(isWordEnabledInTestModes); }
 
 function buildScope(words) {
@@ -32,11 +29,11 @@ function buildScope(words) {
 export function renderTestMenu(context, words, signal) {
   const available = enabledWords(words);
   let selectedMode = testState.mode === "ru" ? "ru" : "kb";
-  const scope = buildScope(available);
+  const scope = buildPracticeScope(available);
   const scopeHtml = scope.map((dictionary) => `<div class="scopeBlock">
     <label class="scopeDictRow"><input class="scopeCheckbox scopeDict" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" checked /><span class="scopeLabel"><strong>${escapeHtml(dictionary.name)}</strong><small>${dictionary.count}</small></span></label>
     ${dictionary.sections.map((section) => {
-      const checked = testState.selectedScopeKeys.size === 0 || testState.selectedScopeKeys.has(scopeKey(dictionary.id, section.id));
+      const checked = testState.selectedScopeKeys.size === 0 || testState.selectedScopeKeys.has(practiceScopeKey(dictionary.id, section.id));
       return `<label class="scopeSectionRow"><input class="scopeCheckbox scopeSection" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" data-section="${escapeHtml(section.id)}" ${checked ? "checked" : ""} /><span class="scopeLabel"><span>${escapeHtml(section.name)}</span><small>${section.count}</small></span></label>`;
     }).join("")}
   </div>`).join("");
@@ -76,8 +73,8 @@ export function renderTestMenu(context, words, signal) {
     });
   }
   function selectedPool() {
-    const keys = new Set(sectionCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
-    return available.filter((word) => keys.has(scopeKey(dictionaryId(word), sectionId(word))));
+    const keys = new Set(sectionCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => practiceScopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
+    return practiceSelectedPool(available, keys);
   }
   function selectedLimit() { return Number(context.root.querySelector('input[name="testLimit"]:checked')?.value || 40); }
   function updateInfo() { const pool = selectedPool(); info.textContent = msg("test.vybrano_test", { pool: pool.length, limit: Math.min(selectedLimit(), pool.length) }); }
@@ -102,7 +99,7 @@ export function renderTestMenu(context, words, signal) {
     if (!pool.length) { context.telegram?.showAlert?.(msg("test.net_slov_dlya_vybrannogo_rezhima")) || window.alert(msg("test.net_slov_dlya_vybrannogo_rezhima")); return; }
     testState.limit = selectedLimit();
     const selected = sectionCheckboxes.filter((checkbox) => checkbox.checked);
-    testState.selectedScopeKeys = new Set(selected.map((checkbox) => scopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
+    testState.selectedScopeKeys = new Set(selected.map((checkbox) => practiceScopeKey(checkbox.dataset.dict, checkbox.dataset.section)));
     startTest(pool, mode, testState.limit, {
       dictionaryCount: new Set(selected.map((checkbox) => checkbox.dataset.dict)).size,
       sectionCount: selected.length,
@@ -122,7 +119,7 @@ export function renderTestMenu(context, words, signal) {
 
 export function renderTestResults(context, signal) {
   const percentage = Math.round((testState.correct / Math.max(1, testState.items.length)) * 100);
-  const level = percentage >= 100 ? 3 : percentage >= 90 ? 2 : percentage >= 80 ? 1 : 0;
+  const level = masteryLevelForPercent(percentage);
   const rows = testState.results.map((result) => {
     const details = result.isCorrect
       ? [{ label: msg("test.pravilno"), value: result.correctAnswer, tone: "correct" }]

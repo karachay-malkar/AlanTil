@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { favoriteHas, toggleFavorite } from '../../packages/alantil-core/favorites.js';
+import { masteryMarkForPercent } from '../../packages/alantil-core/mastery.js';
 import { Button, FavoriteButton, Header, ProgressBar, Screen } from '../ui/components.js';
 import { CompactSegmentedControl, EmptyState, MetricStrip, MonoLabel, ScreenSection, SurfaceCard } from '../ui/parity.js';
 import { theme } from '../ui/theme.js';
@@ -18,13 +19,6 @@ function WordRow({ word, selected, onToggle, favorite, onFavorite }) {
   return <View style={[styles.wordRow, !selected && styles.wordRowHidden]}><Pressable onPress={onToggle} style={styles.toggleWrap} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel="Добавить слово в обучение"><BracketCheckbox selected={selected} /></Pressable><View style={styles.wordMain}><Text numberOfLines={1} style={styles.wordPrimary}>{word.word}</Text><Text numberOfLines={1} style={styles.wordSecondary}>{word.trans}</Text></View><FavoriteButton active={favorite} onPress={onFavorite} /></View>;
 }
 
-function masteryMark(percent) {
-  if (percent >= 100) return ['⌃⌃⌃', 'III знак'];
-  if (percent >= 90) return ['⌃⌃', 'II знак'];
-  if (percent >= 80) return ['⌃', 'I знак'];
-  return ['—', 'не сдан'];
-}
-
 function StatisticsPane({ station, favorites, setFavorites }) {
   const [stats, setStats] = useState(null);
   useEffect(() => {
@@ -33,10 +27,10 @@ function StatisticsPane({ station, favorites, setFavorites }) {
     return () => { alive = false; };
   }, [station]);
   if (!stats) return <EmptyState>Загружаем статистику…</EmptyState>;
-  const mark = masteryMark(stats.best);
+  const mark = masteryMarkForPercent(stats.best);
   return <ScrollView contentContainerStyle={styles.statsScroll} showsVerticalScrollIndicator={false}>
-    <SurfaceCard style={styles.summaryCard}><View style={styles.summaryHead}><View style={styles.masteryCopy}><MonoLabel>ОСВОЕНО СЛОВ</MonoLabel><Text style={styles.masteryValue}>{stats.summary.mastered}/{stats.summary.total}</Text><ProgressBar value={stats.summary.percent} /></View><View style={styles.masteryBadge}><Text style={styles.masteryBadgeValue}>{mark[0]}</Text><Text style={styles.masteryBadgeSmall}>{mark[1]}</Text></View></View><MetricStrip items={[[String(stats.attempts.length), 'попыток'], [`${stats.best}%`, 'лучший результат'], [String(stats.summary.review), 'к повторению']]} /></SurfaceCard>
-    <ScreenSection title="Последние результаты">{stats.recent.length ? <SurfaceCard>{stats.recent.slice(0, 3).map((row, index) => <View key={`${row.sessionId}-${index}`} style={styles.attempt}><Text style={styles.attemptScore}>{row.percent}%</Text><Text style={styles.attemptLabel}>{masteryMark(row.percent)[1]}</Text><Text style={styles.attemptDate}>{row.date ? new Date(row.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : ''}</Text></View>)}</SurfaceCard> : <EmptyState>Тесты ещё не проходились.</EmptyState>}</ScreenSection>
+    <SurfaceCard style={styles.summaryCard}><View style={styles.summaryHead}><View style={styles.masteryCopy}><MonoLabel>ОСВОЕНО СЛОВ</MonoLabel><Text style={styles.masteryValue}>{stats.summary.mastered}/{stats.summary.total}</Text><ProgressBar value={stats.summary.percent} /></View><View style={styles.masteryBadge}><Text style={styles.masteryBadgeValue}>{mark.mark}</Text><Text style={styles.masteryBadgeSmall}>{mark.label}</Text></View></View><MetricStrip items={[[String(stats.attempts.length), 'попыток'], [`${stats.best}%`, 'лучший результат'], [String(stats.summary.review), 'к повторению']]} /></SurfaceCard>
+    <ScreenSection title="Последние результаты">{stats.recent.length ? <SurfaceCard>{stats.recent.slice(0, 3).map((row, index) => <View key={`${row.sessionId}-${index}`} style={styles.attempt}><Text style={styles.attemptScore}>{row.percent}%</Text><Text style={styles.attemptLabel}>{masteryMarkForPercent(row.percent).label}</Text><Text style={styles.attemptDate}>{row.date ? new Date(row.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : ''}</Text></View>)}</SurfaceCard> : <EmptyState>Тесты ещё не проходились.</EmptyState>}</ScreenSection>
     <ScreenSection title="Проблемные слова">{stats.problems.length ? <SurfaceCard><View style={styles.problemHead}><Text style={styles.problemHeadWord}>Слово</Text><Text style={styles.problemMetric}>Показы</Text><Text style={styles.problemMetric}>Ошибки</Text><Text style={styles.problemRate}>%</Text><View style={styles.favoriteSpace} /></View>{stats.problems.slice(0, 7).map(({ word, progress, evaluated, unknownRate }) => <View key={word.id} style={styles.problemRow}><View style={styles.problemCopy}><Text numberOfLines={1} style={styles.problemWord}>{word.word}</Text><Text numberOfLines={1} style={styles.problemTrans}>{word.trans}</Text></View><Text style={styles.problemMetric}>{evaluated}</Text><Text style={styles.problemMetric}>{progress.unknown_count}</Text><Text style={styles.problemRate}>{unknownRate}%</Text><FavoriteButton active={favoriteHas(favorites, word.id)} onPress={() => setFavorites(toggleFavorite(favorites, word.id).ids)} /></View>)}</SurfaceCard> : <EmptyState>Пока недостаточно данных.</EmptyState>}</ScreenSection>
   </ScrollView>;
 }
