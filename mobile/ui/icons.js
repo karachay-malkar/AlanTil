@@ -6,7 +6,7 @@ function IconBase({ size = 22, color = 'currentColor', children, fill = 'none' }
 }
 
 export function PracticeIcon({ size = 20, color = '#666158' }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24"><Path fill={color} d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z" /></Svg>;
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="m6.5 6.5 11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l7-7M14 21l7-7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></Svg>;
 }
 
 export function PathIcon({ size = 22, color = '#666158' }) {
@@ -14,7 +14,7 @@ export function PathIcon({ size = 22, color = '#666158' }) {
 }
 
 export function ProfileIcon({ size = 20, color = '#666158' }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24"><Path fill={color} d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z" /></Svg>;
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Circle cx="12" cy="8" r="5" stroke={color} strokeWidth="1.7"/><Path d="M20 21a8 8 0 0 0-16 0" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></Svg>;
 }
 
 export function FavoriteIcon({ size = 22, color = '#918b80', filled = true }) {
