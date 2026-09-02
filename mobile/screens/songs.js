@@ -21,11 +21,9 @@ function PlaylistsScreen({ songs, loading, favoriteIds, onOpenPlaylist, onBack }
   return <Screen><Header title="Песни" onBack={onBack} /><ScrollView contentContainerStyle={styles.playlistsScroll}><SectionLabel>ПЕСНИ</SectionLabel>{loading ? <View style={styles.empty}><Text style={styles.emptyTitle}>Загружаем песни…</Text></View> : <View style={styles.playlistList}>{items.map((playlist) => <Pressable key={playlist.id} onPress={() => onOpenPlaylist(playlist.id)} style={({ pressed }) => [styles.playlistRow, pressed && styles.rowPressed]}><View style={styles.playlistCopy}><Text numberOfLines={1} style={[styles.playlistTitle, playlist.favorite && styles.favoritePlaylist]}>{playlist.title}</Text>{playlist.description ? <Text numberOfLines={2} style={styles.playlistDescription}>{playlist.description}</Text> : null}</View><Text style={styles.playlistCount}>{playlist.count || 0}</Text><Text style={styles.chevron}>›</Text></Pressable>)}</View>}{!loading && !playlists.length ? <Text style={styles.playlistsEmpty}>Песни пока не добавлены.</Text> : null}</ScrollView></Screen>;
 }
 
-function SongCatalog({ songs, loading, onOpen, favoriteIds, onFavorite, onBack, title = 'Песни' }) {
-  const [query, setQuery] = useState('');
-  const [mode, setMode] = useState('title');
+function SongCatalog({ songs, loading, onOpen, favoriteIds, onFavorite, onBack, title = 'Песни', query, mode, onQueryChange, onModeChange }) {
   const rows = useMemo(() => filterSongs(songs, { searchQuery: query, searchMode: mode, favoriteIds }), [songs, query, mode, favoriteIds]);
-  return <Screen><Header title={title} onBack={onBack} /><ScrollView contentContainerStyle={styles.catalogScroll} keyboardShouldPersistTaps="handled"><View style={styles.searchBar}><TextInput value={query} onChangeText={setQuery} placeholder="Поиск" placeholderTextColor={C.text3} style={styles.searchInput} /><SearchModes value={mode} onChange={setMode} /></View>{loading ? <View style={styles.empty}><Text style={styles.emptyTitle}>Загружаем песни…</Text></View> : rows.length ? rows.map((song) => <View key={song.id} style={styles.songRow}><Pressable onPress={() => onOpen(song)} style={({ pressed }) => [styles.songMain, pressed && styles.rowPressed]}><Text numberOfLines={1} style={styles.songTitle}>{song.title}</Text><Text numberOfLines={1} style={styles.songArtist}>{song.artist || '—'}</Text></Pressable><FavoriteButton active={favoriteIds.has(String(song.id))} onPress={() => onFavorite(song.id)} /></View>) : <View style={styles.empty}><Text style={styles.emptyTitle}>Песни не найдены</Text><Text style={styles.emptyText}>Измените поиск или выберите другой плейлист.</Text></View>}</ScrollView></Screen>;
+  return <Screen><Header title={title} onBack={onBack} /><ScrollView contentContainerStyle={styles.catalogScroll} keyboardShouldPersistTaps="handled"><View style={styles.searchBar}><TextInput value={query} onChangeText={onQueryChange} placeholder="Поиск" placeholderTextColor={C.text3} style={styles.searchInput} /><SearchModes value={mode} onChange={onModeChange} /></View>{loading ? <View style={styles.empty}><Text style={styles.emptyTitle}>Загружаем песни…</Text></View> : rows.length ? rows.map((song) => <View key={song.id} style={styles.songRow}><Pressable onPress={() => onOpen(song)} style={({ pressed }) => [styles.songMain, pressed && styles.rowPressed]}><Text numberOfLines={1} style={styles.songTitle}>{song.title}</Text><Text numberOfLines={1} style={styles.songArtist}>{song.artist || '—'}</Text></Pressable><FavoriteButton active={favoriteIds.has(String(song.id))} onPress={() => onFavorite(song.id)} /></View>) : <View style={styles.empty}><Text style={styles.emptyTitle}>Песни не найдены</Text><Text style={styles.emptyText}>Измените поиск или выберите другой плейлист.</Text></View>}</ScrollView></Screen>;
 }
 
 function formatTime(value) {
@@ -51,18 +49,21 @@ function SongDetail({ song, words, onBack, favorite, onFavorite }) {
   const duration = Math.max(0, Number(status.duration || 0));
   const current = Math.max(0, Number(status.currentTime || 0));
   const percent = duration ? Math.min(100, (current / duration) * 100) : 0;
-  const toggle = () => { if (!song?.audioUrl) return; if (status.playing) player.pause(); else player.play(); };
+  const mediaError = !song?.audioUrl ? 'Аудио для этой песни не указано.' : status?.error ? String(status.error?.message || status.error) : '';
+  const toggle = () => { if (!song?.audioUrl || mediaError) return; if (status.playing) player.pause(); else player.play(); };
   const seek = (event) => {
     if (!duration || !timelineWidth) return;
     const location = Math.max(0, Math.min(timelineWidth, Number(event.nativeEvent?.locationX || 0)));
     Promise.resolve(player.seekTo((location / timelineWidth) * duration)).catch(() => {});
   };
-  return <Screen><Header title={song?.title || 'Песня'} subtitle={song?.artist || ''} onBack={onBack} trailing={<FavoriteButton active={favorite} onPress={onFavorite} />} /><ScrollView contentContainerStyle={styles.detailScroll}><View style={styles.player}><Pressable onPress={toggle} disabled={!song?.audioUrl} style={[styles.playButton, !song?.audioUrl && styles.disabledPlayer]}><Text style={styles.playGlyph}>{status.playing ? 'Ⅱ' : '▶'}</Text></Pressable><View style={styles.timelineWrap}><View style={styles.mediaTimeline}><Text style={styles.time}>{formatTime(current)}</Text><Pressable onLayout={(event) => setTimelineWidth(event.nativeEvent.layout.width)} onPress={seek} style={styles.timeline}><View style={styles.timelineTrack} /><View style={[styles.timelineFill, { width: `${percent}%` }]} /></Pressable><Text style={styles.time}>{formatTime(duration)}</Text></View>{!song?.audioUrl ? <Text style={styles.mediaError}>Аудио для этой песни не указано.</Text> : null}</View></View><WordCard word={activeWord} onClose={() => setActiveWord(null)} /><View style={styles.lyrics}>{model.length ? model.map((block, index) => <View key={index} style={[styles.stanza, block.type === 'chorus' && styles.chorus]}>{block.originalLines.map((line, lineIndex) => <View key={lineIndex} style={styles.linePair}><LyricLine line={line} onWord={setActiveWord} />{block.translationLines[lineIndex] ? <Text style={styles.translation}>{block.translationLines[lineIndex]}</Text> : null}</View>)}</View>) : <Text style={styles.emptyText}>Текст песни отсутствует.</Text>}</View></ScrollView></Screen>;
+  return <Screen><Header title={song?.title || 'Песня'} subtitle={song?.artist || ''} onBack={onBack} trailing={<FavoriteButton active={favorite} onPress={onFavorite} />} /><ScrollView contentContainerStyle={styles.detailScroll}><View style={styles.player}><Pressable onPress={toggle} disabled={!song?.audioUrl || Boolean(mediaError)} style={[styles.playButton, (!song?.audioUrl || mediaError) && styles.disabledPlayer]}><Text style={styles.playGlyph}>{status.playing ? 'Ⅱ' : '▶'}</Text></Pressable><View style={styles.timelineWrap}><View style={styles.mediaTimeline}><Text style={styles.time}>{formatTime(current)}</Text><Pressable onLayout={(event) => setTimelineWidth(event.nativeEvent.layout.width)} onPress={seek} style={styles.timeline}><View style={styles.timelineTrack} /><View style={[styles.timelineFill, { width: `${percent}%` }]} /></Pressable><Text style={styles.time}>{formatTime(duration)}</Text></View>{mediaError ? <Text style={styles.mediaError}>{mediaError}</Text> : null}</View></View><WordCard word={activeWord} onClose={() => setActiveWord(null)} /><View style={styles.lyrics}>{model.length ? model.map((block, index) => <View key={index} style={[styles.stanza, block.type === 'chorus' && styles.chorus]}>{block.originalLines.map((line, lineIndex) => <View key={lineIndex} style={styles.linePair}><LyricLine line={line} onWord={setActiveWord} />{block.translationLines[lineIndex] ? <Text style={styles.translation}>{block.translationLines[lineIndex]}</Text> : null}</View>)}</View>) : <Text style={styles.emptyText}>Текст песни отсутствует.</Text>}</View></ScrollView></Screen>;
 }
 
 export function SongsScreen({ songs: initialSongs = [], words = [], onBack, favoriteIds = new Set(), onFavorite }) {
   const [activePlaylistId, setActivePlaylistId] = useState('');
   const [activeSong, setActiveSong] = useState(null);
+  const [query, setQuery] = useState('');
+  const [mode, setMode] = useState('title');
   const [songs, setSongs] = useState(initialSongs);
   const [loading, setLoading] = useState(!initialSongs.length);
   useEffect(() => {
@@ -71,12 +72,13 @@ export function SongsScreen({ songs: initialSongs = [], words = [], onBack, favo
     (async () => { const loaded = await loadNativeSongs(); if (alive) { setSongs(loaded); setLoading(false); } })();
     return () => { alive = false; };
   }, [initialSongs]);
+  const closePlaylist = () => { setActivePlaylistId(''); setActiveSong(null); };
   if (activeSong) return <SongDetail song={activeSong} words={words} onBack={() => setActiveSong(null)} favorite={favoriteIds.has(String(activeSong.id))} onFavorite={() => onFavorite(activeSong.id)} />;
   if (activePlaylistId) {
     const favoritesOnly = activePlaylistId === '__favorites__';
     const playlist = buildSongPlaylists(songs).find((item) => item.id === activePlaylistId);
     const catalogSongs = favoritesOnly ? songs.filter((song) => favoriteIds.has(String(song.id))) : songs.filter((song) => String(song.playlistId) === String(activePlaylistId));
-    return <SongCatalog songs={catalogSongs} loading={loading} onOpen={setActiveSong} favoriteIds={favoriteIds} onFavorite={onFavorite} onBack={() => setActivePlaylistId('')} title={favoritesOnly ? 'Избранные песни' : playlist?.title || 'Песни'} />;
+    return <SongCatalog songs={catalogSongs} loading={loading} onOpen={setActiveSong} favoriteIds={favoriteIds} onFavorite={onFavorite} onBack={closePlaylist} title={favoritesOnly ? 'Избранные песни' : playlist?.title || 'Песни'} query={query} mode={mode} onQueryChange={setQuery} onModeChange={setMode} />;
   }
   return <PlaylistsScreen songs={songs} loading={loading} favoriteIds={favoriteIds} onOpenPlaylist={setActivePlaylistId} onBack={onBack} />;
 }
