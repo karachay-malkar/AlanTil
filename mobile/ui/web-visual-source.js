@@ -1,22 +1,22 @@
-// Canonical visual contract mirrored from Web 13.15.12.
-// This file is the auditable bridge between Web CSS/UI sources and React Native.
+// Canonical semantic visual contract mirrored from Web 13.15.12.
+// CSS is not copied mechanically. Every web source is mapped to RN semantics or marked non-applicable.
 
 export const WEB_VISUAL_SOURCES = Object.freeze({
   ref: '13.15.12',
   styles: Object.freeze([
-    ['src/shared/styles/app.css','1f616612b2a0c5d40b5e9ca9398d13e424e792f5'],
-    ['src/shared/styles/base.css','aff5f0473ff1b269100c5d20df98b5ad142e1bd3'],
-    ['src/shared/styles/chrome.css','3f2ffa5abfc2d0dc157cb0020d24bed0a2494dff'],
-    ['src/shared/styles/components.css','daf4266a1f83691102f662244b4881e3a73db638'],
-    ['src/shared/styles/guest-profile-prompt.css','e3cd2d00df49d96585e682b95e4f482f72646e54'],
-    ['src/shared/styles/paper-components.css','d39121efbd1eb19c10c3b41992c67be0a50f338e'],
-    ['src/shared/styles/privacy.css','465d6687b02ff2d52a03b2bfd8e4b82d0c4094c5'],
-    ['src/shared/styles/reset.css','3a1f3aa732f773c8b88c027cb5555f5fd0206fad'],
-    ['src/shared/styles/segmented-control.css','c98c3144f2aafdddb4684de5b89b8c6c06a45ce1'],
-    ['src/shared/styles/shell.css','14032e0b4c3d1111ce92831dbd991284b8b41503'],
-    ['src/shared/styles/table-system.css','8160eda4f999745a5430621c3faff9ad01001645'],
     ['src/shared/styles/theme.css','9afc17328e22829ad9a13dec8cd7681705131a5f'],
     ['src/shared/styles/typography.css','f5a5fe2f1e5e87f95c0f854c6a9ed505737131bd'],
+    ['src/shared/styles/shell.css','14032e0b4c3d1111ce92831dbd991284b8b41503'],
+    ['src/shared/styles/chrome.css','3f2ffa5abfc2d0dc157cb0020d24bed0a2494dff'],
+    ['src/shared/styles/components.css','daf4266a1f83691102f662244b4881e3a73db638'],
+    ['src/shared/styles/paper-components.css','d39121efbd1eb19c10c3b41992c67be0a50f338e'],
+    ['src/shared/styles/segmented-control.css','c98c3144f2aafdddb4684de5b89b8c6c06a45ce1'],
+    ['src/shared/styles/table-system.css','8160eda4f999745a5430621c3faff9ad01001645'],
+    ['src/shared/styles/app.css','1f616612b2a0c5d40b5e9ca9398d13e424e792f5'],
+    ['src/shared/styles/base.css','aff5f0473ff1b269100c5d20df98b5ad142e1bd3'],
+    ['src/shared/styles/reset.css','3a1f3aa732f773c8b88c027cb5555f5fd0206fad'],
+    ['src/shared/styles/guest-profile-prompt.css','e3cd2d00df49d96585e682b95e4f482f72646e54'],
+    ['src/shared/styles/privacy.css','465d6687b02ff2d52a03b2bfd8e4b82d0c4094c5'],
   ]),
   ui: Object.freeze([
     ['src/shared/ui/adaptive-layout.js','7e050afff3c3de6210f78bd9808d2edfc8a98d01'],
@@ -36,6 +36,34 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
   ]),
 });
 
+export const WEB_VISUAL_COVERAGE = Object.freeze({
+  'src/shared/styles/theme.css': 'mapped: colors, surfaces, borders, state colors, radii, shadows',
+  'src/shared/styles/typography.css': 'mapped: S/M/L scales, body/display/terminal families and weights',
+  'src/shared/styles/shell.css': 'mapped: app/view/panel geometry, content max width, safe-area spacing',
+  'src/shared/styles/chrome.css': 'mapped: header/nav geometry, glass/blur controls and compact breakpoint',
+  'src/shared/styles/components.css': 'mapped: buttons, inputs, progress, list rows, disabled/error/success states',
+  'src/shared/styles/paper-components.css': 'mapped: paper/glass surfaces, borders and shadows',
+  'src/shared/styles/segmented-control.css': 'mapped: segmented control geometry and active state',
+  'src/shared/styles/table-system.css': 'mapped: row heights, separators and fact/list row semantics; CSS table layout is not applicable to RN',
+  'src/shared/styles/app.css': 'mapped: root application spacing and view composition',
+  'src/shared/styles/base.css': 'mapped: base background/text/control defaults',
+  'src/shared/styles/reset.css': 'not-applicable: browser element reset, box sizing and native HTML defaults do not exist in React Native',
+  'src/shared/styles/guest-profile-prompt.css': 'mapped: guest/login message and action geometry',
+  'src/shared/styles/privacy.css': 'not-applicable-to-current-screen: privacy content-specific layout; shared typography/surface primitives already mapped',
+  'src/shared/ui/adaptive-layout.js': 'mapped: compact breakpoint and adaptive horizontal insets',
+  'src/shared/ui/auth-provider-button.js': 'mapped: AuthProviderButton',
+  'src/shared/ui/favorite-button.js': 'mapped: FavoriteButton',
+  'src/shared/ui/icons.js': 'mapped by mobile/ui/icons.js; DOM/SVG injection implementation itself is not applicable',
+  'src/shared/ui/info-modal.js': 'mapped to shared modal geometry; feature content remains feature-owned',
+  'src/shared/ui/list.js': 'mapped: list row contract',
+  'src/shared/ui/modal.js': 'mapped: modal overlay/card/actions/motion',
+  'src/shared/ui/panel.js': 'mapped: Panel',
+  'src/features/account/account.css': 'mapped: accountStack max width, fields, facts, messages, gender cards and spacing',
+  'src/features/account/index.js': 'logic-parity target: loading/auth/profile/nickname/avatar/completed state machine',
+  'src/features/account/login.js': 'logic-parity target: provider loading/error and guest continuation',
+  'src/features/account/profile.js': 'logic-parity target: nickname debounce/profile creation/avatar confirmation/facts',
+});
+
 export const WEB_VISUAL_TOKENS = Object.freeze({
   colors: Object.freeze({
     appBg:'#eee9df', appBgDeep:'#e7e0d4', surface0:'#f6f2e9', surface1:'#eee8dc', surface2:'#e2d9c9', surface3:'#cec0aa', surfaceDark:'#34312c',
@@ -51,21 +79,38 @@ export const WEB_VISUAL_TOKENS = Object.freeze({
     controlGlass:'rgba(246,242,233,0.28)', controlGlassActive:'rgba(246,242,233,0.46)', controlBorder:'rgba(54,50,43,0.0968)', maskGlass:'rgba(238,233,223,0.18)',
     pathBubbleGlass:'rgba(41,39,34,0.34)', pathBubbleBorder:'rgba(41,39,34,0.18)', activeBubbleGlass:'rgba(41,39,34,0.88)', activeBubbleBorder:'rgba(41,39,34,0.32)',
   }),
+  surfaces:Object.freeze({app:'appBg',panel:'panelMid',panelStrong:'panelStrong',paper:'paper',paperSoft:'paperSoft',control:'controlGlass',controlActive:'controlGlassActive',input:'surface0',overlay:'overlay'}),
+  borders:Object.freeze({soft:'lineSoft',normal:'line',strong:'lineStrong',control:'controlBorder',success:'successBorder',error:'dangerBorder'}),
   typeScale: Object.freeze({
     small:Object.freeze({micro:10,caption:10,body:12,emphasis:14,title:16,display:40,result:54}),
     medium:Object.freeze({micro:10,caption:12,body:14,emphasis:16,title:20,display:48,result:64}),
     large:Object.freeze({micro:12,caption:14,body:16,emphasis:20,title:20,display:56,result:72}),
   }),
-  radius:Object.freeze({xs:7,sm:10,md:15,lg:20,pill:999}),
+  font:Object.freeze({body:undefined,display:undefined,brand:'serif',terminal:'monospace'}),
+  radius:Object.freeze({none:2,xs:7,sm:10,md:15,lg:20,pill:999}),
   spacing:Object.freeze({s1:4,s2:8,s3:12,s4:16,s5:20,s6:24,s7:32,s8:40}),
-  control:Object.freeze({sm:36,normal:44,compact:36,text:28,large:44,header:42,nav:60}),
+  control:Object.freeze({sm:36,normal:44,compact:36,text:28,large:44,header:42,nav:60,input:44,row:48}),
   chrome:Object.freeze({contentRestGap:16,actionEdgeGap:16,headerSide:10,headerSideCompact:6,headerCenterInset:56,navSide:12,navSideCompact:8,actionSize:36,actionIconSize:20,navBubbleSize:38,navBubbleCompactSize:36,blur:10,controlBlur:8,compactWidth:360}),
-  motion:Object.freeze({fast:110,normal:145}),
-  layout:Object.freeze({contentMax:720,viewPadding:12,viewPaddingCompact:8,panelBodyHorizontal:16,panelBodyHorizontalCompact:12,panelBodyTop:8,panelBodyBottom:18}),
-  shadow:Object.freeze({xs:{opacity:0.05,radius:2,y:1},sm:{opacity:0.07,radius:14,y:5},md:{opacity:0.12,radius:30,y:12}}),
+  safeArea:Object.freeze({edges:['top','left','right','bottom'],topContentGap:16,bottomContentGap:18}),
+  breakpoints:Object.freeze({compact:360,accountNarrow:420}),
+  motion:Object.freeze({fast:110,normal:145,modal:145,reduced:0}),
+  layout:Object.freeze({contentMax:720,accountMax:520,viewPadding:12,viewPaddingCompact:8,panelBodyHorizontal:16,panelBodyHorizontalCompact:12,panelBodyTop:8,panelBodyBottom:18,accountGap:16}),
+  shadow:Object.freeze({xs:{opacity:0.05,radius:2,y:1},sm:{opacity:0.07,radius:14,y:5},md:{opacity:0.12,radius:30,y:12},modal:{opacity:0.20,radius:28,y:12}}),
+  states:Object.freeze({disabledOpacity:0.46,pressedOpacity:0.86,loadingOpacity:0.72,focusBorder:'lineStrong',successBorder:'successBorder',errorBorder:'dangerBorder'}),
+  button:Object.freeze({height:44,compactHeight:36,horizontal:13,radius:2,providerHeight:44}),
+  input:Object.freeze({height:44,horizontal:12,radius:2,borderWidth:1}),
+  panel:Object.freeze({radius:20,borderWidth:1,headerMinHeight:42}),
+  modal:Object.freeze({maxWidth:500,padding:18,radius:20,overlay:'overlay'}),
+  segmented:Object.freeze({padding:2,itemMinHeight:28,itemMinWidth:38,radius:999}),
+  progress:Object.freeze({height:4,radius:999}),
+  list:Object.freeze({rowMinHeight:48,menuMinHeight:54,horizontal:14,separator:'lineSoft'}),
+  favorite:Object.freeze({size:36,iconSize:23,active:'favorite',inactive:'text3'}),
+  account:Object.freeze({maxWidth:520,gap:16,fieldGap:8,messageMinHeight:18,genderCardMinHeight:210,genderCardGap:12,factRowMinHeight:48}),
 });
 
 export function verifyWebVisualSourceManifest() {
-  const paths = [...WEB_VISUAL_SOURCES.styles, ...WEB_VISUAL_SOURCES.ui, ...WEB_VISUAL_SOURCES.account].map(([path])=>path);
-  return { ref:WEB_VISUAL_SOURCES.ref, total:paths.length, unique:new Set(paths).size, complete:new Set(paths).size===paths.length };
+  const sources=[...WEB_VISUAL_SOURCES.styles,...WEB_VISUAL_SOURCES.ui,...WEB_VISUAL_SOURCES.account];
+  const paths=sources.map(([path])=>path);
+  const missingCoverage=paths.filter((path)=>!WEB_VISUAL_COVERAGE[path]);
+  return {ref:WEB_VISUAL_SOURCES.ref,total:paths.length,unique:new Set(paths).size,missingCoverage,complete:new Set(paths).size===paths.length&&missingCoverage.length===0};
 }
