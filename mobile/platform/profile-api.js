@@ -1,4 +1,4 @@
-import { validateNicknameRule } from '../../packages/alantil-core/profile.js';
+import { normalizeAvatarGender, validateNicknameRule } from '../../packages/alantil-core/profile.js';
 import { nativeAuthFetch } from './auth.js';
 
 export class NativeProfileApiError extends Error {
@@ -90,7 +90,7 @@ export async function createNativeProfile(userId, value) {
 }
 
 export async function setNativeAvatarGender(userId, value) {
-  const gender = ['male','female'].includes(String(value)) ? String(value) : '';
+  const gender = normalizeAvatarGender(value);
   if (!userId || !gender) throw new NativeProfileApiError('Invalid avatar selection', { operation: 'set_avatar_gender', code: 'invalid' });
   let response;
   try {
