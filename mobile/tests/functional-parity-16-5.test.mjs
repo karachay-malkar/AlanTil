@@ -4,6 +4,7 @@ import test from 'node:test';
 import { buildLearningRoute } from '../../packages/alantil-core/learning-route.js';
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from '../../packages/alantil-core/practice-scope.js';
 import { buildWordsByPOSRounds } from '../../packages/alantil-core/word-selection.js';
+import { normalizeSupabaseWordEntry } from '../../packages/alantil-core/word-normalizer.js';
 import { createRouteProgressSnapshot, computedStationStatus, stationWordProgress, storyProgress } from '../../packages/alantil-core/route-progress.js';
 import { buildLearnResultSummary, decideLearnCard, exposeCurrentLearnCard, initializeLearnState, learnCompletionSummary, undoLearnDecision } from '../../packages/alantil-core/learning.js';
 import { applyStationTestAnswer, buildStationTestSessionState, stationTestActiveSnapshot, stationTestPayload, stationTestResult } from '../../packages/alantil-core/station-test.js';
@@ -15,12 +16,14 @@ import { masteryLevelForPercent } from '../../packages/alantil-core/mastery.js';
 
 const read=(path)=>fs.readFileSync(new URL(`../../${path}`,import.meta.url),'utf8');
 const snapshot=JSON.parse(read('mobile/data/dictionary-snapshot.json'));
-const words=snapshot.words;
+const storyMap=new Map((snapshot.stories||[]).map((story)=>[String(story.story_id||''),story]));
+const words=(snapshot.words||[]).map((row)=>normalizeSupabaseWordEntry(row,storyMap.get(String(row.story_id||''))||null)).filter(Boolean);
 
 function simpleWords(count=20){return Array.from({length:count},(_,index)=>({id:`w${index+1}`,word:`алан${index+1}`,trans:`рус${index+1}`,pos:index%2?'noun':'verb'}));}
 function learnState(){return {currentDict:'d',currentSection:'s',currentSet:'1',mainQueue:[],repeatQueue:[],round:'main',totalPlanned:0,currentStudyId:'',swipeHistory:[],analyticsActions:[],sessionFailMap:{},studySession:{inProgress:false,completed:false,wordsPool:[],progressData:{},wordStats:{},metadata:{}}};}
 
 test('16.5 Path route covers the complete production dictionary with unique dynamic station keys',()=>{
+  assert.equal(words.length,snapshot.word_count);
   const route=buildLearningRoute(words);
   const stations=route.storyOrder.flatMap((story)=>route.stories[story].stations);
   const routed=stations.reduce((sum,station)=>sum+station.words.length,0);
@@ -155,7 +158,7 @@ test('16.5 Profile Statistics Settings are real-data backed and expose all persi
   const profile=read('mobile/screens/profile-main.js'),progress=read('mobile/platform/progress.js'),storage=read('mobile/platform/storage.js');
   assert.match(profile,/getNativeProgressSummary/);assert.match(profile,/loadNativeWordProgressMap/);assert.match(profile,/summary\.activity\?\.sessions/);assert.match(profile,/summary\.difficult/);assert.match(profile,/dictionaryPathProgress/);
   assert.match(profile,/interface_language_code/);assert.match(profile,/alan_script_code/);assert.match(profile,/alan_dialect_code/);assert.match(profile,/text_size_code/);assert.match(profile,/getNativeDictionaryDiagnostics/);assert.match(profile,/16\.5\.0/);
-  assert.match(progress,/mastered/);assert.match(progress,/activeSeconds/);assert.match(progress,/sessions/);assert.match(progress,/buildProblemWordRows/);assert.match(storage,/saveNativeSettings/);assert.match(storage,/queuePreferences/);
+  assert.match(progress,/summarizeWordProgress/);assert.match(progress,/activeSeconds/);assert.match(progress,/sessions/);assert.match(progress,/buildProblemWordRows/);assert.match(storage,/saveNativeSettings/);assert.match(storage,/queuePreferences/);
   const settings=normalizeUserSettings(applyUserSettingsUpdate({}, {interface_language_code:'tr',alan_script_code:'turkic',text_size_code:'large'}));
   assert.equal(settings.interface_language_code,'tr');assert.equal(settings.alan_script_code,'turkic');assert.equal(settings.text_size_code,'large');
 });
