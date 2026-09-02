@@ -35,6 +35,8 @@ jobs:
               git push origin HEAD:${GITHUB_REF_NAME}
             fi
           fi
+      - name: Verify bundled snapshot equals production
+        run: node scripts/verify-mobile-dictionary-snapshot-parity.mjs
       - name: Portable business-logic audit
         run: node scripts/check-portable-duplicates-16-4-1.mjs
       - name: Compute fixed completion matrix
