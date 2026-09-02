@@ -36,6 +36,10 @@ jobs:
       - name: Mobile 16.5 functional parity and regression tests
         working-directory: mobile
         run: npm test
+      - name: Functional parity completion gate
+        run: node scripts/check-functional-parity-16-5.mjs
+      - name: Completion matrix and foundation gate
+        run: node scripts/check-completion-matrix.mjs
       - name: Verify provenance remains clean
         run: node scripts/check-portable-duplicates-16-4-1.mjs
       - name: Expo Doctor
