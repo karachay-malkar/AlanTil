@@ -1,0 +1,96 @@
+name: AlanTil 16.4 Foundation Parity
+
+on:
+  push:
+    branches:
+      - agent/16.4-foundation-data-account-sync-parity
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  foundation-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Shared core tests
+        run: node --test tests/alantil-core-16.test.mjs
+      - name: Unified core boundary tests
+        run: node --test tests/unified-core-boundary-16.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile + Web-origin parity tests
+        working-directory: mobile
+        run: npm test
+      - name: Verify provenance manifest has zero reimplementations
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('docs/WEB_ORIGIN_16_4.json','utf8'));
+          const bad = data.entries.filter(x => x.status === 'MOBILE_REIMPLEMENTATION');
+          if (bad.length) throw new Error(`MOBILE_REIMPLEMENTATION=${bad.length}`);
+          console.log(`Web-origin entries: ${data.entries.length}; MOBILE_REIMPLEMENTATION=0`);
+          NODE
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Export Expo Web preview
+        working-directory: mobile
+        run: npm run export:web
+      - name: Prepare stable preview CDN paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          base = 'https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          root = Path('mobile/dist-web')
+          for path in root.glob('_expo/static/js/web/*.js'):
+              text = path.read_text(encoding='utf-8')
+              text = text.replace('"/_expo/', f'"{base}/_expo/').replace("'/_expo/", f"'{base}/_expo/")
+              text = text.replace('"/assets/', f'"{base}/assets/').replace("'/assets/", f"'{base}/assets/")
+              path.write_text(text, encoding='utf-8')
+          index = root / 'index.html'
+          text = index.read_text(encoding='utf-8')
+          text = text.replace('src="/_expo/', f'src="{base}/_expo/')
+          index.write_text(text, encoding='utf-8')
+          (root / 'preview-build.json').write_text(json.dumps({
+              'sha': os.environ.get('GITHUB_SHA', ''),
+              'branch': os.environ.get('GITHUB_REF_NAME', ''),
+              'run_id': os.environ.get('GITHUB_RUN_ID', ''),
+              'version': '16.4.0',
+          }), encoding='utf-8')
+          PY
+      - name: Package full source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=zip --output=mobile/dist-web/AlanTil-16.4.0-source.zip HEAD
+          sha256sum mobile/dist-web/AlanTil-16.4.0-source.zip > mobile/dist-web/AlanTil-16.4.0-source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.4.0-Foundation-Parity
+          path: mobile/dist-web
+          if-no-files-found: error
+      - name: Publish stable preview branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R mobile/dist-web/. "$publish_dir/"
+          cd "$publish_dir"
+          git init
+          git checkout -b preview-web
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Preview ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
