@@ -1,0 +1,36 @@
+name: AlanTil 16.1 Source
+
+on:
+  push:
+    branches:
+      - agent/16.1-mobile-web-parity
+  workflow_dispatch:
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build source archive and size manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          files=sorted((p for p in Path('.').rglob('*') if p.is_file() and '.git' not in p.parts), key=lambda p:p.as_posix())
+          with open('AlanTil_16.1.0_FILE_SIZES.txt','w',encoding='utf-8') as out:
+              for p in files: out.write(f'{p.as_posix()} — {p.stat().st_size/1024:.2f} KB\n')
+          with zipfile.ZipFile('AlanTil_16.1.0_Mobile_Web_Parity_Source.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for p in files:
+                  if not p.name.startswith('AlanTil_16.1.0_'): z.write(p,p.as_posix())
+          PY
+          sha256sum AlanTil_16.1.0_Mobile_Web_Parity_Source.zip > AlanTil_16.1.0_SOURCE.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.1.0-Source
+          path: |
+            AlanTil_16.1.0_Mobile_Web_Parity_Source.zip
+            AlanTil_16.1.0_FILE_SIZES.txt
+            AlanTil_16.1.0_SOURCE.sha256
+          if-no-files-found: error
