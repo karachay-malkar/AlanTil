@@ -7,6 +7,7 @@ import { Button, Header, ProgressBar, Screen } from '../ui/components.js';
 import { CompactSegmentedControl, EmptyState, MetricStrip, MonoLabel, ScreenSection, SurfaceCard } from '../ui/parity.js';
 import { theme } from '../ui/theme.js';
 import { bootstrapNativeAuth, subscribeNativeAuth } from '../platform/auth.js';
+import { getNativeDictionaryDiagnostics } from '../platform/dictionary.js';
 import { loadNativeProfile } from '../platform/profile-api.js';
 import { getNativeProgressSummary, loadNativeWordProgressMap } from '../platform/progress.js';
 
@@ -57,7 +58,7 @@ function StatisticsPane({ words, route }) {
   const completed = Object.values(path.stories || {}).reduce((sum, value) => sum + Number(value.completedCatalogs || 0), 0);
   if (!summary) return <EmptyState>Загружаем статистику…</EmptyState>;
   return <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-    <ScreenSection title="Сводка эффективности"><SurfaceCard><MetricStrip items={[[String(summary.mastered || 0), 'освоено'], [String(completed), 'словарей'], [durationLabel(summary.activity?.activeSeconds || 0), 'активность']]} /><MetricStrip items={[[String(summary.activity?.learnSessions || 0), 'сессий'], [`${summary.activity?.accuracy || 0}%`, 'точность'], [String(summary.review || 0), 'к повторению']]} /></SurfaceCard></ScreenSection>
+    <ScreenSection title="Сводка эффективности"><SurfaceCard><MetricStrip items={[[String(summary.mastered || 0), 'освоено'], [String(completed), 'словарей'], [durationLabel(summary.activity?.activeSeconds || 0), 'активность']]} /><MetricStrip items={[[String(summary.activity?.sessions || 0), 'сессий'], [`${summary.activity?.accuracy || 0}%`, 'точность'], [String(summary.review || 0), 'к повторению']]} /></SurfaceCard></ScreenSection>
     <ScreenSection title="Проблемные слова">{summary.difficult?.length ? <SurfaceCard>{summary.difficult.slice(0, 7).map(({ word, unknownRate }) => <View key={word.id} style={styles.problemRow}><View style={styles.problemCopy}><Text numberOfLines={1} style={styles.problemWord}>{word.word}</Text><Text numberOfLines={1} style={styles.problemTrans}>{word.trans}</Text></View><MonoLabel style={styles.problemRate}>{unknownRate}%</MonoLabel></View>)}</SurfaceCard> : <EmptyState>Пока недостаточно данных.</EmptyState>}</ScreenSection>
   </ScrollView>;
 }
@@ -68,6 +69,7 @@ function SettingRow({ label, value, items, onChange }) {
 
 function SettingsPane({ settings, onChange }) {
   const update = (key, value) => onChange(applyUserSettingsUpdate(settings, { [key]: value }));
+  const dictionary = getNativeDictionaryDiagnostics();
   return <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
     <ScreenSection title="Язык и отображение"><SurfaceCard>
       <SettingRow label="Язык интерфейса" value={settings.interface_language_code} items={[["ru", "RU"], ["en", "EN"], ["tr", "TR"]]} onChange={(value) => update('interface_language_code', value)} />
@@ -76,7 +78,7 @@ function SettingsPane({ settings, onChange }) {
       <SettingRow label="Размер текста" value={settings.text_size_code} items={[["small", "S"], ["medium", "M"], ["large", "L"]]} onChange={(value) => update('text_size_code', value)} />
     </SurfaceCard></ScreenSection>
     <SurfaceCard inset style={styles.preview}><MonoLabel>ПРЕДПРОСМОТР</MonoLabel><Text style={[styles.previewWord, settings.text_size_code === 'small' && styles.previewSmall, settings.text_size_code === 'large' && styles.previewLarge]}>тау</Text><Text style={styles.previewTranslation}>гора</Text></SurfaceCard>
-    <ScreenSection title="Версия"><SurfaceCard><View style={styles.versionRow}><Text style={styles.versionLabel}>Приложение</Text><MonoLabel>16.3.0</MonoLabel></View><View style={styles.versionRow}><Text style={styles.versionLabel}>Источник</Text><MonoLabel>Web 13.15.12</MonoLabel></View></SurfaceCard></ScreenSection>
+    <ScreenSection title="Версия"><SurfaceCard><View style={styles.versionRow}><Text style={styles.versionLabel}>Приложение</Text><MonoLabel>16.5.0</MonoLabel></View><View style={styles.versionRow}><Text style={styles.versionLabel}>Словарь</Text><MonoLabel>{dictionary.installedVersion || dictionary.bundledVersion || '—'}</MonoLabel></View><View style={styles.versionRow}><Text style={styles.versionLabel}>Источник</Text><MonoLabel>Web 13.15.12</MonoLabel></View></SurfaceCard></ScreenSection>
   </ScrollView>;
 }
 
