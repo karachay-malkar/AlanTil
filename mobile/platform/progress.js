@@ -16,6 +16,7 @@ async function readJson(key,fallback){try{const raw=await AsyncStorage.getItem(k
 async function writeJson(key,value){await AsyncStorage.setItem(key,JSON.stringify(value));}
 
 export async function loadNativeWordProgressState(){return normalizeWordProgressState(await readJson(PROGRESS_KEY,{}));}
+export async function loadNativeWordProgressMap(){return wordProgressMapFromState(await loadNativeWordProgressState());}
 export async function saveNativeWordProgressState(state){const normalized=normalizeWordProgressState(state);await writeJson(PROGRESS_KEY,normalized);return normalized;}
 
 async function bumpActivity({type,correct=0,total=0,startedAt,endedAt=new Date().toISOString()}={}){
