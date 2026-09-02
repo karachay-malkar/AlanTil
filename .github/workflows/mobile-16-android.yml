@@ -1,0 +1,64 @@
+name: AlanTil 16.0 Android
+
+on:
+  push:
+    branches:
+      - agent/16.0-clean-web-core
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Mobile architecture tests
+        working-directory: mobile
+        run: npm test
+
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+
+      - name: Verify JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist
+
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build standalone release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Package APK
+        shell: bash
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.0.0.apk
+          sha256sum AlanTil-16.0.0.apk > AlanTil-16.0.0.apk.sha256
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.0.0-APK
+          path: |
+            AlanTil-16.0.0.apk
+            AlanTil-16.0.0.apk.sha256
+          if-no-files-found: error
