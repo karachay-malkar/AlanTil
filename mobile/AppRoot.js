@@ -18,6 +18,7 @@ import { LearnScreen } from './screens/learn.js';
 import { StationTestScreen } from './screens/station-test.js';
 import { SongsScreen } from './screens/songs.js';
 import { OnboardingScreen } from './screens/onboarding.js';
+import { PathScreen } from './screens/path.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
 import { hasCompletedNativeOnboarding, loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, markNativeOnboardingComplete, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
 import { loadNativeWordProgressMap } from './platform/progress.js';
@@ -31,18 +32,6 @@ function PracticeHome({openTest,openMatch,openFavorites,openSongs}){return <Scre
 
 function FavoritesScreen({favorites,setFavorites,onBack,onLearn}){const rows=WORDS.filter((word)=>favorites.has(String(word.id)));return <Screen><Header title="Избранное" subtitle={`${rows.length} слов`} onBack={onBack}/><ScrollView contentContainerStyle={[uiStyles.scrollContent,{paddingBottom:86}]}>{rows.length?<><SectionLabel>СЛОВА</SectionLabel>{rows.map((word,index)=><View key={word.id} style={styles.wordRow}><Text style={styles.wordIndex}>{String(index+1).padStart(2,'0')}</Text><View style={styles.wordCopy}><Text style={styles.wordPrimary}>{word.word}</Text><Text style={styles.wordSecondary}>{word.trans}</Text></View><FavoriteButton active onPress={()=>setFavorites(toggleFavorite(favorites,word.id).ids)}/></View>)}</>:<View style={styles.empty}><Text style={styles.emptyTitle}>Пока пусто</Text><Text style={styles.emptyText}>Отмечайте слова звездой, чтобы учить их отдельно.</Text></View>}</ScrollView>{rows.length?<View style={styles.favoritesLaunch}><Pressable onPress={()=>onLearn(rows)} style={styles.primaryButton}><Text style={styles.primaryButtonText}>Учить слова</Text></Pressable></View>:null}</Screen>;}
 
-function StoryTabs({activeStory,onChange}){return <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>{(ROUTE.storyOrder||[]).map((type)=><Pressable key={type} onPress={()=>onChange(type)} style={styles.storyTab}><Text style={[styles.storyTabText,activeStory===type&&styles.storyTabActive]}>{ROUTE.stories[type]?.label||type}</Text></Pressable>)}</ScrollView>;}
-
-function PathScreen({onOpenStation}){
-  const [activeStory,setActiveStory]=useState(()=>ROUTE.storyOrder?.[0]||'');
-  const [progressMap,setProgressMap]=useState(()=>new Map());
-  useEffect(()=>{let alive=true;loadNativeWordProgressMap().then((map)=>{if(alive)setProgressMap(map);});return()=>{alive=false;};},[]);
-  const story=ROUTE.stories?.[activeStory];
-  const stations=story?.stations||[];
-  const snapshot=useMemo(()=>createRouteProgressSnapshot(progressMap),[progressMap]);
-  const storySummary=useMemo(()=>storyProgress(ROUTE,activeStory,snapshot),[activeStory,snapshot]);
-  return <Screen bottomNav><Topography opacity={0.28}/><Header title="" trailing={<HeaderCircleButton icon={<InfoIcon size={20} color={C.text2}/>} accessibilityLabel="Подсказка" onPress={()=>{}}/>}/><View style={styles.pathControls}><StoryTabs activeStory={activeStory} onChange={setActiveStory}/><View style={styles.storyProgress}><Text style={styles.storyProgressAccent}>{storySummary.percent}%</Text><Text style={styles.storyProgressCount}>{storySummary.masteredStations}/{stations.length}</Text></View></View><ScrollView contentContainerStyle={styles.pathContent}>{(story?.catalogs||[]).map((catalog)=><View key={`${activeStory}-${catalog.dictionaryId}`} style={styles.catalogBlock}><SectionLabel>{catalog.name||'Словарь'}</SectionLabel>{(catalog.sections||[]).map((section)=><View key={`${catalog.dictionaryId}-${section.sectionId}`} style={styles.sectionBlock}><Text style={styles.sectionHeading}>{section.name}</Text><View style={styles.routeRail}/>{(section.stations||[]).map((station,index)=>{const right=index%2===1;const summary=stationWordProgress(station,snapshot);return <Pressable key={station.key} onPress={()=>onOpenStation(station)} style={[styles.stationNode,right?styles.stationRight:styles.stationLeft]}><View style={[styles.stationProgressRing,summary.percent===100&&styles.stationProgressDone,summary.percent>0&&summary.percent<100&&styles.stationProgressActive]}><View style={styles.millstoneFace}><View style={styles.millstoneHole}/><Text style={styles.stationOrdinal}>{String(station.setNumber||index+1).padStart(2,'0')}</Text></View></View><Text numberOfLines={2} style={styles.stationLabel}>{station.name||`Этап ${index+1}`}</Text><Text style={styles.stationCount}>{summary.mastered}/{summary.total} · {summary.percent}%</Text></Pressable>;})}</View>)}</View>)}{!story?<View style={styles.empty}><Text style={styles.emptyTitle}>Маршрут недоступен</Text><Text style={styles.emptyText}>Нет данных для построения пути.</Text></View>:null}</ScrollView><View style={styles.routeScale}>{[0,1,2,3,4,5,6,7,8].map((value)=>value===4?<View key={value} style={styles.scaleDiamond}/>:<View key={value} style={styles.scaleDot}/>)}</View></Screen>;
-}
 
 function BootScreen(){return <View style={styles.boot}><Text style={styles.bootBrand}>Alan Til</Text><View style={styles.bootDot}/></View>;}
 
@@ -69,7 +58,7 @@ export default function AppRoot(){
   else if(tab==='practice'){content=<PracticeHome openTest={()=>setScreen('test')} openMatch={()=>setScreen('match')} openFavorites={()=>setScreen('favorites')} openSongs={()=>setScreen('songs')}/>;}
   else if(tab==='profile'&&screen==='account'){content=<AccountScreen onBack={()=>setScreen('home')}/>;showNav=false;}
   else if(tab==='profile'){content=<ProfileArea words={WORDS} settings={settings} onSettingsChange={setSettings} onAccount={()=>setScreen('account')}/>;}
-  else content=<PathScreen onOpenStation={openStation}/>;
+  else content=<PathScreen route={ROUTE} onOpenStation={openStation}/>;
   return shell(content,showNav);
 }
 
