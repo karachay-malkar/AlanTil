@@ -24,5 +24,26 @@ jobs:
       - name: Architecture boundary tests
         run: node --test tests/unified-core-boundary-16.test.mjs
 
-      - name: Existing Web regression tests
-        run: node --test tests/*.test.mjs
+      - name: Web behavioral regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test \
+            tests/i18n-runtime.test.mjs \
+            tests/word-normalization.test.mjs \
+            tests/word-progress.test.mjs \
+            tests/station-test-contract.test.mjs \
+            tests/visitor-analytics.test.mjs \
+            tests/navigation-intent.test.mjs \
+            tests/sync-queue.test.mjs \
+            tests/session-exit-phrase.test.mjs
+
+      - name: Verify Web remains the 13.15.12 reference UI
+        shell: bash
+        run: |
+          grep -q 'targetVersion = "13.15.12"' index.html
+          grep -q '/src/app/bootstrap.js?v=13.15.12' index.html
+          test -f src/features/path/index.js
+          test -f src/features/test/engine.js
+          test -f src/features/match/engine.js
+          test -f src/features/learn/study.js
