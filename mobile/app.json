@@ -2,23 +2,23 @@
   "expo": {
     "name": "Alan Til",
     "slug": "alan-til",
-    "version": "16.0.0",
+    "version": "16.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 16,
+      "versionCode": 17,
       "adaptiveIcon": {
         "backgroundColor": "#eee9df"
       }
     },
     "ios": {
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "16"
+      "buildNumber": "17"
     },
     "extra": {
-      "releaseVersion": "16.0.0",
+      "releaseVersion": "16.1.0",
       "architecture": "web-13.15.12-shared-core"
     }
   }
