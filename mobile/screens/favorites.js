@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { toggleFavorite } from '../../packages/alantil-core/favorites.js';
+import { FAVORITES_HIDDEN_CONTEXT } from '../../packages/alantil-core/hidden-selection.js';
 import { Button, FavoriteButton, Header, Screen } from '../ui/components.js';
 import { CompactSegmentedControl, EmptyState, MonoLabel, SurfaceCard } from '../ui/parity.js';
 import { loadNativeHiddenWords, saveNativeHiddenWords } from '../platform/hidden-words.js';
@@ -22,13 +23,13 @@ export function FavoritesScreen({ words, favorites, setFavorites, onBack, onLear
 
   useEffect(() => {
     let alive = true;
-    loadNativeHiddenWords().then((set) => { if (alive) { setHiddenIds(set); setReady(true); } });
+    loadNativeHiddenWords(FAVORITES_HIDDEN_CONTEXT).then((set) => { if (alive) { setHiddenIds(set); setReady(true); } });
     return () => { alive = false; };
   }, []);
 
   const persist = (next, changed) => {
     setHiddenIds(next);
-    saveNativeHiddenWords(next, changed).catch(() => {});
+    saveNativeHiddenWords(FAVORITES_HIDDEN_CONTEXT, next, changed).catch(() => {});
   };
   const toggleWord = (id) => {
     const key = String(id);
@@ -48,7 +49,12 @@ export function FavoritesScreen({ words, favorites, setFavorites, onBack, onLear
     changed.forEach((id) => next.add(id));
     persist(next, changed);
   };
-  const unfavorite = (id) => setFavorites(toggleFavorite(favorites, id).ids);
+  const unfavorite = (id) => {
+    const key=String(id),nextHidden=new Set(hiddenIds);
+    nextHidden.delete(key);
+    persist(nextHidden,[key]);
+    setFavorites(toggleFavorite(favorites, id).ids);
+  };
 
   return <Screen><Header title="Избранное" subtitle={`${rows.length} слов`} onBack={onBack} />{rows.length ? <><View style={styles.toolbar}><View style={styles.tools}><Pressable disabled={!ready} onPress={showAll}><Text style={styles.tool}>Показать все</Text></Pressable><Text style={styles.divider}>·</Text><Pressable disabled={!ready} onPress={hideAll}><Text style={styles.tool}>Скрыть все</Text></Pressable></View><MonoLabel>{activeRows.length}/{rows.length}</MonoLabel></View><ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}><SurfaceCard>{rows.map((word) => { const selected = !hiddenIds.has(String(word.id)); return <View key={word.id} style={[styles.row, !selected && styles.rowHidden]}><BracketCheckbox selected={selected} onPress={() => toggleWord(word.id)} /><View style={styles.copy}><Text numberOfLines={1} style={styles.primary}>{word.word}</Text><Text numberOfLines={1} style={styles.secondary}>{word.trans}</Text></View><FavoriteButton active onPress={() => unfavorite(word.id)} /></View>; })}</SurfaceCard></ScrollView><View style={styles.footer}><View style={styles.direction}><CompactSegmentedControl value={direction} items={[["kb", "алан → рус"], ["ru", "рус → алан"]]} onChange={setDirection} /></View><View style={styles.gameActions}><Button style={styles.gameButton} disabled={!activeRows.length} onPress={() => onMatch?.(activeRows)}>Сопоставление</Button><Button style={styles.gameButton} disabled={!activeRows.length} onPress={() => onTest?.(activeRows)}>Тест</Button></View><Button primary style={styles.start} disabled={!activeRows.length} onPress={() => onLearn(activeRows, direction)}>Учить</Button></View></> : <View style={styles.empty}><EmptyState>Отмечайте слова звездой, чтобы учить их отдельно.</EmptyState></View>}</Screen>;
 }
