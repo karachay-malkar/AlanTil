@@ -1,24 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalizeFavoriteSyncRows } from '../../packages/alantil-core/favorites.js';
 import { migrateStoredUserSettings, normalizeUserSettings } from '../../packages/alantil-core/settings.js';
 import { migrateLegacyNativeValueToGuest, nativeScopedStorageKey } from './storage-scope.js';
 
-const KEYS=Object.freeze({settings:'alantil:16.1:settings',favorites:'alantil:16.1:favorites',songFavorites:'alantil:16.1:song-favorites',legacyOnboarding:'alantil:16.1:onboarding-complete'});
+const KEYS=Object.freeze({settings:'alantil:16.1:settings',favorites:'alantil:16.1:favorites',favoriteSync:'alantil:16.4.1:favorite-sync',songFavorites:'alantil:16.1:song-favorites',songFavoriteSync:'alantil:16.4.1:song-favorite-sync',legacyOnboarding:'alantil:16.1:onboarding-complete'});
 async function scopedKey(base){await migrateLegacyNativeValueToGuest(base);return nativeScopedStorageKey(base);}
 async function readJson(base,fallback){try{const raw=await AsyncStorage.getItem(await scopedKey(base));return raw?JSON.parse(raw):fallback;}catch{return fallback;}}
 async function writeJson(base,value){await AsyncStorage.setItem(await scopedKey(base),JSON.stringify(value));}
 async function queuePreferences(){try{const {queueNativePreferences}=await import('./cloud-sync.js');await queueNativePreferences();}catch{}}
-async function queueFavoriteDiff(kind,before,after){try{const {queueNativeFavoriteChange}=await import('./cloud-sync.js');const ids=new Set([...before,...after]);for(const id of ids){const was=before.has(id),is=after.has(id);if(was!==is)await queueNativeFavoriteChange(kind,id,is);}}catch{}}
-export async function loadNativeSettings(){
-  let raw=null,hasStoredSettings=false;
-  try{const key=await scopedKey(KEYS.settings),stored=await AsyncStorage.getItem(key);hasStoredSettings=stored!==null;raw=stored?JSON.parse(stored):{};}catch{raw={};}
-  const migrated=migrateStoredUserSettings(raw,hasStoredSettings),normalized=normalizeUserSettings(migrated||{});
-  if(hasStoredSettings&&JSON.stringify(normalized)!==JSON.stringify(raw)){try{await writeJson(KEYS.settings,normalized);}catch{}}
-  return normalized;
-}
+async function queueFavoriteDiff(kind,before,after,updatedAt){try{const {queueNativeFavoriteChange}=await import('./cloud-sync.js');const ids=new Set([...before,...after]);for(const id of ids){const was=before.has(id),is=after.has(id);if(was!==is)await queueNativeFavoriteChange(kind,id,is,updatedAt);}}catch{}}
+function config(kind){return kind==='song'?{values:KEYS.songFavorites,sync:KEYS.songFavoriteSync}:{values:KEYS.favorites,sync:KEYS.favoriteSync};}
+async function loadFavoriteSet(kind){const value=await readJson(config(kind).values,[]);return new Set(Array.isArray(value)?value.map(String):[]);}
+async function writeFavoriteSet(kind,set){await writeJson(config(kind).values,Array.from(set).map(String));}
+export async function loadNativeFavoriteSyncRows(kind='word'){const set=await loadFavoriteSet(kind),stored=normalizeFavoriteSyncRows(await readJson(config(kind).sync,[])),map=new Map(stored.map((row)=>[row.id,row]));for(const id of set)if(!map.has(id))map.set(id,{id,is_active:true,updated_at:null});return Array.from(map.values());}
+export async function applyNativeFavoriteSyncRows(kind='word',rows=[]){const normalized=normalizeFavoriteSyncRows(rows),active=new Set(normalized.filter((row)=>row.is_active).map((row)=>row.id));await Promise.all([writeFavoriteSet(kind,active),writeJson(config(kind).sync,normalized)]);return active;}
+async function saveFavoriteSet(kind,ids){const before=await loadFavoriteSet(kind),after=new Set(Array.from(ids instanceof Set?ids:new Set(ids||[])).map(String)),now=new Date().toISOString(),rows=await loadNativeFavoriteSyncRows(kind),map=new Map(rows.map((row)=>[row.id,row]));let changed=false;for(const id of new Set([...before,...after])){const was=before.has(id),is=after.has(id);if(was!==is){map.set(id,{id,is_active:is,updated_at:now});changed=true;}}await Promise.all([writeFavoriteSet(kind,after),writeJson(config(kind).sync,Array.from(map.values()))]);if(changed)void queueFavoriteDiff(kind,before,after,now);return after;}
+export async function loadNativeSettings(){let raw=null,hasStoredSettings=false;try{const key=await scopedKey(KEYS.settings),stored=await AsyncStorage.getItem(key);hasStoredSettings=stored!==null;raw=stored?JSON.parse(stored):{};}catch{raw={};}const migrated=migrateStoredUserSettings(raw,hasStoredSettings),normalized=normalizeUserSettings(migrated||{});if(hasStoredSettings&&JSON.stringify(normalized)!==JSON.stringify(raw)){try{await writeJson(KEYS.settings,normalized);}catch{}}return normalized;}
 export async function saveNativeSettings(settings){const normalized=normalizeUserSettings(settings);await writeJson(KEYS.settings,normalized);void queuePreferences();return normalized;}
-export async function loadNativeFavorites(){const value=await readJson(KEYS.favorites,[]);return new Set(Array.isArray(value)?value.map(String):[]);}
-export async function saveNativeFavorites(ids){const before=await loadNativeFavorites(),values=Array.from(ids instanceof Set?ids:new Set(ids||[])).map(String),after=new Set(values);await writeJson(KEYS.favorites,values);void queueFavoriteDiff('word',before,after);return after;}
-export async function loadNativeSongFavorites(){const value=await readJson(KEYS.songFavorites,[]);return new Set(Array.isArray(value)?value.map(String):[]);}
-export async function saveNativeSongFavorites(ids){const before=await loadNativeSongFavorites(),values=Array.from(ids instanceof Set?ids:new Set(ids||[])).map(String),after=new Set(values);await writeJson(KEYS.songFavorites,values);void queueFavoriteDiff('song',before,after);return after;}
+export async function loadNativeFavorites(){return loadFavoriteSet('word');}
+export async function saveNativeFavorites(ids){return saveFavoriteSet('word',ids);}
+export async function loadNativeSongFavorites(){return loadFavoriteSet('song');}
+export async function saveNativeSongFavorites(ids){return saveFavoriteSet('song',ids);}
 export async function hasCompletedNativeOnboarding(){return (await AsyncStorage.getItem(await scopedKey(KEYS.legacyOnboarding)))==='1';}
 export async function markNativeOnboardingComplete(){await AsyncStorage.setItem(await scopedKey(KEYS.legacyOnboarding),'1');}
