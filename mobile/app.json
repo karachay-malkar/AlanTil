@@ -6,6 +6,14 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
+    "plugins": [
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ]
+    ],
     "web": {
       "bundler": "metro",
       "output": "single"
