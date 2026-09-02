@@ -34,7 +34,7 @@ export function MusicIcon({ size = 22, color = '#666158' }) {
 }
 
 export function BackIcon({ size = 20, color = '#666158' }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="m15 18-6-6 6-6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></Svg>;
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="m15 18-6-6 6-6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><Path d="M9 12h10" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></Svg>;
 }
 
 export function InfoIcon({ size = 20, color = '#666158' }) {
