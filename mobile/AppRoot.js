@@ -9,7 +9,8 @@ import { toggleFavorite } from '../packages/alantil-core/favorites.js';
 import { DEFAULT_USER_SETTINGS, hasCompletedLearningSetup } from '../packages/alantil-core/settings.js';
 import { BottomNav } from './ui/components.js';
 import { theme } from './ui/theme.js';
-import { ProfileArea, AccountScreen } from './screens/profile.js';
+import { AccountScreen } from './screens/profile.js';
+import { ProfileGate } from './screens/profile-gate.js';
 import { StationScreen } from './screens/station.js';
 import { LearnScreen } from './screens/learn.js';
 import { StationTestScreen } from './screens/station-test.js';
@@ -133,7 +134,7 @@ export default function AppRoot() {
     content = <AccountScreen settings={settings} onGuest={continueAsGuest} onBack={() => setScreen('home')} />;
     showNav = false;
   } else if (tab === 'profile') {
-    content = <ProfileArea words={WORDS} settings={settings} onSettingsChange={setSettings} onAccount={() => setScreen('account')} />;
+    content = <ProfileGate words={WORDS} settings={settings} onSettingsChange={setSettings} onGuest={continueAsGuest} onAccount={(action) => { if (action === 'open') setScreen('account'); }} />;
   } else {
     content = <PathScreen route={ROUTE} onOpenStation={openStation} />;
   }
