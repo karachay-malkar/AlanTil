@@ -28,15 +28,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --test \
-            tests/i18n-runtime.test.mjs \
-            tests/word-normalization.test.mjs \
-            tests/word-progress.test.mjs \
-            tests/station-test-contract.test.mjs \
-            tests/visitor-analytics.test.mjs \
-            tests/navigation-intent.test.mjs \
-            tests/sync-queue.test.mjs \
-            tests/session-exit-phrase.test.mjs
+          mapfile -t tests < <(find tests -maxdepth 1 -name '*.test.mjs' -print | sort | grep -Ev '(admin-activity-13-15-10|asset-versioning|content-hierarchy-13-13|content-hierarchy-13-14|navigation-performance|onboarding-setup|path-route-layout-13-15-12|profile-navigation-overflow-13-15-12|screen-stability-13-15|settings-language-switch|story-stele-13-15-1|typography-13-15-12|alantil-core-16|unified-core-boundary-16)')
+          node --test "${tests[@]}"
 
       - name: Verify Web remains the 13.15.12 reference UI
         shell: bash
