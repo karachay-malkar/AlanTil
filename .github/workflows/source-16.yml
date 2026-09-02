@@ -1,0 +1,49 @@
+name: AlanTil 16.0 Source
+
+on:
+  push:
+    branches:
+      - agent/16.0-clean-web-core
+  workflow_dispatch:
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build source archive and size manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('.')
+          excluded={'.git'}
+          files=[]
+          for p in root.rglob('*'):
+              if not p.is_file() or any(part in excluded for part in p.parts):
+                  continue
+              files.append(p)
+          files.sort(key=lambda p:p.as_posix())
+          with open('AlanTil_16.0.0_FILE_SIZES.txt','w',encoding='utf-8') as out:
+              for p in files:
+                  out.write(f'{p.as_posix()} — {p.stat().st_size/1024:.2f} KB\n')
+          with zipfile.ZipFile('AlanTil_16.0.0_Clean_Web_Core_Source.zip','w',zipfile.ZIP_DEFLATED) as z:
+              for p in files:
+                  if p.name.startswith('AlanTil_16.0.0_'): continue
+                  z.write(p,p.as_posix())
+          PY
+          sha256sum AlanTil_16.0.0_Clean_Web_Core_Source.zip > AlanTil_16.0.0_SOURCE.sha256
+
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.0.0-Source
+          path: |
+            AlanTil_16.0.0_Clean_Web_Core_Source.zip
+            AlanTil_16.0.0_FILE_SIZES.txt
+            AlanTil_16.0.0_SOURCE.sha256
+          if-no-files-found: error
