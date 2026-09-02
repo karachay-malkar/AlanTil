@@ -3,33 +3,27 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { STARTER_DICTIONARY } from '../src/data/starter-dictionary.js';
+import { normalizeLegacyWordEntry } from '../packages/alantil-core/word-normalizer.js';
+import { buildLearningRoute } from '../packages/alantil-core/learning-route.js';
 import { initializeTestState, buildTestOptions, applyTestAnswer, testCompletionSummary } from '../packages/alantil-core/test.js';
 import { initializeMatchState, takeNextMatchRound, markMatchSolved, recordMatchMismatch, matchCompletionSummary } from '../packages/alantil-core/match.js';
 import { toggleFavorite, favoriteHas } from '../packages/alantil-core/favorites.js';
+import { DEFAULT_USER_SETTINGS } from '../packages/alantil-core/settings.js';
 import { BottomNav, Button, FavoriteButton, Header, HeaderCircleButton, MenuItem, ProgressBar, Screen, SectionLabel, uiStyles } from './ui/components.js';
 import { theme } from './ui/theme.js';
+import { ProfileArea, AccountScreen } from './screens/profile.js';
+import { StationScreen } from './screens/station.js';
+import { LearnScreen } from './screens/learn.js';
+import { StationTestScreen } from './screens/station-test.js';
 
 const C = theme.colors;
 
 function starterWords() {
-  return STARTER_DICTIONARY.map((row) => ({
-    id: String(row.word_id),
-    word: String(row.word_alan_cyrillic || ''),
-    trans: String(row.translation_ru || ''),
-    pos: String(row.pos || ''),
-    synonyms: String(row.synonyms || ''),
-    story_id: String(row.story_id || ''),
-    story_name: String(row.story_name_ru || ''),
-    dictionary_id: String(row.dictionary_id || ''),
-    dictionary_name: String(row.dictionary_name_ru || ''),
-    section_id: String(row.section_id || ''),
-    section_name: String(row.section_name_ru || ''),
-    set_id: row.set_id == null ? '' : String(row.set_id),
-    set_name: String(row.set_name_ru || ''),
-  })).filter((word) => word.id && word.word && word.trans);
+  return STARTER_DICTIONARY.map((row) => normalizeLegacyWordEntry(row)).filter(Boolean);
 }
 
 const WORDS = starterWords();
+const ROUTE = buildLearningRoute(WORDS);
 
 function PracticeGlyph({ type }) {
   if (type === 'test') return <Text style={styles.menuGlyph}>✓</Text>;
@@ -89,11 +83,7 @@ function TestScreen({ onBack }) {
         </View>
         <View style={styles.options}>
           {options.map((option) => (
-            <Pressable
-              key={`${item.id}-${option.id}`}
-              onPress={() => { applyTestAnswer(state, option); redraw((v) => v + 1); }}
-              style={({ pressed }) => [styles.optionButton, pressed && styles.optionPressed]}
-            >
+            <Pressable key={`${item.id}-${option.id}`} onPress={() => { applyTestAnswer(state, option); redraw((v) => v + 1); }} style={({ pressed }) => [styles.optionButton, pressed && styles.optionPressed]}>
               <Text style={styles.optionText}>{option.text}</Text>
             </Pressable>
           ))}
@@ -155,12 +145,8 @@ function MatchScreen({ onBack }) {
         <View style={styles.topProgress}><ProgressBar value={(state.solvedCount / Math.max(1,state.total)) * 100} /></View>
         <SectionLabel>НАЙДИТЕ ПАРЫ</SectionLabel>
         <View style={styles.matchColumns}>
-          <View style={styles.matchColumn}>
-            {active.map((word) => <MatchCard key={`l-${word.id}`} selected={selected('left', word)} onPress={() => choose('left', word)}>{word.word}</MatchCard>)}
-          </View>
-          <View style={styles.matchColumn}>
-            {[...active].reverse().map((word) => <MatchCard key={`r-${word.id}`} selected={selected('right', word)} onPress={() => choose('right', word)}>{word.trans}</MatchCard>)}
-          </View>
+          <View style={styles.matchColumn}>{active.map((word) => <MatchCard key={`l-${word.id}`} selected={selected('left', word)} onPress={() => choose('left', word)}>{word.word}</MatchCard>)}</View>
+          <View style={styles.matchColumn}>{[...active].reverse().map((word) => <MatchCard key={`r-${word.id}`} selected={selected('right', word)} onPress={() => choose('right', word)}>{word.trans}</MatchCard>)}</View>
         </View>
       </ScrollView>
     </Screen>
@@ -168,11 +154,7 @@ function MatchScreen({ onBack }) {
 }
 
 function MatchCard({ children, selected, onPress }) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.matchCard, selected && styles.matchCardSelected, pressed && { opacity: 0.82 }]}>
-      <Text style={[styles.matchText, selected && styles.matchTextSelected]}>{children}</Text>
-    </Pressable>
-  );
+  return <Pressable onPress={onPress} style={({ pressed }) => [styles.matchCard, selected && styles.matchCardSelected, pressed && { opacity: 0.82 }]}><Text style={[styles.matchText, selected && styles.matchTextSelected]}>{children}</Text></Pressable>;
 }
 
 function FavoritesScreen({ favorites, setFavorites, onBack }) {
@@ -185,103 +167,61 @@ function FavoritesScreen({ favorites, setFavorites, onBack }) {
         {rows.length ? rows.map((word, index) => (
           <View key={word.id} style={styles.wordRow}>
             <Text style={styles.wordIndex}>{String(index + 1).padStart(2,'0')}</Text>
-            <View style={styles.wordRowText}>
-              <Text style={styles.rowWord}>{word.word}</Text>
-              <Text style={styles.rowTrans}>{word.trans}</Text>
-            </View>
+            <View style={styles.wordRowText}><Text style={styles.rowWord}>{word.word}</Text><Text style={styles.rowTrans}>{word.trans}</Text></View>
             <FavoriteButton active onPress={() => setFavorites(toggleFavorite(favorites, word.id).ids)} />
           </View>
-        )) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Пока пусто</Text>
-            <Text style={styles.emptyText}>Отмечайте слова звездой, чтобы тренировать их отдельно.</Text>
-          </View>
-        )}
+        )) : <View style={styles.emptyState}><Text style={styles.emptyTitle}>Пока пусто</Text><Text style={styles.emptyText}>Отмечайте слова звездой, чтобы тренировать их отдельно.</Text></View>}
       </ScrollView>
     </Screen>
   );
 }
 
-function groupStories() {
-  const map = new Map();
-  WORDS.forEach((word) => {
-    const key = word.story_name || 'Путь';
-    if (!map.has(key)) map.set(key, []);
-    map.get(key).push(word);
-  });
-  return [...map.entries()];
+function StoryTabs({ route, activeStory, onChange }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
+      {(route.storyOrder || []).map((type) => <Pressable key={type} onPress={() => onChange(type)} style={styles.storyTab}><Text style={[styles.storyTabText,activeStory===type&&styles.storyTabActive]}>{route.stories[type]?.label || type}</Text></Pressable>)}
+    </ScrollView>
+  );
 }
 
-function PathScreen({ favorites, setFavorites }) {
-  const groups = useMemo(groupStories, []);
+function PathScreen({ favorites, setFavorites, onOpenStation }) {
+  const [activeStory, setActiveStory] = useState(() => ROUTE.storyOrder?.[0] || '');
+  const story = ROUTE.stories?.[activeStory];
+  const stations = story?.stations || [];
   return (
     <Screen bottomNav>
       <Header title="Alan Til" subtitle="Путь" trailing={<HeaderCircleButton label="?" accessibilityLabel="Подсказка" onPress={() => {}} />} />
-      <ScrollView contentContainerStyle={[uiStyles.scrollContentWithNav, styles.pathContent]} showsVerticalScrollIndicator={false}>
-        {groups.map(([story, words], storyIndex) => (
-          <View key={story} style={styles.storyBlock}>
-            <SectionLabel>{story.toUpperCase()}</SectionLabel>
-            <View style={styles.routeRail} />
-            {words.slice(0, 24).map((word, index) => {
-              const lane = index % 3;
-              const mastered = index < 3 && storyIndex === 0;
-              return (
-                <View key={word.id} style={[styles.routeRow, lane === 0 && styles.routeLeft, lane === 1 && styles.routeCenter, lane === 2 && styles.routeRight]}>
-                  <View style={styles.stationLabelWrap}>
-                    <Text style={styles.stationWord} numberOfLines={1}>{word.word}</Text>
-                    <Text style={styles.stationTrans} numberOfLines={1}>{word.trans}</Text>
-                  </View>
-                  <View style={[styles.stationStone, mastered && styles.stationStoneMastered]}>
-                    <View style={styles.stationInner}><Text style={[styles.stationNumber, mastered && { color:C.accentStrong }]}>{String(index + 1).padStart(2,'0')}</Text></View>
-                  </View>
-                  <FavoriteButton active={favoriteHas(favorites, word.id)} onPress={() => setFavorites(toggleFavorite(favorites, word.id).ids)} />
-                </View>
-              );
-            })}
+      <View style={styles.pathControls}>
+        <StoryTabs route={ROUTE} activeStory={activeStory} onChange={setActiveStory} />
+        <View style={styles.storyProgress}><Text style={styles.storyProgressAccent}>0%</Text><Text style={styles.storyProgressCount}>0/{stations.length}</Text></View>
+      </View>
+      <ScrollView contentContainerStyle={styles.pathContent} showsVerticalScrollIndicator={false}>
+        {(story?.catalogs || []).map((catalog) => (
+          <View key={`${activeStory}-${catalog.dictionaryId}`} style={styles.catalogBlock}>
+            <SectionLabel>{catalog.name || 'Словарь'}</SectionLabel>
+            {(catalog.sections || []).map((section) => (
+              <View key={`${catalog.dictionaryId}-${section.sectionId}`} style={styles.sectionBlock}>
+                <Text style={styles.sectionHeading}>{section.name}</Text>
+                <View style={styles.routeRail} />
+                {(section.stations || []).map((station,index) => {
+                  const shiftRight = index % 2 === 1;
+                  return (
+                    <Pressable key={station.key} onPress={() => onOpenStation(station)} style={[styles.stationNode,shiftRight?styles.stationRight:styles.stationLeft]}>
+                      <View style={styles.stationProgressRing}>
+                        <View style={styles.millstoneFace}><View style={styles.millstoneHole} /><Text style={styles.stationOrdinal}>{String(station.setNumber || index+1).padStart(2,'0')}</Text></View>
+                      </View>
+                      <Text numberOfLines={2} style={styles.stationLabel}>{station.name || `Этап ${index+1}`}</Text>
+                      <Text style={styles.stationCount}>{station.words.length} слов</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ))}
           </View>
         ))}
+        {!story ? <View style={styles.emptyState}><Text style={styles.emptyTitle}>Маршрут недоступен</Text><Text style={styles.emptyText}>В стартовом словаре нет данных для построения пути.</Text></View> : null}
       </ScrollView>
-    </Screen>
-  );
-}
-
-function ProfileScreen({ openStats, openSettings, openAccount }) {
-  return (
-    <Screen bottomNav>
-      <Header title="Профиль" />
-      <ScrollView contentContainerStyle={uiStyles.scrollContentWithNav} showsVerticalScrollIndicator={false}>
-        <View style={styles.profileHero}>
-          <View style={styles.profileAvatar}><Text style={styles.avatarText}>A</Text></View>
-          <Text style={styles.profileName}>Гость</Text>
-          <Text style={styles.profileSub}>Alan Til · 16.1</Text>
-        </View>
-        <View style={styles.profileMetrics}>
-          <View style={styles.metric}><Text style={styles.metricValue}>{WORDS.length}</Text><Text style={styles.metricLabel}>слов</Text></View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metric}><Text style={styles.metricValue}>0</Text><Text style={styles.metricLabel}>освоено</Text></View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metric}><Text style={styles.metricValue}>0%</Text><Text style={styles.metricLabel}>прогресс</Text></View>
-        </View>
-        <SectionLabel>ПРОФИЛЬ</SectionLabel>
-        <MenuItem title="Статистика" subtitle="Прогресс, сессии и сложные слова" icon={<Text style={styles.profileMenuGlyph}>⌁</Text>} onPress={openStats} />
-        <MenuItem title="Настройки" subtitle="Язык, письменность и размер текста" icon={<Text style={styles.profileMenuGlyph}>⚙</Text>} onPress={openSettings} />
-        <MenuItem title="Аккаунт" subtitle="Вход и синхронизация прогресса" icon={<Text style={styles.profileMenuGlyph}>○</Text>} onPress={openAccount} />
-      </ScrollView>
-    </Screen>
-  );
-}
-
-function PlaceholderProfileScreen({ title, subtitle, onBack }) {
-  return (
-    <Screen>
-      <Header title={title} onBack={onBack} />
-      <ScrollView contentContainerStyle={uiStyles.scrollContent} showsVerticalScrollIndicator={false}>
-        <SectionLabel>{title.toUpperCase()}</SectionLabel>
-        <View style={styles.placeholderPanel}>
-          <Text style={styles.placeholderTitle}>{title}</Text>
-          <Text style={styles.placeholderText}>{subtitle}</Text>
-        </View>
-      </ScrollView>
+      <View style={styles.routeScale}>{[0,1,2,3,4,5,6,7,8].map((value) => value===4?<View key={value} style={styles.scaleDiamond}/>:<View key={value} style={styles.scaleDot}/>)}</View>
     </Screen>
   );
 }
@@ -290,20 +230,45 @@ export default function App() {
   const [tab, setTab] = useState('path');
   const [screen, setScreen] = useState('home');
   const [favorites, setFavorites] = useState(() => new Set());
-  const changeTab = (next) => { setTab(next); setScreen('home'); };
-  const backProfile = () => setScreen('home');
+  const [settings, setSettings] = useState(() => ({ ...DEFAULT_USER_SETTINGS }));
+  const [station, setStation] = useState(null);
+  const [learnContext, setLearnContext] = useState(null);
+  const [testContext, setTestContext] = useState(null);
+
+  const changeTab = (next) => { setTab(next); setScreen('home'); setStation(null); };
+  const openStation = (nextStation) => { setStation(nextStation); setScreen('station'); };
+  const backToPath = () => { setScreen('home'); setStation(null); };
 
   let content;
   let showNav = true;
-  if (tab === 'practice' && screen === 'test') { content = <TestScreen onBack={() => setScreen('home')} />; showNav = false; }
-  else if (tab === 'practice' && screen === 'match') { content = <MatchScreen onBack={() => setScreen('home')} />; showNav = false; }
-  else if (tab === 'practice' && screen === 'favorites') { content = <FavoritesScreen favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />; showNav = false; }
-  else if (tab === 'practice') content = <PracticeHome openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} />;
-  else if (tab === 'profile' && screen === 'stats') { content = <PlaceholderProfileScreen title="Статистика" subtitle="Экран уже переведён на новую shell-систему. Полные данные подключаются через общий core, без отдельной мобильной бизнес-логики." onBack={backProfile} />; showNav = false; }
-  else if (tab === 'profile' && screen === 'settings') { content = <PlaceholderProfileScreen title="Настройки" subtitle="Визуальная структура приведена к сайту; сохранение настроек остаётся в общем core и платформенном storage adapter." onBack={backProfile} />; showNav = false; }
-  else if (tab === 'profile' && screen === 'account') { content = <PlaceholderProfileScreen title="Аккаунт" subtitle="Native OAuth и синхронизация подключаются отдельно; визуальная оболочка больше не использует старую мобильную стилизацию." onBack={backProfile} />; showNav = false; }
-  else if (tab === 'profile') content = <ProfileScreen openStats={() => setScreen('stats')} openSettings={() => setScreen('settings')} openAccount={() => setScreen('account')} />;
-  else content = <PathScreen favorites={favorites} setFavorites={setFavorites} />;
+
+  if (screen === 'learn' && learnContext) {
+    content = <LearnScreen words={learnContext.words} mode={learnContext.mode} station={learnContext.station} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('station')} />;
+    showNav = false;
+  } else if (screen === 'stationTest' && testContext) {
+    content = <StationTestScreen station={testContext.station} allWords={WORDS} mode={testContext.mode} onBack={() => setScreen('station')} />;
+    showNav = false;
+  } else if (tab === 'path' && screen === 'station' && station) {
+    content = <StationScreen station={station} favorites={favorites} setFavorites={setFavorites} onBack={backToPath} onLearn={(words,mode) => { setLearnContext({ words, mode, station }); setScreen('learn'); }} onTest={(target,mode) => { setTestContext({ station: target, mode }); setScreen('stationTest'); }} />;
+  } else if (tab === 'practice' && screen === 'test') {
+    content = <TestScreen onBack={() => setScreen('home')} />;
+    showNav = false;
+  } else if (tab === 'practice' && screen === 'match') {
+    content = <MatchScreen onBack={() => setScreen('home')} />;
+    showNav = false;
+  } else if (tab === 'practice' && screen === 'favorites') {
+    content = <FavoritesScreen favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
+    showNav = false;
+  } else if (tab === 'practice') {
+    content = <PracticeHome openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} />;
+  } else if (tab === 'profile' && screen === 'account') {
+    content = <AccountScreen onBack={() => setScreen('home')} />;
+    showNav = false;
+  } else if (tab === 'profile') {
+    content = <ProfileArea words={WORDS} settings={settings} onSettingsChange={setSettings} onAccount={() => setScreen('account')} />;
+  } else {
+    content = <PathScreen favorites={favorites} setFavorites={setFavorites} onOpenStation={openStation} />;
+  }
 
   return (
     <SafeAreaProvider>
@@ -330,7 +295,7 @@ const styles = StyleSheet.create({
   optionButton:{minHeight:52,borderWidth:1,borderColor:C.line,borderRadius:theme.radius.sm,backgroundColor:C.surface0,justifyContent:'center',paddingHorizontal:14,paddingVertical:10},
   optionPressed:{transform:[{translateY:1}],borderColor:C.accent,backgroundColor:C.accentSoft},
   optionText:{fontSize:15,fontWeight:'720',lineHeight:19,color:C.text1,textAlign:'center'},
-  resultWrap:{alignItems:'stretch',paddingTop:theme.control.header + 42},
+  resultWrap:{alignItems:'stretch',paddingTop:theme.control.header+42},
   resultValue:{fontSize:58,fontWeight:'800',lineHeight:64,color:C.text1,textAlign:'center',marginTop:18},
   resultCaption:{fontSize:13,color:C.text2,textAlign:'center',marginTop:4},
   resultRule:{height:1,backgroundColor:C.lineSoft,marginVertical:28},
@@ -348,32 +313,29 @@ const styles = StyleSheet.create({
   emptyState:{paddingVertical:32,paddingHorizontal:18,borderWidth:1,borderStyle:'dashed',borderColor:C.line,borderRadius:theme.radius.md,alignItems:'center'},
   emptyTitle:{fontSize:18,fontWeight:'850',color:C.text1,marginBottom:5},
   emptyText:{fontSize:13,lineHeight:19,color:C.text2,textAlign:'center'},
-  pathContent:{paddingHorizontal:14},
-  storyBlock:{position:'relative',paddingBottom:30},
-  routeRail:{position:'absolute',top:42,bottom:18,left:'50%',width:1,marginLeft:-.5,backgroundColor:'rgba(93,86,75,0.16)'},
-  routeRow:{minHeight:88,flexDirection:'row',alignItems:'center',position:'relative'},
-  routeLeft:{paddingRight:'28%'},
-  routeCenter:{paddingHorizontal:'14%'},
-  routeRight:{paddingLeft:'28%'},
-  stationLabelWrap:{flex:1,minWidth:0},
-  stationWord:{fontSize:13,fontWeight:'780',color:C.text1},
-  stationTrans:{fontSize:10,color:C.text3,marginTop:2},
-  stationStone:{width:60,height:60,borderRadius:30,borderWidth:1,borderColor:'rgba(75,70,61,0.42)',backgroundColor:C.surface2,alignItems:'center',justifyContent:'center',shadowColor:'#292722',shadowOpacity:.08,shadowRadius:6,shadowOffset:{width:0,height:4},elevation:2},
-  stationStoneMastered:{backgroundColor:'#d9c79e',borderColor:'rgba(101,73,31,0.42)'},
-  stationInner:{width:42,height:42,borderRadius:21,borderWidth:1,borderColor:'rgba(72,66,56,0.18)',backgroundColor:C.appBg,alignItems:'center',justifyContent:'center'},
-  stationNumber:{fontSize:11,fontWeight:'800',color:C.text2},
-  profileHero:{alignItems:'center',paddingTop:16,paddingBottom:22},
-  profileAvatar:{width:104,height:104,borderRadius:52,borderWidth:1,borderColor:C.lineStrong,backgroundColor:C.surface1,alignItems:'center',justifyContent:'center'},
-  avatarText:{fontSize:43,fontWeight:'700',color:C.text1},
-  profileName:{fontSize:20,fontWeight:'850',color:C.text1,marginTop:12},
-  profileSub:{fontSize:11,fontWeight:'650',color:C.text3,marginTop:3},
-  profileMetrics:{minHeight:70,flexDirection:'row',alignItems:'center',borderTopWidth:1,borderBottomWidth:1,borderColor:C.lineSoft,marginBottom:10},
-  metric:{flex:1,alignItems:'center'},
-  metricValue:{fontSize:20,fontWeight:'800',color:C.text1},
-  metricLabel:{fontSize:10,color:C.text3,marginTop:2},
-  metricDivider:{width:1,height:32,backgroundColor:C.lineSoft},
-  profileMenuGlyph:{fontSize:18,color:C.text2},
-  placeholderPanel:{borderWidth:1,borderColor:C.line,borderRadius:theme.radius.lg,padding:18,backgroundColor:C.paper},
-  placeholderTitle:{fontSize:18,fontWeight:'850',color:C.text1,marginBottom:7},
-  placeholderText:{fontSize:14,lineHeight:21,color:C.text2},
+  pathControls:{position:'absolute',zIndex:24,top:theme.control.header,left:0,right:0,height:68,paddingTop:8,backgroundColor:'rgba(238,233,223,.90)'},
+  storyTabs:{height:32,alignItems:'center',paddingHorizontal:8,gap:3},
+  storyTab:{height:32,minWidth:86,paddingHorizontal:7,alignItems:'center',justifyContent:'center'},
+  storyTabText:{fontSize:11,fontWeight:'700',color:C.text3,opacity:.64},
+  storyTabActive:{color:C.text1,opacity:1},
+  storyProgress:{height:22,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:7},
+  storyProgressAccent:{fontSize:11,fontWeight:'700',color:C.accentStrong},
+  storyProgressCount:{fontSize:11,fontWeight:'700',color:C.text3},
+  pathContent:{paddingTop:theme.control.header+68+76,paddingHorizontal:20,paddingRight:50,paddingBottom:theme.control.nav+108},
+  catalogBlock:{gap:22,marginBottom:70},
+  sectionBlock:{position:'relative',gap:22,alignItems:'center',marginBottom:92},
+  sectionHeading:{fontSize:14,fontWeight:'800',color:C.text1,textAlign:'center'},
+  routeRail:{position:'absolute',top:46,bottom:-20,left:'50%',width:1,borderStyle:'dashed',borderLeftWidth:1,borderLeftColor:'rgba(102,97,88,.28)'},
+  stationNode:{position:'relative',width:60,height:104,alignItems:'center',marginBottom:43},
+  stationLeft:{transform:[{translateX:-64}]},
+  stationRight:{transform:[{translateX:64}]},
+  stationProgressRing:{width:60,height:60,borderRadius:30,padding:2,backgroundColor:'rgba(41,39,34,.10)',alignItems:'center',justifyContent:'center'},
+  millstoneFace:{position:'relative',width:56,height:56,borderWidth:1,borderColor:'rgba(75,70,61,.42)',borderRadius:27,backgroundColor:'#d8d0c2',alignItems:'center',justifyContent:'center',shadowColor:'#292722',shadowOpacity:.10,shadowRadius:6,shadowOffset:{width:0,height:4},elevation:2},
+  millstoneHole:{position:'absolute',width:9,height:9,borderRadius:5,borderWidth:1,borderColor:'rgba(72,66,56,.18)',backgroundColor:C.appBg},
+  stationOrdinal:{fontSize:8,fontWeight:'750',color:C.text2,marginTop:19},
+  stationLabel:{position:'absolute',top:65,width:142,fontSize:10,fontWeight:'750',lineHeight:12,color:C.text1,textAlign:'center'},
+  stationCount:{position:'absolute',top:91,fontSize:8,fontWeight:'700',color:C.text3},
+  routeScale:{position:'absolute',zIndex:25,right:4,top:'28%',bottom:'20%',width:26,alignItems:'center',justifyContent:'space-evenly'},
+  scaleDot:{width:4,height:4,borderRadius:2,backgroundColor:'rgba(41,39,34,.18)'},
+  scaleDiamond:{width:9,height:9,borderWidth:1,borderColor:'rgba(41,39,34,.55)',transform:[{rotate:'45deg'}]},
 });
