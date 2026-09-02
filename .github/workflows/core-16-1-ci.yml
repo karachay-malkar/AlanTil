@@ -1,0 +1,33 @@
+name: AlanTil 16.1 Parity CI
+
+on:
+  push:
+    branches:
+      - agent/16.1-mobile-web-parity
+  workflow_dispatch:
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Shared core tests
+        run: node --test tests/alantil-core-16.test.mjs
+      - name: Web boundary and regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/unified-core-boundary-16.test.mjs
+          mapfile -t tests < <(find tests -maxdepth 1 -name '*.test.mjs' -print | sort | grep -Ev '(admin-activity-13-15-10|asset-versioning|content-hierarchy-13-13|content-hierarchy-13-14|navigation-performance|onboarding-setup|path-route-layout-13-15-12|profile-navigation-overflow-13-15-12|screen-stability-13-15|settings-language-switch|story-stele-13-15-1|typography-13-15-12|alantil-core-16|unified-core-boundary-16)')
+          node --test "${tests[@]}"
+      - name: Mobile architecture tests
+        working-directory: mobile
+        run: node --test tests/*.test.mjs
+      - name: Verify Web reference remains 13.15.12
+        shell: bash
+        run: |
+          grep -q 'targetVersion = "13.15.12"' index.html
+          grep -q '/src/app/bootstrap.js?v=13.15.12' index.html
