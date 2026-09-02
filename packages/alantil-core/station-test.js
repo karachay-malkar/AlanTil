@@ -1,4 +1,5 @@
 import { masteryLevelForPercent } from './mastery.js';
+import { masteryLevelForPercent } from './mastery.js';
 import { CORE_PATH_CONFIG } from './path-config.js';
 import { normalizePos, parseSynonyms } from './word-normalizer.js';
 import { hasWordConflict, shuffle, splitGroups } from './word-selection.js';
