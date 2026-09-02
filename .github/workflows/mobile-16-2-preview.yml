@@ -17,10 +17,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Shared core tests
+        run: node --test tests/alantil-core-16.test.mjs
+      - name: Architecture and boundary tests
+        run: node --test tests/unified-core-boundary-16.test.mjs
       - name: Install mobile dependencies
         working-directory: mobile
         run: npm install --no-audit --no-fund
-      - name: Mobile architecture tests
+      - name: Mobile architecture and Account parity tests
         working-directory: mobile
         run: npm test
       - name: Expo Doctor
@@ -79,7 +83,7 @@ jobs:
           git init
           git checkout -b preview-web
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
           git add --all
           git commit -m "Preview ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
