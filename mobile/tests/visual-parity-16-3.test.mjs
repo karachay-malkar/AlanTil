@@ -19,9 +19,11 @@ const practiceGames = read('screens/practice-games.js');
 const favorites = read('screens/favorites.js');
 const songs = read('screens/songs.js');
 const profile = read('screens/profile.js');
+const profileGate = read('screens/profile-gate.js');
+const profileMain = read('screens/profile-main.js');
 const appRoot = read('AppRoot.js');
 
-const screenSources = [onboarding, pathScreen, station, learn, stationTest, practice, practiceGames, favorites, songs, profile];
+const screenSources = [onboarding, pathScreen, station, learn, stationTest, practice, practiceGames, favorites, songs, profile, profileGate, profileMain];
 
 test('16.3 exposes shared screen parity primitives', () => {
   for (const name of ['ScreenSection', 'SurfaceCard', 'CompactSegmentedControl', 'ListRow', 'MetricStrip', 'MonoLabel', 'EmptyState']) {
@@ -93,6 +95,17 @@ test('songs remains isolated behind its platform adapter', () => {
   assert.match(songs, /\.\.\/platform\/songs\.js/);
 });
 
+test('profile setup is guarded and profile/statistics/settings use parity controls', () => {
+  assert.match(profileGate, /!profile\?\.nickname \|\| !profile\?\.avatar_gender/);
+  assert.match(profileGate, /AccountScreen/);
+  assert.match(profileGate, /ProfileMainArea/);
+  assert.match(profileMain, /CompactSegmentedControl/);
+  assert.match(profileMain, /MetricStrip/);
+  assert.match(profileMain, /dictionaryPathProgress/);
+  assert.match(profileMain, /getNativeProgressSummary/);
+  assert.match(profileMain, /16\.3\.0/);
+});
+
 test('screens never access Supabase directly', () => {
   for (const source of screenSources) {
     assert.doesNotMatch(source, /supabase-client|createClient\(|SUPABASE_URL|SUPABASE_ANON_KEY/);
@@ -108,5 +121,6 @@ test('AppRoot retains main navigation round trips and safe-area contract', () =>
   assert.match(appRoot, /FavoritesScreen/);
   assert.match(appRoot, /SongsScreen/);
   assert.match(appRoot, /AccountScreen/);
+  assert.match(appRoot, /ProfileGate/);
   assert.match(appRoot, /theme\.safeArea\.edges/);
 });
