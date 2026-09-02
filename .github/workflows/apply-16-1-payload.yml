@@ -26,8 +26,8 @@ jobs:
             echo 'payload already applied'
             exit 0
           fi
-          for n in 00 01 02 03 04 05 06; do test -f ".tmp161/chunk$n"; done
-          cat .tmp161/chunk00 .tmp161/chunk01 .tmp161/chunk02 .tmp161/chunk03 .tmp161/chunk04 .tmp161/chunk05 .tmp161/chunk06 | tr -d '\r\n' | base64 -d > /tmp/alantil161.tgz
+          for f in chunk00 chunk01 chunk02 chunk03 chunk04 chunk05part0 chunk05part1 chunk06; do test -f ".tmp161/$f"; done
+          cat .tmp161/chunk00 .tmp161/chunk01 .tmp161/chunk02 .tmp161/chunk03 .tmp161/chunk04 .tmp161/chunk05part0 .tmp161/chunk05part1 .tmp161/chunk06 | tr -d '\r\n' | base64 -d > /tmp/alantil161.tgz
           tar -tzf /tmp/alantil161.tgz >/dev/null
           tar -xzf /tmp/alantil161.tgz -C .
           rm -rf .tmp161
