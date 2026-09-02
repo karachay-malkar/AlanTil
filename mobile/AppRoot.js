@@ -88,7 +88,12 @@ export default function AppRoot() {
     setScreen('home');
     setStation(null);
   };
-  const shell = (content, showNav = true) => <SafeAreaProvider><StatusBar style="dark" /><SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}><View style={styles.app}>{content}{showNav ? <BottomNav tab={tab} onChange={changeTab} /> : null}</View></SafeAreaView></SafeAreaProvider>;
+  const continueAsGuest = () => {
+    setTab('path');
+    setScreen('home');
+    setStation(null);
+  };
+  const shell = (content, showNav = true) => <SafeAreaProvider><StatusBar style="dark" /><SafeAreaView style={styles.safe} edges={theme.safeArea.edges}><View style={styles.app}>{content}{showNav ? <BottomNav tab={tab} onChange={changeTab} /> : null}</View></SafeAreaView></SafeAreaProvider>;
 
   if (!bootstrapped) return shell(<BootScreen />, false);
   if (setupRequired) return shell(<OnboardingScreen initialSettings={settings} onComplete={async (nextSettings) => {
@@ -125,7 +130,7 @@ export default function AppRoot() {
   } else if (tab === 'practice') {
     content = <PracticeScreen openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} openSongs={() => setScreen('songs')} />;
   } else if (tab === 'profile' && screen === 'account') {
-    content = <AccountScreen onBack={() => setScreen('home')} />;
+    content = <AccountScreen settings={settings} onGuest={continueAsGuest} onBack={() => setScreen('home')} />;
     showNav = false;
   } else if (tab === 'profile') {
     content = <ProfileArea words={WORDS} settings={settings} onSettingsChange={setSettings} onAccount={() => setScreen('account')} />;
