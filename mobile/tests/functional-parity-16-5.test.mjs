@@ -146,9 +146,9 @@ test('16.5 Songs search covers title artist lyrics and lyric tokens resolve dict
   assert.equal(model[0].originalLines[0].tokens.find((token)=>token.token==='тау').word.id,'w1');
 });
 
-test('16.5 Songs keeps search state across song detail and exposes runtime audio errors',()=>{
+test('16.5 Songs persists search/navigation state and exposes runtime audio errors',()=>{
   const source=read('mobile/screens/songs.js');
-  assert.match(source,/const \[query, setQuery\] = useState\(''\)/);assert.match(source,/const \[mode, setMode\] = useState\('title'\)/);assert.match(source,/query=\{query\} mode=\{mode\}/);assert.match(source,/setActiveSong\(null\)/);assert.match(source,/status\?\.error/);assert.match(source,/buildSongLyricsModel/);
+  assert.match(source,/const \[query, setQuery\] = useState\(''\)/);assert.match(source,/const \[mode, setMode\] = useState\('title'\)/);assert.match(source,/query=\{query\} mode=\{mode\}/);assert.match(source,/activeSongId/);assert.match(source,/loadNativeSessionSnapshot\('songs-ui'\)/);assert.match(source,/saveNativeSessionSnapshot\('songs-ui'/);assert.match(source,/status\?\.error/);assert.match(source,/buildSongLyricsModel/);
 });
 
 test('16.5 Profile Statistics Settings are real-data backed and expose all persisted settings plus versions',()=>{
