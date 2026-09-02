@@ -11,11 +11,14 @@ for(const path of targets){
   const before=await fs.readFile(path,'utf8');
   const seen=new Set();
   const lines=before.split('\n');
-  const after=lines.filter((line)=>{
+  let after=lines.filter((line)=>{
     if(!line.startsWith('import '))return true;
     if(!/packages\/alantil-core|\.\/mastery\.js/.test(line))return true;
     if(seen.has(line))return false;
     seen.add(line);return true;
   }).join('\n');
+  if(path==='src/features/test/view.js'){
+    after=after.replace(/\nfunction buildScope\(words\) \{[\s\S]*?\n\}\n\nexport function renderTestMenu/, '\nexport function renderTestMenu');
+  }
   if(after!==before){await fs.writeFile(path,after,'utf8');console.log(`${path}: cleaned`);}else console.log(`${path}: already clean`);
 }
