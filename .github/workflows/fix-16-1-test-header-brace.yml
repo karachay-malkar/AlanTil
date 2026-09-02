@@ -1,0 +1,38 @@
+name: Fix 16.1 Test header syntax
+
+on:
+  push:
+    branches:
+      - agent/16.1-mobile-web-parity
+    paths:
+      - '.github/workflows/fix-16-1-test-header-brace.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fix exact JSX brace and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('mobile/screens/practice-games.js')
+          s = p.read_text()
+          old = "mode:state.mode==='ru'?'РУС → АЛАН':'АЛАН → РУС'}}}/>"
+          new = "mode:state.mode==='ru'?'РУС → АЛАН':'АЛАН → РУС'}}/>"
+          assert s.count(old) == 1, f'expected one malformed header, found {s.count(old)}'
+          p.write_text(s.replace(old, new))
+          PY
+          rm .github/workflows/fix-16-1-test-header-brace.yml
+          git config user.name 'taulu'
+          git config user.email 'taulantau5@gmail.com'
+          git add mobile/screens/practice-games.js .github/workflows/fix-16-1-test-header-brace.yml
+          git commit -m '16.1: fix Test session header JSX'
+          git push origin HEAD:agent/16.1-mobile-web-parity
