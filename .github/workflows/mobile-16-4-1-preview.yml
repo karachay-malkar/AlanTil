@@ -16,10 +16,20 @@ jobs:
         with: {fetch-depth: 0}
       - uses: actions/setup-node@v4
         with: {node-version: '24'}
-      - name: Verify shared-core consumer refactor is already applied
+      - name: Normalize shared imports once
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node scripts/refactor-shared-consumers-16-4-1.mjs
-          git diff --exit-code -- mobile/screens/practice-games.js mobile/screens/station.js src/features/test/view.js src/features/match/view.js packages/alantil-core/station-test.js
+          set -euo pipefail
+          node scripts/cleanup-shared-imports-16-4-1.mjs
+          if ! git diff --quiet -- mobile/screens/practice-games.js mobile/screens/station.js src/features/test/view.js src/features/match/view.js packages/alantil-core/station-test.js; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add mobile/screens/practice-games.js mobile/screens/station.js src/features/test/view.js src/features/match/view.js packages/alantil-core/station-test.js
+            git commit -m "16.4.1: normalize shared imports"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
       - name: Verify production dictionary snapshot is already current
         run: |
           node scripts/generate-mobile-dictionary-snapshot.mjs
