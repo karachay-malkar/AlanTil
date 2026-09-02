@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AccountScreen, ProfileArea } from './profile.js';
+import { AccountScreen } from './profile.js';
+import { ProfileMainArea } from './profile-main.js';
 import { Screen, ScreenState } from '../ui/components.js';
 import { bootstrapNativeAuth, subscribeNativeAuth } from '../platform/auth.js';
 import { loadNativeProfile } from '../platform/profile-api.js';
@@ -57,5 +58,5 @@ export function ProfileGate({ words, settings, onSettingsChange, onAccount, onGu
     />;
   }
 
-  return <ProfileArea words={words} settings={settings} onSettingsChange={onSettingsChange} onAccount={() => onAccount?.('open')} />;
+  return <ProfileMainArea words={words} settings={settings} onSettingsChange={onSettingsChange} onAccount={() => onAccount?.('open')} />;
 }
