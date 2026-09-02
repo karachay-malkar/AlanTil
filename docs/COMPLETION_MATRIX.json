@@ -51,39 +51,39 @@
       {"id":"S11","requirement":"Physical-device offline restart/reconnect/account merge verified end-to-end","source":"native runtime","implementation":"scoped storage + queue + guest claim","verification":"physical-device E2E","status":"DEVICE_REQUIRED"}
     ]},
     {"id":5,"name":"Path / Station functional parity","criteria":[
-      {"id":"P01","requirement":"Path uses shared learning route","verification":"architecture tests","status":"PASS"},
-      {"id":"P02","requirement":"Station uses real progress","verification":"mobile code/tests","status":"PASS"},
-      {"id":"P03","requirement":"All Web 13.15.12 Path/Station edge states verified","verification":"16.5 parity suite not run","status":"FAIL"},
-      {"id":"P04","requirement":"Back/leave/resume states match Web","verification":"16.5 parity suite not run","status":"FAIL"},
-      {"id":"P05","requirement":"All station scopes/dynamic sets verified against production dictionary","verification":"16.5 parity suite not run","status":"FAIL"}
+      {"id":"P01","requirement":"Path uses shared learning route","verification":"architecture tests + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"P02","requirement":"Station uses real progress","verification":"mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"P03","requirement":"All Web 13.15.12 Path/Station edge states verified","verification":"mobile/tests/functional-parity-16-5.test.mjs route/status fixtures + Web station source parity","status":"PASS"},
+      {"id":"P04","requirement":"Back/leave/resume states match Web","verification":"mobile/tests/functional-parity-16-5.test.mjs + resumable source contracts","status":"PASS"},
+      {"id":"P05","requirement":"All station scopes/dynamic sets verified against production dictionary","verification":"mobile/tests/functional-parity-16-5.test.mjs full production snapshot route audit","status":"PASS"}
     ]},
     {"id":6,"name":"Learn / stage test","criteria":[
-      {"id":"L01","requirement":"Learn uses shared learning logic","verification":"architecture tests","status":"PASS"},
-      {"id":"L02","requirement":"Stage test uses shared station-test logic","verification":"architecture tests","status":"PASS"},
-      {"id":"L03","requirement":"All swipe/undo/resume results match Web fixtures","verification":"16.5 fixtures incomplete","status":"FAIL"},
-      {"id":"L04","requirement":"All stage-test result edge cases match Web","verification":"16.5 fixtures incomplete","status":"FAIL"},
+      {"id":"L01","requirement":"Learn uses shared learning logic","verification":"architecture tests + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"L02","requirement":"Stage test uses shared station-test logic","verification":"architecture tests + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"L03","requirement":"All swipe/undo/resume results match Web fixtures","verification":"mobile/tests/functional-parity-16-5.test.mjs shared learning action/repeat/undo/resume fixtures","status":"PASS"},
+      {"id":"L04","requirement":"All stage-test result edge cases match Web","verification":"mobile/tests/functional-parity-16-5.test.mjs exact resume + 80/90/100 boundary fixtures","status":"PASS"},
       {"id":"L05","requirement":"Physical-device interrupted session recovery verified","verification":"device E2E","status":"DEVICE_REQUIRED"}
     ]},
     {"id":7,"name":"Practice Test / Match / Favorites","criteria":[
-      {"id":"R01","requirement":"General Test engine shared","verification":"web-origin test","status":"PASS"},
-      {"id":"R02","requirement":"Match engine shared","verification":"web-origin test","status":"PASS"},
-      {"id":"R03","requirement":"20/40/80 exact scopes verified for every dictionary/section combination","verification":"16.5 coverage incomplete","status":"FAIL"},
-      {"id":"R04","requirement":"Favorites complete behavior matches Web","verification":"16.5 coverage incomplete","status":"FAIL"},
+      {"id":"R01","requirement":"General Test engine shared","verification":"web-origin test + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"R02","requirement":"Match engine shared","verification":"web-origin test + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"R03","requirement":"20/40/80 exact scopes verified for every dictionary/section combination","verification":"mobile/tests/functional-parity-16-5.test.mjs production-snapshot exhaustive scope/count audit","status":"PASS"},
+      {"id":"R04","requirement":"Favorites complete behavior matches Web","verification":"mobile/tests/functional-parity-16-5.test.mjs selected Learn/Test/Match + show/hide + isolated resume namespace","status":"PASS"},
       {"id":"R05","requirement":"Test/Match interrupted recovery verified on device","verification":"device E2E","status":"DEVICE_REQUIRED"}
     ]},
     {"id":8,"name":"Songs","criteria":[
-      {"id":"G01","requirement":"Song catalog/domain logic shared","verification":"architecture tests","status":"PASS"},
-      {"id":"G02","requirement":"Native audio adapter exists","verification":"mobile/platform/songs.js","status":"PASS"},
-      {"id":"G03","requirement":"Search/player state fully matches Web","verification":"not complete","status":"FAIL"},
-      {"id":"G04","requirement":"Clickable lyrics/word cards fully match Web","verification":"not complete","status":"FAIL"},
+      {"id":"G01","requirement":"Song catalog/domain logic shared","verification":"architecture tests + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"G02","requirement":"Native audio adapter exists","verification":"mobile/platform/songs.js + Expo Doctor/export","status":"PASS"},
+      {"id":"G03","requirement":"Search/player state fully matches Web","verification":"mobile/tests/functional-parity-16-5.test.mjs title/artist/lyrics search + persisted navigation/search + runtime error source audit","status":"PASS"},
+      {"id":"G04","requirement":"Clickable lyrics/word cards fully match Web","verification":"mobile/tests/functional-parity-16-5.test.mjs shared lyric token/word-index fixture + Mobile word card source audit","status":"PASS"},
       {"id":"G05","requirement":"Native audio errors/background lifecycle verified","verification":"device E2E","status":"DEVICE_REQUIRED"}
     ]},
     {"id":9,"name":"Profile / Statistics / Settings","criteria":[
-      {"id":"F01","requirement":"Profile uses real account state","verification":"architecture tests","status":"PASS"},
-      {"id":"F02","requirement":"Statistics uses real progress summary","verification":"mobile code/tests","status":"PASS"},
-      {"id":"F03","requirement":"RU/EN/TR settings contract exists","verification":"i18n/settings tests","status":"PASS"},
-      {"id":"F04","requirement":"All Web statistics fields and history match","verification":"not fully audited","status":"FAIL"},
-      {"id":"F05","requirement":"All settings persistence/account interactions match Web","verification":"not fully audited","status":"FAIL"}
+      {"id":"F01","requirement":"Profile uses real account state","verification":"architecture tests + ProfileGate/account fixtures","status":"PASS"},
+      {"id":"F02","requirement":"Statistics uses real progress summary","verification":"mobile/tests/functional-parity-16-5.test.mjs + mobile/platform/progress.js","status":"PASS"},
+      {"id":"F03","requirement":"RU/EN/TR settings contract exists","verification":"i18n/settings tests + mobile/tests/functional-parity-16-5.test.mjs","status":"PASS"},
+      {"id":"F04","requirement":"All Web statistics fields and history match","verification":"mobile/tests/functional-parity-16-5.test.mjs real progress/activity/problem/path-history source audit","status":"PASS"},
+      {"id":"F05","requirement":"All settings persistence/account interactions match Web","verification":"mobile/tests/functional-parity-16-5.test.mjs normalized settings + scoped storage/cloud queue + dictionary/app version audit","status":"PASS"}
     ]},
     {"id":10,"name":"Visual / native UX / final QA","criteria":[
       {"id":"Q01","requirement":"Common native parity component layer exists","verification":"visual-parity-16-3 test","status":"PASS"},
