@@ -38,6 +38,12 @@ export function normalizeCompletionTimestamp(value) {
   return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
 }
 
+export function normalizeSyncTimestamp(value) {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+}
+
 export function normalizeUserSettings(value = {}) {
   const interfaceLanguage = normalizeInterfaceLanguageCode(value.interface_language_code);
   return {
@@ -88,6 +94,15 @@ export function replaceUserSettingsValue(current, settings = {}) {
     ? withLocalTextSize
     : { ...withLocalTextSize, learning_setup_completed_at: current.learning_setup_completed_at };
   return normalizeUserSettings(merged);
+}
+
+export function resolveTimestampedUserSettings({ localSettings = {}, localUpdatedAt = null, cloudSettings = {}, cloudUpdatedAt = null } = {}) {
+  const local = normalizeUserSettings(localSettings);
+  const cloud = normalizeUserSettings({ ...cloudSettings, text_size_code: local.text_size_code });
+  const localTime = Date.parse(normalizeSyncTimestamp(localUpdatedAt) || '') || 0;
+  const cloudTime = Date.parse(normalizeSyncTimestamp(cloudUpdatedAt) || '') || 0;
+  if (localTime > cloudTime) return { settings: local, updated_at: normalizeSyncTimestamp(localUpdatedAt), source: 'local' };
+  return { settings: cloud, updated_at: normalizeSyncTimestamp(cloudUpdatedAt), source: 'cloud' };
 }
 
 export function emptyLearningSetupDraft() {
