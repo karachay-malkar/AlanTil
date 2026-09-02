@@ -26,6 +26,10 @@ const C = theme.colors;
 
 function BootScreen() { return <View style={styles.boot}><Text style={styles.bootBrand}>Alan Til</Text><View style={styles.bootDot} /></View>; }
 
+function settledValue(result, fallback) {
+  return result?.status === 'fulfilled' ? result.value : fallback;
+}
+
 export default function AppRoot() {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
@@ -43,7 +47,7 @@ export default function AppRoot() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [savedSettings, savedFavorites, savedSongFavorites, session, dictionary] = await Promise.all([
+      const results = await Promise.allSettled([
         loadNativeSettings(),
         loadNativeFavorites(),
         loadNativeSongFavorites(),
@@ -51,13 +55,26 @@ export default function AppRoot() {
         bootstrapNativeDictionary(),
       ]);
       if (!alive) return;
-      setSettingsState(savedSettings);
-      setFavoritesState(savedFavorites);
-      setSongFavoritesState(savedSongFavorites);
+      const savedSettings = settledValue(results[0], { ...DEFAULT_USER_SETTINGS });
+      const savedFavorites = settledValue(results[1], new Set());
+      const savedSongFavorites = settledValue(results[2], new Set());
+      const session = settledValue(results[3], null);
+      const dictionary = settledValue(results[4], null);
+      setSettingsState(savedSettings || { ...DEFAULT_USER_SETTINGS });
+      setFavoritesState(savedFavorites instanceof Set ? savedFavorites : new Set(savedFavorites || []));
+      setSongFavoritesState(savedSongFavorites instanceof Set ? savedSongFavorites : new Set(savedSongFavorites || []));
       setWords(Array.isArray(dictionary?.words) ? dictionary.words : []);
-      setSetupRequired(!session?.user && !hasCompletedLearningSetup(savedSettings));
+      setSetupRequired(!session?.user && !hasCompletedLearningSetup(savedSettings || DEFAULT_USER_SETTINGS));
       setBootstrapped(true);
-    })();
+    })().catch(() => {
+      if (!alive) return;
+      setSettingsState({ ...DEFAULT_USER_SETTINGS });
+      setFavoritesState(new Set());
+      setSongFavoritesState(new Set());
+      setWords([]);
+      setSetupRequired(true);
+      setBootstrapped(true);
+    });
     return () => { alive = false; };
   }, []);
 
