@@ -17,6 +17,9 @@ import { buildPracticeScope, practiceScopeKey, practiceSelectedPool, practiceWor
 import { toggleFavorite } from '../../packages/alantil-core/favorites.js';
 import { masteryLevelForPercent } from '../../packages/alantil-core/mastery.js';
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool, practiceWordScopeKey } from '../../packages/alantil-core/practice-scope.js';
+import { toggleFavorite } from '../../packages/alantil-core/favorites.js';
+import { masteryLevelForPercent } from '../../packages/alantil-core/mastery.js';
+import { buildPracticeScope, practiceScopeKey, practiceSelectedPool, practiceWordScopeKey } from '../../packages/alantil-core/practice-scope.js';
 import { shuffle } from '../../packages/alantil-core/word-selection.js';
 import { Button, FavoriteButton, Header, Screen } from '../ui/components.js';
 import { theme } from '../ui/theme.js';
