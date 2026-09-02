@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import { resolveFavoriteSyncRows } from '../../packages/alantil-core/favorites.js';
+import { resolveTimestampedUserSettings } from '../../packages/alantil-core/settings.js';
 import { GUEST_STORAGE_SCOPE, scopedStorageKey, storageScopeForUser, storageScopeUserId } from '../../packages/alantil-core/storage-scope.js';
 const read=(path)=>fs.readFileSync(new URL(`../../${path}`,import.meta.url),'utf8');
 
@@ -24,6 +26,23 @@ test('guest state has an explicit one-time account claim path',()=>{
 
 test('cloud queue is scoped and failed entries are not removed',()=>{
   const source=read('mobile/platform/cloud-sync.js');assert.match(source,/nativeScopedStorageKey\(QUEUE_BASE\)/);assert.match(source,/if\(!response\.ok\)\{ok=false;continue;\}/);assert.match(source,/removeProgressQueueEntry/);
+});
+
+test('favorite conflicts use updated_at and preserve tombstones',()=>{
+  const local=[{id:'1',is_active:false,updated_at:'2026-09-02T10:00:00.000Z'},{id:'2',is_active:true,updated_at:'2026-09-02T08:00:00.000Z'}];
+  const cloud=[{id:'1',is_active:true,updated_at:'2026-09-02T09:00:00.000Z'},{id:'2',is_active:false,updated_at:'2026-09-02T11:00:00.000Z'}];
+  const resolved=resolveFavoriteSyncRows(local,cloud),byId=new Map(resolved.map((row)=>[row.id,row]));
+  assert.equal(byId.get('1').is_active,false);assert.equal(byId.get('2').is_active,false);
+  const equal=resolveFavoriteSyncRows([{id:'3',is_active:true,updated_at:'2026-09-02T12:00:00.000Z'}],[{id:'3',is_active:false,updated_at:'2026-09-02T12:00:00.000Z'}]);assert.equal(equal[0].is_active,false);
+  const source=read('mobile/platform/cloud-sync.js');assert.match(source,/select=word_id,is_active,updated_at/);assert.doesNotMatch(source,/user_word_favorites\?is_active=eq\.true/);
+});
+
+test('settings conflicts use updated_at and retain device-local text size',()=>{
+  const local={interface_language_code:'ru',alan_script_code:'cyrillic',alan_dialect_code:'canonical',text_size_code:'large'};
+  const cloud={interface_language_code:'en',alan_script_code:'turkic',alan_dialect_code:'canonical'};
+  const localWins=resolveTimestampedUserSettings({localSettings:local,localUpdatedAt:'2026-09-02T12:00:00.000Z',cloudSettings:cloud,cloudUpdatedAt:'2026-09-02T11:00:00.000Z'});assert.equal(localWins.source,'local');assert.equal(localWins.settings.interface_language_code,'ru');
+  const cloudWins=resolveTimestampedUserSettings({localSettings:local,localUpdatedAt:'2026-09-02T10:00:00.000Z',cloudSettings:cloud,cloudUpdatedAt:'2026-09-02T11:00:00.000Z'});assert.equal(cloudWins.source,'cloud');assert.equal(cloudWins.settings.interface_language_code,'en');assert.equal(cloudWins.settings.text_size_code,'large');
+  const source=read('mobile/platform/cloud-sync.js');assert.match(source,/loadNativeSettingsSyncTimestamp/);assert.match(source,/resolveTimestampedUserSettings/);assert.match(source,/updated_at:settingsTimestamp/);
 });
 
 test('bundled dictionary is full and bootstrap selects it before starter emergency fallback',()=>{
