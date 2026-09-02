@@ -1,4 +1,10 @@
-// Chrome dimensions and visual tokens mirror Web 13.15.12 shell.css; final build verified after session-header migration.
+// Chrome and typography tokens mirror the canonical Web 13.15.12 theme contract.
+const typeScale = {
+  small: { micro: 10, caption: 10, body: 12, emphasis: 14, title: 16, display: 28, result: 40 },
+  medium: { micro: 10, caption: 12, body: 14, emphasis: 16, title: 20, display: 32, result: 48 },
+  large: { micro: 12, caption: 14, body: 16, emphasis: 20, title: 20, display: 36, result: 52 },
+};
+
 export const theme = {
   colors: {
     appBg: '#eee9df',
@@ -18,9 +24,13 @@ export const theme = {
     accentStrong: '#65491f',
     accentSoft: 'rgba(139,107,59,0.11)',
     success: '#5d7654',
+    successStrong: '#425a3b',
     successSoft: 'rgba(93,118,84,0.12)',
     danger: '#98564c',
+    dangerStrong: '#733e36',
     dangerSoft: 'rgba(152,86,76,0.12)',
+    warning: '#a47736',
+    info: '#58777a',
     favorite: '#9b7027',
     controlGlass: 'rgba(246,242,233,0.28)',
     controlGlassActive: 'rgba(246,242,233,0.46)',
@@ -33,6 +43,12 @@ export const theme = {
     paper: 'rgba(255,255,255,0.22)',
     paperSoft: 'rgba(255,255,255,0.13)',
   },
+  font: {
+    body: undefined,
+    terminal: 'monospace',
+  },
+  typeScale,
+  type: typeScale.medium,
   radius: { xs: 7, sm: 10, md: 15, lg: 20, pill: 999 },
   spacing: { s1: 4, s2: 8, s3: 12, s4: 16, s5: 20, s6: 24, s7: 32, s8: 40 },
   control: { sm: 36, normal: 44, compact: 36, header: 42, nav: 60 },
@@ -52,12 +68,8 @@ export const theme = {
     controlBlur: 8,
     compactWidth: 360,
   },
-  type: {
-    micro: 10,
-    caption: 12,
-    body: 14,
-    emphasis: 16,
-    title: 20,
-    display: 32,
-  },
 };
+
+export function typographyFor(textSizeCode = 'medium') {
+  return typeScale[textSizeCode] || typeScale.medium;
+}
