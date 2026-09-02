@@ -6,7 +6,7 @@ import { STARTER_DICTIONARY } from '../src/data/starter-dictionary.js';
 import { normalizeLegacyWordEntry } from '../packages/alantil-core/word-normalizer.js';
 import { buildLearningRoute } from '../packages/alantil-core/learning-route.js';
 import { toggleFavorite } from '../packages/alantil-core/favorites.js';
-import { DEFAULT_USER_SETTINGS } from '../packages/alantil-core/settings.js';
+import { DEFAULT_USER_SETTINGS, hasCompletedLearningSetup } from '../packages/alantil-core/settings.js';
 import { BottomNav } from './ui/components.js';
 import { theme } from './ui/theme.js';
 import { ProfileArea, AccountScreen } from './screens/profile.js';
@@ -19,7 +19,8 @@ import { PathScreen } from './screens/path.js';
 import { PracticeScreen } from './screens/practice.js';
 import { FavoritesScreen } from './screens/favorites.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
-import { hasCompletedNativeOnboarding, loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, markNativeOnboardingComplete, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
+import { bootstrapNativeAuth } from './platform/auth.js';
+import { loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
 
 const C = theme.colors;
 function starterWords() { return STARTER_DICTIONARY.map((row) => normalizeLegacyWordEntry(row)).filter(Boolean); }
@@ -30,7 +31,7 @@ function BootScreen() { return <View style={styles.boot}><Text style={styles.boo
 
 export default function AppRoot() {
   const [bootstrapped, setBootstrapped] = useState(false);
-  const [onboardingComplete, setOnboardingComplete] = useState(true);
+  const [setupRequired, setSetupRequired] = useState(false);
   const [tab, setTab] = useState('path');
   const [screen, setScreen] = useState('home');
   const [favorites, setFavoritesState] = useState(() => new Set());
@@ -43,12 +44,17 @@ export default function AppRoot() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [savedSettings, savedFavorites, savedSongFavorites, completed] = await Promise.all([loadNativeSettings(), loadNativeFavorites(), loadNativeSongFavorites(), hasCompletedNativeOnboarding()]);
+      const [savedSettings, savedFavorites, savedSongFavorites, session] = await Promise.all([
+        loadNativeSettings(),
+        loadNativeFavorites(),
+        loadNativeSongFavorites(),
+        bootstrapNativeAuth(),
+      ]);
       if (!alive) return;
       setSettingsState(savedSettings);
       setFavoritesState(savedFavorites);
       setSongFavoritesState(savedSongFavorites);
-      setOnboardingComplete(completed);
+      setSetupRequired(!session?.user && !hasCompletedLearningSetup(savedSettings));
       setBootstrapped(true);
     })();
     return () => { alive = false; };
@@ -64,9 +70,10 @@ export default function AppRoot() {
     setSongFavoritesState(new Set(value));
     saveNativeSongFavorites(value).catch(() => {});
   };
-  const setSettings = (next) => {
-    setSettingsState(next);
-    saveNativeSettings(next).catch(() => {});
+  const setSettings = async (next) => {
+    const saved = await saveNativeSettings(next);
+    setSettingsState(saved);
+    return saved;
   };
   const changeTab = (next) => {
     setTab(next);
@@ -84,7 +91,13 @@ export default function AppRoot() {
   const shell = (content, showNav = true) => <SafeAreaProvider><StatusBar style="dark" /><SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}><View style={styles.app}>{content}{showNav ? <BottomNav tab={tab} onChange={changeTab} /> : null}</View></SafeAreaView></SafeAreaProvider>;
 
   if (!bootstrapped) return shell(<BootScreen />, false);
-  if (!onboardingComplete) return shell(<OnboardingScreen initialSettings={settings} onComplete={(nextSettings, final) => { if (nextSettings) setSettings(nextSettings); if (final) { markNativeOnboardingComplete().catch(() => {}); setOnboardingComplete(true); } }} onLogin={() => { markNativeOnboardingComplete().catch(() => {}); setOnboardingComplete(true); setTab('profile'); setScreen('account'); }} />, false);
+  if (setupRequired) return shell(<OnboardingScreen initialSettings={settings} onComplete={async (nextSettings) => {
+    const saved = await setSettings(nextSettings);
+    if (!hasCompletedLearningSetup(saved)) throw new Error('Learning setup was not persisted');
+    setSetupRequired(false);
+    setTab('profile');
+    setScreen('account');
+  }} />, false);
 
   let content;
   let showNav = true;
