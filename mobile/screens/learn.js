@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { buildLearnResultSummary, decideLearnCard, ensureLearnWordStats, exposeCurrentLearnCard, initializeLearnState, learnCompletionSummary, learnSessionWords, undoLearnDecision } from '../../packages/alantil-core/learning.js';
 import { favoriteHas, toggleFavorite } from '../../packages/alantil-core/favorites.js';
 import { Button, FavoriteButton, Header, ProgressBar, Screen, SectionLabel } from '../ui/components.js';
@@ -18,6 +18,8 @@ export function LearnScreen({words,mode='kb',station,favorites,setFavorites,onBa
   const startedAt=useRef(new Date().toISOString()),recorded=useRef(false),lastExposed=useRef('');
   useEffect(()=>{let alive=true;(async()=>{const saved=await loadNativeSessionSnapshot('learn');if(!alive)return;if(saved?.contextKey===key&&saved?.state?.studySession?.inProgress){startedAt.current=saved.startedAt||startedAt.current;setState(saved.state);}else{if(saved)await clearNativeSessionSnapshot('learn');setState(createState(words,mode,station));}})();return()=>{alive=false;};},[key,words,mode,station]);
   const persist=()=>state?saveNativeSessionSnapshot('learn',serializeState(state,key,startedAt.current)).catch(()=>{}):Promise.resolve();
+  const back=()=>{persist();onBack();};
+  useEffect(()=>{const sub=BackHandler.addEventListener('hardwareBackPress',()=>{back();return true;});return()=>sub.remove();},[state,key,onBack]);
   const exposure=state?exposeCurrentLearnCard(state,{countShow:false}):{item:null,finished:false};
   const item=exposure.item,finish=Boolean(state&&(exposure.finished||(!item&&state.totalPlanned>0)));
   const summary=finish&&state?buildLearnResultSummary(state,words):null;
@@ -29,7 +31,6 @@ export function LearnScreen({words,mode='kb',station,favorites,setFavorites,onBa
   const pending=new Set([...state.mainQueue,...state.repeatQueue].map((word)=>String(word.id))).size,totalDone=Math.max(0,state.totalPlanned-pending),progress=state.totalPlanned?(totalDone/state.totalPlanned)*100:0;
   const choose=(known)=>{decideLearnCard(state,known);setFlipped(false);persist();redraw((v)=>v+1);};
   const undo=()=>{const action=undoLearnDecision(state);if(action){lastExposed.current='';setFlipped(false);persist();redraw((v)=>v+1);}};
-  const back=()=>{persist();onBack();};
   return <Screen><Header title="Учить слова" subtitle={`${Math.min(totalDone+1,state.totalPlanned)}/${state.totalPlanned}`} onBack={back}/><View style={styles.session}><View style={styles.progress}><ProgressBar value={progress}/></View><Pressable onPress={()=>setFlipped((value)=>!value)} style={styles.cardWrap}><View style={[styles.card,flipped&&styles.cardBack]}><View style={styles.cardInset}/>{!flipped?<><Text style={styles.word}>{mode==='ru'?item.trans:item.word}</Text><Text style={styles.hint}>нажмите, чтобы перевернуть</Text></>:<View style={styles.backContent}><Text style={styles.backLabel}>ПЕРЕВОД</Text><Text style={styles.translation}>{mode==='ru'?item.word:item.trans}</Text>{item.synonyms?<><Text style={styles.backLabel}>СИНОНИМЫ</Text><Text style={styles.synonyms}>{item.synonyms}</Text></>:null}</View>}<View style={styles.cardActions}><Pressable onPress={(event)=>{event.stopPropagation?.();undo();}} style={styles.cardAction}><Text style={styles.cardActionIcon}>↶</Text><Text style={styles.cardActionLabel}>назад</Text></Pressable><FavoriteButton active={favoriteHas(favorites,item.id)} onPress={()=>setFavorites(toggleFavorite(favorites,item.id).ids)}/></View></View></Pressable><View style={styles.decisions}><Decision kind="unknown" label="Не знаю" icon="×" onPress={()=>choose(false)}/><Decision kind="known" label="Знаю" icon="✓" onPress={()=>choose(true)}/></View></View></Screen>;
 }
 function Decision({kind,label,icon,onPress}){return <Pressable onPress={onPress} style={({pressed})=>[styles.decision,pressed&&{opacity:.72}]}><View style={[styles.decisionIcon,kind==='unknown'?styles.unknownIcon:styles.knownIcon]}><Text style={[styles.decisionGlyph,kind==='unknown'?{color:C.danger}:{color:C.success}]}>{icon}</Text></View><Text style={styles.decisionLabel}>{label}</Text></Pressable>;}
