@@ -1,75 +1,34 @@
-// Chrome and typography tokens mirror the canonical Web 13.15.12 theme contract.
-const typeScale = {
-  small: { micro: 10, caption: 10, body: 12, emphasis: 14, title: 16, display: 28, result: 40 },
-  medium: { micro: 10, caption: 12, body: 14, emphasis: 16, title: 20, display: 32, result: 48 },
-  large: { micro: 12, caption: 14, body: 16, emphasis: 20, title: 20, display: 36, result: 52 },
+import { WEB_VISUAL_TOKENS } from './web-visual-source.js';
+
+const W=WEB_VISUAL_TOKENS;
+
+export const theme={
+  colors:W.colors,
+  font:{body:undefined,display:undefined,brand:'serif',terminal:'monospace'},
+  typeScale:W.typeScale,
+  type:W.typeScale.medium,
+  radius:W.radius,
+  spacing:W.spacing,
+  control:W.control,
+  chrome:W.chrome,
+  motion:W.motion,
+  layout:W.layout,
+  shadow:W.shadow,
 };
 
-export const theme = {
-  colors: {
-    appBg: '#eee9df',
-    appBgDeep: '#e7e0d4',
-    surface0: '#f6f2e9',
-    surface1: '#eee8dc',
-    surface2: '#e2d9c9',
-    surface3: '#cec0aa',
-    text1: '#292722',
-    text2: '#666158',
-    text3: '#918b80',
-    inverse: '#faf8f2',
-    lineSoft: 'rgba(54,50,43,0.12)',
-    line: 'rgba(54,50,43,0.22)',
-    lineStrong: 'rgba(54,50,43,0.46)',
-    accent: '#8b6b3b',
-    accentStrong: '#65491f',
-    accentSoft: 'rgba(139,107,59,0.11)',
-    success: '#5d7654',
-    successStrong: '#425a3b',
-    successSoft: 'rgba(93,118,84,0.12)',
-    danger: '#98564c',
-    dangerStrong: '#733e36',
-    dangerSoft: 'rgba(152,86,76,0.12)',
-    warning: '#a47736',
-    info: '#58777a',
-    favorite: '#9b7027',
-    controlGlass: 'rgba(246,242,233,0.28)',
-    controlGlassActive: 'rgba(246,242,233,0.46)',
-    controlBorder: 'rgba(54,50,43,0.0968)',
-    maskGlass: 'rgba(238,233,223,0.18)',
-    pathBubbleGlass: 'rgba(41,39,34,0.34)',
-    pathBubbleBorder: 'rgba(41,39,34,0.18)',
-    activeBubbleGlass: 'rgba(41,39,34,0.88)',
-    activeBubbleBorder: 'rgba(41,39,34,0.32)',
-    paper: 'rgba(255,255,255,0.22)',
-    paperSoft: 'rgba(255,255,255,0.13)',
-  },
-  font: {
-    body: undefined,
-    terminal: 'monospace',
-  },
-  typeScale,
-  type: typeScale.medium,
-  radius: { xs: 7, sm: 10, md: 15, lg: 20, pill: 999 },
-  spacing: { s1: 4, s2: 8, s3: 12, s4: 16, s5: 20, s6: 24, s7: 32, s8: 40 },
-  control: { sm: 36, normal: 44, compact: 36, header: 42, nav: 60 },
-  chrome: {
-    contentRestGap: 16,
-    actionEdgeGap: 16,
-    headerSide: 10,
-    headerSideCompact: 6,
-    headerCenterInset: 56,
-    navSide: 12,
-    navSideCompact: 8,
-    actionSize: 36,
-    actionIconSize: 20,
-    navBubbleSize: 38,
-    navBubbleCompactSize: 36,
-    blur: 10,
-    controlBlur: 8,
-    compactWidth: 360,
-  },
-};
+export function typographyFor(textSizeCode='medium') {
+  return W.typeScale[textSizeCode]||W.typeScale.medium;
+}
 
-export function typographyFor(textSizeCode = 'medium') {
-  return typeScale[textSizeCode] || typeScale.medium;
+export function semanticTypography(textSizeCode='medium') {
+  const t=typographyFor(textSizeCode);
+  return {
+    micro:{fontSize:t.micro,lineHeight:Math.round(t.micro*1.2),fontFamily:theme.font.terminal},
+    caption:{fontSize:t.caption,lineHeight:Math.round(t.caption*1.35)},
+    body:{fontSize:t.body,lineHeight:Math.round(t.body*1.45)},
+    emphasis:{fontSize:t.emphasis,lineHeight:Math.round(t.emphasis*1.3),fontWeight:'700'},
+    title:{fontSize:t.title,lineHeight:Math.round(t.title*1.18),fontWeight:'800'},
+    display:{fontSize:t.display,lineHeight:Math.round(t.display*1.04),fontWeight:'800'},
+    result:{fontSize:t.result,lineHeight:Math.round(t.result*1.02),fontWeight:'800'},
+  };
 }
