@@ -26,7 +26,7 @@ test('cloud queue is scoped and failed entries are not removed',()=>{
   const source=read('mobile/platform/cloud-sync.js');assert.match(source,/nativeScopedStorageKey\(QUEUE_BASE\)/);assert.match(source,/if\(!response\.ok\)\{ok=false;continue;\}/);assert.match(source,/removeProgressQueueEntry/);
 });
 
-test('bundled dictionary is full and bootstrap precedes starter emergency fallback',()=>{
+test('bundled dictionary is full and bootstrap selects it before starter emergency fallback',()=>{
   const snapshot=JSON.parse(read('mobile/data/dictionary-snapshot.json'));assert.ok(snapshot.version);assert.ok(snapshot.words.length>=2500);assert.equal(snapshot.word_count,snapshot.words.length);assert.equal(new Set(snapshot.words.map((row)=>String(row.word_id))).size,snapshot.words.length);
-  const source=read('mobile/platform/dictionary.js');assert.ok(source.indexOf('const bundled=bundledSnapshot()')<source.indexOf('starterSnapshot()'));assert.match(source,/source:'bundled-snapshot'/);assert.match(source,/source:'starter-emergency'/);
+  const source=read('mobile/platform/dictionary.js');const bootstrap=source.slice(source.indexOf('export async function bootstrapNativeDictionary'),source.indexOf('export async function refreshNativeDictionary'));assert.ok(bootstrap.indexOf('const bundled=bundledSnapshot()')>=0);assert.ok(bootstrap.indexOf('const bundled=bundledSnapshot()')<bootstrap.indexOf('starterSnapshot()'));assert.match(source,/source:'bundled-snapshot'/);assert.match(source,/source:'starter-emergency'/);
 });
