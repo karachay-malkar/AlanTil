@@ -1,0 +1,42 @@
+name: AlanTil 16.2 Live Preview
+
+on:
+  push:
+    branches:
+      - agent/16.2-live-preview-visual-parity
+  workflow_dispatch:
+
+jobs:
+  web-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile architecture tests
+        working-directory: mobile
+        run: npm test
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Export Expo Web preview
+        working-directory: mobile
+        run: npm run export:web
+      - name: Package preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -C mobile/dist-web -czf AlanTil-16.2.0-Web-Preview.tgz .
+          sha256sum AlanTil-16.2.0-Web-Preview.tgz > AlanTil-16.2.0-Web-Preview.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.2.0-Web-Preview
+          path: |
+            mobile/dist-web
+            AlanTil-16.2.0-Web-Preview.tgz
+            AlanTil-16.2.0-Web-Preview.sha256
+          if-no-files-found: error
