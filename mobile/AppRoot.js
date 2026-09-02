@@ -20,6 +20,7 @@ import { FavoritesScreen } from './screens/favorites.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
 import { bootstrapNativeAuth } from './platform/auth.js';
 import { bootstrapNativeDictionary } from './platform/dictionary.js';
+import { setNativeSessionNamespace } from './platform/session-store.js';
 import { loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
 
 const C = theme.colors;
@@ -94,6 +95,7 @@ export default function AppRoot() {
   const backToPath = () => { setScreen('home'); setStation(null); };
   const continueAsGuest = () => { setTab('path'); setScreen('home'); setStation(null); };
   const openPracticeGame = (type, sourceWords = words, returnTo = 'home', scopeId = 'all') => {
+    setNativeSessionNamespace(type, scopeId);
     setPracticeGameContext({ words: Array.isArray(sourceWords) ? sourceWords : [], returnTo, scopeId });
     setScreen(type);
   };
@@ -124,11 +126,11 @@ export default function AppRoot() {
     showNav = false;
   } else if (tab === 'practice' && screen === 'test') {
     const context = practiceGameContext || { words, scopeId: 'all' };
-    content = <GeneralTestFlow words={context.words} favorites={favorites} setFavorites={setFavorites} sessionType={`test:${context.scopeId}`} onBack={closePracticeGame} />;
+    content = <GeneralTestFlow words={context.words} favorites={favorites} setFavorites={setFavorites} onBack={closePracticeGame} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'match') {
     const context = practiceGameContext || { words, scopeId: 'all' };
-    content = <GeneralMatchFlow words={context.words} favorites={favorites} setFavorites={setFavorites} sessionType={`match:${context.scopeId}`} onBack={closePracticeGame} />;
+    content = <GeneralMatchFlow words={context.words} favorites={favorites} setFavorites={setFavorites} onBack={closePracticeGame} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'favorites') {
     content = <FavoritesScreen words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station: null, returnTo: 'favorites' }); setScreen('learn'); }} onTest={(rows) => openPracticeGame('test', rows, 'favorites', 'favorites')} onMatch={(rows) => openPracticeGame('match', rows, 'favorites', 'favorites')} />;
