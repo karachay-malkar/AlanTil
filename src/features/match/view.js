@@ -1,6 +1,7 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
+import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
 import { isWordEnabledInTestModes, shuffle } from "../../shared/domain/word-selection.js?v=13.13";
 import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
 import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.13";
