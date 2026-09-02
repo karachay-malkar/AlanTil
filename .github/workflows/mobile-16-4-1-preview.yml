@@ -35,6 +35,8 @@ jobs:
               git push origin HEAD:${GITHUB_REF_NAME}
             fi
           fi
+      - name: Portable business-logic audit
+        run: node scripts/check-portable-duplicates-16-4-1.mjs
       - name: Compute fixed completion matrix
         run: node scripts/check-completion-matrix.mjs
       - name: Shared core tests
@@ -46,10 +48,7 @@ jobs:
         working-directory: mobile
         run: npm test
       - name: Verify provenance has zero declared mobile reimplementations
-        run: |
-          node - <<'NODE'
-          const fs=require('fs');const data=JSON.parse(fs.readFileSync('docs/WEB_ORIGIN_16_4.json','utf8'));const bad=data.entries.filter(x=>x.status==='MOBILE_REIMPLEMENTATION');if(bad.length)throw new Error(`MOBILE_REIMPLEMENTATION=${bad.length}`);console.log(`MOBILE_REIMPLEMENTATION=0; entries=${data.entries.length}`);
-          NODE
+        run: node scripts/check-portable-duplicates-16-4-1.mjs
       - name: Expo Doctor
         working-directory: mobile
         run: npx expo-doctor
