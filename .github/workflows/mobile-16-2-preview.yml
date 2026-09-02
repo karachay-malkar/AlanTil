@@ -6,6 +6,9 @@ on:
       - agent/16.2-live-preview-visual-parity
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   web-preview:
     runs-on: ubuntu-latest
@@ -26,6 +29,30 @@ jobs:
       - name: Export Expo Web preview
         working-directory: mobile
         run: npm run export:web
+      - name: Prepare stable preview CDN paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          base = 'https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          root = Path('mobile/dist-web')
+          for path in root.glob('_expo/static/js/web/*.js'):
+              text = path.read_text(encoding='utf-8')
+              text = text.replace('"/_expo/', f'"{base}/_expo/').replace("'/_expo/", f"'{base}/_expo/")
+              text = text.replace('"/assets/', f'"{base}/assets/').replace("'/assets/", f"'{base}/assets/")
+              path.write_text(text, encoding='utf-8')
+          index = root / 'index.html'
+          text = index.read_text(encoding='utf-8')
+          text = text.replace('src="/_expo/', f'src="{base}/_expo/')
+          index.write_text(text, encoding='utf-8')
+          (root / 'preview-build.json').write_text(json.dumps({
+              'sha': os.environ.get('GITHUB_SHA', ''),
+              'branch': os.environ.get('GITHUB_REF_NAME', ''),
+              'run_id': os.environ.get('GITHUB_RUN_ID', ''),
+          }), encoding='utf-8')
+          PY
       - name: Package preview
         shell: bash
         run: |
@@ -40,3 +67,19 @@ jobs:
             AlanTil-16.2.0-Web-Preview.tgz
             AlanTil-16.2.0-Web-Preview.sha256
           if-no-files-found: error
+      - name: Publish stable preview branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R mobile/dist-web/. "$publish_dir/"
+          cd "$publish_dir"
+          git init
+          git checkout -b preview-web
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Preview ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
