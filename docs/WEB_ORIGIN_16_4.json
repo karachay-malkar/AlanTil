@@ -1,0 +1,26 @@
+{
+  "reference": "Web 13.15.12",
+  "rule": "MOBILE_REIMPLEMENTATION must remain zero for platform-independent business logic",
+  "entries": [
+    {"function":"word normalization","web":"src/shared/domain/word-normalizer.js","shared":"packages/alantil-core/word-normalizer.js","mobile":"mobile/platform/dictionary.js","status":"EXACT"},
+    {"function":"example grouping","web":"src/shared/domain/example-groups.js","shared":"packages/alantil-core/example-groups.js","mobile":"mobile/screens/learn.js","status":"EXACT"},
+    {"function":"slug normalization","web":"src/shared/domain/slugs.js","shared":"packages/alantil-core/slugs.js","mobile":"shared consumers","status":"EXACT"},
+    {"function":"learning route","web":"src/shared/domain/learning-route.js","shared":"packages/alantil-core/learning-route.js","mobile":"mobile/AppRoot.js","status":"ADAPTED"},
+    {"function":"word selection","web":"src/shared/domain/word-selection.js","shared":"packages/alantil-core/word-selection.js","mobile":"mobile/screens/practice-games.js","status":"ADAPTED"},
+    {"function":"learn state and decisions","web":"src/features/learn","shared":"packages/alantil-core/learning.js","mobile":"mobile/screens/learn.js","status":"ADAPTED"},
+    {"function":"general test algorithm","web":"src/features/test/engine.js","shared":"packages/alantil-core/test.js","mobile":"mobile/screens/practice-games.js","status":"ADAPTED"},
+    {"function":"match algorithm","web":"src/features/match/engine.js","shared":"packages/alantil-core/match.js","mobile":"mobile/screens/practice-games.js","status":"ADAPTED"},
+    {"function":"station test algorithm","web":"src/features/path/station-test.js","shared":"packages/alantil-core/station-test.js","mobile":"mobile/screens/station-test.js","status":"ADAPTED"},
+    {"function":"route progress","web":"src/shared/domain/route-progress.js","shared":"packages/alantil-core/route-progress.js","mobile":"mobile/screens/path.js","status":"ADAPTED"},
+    {"function":"settings normalization","web":"src/shared/settings","shared":"packages/alantil-core/settings.js","mobile":"mobile/platform/storage.js","status":"ADAPTED"},
+    {"function":"learning setup","web":"src/shared/settings/learning-setup.js","shared":"packages/alantil-core/learning-setup.js","mobile":"mobile/screens/onboarding.js","status":"ADAPTED"},
+    {"function":"dictionary REST contract","web":"src/config/words.js + src/shared/data/word-repository.js","shared":"packages/alantil-core/dictionary-contract.js","mobile":"mobile/platform/dictionary.js","status":"ADAPTED"},
+    {"function":"progress queue policy","web":"src/shared/progress/progress-queue.js","shared":"packages/alantil-core/sync-policy.js","mobile":"mobile/platform/cloud-sync.js","status":"ADAPTED"},
+    {"function":"word progress merge","web":"src/shared/progress/word-progress-store.js + progress-sync-policy.js","shared":"packages/alantil-core/word-progress.js","mobile":"mobile/platform/cloud-sync.js","status":"ADAPTED"},
+    {"function":"session payload rules","web":"src/shared/progress/session-builders.js","shared":"packages/alantil-core/session.js","mobile":"mobile/platform/session-store.js + screens","status":"ADAPTED"},
+    {"function":"favorites set operations","web":"src/shared/state/word-favorites.js","shared":"packages/alantil-core/favorites.js","mobile":"mobile/AppRoot.js + screens","status":"ADAPTED"},
+    {"function":"native OAuth/deep-link transport","web":"N/A: browser OAuth transport","shared":"N/A","mobile":"mobile/platform/auth.js","status":"PLATFORM_ONLY"},
+    {"function":"AsyncStorage persistence","web":"N/A: localStorage/scoped storage","shared":"N/A","mobile":"mobile/platform/storage.js + mobile/platform/dictionary.js","status":"PLATFORM_ONLY"},
+    {"function":"native REST transport","web":"fetch in word-repository/progress-sync","shared":"shared contracts only","mobile":"mobile/platform/auth.js nativeAuthFetch","status":"PLATFORM_ONLY"}
+  ]
+}
