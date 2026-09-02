@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { FAVORITES_HIDDEN_CONTEXT, hiddenSelectionIds, hiddenSelectionKey, LEGACY_HIDDEN_CONTEXT, setHiddenSelectionIds, stationHiddenSelectionContext } from '../../packages/alantil-core/hidden-selection.js';
+import { stationMilestoneCount } from '../../packages/alantil-core/route-progress.js';
 import { buildTestOptions, initializeTestState, restoreTestStateSnapshot, testStateSnapshot } from '../../packages/alantil-core/test.js';
 import { buildStationTestSessionState, stationTestActiveSnapshot, stationTestDistractors, stationTestPayload } from '../../packages/alantil-core/station-test.js';
 
@@ -63,4 +65,22 @@ test('16.6.1 Stage Test phase survives active snapshot, restore and final payloa
   assert.equal(restored.id,'stage-1');
   assert.equal(restored.phase,'review_1');
   assert.equal(stationTestPayload(restored).phase,'review_1');
+});
+
+test('16.6.1 hidden selection is contextual and Favorites cannot leak into Station',()=>{
+  const stationA=stationHiddenSelectionContext({key:'story::d::s::set-a',dictionaryId:'d',sectionId:'s',sourceSetId:'set-a'});
+  const stationB=stationHiddenSelectionContext({key:'story::d::s::set-b',dictionaryId:'d',sectionId:'s',sourceSetId:'set-b'});
+  assert.notEqual(hiddenSelectionKey(stationA),hiddenSelectionKey(stationB));
+  assert.notEqual(hiddenSelectionKey(stationA),hiddenSelectionKey(FAVORITES_HIDDEN_CONTEXT));
+  let map={};
+  map=setHiddenSelectionIds(map,stationA,new Set(['n1']));
+  map=setHiddenSelectionIds(map,FAVORITES_HIDDEN_CONTEXT,new Set(['n2']));
+  assert.deepEqual([...hiddenSelectionIds(map,stationA)],['n1']);
+  assert.deepEqual([...hiddenSelectionIds(map,stationB)],[]);
+  assert.deepEqual([...hiddenSelectionIds(map,FAVORITES_HIDDEN_CONTEXT)],['n2']);
+  assert.equal(hiddenSelectionKey(LEGACY_HIDDEN_CONTEXT),'legacy:default:default');
+});
+
+test('16.6.1 Path milestone contract allows at most four marks',()=>{
+  assert.deepEqual([0,19,20,39,40,59,60,79,80,120].map(stationMilestoneCount),[0,0,1,1,2,2,3,3,4,4]);
 });
