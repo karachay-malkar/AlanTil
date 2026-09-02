@@ -13,7 +13,7 @@ function BracketCheckbox({ selected, onPress }) {
   return <Pressable onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel="Добавить слово в обучение" style={styles.checkboxHit}><Text style={[styles.checkboxText, selected && styles.checkboxOn]}>[{selected ? '✓' : ' '}]</Text></Pressable>;
 }
 
-export function FavoritesScreen({ words, favorites, setFavorites, onBack, onLearn }) {
+export function FavoritesScreen({ words, favorites, setFavorites, onBack, onLearn, onTest, onMatch }) {
   const [hiddenIds, setHiddenIds] = useState(() => new Set());
   const [direction, setDirection] = useState('kb');
   const [ready, setReady] = useState(false);
@@ -50,7 +50,7 @@ export function FavoritesScreen({ words, favorites, setFavorites, onBack, onLear
   };
   const unfavorite = (id) => setFavorites(toggleFavorite(favorites, id).ids);
 
-  return <Screen><Header title="Избранное" subtitle={`${rows.length} слов`} onBack={onBack} />{rows.length ? <><View style={styles.toolbar}><View style={styles.tools}><Pressable disabled={!ready} onPress={showAll}><Text style={styles.tool}>Показать все</Text></Pressable><Text style={styles.divider}>·</Text><Pressable disabled={!ready} onPress={hideAll}><Text style={styles.tool}>Скрыть все</Text></Pressable></View><MonoLabel>{activeRows.length}/{rows.length}</MonoLabel></View><ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}><SurfaceCard>{rows.map((word) => { const selected = !hiddenIds.has(String(word.id)); return <View key={word.id} style={[styles.row, !selected && styles.rowHidden]}><BracketCheckbox selected={selected} onPress={() => toggleWord(word.id)} /><View style={styles.copy}><Text numberOfLines={1} style={styles.primary}>{word.word}</Text><Text numberOfLines={1} style={styles.secondary}>{word.trans}</Text></View><FavoriteButton active onPress={() => unfavorite(word.id)} /></View>; })}</SurfaceCard></ScrollView><View style={styles.footer}><View style={styles.direction}><CompactSegmentedControl value={direction} items={[["kb", "алан → рус"], ["ru", "рус → алан"]]} onChange={setDirection} /></View><Button primary style={styles.start} disabled={!activeRows.length} onPress={() => onLearn(activeRows, direction)}>Начать изучение</Button></View></> : <View style={styles.empty}><EmptyState>Отмечайте слова звездой, чтобы учить их отдельно.</EmptyState></View>}</Screen>;
+  return <Screen><Header title="Избранное" subtitle={`${rows.length} слов`} onBack={onBack} />{rows.length ? <><View style={styles.toolbar}><View style={styles.tools}><Pressable disabled={!ready} onPress={showAll}><Text style={styles.tool}>Показать все</Text></Pressable><Text style={styles.divider}>·</Text><Pressable disabled={!ready} onPress={hideAll}><Text style={styles.tool}>Скрыть все</Text></Pressable></View><MonoLabel>{activeRows.length}/{rows.length}</MonoLabel></View><ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}><SurfaceCard>{rows.map((word) => { const selected = !hiddenIds.has(String(word.id)); return <View key={word.id} style={[styles.row, !selected && styles.rowHidden]}><BracketCheckbox selected={selected} onPress={() => toggleWord(word.id)} /><View style={styles.copy}><Text numberOfLines={1} style={styles.primary}>{word.word}</Text><Text numberOfLines={1} style={styles.secondary}>{word.trans}</Text></View><FavoriteButton active onPress={() => unfavorite(word.id)} /></View>; })}</SurfaceCard></ScrollView><View style={styles.footer}><View style={styles.direction}><CompactSegmentedControl value={direction} items={[["kb", "алан → рус"], ["ru", "рус → алан"]]} onChange={setDirection} /></View><View style={styles.gameActions}><Button style={styles.gameButton} disabled={!activeRows.length} onPress={() => onMatch?.(activeRows)}>Сопоставление</Button><Button style={styles.gameButton} disabled={!activeRows.length} onPress={() => onTest?.(activeRows)}>Тест</Button></View><Button primary style={styles.start} disabled={!activeRows.length} onPress={() => onLearn(activeRows, direction)}>Учить</Button></View></> : <View style={styles.empty}><EmptyState>Отмечайте слова звездой, чтобы учить их отдельно.</EmptyState></View>}</Screen>;
 }
 
 const styles = StyleSheet.create({
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   tools: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   tool: { fontFamily: theme.font.terminal, fontSize: 11, fontWeight: '700', color: C.text2 },
   divider: { fontFamily: theme.font.terminal, fontSize: 11, color: C.text3 },
-  list: { paddingTop: theme.control.header + 44, paddingHorizontal: 12, paddingBottom: 116 },
+  list: { paddingTop: theme.control.header + 44, paddingHorizontal: 12, paddingBottom: 154 },
   row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: C.lineSoft },
   rowHidden: { opacity: .48 },
   checkboxHit: { width: 38, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
@@ -67,8 +67,10 @@ const styles = StyleSheet.create({
   copy: { flex: 1, minWidth: 0, minHeight: 44, justifyContent: 'center' },
   primary: { fontSize: 15, fontWeight: '800', lineHeight: 21, color: C.text1 },
   secondary: { fontSize: T.caption, lineHeight: 18, color: C.text2 },
-  footer: { position: 'absolute', zIndex: 30, left: 12, right: 12, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  direction: { flex: 1, maxWidth: 260 },
-  start: { width: 156, maxWidth: '44%' },
+  footer: { position: 'absolute', zIndex: 30, left: 12, right: 12, bottom: 10, gap: 7 },
+  direction: { width: '100%' },
+  gameActions: { flexDirection: 'row', gap: 7 },
+  gameButton: { flex: 1 },
+  start: { width: '100%' },
   empty: { flex: 1, marginTop: theme.control.header + 24, marginHorizontal: 12, justifyContent: 'center' },
 });
