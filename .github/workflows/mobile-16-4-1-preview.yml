@@ -16,20 +16,24 @@ jobs:
         with: {fetch-depth: 0}
       - uses: actions/setup-node@v4
         with: {node-version: '24'}
+      - name: Apply shared-core consumer refactor
+        run: node scripts/refactor-shared-consumers-16-4-1.mjs
       - name: Generate production dictionary snapshot
         run: node scripts/generate-mobile-dictionary-snapshot.mjs
-      - name: Persist snapshot when production dictionary changed
+      - name: Persist generated foundation changes
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          if ! git diff --quiet -- mobile/data/dictionary-snapshot.json; then
+          if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add mobile/data/dictionary-snapshot.json
-            git commit -m "16.4.1: refresh bundled dictionary snapshot"
-            git push origin HEAD:${GITHUB_REF_NAME}
+            git add mobile/screens/practice-games.js mobile/screens/station.js src/features/test/view.js src/features/match/view.js packages/alantil-core/station-test.js mobile/data/dictionary-snapshot.json
+            if ! git diff --cached --quiet; then
+              git commit -m "16.4.1: apply shared consumers and refresh snapshot"
+              git push origin HEAD:${GITHUB_REF_NAME}
+            fi
           fi
       - name: Compute fixed completion matrix
         run: node scripts/check-completion-matrix.mjs
