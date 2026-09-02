@@ -1,0 +1,78 @@
+name: AlanTil 16.5 Functional Parity
+
+on:
+  push:
+    branches: [agent/16.5-functional-parity]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  functional-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - name: Verify shared consumers are normalized
+        run: |
+          node scripts/cleanup-shared-imports-16-4-1.mjs
+          git diff --exit-code -- mobile/screens/practice-games.js mobile/screens/station.js src/features/test/view.js src/features/match/view.js packages/alantil-core/station-test.js
+      - name: Verify production dictionary snapshot is current
+        run: |
+          node scripts/generate-mobile-dictionary-snapshot.mjs
+          git diff --exit-code -- mobile/data/dictionary-snapshot.json
+      - name: Verify bundled snapshot equals production
+        run: node scripts/verify-mobile-dictionary-snapshot-parity.mjs
+      - name: Portable business-logic audit
+        run: node scripts/check-portable-duplicates-16-4-1.mjs
+      - name: Shared core regression tests
+        run: node --test tests/alantil-core-16.test.mjs tests/progress-sync-policy.test.mjs tests/unified-core-boundary-16.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile 16.5 functional parity and regression tests
+        working-directory: mobile
+        run: npm test
+      - name: Verify provenance remains clean
+        run: node scripts/check-portable-duplicates-16-4-1.mjs
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Export Expo Web
+        working-directory: mobile
+        run: npm run export:web
+      - name: Prepare preview metadata
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          root=Path('mobile/dist-web'); base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          for p in root.glob('_expo/static/js/web/*.js'):
+            t=p.read_text(); t=t.replace('"/_expo/',f'"{base}/_expo/').replace("'/_expo/",f"'{base}/_expo/").replace('"/assets/',f'"{base}/assets/').replace("'/assets/",f"'{base}/assets/'); p.write_text(t)
+          index=root/'index.html'; t=index.read_text().replace('src="/_expo/',f'src="{base}/_expo/'); index.write_text(t)
+          (root/'preview-build.json').write_text(json.dumps({'sha':os.environ.get('GITHUB_SHA',''),'branch':os.environ.get('GITHUB_REF_NAME',''),'run_id':os.environ.get('GITHUB_RUN_ID',''),'version':'16.5.0'}))
+          PY
+      - name: Package full source archive
+        shell: bash
+        run: |
+          git archive --format=zip --output=mobile/dist-web/AlanTil-16.5-source.zip HEAD
+          sha256sum mobile/dist-web/AlanTil-16.5-source.zip > mobile/dist-web/AlanTil-16.5-source.sha256
+          if [ -f docs/COMPLETION_STATUS.json ]; then cp docs/COMPLETION_STATUS.json mobile/dist-web/COMPLETION_STATUS.json; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.5-Functional-Parity
+          path: mobile/dist-web
+          if-no-files-found: error
+      - name: Publish stable preview branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"; cp -R mobile/dist-web/. "$publish_dir/"; cd "$publish_dir"
+          git init; git checkout -b preview-web; git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all; git commit -m "Preview ${GITHUB_SHA}"; git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
