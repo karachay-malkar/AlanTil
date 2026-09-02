@@ -1,3 +1,4 @@
+// Chrome dimensions and visual tokens mirror Web 13.15.12 shell.css.
 export const theme = {
   colors: {
     appBg: '#eee9df',
