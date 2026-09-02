@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { STARTER_DICTIONARY } from '../src/data/starter-dictionary.js';
-import { normalizeLegacyWordEntry } from '../packages/alantil-core/word-normalizer.js';
 import { buildLearningRoute } from '../packages/alantil-core/learning-route.js';
 import { toggleFavorite } from '../packages/alantil-core/favorites.js';
 import { DEFAULT_USER_SETTINGS, hasCompletedLearningSetup } from '../packages/alantil-core/settings.js';
@@ -21,18 +19,17 @@ import { PracticeScreen } from './screens/practice.js';
 import { FavoritesScreen } from './screens/favorites.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
 import { bootstrapNativeAuth } from './platform/auth.js';
+import { bootstrapNativeDictionary } from './platform/dictionary.js';
 import { loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
 
 const C = theme.colors;
-function starterWords() { return STARTER_DICTIONARY.map((row) => normalizeLegacyWordEntry(row)).filter(Boolean); }
-const WORDS = starterWords();
-const ROUTE = buildLearningRoute(WORDS);
 
 function BootScreen() { return <View style={styles.boot}><Text style={styles.bootBrand}>Alan Til</Text><View style={styles.bootDot} /></View>; }
 
 export default function AppRoot() {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
+  const [words, setWords] = useState([]);
   const [tab, setTab] = useState('path');
   const [screen, setScreen] = useState('home');
   const [favorites, setFavoritesState] = useState(() => new Set());
@@ -41,20 +38,23 @@ export default function AppRoot() {
   const [station, setStation] = useState(null);
   const [learnContext, setLearnContext] = useState(null);
   const [testContext, setTestContext] = useState(null);
+  const route = useMemo(() => buildLearningRoute(words), [words]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [savedSettings, savedFavorites, savedSongFavorites, session] = await Promise.all([
+      const [savedSettings, savedFavorites, savedSongFavorites, session, dictionary] = await Promise.all([
         loadNativeSettings(),
         loadNativeFavorites(),
         loadNativeSongFavorites(),
         bootstrapNativeAuth(),
+        bootstrapNativeDictionary(),
       ]);
       if (!alive) return;
       setSettingsState(savedSettings);
       setFavoritesState(savedFavorites);
       setSongFavoritesState(savedSongFavorites);
+      setWords(Array.isArray(dictionary?.words) ? dictionary.words : []);
       setSetupRequired(!session?.user && !hasCompletedLearningSetup(savedSettings));
       setBootstrapped(true);
     })();
@@ -111,22 +111,22 @@ export default function AppRoot() {
     content = <LearnScreen words={learnContext.words} mode={learnContext.mode} station={learnContext.station} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen(learnContext.returnTo || 'station')} />;
     showNav = false;
   } else if (screen === 'stationTest' && testContext) {
-    content = <StationTestScreen station={testContext.station} allWords={WORDS} mode={testContext.mode} onBack={() => setScreen('station')} />;
+    content = <StationTestScreen station={testContext.station} allWords={words} mode={testContext.mode} onBack={() => setScreen('station')} />;
     showNav = false;
   } else if (tab === 'path' && screen === 'station' && station) {
-    content = <StationScreen station={station} favorites={favorites} setFavorites={setFavorites} onBack={backToPath} onLearn={(words, mode) => { setLearnContext({ words, mode, station, returnTo: 'station' }); setScreen('learn'); }} onTest={(target, mode) => { setTestContext({ station: target, mode }); setScreen('stationTest'); }} />;
+    content = <StationScreen station={station} favorites={favorites} setFavorites={setFavorites} onBack={backToPath} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station, returnTo: 'station' }); setScreen('learn'); }} onTest={(target, mode) => { setTestContext({ station: target, mode }); setScreen('stationTest'); }} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'test') {
-    content = <GeneralTestFlow words={WORDS} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
+    content = <GeneralTestFlow words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'match') {
-    content = <GeneralMatchFlow words={WORDS} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
+    content = <GeneralMatchFlow words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'favorites') {
-    content = <FavoritesScreen words={WORDS} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station: null, returnTo: 'favorites' }); setScreen('learn'); }} />;
+    content = <FavoritesScreen words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station: null, returnTo: 'favorites' }); setScreen('learn'); }} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'songs') {
-    content = <SongsScreen words={WORDS} onBack={() => setScreen('home')} favoriteIds={songFavorites} onFavorite={(id) => setSongFavorites(toggleFavorite(songFavorites, id).ids)} />;
+    content = <SongsScreen words={words} onBack={() => setScreen('home')} favoriteIds={songFavorites} onFavorite={(id) => setSongFavorites(toggleFavorite(songFavorites, id).ids)} />;
     showNav = false;
   } else if (tab === 'practice') {
     content = <PracticeScreen openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} openSongs={() => setScreen('songs')} />;
@@ -134,9 +134,9 @@ export default function AppRoot() {
     content = <AccountScreen settings={settings} onGuest={continueAsGuest} onBack={() => setScreen('home')} />;
     showNav = false;
   } else if (tab === 'profile') {
-    content = <ProfileGate words={WORDS} settings={settings} onSettingsChange={setSettings} onGuest={continueAsGuest} onAccount={(action) => { if (action === 'open') setScreen('account'); }} />;
+    content = <ProfileGate words={words} settings={settings} onSettingsChange={setSettings} onGuest={continueAsGuest} onAccount={(action) => { if (action === 'open') setScreen('account'); }} />;
   } else {
-    content = <PathScreen route={ROUTE} onOpenStation={openStation} />;
+    content = <PathScreen route={route} onOpenStation={openStation} />;
   }
   return shell(content, showNav);
 }
