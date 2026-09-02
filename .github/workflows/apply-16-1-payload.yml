@@ -1,0 +1,39 @@
+name: Apply AlanTil 16.1 parity payload
+
+on:
+  push:
+    branches:
+      - agent/16.1-mobile-web-parity
+    paths:
+      - '.tmp161/payload.tgz'
+      - '.github/workflows/apply-16-1-payload.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply exact 16.1 files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f .tmp161/payload.tgz ]; then
+            echo 'payload already applied'
+            exit 0
+          fi
+          tar -xzf .tmp161/payload.tgz -C .
+          rm -rf .tmp161
+          git config user.name 'taulu'
+          git config user.email 'taulantau5@gmail.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'nothing to commit'
+            exit 0
+          fi
+          git commit -m '16.1: implement mobile web parity'
+          git push origin HEAD:agent/16.1-mobile-web-parity
