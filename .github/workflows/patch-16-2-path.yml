@@ -1,0 +1,49 @@
+name: Patch 16.2 Path Integration
+
+on:
+  push:
+    branches:
+      - agent/16.2-live-preview-visual-parity
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/16.2-live-preview-visual-parity
+      - name: Integrate native Path screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path = Path('mobile/AppRoot.js')
+          text = path.read_text(encoding='utf-8')
+          if "import { PathScreen } from './screens/path.js';" in text:
+              raise SystemExit(0)
+          anchor = "import { OnboardingScreen } from './screens/onboarding.js';\n"
+          if anchor not in text:
+              raise SystemExit('Onboarding import anchor not found')
+          text = text.replace(anchor, anchor + "import { PathScreen } from './screens/path.js';\n", 1)
+          text, count = re.subn(r"\nfunction StoryTabs\([\s\S]*?(?=\nfunction BootScreen\(\))", "\n", text, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one inline Path block, got {count}')
+          old = "else content=<PathScreen onOpenStation={openStation}/>;"
+          new = "else content=<PathScreen route={ROUTE} onOpenStation={openStation}/>;"
+          if old not in text:
+              raise SystemExit('Path render anchor not found')
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/AppRoot.js
+          git commit -m "16.2: integrate canonical native Path screen"
+          git push origin HEAD:agent/16.2-live-preview-visual-parity
