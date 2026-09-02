@@ -6,6 +6,7 @@ import { buildSongPlaylists } from '../../packages/alantil-core/song-catalog.js'
 import { FavoriteButton, Header, Screen, SectionLabel } from '../ui/components.js';
 import { theme } from '../ui/theme.js';
 import { loadNativeSongs } from '../platform/songs.js';
+import { loadNativeSessionSnapshot, saveNativeSessionSnapshot } from '../platform/session-store.js';
 
 const C = theme.colors;
 const T = theme.type;
@@ -23,7 +24,7 @@ function PlaylistsScreen({ songs, loading, favoriteIds, onOpenPlaylist, onBack }
 
 function SongCatalog({ songs, loading, onOpen, favoriteIds, onFavorite, onBack, title = 'Песни', query, mode, onQueryChange, onModeChange }) {
   const rows = useMemo(() => filterSongs(songs, { searchQuery: query, searchMode: mode, favoriteIds }), [songs, query, mode, favoriteIds]);
-  return <Screen><Header title={title} onBack={onBack} /><ScrollView contentContainerStyle={styles.catalogScroll} keyboardShouldPersistTaps="handled"><View style={styles.searchBar}><TextInput value={query} onChangeText={onQueryChange} placeholder="Поиск" placeholderTextColor={C.text3} style={styles.searchInput} /><SearchModes value={mode} onChange={onModeChange} /></View>{loading ? <View style={styles.empty}><Text style={styles.emptyTitle}>Загружаем песни…</Text></View> : rows.length ? rows.map((song) => <View key={song.id} style={styles.songRow}><Pressable onPress={() => onOpen(song)} style={({ pressed }) => [styles.songMain, pressed && styles.rowPressed]}><Text numberOfLines={1} style={styles.songTitle}>{song.title}</Text><Text numberOfLines={1} style={styles.songArtist}>{song.artist || '—'}</Text></Pressable><FavoriteButton active={favoriteIds.has(String(song.id))} onPress={() => onFavorite(song.id)} /></View>) : <View style={styles.empty}><Text style={styles.emptyTitle}>Песни не найдены</Text><Text style={styles.emptyText}>Измените поиск или выберите другой плейлист.</Text></View>}</ScrollView></Screen>;
+  return <Screen><Header title={title} onBack={onBack} /><ScrollView contentContainerStyle={styles.catalogScroll} keyboardShouldPersistTaps="handled"><View style={styles.searchBar}><TextInput value={query} onChangeText={onQueryChange} placeholder="Поиск" placeholderTextColor={C.text3} style={styles.searchInput} /><SearchModes value={mode} onChange={onModeChange} /></View>{loading ? <View style={styles.empty}><Text style={styles.emptyTitle}>Загружаем песни…</Text></View> : rows.length ? rows.map((song) => <View key={song.id} style={styles.songRow}><Pressable onPress={() => onOpen(song.id)} style={({ pressed }) => [styles.songMain, pressed && styles.rowPressed]}><Text numberOfLines={1} style={styles.songTitle}>{song.title}</Text><Text numberOfLines={1} style={styles.songArtist}>{song.artist || '—'}</Text></Pressable><FavoriteButton active={favoriteIds.has(String(song.id))} onPress={() => onFavorite(song.id)} /></View>) : <View style={styles.empty}><Text style={styles.emptyTitle}>Песни не найдены</Text><Text style={styles.emptyText}>Измените поиск или выберите другой плейлист.</Text></View>}</ScrollView></Screen>;
 }
 
 function formatTime(value) {
@@ -61,24 +62,45 @@ function SongDetail({ song, words, onBack, favorite, onFavorite }) {
 
 export function SongsScreen({ songs: initialSongs = [], words = [], onBack, favoriteIds = new Set(), onFavorite }) {
   const [activePlaylistId, setActivePlaylistId] = useState('');
-  const [activeSong, setActiveSong] = useState(null);
+  const [activeSongId, setActiveSongId] = useState('');
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState('title');
   const [songs, setSongs] = useState(initialSongs);
   const [loading, setLoading] = useState(!initialSongs.length);
+  const [navigationReady, setNavigationReady] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    loadNativeSessionSnapshot('songs-ui').then((saved) => {
+      if (!alive) return;
+      if (saved) {
+        setActivePlaylistId(String(saved.activePlaylistId || ''));
+        setActiveSongId(String(saved.activeSongId || ''));
+        setQuery(String(saved.query || ''));
+        setMode(['title','artist','lyrics'].includes(saved.mode) ? saved.mode : 'title');
+      }
+      setNavigationReady(true);
+    }).catch(() => { if (alive) setNavigationReady(true); });
+    return () => { alive = false; };
+  }, []);
+  useEffect(() => {
+    if (!navigationReady) return;
+    saveNativeSessionSnapshot('songs-ui',{activePlaylistId,activeSongId,query,mode}).catch(() => {});
+  }, [navigationReady,activePlaylistId,activeSongId,query,mode]);
   useEffect(() => {
     let alive = true;
     if (initialSongs.length) { setSongs(initialSongs); setLoading(false); return () => { alive = false; }; }
     (async () => { const loaded = await loadNativeSongs(); if (alive) { setSongs(loaded); setLoading(false); } })();
     return () => { alive = false; };
   }, [initialSongs]);
-  const closePlaylist = () => { setActivePlaylistId(''); setActiveSong(null); };
-  if (activeSong) return <SongDetail song={activeSong} words={words} onBack={() => setActiveSong(null)} favorite={favoriteIds.has(String(activeSong.id))} onFavorite={() => onFavorite(activeSong.id)} />;
+  const activeSong = useMemo(() => songs.find((song)=>String(song.id)===String(activeSongId)) || null,[songs,activeSongId]);
+  const closePlaylist = () => { setActivePlaylistId(''); setActiveSongId(''); };
+  if (!navigationReady) return <Screen><Header title="Песни" onBack={onBack} /><View style={styles.empty}><Text style={styles.emptyTitle}>Восстанавливаем состояние…</Text></View></Screen>;
+  if (activeSong) return <SongDetail song={activeSong} words={words} onBack={() => setActiveSongId('')} favorite={favoriteIds.has(String(activeSong.id))} onFavorite={() => onFavorite(activeSong.id)} />;
   if (activePlaylistId) {
     const favoritesOnly = activePlaylistId === '__favorites__';
     const playlist = buildSongPlaylists(songs).find((item) => item.id === activePlaylistId);
     const catalogSongs = favoritesOnly ? songs.filter((song) => favoriteIds.has(String(song.id))) : songs.filter((song) => String(song.playlistId) === String(activePlaylistId));
-    return <SongCatalog songs={catalogSongs} loading={loading} onOpen={setActiveSong} favoriteIds={favoriteIds} onFavorite={onFavorite} onBack={closePlaylist} title={favoritesOnly ? 'Избранные песни' : playlist?.title || 'Песни'} query={query} mode={mode} onQueryChange={setQuery} onModeChange={setMode} />;
+    return <SongCatalog songs={catalogSongs} loading={loading} onOpen={setActiveSongId} favoriteIds={favoriteIds} onFavorite={onFavorite} onBack={closePlaylist} title={favoritesOnly ? 'Избранные песни' : playlist?.title || 'Песни'} query={query} mode={mode} onQueryChange={setQuery} onModeChange={setMode} />;
   }
   return <PlaylistsScreen songs={songs} loading={loading} favoriteIds={favoriteIds} onOpenPlaylist={setActivePlaylistId} onBack={onBack} />;
 }
