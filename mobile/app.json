@@ -2,37 +2,14 @@
   "expo": {
     "name": "Alan Til",
     "slug": "alan-til",
-    "version": "16.4.0",
+    "version": "16.4.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
-    "plugins": [
-      [
-        "expo-dev-client",
-        {
-          "launchMode": "most-recent"
-        }
-      ]
-    ],
-    "web": {
-      "bundler": "metro",
-      "output": "single"
-    },
-    "android": {
-      "package": "app.alantil.mobile",
-      "versionCode": 20,
-      "adaptiveIcon": {
-        "backgroundColor": "#eee9df"
-      }
-    },
-    "ios": {
-      "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "20"
-    },
-    "extra": {
-      "releaseVersion": "16.4.0",
-      "architecture": "web-13.15.12-shared-core",
-      "preview": "expo-web-and-native-preview"
-    }
+    "plugins": [["expo-dev-client", {"launchMode": "most-recent"}]],
+    "web": {"bundler": "metro", "output": "single"},
+    "android": {"package": "app.alantil.mobile", "versionCode": 21, "adaptiveIcon": {"backgroundColor": "#eee9df"}},
+    "ios": {"bundleIdentifier": "app.alantil.mobile", "buildNumber": "21"},
+    "extra": {"releaseVersion": "16.4.1", "architecture": "web-13.15.12-shared-core", "preview": "expo-web-and-native-preview"}
   }
 }

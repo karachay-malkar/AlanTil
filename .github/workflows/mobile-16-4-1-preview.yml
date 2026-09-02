@@ -1,0 +1,86 @@
+name: AlanTil 16.4.1 Foundation Completion
+
+on:
+  push:
+    branches: [agent/16.4.1-foundation-completion]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  foundation-completion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - name: Generate production dictionary snapshot
+        run: node scripts/generate-mobile-dictionary-snapshot.mjs
+      - name: Persist snapshot when production dictionary changed
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- mobile/data/dictionary-snapshot.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add mobile/data/dictionary-snapshot.json
+            git commit -m "16.4.1: refresh bundled dictionary snapshot"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Compute fixed completion matrix
+        run: node scripts/check-completion-matrix.mjs
+      - name: Shared core tests
+        run: node --test tests/alantil-core-16.test.mjs tests/progress-sync-policy.test.mjs tests/unified-core-boundary-16.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile foundation and regression tests
+        working-directory: mobile
+        run: npm test
+      - name: Verify provenance has zero declared mobile reimplementations
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');const data=JSON.parse(fs.readFileSync('docs/WEB_ORIGIN_16_4.json','utf8'));const bad=data.entries.filter(x=>x.status==='MOBILE_REIMPLEMENTATION');if(bad.length)throw new Error(`MOBILE_REIMPLEMENTATION=${bad.length}`);console.log(`MOBILE_REIMPLEMENTATION=0; entries=${data.entries.length}`);
+          NODE
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Export Expo Web
+        working-directory: mobile
+        run: npm run export:web
+      - name: Prepare preview metadata
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          root=Path('mobile/dist-web'); base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          for p in root.glob('_expo/static/js/web/*.js'):
+            t=p.read_text(); t=t.replace('"/_expo/',f'"{base}/_expo/').replace("'/_expo/",f"'{base}/_expo/").replace('"/assets/',f'"{base}/assets/').replace("'/assets/",f"'{base}/assets/"); p.write_text(t)
+          index=root/'index.html'; t=index.read_text().replace('src="/_expo/',f'src="{base}/_expo/'); index.write_text(t)
+          (root/'preview-build.json').write_text(json.dumps({'sha':os.environ.get('GITHUB_SHA',''),'branch':os.environ.get('GITHUB_REF_NAME',''),'run_id':os.environ.get('GITHUB_RUN_ID',''),'version':'16.4.1'}))
+          PY
+      - name: Package full source archive
+        shell: bash
+        run: |
+          git archive --format=zip --output=mobile/dist-web/AlanTil-16.4.1-source.zip HEAD
+          sha256sum mobile/dist-web/AlanTil-16.4.1-source.zip > mobile/dist-web/AlanTil-16.4.1-source.sha256
+          cp docs/COMPLETION_STATUS.json mobile/dist-web/COMPLETION_STATUS.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.4.1-Foundation-Completion
+          path: mobile/dist-web
+          if-no-files-found: error
+      - name: Publish stable preview branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"; cp -R mobile/dist-web/. "$publish_dir/"; cd "$publish_dir"
+          git init; git checkout -b preview-web; git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all; git commit -m "Preview ${GITHUB_SHA}"; git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
