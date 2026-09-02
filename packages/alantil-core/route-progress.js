@@ -33,6 +33,8 @@ export function stationWordProgress(station, snapshot) {
   return activeSnapshot.stationSummaries.get(station);
 }
 
+export function stationMilestoneCount(masteredWords=0){return Math.min(4,Math.max(0,Math.floor((Number(masteredWords)||0)/20)));}
+
 export function storyProgress(route, storyType, snapshot) {
   const activeSnapshot = snapshot || createRouteProgressSnapshot();
   const story = route?.stories?.[storyType] || { stations: [], sections: [], catalogs: [] };
