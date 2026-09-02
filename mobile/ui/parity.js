@@ -12,9 +12,10 @@ export function ScreenSection({ title, trailing, children, style }) {
   </View>;
 }
 
-export function SurfaceCard({ children, style, inset = false }) {
-  return <View style={[styles.surface, style]}>{inset ? <View pointerEvents="none" style={styles.surfaceInset} /> : null}{children}</View>;
+export function SurfaceCard({ children, style, inset = false, flat = false }) {
+  return <View style={[styles.surface, flat && styles.surfaceFlat, style]}>{inset && !flat ? <View pointerEvents="none" style={styles.surfaceInset} /> : null}{children}</View>;
 }
+
 
 export function CompactSegmentedControl({ value, items, onChange, accessibilityLabel }) {
   return <View accessibilityLabel={accessibilityLabel} style={styles.segmented}>{items.map(([id, label]) => {
@@ -49,6 +50,7 @@ const styles = StyleSheet.create({
   sectionHead: { minHeight: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sectionTitle: { fontSize: 15, fontWeight: '800', lineHeight: 18, color: C.text1 },
   surface: { position: 'relative', width: '100%', borderWidth: 1, borderColor: C.line, borderRadius: theme.radius.lg, backgroundColor: C.surface0, overflow: 'hidden' },
+  surfaceFlat: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
   surfaceInset: { position: 'absolute', top: 9, left: 9, right: 9, bottom: 9, borderWidth: 1, borderColor: C.lineSoft, borderRadius: Math.max(1, theme.radius.lg - 6), opacity: .6 },
   segmented: { width: '100%', minHeight: 36, padding: 2, borderWidth: 1, borderColor: C.line, borderRadius: 999, flexDirection: 'row', backgroundColor: 'transparent' },
   segmentItem: { flex: 1, minHeight: 30, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7 },

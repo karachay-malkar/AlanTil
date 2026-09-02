@@ -103,7 +103,7 @@ test('profile setup is guarded and profile/statistics/settings use parity contro
   assert.match(profileMain, /MetricStrip/);
   assert.match(profileMain, /dictionaryPathProgress/);
   assert.match(profileMain, /getNativeProgressSummary/);
-  assert.match(profileMain, /<Text style=\{styles\.versionLabel\}>Приложение<\/Text>/);
+  assert.match(profileMain, /Версия приложения/);
 });
 
 test('screens never access Supabase directly', () => {

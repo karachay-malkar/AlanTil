@@ -34,6 +34,20 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
     ['src/features/account/login.js','0749e4f3e145f21c2c00a4416859e482e727b71d'],
     ['src/features/account/profile.js','f8c60b181410cfe262d29dc9cc06866b0ac10712'],
   ]),
+  features: Object.freeze([
+    ['src/features/path/path.css','9e6c746c8eb079f0ecfbb410457f5f7e39f612ee'],
+    ['src/features/path/path-navigation.css','f17954314fae6f71f425a53c3be64cdc742739ea'],
+    ['src/features/path/story-stele.css','525a13a2d1f407ec63f9e920ed25e5927430aa3e'],
+    ['src/features/path/story-word-list.css','ac6c06b090ca37a236cd8681193f5f5ebb9ed99c'],
+    ['src/features/profile/profile.css','09e4a18859cf51f7ae80b4ebe876fe77083bdd82'],
+    ['src/features/settings/settings.css','73cdab1163fc4a065ffb2132800f50d725a03e05'],
+    ['src/features/practice/practice.css','5dc627763e8caa236d5677c2a21e5c5b5f4cb657'],
+    ['src/features/learn/learn.css','838c152e40c36fe622d89fa50ec392e9e4d687b2'],
+    ['src/features/test/test.css','0da75c3b833467a9436d0a49e50a82b392aa9acc'],
+    ['src/features/match/match.css','7f48c62efe343136ccde811d2496a8b664078bbe'],
+    ['src/features/songs/songs.css','261c4aa3b6cc538375231e1bfe6f3beca6c90ae3'],
+    ['src/features/onboarding/onboarding.css','d61507a2a6ae896a84bbaebb7ea2dd5e6e0c006a'],
+  ]),
 });
 
 export const WEB_VISUAL_COVERAGE = Object.freeze({
@@ -62,6 +76,18 @@ export const WEB_VISUAL_COVERAGE = Object.freeze({
   'src/features/account/index.js': 'logic-parity target: loading/auth/profile/nickname/avatar/completed state machine',
   'src/features/account/login.js': 'logic-parity target: provider loading/error and guest continuation',
   'src/features/account/profile.js': 'logic-parity target: nickname debounce/profile creation/avatar confirmation/facts',
+  'src/features/path/path.css': 'mapped: route zigzag, station geometry, scale, topographic scene and progress states',
+  'src/features/path/path-navigation.css': 'mapped: story navigation and route controls',
+  'src/features/path/story-stele.css': 'mapped: story stele proportions and overlay geometry',
+  'src/features/path/story-word-list.css': 'mapped: story word rows and separators',
+  'src/features/profile/profile.css': 'mapped: primary profile navigation, identity, story progress and statistics',
+  'src/features/settings/settings.css': 'mapped: 620px content, 46px rows, flat separators, learning preview, dictionary version and links',
+  'src/features/practice/practice.css': 'mapped: 68px flat practice menu rows',
+  'src/features/learn/learn.css': 'mapped: word card, actions, result layout and progress',
+  'src/features/test/test.css': 'mapped: question answers, selected/correct/wrong states and results',
+  'src/features/match/match.css': 'mapped: pair grid, pair states and results',
+  'src/features/songs/songs.css': 'mapped: catalog, player, lyrics and search presentation',
+  'src/features/onboarding/onboarding.css': 'mapped: setup/guide spacing and actions',
 });
 
 export const WEB_VISUAL_TOKENS = Object.freeze({
@@ -109,7 +135,7 @@ export const WEB_VISUAL_TOKENS = Object.freeze({
 });
 
 export function verifyWebVisualSourceManifest() {
-  const sources=[...WEB_VISUAL_SOURCES.styles,...WEB_VISUAL_SOURCES.ui,...WEB_VISUAL_SOURCES.account];
+  const sources=[...WEB_VISUAL_SOURCES.styles,...WEB_VISUAL_SOURCES.ui,...WEB_VISUAL_SOURCES.account,...WEB_VISUAL_SOURCES.features];
   const paths=sources.map(([path])=>path);
   const missingCoverage=paths.filter((path)=>!WEB_VISUAL_COVERAGE[path]);
   return {ref:WEB_VISUAL_SOURCES.ref,total:paths.length,unique:new Set(paths).size,missingCoverage,complete:new Set(paths).size===paths.length&&missingCoverage.length===0};

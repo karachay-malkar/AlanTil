@@ -1,0 +1,22 @@
+{
+  "version": "16.6.0",
+  "reference": "Web 13.15.12",
+  "method": "source geometry + semantic token parity; physical rendering remains 16.7 DEVICE_REQUIRED",
+  "screens": [
+    {"id":"path","web":["src/features/path/path.css","src/features/path/path-navigation.css","src/features/path/story-stele.css"],"mobile":["mobile/screens/path.js"],"checks":["3-position zigzag","connector","4px dots","8px diamonds","route scale","auto-scroll","topography"],"status":"PASS"},
+    {"id":"station","web":["src/features/path/station-view.js","src/features/path/story-word-list.css"],"mobile":["mobile/screens/station.js"],"checks":["compact word rows","separator system","show/hide","direction","learn left","stage test right"],"status":"PASS"},
+    {"id":"learn","web":["src/features/learn/learn.css"],"mobile":["mobile/screens/learn.js"],"checks":["card","progress","favorite","undo","results"],"status":"PASS"},
+    {"id":"stage-test","web":["src/features/path/station-test.js","src/features/test/test.css"],"mobile":["mobile/screens/station-test.js"],"checks":["question","answers","result","mastery"],"status":"PASS"},
+    {"id":"practice","web":["src/features/practice/practice.css"],"mobile":["mobile/screens/practice.js"],"checks":["flat menu","68px source rows","23px icons","separator system"],"status":"PASS"},
+    {"id":"test","web":["src/features/test/test.css"],"mobile":["mobile/screens/practice-games.js"],"checks":["scope menu","20/40/80","answer states","results"],"status":"PASS"},
+    {"id":"match","web":["src/features/match/match.css"],"mobile":["mobile/screens/practice-games.js"],"checks":["pair grid","selection states","results"],"status":"PASS"},
+    {"id":"favorites","web":["src/features/path/story-word-list.css","src/features/learn/learn.css"],"mobile":["mobile/screens/favorites.js"],"checks":["word rows","checkbox","direction","actions"],"status":"PASS"},
+    {"id":"songs","web":["src/features/songs/songs.css"],"mobile":["mobile/screens/songs.js"],"checks":["catalog","search","player","lyrics","word overlay"],"status":"PASS"},
+    {"id":"profile","web":["src/features/profile/profile.css"],"mobile":["mobile/screens/profile-main.js"],"checks":["profile nav","canonical avatar assets","nickname","story progress"],"status":"PASS"},
+    {"id":"statistics","web":["src/features/profile/profile.css","src/shared/styles/table-system.css"],"mobile":["mobile/screens/profile-main.js"],"checks":["metrics","problem rows","terminal values","separators"],"status":"PASS"},
+    {"id":"settings","web":["src/features/settings/settings.css","src/features/settings/index.js"],"mobile":["mobile/screens/profile-main.js"],"checks":["620px max","46px rows","Save","180px preview","dictionary block","links"],"status":"PASS"},
+    {"id":"account","web":["src/features/account/account.css","src/features/account/index.js"],"mobile":["mobile/screens/profile.js"],"checks":["provider","nickname","avatar gender","facts","actions"],"status":"PASS"},
+    {"id":"onboarding","web":["src/features/onboarding/onboarding.css","src/features/onboarding/guide.js"],"mobile":["mobile/screens/onboarding.js"],"checks":["setup controls","guide","actions","spacing"],"status":"PASS"}
+  ],
+  "device_required": ["Android font rasterization", "Android safe-area/status-bar final comparison", "iOS font rasterization", "iOS safe-area/home-indicator final comparison", "native blur intensity", "native audio control rendering"]
+}

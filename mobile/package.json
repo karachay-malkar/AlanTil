@@ -1,6 +1,6 @@
 {
   "name": "alantil-mobile",
-  "version": "16.5.0",
+  "version": "16.6.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -27,5 +27,7 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "~0.21.0"
   },
-  "devDependencies": {"@babel/core": "^7.25.2"}
+  "devDependencies": {
+    "@babel/core": "^7.25.2"
+  }
 }

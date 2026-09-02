@@ -157,7 +157,7 @@ test('16.5 Songs persists search/navigation state and exposes runtime audio erro
 test('16.5 Profile Statistics Settings are real-data backed and expose all persisted settings plus versions',()=>{
   const profile=read('mobile/screens/profile-main.js'),progress=read('mobile/platform/progress.js'),storage=read('mobile/platform/storage.js');
   assert.match(profile,/getNativeProgressSummary/);assert.match(profile,/loadNativeWordProgressMap/);assert.match(profile,/summary\.activity\?\.sessions/);assert.match(profile,/summary\.difficult/);assert.match(profile,/dictionaryPathProgress/);
-  assert.match(profile,/interface_language_code/);assert.match(profile,/alan_script_code/);assert.match(profile,/alan_dialect_code/);assert.match(profile,/text_size_code/);assert.match(profile,/getNativeDictionaryDiagnostics/);assert.match(profile,/16\.5\.0/);
+  assert.match(profile,/interface_language_code/);assert.match(profile,/alan_script_code/);assert.match(profile,/alan_dialect_code/);assert.match(profile,/text_size_code/);assert.match(profile,/getNativeDictionaryDiagnostics/);assert.match(profile,/16\.(5|6)\.0/);
   assert.match(progress,/summarizeWordProgress/);assert.match(progress,/activeSeconds/);assert.match(progress,/sessions/);assert.match(progress,/buildProblemWordRows/);assert.match(storage,/saveNativeSettings/);assert.match(storage,/queuePreferences/);
   const settings=normalizeUserSettings(applyUserSettingsUpdate({}, {interface_language_code:'tr',alan_script_code:'turkic',text_size_code:'large'}));
   assert.equal(settings.interface_language_code,'tr');assert.equal(settings.alan_script_code,'turkic');assert.equal(settings.text_size_code,'large');
@@ -168,5 +168,5 @@ test('16.5 Expo Web bootstrap cannot remain permanently on BootScreen after one 
   const boot=source.slice(source.indexOf('useEffect(() => {'),source.indexOf('const setFavorites ='));
   assert.match(boot,/Promise\.allSettled/);assert.doesNotMatch(boot,/Promise\.all\(\[/);assert.match(boot,/setBootstrapped\(true\)/);assert.match(boot,/\.catch\(\(\) => \{/);
   const app=JSON.parse(read('mobile/app.json')),pkg=JSON.parse(read('mobile/package.json'));
-  assert.equal(app.expo.version,'16.5.0');assert.equal(pkg.version,'16.5.0');assert.equal(app.expo.web.bundler,'metro');
+  assert.match(app.expo.version,/^16\.(5|6)\.0$/);assert.equal(pkg.version,app.expo.version);assert.equal(app.expo.web.bundler,'metro');
 });
