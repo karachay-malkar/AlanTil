@@ -54,11 +54,18 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import json, os
-          root=Path('mobile/dist-web'); base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          root = Path('mobile/dist-web')
+          base = 'https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
           for p in root.glob('_expo/static/js/web/*.js'):
-            t=p.read_text(); t=t.replace('"/_expo/',f'"{base}/_expo/').replace("'/_expo/",f"'{base}/_expo/").replace('"/assets/',f'"{base}/assets/').replace("'/assets/",f"'{base}/assets/'); p.write_text(t)
-          index=root/'index.html'; t=index.read_text().replace('src="/_expo/',f'src="{base}/_expo/'); index.write_text(t)
-          (root/'preview-build.json').write_text(json.dumps({'sha':os.environ.get('GITHUB_SHA',''),'branch':os.environ.get('GITHUB_REF_NAME',''),'run_id':os.environ.get('GITHUB_RUN_ID',''),'version':'16.5.0'}))
+              t = p.read_text()
+              t = t.replace('"/_expo/', '"' + base + '/_expo/')
+              t = t.replace("'/_expo/", "'" + base + '/_expo/')
+              t = t.replace('"/assets/', '"' + base + '/assets/')
+              t = t.replace("'/assets/", "'" + base + '/assets/')
+              p.write_text(t)
+          index = root / 'index.html'
+          index.write_text(index.read_text().replace('src="/_expo/', 'src="' + base + '/_expo/'))
+          (root / 'preview-build.json').write_text(json.dumps({'sha': os.environ.get('GITHUB_SHA',''), 'branch': os.environ.get('GITHUB_REF_NAME',''), 'run_id': os.environ.get('GITHUB_RUN_ID',''), 'version': '16.5.0'}))
           PY
       - name: Package full source archive
         shell: bash
