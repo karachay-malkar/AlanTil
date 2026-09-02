@@ -25,10 +25,7 @@ import { loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, saveN
 const C = theme.colors;
 
 function BootScreen() { return <View style={styles.boot}><Text style={styles.bootBrand}>Alan Til</Text><View style={styles.bootDot} /></View>; }
-
-function settledValue(result, fallback) {
-  return result?.status === 'fulfilled' ? result.value : fallback;
-}
+function settledValue(result, fallback) { return result?.status === 'fulfilled' ? result.value : fallback; }
 
 export default function AppRoot() {
   const [bootstrapped, setBootstrapped] = useState(false);
@@ -42,17 +39,14 @@ export default function AppRoot() {
   const [station, setStation] = useState(null);
   const [learnContext, setLearnContext] = useState(null);
   const [testContext, setTestContext] = useState(null);
+  const [practiceGameContext, setPracticeGameContext] = useState(null);
   const route = useMemo(() => buildLearningRoute(words), [words]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       const results = await Promise.allSettled([
-        loadNativeSettings(),
-        loadNativeFavorites(),
-        loadNativeSongFavorites(),
-        bootstrapNativeAuth(),
-        bootstrapNativeDictionary(),
+        loadNativeSettings(), loadNativeFavorites(), loadNativeSongFavorites(), bootstrapNativeAuth(), bootstrapNativeDictionary(),
       ]);
       if (!alive) return;
       const savedSettings = settledValue(results[0], { ...DEFAULT_USER_SETTINGS });
@@ -94,22 +88,19 @@ export default function AppRoot() {
     return saved;
   };
   const changeTab = (next) => {
-    setTab(next);
-    setScreen('home');
-    setStation(null);
+    setTab(next); setScreen('home'); setStation(null); setPracticeGameContext(null);
   };
-  const openStation = (nextStation) => {
-    setStation(nextStation);
-    setScreen('station');
+  const openStation = (nextStation) => { setStation(nextStation); setScreen('station'); };
+  const backToPath = () => { setScreen('home'); setStation(null); };
+  const continueAsGuest = () => { setTab('path'); setScreen('home'); setStation(null); };
+  const openPracticeGame = (type, sourceWords = words, returnTo = 'home', scopeId = 'all') => {
+    setPracticeGameContext({ words: Array.isArray(sourceWords) ? sourceWords : [], returnTo, scopeId });
+    setScreen(type);
   };
-  const backToPath = () => {
-    setScreen('home');
-    setStation(null);
-  };
-  const continueAsGuest = () => {
-    setTab('path');
-    setScreen('home');
-    setStation(null);
+  const closePracticeGame = () => {
+    const returnTo = practiceGameContext?.returnTo || 'home';
+    setPracticeGameContext(null);
+    setScreen(returnTo);
   };
   const shell = (content, showNav = true) => <SafeAreaProvider><StatusBar style="dark" /><SafeAreaView style={styles.safe} edges={theme.safeArea.edges}><View style={styles.app}>{content}{showNav ? <BottomNav tab={tab} onChange={changeTab} /> : null}</View></SafeAreaView></SafeAreaProvider>;
 
@@ -117,9 +108,7 @@ export default function AppRoot() {
   if (setupRequired) return shell(<OnboardingScreen initialSettings={settings} onComplete={async (nextSettings) => {
     const saved = await setSettings(nextSettings);
     if (!hasCompletedLearningSetup(saved)) throw new Error('Learning setup was not persisted');
-    setSetupRequired(false);
-    setTab('profile');
-    setScreen('account');
+    setSetupRequired(false); setTab('profile'); setScreen('account');
   }} />, false);
 
   let content;
@@ -134,19 +123,21 @@ export default function AppRoot() {
     content = <StationScreen station={station} favorites={favorites} setFavorites={setFavorites} onBack={backToPath} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station, returnTo: 'station' }); setScreen('learn'); }} onTest={(target, mode) => { setTestContext({ station: target, mode }); setScreen('stationTest'); }} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'test') {
-    content = <GeneralTestFlow words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
+    const context = practiceGameContext || { words, scopeId: 'all' };
+    content = <GeneralTestFlow words={context.words} favorites={favorites} setFavorites={setFavorites} sessionType={`test:${context.scopeId}`} onBack={closePracticeGame} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'match') {
-    content = <GeneralMatchFlow words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} />;
+    const context = practiceGameContext || { words, scopeId: 'all' };
+    content = <GeneralMatchFlow words={context.words} favorites={favorites} setFavorites={setFavorites} sessionType={`match:${context.scopeId}`} onBack={closePracticeGame} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'favorites') {
-    content = <FavoritesScreen words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station: null, returnTo: 'favorites' }); setScreen('learn'); }} />;
+    content = <FavoritesScreen words={words} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('home')} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station: null, returnTo: 'favorites' }); setScreen('learn'); }} onTest={(rows) => openPracticeGame('test', rows, 'favorites', 'favorites')} onMatch={(rows) => openPracticeGame('match', rows, 'favorites', 'favorites')} />;
     showNav = false;
   } else if (tab === 'practice' && screen === 'songs') {
-    content = <SongsScreen words={words} onBack={() => setScreen('home')} favoriteIds={songFavorites} onFavorite={(id) => setSongFavorites(toggleFavorite(songFavorites, id).ids)} />;
+    content = <SongsScreen words={words} settings={settings} onBack={() => setScreen('home')} favoriteIds={songFavorites} onFavorite={(id) => setSongFavorites(toggleFavorite(songFavorites, id).ids)} />;
     showNav = false;
   } else if (tab === 'practice') {
-    content = <PracticeScreen openTest={() => setScreen('test')} openMatch={() => setScreen('match')} openFavorites={() => setScreen('favorites')} openSongs={() => setScreen('songs')} />;
+    content = <PracticeScreen openTest={() => openPracticeGame('test', words, 'home', 'all')} openMatch={() => openPracticeGame('match', words, 'home', 'all')} openFavorites={() => setScreen('favorites')} openSongs={() => setScreen('songs')} />;
   } else if (tab === 'profile' && screen === 'account') {
     content = <AccountScreen settings={settings} onGuest={continueAsGuest} onBack={() => setScreen('home')} />;
     showNav = false;
