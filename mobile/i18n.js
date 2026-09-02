@@ -14,6 +14,10 @@ const ALL_INTERFACE_MESSAGES = Object.freeze({
   ...RELEASE_MESSAGES_13_15_12,
 });
 
+const MOBILE_MESSAGE_ALIASES=Object.freeze({
+  'common.otmena':'common.ostatsya',
+});
+
 export function normalizeInterfaceLanguage(value) {
   const source=String(value||'').trim().toLowerCase().split('-')[0];
   const normalized=source==='tu'?'tr':source;
@@ -24,11 +28,20 @@ function interpolate(template,params={}) {
   return String(template||'').replace(/\{([a-zA-Z0-9_]+)\}/g,(placeholder,name)=>Object.prototype.hasOwnProperty.call(params,name)?String(params[name]??''):placeholder);
 }
 
-export function mobileMsg(language,key,params={}) {
+export function messageForLanguage(language,key,params={}) {
   const locale=normalizeInterfaceLanguage(language);
-  const entry=ALL_INTERFACE_MESSAGES[key];
-  const template=entry?.[locale]||entry?.ru||key;
+  const resolvedKey=MOBILE_MESSAGE_ALIASES[key]||key;
+  const entry=ALL_INTERFACE_MESSAGES[resolvedKey];
+  const template=entry?.[locale]||entry?.ru||resolvedKey;
   return interpolate(template,params);
+}
+
+export function mobileMsg(language,key,params={}) {
+  return messageForLanguage(language,key,params);
+}
+
+export function msg(settings,key,params={}) {
+  return messageForLanguage(settings?.interface_language_code,key,params);
 }
 
 export function mobileLocale(language) {
@@ -36,5 +49,6 @@ export function mobileLocale(language) {
 }
 
 export function hasMobileTranslation(language,key) {
-  return Boolean(ALL_INTERFACE_MESSAGES[key]?.[normalizeInterfaceLanguage(language)]);
+  const resolvedKey=MOBILE_MESSAGE_ALIASES[key]||key;
+  return Boolean(ALL_INTERFACE_MESSAGES[resolvedKey]?.[normalizeInterfaceLanguage(language)]);
 }
