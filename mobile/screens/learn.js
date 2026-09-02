@@ -3,6 +3,7 @@ import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'reac
 import { buildLearnResultSummary, decideLearnCard, ensureLearnWordStats, exposeCurrentLearnCard, initializeLearnState, learnCompletionSummary, learnSessionWords, undoLearnDecision } from '../../packages/alantil-core/learning.js';
 import { favoriteHas, toggleFavorite } from '../../packages/alantil-core/favorites.js';
 import { Button, FavoriteButton, Header, ProgressBar, Screen, SectionLabel } from '../ui/components.js';
+import { EmptyState, MetricStrip, MonoLabel, ScreenSection, SurfaceCard } from '../ui/parity.js';
 import { theme } from '../ui/theme.js';
 import { recordNativeLearnSession } from '../platform/progress.js';
 import { clearNativeSessionSnapshot, loadNativeSessionSnapshot, saveNativeSessionSnapshot } from '../platform/session-store.js';
@@ -65,12 +66,12 @@ export function LearnScreen({ words, mode = 'kb', station, favorites, setFavorit
     clearNativeSessionSnapshot('learn').catch(() => {});
   }, [finish, state, station?.key]);
 
-  if (!state) return <Screen><Header title="Учить слова" onBack={onBack} /><View style={styles.loading}><Text style={styles.problemEmpty}>Восстанавливаем обучение…</Text></View></Screen>;
+  if (!state) return <Screen><Header title="Учить слова" onBack={onBack} /><View style={styles.center}><EmptyState>Восстанавливаем обучение…</EmptyState></View></Screen>;
   if (finish) {
     const completed = learnCompletionSummary(state);
-    return <Screen><Header title="Результат" onBack={onBack} /><ScrollView contentContainerStyle={styles.results}><SectionLabel>ОБУЧЕНИЕ ЗАВЕРШЕНО</SectionLabel><View style={styles.resultSummary}><ResultMetric value={String(completed.items_total)} label="изучено" /><ResultMetric value={String(completed.known_count)} label="знаю" /><ResultMetric value={String(summary?.leftSwipesTotal || 0)} label="не знаю" /></View><View style={styles.problemSection}><Text style={styles.problemHeading}>Проблемные слова</Text>{summary?.problemWords?.length ? summary.problemWords.slice(0, 7).map((word) => <View key={word.id} style={styles.problemRow}><Text style={styles.problemWord}>{word.word}</Text><Text style={styles.problemTrans}>{word.trans}</Text><Text style={styles.problemFails}>{word.fails}</Text></View>) : <Text style={styles.problemEmpty}>Ошибок нет.</Text>}</View><View style={styles.resultFooter}><View style={styles.resultButton}><Button primary onPress={onBack}>К этапу</Button></View></View></ScrollView></Screen>;
+    return <Screen><Header title="Результат" onBack={onBack} /><ScrollView contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}><SectionLabel>ОБУЧЕНИЕ ЗАВЕРШЕНО</SectionLabel><SurfaceCard><MetricStrip items={[[String(completed.items_total), 'изучено'], [String(completed.known_count), 'знаю'], [String(summary?.leftSwipesTotal || 0), 'не знаю']]} /></SurfaceCard><ScreenSection title="Проблемные слова">{summary?.problemWords?.length ? <SurfaceCard>{summary.problemWords.slice(0, 7).map((word) => <View key={word.id} style={styles.problemRow}><View style={styles.problemCopy}><Text style={styles.problemWord}>{word.word}</Text><Text style={styles.problemTrans}>{word.trans}</Text></View><MonoLabel style={styles.problemFails}>{word.fails}</MonoLabel></View>)}</SurfaceCard> : <EmptyState>Ошибок нет.</EmptyState>}</ScreenSection><View style={styles.resultFooter}><Button primary style={styles.resultButton} onPress={onBack}>К этапу</Button></View></ScrollView></Screen>;
   }
-  if (!item) return <Screen><Header title="Учить слова" onBack={onBack} /><View style={styles.empty}><Text style={styles.problemEmpty}>Нет слов для обучения.</Text></View></Screen>;
+  if (!item) return <Screen><Header title="Учить слова" onBack={onBack} /><View style={styles.center}><EmptyState>Нет слов для обучения.</EmptyState></View></Screen>;
 
   const pending = new Set([...state.mainQueue, ...state.repeatQueue].map((word) => String(word.id))).size;
   const totalDone = Math.max(0, state.totalPlanned - pending);
@@ -81,56 +82,42 @@ export function LearnScreen({ words, mode = 'kb', station, favorites, setFavorit
   const backText = mode === 'ru' ? item.word : item.trans;
   const example = String(item.example || item.example_alan || item.example_ru || '').trim();
 
-  return <Screen><Header title="Учить слова" onBack={back} sessionStatus={{ counter: `${Math.min(totalDone + 1, state.totalPlanned)}/${state.totalPlanned}`, mode: mode === 'ru' ? 'РУС → АЛАН' : 'АЛАН → РУС' }} /><View style={styles.session}><View style={styles.progress}><ProgressBar value={progress} /></View><Pressable accessibilityRole="button" accessibilityLabel="Перевернуть карточку" onPress={() => setFlipped((value) => !value)} style={styles.cardWrap}><View style={[styles.card, flipped && styles.cardBack]}><View style={styles.cardInset} />{!flipped ? <><Text style={styles.word}>{frontText}</Text></> : <ScrollView style={styles.backScroll} contentContainerStyle={styles.backContent} showsVerticalScrollIndicator={false}><Text style={styles.backLabel}>ПЕРЕВОД</Text><Text style={styles.translation}>{backText}</Text>{item.synonyms ? <><Text style={styles.backLabel}>СИНОНИМЫ</Text><Text style={styles.synonyms}>{item.synonyms}</Text></> : null}{example ? <><Text style={styles.backLabel}>ПРИМЕР</Text><Text style={styles.example}>{example}</Text></> : null}</ScrollView>}<View style={styles.cardActions}><Pressable disabled={!state.swipeHistory.length} onPress={(event) => { event.stopPropagation?.(); undo(); }} style={({ pressed }) => [styles.cardAction, !state.swipeHistory.length && styles.cardActionDisabled, pressed && styles.cardActionPressed]}><Text style={styles.cardActionIcon}>↶</Text><Text style={styles.cardActionLabel}>назад</Text></Pressable><FavoriteButton active={favoriteHas(favorites, item.id)} onPress={() => setFavorites(toggleFavorite(favorites, item.id).ids)} /></View></View></Pressable><View style={styles.decisions}><Decision kind="unknown" label="Не знаю" icon="×" onPress={() => choose(false)} /><Decision kind="known" label="Знаю" icon="✓" onPress={() => choose(true)} /></View></View></Screen>;
+  return <Screen><Header title="Учить слова" onBack={back} sessionStatus={{ counter: `${Math.min(totalDone + 1, state.totalPlanned)}/${state.totalPlanned}`, mode: mode === 'ru' ? 'РУС → АЛАН' : 'АЛАН → РУС' }} /><View style={styles.session}><ProgressBar value={progress} /><Pressable accessibilityRole="button" accessibilityLabel="Перевернуть карточку" onPress={() => setFlipped((value) => !value)} style={styles.cardWrap}><SurfaceCard inset style={[styles.card, flipped && styles.cardBack]}>{!flipped ? <><MonoLabel>НАЖМИТЕ, ЧТОБЫ ПЕРЕВЕРНУТЬ</MonoLabel><Text style={styles.word}>{frontText}</Text></> : <ScrollView style={styles.backScroll} contentContainerStyle={styles.backContent} showsVerticalScrollIndicator={false}><MonoLabel>ПЕРЕВОД</MonoLabel><Text style={styles.translation}>{backText}</Text>{item.synonyms ? <><MonoLabel style={styles.backLabel}>СИНОНИМЫ</MonoLabel><Text style={styles.copyText}>{item.synonyms}</Text></> : null}{example ? <><MonoLabel style={styles.backLabel}>ПРИМЕР</MonoLabel><Text style={styles.copyText}>{example}</Text></> : null}</ScrollView>}<View style={styles.cardActions}><Pressable disabled={!state.swipeHistory.length} onPress={(event) => { event.stopPropagation?.(); undo(); }} style={({ pressed }) => [styles.cardAction, !state.swipeHistory.length && styles.cardActionDisabled, pressed && styles.pressed]}><Text style={styles.cardActionIcon}>↶</Text><MonoLabel>назад</MonoLabel></Pressable><FavoriteButton active={favoriteHas(favorites, item.id)} onPress={() => setFavorites(toggleFavorite(favorites, item.id).ids)} /></View></SurfaceCard></Pressable><View style={styles.decisions}><Decision kind="unknown" label="Не знаю" icon="×" onPress={() => choose(false)} /><Decision kind="known" label="Знаю" icon="✓" onPress={() => choose(true)} /></View></View></Screen>;
 }
 
-function Decision({ kind, label, icon, onPress }) { return <Pressable onPress={onPress} style={({ pressed }) => [styles.decision, pressed && styles.decisionPressed]}><View style={[styles.decisionIcon, kind === 'unknown' ? styles.unknownIcon : styles.knownIcon]}><Text style={[styles.decisionGlyph, kind === 'unknown' ? styles.unknownGlyph : styles.knownGlyph]}>{icon}</Text></View><Text style={styles.decisionLabel}>{label}</Text></Pressable>; }
-function ResultMetric({ value, label }) { return <View style={styles.resultMetric}><Text style={styles.resultValue}>{value}</Text><Text style={styles.resultLabel}>{label}</Text></View>; }
+function Decision({ kind, label, icon, onPress }) { return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.decision, pressed && styles.pressed]}><View style={[styles.decisionIcon, kind === 'unknown' ? styles.unknownIcon : styles.knownIcon]}><Text style={[styles.decisionGlyph, kind === 'unknown' ? styles.unknownGlyph : styles.knownGlyph]}>{icon}</Text></View><MonoLabel>{label}</MonoLabel></Pressable>; }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
   session: { flex: 1, paddingTop: theme.control.header + 8, paddingHorizontal: 12, paddingBottom: 10, gap: 12 },
-  progress: { height: 4, justifyContent: 'center', paddingHorizontal: 0, opacity: .8 },
   cardWrap: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
-  card: { width: '100%', maxWidth: 560, height: '100%', maxHeight: 620, borderWidth: 1, borderColor: C.line, borderRadius: theme.radius.lg, backgroundColor: 'rgba(246,242,233,.90)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 24, position: 'relative', overflow: 'hidden', shadowColor: '#292721', shadowOpacity: .07, shadowRadius: 14, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
-  cardBack: { alignItems: 'stretch', justifyContent: 'flex-start', paddingTop: 30, paddingHorizontal: 18, paddingBottom: 58 },
-  cardInset: { position: 'absolute', top: 10, left: 10, right: 10, bottom: 10, borderWidth: 1, borderColor: C.lineSoft, borderRadius: theme.radius.lg - 7, opacity: .55 },
-  word: { position: 'relative', zIndex: 1, maxWidth: '100%', fontSize: 42, fontWeight: '900', lineHeight: 45, color: C.text1, textAlign: 'center' },
+  card: { width: '100%', maxWidth: 560, height: '100%', maxHeight: 620, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 26, gap: 18 },
+  cardBack: { alignItems: 'stretch', justifyContent: 'flex-start', paddingTop: 30, paddingHorizontal: 20, paddingBottom: 58 },
+  word: { maxWidth: '100%', fontSize: 42, fontWeight: '900', lineHeight: 46, color: C.text1, textAlign: 'center' },
   backScroll: { width: '100%', flex: 1 },
-  backContent: { width: '100%', paddingTop: 4, paddingBottom: 50 },
-  backLabel: { fontFamily: theme.font.terminal, fontSize: 9, fontWeight: '800', letterSpacing: .9, color: C.text3, marginTop: 12, marginBottom: 6 },
-  translation: { fontSize: 18, fontWeight: '700', lineHeight: 26, color: C.text1 },
-  synonyms: { fontSize: T.body, lineHeight: 21, color: C.text2 },
-  example: { fontSize: T.body, lineHeight: 21, color: C.text2 },
+  backContent: { width: '100%', paddingTop: 4, paddingBottom: 50, gap: 7 },
+  backLabel: { marginTop: 12 },
+  translation: { fontSize: 19, fontWeight: '800', lineHeight: 27, color: C.text1 },
+  copyText: { fontSize: T.body, lineHeight: 21, color: C.text2 },
   cardActions: { position: 'absolute', zIndex: 5, left: 12, right: 12, bottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardAction: { minWidth: 40, minHeight: 40, padding: 8, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  cardActionPressed: { opacity: .62, transform: [{ translateY: 1 }] },
+  cardAction: { minWidth: 44, minHeight: 42, padding: 7, alignItems: 'center', justifyContent: 'center', gap: 3 },
   cardActionDisabled: { opacity: .28 },
   cardActionIcon: { fontSize: 20, lineHeight: 20, color: C.text2 },
-  cardActionLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '700', lineHeight: 10, color: C.text3 },
   decisions: { width: '100%', maxWidth: 560, alignSelf: 'center', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 58, paddingTop: 2 },
-  decision: { width: 64, minHeight: 64, alignItems: 'center', gap: 5 },
-  decisionPressed: { opacity: .72, transform: [{ translateY: 1 }] },
+  decision: { width: 68, minHeight: 66, alignItems: 'center', gap: 5 },
   decisionIcon: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  unknownIcon: { borderColor: 'rgba(152,86,76,.48)', backgroundColor: 'rgba(152,86,76,.045)' },
-  knownIcon: { borderColor: 'rgba(93,118,84,.48)', backgroundColor: 'rgba(93,118,84,.045)' },
+  unknownIcon: { borderColor: C.danger, backgroundColor: 'rgba(152,86,76,.045)' },
+  knownIcon: { borderColor: C.success, backgroundColor: 'rgba(93,118,84,.045)' },
   unknownGlyph: { color: C.dangerStrong },
   knownGlyph: { color: C.successStrong },
   decisionGlyph: { fontSize: 22, fontWeight: '800' },
-  decisionLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '700', lineHeight: 10, color: C.text2 },
-  results: { paddingTop: theme.control.header + 18, paddingHorizontal: 12, paddingBottom: 24 },
-  resultSummary: { flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.lineSoft, marginTop: 12 },
-  resultMetric: { flex: 1, minHeight: 72, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderRightWidth: 1, borderRightColor: C.lineSoft },
-  resultValue: { fontFamily: theme.font.terminal, fontSize: 22, fontWeight: '850', lineHeight: 23, color: C.text1 },
-  resultLabel: { fontSize: T.micro, lineHeight: 12, color: C.text2, textAlign: 'center', marginTop: 6 },
-  problemSection: { marginTop: 18 },
-  problemHeading: { fontSize: 15, fontWeight: '800', color: C.text1, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: C.lineSoft },
-  problemRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: C.lineSoft },
-  problemWord: { flex: 1, fontSize: 15, fontWeight: '700', color: C.text1 },
-  problemTrans: { flex: 1, fontSize: T.caption, color: C.text2 },
-  problemFails: { width: 32, fontFamily: theme.font.terminal, fontSize: 11, fontWeight: '800', color: C.dangerStrong, textAlign: 'center' },
-  problemEmpty: { fontSize: T.caption, lineHeight: 18, color: C.text3, paddingVertical: 14, textAlign: 'center' },
-  resultFooter: { alignItems: 'flex-end', paddingTop: 10 },
-  resultButton: { width: 170, maxWidth: '48%' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  results: { paddingTop: theme.control.header + 18, paddingHorizontal: 12, paddingBottom: 24, gap: 14 },
+  problemRow: { minHeight: 52, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: C.lineSoft },
+  problemCopy: { flex: 1, minWidth: 0 },
+  problemWord: { fontSize: 15, fontWeight: '700', color: C.text1 },
+  problemTrans: { marginTop: 2, fontSize: T.caption, color: C.text2 },
+  problemFails: { color: C.dangerStrong },
+  resultFooter: { alignItems: 'flex-end', paddingTop: 2 },
+  resultButton: { width: 176, maxWidth: '52%' },
+  pressed: { opacity: .7, transform: [{ translateY: 1 }] },
 });
