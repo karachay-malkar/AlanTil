@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import { bootstrapDictionaryRuntime } from '../../packages/alantil-core/dictionary-bootstrap.js';
 import { resolveFavoriteSyncRows } from '../../packages/alantil-core/favorites.js';
 import { initializeMatchState, matchStateSnapshot, restoreMatchStateSnapshot } from '../../packages/alantil-core/match.js';
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from '../../packages/alantil-core/practice-scope.js';
@@ -63,7 +64,11 @@ test('shared test and match snapshot contracts round-trip resumable state',()=>{
   const matchState={session:{id:'match-1',startedAt:'2026-09-02T10:00:00.000Z'}};initializeMatchState(matchState,words,20,{});matchState.roundIndex=1;matchState.solved.add(String(matchState.rounds[0][0].id));matchState.solvedCount=1;const restoredMatch=restoreMatchStateSnapshot(matchStateSnapshot(matchState),words);assert.equal(restoredMatch.roundIndex,1);assert.equal(restoredMatch.solvedCount,1);assert.ok(restoredMatch.solved.size===1);
 });
 
-test('bundled dictionary is full and bootstrap selects it before starter emergency fallback',()=>{
-  const snapshot=JSON.parse(read('mobile/data/dictionary-snapshot.json'));assert.ok(snapshot.version);assert.ok(snapshot.words.length>=2500);assert.equal(snapshot.word_count,snapshot.words.length);assert.equal(new Set(snapshot.words.map((row)=>String(row.word_id))).size,snapshot.words.length);
-  const source=read('mobile/platform/dictionary.js');const bootstrap=source.slice(source.indexOf('export async function bootstrapNativeDictionary'),source.indexOf('export async function refreshNativeDictionary'));assert.ok(bootstrap.indexOf('const bundled=bundledSnapshot()')>=0);assert.ok(bootstrap.indexOf('const bundled=bundledSnapshot()')<bootstrap.indexOf('starterSnapshot()'));assert.match(source,/source:'bundled-snapshot'/);assert.match(source,/source:'starter-emergency'/);
+test('bundled dictionary is full and bootstrap selects it before starter emergency fallback',async()=>{
+  const snapshot=JSON.parse(read('mobile/data/dictionary-snapshot.json'));assert.equal(snapshot.version,'2026.08.30.1');assert.equal(snapshot.words.length,2976);assert.equal(snapshot.word_count,snapshot.words.length);assert.equal(new Set(snapshot.words.map((row)=>String(row.word_id))).size,snapshot.words.length);
+  let downloaded=false,starterUsed=false;
+  const bundled={version:snapshot.version,words:snapshot.words,source:'bundled-snapshot'};
+  const runtime=await bootstrapDictionaryRuntime({readCache:async()=>null,bundledSnapshot:()=>bundled,downloadSnapshot:async()=>{downloaded=true;throw new Error('offline');},starterSnapshot:()=>{starterUsed=true;return{version:'starter',words:[]};},persistSnapshot:async()=>false,refreshSnapshot:async()=>null});
+  assert.equal(runtime,bundled);assert.equal(downloaded,false);assert.equal(starterUsed,false);
+  const source=read('mobile/platform/dictionary.js');assert.match(source,/bootstrapDictionaryRuntime/);assert.match(source,/source:'bundled-snapshot'/);assert.match(source,/source:'starter-emergency'/);
 });
