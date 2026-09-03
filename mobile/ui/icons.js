@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 function IconBase({ size = 22, color = 'currentColor', children, fill = 'none' }) {
   return <Svg width={size} height={size} viewBox="0 0 24 24" fill={fill}>{React.Children.map(children, (child) => React.cloneElement(child, { color }))}</Svg>;
@@ -43,4 +43,12 @@ export function SearchIcon({ size = 20, color = '#666158' }) {
 
 export function InfoIcon({ size = 20, color = '#666158' }) {
   return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.6"/><Path d="M12 10v7M12 7h.01" stroke={color} strokeWidth="1.8" strokeLinecap="round"/></Svg>;
+}
+
+export function PlayIcon({ size = 20, color = '#f4efe6' }) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="M8 5.5v13l10-6.5L8 5.5Z" fill={color}/></Svg>;
+}
+
+export function PauseIcon({ size = 20, color = '#f4efe6' }) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Rect x="7" y="5" width="3.5" height="14" rx="1" fill={color}/><Rect x="13.5" y="5" width="3.5" height="14" rx="1" fill={color}/></Svg>;
 }
