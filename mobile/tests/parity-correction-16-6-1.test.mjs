@@ -1,86 +1,42 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
+import { DOMAIN_EVENTS, domainSessionEvent, domainWordResultEvent } from '../../packages/alantil-core/analytics.js';
+import { bootstrapDictionaryRuntime } from '../../packages/alantil-core/dictionary-bootstrap.js';
+import { GENERAL_GUIDE_STEPS, GUIDE_STORY_SEQUENCE, LEARNING_GUIDE_STEPS, STATION_GUIDE_STEPS } from '../../packages/alantil-core/guide-contract.js';
 import { FAVORITES_HIDDEN_CONTEXT, hiddenSelectionIds, hiddenSelectionKey, LEGACY_HIDDEN_CONTEXT, setHiddenSelectionIds, stationHiddenSelectionContext } from '../../packages/alantil-core/hidden-selection.js';
+import { buildLearnCardModel } from '../../packages/alantil-core/learn-card.js';
+import { initializeMatchState, matchStateSnapshot, restoreMatchActiveRound, restoreMatchStateSnapshot, setMatchActiveOrdering, takeNextMatchRound } from '../../packages/alantil-core/match.js';
+import { buildPracticeScope, practiceScopeKey, scopeSelectionCounts, scopeSelectionState, selectedScopeSources } from '../../packages/alantil-core/practice-scope.js';
 import { stationMilestoneCount } from '../../packages/alantil-core/route-progress.js';
+import { applyUserSettingsUpdate, DEFAULT_USER_SETTINGS, userSettingsChanged } from '../../packages/alantil-core/settings.js';
+import { buildStoryWordGroups, filterStoryWordGroups, storyWordEntries } from '../../packages/alantil-core/story-word-list.js';
 import { buildTestOptions, initializeTestState, restoreTestStateSnapshot, testStateSnapshot } from '../../packages/alantil-core/test.js';
 import { buildStationTestSessionState, stationTestActiveSnapshot, stationTestDistractors, stationTestPayload } from '../../packages/alantil-core/station-test.js';
 
 const words = [
-  { id: 'n1', word: 'тау', trans: 'гора', pos: 'noun', synonyms: ['вершина'] },
-  { id: 'n2', word: 'таш', trans: 'камень', pos: 'noun', synonyms: ['скала'] },
-  { id: 'n3', word: 'къая', trans: 'скала', pos: 'noun', synonyms: ['утёс'] },
-  { id: 'n4', word: 'баш', trans: 'вершина', pos: 'noun', synonyms: ['пик'] },
-  { id: 'n5', word: 'тауъ', trans: 'гора', pos: 'noun', synonyms: ['хребет'] },
-  { id: 'v1', word: 'бар', trans: 'иди', pos: 'verb', synonyms: [] },
-  { id: 'a1', word: 'бийик', trans: 'высокий', pos: 'adjective', synonyms: [] },
+  { id: 'n1', word: 'тау', trans: 'гора', pos: 'noun', synonyms: ['вершина'], dictionary_id:'d1',section_id:'s1',set_id:'set1' },
+  { id: 'n2', word: 'таш', trans: 'камень', pos: 'noun', synonyms: ['скала'], dictionary_id:'d1',section_id:'s1',set_id:'set1' },
+  { id: 'n3', word: 'къая', trans: 'скала', pos: 'noun', synonyms: ['утёс'], dictionary_id:'d1',section_id:'s2',set_id:'set2' },
+  { id: 'n4', word: 'баш', trans: 'вершина', pos: 'noun', synonyms: ['пик'], dictionary_id:'d1',section_id:'s2',set_id:'set2' },
+  { id: 'n5', word: 'тауъ', trans: 'гора', pos: 'noun', synonyms: ['хребет'], dictionary_id:'d2',section_id:'s3',set_id:'set3' },
+  { id: 'v1', word: 'бар', trans: 'иди', pos: 'verb', synonyms: [], dictionary_id:'d2',section_id:'s3',set_id:'set3' },
+  { id: 'a1', word: 'бийик', trans: 'высокий', pos: 'adjective', synonyms: [], dictionary_id:'d2',section_id:'s4',set_id:'set4' },
 ];
+function state(mode='kb'){const value={session:{id:'test-1',startedAt:'2026-09-02T10:00:00.000Z'}};initializeTestState(value,words,mode,20,{dictionaryCount:2,sectionCount:3,selectedSources:['d::s'],direction:mode,scopeKeys:['d::s']},words);return value;}
 
-function state(mode='kb') {
-  const value={session:{id:'test-1',startedAt:'2026-09-02T10:00:00.000Z'}};
-  initializeTestState(value,words,mode,20,{dictionaryCount:2,sectionCount:3,selectedSources:['d::s'],direction:mode,scopeKeys:['d::s']},words);
-  return value;
-}
-
-test('16.6.1 General Test distractors stay same-POS, conflict-safe and may return fewer than four options',()=>{
-  for(const mode of ['kb','ru']){
-    const value=state(mode),item=words[0],options=buildTestOptions(value,item);
-    assert.equal(options.filter((option)=>option.id===item.id).length,1);
-    assert.equal(new Set(options.map((option)=>option.text)).size,options.length);
-    assert.ok(options.length<4,'fixture intentionally leaves fewer than four safe noun options');
-    assert.ok(options.every((option)=>option.id===item.id||words.find((word)=>word.id===option.id)?.pos==='noun'));
-    assert.ok(!options.some((option)=>option.id==='n5'),'same translation conflict must be excluded');
-    assert.ok(!options.some((option)=>option.id==='v1'||option.id==='a1'),'other POS fallback must not be used');
-  }
-});
-
-test('16.6.1 General Test snapshot restores metadata and stays compatible with old snapshots',()=>{
-  const value=state('kb'),snapshot=JSON.parse(JSON.stringify(testStateSnapshot(value)));
-  assert.deepEqual(snapshot.metadata,{dictionaryCount:2,sectionCount:3,selectedSources:['d::s'],direction:'kb',scopeKeys:['d::s']});
-  assert.deepEqual(restoreTestStateSnapshot(snapshot,words,words).session.metadata,snapshot.metadata);
-  delete snapshot.metadata;
-  assert.deepEqual(restoreTestStateSnapshot(snapshot,words,words).session.metadata,{});
-});
-
-test('16.6.1 Stage Test distractors stay same-POS and reject lexical, translation and synonym conflicts',()=>{
-  const item={id:'q',word:'къаяла',trans:'скала',pos:'noun',synonyms:['утёс']};
-  const pool=[
-    item,
-    {id:'safe',word:'таш',trans:'камень',pos:'noun',synonyms:['валун']},
-    {id:'translation',word:'таш2',trans:'скала',pos:'noun',synonyms:[]},
-    {id:'synonym',word:'таш3',trans:'обрыв',pos:'noun',synonyms:['утёс']},
-    {id:'stem',word:'къаялар',trans:'горы',pos:'noun',synonyms:[]},
-    {id:'verb',word:'бар',trans:'иди',pos:'verb',synonyms:[]},
-  ];
-  const distractors=stationTestDistractors(item,pool,3,'kb');
-  assert.deepEqual(distractors.map((word)=>word.id),['safe']);
-});
-
-test('16.6.1 Stage Test phase survives active snapshot, restore and final payload',()=>{
-  const station={key:'story::dict::section::set',dictionaryId:'dict',catalogId:'dict',groupId:'section',sourceSetId:'set',storyType:'story',requiredAccuracy:80,words:words.slice(0,4)};
-  const first=buildStationTestSessionState({station,optionWords:words,mode:'kb',id:'stage-1',startedAt:'2026-09-02T10:00:00.000Z',phase:'review_1'});
-  assert.equal(first.phase,'review_1');
-  const snapshot=JSON.parse(JSON.stringify(stationTestActiveSnapshot(first)));
-  assert.equal(snapshot.phase,'review_1');
-  const restored=buildStationTestSessionState({station,optionWords:words,mode:'kb',interrupted:snapshot,id:'stage-2',startedAt:'2026-09-02T11:00:00.000Z',phase:'first_test'});
-  assert.equal(restored.id,'stage-1');
-  assert.equal(restored.phase,'review_1');
-  assert.equal(stationTestPayload(restored).phase,'review_1');
-});
-
-test('16.6.1 hidden selection is contextual and Favorites cannot leak into Station',()=>{
-  const stationA=stationHiddenSelectionContext({key:'story::d::s::set-a',dictionaryId:'d',sectionId:'s',sourceSetId:'set-a'});
-  const stationB=stationHiddenSelectionContext({key:'story::d::s::set-b',dictionaryId:'d',sectionId:'s',sourceSetId:'set-b'});
-  assert.notEqual(hiddenSelectionKey(stationA),hiddenSelectionKey(stationB));
-  assert.notEqual(hiddenSelectionKey(stationA),hiddenSelectionKey(FAVORITES_HIDDEN_CONTEXT));
-  let map={};
-  map=setHiddenSelectionIds(map,stationA,new Set(['n1']));
-  map=setHiddenSelectionIds(map,FAVORITES_HIDDEN_CONTEXT,new Set(['n2']));
-  assert.deepEqual([...hiddenSelectionIds(map,stationA)],['n1']);
-  assert.deepEqual([...hiddenSelectionIds(map,stationB)],[]);
-  assert.deepEqual([...hiddenSelectionIds(map,FAVORITES_HIDDEN_CONTEXT)],['n2']);
-  assert.equal(hiddenSelectionKey(LEGACY_HIDDEN_CONTEXT),'legacy:default:default');
-});
-
-test('16.6.1 Path milestone contract allows at most four marks',()=>{
-  assert.deepEqual([0,19,20,39,40,59,60,79,80,120].map(stationMilestoneCount),[0,0,1,1,2,2,3,3,4,4]);
-});
+test('16.6.1 General Test distractors stay same-POS, conflict-safe and may return fewer than four options',()=>{for(const mode of ['kb','ru']){const value=state(mode),item=words[0],options=buildTestOptions(value,item);assert.equal(options.filter((option)=>option.id===item.id).length,1);assert.equal(new Set(options.map((option)=>option.text)).size,options.length);assert.ok(options.length<4);assert.ok(options.every((option)=>option.id===item.id||words.find((word)=>word.id===option.id)?.pos==='noun'));assert.ok(!options.some((option)=>option.id==='n5'));assert.ok(!options.some((option)=>option.id==='v1'||option.id==='a1'));}});
+test('16.6.1 General Test snapshot restores metadata and stays compatible with old snapshots',()=>{const value=state('kb'),snapshot=JSON.parse(JSON.stringify(testStateSnapshot(value)));assert.deepEqual(snapshot.metadata,{dictionaryCount:2,sectionCount:3,selectedSources:['d::s'],direction:'kb',scopeKeys:['d::s']});assert.deepEqual(restoreTestStateSnapshot(snapshot,words,words).session.metadata,snapshot.metadata);delete snapshot.metadata;assert.deepEqual(restoreTestStateSnapshot(snapshot,words,words).session.metadata,{});});
+test('16.6.1 Stage Test distractors stay same-POS and reject lexical, translation and synonym conflicts',()=>{const item={id:'q',word:'къаяла',trans:'скала',pos:'noun',synonyms:['утёс']};const pool=[item,{id:'safe',word:'таш',trans:'камень',pos:'noun',synonyms:['валун']},{id:'translation',word:'таш2',trans:'скала',pos:'noun',synonyms:[]},{id:'synonym',word:'таш3',trans:'обрыв',pos:'noun',synonyms:['утёс']},{id:'stem',word:'къаялар',trans:'горы',pos:'noun',synonyms:[]},{id:'verb',word:'бар',trans:'иди',pos:'verb',synonyms:[]}];assert.deepEqual(stationTestDistractors(item,pool,3,'kb').map((word)=>word.id),['safe']);});
+test('16.6.1 Stage Test phase survives active snapshot, restore and final payload',()=>{const station={key:'story::dict::section::set',dictionaryId:'dict',catalogId:'dict',groupId:'section',sourceSetId:'set',storyType:'story',requiredAccuracy:80,words:words.slice(0,4)};const first=buildStationTestSessionState({station,optionWords:words,mode:'kb',id:'stage-1',startedAt:'2026-09-02T10:00:00.000Z',phase:'review_1'});const snapshot=JSON.parse(JSON.stringify(stationTestActiveSnapshot(first)));const restored=buildStationTestSessionState({station,optionWords:words,mode:'kb',interrupted:snapshot,id:'stage-2',startedAt:'2026-09-02T11:00:00.000Z',phase:'first_test'});assert.equal(first.phase,'review_1');assert.equal(snapshot.phase,'review_1');assert.equal(restored.id,'stage-1');assert.equal(stationTestPayload(restored).phase,'review_1');});
+test('16.6.1 Stage Test retry creates a fresh session identity',()=>{const station={key:'s',dictionaryId:'d1',sectionId:'s1',setId:'set1',requiredAccuracy:80,words:words.slice(0,4)};const first=buildStationTestSessionState({station,optionWords:words,mode:'kb',id:'attempt-1',startedAt:'2026-09-02T10:00:00.000Z'});const retry=buildStationTestSessionState({station,optionWords:words,mode:'kb',id:'attempt-2',startedAt:'2026-09-02T10:05:00.000Z'});assert.notEqual(first.id,retry.id);assert.notEqual(first.startedAt,retry.startedAt);assert.equal(retry.index,0);assert.equal(retry.answers.length,0);});
+test('16.6.1 hidden selection is contextual and Favorites cannot leak into Station',()=>{const stationA=stationHiddenSelectionContext({key:'story::d::s::set-a',dictionaryId:'d',sectionId:'s',sourceSetId:'set-a'}),stationB=stationHiddenSelectionContext({key:'story::d::s::set-b',dictionaryId:'d',sectionId:'s',sourceSetId:'set-b'});let map={};map=setHiddenSelectionIds(map,stationA,new Set(['n1']));map=setHiddenSelectionIds(map,FAVORITES_HIDDEN_CONTEXT,new Set(['n2']));assert.notEqual(hiddenSelectionKey(stationA),hiddenSelectionKey(stationB));assert.deepEqual([...hiddenSelectionIds(map,stationA)],['n1']);assert.deepEqual([...hiddenSelectionIds(map,stationB)],[]);assert.deepEqual([...hiddenSelectionIds(map,FAVORITES_HIDDEN_CONTEXT)],['n2']);assert.equal(hiddenSelectionKey(LEGACY_HIDDEN_CONTEXT),'legacy:default:default');});
+test('16.6.1 Path milestone contract allows at most four marks',()=>{assert.deepEqual([0,19,20,39,40,59,60,79,80,120].map(stationMilestoneCount),[0,0,1,1,2,2,3,3,4,4]);});
+test('16.6.1 scope parent selection has none partial all and stable metadata',()=>{const scope=buildPracticeScope(words),dictionary=scope.find((row)=>row.id==='d1'),keys=new Set([practiceScopeKey('d1','s1')]);assert.equal(scopeSelectionState(dictionary,new Set()),'none');assert.equal(scopeSelectionState(dictionary,keys),'partial');keys.add(practiceScopeKey('d1','s2'));assert.equal(scopeSelectionState(dictionary,keys),'all');assert.deepEqual(scopeSelectionCounts(scope,keys),{dictionaryCount:1,sectionCount:2});assert.equal(selectedScopeSources(scope,keys).length,2);});
+test('16.6.1 Match snapshot restores metadata, current round and exact right-column ordering',()=>{const value={session:{id:'match-1',startedAt:'2026-09-02T10:00:00.000Z'}};initializeMatchState(value,words,20,{dictionaryCount:2,sectionCount:4,selectedSources:['a','b'],scopeKeys:['a','b'],limit:20});const round=takeNextMatchRound(value),right=[...round].reverse();setMatchActiveOrdering(value,round,right);const snapshot=JSON.parse(JSON.stringify(matchStateSnapshot(value))),restored=restoreMatchStateSnapshot(snapshot,words),active=restoreMatchActiveRound(restored);assert.deepEqual(restored.session.metadata,snapshot.metadata);assert.deepEqual(active.round.map((row)=>row.id),round.map((row)=>row.id));assert.deepEqual(active.right.map((row)=>row.id),right.map((row)=>row.id));});
+test('16.6.1 Story Word List is unique, ordered, grouped and searchable',()=>{const story={catalogs:[{dictionaryId:'d1',name:'Основной',sections:[{sectionId:'s1',name:'Раздел 1',stations:[{words:[words[0],words[1]]},{words:[words[1],words[2]]}]}]}]};const groups=buildStoryWordGroups(story),entries=storyWordEntries(story);assert.deepEqual(entries.map((entry)=>entry.word.id),['n1','n2','n3']);assert.deepEqual(entries.map((entry)=>entry.ordinal),[1,2,3]);assert.deepEqual(filterStoryWordGroups(groups,'камень').flatMap((group)=>group.sections.flatMap((section)=>section.entries)).map((entry)=>entry.word.id),['n2']);});
+test('16.6.1 settings language update pairs interface and translation and dirty state is real',()=>{const next=applyUserSettingsUpdate(DEFAULT_USER_SETTINGS,{interface_language_code:'tr'});assert.equal(next.interface_language_code,'tr');assert.equal(next.translation_language_code,'tr');assert.equal(userSettingsChanged(DEFAULT_USER_SETTINGS,next),true);assert.equal(userSettingsChanged(next,{...next}),false);});
+test('16.6.1 bundled dictionary remains runtime source when persistence rejects',async()=>{const raw=JSON.parse(await readFile(new URL('../data/dictionary-snapshot.json',import.meta.url),'utf8'));let persistAttempted=false;const bundled={version:raw.version,words:raw.words,source:'bundled-snapshot'};const result=await bootstrapDictionaryRuntime({readCache:async()=>null,bundledSnapshot:()=>bundled,downloadSnapshot:async()=>{throw new Error('offline');},starterSnapshot:()=>({version:'starter',words:[]}),persistSnapshot:async()=>{persistAttempted=true;throw new Error('storage reject');},refreshSnapshot:async()=>{throw new Error('offline');}});await new Promise((resolve)=>setTimeout(resolve,0));assert.equal(persistAttempted,true);assert.equal(result.version,'2026.08.30.1');assert.equal(result.words.length,2976);});
+test('16.6.1 guide contract preserves Web general/station/learning step order',()=>{assert.deepEqual(GUIDE_STORY_SEQUENCE,['oblivion','roots','ascent','pathways']);assert.deepEqual(GENERAL_GUIDE_STEPS.map((step)=>step.id),['intro','stories-intro','story:oblivion','story:roots','story:ascent','story:pathways','summary','stages']);assert.deepEqual(STATION_GUIDE_STEPS.map((step)=>step.id),['study','test']);assert.deepEqual(LEARNING_GUIDE_STEPS.map((step)=>step.id),['card','translation','decision','counter','favorite']);});
+test('16.6.1 Learn presentation model is direction-symmetric and preserves semantic content',()=>{const word={id:'1',word:'тау',trans:'гора; вершина',synonyms:'къая, баш',example:'1.1 Уллу тау',example_translation:'1.1 Большая гора',dictionary_id:'d',section_id:'s',set_id:'x'};const kb=buildLearnCardModel(word,'kb'),ru=buildLearnCardModel(word,'ru');assert.equal(kb.front.primary,'тау');assert.equal(ru.front.primary,'гора; вершина');assert.equal(ru.back.primary,'тау');assert.deepEqual(kb.back.synonyms,['къая','баш']);assert.equal(kb.back.examples[0].lines[0],'Уллу тау');});
+test('16.6.1 analytics domain events preserve shared semantic fields',()=>{const correct=domainWordResultEvent({activity:'test',result:'correct',word_id:'n1',dictionary_id:'d1',section_id:'s1',set_id:'set1',direction:'alan_ru',session_id:'t1'}),interrupted=domainSessionEvent(false,{source:'match',session_id:'m1',cancel_reason:'back'});assert.equal(correct.type,DOMAIN_EVENTS.TEST_CORRECT);assert.equal(correct.word_id,'n1');assert.equal(correct.dictionary_id,'d1');assert.equal(interrupted.type,DOMAIN_EVENTS.SESSION_INTERRUPTED);assert.equal(interrupted.status,'interrupted');assert.equal(interrupted.cancel_reason,'back');});
