@@ -12,6 +12,7 @@ export const theme={
   radius:W.radius,
   spacing:W.spacing,
   control:W.control,
+  path:W.path,
   chrome:W.chrome,
   safeArea:W.safeArea,
   breakpoints:W.breakpoints,
