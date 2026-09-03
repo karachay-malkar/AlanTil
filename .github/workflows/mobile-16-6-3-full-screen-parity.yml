@@ -54,13 +54,23 @@ jobs:
       - name: Export Expo Web
         working-directory: mobile
         run: npm run export:web
-      - name: Prepare preview metadata
+      - name: Prepare stable preview metadata
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           import json, os
           root=Path('mobile/dist-web')
+          base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          for p in root.glob('_expo/static/js/web/*.js'):
+            t=p.read_text()
+            t=t.replace('"/_expo/','"'+base+'/_expo/')
+            t=t.replace("'/_expo/","'"+base+'/_expo/')
+            t=t.replace('"/assets/','"'+base+'/assets/')
+            t=t.replace("'/assets/","'"+base+'/assets/')
+            p.write_text(t)
+          index=root/'index.html'
+          index.write_text(index.read_text().replace('src="/_expo/','src="'+base+'/_expo/'))
           (root/'preview-build.json').write_text(json.dumps({
             'sha':os.environ.get('GITHUB_SHA',''),
             'branch':os.environ.get('GITHUB_REF_NAME',''),
@@ -91,3 +101,20 @@ jobs:
           name: AlanTil-16.6.3-Full-Screen-Parity
           path: mobile/dist-web
           if-no-files-found: error
+      - name: Publish stable Expo Web preview
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R mobile/dist-web/. "$publish_dir/"
+          cd "$publish_dir"
+          git init
+          git checkout -b preview-web
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Preview ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
