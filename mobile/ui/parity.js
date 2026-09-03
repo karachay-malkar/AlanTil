@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from './theme.js';
 
 const C = theme.colors;
@@ -23,11 +23,17 @@ export function CompactSegmentedControl({ value, items, onChange, accessibilityL
   })}</View>;
 }
 
-export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
+export function OverflowMarquee({ children, textStyle, style, enabled = true }) {
+  const [boxWidth,setBoxWidth]=useState(0),[textWidth,setTextWidth]=useState(0);const offset=useRef(new Animated.Value(0)).current,overflow=Math.max(0,textWidth-boxWidth);
+  useEffect(()=>{offset.stopAnimation();offset.setValue(0);if(!enabled||overflow<8)return;const duration=Math.max(1800,Math.min(6000,overflow*28));const animation=Animated.loop(Animated.sequence([Animated.delay(650),Animated.timing(offset,{toValue:-overflow,duration,easing:Easing.linear,useNativeDriver:true}),Animated.delay(850),Animated.timing(offset,{toValue:0,duration:220,easing:Easing.out(Easing.quad),useNativeDriver:true}),Animated.delay(450)]));animation.start();return()=>animation.stop();},[enabled,overflow,offset]);
+  return <View style={[styles.marquee,style]} onLayout={(event)=>setBoxWidth(event.nativeEvent.layout.width)}><Animated.View style={{transform:[{translateX:offset}]}}><Text onLayout={(event)=>setTextWidth(event.nativeEvent.layout.width)} numberOfLines={1} style={textStyle}>{children}</Text></Animated.View></View>;
+}
+
+export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, marquee = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
   const Body = onPress ? Pressable : View;
   return <Body accessibilityRole={onPress ? 'button' : undefined} accessibilityState={onPress ? { selected } : undefined} onPress={onPress} style={({ pressed }) => [styles.listRow, compact && styles.listRowCompact, selected && styles.listRowSelected, pressed && styles.pressed, style]}>
     {leading ? <View style={[styles.listLeading,leadingStyle]}>{leading}</View> : null}
-    <View style={styles.listCopy}><Text numberOfLines={1} style={[styles.listTitle,titleStyle]}>{title}</Text>{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,subtitleStyle]}>{subtitle}</Text> : null}</View>
+    <View style={styles.listCopy}>{marquee?<OverflowMarquee textStyle={[styles.listTitle,titleStyle]}>{title}</OverflowMarquee>:<Text numberOfLines={1} style={[styles.listTitle,titleStyle]}>{title}</Text>}{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,subtitleStyle]}>{subtitle}</Text> : null}</View>
     {trailing ? <View style={[styles.listTrailing,trailingStyle]}>{trailing}</View> : null}
   </Body>;
 }
@@ -64,6 +70,7 @@ const styles = StyleSheet.create({
   listTitle: { fontSize: 15, fontWeight: '800', lineHeight: 18, color: C.text1 },
   listSubtitle: { marginTop: 2, fontSize: T.caption, lineHeight: 16, color: C.text2 },
   listTrailing: { minWidth: 30, alignItems: 'flex-end', justifyContent: 'center' },
+  marquee:{width:'100%',overflow:'hidden'},
   metrics: { width: '100%', flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.lineSoft },
   metric: { flex: 1, minHeight: 66, paddingVertical: 9, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: C.lineSoft },
   metricValue: { fontFamily: theme.font.terminal, fontSize: 19, fontWeight: '850', lineHeight: 21, color: C.text1 },
