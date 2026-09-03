@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { applyStationTestAnswer, buildStationTestSessionState, stationTestActiveSnapshot, stationTestPayload, stationTestResult } from '../../packages/alantil-core/station-test.js';
-import { Button, Header, ProgressBar, Screen, SectionLabel } from '../ui/components.js';
+import { toggleFavorite } from '../../packages/alantil-core/favorites.js';
+import { Button, FavoriteButton, Header, ProgressBar, Screen, SectionLabel } from '../ui/components.js';
 import { EmptyState, MetricStrip, MonoLabel, ScreenSection, SurfaceCard } from '../ui/parity.js';
 import { theme } from '../ui/theme.js';
 import { recordNativeTestSession } from '../platform/progress.js';
@@ -10,17 +11,26 @@ import { clearNativeSessionSnapshot, loadNativeSessionSnapshot, saveNativeSessio
 const C = theme.colors;
 const T = theme.type;
 
-export function StationTestScreen({ station, allWords, mode = 'kb', onBack }) {
+export function StationTestScreen({ station, allWords, mode = 'kb', favorites = new Set(), setFavorites = () => {}, onBack }) {
   const [session, setSession] = useState(null);
   const [selectedId, setSelectedId] = useState('');
   const [, redraw] = useState(0);
   const recorded = useRef(false);
 
+  const createSession = (interrupted = null) => buildStationTestSessionState({
+    station,
+    optionWords: allWords,
+    mode,
+    interrupted,
+    id: `station-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    startedAt: new Date().toISOString(),
+  });
+
   useEffect(() => {
     let alive = true;
     (async () => {
       const interrupted = await loadNativeSessionSnapshot('station-test');
-      const next = buildStationTestSessionState({ station, optionWords: allWords, mode, interrupted, id: `station-${Date.now()}`, startedAt: new Date().toISOString() });
+      const next = createSession(interrupted);
       if (alive) setSession(next);
     })();
     return () => { alive = false; };
@@ -36,13 +46,22 @@ export function StationTestScreen({ station, allWords, mode = 'kb', onBack }) {
     recorded.current = true;
     session.completed = true;
     const payload = stationTestPayload(session);
-    recordNativeTestSession({ sessionId: session.id, answers: payload.words.map((row) => ({ word_id: row.word_id, result: row.result })), accuracy: payload.accuracy, requiredAccuracy: payload.required_accuracy, updateMastery: true, startedAt: session.startedAt, type: 'station_test', stationKey: station?.key || '' }).catch(() => {});
+    recordNativeTestSession({ sessionId: session.id, answers: payload.words.map((row) => ({ word_id: row.word_id, result: row.result })), accuracy: payload.accuracy, requiredAccuracy: payload.required_accuracy, updateMastery: true, startedAt: session.startedAt, type: 'station_test', stationKey: station?.key || '', phase: payload.phase || session.phase || '' }).catch(() => {});
     clearNativeSessionSnapshot('station-test').catch(() => {});
   }, [done, result, session, station?.key]);
 
   const back = () => {
-    if (session) saveNativeSessionSnapshot('station-test', stationTestActiveSnapshot(session)).catch(() => {});
+    if (session && !session.completed) saveNativeSessionSnapshot('station-test', stationTestActiveSnapshot(session)).catch(() => {});
     onBack();
+  };
+  const retry = async () => {
+    await clearNativeSessionSnapshot('station-test').catch(() => {});
+    recorded.current = false;
+    setSelectedId('');
+    const next = createSession(null);
+    setSession(next);
+    redraw((value) => value + 1);
+    saveNativeSessionSnapshot('station-test', stationTestActiveSnapshot(next)).catch(() => {});
   };
   useEffect(() => { const sub = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; }); return () => sub.remove(); }, [session, onBack]);
 
@@ -51,7 +70,7 @@ export function StationTestScreen({ station, allWords, mode = 'kb', onBack }) {
   if (done && result) {
     const levelSymbol = result.masteryLevel ? '⌃'.repeat(result.masteryLevel) : '—';
     const levelName = result.masteryLevel ? `${['', 'I', 'II', 'III'][result.masteryLevel]} знак` : 'не сдан';
-    return <Screen><Header title="Результат этапа" subtitle={station?.name || ''} onBack={onBack} /><ScrollView contentContainerStyle={styles.resultScroll} showsVerticalScrollIndicator={false}><SectionLabel>{result.passed ? 'ЭТАП ПРОЙДЕН' : 'НУЖНО ПОВТОРИТЬ'}</SectionLabel><SurfaceCard style={styles.scoreCard}><Text style={[styles.score, result.passed ? styles.scorePassed : styles.scoreFailed]}>{result.payload.accuracy}%</Text><Text style={styles.scoreCaption}>{result.payload.correct_total} из {result.payload.questions_total} · проходной {result.required}%</Text><View style={styles.masteryLine}><View><MonoLabel>УРОВЕНЬ</MonoLabel><Text style={styles.masteryName}>{levelName}</Text></View><View style={styles.masteryBadge}><Text style={styles.masteryValue}>{levelSymbol}</Text></View></View><MetricStrip items={[[String(result.payload.correct_total), 'верно'], [String(result.payload.wrong_total), 'ошибок'], [String(result.payload.questions_total), 'вопросов']]} /></SurfaceCard><ScreenSection title="Ответы"><SurfaceCard>{session.answers.map((answer, index) => { const source = session.questions[index]; const correct = answer.result === 'correct'; const selected = source?.options?.find((option) => String(option.id) === String(answer.wrongWordId || source?.item?.id)); return <View key={`${answer.wordId}-${index}`} style={styles.resultRow}><View style={[styles.resultDot, correct ? styles.resultDotCorrect : styles.resultDotWrong]}><Text style={styles.resultDotGlyph}>{correct ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text numberOfLines={1} style={styles.resultPrimary}>{session.mode === 'ru' ? source?.item?.trans : source?.item?.word}</Text>{!correct ? <Text numberOfLines={1} style={styles.resultWrong}>Ответ: {selected?.text || '—'}</Text> : null}<Text numberOfLines={1} style={styles.resultCorrect}>Правильно: {session.mode === 'ru' ? source?.item?.word : source?.item?.trans}</Text></View></View>; })}</SurfaceCard></ScreenSection><View style={styles.footer}><Button primary style={styles.footerButton} onPress={onBack}>К этапу</Button></View></ScrollView></Screen>;
+    return <Screen><Header title="Результат этапа" subtitle={station?.name || ''} onBack={onBack} /><ScrollView contentContainerStyle={styles.resultScroll} showsVerticalScrollIndicator={false}><SectionLabel>{result.passed ? 'ЭТАП ПРОЙДЕН' : 'НУЖНО ПОВТОРИТЬ'}</SectionLabel><SurfaceCard style={styles.scoreCard}><Text style={[styles.score, result.passed ? styles.scorePassed : styles.scoreFailed]}>{result.payload.accuracy}%</Text><Text style={styles.scoreCaption}>{result.payload.correct_total} из {result.payload.questions_total} · проходной {result.required}%</Text><View style={styles.masteryLine}><View><MonoLabel>УРОВЕНЬ</MonoLabel><Text style={styles.masteryName}>{levelName}</Text></View><View style={styles.masteryBadge}><Text style={styles.masteryValue}>{levelSymbol}</Text></View></View><MetricStrip items={[[String(result.payload.correct_total), 'верно'], [String(result.payload.wrong_total), 'ошибок'], [String(result.payload.questions_total), 'вопросов']]} /></SurfaceCard><ScreenSection title="Ответы"><SurfaceCard>{session.answers.map((answer, index) => { const source = session.questions[index]; const correct = answer.result === 'correct'; const selected = source?.options?.find((option) => String(option.id) === String(answer.wrongWordId || source?.item?.id)); const wordId=String(answer.wordId||source?.item?.id||''); return <View key={`${wordId}-${index}`} style={styles.resultRow}><View style={[styles.resultDot, correct ? styles.resultDotCorrect : styles.resultDotWrong]}><Text style={styles.resultDotGlyph}>{correct ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text numberOfLines={1} style={styles.resultPrimary}>{session.mode === 'ru' ? source?.item?.trans : source?.item?.word}</Text>{!correct ? <Text numberOfLines={1} style={styles.resultWrong}>Ответ: {selected?.text || '—'}</Text> : null}<Text numberOfLines={1} style={styles.resultCorrect}>Правильно: {session.mode === 'ru' ? source?.item?.word : source?.item?.trans}</Text></View><FavoriteButton active={favorites.has(wordId)} onPress={()=>setFavorites(toggleFavorite(favorites,wordId).ids)}/></View>; })}</SurfaceCard></ScreenSection><View style={styles.footer}><Button text style={styles.footerButton} onPress={onBack}>К этапу</Button>{!result.passed?<Button primary style={styles.footerButton} onPress={retry}>Повторить</Button>:null}</View></ScrollView></Screen>;
   }
 
   const prompt = session.mode === 'ru' ? question.item.trans : question.item.word;
@@ -101,6 +120,6 @@ const styles = StyleSheet.create({
   resultPrimary: { fontSize: 14, fontWeight: '800', color: C.text1 },
   resultWrong: { marginTop: 3, fontSize: T.micro, color: C.dangerStrong },
   resultCorrect: { marginTop: 3, fontSize: T.micro, color: C.successStrong },
-  footer: { alignItems: 'flex-end', paddingTop: 2 },
-  footerButton: { width: 176, maxWidth: '52%' },
+  footer: { flexDirection:'row', justifyContent:'flex-end', gap:8, paddingTop: 2 },
+  footerButton: { width: 176, maxWidth: '48%' },
 });
