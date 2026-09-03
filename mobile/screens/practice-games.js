@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { applyTestAnswer, buildTestOptions, initializeTestState, restoreTestStateSnapshot, testCompletionSummary, testStateSnapshot } from '../../packages/alantil-core/test.js';
-import { initializeMatchState, markMatchSolved, matchCompletionSummary, matchSessionWords, matchStateSnapshot, recordMatchMismatch, restoreMatchStateSnapshot, takeNextMatchRound } from '../../packages/alantil-core/match.js';
+import { initializeMatchState, markMatchSolved, matchCompletionSummary, matchSessionWords, matchStateSnapshot, recordMatchMismatch, restoreMatchActiveRound, restoreMatchStateSnapshot, setMatchActiveOrdering, takeNextMatchRound } from '../../packages/alantil-core/match.js';
 import { toggleFavorite } from '../../packages/alantil-core/favorites.js';
 import { masteryLevelForPercent } from '../../packages/alantil-core/mastery.js';
-import { buildPracticeScope, practiceScopeKey, practiceSelectedPool, practiceWordScopeKey } from '../../packages/alantil-core/practice-scope.js';
+import { buildPracticeScope, practiceScopeKey, practiceSelectedPool, practiceWordScopeKey, scopeSelectionCounts, scopeSelectionState, selectedScopeSources } from '../../packages/alantil-core/practice-scope.js';
 import { shuffle } from '../../packages/alantil-core/word-selection.js';
 import { Button, FavoriteButton, Header, Screen } from '../ui/components.js';
 import { theme } from '../ui/theme.js';
@@ -14,12 +14,14 @@ import { recordNativeMatchSession, recordNativeTestSession } from '../platform/p
 const C = theme.colors;
 const T = theme.type;
 
-function BracketCheck({ checked, onPress }) {
-  return <Pressable onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked }} style={styles.checkHit}><View style={styles.bracketCheck}><Text style={[styles.bracketGlyph, checked && styles.bracketGlyphOn]}>[</Text><Text style={[styles.bracketMark, checked && styles.bracketMarkOn]}>{checked ? '✓' : ' '}</Text><Text style={[styles.bracketGlyph, checked && styles.bracketGlyphOn]}>]</Text></View></Pressable>;
+function BracketCheck({ state = 'none', onPress }) {
+  const checked = state === 'all';
+  const mixed = state === 'partial';
+  const active = checked || mixed;
+  return <Pressable onPress={onPress} accessibilityRole="checkbox" accessibilityState={{ checked: mixed ? 'mixed' : checked }} style={styles.checkHit}><View style={styles.bracketCheck}><Text style={[styles.bracketGlyph, active && styles.bracketGlyphOn]}>[</Text><Text style={[styles.bracketMark, active && styles.bracketMarkOn]}>{checked ? '✓' : mixed ? '−' : ' '}</Text><Text style={[styles.bracketGlyph, active && styles.bracketGlyphOn]}>]</Text></View></Pressable>;
 }
 
-function ScopePicker({ words, selectedKeys, setSelectedKeys }) {
-  const scope = useMemo(() => buildPracticeScope(words), [words]);
+function ScopePicker({ scope, selectedKeys, setSelectedKeys }) {
   const toggleSection = (dictionaryId, sectionId) => setSelectedKeys((current) => {
     const next = new Set(current);
     const key = practiceScopeKey(dictionaryId, sectionId);
@@ -29,16 +31,15 @@ function ScopePicker({ words, selectedKeys, setSelectedKeys }) {
   const toggleDictionary = (dictionary) => setSelectedKeys((current) => {
     const next = new Set(current);
     const keys = dictionary.sections.map((section) => practiceScopeKey(dictionary.id, section.id));
-    const all = keys.every((key) => next.has(key));
-    keys.forEach((key) => all ? next.delete(key) : next.add(key));
+    const state = scopeSelectionState(dictionary, next);
+    keys.forEach((key) => state === 'all' ? next.delete(key) : next.add(key));
     return next;
   });
   return <View style={styles.scopeList}>{scope.map((dictionary) => {
-    const keys = dictionary.sections.map((section) => practiceScopeKey(dictionary.id, section.id));
-    const all = keys.length > 0 && keys.every((key) => selectedKeys.has(key));
-    return <View key={dictionary.id} style={styles.scopeBlock}><View style={styles.scopeDictRow}><BracketCheck checked={all} onPress={() => toggleDictionary(dictionary)} /><View style={styles.scopeCopy}><Text numberOfLines={1} style={styles.scopeDict}>{dictionary.name}</Text><Text style={styles.scopeCount}>{dictionary.count}</Text></View></View>{dictionary.sections.map((section) => {
+    const state = scopeSelectionState(dictionary, selectedKeys);
+    return <View key={dictionary.id} style={styles.scopeBlock}><View style={styles.scopeDictRow}><BracketCheck state={state} onPress={() => toggleDictionary(dictionary)} /><View style={styles.scopeCopy}><Text numberOfLines={1} style={styles.scopeDict}>{dictionary.name}</Text><Text style={styles.scopeCount}>{dictionary.count}</Text></View></View>{dictionary.sections.map((section) => {
       const key = practiceScopeKey(dictionary.id, section.id);
-      return <View key={key} style={styles.scopeSectionRow}><BracketCheck checked={selectedKeys.has(key)} onPress={() => toggleSection(dictionary.id, section.id)} /><View style={styles.scopeCopy}><Text numberOfLines={1} style={styles.scopeSection}>{section.name}</Text><Text style={styles.scopeCount}>{section.count}</Text></View></View>;
+      return <View key={key} style={styles.scopeSectionRow}><BracketCheck state={selectedKeys.has(key) ? 'all' : 'none'} onPress={() => toggleSection(dictionary.id, section.id)} /><View style={styles.scopeCopy}><Text numberOfLines={1} style={styles.scopeSection}>{section.name}</Text><Text style={styles.scopeCount}>{section.count}</Text></View></View>;
     })}</View>;
   })}</View>;
 }
@@ -52,13 +53,25 @@ function DirectionControl({ value, onChange }) {
 }
 
 function GameMenu({ type, words, onBack, onStart }) {
+  const scope = useMemo(() => buildPracticeScope(words), [words]);
   const allKeys = useMemo(() => new Set(words.map(practiceWordScopeKey)), [words]);
   const [selectedKeys, setSelectedKeys] = useState(allKeys);
   const [limit, setLimit] = useState(40);
   const [mode, setMode] = useState('kb');
   const pool = useMemo(() => practiceSelectedPool(words, selectedKeys), [words, selectedKeys]);
   const selectedCount = Math.min(limit, pool.length);
-  return <Screen><Header title={type === 'test' ? 'Проверь знания' : 'Сопоставление'} onBack={onBack} /><ScrollView contentContainerStyle={styles.menuScroll}><View style={styles.modeLead}><Text style={styles.modeLeadValue}>Выбрано: {pool.length}</Text><Text style={styles.modeLeadHint}>игра: {selectedCount}</Text></View><ScopePicker words={words} selectedKeys={selectedKeys} setSelectedKeys={setSelectedKeys} /><View style={styles.optionSection}><Text style={styles.optionLabel}>Количество слов</Text><LimitControl value={limit} onChange={setLimit} /></View></ScrollView><View style={styles.launchBar}>{type === 'test' ? <DirectionControl value={mode} onChange={setMode} /> : null}<View style={styles.launchButton}><Button primary disabled={!pool.length} onPress={() => onStart(pool, limit, mode)}>{type === 'test' ? 'Начать тест' : 'Начать игру'}</Button></View></View></Screen>;
+  const start = () => {
+    const counts = scopeSelectionCounts(scope, selectedKeys);
+    const metadata = {
+      ...counts,
+      selectedSources: selectedScopeSources(scope, selectedKeys),
+      scopeKeys: Array.from(selectedKeys),
+      limit,
+      ...(type === 'test' ? { direction: mode === 'ru' ? 'ru_to_alan' : 'alan_to_ru', mode } : {}),
+    };
+    onStart(pool, limit, mode, metadata);
+  };
+  return <Screen><Header title={type === 'test' ? 'Проверь знания' : 'Сопоставление'} onBack={onBack} /><ScrollView contentContainerStyle={styles.menuScroll}><View style={styles.modeLead}><Text style={styles.modeLeadValue}>Выбрано: {pool.length}</Text><Text style={styles.modeLeadHint}>игра: {selectedCount}</Text></View><ScopePicker scope={scope} selectedKeys={selectedKeys} setSelectedKeys={setSelectedKeys} /><View style={styles.optionSection}><Text style={styles.optionLabel}>Количество слов</Text><LimitControl value={limit} onChange={setLimit} /></View></ScrollView><View style={styles.launchBar}>{type === 'test' ? <DirectionControl value={mode} onChange={setMode} /> : null}<View style={styles.launchButton}><Button primary disabled={!pool.length} onPress={start}>{type === 'test' ? 'Начать тест' : 'Начать игру'}</Button></View></View></Screen>;
 }
 
 function SessionProgress({ current, total }) {
@@ -85,12 +98,10 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
     return () => { alive = false; };
   }, [words]);
 
-  const start = (pool, limit, mode) => {
+  const start = (pool, limit, mode, metadata = {}) => {
     const now = new Date().toISOString();
-    const next = { mode, limit, items: [], optionPool: [], index: 0, correct: 0, selectedAnswer: null, results: [], session: { id: `test-${Date.now()}`, startedAt: now } };
-    initializeTestState(next, pool, mode, limit, {}, words);
-    next.session.id = `test-${Date.now()}`;
-    next.session.startedAt = now;
+    const next = { mode, limit, items: [], optionPool: [], index: 0, correct: 0, selectedAnswer: null, results: [], session: { id: `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, startedAt: now } };
+    initializeTestState(next, pool, mode, limit, { ...metadata, limit, direction: metadata.direction || (mode === 'ru' ? 'ru_to_alan' : 'alan_to_ru'), mode }, words);
     recorded.current = false;
     setState(next);
     setSelected(null);
@@ -106,7 +117,7 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
     if (phase !== 'results' || !state || recorded.current) return;
     recorded.current = true;
     const result = testCompletionSummary(state);
-    recordNativeTestSession({ sessionId: state.session.id || `test-${Date.now()}`, answers: state.results.map((row) => ({ word_id: row.id, result: row.isCorrect ? 'correct' : 'wrong' })), accuracy: result.accuracy_percent, updateMastery: false, startedAt: state.session.startedAt, type: 'test' }).catch(() => {});
+    recordNativeTestSession({ sessionId: state.session.id || `test-${Date.now()}`, answers: state.results.map((row) => ({ word_id: row.id, result: row.isCorrect ? 'correct' : 'wrong' })), accuracy: result.accuracy_percent, updateMastery: false, startedAt: state.session.startedAt, type: 'test', metadata: state.session.metadata }).catch(() => {});
     clearNativeSessionSnapshot('test').catch(() => {});
   }, [phase, state]);
 
@@ -115,7 +126,7 @@ export function GeneralTestFlow({ words, favorites, setFavorites, onBack }) {
   if (phase === 'results') {
     const result = testCompletionSummary(state);
     const level = masteryLevelForPercent(result.accuracy_percent);
-    return <Screen><Header title="Результаты теста" onBack={leave} /><View style={styles.resultsView}><View style={styles.resultSummary}><Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text><Text style={styles.resultScore}>{result.accuracy_percent}%</Text><Text style={styles.resultStatus}>{result.accuracy_percent >= 80 ? 'Тест сдан' : 'Тест не сдан'} · {result.correct_count}/{result.questions_total}</Text></View><ScrollView contentContainerStyle={styles.resultList}>{state.results.map((row) => <View key={`${row.id}-${row.questionText}`} style={styles.resultRow}><View style={[styles.resultStatusDot, row.isCorrect ? styles.okDot : styles.badDot]}><Text style={styles.resultStatusGlyph}>{row.isCorrect ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text numberOfLines={1} style={styles.resultPrimary}>{row.questionText || row.word}</Text>{!row.isCorrect ? <View style={styles.answerLine}><Text style={styles.answerWrongLabel}>Ответ</Text><Text numberOfLines={1} style={styles.resultWrong}>{row.userAnswer || '—'}</Text></View> : null}<View style={styles.answerLine}><Text style={styles.answerCorrectLabel}>Правильно</Text><Text numberOfLines={1} style={styles.resultCorrect}>{row.correctAnswer}</Text></View></View><FavoriteButton active={favorites.has(String(row.id))} onPress={() => setFavorites(toggleFavorite(favorites, row.id).ids)} /></View>)}</ScrollView><View style={styles.retryBar}><View style={styles.retryButton}><Button primary onPress={() => start(state.session.wordsPool, state.limit, state.mode)}>Пройти ещё раз</Button></View></View></View></Screen>;
+    return <Screen><Header title="Результаты теста" onBack={leave} /><View style={styles.resultsView}><View style={styles.resultSummary}><Text style={styles.resultMark}>{level ? '⌃'.repeat(level) : '—'}</Text><Text style={styles.resultScore}>{result.accuracy_percent}%</Text><Text style={styles.resultStatus}>{result.accuracy_percent >= 80 ? 'Тест сдан' : 'Тест не сдан'} · {result.correct_count}/{result.questions_total}</Text></View><ScrollView contentContainerStyle={styles.resultList}>{state.results.map((row) => <View key={`${row.id}-${row.questionText}`} style={styles.resultRow}><View style={[styles.resultStatusDot, row.isCorrect ? styles.okDot : styles.badDot]}><Text style={styles.resultStatusGlyph}>{row.isCorrect ? '✓' : '×'}</Text></View><View style={styles.resultCopy}><Text numberOfLines={1} style={styles.resultPrimary}>{row.questionText || row.word}</Text>{!row.isCorrect ? <View style={styles.answerLine}><Text style={styles.answerWrongLabel}>Ответ</Text><Text numberOfLines={1} style={styles.resultWrong}>{row.userAnswer || '—'}</Text></View> : null}<View style={styles.answerLine}><Text style={styles.answerCorrectLabel}>Правильно</Text><Text numberOfLines={1} style={styles.resultCorrect}>{row.correctAnswer}</Text></View></View><FavoriteButton active={favorites.has(String(row.id))} onPress={() => setFavorites(toggleFavorite(favorites, row.id).ids)} /></View>)}</ScrollView><View style={styles.retryBar}><View style={styles.retryButton}><Button primary onPress={() => start(state.session.wordsPool || state.items, state.limit, state.mode, state.session.metadata || {})}>Пройти ещё раз</Button></View></View></View></Screen>;
   }
 
   const item = state.items[state.index];
@@ -142,9 +153,11 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
   const lockRef = useRef(false);
   const recorded = useRef(false);
 
-  const installRound = (nextRound) => {
+  const installRound = (targetState, nextRound, restoredRight = null) => {
+    const orderedRight = Array.isArray(restoredRight) && restoredRight.length ? restoredRight.slice() : shuffle(nextRound.slice());
+    setMatchActiveOrdering(targetState, nextRound, orderedRight);
     setRound(nextRound);
-    setRightOrder(shuffle(nextRound.slice()));
+    setRightOrder(orderedRight);
     setLeft(null);
     setRight(null);
   };
@@ -156,24 +169,26 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
       const restored = restoreMatchStateSnapshot(snapshot, words);
       if (restored) {
         setState(restored);
-        const current = restored.rounds[Math.max(0, restored.roundIndex - 1)] || takeNextMatchRound(restored);
-        installRound(current);
+        const active = restoreMatchActiveRound(restored);
+        if (active.round.length) installRound(restored, active.round, active.right);
+        else {
+          const current = restored.rounds[Math.max(0, restored.roundIndex - 1)] || takeNextMatchRound(restored);
+          installRound(restored, current);
+        }
         setPhase(restored.solvedCount >= restored.total ? 'results' : 'game');
       } else setPhase('menu');
     });
     return () => { alive = false; };
   }, [words]);
 
-  const start = (pool, limit) => {
+  const start = (pool, limit, mode, metadata = {}) => {
     const now = new Date().toISOString();
-    const next = { session: { id: `match-${Date.now()}`, startedAt: now } };
-    initializeMatchState(next, pool, limit, {});
-    next.session.id = `match-${Date.now()}`;
-    next.session.startedAt = now;
+    const next = { session: { id: `match-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, startedAt: now } };
+    initializeMatchState(next, pool, limit, { ...metadata, limit });
     const first = takeNextMatchRound(next);
     recorded.current = false;
     setState(next);
-    installRound(first);
+    installRound(next, first);
     setWrongPair(null);
     setPhase('game');
     saveNativeSessionSnapshot('match', matchStateSnapshot(next)).catch(() => {});
@@ -186,7 +201,7 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
   useEffect(() => {
     if (phase !== 'results' || !state || recorded.current) return;
     recorded.current = true;
-    recordNativeMatchSession({ sessionId: state.session.id || `match-${Date.now()}`, words: matchSessionWords(state), startedAt: state.session.startedAt }).catch(() => {});
+    recordNativeMatchSession({ sessionId: state.session.id || `match-${Date.now()}`, words: matchSessionWords(state), startedAt: state.session.startedAt, metadata: state.session.metadata }).catch(() => {});
     clearNativeSessionSnapshot('match').catch(() => {});
   }, [phase, state]);
 
@@ -195,7 +210,7 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
   if (phase === 'results') {
     const summary = matchCompletionSummary(state);
     const problems = Object.entries(state.failMap).filter(([, count]) => count > 0).map(([id, count]) => ({ ...words.find((word) => String(word.id) === String(id)), fails: count })).filter((word) => word.id).sort((a, b) => b.fails - a.fails);
-    return <Screen><Header title="Сопоставление" onBack={leave} /><ScrollView contentContainerStyle={styles.resultScroll}><View style={styles.resultSummary}><Text style={styles.resultMark}>{summary.errors_count ? '—' : '⌃⌃⌃'}</Text><Text style={styles.matchResultScore}>{summary.pairs_completed}/{summary.pairs_total}</Text><Text style={styles.resultStatus}>Ошибок: {summary.errors_count}</Text></View>{problems.length ? <View style={styles.resultList}>{problems.map((word) => <View key={word.id} style={styles.resultRow}><View style={[styles.resultStatusDot, styles.badDot]}><Text style={styles.resultStatusGlyph}>{word.fails}</Text></View><View style={styles.resultCopy}><Text style={styles.resultPrimary}>{word.word}</Text><Text style={styles.resultCorrect}>{word.trans}</Text></View><FavoriteButton active={favorites.has(String(word.id))} onPress={() => setFavorites(toggleFavoriteSet(favorites, word.id))} /></View>)}</View> : <View style={styles.perfect}><Text style={styles.perfectTitle}>Аперим!</Text><Text style={styles.resultCorrect}>Все пары собраны с первого раза.</Text></View>}<View style={styles.retryInline}><View style={styles.retryButton}><Button primary onPress={() => start(state.session.wordsPool || state.items, state.limit)}>Пройти ещё раз</Button></View></View></ScrollView></Screen>;
+    return <Screen><Header title="Сопоставление" onBack={leave} /><ScrollView contentContainerStyle={styles.resultScroll}><View style={styles.resultSummary}><Text style={styles.resultMark}>{summary.errors_count ? '—' : '⌃⌃⌃'}</Text><Text style={styles.matchResultScore}>{summary.pairs_completed}/{summary.pairs_total}</Text><Text style={styles.resultStatus}>Ошибок: {summary.errors_count}</Text></View>{problems.length ? <View style={styles.resultList}>{problems.map((word) => <View key={word.id} style={styles.resultRow}><View style={[styles.resultStatusDot, styles.badDot]}><Text style={styles.resultStatusGlyph}>{word.fails}</Text></View><View style={styles.resultCopy}><Text style={styles.resultPrimary}>{word.word}</Text><Text style={styles.resultCorrect}>{word.trans}</Text></View><FavoriteButton active={favorites.has(String(word.id))} onPress={() => setFavorites(toggleFavorite(favorites, word.id).ids)} /></View>)}</View> : <View style={styles.perfect}><Text style={styles.perfectTitle}>Аперим!</Text><Text style={styles.resultCorrect}>Все пары собраны с первого раза.</Text></View>}<View style={styles.retryInline}><View style={styles.retryButton}><Button primary onPress={() => start(state.session.wordsPool || state.items, state.limit, 'kb', state.session.metadata || {})}>Пройти ещё раз</Button></View></View></ScrollView></Screen>;
   }
 
   const active = round.filter((word) => !state.solved.has(String(word.id)));
@@ -203,8 +218,11 @@ export function GeneralMatchFlow({ words, favorites, setFavorites, onBack }) {
     if (state.solvedCount >= state.total) setTimeout(() => setPhase('results'), 0);
     else {
       const next = takeNextMatchRound(state);
-      saveNativeSessionSnapshot('match', matchStateSnapshot(state)).catch(() => {});
-      setTimeout(() => installRound(next), 0);
+      setTimeout(() => {
+        installRound(state, next);
+        setState({ ...state });
+        saveNativeSessionSnapshot('match', matchStateSnapshot(state)).catch(() => {});
+      }, 0);
     }
     return <Screen />;
   }
