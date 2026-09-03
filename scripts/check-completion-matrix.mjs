@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const matrix = JSON.parse(fs.readFileSync('docs/COMPLETION_MATRIX.json', 'utf8'));
-const allowed = new Set(['PASS', 'FAIL', 'DEVICE_REQUIRED']);
+const allowed = new Set(['PASS', 'FAIL', 'DEVICE_REQUIRED', 'NEXT_STAGE']);
 const directions = [];
 
 for (const direction of matrix.directions || []) {
@@ -17,6 +17,7 @@ for (const direction of matrix.directions || []) {
   const pass = criteria.filter((x) => x.status === 'PASS').length;
   const fail = criteria.filter((x) => x.status === 'FAIL').length;
   const deviceRequired = criteria.filter((x) => x.status === 'DEVICE_REQUIRED').length;
+  const nextStage = criteria.filter((x) => x.status === 'NEXT_STAGE').length;
   const codeDenominator = pass + fail;
   const totalDenominator = pass + fail + deviceRequired;
   const codeReadiness = Number(((pass / Math.max(1, codeDenominator)) * 100).toFixed(1));
@@ -27,6 +28,7 @@ for (const direction of matrix.directions || []) {
     pass,
     fail,
     device_required: deviceRequired,
+    next_stage: nextStage,
     total: criteria.length,
     code_readiness: codeReadiness,
     total_readiness: totalReadiness,
