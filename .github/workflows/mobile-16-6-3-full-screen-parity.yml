@@ -61,24 +61,49 @@ jobs:
           from pathlib import Path
           import json, os
           root=Path('mobile/dist-web')
+          base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
           for p in root.glob('_expo/static/js/web/*.js'):
             t=p.read_text()
-            t=t.replace('"/_expo/','"./_expo/')
-            t=t.replace("'/_expo/","'./_expo/")
-            t=t.replace('"/assets/','"./assets/')
-            t=t.replace("'/assets/","'./assets/")
+            for old in ('"./_expo/', '"/_expo/'):
+              t=t.replace(old,'"'+base+'/_expo/')
+            for old in ("'./_expo/", "'/_expo/"):
+              t=t.replace(old,"'"+base+'/_expo/')
+            for old in ('"./assets/', '"/assets/'):
+              t=t.replace(old,'"'+base+'/assets/')
+            for old in ("'./assets/", "'/assets/"):
+              t=t.replace(old,"'"+base+'/assets/')
             p.write_text(t)
           index=root/'index.html'
           t=index.read_text()
-          t=t.replace('src="/_expo/','src="./_expo/')
+          t=t.replace('src="./_expo/','src="'+base+'/_expo/')
+          t=t.replace('src="/_expo/','src="'+base+'/_expo/')
           index.write_text(t)
           (root/'preview-build.json').write_text(json.dumps({
             'sha':os.environ.get('GITHUB_SHA',''),
             'branch':os.environ.get('GITHUB_REF_NAME',''),
             'run_id':os.environ.get('GITHUB_RUN_ID',''),
             'version':'16.6.3',
+            'delivery':'cdn-absolute',
             'q03':'RENDER_QA_REQUIRED'
           }),encoding='utf-8')
+          PY
+      - name: Validate browser preview contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('mobile/dist-web')
+          base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
+          index=(root/'index.html').read_text()
+          if f'src="{base}/_expo/' not in index:
+            raise SystemExit('Preview index does not use the CDN Expo bundle URL')
+          bad=('"./_expo/',"'./_expo/",'"/_expo/',"'/_expo/",'"./assets/',"'./assets/",'"/assets/',"'/assets/")
+          for p in root.glob('_expo/static/js/web/*.js'):
+            text=p.read_text()
+            found=[token for token in bad if token in text]
+            if found:
+              raise SystemExit(f'{p}: unresolved browser-relative Expo paths: {found}')
+          print('Expo Web delivery contract: PASS')
           PY
       - name: Package source archive and size manifest
         shell: bash
