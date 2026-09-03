@@ -7,6 +7,7 @@ import { toggleFavorite } from '../packages/alantil-core/favorites.js';
 import { DEFAULT_USER_SETTINGS, hasCompletedLearningSetup } from '../packages/alantil-core/settings.js';
 import { msg } from './i18n.js';
 import { BottomNav } from './ui/components.js';
+import { RuntimeSettingsProvider } from './ui/runtime-settings.js';
 import { theme } from './ui/theme.js';
 import { AccountScreen } from './screens/profile.js';
 import { ProfileGate } from './screens/profile-gate.js';
@@ -36,7 +37,7 @@ export default function AppRoot(){
   const changeTab=(next)=>{setTab(next);setScreen('home');setStation(null);setStoryWordListType('');setPracticeGameContext(null);};const openStation=(nextStation)=>{setStation(nextStation);setScreen('station');};const backToPath=()=>{setScreen('home');setStation(null);};const openStoryWordList=(storyType)=>{setStoryWordListType(storyType);setScreen('storyWords');};const closeStoryWordList=()=>{setScreen('home');setStoryWordListType('');};const continueAsGuest=()=>{setTab('path');setScreen('home');setStation(null);};const openProfileStory=async(storyType)=>{if(!route.stories?.[storyType])return;await saveNativeActiveStory(storyType);setTab('path');setScreen('home');setStation(null);setStoryWordListType('');};
   const openPracticeGame=(type,sourceWords=words,returnTo='home',scopeId='all')=>{setNativeSessionNamespace(type,scopeId);setPracticeGameContext({words:Array.isArray(sourceWords)?sourceWords:[],returnTo,scopeId});setScreen(type);};const closePracticeGame=()=>{const returnTo=practiceGameContext?.returnTo||'home';setPracticeGameContext(null);setScreen(returnTo);};
   const navLabels={practice:msg(settings,'nav.praktika'),path:msg(settings,'nav.put'),profile:msg(settings,'nav.profil')};
-  const shell=(content,showNav=true)=><SafeAreaProvider><StatusBar style="dark"/><SafeAreaView style={styles.safe} edges={theme.safeArea.edges}><View style={styles.app}>{content}{showNav?<BottomNav tab={tab} onChange={changeTab} labels={navLabels}/>:null}</View></SafeAreaView></SafeAreaProvider>;
+  const shell=(content,showNav=true)=><RuntimeSettingsProvider settings={settings}><SafeAreaProvider><StatusBar style="dark"/><SafeAreaView style={styles.safe} edges={theme.safeArea.edges}><View style={styles.app}>{content}{showNav?<BottomNav tab={tab} onChange={changeTab} labels={navLabels}/>:null}</View></SafeAreaView></SafeAreaProvider></RuntimeSettingsProvider>;
   if(!bootstrapped)return shell(<BootScreen/>,false);
   if(setupRequired)return shell(<OnboardingScreen initialSettings={settings} onComplete={async(nextSettings)=>{const saved=await setSettings(nextSettings);if(!hasCompletedLearningSetup(saved))throw new Error('Learning setup was not persisted');setSetupRequired(false);setTab('profile');setScreen('account');}}/>,false);
   let content;let showNav=true;
