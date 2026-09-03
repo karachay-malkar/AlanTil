@@ -4,18 +4,23 @@ import path from 'node:path';
 const root=process.cwd();
 const read=(file)=>fs.readFileSync(path.join(root,file),'utf8');
 const requireText=(file,patterns)=>{const source=read(file);for(const pattern of patterns)if(!source.includes(pattern))throw new Error(`${file}: missing ${pattern}`);};
+const requireRegex=(file,patterns)=>{const source=read(file);for(const pattern of patterns)if(!pattern.test(source))throw new Error(`${file}: missing ${pattern}`);};
 const requireFile=(file)=>{if(!fs.existsSync(path.join(root,file)))throw new Error(`Missing ${file}`);};
 
 [
   'packages/alantil-core/hidden-selection.js','packages/alantil-core/story-word-list.js','packages/alantil-core/learn-card.js','packages/alantil-core/guide-contract.js','packages/alantil-core/dictionary-bootstrap.js',
   'mobile/platform/path-state.js','mobile/platform/guide-state.js','mobile/platform/privacy.js','mobile/screens/story-word-list.js','mobile/screens/settings-child.js','mobile/ui/guide.js','mobile/tests/parity-correction-16-6-1.test.mjs'
 ].forEach(requireFile);
-requireText('packages/alantil-core/test.js',['metadata:{...(state.session.metadata||{})}','hasWordConflict']);
-requireText('packages/alantil-core/station-test.js',['stationTestPhaseFromProgress','phase:session.phase','hasWordConflict']);
-requireText('packages/alantil-core/match.js',['activeRoundIds','activeRightIds','metadata:{...(state.session.metadata||{})}']);
+requireText('packages/alantil-core/test.js',['hasWordConflict']);
+requireRegex('packages/alantil-core/test.js',[/metadata\s*:\s*\{\.\.\.\(state\.session\.metadata\|\|\{\}\)\}/]);
+requireText('packages/alantil-core/station-test.js',['stationTestPhaseFromProgress','hasWordConflict']);
+requireRegex('packages/alantil-core/station-test.js',[/phase\s*:\s*session\.phase/]);
+requireText('packages/alantil-core/match.js',['activeRoundIds','activeRightIds']);
+requireRegex('packages/alantil-core/match.js',[/metadata\s*:\s*\{\.\.\.\(state\.session\.metadata\|\|\{\}\)\}/]);
 requireText('packages/alantil-core/practice-scope.js',['scopeSelectionState','scopeSelectionCounts','selectedScopeSources']);
 requireText('mobile/screens/path.js',['loadNativePathSettings','loadNativeStoryScroll','stationMilestoneCount','computedStationStatus','onOpenWordList']);
-requireText('mobile/screens/practice-games.js',['restoreMatchActiveRound','setMatchActiveOrdering',"checked: mixed ? 'mixed' : checked"]);
+requireText('mobile/screens/practice-games.js',['restoreMatchActiveRound','setMatchActiveOrdering']);
+requireRegex('mobile/screens/practice-games.js',[/checked\s*:\s*mixed\s*\?\s*['"]mixed['"]\s*:\s*checked/]);
 requireText('mobile/screens/station-test.js',['FavoriteButton','clearNativeSessionSnapshot','retry']);
 requireText('mobile/screens/learn.js',['PanResponder','buildLearnCardModel','gestureLock','GuideOverlay']);
 requireText('mobile/screens/profile-main.js',['SettingsChildScreen','checkNativeDictionaryUpdate','onOpenStory']);
