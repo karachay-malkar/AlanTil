@@ -17,5 +17,6 @@ export function PauseIcon({size=20,color='#f4efe6'}){return <Fill size={size} co
 export function UndoIcon({size=20,color='#666158'}){return <Fill size={size} color={color} d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6a6 6 0 0 1-6 6H6v2h6a8 8 0 0 0 0-16Z"/>}
 export function CorrectIcon({size=20,color='#5d7654'}){return <Fill size={size} color={color} d="m9 16.17-4.17-4.17-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z"/>}
 export function WrongIcon({size=20,color='#98564c'}){return <Fill size={size} color={color} d="m19 6.41-1.41-1.41L12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/>}
+export function CloseIcon({size=20,color='#666158'}){return <Fill size={size} color={color} d="m19 6.41-1.41-1.41L12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/>}
 export function LockedIcon({size=20,color='#666158'}){return <Fill size={size} color={color} d="M17 9V7a5 5 0 0 0-10 0v2H5v13h14V9h-2Zm-8-2a3 3 0 0 1 6 0v2H9V7Zm8 13H7v-9h10v9Z"/>}
 export function ChevronIcon({size=20,color='#918b80'}){return <Fill size={size} color={color} d="m9 18 6-6-6-6 1.4-1.4L17.8 12l-7.4 7.4L9 18Z"/>}
