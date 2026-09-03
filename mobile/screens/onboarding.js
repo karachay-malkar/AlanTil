@@ -1,80 +1,24 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { completeLearningSetupSettings, emptyLearningSetupDraft, isLearningSetupDraftComplete } from '../../packages/alantil-core/settings.js';
 import { LEARNING_SETUP_LANGUAGES, previewContent, setupText } from '../../packages/alantil-core/learning-setup.js';
 import { msg } from '../i18n.js';
 import { Button, InlineMessage, Screen } from '../ui/components.js';
-import { CompactSegmentedControl, MonoLabel, SurfaceCard } from '../ui/parity.js';
+import { CompactSegmentedControl, MonoLabel } from '../ui/parity.js';
 import { Topography } from '../ui/topography.js';
 import { theme } from '../ui/theme.js';
 
 const C = theme.colors;
-
-function capitalizeWord(value) {
-  const text = String(value || '');
-  return text ? `${text[0].toUpperCase()}${text.slice(1)}` : '';
-}
+function capitalizeWord(value){const text=String(value||'');return text?`${text[0].toUpperCase()}${text.slice(1)}`:'';}
 
 export function OnboardingScreen({ initialSettings, onComplete }) {
-  const [draft, setDraft] = useState(() => emptyLearningSetupDraft());
-  const [error, setError] = useState('');
-  const language = draft.interface_language_code || initialSettings?.interface_language_code || 'ru';
-  const copy = setupText(language);
-  const preview = useMemo(() => previewContent(draft), [draft]);
-  const complete = isLearningSetupDraftComplete(draft);
-  const localizedSettings = { ...initialSettings, interface_language_code: language };
-
-  const updateDraft = (updates) => {
-    setDraft((current) => ({ ...current, ...updates }));
-    setError('');
-  };
-
-  const continueSetup = async () => {
-    if (!complete) return;
-    const next = completeLearningSetupSettings(initialSettings, {
-      ...draft,
-      translation_language_code: draft.interface_language_code,
-      alan_dialect_code: draft.alan_script_code === 'turkic'
-        ? (draft.alan_dialect_code || 'canonical')
-        : draft.alan_dialect_code,
-    });
-    try {
-      await onComplete?.(next);
-    } catch {
-      setError(copy.storageError);
-    }
-  };
-
-  const languageOptions = LEARNING_SETUP_LANGUAGES.map((item) => [item.code, item.label]);
-  const scriptOptions = [['cyrillic', copy.cyrillic], ['turkic', 'Latin']];
-  const dialectOptions = [['canonical', 'Җ'], ['karachay', 'Дж'], ['balkar', 'Ж']];
-
-  return <Screen><Topography opacity={0.22} /><ScrollView contentContainerStyle={styles.root} showsVerticalScrollIndicator={false}>
-    <View style={styles.pane}>
-      <View style={styles.heading}><MonoLabel>ALAN TIL</MonoLabel><Text style={styles.title}>{copy.title}</Text><Text style={styles.subtitle}>{copy.preview}</Text></View>
-      {error ? <InlineMessage type="error">{error}</InlineMessage> : null}
-      <View style={styles.step}><Text style={styles.stepTitle}>{msg(localizedSettings, 'mobile.onboarding.interface_language')}</Text><CompactSegmentedControl value={draft.interface_language_code} items={languageOptions} onChange={(value) => updateDraft({ interface_language_code: value, translation_language_code: value })} /></View>
-      {draft.interface_language_code ? <View style={styles.step}><Text style={styles.stepTitle}>{copy.script}</Text><CompactSegmentedControl value={draft.alan_script_code} items={scriptOptions} onChange={(value) => updateDraft({ alan_script_code: value })} /></View> : null}
-      {draft.alan_script_code === 'cyrillic' ? <View style={styles.step}><Text style={styles.stepTitle}>{copy.dialect}</Text><CompactSegmentedControl value={draft.alan_dialect_code} items={dialectOptions} onChange={(value) => updateDraft({ alan_dialect_code: value })} /></View> : null}
-      <SurfaceCard inset style={styles.previewCard}><MonoLabel>{copy.preview}</MonoLabel><Text style={styles.previewWord}>{capitalizeWord(preview.word)}</Text><View style={styles.previewCopy}><Text style={styles.previewTranslation}>{preview.translation}</Text><Text style={styles.previewExample}>{preview.example}</Text><Text style={styles.previewExampleTranslation}>{preview.exampleTranslation}</Text></View></SurfaceCard>
-      <Button primary style={styles.fullButton} disabled={!complete} onPress={continueSetup}>{copy.continue}</Button>
-    </View>
-  </ScrollView></Screen>;
+  const [draft,setDraft]=useState(()=>emptyLearningSetupDraft()),[error,setError]=useState(''),[step,setStep]=useState(0);
+  const language=draft.interface_language_code||initialSettings?.interface_language_code||'ru',copy=setupText(language),preview=useMemo(()=>previewContent(draft),[draft]),complete=isLearningSetupDraftComplete(draft),localizedSettings={...initialSettings,interface_language_code:language};
+  const updateDraft=(updates)=>{setDraft((current)=>({...current,...updates}));setError('');};
+  const persist=async(mode)=>{if(!complete)return;const next=completeLearningSetupSettings(initialSettings,{...draft,translation_language_code:draft.interface_language_code,alan_dialect_code:draft.alan_script_code==='turkic'?(draft.alan_dialect_code||'canonical'):draft.alan_dialect_code});try{await onComplete?.(next,mode);}catch{setError(copy.storageError);}};
+  const languageOptions=LEARNING_SETUP_LANGUAGES.map((item)=>[item.code,item.label]),scriptOptions=[['cyrillic',copy.cyrillic],['turkic','Latin']],dialectOptions=[['canonical','Җ'],['karachay','Дж'],['balkar','Ж']],total=4;
+  const next=()=>{if(step===0&&!draft.interface_language_code)return;if(step===1&&!draft.alan_script_code)return;if(step===2&&draft.alan_script_code==='cyrillic'&&!draft.alan_dialect_code)return;setStep((value)=>Math.min(total-1,value+1));};
+  return <Screen><Topography opacity={0.22}/><ScrollView contentContainerStyle={styles.root} showsVerticalScrollIndicator={false}><View style={styles.pane}><View style={styles.progressHead}><MonoLabel>ALAN TIL</MonoLabel><MonoLabel>{copy.step} {step+1}/{total}</MonoLabel></View><View style={styles.progress}>{Array.from({length:total},(_,index)=><View key={index} style={[styles.progressCell,index<=step&&styles.progressCellOn]}/>)}</View>{error?<InlineMessage type="error">{error}</InlineMessage>:null}{step===0?<View style={styles.step}><Text style={styles.title}>{copy.title}</Text><Text style={styles.stepTitle}>{msg(localizedSettings,'mobile.onboarding.interface_language')}</Text><CompactSegmentedControl value={draft.interface_language_code} items={languageOptions} onChange={(value)=>updateDraft({interface_language_code:value,translation_language_code:value})}/><Button primary style={styles.fullButton} disabled={!draft.interface_language_code} onPress={next}>{copy.continue}</Button></View>:null}{step===1?<View style={styles.step}><Text style={styles.title}>{copy.script}</Text><CompactSegmentedControl value={draft.alan_script_code} items={scriptOptions} onChange={(value)=>updateDraft({alan_script_code:value})}/><View style={styles.navRow}><Back copy={copy} onPress={()=>setStep(0)}/><Button primary style={styles.nextButton} disabled={!draft.alan_script_code} onPress={next}>{copy.continue}</Button></View></View>:null}{step===2?<View style={styles.step}><Text style={styles.title}>{copy.dialect}</Text>{draft.alan_script_code==='cyrillic'?<CompactSegmentedControl value={draft.alan_dialect_code} items={dialectOptions} onChange={(value)=>updateDraft({alan_dialect_code:value})}/>:<Text style={styles.skipNote}>Latin</Text>}<View style={styles.previewCard}><MonoLabel>{copy.preview}</MonoLabel><Text style={styles.previewWord}>{capitalizeWord(preview.word)}</Text><View style={styles.previewCopy}><Text style={styles.previewTranslation}>{preview.translation}</Text><Text style={styles.previewExample}>{preview.example}</Text><Text style={styles.previewExampleTranslation}>{preview.exampleTranslation}</Text></View></View><View style={styles.navRow}><Back copy={copy} onPress={()=>setStep(1)}/><Button primary style={styles.nextButton} disabled={!complete} onPress={next}>{copy.continue}</Button></View></View>:null}{step===3?<View style={styles.step}><Text style={styles.title}>{copy.accountTitle}</Text><Text style={styles.accountBody}>{copy.accountBody}</Text><View style={styles.accountActions}><Button primary action style={styles.fullButton} onPress={()=>persist('account')}>{copy.account}</Button><Button action style={styles.fullButton} onPress={()=>persist('guest')}>{copy.guest}</Button></View><Back copy={copy} onPress={()=>setStep(2)}/></View>:null}</View></ScrollView></Screen>;
 }
-
-const styles = StyleSheet.create({
-  root: { flexGrow: 1, minHeight: '100%', paddingTop: theme.control.header + theme.chrome.contentRestGap, paddingHorizontal: 14, paddingBottom: 24, justifyContent: 'center' },
-  pane: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: 14 },
-  heading: { alignItems: 'center', gap: 6, marginBottom: 2 },
-  title: { fontSize: 20, fontWeight: '850', lineHeight: 24, color: C.text1, textAlign: 'center' },
-  subtitle: { fontSize: 11, lineHeight: 15, color: C.text3, textAlign: 'center' },
-  step: { gap: 7 },
-  stepTitle: { fontSize: 13, fontWeight: '850', lineHeight: 16, color: C.text2 },
-  previewCard: { minHeight: 220, maxHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 24, gap: 12 },
-  previewWord: { fontSize: 36, fontWeight: '900', lineHeight: 40, color: C.text1, textAlign: 'center' },
-  previewCopy: { width: '92%', alignItems: 'center', gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.lineSoft },
-  previewTranslation: { fontSize: 14, fontWeight: '800', color: C.text2, textAlign: 'center' },
-  previewExample: { marginTop: 4, fontSize: 11, lineHeight: 16, color: C.text2, textAlign: 'center' },
-  previewExampleTranslation: { fontSize: 10, lineHeight: 15, color: C.text3, textAlign: 'center' },
-  fullButton: { width: '100%' },
-});
+function Back({copy,onPress}){return <Pressable accessibilityRole="button" onPress={onPress} style={styles.back}><Text style={styles.backText}>‹ {copy.back}</Text></Pressable>;}
+const styles=StyleSheet.create({root:{flexGrow:1,minHeight:'100%',paddingHorizontal:14,paddingVertical:24,justifyContent:'center'},pane:{width:'100%',maxWidth:560,alignSelf:'center',gap:14},progressHead:{flexDirection:'row',justifyContent:'space-between',alignItems:'center'},progress:{height:3,flexDirection:'row',gap:4},progressCell:{flex:1,height:3,backgroundColor:C.lineSoft},progressCellOn:{backgroundColor:C.accentStrong},step:{gap:14},title:{fontSize:20,fontWeight:'850',lineHeight:24,color:C.text1,textAlign:'center'},stepTitle:{fontSize:13,fontWeight:'850',lineHeight:16,color:C.text2},previewCard:{height:220,alignItems:'center',justifyContent:'center',paddingHorizontal:24,paddingVertical:24,gap:12,borderWidth:1,borderColor:C.lineSoft,backgroundColor:C.paperSoft},previewWord:{fontSize:36,fontWeight:'900',lineHeight:40,color:C.text1,textAlign:'center'},previewCopy:{width:'92%',alignItems:'center',gap:4,paddingTop:8,borderTopWidth:1,borderTopColor:C.lineSoft},previewTranslation:{fontSize:14,fontWeight:'800',color:C.text2,textAlign:'center'},previewExample:{marginTop:4,fontSize:11,lineHeight:16,color:C.text2,textAlign:'center'},previewExampleTranslation:{fontSize:10,lineHeight:15,color:C.text3,textAlign:'center'},skipNote:{minHeight:34,textAlign:'center',textAlignVertical:'center',fontFamily:theme.font.terminal,color:C.text2},navRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10},back:{minHeight:44,minWidth:110,justifyContent:'center'},backText:{fontFamily:theme.font.terminal,fontSize:11,fontWeight:'800',color:C.text2},nextButton:{width:180,maxWidth:'55%'},fullButton:{width:'100%'},accountBody:{fontSize:13,lineHeight:19,color:C.text2,textAlign:'center'},accountActions:{gap:8}});
