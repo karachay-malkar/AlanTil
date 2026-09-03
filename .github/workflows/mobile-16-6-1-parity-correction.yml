@@ -34,6 +34,8 @@ jobs:
       - name: Mobile executable tests
         working-directory: mobile
         run: npm test
+      - name: Mobile RU EN TR hardcode gate
+        run: node scripts/check-mobile-i18n-16-6-1.mjs
       - name: Foundation 16.4.1 gate
         run: |
           node scripts/check-completion-matrix.mjs
