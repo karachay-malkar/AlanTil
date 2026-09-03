@@ -24,6 +24,7 @@ const MOBILE_INTERFACE_MESSAGES=Object.freeze({
   'mobile.common.add_learning':M('Добавить слово в обучение','Include word in learning','Kelimeyi öğrenmeye ekle'),
   'mobile.common.favorite_add':M('Добавить в избранное','Add to favourites','Favorilere ekle'),
   'mobile.common.favorite_remove':M('Убрать из избранного','Remove from favourites','Favorilerden çıkar'),
+  'mobile.onboarding.interface_language':M('Язык интерфейса','Interface language','Arayüz dili'),
   'mobile.practice.title':M('ПРАКТИКА','PRACTICE','ALIŞTIRMA'),
   'mobile.practice.test':M('Тест','Test','Test'),
   'mobile.practice.test_sub':M('Проверка слов из выбранных разделов','Test words from selected sections','Seçili bölümlerdeki kelimeleri test et'),
