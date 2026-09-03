@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { completeLearningSetupSettings, emptyLearningSetupDraft, isLearningSetupDraftComplete } from '../../packages/alantil-core/settings.js';
 import { LEARNING_SETUP_LANGUAGES, previewContent, setupText } from '../../packages/alantil-core/learning-setup.js';
+import { msg } from '../i18n.js';
 import { Button, InlineMessage, Screen } from '../ui/components.js';
 import { CompactSegmentedControl, MonoLabel, SurfaceCard } from '../ui/parity.js';
 import { Topography } from '../ui/topography.js';
@@ -17,9 +18,11 @@ function capitalizeWord(value) {
 export function OnboardingScreen({ initialSettings, onComplete }) {
   const [draft, setDraft] = useState(() => emptyLearningSetupDraft());
   const [error, setError] = useState('');
-  const copy = setupText(draft.interface_language_code || 'ru');
+  const language = draft.interface_language_code || initialSettings?.interface_language_code || 'ru';
+  const copy = setupText(language);
   const preview = useMemo(() => previewContent(draft), [draft]);
   const complete = isLearningSetupDraftComplete(draft);
+  const localizedSettings = { ...initialSettings, interface_language_code: language };
 
   const updateDraft = (updates) => {
     setDraft((current) => ({ ...current, ...updates }));
@@ -48,9 +51,9 @@ export function OnboardingScreen({ initialSettings, onComplete }) {
 
   return <Screen><Topography opacity={0.22} /><ScrollView contentContainerStyle={styles.root} showsVerticalScrollIndicator={false}>
     <View style={styles.pane}>
-      <View style={styles.heading}><MonoLabel>ALAN TIL</MonoLabel><Text style={styles.title}>Язык · Language · Dil</Text><Text style={styles.subtitle}>{copy.preview}</Text></View>
+      <View style={styles.heading}><MonoLabel>ALAN TIL</MonoLabel><Text style={styles.title}>{copy.title}</Text><Text style={styles.subtitle}>{copy.preview}</Text></View>
       {error ? <InlineMessage type="error">{error}</InlineMessage> : null}
-      <View style={styles.step}><Text style={styles.stepTitle}>Язык интерфейса</Text><CompactSegmentedControl value={draft.interface_language_code} items={languageOptions} onChange={(value) => updateDraft({ interface_language_code: value, translation_language_code: value })} /></View>
+      <View style={styles.step}><Text style={styles.stepTitle}>{msg(localizedSettings, 'mobile.onboarding.interface_language')}</Text><CompactSegmentedControl value={draft.interface_language_code} items={languageOptions} onChange={(value) => updateDraft({ interface_language_code: value, translation_language_code: value })} /></View>
       {draft.interface_language_code ? <View style={styles.step}><Text style={styles.stepTitle}>{copy.script}</Text><CompactSegmentedControl value={draft.alan_script_code} items={scriptOptions} onChange={(value) => updateDraft({ alan_script_code: value })} /></View> : null}
       {draft.alan_script_code === 'cyrillic' ? <View style={styles.step}><Text style={styles.stepTitle}>{copy.dialect}</Text><CompactSegmentedControl value={draft.alan_dialect_code} items={dialectOptions} onChange={(value) => updateDraft({ alan_dialect_code: value })} /></View> : null}
       <SurfaceCard inset style={styles.previewCard}><MonoLabel>{copy.preview}</MonoLabel><Text style={styles.previewWord}>{capitalizeWord(preview.word)}</Text><View style={styles.previewCopy}><Text style={styles.previewTranslation}>{preview.translation}</Text><Text style={styles.previewExample}>{preview.example}</Text><Text style={styles.previewExampleTranslation}>{preview.exampleTranslation}</Text></View></SurfaceCard>
