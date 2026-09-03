@@ -15,6 +15,7 @@ import { StationTestScreen } from './screens/station-test.js';
 import { SongsScreen } from './screens/songs.js';
 import { OnboardingScreen } from './screens/onboarding.js';
 import { PathScreen } from './screens/path.js';
+import { StoryWordListScreen } from './screens/story-word-list.js';
 import { PracticeScreen } from './screens/practice.js';
 import { FavoritesScreen } from './screens/favorites.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
@@ -38,6 +39,7 @@ export default function AppRoot() {
   const [songFavorites, setSongFavoritesState] = useState(() => new Set());
   const [settings, setSettingsState] = useState(() => ({ ...DEFAULT_USER_SETTINGS }));
   const [station, setStation] = useState(null);
+  const [storyWordListType, setStoryWordListType] = useState('');
   const [learnContext, setLearnContext] = useState(null);
   const [testContext, setTestContext] = useState(null);
   const [practiceGameContext, setPracticeGameContext] = useState(null);
@@ -89,10 +91,12 @@ export default function AppRoot() {
     return saved;
   };
   const changeTab = (next) => {
-    setTab(next); setScreen('home'); setStation(null); setPracticeGameContext(null);
+    setTab(next); setScreen('home'); setStation(null); setStoryWordListType(''); setPracticeGameContext(null);
   };
   const openStation = (nextStation) => { setStation(nextStation); setScreen('station'); };
   const backToPath = () => { setScreen('home'); setStation(null); };
+  const openStoryWordList = (storyType) => { setStoryWordListType(storyType); setScreen('storyWords'); };
+  const closeStoryWordList = () => { setScreen('home'); setStoryWordListType(''); };
   const continueAsGuest = () => { setTab('path'); setScreen('home'); setStation(null); };
   const openPracticeGame = (type, sourceWords = words, returnTo = 'home', scopeId = 'all') => {
     setNativeSessionNamespace(type, scopeId);
@@ -119,7 +123,10 @@ export default function AppRoot() {
     content = <LearnScreen words={learnContext.words} mode={learnContext.mode} station={learnContext.station} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen(learnContext.returnTo || 'station')} />;
     showNav = false;
   } else if (screen === 'stationTest' && testContext) {
-    content = <StationTestScreen station={testContext.station} allWords={words} mode={testContext.mode} onBack={() => setScreen('station')} />;
+    content = <StationTestScreen station={testContext.station} allWords={words} mode={testContext.mode} favorites={favorites} setFavorites={setFavorites} onBack={() => setScreen('station')} />;
+    showNav = false;
+  } else if (tab === 'path' && screen === 'storyWords' && route.stories?.[storyWordListType]) {
+    content = <StoryWordListScreen story={route.stories[storyWordListType]} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={closeStoryWordList} />;
     showNav = false;
   } else if (tab === 'path' && screen === 'station' && station) {
     content = <StationScreen station={station} favorites={favorites} setFavorites={setFavorites} onBack={backToPath} onLearn={(rows, mode) => { setLearnContext({ words: rows, mode, station, returnTo: 'station' }); setScreen('learn'); }} onTest={(target, mode) => { setTestContext({ station: target, mode }); setScreen('stationTest'); }} />;
@@ -146,7 +153,7 @@ export default function AppRoot() {
   } else if (tab === 'profile') {
     content = <ProfileGate words={words} settings={settings} onSettingsChange={setSettings} onGuest={continueAsGuest} onAccount={(action) => { if (action === 'open') setScreen('account'); }} />;
   } else {
-    content = <PathScreen route={route} onOpenStation={openStation} />;
+    content = <PathScreen route={route} onOpenStation={openStation} onOpenWordList={openStoryWordList} />;
   }
   return shell(content, showNav);
 }
