@@ -8,6 +8,9 @@ const excluded=new Set([
 ]);
 const allowedFragments=[
   'Alan Til','Latin','Җ','Дж','Ж','РУС → АЛАН','АЛАН → РУС','алан → рус','рус → алан',
+  // Dataset classification fragments are not user-visible UI copy. They are used only to preserve
+  // the Web rule that generic difficulty dictionaries do not render station captions.
+  'началь','средн','сложн',
 ];
 const cyrillic=/[А-Яа-яЁёҢңҒғҚқӨөҮүҖҗ]/u;
 const files=[];
