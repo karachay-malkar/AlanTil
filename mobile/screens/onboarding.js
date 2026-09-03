@@ -63,18 +63,18 @@ export function OnboardingScreen({ initialSettings, onComplete }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flexGrow: 1, minHeight: '100%', paddingHorizontal: 14, paddingVertical: 24, justifyContent: 'center' },
-  pane: { width: '100%', maxWidth: 520, alignSelf: 'center', gap: 14 },
+  root: { flexGrow: 1, minHeight: '100%', paddingTop: theme.control.header + theme.chrome.contentRestGap, paddingHorizontal: 14, paddingBottom: 24, justifyContent: 'center' },
+  pane: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: 14 },
   heading: { alignItems: 'center', gap: 6, marginBottom: 2 },
   title: { fontSize: 20, fontWeight: '850', lineHeight: 24, color: C.text1, textAlign: 'center' },
   subtitle: { fontSize: 11, lineHeight: 15, color: C.text3, textAlign: 'center' },
   step: { gap: 7 },
-  stepTitle: { fontSize: 13, fontWeight: '800', lineHeight: 16, color: C.text2 },
-  previewCard: { minHeight: 238, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 24, gap: 12 },
+  stepTitle: { fontSize: 13, fontWeight: '850', lineHeight: 16, color: C.text2 },
+  previewCard: { minHeight: 220, maxHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 24, gap: 12 },
   previewWord: { fontSize: 36, fontWeight: '900', lineHeight: 40, color: C.text1, textAlign: 'center' },
   previewCopy: { width: '92%', alignItems: 'center', gap: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.lineSoft },
   previewTranslation: { fontSize: 14, fontWeight: '800', color: C.text2, textAlign: 'center' },
   previewExample: { marginTop: 4, fontSize: 11, lineHeight: 16, color: C.text2, textAlign: 'center' },
   previewExampleTranslation: { fontSize: 10, lineHeight: 15, color: C.text3, textAlign: 'center' },
-  fullButton: { width: '100%', minHeight: 44 },
+  fullButton: { width: '100%' },
 });
