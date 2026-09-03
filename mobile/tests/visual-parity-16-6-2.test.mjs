@@ -15,12 +15,16 @@ const theme=readMobile('ui/theme.js');
 const parity=readMobile('ui/parity.js');
 const pathScreen=readMobile('screens/path.js');
 const station=readMobile('screens/station.js');
+const practice=readMobile('screens/practice.js');
+const profile=readMobile('screens/profile-main.js');
 const app=JSON.parse(readMobile('app.json'));
 const pkg=JSON.parse(readMobile('package.json'));
 const webTheme=readRoot('src/shared/styles/theme.css');
 const webChrome=readRoot('src/shared/styles/chrome.css');
 const webPath=readRoot('src/features/path/path.css');
 const webSegmented=readRoot('src/shared/styles/segmented-control.css');
+const webPractice=readRoot('src/features/practice/practice.css');
+const webProfile=readRoot('src/features/profile/profile.css');
 
 test('16.6.2 release metadata is coherent',()=>{
   assert.equal(app.expo.version,'16.6.2');
@@ -41,6 +45,33 @@ test('16.6.2 shared segmented control uses Web 28px item geometry',()=>{
   assert.match(webSegmented,/min-height:28px/);
   assert.match(parity,/segmentItem:\s*\{[^}]*minHeight:\s*28/s);
   assert.match(parity,/segmented:\s*\{[^}]*padding:\s*2/s);
+});
+
+test('16.6.2 Practice menu uses Web 68px flat rows and exact type geometry',()=>{
+  assert.match(webPractice,/menuItem\{[^}]*min-height:68px[^}]*padding:10px 2px/s);
+  assert.match(webPractice,/menuIcon\{width:36px;height:36px/);
+  assert.match(webPractice,/menuItem strong\{font-size:15px\}/);
+  assert.match(webPractice,/menuItem small\{[^}]*font-size:11px[^}]*line-height:1\.3/s);
+  assert.match(practice,/menuRow:\{[^}]*minHeight:68[^}]*paddingHorizontal:2[^}]*paddingVertical:10[^}]*gap:10/s);
+  assert.match(practice,/menuLeading:\{width:36,height:36\}/);
+  assert.match(practice,/menuTitle:\{fontSize:15[^}]*lineHeight:18/s);
+  assert.match(practice,/menuSubtitle:\{[^}]*fontSize:11[^}]*lineHeight:14\.3/s);
+});
+
+test('16.6.2 Profile root replaces brand header with Web primary tabs and avatar frame',()=>{
+  assert.match(webProfile,/profileView\{[^}]*grid-template-rows:30px minmax\(0,1fr\)/s);
+  assert.match(webProfile,/profilePrimaryTab\{[^}]*min-height:30px/s);
+  assert.match(webProfile,/profileAvatarFrame\{[^}]*width:min\(72vw,286px\)[^}]*aspect-ratio:4\/5/s);
+  assert.match(webProfile,/profileAccountButton\{[^}]*right:-12px[^}]*bottom:14px[^}]*width:42px[^}]*height:42px/s);
+  assert.match(webProfile,/profileNickname\{[^}]*font-size:22px/s);
+  assert.match(webProfile,/profileStat\{min-height:72px/s);
+  assert.doesNotMatch(profile,/<Header title="Alan Til!"/);
+  assert.match(profile,/tabs:\{[^}]*top:2[^}]*height:30/s);
+  assert.match(profile,/body:\{[^}]*paddingTop:42[^}]*paddingHorizontal:14/s);
+  assert.match(profile,/avatarFrame:\{[^}]*maxWidth:286[^}]*aspectRatio:\.8[^}]*borderRadius:2/s);
+  assert.match(profile,/accountCircle:\{[^}]*right:-12[^}]*bottom:14[^}]*width:42[^}]*height:42/s);
+  assert.match(profile,/nickname:\{[^}]*fontSize:22/s);
+  assert.match(profile,/profileStat:\{[^}]*width:'50%'[^}]*minHeight:72/s);
 });
 
 test('16.6.2 Path geometry uses final Web chrome and path dimensions',()=>{
