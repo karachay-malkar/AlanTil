@@ -16,7 +16,6 @@ export function SurfaceCard({ children, style, inset = false, flat = false }) {
   return <View style={[styles.surface, flat && styles.surfaceFlat, style]}>{inset && !flat ? <View pointerEvents="none" style={styles.surfaceInset} /> : null}{children}</View>;
 }
 
-
 export function CompactSegmentedControl({ value, items, onChange, accessibilityLabel }) {
   return <View accessibilityLabel={accessibilityLabel} style={styles.segmented}>{items.map(([id, label]) => {
     const active = value === id;
@@ -52,10 +51,10 @@ const styles = StyleSheet.create({
   surface: { position: 'relative', width: '100%', borderWidth: 1, borderColor: C.line, borderRadius: theme.radius.lg, backgroundColor: C.surface0, overflow: 'hidden' },
   surfaceFlat: { borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' },
   surfaceInset: { position: 'absolute', top: 9, left: 9, right: 9, bottom: 9, borderWidth: 1, borderColor: C.lineSoft, borderRadius: Math.max(1, theme.radius.lg - 6), opacity: .6 },
-  segmented: { width: '100%', minHeight: 36, padding: 2, borderWidth: 1, borderColor: C.line, borderRadius: 999, flexDirection: 'row', backgroundColor: 'transparent' },
-  segmentItem: { flex: 1, minHeight: 30, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7 },
+  segmented: { width: '100%', minHeight: 34, padding: 2, borderWidth: 1, borderColor: C.line, borderRadius: 999, flexDirection: 'row', backgroundColor: 'transparent' },
+  segmentItem: { flex: 1, minHeight: 28, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, paddingVertical: 4 },
   segmentItemActive: { backgroundColor: C.controlGlassActive || C.surface0 },
-  segmentLabel: { fontFamily: theme.font.terminal, fontSize: 10, fontWeight: '700', lineHeight: 12, color: C.text3, textAlign: 'center' },
+  segmentLabel: { fontFamily: theme.font.terminal, fontSize: 10, fontWeight: '700', lineHeight: 10, color: C.text3, textAlign: 'center' },
   segmentLabelActive: { color: C.text1 },
   listRow: { minHeight: 58, paddingHorizontal: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.lineSoft, flexDirection: 'row', alignItems: 'center', gap: 9 },
   listRowCompact: { minHeight: 48, paddingVertical: 5 },
