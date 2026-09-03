@@ -1,0 +1,7 @@
+import React from'react';
+import{Pressable,StyleSheet,Text,View}from'react-native';
+import{CorrectIcon}from'./icons.js';
+import{theme}from'./theme.js';
+const C=theme.colors;
+export function Checkbox({state='none',checked,onPress,disabled=false,accessibilityLabel,size=18}){const resolved=checked===true?'all':checked===false?'none':state,mixed=resolved==='partial'||resolved==='mixed',on=resolved==='all'||mixed;return <Pressable accessibilityRole="checkbox" accessibilityLabel={accessibilityLabel} accessibilityState={{checked:mixed?'mixed':resolved==='all',disabled}} disabled={disabled} onPress={onPress} hitSlop={8} style={({pressed})=>[styles.hit,disabled&&styles.disabled,pressed&&styles.pressed]}><View style={[styles.box,{width:size,height:size},on&&styles.boxOn]}>{resolved==='all'?<CorrectIcon size={Math.max(11,size-5)} color={C.accentStrong}/>:mixed?<Text style={styles.mixed}>−</Text>:null}</View></Pressable>}
+const styles=StyleSheet.create({hit:{width:34,height:34,alignItems:'center',justifyContent:'center'},box:{borderWidth:1,borderColor:C.lineStrong,borderRadius:2,backgroundColor:'rgba(246,242,233,.56)',alignItems:'center',justifyContent:'center'},boxOn:{borderColor:C.accentStrong,backgroundColor:C.accentSoft},mixed:{fontFamily:theme.font.terminal,fontSize:12,fontWeight:'900',lineHeight:12,color:C.accentStrong},pressed:{opacity:.68},disabled:{opacity:.46}});
