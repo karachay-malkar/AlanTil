@@ -12,6 +12,8 @@ const favorites=read('mobile/screens/favorites.js');
 const songs=read('mobile/screens/songs.js');
 const profile=read('mobile/screens/profile-main.js');
 const onboarding=read('mobile/screens/onboarding.js');
+const authChoice=read('mobile/screens/auth-choice.js');
+const appRoot=read('mobile/AppRoot.js');
 const guide=read('mobile/ui/guide.js');
 const theme=read('mobile/ui/theme.js');
 const modal=read('mobile/ui/modal.js');
@@ -48,7 +50,8 @@ expect('Profile setup remains in Profile',profile.includes('function ProfileSetu
 expect('Settings preview 180 px',profile.includes("settingsLearningPreview:{width:'100%',height:180"));
 expect('Privacy shared checkbox',settingsChild.includes("from '../ui/checkbox.js'")&&settingsChild.includes('<Checkbox')&&!settingsChild.includes('Switch'));
 expect('Shared checkbox is non-text glyph control',checkbox.includes('CorrectIcon')&&!checkbox.includes("'[✓]'"));
-expect('Onboarding account/guest step',onboarding.includes("persist('account')")&&onboarding.includes("persist('guest')"));
+expect('Onboarding single-screen progressive setup',!onboarding.includes('setStep(')&&!onboarding.includes('progressCell')&&onboarding.includes('draft.interface_language_code?')&&onboarding.includes("draft.alan_script_code==='cyrillic'?"));
+expect('Onboarding direct auth choice follows setup',authChoice.includes('signInWithGoogleNative')&&authChoice.includes('voyti_cherez_google')&&authChoice.includes('prodolzhit_kak_gost')&&appRoot.includes('AuthChoiceScreen')&&appRoot.includes('authChoiceRequired'));
 expect('Onboarding semantic typography',onboarding.includes('useSemanticTypography')&&onboarding.includes('type.wordCard'));
 expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
 for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
