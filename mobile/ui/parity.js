@@ -23,12 +23,12 @@ export function CompactSegmentedControl({ value, items, onChange, accessibilityL
   })}</View>;
 }
 
-export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false }) {
+export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
   const Body = onPress ? Pressable : View;
-  return <Body accessibilityRole={onPress ? 'button' : undefined} accessibilityState={onPress ? { selected } : undefined} onPress={onPress} style={({ pressed }) => [styles.listRow, compact && styles.listRowCompact, selected && styles.listRowSelected, pressed && styles.pressed]}>
-    {leading ? <View style={styles.listLeading}>{leading}</View> : null}
-    <View style={styles.listCopy}><Text numberOfLines={1} style={styles.listTitle}>{title}</Text>{subtitle ? <Text numberOfLines={2} style={styles.listSubtitle}>{subtitle}</Text> : null}</View>
-    {trailing ? <View style={styles.listTrailing}>{trailing}</View> : null}
+  return <Body accessibilityRole={onPress ? 'button' : undefined} accessibilityState={onPress ? { selected } : undefined} onPress={onPress} style={({ pressed }) => [styles.listRow, compact && styles.listRowCompact, selected && styles.listRowSelected, pressed && styles.pressed, style]}>
+    {leading ? <View style={[styles.listLeading,leadingStyle]}>{leading}</View> : null}
+    <View style={styles.listCopy}><Text numberOfLines={1} style={[styles.listTitle,titleStyle]}>{title}</Text>{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,subtitleStyle]}>{subtitle}</Text> : null}</View>
+    {trailing ? <View style={[styles.listTrailing,trailingStyle]}>{trailing}</View> : null}
   </Body>;
 }
 
