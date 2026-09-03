@@ -37,6 +37,10 @@ export function BackIcon({ size = 20, color = '#666158' }) {
   return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="m15 18-6-6 6-6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><Path d="M9 12h10" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></Svg>;
 }
 
+export function SearchIcon({ size = 20, color = '#666158' }) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Circle cx="11" cy="11" r="6.5" stroke={color} strokeWidth="1.7"/><Path d="m16 16 4 4" stroke={color} strokeWidth="1.7" strokeLinecap="round"/></Svg>;
+}
+
 export function InfoIcon({ size = 20, color = '#666158' }) {
   return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Circle cx="12" cy="12" r="9" stroke={color} strokeWidth="1.6"/><Path d="M12 10v7M12 7h.01" stroke={color} strokeWidth="1.8" strokeLinecap="round"/></Svg>;
 }
