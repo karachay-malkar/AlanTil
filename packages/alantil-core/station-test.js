@@ -5,7 +5,7 @@ import { normalizePos, parseSynonyms } from './word-normalizer.js';
 import { hasWordConflict, shuffle, splitGroups } from './word-selection.js';
 
 export function normalizedStationLexeme(value){return String(value||'').normalize('NFC').toLowerCase().replace(/[’'`ʼъь\s\-–—.,;:!?()[\]{}]/g,'').trim();}
-export function approximateStationStem(value){const lexeme=normalizedStationLexeme(value);return lexeme.length>6?lexeme.slice(0,Math.max(4,lexeme.length-3)):lexeme;}
+export function approximateStationStem(value){const lexeme=normalizedStationLexeme(value);return lexeme.length>=6?lexeme.slice(0,Math.max(4,lexeme.length-3)):lexeme;}
 function normalizedTranslationSet(item){return new Set(splitGroups(item?.trans).map(normalizedStationLexeme).filter(Boolean));}
 export function isStationTestCandidateAmbiguous(candidate,item,selected=[]){if(!candidate||String(candidate.id)===String(item.id))return true;if(hasWordConflict(candidate,[item,...selected]))return true;const candidateWord=normalizedStationLexeme(candidate.word),correctWord=normalizedStationLexeme(item.word);if(!candidateWord||candidateWord===correctWord)return true;if(approximateStationStem(candidate.word)&&approximateStationStem(candidate.word)===approximateStationStem(item.word))return true;const correctTranslations=normalizedTranslationSet(item);for(const translation of normalizedTranslationSet(candidate))if(correctTranslations.has(translation))return true;const correctSynonyms=new Set(parseSynonyms(item.synonyms));for(const synonym of parseSynonyms(candidate.synonyms))if(correctSynonyms.has(synonym))return true;return false;}
 function candidateText(word,mode){return String(mode==='ru'?word?.word:word?.trans||'').trim();}
