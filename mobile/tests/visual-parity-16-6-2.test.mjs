@@ -12,12 +12,15 @@ const readRoot=(relative)=>fs.readFileSync(path.join(root,relative),'utf8');
 
 const visual=readMobile('ui/web-visual-source.js');
 const theme=readMobile('ui/theme.js');
+const parity=readMobile('ui/parity.js');
 const pathScreen=readMobile('screens/path.js');
+const station=readMobile('screens/station.js');
 const app=JSON.parse(readMobile('app.json'));
 const pkg=JSON.parse(readMobile('package.json'));
 const webTheme=readRoot('src/shared/styles/theme.css');
 const webChrome=readRoot('src/shared/styles/chrome.css');
 const webPath=readRoot('src/features/path/path.css');
+const webSegmented=readRoot('src/shared/styles/segmented-control.css');
 
 test('16.6.2 release metadata is coherent',()=>{
   assert.equal(app.expo.version,'16.6.2');
@@ -32,6 +35,12 @@ test('16.6.2 canonical header token follows Web theme rather than Profile root o
   assert.match(webChrome,/profileScroll[\s\S]*safe-top\) \+ 42px/);
   assert.match(visual,/header:46/);
   assert.match(theme,/path:W\.path/);
+});
+
+test('16.6.2 shared segmented control uses Web 28px item geometry',()=>{
+  assert.match(webSegmented,/min-height:28px/);
+  assert.match(parity,/segmentItem:\s*\{[^}]*minHeight:\s*28/s);
+  assert.match(parity,/segmented:\s*\{[^}]*padding:\s*2/s);
 });
 
 test('16.6.2 Path geometry uses final Web chrome and path dimensions',()=>{
@@ -61,4 +70,19 @@ test('16.6.2 does not reintroduce the old Path 58px/66px geometry',()=>{
   assert.doesNotMatch(pathScreen,/pathControls:\{[^}]*height:66/);
   assert.doesNotMatch(pathScreen,/scaleDot:\{[^}]*width:3/);
   assert.doesNotMatch(pathScreen,/scaleDiamond:\{[^}]*width:7/);
+});
+
+test('16.6.2 Station uses final Web chrome offsets and flat statistics layout',()=>{
+  assert.match(webChrome,/stationViewTabs\{top:calc\(var\(--safe-top\) \+ var\(--header-h\) - 4px\)!important;height:28px!important\}/);
+  assert.match(webChrome,/stationMenuToolbar\{top:calc\(var\(--safe-top\) \+ var\(--header-h\) \+ 24px\)!important;height:28px!important\}/);
+  assert.match(webChrome,/stationWordList[\s\S]*header-h\) \+ 56px/);
+  assert.match(webChrome,/stationLaunchPanel\{bottom:calc\(var\(--safe-bottom\) \+ var\(--action-edge-gap\)\)!important/);
+  assert.match(webChrome,/stationStatisticsPane[\s\S]*header-h\) \+ 36px/);
+  assert.match(station,/tabs:\{[^}]*top:theme\.control\.header-4[^}]*height:28/s);
+  assert.match(station,/toolbar:\{[^}]*top:theme\.control\.header\+24[^}]*height:28/s);
+  assert.match(station,/wordList:\{[^}]*paddingTop:theme\.control\.header\+56[^}]*paddingBottom:108/s);
+  assert.match(station,/launchPanel:\{[^}]*bottom:theme\.chrome\.actionEdgeGap/s);
+  assert.match(station,/statsScroll:\{[^}]*paddingTop:theme\.control\.header\+36/s);
+  assert.match(station,/<SurfaceCard flat style=\{styles\.summaryCard\}>/);
+  assert.match(station,/<SurfaceCard flat style=\{styles\.attemptsFlat\}>/);
 });
