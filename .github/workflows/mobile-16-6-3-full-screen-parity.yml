@@ -61,16 +61,17 @@ jobs:
           from pathlib import Path
           import json, os
           root=Path('mobile/dist-web')
-          base='https://cdn.jsdelivr.net/gh/karachay-malkar/AlanTil@preview-web'
           for p in root.glob('_expo/static/js/web/*.js'):
             t=p.read_text()
-            t=t.replace('"/_expo/','"'+base+'/_expo/')
-            t=t.replace("'/_expo/","'"+base+'/_expo/')
-            t=t.replace('"/assets/','"'+base+'/assets/')
-            t=t.replace("'/assets/","'"+base+'/assets/')
+            t=t.replace('"/_expo/','"./_expo/')
+            t=t.replace("'/_expo/","'./_expo/")
+            t=t.replace('"/assets/','"./assets/')
+            t=t.replace("'/assets/","'./assets/")
             p.write_text(t)
           index=root/'index.html'
-          index.write_text(index.read_text().replace('src="/_expo/','src="'+base+'/_expo/'))
+          t=index.read_text()
+          t=t.replace('src="/_expo/','src="./_expo/')
+          index.write_text(t)
           (root/'preview-build.json').write_text(json.dumps({
             'sha':os.environ.get('GITHUB_SHA',''),
             'branch':os.environ.get('GITHUB_REF_NAME',''),
