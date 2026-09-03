@@ -1,0 +1,54 @@
+import fs from 'node:fs';
+
+const read=(path)=>fs.readFileSync(path,'utf8');
+const checks=[];
+function expect(name,condition){checks.push([name,Boolean(condition)]);}
+const path=read('mobile/screens/path.js');
+const practice=read('mobile/screens/practice.js');
+const learn=read('mobile/screens/learn.js');
+const stage=read('mobile/screens/station-test.js');
+const games=read('mobile/screens/practice-games.js');
+const favorites=read('mobile/screens/favorites.js');
+const songs=read('mobile/screens/songs.js');
+const profile=read('mobile/screens/profile-main.js');
+const onboarding=read('mobile/screens/onboarding.js');
+const guide=read('mobile/ui/guide.js');
+const theme=read('mobile/ui/theme.js');
+const storyWords=read('mobile/screens/story-word-list.js');
+const settingsChild=read('mobile/screens/settings-child.js');
+const app=JSON.parse(read('mobile/app.json'));
+
+expect('Path canonical Story Stele asset',path.includes("require('../../assets/path/story-stele.webp')"));
+expect('Path Story Stele seen state',path.includes('hasSeenNativeStoryStele')&&path.includes('markNativeStorySteleSeen'));
+expect('Path scale is interactive',path.includes('jumpScale')&&!path.includes('pointerEvents="none" style={styles.routeScale}'));
+expect('Path word list is floating',path.includes('wordListFloat'));
+expect('Practice Web shell title',practice.includes('<Header title="Alan Til!"'));
+expect('Practice no bracket heading',!practice.includes('[ Практика ]'));
+expect('Learn keeps approved progress',learn.includes('<ProgressBar value={progress}'));
+expect('Learn keeps flip helper',learn.includes("mobile.learn.tap_flip"));
+expect('Learn uses dedicated learning card',learn.includes('function LearningCard')&&!learn.includes('<SurfaceCard inset style={[styles.card'));
+expect('Stage Test no separate progress bar',!stage.includes('ProgressBar'));
+expect('Stage Test no choose-answer helper',!stage.includes('mobile.stage.choose'));
+expect('General Test no separate progress bar',!games.includes('SessionProgress'));
+expect('General Test results marquee',games.includes('OverflowMarquee'));
+expect('Match fixed 13/11 typography',games.includes('matchCardTextNormal:{fontSize:13')&&games.includes('matchCardTextCompact:{fontSize:11'));
+expect('Match Web shake',games.includes('[3,-3,3,-3,0]'));
+expect('Favorites shares set-preparation flow',!favorites.includes('onMatch')&&!favorites.includes('onTest')&&favorites.includes('showAll')&&favorites.includes('hideAll'));
+expect('Story word list animated header search',storyWords.includes('Animated.timing(searchProgress'));
+expect('Story word list marquee',storyWords.includes('OverflowMarquee'));
+expect('Songs Info action',songs.includes('<InfoIcon')&&songs.includes('SongInfoModal'));
+expect('Songs SVG media icons',songs.includes('<PlayIcon')&&songs.includes('<PauseIcon'));
+expect('Profile guest locked state',profile.includes('avatarFrameLocked')&&profile.includes('avatarLock'));
+expect('Profile incomplete state remains in Profile',profile.includes('if(incomplete)'));
+expect('Settings preview 180 px',profile.includes("settingsLearningPreview:{width:'100%',height:180"));
+expect('Settings privacy custom Web checkbox',settingsChild.includes('function WebCheckbox')&&!settingsChild.includes('Switch'));
+expect('Onboarding account/guest step',onboarding.includes("persist('account')")&&onboarding.includes("persist('guest')"));
+expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
+for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
+expect('Release version 16.6.3',app.expo?.version==='16.6.3'&&app.expo?.extra?.releaseVersion==='16.6.3');
+
+const failed=checks.filter(([,ok])=>!ok);
+for(const [name,ok] of checks)console.log(`${ok?'PASS':'FAIL'}  ${name}`);
+if(failed.length){console.error(`\n16.6.3 gate failed: ${failed.length} checks`);process.exit(1);}
+console.log(`\n16.6.3 source/state contract gate passed: ${checks.length} checks.`);
+console.log('Q03 render comparison is intentionally NOT granted by this source gate; it requires final Expo Web render QA.');
