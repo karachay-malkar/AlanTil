@@ -44,7 +44,7 @@ expect('Songs shared InfoDialog',songs.includes('InfoDialog')&&modal.includes('e
 expect('Songs shared time formatter',songs.includes('formatClockTime')&&format.includes('export function formatClockTime'));
 expect('Songs SVG media icons',songs.includes('<PlayIcon')&&songs.includes('<PauseIcon'));
 expect('Profile guest locked state',profile.includes('avatarFrameLocked')&&profile.includes('LockedIcon'));
-expect('Profile setup remains in Profile',profile.includes('ProfileSetupPane')&&profile.includes('checkNativeNickname')&&profile.includes('setNativeAvatarGender'));
+expect('Profile setup remains in Profile',profile.includes('function ProfileSetup')&&profile.includes('checkNativeNickname')&&profile.includes('setNativeAvatarGender'));
 expect('Settings preview 180 px',profile.includes("settingsLearningPreview:{width:'100%',height:180"));
 expect('Privacy shared checkbox',settingsChild.includes("from '../ui/checkbox.js'")&&settingsChild.includes('<Checkbox')&&!settingsChild.includes('Switch'));
 expect('Shared checkbox is non-text glyph control',checkbox.includes('CorrectIcon')&&!checkbox.includes("'[✓]'"));
