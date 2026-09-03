@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AccountScreen } from './profile.js';
 import { ProfileMainArea } from './profile-main.js';
+import { msg } from '../i18n.js';
 import { Screen, ScreenState } from '../ui/components.js';
 import { bootstrapNativeAuth, subscribeNativeAuth } from '../platform/auth.js';
 import { loadNativeProfile } from '../platform/profile-api.js';
@@ -27,7 +28,7 @@ export function ProfileGate({ words, settings, onSettingsChange, onAccount, onGu
     return () => { alive = false; unsubscribe(); };
   }, [resolveProfile]);
 
-  if (!authReady || checking) return <Screen><ScreenState>Проверяем профиль…</ScreenState></Screen>;
+  if (!authReady || checking) return <Screen><ScreenState>{msg(settings, 'mobile.profile.checking')}</ScreenState></Screen>;
   const setupIncomplete = Boolean(session?.user && (!profile?.nickname || !profile?.avatar_gender));
   if (setupIncomplete || (session?.user && profile === undefined)) {
     return <AccountScreen settings={settings} onGuest={onGuest} onBack={async () => { const next = await resolveProfile(session); if (next?.nickname && next?.avatar_gender) onAccount?.('close'); }} />;
