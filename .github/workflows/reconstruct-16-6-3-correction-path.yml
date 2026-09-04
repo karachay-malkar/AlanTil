@@ -1,0 +1,38 @@
+name: Reconstruct 16.6.3 correction path
+
+on:
+  push:
+    branches:
+      - agent/16.6.3-correction-staging
+    paths:
+      - '.tmp-correction/path.part*'
+      - '.github/workflows/reconstruct-16-6-3-correction-path.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reconstruct exact path.js
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .tmp-correction/path.part* | base64 -d > mobile/screens/path.js
+          actual="$(git hash-object mobile/screens/path.js)"
+          expected="73dba4ec3021d30356a257cdb86e279588ec7336"
+          echo "path.js blob: $actual"
+          test "$actual" = "$expected"
+          if git diff --quiet -- mobile/screens/path.js; then
+            echo "path.js already reconstructed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/screens/path.js
+          git commit -m "Stage exact 16.6.3 path correction"
+          git push origin HEAD:agent/16.6.3-correction-staging
