@@ -196,6 +196,12 @@ jobs:
 
             const definitive = await page.reload({ waitUntil: 'networkidle', timeout: 60000 });
             assert.ok(definitive?.ok(), `Definitive public preview reload failed: HTTP ${definitive?.status()}`);
+            await page.waitForTimeout(4000);
+            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '00-runtime-body.txt'), await page.locator('body').innerText().catch(()=>''));
+            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '00-runtime-dom.html'), await page.content().catch(()=>''));
+            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '00-runtime-errors.json'), JSON.stringify({ consoleErrors, pageErrors, requestFailures, badResponses, url: page.url() }, null, 2));
+            await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '00-runtime.png'), fullPage: true });
+
             await page.getByText('Язык · Language · Dil', { exact: true }).waitFor({ state: 'visible', timeout: 30000 });
             await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '01-onboarding.png'), fullPage: true });
 
