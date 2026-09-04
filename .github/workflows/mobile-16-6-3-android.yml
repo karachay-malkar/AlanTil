@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify source provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "agent/16.6.3-full-screen-parity"
+          printf 'branch=%s\ncommit=%s\nauth_revision=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" "google-oauth-pkce-deeplink-1" > AlanTil-16.6.3.source.txt
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -36,9 +42,37 @@ jobs:
       - name: Generate native Android project
         working-directory: mobile
         run: npx expo prebuild --platform android --no-install
+      - name: Verify generated Android auth intent-filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="mobile/android/app/src/main/AndroidManifest.xml"
+          test -f "$manifest"
+          grep -F 'android.intent.action.VIEW' "$manifest"
+          grep -F 'android.intent.category.BROWSABLE' "$manifest"
+          grep -F 'android:scheme="alantil"' "$manifest"
+          grep -F 'android:host="auth"' "$manifest"
+          grep -F 'android:pathPrefix="/callback"' "$manifest"
       - name: Build standalone release APK
         working-directory: mobile/android
         run: ./gradlew assembleRelease --no-daemon
+      - name: Verify release APK manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="mobile/android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$apk"
+          apkanalyzer_bin="$(command -v apkanalyzer || true)"
+          if [ -z "$apkanalyzer_bin" ]; then
+            apkanalyzer_bin="$(find "${ANDROID_HOME}" -type f -name apkanalyzer -print -quit)"
+          fi
+          test -n "$apkanalyzer_bin"
+          "$apkanalyzer_bin" manifest print "$apk" > AlanTil-16.6.3.AndroidManifest.xml
+          grep -F 'android.intent.action.VIEW' AlanTil-16.6.3.AndroidManifest.xml
+          grep -F 'android.intent.category.BROWSABLE' AlanTil-16.6.3.AndroidManifest.xml
+          grep -F 'android:scheme="alantil"' AlanTil-16.6.3.AndroidManifest.xml
+          grep -F 'android:host="auth"' AlanTil-16.6.3.AndroidManifest.xml
+          grep -F 'android:pathPrefix="/callback"' AlanTil-16.6.3.AndroidManifest.xml
       - name: Package APK
         shell: bash
         run: |
@@ -50,4 +84,6 @@ jobs:
           path: |
             AlanTil-16.6.3.apk
             AlanTil-16.6.3.apk.sha256
+            AlanTil-16.6.3.source.txt
+            AlanTil-16.6.3.AndroidManifest.xml
           if-no-files-found: error
