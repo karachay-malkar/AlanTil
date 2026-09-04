@@ -13,7 +13,8 @@ const songs=read('mobile/screens/songs.js');
 const profile=read('mobile/screens/profile-main.js');
 const onboarding=read('mobile/screens/onboarding.js');
 const authChoice=read('mobile/screens/auth-choice.js');
-const nativeAuth=read('mobile/platform/auth.js');
+const nativeAuth=read('mobile/platform/auth.native.js');
+const webAuth=read('mobile/platform/auth.web.js');
 const fullScreenWorkflow=read('.github/workflows/mobile-16-6-3-full-screen-parity.yml');
 const webExportWorkflow=read('.github/workflows/mobile-16-6-3-expo-web-pages.yml');
 const appRoot=read('mobile/AppRoot.js');
@@ -56,13 +57,14 @@ expect('Privacy shared checkbox',settingsChild.includes("from '../ui/checkbox.js
 expect('Shared checkbox is non-text glyph control',checkbox.includes('CorrectIcon')&&!checkbox.includes("'[✓]'"));
 expect('Onboarding single-screen progressive setup',!onboarding.includes('setStep(')&&!onboarding.includes('progressCell')&&onboarding.includes('DisclosureSection visible={Boolean(draft.interface_language_code)}')&&onboarding.includes("DisclosureSection visible={draft.alan_script_code==='cyrillic'}")&&onboarding.includes('FlagIcon'));
 expect('Onboarding direct auth choice follows setup',authChoice.includes('signInWithGoogleNative')&&authChoice.includes('continueGoogle')&&authChoice.includes('prodolzhit_kak_gost')&&appRoot.includes('AuthChoiceScreen')&&appRoot.includes('authChoiceRequired'));
-expect('Google OAuth returns to app and persists session',nativeAuth.includes("NATIVE_AUTH_REDIRECT_URL='alantil://auth/callback'")&&nativeAuth.includes('WebBrowser.openAuthSessionAsync')&&nativeAuth.includes('callbackPromise')&&nativeAuth.includes('oauthFlowPromise')&&nativeAuth.includes('AsyncStorage.setItem(SESSION_KEY'));
+expect('Google OAuth Native returns to app and persists session',nativeAuth.includes("NATIVE_AUTH_REDIRECT_URL='alantil://auth/callback'")&&nativeAuth.includes('WebBrowser.openAuthSessionAsync')&&nativeAuth.includes('callbackPromise')&&nativeAuth.includes('oauthFlowPromise')&&nativeAuth.includes('AsyncStorage.setItem(SESSION_KEY'));
+expect('Google OAuth Web returns to its HTTPS origin',webAuth.includes('resolveWebAuthRedirectUrl')&&webAuth.includes('location.origin')&&webAuth.includes('window.location.assign(data.url)')&&webAuth.includes('exchangeCodeForSession')&&!webAuth.includes('alantil://auth/callback')&&!webAuth.includes('WebBrowser.openAuthSessionAsync'));
 expect('Expo Web preview is public browser-QA without production Pages deploy',fullScreenWorkflow.includes('raw.githack.com')&&fullScreenWorkflow.includes('Verify public Expo Web render in Chromium')&&fullScreenWorkflow.includes('playwright@1.55.0')&&!webExportWorkflow.includes('deploy-pages')&&!webExportWorkflow.includes('pages: write')&&!webExportWorkflow.includes('upload-pages-artifact'));
 
 expect('Onboarding semantic typography',onboarding.includes('useSemanticTypography')&&onboarding.includes('type.wordCard'));
 expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
 for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
-expect('Release version 16.6.3',app.expo?.version==='16.6.3'&&app.expo?.extra?.releaseVersion==='16.6.3'&&app.expo?.android?.versionCode===27&&app.expo?.ios?.buildNumber==='27');
+expect('Release version 16.6.3',app.expo?.version==='16.6.3'&&app.expo?.extra?.releaseVersion==='16.6.3'&&app.expo?.android?.versionCode===28&&app.expo?.ios?.buildNumber==='28');
 
 const failed=checks.filter(([,ok])=>!ok);
 for(const [name,ok] of checks)console.log(`${ok?'PASS':'FAIL'}  ${name}`);

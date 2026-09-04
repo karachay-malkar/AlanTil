@@ -15,7 +15,7 @@ jobs:
         run: |
           set -euo pipefail
           test "${GITHUB_REF_NAME}" = "agent/16.6.3-full-screen-parity"
-          printf 'branch=%s\ncommit=%s\nauth_revision=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" "google-oauth-pkce-deeplink-1" > AlanTil-16.6.3.source.txt
+          printf 'branch=%s\ncommit=%s\nauth_revision=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" "google-oauth-pkce-deeplink-2" > AlanTil-16.6.3.source.txt
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

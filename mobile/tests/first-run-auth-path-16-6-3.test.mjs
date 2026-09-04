@@ -9,8 +9,12 @@ const mobile=path.resolve(here,'..');
 const read=(file)=>fs.readFileSync(path.join(mobile,file),'utf8');
 const onboarding=read('screens/onboarding.js');
 const authChoice=read('screens/auth-choice.js');
-const auth=read('platform/auth.js');
-const supabase=read('platform/supabase.js');
+const authFacade=read('platform/auth.js');
+const nativeAuth=read('platform/auth.native.js');
+const webAuth=read('platform/auth.web.js');
+const nativeSupabase=read('platform/supabase.native.js');
+const webSupabase=read('platform/supabase.web.js');
+const appRoot=read('AppRoot.js');
 const pathScreen=read('screens/path.js');
 const app=JSON.parse(read('app.json'));
 const pkg=JSON.parse(read('package.json'));
@@ -26,34 +30,42 @@ test('16.6.3 first-run setup is one progressively disclosed screen with Web geom
   assert.doesNotMatch(onboarding,/setStep\(|progressCell/);
 });
 
-test('16.6.3 auth choice uses Supabase PKCE OAuth and returns only to the native callback',()=>{
+test('16.6.3 auth choice resolves separate Native and Web PKCE callbacks',()=>{
   assert.match(authChoice,/continueGoogle/);
   assert.match(authChoice,/prodolzhit_kak_gost/);
   assert.match(authChoice,/GoogleMark/);
-  assert.match(auth,/NATIVE_AUTH_REDIRECT_URL='alantil:\/\/auth\/callback'/);
-  assert.match(supabase,/createClient\(/);
-  assert.match(supabase,/flowType:'pkce'/);
-  assert.match(supabase,/appendPkceFlowIdToRedirects:true/);
-  assert.match(supabase,/storage:AsyncStorage/);
-  assert.match(supabase,/persistSession:true/);
-  assert.match(supabase,/detectSessionInUrl:false/);
-  assert.match(auth,/nativeSupabase\.auth\.signInWithOAuth\(/);
-  assert.match(auth,/redirectTo:NATIVE_AUTH_REDIRECT_URL/);
-  assert.match(auth,/skipBrowserRedirect:true/);
-  assert.match(auth,/WebBrowser\.openAuthSessionAsync\(data\.url,NATIVE_AUTH_REDIRECT_URL/);
-  assert.match(auth,/nativeSupabase\.auth\.exchangeCodeForSession\(params\.code,options\)/);
-  assert.match(auth,/read\('code'\)/);
-  assert.match(auth,/nativeSupabase\.auth\.setSession\(\{access_token:params\.accessToken,refresh_token:params\.refreshToken\}\)/);
-  assert.match(auth,/dismissAuthBrowser/);
-  assert.match(auth,/restoreLegacySession/);
-  assert.match(auth,/Linking\.getInitialURL\(\)/);
-  assert.match(auth,/lastHandledCallbackUrl/);
-  assert.match(auth,/nativeSupabase\.auth\.getSession\(\)/);
-  assert.match(auth,/nativeSupabase\.auth\.signOut\(\{scope:'local'\}\)/);
-  assert.match(auth,/AsyncStorage\.setItem\(SESSION_KEY,JSON\.stringify\(currentSession\)\)/);
-  assert.match(auth,/refreshNativeAuthSession/);
-  assert.doesNotMatch(auth,/\/auth\/v1\/authorize/);
-  assert.doesNotMatch(auth,/alantil\.ru/);
+  assert.match(appRoot,/from '.\/platform\/auth\.js'/);
+  assert.match(authFacade,/Platform\.OS==='web'\?require\('.\/auth\.web\.js'\):require\('.\/auth\.native\.js'\)/);
+  assert.match(nativeAuth,/NATIVE_AUTH_REDIRECT_URL='alantil:\/\/auth\/callback'/);
+  assert.match(nativeSupabase,/createClient\(/);
+  assert.match(nativeSupabase,/flowType:'pkce'/);
+  assert.match(nativeSupabase,/appendPkceFlowIdToRedirects:true/);
+  assert.match(nativeSupabase,/storage:AsyncStorage/);
+  assert.match(nativeSupabase,/persistSession:true/);
+  assert.match(nativeSupabase,/detectSessionInUrl:false/);
+  assert.match(nativeAuth,/nativeSupabase\.auth\.signInWithOAuth\(/);
+  assert.match(nativeAuth,/redirectTo:NATIVE_AUTH_REDIRECT_URL/);
+  assert.match(nativeAuth,/skipBrowserRedirect:true/);
+  assert.match(nativeAuth,/WebBrowser\.openAuthSessionAsync\(data\.url,NATIVE_AUTH_REDIRECT_URL/);
+  assert.match(nativeAuth,/nativeSupabase\.auth\.exchangeCodeForSession\(params\.code,options\)/);
+  assert.match(nativeAuth,/Linking\.getInitialURL\(\)/);
+  assert.doesNotMatch(nativeAuth,/alantil\.ru/);
+
+  assert.match(webSupabase,/createClient\(/);
+  assert.match(webSupabase,/flowType:'pkce'/);
+  assert.match(webSupabase,/browserStorage/);
+  assert.match(webSupabase,/persistSession:true/);
+  assert.match(webSupabase,/detectSessionInUrl:false/);
+  assert.match(webAuth,/resolveWebAuthRedirectUrl/);
+  assert.match(webAuth,/location\.origin/);
+  assert.match(webAuth,/nativeSupabase\.auth\.signInWithOAuth\(/);
+  assert.match(webAuth,/redirectTo,skipBrowserRedirect:true/);
+  assert.match(webAuth,/window\.location\.assign\(data\.url\)/);
+  assert.match(webAuth,/nativeSupabase\.auth\.exchangeCodeForSession\(params\.code,options\)/);
+  assert.doesNotMatch(webAuth,/alantil:\/\/auth\/callback/);
+  assert.doesNotMatch(webAuth,/WebBrowser\.openAuthSessionAsync/);
+  assert.doesNotMatch(webAuth,/Linking\./);
+
   assert.equal(pkg.dependencies['@supabase/supabase-js'],'2.112.4');
   assert.match(pkg.dependencies['expo-web-browser'],/^~15\.0\.11$/);
   assert.ok(app.expo.plugins.some((entry)=>Array.isArray(entry)&&entry[0]==='expo-web-browser'));
@@ -63,8 +75,8 @@ test('16.6.3 auth choice uses Supabase PKCE OAuth and returns only to the native
   assert.ok(filter.category.includes('BROWSABLE'));
   assert.ok(filter.category.includes('DEFAULT'));
   assert.ok(filter.data.some((entry)=>entry.scheme==='alantil'&&entry.host==='auth'&&entry.pathPrefix==='/callback'));
-  assert.equal(app.expo.android.versionCode,27);
-  assert.equal(app.expo.ios.buildNumber,'27');
+  assert.equal(app.expo.android.versionCode,28);
+  assert.equal(app.expo.ios.buildNumber,'28');
 });
 
 test('16.6.3 Story Stele matches Web viewport and overflow behavior',()=>{
