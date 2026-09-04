@@ -13,6 +13,9 @@ const songs=read('mobile/screens/songs.js');
 const profile=read('mobile/screens/profile-main.js');
 const onboarding=read('mobile/screens/onboarding.js');
 const authChoice=read('mobile/screens/auth-choice.js');
+const nativeAuth=read('mobile/platform/auth.js');
+const fullScreenWorkflow=read('.github/workflows/mobile-16-6-3-full-screen-parity.yml');
+const webExportWorkflow=read('.github/workflows/mobile-16-6-3-expo-web-pages.yml');
 const appRoot=read('mobile/AppRoot.js');
 const guide=read('mobile/ui/guide.js');
 const theme=read('mobile/ui/theme.js');
@@ -25,6 +28,7 @@ const app=JSON.parse(read('mobile/app.json'));
 
 expect('Path canonical Story Stele asset',path.includes("require('../../assets/path/story-stele.webp')"));
 expect('Path Story Stele seen state',path.includes('hasSeenNativeStoryStele')&&path.includes('markNativeStorySteleSeen'));
+expect('Path Story Stele Web viewport fit and gradual auto-scroll',path.includes('height*.53,932')&&path.includes('STELE_AUTO_SCROLL_PX_PER_SECOND=7')&&path.includes('STELE_MIN_BODY_FONT_SIZE=12.5')&&!path.includes('scrollToEnd({animated:true})'));
 expect('Path scale is interactive',path.includes('jumpScale')&&!path.includes('pointerEvents="none" style={styles.routeScale}'));
 expect('Path word list is floating',path.includes('wordListFloat'));
 expect('Practice Web shell title',practice.includes('<Header title="Alan Til!"'));
@@ -50,12 +54,15 @@ expect('Profile setup remains in Profile',profile.includes('function ProfileSetu
 expect('Settings preview 180 px',profile.includes("settingsLearningPreview:{width:'100%',height:180"));
 expect('Privacy shared checkbox',settingsChild.includes("from '../ui/checkbox.js'")&&settingsChild.includes('<Checkbox')&&!settingsChild.includes('Switch'));
 expect('Shared checkbox is non-text glyph control',checkbox.includes('CorrectIcon')&&!checkbox.includes("'[✓]'"));
-expect('Onboarding single-screen progressive setup',!onboarding.includes('setStep(')&&!onboarding.includes('progressCell')&&onboarding.includes('draft.interface_language_code?')&&onboarding.includes("draft.alan_script_code==='cyrillic'?"));
-expect('Onboarding direct auth choice follows setup',authChoice.includes('signInWithGoogleNative')&&authChoice.includes('voyti_cherez_google')&&authChoice.includes('prodolzhit_kak_gost')&&appRoot.includes('AuthChoiceScreen')&&appRoot.includes('authChoiceRequired'));
+expect('Onboarding single-screen progressive setup',!onboarding.includes('setStep(')&&!onboarding.includes('progressCell')&&onboarding.includes('DisclosureSection visible={Boolean(draft.interface_language_code)}')&&onboarding.includes("DisclosureSection visible={draft.alan_script_code==='cyrillic'}")&&onboarding.includes('FlagIcon'));
+expect('Onboarding direct auth choice follows setup',authChoice.includes('signInWithGoogleNative')&&authChoice.includes('continueGoogle')&&authChoice.includes('prodolzhit_kak_gost')&&appRoot.includes('AuthChoiceScreen')&&appRoot.includes('authChoiceRequired'));
+expect('Google OAuth returns to app and persists session',nativeAuth.includes("NATIVE_AUTH_REDIRECT_URL='alantil://auth/callback'")&&nativeAuth.includes('WebBrowser.openAuthSessionAsync')&&nativeAuth.includes('callbackPromise')&&nativeAuth.includes('oauthFlowPromise')&&nativeAuth.includes('AsyncStorage.setItem(SESSION_KEY'));
+expect('Expo Web preview is public browser-QA without production Pages deploy',fullScreenWorkflow.includes('raw.githack.com')&&fullScreenWorkflow.includes('Verify public Expo Web render in Chromium')&&fullScreenWorkflow.includes('playwright@1.55.0')&&!webExportWorkflow.includes('deploy-pages')&&!webExportWorkflow.includes('pages: write')&&!webExportWorkflow.includes('upload-pages-artifact'));
+
 expect('Onboarding semantic typography',onboarding.includes('useSemanticTypography')&&onboarding.includes('type.wordCard'));
 expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
 for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
-expect('Release version 16.6.3',app.expo?.version==='16.6.3'&&app.expo?.extra?.releaseVersion==='16.6.3');
+expect('Release version 16.6.3',app.expo?.version==='16.6.3'&&app.expo?.extra?.releaseVersion==='16.6.3'&&app.expo?.android?.versionCode===27&&app.expo?.ios?.buildNumber==='27');
 
 const failed=checks.filter(([,ok])=>!ok);
 for(const [name,ok] of checks)console.log(`${ok?'PASS':'FAIL'}  ${name}`);
