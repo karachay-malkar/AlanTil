@@ -167,7 +167,9 @@ jobs:
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
-            const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+            await context.addCookies([{ name: '__Http-phish', value: '1', url: 'https://raw.githack.com' }]);
+            const page = await context.newPage();
             const url = process.env.PUBLIC_PREVIEW_URL;
             let loaded = false;
             let lastError = '';
