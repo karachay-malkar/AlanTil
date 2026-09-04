@@ -116,7 +116,7 @@ export const WEB_VISUAL_TOKENS = Object.freeze({
   radius:Object.freeze({none:2,xs:7,sm:10,md:15,lg:20,pill:999}),
   spacing:Object.freeze({s1:4,s2:8,s3:12,s4:16,s5:20,s6:24,s7:32,s8:40}),
   control:Object.freeze({sm:36,normal:44,compact:36,text:28,large:44,header:46,nav:60,input:44,row:48}),
-  path:Object.freeze({rootControlsHeight:56,mapTop:64,stationSize:60,stationGap:43,sectionGap:92,dictionaryGap:118,headingGap:22,scaleDot:4,scaleSection:6,scaleDiamond:9,scaleHeightPercent:60,scaleRight:4,scaleWidth:26}),
+  path:Object.freeze({rootControlsHeight:56,mapTop:64,stationSize:60,stationGap:58,stationMetaReserve:52,sectionGap:92,dictionaryGap:118,headingGap:22,routeGroupsBottom:64,waveAmplitudeMin:64,waveAmplitudeWidthRatio:.22,waveAmplitudeMax:90,scaleDot:4,scaleSection:6,scaleDiamond:9,scaleHeightPercent:60,scaleRight:12,scaleWidth:26}),
   chrome:Object.freeze({contentRestGap:16,actionEdgeGap:16,headerSide:10,headerSideCompact:6,headerCenterInset:56,navSide:12,navSideCompact:8,actionSize:36,actionIconSize:20,navBubbleSize:38,navBubbleCompactSize:36,blur:10,controlBlur:8,compactWidth:360}),
   safeArea:Object.freeze({edges:['top','left','right','bottom'],topContentGap:16,bottomContentGap:18}),
   breakpoints:Object.freeze({compact:360,accountNarrow:420}),
