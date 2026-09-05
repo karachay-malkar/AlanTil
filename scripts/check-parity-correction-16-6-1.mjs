@@ -10,7 +10,7 @@ const versionAtLeast=(value,minimum)=>{const a=String(value||'').split('.').map(
 
 [
   'packages/alantil-core/hidden-selection.js','packages/alantil-core/story-word-list.js','packages/alantil-core/learn-card.js','packages/alantil-core/guide-contract.js','packages/alantil-core/dictionary-bootstrap.js',
-  'mobile/platform/path-state.js','mobile/platform/guide-state.js','mobile/platform/privacy.js','mobile/screens/story-word-list.js','mobile/screens/settings-child.js','mobile/ui/guide.js','mobile/tests/parity-correction-16-6-1.test.mjs'
+  'mobile/platform/path-state.js','mobile/platform/guide-state.js','mobile/platform/privacy.js','mobile/screens/story-word-list.js','mobile/screens/settings-child.js','mobile/ui/guide.js','mobile/ui/checkbox.js','mobile/tests/parity-correction-16-6-1.test.mjs'
 ].forEach(requireFile);
 requireText('packages/alantil-core/test.js',['hasWordConflict']);
 requireRegex('packages/alantil-core/test.js',[/metadata\s*:\s*\{\.\.\.\(state\.session\.metadata\|\|\{\}\)\}/]);
@@ -20,8 +20,8 @@ requireText('packages/alantil-core/match.js',['activeRoundIds','activeRightIds']
 requireRegex('packages/alantil-core/match.js',[/metadata\s*:\s*\{\.\.\.\(state\.session\.metadata\|\|\{\}\)\}/]);
 requireText('packages/alantil-core/practice-scope.js',['scopeSelectionState','scopeSelectionCounts','selectedScopeSources']);
 requireText('mobile/screens/path.js',['loadNativePathSettings','loadNativeStoryScroll','stationMilestoneCount','computedStationStatus','onOpenWordList']);
-requireText('mobile/screens/practice-games.js',['restoreMatchActiveRound','setMatchActiveOrdering']);
-requireRegex('mobile/screens/practice-games.js',[/checked\s*:\s*mixed\s*\?\s*['"]mixed['"]\s*:\s*checked/]);
+requireText('mobile/screens/practice-games.js',['restoreMatchActiveRound','setMatchActiveOrdering','Checkbox']);
+requireRegex('mobile/ui/checkbox.js',[/checked\s*===\s*true\s*\?\s*['"]all['"]/,/mixed\s*\?\s*['"]mixed['"]\s*:\s*resolved\s*===\s*['"]all['"]/]);
 requireText('mobile/screens/station-test.js',['FavoriteButton','clearNativeSessionSnapshot','retry']);
 requireText('mobile/screens/learn.js',['PanResponder','buildLearnCardModel','gestureLock','GuideOverlay']);
 requireText('mobile/screens/profile-main.js',['SettingsChildScreen','checkNativeDictionaryUpdate','onOpenStory']);

@@ -3,7 +3,7 @@ import { normalizeFavoriteSyncRows } from '../../packages/alantil-core/favorites
 import { migrateStoredUserSettings, normalizeSyncTimestamp, normalizeUserSettings } from '../../packages/alantil-core/settings.js';
 import { migrateLegacyNativeValueToGuest, nativeScopedStorageKey } from './storage-scope.js';
 
-const KEYS=Object.freeze({settings:'alantil:16.1:settings',settingsSync:'alantil:16.4.1:settings-sync',favorites:'alantil:16.1:favorites',favoriteSync:'alantil:16.4.1:favorite-sync',songFavorites:'alantil:16.1:song-favorites',songFavoriteSync:'alantil:16.4.1:song-favorite-sync',legacyOnboarding:'alantil:16.1:onboarding-complete'});
+const KEYS=Object.freeze({settings:'alantil:16.1:settings',settingsSync:'alantil:16.4.1:settings-sync',favorites:'alantil:16.1:favorites',favoriteSync:'alantil:16.4.1:favorite-sync',songFavorites:'alantil:16.1:song-favorites',songFavoriteSync:'alantil:16.4.1:song-favorite-sync',legacyOnboarding:'alantil:16.1:onboarding-complete',authChoice:'alantil:16.6.3:auth-choice-complete'});
 async function scopedKey(base){await migrateLegacyNativeValueToGuest(base);return nativeScopedStorageKey(base);}
 async function readJson(base,fallback){try{const raw=await AsyncStorage.getItem(await scopedKey(base));return raw?JSON.parse(raw):fallback;}catch{return fallback;}}
 async function writeJson(base,value){await AsyncStorage.setItem(await scopedKey(base),JSON.stringify(value));}
@@ -25,3 +25,5 @@ export async function loadNativeSongFavorites(){return loadFavoriteSet('song');}
 export async function saveNativeSongFavorites(ids){return saveFavoriteSet('song',ids);}
 export async function hasCompletedNativeOnboarding(){return (await AsyncStorage.getItem(await scopedKey(KEYS.legacyOnboarding)))==='1';}
 export async function markNativeOnboardingComplete(){await AsyncStorage.setItem(await scopedKey(KEYS.legacyOnboarding),'1');}
+export async function hasCompletedNativeAuthChoice(){const direct=(await AsyncStorage.getItem(await scopedKey(KEYS.authChoice)))==='1';if(direct)return true;return hasCompletedNativeOnboarding();}
+export async function markNativeAuthChoiceComplete(){await AsyncStorage.setItem(await scopedKey(KEYS.authChoice),'1');}

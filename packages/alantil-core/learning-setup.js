@@ -22,31 +22,13 @@ export const LEARNING_PREVIEW = Object.freeze({
 
 export const LEARNING_SETUP_TEXT = Object.freeze({
   ru: Object.freeze({
-    title: 'Настрой обучение под себя',
-    script: 'Написание аланских слов',
-    cyrillic: 'Кириллица',
-    continue: 'Продолжить',
-    dialect: 'Выберите форму',
-    preview: 'Предпросмотр учебной карточки',
-    storageError: 'Не удалось сохранить настройки на этом устройстве.',
+    title: 'Настрой обучение под себя', script: 'Написание аланских слов', cyrillic: 'Кириллица', continue: 'Продолжить', dialect: 'Выберите форму', preview: 'Предпросмотр учебной карточки', storageError: 'Не удалось сохранить настройки на этом устройстве.', accountTitle: 'Как продолжить?', accountBody: 'Войдите в аккаунт для синхронизации прогресса или продолжите как гость.', account: 'Войти в аккаунт', continueGoogle: 'Продолжить с Google', guest: 'Продолжить как гость', back: 'Назад', step: 'Шаг',
   }),
   en: Object.freeze({
-    title: 'Set up learning for yourself',
-    script: 'Alan word script',
-    cyrillic: 'Cyrillic',
-    continue: 'Continue',
-    dialect: 'Choose the letter form',
-    preview: 'Learning card preview',
-    storageError: 'Settings could not be saved on this device.',
+    title: 'Set up learning for yourself', script: 'Alan word script', cyrillic: 'Cyrillic', continue: 'Continue', dialect: 'Choose the letter form', preview: 'Learning card preview', storageError: 'Settings could not be saved on this device.', accountTitle: 'How would you like to continue?', accountBody: 'Sign in to sync your progress, or continue as a guest.', account: 'Sign in', continueGoogle: 'Continue with Google', guest: 'Continue as guest', back: 'Back', step: 'Step',
   }),
   tr: Object.freeze({
-    title: 'Öğrenmeni kendine göre ayarla',
-    script: 'Alanca kelimelerin yazımı',
-    cyrillic: 'Kiril',
-    continue: 'Devam et',
-    dialect: 'Harf biçimini seçin',
-    preview: 'Öğrenme kartı önizlemesi',
-    storageError: 'Ayarlar bu cihaza kaydedilemedi.',
+    title: 'Öğrenmeni kendine göre ayarla', script: 'Alanca kelimelerin yazımı', cyrillic: 'Kiril', continue: 'Devam et', dialect: 'Harf biçimini seçin', preview: 'Öğrenme kartı önizlemesi', storageError: 'Ayarlar bu cihaza kaydedilemedi.', accountTitle: 'Nasıl devam etmek istersiniz?', accountBody: 'İlerlemenizi eşitlemek için giriş yapın veya misafir olarak devam edin.', account: 'Giriş yap', continueGoogle: 'Google ile devam et', guest: 'Misafir olarak devam et', back: 'Geri', step: 'Adım',
   }),
 });
 

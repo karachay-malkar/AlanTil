@@ -16,7 +16,7 @@ const requireRegex=(file,patterns)=>{const source=read(file);for(const pattern o
 const pkg=JSON.parse(read('mobile/package.json')),app=JSON.parse(read('mobile/app.json'));
 if(pkg.version!=='16.6.2'||app.expo.version!=='16.6.2'||app.expo.extra?.releaseVersion!=='16.6.2')throw new Error('Mobile version is not 16.6.2');
 if(Number(app.expo.android?.versionCode)!==25||String(app.expo.ios?.buildNumber)!=='25')throw new Error('16.6.2 native build numbers must be 25');
-requireRegex('mobile/ui/web-visual-source.js',[/control:Object\.freeze\([^\n]*header:46/,/path:Object\.freeze\([^\n]*rootControlsHeight:56[^\n]*mapTop:64[^\n]*stationSize:60[^\n]*stationGap:43[^\n]*scaleDot:4[^\n]*scaleSection:6[^\n]*scaleDiamond:9/]);
+requireRegex('mobile/ui/web-visual-source.js',[/control:Object\.freeze\([^\n]*header:46/,/path:Object\.freeze\([^\n]*rootControlsHeight:56[^\n]*mapTop:64[^\n]*stationSize:60[^\n]*stationGap:58[^\n]*scaleDot:4[^\n]*scaleSection:6[^\n]*scaleDiamond:9/]);
 requireText('mobile/ui/theme.js',['path:W.path']);
 requireRegex('mobile/ui/components.js',[/NAV_INACTIVE='rgba\(102,97,88,\.62\)'/,/button:\{[^}]*borderRadius:14/s,/buttonAction:\{borderRadius:15\}/,/navLabel:\{[^}]*color:NAV_INACTIVE/s,/webTopChromeMask:[\s\S]*maskImage:'linear-gradient\(to bottom/,/webBottomChromeMask:[\s\S]*maskImage:'linear-gradient\(to top/]);
 requireRegex('mobile/ui/parity.js',[/segmentItem:\s*\{[^}]*minHeight:\s*28/s]);
