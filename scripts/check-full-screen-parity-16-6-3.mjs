@@ -46,7 +46,7 @@ expect('Match Web shake',games.includes('[3,-3,3,-3,0]'));
 expect('Favorites shares set-preparation flow',!favorites.includes('onMatch')&&!favorites.includes('onTest')&&favorites.includes('SetPreparationView'));
 expect('Story word list animated header search',storyWords.includes('Animated.timing(searchProgress'));
 expect('Story word list overflow contract',storyWords.includes('OverflowMarquee'));
-expect('Songs Info action',songs.includes('<InfoIcon')&&songs.includes('SongInfoModal'));
+expect('Songs Info action',songs.includes('HeaderTextAction')&&songs.includes('role="songs.info"')&&songs.includes('SongInfoModal')&&!songs.includes('<InfoIcon'));
 expect('Songs shared InfoDialog',songs.includes('InfoDialog')&&modal.includes('export function InfoDialog'));
 expect('Songs shared time formatter',songs.includes('formatClockTime')&&format.includes('export function formatClockTime'));
 expect('Songs SVG media icons',songs.includes('<PlayIcon')&&songs.includes('<PauseIcon'));
@@ -64,7 +64,7 @@ expect('Expo Web preview is public browser-QA without production Pages deploy',f
 expect('Onboarding semantic typography',onboarding.includes('useSemanticTypography')&&onboarding.includes('type.wordCard'));
 expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
 for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
-expect('Release version 16.6.4',app.expo?.version==='16.6.4'&&app.expo?.extra?.releaseVersion==='16.6.4'&&app.expo?.android?.versionCode===29&&app.expo?.ios?.buildNumber==='29');
+expect('Release version 16.6.5',app.expo?.version==='16.6.5'&&app.expo?.extra?.releaseVersion==='16.6.5'&&app.expo?.android?.versionCode===30&&app.expo?.ios?.buildNumber==='30');
 
 const failed=checks.filter(([,ok])=>!ok);
 for(const [name,ok] of checks)console.log(`${ok?'PASS':'FAIL'}  ${name}`);

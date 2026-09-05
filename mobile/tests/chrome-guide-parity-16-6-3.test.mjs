@@ -17,6 +17,8 @@ const icons=read('ui/icons.js');
 const appRoot=read('AppRoot.js');
 const profileGate=read('screens/profile-gate.js');
 const profileMain=read('screens/profile-main.js');
+const sharedTokens=fs.readFileSync(path.join(mobile,'../packages/alantil-ui/tokens.js'),'utf8');
+const sharedChrome=fs.readFileSync(path.join(mobile,'../packages/alantil-ui/chrome.js'),'utf8');
 const visual=read('ui/web-visual-source.js');
 
 test('Path guide uses the Web floating question trigger and story-specific targets',()=>{
@@ -60,8 +62,8 @@ test('learning guide uses interactive split decision targets, counter pill and f
 });
 
 test('BottomNav overlays content and owns the bottom safe area instead of reserving a panel',()=>{
-  assert.match(visual,/shellEdges:\['top','left','right'\]/);
-  assert.match(visual,/bottomManagedByChrome:true/);
+  assert.match(sharedTokens,/shellEdges:\['top','left','right'\]/);
+  assert.match(sharedTokens,/bottomManagedByChrome:true/);
   assert.match(appRoot,/edges=\{theme\.safeArea\.shellEdges\}/);
   assert.match(components,/height:theme\.control\.nav\+insets\.bottom/);
   assert.match(components,/paddingBottom:insets\.bottom/);

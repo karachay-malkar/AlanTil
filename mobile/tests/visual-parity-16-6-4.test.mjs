@@ -11,6 +11,8 @@ const mobile=path.resolve(here,'..');
 const read=(file)=>fs.readFileSync(path.join(mobile,file),'utf8');
 const appRoot=read('AppRoot.js');
 const components=read('ui/components.js');
+const sharedTokens=fs.readFileSync(path.join(mobile,'../packages/alantil-ui/tokens.js'),'utf8');
+const sharedChrome=fs.readFileSync(path.join(mobile,'../packages/alantil-ui/chrome.js'),'utf8');
 const visual=read('ui/web-visual-source.js');
 const pathScreen=read('screens/path.js');
 const station=read('screens/station.js');
@@ -49,11 +51,10 @@ test('16.6.4 real bundled dictionary exposes localized numbered examples after d
 test('16.6.4 system chrome exists on every Screen and stays below interactive chrome',()=>{
   assert.match(components,/export function Screen\(\{children,bottomNav=false,topChromeDepth,bottomChromeDepth\}\)/);
   assert.match(components,/<TopChromeMask height=\{top\}\/><BottomChromeMask height=\{bottom\}\/>/);
-  assert.match(components,/topChromeMask:\{position:'absolute',zIndex:29,elevation:29/);
-  assert.match(components,/bottomChromeMask:\{position:'absolute',zIndex:29,elevation:29/);
+  const nativeChrome=read('ui/chrome-mask.native.js');assert.match(nativeChrome,/zIndex:29,elevation:29/);assert.match(nativeChrome,/MaskedView/);
   assert.match(components,/header:\{position:'absolute',zIndex:30,elevation:30/);
   assert.match(components,/bottomNav:\{position:'absolute',zIndex:30,elevation:30/);
-  for(const token of['default:Object.freeze({top:58,bottom:16})','stationWords:Object.freeze({top:102,bottom:108})','learn:Object.freeze({top:58,bottom:80})','testMenu:Object.freeze({top:58,bottom:93})','testResults:Object.freeze({top:178,bottom:54})','profile:Object.freeze({top:42,bottom:76})']) assert.ok(visual.includes(token),token);
+  for(const token of['default:freezeDepth(58,16)','stationWords:freezeDepth(102,108)','learn:freezeDepth(58,80)','learnResults:freezeDepth(178,54)','testMenu:freezeDepth(58,93)','testResults:freezeDepth(178,54)','profile:freezeDepth(42,76)']) assert.ok(sharedChrome.includes(token),token);
 });
 
 test('16.6.4 Path restores final Web story/header and responsive map gutters',()=>{
@@ -67,15 +68,15 @@ test('16.6.4 Path restores final Web story/header and responsive map gutters',()
 test('16.6.4 Station, Favorites, Test and Match use state-specific chrome and canonical control roles',()=>{
   assert.match(station,/screenDepths\.stationWords/);
   assert.match(station,/screenDepths\.stationStatistics/);
-  assert.match(station,/<Button action glass disabled=/);
-  assert.match(station,/<Button action primary disabled=/);
+  assert.match(station,/<Button role="station\.study" disabled=/);
+  assert.match(station,/<Button role="station\.test" disabled=/);
   assert.match(favorites,/screenDepths\.setPreparation/);
   assert.match(games,/function BracketCheck\(\{state='none',onPress\}\)\{return <Checkbox variant="bracket"/);
   assert.match(games,/scopeSectionRow:\{[^}]*paddingLeft:34/s);
   assert.match(games,/screenDepths\.testMenu/);
   assert.match(games,/screenDepths\.matchMenu/);
   assert.match(games,/screenDepths\.testResults/);
-  assert.match(games,/CutCornerFrame fill=\{fill\} stroke=\{stroke\} cut=\{7\}/);
+  assert.match(components,/CutCornerFrame fill=\{fill\} stroke=\{stroke\} cut=\{theme\.button\.cut\}/);
   assert.match(games,/launchBar:\{[^}]*zIndex:30[^}]*elevation:30/s);
   assert.match(stationTest,/screenDepths\.testResults/);
 });
@@ -97,7 +98,7 @@ test('16.6.4 Learn renders shared card-model groups/examples with Web card geome
 
 test('16.6.4 Settings/Profile use Web-specific flat controls instead of generic action buttons',()=>{
   assert.match(parity,/export function SmallActionButton/);
-  assert.match(parity,/smallAction:\s*\{[^}]*minHeight:\s*29[^}]*borderRadius:\s*2[^}]*backgroundColor:\s*'transparent'/s);
+  assert.match(parity,/smallAction:\s*\{[^}]*minHeight:\s*theme\.button\.settingsSmallHeight[^}]*borderRadius:\s*theme\.button\.settingsSmallRadius[^}]*backgroundColor:\s*'transparent'/s);
   assert.match(profile,/<SmallActionButton active=\{dirty\}/);
   assert.match(profile,/<SmallActionButton active=\{dictionary\.needsUpdate&&!dictionaryBusy\}/);
   assert.match(profile,/tabs:\{[^}]*zIndex:30[^}]*elevation:30[^}]*top:2[^}]*left:10[^}]*right:10[^}]*height:34/s);
@@ -116,11 +117,11 @@ test('16.6.4 Songs inline word card is flat and renders grouped examples',()=>{
 });
 
 test('16.6.4 release metadata is coherent',()=>{
-  assert.equal(app.expo.version,'16.6.4');
-  assert.equal(pkg.version,'16.6.4');
-  assert.equal(app.expo.extra.releaseVersion,'16.6.4');
-  assert.equal(app.expo.android.versionCode,29);
-  assert.equal(app.expo.ios.buildNumber,'29');
-  assert.match(settingsChild,/>16\.6\.4</);
+  assert.equal(app.expo.version,'16.6.5');
+  assert.equal(pkg.version,'16.6.5');
+  assert.equal(app.expo.extra.releaseVersion,'16.6.5');
+  assert.equal(app.expo.android.versionCode,30);
+  assert.equal(app.expo.ios.buildNumber,'30');
+  assert.match(settingsChild,/>16\.6\.5</);
   assert.match(settingsChild,/>05\.09\.2026</);
 });

@@ -1,6 +1,6 @@
 {
   "name": "alantil-mobile",
-  "version": "16.6.4",
+  "version": "16.6.5",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,8 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-svg": "15.12.1",
     "react-native-web": "~0.21.0",
-    "expo-web-browser": "~15.0.11"
+    "expo-web-browser": "~15.0.11",
+    "@react-native-masked-view/masked-view": "0.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2"

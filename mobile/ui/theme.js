@@ -1,6 +1,7 @@
-import { WEB_VISUAL_TOKENS } from './web-visual-source.js';
+import { UI_TOKENS } from '../../packages/alantil-ui/tokens.js';
+import { CHROME_CONTRACT } from '../../packages/alantil-ui/chrome.js';
 
-const W=WEB_VISUAL_TOKENS;
+const W={...UI_TOKENS,chrome:CHROME_CONTRACT};
 
 export const theme={
   colors:W.colors,

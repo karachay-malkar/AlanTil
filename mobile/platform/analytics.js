@@ -4,7 +4,7 @@ import { nativeAuthFetch } from './auth.js';
 import { loadNativeAnalyticsPreference } from './privacy.js';
 import { getNativeStorageScope, nativeScopedStorageKey } from './storage-scope.js';
 
-const APP_VERSION='16.6.4';
+const APP_VERSION='16.6.5';
 const VISITOR_KEY='alantil:analytics:visitor-id';
 const QUEUE_BASE='alantil:16.6.3:analytics-events';
 const MAX_QUEUE=240;
