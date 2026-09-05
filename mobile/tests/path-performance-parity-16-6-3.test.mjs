@@ -66,7 +66,10 @@ test('Path restores the Web floating Guide trigger without overlapping Story Wor
   assert.doesNotMatch(pathScreen,/HeaderCircleButton/);
   assert.match(pathScreen,/wordListFloat:\{[^}]*left:10[^}]*top:'80%'[^}]*marginTop:-64/s);
   assert.match(pathScreen,/steleTrigger:\{[^}]*right:8[^}]*top:'80%'[^}]*marginTop:-31/s);
-  assert.match(pathScreen,/storyTabs:\{[^}]*gap:3/s);
+  assert.match(pathScreen,/storyTabs:\{[^}]*paddingHorizontal:18[^}]*gap:8/s);
+  assert.match(pathScreen,/scrollToStory=\(type,animated=true\)=>new Promise/);
+  assert.match(pathScreen,/storyEdgeStart/);
+  assert.match(pathScreen,/storyEdgeEnd/);
 });
 
 test('Route scale diamonds jump to measured catalog positions rather than percentage guesses',()=>{

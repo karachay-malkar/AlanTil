@@ -33,24 +33,33 @@ function showStationLabels(catalog){const value=String(catalog?.name||catalog?.l
 function geometryBuffer(){return{map:null,stations:new Map(),sections:new Map(),catalogs:new Map()};}
 function ensureTargetRef(map,key){if(!map.has(key))map.set(key,{current:null});return map.get(key);}
 
-function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs}){
-  const {width}=useWindowDimensions(),fontSize=Math.min(13,Math.max(10,width*.03));
-  return <ScrollView ref={targetRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
-    {(route.storyOrder||[]).map((type)=>{
-      const active=activeStory===type,target=storyTargetRefs?.get(type);
-      return <Pressable
-        ref={target}
-        collapsable={false}
-        key={type}
-        accessibilityRole="button"
-        accessibilityState={{selected:active}}
-        onPress={()=>onChange(type)}
-        style={({pressed})=>[styles.storyTab,active&&styles.storyTabSelected,pressed&&styles.storyTabPressed]}
-      >
-        <Text style={[styles.storyTabText,{fontSize,lineHeight:fontSize*1.1},active&&styles.storyTabActive]}>[ {route.stories[type]?.label||type} ]</Text>
-      </Pressable>;
-    })}
-  </ScrollView>;
+function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef}){
+  const {width}=useWindowDimensions(),fontSize=Math.min(13,Math.max(10,width*.03)),scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
+  const syncEdges=(offset=offsetRef.current)=>{const max=Math.max(0,contentRef.current-viewportRef.current),next={start:max>3&&offset>3,end:max>3&&offset<max-3};setEdges(current=>current.start===next.start&&current.end===next.end?current:next);};
+  const scrollToStory=(type,animated=true)=>new Promise(resolve=>{const layout=layoutsRef.current.get(type),viewport=viewportRef.current;if(!layout||!viewport){resolve(false);return;}const max=Math.max(0,contentRef.current-viewport),x=Math.max(0,Math.min(max,layout.x+layout.width/2-viewport/2));offsetRef.current=x;scrollRef.current?.scrollTo({x,animated});syncEdges(x);setTimeout(()=>resolve(true),animated?190:0);});
+  useImperativeHandle(controlRef,()=>({scrollToStory}),[route.storyOrder,width]);
+  useEffect(()=>{const frame=requestAnimationFrame(()=>{void scrollToStory(activeStory,false);});return()=>cancelAnimationFrame(frame);},[activeStory,width]);
+  return <View ref={targetRef} collapsable={false} style={styles.storyTabsShell}>
+    {edges.start?<Text pointerEvents="none" style={[styles.storyEdge,styles.storyEdgeStart]}>‹</Text>:null}
+    <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs} scrollEventThrottle={32} onLayout={event=>{viewportRef.current=event.nativeEvent.layout.width||1;syncEdges();}} onContentSizeChange={(contentWidth)=>{contentRef.current=contentWidth||1;syncEdges();void scrollToStory(activeStory,false);}} onScroll={event=>{offsetRef.current=event.nativeEvent.contentOffset.x;syncEdges(offsetRef.current);}}>
+      {(route.storyOrder||[]).map((type)=>{
+        const active=activeStory===type,target=storyTargetRefs?.get(type);
+        return <Pressable
+          ref={target}
+          collapsable={false}
+          key={type}
+          accessibilityRole="button"
+          accessibilityState={{selected:active}}
+          onLayout={event=>{layoutsRef.current.set(type,event.nativeEvent.layout);if(type===activeStory)void scrollToStory(type,false);}}
+          onPress={()=>onChange(type)}
+          style={({pressed})=>[styles.storyTab,active&&styles.storyTabSelected,pressed&&styles.storyTabPressed]}
+        >
+          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.storyTabText,{fontSize,lineHeight:fontSize*1.1},active&&styles.storyTabActive]}>[ {route.stories[type]?.label||type} ]</Text>
+        </Pressable>;
+      })}
+    </ScrollView>
+    {edges.end?<Text pointerEvents="none" style={[styles.storyEdge,styles.storyEdgeEnd]}>›</Text>:null}
+  </View>;
 }
 
 function SegmentedStoryProgress({value=0}){
@@ -219,7 +228,7 @@ function StoryStele({story,visible,onOpen,onClose}){
 export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
-  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
+  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
   const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
   for(const storyType of route.storyOrder||[])ensureTargetRef(storyTargetRefs,storyType);
 
@@ -346,7 +355,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     }
     const nextIndex=guideIndex+1;if(nextIndex>=GENERAL_GUIDE_STEPS.length){stopGuide();return;}
     const next=GENERAL_GUIDE_STEPS[nextIndex];setSteleOpen(false);
-    if(next?.story&&route.stories?.[next.story]&&next.story!==activeStory)await changeStory(next.story);
+    if(next?.story&&route.stories?.[next.story]){if(next.story!==activeStory)await changeStory(next.story);await storyTabsControlRef.current?.scrollToStory?.(next.story,true);}
     if(next?.id==='stages')selectVisibleGuideStation();
     const storyIndex=next?.story?Math.max(0,GENERAL_GUIDE_STEPS.filter(step=>step?.id?.startsWith('story:')).findIndex(step=>step.story===next.story)):getNativeGeneralGuideRuntime().storyIndex;
     setNativeGeneralGuideRuntime({active:true,phase:next?.id?.startsWith('story:')?'story':next?.id||'',storyIndex});setGuideIndex(nextIndex);
@@ -393,7 +402,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   return <Screen bottomNav>
     <Topography opacity={.28}/>
     <View style={styles.pathControls}>
-      <StoryTabs targetRef={storyTabsRef} storyTargetRefs={storyTargetRefs} route={route} activeStory={activeStory} onChange={changeStory}/>
+      <StoryTabs targetRef={storyTabsRef} controlRef={storyTabsControlRef} storyTargetRefs={storyTargetRefs} route={route} activeStory={activeStory} onChange={changeStory}/>
       <View style={styles.storyProgress}>
         <SegmentedStoryProgress value={storySummary.percent}/>
         <MonoLabel accent>{storySummary.percent}%</MonoLabel>
@@ -418,8 +427,12 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
 
 const styles=StyleSheet.create({
   pathControls:{position:'absolute',zIndex:24,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingRight:38,paddingBottom:2},
-  storyTabs:{height:32,alignItems:'center',paddingHorizontal:8,gap:3},
-  storyTab:{height:30,paddingHorizontal:8,marginVertical:1,borderRadius:12,alignItems:'center',justifyContent:'center'},
+  storyTabsShell:{position:'relative',height:32,overflow:'hidden'},
+  storyTabs:{height:32,alignItems:'center',paddingHorizontal:18,gap:8},
+  storyEdge:{position:'absolute',zIndex:4,top:0,width:24,height:32,textAlign:'center',fontFamily:theme.font.terminal,fontSize:18,fontWeight:'800',lineHeight:32,color:C.text2,opacity:.72,backgroundColor:'rgba(238,233,223,.78)'},
+  storyEdgeStart:{left:0},
+  storyEdgeEnd:{right:0},
+  storyTab:{flexShrink:0,maxWidth:280,height:30,paddingHorizontal:8,marginVertical:1,borderRadius:12,alignItems:'center',justifyContent:'center'},
   storyTabSelected:{backgroundColor:'rgba(246,242,233,.28)'},
   storyTabPressed:{opacity:.68,transform:[{translateY:1}]},
   storyTabText:{fontFamily:theme.font.terminal,fontWeight:'700',color:C.text3,opacity:.64},

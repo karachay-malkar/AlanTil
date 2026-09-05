@@ -43,7 +43,7 @@ test('Guide overlay mirrors Web shade, shapes, pulsing halo and glass panel',()=
   assert.match(guide,/shape==='circle'\|\|hole\.shape==='pill'/);
   assert.match(guide,/Array\.isArray\(targets\)/);
   assert.match(guide,/duration:1075/);
-  assert.match(guide,/intensity=\{14\}/);
+  assert.match(guide,/GlassBackdrop blur=\{14\}/);
   assert.match(guide,/GUIDE_PANEL='rgba\(246,242,233,\.94\)'/);
   assert.match(guide,/avoidBottomNav\?height-\(insets\.bottom\+theme\.control\.nav\+theme\.chrome\.contentRestGap\)/);
 });
