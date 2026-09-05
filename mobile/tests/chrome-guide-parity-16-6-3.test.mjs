@@ -48,8 +48,12 @@ test('Guide overlay mirrors Web shade, shapes, pulsing halo and glass panel',()=
   assert.match(guide,/avoidBottomNav\?height-\(insets\.bottom\+theme\.control\.nav\+theme\.chrome\.contentRestGap\)/);
 });
 
-test('learning guide uses multi-target decision, counter pill and favorite circle',()=>{
-  assert.match(learn,/guideTargets=currentGuide\?\.id==='decision'\?\[\{ref:cardTarget,shape:'rounded',padding:7\},\{ref:decisionTarget,shape:'rounded',padding:10,minWidth:178,minHeight:84\}\]/);
+test('learning guide uses interactive split decision targets, counter pill and favorite circle',()=>{
+  assert.match(learn,/guideTargets=currentGuide\?\.id==='decision'\?\[/);
+  assert.match(learn,/\{ref:cardTarget,shape:'rounded',padding:7,interactive:true/);
+  assert.match(learn,/\{ref:unknownTarget,shape:'circle',padding:9,minWidth:60,minHeight:60,interactive:true/);
+  assert.match(learn,/\{ref:knownTarget,shape:'circle',padding:9,minWidth:60,minHeight:60,interactive:true/);
+  assert.match(learn,/interactiveTarget=\{interactiveGuideTarget\}/);
   assert.match(learn,/currentGuide\?\.id==='counter'\?counterTarget/);
   assert.match(learn,/currentGuide\?\.id==='favorite'\?'circle'/);
   assert.match(learn,/targetRef:counterTarget/);
@@ -66,10 +70,11 @@ test('BottomNav overlays content and owns the bottom safe area instead of reserv
   assert.match(pathScreen,/paddingBottom:insets\.bottom\+theme\.control\.nav\+theme\.chrome\.contentRestGap/);
 });
 
-test('BottomNav uses the exact Web practice/profile outline glyphs and bubble treatment',()=>{
-  assert.match(icons,/m6\.5 6\.5 11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l7-7M14 21l7-7/);
-  assert.match(icons,/<Circle cx="12" cy="8" r="5"/);
-  assert.match(icons,/M20 21a8 8 0 0 0-16 0/);
+test('BottomNav uses the exact Web canonical practice/profile filled glyphs and bubble treatment',()=>{
+  assert.match(icons,/M4 4h7v7H4V4/);
+  assert.match(icons,/M12 12a5 5 0 1 0 0-10/);
+  assert.match(icons,/C21 16\.5 17 14 12 14Z/);
+  assert.doesNotMatch(icons,/m6\.5 6\.5 11 11M21 21l-1-1/);
   assert.match(components,/shadowOpacity:\.018/);
   assert.match(components,/navLabelActive:\{color:C\.text1\}/);
 });

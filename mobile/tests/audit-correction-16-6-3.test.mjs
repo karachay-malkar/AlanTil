@@ -15,8 +15,17 @@ test('16.6.3 audit correction keeps auth bootstrap ahead of scoped storage hydra
   assert.ok(bootstrap>=0&&scoped>bootstrap,'auth must establish storage scope before scoped state is read');
   assert.match(source,/await synchronizeNativeAccount\(\)/);
   assert.match(source,/nextUserId===authUserId\.current/);
+  assert.doesNotMatch(source,/Promise\.all\(\[/);
   assert.match(source,/key=\{`path-\$\{dataEpoch\}`\}/);
   assert.match(source,/key=\{`profile-\$\{dataEpoch\}`\}/);
+});
+
+test('16.6.3 account synchronization is single-flight',()=>{
+  const source=read('mobile/platform/cloud-sync.js');
+  assert.match(source,/let flushing=null,synchronizing=null/);
+  assert.match(source,/if\(synchronizing\)return synchronizing/);
+  assert.match(source,/synchronizing=\(async\(\)=>/);
+  assert.match(source,/\.finally\(\(\)=>\{synchronizing=null;\}\)/);
 });
 
 test('16.6.3 audit correction restores consent-gated native analytics runtime',()=>{
