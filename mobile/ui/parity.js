@@ -49,7 +49,7 @@ export function MonoLabel({ children, accent = false, style }) {
 
 
 export function SmallActionButton({ children, onPress, active = false, disabled = false }) {
-  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, active && styles.smallActionActive, disabled && styles.smallActionDisabled, pressed && !disabled && styles.pressed]}><Text style={[styles.smallActionLabel, active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
+  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, active && styles.smallActionActive, disabled && styles.smallActionDisabled, pressed && !disabled && styles.smallActionPressed]}><Text style={[styles.smallActionLabel, active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
 }
 
 export function EmptyState({ children }) {
@@ -86,11 +86,12 @@ const styles = StyleSheet.create({
   metricLabel: { marginTop: 4, fontSize: T.micro, lineHeight: 12, color: C.text2, textAlign: 'center' },
   monoLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '800', lineHeight: 11, letterSpacing: .55, color: C.text3 },
   monoAccent: { color: C.accentStrong },
-  smallAction: { minHeight: 29, paddingVertical: 4, paddingHorizontal: 10, borderWidth: 1, borderColor: C.line, borderRadius: 2, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  smallAction: { minHeight: theme.button.settingsSmallHeight, paddingVertical: theme.button.settingsSmallVertical, paddingHorizontal: theme.button.settingsSmallHorizontal, borderWidth: 1, borderColor: C.line, borderRadius: theme.button.settingsSmallRadius, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   smallActionActive: { borderColor: C.accentStrong, backgroundColor: C.accent },
-  smallActionDisabled: { opacity: .48 },
-  smallActionLabel: { fontFamily: theme.font.terminal, fontSize: 10, fontWeight: '750', lineHeight: 12, color: C.text3 },
+  smallActionDisabled: { opacity: theme.button.settingsSmallDisabledOpacity },
+  smallActionLabel: { fontFamily: theme.font.terminal, fontSize: theme.button.settingsSmallFontSize, fontWeight: theme.button.settingsSmallFontWeight, lineHeight: theme.button.settingsSmallLineHeight, color: C.text3 },
   smallActionLabelActive: { color: C.inverse },
+  smallActionPressed: { opacity: theme.button.pressedOpacity, transform: [{ scale: theme.button.pressedScale }] },
   empty: { minHeight: 96, alignItems: 'center', justifyContent: 'center', padding: 16 },
   emptyText: { fontSize: T.caption, lineHeight: 18, color: C.text3, textAlign: 'center' },
   pressed: { opacity: .7, transform: [{ translateY: 1 }] },

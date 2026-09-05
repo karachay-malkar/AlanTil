@@ -8,6 +8,8 @@ const here=path.dirname(fileURLToPath(import.meta.url));
 const mobile=path.resolve(here,'..');
 const read=(file)=>fs.readFileSync(path.join(mobile,file),'utf8');
 const pathScreen=read('screens/path.js');
+const sharedTokens=fs.readFileSync(path.join(mobile,'../packages/alantil-ui/tokens.js'),'utf8');
+const sharedChrome=fs.readFileSync(path.join(mobile,'../packages/alantil-ui/chrome.js'),'utf8');
 const visual=read('ui/web-visual-source.js');
 const pathState=read('platform/path-state.js');
 
@@ -30,11 +32,11 @@ test('Path geometry batches station, section and catalog measurements into one r
 test('Path uses final Web four-step snake and final medium spacing',()=>{
   assert.match(pathScreen,/POSITION_PATTERN=\[-1,0,1,0\]/);
   assert.match(pathScreen,/Math\.min\(theme\.path\.waveAmplitudeMax,Math\.max\(theme\.path\.waveAmplitudeMin,viewportWidth\*theme\.path\.waveAmplitudeWidthRatio\)\)/);
-  assert.match(visual,/stationGap:58/);
-  assert.match(visual,/stationMetaReserve:52/);
-  assert.match(visual,/waveAmplitudeMin:64/);
-  assert.match(visual,/waveAmplitudeWidthRatio:\.22/);
-  assert.match(visual,/waveAmplitudeMax:90/);
+  assert.match(sharedTokens,/stationGap:58/);
+  assert.match(sharedTokens,/stationMetaReserve:52/);
+  assert.match(sharedTokens,/waveAmplitudeMin:64/);
+  assert.match(sharedTokens,/waveAmplitudeWidthRatio:\.22/);
+  assert.match(sharedTokens,/waveAmplitudeMax:90/);
   assert.match(pathScreen,/routeSectionStations:\{[^}]*gap:theme\.path\.stationGap[^}]*paddingBottom:theme\.path\.stationMetaReserve/s);
   assert.match(pathScreen,/sectionHeading/);
 });

@@ -27,8 +27,8 @@ export function ConfirmDialog({visible,title,message,confirmLabel,cancelLabel,on
       {title?<Text style={styles.title}>{title}</Text>:null}
       <Text style={styles.message}>{message}</Text>
       <View style={styles.actions}>
-        <Button text style={styles.action} onPress={onCancel}>{cancelLabel}</Button>
-        <Button primary action style={styles.action} onPress={onConfirm}>{confirmLabel}</Button>
+        <Button role="modal.cancel" style={styles.action} onPress={onCancel}>{cancelLabel}</Button>
+        <Button role="modal.confirm" style={styles.action} onPress={onConfirm}>{confirmLabel}</Button>
       </View>
     </ModalCard>
   </ModalShell>;
@@ -42,7 +42,7 @@ export function InfoDialog({visible,title='',closeLabel='Close',onClose,children
         <Pressable accessibilityRole="button" accessibilityLabel={closeLabel} onPress={onClose} style={({pressed})=>[styles.close,pressed&&styles.closePressed]}><GlassBackdrop blur={8} backgroundColor={C.controlGlass}/><CloseIcon size={18} color={C.text2}/></Pressable>
       </View>
       <ScrollView style={styles.infoBody} contentContainerStyle={styles.infoBodyContent} showsVerticalScrollIndicator={false}>{children}</ScrollView>
-      <View style={styles.infoActions}><Button primary action style={styles.infoAction} onPress={onClose}>{closeLabel}</Button></View>
+      <View style={styles.infoActions}><Button role="modal.confirm" style={styles.infoAction} onPress={onClose}>{closeLabel}</Button></View>
     </ModalCard>
   </ModalShell>;
 }
