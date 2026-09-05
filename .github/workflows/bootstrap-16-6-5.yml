@@ -27,7 +27,22 @@ jobs:
           PATCH_SHA: b2555c8cecad26ecfcd5dd8bc17fcc7fbda5afd6750793ba84c3431188d50e24
         run: |
           set -euo pipefail
-          cat .bootstrap/16.6.5.b64.part-{00..12} > "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64"
+          cat \
+            .bootstrap/16.6.5.b64.part-00 \
+            .bootstrap/16.6.5.b64.part-01 \
+            .bootstrap/16.6.5.b64.part-02 \
+            .bootstrap/16.6.5.b64.part-03a \
+            .bootstrap/16.6.5.b64.part-03b \
+            .bootstrap/16.6.5.b64.part-04 \
+            .bootstrap/16.6.5.b64.part-05 \
+            .bootstrap/16.6.5.b64.part-06 \
+            .bootstrap/16.6.5.b64.part-07 \
+            .bootstrap/16.6.5.b64.part-08 \
+            .bootstrap/16.6.5.b64.part-09 \
+            .bootstrap/16.6.5.b64.part-10 \
+            .bootstrap/16.6.5.b64.part-11 \
+            .bootstrap/16.6.5.b64.part-12 \
+            > "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64"
           echo "$B64_SHA  $RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64" | sha256sum -c -
           base64 -d "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64" > "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz"
           echo "$GZ_SHA  $RUNNER_TEMP/AlanTil-16.6.5.patch.gz" | sha256sum -c -
@@ -58,4 +73,4 @@ jobs:
           test "$(git rev-list --count "$BASE_SHA"..HEAD)" = "1"
           test "$(git rev-parse HEAD^)" = "$BASE_SHA"
           git push --force origin HEAD:agent/16.6.5-staging
-# payload-complete
+# exact-part03-split
