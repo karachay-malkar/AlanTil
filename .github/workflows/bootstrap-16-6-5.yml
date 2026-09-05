@@ -32,7 +32,9 @@ jobs:
             .bootstrap/16.6.5.b64.part-01 \
             .bootstrap/16.6.5.b64.part-02 \
             .bootstrap/16.6.5.b64.part-03a \
-            .bootstrap/16.6.5.b64.part-03b \
+            .bootstrap/16.6.5.b64.part-03b1 \
+            .bootstrap/16.6.5.b64.part-03b2a \
+            .bootstrap/16.6.5.b64.part-03b2b \
             .bootstrap/16.6.5.b64.part-04 \
             .bootstrap/16.6.5.b64.part-05 \
             .bootstrap/16.6.5.b64.part-06 \
@@ -73,4 +75,4 @@ jobs:
           test "$(git rev-list --count "$BASE_SHA"..HEAD)" = "1"
           test "$(git rev-parse HEAD^)" = "$BASE_SHA"
           git push --force origin HEAD:agent/16.6.5-staging
-# exact-part03-split
+# exact-all-payload-bytes
