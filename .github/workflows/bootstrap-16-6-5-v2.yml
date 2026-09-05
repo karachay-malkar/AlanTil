@@ -25,21 +25,26 @@ jobs:
           gzip -t "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz"
           gunzip -c "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz" > "$RUNNER_TEMP/AlanTil-16.6.5.patch"
           echo 'b2555c8cecad26ecfcd5dd8bc17fcc7fbda5afd6750793ba84c3431188d50e24  '"$RUNNER_TEMP/AlanTil-16.6.5.patch" | sha256sum -c -
-      - name: Apply tracked patch and print missing shared contracts
+      - name: Apply tracked 16.6.5 patch
         shell: bash
         run: |
           set -euo pipefail
           git reset --hard 50c5dbf28596c9b9c12b292ca89115a37dd42710
           git apply --index --binary "$RUNNER_TEMP/AlanTil-16.6.5.patch"
-          echo '=== PATCHED FILES ==='
-          git diff --cached --name-only
-          echo '=== ALANTIL-UI REFERENCES ==='
-          grep -RIn --exclude-dir=node_modules --exclude='*.map' 'alantil-ui' mobile src scripts tests .github 2>/dev/null || true
-          echo '=== CHROME-MASK REFERENCES ==='
-          grep -RIn --exclude-dir=node_modules --exclude='*.map' 'chrome-mask' mobile src scripts tests .github 2>/dev/null || true
-          echo '=== 16.6.5 NEW SCRIPT/TEST REFERENCES ==='
-          grep -RIn --exclude-dir=node_modules --exclude='*.map' '16-6-5\|16\.6\.5' mobile src scripts tests .github 2>/dev/null || true
-          echo '=== IMPORT LINES FROM PATCHED MOBILE UI ==='
-          grep -RIn --include='*.js' --include='*.mjs' '^import\|^export .* from' mobile src 2>/dev/null | grep -E 'alantil-ui|chrome-mask|shared-visual' || true
-          echo '=== STATUS ==='
-          git status --short
+          git diff --cached --check
+          echo "tracked_files=$(git diff --cached --name-only | wc -l)"
+          mkdir -p "$RUNNER_TEMP/at1665-tracked"
+          git archive --format=tar HEAD | tar -xf - -C "$RUNNER_TEMP/at1665-tracked"
+          while IFS= read -r path; do
+            mkdir -p "$RUNNER_TEMP/at1665-tracked/$(dirname "$path")"
+            cp -a "$path" "$RUNNER_TEMP/at1665-tracked/$path"
+          done < <(git diff --cached --name-only)
+          tar -C "$RUNNER_TEMP/at1665-tracked" -czf "$RUNNER_TEMP/AlanTil-16.6.5-tracked-snapshot.tgz" .
+          sha256sum "$RUNNER_TEMP/AlanTil-16.6.5-tracked-snapshot.tgz"
+      - name: Upload tracked snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.5-tracked-snapshot
+          path: ${{ runner.temp }}/AlanTil-16.6.5-tracked-snapshot.tgz
+          if-no-files-found: error
+          retention-days: 3
