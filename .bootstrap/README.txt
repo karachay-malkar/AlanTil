@@ -1,0 +1,1 @@
+Bootstrap transport only. Final 16.6.5 source is staged from commit 77a3f52b68aaa717d88218a1d128e36abf9b6a9e.
