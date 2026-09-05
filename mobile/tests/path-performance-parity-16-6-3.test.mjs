@@ -61,11 +61,12 @@ test('Path keeps only catalog diamonds interactive on the route scale',()=>{
   assert.match(pathScreen,/return <View pointerEvents="none" key=\{part\.key\} style=\{\[styles\.scaleDot/);
 });
 
-test('Path removes the overlapping floating Guide button and keeps header help',()=>{
-  assert.doesNotMatch(pathScreen,/GuideHelpButton/);
-  assert.match(pathScreen,/HeaderCircleButton[\s\S]*onPress=\{startGuide\}/);
+test('Path restores the Web floating Guide trigger without overlapping Story Words',()=>{
+  assert.match(pathScreen,/GuideHelpButton onPress=\{startGuide\}/);
+  assert.doesNotMatch(pathScreen,/HeaderCircleButton/);
   assert.match(pathScreen,/wordListFloat:\{[^}]*left:10[^}]*top:'80%'[^}]*marginTop:-64/s);
   assert.match(pathScreen,/steleTrigger:\{[^}]*right:8[^}]*top:'80%'[^}]*marginTop:-31/s);
+  assert.match(pathScreen,/storyTabs:\{[^}]*gap:3/s);
 });
 
 test('Route scale diamonds jump to measured catalog positions rather than percentage guesses',()=>{

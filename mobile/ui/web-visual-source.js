@@ -118,7 +118,7 @@ export const WEB_VISUAL_TOKENS = Object.freeze({
   control:Object.freeze({sm:36,normal:44,compact:36,text:28,large:44,header:46,nav:60,input:44,row:48}),
   path:Object.freeze({rootControlsHeight:56,mapTop:64,stationSize:60,stationGap:58,stationMetaReserve:52,sectionGap:92,dictionaryGap:118,headingGap:22,routeGroupsBottom:64,waveAmplitudeMin:64,waveAmplitudeWidthRatio:.22,waveAmplitudeMax:90,scaleDot:4,scaleSection:6,scaleDiamond:9,scaleHeightPercent:60,scaleRight:12,scaleWidth:26}),
   chrome:Object.freeze({contentRestGap:16,actionEdgeGap:16,headerSide:10,headerSideCompact:6,headerCenterInset:56,navSide:12,navSideCompact:8,actionSize:36,actionIconSize:20,navBubbleSize:38,navBubbleCompactSize:36,blur:10,controlBlur:8,compactWidth:360}),
-  safeArea:Object.freeze({edges:['top','left','right','bottom'],topContentGap:16,bottomContentGap:18}),
+  safeArea:Object.freeze({edges:['top','left','right','bottom'],shellEdges:['top','left','right'],bottomManagedByChrome:true,topContentGap:16,bottomContentGap:18}),
   breakpoints:Object.freeze({compact:360,accountNarrow:420}),
   motion:Object.freeze({fast:110,normal:145,modal:145,reduced:0}),
   layout:Object.freeze({contentMax:720,accountMax:520,viewPadding:12,viewPaddingCompact:8,panelBodyHorizontal:16,panelBodyHorizontalCompact:12,panelBodyTop:8,panelBodyBottom:18,accountGap:16}),

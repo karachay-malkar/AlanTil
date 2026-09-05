@@ -1,16 +1,17 @@
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
 import { AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path as SvgPath } from 'react-native-svg';
 import { GENERAL_GUIDE_STEPS } from '../../packages/alantil-core/guide-contract.js';
 import { computedStationStatus, createRouteProgressSnapshot, stationMilestoneCount, stationWordProgress, storyProgress } from '../../packages/alantil-core/route-progress.js';
 import { loadNativeWordProgressMap } from '../platform/progress.js';
 import { hasSeenNativeStoryStele, loadNativePathSettings, loadNativeStoryScroll, markNativeStorySteleSeen, saveNativeActiveStory, saveNativeStoryScroll } from '../platform/path-state.js';
-import { saveNativeGuideState } from '../platform/guide-state.js';
+import { beginNativeGeneralGuide, getNativeGeneralGuideRuntime, resetNativeGeneralGuideRuntime, setNativeGeneralGuideRuntime } from '../platform/guide-state.js';
 import { msg } from '../i18n.js';
-import { Header, HeaderCircleButton, Screen } from '../ui/components.js';
-import { GuideOverlay } from '../ui/guide.js';
+import { Screen } from '../ui/components.js';
+import { GuideHelpButton, GuideOverlay } from '../ui/guide.js';
 import { MonoLabel } from '../ui/parity.js';
-import { InfoIcon, ListChecksIcon } from '../ui/icons.js';
+import { ListChecksIcon } from '../ui/icons.js';
 import { Topography } from '../ui/topography.js';
 import { theme } from '../ui/theme.js';
 
@@ -30,13 +31,16 @@ function dotCount(height,routeHeight){if(!routeHeight)return 4;const share=Math.
 function connectorPath(points){if(points.length<2)return'';let path=`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;for(let index=1;index<points.length;index+=1){const previous=points[index-1],current=points[index],middleY=(previous.y+current.y)/2;path+=` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;}return path;}
 function showStationLabels(catalog){const value=String(catalog?.name||catalog?.label||'').toLowerCase();return !/(beginner|intermediate|advanced|началь|средн|сложн)/i.test(value);}
 function geometryBuffer(){return{map:null,stations:new Map(),sections:new Map(),catalogs:new Map()};}
+function ensureTargetRef(map,key){if(!map.has(key))map.set(key,{current:null});return map.get(key);}
 
-function StoryTabs({route,activeStory,onChange,targetRef}){
+function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs}){
   const {width}=useWindowDimensions(),fontSize=Math.min(13,Math.max(10,width*.03));
   return <ScrollView ref={targetRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyTabs}>
     {(route.storyOrder||[]).map((type)=>{
-      const active=activeStory===type;
+      const active=activeStory===type,target=storyTargetRefs?.get(type);
       return <Pressable
+        ref={target}
+        collapsable={false}
         key={type}
         accessibilityRole="button"
         accessibilityState={{selected:active}}
@@ -56,9 +60,9 @@ function SegmentedStoryProgress({value=0}){
   </View>;
 }
 
-function StationProgressRing({percent=0,done=false,children}){
+function StationProgressRing({percent=0,done=false,children,targetRef}){
   const size=theme.path.stationSize,stroke=2,radius=(size-stroke)/2,circumference=2*Math.PI*radius,progress=Math.max(0,Math.min(100,percent));
-  return <View style={styles.stationProgressRing}>
+  return <View ref={targetRef} collapsable={false} style={styles.stationProgressRing}>
     <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
       <Circle cx={size/2} cy={size/2} r={radius} stroke={C.lineSoft} strokeWidth={stroke} fill="none"/>
       {progress>0?<Circle cx={size/2} cy={size/2} r={radius} stroke={done?C.successStrong:C.accentStrong} strokeWidth={stroke} fill="none" strokeLinecap="round" strokeDasharray={`${circumference} ${circumference}`} strokeDashoffset={circumference*(1-progress/100)} rotation="-90" origin={`${size/2} ${size/2}`}/>:null}
@@ -214,9 +218,10 @@ function StoryStele({story,visible,onOpen,onClose}){
 
 export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
-  const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[steleOpen,setSteleOpen]=useState(false);
-  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),stationGuideRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef('');
-  const {width:viewportWidth}=useWindowDimensions();
+  const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
+  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
+  const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
+  for(const storyType of route.storyOrder||[])ensureTargetRef(storyTargetRefs,storyType);
 
   useEffect(()=>{
     let alive=true;
@@ -233,24 +238,24 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     let cancelled=false;
     geometryRef.current=geometryBuffer();geometrySignatureRef.current='';setGeometry(null);
     positionedRef.current=false;contentHeightRef.current=1;viewportHeightRef.current=1;offsetRef.current=0;storyRef.current=activeStory;setSteleOpen(false);
-    if(pathReady&&route.stories?.[activeStory]?.intro){
+    if(pathReady&&route.stories?.[activeStory]?.intro&&!getNativeGeneralGuideRuntime().active){
       (async()=>{
         const seen=await hasSeenNativeStoryStele(activeStory);
-        if(cancelled||seen)return;
+        if(cancelled||seen||getNativeGeneralGuideRuntime().active)return;
         await markNativeStorySteleSeen(activeStory).catch(()=>{});
-        if(!cancelled&&storyRef.current===activeStory)setSteleOpen(true);
+        if(!cancelled&&storyRef.current===activeStory&&!getNativeGeneralGuideRuntime().active)setSteleOpen(true);
       })().catch(()=>{});
     }
     return()=>{cancelled=true;if(geometryFrameRef.current){cancelAnimationFrame(geometryFrameRef.current);geometryFrameRef.current=0;}};
   },[activeStory,pathReady,route]);
 
-  const changeStory=async(nextStory)=>{if(!nextStory||nextStory===activeStory)return;await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(nextStory);offsetRef.current=0;setActiveStory(nextStory);};
-  const openStation=async(station)=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);onOpenStation(station);};
+  const changeStory=async(nextStory)=>{if(!nextStory||nextStory===activeStory)return;await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(nextStory);offsetRef.current=0;setSteleOpen(false);setActiveStory(nextStory);};
+  const openStation=async(station)=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);const runtime=getNativeGeneralGuideRuntime();if(runtime.active&&runtime.phase==='await-station')setNativeGeneralGuideRuntime({phase:'station-study'});onOpenStation(station);};
   const openWordList=async()=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);onOpenWordList?.(activeStory);};
   const openStele=async()=>{await markNativeStorySteleSeen(activeStory).catch(()=>{});setSteleOpen(true);};
   const closeStele=()=>setSteleOpen(false);
-  const startGuide=()=>setGuideIndex(0),stopGuide=()=>setGuideIndex(-1);
-  const nextGuide=async()=>{const nextIndex=guideIndex+1;if(nextIndex>=GENERAL_GUIDE_STEPS.length){await saveNativeGuideState({station_pending:true});setGuideIndex(-1);return;}const next=GENERAL_GUIDE_STEPS[nextIndex];if(next?.story&&route.stories?.[next.story])await changeStory(next.story);setGuideIndex(nextIndex);};
+  const startGuide=()=>{setSteleOpen(false);beginNativeGeneralGuide();setGuideStationKey('');setGuideIndex(0);};
+  const stopGuide=()=>{resetNativeGeneralGuideRuntime();setGuideStationKey('');setGuideIndex(-1);};
   const currentGuide=guideIndex>=0?GENERAL_GUIDE_STEPS[guideIndex]:null;
 
   const story=route.stories?.[activeStory],stations=story?.stations||[],snapshot=useMemo(()=>createRouteProgressSnapshot(progressMap),[progressMap]),storySummary=useMemo(()=>storyProgress(route,activeStory,snapshot),[route,activeStory,snapshot]),stationIndex=useMemo(()=>new Map(stations.map((station,index)=>[station.key,index])),[stations]);
@@ -327,8 +332,27 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const onContentSizeChange=(_,height)=>{contentHeightRef.current=height||1;syncScaleMetrics();void restoreMapPosition();};
   const onPathScroll=(event)=>{const offset=event.nativeEvent.contentOffset.y;offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);};
   const jumpScale=(part)=>{const viewport=viewportHeightRef.current||1,target=Math.max(0,(Number(part?.targetY)||0)-viewport*.16);scrollRef.current?.scrollTo({y:target,animated:true});};
+  const selectVisibleGuideStation=()=>{
+    const viewport=viewportHeightRef.current||1,center=viewport/2,hardTop=viewport*.28,preferredTop=viewport*.40,preferredBottom=viewport*.65,offset=offsetRef.current;
+    const candidates=points.map(point=>({...point,screenY:theme.path.mapTop+point.y-offset})).filter(point=>point.screenY>=hardTop&&point.screenY<=viewport-8);
+    const comfortable=candidates.filter(point=>point.screenY>=preferredTop&&point.screenY<=preferredBottom),pool=comfortable.length?comfortable:candidates.length?candidates:points.map(point=>({...point,screenY:theme.path.mapTop+point.y-offset}));
+    pool.sort((a,b)=>{const distance=Math.abs(a.screenY-center)-Math.abs(b.screenY-center);return Math.abs(distance)>12?distance:b.index-a.index;});
+    const key=pool[0]?.key||displayStations.at(-1)?.station?.key||displayStations[0]?.station?.key||'';setGuideStationKey(key);return key;
+  };
+  const nextGuide=async()=>{
+    if(!currentGuide)return;
+    if(currentGuide.id==='stages'){
+      setNativeGeneralGuideRuntime({active:true,phase:'await-station'});setGuideIndex(-1);return;
+    }
+    const nextIndex=guideIndex+1;if(nextIndex>=GENERAL_GUIDE_STEPS.length){stopGuide();return;}
+    const next=GENERAL_GUIDE_STEPS[nextIndex];setSteleOpen(false);
+    if(next?.story&&route.stories?.[next.story]&&next.story!==activeStory)await changeStory(next.story);
+    if(next?.id==='stages')selectVisibleGuideStation();
+    const storyIndex=next?.story?Math.max(0,GENERAL_GUIDE_STEPS.filter(step=>step?.id?.startsWith('story:')).findIndex(step=>step.story===next.story)):getNativeGeneralGuideRuntime().storyIndex;
+    setNativeGeneralGuideRuntime({active:true,phase:next?.id?.startsWith('story:')?'story':next?.id||'',storyIndex});setGuideIndex(nextIndex);
+  };
 
-  const routeItems=[];let firstStationCaptured=false;
+  const routeItems=[];
   displayCatalogs.forEach((catalog)=>{
     const labels=showStationLabels(catalog),sections=[...(catalog.sections||[])].reverse();
     routeItems.push(
@@ -339,11 +363,10 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
             return <View key={sectionKey(catalog,section)} style={styles.routeSection} onLayout={(event)=>recordSection(catalog,section,event)}>
               <View style={styles.routeSectionStations}>
                 {reversedStations.map((station)=>{
-                  const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),capture=!firstStationCaptured;
-                  if(capture)firstStationCaptured=true;
-                  return <View ref={capture?stationGuideRef:undefined} collapsable={capture?false:undefined} key={station.key} style={styles.stationRow} onLayout={(event)=>recordStation(catalog,section,station,event)}>
+                  const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),targetRef=ensureTargetRef(stationTargetRefs,station.key);
+                  return <View key={station.key} style={styles.stationRow} onLayout={(event)=>recordStation(catalog,section,station,event)}>
                     <Pressable accessibilityRole="button" accessibilityLabel={station.name||fallback} accessibilityValue={{text:status}} disabled={status==='locked'} accessibilityState={{disabled:status==='locked'}} hitSlop={8} onPress={()=>openStation(station)} style={({pressed})=>[styles.stationNode,status==='locked'&&styles.stationLocked,{transform:[{translateX:shift},{scale:pressed?0.97:1}]}]}>
-                      <StationProgressRing percent={summary.percent} done={done}>
+                      <StationProgressRing targetRef={targetRef} percent={summary.percent} done={done}>
                         <MillstoneFace status={status} done={done}><Text style={styles.stationOrdinal}>{String(index+1).padStart(2,'0')}</Text></MillstoneFace>
                       </StationProgressRing>
                       {milestones?<Text style={styles.stationMilestones}>{'⌃'.repeat(milestones)}</Text>:null}
@@ -364,22 +387,20 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     );
   });
 
-  const headerActions=<HeaderCircleButton icon={<InfoIcon size={20} color={C.text2}/>} accessibilityLabel={m('mobile.path.help')} onPress={startGuide}/>;
-  const guideTarget=currentGuide?.id==='stages'?stationGuideRef:storyTabsRef;
-  const compactFloat=viewportWidth<=390;
+  const compactFloat=viewportWidth<=390,guideStoryRef=currentGuide?.story?storyTargetRefs.get(currentGuide.story):null,guideTarget=currentGuide?.id==='stages'?stationTargetRefs.get(guideStationKey):currentGuide?.id?.startsWith('story:')?guideStoryRef:currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'?storyTabsRef:null,guideStationPoint=points.find(point=>point.key===guideStationKey),guideStationY=guideStationPoint?theme.path.mapTop+guideStationPoint.y-offsetRef.current:0;
+  const guideShape=currentGuide?.id==='stages'?'circle':currentGuide?.id?.startsWith('story:')?'pill':currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'?'rounded':'auto',guidePadding=currentGuide?.id==='stages'?10:currentGuide?.id?.startsWith('story:')?7:6,guidePreference=currentGuide?.id==='stages'?(guideStationY>viewportHeightRef.current/2?'top':'bottom'):currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'||currentGuide?.id?.startsWith('story:')?'bottom':'auto';
 
   return <Screen bottomNav>
     <Topography opacity={.28}/>
-    <Header title="" trailing={headerActions}/>
     <View style={styles.pathControls}>
-      <StoryTabs targetRef={storyTabsRef} route={route} activeStory={activeStory} onChange={changeStory}/>
+      <StoryTabs targetRef={storyTabsRef} storyTargetRefs={storyTargetRefs} route={route} activeStory={activeStory} onChange={changeStory}/>
       <View style={styles.storyProgress}>
         <SegmentedStoryProgress value={storySummary.percent}/>
         <MonoLabel accent>{storySummary.percent}%</MonoLabel>
         <MonoLabel>{storySummary.masteredWords}/{storySummary.totalWords}</MonoLabel>
       </View>
     </View>
-    <ScrollView ref={scrollRef} style={styles.pathViewport} contentContainerStyle={styles.pathContent} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
+    <ScrollView ref={scrollRef} style={styles.pathViewport} contentContainerStyle={[styles.pathContent,{paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
       <View style={styles.routeMap} onLayout={recordMap}>
         {connector&&geometry?.map?.width&&geometry?.map?.height?<Svg pointerEvents="none" width={geometry.map.width} height={geometry.map.height} style={styles.routeConnector}><SvgPath d={connector} fill="none" stroke="rgba(102,97,88,.38)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.72}/></Svg>:null}
         {routeItems}
@@ -390,13 +411,14 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     </Pressable>
     <RouteScale ref={routeScaleRef} parts={scaleParts} onJump={jumpScale}/>
     <StoryStele story={story} visible={steleOpen} onOpen={openStele} onClose={closeStele}/>
-    <GuideOverlay visible={Boolean(currentGuide)} settings={settings} step={currentGuide} targetRef={guideTarget} onNext={nextGuide} onSkip={stopGuide} nextLabel={currentGuide?.id==='stages'?'OK':''}/>
+    <GuideHelpButton onPress={startGuide} accessibilityLabel={m('mobile.path.help')}/>
+    <GuideOverlay visible={Boolean(currentGuide)} settings={settings} step={currentGuide} targetRef={guideTarget} spotlightShape={guideShape} spotlightPadding={guidePadding} contentPreference={guidePreference} onNext={nextGuide} onSkip={stopGuide} nextLabel={currentGuide?.id==='stages'?m('guide.understood'):''}/>
   </Screen>;
 }
 
 const styles=StyleSheet.create({
   pathControls:{position:'absolute',zIndex:24,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingRight:38,paddingBottom:2},
-  storyTabs:{height:32,alignItems:'center',paddingHorizontal:8,gap:8},
+  storyTabs:{height:32,alignItems:'center',paddingHorizontal:8,gap:3},
   storyTab:{height:30,paddingHorizontal:8,marginVertical:1,borderRadius:12,alignItems:'center',justifyContent:'center'},
   storyTabSelected:{backgroundColor:'rgba(246,242,233,.28)'},
   storyTabPressed:{opacity:.68,transform:[{translateY:1}]},
@@ -406,8 +428,8 @@ const styles=StyleSheet.create({
   segmentedProgress:{width:62,height:5,flexDirection:'row',gap:2},
   segmentedProgressCell:{flex:1,height:5,borderRadius:1,backgroundColor:C.lineSoft},
   segmentedProgressCellOn:{backgroundColor:C.accentStrong},
-  pathViewport:{position:'absolute',top:0,left:0,right:0,bottom:theme.control.nav},
-  pathContent:{paddingTop:theme.path.mapTop,paddingLeft:20,paddingRight:50,paddingBottom:108},
+  pathViewport:{position:'absolute',top:0,left:0,right:0,bottom:0},
+  pathContent:{paddingTop:theme.path.mapTop,paddingLeft:20,paddingRight:50},
   routeMap:{position:'relative',width:'100%',maxWidth:560,alignSelf:'center',gap:theme.path.dictionaryGap},
   routeConnector:{position:'absolute',zIndex:0,left:0,top:0},
   routeCatalog:{position:'relative',zIndex:1,gap:theme.path.headingGap},
