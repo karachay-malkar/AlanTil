@@ -1,4 +1,4 @@
-name: AlanTil 16.6.3 Full Screen Parity
+name: AlanTil 16.6.4 Full Screen Parity
 
 on:
   push:
@@ -13,13 +13,22 @@ permissions:
 jobs:
   full-screen-parity:
     runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SOURCE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Verify exact branch HEAD checkout
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          echo "Exact branch HEAD: $SOURCE_SHA"
       - name: Verify production dictionary snapshot is current
         run: |
           node scripts/generate-mobile-dictionary-snapshot.mjs
@@ -46,8 +55,10 @@ jobs:
         run: node scripts/check-functional-parity-16-5.mjs
       - name: Preserve 16.6.1 functional gate
         run: node scripts/check-parity-correction-16-6-1.mjs
-      - name: Full screen parity 16.6.3 source and state gate
+      - name: Preserve full screen parity source and state gate
         run: node scripts/check-full-screen-parity-16-6-3.mjs
+      - name: Visual parity 16.6.4 correction gate
+        run: node --test mobile/tests/visual-parity-16-6-4.test.mjs
       - name: Expo Doctor
         working-directory: mobile
         run: npx expo-doctor
@@ -76,10 +87,10 @@ jobs:
           t=t.replace('src="/_expo/','src="./_expo/')
           index.write_text(t)
           (root/'preview-build.json').write_text(json.dumps({
-            'source_sha':os.environ.get('GITHUB_SHA',''),
-            'branch':os.environ.get('GITHUB_REF_NAME',''),
+            'source_sha':os.environ.get('SOURCE_SHA',''),
+            'branch':os.environ.get('SOURCE_BRANCH',''),
             'run_id':os.environ.get('GITHUB_RUN_ID',''),
-            'version':'16.6.3',
+            'version':'16.6.4',
             'delivery':'immutable-cdn-relative',
             'q03':'PUBLIC_RENDER_QA_REQUIRED'
           }),encoding='utf-8')
@@ -105,7 +116,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p mobile/dist-web
-          git archive --format=zip --output=mobile/dist-web/AlanTil-16.6.3-source.zip HEAD
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git archive --format=zip --output=mobile/dist-web/AlanTil-16.6.4-source.zip HEAD
           python - <<'PY'
           from pathlib import Path
           excluded={'.git','node_modules','dist-web'}
@@ -115,16 +127,16 @@ jobs:
               continue
             rows.append((p.as_posix(),p.stat().st_size))
           rows.sort()
-          Path('mobile/dist-web/FILE_SIZES_16.6.3.txt').write_text('\n'.join(f'{name} — {size/1024:.2f} KB' for name,size in rows)+'\n',encoding='utf-8')
+          Path('mobile/dist-web/FILE_SIZES_16.6.4.txt').write_text('\n'.join(f'{name} — {size/1024:.2f} KB' for name,size in rows)+'\n',encoding='utf-8')
           PY
-          sha256sum mobile/dist-web/AlanTil-16.6.3-source.zip > mobile/dist-web/AlanTil-16.6.3-source.sha256
+          sha256sum mobile/dist-web/AlanTil-16.6.4-source.zip > mobile/dist-web/AlanTil-16.6.4-source.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-16.6.3-Full-Screen-Parity
+          name: AlanTil-16.6.4-Full-Screen-Parity
           path: mobile/dist-web
           if-no-files-found: error
       - name: Publish immutable Expo Web preview source
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -138,17 +150,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add --all
-          git commit -m "Preview ${GITHUB_SHA}"
+          git commit -m "Preview ${SOURCE_SHA}"
           preview_sha="$(git rev-parse HEAD)"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
           preview_url="https://raw.githack.com/${GITHUB_REPOSITORY}/${preview_sha}/index.html"
           echo "PREVIEW_SHA=${preview_sha}" >> "$GITHUB_ENV"
           echo "PUBLIC_PREVIEW_URL=${preview_url}" >> "$GITHUB_ENV"
-          echo "${preview_url}" > "$RUNNER_TEMP/AlanTil-16.6.3-public-preview-url.txt"
+          echo "${preview_url}" > "$RUNNER_TEMP/AlanTil-16.6.4-public-preview-url.txt"
           echo "Public preview: ${preview_url}" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify public Expo Web render in Chromium
-        if: github.event_name == 'push'
+      - name: Verify public Expo Web render matrix in Chromium
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
@@ -159,117 +171,14 @@ jobs:
           npm install --no-save --no-audit --no-fund playwright@1.55.0
           npx playwright install --with-deps chromium
           export SCREENSHOT_DIR="$qa_dir/output"
-          node - <<'NODE'
-          const { chromium } = require('playwright');
-          const assert = require('node:assert/strict');
-          const fs = require('node:fs');
-          const path = require('node:path');
-
-          (async () => {
-            const browser = await chromium.launch({ headless: true });
-            const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
-            await context.addCookies([{ name: '__Http-phish', value: '1', domain: 'raw.githack.com', path: '/', secure: true, httpOnly: true, sameSite: 'Lax' }]);
-            const page = await context.newPage();
-            const url = process.env.PUBLIC_PREVIEW_URL;
-            let loaded = false;
-            let lastError = '';
-            for (let attempt = 0; attempt < 12 && !loaded; attempt += 1) {
-              try {
-                const response = await page.goto(`${url}?source=${process.env.GITHUB_SHA}&attempt=${attempt}`, { waitUntil: 'networkidle', timeout: 60000 });
-                loaded = Boolean(response?.ok());
-                if (!loaded) lastError = `HTTP ${response?.status()}`;
-              } catch (error) {
-                lastError = error.message;
-              }
-              if (!loaded) await page.waitForTimeout(2500);
-            }
-            assert.ok(loaded, `Public immutable preview failed to load: ${lastError}`);
-
-            const consoleErrors = [];
-            const pageErrors = [];
-            const requestFailures = [];
-            const badResponses = [];
-            page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
-            page.on('pageerror', error => pageErrors.push(String(error?.stack || error)));
-            page.on('requestfailed', request => requestFailures.push(`${request.method()} ${request.url()} :: ${request.failure()?.errorText || 'failed'}`));
-            page.on('response', response => { if (response.status() >= 400) badResponses.push(`${response.status()} ${response.url()}`); });
-
-            const definitive = await page.reload({ waitUntil: 'networkidle', timeout: 60000 });
-            assert.ok(definitive?.ok(), `Definitive public preview reload failed: HTTP ${definitive?.status()}`);
-            await page.waitForTimeout(4000);
-            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '00-runtime-body.txt'), await page.locator('body').innerText().catch(()=>''));
-            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '00-runtime-dom.html'), await page.content().catch(()=>''));
-            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '00-runtime-errors.json'), JSON.stringify({ consoleErrors, pageErrors, requestFailures, badResponses, url: page.url() }, null, 2));
-            await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '00-runtime.png'), fullPage: true });
-
-            await page.getByText('Язык · Language · Dil', { exact: true }).waitFor({ state: 'visible', timeout: 30000 });
-            await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '01-onboarding.png'), fullPage: true });
-
-            await page.getByText('Русский', { exact: true }).click();
-            await page.getByText('Написание аланских слов', { exact: true }).waitFor({ state: 'visible' });
-            await page.getByText('Кириллица', { exact: true }).click();
-            await page.getByText('Выберите форму', { exact: true }).waitFor({ state: 'visible' });
-            await page.getByText('Җ', { exact: true }).click();
-            await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '02-onboarding-complete.png'), fullPage: true });
-
-            await page.getByText('Продолжить', { exact: true }).click();
-            await page.getByText('Продолжить с Google', { exact: true }).waitFor({ state: 'visible', timeout: 15000 });
-            await page.getByText('Продолжить как гость', { exact: true }).waitFor({ state: 'visible' });
-            await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '03-auth-choice.png'), fullPage: true });
-
-            await page.getByText('Продолжить как гость', { exact: true }).click();
-            await page.getByText('Путь', { exact: true }).first().waitFor({ state: 'visible', timeout: 30000 });
-            await page.waitForTimeout(2500);
-            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, '04-path-dom.html'), await page.content().catch(()=>''));
-            await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, '04-path-stele.png'), fullPage: true });
-            const paragraph = page.getByText('Это история о последних мгновениях жизни языка.', { exact: false }).first();
-            await paragraph.waitFor({ state: 'visible', timeout: 15000 });
-            const fontSize = await paragraph.evaluate(node => Number.parseFloat(getComputedStyle(node).fontSize) || 0);
-            assert.ok(fontSize >= 12.5, `Story Stele font is too small: ${fontSize}`);
-            const steleBoxes = await page.locator('*').evaluateAll(nodes => nodes.map(node => {
-              const style = getComputedStyle(node);
-              const marker = `${node.getAttribute?.('src') || ''} ${style.backgroundImage || ''}`;
-              if (!marker.includes('story-stele')) return null;
-              const rect = node.getBoundingClientRect();
-              if (rect.width <= 0 || rect.height <= 0) return null;
-              return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, area: rect.width * rect.height };
-            }).filter(Boolean));
-            const box = steleBoxes.sort((left,right)=>right.area-left.area)[0] || null;
-            assert.ok(box, 'Story Stele image has no visible layout box');
-            assert.ok(box.y >= -1, `Story Stele starts above viewport: ${JSON.stringify(box)}`);
-            assert.ok(box.y + box.height <= 845, `Story Stele is clipped below viewport: ${JSON.stringify(box)}`);
-
-            await page.waitForTimeout(750);
-            const failures = { consoleErrors, pageErrors, requestFailures, badResponses };
-            fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, 'render-qa.json'), JSON.stringify({
-              sourceSha: process.env.GITHUB_SHA,
-              previewSha: process.env.PREVIEW_SHA,
-              url,
-              viewport: { width: 390, height: 844 },
-              firstRun: 'PASS',
-              authChoice: 'PASS',
-              guestPath: 'PASS',
-              steleBox: box,
-              steleFontSize: fontSize,
-              ...failures
-            }, null, 2));
-            assert.deepEqual(failures, { consoleErrors: [], pageErrors: [], requestFailures: [], badResponses: [] }, JSON.stringify(failures, null, 2));
-            await browser.close();
-            console.log('Public Expo Web Chromium render QA: PASS');
-          })().catch(async error => {
-            try {
-              fs.writeFileSync(path.join(process.env.SCREENSHOT_DIR, 'render-qa-error.txt'), String(error?.stack || error));
-            } catch {}
-            console.error(error);
-            process.exit(1);
-          });
-          NODE
-          cp "$RUNNER_TEMP/AlanTil-16.6.3-public-preview-url.txt" "$qa_dir/output/PUBLIC_PREVIEW_URL.txt"
+          export NODE_PATH="$qa_dir/node_modules"
+          node "$GITHUB_WORKSPACE/scripts/qa-mobile-visual-parity-16-6-4.cjs"
+          cp "$RUNNER_TEMP/AlanTil-16.6.4-public-preview-url.txt" "$qa_dir/output/PUBLIC_PREVIEW_URL.txt"
 
       - name: Upload public render QA
-        if: always() && github.event_name == 'push'
+        if: always() && (github.event_name == 'push' || github.event_name == 'pull_request')
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-16.6.3-Web-Render-QA
+          name: AlanTil-16.6.4-Web-Render-QA
           path: ${{ runner.temp }}/alantil-render-qa/output
           if-no-files-found: warn

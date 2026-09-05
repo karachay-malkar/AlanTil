@@ -47,6 +47,11 @@ export function MonoLabel({ children, accent = false, style }) {
   return <Text style={[styles.monoLabel, accent && styles.monoAccent, style]}>{children}</Text>;
 }
 
+
+export function SmallActionButton({ children, onPress, active = false, disabled = false }) {
+  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, active && styles.smallActionActive, disabled && styles.smallActionDisabled, pressed && !disabled && styles.pressed]}><Text style={[styles.smallActionLabel, active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
+}
+
 export function EmptyState({ children }) {
   return <View style={styles.empty}><Text style={styles.emptyText}>{children}</Text></View>;
 }
@@ -81,6 +86,11 @@ const styles = StyleSheet.create({
   metricLabel: { marginTop: 4, fontSize: T.micro, lineHeight: 12, color: C.text2, textAlign: 'center' },
   monoLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '800', lineHeight: 11, letterSpacing: .55, color: C.text3 },
   monoAccent: { color: C.accentStrong },
+  smallAction: { minHeight: 29, paddingVertical: 4, paddingHorizontal: 10, borderWidth: 1, borderColor: C.line, borderRadius: 2, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  smallActionActive: { borderColor: C.accentStrong, backgroundColor: C.accent },
+  smallActionDisabled: { opacity: .48 },
+  smallActionLabel: { fontFamily: theme.font.terminal, fontSize: 10, fontWeight: '750', lineHeight: 12, color: C.text3 },
+  smallActionLabelActive: { color: C.inverse },
   empty: { minHeight: 96, alignItems: 'center', justifyContent: 'center', padding: 16 },
   emptyText: { fontSize: T.caption, lineHeight: 18, color: C.text3, textAlign: 'center' },
   pressed: { opacity: .7, transform: [{ translateY: 1 }] },

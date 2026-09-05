@@ -65,7 +65,8 @@ test('BottomNav overlays content and owns the bottom safe area instead of reserv
   assert.match(appRoot,/edges=\{theme\.safeArea\.shellEdges\}/);
   assert.match(components,/height:theme\.control\.nav\+insets\.bottom/);
   assert.match(components,/paddingBottom:insets\.bottom/);
-  assert.match(components,/export function Screen\(\{children,bottomNav=false\}\)\{return <View style=\{s\.screen\}>/);
+  assert.match(components,/export function Screen\(\{children,bottomNav=false,topChromeDepth,bottomChromeDepth\}\)/);
+  assert.match(components,/<TopChromeMask height=\{top\}\/><BottomChromeMask height=\{bottom\}\/>/);
   assert.match(pathScreen,/pathViewport:\{position:'absolute',top:0,left:0,right:0,bottom:0\}/);
   assert.match(pathScreen,/paddingBottom:insets\.bottom\+theme\.control\.nav\+theme\.chrome\.contentRestGap/);
 });

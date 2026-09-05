@@ -399,7 +399,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const compactFloat=viewportWidth<=390,guideStoryRef=currentGuide?.story?storyTargetRefs.get(currentGuide.story):null,guideTarget=currentGuide?.id==='stages'?stationTargetRefs.get(guideStationKey):currentGuide?.id?.startsWith('story:')?guideStoryRef:currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'?storyTabsRef:null,guideStationPoint=points.find(point=>point.key===guideStationKey),guideStationY=guideStationPoint?theme.path.mapTop+guideStationPoint.y-offsetRef.current:0;
   const guideShape=currentGuide?.id==='stages'?'circle':currentGuide?.id?.startsWith('story:')?'pill':currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'?'rounded':'auto',guidePadding=currentGuide?.id==='stages'?10:currentGuide?.id?.startsWith('story:')?7:6,guidePreference=currentGuide?.id==='stages'?(guideStationY>viewportHeightRef.current/2?'top':'bottom'):currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'||currentGuide?.id?.startsWith('story:')?'bottom':'auto';
 
-  return <Screen bottomNav>
+  return <Screen bottomNav topChromeDepth={theme.chrome.screenDepths.path.top} bottomChromeDepth={theme.chrome.screenDepths.path.bottom}>
     <Topography opacity={.28}/>
     <View style={styles.pathControls}>
       <StoryTabs targetRef={storyTabsRef} controlRef={storyTabsControlRef} storyTargetRefs={storyTargetRefs} route={route} activeStory={activeStory} onChange={changeStory}/>
@@ -409,7 +409,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
         <MonoLabel>{storySummary.masteredWords}/{storySummary.totalWords}</MonoLabel>
       </View>
     </View>
-    <ScrollView ref={scrollRef} style={styles.pathViewport} contentContainerStyle={[styles.pathContent,{paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
+    <ScrollView ref={scrollRef} style={styles.pathViewport} contentContainerStyle={[styles.pathContent,{paddingLeft:viewportWidth<=420?12:20,paddingRight:viewportWidth<=340?28:viewportWidth<=420?36:50,paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
       <View style={styles.routeMap} onLayout={recordMap}>
         {connector&&geometry?.map?.width&&geometry?.map?.height?<Svg pointerEvents="none" width={geometry.map.width} height={geometry.map.height} style={styles.routeConnector}><SvgPath d={connector} fill="none" stroke="rgba(102,97,88,.38)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.72}/></Svg>:null}
         {routeItems}
@@ -426,7 +426,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
 }
 
 const styles=StyleSheet.create({
-  pathControls:{position:'absolute',zIndex:24,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingRight:38,paddingBottom:2},
+  pathControls:{position:'absolute',zIndex:30,elevation:30,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingLeft:8,paddingRight:38,paddingBottom:2},
   storyTabsShell:{position:'relative',height:32,overflow:'hidden'},
   storyTabs:{height:32,alignItems:'center',paddingHorizontal:18,gap:8},
   storyEdge:{position:'absolute',zIndex:4,top:0,width:24,height:32,textAlign:'center',fontFamily:theme.font.terminal,fontSize:18,fontWeight:'800',lineHeight:32,color:C.text2,opacity:.72,backgroundColor:'rgba(238,233,223,.78)'},
@@ -442,7 +442,7 @@ const styles=StyleSheet.create({
   segmentedProgressCell:{flex:1,height:5,borderRadius:1,backgroundColor:C.lineSoft},
   segmentedProgressCellOn:{backgroundColor:C.accentStrong},
   pathViewport:{position:'absolute',top:0,left:0,right:0,bottom:0},
-  pathContent:{paddingTop:theme.path.mapTop,paddingLeft:20,paddingRight:50},
+  pathContent:{paddingTop:theme.path.mapTop},
   routeMap:{position:'relative',width:'100%',maxWidth:560,alignSelf:'center',gap:theme.path.dictionaryGap},
   routeConnector:{position:'absolute',zIndex:0,left:0,top:0},
   routeCatalog:{position:'relative',zIndex:1,gap:theme.path.headingGap},

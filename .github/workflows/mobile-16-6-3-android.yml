@@ -1,4 +1,4 @@
-name: AlanTil 16.6.3 Android
+name: AlanTil 16.6.4 Android
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
         run: |
           set -euo pipefail
           test "${GITHUB_REF_NAME}" = "agent/16.6.3-full-screen-parity"
-          printf 'branch=%s\ncommit=%s\nauth_revision=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" "google-oauth-pkce-deeplink-2" > AlanTil-16.6.3.source.txt
+          printf 'branch=%s\ncommit=%s\nauth_revision=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" "google-oauth-pkce-deeplink-2" > AlanTil-16.6.4.source.txt
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -31,8 +31,10 @@ jobs:
         run: npm test
       - name: Preserve 16.6.1 functional gate
         run: node scripts/check-parity-correction-16-6-1.mjs
-      - name: Full screen parity 16.6.3 source and state gate
-        run: node scripts/check-full-screen-parity-16-6-3.mjs
+      - name: Full screen parity 16.6.4 source and state gate
+        run: |
+          node scripts/check-full-screen-parity-16-6-3.mjs
+          node --test mobile/tests/visual-parity-16-6-4.test.mjs
       - name: Expo Doctor
         working-directory: mobile
         run: npx expo-doctor
@@ -67,23 +69,23 @@ jobs:
             apkanalyzer_bin="$(find "${ANDROID_HOME}" -type f -name apkanalyzer -print -quit)"
           fi
           test -n "$apkanalyzer_bin"
-          "$apkanalyzer_bin" manifest print "$apk" > AlanTil-16.6.3.AndroidManifest.xml
-          grep -F 'android.intent.action.VIEW' AlanTil-16.6.3.AndroidManifest.xml
-          grep -F 'android.intent.category.BROWSABLE' AlanTil-16.6.3.AndroidManifest.xml
-          grep -F 'android:scheme="alantil"' AlanTil-16.6.3.AndroidManifest.xml
-          grep -F 'android:host="auth"' AlanTil-16.6.3.AndroidManifest.xml
-          grep -F 'android:pathPrefix="/callback"' AlanTil-16.6.3.AndroidManifest.xml
+          "$apkanalyzer_bin" manifest print "$apk" > AlanTil-16.6.4.AndroidManifest.xml
+          grep -F 'android.intent.action.VIEW' AlanTil-16.6.4.AndroidManifest.xml
+          grep -F 'android.intent.category.BROWSABLE' AlanTil-16.6.4.AndroidManifest.xml
+          grep -F 'android:scheme="alantil"' AlanTil-16.6.4.AndroidManifest.xml
+          grep -F 'android:host="auth"' AlanTil-16.6.4.AndroidManifest.xml
+          grep -F 'android:pathPrefix="/callback"' AlanTil-16.6.4.AndroidManifest.xml
       - name: Package APK
         shell: bash
         run: |
-          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.6.3.apk
-          sha256sum AlanTil-16.6.3.apk > AlanTil-16.6.3.apk.sha256
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.6.4.apk
+          sha256sum AlanTil-16.6.4.apk > AlanTil-16.6.4.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-16.6.3-APK
+          name: AlanTil-16.6.4-APK
           path: |
-            AlanTil-16.6.3.apk
-            AlanTil-16.6.3.apk.sha256
-            AlanTil-16.6.3.source.txt
-            AlanTil-16.6.3.AndroidManifest.xml
+            AlanTil-16.6.4.apk
+            AlanTil-16.6.4.apk.sha256
+            AlanTil-16.6.4.source.txt
+            AlanTil-16.6.4.AndroidManifest.xml
           if-no-files-found: error
