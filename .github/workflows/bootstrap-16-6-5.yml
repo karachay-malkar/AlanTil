@@ -1,6 +1,8 @@
 name: Bootstrap AlanTil 16.6.5 staging
 
 on:
+  push:
+    branches: [agent/16.6.5-bootstrap]
   workflow_dispatch:
 
 permissions:
@@ -10,4 +12,49 @@ jobs:
   stage:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "bootstrap paused while payload is replaced"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Rebuild and verify exact 16.6.5 payload
+        shell: bash
+        env:
+          BASE_SHA: 50c5dbf28596c9b9c12b292ca89115a37dd42710
+          B64_SHA: 64f4aec1ab28588eeb4a9dbd263be70dcf1df6c3d0deb6fba946e7ea21c5b206
+          GZ_SHA: ae6fe12c08c7ef62ccfb45c5cc1b8c92fcd871203042e9fbdee9a06ccc59dee2
+          PATCH_SHA: b2555c8cecad26ecfcd5dd8bc17fcc7fbda5afd6750793ba84c3431188d50e24
+        run: |
+          set -euo pipefail
+          cat .bootstrap/16.6.5.b64.part-{00..12} > "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64"
+          echo "$B64_SHA  $RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64" | sha256sum -c -
+          base64 -d "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz.b64" > "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz"
+          echo "$GZ_SHA  $RUNNER_TEMP/AlanTil-16.6.5.patch.gz" | sha256sum -c -
+          gunzip -c "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz" > "$RUNNER_TEMP/AlanTil-16.6.5.patch"
+          echo "$PATCH_SHA  $RUNNER_TEMP/AlanTil-16.6.5.patch" | sha256sum -c -
+          git cat-file -e "$BASE_SHA^{commit}"
+      - name: Apply exact patch and run source gates
+        shell: bash
+        env:
+          BASE_SHA: 50c5dbf28596c9b9c12b292ca89115a37dd42710
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git apply --index --binary "$RUNNER_TEMP/AlanTil-16.6.5.patch"
+          node scripts/check-shared-visual-contract-16-6-5.mjs
+          node --test mobile/tests/*.test.mjs
+          git diff --cached --check
+          test -z "$(git status --porcelain | grep '^??' || true)"
+      - name: Publish one-clean-commit staging branch
+        shell: bash
+        env:
+          BASE_SHA: 50c5dbf28596c9b9c12b292ca89115a37dd42710
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Complete 16.6.5 unified visual parity contract"
+          test "$(git rev-list --count "$BASE_SHA"..HEAD)" = "1"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          git push --force origin HEAD:agent/16.6.5-staging
