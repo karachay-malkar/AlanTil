@@ -1,0 +1,43 @@
+name: Bootstrap AlanTil 16.6.5 staging
+
+on:
+  push:
+    branches: [agent/16.6.5-bootstrap]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply exact 16.6.5 patch onto 16.6.4 base
+        shell: bash
+        env:
+          BASE_SHA: 50c5dbf28596c9b9c12b292ca89115a37dd42710
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          cp .bootstrap/16.6.5.patch.gz "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz"
+          git reset --hard "$BASE_SHA"
+          gunzip -c "$RUNNER_TEMP/AlanTil-16.6.5.patch.gz" | git apply --index --binary
+          node scripts/check-shared-visual-contract-16-6-5.mjs
+          node --test mobile/tests/*.test.mjs
+          git diff --cached --check
+          test -z "$(git status --porcelain | grep '^??' || true)"
+      - name: Publish one-clean-commit staging branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Complete 16.6.5 unified visual parity contract"
+          test "$(git rev-list --count 50c5dbf28596c9b9c12b292ca89115a37dd42710..HEAD)" = "1"
+          git push --force origin HEAD:agent/16.6.5-staging
