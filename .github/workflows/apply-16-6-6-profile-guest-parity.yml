@@ -1,6 +1,11 @@
 name: Apply 16.6.6 Final Visual Parity
 
 on:
+  push:
+    branches: [agent/16.6.6-render-qa]
+    paths:
+      - scripts/apply-profile-guest-parity-16-6-6.mjs
+      - .github/workflows/apply-16-6-6-profile-guest-parity.yml
   workflow_dispatch:
 
 permissions:
