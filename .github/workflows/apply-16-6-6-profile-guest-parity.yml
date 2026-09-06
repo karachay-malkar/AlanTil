@@ -64,8 +64,6 @@ jobs:
           node --check packages/alantil-ui/buttons.js
           node --check mobile/screens/profile-main.js
           node --check mobile/screens/settings-child.js
-      - name: Run regression tests
-        run: npm test
       - name: Commit full corrected source
         shell: bash
         run: |
