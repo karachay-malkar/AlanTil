@@ -1,0 +1,168 @@
+name: AlanTil 16.6.6 Render QA
+
+on:
+  push:
+    branches: [agent/16.6.6-render-qa]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render-qa:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.sha }}
+      SOURCE_BRANCH: ${{ github.ref_name }}
+      WEB_REFERENCE_URL: https://raw.githack.com/karachay-malkar/AlanTil/3249e0d3364656e1030d50791b24aaa8789ed1b8/index.html
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify exact 16.6.6 render QA source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$SOURCE_BRANCH" = "agent/16.6.6-render-qa"
+          grep -F '"version": "16.6.6"' mobile/app.json
+          grep -F "VISUAL_CONTRACT_VERSION='16.6.6'" packages/alantil-ui/tokens.js
+      - name: Verify production dictionary snapshot
+        run: |
+          node scripts/generate-mobile-dictionary-snapshot.mjs
+          git diff --exit-code -- mobile/data/dictionary-snapshot.json
+          node scripts/verify-mobile-dictionary-snapshot-parity.mjs
+      - name: Shared core regression gates
+        run: |
+          node scripts/check-completion-matrix.mjs
+          node scripts/check-portable-duplicates-16-4-1.mjs
+          node --test tests/alantil-core-16.test.mjs tests/progress-sync-policy.test.mjs tests/unified-core-boundary-16.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile executable regression gates
+        working-directory: mobile
+        run: npm test
+      - name: Functional and i18n parity gates
+        run: |
+          node scripts/check-mobile-i18n-16-6-1.mjs
+          node scripts/check-functional-parity-16-5.mjs
+          node scripts/check-parity-correction-16-6-1.mjs
+          node scripts/check-full-screen-parity-16-6-3.mjs
+      - name: Unified visual contract and 16.6.6 structural gate
+        run: |
+          node scripts/generate-shared-visual-css.mjs
+          git diff --exit-code -- src/shared/styles/shared-visual-tokens.css
+          node scripts/check-shared-visual-contract-16-6-5.mjs
+          node scripts/check-structural-visual-parity-16-6-6.mjs
+          node --test mobile/tests/visual-parity-16-6-4.test.mjs mobile/tests/visual-contract-16-6-5.test.mjs
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Export Expo Web 16.6.6
+        working-directory: mobile
+        run: npm run export:web
+      - name: Prepare immutable portable preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          root=Path('mobile/dist-web')
+          for p in root.glob('_expo/static/js/web/*.js'):
+            t=p.read_text()
+            for old,new in (
+              ('"/_expo/','"./_expo/'),("'/_expo/","'./_expo/"),
+              ('"/assets/','"./assets/'),("'/assets/","'./assets/"),
+            ):
+              t=t.replace(old,new)
+            p.write_text(t)
+          index=root/'index.html'
+          t=index.read_text().replace('src="/_expo/','src="./_expo/')
+          index.write_text(t)
+          (root/'preview-build.json').write_text(json.dumps({
+            'source_sha':os.environ.get('SOURCE_SHA',''),
+            'branch':os.environ.get('SOURCE_BRANCH',''),
+            'version':'16.6.6',
+            'reference_web_sha':'3249e0d3364656e1030d50791b24aaa8789ed1b8',
+            'delivery':'immutable-cdn-relative',
+            'qa':'paired-web-render'
+          }),encoding='utf-8')
+          PY
+          grep -F 'src="./_expo/' mobile/dist-web/index.html
+      - name: Package source and file-size manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git archive --format=zip --output=mobile/dist-web/AlanTil-16.6.6-source.zip HEAD
+          python - <<'PY'
+          from pathlib import Path
+          excluded={'.git','node_modules','dist-web'}
+          rows=[]
+          for p in Path('.').rglob('*'):
+            if not p.is_file() or any(part in excluded for part in p.parts):
+              continue
+            rows.append((p.as_posix(),p.stat().st_size))
+          rows.sort()
+          Path('mobile/dist-web/FILE_SIZES_16.6.6.txt').write_text('\n'.join(f'{name} — {size/1024:.2f} KB' for name,size in rows)+'\n',encoding='utf-8')
+          PY
+          sha256sum mobile/dist-web/AlanTil-16.6.6-source.zip > mobile/dist-web/AlanTil-16.6.6-source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.6-Source
+          path: |
+            mobile/dist-web/AlanTil-16.6.6-source.zip
+            mobile/dist-web/AlanTil-16.6.6-source.sha256
+            mobile/dist-web/FILE_SIZES_16.6.6.txt
+            mobile/dist-web/preview-build.json
+          if-no-files-found: error
+      - name: Publish immutable Expo Web preview source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R mobile/dist-web/. "$publish_dir/"
+          cd "$publish_dir"
+          git init
+          git checkout -b preview-web-16-6-6
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "16.6.6 preview ${SOURCE_SHA}"
+          preview_sha="$(git rev-parse HEAD)"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web-16-6-6
+          preview_url="https://raw.githack.com/${GITHUB_REPOSITORY}/${preview_sha}/index.html"
+          echo "PUBLIC_PREVIEW_URL=${preview_url}" >> "$GITHUB_ENV"
+          echo "$preview_url" > "$RUNNER_TEMP/AlanTil-16.6.6-public-preview-url.txt"
+          echo "Preview: $preview_url" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reference: $WEB_REFERENCE_URL" >> "$GITHUB_STEP_SUMMARY"
+      - name: Paired Chromium render comparison against Web 13.15.12
+        shell: bash
+        run: |
+          set -euo pipefail
+          qa_dir="$RUNNER_TEMP/alantil-16-6-6-render-qa"
+          mkdir -p "$qa_dir/output"
+          cd "$qa_dir"
+          npm init -y >/dev/null 2>&1
+          npm install --no-save --no-audit --no-fund playwright@1.55.0 pixelmatch@5.3.0 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+          export SCREENSHOT_DIR="$qa_dir/output"
+          export NODE_PATH="$qa_dir/node_modules"
+          node "$GITHUB_WORKSPACE/scripts/qa-mobile-visual-parity-16-6-6.cjs"
+          cp "$RUNNER_TEMP/AlanTil-16.6.6-public-preview-url.txt" "$qa_dir/output/PUBLIC_PREVIEW_URL.txt"
+          printf '%s\n' "$WEB_REFERENCE_URL" > "$qa_dir/output/WEB_REFERENCE_URL.txt"
+      - name: Upload paired render QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.6-Render-QA
+          path: ${{ runner.temp }}/alantil-16-6-6-render-qa/output
+          if-no-files-found: warn
