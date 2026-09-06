@@ -27,7 +27,7 @@ test('Web controls use one platform-aware glass layer and never nest Expo BlurVi
   assert.doesNotMatch(components,/HeaderCircleButton[\s\S]{0,900}<BlurView/);
   assert.doesNotMatch(components,/HeaderTextAction[\s\S]{0,900}<BlurView/);
   assert.match(components,/HeaderCircleButton[\s\S]{0,800}<GlassBackdrop/);
-  assert.match(components,/BottomNav[\s\S]{0,1800}<GlassBackdrop/);
+  assert.match(components,/BottomNav[\s\S]{0,1800}Platform\.OS==='web'\?<GlassBackdrop\/>:null/);
 });
 
 test('Guide story steps center the exact story before rendering a target-dependent panel',()=>{
@@ -35,7 +35,7 @@ test('Guide story steps center the exact story before rendering a target-depende
   assert.match(pathScreen,/scrollToStory=\(type,animated=true\)=>new Promise/);
   assert.match(pathScreen,/layout\.x\+layout\.width\/2-viewport\/2/);
   assert.match(pathScreen,/await storyTabsControlRef\.current\?\.scrollToStory\?\.\(next\.story,true\)/);
-  assert.match(pathScreen,/paddingHorizontal:18,gap:8/);
+  assert.match(pathScreen,/paddingHorizontal:0,gap:theme\.chrome\.storyTabs\.gap/);
   assert.match(pathScreen,/storyEdgeStart/);
   assert.match(pathScreen,/storyEdgeEnd/);
   assert.match(guide,/targetExpected=targetDefs\.some/);

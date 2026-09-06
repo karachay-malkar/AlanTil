@@ -48,8 +48,8 @@
   --ui-button-station-line-height:1.2;
   --ui-button-station-vertical:5px;
   --ui-button-vertical:7px;
-  --ui-chrome-mask-bottom:linear-gradient(to top,#000 0%,rgba(0,0,0,.94) 18%,rgba(0,0,0,.68) 42%,rgba(0,0,0,.30) 70%,transparent 100%);
-  --ui-chrome-mask-top:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.94) 18%,rgba(0,0,0,.68) 42%,rgba(0,0,0,.30) 70%,transparent 100%);
+  --ui-chrome-mask-bottom:linear-gradient(to top,#000 0,rgba(0,0,0,.62) 38%,rgba(0,0,0,.18) 76%,transparent 100%);
+  --ui-chrome-mask-top:linear-gradient(to bottom,#000 0,rgba(0,0,0,.62) 38%,rgba(0,0,0,.18) 76%,transparent 100%);
   --ui-color-modal-shadow:rgba(31,30,26,0.20);
   --ui-color-overlay:rgba(31,30,26,0.52);
   --ui-content-max:720px;

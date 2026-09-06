@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from './theme.js';
+import { CutCornerFrame } from './cut-corner.js';
 
 const C = theme.colors;
 const T = theme.type;
@@ -49,7 +50,7 @@ export function MonoLabel({ children, accent = false, style }) {
 
 
 export function SmallActionButton({ children, onPress, active = false, disabled = false }) {
-  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, active && styles.smallActionActive, disabled && styles.smallActionDisabled, pressed && !disabled && styles.smallActionPressed]}><Text style={[styles.smallActionLabel, active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
+  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, disabled && styles.smallActionDisabled, pressed && !disabled && styles.smallActionPressed]}><CutCornerFrame fill={active?C.accent:'transparent'} stroke={active?C.accentStrong:C.line} cut={theme.button.cut} radius={theme.button.radius}/><Text style={[styles.smallActionLabel, active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
 }
 
 export function EmptyState({ children }) {
