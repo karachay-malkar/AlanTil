@@ -11,6 +11,7 @@ const referenceUrl=process.env.WEB_REFERENCE_URL||'https://raw.githack.com/karac
 if(!targetUrl)throw new Error('PUBLIC_PREVIEW_URL is required');
 fs.mkdirSync(output,{recursive:true});
 
+const REQUIRED_STATES=['00-runtime','01-onboarding','02-onboarding-complete','03-auth-choice','04-path-stele','05-path','06-practice','07-general-test-menu','08-general-test-session','09-match-menu','10-match-session','11-favorites','12-songs-playlists','13-profile-guest','14-account-guest','15-profile-statistics','16-settings','17-privacy','18-version','19-thanks','20-station-words','21-station-statistics','22-learn-guide','23-learn-front','24-learn-back','25-stage-test-session','26-stage-test-results'];
 function safeName(value){return String(value).replace(/[^a-z0-9._-]+/gi,'-');}
 function readPng(file){return PNG.sync.read(fs.readFileSync(file));}
 function comparePng(referenceFile,targetFile,diffFile){
@@ -63,11 +64,13 @@ async function runFlow(h,isReference=false){
   const reference=await createHarness(browser,'reference',referenceUrl);let referenceFlow=null,referenceError='';try{referenceFlow=await runFlow(reference,true);}catch(error){referenceError=String(error?.stack||error);fs.writeFileSync(path.join(output,'reference-flow-error.txt'),referenceError);}
   const comparisons={};for(const name of Object.keys(target.captures)){if(!reference.captures[name])continue;comparisons[name]=comparePng(reference.captures[name].viewportFile,target.captures[name].viewportFile,path.join(output,`diff-${safeName(name)}.png`));comparisons[name].targetMetrics=target.captures[name].metrics;comparisons[name].referenceMetrics=reference.captures[name].metrics;}
   const ranked=Object.entries(comparisons).filter(([,v])=>v.status==='COMPARED').sort((a,b)=>b[1].ratio-a[1].ratio).map(([name,v])=>({name,ratio:v.ratio,pixels:v.pixels,total:v.total}));
-  const report={version:'16.6.6',sourceSha:process.env.SOURCE_SHA||'',targetUrl,referenceUrl,viewport:{width:390,height:844},targetFlow,targetError,referenceFlow,referenceError,targetFailures:target.failures,referenceFailures:reference.failures,comparisons,ranked};fs.writeFileSync(path.join(output,'visual-comparison-16.6.6.json'),JSON.stringify(report,null,2));
+  const report={version:'16.6.6',sourceSha:process.env.SOURCE_SHA||'',targetUrl,referenceUrl,viewport:{width:390,height:844},requiredStates:REQUIRED_STATES,targetFlow,targetError,referenceFlow,referenceError,targetFailures:target.failures,referenceFailures:reference.failures,comparisons,ranked};fs.writeFileSync(path.join(output,'visual-comparison-16.6.6.json'),JSON.stringify(report,null,2));
   fs.writeFileSync(path.join(output,'VISUAL_DIFF_RANKING.txt'),ranked.map((x,i)=>`${String(i+1).padStart(2,'0')}. ${x.name} — ${(x.ratio*100).toFixed(2)}%`).join('\n')+'\n');
   await target.context.close();await reference.context.close();await browser.close();
   assert.deepEqual(target.failures,{consoleErrors:[],pageErrors:[],requestFailures:[],badResponses:[]},JSON.stringify(target.failures,null,2));
-  assert.ok(Object.keys(comparisons).length>=8,`Reference comparison coverage too low: ${Object.keys(comparisons).length}`);
+  const missing=REQUIRED_STATES.filter(name=>!comparisons[name]);
+  assert.deepEqual(missing,[],`Reference comparison coverage incomplete: missing ${missing.join(', ')}`);
   if(targetError)throw new Error(`Target flow incomplete after paired capture: ${targetError}`);
-  console.log(`16.6.6 render QA complete: ${Object.keys(comparisons).length} paired states`);
+  if(referenceError)throw new Error(`Reference flow incomplete after paired capture: ${referenceError}`);
+  console.log(`16.6.6 render QA complete: ${Object.keys(comparisons).length}/${REQUIRED_STATES.length} paired states`);
 })().catch(error=>{try{fs.writeFileSync(path.join(output,'render-qa-error.txt'),String(error?.stack||error));}catch{}console.error(error);process.exit(1);});
