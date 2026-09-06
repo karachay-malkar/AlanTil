@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test "$SOURCE_BRANCH" = "agent/16.6.6-render-qa"
-          test "$(git rev-parse 13.15.12)" = "$WEB_REFERENCE_SHA"
+          test "$(git rev-parse origin/13.15.12)" = "$WEB_REFERENCE_SHA"
           grep -F '"version": "16.6.6"' mobile/app.json
           grep -F "VISUAL_CONTRACT_VERSION='16.6.6'" packages/alantil-ui/tokens.js
       - name: Verify production dictionary snapshot
