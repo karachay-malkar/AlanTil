@@ -1,6 +1,10 @@
-name: Apply 16.6.6 Final Visual Parity
+name: Apply 16.6.6 Render QA Locator Fix
 
 on:
+  push:
+    branches: [agent/16.6.6-render-qa]
+    paths:
+      - .github/workflows/apply-16-6-6-profile-guest-parity.yml
   workflow_dispatch:
 
 permissions:
@@ -17,27 +21,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Apply deterministic final visual correction
-        run: node scripts/apply-profile-guest-parity-16-6-6.mjs
-      - name: Commit full corrected source
+      - name: Apply Station tab locator correction
         shell: bash
         run: |
           set -euo pipefail
-          FILES=(
-            mobile/screens/path.js
-            mobile/screens/station.js
-            mobile/ui/components.js
-            mobile/ui/guide.js
-            mobile/screens/learn.js
-            mobile/screens/station-test.js
-            mobile/screens/profile-main.js
-          )
-          if git diff --quiet -- "${FILES[@]}"; then
-            echo "Final visual parity source already current"
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/qa-mobile-visual-parity-16-6-6.cjs')
+          s=p.read_text()
+          old="await capture('20-station-words');if(isReference){await page.locator('[data-station-tab=\"statistics\"]').click();}else await clickExact(page,'Статистика');await page.waitForTimeout(250);await capture('21-station-statistics');if(isReference){await page.locator('[data-station-tab=\"menu\"]').click();}else await clickExact(page,'Меню');"
+          new="await capture('20-station-words');if(isReference){await page.locator('[data-station-tab=\"statistics\"]').click();}else{const statisticsTab=page.getByRole('button',{name:/Статистика/}).first();await statisticsTab.waitFor({state:'visible',timeout:15000});await statisticsTab.click();}await page.waitForTimeout(250);await capture('21-station-statistics');if(isReference){await page.locator('[data-station-tab=\"menu\"]').click();}else{const menuTab=page.getByRole('button',{name:/Меню/}).first();await menuTab.waitFor({state:'visible',timeout:15000});await menuTab.click();}"
+          if old in s:
+              p.write_text(s.replace(old,new))
+          elif new not in s:
+              raise SystemExit('Render QA locator source mismatch')
+          PY
+          node --check scripts/qa-mobile-visual-parity-16-6-6.cjs
+      - name: Commit corrected Render QA harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- scripts/qa-mobile-visual-parity-16-6-6.cjs; then
+            echo "Render QA locator already current"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- "${FILES[@]}"
-          git commit -m "Close final Web 13.15.12 render parity gaps"
+          git add scripts/qa-mobile-visual-parity-16-6-6.cjs
+          git commit -m "Fix canonical Station tab traversal in Render QA"
           git push origin HEAD:agent/16.6.6-render-qa
