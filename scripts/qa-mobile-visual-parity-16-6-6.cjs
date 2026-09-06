@@ -41,7 +41,7 @@ async function runFlow(h,isReference=false){
   await page.getByText('Язык · Language · Dil',{exact:true}).waitFor({state:'visible',timeout:30000});
   await capture('01-onboarding');
   await clickExact(page,'Русский');await page.getByText('Написание аланских слов',{exact:true}).waitFor({state:'visible'});await clickExact(page,'Кириллица');await page.getByText('Выберите форму',{exact:true}).waitFor({state:'visible'});await clickExact(page,'Җ');await capture('02-onboarding-complete');
-  await clickExact(page,'Продолжить');await page.getByText('Продолжить с Google',{exact:true}).waitFor({state:'visible',timeout:15000});await capture('03-auth-choice');
+  await clickExact(page,'Продолжить');const googleLabel=isReference?'Войти через Google':'Продолжить с Google';await page.getByText(googleLabel,{exact:true}).waitFor({state:'visible',timeout:15000});await capture('03-auth-choice');
   await clickExact(page,'Продолжить как гость');await page.getByText('Путь',{exact:true}).first().waitFor({state:'visible',timeout:30000});await page.waitForTimeout(1000);await capture('04-path-stele');
   const stele=page.getByText('Это история о последних мгновениях жизни языка.',{exact:false}).first();await stele.waitFor({state:'visible',timeout:15000});const steleFontSize=await stele.evaluate(node=>Number.parseFloat(getComputedStyle(node).fontSize)||0);await page.mouse.click(1,1);await page.waitForTimeout(250);await capture('05-path');
   await clickExact(page,'Практика');await page.getByText(isReference?'Практика':'ПРАКТИКА',{exact:true}).waitFor({state:'visible',timeout:15000}).catch(async()=>page.getByText(/Практика/i).first().waitFor({state:'visible'}));await capture('06-practice');
