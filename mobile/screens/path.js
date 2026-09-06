@@ -17,6 +17,7 @@ import { Topography } from '../ui/topography.js';
 import { theme } from '../ui/theme.js';
 
 const C=theme.colors;
+function canonicalStoryLabel(settings,type,story){const fallback=story?.label||story?.name||type;if(type==='roots')return msg(settings,'path.voshozhdenie')||fallback;if(type==='ascent')return msg(settings,'path.na_vershine')||fallback;if(type==='pathways')return msg(settings,'path.tropy')||fallback;return fallback;}
 const POSITION_PATTERN=[-1,0,1,0];
 const STORY_STELE=require('../../assets/path/story-stele.webp');
 const STELE_AUTO_SCROLL_START_DELAY=1600;
@@ -34,7 +35,7 @@ function showStationLabels(catalog){const value=String(catalog?.name||catalog?.l
 function geometryBuffer(){return{map:null,stations:new Map(),sections:new Map(),catalogs:new Map()};}
 function ensureTargetRef(map,key){if(!map.has(key))map.set(key,{current:null});return map.get(key);}
 
-function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef}){
+function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef,storyLabels}){
   const {width}=useWindowDimensions(),fontSize=Math.min(13,Math.max(10,width*.03)),scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
   const syncEdges=(offset=offsetRef.current)=>{const max=Math.max(0,contentRef.current-viewportRef.current),next={start:max>3&&offset>3,end:max>3&&offset<max-3};setEdges(current=>current.start===next.start&&current.end===next.end?current:next);};
   const scrollToStory=(type,animated=true)=>new Promise(resolve=>{const layout=layoutsRef.current.get(type),viewport=viewportRef.current;if(!layout||!viewport){resolve(false);return;}const max=Math.max(0,contentRef.current-viewport),x=Math.max(0,Math.min(max,layout.x+layout.width/2-viewport/2));offsetRef.current=x;scrollRef.current?.scrollTo({x,animated});syncEdges(x);setTimeout(()=>resolve(true),animated?190:0);});
@@ -55,7 +56,7 @@ function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,control
           onPress={()=>onChange(type)}
           style={({pressed})=>[styles.storyTab,type===route.storyOrder?.[0]&&styles.storyTabFirst,type===route.storyOrder?.[route.storyOrder.length-1]&&styles.storyTabLast,active&&styles.storyTabSelected,pressed&&styles.storyTabPressed]}
         >
-          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.storyTabText,{fontSize,lineHeight:fontSize*1.1},active&&styles.storyTabActive]}>[ {route.stories[type]?.label||type} ]</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.storyTabText,{fontSize,lineHeight:fontSize*1.1},active&&styles.storyTabActive]}>[ {storyLabels?.[type]||route.stories[type]?.label||type} ]</Text>
         </Pressable>;
       })}
     </ScrollView>
@@ -227,7 +228,7 @@ function StoryStele({story,visible,onOpen,onClose}){
 }
 
 export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
-  const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
+  const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'',storyLabels=useMemo(()=>Object.fromEntries((route.storyOrder||[]).map(type=>[type,canonicalStoryLabel(settings,type,route.stories?.[type])])),[route,settings?.interface_language_code]);
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
   const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
   const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
@@ -403,7 +404,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   return <Screen bottomNav topChromeDepth={theme.chrome.screenDepths.path.top} bottomChromeDepth={theme.chrome.screenDepths.path.bottom}>
     <Topography opacity={.28}/>
     <View style={styles.pathControls}>
-      <StoryTabs targetRef={storyTabsRef} controlRef={storyTabsControlRef} storyTargetRefs={storyTargetRefs} route={route} activeStory={activeStory} onChange={changeStory}/>
+      <StoryTabs targetRef={storyTabsRef} controlRef={storyTabsControlRef} storyTargetRefs={storyTargetRefs} route={route} activeStory={activeStory} onChange={changeStory} storyLabels={storyLabels}/>
       <View style={styles.storyProgress}>
         <SegmentedStoryProgress value={storySummary.percent}/>
         <MonoLabel accent>{storySummary.percent}%</MonoLabel>
@@ -420,7 +421,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
       <ListChecksIcon size={compactFloat?18:19} color={C.text2}/>
     </Pressable>
     <RouteScale ref={routeScaleRef} parts={scaleParts} onJump={jumpScale}/>
-    <StoryStele story={story} visible={steleOpen} onOpen={openStele} onClose={closeStele}/>
+    <StoryStele story={story?{...story,name:storyLabels[activeStory]||story.name}:story} visible={steleOpen} onOpen={openStele} onClose={closeStele}/>
     <GuideHelpButton onPress={startGuide} accessibilityLabel={m('mobile.path.help')}/>
     <GuideOverlay visible={Boolean(currentGuide)} settings={settings} step={currentGuide} targetRef={guideTarget} spotlightShape={guideShape} spotlightPadding={guidePadding} contentPreference={guidePreference} onNext={nextGuide} onSkip={stopGuide} nextLabel={currentGuide?.id==='stages'?m('guide.understood'):''}/>
   </Screen>;
