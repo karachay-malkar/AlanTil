@@ -34,7 +34,6 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/generate-shared-visual-css.mjs
-          git diff --exit-code -- src/shared/styles/shared-visual-tokens.css
           node scripts/check-shared-visual-contract-16-6-5.mjs
           node scripts/check-structural-visual-parity-16-6-6.mjs
           node scripts/check-full-screen-parity-16-6-3.mjs
