@@ -1,6 +1,7 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from './theme.js';
+import { CutCornerFrame } from './cut-corner.js';
 
 const C = theme.colors;
 const T = theme.type;
@@ -16,18 +17,25 @@ export function SurfaceCard({ children, style, inset = false, flat = false }) {
   return <View style={[styles.surface, flat && styles.surfaceFlat, style]}>{inset && !flat ? <View pointerEvents="none" style={styles.surfaceInset} /> : null}{children}</View>;
 }
 
-export function CompactSegmentedControl({ value, items, onChange, accessibilityLabel }) {
+export function CompactSegmentedControl({ value, items, onChange, accessibilityLabel, variant='settings' }) {
+  const activeStyle=variant==='set'?styles.segmentItemSetActive:variant==='test'?styles.segmentItemTestActive:variant==='songs'?styles.segmentItemSongsActive:styles.segmentItemActive;
   return <View accessibilityLabel={accessibilityLabel} style={styles.segmented}>{items.map(([id, label]) => {
     const active = value === id;
-    return <Pressable key={id} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => onChange(id)} style={({ pressed }) => [styles.segmentItem, active && styles.segmentItemActive, pressed && styles.pressed]}><Text numberOfLines={1} style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{label}</Text></Pressable>;
+    return <Pressable key={id} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => onChange(id)} style={({ pressed }) => [styles.segmentItem, active && activeStyle, pressed && styles.pressed]}><Text numberOfLines={1} style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{label}</Text></Pressable>;
   })}</View>;
 }
 
-export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
+export function OverflowMarquee({ children, textStyle, style, enabled = true }) {
+  const [boxWidth,setBoxWidth]=useState(0),[textWidth,setTextWidth]=useState(0);const offset=useRef(new Animated.Value(0)).current,overflow=Math.max(0,textWidth-boxWidth);
+  useEffect(()=>{offset.stopAnimation();offset.setValue(0);if(!enabled||overflow<8)return;const duration=Math.max(1800,Math.min(6000,overflow*28));const animation=Animated.loop(Animated.sequence([Animated.delay(650),Animated.timing(offset,{toValue:-overflow,duration,easing:Easing.linear,useNativeDriver:true}),Animated.delay(850),Animated.timing(offset,{toValue:0,duration:220,easing:Easing.out(Easing.quad),useNativeDriver:true}),Animated.delay(450)]));animation.start();return()=>animation.stop();},[enabled,overflow,offset]);
+  return <View style={[styles.marquee,style]} onLayout={(event)=>setBoxWidth(event.nativeEvent.layout.width)}><Animated.View style={{transform:[{translateX:offset}]}}><Text onLayout={(event)=>setTextWidth(event.nativeEvent.layout.width)} numberOfLines={1} style={textStyle}>{children}</Text></Animated.View></View>;
+}
+
+export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, marquee = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
   const Body = onPress ? Pressable : View;
   return <Body accessibilityRole={onPress ? 'button' : undefined} accessibilityState={onPress ? { selected } : undefined} onPress={onPress} style={({ pressed }) => [styles.listRow, compact && styles.listRowCompact, selected && styles.listRowSelected, pressed && styles.pressed, style]}>
     {leading ? <View style={[styles.listLeading,leadingStyle]}>{leading}</View> : null}
-    <View style={styles.listCopy}><Text numberOfLines={1} style={[styles.listTitle,titleStyle]}>{title}</Text>{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,subtitleStyle]}>{subtitle}</Text> : null}</View>
+    <View style={styles.listCopy}>{marquee?<OverflowMarquee textStyle={[styles.listTitle,titleStyle]}>{title}</OverflowMarquee>:<Text numberOfLines={1} style={[styles.listTitle,titleStyle]}>{title}</Text>}{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,subtitleStyle]}>{subtitle}</Text> : null}</View>
     {trailing ? <View style={[styles.listTrailing,trailingStyle]}>{trailing}</View> : null}
   </Body>;
 }
@@ -38,6 +46,11 @@ export function MetricStrip({ items }) {
 
 export function MonoLabel({ children, accent = false, style }) {
   return <Text style={[styles.monoLabel, accent && styles.monoAccent, style]}>{children}</Text>;
+}
+
+
+export function SmallActionButton({ children, onPress, active = false, disabled = false }) {
+  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, disabled && styles.smallActionDisabled, pressed && !disabled && styles.smallActionPressed]}><CutCornerFrame fill={active?C.accent:'transparent'} stroke={active?C.accentStrong:C.line} cut={theme.button.cut} radius={theme.button.radius}/><Text style={[styles.smallActionLabel, active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
 }
 
 export function EmptyState({ children }) {
@@ -53,7 +66,10 @@ const styles = StyleSheet.create({
   surfaceInset: { position: 'absolute', top: 9, left: 9, right: 9, bottom: 9, borderWidth: 1, borderColor: C.lineSoft, borderRadius: Math.max(1, theme.radius.lg - 6), opacity: .6 },
   segmented: { width: '100%', minHeight: 34, padding: 2, borderWidth: 1, borderColor: C.line, borderRadius: 999, flexDirection: 'row', backgroundColor: 'transparent' },
   segmentItem: { flex: 1, minHeight: 28, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, paddingVertical: 4 },
-  segmentItemActive: { backgroundColor: C.controlGlassActive || C.surface0 },
+  segmentItemActive: { backgroundColor: 'rgba(246,242,233,.72)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  segmentItemSetActive: { backgroundColor: 'rgba(246,242,233,.82)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  segmentItemTestActive: { backgroundColor: 'rgba(246,242,233,.86)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  segmentItemSongsActive: { backgroundColor: 'rgba(246,242,233,.84)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   segmentLabel: { fontFamily: theme.font.terminal, fontSize: 10, fontWeight: '700', lineHeight: 10, color: C.text3, textAlign: 'center' },
   segmentLabelActive: { color: C.text1 },
   listRow: { minHeight: 58, paddingHorizontal: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.lineSoft, flexDirection: 'row', alignItems: 'center', gap: 9 },
@@ -64,12 +80,19 @@ const styles = StyleSheet.create({
   listTitle: { fontSize: 15, fontWeight: '800', lineHeight: 18, color: C.text1 },
   listSubtitle: { marginTop: 2, fontSize: T.caption, lineHeight: 16, color: C.text2 },
   listTrailing: { minWidth: 30, alignItems: 'flex-end', justifyContent: 'center' },
+  marquee:{width:'100%',overflow:'hidden'},
   metrics: { width: '100%', flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.lineSoft },
   metric: { flex: 1, minHeight: 66, paddingVertical: 9, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: C.lineSoft },
   metricValue: { fontFamily: theme.font.terminal, fontSize: 19, fontWeight: '850', lineHeight: 21, color: C.text1 },
   metricLabel: { marginTop: 4, fontSize: T.micro, lineHeight: 12, color: C.text2, textAlign: 'center' },
   monoLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '800', lineHeight: 11, letterSpacing: .55, color: C.text3 },
   monoAccent: { color: C.accentStrong },
+  smallAction: { minHeight: theme.button.settingsSmallHeight, paddingVertical: theme.button.settingsSmallVertical, paddingHorizontal: theme.button.settingsSmallHorizontal, borderWidth: 1, borderColor: C.line, borderRadius: theme.button.settingsSmallRadius, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  smallActionActive: { borderColor: C.accentStrong, backgroundColor: C.accent },
+  smallActionDisabled: { opacity: theme.button.settingsSmallDisabledOpacity },
+  smallActionLabel: { fontFamily: theme.font.terminal, fontSize: theme.button.settingsSmallFontSize, fontWeight: theme.button.settingsSmallFontWeight, lineHeight: theme.button.settingsSmallLineHeight, color: C.text3 },
+  smallActionLabelActive: { color: C.inverse },
+  smallActionPressed: { opacity: theme.button.pressedOpacity, transform: [{ scale: theme.button.pressedScale }] },
   empty: { minHeight: 96, alignItems: 'center', justifyContent: 'center', padding: 16 },
   emptyText: { fontSize: T.caption, lineHeight: 18, color: C.text3, textAlign: 'center' },
   pressed: { opacity: .7, transform: [{ translateY: 1 }] },

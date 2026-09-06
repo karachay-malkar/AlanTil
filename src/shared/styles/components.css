@@ -31,16 +31,16 @@ input::placeholder,textarea::placeholder{color:var(--text-3)}
   box-shadow:var(--shadow-xs);transition:transform var(--duration-fast),background var(--duration-fast),border-color var(--duration-fast),box-shadow var(--duration-fast),opacity var(--duration-fast);
 }
 .btn{
-  min-height:38px;padding:7px 13px;border-radius:2px;
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center;font-weight:760;line-height:1.2;
+  min-height:var(--ui-button-height);padding:var(--ui-button-vertical) var(--ui-button-horizontal);border-radius:2px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center;font-size:var(--ui-button-font-size);font-weight:var(--ui-button-font-weight);line-height:var(--ui-button-line-height);
 }
 .btn:hover:not(:disabled),.sectionMenuItem:hover:not(:disabled),.menuItem:hover:not(:disabled),.profileLink:hover:not(:disabled),.optionBtn:hover:not(:disabled){border-color:var(--accent);box-shadow:var(--shadow-sm)}
 .btn:active:not(:disabled),.sectionMenuItem:active:not(:disabled),.menuItem:active:not(:disabled),.profileLink:active:not(:disabled),.optionBtn:active:not(:disabled){transform:translateY(1px);box-shadow:none}
-.btn:disabled,.optionBtn:disabled{opacity:.46;box-shadow:none}
+.btn:disabled,.optionBtn:disabled{opacity:var(--ui-button-disabled-opacity);box-shadow:none}
 .btn.actionPrimary{border-color:var(--accent-strong);background:var(--accent);color:var(--text-inverse);box-shadow:none}
 .btn.actionText{border-color:transparent;background:transparent;color:var(--text-2);box-shadow:none}
 .btn.actionText:hover:not(:disabled){border-color:transparent;background:transparent;color:var(--text-1);box-shadow:none}
-.btn.actionCompact{min-height:30px;padding:4px 10px;font:750 10px/1 var(--font-terminal)}
+.btn.actionCompact{min-height:var(--ui-button-compact-height);padding:var(--ui-button-compact-vertical) var(--ui-button-compact-horizontal);font:var(--ui-button-compact-font-weight) var(--ui-button-compact-font-size)/var(--ui-button-compact-line-height) var(--font-terminal)}
 .btn.mini{min-height:var(--control-h-sm);margin-top:12px}
 .btnIcon{width:22px;height:22px;display:grid;place-items:center;flex:0 0 auto}
 .btnIcon svg{width:100%;height:100%;fill:currentColor}
@@ -89,8 +89,8 @@ button.contentListMain{cursor:pointer}
 .sectionHeader{margin-top:8px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);font-weight:800;cursor:pointer}
 .sectionHeader:first-child{margin-top:0}
 
-.starBtn{appearance:none;width:38px;height:38px;padding:8px;border:0;border-radius:50%;background:transparent;color:var(--text-3);display:grid;place-items:center}
-.starBtn svg{width:23px;height:23px;fill:currentColor}
+.starBtn{appearance:none;width:var(--ui-favorite-size);height:var(--ui-favorite-size);padding:8px;border:0;border-radius:50%;background:transparent;color:var(--text-3);display:grid;place-items:center}
+.starBtn svg{width:var(--ui-favorite-icon-size);height:var(--ui-favorite-icon-size);fill:currentColor}
 .starBtn.on{color:var(--favorite-active);background:transparent}
 
 .secBlock{margin-top:18px}
@@ -162,7 +162,7 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 .segmentedProgressSegment{display:block;width:8px;height:2px;border-radius:999px;background:color-mix(in srgb,var(--text-1) 18%,transparent)}
 .segmentedProgressSegment.isFilled{background:var(--text-1)}
 .textAction{min-height:var(--control-h-text);padding:0;border:0;background:transparent;color:var(--text-2)}
-.textAction:active{opacity:.68;transform:translateY(1px)}
+.textAction:active{opacity:var(--ui-text-action-pressed-opacity);transform:translateY(1px)}
 .starBtn{width:var(--control-h-compact);height:var(--control-h-compact);background:transparent!important}
 .starBtn.on{color:var(--favorite-active);background:transparent!important}
 .starBtn.on svg{fill:currentColor}
@@ -186,10 +186,10 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
   border-color:var(--line-strong);
   background:color-mix(in srgb,var(--surface-0) 72%,transparent);
   box-shadow:none;
-  clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
+  clip-path:polygon(var(--ui-button-cut) 0,100% 0,100% calc(100% - var(--ui-button-cut)),calc(100% - var(--ui-button-cut)) 100%,0 100%,0 var(--ui-button-cut));
 }
 .btn:hover:not(:disabled),.directionChoiceButton:hover:not(:disabled),.optionBtn:hover:not(:disabled),.matchCard:hover:not(:disabled){border-color:var(--accent-strong);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
-.btn:active:not(:disabled),.directionChoiceButton:active:not(:disabled),.optionBtn:active:not(:disabled),.matchCard:active:not(:disabled){background:color-mix(in srgb,var(--surface-0) 72%,transparent);opacity:.76;transform:translateY(1px)}
+.btn:active:not(:disabled),.directionChoiceButton:active:not(:disabled),.optionBtn:active:not(:disabled),.matchCard:active:not(:disabled){background:color-mix(in srgb,var(--surface-0) 72%,transparent);opacity:var(--ui-button-pressed-opacity);transform:translateY(1px)}
 .contentListRow{border-radius:0;background:transparent;box-shadow:none;border-bottom:1px solid var(--line-soft)}
 .scopeBlock{border:0;border-top:1px solid var(--line-soft);border-radius:0;background:transparent}
 .scopeDictRow,.scopeSectionRow{background:transparent;border-bottom:1px solid var(--line-soft)}

@@ -1,3 +1,6 @@
+import { UI_TOKENS, WEB_VISUAL_REFERENCE, VISUAL_CONTRACT_VERSION } from '../../packages/alantil-ui/tokens.js';
+import { CHROME_CONTRACT } from '../../packages/alantil-ui/chrome.js';
+
 // Canonical semantic visual contract mirrored from Web 13.15.12.
 // CSS is not copied mechanically. Every web source is mapped to RN semantics or marked non-applicable.
 
@@ -90,50 +93,9 @@ export const WEB_VISUAL_COVERAGE = Object.freeze({
   'src/features/onboarding/onboarding.css': 'mapped: setup/guide spacing and actions',
 });
 
-export const WEB_VISUAL_TOKENS = Object.freeze({
-  colors: Object.freeze({
-    appBg:'#eee9df', appBgDeep:'#e7e0d4', surface0:'#f6f2e9', surface1:'#eee8dc', surface2:'#e2d9c9', surface3:'#cec0aa', surfaceDark:'#34312c',
-    text1:'#292722', text2:'#666158', text3:'#918b80', inverse:'#faf8f2',
-    lineSoft:'rgba(54,50,43,0.12)', line:'rgba(54,50,43,0.22)', lineStrong:'rgba(54,50,43,0.46)',
-    accent:'#8b6b3b', accentStrong:'#65491f', accentSoft:'rgba(139,107,59,0.11)', accentGlow:'rgba(139,107,59,0.20)',
-    success:'#5d7654', successStrong:'#425a3b', successSoft:'rgba(93,118,84,0.12)', successBorder:'rgba(93,118,84,0.32)',
-    danger:'#98564c', dangerStrong:'#733e36', dangerSoft:'rgba(152,86,76,0.12)', dangerBorder:'rgba(152,86,76,0.35)',
-    warning:'#a47736', info:'#58777a', locked:'#aaa49a', favorite:'#9b7027',
-    paper:'rgba(255,255,255,0.22)', paperSoft:'rgba(255,255,255,0.13)', component:'rgba(255,255,255,0.28)',
-    panelStrong:'rgba(255,255,255,0.20)', panelMid:'rgba(255,255,255,0.14)', panelSoft:'rgba(255,255,255,0.10)', panelFaint:'rgba(255,255,255,0.08)',
-    white55:'rgba(255,255,255,0.55)', overlay:'rgba(31,30,26,0.52)', modalShadow:'rgba(31,30,26,0.20)',
-    controlGlass:'rgba(246,242,233,0.28)', controlGlassActive:'rgba(246,242,233,0.46)', controlBorder:'rgba(54,50,43,0.0968)', maskGlass:'rgba(238,233,223,0.18)',
-    pathBubbleGlass:'rgba(41,39,34,0.34)', pathBubbleBorder:'rgba(41,39,34,0.18)', activeBubbleGlass:'rgba(41,39,34,0.88)', activeBubbleBorder:'rgba(41,39,34,0.32)',
-  }),
-  surfaces:Object.freeze({app:'appBg',panel:'panelMid',panelStrong:'panelStrong',paper:'paper',paperSoft:'paperSoft',control:'controlGlass',controlActive:'controlGlassActive',input:'surface0',overlay:'overlay'}),
-  borders:Object.freeze({soft:'lineSoft',normal:'line',strong:'lineStrong',control:'controlBorder',success:'successBorder',error:'dangerBorder'}),
-  typeScale: Object.freeze({
-    small:Object.freeze({micro:10,caption:10,body:12,emphasis:14,title:16,display:40,result:54}),
-    medium:Object.freeze({micro:10,caption:12,body:14,emphasis:16,title:20,display:48,result:64}),
-    large:Object.freeze({micro:12,caption:14,body:16,emphasis:20,title:20,display:56,result:72}),
-  }),
-  font:Object.freeze({body:undefined,display:undefined,brand:'serif',terminal:'monospace'}),
-  radius:Object.freeze({none:2,xs:7,sm:10,md:15,lg:20,pill:999}),
-  spacing:Object.freeze({s1:4,s2:8,s3:12,s4:16,s5:20,s6:24,s7:32,s8:40}),
-  control:Object.freeze({sm:36,normal:44,compact:36,text:28,large:44,header:46,nav:60,input:44,row:48}),
-  path:Object.freeze({rootControlsHeight:56,mapTop:64,stationSize:60,stationGap:43,sectionGap:92,dictionaryGap:118,headingGap:22,scaleDot:4,scaleSection:6,scaleDiamond:9,scaleHeightPercent:60,scaleRight:4,scaleWidth:26}),
-  chrome:Object.freeze({contentRestGap:16,actionEdgeGap:16,headerSide:10,headerSideCompact:6,headerCenterInset:56,navSide:12,navSideCompact:8,actionSize:36,actionIconSize:20,navBubbleSize:38,navBubbleCompactSize:36,blur:10,controlBlur:8,compactWidth:360}),
-  safeArea:Object.freeze({edges:['top','left','right','bottom'],topContentGap:16,bottomContentGap:18}),
-  breakpoints:Object.freeze({compact:360,accountNarrow:420}),
-  motion:Object.freeze({fast:110,normal:145,modal:145,reduced:0}),
-  layout:Object.freeze({contentMax:720,accountMax:520,viewPadding:12,viewPaddingCompact:8,panelBodyHorizontal:16,panelBodyHorizontalCompact:12,panelBodyTop:8,panelBodyBottom:18,accountGap:16}),
-  shadow:Object.freeze({xs:{opacity:0.05,radius:2,y:1},sm:{opacity:0.07,radius:14,y:5},md:{opacity:0.12,radius:30,y:12},modal:{opacity:0.20,radius:28,y:12}}),
-  states:Object.freeze({disabledOpacity:0.46,pressedOpacity:0.86,loadingOpacity:0.72,focusBorder:'lineStrong',successBorder:'successBorder',errorBorder:'dangerBorder'}),
-  button:Object.freeze({height:44,compactHeight:36,horizontal:13,radius:2,providerHeight:44}),
-  input:Object.freeze({height:44,horizontal:12,radius:2,borderWidth:1}),
-  panel:Object.freeze({radius:20,borderWidth:1,headerMinHeight:42}),
-  modal:Object.freeze({maxWidth:500,padding:18,radius:20,overlay:'overlay'}),
-  segmented:Object.freeze({padding:2,itemMinHeight:28,itemMinWidth:38,radius:999}),
-  progress:Object.freeze({height:4,radius:999}),
-  list:Object.freeze({rowMinHeight:48,menuMinHeight:54,horizontal:14,separator:'lineSoft'}),
-  favorite:Object.freeze({size:36,iconSize:23,active:'favorite',inactive:'text3'}),
-  account:Object.freeze({maxWidth:520,gap:16,fieldGap:8,messageMinHeight:18,genderCardMinHeight:210,genderCardGap:12,factRowMinHeight:48}),
-});
+// Compatibility export: values now come from the shared visual contract rather than a Mobile copy.
+export const WEB_VISUAL_TOKENS = Object.freeze({...UI_TOKENS,chrome:CHROME_CONTRACT});
+export { UI_TOKENS, CHROME_CONTRACT, WEB_VISUAL_REFERENCE, VISUAL_CONTRACT_VERSION };
 
 export function verifyWebVisualSourceManifest() {
   const sources=[...WEB_VISUAL_SOURCES.styles,...WEB_VISUAL_SOURCES.ui,...WEB_VISUAL_SOURCES.account,...WEB_VISUAL_SOURCES.features];

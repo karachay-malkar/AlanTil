@@ -1,0 +1,59 @@
+name: AlanTil 16.6.3 Expo Web Export Gate
+
+on:
+  push:
+    branches: [agent/16.6.3-full-screen-parity]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alantil-expo-web-export
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Mobile executable tests
+        working-directory: mobile
+        run: npm test
+
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+
+      - name: Export Expo Web
+        working-directory: mobile
+        run: npm run export:web
+
+      - name: Validate export contract
+        working-directory: mobile
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const root = 'dist-web';
+          const indexPath = path.join(root, 'index.html');
+          if (!fs.existsSync(indexPath)) throw new Error('dist-web/index.html is missing');
+          const bundleDir = path.join(root, '_expo/static/js/web');
+          if (!fs.existsSync(bundleDir)) throw new Error('Expo Web bundle directory is missing');
+          const bundles = fs.readdirSync(bundleDir).filter((name) => name.endsWith('.js'));
+          if (!bundles.length) throw new Error('Expo Web JavaScript bundle is missing');
+          const index = fs.readFileSync(indexPath, 'utf8');
+          if (!index.includes('_expo/static/js/web/')) throw new Error('index.html does not reference an Expo Web bundle');
+          console.log(`Expo Web export contract: PASS (${bundles.length} bundle(s))`);
+          NODE

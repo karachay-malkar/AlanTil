@@ -1,0 +1,189 @@
+name: AlanTil 16.6.6 Full Screen Parity
+
+on:
+  push:
+    branches: [agent/16.6.3-full-screen-parity]
+  pull_request:
+    branches: [agent/16.6.2-visual-parity]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  full-screen-parity:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SOURCE_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify exact branch HEAD checkout
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          echo "Exact branch HEAD: $SOURCE_SHA"
+      - name: Verify production dictionary snapshot is current
+        run: |
+          node scripts/generate-mobile-dictionary-snapshot.mjs
+          git diff --exit-code -- mobile/data/dictionary-snapshot.json
+      - name: Verify bundled snapshot equals production
+        run: node scripts/verify-mobile-dictionary-snapshot-parity.mjs
+      - name: Portable duplicate audit
+        run: node scripts/check-portable-duplicates-16-4-1.mjs
+      - name: Shared core regression tests
+        run: node --test tests/alantil-core-16.test.mjs tests/progress-sync-policy.test.mjs tests/unified-core-boundary-16.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile executable tests
+        working-directory: mobile
+        run: npm test
+      - name: Mobile RU EN TR hardcode gate
+        run: node scripts/check-mobile-i18n-16-6-1.mjs
+      - name: Foundation 16.4.1 gate
+        run: |
+          node scripts/check-completion-matrix.mjs
+          node scripts/check-portable-duplicates-16-4-1.mjs
+      - name: Functional 16.5 gate
+        run: node scripts/check-functional-parity-16-5.mjs
+      - name: Preserve 16.6.1 functional gate
+        run: node scripts/check-parity-correction-16-6-1.mjs
+      - name: Preserve full screen parity source and state gate
+        run: node scripts/check-full-screen-parity-16-6-3.mjs
+      - name: Visual parity 16.6.6 shared contract gate
+        run: |
+          node scripts/generate-shared-visual-css.mjs
+          git diff --exit-code -- src/shared/styles/shared-visual-tokens.css
+          node scripts/check-shared-visual-contract-16-6-5.mjs
+          node scripts/check-structural-visual-parity-16-6-6.mjs
+          node --test mobile/tests/visual-parity-16-6-4.test.mjs mobile/tests/visual-contract-16-6-5.test.mjs mobile/tests/visual-structure-16-6-6.test.mjs
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Export Expo Web
+        working-directory: mobile
+        run: npm run export:web
+      - name: Prepare portable immutable preview bundle
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          root=Path('mobile/dist-web')
+          for p in root.glob('_expo/static/js/web/*.js'):
+            t=p.read_text()
+            for old,new in (
+              ('"./_expo/','"./_expo/'), ('"/_expo/','"./_expo/'),
+              ("'./_expo/","'./_expo/"), ("'/_expo/","'./_expo/"),
+              ('"./assets/','"./assets/'), ('"/assets/','"./assets/'),
+              ("'./assets/","'./assets/"), ("'/assets/","'./assets/"),
+            ):
+              t=t.replace(old,new)
+            p.write_text(t)
+          index=root/'index.html'
+          t=index.read_text()
+          t=t.replace('src="/_expo/','src="./_expo/')
+          index.write_text(t)
+          (root/'preview-build.json').write_text(json.dumps({
+            'source_sha':os.environ.get('SOURCE_SHA',''),
+            'branch':os.environ.get('SOURCE_BRANCH',''),
+            'run_id':os.environ.get('GITHUB_RUN_ID',''),
+            'version':'16.6.6',
+            'delivery':'immutable-cdn-relative',
+            'q03':'PUBLIC_RENDER_QA_REQUIRED'
+          }),encoding='utf-8')
+          PY
+      - name: Validate portable browser preview contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('mobile/dist-web')
+          index=(root/'index.html').read_text()
+          if 'src="./_expo/' not in index:
+            raise SystemExit('Preview index does not use a document-relative Expo bundle URL')
+          bad=('"/_expo/',"'/_expo/",'"/assets/',"'/assets/")
+          for p in root.glob('_expo/static/js/web/*.js'):
+            text=p.read_text()
+            found=[token for token in bad if token in text]
+            if found:
+              raise SystemExit(f'{p}: unresolved root-relative Expo paths: {found}')
+          print('Portable immutable Expo Web delivery contract: PASS')
+          PY
+      - name: Package source archive and size manifest
+        shell: bash
+        run: |
+          mkdir -p mobile/dist-web
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git archive --format=zip --output=mobile/dist-web/AlanTil-16.6.6-source.zip HEAD
+          python - <<'PY'
+          from pathlib import Path
+          excluded={'.git','node_modules','dist-web'}
+          rows=[]
+          for p in Path('.').rglob('*'):
+            if not p.is_file() or any(part in excluded for part in p.parts):
+              continue
+            rows.append((p.as_posix(),p.stat().st_size))
+          rows.sort()
+          Path('mobile/dist-web/FILE_SIZES_16.6.6.txt').write_text('\n'.join(f'{name} — {size/1024:.2f} KB' for name,size in rows)+'\n',encoding='utf-8')
+          PY
+          sha256sum mobile/dist-web/AlanTil-16.6.6-source.zip > mobile/dist-web/AlanTil-16.6.6-source.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.6-Full-Screen-Parity
+          path: mobile/dist-web
+          if-no-files-found: error
+      - name: Publish immutable Expo Web preview source
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R mobile/dist-web/. "$publish_dir/"
+          cd "$publish_dir"
+          git init
+          git checkout -b preview-web
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Preview ${SOURCE_SHA}"
+          preview_sha="$(git rev-parse HEAD)"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web
+          preview_url="https://raw.githack.com/${GITHUB_REPOSITORY}/${preview_sha}/index.html"
+          echo "PREVIEW_SHA=${preview_sha}" >> "$GITHUB_ENV"
+          echo "PUBLIC_PREVIEW_URL=${preview_url}" >> "$GITHUB_ENV"
+          echo "${preview_url}" > "$RUNNER_TEMP/AlanTil-16.6.6-public-preview-url.txt"
+          echo "Public preview: ${preview_url}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify public Expo Web render matrix in Chromium
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          qa_dir="$RUNNER_TEMP/alantil-render-qa"
+          mkdir -p "$qa_dir/output"
+          cd "$qa_dir"
+          npm init -y >/dev/null 2>&1
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+          export SCREENSHOT_DIR="$qa_dir/output"
+          export NODE_PATH="$qa_dir/node_modules"
+          node "$GITHUB_WORKSPACE/scripts/qa-mobile-visual-parity-16-6-6.cjs"
+          cp "$RUNNER_TEMP/AlanTil-16.6.6-public-preview-url.txt" "$qa_dir/output/PUBLIC_PREVIEW_URL.txt"
+
+      - name: Upload public render QA
+        if: always() && (github.event_name == 'push' || github.event_name == 'pull_request')
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.6-Web-Render-QA
+          path: ${{ runner.temp }}/alantil-render-qa/output
+          if-no-files-found: warn

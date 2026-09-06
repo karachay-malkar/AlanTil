@@ -1,0 +1,78 @@
+import fs from 'node:fs';
+
+const read=(path)=>fs.readFileSync(path,'utf8');
+const checks=[];
+function expect(name,condition){checks.push([name,Boolean(condition)]);}
+const path=read('mobile/screens/path.js');
+const practice=read('mobile/screens/practice.js');
+const learn=read('mobile/screens/learn.js');
+const station=read('mobile/screens/station.js');
+const stage=read('mobile/screens/station-test.js');
+const games=read('mobile/screens/practice-games.js');
+const favorites=read('mobile/screens/favorites.js');
+const songs=read('mobile/screens/songs.js');
+const profile=read('mobile/screens/profile-main.js');
+const onboarding=read('mobile/screens/onboarding.js');
+const authChoice=read('mobile/screens/auth-choice.js');
+const nativeAuth=read('mobile/platform/auth.native.js');
+const webAuth=read('mobile/platform/auth.web.js');
+const fullScreenWorkflow=read('.github/workflows/mobile-16-6-3-full-screen-parity.yml');
+const webExportWorkflow=read('.github/workflows/mobile-16-6-3-expo-web-pages.yml');
+const appRoot=read('mobile/AppRoot.js');
+const guide=read('mobile/ui/guide.js');
+const theme=read('mobile/ui/theme.js');
+const modal=read('mobile/ui/modal.js');
+const checkbox=read('mobile/ui/checkbox.js');
+const format=read('mobile/ui/format.js');
+const storyWords=read('mobile/screens/story-word-list.js');
+const settingsChild=read('mobile/screens/settings-child.js');
+const app=JSON.parse(read('mobile/app.json'));
+
+expect('Path canonical Story Stele asset',path.includes("require('../../assets/path/story-stele.webp')"));
+expect('Path Story Stele seen state',path.includes('hasSeenNativeStoryStele')&&path.includes('markNativeStorySteleSeen'));
+expect('Path Story Stele Web viewport fit and gradual auto-scroll',path.includes('height*.53,932')&&path.includes('STELE_AUTO_SCROLL_PX_PER_SECOND=7')&&path.includes('STELE_MIN_BODY_FONT_SIZE=12.5')&&!path.includes('scrollToEnd({animated:true})'));
+expect('Path scale is interactive',path.includes('jumpScale')&&!path.includes('pointerEvents="none" style={styles.routeScale}'));
+expect('Path word list is floating',path.includes('wordListFloat'));
+expect('Practice Web shell title',practice.includes('<Header title="Alan Til!"'));
+expect('Practice no bracket heading',!practice.includes('[ Практика ]'));
+expect('Learn keeps approved progress',learn.includes('<ProgressBar value={progress}'));
+expect('Learn keeps flip helper',learn.includes('mobile.learn.tap_flip'));
+expect('Learn uses dedicated learning card',learn.includes('function LearningCard')&&!learn.includes('<SurfaceCard inset style={[styles.card'));
+expect('Stage Test no separate progress bar',!stage.includes('ProgressBar'));
+expect('Stage Test no choose-answer helper',!stage.includes('mobile.stage.choose'));
+expect('General Test no separate progress bar',!games.includes('SessionProgress'));
+expect('General Test results marquee',games.includes('OverflowMarquee'));
+expect('Match fixed 13/11 typography',games.includes('matchCardTextNormal:{fontSize:13')&&games.includes('matchCardTextCompact:{fontSize:11'));
+expect('Match Web shake',games.includes('[3,-3,3,-3,0]'));
+expect('Favorites shares set-preparation flow',!favorites.includes('onMatch')&&!favorites.includes('onTest')&&favorites.includes('SetPreparationView'));
+expect('Story word list animated header search',storyWords.includes('Animated.timing(searchProgress'));
+expect('Story word list overflow contract',storyWords.includes('OverflowMarquee'));
+expect('Songs Info action',songs.includes('HeaderTextAction')&&songs.includes('role="songs.info"')&&songs.includes('SongInfoModal')&&!songs.includes('<InfoIcon'));
+expect('Songs shared InfoDialog',songs.includes('InfoDialog')&&modal.includes('export function InfoDialog'));
+expect('Songs shared time formatter',songs.includes('formatClockTime')&&format.includes('export function formatClockTime'));
+expect('Songs SVG media icons',songs.includes('<PlayIcon')&&songs.includes('<PauseIcon'));
+expect('Profile guest locked state',profile.includes('avatarFrameLocked')&&profile.includes('LockedIcon'));
+expect('Profile setup remains in Profile',profile.includes('function ProfileSetup')&&profile.includes('checkNativeNickname')&&profile.includes('setNativeAvatarGender'));
+expect('Settings preview 180 px',profile.includes("settingsLearningPreview:{width:'100%',height:180"));
+expect('Privacy shared checkbox',settingsChild.includes("from '../ui/checkbox.js'")&&settingsChild.includes('<Checkbox')&&!settingsChild.includes('Switch'));
+expect('Shared checkbox is non-text glyph control',checkbox.includes('CorrectIcon')&&!checkbox.includes("'[✓]'"));
+expect('Onboarding single-screen progressive setup',!onboarding.includes('setStep(')&&!onboarding.includes('progressCell')&&onboarding.includes('DisclosureSection visible={Boolean(draft.interface_language_code)}')&&onboarding.includes("DisclosureSection visible={draft.alan_script_code==='cyrillic'}")&&onboarding.includes('FlagIcon'));
+expect('Onboarding direct auth choice follows setup',authChoice.includes('signInWithGoogleNative')&&authChoice.includes('continueGoogle')&&authChoice.includes('prodolzhit_kak_gost')&&appRoot.includes('AuthChoiceScreen')&&appRoot.includes('authChoiceRequired'));
+expect('Google OAuth Native returns to app and persists session',nativeAuth.includes("NATIVE_AUTH_REDIRECT_URL='alantil://auth/callback'")&&nativeAuth.includes('WebBrowser.openAuthSessionAsync')&&nativeAuth.includes('callbackPromise')&&nativeAuth.includes('oauthFlowPromise')&&nativeAuth.includes('AsyncStorage.setItem(SESSION_KEY'));
+expect('Google OAuth Web returns to its HTTPS origin',webAuth.includes('resolveWebAuthRedirectUrl')&&webAuth.includes('location.origin')&&webAuth.includes('window.location.assign(data.url)')&&webAuth.includes('exchangeCodeForSession')&&!webAuth.includes('alantil://auth/callback')&&!webAuth.includes('WebBrowser.openAuthSessionAsync'));
+expect('Expo Web preview is public browser-QA without production Pages deploy',fullScreenWorkflow.includes('raw.githack.com')&&fullScreenWorkflow.includes('Verify public Expo Web render matrix in Chromium')&&fullScreenWorkflow.includes('playwright@1.55.0')&&!webExportWorkflow.includes('deploy-pages')&&!webExportWorkflow.includes('pages: write')&&!webExportWorkflow.includes('upload-pages-artifact'));
+
+expect('Onboarding semantic typography',onboarding.includes('useSemanticTypography')&&onboarding.includes('type.wordCard'));
+expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
+for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
+expect('Release version 16.6.6',app.expo?.version==='16.6.6'&&app.expo?.extra?.releaseVersion==='16.6.6'&&app.expo?.android?.versionCode===31&&app.expo?.ios?.buildNumber==='31');
+
+expect('Path final story-tab cascade',path.includes("paddingHorizontal:0")&&path.includes('storyTabFirst:{marginLeft:theme.chrome.storyTabs.edgeInset}')&&path.includes('right:theme.path.scaleRight'));
+expect('Station uses Web plain text tabs',station.includes('stationTabTextActive')&&!station.includes('CompactSegmentedControl value={pane}')&&!station.includes('GuideHelpButton'));
+expect('Profile bracket tabs and underlay scroll',profile.includes('{`[ ${label} ]`}')&&profile.includes('body:{flex:1,paddingTop:0')&&profile.includes('FadedScrollView topFade={theme.chrome.scrollFades.profile.top}'));
+expect('Learn guide trigger bottom-right',learn.includes('GuideHelpButton placement="bottomRight"'));
+const failed=checks.filter(([,ok])=>!ok);
+for(const [name,ok] of checks)console.log(`${ok?'PASS':'FAIL'}  ${name}`);
+if(failed.length){console.error(`\n16.6.3 gate failed: ${failed.length} checks`);process.exit(1);}
+console.log(`\n16.6.3 source/state contract gate passed: ${checks.length} checks.`);
+console.log('Q03 render comparison is intentionally NOT granted by this source gate; it requires final Expo Web render QA.');

@@ -6,11 +6,17 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("semantic typography exposes only the approved five fixed tiers", async () => {
   const theme = await read("src/shared/styles/theme.css");
-  assert.match(theme, /--text-micro:10px;/);
-  assert.match(theme, /--text-caption:12px;/);
-  assert.match(theme, /--text-body:14px;/);
-  assert.match(theme, /--text-emphasis:16px;/);
-  assert.match(theme, /--text-title:20px;/);
+  const shared = await read("src/shared/styles/shared-visual-tokens.css");
+  assert.match(shared, /--ui-text-medium-micro:10px;/);
+  assert.match(shared, /--ui-text-medium-caption:12px;/);
+  assert.match(shared, /--ui-text-medium-body:14px;/);
+  assert.match(shared, /--ui-text-medium-emphasis:16px;/);
+  assert.match(shared, /--ui-text-medium-title:20px;/);
+  assert.match(theme, /--text-micro:var\(--ui-text-medium-micro\)/);
+  assert.match(theme, /--text-caption:var\(--ui-text-medium-caption\)/);
+  assert.match(theme, /--text-body:var\(--ui-text-medium-body\)/);
+  assert.match(theme, /--text-emphasis:var\(--ui-text-medium-emphasis\)/);
+  assert.match(theme, /--text-title:var\(--ui-text-medium-title\)/);
   assert.match(theme, /html\[data-text-size="small"\]/);
   assert.match(theme, /html\[data-text-size="medium"\]/);
   assert.match(theme, /html\[data-text-size="large"\]/);
