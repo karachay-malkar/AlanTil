@@ -42,7 +42,7 @@ jobs:
         run: node --test tests/alantil-core-16.test.mjs tests/progress-sync-policy.test.mjs tests/unified-core-boundary-16.test.mjs
       - name: Install mobile dependencies
         working-directory: mobile
-        run: npm install --no-package-lock --no-audit --no-fund
+        run: npm install --no-audit --no-fund
       - name: Mobile executable tests
         working-directory: mobile
         run: npm test
@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf mobile/node_modules mobile/dist-web
+          rm -rf mobile/node_modules mobile/dist-web mobile/package-lock.json
           git clean -fdX
           node scripts/generate-shared-visual-css.mjs
           git diff --exit-code -- src/shared/styles/shared-visual-tokens.css
