@@ -1,13 +1,82 @@
-name: Apply 16.6.6 Temporary QA Helper
+name: Apply 16.6.6 Final Factual Parity
 
 on:
+  push:
+    branches: [agent/16.6.6-render-qa]
+    paths:
+      - .github/workflows/apply-16-6-6-profile-guest-parity.yml
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  noop:
+  apply:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Temporary helper retained only until final 16.6.6 cleanup"
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/16.6.6-render-qa
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply final factual visual corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, label):
+              p=Path(path)
+              s=p.read_text()
+              if old in s:
+                  p.write_text(s.replace(old,new,1))
+              elif new not in s:
+                  raise SystemExit(f'{label}: source mismatch')
+
+          replace(
+              'mobile/screens/profile-main.js',
+              'items={[["small","S"],["medium","M"],["large","L"]]}',
+              'items={[["small",msg(settings,\'settings.razmer_teksta_malenkiy\')],["medium",msg(settings,\'settings.razmer_teksta_sredniy\')],["large",msg(settings,\'settings.razmer_teksta_bolshoy\')]]}',
+              'Settings text-size labels',
+          )
+          replace(
+              'packages/alantil-ui/buttons.js',
+              "'path.resultBack':def('primary','primary',['btn','actionPrimary']),",
+              "'path.resultBack':def('text','text',['btn','actionText']),",
+              'Stage result return action',
+          )
+          replace(
+              'mobile/screens/settings-child.js',
+              "{msg(settings,'privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_')} alantil0709@gmail.com.</>",
+              "{msg(settings,'privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_')} <Text style={styles.emailLink}>alantil0709@gmail.com</Text>.</>",
+              'Privacy email link',
+          )
+          replace(
+              'mobile/screens/settings-child.js',
+              "strong:{fontWeight:'800',color:C.text1},documentDate:",
+              "strong:{fontWeight:'800',color:C.text1},emailLink:{color:C.text1,textDecorationLine:'underline'},documentDate:",
+              'Privacy email style',
+          )
+          PY
+          node --check packages/alantil-ui/buttons.js
+          node --check mobile/screens/profile-main.js
+          node --check mobile/screens/settings-child.js
+      - name: Run regression tests
+        run: npm test
+      - name: Commit full corrected source
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILES=(mobile/screens/profile-main.js packages/alantil-ui/buttons.js mobile/screens/settings-child.js)
+          if git diff --quiet -- "${FILES[@]}"; then
+            echo "Final factual parity already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "${FILES[@]}"
+          git commit -m "Close final factual Web 13.15.12 visual gaps"
+          git push origin HEAD:agent/16.6.6-render-qa
