@@ -14,7 +14,7 @@ jobs:
     env:
       SOURCE_SHA: ${{ github.sha }}
       SOURCE_BRANCH: ${{ github.ref_name }}
-      WEB_REFERENCE_URL: https://raw.githack.com/karachay-malkar/AlanTil/3249e0d3364656e1030d50791b24aaa8789ed1b8/index.html
+      WEB_REFERENCE_SHA: 3249e0d3364656e1030d50791b24aaa8789ed1b8
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,6 +29,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test "$SOURCE_BRANCH" = "agent/16.6.6-render-qa"
+          test "$(git rev-parse 13.15.12)" = "$WEB_REFERENCE_SHA"
           grep -F '"version": "16.6.6"' mobile/app.json
           grep -F "VISUAL_CONTRACT_VERSION='16.6.6'" packages/alantil-ui/tokens.js
       - name: Verify production dictionary snapshot
@@ -89,7 +90,7 @@ jobs:
             'source_sha':os.environ.get('SOURCE_SHA',''),
             'branch':os.environ.get('SOURCE_BRANCH',''),
             'version':'16.6.6',
-            'reference_web_sha':'3249e0d3364656e1030d50791b24aaa8789ed1b8',
+            'reference_web_sha':os.environ.get('WEB_REFERENCE_SHA',''),
             'delivery':'immutable-cdn-relative',
             'qa':'paired-web-render'
           }),encoding='utf-8')
@@ -143,22 +144,34 @@ jobs:
           echo "PUBLIC_PREVIEW_URL=${preview_url}" >> "$GITHUB_ENV"
           echo "$preview_url" > "$RUNNER_TEMP/AlanTil-16.6.6-public-preview-url.txt"
           echo "Preview: $preview_url" >> "$GITHUB_STEP_SUMMARY"
-          echo "Reference: $WEB_REFERENCE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reference SHA: $WEB_REFERENCE_SHA" >> "$GITHUB_STEP_SUMMARY"
       - name: Paired Chromium render comparison against Web 13.15.12
         shell: bash
         run: |
           set -euo pipefail
           qa_dir="$RUNNER_TEMP/alantil-16-6-6-render-qa"
-          mkdir -p "$qa_dir/output"
+          ref_dir="$qa_dir/web-13.15.12"
+          mkdir -p "$qa_dir/output" "$ref_dir"
+          git archive "$WEB_REFERENCE_SHA" | tar -x -C "$ref_dir"
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory "$ref_dir" > "$qa_dir/reference-server.log" 2>&1 &
+          ref_pid=$!
+          trap 'kill "$ref_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null; then break; fi
+            sleep 0.2
+          done
+          curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null
           cd "$qa_dir"
           npm init -y >/dev/null 2>&1
           npm install --no-save --no-audit --no-fund playwright@1.55.0 pixelmatch@5.3.0 pngjs@7.0.0
           npx playwright install --with-deps chromium
           export SCREENSHOT_DIR="$qa_dir/output"
           export NODE_PATH="$qa_dir/node_modules"
+          export WEB_REFERENCE_URL="http://127.0.0.1:4173/index.html"
           node "$GITHUB_WORKSPACE/scripts/qa-mobile-visual-parity-16-6-6.cjs"
           cp "$RUNNER_TEMP/AlanTil-16.6.6-public-preview-url.txt" "$qa_dir/output/PUBLIC_PREVIEW_URL.txt"
           printf '%s\n' "$WEB_REFERENCE_URL" > "$qa_dir/output/WEB_REFERENCE_URL.txt"
+          cp "$qa_dir/reference-server.log" "$qa_dir/output/reference-server.log"
       - name: Upload paired render QA
         if: always()
         uses: actions/upload-artifact@v4
