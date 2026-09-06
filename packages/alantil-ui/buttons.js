@@ -56,7 +56,7 @@ export const BUTTON_ROLES=F({
  'favorite.toggle':def('favorite','favorite',['starBtn'],{shape:'plain'}),
  'modal.confirm':def('primary','primary',['btn','actionPrimary']),
  'modal.cancel':def('text','text',['btn','actionText']),
- 'path.resultBack':def('primary','primary',['btn','actionPrimary']),
+ 'path.resultBack':def('text','text',['btn','actionText']),
  'path.storyTab':def('tab','text',['storyTab']),
  'direction.choice':def('segment','default',['directionChoiceButton'],{shape:'cut2'}),
  'set.start':def('primary','primary',['btn','actionPrimary'])
