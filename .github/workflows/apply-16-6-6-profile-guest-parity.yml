@@ -1,11 +1,6 @@
-name: Apply 16.6.6 Profile Guest Parity
+name: Apply 16.6.6 Final Visual Parity
 
 on:
-  push:
-    branches: [agent/16.6.6-render-qa]
-    paths:
-      - scripts/apply-profile-guest-parity-16-6-6.mjs
-      - .github/workflows/apply-16-6-6-profile-guest-parity.yml
   workflow_dispatch:
 
 permissions:
@@ -22,18 +17,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Apply deterministic correction
+      - name: Apply deterministic final visual correction
         run: node scripts/apply-profile-guest-parity-16-6-6.mjs
       - name: Commit full corrected source
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- mobile/screens/profile-main.js; then
-            echo "Profile guest parity already current"
+          FILES=(
+            mobile/screens/path.js
+            mobile/screens/station.js
+            mobile/ui/components.js
+            mobile/ui/guide.js
+            mobile/screens/learn.js
+            mobile/screens/station-test.js
+            mobile/screens/profile-main.js
+          )
+          if git diff --quiet -- "${FILES[@]}"; then
+            echo "Final visual parity source already current"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add mobile/screens/profile-main.js
-          git commit -m "Align Profile guest locked state with Web 13.15.12"
+          git add -- "${FILES[@]}"
+          git commit -m "Close final Web 13.15.12 render parity gaps"
           git push origin HEAD:agent/16.6.6-render-qa
