@@ -9,15 +9,15 @@ import { loadNativeAnalyticsPreference, saveNativeAnalyticsPreference } from '..
 
 const C=theme.colors;
 function Document({children}){return <ScrollView contentContainerStyle={styles.document} showsVerticalScrollIndicator={false}>{children}</ScrollView>;}
-function H2({children,type}){return <Text style={[styles.h2,type.emphasis]}>{children}</Text>;}
-function P({children,type}){return <Text style={[styles.p,type.body]}>{children}</Text>;}
+function H2({children}){return <Text style={styles.h2}>{children}</Text>;}
+function P({children}){return <Text style={styles.p}>{children}</Text>;}
 function Thanks({settings,type}){return <Document><Text style={[styles.h1,type.title]}>{msg(settings,'about.blagodarstvennoe_slovo')}</Text><P type={type}>{msg(settings,'about.zdes_budet_razmeschena_blagodarnost_lyudyam_kotorye_pomoga')}</P></Document>;}
 function Version({settings,type}){return <Document><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.versiya')}</Text><Text style={[styles.factValue,type.caption]}>16.6.6</Text></View><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.poslednee_obnovlenie')}</Text><Text style={[styles.factValue,type.caption]}>06.09.2026</Text></View></Document>;}
 function Privacy({settings,type}){
   const [enabled,setEnabled]=useState(false),[loaded,setLoaded]=useState(false),[saved,setSaved]=useState(false);
   useEffect(()=>{let alive=true;loadNativeAnalyticsPreference().then((value)=>{if(alive){setEnabled(value===true);setLoaded(true);}});return()=>{alive=false;};},[]);
   const save=async()=>{await saveNativeAnalyticsPreference(enabled);setSaved(true);};
-  const h=(children)=><H2 type={type}>{children}</H2>,p=(children)=><P type={type}>{children}</P>;
+  const h=(children)=><H2>{children}</H2>,p=(children)=><P>{children}</P>;
   return <Document>
     {p(<><Text style={styles.strong}>{msg(settings,'privacy.alantil_alan_til')} </Text>{msg(settings,'privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_')} alantil0709@gmail.com.</>)}
     {h(msg(settings,'privacy.kakie_dannye_sohranyayutsya_na_ustroystve'))}
@@ -47,8 +47,8 @@ function Privacy({settings,type}){
       <View style={styles.switchRow}><Text style={[styles.switchLabel,type.body]}>{msg(settings,'privacy.razreshit_statistiku_ispolzovaniya')}</Text><Checkbox size={20} disabled={!loaded} checked={enabled} accessibilityLabel={msg(settings,'privacy.razreshit_statistiku_ispolzovaniya')} onPress={()=>{setSaved(false);setEnabled((value)=>!value);}}/></View>
       <Button role="privacy.save" onPress={save}>{saved?msg(settings,'privacy.nastroyki_statistiki_sohraneny'):msg(settings,'privacy.sohranit_nastroyki')}</Button>
     </View>
-    {p(msg(settings,'privacy.revision_august_2026'))}
+    <Text style={styles.documentDate}>{msg(settings,'privacy.revision_august_2026')}</Text>
   </Document>;
 }
 export function SettingsChildScreen({screen,settings,onBack}){const type=useSemanticTypography(),title=screen==='thanks'?msg(settings,'about.blagodarnosti'):screen==='version'?msg(settings,'about.versiya_prilozheniya'):msg(settings,'privacy.konfidentsialnost');return <Screen><Header title={title} onBack={onBack}/>{screen==='thanks'?<Thanks settings={settings} type={type}/>:screen==='version'?<Version settings={settings} type={type}/>:<Privacy settings={settings} type={type}/>}</Screen>;}
-const styles=StyleSheet.create({document:{paddingTop:theme.control.header+theme.chrome.contentRestGap,paddingHorizontal:16,paddingBottom:30,gap:12},h1:{color:C.text1,marginBottom:4},h2:{color:C.text1,marginTop:8},p:{color:C.text2},strong:{fontWeight:'800',color:C.text1},fact:{minHeight:46,flexDirection:'row',alignItems:'center',justifyContent:'space-between',borderBottomWidth:1,borderBottomColor:C.lineSoft},factLabel:{color:C.text2},factValue:{fontFamily:theme.font.terminal,fontWeight:'700',color:C.text1},analytics:{gap:10,marginTop:8,paddingTop:8,borderTopWidth:1,borderTopColor:C.lineSoft},switchRow:{minHeight:46,flexDirection:'row',alignItems:'center',gap:12,borderBottomWidth:1,borderBottomColor:C.lineSoft},switchLabel:{flex:1,color:C.text1}});
+const styles=StyleSheet.create({document:{width:'100%',maxWidth:620,alignSelf:'center',paddingTop:theme.control.header+theme.chrome.contentRestGap,paddingHorizontal:12,paddingBottom:30},h1:{color:C.text1,marginBottom:4},h2:{marginTop:22,marginBottom:9,color:C.text1,fontSize:16,lineHeight:19,fontWeight:'800'},p:{marginTop:10,color:C.text2,fontSize:14,lineHeight:23},strong:{fontWeight:'800',color:C.text1},documentDate:{marginTop:10,marginBottom:18,color:C.text3,fontFamily:theme.font.terminal,fontSize:11,lineHeight:14,fontWeight:'700'},fact:{minHeight:46,flexDirection:'row',alignItems:'center',justifyContent:'space-between',borderBottomWidth:1,borderBottomColor:C.lineSoft},factLabel:{color:C.text2},factValue:{fontFamily:theme.font.terminal,fontWeight:'700',color:C.text1},analytics:{marginTop:20,paddingTop:12,paddingHorizontal:2,borderTopWidth:1,borderTopColor:C.lineSoft},switchRow:{minHeight:46,marginTop:12,flexDirection:'row',alignItems:'center',gap:10,borderBottomWidth:1,borderBottomColor:C.lineSoft},switchLabel:{flex:1,color:C.text1,fontSize:14,lineHeight:23}});
