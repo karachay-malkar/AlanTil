@@ -33,7 +33,8 @@ test('16.6.3 first-run setup is one progressively disclosed screen with Web geom
 test('16.6.3 auth choice resolves separate Native and Web PKCE callbacks',()=>{
   assert.match(authChoice,/continueGoogle/);
   assert.match(authChoice,/prodolzhit_kak_gost/);
-  assert.match(authChoice,/GoogleMark/);
+  assert.match(authChoice,/import \{ GoogleIcon \} from '\.\.\/ui\/icons\.js'/);
+  assert.match(authChoice,/<GoogleIcon size=\{20\}\/>/);
   assert.match(appRoot,/from '.\/platform\/auth\.js'/);
   assert.match(authFacade,/Platform\.OS==='web'\?require\('.\/auth\.web\.js'\):require\('.\/auth\.native\.js'\)/);
   assert.match(nativeAuth,/NATIVE_AUTH_REDIRECT_URL='alantil:\/\/auth\/callback'/);
