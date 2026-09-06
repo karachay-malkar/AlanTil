@@ -59,6 +59,8 @@ jobs:
           rm -rf mobile/node_modules mobile/dist-web mobile/package-lock.json
           git clean -fdX
           node scripts/generate-shared-visual-css.mjs
+          git add src/shared/styles/shared-visual-tokens.css
+          node scripts/generate-shared-visual-css.mjs
           git diff --exit-code -- src/shared/styles/shared-visual-tokens.css
           git diff --check
           git config user.name "github-actions[bot]"
