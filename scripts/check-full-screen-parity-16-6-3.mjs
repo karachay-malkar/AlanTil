@@ -6,6 +6,7 @@ function expect(name,condition){checks.push([name,Boolean(condition)]);}
 const path=read('mobile/screens/path.js');
 const practice=read('mobile/screens/practice.js');
 const learn=read('mobile/screens/learn.js');
+const station=read('mobile/screens/station.js');
 const stage=read('mobile/screens/station-test.js');
 const games=read('mobile/screens/practice-games.js');
 const favorites=read('mobile/screens/favorites.js');
@@ -64,8 +65,12 @@ expect('Expo Web preview is public browser-QA without production Pages deploy',f
 expect('Onboarding semantic typography',onboarding.includes('useSemanticTypography')&&onboarding.includes('type.wordCard'));
 expect('Guide spotlight geometry',guide.includes('measureInWindow')&&guide.includes('SpotlightMask')&&guide.includes('halo'));
 for(const role of ['display','title','heading','body','emphasis','caption','helper','micro','terminal','result','button','navigation','wordCard','question'])expect(`Typography role ${role}`,theme.includes(`${role}:`));
-expect('Release version 16.6.5',app.expo?.version==='16.6.5'&&app.expo?.extra?.releaseVersion==='16.6.5'&&app.expo?.android?.versionCode===30&&app.expo?.ios?.buildNumber==='30');
+expect('Release version 16.6.6',app.expo?.version==='16.6.6'&&app.expo?.extra?.releaseVersion==='16.6.6'&&app.expo?.android?.versionCode===31&&app.expo?.ios?.buildNumber==='31');
 
+expect('Path final story-tab cascade',path.includes("paddingHorizontal:0")&&path.includes('storyTabFirst:{marginLeft:theme.chrome.storyTabs.edgeInset}')&&path.includes('right:theme.path.scaleRight'));
+expect('Station uses Web plain text tabs',station.includes('stationTabTextActive')&&!station.includes('CompactSegmentedControl value={pane}')&&!station.includes('GuideHelpButton'));
+expect('Profile bracket tabs and underlay scroll',profile.includes('{`[ ${label} ]`}')&&profile.includes('body:{flex:1,paddingTop:0')&&profile.includes('FadedScrollView topFade={theme.chrome.scrollFades.profile.top}'));
+expect('Learn guide trigger bottom-right',learn.includes('GuideHelpButton placement="bottomRight"'));
 const failed=checks.filter(([,ok])=>!ok);
 for(const [name,ok] of checks)console.log(`${ok?'PASS':'FAIL'}  ${name}`);
 if(failed.length){console.error(`\n16.6.3 gate failed: ${failed.length} checks`);process.exit(1);}

@@ -58,7 +58,7 @@ test('16.6.4 system chrome exists on every Screen and stays below interactive ch
 });
 
 test('16.6.4 Path restores final Web story/header and responsive map gutters',()=>{
-  assert.match(pathScreen,/pathControls:\{[^}]*zIndex:30[^}]*elevation:30[^}]*paddingLeft:8[^}]*paddingRight:38/s);
+  assert.match(pathScreen,/pathControls:\{[^}]*zIndex:30[^}]*elevation:30[^}]*paddingHorizontal:0/s);assert.match(pathScreen,/storyTabFirst:\{marginLeft:theme\.chrome\.storyTabs\.edgeInset\}/);
   assert.match(pathScreen,/paddingLeft:viewportWidth<=420\?12:20/);
   assert.match(pathScreen,/paddingRight:viewportWidth<=340\?28:viewportWidth<=420\?36:50/);
   assert.match(pathScreen,/screenDepths\.path\.top/);
@@ -76,7 +76,7 @@ test('16.6.4 Station, Favorites, Test and Match use state-specific chrome and ca
   assert.match(games,/screenDepths\.testMenu/);
   assert.match(games,/screenDepths\.matchMenu/);
   assert.match(games,/screenDepths\.testResults/);
-  assert.match(components,/CutCornerFrame fill=\{fill\} stroke=\{stroke\} cut=\{theme\.button\.cut\}/);
+  assert.match(components,/CutCornerFrame fill=\{fill\} stroke=\{stroke\} cut=\{theme\.button\.cut\} radius=\{theme\.button\.radius\}/);
   assert.match(games,/launchBar:\{[^}]*zIndex:30[^}]*elevation:30/s);
   assert.match(stationTest,/screenDepths\.testResults/);
 });
@@ -101,7 +101,7 @@ test('16.6.4 Settings/Profile use Web-specific flat controls instead of generic 
   assert.match(parity,/smallAction:\s*\{[^}]*minHeight:\s*theme\.button\.settingsSmallHeight[^}]*borderRadius:\s*theme\.button\.settingsSmallRadius[^}]*backgroundColor:\s*'transparent'/s);
   assert.match(profile,/<SmallActionButton active=\{dirty\}/);
   assert.match(profile,/<SmallActionButton active=\{dictionary\.needsUpdate&&!dictionaryBusy\}/);
-  assert.match(profile,/tabs:\{[^}]*zIndex:30[^}]*elevation:30[^}]*top:2[^}]*left:10[^}]*right:10[^}]*height:34/s);
+  assert.match(profile,/tabs:\{[^}]*top:theme\.chrome\.profileTabs\.top[^}]*left:theme\.chrome\.profileTabs\.side[^}]*height:theme\.chrome\.profileTabs\.height/s);assert.match(profile,/\{`\[ \$\{label\} \]`\}/);
   assert.match(profile,/problemChip:\{[^}]*minWidth:92[^}]*borderWidth:1[^}]*backgroundColor:'transparent'/s);
   assert.doesNotMatch(profile,/problemChip:\{[^}]*borderRadius:999/s);
   assert.match(profile,/screenDepths\.profile/);
@@ -117,11 +117,11 @@ test('16.6.4 Songs inline word card is flat and renders grouped examples',()=>{
 });
 
 test('16.6.4 release metadata is coherent',()=>{
-  assert.equal(app.expo.version,'16.6.5');
-  assert.equal(pkg.version,'16.6.5');
-  assert.equal(app.expo.extra.releaseVersion,'16.6.5');
-  assert.equal(app.expo.android.versionCode,30);
-  assert.equal(app.expo.ios.buildNumber,'30');
-  assert.match(settingsChild,/>16\.6\.5</);
-  assert.match(settingsChild,/>05\.09\.2026</);
+  assert.equal(app.expo.version,'16.6.6');
+  assert.equal(pkg.version,'16.6.6');
+  assert.equal(app.expo.extra.releaseVersion,'16.6.6');
+  assert.equal(app.expo.android.versionCode,31);
+  assert.equal(app.expo.ios.buildNumber,'31');
+  assert.match(settingsChild,/>16\.6\.6</);
+  assert.match(settingsChild,/>06\.09\.2026</);
 });

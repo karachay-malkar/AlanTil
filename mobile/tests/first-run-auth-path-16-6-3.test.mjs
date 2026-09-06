@@ -75,8 +75,8 @@ test('16.6.3 auth choice resolves separate Native and Web PKCE callbacks',()=>{
   assert.ok(filter.category.includes('BROWSABLE'));
   assert.ok(filter.category.includes('DEFAULT'));
   assert.ok(filter.data.some((entry)=>entry.scheme==='alantil'&&entry.host==='auth'&&entry.pathPrefix==='/callback'));
-  assert.equal(app.expo.android.versionCode,30);
-  assert.equal(app.expo.ios.buildNumber,'30');
+  assert.equal(app.expo.android.versionCode,31);
+  assert.equal(app.expo.ios.buildNumber,'31');
 });
 
 test('16.6.3 Story Stele matches Web viewport and overflow behavior',()=>{

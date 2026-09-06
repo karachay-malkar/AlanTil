@@ -1,4 +1,4 @@
-export const VISUAL_CONTRACT_VERSION='16.6.5';
+export const VISUAL_CONTRACT_VERSION='16.6.6';
 export const WEB_VISUAL_REFERENCE='13.15.12';
 const F=Object.freeze;
 const colors=F({appBg:'#eee9df',appBgDeep:'#e7e0d4',surface0:'#f6f2e9',surface1:'#eee8dc',surface2:'#e2d9c9',surface3:'#cec0aa',surfaceDark:'#34312c',text1:'#292722',text2:'#666158',text3:'#918b80',inverse:'#faf8f2',lineSoft:'rgba(54,50,43,0.12)',line:'rgba(54,50,43,0.22)',lineStrong:'rgba(54,50,43,0.46)',accent:'#8b6b3b',accentStrong:'#65491f',accentSoft:'rgba(139,107,59,0.11)',accentGlow:'rgba(139,107,59,0.20)',success:'#5d7654',successStrong:'#425a3b',successSoft:'rgba(93,118,84,0.12)',successBorder:'rgba(93,118,84,0.32)',danger:'#98564c',dangerStrong:'#733e36',dangerSoft:'rgba(152,86,76,0.12)',dangerBorder:'rgba(152,86,76,0.35)',warning:'#a47736',info:'#58777a',locked:'#aaa49a',favorite:'#9b7027',paper:'rgba(255,255,255,0.22)',paperSoft:'rgba(255,255,255,0.13)',component:'rgba(255,255,255,0.28)',panelStrong:'rgba(255,255,255,0.20)',panelMid:'rgba(255,255,255,0.14)',panelSoft:'rgba(255,255,255,0.10)',panelFaint:'rgba(255,255,255,0.08)',white55:'rgba(255,255,255,0.55)',white40:'rgba(255,255,255,0.40)',white34:'rgba(255,255,255,0.34)',white30:'rgba(255,255,255,0.30)',white23:'rgba(255,255,255,0.23)',white20:'rgba(255,255,255,0.20)',overlay:'rgba(31,30,26,0.52)',modalShadow:'rgba(31,30,26,0.20)',controlGlass:'rgba(246,242,233,0.28)',controlGlassActive:'rgba(246,242,233,0.46)',controlBorder:'rgba(54,50,43,0.0968)',maskGlass:'rgba(238,233,223,0.18)',pathBubbleGlass:'rgba(41,39,34,0.34)',pathBubbleBorder:'rgba(41,39,34,0.18)',activeBubbleGlass:'rgba(41,39,34,0.88)',activeBubbleBorder:'rgba(41,39,34,0.32)'});
@@ -13,7 +13,7 @@ export const UI_TOKENS=F({
   radius:F({none:2,xs:7,sm:10,md:15,lg:20,pill:999}),
   spacing:F({s1:4,s2:8,s3:12,s4:16,s5:20,s6:24,s7:32,s8:40}),
   control:Object.freeze({sm:36,normal:44,compact:36,text:28,large:44,header:42,nav:60,input:44,row:48}),
-  path:F({rootControlsHeight:56,mapTop:64,stationSize:60,stationGap:58,stationMetaReserve:52,sectionGap:92,dictionaryGap:118,catalogGap:118,headingGap:22,routeGroupsBottom:64,waveAmplitudeMin:64,waveAmplitudeWidthRatio:.22,waveAmplitudeMax:90,scaleDot:4,scaleSection:6,scaleDiamond:9,scaleHeightPercent:60,scaleRight:12,scaleWidth:26}),
+  path:F({rootControlsHeight:56,mapTop:64,stationSize:60,stationGap:58,stationMetaReserve:52,sectionGap:92,dictionaryGap:118,catalogGap:118,headingGap:22,routeGroupsBottom:64,waveAmplitudeMin:64,waveAmplitudeWidthRatio:.22,waveAmplitudeMax:90,scaleDot:4,scaleSection:6,scaleDiamond:9,scaleHeightPercent:60,scaleRight:4,scaleWidth:26}),
   safeArea:F({edges:['top','left','right','bottom'],shellEdges:['top','left','right'],bottomManagedByChrome:true,topContentGap:16,bottomContentGap:18}),
   breakpoints:F({compact:360,accountNarrow:420}),
   motion:F({fast:110,normal:145,modal:145,reduced:0}),

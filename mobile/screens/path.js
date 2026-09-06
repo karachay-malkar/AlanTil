@@ -9,6 +9,7 @@ import { hasSeenNativeStoryStele, loadNativePathSettings, loadNativeStoryScroll,
 import { beginNativeGeneralGuide, getNativeGeneralGuideRuntime, resetNativeGeneralGuideRuntime, setNativeGeneralGuideRuntime } from '../platform/guide-state.js';
 import { msg } from '../i18n.js';
 import { Screen } from '../ui/components.js';
+import { FadedScrollView } from '../ui/faded-scroll';
 import { GuideHelpButton, GuideOverlay } from '../ui/guide.js';
 import { MonoLabel } from '../ui/parity.js';
 import { ListChecksIcon } from '../ui/icons.js';
@@ -52,7 +53,7 @@ function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,control
           accessibilityState={{selected:active}}
           onLayout={event=>{layoutsRef.current.set(type,event.nativeEvent.layout);if(type===activeStory)void scrollToStory(type,false);}}
           onPress={()=>onChange(type)}
-          style={({pressed})=>[styles.storyTab,active&&styles.storyTabSelected,pressed&&styles.storyTabPressed]}
+          style={({pressed})=>[styles.storyTab,type===route.storyOrder?.[0]&&styles.storyTabFirst,type===route.storyOrder?.[route.storyOrder.length-1]&&styles.storyTabLast,active&&styles.storyTabSelected,pressed&&styles.storyTabPressed]}
         >
           <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.storyTabText,{fontSize,lineHeight:fontSize*1.1},active&&styles.storyTabActive]}>[ {route.stories[type]?.label||type} ]</Text>
         </Pressable>;
@@ -409,12 +410,12 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
         <MonoLabel>{storySummary.masteredWords}/{storySummary.totalWords}</MonoLabel>
       </View>
     </View>
-    <ScrollView ref={scrollRef} style={styles.pathViewport} contentContainerStyle={[styles.pathContent,{paddingLeft:viewportWidth<=420?12:20,paddingRight:viewportWidth<=340?28:viewportWidth<=420?36:50,paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
+    <FadedScrollView topFade={theme.chrome.scrollFades.path.top} bottomFade={theme.chrome.scrollFades.path.bottom} ref={scrollRef} style={styles.pathViewport} contentContainerStyle={[styles.pathContent,{paddingLeft:viewportWidth<=420?12:20,paddingRight:viewportWidth<=340?28:viewportWidth<=420?36:50,paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
       <View style={styles.routeMap} onLayout={recordMap}>
         {connector&&geometry?.map?.width&&geometry?.map?.height?<Svg pointerEvents="none" width={geometry.map.width} height={geometry.map.height} style={styles.routeConnector}><SvgPath d={connector} fill="none" stroke="rgba(102,97,88,.38)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.72}/></Svg>:null}
         {routeItems}
       </View>
-    </ScrollView>
+    </FadedScrollView>
     <Pressable accessibilityRole="button" accessibilityLabel={m('mobile.path.word_list')} onPress={openWordList} style={({pressed})=>[styles.wordListFloat,compactFloat&&styles.wordListFloatCompact,pressed&&styles.floatingPressed]}>
       <ListChecksIcon size={compactFloat?18:19} color={C.text2}/>
     </Pressable>
@@ -426,13 +427,13 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
 }
 
 const styles=StyleSheet.create({
-  pathControls:{position:'absolute',zIndex:30,elevation:30,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingLeft:8,paddingRight:38,paddingBottom:2},
+  pathControls:{position:'absolute',zIndex:30,elevation:30,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingHorizontal:0,paddingBottom:2},
   storyTabsShell:{position:'relative',height:32,overflow:'hidden'},
-  storyTabs:{height:32,alignItems:'center',paddingHorizontal:18,gap:8},
+  storyTabs:{height:32,alignItems:'center',paddingHorizontal:0,gap:theme.chrome.storyTabs.gap},
   storyEdge:{position:'absolute',zIndex:4,top:0,width:24,height:32,textAlign:'center',fontFamily:theme.font.terminal,fontSize:18,fontWeight:'800',lineHeight:32,color:C.text2,opacity:.72,backgroundColor:'rgba(238,233,223,.78)'},
   storyEdgeStart:{left:0},
   storyEdgeEnd:{right:0},
-  storyTab:{flexShrink:0,maxWidth:280,height:30,paddingHorizontal:8,marginVertical:1,borderRadius:12,alignItems:'center',justifyContent:'center'},
+  storyTab:{flexShrink:0,maxWidth:280,height:30,paddingHorizontal:8,marginVertical:1,borderRadius:12,alignItems:'center',justifyContent:'center'},storyTabFirst:{marginLeft:theme.chrome.storyTabs.edgeInset},storyTabLast:{marginRight:theme.chrome.storyTabs.edgeInset},
   storyTabSelected:{backgroundColor:'rgba(246,242,233,.28)'},
   storyTabPressed:{opacity:.68,transform:[{translateY:1}]},
   storyTabText:{fontFamily:theme.font.terminal,fontWeight:'700',color:C.text3,opacity:.64},
