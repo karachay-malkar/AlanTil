@@ -70,3 +70,11 @@ Unknown station coordinates or an unmeasured viewport now render empty fixed-hei
 - Failed pull/flush returns false; auth sync marker resets on false so later resume can retry.
 - Behavioral tests use actual platform module bodies with injected storage/auth transport. 220 tests and 54 source checks passed before final rerun.
 - Still open: guest-claim/pull atomicity across user changes, songs refresh/error UI, remaining typography/visual matrix, physical-device FPS and live OAuth.
+
+## 2026-09-09 — account-bound local/cloud persistence
+
+- Storage keys are captured before legacy migration awaits. Settings, favorite values and their sync metadata, progress results/activity/station attempts, and summary reads carry the initiating scope through subsequent awaits.
+- Cloud pull and guest claim capture their destination once; reads, merges, writes, claim marker and queued progress use that same destination. Cloud GET requests also require the initiating user. Deferred preference/favorite queue callbacks do not enqueue old-user changes for a newly selected account.
+- Seven behavioral tests run actual platform modules with controlled account changes during migration/local reads: settings, favorites, guest claim, cloud pull, and Learn/Test/Match result persistence. They assert all writes remain under account A after selecting B.
+- Validation: 227 targeted tests; 54 source/state checks. This proves scoped IO behavior in those interleavings, not atomic multi-key storage or conflict-free simultaneous local edits/cloud merges. Refresh completion races and live Google OAuth remain unverified.
+- Previous head 07f253a: push render artifact has 49 PASS scenarios, no console/page errors, but a cancelled Google CSV request marks that run failed; PR run succeeded. This is not evidence of native Android parity or measured scroll FPS.

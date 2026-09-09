@@ -8,7 +8,7 @@ const source=readFileSync(new URL('../platform/cloud-sync.js',import.meta.url),'
 const tick=()=>new Promise(r=>setImmediate(r));
 function harness(){
  let user='A',release;const sent=[],db=new Map();let first=true;
- const c=vm.createContext({...policy,createDurableQueue,AsyncStorage:{getItem:async key=>db.get(key)||null,setItem:async(key,v)=>db.set(key,v)},migrateLegacyNativeValueToGuest:async()=>{},nativeScopedStorageKey:()=>user,getNativeAuthSession:()=>({user:{id:user}}),nativeAuthFetch:async(path,options,expected)=>{assert.equal(expected,user);sent.push(JSON.parse(options.body));if(first){first=false;return new Promise(r=>release=r);}return {ok:true};}});
+ const c=vm.createContext({...policy,createDurableQueue,getNativeStorageScope:()=>user,AsyncStorage:{getItem:async key=>db.get(key)||null,setItem:async(key,v)=>db.set(key,v)},migrateLegacyNativeValueToGuest:async()=>{},nativeScopedStorageKey:()=>user,getNativeAuthSession:()=>({user:{id:user}}),nativeAuthFetch:async(path,options,expected)=>{assert.equal(expected,user);sent.push(JSON.parse(options.body));if(first){first=false;return new Promise(r=>release=r);}return {ok:true};}});
  vm.runInContext(source,c);
  return {db,sent,change:next=>user=next,run:code=>vm.runInContext(code,c),release:()=>release({ok:true})};
 }
