@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, GlassBackdrop } from './components.js';
 import { CloseIcon } from './icons.js';
+import { useSemanticTypography } from './runtime-settings.js';
 import { theme } from './theme.js';
 
 const C=theme.colors;
@@ -22,10 +23,11 @@ function ModalShell({visible,onClose,children,accessibilityLabel}) {
 function ModalCard({children,style,accessibilityRole}){return <View accessibilityRole={accessibilityRole} style={[styles.card,style]}><GlassBackdrop blur={20} saturate={1.05} backgroundColor={MODAL_SURFACE}/>{children}</View>}
 
 export function ConfirmDialog({visible,title,message,confirmLabel,cancelLabel,onConfirm,onCancel}) {
+  const type=useSemanticTypography();
   return <ModalShell visible={visible} onClose={onCancel} accessibilityLabel={cancelLabel}>
     <ModalCard accessibilityRole="alert">
-      {title?<Text style={styles.title}>{title}</Text>:null}
-      <Text style={styles.message}>{message}</Text>
+      {title?<Text style={[styles.title,{fontSize:type.emphasis.fontSize}]}>{title}</Text>:null}
+      <Text style={[styles.message,{fontSize:type.emphasis.fontSize,lineHeight:Math.round(type.emphasis.fontSize*1.4)}]}>{message}</Text>
       <View style={styles.actions}>
         <Button role="modal.cancel" style={styles.action} onPress={onCancel}>{cancelLabel}</Button>
         <Button role="modal.confirm" style={styles.action} onPress={onConfirm}>{confirmLabel}</Button>
@@ -35,10 +37,11 @@ export function ConfirmDialog({visible,title,message,confirmLabel,cancelLabel,on
 }
 
 export function InfoDialog({visible,title='',closeLabel='Close',onClose,children}) {
+  const type=useSemanticTypography();
   return <ModalShell visible={visible} onClose={onClose} accessibilityLabel={closeLabel}>
     <ModalCard accessibilityRole="summary" style={styles.infoCard}>
       <View style={styles.infoHeader}>
-        {title?<Text numberOfLines={2} style={styles.infoTitle}>{title}</Text>:<View style={styles.infoTitle}/>} 
+        {title?<Text numberOfLines={2} style={[styles.infoTitle,{fontSize:type.emphasis.fontSize}]}>{title}</Text>:<View style={styles.infoTitle}/>}
         <Pressable accessibilityRole="button" accessibilityLabel={closeLabel} onPress={onClose} style={({pressed})=>[styles.close,pressed&&styles.closePressed]}><GlassBackdrop blur={8} backgroundColor={C.controlGlass}/><CloseIcon size={18} color={C.text2}/></Pressable>
       </View>
       <ScrollView style={styles.infoBody} contentContainerStyle={styles.infoBodyContent} showsVerticalScrollIndicator={false}>{children}</ScrollView>

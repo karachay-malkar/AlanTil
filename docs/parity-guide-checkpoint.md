@@ -78,3 +78,10 @@ Unknown station coordinates or an unmeasured viewport now render empty fixed-hei
 - Seven behavioral tests run actual platform modules with controlled account changes during migration/local reads: settings, favorites, guest claim, cloud pull, and Learn/Test/Match result persistence. They assert all writes remain under account A after selecting B.
 - Validation: 227 targeted tests; 54 source/state checks. This proves scoped IO behavior in those interleavings, not atomic multi-key storage or conflict-free simultaneous local edits/cloud merges. Refresh completion races and live Google OAuth remain unverified.
 - Previous head 07f253a: push render artifact has 49 PASS scenarios, no console/page errors, but a cancelled Google CSV request marks that run failed; PR run succeeded. This is not evidence of native Android parity or measured scroll FPS.
+
+## 2026-09-09 — songs cache, error recovery and semantic text
+
+- SongsScreen default list is a stable frozen value; its load effect no longer restarts after every state render when no initial catalog is supplied.
+- Catalog cache has a one-hour freshness timestamp. Legacy/stale rows render while a shared network request refreshes them. Offline refresh retains cached rows and exposes a localized warning/retry; no-cache failures expose an error rather than a false empty catalog. Invalid CSV/HTML cannot overwrite saved songs. A valid empty catalog can clear obsolete songs. Cache-write errors do not hide successful downloads.
+- Song information now uses the shared catalog's `info` field. Search-mode labels, timestamps, counts, word heading and modal text sizes follow Web 13.15.12 semantic typography. Confirm/info text keeps its own weight while receiving the semantic emphasis size.
+- Nine runtime loader tests cover fresh/legacy/stale/empty/invalid/offline caches, forced retry, concurrent requests and failed writes. 236 targeted tests and 54 source/state checks pass. Native layout/audio/scroll and live Google OAuth still require runtime device evidence; no full-parity claim.
