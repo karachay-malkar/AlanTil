@@ -20,12 +20,12 @@ test('16.6.3 audit correction keeps auth bootstrap ahead of scoped storage hydra
   assert.match(source,/key=\{`profile-\$\{dataEpoch\}`\}/);
 });
 
-test('16.6.3 account synchronization is single-flight',()=>{
-  const source=read('mobile/platform/cloud-sync.js');
-  assert.match(source,/let flushing=null,synchronizing=null/);
-  assert.match(source,/if\(synchronizing\)return synchronizing/);
-  assert.match(source,/synchronizing=\(async\(\)=>/);
-  assert.match(source,/\.finally\(\(\)=>\{synchronizing=null;\}\)/);
+test('account synchronization is single-flight per account',()=>{
+ const source=read('mobile/platform/cloud-sync.js');
+ assert.match(source,/synchronizing=new Map\(\)/);
+ assert.match(source,/synchronizing.has\(context.key\)/);
+ assert.match(source,/synchronizing.set\(context.key,run\)/);
+ assert.match(source,/synchronizing.delete\(context.key\)/);
 });
 
 test('16.6.3 audit correction restores consent-gated native analytics runtime',()=>{

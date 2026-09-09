@@ -52,7 +52,7 @@ test('cloud queue: failed request state can be retained, attempts updated, then 
   let queue=[];({queue}=enqueueProgressEntry(queue,'user_settings',{value:1},{id:'user_settings:current',createdAt:t(10)}));
   let updated=updateProgressQueueEntry(queue,'user_settings:current',{attempts:1,last_error:'503'});assert.equal(updated.queue.length,1);assert.equal(updated.queue[0].attempts,1);
   const removed=removeProgressQueueEntry(updated.queue,'user_settings:current');assert.equal(removed.changed,true);assert.equal(removed.queue.length,0);
-  const source=read('mobile/platform/cloud-sync.js');assert.match(source,/if\(!response\.ok\)\{ok=false;continue;\}/);assert.match(source,/removeProgressQueueEntry\(queue,entry\.id\)/);
+  const source=read('mobile/platform/cloud-sync.js');assert.match(source,/if\(!response\.ok\)return false;/);assert.match(source,/durableQueue\.acknowledge\(context.key,entry\)/);
 });
 
 test('guest -> account queue merge deduplicates and labels claimed entries',()=>{

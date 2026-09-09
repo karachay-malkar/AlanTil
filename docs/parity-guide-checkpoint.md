@@ -62,3 +62,11 @@ Input mobile: 4a91cd4a327c58cc915ab5f3b22fcec26431b33d.
 
 ## Initial Path layout correction
 Unknown station coordinates or an unmeasured viewport now render empty fixed-height rows. Native button/SVG content mounts only after geometry and viewport are available. Row onLayout remains outside the conditional content, so measurement does not depend on mounting the button. Initial row placeholders and full connector remain; no claim of full list virtualization.
+
+## Cloud queue and refresh corrections after 5a88260
+- Reproduced lost enqueue while an older network request was in flight. Replaced stale-array rewrites with per-key serialized mutations and exact-revision acknowledgements. Concurrent edits, including replacement of the same favorite, survive and drain.
+- Queue storage key and owner captured before await; flush and synchronization are single-flight per account. Requests check expected user before sending and after refresh. This does not certify every guest-transfer/pull storage operation across account switches; those broader transactions still require work.
+- Transient refresh errors retain local session; only explicit terminal Supabase codes clear it. See https://supabase.com/docs/guides/auth/debugging/error-codes . Live OAuth round-trip remains unverified.
+- Failed pull/flush returns false; auth sync marker resets on false so later resume can retry.
+- Behavioral tests use actual platform module bodies with injected storage/auth transport. 220 tests and 54 source checks passed before final rerun.
+- Still open: guest-claim/pull atomicity across user changes, songs refresh/error UI, remaining typography/visual matrix, physical-device FPS and live OAuth.
