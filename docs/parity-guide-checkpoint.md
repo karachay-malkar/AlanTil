@@ -59,3 +59,6 @@ Input mobile: 4a91cd4a327c58cc915ab5f3b22fcec26431b33d.
 - Window store notifies only after half a viewport of movement or resize; no PathScreen state update on scroll. Guide target stays mounted.
 - Learn decision borders use premultiplied sRGB mixes from Web CSS; high elevation decision wrapper has no Android shadow.
 - Added behavioral coverage for long routes, pinned targets, jumps, resize and subscription cleanup. Native FPS remains unmeasured.
+
+## Initial Path layout correction
+Unknown station coordinates or an unmeasured viewport now render empty fixed-height rows. Native button/SVG content mounts only after geometry and viewport are available. Row onLayout remains outside the conditional content, so measurement does not depend on mounting the button. Initial row placeholders and full connector remain; no claim of full list virtualization.

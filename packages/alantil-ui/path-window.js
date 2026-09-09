@@ -8,5 +8,5 @@ export function createPathWindow(){
  }};
 }
 export function stationInWindow(y,{offset,height},pinned=false){
- return pinned||!height||!Number.isFinite(y)||(y>=offset-height*1.5&&y<=offset+height*2.5);
+ return pinned||(height>1&&Number.isFinite(y)&&y>=offset-height*1.5&&y<=offset+height*2.5);
 }
