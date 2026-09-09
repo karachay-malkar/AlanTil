@@ -14,6 +14,8 @@ import { GuideHelpButton, GuideOverlay } from '../ui/guide.js';
 import { MonoLabel } from '../ui/parity.js';
 import { ListChecksIcon } from '../ui/icons.js';
 import { Topography } from '../ui/topography.js';
+import {createPathWindow} from '../../packages/alantil-ui/path-window.js';
+import {PathStationWindow} from '../ui/path-station-window.js';
 import { theme } from '../ui/theme.js';
 import { useSemanticTypography } from '../ui/runtime-settings.js';
 import { textMetrics } from '../../packages/alantil-ui/typography.js';
@@ -233,6 +235,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const type=useSemanticTypography(),routeSpacing=settings.text_size_code==='large'?{gap:72,paddingBottom:66}:settings.text_size_code==='small'?{gap:58,paddingBottom:48}:{gap:58,paddingBottom:52};
   const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
+  const stationWindow=useRef(createPathWindow()).current;
   const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
   const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
   for(const storyType of route.storyOrder||[])ensureTargetRef(storyTargetRefs,storyType);
@@ -308,6 +311,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
       return{key:station.key,index:stationOrder.get(station.key)??9999,x:geometry.map.width/2+shiftFor(station),y:catalog.y+section.y+row.y+theme.path.stationSize/2};
     }).filter(Boolean).sort((a,b)=>a.index-b.index);
   },[geometry,displayStations,stationOrder,amplitude]);
+  const stationY=useMemo(()=>new Map(points.map(point=>[point.key,theme.path.mapTop+point.y])),[points]);
   const connector=useMemo(()=>connectorPath(points),[points]);
 
   const scaleParts=useMemo(()=>{
@@ -337,14 +341,15 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
       if(saved===null)scrollRef.current?.scrollToEnd({animated:false});
       else scrollRef.current?.scrollTo({y:saved,animated:false});
       offsetRef.current=saved===null?Math.max(0,contentHeightRef.current-viewportHeightRef.current):saved;
+      stationWindow.update(offsetRef.current,viewportHeightRef.current);
       syncScaleMetrics({offset:offsetRef.current});
     });
   };
   useEffect(()=>{void restoreMapPosition();},[pathReady,activeStory,geometry?.map?.height]);
 
-  const onViewportLayout=(event)=>{viewportHeightRef.current=event.nativeEvent.layout.height||1;syncScaleMetrics();void restoreMapPosition();};
+  const onViewportLayout=(event)=>{viewportHeightRef.current=event.nativeEvent.layout.height||1;stationWindow.update(offsetRef.current,viewportHeightRef.current);syncScaleMetrics();void restoreMapPosition();};
   const onContentSizeChange=(_,height)=>{contentHeightRef.current=height||1;syncScaleMetrics();void restoreMapPosition();};
-  const onPathScroll=(event)=>{const offset=event.nativeEvent.contentOffset.y;offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);};
+  const onPathScroll=(event)=>{const offset=event.nativeEvent.contentOffset.y;offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);stationWindow.update(offset,viewportHeightRef.current);};
   const jumpScale=(part)=>{const viewport=viewportHeightRef.current||1,target=Math.max(0,(Number(part?.targetY)||0)-viewport*.16);scrollRef.current?.scrollTo({y:target,animated:true});};
   const selectVisibleGuideStation=()=>{
     const viewport=viewportHeightRef.current||1,center=viewport/2,hardTop=viewport*.28,preferredTop=viewport*.40,preferredBottom=viewport*.65,offset=offsetRef.current;
@@ -379,7 +384,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
                 {reversedStations.map((station)=>{
                   const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),targetRef=ensureTargetRef(stationTargetRefs,station.key);
                   return <View key={station.key} style={styles.stationRow} onLayout={(event)=>recordStation(catalog,section,station,event)}>
-                    <Pressable accessibilityRole="button" accessibilityLabel={station.name||fallback} accessibilityValue={{text:status}} disabled={status==='locked'} accessibilityState={{disabled:status==='locked'}} hitSlop={8} onPress={()=>openStation(station)} style={({pressed})=>[styles.stationNode,status==='locked'&&styles.stationLocked,{transform:[{translateX:shift},{scale:pressed?0.97:1}]}]}>
+                    <PathStationWindow store={stationWindow} y={stationY.get(station.key)} pinned={guideStationKey===station.key}><Pressable accessibilityRole="button" accessibilityLabel={station.name||fallback} accessibilityValue={{text:status}} disabled={status==='locked'} accessibilityState={{disabled:status==='locked'}} hitSlop={8} onPress={()=>openStation(station)} style={({pressed})=>[styles.stationNode,status==='locked'&&styles.stationLocked,{transform:[{translateX:shift},{scale:pressed?0.97:1}]}]}>
                       <StationProgressRing targetRef={targetRef} percent={summary.percent} done={done}>
                         <MillstoneFace status={status} done={done}><Text style={[styles.stationOrdinal,textMetrics(type.micro.fontSize,1)]}>{String(index+1).padStart(2,'0')}</Text></MillstoneFace>
                       </StationProgressRing>
@@ -388,7 +393,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
                         {labels?<Text numberOfLines={2} style={[styles.stationLabel,textMetrics(type.caption.fontSize,1.15)]}>{station.name||fallback}</Text>:null}
                         <Text style={[styles.stationCount,textMetrics(type.micro.fontSize,1)]}>{summary.mastered}/{summary.total}</Text>
                       </View>
-                    </Pressable>
+                    </Pressable></PathStationWindow>
                   </View>;
                 })}
               </View>

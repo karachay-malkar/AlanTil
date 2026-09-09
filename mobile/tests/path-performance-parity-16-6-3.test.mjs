@@ -16,7 +16,7 @@ const pathState=read('platform/path-state.js');
 test('Path scroll no longer re-renders the whole route on every scroll event',()=>{
   assert.doesNotMatch(pathScreen,/setScrollState/);
   assert.doesNotMatch(pathScreen,/setStationRows/);
-  assert.match(pathScreen,/const onPathScroll=\(event\)=>\{const offset=event\.nativeEvent\.contentOffset\.y;offsetRef\.current=offset;routeScaleRef\.current\?\.updateOffset\(offset\);\}/);
+  assert.match(pathScreen,/const onPathScroll=\(event\)=>\{const offset=event\.nativeEvent\.contentOffset\.y;offsetRef\.current=offset;routeScaleRef\.current\?\.updateOffset\(offset\);stationWindow\.update\(offset,viewportHeightRef\.current\);\}/);
   assert.match(pathScreen,/useImperativeHandle\(ref/);
   assert.match(pathScreen,/if\(stateRef\.current\.passed===passed&&stateRef\.current\.current===current\)return;/);
 });

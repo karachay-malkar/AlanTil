@@ -53,3 +53,9 @@ Input mobile: 4a91cd4a327c58cc915ab5f3b22fcec26431b33d.
 - Guide compact buttons now match 98x35 minimum at <=390.
 - Audit correction: Learn decision gap already had a responsive inline override; fixed 58 was only fallback.
 - 202 local tests passed. Physical Android FPS/halo checks pending. Long route virtualization remains pending; do not claim scrolling fully fixed.
+
+## Path station render window
+- Station SVG/decorations/buttons unmount outside the viewport plus overscan after initial geometry measurement; fixed-height row placeholders retain all route coordinates, connector and restore behavior. This bounds native station content, not row placeholders or initial layout cost.
+- Window store notifies only after half a viewport of movement or resize; no PathScreen state update on scroll. Guide target stays mounted.
+- Learn decision borders use premultiplied sRGB mixes from Web CSS; high elevation decision wrapper has no Android shadow.
+- Added behavioral coverage for long routes, pinned targets, jumps, resize and subscription cleanup. Native FPS remains unmeasured.
