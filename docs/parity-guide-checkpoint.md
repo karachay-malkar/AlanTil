@@ -91,3 +91,10 @@ Unknown station coordinates or an unmeasured viewport now render empty fixed-hei
 - Replaced the stretched nine-ellipse illustration with three tiled radial layers derived from immutable Web 13.15.12 theme.css. Path uses centered 420px tiles; story word lists use left-aligned 460px tiles. Layer centers, percentage bands, 39px repeating bands, opacity and stacking follow the CSS source. SVG definitions are memoized and namespaced per component.
 - Guide panel content now scrolls within the safe viewport on short screens. Kept guide-specific fixed typography after checking injected styles in src/features/onboarding/guide.js: these are explicitly 17/13/11px, compact 16/12.5/11px, not the generic semantic sizes.
 - Geometry tests verify farthest-corner ellipses and constant ring spacing at both tile sizes. 239 targeted tests pass. SVG/guide JSX requires Expo render validation; native clipping and Android scrolling still need device verification. This change does not claim full parity or measured FPS.
+
+## 2026-09-09 — consolidated remaining UI and verification pass
+
+- Full-screen CI push/PR runs now share a concurrency group: previous failure logs showed competing writes to preview-web. Both render gates remain enabled.
+- Onboarding disclosure measures actual child height instead of capping all sections at 120px. Profile/station receive the corresponding 420/460px backgrounds. Profile async data ignores superseded account requests.
+- Removed Android elevation shadows from all remaining high-layer transparent toolbar/answer/result/footer containers, preserving their z-order.
+- Added an actual 320×480 guide-panel/completion-button check to the existing Chromium pipeline. Complete known evidence and blockers are in remaining-verification.md; no unverified native/auth/audio scenario is declared PASS.

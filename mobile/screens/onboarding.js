@@ -25,9 +25,9 @@ function LanguageSegmentedControl({value,onChange,compact=false}){
 }
 
 function DisclosureSection({visible,children}){
-  const progress=useRef(new Animated.Value(visible?1:0)).current;
+  const progress=useRef(new Animated.Value(visible?1:0)).current,[contentHeight,setContentHeight]=useState(0);
   useEffect(()=>{Animated.timing(progress,{toValue:visible?1:0,duration:visible?320:240,useNativeDriver:false}).start();},[visible,progress]);
-  return <Animated.View pointerEvents={visible?'auto':'none'} accessibilityElementsHidden={!visible} importantForAccessibility={visible?'auto':'no-hide-descendants'} style={[styles.disclosure,{maxHeight:progress.interpolate({inputRange:[0,1],outputRange:[0,120]}),opacity:progress,transform:[{translateY:progress.interpolate({inputRange:[0,1],outputRange:[-8,0]})}]}]}>{children}</Animated.View>;
+  return <Animated.View pointerEvents={visible?'auto':'none'} accessibilityElementsHidden={!visible} importantForAccessibility={visible?'auto':'no-hide-descendants'} style={[styles.disclosure,{height:progress.interpolate({inputRange:[0,1],outputRange:[0,contentHeight]}),opacity:progress,transform:[{translateY:progress.interpolate({inputRange:[0,1],outputRange:[-8,0]})}]}]}><View onLayout={event=>setContentHeight(event.nativeEvent.layout.height)} style={{position:'absolute',left:0,right:0,top:0}}>{children}</View></Animated.View>;
 }
 
 export function OnboardingScreen({initialSettings,onComplete}){

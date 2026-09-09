@@ -7,6 +7,11 @@ on:
     branches: [agent/16.6.2-visual-parity]
   workflow_dispatch:
 
+# Push and PR runs publish to the same preview ref; keep both checks, serialize publication.
+concurrency:
+  group: alantil-full-screen-preview
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
