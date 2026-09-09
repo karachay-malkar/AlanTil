@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
-import { AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, Platform, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path as SvgPath } from 'react-native-svg';
 import { GENERAL_GUIDE_STEPS } from '../../packages/alantil-core/guide-contract.js';
@@ -431,7 +431,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
 }
 
 const styles=StyleSheet.create({
-  pathControls:{position:'absolute',zIndex:30,elevation:30,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingHorizontal:0,paddingBottom:2},
+  pathControls:{position:'absolute',zIndex:30,elevation:30,shadowColor:Platform.OS==='android'?'transparent':undefined,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingHorizontal:0,paddingBottom:2},
   storyTabsShell:{position:'relative',height:32,overflow:'hidden'},
   storyTabs:{height:32,alignItems:'center',paddingHorizontal:0,gap:theme.chrome.storyTabs.gap},
   storyEdge:{position:'absolute',zIndex:4,top:0,width:24,height:32,textAlign:'center',fontFamily:theme.font.terminal,fontSize:18,fontWeight:'800',lineHeight:32,color:C.text2,opacity:.72,backgroundColor:'rgba(238,233,223,.78)'},

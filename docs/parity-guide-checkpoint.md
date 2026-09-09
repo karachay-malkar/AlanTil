@@ -44,3 +44,12 @@ Input mobile: 4a91cd4a327c58cc915ab5f3b22fcec26431b33d.
 - Stele title/body use semantic S/M/L sizes. Overflow fitting may tighten line spacing and gaps but cannot shrink the font below the selected semantic size; scrolling remains available.
 - 202 local tests and eight source gates passed. CI now checks exact default Stele body size rather than only a minimum.
 - Remaining acceptance is unchanged: paired original Web visuals, native device rendering/lifecycle, real OAuth, cloud sync and filled-state coverage remain open.
+
+
+## Android rendering correction after 2590d16
+- Android chrome uses stationary background gradients instead of live BlurView plus MaskedView. Android faded scroll no longer masks the full scroll surface; imperative scroll ref is forwarded explicitly. iOS mask behavior retained.
+- Android GlassBackdrop uses its explicit tint without live blur. This is a deliberate native rendering approximation, not a claim of pixel equality to CSS backdrop-filter.
+- Transparent high-elevation chrome/guide containers have transparent shadow color; guide panel has an explicit Android background to prevent content-shaped shadow candidates.
+- Guide compact buttons now match 98x35 minimum at <=390.
+- Audit correction: Learn decision gap already had a responsive inline override; fixed 58 was only fallback.
+- 202 local tests passed. Physical Android FPS/halo checks pending. Long route virtualization remains pending; do not claim scrolling fully fixed.
