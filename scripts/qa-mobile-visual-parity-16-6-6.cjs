@@ -92,6 +92,21 @@ if(!url)throw new Error('PUBLIC_PREVIEW_URL is required');
   await page.waitForTimeout(300);
   const navButtons=page.getByText('Путь',{exact:true});const navButton=navButtons.first();const navBubble=await navButton.evaluate(node=>{const button=node.closest('[role=button]')||node.parentElement;const bubble=button.firstElementChild;const r=bubble?.getBoundingClientRect?.()||{width:0,height:0};return{width:r.width,height:r.height};});assert.ok(navBubble.width>=36&&navBubble.width<=40&&navBubble.height>=36&&navBubble.height<=40,`BottomNav bubble geometry drift: ${JSON.stringify(navBubble)}`);
   await shot('05-path');
+  const progress=page.getByRole('progressbar').first();
+  const progressGeometry=await progress.evaluate(node=>({text:node.textContent,cells:[...node.querySelectorAll('div')].filter(el=>{const r=el.getBoundingClientRect();return r.width===8&&r.height===2}).length}));
+  assert.equal(progressGeometry.cells,10,'Path progress must have ten 8×2 cells');
+  assert.match(progressGeometry.text,/\[.*\]/,'Path progress brackets are missing');
+  renderChecks['shared-progress-geometry']='PASS';
+  for(const label of ['Практика','Профиль']){
+    const clear=await page.getByText(label,{exact:true}).first().evaluate(node=>{const button=node.closest('[role=button]');const svg=button?.querySelector('svg');return !!svg&&Number(getComputedStyle(svg.parentElement).zIndex)>0;});
+    assert.ok(clear,`${label}: icon must be above the backdrop`);
+  }
+  renderChecks['nav-icons-above-backdrop']='PASS';
+  await page.setViewportSize({width:1920,height:920});
+  await page.waitForTimeout(350);
+  await shot('05-path-desktop');
+  await page.setViewportSize({width:390,height:844});
+
 
   await clickExact('Практика');
   await page.getByText('ПРАКТИКА',{exact:true}).waitFor({state:'visible'});
@@ -203,6 +218,13 @@ if(!url)throw new Error('PUBLIC_PREVIEW_URL is required');
   const stationTabMetrics=await page.getByText('Меню',{exact:true}).evaluate(node=>{const button=node.closest('[role=button]')||node.parentElement;const r=button.getBoundingClientRect(),cs=getComputedStyle(button);return{height:r.height,border:cs.borderStyle,background:cs.backgroundColor};});
   assert.ok(stationTabMetrics.height<=30,`Station tab too tall: ${JSON.stringify(stationTabMetrics)}`);
   await shot('20-station-words');
+  await page.setViewportSize({width:1920,height:920});
+  await page.waitForTimeout(350);
+  const tabPadding=await page.getByText('Меню',{exact:true}).evaluate(node=>{const button=node.closest('[role=button]');return Number.parseFloat(getComputedStyle(button.parentElement).paddingLeft);});
+  assert.equal(tabPadding,76,'Desktop station tabs must use the shared clamped inset');
+  await shot('20-station-desktop');
+  await page.setViewportSize({width:390,height:844});
+
   await clickExact('Статистика');
   await page.waitForTimeout(350);
   await shot('21-station-statistics');

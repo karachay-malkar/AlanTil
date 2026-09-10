@@ -73,7 +73,7 @@
 .appShell[data-feature="path"][data-screen="station"][data-station-pane="statistics"]{--chrome-top-depth:calc(var(--safe-top) + var(--header-h) + 38px);--chrome-bottom-depth:calc(var(--safe-bottom) + var(--content-rest-gap))}
 .stationViewTabs{top:calc(var(--safe-top) + var(--header-h) - 4px)!important;height:28px!important}
 .stationViewTab{min-height:28px!important}
-.stationMenuToolbar{top:calc(var(--safe-top) + var(--header-h) + 24px)!important;height:28px!important}
+.stationMenuToolbar{top:calc(var(--safe-top) + var(--header-h) + 24px)!important;height:var(--ui-station-toolbar-height)!important}
 .stationWordList{
   --scroll-fade-top:calc(var(--safe-top) + var(--header-h) + 56px);
   --scroll-fade-bottom:calc(var(--safe-bottom) + 108px);

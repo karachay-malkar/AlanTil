@@ -61,13 +61,13 @@ body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:
 .alantilGuideBody{margin-top:9px;color:var(--text-2);font-size:13px;line-height:1.46;text-wrap:pretty}
 .alantilGuideBody p{margin:0}.alantilGuideBody p+p{margin-top:8px}.alantilGuideBody strong{color:var(--text-1);font-weight:850}
 .alantilGuideNav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;pointer-events:auto}
-.alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:104px;min-height:36px;padding:6px 12px;font:800 11px/1 var(--font-terminal)}
+.alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:var(--ui-guide-width);min-height:var(--ui-guide-height);padding:6px var(--ui-guide-padding-horizontal);font:var(--ui-guide-font-weight) var(--ui-guide-font-size)/1 var(--font-terminal)}
 .alantilGuideNext.btn{margin-left:auto;box-shadow:none}
 @media(max-width:390px){
   .alantilGuideTrigger{left:9px;width:34px;height:34px}
   .alantilGuideContent{width:calc(100vw - 28px);padding:14px 14px 12px}
   .alantilGuideTitle{font-size:16px}.alantilGuideBody{font-size:12.5px}
-  .alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:98px;min-height:35px;padding:6px 10px}
+  .alantilGuideSkip.btn,.alantilGuideNext.btn{min-width:var(--ui-guide-compact-min-width);min-height:var(--ui-guide-compact-height);padding:6px var(--ui-guide-compact-horizontal)}
 }
 @media(prefers-reduced-motion:reduce){
   .alantilGuideTrigger,.alantilGuideOverlay,.alantilGuideContent,.alantilGuideHalo{transition:none!important}

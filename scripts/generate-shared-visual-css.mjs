@@ -1,3 +1,4 @@
+import { CONTROL_LAYOUT } from '../packages/alantil-ui/control-layout.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +23,7 @@ const vars={
 '--ui-header-text-action-height':px(B.headerTextHeight),'--ui-header-text-action-horizontal':px(B.headerTextHorizontal),'--ui-header-text-action-font-size':px(B.headerTextFontSize),'--ui-header-text-action-font-weight':num(B.headerTextFontWeight),'--ui-header-text-action-line-height':num(1),
 '--ui-text-action-font-size':px(B.textActionFontSize),'--ui-text-action-font-weight':num(B.textActionFontWeight),'--ui-text-action-line-height':num(1),'--ui-text-action-pressed-opacity':num(B.textActionPressedOpacity),'--ui-favorite-size':px(T.favorite.size),'--ui-favorite-icon-size':px(T.favorite.iconSize)
 };
+for(const [group,values] of Object.entries(CONTROL_LAYOUT))for(const [key,value] of Object.entries(values)){const name=`--ui-${group}-${key}`.replace(/[A-Z]/g,c=>`-${c.toLowerCase()}`);vars[name]=typeof value==='number'&&!/segments|Ratio|fontWeight/.test(key)?px(value):String(value);}
 for(const size of ['small','medium','large'])for(const key of ['micro','caption','body','emphasis','title'])vars[`--ui-text-${size}-${key}`]=px(T.typeScale[size][key]);
 const css=`/* GENERATED from packages/alantil-ui. Do not edit by hand. */\n:root{\n${Object.entries(vars).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`  ${k}:${v};`).join('\n')}\n}\n`;
 const target=path.join(root,'src/shared/styles/shared-visual-tokens.css');fs.writeFileSync(target,css,'utf8');

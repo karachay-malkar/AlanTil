@@ -59,7 +59,7 @@ export function MonoLabel({ children, accent = false, style }) {
 
 export function SmallActionButton({ children, onPress, active = false, disabled = false }) {
   const type = useSemanticTypography();
-  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, disabled && styles.smallActionDisabled, pressed && !disabled && styles.smallActionPressed]}><CutCornerFrame fill={active?C.accent:'transparent'} stroke={active?C.accentStrong:C.line} cut={theme.button.cut} radius={theme.button.radius}/><Text style={[styles.smallActionLabel,textMetrics(type.micro.fontSize,1), active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
+  return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.smallAction, disabled && styles.smallActionDisabled, pressed && !disabled && styles.smallActionPressed]}><CutCornerFrame fill={active?C.accent:'transparent'} stroke={active?C.accentStrong:C.line} cut={theme.button.cut} radius={theme.button.settingsSmallRadius}/><Text style={[styles.smallActionLabel,textMetrics(type.micro.fontSize,1), active && styles.smallActionLabelActive]}>{children}</Text></Pressable>;
 }
 
 export function EmptyState({ children }) {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   metricLabel: { marginTop: 4, fontSize: T.micro, lineHeight: 12, color: C.text2, textAlign: 'center' },
   monoLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '800', lineHeight: 11, letterSpacing: .55, color: C.text3 },
   monoAccent: { color: C.accentStrong },
-  smallAction: { minHeight: theme.button.settingsSmallHeight, paddingVertical: theme.button.settingsSmallVertical, paddingHorizontal: theme.button.settingsSmallHorizontal, borderWidth: 1, borderColor: C.line, borderRadius: theme.button.settingsSmallRadius, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  smallAction: { minHeight: theme.button.settingsSmallHeight, paddingVertical: theme.button.settingsSmallVertical, paddingHorizontal: theme.button.settingsSmallHorizontal, borderWidth: 0, borderRadius: theme.button.settingsSmallRadius, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   smallActionActive: { borderColor: C.accentStrong, backgroundColor: C.accent },
   smallActionDisabled: { opacity: theme.button.settingsSmallDisabledOpacity },
   smallActionLabel: { fontFamily: theme.font.terminal, fontSize: theme.button.settingsSmallFontSize, fontWeight: theme.button.settingsSmallFontWeight, lineHeight: theme.button.settingsSmallLineHeight, color: C.text3 },

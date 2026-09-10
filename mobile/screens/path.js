@@ -1,3 +1,4 @@
+import { CONTROL_LAYOUT } from '../../packages/alantil-ui/control-layout.js';
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
 import { AccessibilityInfo, Platform, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,9 +69,9 @@ function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,control
 }
 
 function SegmentedStoryProgress({value=0}){
-  const filled=Math.round(Math.max(0,Math.min(100,value))/10);
+  const filled=Math.round(Math.max(0,Math.min(100,value))/100*CONTROL_LAYOUT.progress.segments);
   return <View accessibilityRole="progressbar" accessibilityValue={{min:0,max:100,now:value}} style={styles.segmentedProgress}>
-    {Array.from({length:10},(_,index)=><View key={index} style={[styles.segmentedProgressCell,index<filled&&styles.segmentedProgressCellOn]}/>)}
+    <Text style={styles.progressBracket}>[</Text><View style={styles.progressTrack}>{Array.from({length:CONTROL_LAYOUT.progress.segments},(_,index)=><View key={index} style={[styles.segmentedProgressCell,index<filled&&styles.segmentedProgressCellOn]}/>)}</View><Text style={styles.progressBracket}>]</Text>
   </View>;
 }
 
@@ -448,9 +449,11 @@ const styles=StyleSheet.create({
   storyTabText:{fontFamily:theme.font.terminal,fontWeight:'700',color:C.text3,opacity:.64},
   storyTabActive:{color:C.text1,opacity:1},
   storyProgress:{height:22,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:7},
-  segmentedProgress:{width:62,height:5,flexDirection:'row',gap:2},
-  segmentedProgressCell:{flex:1,height:5,borderRadius:1,backgroundColor:C.lineSoft},
-  segmentedProgressCellOn:{backgroundColor:C.accentStrong},
+  segmentedProgress:{flexDirection:'row',alignItems:'center',gap:CONTROL_LAYOUT.progress.bracketGap},
+  progressTrack:{flexDirection:'row',gap:CONTROL_LAYOUT.progress.segmentGap},
+  progressBracket:{fontFamily:theme.font.terminal,fontSize:12,lineHeight:12,fontWeight:'800',color:C.accentStrong},
+  segmentedProgressCell:{width:CONTROL_LAYOUT.progress.segmentWidth,height:CONTROL_LAYOUT.progress.segmentHeight,borderRadius:0,backgroundColor:CONTROL_LAYOUT.progress.track},
+  segmentedProgressCellOn:{backgroundColor:CONTROL_LAYOUT.progress.fill},
   pathViewport:{position:'absolute',top:0,left:0,right:0,bottom:0},
   pathContent:{paddingTop:theme.path.mapTop},
   routeMap:{position:'relative',width:'100%',maxWidth:560,alignSelf:'center',gap:theme.path.dictionaryGap},

@@ -158,7 +158,7 @@ button,a,[role="button"],label{-webkit-tap-highlight-color:transparent}
 button:active,a:active,[role="button"]:active,label:active{background-color:transparent}
 .bracketHeading{display:flex;align-items:center;gap:.42em;margin:0;color:var(--text-2);font:650 11px/1.25 var(--font-terminal);letter-spacing:.035em}
 .bracketHeading>span:first-child,.bracketHeading>span:last-child{color:var(--accent-strong)}
-.segmentedProgress{display:inline-grid;grid-auto-flow:column;grid-auto-columns:8px;gap:4px;align-items:center;vertical-align:middle}
+.segmentedProgress{display:inline-grid;grid-auto-flow:column;grid-auto-columns:var(--ui-progress-segment-width);gap:var(--ui-progress-segment-gap);align-items:center;vertical-align:middle}
 .segmentedProgressSegment{display:block;width:8px;height:2px;border-radius:999px;background:color-mix(in srgb,var(--text-1) 18%,transparent)}
 .segmentedProgressSegment.isFilled{background:var(--text-1)}
 .textAction{min-height:var(--control-h-text);padding:0;border:0;background:transparent;color:var(--text-2)}
@@ -176,10 +176,10 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 /* 13.6 mountain field-journal components */
 .bracketHeading{display:flex;align-items:center;gap:.38em;margin:0;color:var(--text-1);font:850 17px/1.2 var(--font-terminal);letter-spacing:.045em}
 .bracketHeading>span:first-child,.bracketHeading>span:last-child{color:var(--accent-strong);font-weight:900}
-.segmentedProgress{display:inline-flex;align-items:center;gap:5px;max-width:100%;vertical-align:middle;color:var(--accent-strong);font:800 12px/1 var(--font-terminal)}
-.segmentedProgressTrack{display:inline-grid;grid-auto-flow:column;grid-auto-columns:8px;gap:4px;align-items:center;min-width:0}
+.segmentedProgress{display:inline-flex;align-items:center;gap:var(--ui-progress-bracket-gap);max-width:100%;vertical-align:middle;color:var(--accent-strong);font:800 12px/1 var(--font-terminal)}
+.segmentedProgressTrack{display:inline-grid;grid-auto-flow:column;grid-auto-columns:var(--ui-progress-segment-width);gap:var(--ui-progress-segment-gap);align-items:center;min-width:0}
 .segmentedProgressBracket{flex:0 0 auto}
-.segmentedProgressSegment{display:block;width:8px;height:2px;border-radius:0;background:color-mix(in srgb,var(--text-1) 20%,transparent)}
+.segmentedProgressSegment{display:block;width:var(--ui-progress-segment-width);height:var(--ui-progress-segment-height);border-radius:0;background:var(--ui-progress-track)}
 .segmentedProgressSegment.isFilled{background:var(--text-1)}
 .btn,.directionChoiceButton,.optionBtn,.matchCard{
   border-radius:2px;

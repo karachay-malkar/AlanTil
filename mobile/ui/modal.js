@@ -42,7 +42,7 @@ export function InfoDialog({visible,title='',closeLabel='Close',onClose,children
     <ModalCard accessibilityRole="summary" style={styles.infoCard}>
       <View style={styles.infoHeader}>
         {title?<Text numberOfLines={2} style={[styles.infoTitle,{fontSize:type.emphasis.fontSize}]}>{title}</Text>:<View style={styles.infoTitle}/>}
-        <Pressable accessibilityRole="button" accessibilityLabel={closeLabel} onPress={onClose} style={({pressed})=>[styles.close,pressed&&styles.closePressed]}><GlassBackdrop blur={8} backgroundColor={C.controlGlass}/><CloseIcon size={18} color={C.text2}/></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={closeLabel} onPress={onClose} style={({pressed})=>[styles.close,pressed&&styles.closePressed]}><GlassBackdrop blur={8} backgroundColor={C.controlGlass}/><View pointerEvents="none" style={{zIndex:2}}><CloseIcon size={18} color={C.text2}/></View></Pressable>
       </View>
       <ScrollView style={styles.infoBody} contentContainerStyle={styles.infoBodyContent} showsVerticalScrollIndicator={false}>{children}</ScrollView>
       <View style={styles.infoActions}><Button role="modal.confirm" style={styles.infoAction} onPress={onClose}>{closeLabel}</Button></View>
