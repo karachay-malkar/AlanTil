@@ -2,10 +2,16 @@
   "expo": {
     "name": "Alan Til",
     "slug": "alan-til",
-    "version": "16.6.6",
+    "version": "16.6.7",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
+    "icon": "./assets/osuyat.png",
+    "splash": {
+      "image": "./assets/osuyat.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fcf8f1"
+    },
     "plugins": [
       [
         "expo-dev-client",
@@ -22,11 +28,12 @@
     ],
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "favicon": "./assets/osuyat.png"
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 31,
+      "versionCode": 32,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -45,15 +52,16 @@
         }
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#eee9df"
+        "foregroundImage": "./assets/osuyat.png",
+        "backgroundColor": "#fcf8f1"
       }
     },
     "ios": {
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "31"
+      "buildNumber": "32"
     },
     "extra": {
-      "releaseVersion": "16.6.6",
+      "releaseVersion": "16.6.7",
       "architecture": "web-13.15.12-shared-core",
       "preview": "expo-web-and-native-preview"
     }

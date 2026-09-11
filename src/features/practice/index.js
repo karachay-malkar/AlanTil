@@ -1,6 +1,8 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
+import { OSUYAT_URL } from "../../../packages/alantil-core/external-games.js";
 
 let controller = null;
 
@@ -17,6 +19,7 @@ export function mount(context) {
         <button class="menuItem" type="button" data-practice-route="match.menu"><span class="menuIcon">${uiIcon("puzzle")}</span><span class="menuItemText"><strong>${msg("practice.sopostavlenie")}</strong><small>${msg("practice.soedinenie_slov_i_perevodov")}</small></span></button>
         <button class="menuItem" type="button" data-practice-route="learn.set" data-dictionary-slug="favorites"><span class="menuIcon">${uiIcon("favorite")}</span><span class="menuItemText"><strong>${msg("common.izbrannoe")}</strong><small>${msg("learn.uchit_slova")}</small></span></button>
         <button class="menuItem" type="button" data-practice-route="songs.playlists"><span class="menuIcon">${uiIcon("music2")}</span><span class="menuItemText"><strong>${msg("practice.pesni")}</strong><small>${msg("practice.yazyk_v_zhivom_kontekste")}</small></span></button>
+        <button class="menuItem" type="button" data-practice-external="osuyat"><span class="menuIcon"><img class="osuyatMark" src="/assets/images/osuyat.png?v=16.6.7" alt="" aria-hidden="true" /></span><span class="menuItemText"><strong>osuyat</strong></span></button>
       </div>`,
   });
   context.root.querySelectorAll("[data-practice-route]").forEach((button) => {
@@ -25,6 +28,10 @@ export function mount(context) {
       context.router.navigate(button.dataset.practiceRoute, params);
     }, { signal: controller.signal });
   });
+  context.root.querySelector("[data-practice-external='osuyat']")?.addEventListener("click", () => {
+    trackEvent("osuyat_open", { surface: "practice" });
+    window.open(OSUYAT_URL, "_blank", "noopener,noreferrer");
+  }, { signal: controller.signal });
 }
 
 export function unmount() {

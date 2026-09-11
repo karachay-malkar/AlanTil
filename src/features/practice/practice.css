@@ -3,4 +3,5 @@
 [data-feature="practice"] .menuItem{width:100%;min-height:68px;padding:10px 2px;border:0;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:10px;text-align:left}
 [data-feature="practice"] .menuIcon{width:36px;height:36px;display:grid;place-items:center;color:var(--text-2)}
 [data-feature="practice"] .menuIcon svg{width:23px;height:23px;fill:currentColor}.menuIcon svg [fill="none"]{fill:none}
+[data-feature="practice"] .osuyatMark{width:32px;height:32px;border-radius:8px;object-fit:cover;display:block}
 [data-feature="practice"] .menuItemText{min-width:0}.menuItem strong,.menuItem small{display:block}.menuItem strong{font-size:15px}.menuItem small{margin-top:2px;color:var(--text-2);font-size:11px;line-height:1.3}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header, Screen } from '../ui/components.js';
 import { FavoriteIcon, ListChecksIcon, MusicIcon, PuzzleIcon } from '../ui/icons.js';
@@ -8,13 +8,15 @@ import { msg } from '../i18n.js';
 import { theme } from '../ui/theme.js';
 
 const C=theme.colors;
-export function PracticeScreen({settings={},openTest,openMatch,openFavorites,openSongs}){
+const OSUYAT_MARK=require('../assets/osuyat.png');
+export function PracticeScreen({settings={},openTest,openMatch,openFavorites,openSongs,openOsuyat}){
   const m=(key,params)=>msg(settings,key,params),insets=useSafeAreaInsets(),rowProps={style:styles.menuRow,titleStyle:styles.menuTitle,subtitleStyle:styles.menuSubtitle,leadingStyle:styles.menuLeading};
   return <Screen bottomNav><Header title="Alan Til!"/><ScrollView contentContainerStyle={[styles.scroll,{paddingBottom:theme.control.nav+theme.chrome.contentRestGap+insets.bottom}]} showsVerticalScrollIndicator={false}><View style={styles.panelHead}><Text style={styles.panelTitle}>{m('practice.praktika')}</Text></View><View style={styles.menu}>
     <ListRow {...rowProps} title={m('practice.test')} subtitle={m('practice.proverka_slov_iz_vybrannyh_razdelov')} leading={<ListChecksIcon size={23} color={C.text2}/>} onPress={openTest}/>
     <ListRow {...rowProps} title={m('practice.sopostavlenie')} subtitle={m('practice.soedinenie_slov_i_perevodov')} leading={<PuzzleIcon size={23} color={C.text2}/>} onPress={openMatch}/>
     <ListRow {...rowProps} title={m('common.izbrannoe')} subtitle={m('learn.uchit_slova')} leading={<FavoriteIcon size={23} color={C.text2}/>} onPress={openFavorites}/>
     <ListRow {...rowProps} title={m('practice.pesni')} subtitle={m('practice.yazyk_v_zhivom_kontekste')} leading={<MusicIcon size={23} color={C.text2}/>} onPress={openSongs}/>
+    <ListRow {...rowProps} title="osuyat" leading={<Image source={OSUYAT_MARK} style={styles.osuyatMark} resizeMode="cover"/>} onPress={openOsuyat}/>
   </View></ScrollView></Screen>;
 }
-const styles=StyleSheet.create({scroll:{width:'100%',maxWidth:720,alignSelf:'center',paddingTop:theme.control.header+theme.chrome.contentRestGap,paddingHorizontal:16,paddingBottom:28},panelHead:{minHeight:42,justifyContent:'center',paddingHorizontal:2,borderBottomWidth:1,borderBottomColor:C.lineSoft},panelTitle:{fontSize:16,fontWeight:'800',lineHeight:20,color:C.text1},menu:{overflow:'hidden'},menuRow:{minHeight:68,paddingHorizontal:2,paddingVertical:10,gap:10},menuLeading:{width:36,height:36},menuTitle:{fontSize:15,fontWeight:'800',lineHeight:18},menuSubtitle:{marginTop:2,fontSize:11,lineHeight:14.3}});
+const styles=StyleSheet.create({scroll:{width:'100%',maxWidth:720,alignSelf:'center',paddingTop:theme.control.header+theme.chrome.contentRestGap,paddingHorizontal:16,paddingBottom:28},panelHead:{minHeight:42,justifyContent:'center',paddingHorizontal:2,borderBottomWidth:1,borderBottomColor:C.lineSoft},panelTitle:{fontSize:16,fontWeight:'800',lineHeight:20,color:C.text1},menu:{overflow:'hidden'},menuRow:{minHeight:68,paddingHorizontal:2,paddingVertical:10,gap:10},menuLeading:{width:36,height:36},menuTitle:{fontSize:15,fontWeight:'800',lineHeight:18},menuSubtitle:{marginTop:2,fontSize:11,lineHeight:14.3},osuyatMark:{width:32,height:32,borderRadius:8}});
