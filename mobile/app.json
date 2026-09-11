@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Alan Til",
-    "slug": "alan-til",
-    "version": "16.6.7",
+    "name": "osuyat",
+    "slug": "osuyat",
+    "version": "16.6.8",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
@@ -33,7 +33,7 @@
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 32,
+      "versionCode": 33,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -58,10 +58,10 @@
     },
     "ios": {
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "32"
+      "buildNumber": "33"
     },
     "extra": {
-      "releaseVersion": "16.6.7",
+      "releaseVersion": "16.6.8",
       "architecture": "web-13.15.12-shared-core",
       "preview": "expo-web-and-native-preview"
     }
