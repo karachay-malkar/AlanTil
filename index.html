@@ -3,10 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="AlanTil — приложение для изучения карачаево-балкарского языка." />
+  <meta name="description" content="Карачаево-балкарский язык." />
   <meta name="theme-color" content="#eee9df" />
-  <title>Alan Til!</title>
+  <title></title>
   <style>html[data-i18n-ready="false"] #appShell,html[data-scope-ready="false"] #appShell{visibility:hidden}</style>
+  <script>
+    (() => {
+      const cleanProductTitle = () => {
+        const cleaned = String(document.title || "")
+          .replace(/\s*[—–-]\s*Alan\s*Til!?/gi, "")
+          .replace(/Alan\s*Til!?/gi, "")
+          .trim();
+        if (cleaned !== document.title) document.title = cleaned;
+      };
+      const titleNode = document.querySelector("title");
+      if (titleNode) new MutationObserver(cleanProductTitle).observe(titleNode, { childList: true, subtree: true, characterData: true });
+      cleanProductTitle();
+    })();
+  </script>
   <script>
     (() => {
       try {
@@ -44,6 +58,7 @@
       for (const version of [...versions, analyticsTargetVersion]) {
         imports[`${analyticsPath}?v=${version}`] = `${analyticsPath}?v=${analyticsTargetVersion}`;
       }
+      imports["/src/features/practice/index.js?v=13.15.9"] = "/src/features/practice/index.js?v=16.6.8";
       const importMap = document.createElement("script");
       importMap.type = "importmap";
       importMap.textContent = JSON.stringify({ imports });
@@ -51,6 +66,7 @@
     })();
   </script>
   <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.15.12.7" />
+  <link rel="stylesheet" href="/src/features/practice/practice.css?v=16.6.8" />
 </head>
 <body>
   <div id="appShell" class="appShell" data-feature="path" data-screen="home" data-layout="map" data-header="minimal" data-bottom-nav="true">
