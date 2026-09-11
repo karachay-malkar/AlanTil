@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import * as WebBrowser from 'expo-web-browser';
 import { EVENTS } from '../packages/alantil-core/analytics.js';
 import { buildLearningRoute } from '../packages/alantil-core/learning-route.js';
 import { getDisplayedWordCollection } from '../packages/alantil-core/alan-display.js';
 import { toggleFavorite } from '../packages/alantil-core/favorites.js';
-import { OSUYAT_URL } from '../packages/alantil-core/external-games.js';
 import { DEFAULT_USER_SETTINGS, hasCompletedLearningSetup } from '../packages/alantil-core/settings.js';
 import { msg } from './i18n.js';
 import { BottomNav } from './ui/components.js';
@@ -24,6 +22,7 @@ import { AuthChoiceScreen } from './screens/auth-choice.js';
 import { PathScreen } from './screens/path.js';
 import { StoryWordListScreen } from './screens/story-word-list.js';
 import { PracticeScreen } from './screens/practice.js';
+import { AshykGameScreen } from './screens/ashyk-game';
 import { FavoritesScreen } from './screens/favorites.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
 import { bootstrapNativeAuth, subscribeNativeAuth } from './platform/auth.js';
@@ -36,7 +35,7 @@ import { hasCompletedNativeAuthChoice, loadNativeFavorites, loadNativeSettings, 
 
 const C=theme.colors;
 const OSUYAT_MARK=require('./assets/osuyat.png');
-function BootScreen(){return <View style={styles.boot}><Image source={OSUYAT_MARK} style={styles.bootMark} resizeMode="contain"/></View>;}
+function BootScreen(){return <View style={styles.boot}><Image source={OSUYAT_MARK} style={styles.bootMark} resizeMode="contain"/><Text style={styles.bootBrand}>osuyat</Text></View>;}
 function settledValue(result,fallback){return result?.status==='fulfilled'?result.value:fallback;}
 export default function AppRoot(){
   const [bootstrapped,setBootstrapped]=useState(false),[setupRequired,setSetupRequired]=useState(false),[authChoiceRequired,setAuthChoiceRequired]=useState(false),[words,setWords]=useState([]),[tab,setTab]=useState('path'),[screen,setScreen]=useState('home'),[favorites,setFavoritesState]=useState(()=>new Set()),[songFavorites,setSongFavoritesState]=useState(()=>new Set()),[settings,setSettingsState]=useState(()=>({...DEFAULT_USER_SETTINGS})),[station,setStation]=useState(null),[storyWordListType,setStoryWordListType]=useState(''),[learnContext,setLearnContext]=useState(null),[testContext,setTestContext]=useState(null),[practiceGameContext,setPracticeGameContext]=useState(null),[profileBottomNavVisible,setProfileBottomNavVisible]=useState(true),[dataEpoch,setDataEpoch]=useState(0);const displayWords=useMemo(()=>getDisplayedWordCollection(words,settings),[words,settings]),route=useMemo(()=>buildLearningRoute(displayWords),[displayWords]),authTransition=useRef(0),authUserId=useRef('');
@@ -46,7 +45,7 @@ export default function AppRoot(){
   useEffect(()=>{if(!bootstrapped)return;const name=setupRequired?'onboarding':authChoiceRequired?'auth_choice':tab==='path'?(screen==='home'?'path':screen):tab==='practice'?(screen==='home'?'practice':screen):screen==='home'?'profile':`profile_${screen}`;void trackNativeScreen(name,{tab,screen});},[bootstrapped,setupRequired,authChoiceRequired,tab,screen]);
   const setFavorites=(next)=>{const value=next instanceof Set?next:new Set(next||[]);setFavoritesState(new Set(value));saveNativeFavorites(value).catch(()=>{});};const setSongFavorites=(next)=>{const value=next instanceof Set?next:new Set(next||[]);setSongFavoritesState(new Set(value));saveNativeSongFavorites(value).catch(()=>{});};const setSettings=async(next)=>{const saved=await saveNativeSettings(next);setSettingsState(saved);return saved;};
   const changeTab=(next)=>{setTab(next);setScreen('home');setStation(null);setStoryWordListType('');setPracticeGameContext(null);setProfileBottomNavVisible(true);};const openStation=(nextStation)=>{setStation(nextStation);setScreen('station');};const backToPath=()=>{setScreen('home');setStation(null);};const openStoryWordList=(storyType)=>{setStoryWordListType(storyType);setScreen('storyWords');};const closeStoryWordList=()=>{setScreen('home');setStoryWordListType('');};const continueAsGuest=async()=>{if(route.stories?.ascent)await saveNativeActiveStory('ascent');setTab('path');setScreen('home');setStation(null);};const completeAuthChoiceAsGuest=async()=>{await markNativeAuthChoiceComplete();await continueAsGuest();setAuthChoiceRequired(false);};const completeAuthChoiceAsAccount=async()=>{await markNativeAuthChoiceComplete().catch(()=>{});};const openProfileStory=async(storyType)=>{if(!route.stories?.[storyType])return;await saveNativeActiveStory(storyType);setTab('path');setScreen('home');setStation(null);setStoryWordListType('');};
-  const openPracticeGame=(type,sourceWords=displayWords,returnTo='home',scopeId='all')=>{setNativeSessionNamespace(type,scopeId);setPracticeGameContext({words:Array.isArray(sourceWords)?sourceWords:[],returnTo,scopeId});setScreen(type);};const closePracticeGame=()=>{const returnTo=practiceGameContext?.returnTo||'home';setPracticeGameContext(null);setScreen(returnTo);};const openOsuyat=()=>{void trackNativeEvent('osuyat_open',{surface:'practice'});void WebBrowser.openBrowserAsync(OSUYAT_URL).catch(()=>{});};
+  const openPracticeGame=(type,sourceWords=displayWords,returnTo='home',scopeId='all')=>{setNativeSessionNamespace(type,scopeId);setPracticeGameContext({words:Array.isArray(sourceWords)?sourceWords:[],returnTo,scopeId});setScreen(type);};const closePracticeGame=()=>{const returnTo=practiceGameContext?.returnTo||'home';setPracticeGameContext(null);setScreen(returnTo);};const openAshyk=()=>{void trackNativeEvent('ashyk_game_open',{surface:'practice',mode:'embedded'});setScreen('ashyk');};
   const navLabels={practice:msg(settings,'nav.praktika'),path:msg(settings,'nav.put'),profile:msg(settings,'nav.profil')};
   const shell=(content,showNav=true)=><RuntimeSettingsProvider settings={settings}><SafeAreaProvider><StatusBar style="dark"/><SafeAreaView style={styles.safe} edges={theme.safeArea.shellEdges}><View style={styles.app}>{content}{showNav?<BottomNav tab={tab} onChange={changeTab} labels={navLabels}/>:null}</View></SafeAreaView></SafeAreaProvider></RuntimeSettingsProvider>;
   if(!bootstrapped)return shell(<BootScreen/>,false);
@@ -57,14 +56,15 @@ export default function AppRoot(){
   else if(screen==='stationTest'&&testContext){content=<StationTestScreen station={testContext.station} allWords={displayWords} mode={testContext.mode} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={()=>setScreen('station')}/>;showNav=false;}
   else if(tab==='path'&&screen==='storyWords'&&route.stories?.[storyWordListType]){content=<StoryWordListScreen story={route.stories[storyWordListType]} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={closeStoryWordList}/>;showNav=false;}
   else if(tab==='path'&&screen==='station'&&station){content=<StationScreen station={station} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={backToPath} onLearn={(rows,mode)=>{setLearnContext({words:rows,mode,station,returnTo:'station'});setScreen('learn');}} onTest={(target,mode)=>{setTestContext({station:target,mode});setScreen('stationTest');}}/>;showNav=false;}
+  else if(tab==='practice'&&screen==='ashyk'){content=<AshykGameScreen onBack={()=>setScreen('home')}/>;showNav=false;}
   else if(tab==='practice'&&screen==='test'){const context=practiceGameContext||{words:displayWords,scopeId:'all'};content=<GeneralTestFlow words={context.words} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={closePracticeGame}/>;showNav=false;}
   else if(tab==='practice'&&screen==='match'){const context=practiceGameContext||{words:displayWords,scopeId:'all'};content=<GeneralMatchFlow words={context.words} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={closePracticeGame}/>;showNav=false;}
   else if(tab==='practice'&&screen==='favorites'){content=<FavoritesScreen words={displayWords} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={()=>setScreen('home')} onLearn={(rows,mode)=>{setLearnContext({words:rows,mode,station:null,returnTo:'favorites'});setScreen('learn');}}/>;showNav=false;}
   else if(tab==='practice'&&screen==='songs'){content=<SongsScreen words={displayWords} settings={settings} onBack={()=>setScreen('home')} favoriteIds={songFavorites} onFavorite={(id)=>setSongFavorites(toggleFavorite(songFavorites,id).ids)}/>;showNav=false;}
-  else if(tab==='practice'){content=<PracticeScreen settings={settings} openTest={()=>openPracticeGame('test',displayWords,'home','all')} openMatch={()=>openPracticeGame('match',displayWords,'home','all')} openFavorites={()=>setScreen('favorites')} openSongs={()=>setScreen('songs')} openOsuyat={openOsuyat}/>;}
+  else if(tab==='practice'){content=<PracticeScreen settings={settings} openTest={()=>openPracticeGame('test',displayWords,'home','all')} openMatch={()=>openPracticeGame('match',displayWords,'home','all')} openFavorites={()=>setScreen('favorites')} openSongs={()=>setScreen('songs')} openAshyk={openAshyk}/>;}
   else if(tab==='profile'&&screen==='account'){content=<AccountScreen settings={settings} onGuest={continueAsGuest} onBack={()=>setScreen('home')}/>;showNav=false;}
   else if(tab==='profile'){content=<ProfileGate key={`profile-${dataEpoch}`} words={displayWords} settings={settings} onSettingsChange={setSettings} onGuest={continueAsGuest} onOpenStory={openProfileStory} onBottomNavVisibilityChange={setProfileBottomNavVisible} onAccount={(action)=>{if(action==='open')setScreen('account');}}/>;showNav=profileBottomNavVisible;}
   else{content=<PathScreen key={`path-${dataEpoch}`} route={route} settings={settings} onOpenStation={openStation} onOpenWordList={openStoryWordList}/>;}
   return shell(content,showNav);
 }
-const styles=StyleSheet.create({safe:{flex:1,backgroundColor:C.appBg},app:{flex:1,backgroundColor:C.appBg,overflow:'hidden'},boot:{flex:1,alignItems:'center',justifyContent:'center',backgroundColor:'#fcf8f1'},bootMark:{width:'100%',height:'100%'}});
+const styles=StyleSheet.create({safe:{flex:1,backgroundColor:C.appBg},app:{flex:1,backgroundColor:C.appBg,overflow:'hidden'},boot:{flex:1,alignItems:'center',justifyContent:'center',gap:14,backgroundColor:'#fcf8f1'},bootMark:{width:190,height:190},bootBrand:{fontSize:28,lineHeight:32,fontWeight:'800',letterSpacing:.4,color:C.text1}});
