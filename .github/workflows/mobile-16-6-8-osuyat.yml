@@ -1,0 +1,154 @@
+name: osuyat 16.6.8 Internal Ashyk QA
+
+on:
+  push:
+    branches: [agent/16.6.8-osuyat-internal-game]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  qa-build-package:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.sha }}
+      SOURCE_BRANCH: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify 16.6.8 source and branding contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$SOURCE_BRANCH" = "agent/16.6.8-osuyat-internal-game"
+          grep -F '"name": "osuyat"' mobile/app.json
+          grep -F '"version": "16.6.8"' mobile/app.json
+          grep -F 'Ашыкъ оюн' mobile/screens/practice.js
+          grep -F 'screen==='"'"'ashyk'"'"'' mobile/AppRoot.js
+          ! grep -R "WebBrowser.openBrowserAsync(OSUYAT_URL)" mobile src packages
+          ! grep -R "window.open(OSUYAT_URL" src packages
+
+      - name: Shared core regression gates
+        run: |
+          node --test tests/alantil-core-16.test.mjs tests/progress-sync-policy.test.mjs tests/unified-core-boundary-16.test.mjs
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Mobile integration and parity gates
+        run: |
+          node --test \
+            mobile/tests/architecture.test.mjs \
+            mobile/tests/functional-parity-16-5.test.mjs \
+            mobile/tests/parity-correction-16-6-1.test.mjs \
+            mobile/tests/osuyat-integration-16-6-8.test.mjs
+
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+
+      - name: Export Expo Web
+        working-directory: mobile
+        run: npm run export:web
+
+      - name: Prepare relative web preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          root=Path('mobile/dist-web')
+          for p in root.glob('_expo/static/js/web/*.js'):
+            t=p.read_text()
+            for old,new in (
+              ('"/_expo/','"./_expo/'),("'/_expo/","'./_expo/"),
+              ('"/assets/','"./assets/'),("'/assets/","'./assets/"),
+            ):
+              t=t.replace(old,new)
+            p.write_text(t)
+          index=root/'index.html'
+          if index.exists():
+            t=index.read_text().replace('src="/_expo/','src="./_expo/')
+            index.write_text(t)
+          (root/'preview-build.json').write_text(json.dumps({
+            'source_sha':os.environ.get('SOURCE_SHA',''),
+            'branch':os.environ.get('SOURCE_BRANCH',''),
+            'version':'16.6.8',
+            'product':'osuyat',
+            'ashyk_delivery':'internal-app-section'
+          }),encoding='utf-8')
+          PY
+
+      - name: Android prebuild
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Build Android debug APK
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Package full source and file-size manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p mobile/dist-web/package
+          git archive --format=zip --output=mobile/dist-web/package/osuyat-16.6.8-source.zip HEAD
+          python - <<'PY'
+          from pathlib import Path
+          excluded={'.git','node_modules','dist-web','android'}
+          rows=[]
+          for p in Path('.').rglob('*'):
+            if not p.is_file() or any(part in excluded for part in p.parts):
+              continue
+            rows.append((p.as_posix(),p.stat().st_size))
+          rows.sort()
+          Path('mobile/dist-web/package/FILE_SIZES_16.6.8.txt').write_text('\n'.join(f'{name} — {size/1024:.2f} KB' for name,size in rows)+'\n',encoding='utf-8')
+          PY
+          sha256sum mobile/dist-web/package/osuyat-16.6.8-source.zip > mobile/dist-web/package/osuyat-16.6.8-source.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osuyat-16.6.8-source
+          path: |
+            mobile/dist-web/package/osuyat-16.6.8-source.zip
+            mobile/dist-web/package/osuyat-16.6.8-source.sha256
+            mobile/dist-web/package/FILE_SIZES_16.6.8.txt
+            mobile/dist-web/preview-build.json
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osuyat-16.6.8-android-debug
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Publish Expo Web preview
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R mobile/dist-web/. "$publish_dir/"
+          rm -rf "$publish_dir/package"
+          cd "$publish_dir"
+          git init
+          git checkout -b preview-web-16-6-8
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "osuyat 16.6.8 preview ${SOURCE_SHA}"
+          preview_sha="$(git rev-parse HEAD)"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:preview-web-16-6-8
+          preview_url="https://raw.githack.com/${GITHUB_REPOSITORY}/${preview_sha}/index.html"
+          echo "Preview: $preview_url" >> "$GITHUB_STEP_SUMMARY"
