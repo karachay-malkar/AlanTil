@@ -12,14 +12,14 @@ function Document({children}){return <ScrollView contentContainerStyle={styles.d
 function H2({children}){return <Text style={styles.h2}>{children}</Text>;}
 function P({children}){return <Text style={styles.p}>{children}</Text>;}
 function Thanks({settings,type}){return <Document><Text style={[styles.h1,type.title]}>{msg(settings,'about.blagodarstvennoe_slovo')}</Text><P type={type}>{msg(settings,'about.zdes_budet_razmeschena_blagodarnost_lyudyam_kotorye_pomoga')}</P></Document>;}
-function Version({settings,type}){return <Document><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.versiya')}</Text><Text style={[styles.factValue,type.caption]}>16.6.6</Text></View><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.poslednee_obnovlenie')}</Text><Text style={[styles.factValue,type.caption]}>06.09.2026</Text></View></Document>;}
+function Version({settings,type}){return <Document><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.versiya')}</Text><Text style={[styles.factValue,type.caption]}>16.6.8</Text></View><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.poslednee_obnovlenie')}</Text><Text style={[styles.factValue,type.caption]}>11.09.2026</Text></View></Document>;}
 function Privacy({settings,type}){
   const [enabled,setEnabled]=useState(false),[loaded,setLoaded]=useState(false),[saved,setSaved]=useState(false);
   useEffect(()=>{let alive=true;loadNativeAnalyticsPreference().then((value)=>{if(alive){setEnabled(value===true);setLoaded(true);}});return()=>{alive=false;};},[]);
   const save=async()=>{await saveNativeAnalyticsPreference(enabled);setSaved(true);};
   const h=(children)=><H2>{children}</H2>,p=(children)=><P>{children}</P>;
   return <Document>
-    {p(<><Text style={styles.strong}>{msg(settings,'privacy.alantil_alan_til')} </Text>{msg(settings,'privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_')} <Text style={styles.emailLink}>alantil0709@gmail.com</Text>.</>)}
+    {p(<><Text style={styles.strong}>osuyat </Text>{msg(settings,'privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_')} <Text style={styles.emailLink}>alantil0709@gmail.com</Text>.</>)}
     {h(msg(settings,'privacy.kakie_dannye_sohranyayutsya_na_ustroystve'))}
     {p(msg(settings,'privacy.prilozhenie_mozhet_lokalno_sohranyat_v_brauzere_izbrannye'))}
     {p(msg(settings,'privacy.dlya_vybora_primenimogo_rezhima_statistiki_prilozhenie_moz'))}
