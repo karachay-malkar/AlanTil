@@ -1,6 +1,6 @@
 {
-  "name": "alantil-mobile",
-  "version": "16.6.7",
+  "name": "osuyat-mobile",
+  "version": "16.6.8",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -21,13 +21,14 @@
     "expo-blur": "~15.0.8",
     "expo-dev-client": "~6.0.21",
     "expo-status-bar": "~3.0.8",
+    "expo-web-browser": "~15.0.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-svg": "15.12.1",
     "react-native-web": "~0.21.0",
-    "expo-web-browser": "~15.0.11",
+    "react-native-webview": "13.15.0",
     "@react-native-masked-view/masked-view": "0.3.2"
   },
   "devDependencies": {
