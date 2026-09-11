@@ -25,5 +25,5 @@ export async function loadNativeSongFavorites(scope=getNativeStorageScope()){ret
 export async function saveNativeSongFavorites(ids,scope=getNativeStorageScope()){return saveFavoriteSet('song',ids,scope);}
 export async function hasCompletedNativeOnboarding(){return (await AsyncStorage.getItem(await scopedKey(KEYS.legacyOnboarding)))==='1';}
 export async function markNativeOnboardingComplete(){await AsyncStorage.setItem(await scopedKey(KEYS.legacyOnboarding),'1');}
-export async function hasCompletedNativeAuthChoice(){const direct=(await AsyncStorage.getItem(await scopedKey(KEYS.authChoice)))==='1';if(direct)return true;return hasCompletedNativeOnboarding();}
+export async function hasCompletedNativeAuthChoice(){return (await AsyncStorage.getItem(await scopedKey(KEYS.authChoice)))==='1';}
 export async function markNativeAuthChoiceComplete(){await AsyncStorage.setItem(await scopedKey(KEYS.authChoice),'1');}

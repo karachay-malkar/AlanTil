@@ -13,6 +13,5 @@ export const nativeSupabase=createClient(NATIVE_SUPABASE_URL,NATIVE_SUPABASE_PUB
     persistSession:true,
     detectSessionInUrl:false,
     flowType:'pkce',
-    experimental:{appendPkceFlowIdToRedirects:true},
   },
 });

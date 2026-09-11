@@ -236,8 +236,8 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const type=useSemanticTypography(),routeSpacing=settings.text_size_code==='large'?{gap:72,paddingBottom:66}:settings.text_size_code==='small'?{gap:58,paddingBottom:48}:{gap:58,paddingBottom:52};
   const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
-  const stationWindow=useRef(createPathWindow()).current;
-  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
+  const stationWindow=useRef(createPathWindow(defaultStory)).current;
+  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),restoreGenerationRef=useRef(0),restoreInFlightRef=useRef(''),storyChangeRef=useRef(0),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
   const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
   for(const storyType of route.storyOrder||[])ensureTargetRef(storyTargetRefs,storyType);
 
@@ -249,13 +249,15 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
       const restored=route.stories?.[pathSettings.active_story]?pathSettings.active_story:defaultStory;
       storyRef.current=restored;setActiveStory(restored);setPathReady(true);
     });
-    return()=>{alive=false;saveNativeStoryScroll(storyRef.current,offsetRef.current).catch(()=>{});if(geometryFrameRef.current)cancelAnimationFrame(geometryFrameRef.current);};
+    return()=>{alive=false;restoreGenerationRef.current+=1;saveNativeStoryScroll(storyRef.current,offsetRef.current).catch(()=>{});if(geometryFrameRef.current)cancelAnimationFrame(geometryFrameRef.current);};
   },[defaultStory,route]);
 
   useEffect(()=>{
     let cancelled=false;
+    restoreGenerationRef.current+=1;restoreInFlightRef.current='';stationWindow.reset(activeStory);
     geometryRef.current=geometryBuffer();geometrySignatureRef.current='';setGeometry(null);
-    positionedRef.current=false;contentHeightRef.current=1;viewportHeightRef.current=1;offsetRef.current=0;storyRef.current=activeStory;setSteleOpen(false);
+    positionedRef.current=false;contentHeightRef.current=1;offsetRef.current=0;storyRef.current=activeStory;setSteleOpen(false);
+    routeScaleRef.current?.setMetrics({offset:0,content:1,viewport:viewportHeightRef.current});
     if(pathReady&&route.stories?.[activeStory]?.intro&&!getNativeGeneralGuideRuntime().active){
       (async()=>{
         const seen=await hasSeenNativeStoryStele(activeStory);
@@ -264,10 +266,10 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
         if(!cancelled&&storyRef.current===activeStory&&!getNativeGeneralGuideRuntime().active)setSteleOpen(true);
       })().catch(()=>{});
     }
-    return()=>{cancelled=true;if(geometryFrameRef.current){cancelAnimationFrame(geometryFrameRef.current);geometryFrameRef.current=0;}};
+    return()=>{cancelled=true;restoreGenerationRef.current+=1;if(geometryFrameRef.current){cancelAnimationFrame(geometryFrameRef.current);geometryFrameRef.current=0;}};
   },[activeStory,pathReady,route]);
 
-  const changeStory=async(nextStory)=>{if(!nextStory||nextStory===activeStory)return;await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(nextStory);offsetRef.current=0;setSteleOpen(false);setActiveStory(nextStory);};
+  const changeStory=async(nextStory)=>{if(!nextStory||nextStory===storyRef.current)return;const request=++storyChangeRef.current,fromStory=storyRef.current;await saveNativeStoryScroll(fromStory,offsetRef.current);if(request!==storyChangeRef.current)return;await saveNativeActiveStory(nextStory);if(request!==storyChangeRef.current)return;offsetRef.current=0;setSteleOpen(false);setActiveStory(nextStory);};
   const openStation=async(station)=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);const runtime=getNativeGeneralGuideRuntime();if(runtime.active&&runtime.phase==='await-station')setNativeGeneralGuideRuntime({phase:'station-study'});onOpenStation(station);};
   const openWordList=async()=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);onOpenWordList?.(activeStory);};
   const openStele=async()=>{await markNativeStorySteleSeen(activeStory).catch(()=>{});setSteleOpen(true);};
@@ -333,24 +335,22 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
 
   const syncScaleMetrics=(next={})=>routeScaleRef.current?.setMetrics({content:contentHeightRef.current,viewport:viewportHeightRef.current,offset:offsetRef.current,...next});
   const restoreMapPosition=async()=>{
-    if(!pathReady||positionedRef.current||contentHeightRef.current<=1||viewportHeightRef.current<=1)return;
-    positionedRef.current=true;
-    const targetStory=activeStory,saved=await loadNativeStoryScroll(targetStory);
-    if(storyRef.current!==targetStory){positionedRef.current=false;return;}
+    if(!pathReady||positionedRef.current||restoreInFlightRef.current||contentHeightRef.current<=1||viewportHeightRef.current<=1)return;
+    const targetStory=activeStory,generation=restoreGenerationRef.current;restoreInFlightRef.current=targetStory;
+    let saved=null;try{saved=await loadNativeStoryScroll(targetStory);}catch{saved=null;}
+    if(storyRef.current!==targetStory||restoreGenerationRef.current!==generation){if(restoreInFlightRef.current===targetStory)restoreInFlightRef.current='';return;}
     requestAnimationFrame(()=>{
-      if(storyRef.current!==targetStory)return;
-      if(saved===null)scrollRef.current?.scrollToEnd({animated:false});
-      else scrollRef.current?.scrollTo({y:saved,animated:false});
-      offsetRef.current=saved===null?Math.max(0,contentHeightRef.current-viewportHeightRef.current):saved;
-      stationWindow.update(offsetRef.current,viewportHeightRef.current);
-      syncScaleMetrics({offset:offsetRef.current});
+      if(storyRef.current!==targetStory||restoreGenerationRef.current!==generation){if(restoreInFlightRef.current===targetStory)restoreInFlightRef.current='';return;}
+      const viewport=Math.max(1,viewportHeightRef.current),maximum=Math.max(0,contentHeightRef.current-viewport),targetOffset=saved===null?maximum:Math.max(0,Math.min(maximum,Number(saved)||0));
+      scrollRef.current?.scrollTo({y:targetOffset,animated:false});offsetRef.current=targetOffset;positionedRef.current=true;restoreInFlightRef.current='';
+      stationWindow.update(targetOffset,viewport,targetStory);syncScaleMetrics({offset:targetOffset,viewport,content:contentHeightRef.current});
     });
   };
   useEffect(()=>{void restoreMapPosition();},[pathReady,activeStory,geometry?.map?.height]);
 
-  const onViewportLayout=(event)=>{viewportHeightRef.current=event.nativeEvent.layout.height||1;stationWindow.update(offsetRef.current,viewportHeightRef.current);syncScaleMetrics();void restoreMapPosition();};
-  const onContentSizeChange=(_,height)=>{contentHeightRef.current=height||1;syncScaleMetrics();void restoreMapPosition();};
-  const onPathScroll=(event)=>{const offset=event.nativeEvent.contentOffset.y;offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);stationWindow.update(offset,viewportHeightRef.current);};
+  const onViewportLayout=(event)=>{const viewport=event.nativeEvent.layout.height||1;viewportHeightRef.current=viewport;if(positionedRef.current)stationWindow.update(offsetRef.current,viewport,activeStory);syncScaleMetrics({viewport});void restoreMapPosition();};
+  const onContentSizeChange=(_,height)=>{contentHeightRef.current=height||1;if(positionedRef.current)stationWindow.update(offsetRef.current,viewportHeightRef.current,activeStory);syncScaleMetrics({content:contentHeightRef.current});void restoreMapPosition();};
+  const onPathScroll=(event)=>{const offset=event.nativeEvent.contentOffset.y;offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);if(positionedRef.current)stationWindow.update(offset,viewportHeightRef.current,activeStory);};
   const jumpScale=(part)=>{const viewport=viewportHeightRef.current||1,target=Math.max(0,(Number(part?.targetY)||0)-viewport*.16);scrollRef.current?.scrollTo({y:target,animated:true});};
   const selectVisibleGuideStation=()=>{
     const viewport=viewportHeightRef.current||1,center=viewport/2,hardTop=viewport*.28,preferredTop=viewport*.40,preferredBottom=viewport*.65,offset=offsetRef.current;
