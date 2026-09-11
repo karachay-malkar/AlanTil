@@ -1,12 +1,12 @@
 .appShell{
   --header-h:42px;
   --nav-h:60px;
-  --content-rest-gap:16px;
-  --action-edge-gap:16px;
+  --content-rest-gap:var(--ui-content-rest-gap);
+  --action-edge-gap:var(--ui-action-edge-gap);
   --chrome-top-depth:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap));
   --chrome-bottom-depth:calc(var(--safe-bottom) + var(--content-rest-gap));
   --system-mask-bg:color-mix(in srgb,var(--app-bg) 18%,transparent);
-  --system-mask-blur:10px;
+  --system-mask-blur:var(--ui-system-mask-blur);
   --system-control-bg:color-mix(in srgb,var(--surface-0) 28%,transparent);
   --system-control-bg-active:color-mix(in srgb,var(--surface-0) 46%,transparent);
   --system-control-border:color-mix(in srgb,var(--line) 44%,transparent);
@@ -33,14 +33,14 @@
 .appViewport::before{
   top:0;
   height:var(--chrome-top-depth);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0,rgba(0,0,0,.62) 38%,rgba(0,0,0,.18) 76%,transparent 100%);
-  mask-image:linear-gradient(to bottom,#000 0,rgba(0,0,0,.62) 38%,rgba(0,0,0,.18) 76%,transparent 100%);
+  -webkit-mask-image:var(--ui-chrome-mask-top);
+  mask-image:var(--ui-chrome-mask-top);
 }
 .appViewport::after{
   bottom:0;
   height:var(--chrome-bottom-depth);
-  -webkit-mask-image:linear-gradient(to top,#000 0,rgba(0,0,0,.62) 38%,rgba(0,0,0,.18) 76%,transparent 100%);
-  mask-image:linear-gradient(to top,#000 0,rgba(0,0,0,.62) 38%,rgba(0,0,0,.18) 76%,transparent 100%);
+  -webkit-mask-image:var(--ui-chrome-mask-bottom);
+  mask-image:var(--ui-chrome-mask-bottom);
 }
 .appShell[data-bottom-nav="true"]{--chrome-bottom-depth:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap))}
 .appHeader{
@@ -64,8 +64,8 @@
 .appHeaderSubtitle{max-width:100%;margin-top:2px;color:var(--text-2);font:650 10px/1.1 var(--font-terminal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .appHeaderAction{
   appearance:none;
-  width:36px;
-  height:36px;
+  width:var(--ui-header-action-size);
+  height:var(--ui-header-action-size);
   display:grid;
   place-items:center;
   padding:0;
@@ -74,14 +74,14 @@
   background:var(--system-control-bg);
   color:var(--text-2);
   box-shadow:0 2px 9px rgba(41,39,33,.025);
-  -webkit-backdrop-filter:blur(8px);
-  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(var(--ui-system-control-blur));
+  backdrop-filter:blur(var(--ui-system-control-blur));
   transition:transform var(--duration-fast),background var(--duration-fast),border-color var(--duration-fast),opacity var(--duration-fast);
 }
 .appHeaderAction:active{opacity:1;transform:scale(.96);background:var(--system-control-bg-active);border-color:var(--line)}
-.appHeaderAction svg{display:block;width:20px;height:20px;margin:0;transform:none}
+.appHeaderAction svg{display:block;width:var(--ui-header-action-icon-size);height:var(--ui-header-action-icon-size);margin:0;transform:none}
 .appHeaderActionSlot{display:flex;align-items:center;justify-content:flex-end;min-width:0;pointer-events:auto}
-.appHeaderTextAction{appearance:none;min-width:0;min-height:34px;padding:0 10px;border:1px solid var(--system-control-border);border-radius:999px;background:var(--system-control-bg);color:var(--text-2);font:750 11px/1 var(--font-terminal);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.appHeaderTextAction{appearance:none;min-width:0;min-height:var(--ui-header-text-action-height);padding:0 var(--ui-header-text-action-horizontal);border:1px solid var(--system-control-border);border-radius:999px;background:var(--system-control-bg);color:var(--text-2);font:var(--ui-header-text-action-font-weight) var(--ui-header-text-action-font-size)/var(--ui-header-text-action-line-height) var(--font-terminal);-webkit-backdrop-filter:blur(var(--ui-system-control-blur));backdrop-filter:blur(var(--ui-system-control-blur))}
 .appHeaderTextAction:active{opacity:1;transform:scale(.97);background:var(--system-control-bg-active)}
 .appViewport{position:absolute;z-index:1;inset:0;min-width:0;min-height:0;overflow:hidden;background:var(--app-bg)}
 .sessionStatus{min-width:max-content;min-height:0;padding:0;display:flex;align-items:center;justify-content:flex-end;gap:5px;color:var(--text-2);font:750 10px/1.2 var(--font-terminal);background:transparent;pointer-events:none}
@@ -140,8 +140,8 @@
   background:color-mix(in srgb,var(--surface-0) 22%,transparent);
   color:var(--text-2);
   box-shadow:0 2px 8px rgba(41,39,33,.018);
-  -webkit-backdrop-filter:blur(8px);
-  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(var(--ui-system-control-blur));
+  backdrop-filter:blur(var(--ui-system-control-blur));
   transition:background var(--duration-fast),border-color var(--duration-fast),color var(--duration-fast),transform var(--duration-fast);
 }
 .bottomNavItem.active .bottomNavIconBubble{background:color-mix(in srgb,var(--text-1) 88%,transparent);border-color:color-mix(in srgb,var(--text-1) 32%,transparent);color:var(--text-inverse)}

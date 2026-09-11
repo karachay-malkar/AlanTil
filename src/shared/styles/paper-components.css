@@ -47,7 +47,7 @@
   border:0;
   background:transparent;
   color:var(--text-2);
-  font:650 12px/1 var(--font-body);
+  font:var(--ui-text-action-font-weight) var(--ui-text-action-font-size)/var(--ui-text-action-line-height) var(--font-body);
   cursor:pointer;
 }
 .textAction:hover{color:var(--accent-strong)}

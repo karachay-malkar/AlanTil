@@ -1,0 +1,8 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import {CHROME_CONTRACT} from '../packages/alantil-ui/chrome.js';import {UI_TOKENS,VISUAL_CONTRACT_VERSION} from '../packages/alantil-ui/tokens.js';
+const read=p=>fs.readFileSync(p,'utf8'),path=read('mobile/screens/path.js'),station=read('mobile/screens/station.js'),profile=read('mobile/screens/profile-main.js'),learn=read('mobile/screens/learn.js'),components=read('mobile/ui/components.js'),nativeChrome=read('mobile/ui/chrome-mask.native.js'),faded=read('mobile/ui/faded-scroll.native.js'),cut=read('mobile/ui/cut-corner.js');
+assert.equal(VISUAL_CONTRACT_VERSION,'16.6.6');assert.equal(UI_TOKENS.path.scaleRight,4);assert.deepEqual(CHROME_CONTRACT.maskStops.map(x=>[x.offset,x.alpha]),[[0,1],[.38,.62],[.76,.18],[1,0]]);
+assert.match(path,/paddingHorizontal:0/);assert.match(path,/storyTabFirst:\{marginLeft:theme\.chrome\.storyTabs\.edgeInset\}/);assert.match(path,/right:theme\.path\.scaleRight/);
+assert.match(station,/stationTabTextActive/);assert.doesNotMatch(station,/CompactSegmentedControl value=\{pane\}/);assert.doesNotMatch(station,/GuideHelpButton/);
+assert.match(profile,/\{`\[ \$\{label\} \]`\}/);assert.match(profile,/body:\{flex:1,paddingTop:0/);assert.match(profile,/FadedScrollView topFade=\{theme\.chrome\.scrollFades\.profile\.top\}/);
+assert.match(learn,/GuideHelpButton placement="bottomRight"/);assert.doesNotMatch(nativeChrome,/FadeOverlay/);assert.match(faded,/MaskedView/);assert.match(components,/Platform\.OS==='web'\?<GlassBackdrop\/>:null/);assert.match(cut,/Q \$\{w\} 0 \$\{w\} \$\{r\}/);
+console.log('16.6.6 structural visual parity gate PASS');

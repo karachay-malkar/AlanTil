@@ -9,9 +9,9 @@
 [data-feature="settings"] .settingsSectionTitle{margin:0;padding:0 0 7px;border-bottom:1px solid var(--line-soft);font-size:15px;font-weight:850;line-height:1.2}
 [data-feature="settings"] .settingsSectionHead{align-items:flex-start;border-bottom:1px solid var(--line-soft)}
 [data-feature="settings"] .settingsSectionHead .settingsSectionTitle{flex:1;border:0}
-[data-feature="settings"] .settingsSmallAction{appearance:none;flex:0 0 auto;min-height:29px;padding:4px 10px;border:1px solid var(--line);border-radius:2px;background:transparent;color:var(--text-3);font:750 10px/1 var(--font-terminal)}
+[data-feature="settings"] .settingsSmallAction{appearance:none;flex:0 0 auto;min-height:var(--ui-button-settings-small-height);padding:var(--ui-button-settings-small-vertical) var(--ui-button-settings-small-horizontal);border:1px solid var(--line);border-radius:var(--ui-button-settings-small-radius);background:transparent;color:var(--text-3);font:var(--ui-button-settings-small-font-weight) var(--ui-button-settings-small-font-size)/var(--ui-button-settings-small-line-height) var(--font-terminal)}
 [data-feature="settings"] .settingsSmallAction.isDirty,[data-feature="settings"] .settingsUpdateWrap.needsUpdate .settingsSmallAction{border-color:var(--accent-strong);background:var(--accent);color:var(--text-inverse)}
-[data-feature="settings"] .settingsSmallAction:disabled{opacity:.48}
+[data-feature="settings"] .settingsSmallAction:disabled{opacity:var(--ui-button-settings-small-disabled-opacity)}
 [data-feature="settings"] .settingsRow{min-height:46px;display:grid;grid-template-columns:minmax(120px,1fr) minmax(142px,auto);align-items:center;gap:12px;border-bottom:1px solid var(--line-soft)}
 [data-feature="settings"] .settingsRow[hidden]{display:none}
 [data-feature="settings"] .settingsRowLabel{color:var(--text-2);font-size:12px;line-height:1.25}

@@ -21,7 +21,7 @@ test('mobile persisted state uses scoped storage keys and legacy data migrates o
 });
 
 test('auth refreshes near expiry, on foreground, and retries a 401 once',()=>{
-  const source=read('mobile/platform/auth.js');assert.match(source,/AppState\.addEventListener/);assert.match(source,/refreshNativeAuthSession/);assert.match(source,/response\.status===401/);assert.match(source,/await refreshNativeAuthSession\(\)/);assert.match(source,/setNativeStorageScope/);assert.match(source,/alantil:\/\/auth\/callback/);
+  const source=read('mobile/platform/auth.native.js');assert.match(source,/AppState\.addEventListener/);assert.match(source,/refreshNativeAuthSession/);assert.match(source,/response\.status===401/);assert.match(source,/await refreshNativeAuthSession\(\)/);assert.match(source,/setNativeStorageScope/);assert.match(source,/alantil:\/\/auth\/callback/);
 });
 
 test('guest state has an explicit one-time account claim path',()=>{
@@ -29,7 +29,7 @@ test('guest state has an explicit one-time account claim path',()=>{
 });
 
 test('cloud queue is scoped and failed entries are not removed',()=>{
-  const source=read('mobile/platform/cloud-sync.js');assert.match(source,/nativeScopedStorageKey\(QUEUE_BASE\)/);assert.match(source,/if\(!response\.ok\)\{ok=false;continue;\}/);assert.match(source,/removeProgressQueueEntry/);
+  const source=read('mobile/platform/cloud-sync.js');assert.match(source,/nativeScopedStorageKey\(QUEUE_BASE\)/);assert.match(source,/if\(!response\.ok\)return false;/);assert.match(source,/durableQueue\.acknowledge/);
 });
 
 test('favorite conflicts use updated_at and preserve tombstones',()=>{

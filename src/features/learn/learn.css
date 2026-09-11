@@ -12,7 +12,7 @@
   transform-origin:center center;
 }
 .learnCardActions{position:absolute;z-index:5;left:12px;right:12px;bottom:10px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
-.learnCardAction{appearance:none;min-width:40px;min-height:40px;padding:8px;border:0;background:transparent;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;gap:4px;pointer-events:auto}
+.learnCardAction{appearance:none;min-width:40px;min-height:40px;padding:8px;border:0;background:transparent;color:var(--text-2);display:inline-flex;flex-direction:var(--ui-learn-undo-direction);align-items:center;justify-content:center;gap:var(--ui-learn-undo-gap);pointer-events:auto}
 .learnCardAction:active{opacity:.62;transform:translateY(1px)}
 .learnCardAction svg{width:20px;height:20px;fill:currentColor}.learnCardAction>span{font:700 10px/1 var(--font-terminal)}
 .learnCardActions .starBtn{pointer-events:auto}

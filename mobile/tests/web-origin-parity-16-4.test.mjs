@@ -57,7 +57,8 @@ test('Mobile root no longer constructs runtime words from STARTER_DICTIONARY', (
   assert.doesNotMatch(source, /const\s+WORDS\s*=/);
   assert.doesNotMatch(source, /const\s+ROUTE\s*=/);
   assert.match(source, /bootstrapNativeDictionary/);
-  assert.match(source, /buildLearningRoute\(words\)/);
+  assert.match(source, /getDisplayedWordCollection\(words,settings\)/);
+  assert.match(source, /buildLearningRoute\(displayWords\)/);
 });
 
 test('Web and Mobile dictionary contracts resolve to the same resources', () => {

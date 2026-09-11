@@ -1,0 +1,96 @@
+/* 13.15.12 — semantic typography contract.
+   Effective application sizes come from theme.css. This final cascade layer
+   normalizes legacy feature declarations without changing weight, family or line-height. */
+
+:where(body,body *,body *::before,body *::after){font-size:var(--text-body)}
+
+/* Micro — technical counters, compact status marks and dense controls. */
+:where(
+  .appHeaderSubtitle,.sessionStatus,.bottomNavItem,.btn.actionCompact,
+  .contentListPill,.analyticsFailCount,.resultStatusCount,.resultDetailLine>strong,
+  .stationOrdinal,.stationWordCount,.stationMilestones,.stationDirectionControl>span,
+  .stationDirectionToggle button,.stationLaunchActions .btn,.stationStatLabel,
+  .stationMasteryBadge small,.stationMetricGrid span,.stationAttempt span,.stationAttempt small,
+  .stationProblemHead,.storyProgress .pathProgressCount,
+  .learnCardAction>span,.sessionDecision,.learnResultSummary span,
+  .settingsSmallAction,.settingsUpdateBadge,.settingsLinkEnd small,
+  .searchModeItem span,.mediaTimeline,.profileAvatarFrame::before,.problemWord small,
+  .adminUsersTable thead th,.adminRankLabel,.adminTestDate,.adminInlineAction,
+  .adminProblemCounts,.adminTestTitle>span,.adminTestFacts dt,.adminResultWordMain span,
+  .adminResultWordStatus strong,.adminResultWordStatus small,
+  .modeLead small,.scopeLabel small,.modeDirectionControl>span,.modeDirectionToggle button,
+  .testResultAnswerLine>strong,.storySteleTriggerGlyph>span
+){font-size:var(--text-micro)}
+
+/* Caption — labels, secondary rows, counts and compact navigation. */
+:where(
+  .appHeaderTextAction,.profilePrimaryTab,.storyTab,.storyProgress,
+  .typo-muted,.setTileCount,.hint,.smallNote,.dictNum,
+  .contentListSecondary,.contentListIndex,.groupNum,.gEx,.bracketHeading,.segmentedProgress,
+  .instagramBadge,.instagramSubtitle,.textAction,.directionChoiceButton,
+  .settingsChoiceBody,.settingsChoice>span,
+  .analyticsConsentText,.analyticsConsentButton,.analyticsPreferenceMessage,
+  .googleIdentityLoading,.accountField>span,.googleIdentityStatus,.accountMessage,.accountPrivacyNote,
+  .accountNicknameMessage,.accountGenderIntro span,
+  .learningSetupError,.learningSetupStep h1,.learningSetupStep h2,.learningSetupLanguageSegments .settingsChoiceBody,
+  .stationLabel,.stationViewTab,.stationMenuToolbar,.stationWordRow .contentListSecondary,
+  .stationProblemRow,.stationEmptyState,.learnCard .hint,.learnResultCount,
+  .matchCard,.profileStoryHead>span,.profileFutureNote,
+  .profileInlineError,.profileStat span,.problemWord,
+  .settingsRowLabel,.settingsDictionaryVersions>div,.settingsDictionaryVersions dd,
+  .settingsDictionaryNotice,.settingsDictionaryError,.settingsLink,.settingsDocumentDate,
+  .expandSearchInput,.mediaError,.modeLead,.modeOptionLabel,.modeResultSummary>span:last-child,
+  .testResultAnswerTrack,.adminUsersTable,.adminUserLink,.adminTableNumber,.adminStoryRowHead,
+  .adminStoryRowHead span,.adminTestRow,.adminTestRow strong,.adminTestRow>span:last-child,
+  .adminTestStory,.adminTestSet,.adminTestResult,.adminProblemRow,.adminProblemRow strong,
+  .adminEmpty,.adminWordTile strong,.adminResultWordMain strong,.adminStateMessage,.adminModalState,
+  .practiceMenu .menuItem small
+){font-size:var(--text-caption)}
+
+/* Body — the standard application reading size. */
+:where(
+  .typo-subtitle,.hintText,.meta,.learnLabel,.typo-body,.trans,
+  .field span,.secTitle,.scopeSectionRow,.bracketCheckboxMark,.resultDetailTrack,
+  .accountIntro,.analyticsPreferenceRow,.guestProfilePrompt p,
+  .routeSectionHeading,.stationStatsHeading,.stationProblemWord,.storyIntro,
+  .learnCard .trans,.optionBtn,.songTranslatedLine,.profileStoryHead,
+  .profileLockedState>span,.profileGenderSetup>span,.settingsSectionTitle,.settingsDocument,
+  .adminTestFacts dd
+){font-size:var(--text-body)}
+
+/* Emphasis — set/row names, important labels and section-level headings. */
+:where(
+  .typo-card-main,.groupPill,.emptyStateTitle,.noteTitle,.modalTitle,.exitModalText,
+  .contentListPrimary,.sectionMenuTitle,.setTileTitle,.gTrans,
+  .scopeDictRow,.routeCatalogHeading,.stationWordRow .contentListPrimary,
+  .stationMasteryBadge>span,.stationMetricGrid strong,
+  .modeResultMark,.songOriginalLine,.songInfoButton,.profileSectionTitle,
+  .practiceMenu .menuItem strong,.adminSummaryGrid strong,
+  .adminDetailSection>h2,.adminSectionHead h2,
+  .appHeaderScreenTitle,.storyTabsShell::before,.storyTabsShell::after
+){font-size:var(--text-emphasis)}
+
+/* Titles — screen/document headings, primary metrics and prominent names. */
+:where(
+  h1,.panelTitle,.typo-title,.profileNickname,.profileGenderSetup>strong,
+  .settingsPageHead h1,.settingsDocument h1,.wordCardWord,.instagramArrow,.modalClose,
+  .stationMasteryBlock strong,.stationAttempt strong,.stationResultMark,
+  .learnResultSummary strong,.accountGenderIntro strong,.profileLockedState>strong,
+  .profileStat strong,.adminUserSummaryHead h1,.adminTestTitle h1,
+  .storySteleCard::before
+){font-size:var(--text-title)}
+
+:where(h2,.settingsDocument h2){font-size:var(--text-emphasis)}
+:where(h3,.settingsDocument h3){font-size:var(--text-body)}
+
+/* Unified adaptive display sizes. */
+:where(.learnCard .word,.modeQuestion,.stationTestQuestion){font-size:var(--text-display)}
+:where(.stationResultScore,.modeResultSummary strong){font-size:var(--text-result)}
+
+/* The stele still measures overflow in JS; semantic sizes remain authoritative. */
+.storySteleTitle{font-size:var(--text-title)!important}
+.storySteleBody{font-size:var(--text-body)!important}
+
+/* Path-specific compact labels. */
+.stationLabel{font-size:var(--text-caption)}
+.stationWordCount{font-size:var(--text-micro)}

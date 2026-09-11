@@ -1,0 +1,8 @@
+import React,{forwardRef} from 'react';
+import{Platform,ScrollView,StyleSheet,useWindowDimensions,View}from'react-native';
+import {ChromeMask} from './chrome-mask.native.js';
+import MaskedView from '@react-native-masked-view/masked-view';
+import Svg,{Defs,LinearGradient,Rect,Stop}from'react-native-svg';
+function FadeMask({topFade,bottomFade,height}){const top=Math.max(0,Math.min(.49,topFade/Math.max(1,height))),bottom=Math.max(.51,Math.min(1,1-bottomFade/Math.max(1,height)));return <Svg width="100%" height="100%" preserveAspectRatio="none"><Defs><LinearGradient id="scrollFade" x1="0" y1="0" x2="0" y2="1"><Stop offset="0%" stopColor="#000" stopOpacity="0"/><Stop offset={`${top*100}%`} stopColor="#000" stopOpacity="1"/><Stop offset={`${bottom*100}%`} stopColor="#000" stopOpacity="1"/><Stop offset="100%" stopColor="#000" stopOpacity="0"/></LinearGradient></Defs><Rect width="100%" height="100%" fill="url(#scrollFade)"/></Svg>}
+export const FadedScrollView=forwardRef(function FadedScrollView({topFade=0,bottomFade=0,style,...props},ref){const{height}=useWindowDimensions();if(Platform.OS==='android')return <View style={[styles.mask,style]}><ScrollView {...props} ref={ref} style={styles.scroll}/>{topFade>0?<ChromeMask edge="top" height={topFade}/>:null}{bottomFade>0?<ChromeMask edge="bottom" height={bottomFade}/>:null}</View>;return <MaskedView style={[styles.mask,style]} maskElement={<FadeMask topFade={topFade} bottomFade={bottomFade} height={height}/> }><ScrollView {...props} ref={ref} style={styles.scroll}/></MaskedView>});
+const styles=StyleSheet.create({mask:{flex:1},scroll:{flex:1}});

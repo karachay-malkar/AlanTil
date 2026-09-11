@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {VISUAL_CONTRACT_VERSION,UI_TOKENS} from '../../packages/alantil-ui/tokens.js';
+import {CHROME_CONTRACT} from '../../packages/alantil-ui/chrome.js';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const pathScreen=read('mobile/screens/path.js'),station=read('mobile/screens/station.js'),profile=read('mobile/screens/profile-main.js'),learn=read('mobile/screens/learn.js'),components=read('mobile/ui/components.js'),cut=read('mobile/ui/cut-corner.js'),nativeChrome=read('mobile/ui/chrome-mask.native.js'),fadedNative=read('mobile/ui/faded-scroll.native.js');
+test('16.6.6 visual contract targets canonical Web 13.15.12 structural geometry',()=>{assert.equal(VISUAL_CONTRACT_VERSION,'16.6.6');assert.equal(UI_TOKENS.path.scaleRight,4);assert.deepEqual(CHROME_CONTRACT.maskStops.map(x=>[x.offset,x.alpha]),[[0,1],[.38,.62],[.76,.18],[1,0]]);});
+test('Path uses final cascade story-tab gutters and route scale offset',()=>{assert.match(pathScreen,/paddingHorizontal:0/);assert.match(pathScreen,/storyTabFirst:\{marginLeft:theme\.chrome\.storyTabs\.edgeInset\}/);assert.match(pathScreen,/right:theme\.path\.scaleRight/);});
+test('Station uses plain Web text tabs and no persistent guide button',()=>{assert.match(station,/stationTabTextActive/);assert.doesNotMatch(station,/CompactSegmentedControl value=\{pane\}/);assert.doesNotMatch(station,/GuideHelpButton/);});
+test('Profile tabs include literal brackets and scroll content starts behind tabs',()=>{assert.match(profile,/\{`\[ \$\{label\} \]`\}/);assert.match(profile,/body:\{flex:1,paddingTop:0/);assert.match(profile,/FadedScrollView topFade=\{theme\.chrome\.scrollFades\.profile\.top\}/);});
+test('Learn guide trigger uses canonical bottom-right placement',()=>{assert.match(learn,/GuideHelpButton placement="bottomRight"/);});
+test('Native chrome separates blur from scroll-content fade',()=>{assert.doesNotMatch(nativeChrome,/FadeOverlay/);assert.match(fadedNative,/MaskedView/);assert.match(fadedNative,/LinearGradient/);});
+test('Bottom navigation avoids a second native BlurView inside each bubble',()=>{assert.match(components,/Platform\.OS==='web'\?<GlassBackdrop\/>:null/);});
+test('cut2 frame preserves two diagonal cuts and two rounded corners',()=>{assert.match(cut,/Q \$\{w\} 0 \$\{w\} \$\{r\}/);assert.match(cut,/Q 0 \$\{h\} 0 \$\{Math\.max\(0,h-r\)\}/);});

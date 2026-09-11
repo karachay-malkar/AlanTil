@@ -36,8 +36,8 @@
 [data-feature="profile"] .profileGenderSetup{width:min(100%,460px);min-height:100%;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
 [data-feature="profile"] .profileGenderSetup>strong{font-size:20px}
 [data-feature="profile"] .profileGenderSetup>span{color:var(--text-2);font-size:13px}
-[data-feature="profile"] .profileGenderChoices{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
-[data-feature="profile"] .profileGenderChoices button{appearance:none;min-height:180px;padding:10px;border:1px solid var(--line);background:var(--surface-paper-soft);color:var(--text-2);display:grid;place-items:center;align-content:center;gap:5px}
+[data-feature="profile"] .profileGenderChoices{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ui-profile-gender-gap);margin-top:8px}
+[data-feature="profile"] .profileGenderChoices button{appearance:none;min-height:var(--ui-profile-gender-height);padding:10px;border:1px solid var(--line);background:var(--surface-paper-soft);color:var(--text-2);display:grid;place-items:center;align-content:center;gap:5px}
 [data-feature="profile"] .profileGenderChoices button>span{height:125px;overflow:hidden}
 [data-feature="profile"] .profileGenderChoices .profileAvatarSvg{width:100px;height:130px}
 [data-feature="profile"] .profileGenderChoices button>strong{color:var(--text-1)}
@@ -49,4 +49,4 @@
 [data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--line-soft);padding-top:9px}
 [data-feature="profile"] .problemWord{min-width:92px;padding:6px 8px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:8px;font-size:12px}
 [data-feature="profile"] .problemWord small{color:var(--danger-strong);font:700 9px/1.4 var(--font-terminal)}
-@media(max-width:360px){.profilePrimaryTab{font-size:8px}[data-feature="profile"] .profileAvatarFrame{width:min(69vw,242px)}[data-feature="profile"] .profileGenderChoices button{min-height:150px}[data-feature="profile"] .profileGenderChoices button>span{height:105px}}
+@media(max-width:360px){.profilePrimaryTab{font-size:8px}[data-feature="profile"] .profileAvatarFrame{width:min(69vw,242px)}[data-feature="profile"] .profileGenderChoices button{min-height:var(--ui-profile-gender-compact-height)}[data-feature="profile"] .profileGenderChoices button>span{height:105px}}

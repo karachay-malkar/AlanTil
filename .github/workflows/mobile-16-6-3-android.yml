@@ -1,0 +1,93 @@
+name: AlanTil 16.6.6 Android
+
+on:
+  push:
+    branches: [agent/16.6.3-full-screen-parity]
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "agent/16.6.3-full-screen-parity"
+          printf 'branch=%s\ncommit=%s\nauth_revision=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" "google-oauth-pkce-deeplink-2" > AlanTil-16.6.6.source.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Mobile executable tests
+        working-directory: mobile
+        run: npm test
+      - name: Preserve 16.6.1 functional gate
+        run: node scripts/check-parity-correction-16-6-1.mjs
+      - name: Full visual contract parity 16.6.6 gate
+        run: |
+          node scripts/check-full-screen-parity-16-6-3.mjs
+          node scripts/check-shared-visual-contract-16-6-5.mjs
+          node scripts/check-structural-visual-parity-16-6-6.mjs
+          node --test mobile/tests/visual-parity-16-6-4.test.mjs mobile/tests/visual-contract-16-6-5.test.mjs mobile/tests/visual-structure-16-6-6.test.mjs
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Verify Android JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist-android
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Verify generated Android auth intent-filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="mobile/android/app/src/main/AndroidManifest.xml"
+          test -f "$manifest"
+          grep -F 'android.intent.action.VIEW' "$manifest"
+          grep -F 'android.intent.category.BROWSABLE' "$manifest"
+          grep -F 'android:scheme="alantil"' "$manifest"
+          grep -F 'android:host="auth"' "$manifest"
+          grep -F 'android:pathPrefix="/callback"' "$manifest"
+      - name: Build standalone release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Verify release APK manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="mobile/android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$apk"
+          apkanalyzer_bin="$(command -v apkanalyzer || true)"
+          if [ -z "$apkanalyzer_bin" ]; then
+            apkanalyzer_bin="$(find "${ANDROID_HOME}" -type f -name apkanalyzer -print -quit)"
+          fi
+          test -n "$apkanalyzer_bin"
+          "$apkanalyzer_bin" manifest print "$apk" > AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android.intent.action.VIEW' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android.intent.category.BROWSABLE' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android:scheme="alantil"' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android:host="auth"' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android:pathPrefix="/callback"' AlanTil-16.6.6.AndroidManifest.xml
+      - name: Package APK
+        shell: bash
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.6.6.apk
+          sha256sum AlanTil-16.6.6.apk > AlanTil-16.6.6.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.6-APK
+          path: |
+            AlanTil-16.6.6.apk
+            AlanTil-16.6.6.apk.sha256
+            AlanTil-16.6.6.source.txt
+            AlanTil-16.6.6.AndroidManifest.xml
+          if-no-files-found: error
