@@ -9,11 +9,12 @@ import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 export function renderPrivacy(context, signal, params = {}) {
   context.shell.setHeaderContent?.({ title: msg("privacy.konfidentsialnost") });
   const initialState = getPrivacyState();
+  const appDescription = msg("privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_").replace(/^[\s—–-]+/, "");
   context.root.innerHTML = panel({
     title: msg("privacy.politika_konfidentsialnosti"),
     body: `
       <article class="settingsDocument">
-        <p><strong>${msg("privacy.alantil_alan_til")}</strong> ${msg("privacy.prilozhenie_dlya_izucheniya_karachaevo_balkarskogo_yazyka_")} <a href="mailto:alantil0709@gmail.com">alantil0709@gmail.com</a>.</p>
+        <p>${appDescription} <a href="mailto:alantil0709@gmail.com">alantil0709@gmail.com</a>.</p>
 
         <h2>${msg("privacy.kakie_dannye_sohranyayutsya_na_ustroystve")}</h2>
         <p>${msg("privacy.prilozhenie_mozhet_lokalno_sohranyat_v_brauzere_izbrannye")}</p>
