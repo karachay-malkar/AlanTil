@@ -58,11 +58,11 @@ test('mobile product branding is osuyat while compatibility identifiers stay int
   assert.equal(config.expo.android.adaptiveIcon.foregroundImage,'./assets/osuyat.png');
   assert.equal(config.expo.android.package,'app.alantil.mobile');
   assert.equal(config.expo.scheme,'alantil');
-  assert.match(app,/bootBrand>osuyat</);
+  assert.match(app,/styles\.bootBrand}>osuyat</);
   assert.ok(exists('mobile/assets/osuyat.png'));
 });
 
-test('web shell has no visible Alan Til or osuyat product title',()=>{
+test('web shell has no visible Alan Til product title',()=>{
   const html=read('index.html');
   assert.doesNotMatch(html,/<title>\s*Alan\s*Til/i);
   assert.doesNotMatch(html,/content="AlanTil/);
