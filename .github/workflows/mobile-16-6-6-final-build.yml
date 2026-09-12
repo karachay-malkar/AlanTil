@@ -1,0 +1,123 @@
+name: AlanTil 16.6.6 Final Build
+
+on:
+  push:
+    branches:
+      - agent/16.6.6-final-build-temp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  final-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact final 16.6.6
+        uses: actions/checkout@v4
+        with:
+          ref: aa3f64b841d8fc19a731a7f9eaf2c07dcd23f88d
+          fetch-depth: 0
+
+      - name: Verify source provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "aa3f64b841d8fc19a731a7f9eaf2c07dcd23f88d"
+          printf 'version=16.6.6\ncommit=%s\nweb_reference=%s\n' "$(git rev-parse HEAD)" "3249e0d3364656e1030d50791b24aaa8789ed1b8" > AlanTil-16.6.6.source.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Mobile executable tests
+        working-directory: mobile
+        run: npm test
+
+      - name: Functional and visual parity gates
+        run: |
+          node scripts/check-parity-correction-16-6-1.mjs
+          node scripts/check-full-screen-parity-16-6-3.mjs
+          node scripts/check-shared-visual-contract-16-6-5.mjs
+          node scripts/check-structural-visual-parity-16-6-6.mjs
+          node --test mobile/tests/visual-parity-16-6-4.test.mjs mobile/tests/visual-contract-16-6-5.test.mjs mobile/tests/visual-structure-16-6-6.test.mjs
+
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+
+      - name: Verify Android JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist-android
+
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Verify generated Android auth intent-filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="mobile/android/app/src/main/AndroidManifest.xml"
+          test -f "$manifest"
+          grep -F 'android.intent.action.VIEW' "$manifest"
+          grep -F 'android.intent.category.BROWSABLE' "$manifest"
+          grep -F 'android:scheme="alantil"' "$manifest"
+          grep -F 'android:host="auth"' "$manifest"
+          grep -F 'android:pathPrefix="/callback"' "$manifest"
+
+      - name: Build standalone release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Verify release APK manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="mobile/android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$apk"
+          apkanalyzer_bin="$(command -v apkanalyzer || true)"
+          if [ -z "$apkanalyzer_bin" ]; then
+            apkanalyzer_bin="$(find "${ANDROID_HOME}" -type f -name apkanalyzer -print -quit)"
+          fi
+          test -n "$apkanalyzer_bin"
+          "$apkanalyzer_bin" manifest print "$apk" > AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android.intent.action.VIEW' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android.intent.category.BROWSABLE' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android:scheme="alantil"' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android:host="auth"' AlanTil-16.6.6.AndroidManifest.xml
+          grep -F 'android:pathPrefix="/callback"' AlanTil-16.6.6.AndroidManifest.xml
+
+      - name: Package final APK and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.6.6.apk
+          sha256sum AlanTil-16.6.6.apk > AlanTil-16.6.6.apk.sha256
+          git archive --format=zip --output=AlanTil-16.6.6-source.zip aa3f64b841d8fc19a731a7f9eaf2c07dcd23f88d
+          sha256sum AlanTil-16.6.6-source.zip > AlanTil-16.6.6-source.zip.sha256
+          stat -c '%n %s' AlanTil-16.6.6.apk AlanTil-16.6.6-source.zip > AlanTil-16.6.6.sizes.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.6-Final
+          path: |
+            AlanTil-16.6.6.apk
+            AlanTil-16.6.6.apk.sha256
+            AlanTil-16.6.6-source.zip
+            AlanTil-16.6.6-source.zip.sha256
+            AlanTil-16.6.6.source.txt
+            AlanTil-16.6.6.AndroidManifest.xml
+            AlanTil-16.6.6.sizes.txt
+          if-no-files-found: error
+          retention-days: 30
