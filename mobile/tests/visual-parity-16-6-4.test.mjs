@@ -71,7 +71,7 @@ test('16.6.4 Station, Favorites, Test and Match use state-specific chrome and ca
   assert.match(station,/<Button role="station\.study" disabled=/);
   assert.match(station,/<Button role="station\.test" disabled=/);
   assert.match(favorites,/screenDepths\.setPreparation/);
-  assert.match(games,/function BracketCheck\(\{state='none',onPress\}\)\{return <Checkbox variant="bracket"/);
+  assert.match(games,/function ScopeCheck\(\{state='none',onPress\}\)\{return <Checkbox state=\{state\} onPress=\{onPress\} compact\/>/);
   assert.match(games,/scopeSectionRow:\{[^}]*paddingLeft:34/s);
   assert.match(games,/screenDepths\.testMenu/);
   assert.match(games,/screenDepths\.matchMenu/);

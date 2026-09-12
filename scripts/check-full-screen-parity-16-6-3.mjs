@@ -34,10 +34,10 @@ expect('Path Story Stele seen state',path.includes('hasSeenNativeStoryStele')&&p
 expect('Path Story Stele Web viewport fit and gradual auto-scroll',path.includes('height*.53,932')&&path.includes('STELE_AUTO_SCROLL_PX_PER_SECOND=7')&&path.includes('STELE_MIN_BODY_FONT_SIZE=12.5')&&!path.includes('scrollToEnd({animated:true})'));
 expect('Path scale is interactive',path.includes('jumpScale')&&!path.includes('pointerEvents="none" style={styles.routeScale}'));
 expect('Path word list is floating',path.includes('wordListFloat'));
-expect('Practice Web shell title',practice.includes('<Header title="Alan Til!"'));
+expect('Practice matches canonical Web shell without duplicate mobile title',!practice.includes('<Header title="Alan Til!"'));
 expect('Practice no bracket heading',!practice.includes('[ Практика ]'));
 expect('Learn keeps approved progress',learn.includes('<ProgressBar value={progress}'));
-expect('Learn keeps flip helper',learn.includes('mobile.learn.tap_flip'));
+expect('Learn front card omits non-canonical flip helper',!learn.includes('mobile.learn.tap_flip'));
 expect('Learn uses dedicated learning card',learn.includes('function LearningCard')&&!learn.includes('<SurfaceCard inset style={[styles.card'));
 expect('Stage Test no separate progress bar',!stage.includes('ProgressBar'));
 expect('Stage Test no choose-answer helper',!stage.includes('mobile.stage.choose'));
@@ -54,7 +54,7 @@ expect('Songs shared time formatter',songs.includes('formatClockTime')&&format.i
 expect('Songs SVG media icons',songs.includes('<PlayIcon')&&songs.includes('<PauseIcon'));
 expect('Profile guest locked state',profile.includes('avatarFrameLocked')&&profile.includes('LockedIcon'));
 expect('Profile setup remains in Profile',profile.includes('function ProfileSetup')&&profile.includes('checkNativeNickname')&&profile.includes('setNativeAvatarGender'));
-expect('Settings preview 180 px',profile.includes("settingsLearningPreview:{width:'100%',height:180"));
+expect('Settings preview 180 px',profile.includes('settingsLearningPreview:{position:')&&profile.includes('height:180'));
 expect('Privacy shared checkbox',settingsChild.includes("from '../ui/checkbox.js'")&&settingsChild.includes('<Checkbox')&&!settingsChild.includes('Switch'));
 expect('Shared checkbox is non-text glyph control',checkbox.includes('CorrectIcon')&&!checkbox.includes("'[✓]'"));
 expect('Onboarding single-screen progressive setup',!onboarding.includes('setStep(')&&!onboarding.includes('progressCell')&&onboarding.includes('DisclosureSection visible={Boolean(draft.interface_language_code)}')&&onboarding.includes("DisclosureSection visible={draft.alan_script_code==='cyrillic'}")&&onboarding.includes('FlagIcon'));
