@@ -1,5 +1,41 @@
 function text(value) {
-  return String(value || "").trim();
+  return String(value || '').trim();
+}
+
+function cleanGroupText(value) {
+  return text(value).replace(/^\s*[;；]+|[;；]+\s*$/gu, '').trim();
+}
+
+/**
+ * Parses a translation field into semantic meaning groups.
+ * Supports inline numbering ("1. ... 2. ..." / "1) ... 2) ..." / "1 - ..."),
+ * semicolon/newline separated values, and unnumbered single values.
+ * The numeric marker is metadata and is never returned as display text.
+ */
+export function parseTranslationGroups(value) {
+  const source = text(value);
+  if (!source) return [];
+  const normalized = source.replace(/\r?\n+/gu, '; ');
+  const marker = /(?:^|[;；\s])([1-9]\d*)\s*(?:[.)]|[-–—])\s*/gu;
+  const matches = Array.from(normalized.matchAll(marker));
+  if (matches.length) {
+    const rows = [];
+    const prefix = cleanGroupText(normalized.slice(0, matches[0].index || 0));
+    if (prefix) rows.push({ index: 0, number: 1, text: prefix, explicit: false });
+    matches.forEach((match, position) => {
+      const number = Math.max(1, Number(match[1]) || position + 1);
+      const start = (match.index || 0) + match[0].length;
+      const end = position + 1 < matches.length ? matches[position + 1].index : normalized.length;
+      const valueText = cleanGroupText(normalized.slice(start, end));
+      if (valueText) rows.push({ index: number - 1, number, text: valueText, explicit: true });
+    });
+    if (rows.length) return rows;
+  }
+  return normalized
+    .split(/\s*[;；]\s*/u)
+    .map(cleanGroupText)
+    .filter(Boolean)
+    .map((valueText, index) => ({ index, number: index + 1, text: valueText, explicit: false }));
 }
 
 export function numberedPhraseRows(value) {
@@ -20,21 +56,21 @@ export function numberedPhraseRows(value) {
 export function combineNumberedExamples(alanValue, translatedValue) {
   const alanRows = numberedPhraseRows(alanValue);
   const translatedRows = numberedPhraseRows(translatedValue);
-  if (!alanRows.length && !translatedRows.length) return "";
+  if (!alanRows.length && !translatedRows.length) return '';
   const translatedByKey = new Map(translatedRows.map((row) => [row.key, row.text]));
   return alanRows.map((row, index) => {
-    const translation = translatedByKey.get(row.key) || translatedRows[index]?.text || "";
-    const combined = [row.text, translation].filter(Boolean).join(" ✦ ");
-    const prefix = /^\d+\.\d+$/u.test(row.key) ? `${row.key} ` : "";
+    const translation = translatedByKey.get(row.key) || translatedRows[index]?.text || '';
+    const combined = [row.text, translation].filter(Boolean).join(' ✦ ');
+    const prefix = /^\d+\.\d+$/u.test(row.key) ? `${row.key} ` : '';
     return `${prefix}${combined}`.trim();
-  }).join("; ");
+  }).join('; ');
 }
 
 export function parseExampleGroups(value) {
   const source = text(value);
   if (!source) return [];
   const parts = source
-    .replace(/\r?\n+/g, ";")
+    .replace(/\r?\n+/g, ';')
     .split(/\s*[;；]\s*/u)
     .map((part) => part.trim())
     .filter(Boolean);
@@ -59,5 +95,5 @@ export function parseExampleGroups(value) {
     }
     byIndex.get(index).lines.push(line);
   }
-  return groups;
+  return groups.sort((left, right) => left.index - right.index);
 }

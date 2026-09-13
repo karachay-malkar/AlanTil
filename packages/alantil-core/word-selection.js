@@ -1,3 +1,4 @@
+import { parseTranslationGroups } from './example-groups.js';
 const PRIORITY_POS=["noun","verb","adjective","adverb"];
 const PRIORITY_POS_SET=new Set(PRIORITY_POS);
 function normalizeId(id){return String(id??"").trim();}
@@ -16,7 +17,7 @@ export function wordsForSection(words,dict,section){const dictionary=String(dict
 export function wordsForSet(words,dict,section,setNumber){const dictionary=String(dict||"").trim(),sectionScope=String(section||"").trim(),setId=String(setNumber||"").trim();if(!dictionary||!sectionScope||!setId)return[];return orderedWords(words).filter((word)=>dictionaryId(word)===dictionary&&sectionId(word)===sectionScope&&sourceSetId(word)===setId);}
 export function isWordEnabledInTestModes(word){return Boolean(word&&word.usedInTest===true);}
 export function practiceEligibleWords(words=[]){return (Array.isArray(words)?words:[]).filter(isWordEnabledInTestModes);}
-export function splitGroups(text){return String(text||"").split(/\s*[;；]\s*|\n+/g).map((value)=>value.trim()).filter(Boolean).map((value)=>value.replace(/^\s*\d+\s*(?:[.)]|[-–—])\s*/,"").trim());}
+export function splitGroups(text){return parseTranslationGroups(text).map((group)=>group.text);}
 function randomFrom(values){return values[Math.floor(Math.random()*values.length)];}
 function getTranslationSet(item){return new Set(splitGroups(item?.trans).map((value)=>value.toLowerCase()).filter(Boolean));}
 function getSynonymSet(item){return new Set((Array.isArray(item?.synonyms)?item.synonyms:[]).map((value)=>String(value||"").trim().toLowerCase()).filter(Boolean));}

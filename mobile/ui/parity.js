@@ -30,9 +30,10 @@ export function CompactSegmentedControl({ value, items, onChange, accessibilityL
 }
 
 export function OverflowMarquee({ children, textStyle, style, enabled = true }) {
+  const displayText=typeof children==='string'||typeof children==='number'?String(children??'').replace(/\s*\r?\n+\s*/gu,'; ').replace(/\s{2,}/gu,' ').trim():children;
   const [boxWidth,setBoxWidth]=useState(0),[textWidth,setTextWidth]=useState(0);const offset=useRef(new Animated.Value(0)).current,overflow=Math.max(0,textWidth-boxWidth);
   useEffect(()=>{offset.stopAnimation();offset.setValue(0);if(!enabled||overflow<8)return;const duration=Math.max(1800,Math.min(6000,overflow*28));const animation=Animated.loop(Animated.sequence([Animated.delay(650),Animated.timing(offset,{toValue:-overflow,duration,easing:Easing.linear,useNativeDriver:true}),Animated.delay(850),Animated.timing(offset,{toValue:0,duration:220,easing:Easing.out(Easing.quad),useNativeDriver:true}),Animated.delay(450)]));animation.start();return()=>animation.stop();},[enabled,overflow,offset]);
-  return <View style={[styles.marquee,style]} onLayout={(event)=>setBoxWidth(event.nativeEvent.layout.width)}><Animated.View style={{transform:[{translateX:offset}]}}><Text onLayout={(event)=>setTextWidth(event.nativeEvent.layout.width)} numberOfLines={1} style={textStyle}>{children}</Text></Animated.View></View>;
+  return <View style={[styles.marquee,style]} onLayout={(event)=>setBoxWidth(event.nativeEvent.layout.width)}><Animated.View style={{transform:[{translateX:offset}]}}><Text onLayout={(event)=>setTextWidth(event.nativeEvent.layout.width)} numberOfLines={1} style={textStyle}>{displayText}</Text></Animated.View></View>;
 }
 
 export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, marquee = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
@@ -48,7 +49,7 @@ export function ListRow({ leading, title, subtitle, trailing, onPress, selected 
 
 export function MetricStrip({ items }) {
   const type = useSemanticTypography();
-  return <View style={styles.metrics}>{items.map(([value, label]) => <View key={label} style={styles.metric}><Text style={[styles.metricValue,textMetrics(type.title.fontSize,1)]}>{value}</Text><Text style={[styles.metricLabel,textMetrics(type.micro.fontSize,1.2)]}>{label}</Text></View>)}</View>;
+  return <View style={styles.metrics}>{items.map(([value, label]) => <View key={label} style={styles.metric}><Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.78} style={[styles.metricValue,textMetrics(type.title.fontSize,1.08)]}>{value}</Text><Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.72} style={[styles.metricLabel,textMetrics(type.micro.fontSize,1.28)]}>{label}</Text></View>)}</View>;
 }
 
 export function MonoLabel({ children, accent = false, style }) {
@@ -92,9 +93,9 @@ const styles = StyleSheet.create({
   listTrailing: { minWidth: 30, alignItems: 'flex-end', justifyContent: 'center' },
   marquee:{width:'100%',overflow:'hidden'},
   metrics: { width: '100%', flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.lineSoft },
-  metric: { flex: 1, minHeight: 66, paddingVertical: 9, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: C.lineSoft },
-  metricValue: { fontFamily: theme.font.terminal, fontSize: 19, fontWeight: '850', lineHeight: 21, color: C.text1 },
-  metricLabel: { marginTop: 4, fontSize: T.micro, lineHeight: 12, color: C.text2, textAlign: 'center' },
+  metric: { flex: 1, minWidth: 0, minHeight: 66, paddingVertical: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: C.lineSoft, overflow: 'visible' },
+  metricValue: { maxWidth: '100%', fontFamily: theme.font.terminal, fontSize: 19, fontWeight: '850', lineHeight: 22, color: C.text1, includeFontPadding: true },
+  metricLabel: { maxWidth: '100%', marginTop: 4, paddingHorizontal: 1, fontSize: T.micro, lineHeight: 13, color: C.text2, textAlign: 'center', includeFontPadding: true },
   monoLabel: { fontFamily: theme.font.terminal, fontSize: T.micro, fontWeight: '800', lineHeight: 11, letterSpacing: .55, color: C.text3 },
   monoAccent: { color: C.accentStrong },
   smallAction: { minHeight: theme.button.settingsSmallHeight, paddingVertical: theme.button.settingsSmallVertical, paddingHorizontal: theme.button.settingsSmallHorizontal, borderWidth: 0, borderRadius: theme.button.settingsSmallRadius, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },

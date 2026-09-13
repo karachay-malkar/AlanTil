@@ -82,7 +82,7 @@ test('16.6.4 Station, Favorites, Test and Match use state-specific chrome and ca
 });
 
 test('16.6.4 Learn renders shared card-model groups/examples with Web card geometry',()=>{
-  assert.match(learn,/cardModel\?\.back\?\.translations/);
+  assert.match(learn,/cardModel\?\.back\?\.translationGroups/);
   assert.match(learn,/cardModel\?\.back\?\.examples/);
   assert.match(learn,/example\?\.lines\?\.map/);
   assert.doesNotMatch(learn,/parseExampleGroups/);
@@ -117,11 +117,11 @@ test('16.6.4 Songs inline word card is flat and renders grouped examples',()=>{
 });
 
 test('16.6.4 release metadata is coherent',()=>{
-  assert.equal(app.expo.version,'16.6.6');
-  assert.equal(pkg.version,'16.6.6');
-  assert.equal(app.expo.extra.releaseVersion,'16.6.6');
-  assert.equal(app.expo.android.versionCode,31);
-  assert.equal(app.expo.ios.buildNumber,'31');
-  assert.match(settingsChild,/>16\.6\.6</);
-  assert.match(settingsChild,/>06\.09\.2026</);
+  assert.equal(app.expo.version,'16.6.8');
+  assert.equal(pkg.version,'16.6.8');
+  assert.equal(app.expo.extra.releaseVersion,'16.6.8');
+  assert.equal(app.expo.android.versionCode,33);
+  assert.equal(app.expo.ios.buildNumber,'33');
+  assert.match(settingsChild,/>16\.6\.8</);
+  assert.match(settingsChild,/>13\.09\.2026</);
 });

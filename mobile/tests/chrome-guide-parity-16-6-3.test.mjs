@@ -36,7 +36,9 @@ test('general guide continuation is runtime-only and no longer persists station_
   assert.match(guideState,/let generalRuntime=\{active:false,phase:'',storyIndex:0\}/);
   assert.match(guideState,/beginNativeGeneralGuide/);
   assert.match(guideState,/resetNativeGeneralGuideRuntime/);
-  assert.match(pathScreen,/phase:'await-station'/);
+  assert.match(guideState,/general_completed:Boolean\(value\?\.general_completed\)/);
+  assert.match(pathScreen,/saveNativeGuideState\(\{general_completed:true\}\)/);
+  assert.match(pathScreen,/currentGuide\.id==='stages'\)\{await stopGuide\(\);return;\}/);
   assert.match(station,/runtime\.active&&\(runtime\.phase==='station-study'\|\|runtime\.phase==='await-station'\)/);
 });
 

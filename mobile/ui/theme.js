@@ -43,7 +43,7 @@ export function semanticTypography(textSizeCode='medium',viewportWidth) {
   const body={fontFamily:theme.font.body};
   const display={fontFamily:theme.font.display};
   return {
-    display:{fontSize:t.display,lineHeight:line(t.display,1.04),fontWeight:'800',...display},
+    display:{fontSize:t.display,lineHeight:line(t.display,1.16),fontWeight:'800',...display},
     title:{fontSize:t.title,lineHeight:line(t.title,1.18),fontWeight:'800',...display},
     heading:{fontSize:t.emphasis,lineHeight:line(t.emphasis,1.25),fontWeight:'800',...body},
     body:{fontSize:t.body,lineHeight:line(t.body,1.45),...body},
@@ -55,8 +55,8 @@ export function semanticTypography(textSizeCode='medium',viewportWidth) {
     result:{fontSize:t.result,lineHeight:line(t.result,1.02),fontWeight:'800',...display},
     button:{fontSize:t.body,lineHeight:line(t.body,1.2),fontWeight:'800',...body},
     navigation:{fontSize:t.micro,lineHeight:line(t.micro,1.15),fontWeight:'750',...terminal},
-    wordCard:{fontSize:t.display,lineHeight:line(t.display,1.08),fontWeight:'900',...display},
-    question:{fontSize:t.display,lineHeight:line(t.display,1.08),fontWeight:'900',...display},
+    wordCard:{fontSize:t.display,lineHeight:line(t.display,1.18),fontWeight:'900',...display},
+    question:{fontSize:t.display,lineHeight:line(t.display,1.18),fontWeight:'900',...display},
   };
 }
 

@@ -83,8 +83,8 @@ test('16.6.6 auth entry is shared and Native/Web PKCE callbacks stay separated',
   assert.ok(filter.category.includes('BROWSABLE'));
   assert.ok(filter.category.includes('DEFAULT'));
   assert.ok(filter.data.some((entry)=>entry.scheme==='alantil'&&entry.host==='auth'&&entry.pathPrefix==='/callback'));
-  assert.equal(app.expo.android.versionCode,31);
-  assert.equal(app.expo.ios.buildNumber,'31');
+  assert.equal(app.expo.android.versionCode,33);
+  assert.equal(app.expo.ios.buildNumber,'33');
 });
 
 test('16.6.6 Story Stele keeps Web viewport and overflow behavior',()=>{

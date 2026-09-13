@@ -33,7 +33,7 @@ import { setNativeSessionNamespace } from './platform/session-store.js';
 import { hasCompletedNativeAuthChoice, loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, markNativeAuthChoiceComplete, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
 
 const C=theme.colors;
-function BootScreen(){return <View style={styles.boot}><Text style={styles.bootBrand}>Alan Til</Text><View style={styles.bootDot}/></View>;}
+function BootScreen(){return <View style={styles.boot}><Text style={styles.bootBrand}>Osuyat</Text><View style={styles.bootDot}/></View>;}
 function settledValue(result,fallback){return result?.status==='fulfilled'?result.value:fallback;}
 export default function AppRoot(){
   const [bootstrapped,setBootstrapped]=useState(false),[setupRequired,setSetupRequired]=useState(false),[authChoiceRequired,setAuthChoiceRequired]=useState(false),[words,setWords]=useState([]),[tab,setTab]=useState('path'),[screen,setScreen]=useState('home'),[favorites,setFavoritesState]=useState(()=>new Set()),[songFavorites,setSongFavoritesState]=useState(()=>new Set()),[settings,setSettingsState]=useState(()=>({...DEFAULT_USER_SETTINGS})),[station,setStation]=useState(null),[storyWordListType,setStoryWordListType]=useState(''),[learnContext,setLearnContext]=useState(null),[testContext,setTestContext]=useState(null),[practiceGameContext,setPracticeGameContext]=useState(null),[profileBottomNavVisible,setProfileBottomNavVisible]=useState(true),[dataEpoch,setDataEpoch]=useState(0);const displayWords=useMemo(()=>getDisplayedWordCollection(words,settings),[words,settings]),route=useMemo(()=>buildLearningRoute(displayWords),[displayWords]),authTransition=useRef(0),authUserId=useRef('');

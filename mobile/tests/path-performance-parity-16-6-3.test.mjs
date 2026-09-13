@@ -41,13 +41,12 @@ test('Path uses final Web four-step snake and final medium spacing',()=>{
   assert.match(pathScreen,/sectionHeading/);
 });
 
-test('Story Stele auto-open marks scoped seen state and manual reopen stays available',()=>{
+test('Story Stele auto-open waits for the guide and marks scoped seen state only on close',()=>{
   assert.match(pathState,/STORY_STELE_SEEN_KEY='alantil_story_intro_seen_v1'/);
-  const autoSeen=pathScreen.indexOf('const seen=await hasSeenNativeStoryStele(activeStory)');
-  const autoMark=pathScreen.indexOf('await markNativeStorySteleSeen(activeStory).catch(()=>{})',autoSeen);
-  const autoOpen=pathScreen.indexOf('setSteleOpen(true)',autoMark);
-  assert.ok(autoSeen>=0&&autoMark>autoSeen&&autoOpen>autoMark);
-  assert.match(pathScreen,/const openStele=async\(\)=>\{await markNativeStorySteleSeen\(activeStory\)\.catch\(\(\)=>\{\}\);setSteleOpen\(true\);\}/);
+  assert.match(pathScreen,/pathReady&&guideStateReady&&generalCompleted/);
+  assert.match(pathScreen,/const showUnseenStele=async\(\)=>\{const target=storyRef\.current,seen=await hasSeenNativeStoryStele/);
+  assert.match(pathScreen,/const openStele=\(\)=>setSteleOpen\(true\);/);
+  assert.match(pathScreen,/const closeStele=async\(\)=>\{setSteleOpen\(false\);await markNativeStorySteleSeen\(activeStory\)\.catch\(\(\)=>\{\}\);\};/);
 });
 
 test('Story Stele animation and text fitting are bounded and frame-driven',()=>{
@@ -74,7 +73,9 @@ test('Path restores the Web floating Guide trigger without overlapping Story Wor
   assert.match(pathScreen,/storyEdgeEnd/);
 });
 
-test('Route scale diamonds jump to measured catalog positions rather than percentage guesses',()=>{
-  assert.match(pathScreen,/targetY:catalogLayout\?\.y\|\|0/);
-  assert.match(pathScreen,/const jumpScale=\(part\)=>\{const viewport=viewportHeightRef\.current\|\|1,target=Math\.max\(0,\(Number\(part\?\.targetY\)\|\|0\)-viewport\*\.16\)/);
+test('Route scale is data-built immediately and diamonds jump only when measured geometry exists',()=>{
+  assert.match(pathScreen,/const scaleParts=useMemo\(\(\)=>\{/);
+  assert.match(pathScreen,/displayCatalogs\.forEach/);
+  assert.match(pathScreen,/targetY:Number\.isFinite\(catalogLayout\?\.y\)\?catalogLayout\.y:null/);
+  assert.match(pathScreen,/const jumpScale=\(part\)=>\{if\(!Number\.isFinite\(part\?\.targetY\)\)return;/);
 });
