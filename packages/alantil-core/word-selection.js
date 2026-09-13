@@ -15,6 +15,7 @@ export function setsFrom(words,dict,section=""){const dictionary=String(dict||""
 export function wordsForSection(words,dict,section){const dictionary=String(dict||"").trim(),sectionScope=String(section||"").trim();if(!dictionary||!sectionScope)return[];return orderedWords(words).filter((word)=>dictionaryId(word)===dictionary&&sectionId(word)===sectionScope);}
 export function wordsForSet(words,dict,section,setNumber){const dictionary=String(dict||"").trim(),sectionScope=String(section||"").trim(),setId=String(setNumber||"").trim();if(!dictionary||!sectionScope||!setId)return[];return orderedWords(words).filter((word)=>dictionaryId(word)===dictionary&&sectionId(word)===sectionScope&&sourceSetId(word)===setId);}
 export function isWordEnabledInTestModes(word){return Boolean(word&&word.usedInTest===true);}
+export function practiceEligibleWords(words=[]){return (Array.isArray(words)?words:[]).filter(isWordEnabledInTestModes);}
 export function splitGroups(text){return String(text||"").split(/\s*[;；]\s*|\n+/g).map((value)=>value.trim()).filter(Boolean).map((value)=>value.replace(/^\s*\d+\s*(?:[.)]|[-–—])\s*/,"").trim());}
 function randomFrom(values){return values[Math.floor(Math.random()*values.length)];}
 function getTranslationSet(item){return new Set(splitGroups(item?.trans).map((value)=>value.toLowerCase()).filter(Boolean));}

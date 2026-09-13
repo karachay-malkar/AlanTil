@@ -1,0 +1,43 @@
+name: 16.6.7 Practice Songs Verify
+
+on:
+  push:
+    branches:
+      - agent/16.6.7-practice-songs-supabase
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check changed JavaScript
+        run: |
+          node --check packages/alantil-core/word-selection.js
+          node --check packages/alantil-core/practice-scope.js
+          node --check packages/alantil-core/test.js
+          node --check packages/alantil-core/match.js
+          node --check packages/alantil-core/song-supabase.js
+          node --check mobile/platform/songs.js
+          node --check src/features/songs/repository.js
+          node --check src/shared/state/practice-snapshot-store.js
+          node --check src/shared/progress/session-builders.js
+          node --check src/features/test/engine.js
+          node --check src/features/test/index.js
+          node --check src/features/match/engine.js
+          node --check src/features/match/index.js
+      - name: Run 16.6.7 regression tests
+        run: node --test mobile/tests/practice-mechanics-parity-16-6-7.test.mjs
+      - name: Build source archive
+        run: zip -qr AlanTil-16.6.7-practice-songs-supabase.zip . -x '.git/*' 'AlanTil-16.6.7-practice-songs-supabase.zip'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.7-practice-songs-supabase
+          path: AlanTil-16.6.7-practice-songs-supabase.zip
+          if-no-files-found: error
+          retention-days: 30
