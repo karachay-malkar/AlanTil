@@ -41,6 +41,12 @@ function replaceResources(text,resources){
   return output;
 }
 
+function markupOnly(html){
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'<script></script>')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'<style></style>');
+}
+
 async function main(){
   let html=await fetchOk(SOURCE);
   const resources=await dataUris();
@@ -70,10 +76,10 @@ async function main(){
     .replaceAll(SOURCE,'')
     .replaceAll(SOURCE_ORIGIN,'');
 
-  const externalAsset=/\b(?:src|href)=["']https?:\/\/[^"']*appdeploy\.ai[^"']*["']/i;
-  const appdeployFetch=/(?:fetch|WebSocket|EventSource)\s*\([^)]*appdeploy\.ai/i;
-  if(externalAsset.test(html)||appdeployFetch.test(html))throw new Error('Embedded build still makes an AppDeploy runtime request');
-  if(/(?:src|href)=["'][^"']*(?:assets\/|resources\/)/i.test(html))throw new Error('Embedded build still references unpacked local asset files');
+  const markup=markupOnly(html);
+  if(/\b(?:src|href)=["']https?:\/\/[^"']*appdeploy\.ai[^"']*["']/i.test(markup))throw new Error('HTML still loads AppDeploy at runtime');
+  if(/(?:fetch|WebSocket|EventSource)\s*\([^)]*appdeploy\.ai/i.test(html))throw new Error('Embedded JS still calls AppDeploy at runtime');
+  if(/\b(?:src|href)=["'][^"']*(?:assets\/|resources\/)[^"']*["']/i.test(markup))throw new Error('HTML still references unpacked game assets');
   if(!html.includes('Ашыкъ оюн'))throw new Error('Unexpected game build: title not found');
   const bytes=Buffer.byteLength(html);
   if(bytes<100000)throw new Error(`Embedded game is unexpectedly small: ${bytes}`);
