@@ -91,7 +91,7 @@ async function main(){
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#08100d">
+  <meta name="theme-color" content="#eee9df">
   <title>Ашыкъ оюн</title>
   <style>${css}</style>
 </head>
