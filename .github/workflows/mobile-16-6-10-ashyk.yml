@@ -22,13 +22,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Vendor Ashyk into Alan Til
+      - name: Build local Ashyk runtime
         run: node tools/vendor-ashyk-v45.mjs > vendor-ashyk.log 2>&1
-      - name: Upload vendor diagnostics
+      - name: Upload runtime diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ashyk-vendor-diagnostics
+          name: ashyk-runtime-diagnostics
           path: vendor-ashyk.log
           if-no-files-found: ignore
       - name: Internal integration contracts
@@ -56,7 +56,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/ashyk-game/index.html mobile/assets/ashyk-game/index.html
           if ! git diff --cached --quiet; then
-            git commit -m "16.6.10: embed Ashyk runtime [skip ci]"
+            git commit -m "16.6.10: fix embedded Ashyk runtime [skip ci]"
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
       - name: Package APK and complete source
@@ -66,7 +66,7 @@ jobs:
           sha256sum AlanTil-16.6.10.apk AlanTil-16.6.10-source.zip > AlanTil-16.6.10.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-16.6.10-internal-Ashyk
+          name: AlanTil-16.6.10-internal-Ashyk-fixed
           path: |
             AlanTil-16.6.10.apk
             AlanTil-16.6.10-source.zip

@@ -3,7 +3,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SOURCE='https://3d-5lcon9.v2.appdeploy.ai/';
-const SOURCE_ORIGIN=new URL(SOURCE).origin;
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const WEB_OUT=path.join(ROOT,'assets/ashyk-game/index.html');
 const MOBILE_OUT=path.join(ROOT,'mobile/assets/ashyk-game/index.html');
@@ -41,46 +40,78 @@ function replaceResources(text,resources){
   return output;
 }
 
-function markupOnly(html){
+function findAppScript(html){
+  const tags=[...html.matchAll(/<script\b[^>]*\bsrc=["'][^"']+["'][^>]*><\/script>/gi)].map(match=>match[0]);
+  const tag=tags.find(value=>{
+    const src=attribute(value,'src');
+    return !/data-appdeploy/i.test(value)&&/\.js(?:\?|$)/i.test(src)&&/assets\//i.test(src);
+  });
+  if(!tag)throw new Error('Could not locate the built Ashyk JavaScript asset');
+  return attribute(tag,'src');
+}
+
+function findAppStylesheet(html){
+  const tags=[...html.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]);
+  const tag=tags.find(value=>{
+    const rel=attribute(value,'rel').toLowerCase();
+    const href=attribute(value,'href');
+    return !/data-appdeploy/i.test(value)&&rel==='stylesheet'&&/\.css(?:\?|$)/i.test(href)&&/assets\//i.test(href);
+  });
+  if(!tag)throw new Error('Could not locate the built Ashyk stylesheet');
+  return attribute(tag,'href');
+}
+
+function visibleMarkup(html){
   return html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'<script></script>')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'<style></style>');
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'')
+    .replace(/<[^>]+>/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 
 async function main(){
-  let html=await fetchOk(SOURCE);
+  const sourceHtml=await fetchOk(SOURCE);
+  const scriptSrc=findAppScript(sourceHtml);
+  const stylesheetHref=findAppStylesheet(sourceHtml);
   const resources=await dataUris();
 
-  for(const tag of [...html.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0])){
-    const rel=attribute(tag,'rel').toLowerCase();
-    const href=attribute(tag,'href');
-    if(rel==='manifest'||rel==='modulepreload'||rel.includes('icon')){
-      html=html.replace(tag,'');
-      continue;
-    }
-    if(rel!=='stylesheet'||!href)continue;
-    const css=replaceResources(await fetchOk(new URL(href,SOURCE)),resources).replace(/<\/style/gi,'<\\/style');
-    html=html.replace(tag,`<style>${css}</style>`);
-  }
+  let js=replaceResources(await fetchOk(new URL(scriptSrc,SOURCE)),resources);
+  let css=replaceResources(await fetchOk(new URL(stylesheetHref,SOURCE)),resources);
 
-  for(const match of [...html.matchAll(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi)]){
-    const [tag,before,src,after]=match;
-    let js=replaceResources(await fetchOk(new URL(src,SOURCE)),resources);
-    if(/(?:from\s*["']\.\/|import\s*\(\s*["']\.\/)/.test(js))throw new Error(`Built script still contains relative JS imports: ${src}`);
-    js=js.replace(/<\/script/gi,'<\\/script');
-    const attrs=`${before}${after}`.replace(/\s*(?:crossorigin|integrity)(?:=["'][^"']*["'])?/gi,'').trim();
-    html=html.replace(tag,`<script${attrs?` ${attrs}`:''}>${js}</script>`);
-  }
+  if(/(?:from\s*["']\.\/|import\s*\(\s*["']\.\/)/.test(js))throw new Error(`Built script still contains relative JS imports: ${scriptSrc}`);
+  if(/appdeploy\.ai/i.test(js))throw new Error('Built application JavaScript unexpectedly contains an AppDeploy runtime dependency');
+  if(/\burl\([^)]*(?:assets\/|resources\/)/i.test(css))throw new Error('Built stylesheet still references unpacked assets');
 
-  html=replaceResources(html,resources)
-    .replaceAll(SOURCE,'')
-    .replaceAll(SOURCE_ORIGIN,'');
+  js=js.replace(/<\/script/gi,'<\\/script');
+  css=css.replace(/<\/style/gi,'<\\/style');
 
-  const markup=markupOnly(html);
-  if(/\b(?:src|href)=["']https?:\/\/[^"']*appdeploy\.ai[^"']*["']/i.test(markup))throw new Error('HTML still loads AppDeploy at runtime');
-  if(/(?:fetch|WebSocket|EventSource)\s*\([^)]*appdeploy\.ai/i.test(html))throw new Error('Embedded JS still calls AppDeploy at runtime');
-  if(/\b(?:src|href)=["'][^"']*(?:assets\/|resources\/)[^"']*["']/i.test(markup))throw new Error('HTML still references unpacked game assets');
-  if(!html.includes('Ашыкъ оюн'))throw new Error('Unexpected game build: title not found');
+  const html=`<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08100d">
+  <title>Ашыкъ оюн</title>
+  <style>${css}</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">${js}</script>
+</body>
+</html>
+`;
+
+  const scriptOpen=(html.match(/<script\b/gi)||[]).length;
+  const scriptClose=(html.match(/<\/script>/gi)||[]).length;
+  const styleOpen=(html.match(/<style\b/gi)||[]).length;
+  const styleClose=(html.match(/<\/style>/gi)||[]).length;
+  if(scriptOpen!==1||scriptClose!==1)throw new Error(`Unbalanced embedded scripts: ${scriptOpen}/${scriptClose}`);
+  if(styleOpen!==1||styleClose!==1)throw new Error(`Unbalanced embedded styles: ${styleOpen}/${styleClose}`);
+  if(/\b(?:src|href)=["'][^"']+(?:assets\/|resources\/|appdeploy\.ai)[^"']*["']/i.test(html))throw new Error('Embedded HTML still references external game assets');
+  if(/appdeploy\.ai|__APPDEPLOY_APP_ID|request-latency-log-v1/i.test(html))throw new Error('Embedded runtime still contains AppDeploy instrumentation');
+  const visible=visibleMarkup(html);
+  if(visible!=='Ашыкъ оюн')throw new Error(`Unexpected visible text outside the game root: ${visible.slice(0,160)}`);
   const bytes=Buffer.byteLength(html);
   if(bytes<100000)throw new Error(`Embedded game is unexpectedly small: ${bytes}`);
 
@@ -88,7 +119,7 @@ async function main(){
   await fs.mkdir(path.dirname(MOBILE_OUT),{recursive:true});
   await fs.writeFile(WEB_OUT,html);
   await fs.writeFile(MOBILE_OUT,html);
-  console.log(`Embedded Ashyk bundle: ${bytes} bytes`);
+  console.log(`Embedded Ashyk bundle: ${bytes} bytes; source JS ${scriptSrc}; CSS ${stylesheetHref}`);
 }
 
 await main();

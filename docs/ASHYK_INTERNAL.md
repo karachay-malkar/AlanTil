@@ -1,0 +1,3 @@
+# Alan Til 16.6.10 — internal Ashyk
+
+`Ашыкъ оюн` is shipped as a repository-owned self-contained runtime for Web and Mobile. Web loads `/assets/ashyk-game/index.html`; Mobile packages the byte-identical `mobile/assets/ashyk-game/index.html` into the APK. No AppDeploy runtime, overlay, service worker or remote game asset is allowed in the embedded HTML. Online mode uses Alan Til authentication and Supabase; against-computer mode remains available without the game host.

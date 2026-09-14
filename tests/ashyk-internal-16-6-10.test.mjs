@@ -8,6 +8,13 @@ const gamePath=new URL('../assets/ashyk-game/index.html',import.meta.url);
 const mobileGamePath=new URL('../mobile/assets/ashyk-game/index.html',import.meta.url);
 const migration=fs.readFileSync(new URL('../supabase/migrations/20260914_ashyk_online_rooms.sql',import.meta.url),'utf8');
 const hash=(bytes)=>crypto.createHash('sha256').update(bytes).digest('hex');
+const count=(text,re)=>(text.match(re)||[]).length;
+const visibleMarkup=(html)=>html
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
+  .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'')
+  .replace(/<[^>]+>/g,' ')
+  .replace(/\s+/g,' ')
+  .trim();
 
 test('web Practice opens the repository-owned Ashyk bundle',()=>{
   assert.match(practice,/data-ashyk-game/);
@@ -17,9 +24,17 @@ test('web Practice opens the repository-owned Ashyk bundle',()=>{
   assert.match(practice,/subscribeToAuth/);
   assert.match(practice,/ashyk-auth-request/);
   assert.match(practice,/alantil-auth/);
+
   const embedded=fs.readFileSync(gamePath);
+  const html=embedded.toString('utf8');
   assert.ok(embedded.length>100000,'embedded game must be a real self-contained build');
-  assert.doesNotMatch(embedded.toString('utf8'),/3d-5lcon9\.v2\.appdeploy\.ai/i);
+  assert.equal(count(html,/<script\b/gi),1,'runtime must have exactly one inline script');
+  assert.equal(count(html,/<\/script>/gi),1,'runtime script must be balanced');
+  assert.equal(count(html,/<style\b/gi),1,'runtime must have exactly one inline style block');
+  assert.equal(count(html,/<\/style>/gi),1,'runtime style must be balanced');
+  assert.doesNotMatch(html,/appdeploy\.ai|__APPDEPLOY_APP_ID|request-latency-log-v1/i);
+  assert.doesNotMatch(html,/\b(?:src|href)=["'][^"']+(?:assets\/|resources\/)[^"']*["']/i);
+  assert.equal(visibleMarkup(html),'Ашыкъ оюн','minified JavaScript must never leak into visible HTML');
   assert.equal(hash(embedded),hash(fs.readFileSync(mobileGamePath)),'web and mobile must ship the identical game engine');
 });
 
