@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 
 const practice=fs.readFileSync(new URL('../src/features/practice/index.js',import.meta.url),'utf8');
+const serviceWorker=fs.readFileSync(new URL('../service-worker.js',import.meta.url),'utf8');
 const gamePath=new URL('../assets/ashyk-game/index.html',import.meta.url);
 const mobileGamePath=new URL('../mobile/assets/ashyk-game/index.html',import.meta.url);
 const migration=fs.readFileSync(new URL('../supabase/migrations/20260914_ashyk_online_rooms.sql',import.meta.url),'utf8');
@@ -16,14 +17,16 @@ const visibleMarkup=(html)=>html
   .replace(/\s+/g,' ')
   .trim();
 
-test('web Practice opens a safe repository-owned Ashyk bundle',()=>{
+test('web Practice opens a fresh repository-owned Ashyk bundle',()=>{
   assert.match(practice,/data-ashyk-game/);
   assert.match(practice,/Ашыкъ оюн/);
-  assert.match(practice,/\/assets\/ashyk-game\/index\.html/);
+  assert.match(practice,/\/assets\/ashyk-game\/index\.html\?v=16\.6\.10\.2/);
   assert.doesNotMatch(practice,/appdeploy\.ai/i);
   assert.match(practice,/subscribeToAuth/);
   assert.match(practice,/ashyk-auth-request/);
   assert.match(practice,/alantil-auth/);
+  assert.match(serviceWorker,/const VERSION = "13\.15\.12\.7"/);
+  assert.match(serviceWorker,/NETWORK_FIRST_PATHS[\s\S]*"\/assets\/ashyk-game\/index\.html"/);
 
   const embedded=fs.readFileSync(gamePath);
   const html=embedded.toString('utf8');

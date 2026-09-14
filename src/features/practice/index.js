@@ -3,7 +3,7 @@ import { getCurrentAuthState, subscribeToAuth } from "../../shared/auth/auth-ser
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
 
-const ASHYK_GAME_PATH = "/assets/ashyk-game/index.html";
+const ASHYK_GAME_PATH = "/assets/ashyk-game/index.html?v=16.6.10.2";
 
 let controller = null;
 let gameController = null;

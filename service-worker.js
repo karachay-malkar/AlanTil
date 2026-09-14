@@ -1,4 +1,4 @@
-const VERSION = "13.15.12.6";
+const VERSION = "13.15.12.7";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
@@ -16,6 +16,7 @@ const CORE_ASSETS = [
 ];
 
 const NETWORK_FIRST_PATHS = new Set([
+  "/assets/ashyk-game/index.html",
   "/src/config/analytics.js",
   "/src/config/supabase.js",
   "/src/config/words.js",
