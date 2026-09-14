@@ -23,7 +23,14 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Vendor Ashyk into Alan Til
-        run: node tools/vendor-ashyk-v45.mjs
+        run: node tools/vendor-ashyk-v45.mjs > vendor-ashyk.log 2>&1
+      - name: Upload vendor diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ashyk-vendor-diagnostics
+          path: vendor-ashyk.log
+          if-no-files-found: ignore
       - name: Internal integration contracts
         run: node --test tests/ashyk-internal-16-6-10.test.mjs mobile/tests/ashyk-internal-16-6-10.test.mjs
       - name: Existing Practice regression
