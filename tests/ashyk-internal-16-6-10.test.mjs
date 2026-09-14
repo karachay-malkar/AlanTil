@@ -16,7 +16,7 @@ const visibleMarkup=(html)=>html
   .replace(/\s+/g,' ')
   .trim();
 
-test('web Practice opens the repository-owned Ashyk bundle',()=>{
+test('web Practice opens a safe repository-owned Ashyk bundle',()=>{
   assert.match(practice,/data-ashyk-game/);
   assert.match(practice,/Ашыкъ оюн/);
   assert.match(practice,/\/assets\/ashyk-game\/index\.html/);
@@ -28,10 +28,10 @@ test('web Practice opens the repository-owned Ashyk bundle',()=>{
   const embedded=fs.readFileSync(gamePath);
   const html=embedded.toString('utf8');
   assert.ok(embedded.length>100000,'embedded game must be a real self-contained build');
-  assert.equal(count(html,/<script\b/gi),1,'runtime must have exactly one inline script');
-  assert.equal(count(html,/<\/script>/gi),1,'runtime script must be balanced');
-  assert.equal(count(html,/<style\b/gi),1,'runtime must have exactly one inline style block');
-  assert.equal(count(html,/<\/style>/gi),1,'runtime style must be balanced');
+  assert.match(html,/<script type="module">/i);
+  assert.equal(count(html,/<\/script>/gi),1,'only the wrapper may contain a literal closing script tag');
+  assert.match(html,/<style>/i);
+  assert.equal(count(html,/<\/style>/gi),1,'only the wrapper may contain a literal closing style tag');
   assert.doesNotMatch(html,/appdeploy\.ai|__APPDEPLOY_APP_ID|request-latency-log-v1/i);
   assert.doesNotMatch(html,/\b(?:src|href)=["'][^"']+(?:assets\/|resources\/)[^"']*["']/i);
   assert.equal(visibleMarkup(html),'Ашыкъ оюн','minified JavaScript must never leak into visible HTML');

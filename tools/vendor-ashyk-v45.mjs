@@ -102,12 +102,10 @@ async function main(){
 </html>
 `;
 
-  const scriptOpen=(html.match(/<script\b/gi)||[]).length;
   const scriptClose=(html.match(/<\/script>/gi)||[]).length;
-  const styleOpen=(html.match(/<style\b/gi)||[]).length;
   const styleClose=(html.match(/<\/style>/gi)||[]).length;
-  if(scriptOpen!==1||scriptClose!==1)throw new Error(`Unbalanced embedded scripts: ${scriptOpen}/${scriptClose}`);
-  if(styleOpen!==1||styleClose!==1)throw new Error(`Unbalanced embedded styles: ${styleOpen}/${styleClose}`);
+  if(!html.includes('<script type="module">')||scriptClose!==1)throw new Error(`Unsafe embedded script boundary: closing tags=${scriptClose}`);
+  if(!html.includes('<style>')||styleClose!==1)throw new Error(`Unsafe embedded style boundary: closing tags=${styleClose}`);
   if(/\b(?:src|href)=["'][^"']+(?:assets\/|resources\/|appdeploy\.ai)[^"']*["']/i.test(html))throw new Error('Embedded HTML still references external game assets');
   if(/appdeploy\.ai|__APPDEPLOY_APP_ID|request-latency-log-v1/i.test(html))throw new Error('Embedded runtime still contains AppDeploy instrumentation');
   const visible=visibleMarkup(html);
