@@ -34,7 +34,8 @@ test('Guide story steps center the exact story before rendering a target-depende
   assert.match(webPathNav,/storyTabs[\s\S]*scroll-snap-type:x proximity/);
   assert.match(pathScreen,/scrollToStory=\(type,animated=true\)=>new Promise/);
   assert.match(pathScreen,/layout\.x\+layout\.width\/2-viewport\/2/);
-  assert.match(pathScreen,/await storyTabsControlRef\.current\?\.scrollToStory\?\.\(next\.story,true\)/);
+  assert.match(pathScreen,/void storyTabsControlRef\.current\?\.scrollToStory\?\.\(next\.story,true\)/);
+  assert.doesNotMatch(pathScreen,/setTimeout\(\(\)=>resolve\(true\),animated\?190:0\)/);
   assert.match(pathScreen,/paddingHorizontal:0,gap:theme\.chrome\.storyTabs\.gap/);
   assert.match(pathScreen,/storyEdgeStart/);
   assert.match(pathScreen,/storyEdgeEnd/);

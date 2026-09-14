@@ -42,7 +42,7 @@ function ensureTargetRef(map,key){if(!map.has(key))map.set(key,{current:null});r
 function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef}){
   const type=useSemanticTypography(),{width}=useWindowDimensions(),fontSize=type.caption.fontSize,scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
   const syncEdges=(offset=offsetRef.current)=>{const max=Math.max(0,contentRef.current-viewportRef.current),next={start:max>3&&offset>3,end:max>3&&offset<max-3};setEdges(current=>current.start===next.start&&current.end===next.end?current:next);};
-  const scrollToStory=(type,animated=true)=>new Promise(resolve=>{const layout=layoutsRef.current.get(type),viewport=viewportRef.current;if(!layout||!viewport){resolve(false);return;}const max=Math.max(0,contentRef.current-viewport),x=Math.max(0,Math.min(max,layout.x+layout.width/2-viewport/2));offsetRef.current=x;scrollRef.current?.scrollTo({x,animated});syncEdges(x);setTimeout(()=>resolve(true),animated?190:0);});
+  const scrollToStory=(type,animated=true)=>new Promise(resolve=>{const layout=layoutsRef.current.get(type),viewport=viewportRef.current;if(!layout||!viewport){resolve(false);return;}const max=Math.max(0,contentRef.current-viewport),x=Math.max(0,Math.min(max,layout.x+layout.width/2-viewport/2));offsetRef.current=x;scrollRef.current?.scrollTo({x,animated});syncEdges(x);resolve(true);});
   useImperativeHandle(controlRef,()=>({scrollToStory}),[route.storyOrder,width]);
   useEffect(()=>{const frame=requestAnimationFrame(()=>{void scrollToStory(activeStory,false);});return()=>cancelAnimationFrame(frame);},[activeStory,width]);
   return <View ref={targetRef} collapsable={false} style={styles.storyTabsShell}>
@@ -242,7 +242,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[guideStateReady,setGuideStateReady]=useState(false),[generalCompleted,setGeneralCompleted]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
   const stationWindow=useRef(createPathWindow(defaultStory)).current;
-  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),restoreGenerationRef=useRef(0),restoreInFlightRef=useRef(''),storyChangeRef=useRef(0),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
+  const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),restoreGenerationRef=useRef(0),restoreInFlightRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
   const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
   for(const storyType of route.storyOrder||[])ensureTargetRef(storyTargetRefs,storyType);
 
@@ -274,7 +274,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     return()=>{cancelled=true;restoreGenerationRef.current+=1;if(geometryFrameRef.current){cancelAnimationFrame(geometryFrameRef.current);geometryFrameRef.current=0;}};
   },[activeStory,pathReady,guideStateReady,generalCompleted,route]);
 
-  const changeStory=async(nextStory)=>{if(!nextStory||nextStory===storyRef.current)return;const request=++storyChangeRef.current,fromStory=storyRef.current;await saveNativeStoryScroll(fromStory,offsetRef.current);if(request!==storyChangeRef.current)return;await saveNativeActiveStory(nextStory);if(request!==storyChangeRef.current)return;offsetRef.current=0;setSteleOpen(false);setActiveStory(nextStory);};
+  const changeStory=(nextStory)=>{if(!nextStory||nextStory===storyRef.current)return;const fromStory=storyRef.current,fromOffset=offsetRef.current;storyRef.current=nextStory;offsetRef.current=0;setSteleOpen(false);setActiveStory(nextStory);void saveNativeStoryScroll(fromStory,fromOffset).catch(()=>{});void saveNativeActiveStory(nextStory).catch(()=>{});};
   const openStation=async(station)=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);const runtime=getNativeGeneralGuideRuntime();if(runtime.active&&runtime.phase==='await-station')setNativeGeneralGuideRuntime({phase:'station-study'});onOpenStation(station);};
   const openWordList=async()=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);onOpenWordList?.(activeStory);};
   const openStele=()=>setSteleOpen(true);
@@ -369,10 +369,11 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     if(currentGuide.id==='stages'){await stopGuide();return;}
     const nextIndex=guideIndex+1;if(nextIndex>=GENERAL_GUIDE_STEPS.length){stopGuide();return;}
     const next=GENERAL_GUIDE_STEPS[nextIndex];setSteleOpen(false);
-    if(next?.story&&route.stories?.[next.story]){if(next.story!==activeStory)await changeStory(next.story);await storyTabsControlRef.current?.scrollToStory?.(next.story,true);}
-    if(next?.id==='stages')selectVisibleGuideStation();
+    if(next?.story&&route.stories?.[next.story]){if(next.story!==storyRef.current)void changeStory(next.story);void storyTabsControlRef.current?.scrollToStory?.(next.story,true);}
     const storyIndex=next?.story?Math.max(0,GENERAL_GUIDE_STEPS.filter(step=>step?.id?.startsWith('story:')).findIndex(step=>step.story===next.story)):getNativeGeneralGuideRuntime().storyIndex;
-    setNativeGeneralGuideRuntime({active:true,phase:next?.id?.startsWith('story:')?'story':next?.id||'',storyIndex});setGuideIndex(nextIndex);
+    setNativeGeneralGuideRuntime({active:true,phase:next?.id?.startsWith('story:')?'story':next?.id||'',storyIndex});
+    if(next?.id==='stages'){selectVisibleGuideStation();requestAnimationFrame(()=>setGuideIndex(nextIndex));return;}
+    setGuideIndex(nextIndex);
   };
 
   const routeItems=[];

@@ -42,13 +42,16 @@ test('16.6.3 guide supports interactive spotlight proxies and continuous target 
   const source=read('mobile/ui/guide.js');
   assert.match(source,/interactiveTarget/);
   assert.match(source,/targetProxy/);
-  assert.match(source,/setInterval\(measure,140\)/);
+  assert.match(source,/timers=\[32,96,180,320\]/);
+  assert.match(source,/setInterval\(measure,180\)/);
+  assert.match(source,/Promise\.all\(targetDefs\.map/);
 });
 
 test('16.6.3 learn restores web card presentation primitives',()=>{
   const source=read('mobile/screens/learn.js');
-  assert.match(source,/rotateY:frontRotate/);
-  assert.match(source,/rotateY:backRotate/);
+  assert.match(source,/cardRotate=flip\.interpolate/);
+  assert.match(source,/styles\.cardFlip/);
+  assert.match(source,/transform:\[\{rotateY:'180deg'\}\]/);
   assert.match(source,/backfaceVisibility:'hidden'/);
   assert.match(source,/groups\.length>1/);
   assert.match(source,/unknownTarget/);
