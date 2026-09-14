@@ -2,7 +2,7 @@
   "expo": {
     "name": "Osuyat",
     "slug": "alan-til",
-    "version": "16.6.9",
+    "version": "16.6.10",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
@@ -26,7 +26,7 @@
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 34,
+      "versionCode": 35,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -51,10 +51,10 @@
     },
     "ios": {
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "34"
+      "buildNumber": "35"
     },
     "extra": {
-      "releaseVersion": "16.6.9",
+      "releaseVersion": "16.6.10",
       "architecture": "web-13.15.12-shared-core",
       "preview": "expo-web-and-native-preview"
     },

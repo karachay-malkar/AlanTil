@@ -6,4 +6,5 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 const config = getDefaultConfig(projectRoot);
 config.watchFolders = [workspaceRoot];
 config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules')];
+if (!config.resolver.assetExts.includes('html')) config.resolver.assetExts.push('html');
 module.exports = config;

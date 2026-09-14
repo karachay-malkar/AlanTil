@@ -1,0 +1,67 @@
+name: Alan Til 16.6.10 internal Ashyk
+
+on:
+  push:
+    branches: [agent/16.6.10-ashyk-internal]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Vendor Ashyk into Alan Til
+        run: node tools/vendor-ashyk-v45.mjs
+      - name: Internal integration contracts
+        run: node --test tests/ashyk-internal-16-6-10.test.mjs mobile/tests/ashyk-internal-16-6-10.test.mjs
+      - name: Existing Practice regression
+        run: node --test mobile/tests/practice-mechanics-parity-16-6-7.test.mjs mobile/tests/mobile-polish-16-6-8.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Verify Android JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist-android
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Build release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Commit embedded game asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/ashyk-game/index.html mobile/assets/ashyk-game/index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "16.6.10: embed Ashyk runtime [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Package APK and complete source
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.6.10.apk
+          git archive --format=zip --output AlanTil-16.6.10-source.zip HEAD
+          sha256sum AlanTil-16.6.10.apk AlanTil-16.6.10-source.zip > AlanTil-16.6.10.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.10-internal-Ashyk
+          path: |
+            AlanTil-16.6.10.apk
+            AlanTil-16.6.10-source.zip
+            AlanTil-16.6.10.sha256
+          if-no-files-found: error

@@ -3,8 +3,7 @@ import { getCurrentAuthState, subscribeToAuth } from "../../shared/auth/auth-ser
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
 
-const ASHYK_GAME_URL = "https://3d-5lcon9.v2.appdeploy.ai/";
-const ASHYK_GAME_ORIGIN = "https://3d-5lcon9.v2.appdeploy.ai";
+const ASHYK_GAME_PATH = "/assets/ashyk-game/index.html";
 
 let controller = null;
 let gameController = null;
@@ -31,7 +30,6 @@ function closeAshykGame() {
 
 function openAshykGame() {
   closeAshykGame();
-
   gameController = new AbortController();
   const overlay = document.createElement("section");
   overlay.className = "ashykGameOverlay";
@@ -43,9 +41,8 @@ function openAshykGame() {
       </button>
       <strong>Ашыкъ оюн</strong>
     </header>
-    <iframe class="ashykGameFrame" src="${ASHYK_GAME_URL}" title="Ашыкъ оюн" allow="fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <iframe class="ashykGameFrame" src="${ASHYK_GAME_PATH}" title="Ашыкъ оюн" allow="fullscreen" referrerpolicy="same-origin"></iframe>
   `;
-
   document.body.appendChild(overlay);
   gameOverlay = overlay;
 
@@ -54,17 +51,15 @@ function openAshykGame() {
     frame?.contentWindow?.postMessage({
       type: "alantil-auth",
       session: publicGameSession(state?.session),
-    }, ASHYK_GAME_ORIGIN);
+    }, window.location.origin);
   };
 
   frame?.addEventListener("load", () => postSession(), { signal: gameController.signal });
   overlay.querySelector(".ashykGameBack")?.addEventListener("click", closeAshykGame, { signal: gameController.signal });
-
   window.addEventListener("message", (event) => {
-    if (event.source !== frame?.contentWindow || event.data?.type !== "ashyk-auth-request") return;
+    if (event.origin !== window.location.origin || event.source !== frame?.contentWindow || event.data?.type !== "ashyk-auth-request") return;
     postSession();
   }, { signal: gameController.signal });
-
   authUnsubscribe = subscribeToAuth((state) => postSession(state));
 }
 
@@ -84,7 +79,6 @@ export function mount(context) {
         <button class="menuItem" type="button" data-ashyk-game><span class="menuIcon">${uiIcon("puzzle")}</span><span class="menuItemText"><strong>Ашыкъ оюн</strong><small>3D · Alan → RU</small></span></button>
       </div>`,
   });
-
   context.root.querySelectorAll("[data-practice-route]").forEach((button) => {
     button.addEventListener("click", () => {
       const params = button.dataset.dictionarySlug ? { dictionarySlug: button.dataset.dictionarySlug } : {};

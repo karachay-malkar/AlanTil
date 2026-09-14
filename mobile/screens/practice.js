@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Asset } from 'expo-asset';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { Screen } from '../ui/components.js';
@@ -10,7 +11,7 @@ import { msg } from '../i18n.js';
 import { theme } from '../ui/theme.js';
 
 const C=theme.colors;
-const ASHYK_GAME_URL='https://3d-5lcon9.v2.appdeploy.ai/';
+const ASHYK_GAME_ASSET=require('../assets/ashyk-game/index.html');
 
 function publicGameSession(session){
   if(!session?.access_token||!session?.refresh_token||!session?.user?.id)return null;
@@ -19,7 +20,7 @@ function publicGameSession(session){
 
 export function PracticeScreen({settings={},openTest,openMatch,openFavorites,openSongs}){
   const m=(key,params)=>msg(settings,key,params),insets=useSafeAreaInsets(),rowProps={style:styles.menuRow,titleStyle:styles.menuTitle,subtitleStyle:styles.menuSubtitle,leadingStyle:styles.menuLeading};
-  const [gameOpen,setGameOpen]=useState(false),[authSession,setAuthSession]=useState(()=>getNativeAuthSession());
+  const [gameOpen,setGameOpen]=useState(false),[gameUri,setGameUri]=useState(''),[gameError,setGameError]=useState(''),[authSession,setAuthSession]=useState(()=>getNativeAuthSession());
   const gameRef=useRef(null);
 
   const postAuth=(session=authSession)=>{
@@ -27,6 +28,17 @@ export function PracticeScreen({settings={},openTest,openMatch,openFavorites,ope
   };
 
   useEffect(()=>subscribeNativeAuth((session)=>{setAuthSession(session||null);if(gameOpen)postAuth(session||null);}),[gameOpen]);
+
+  const openGame=async()=>{
+    setGameOpen(true);setGameError('');setGameUri('');
+    try{
+      const asset=Asset.fromModule(ASHYK_GAME_ASSET);
+      if(!asset.localUri)await asset.downloadAsync();
+      const uri=asset.localUri||asset.uri||'';
+      if(!uri)throw new Error('Local Ashyk asset is unavailable');
+      setGameUri(uri);
+    }catch{setGameError('Не удалось открыть локальный модуль Ашыкъ оюн.');}
+  };
 
   const onGameMessage=(event)=>{
     try{
@@ -41,7 +53,7 @@ export function PracticeScreen({settings={},openTest,openMatch,openFavorites,ope
       <ListRow {...rowProps} title={m('mobile.practice.match')} subtitle={m('mobile.practice.match_sub')} leading={<PuzzleIcon size={23} color={C.text2}/>} onPress={openMatch}/>
       <ListRow {...rowProps} title={m('mobile.practice.favorites')} subtitle={m('mobile.practice.favorites_sub')} leading={<FavoriteIcon size={23} color={C.favorite} filled/>} onPress={openFavorites}/>
       <ListRow {...rowProps} title={m('mobile.practice.songs')} subtitle={m('mobile.practice.songs_sub')} leading={<MusicIcon size={23} color={C.text2}/>} onPress={openSongs}/>
-      <ListRow {...rowProps} title="Ашыкъ оюн" subtitle="3D · Alan → RU" leading={<PracticeIcon size={23} color={C.text2}/>} onPress={()=>setGameOpen(true)}/>
+      <ListRow {...rowProps} title="Ашыкъ оюн" subtitle="3D · Alan → RU" leading={<PracticeIcon size={23} color={C.text2}/>} onPress={openGame}/>
     </View></ScrollView></Screen>
     <Modal visible={gameOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={()=>setGameOpen(false)}>
       <SafeAreaView style={styles.gameSafe} edges={['top','right','bottom','left']}>
@@ -52,16 +64,19 @@ export function PracticeScreen({settings={},openTest,openMatch,openFavorites,ope
           <Text style={styles.gameTitle}>Ашыкъ оюн</Text>
           <View style={styles.headerSpacer}/>
         </View>
-        <WebView
+        {gameUri?<WebView
           ref={gameRef}
-          source={{uri:ASHYK_GAME_URL}}
+          source={{uri:gameUri}}
           style={styles.gameWeb}
-          originWhitelist={['https://*']}
+          originWhitelist={['*']}
           javaScriptEnabled
           domStorageEnabled
+          allowFileAccess
+          allowUniversalAccessFromFileURLs
+          mixedContentMode="never"
           onLoadEnd={()=>postAuth()}
           onMessage={onGameMessage}
-        />
+        />:<View style={styles.gameLoading}>{gameError?<Text style={styles.gameError}>{gameError}</Text>:<><ActivityIndicator color={C.accent}/><Text style={styles.gameLoadingText}>Открываем Ашыкъ оюн…</Text></>}</View>}
       </SafeAreaView>
     </Modal>
   </>;
@@ -80,4 +95,7 @@ const styles=StyleSheet.create({
   gameTitle:{flex:1,textAlign:'center',fontSize:15,fontWeight:'800',color:C.text1},
   headerSpacer:{width:44},
   gameWeb:{flex:1,backgroundColor:C.appBg},
+  gameLoading:{flex:1,alignItems:'center',justifyContent:'center',gap:12,padding:24,backgroundColor:C.appBg},
+  gameLoadingText:{fontSize:12,color:C.text2},
+  gameError:{fontSize:12,lineHeight:18,textAlign:'center',color:C.dangerStrong||C.text2},
 });
