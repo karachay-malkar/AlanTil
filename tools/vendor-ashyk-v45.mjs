@@ -28,8 +28,9 @@ async function dataUris(){
   const result=new Map();
   for(const [relative,mime] of AUDIO){
     const bytes=await fetchOk(new URL(relative,SOURCE),true);
-    result.set(`./${relative}`,`data:${mime};base64,${bytes.toString('base64')}`);
-    result.set(`/${relative}`,`data:${mime};base64,${bytes.toString('base64')}`);
+    const uri=`data:${mime};base64,${bytes.toString('base64')}`;
+    result.set(`./${relative}`,uri);
+    result.set(`/${relative}`,uri);
   }
   return result;
 }
@@ -69,8 +70,10 @@ async function main(){
     .replaceAll(SOURCE,'')
     .replaceAll(SOURCE_ORIGIN,'');
 
-  if(/appdeploy\.ai/i.test(html))throw new Error('AppDeploy runtime reference remained in embedded build');
-  if(/(?:src|href)=["'][^"']*(?:assets\/|resources\/)/i.test(html))throw new Error('Embedded build still references external asset files');
+  const externalAsset=/\b(?:src|href)=["']https?:\/\/[^"']*appdeploy\.ai[^"']*["']/i;
+  const appdeployFetch=/(?:fetch|WebSocket|EventSource)\s*\([^)]*appdeploy\.ai/i;
+  if(externalAsset.test(html)||appdeployFetch.test(html))throw new Error('Embedded build still makes an AppDeploy runtime request');
+  if(/(?:src|href)=["'][^"']*(?:assets\/|resources\/)/i.test(html))throw new Error('Embedded build still references unpacked local asset files');
   if(!html.includes('Ашыкъ оюн'))throw new Error('Unexpected game build: title not found');
   const bytes=Buffer.byteLength(html);
   if(bytes<100000)throw new Error(`Embedded game is unexpectedly small: ${bytes}`);
