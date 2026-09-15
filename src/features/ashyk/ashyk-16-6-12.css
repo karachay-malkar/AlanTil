@@ -1,0 +1,42 @@
+.appShell[data-screen="ashyk"] .ashykScore{top:calc(var(--safe-top) + var(--header-h) + 6px);left:8px;transform:none}
+.appShell[data-screen="ashyk"] .ashykTurnTimer{position:absolute;z-index:19;top:calc(var(--safe-top) + var(--header-h) + 10px);left:50%;transform:translateX(-50%);min-width:48px;padding:7px 10px;border:1px solid color-mix(in srgb,var(--line) 48%,transparent);border-radius:999px;background:color-mix(in srgb,var(--surface-0) 58%,transparent);color:var(--accent-strong);font:850 11px/1 var(--font-terminal);text-align:center;-webkit-backdrop-filter:blur(var(--ui-system-control-blur));backdrop-filter:blur(var(--ui-system-control-blur));box-shadow:0 4px 18px rgba(41,39,33,.05);pointer-events:none}
+.appShell[data-screen="ashyk"] .ashykTurnTimer.danger{border-color:var(--danger-border);background:color-mix(in srgb,var(--surface-0) 72%,var(--danger-soft));color:var(--danger-strong)}
+.appShell[data-screen="ashyk"] .ashykMenuButton{position:absolute;z-index:20;top:calc(var(--safe-top) + var(--header-h) + 7px);right:8px;width:34px;height:34px;padding:0;border:1px solid color-mix(in srgb,var(--line) 52%,transparent);border-radius:50%;background:color-mix(in srgb,var(--surface-0) 58%,transparent);color:var(--text-2);font:800 12px/1 var(--font-terminal);letter-spacing:.02em;-webkit-backdrop-filter:blur(var(--ui-system-control-blur));backdrop-filter:blur(var(--ui-system-control-blur));box-shadow:0 4px 18px rgba(41,39,33,.05)}
+.appShell[data-screen="ashyk"] .ashykMenuButton:active{transform:scale(.95)}
+.appShell[data-screen="ashyk"] .ashykShotIcons{position:absolute;z-index:20;top:calc(var(--safe-top) + var(--header-h) + 48px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:3px;padding:3px;border:1px solid color-mix(in srgb,var(--line) 48%,transparent);border-radius:999px;background:color-mix(in srgb,var(--surface-0) 58%,transparent);-webkit-backdrop-filter:blur(var(--ui-system-control-blur));backdrop-filter:blur(var(--ui-system-control-blur));box-shadow:0 4px 18px rgba(41,39,33,.05)}
+.appShell[data-screen="ashyk"] .ashykShotIcons button,.appShell[data-screen="ashyk"] .ashykShotInfo{width:30px;height:30px;display:grid;place-items:center;flex:0 0 30px;border:0;border-radius:50%;background:transparent;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykShotInfo{opacity:.55;cursor:default}
+.appShell[data-screen="ashyk"] .ashykShotIcons button{appearance:none;cursor:pointer;color:var(--text-2);transition:transform var(--duration-fast),background var(--duration-fast),color var(--duration-fast)}
+.appShell[data-screen="ashyk"] .ashykShotIcons button.active{background:var(--accent-soft);color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykShotIcons button:active:not(:disabled){transform:scale(.92)}
+.appShell[data-screen="ashyk"] .ashykShotIcons button:disabled{cursor:default}
+.appShell[data-screen="ashyk"] .ashykShotSvg{display:block;overflow:visible}
+.appShell[data-screen="ashyk"] .ashykTopControls,.appShell[data-screen="ashyk"] .ashykShotControl,.appShell[data-screen="ashyk"] .ashykShotTimer{display:none!important}
+.appShell[data-screen="ashyk"] .ashykStatus{padding:7px 10px;max-width:min(300px,calc(100% - 16px))}
+.appShell[data-screen="ashyk"] .ashykStatus strong{font-size:10px;font-weight:720}
+.appShell[data-screen="ashyk"] .ashykDialog.ashykHelp{width:min(100%,600px);padding:0;overflow:hidden}
+.appShell[data-screen="ashyk"] .ashykHelp>header{position:sticky;top:0;z-index:2;padding:14px 16px 10px;background:var(--surface-0);border-bottom:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykHelp>header h2{margin:0}
+.appShell[data-screen="ashyk"] .ashykHelpSection{padding:14px 16px;border-bottom:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykHelpSection h3{margin:0 0 6px;color:var(--text-1);font-size:14px;line-height:1.25;font-weight:820}
+.appShell[data-screen="ashyk"] .ashykHelpSection p{margin:0;color:var(--text-2);font-size:12px;line-height:1.55}
+.appShell[data-screen="ashyk"] .ashykHelpControls{display:grid;gap:7px;margin-top:11px}
+.appShell[data-screen="ashyk"] .ashykHelpControls>div{display:grid;grid-template-columns:38px 1fr;align-items:center;gap:10px;min-height:44px;padding:6px 8px;border:1px solid var(--line-soft);border-radius:12px;background:color-mix(in srgb,var(--paper) 45%,transparent)}
+.appShell[data-screen="ashyk"] .ashykHelpIcon{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--surface-0);color:var(--text-2)}
+.appShell[data-screen="ashyk"] .ashykHelpControls p{display:grid;gap:2px}
+.appShell[data-screen="ashyk"] .ashykHelpControls b{font-size:11px;color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykHelpControls small{font-size:10px;line-height:1.35;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykFacesGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:11px}
+.appShell[data-screen="ashyk"] .ashykFaceRule{min-height:48px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 8px;padding:8px 10px;border:1px solid var(--line-soft);border-radius:12px;background:color-mix(in srgb,var(--paper) 45%,transparent)}
+.appShell[data-screen="ashyk"] .ashykFaceRule strong{font-size:12px;color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykFaceRule span{font:800 10px/1 var(--font-terminal);color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykFaceRule small{grid-column:1/-1;font-size:9px;line-height:1.25;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykFaceRule.kyt{border-color:color-mix(in srgb,var(--accent-strong) 30%,var(--line-soft));background:color-mix(in srgb,var(--accent-soft) 45%,var(--surface-0))}
+.appShell[data-screen="ashyk"] .ashykHelpKyt{background:color-mix(in srgb,var(--accent-soft) 28%,transparent)}
+.appShell[data-screen="ashyk"] .ashykHelp>.ashykSecondary{width:calc(100% - 32px);margin:14px 16px 16px}
+.appShell[data-screen="ashyk"] .ashykMenu,.appShell[data-screen="ashyk"] .ashykAppearance{width:min(100%,360px)}
+.appShell[data-screen="ashyk"] .ashykMenuActions{display:grid;gap:8px}
+.appShell[data-screen="ashyk"] .ashykAppearanceRow{display:grid;gap:8px}
+.appShell[data-screen="ashyk"] .ashykAppearanceRow>span{font:780 9px/1 var(--font-terminal);letter-spacing:.1em;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykFinish .ashykKytResult{color:var(--accent-strong);font-weight:800}
+@media(max-width:560px){.appShell[data-screen="ashyk"] .ashykScore{left:6px}.appShell[data-screen="ashyk"] .ashykScore span{display:none}.appShell[data-screen="ashyk"] .ashykMenuButton{right:6px}.appShell[data-screen="ashyk"] .ashykShotIcons{top:calc(var(--safe-top) + var(--header-h) + 46px)}.appShell[data-screen="ashyk"] .ashykFacesGrid{grid-template-columns:1fr 1fr}.appShell[data-screen="ashyk"] .ashykHelpSection{padding-inline:14px}}

@@ -4,7 +4,7 @@ import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.6.11";
+const RELEASE_VERSION = "16.6.12";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
