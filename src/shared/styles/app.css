@@ -15,7 +15,8 @@
 @import url("../../features/learn/learn.css?v=13.9.0") layer(features);
 @import url("../../features/test/test.css?v=13.10.12") layer(features);
 @import url("../../features/match/match.css?v=13.9.0") layer(features);
-@import url("../../features/practice/practice.css?v=13.9.0") layer(features);
+@import url("../../features/practice/practice.css?v=16.6.11") layer(features);
+@import url("../../features/ashyk/ashyk.css?v=16.6.11") layer(features);
 @import url("../../features/profile/profile.css?v=13.15.10.1") layer(features);
 @import url("../../features/admin/admin.css?v=13.15.10.4") layer(features);
 @import url("../../features/account/account.css?v=13.10.2") layer(features);

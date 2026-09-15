@@ -22,12 +22,14 @@ import { AuthChoiceScreen } from './screens/auth-choice.js';
 import { PathScreen } from './screens/path.js';
 import { StoryWordListScreen } from './screens/story-word-list.js';
 import { PracticeScreen } from './screens/practice.js';
+import { AshykScreen } from './screens/ashyk.js';
 import { FavoritesScreen } from './screens/favorites.js';
 import { GeneralMatchFlow, GeneralTestFlow } from './screens/practice-games.js';
 import { bootstrapNativeAuth, subscribeNativeAuth } from './platform/auth.js';
 import { trackNativeEvent, trackNativeScreen } from './platform/analytics.js';
 import { synchronizeNativeAccount } from './platform/cloud-sync.js';
 import { bootstrapNativeDictionary } from './platform/dictionary.js';
+import { nativeSupabase } from './platform/supabase.js';
 import { saveNativeActiveStory } from './platform/path-state.js';
 import { setNativeSessionNamespace } from './platform/session-store.js';
 import { hasCompletedNativeAuthChoice, loadNativeFavorites, loadNativeSettings, loadNativeSongFavorites, markNativeAuthChoiceComplete, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './platform/storage.js';
@@ -58,7 +60,8 @@ export default function AppRoot(){
   else if(tab==='practice'&&screen==='match'){const context=practiceGameContext||{words:displayWords,scopeId:'all'};content=<GeneralMatchFlow words={context.words} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={closePracticeGame}/>;showNav=false;}
   else if(tab==='practice'&&screen==='favorites'){content=<FavoritesScreen words={displayWords} settings={settings} favorites={favorites} setFavorites={setFavorites} onBack={()=>setScreen('home')} onLearn={(rows,mode)=>{setLearnContext({words:rows,mode,station:null,returnTo:'favorites'});setScreen('learn');}}/>;showNav=false;}
   else if(tab==='practice'&&screen==='songs'){content=<SongsScreen words={displayWords} settings={settings} onBack={()=>setScreen('home')} favoriteIds={songFavorites} onFavorite={(id)=>setSongFavorites(toggleFavorite(songFavorites,id).ids)}/>;showNav=false;}
-  else if(tab==='practice'){content=<PracticeScreen settings={settings} openTest={()=>openPracticeGame('test',displayWords,'home','all')} openMatch={()=>openPracticeGame('match',displayWords,'home','all')} openFavorites={()=>setScreen('favorites')} openSongs={()=>setScreen('songs')}/>;}
+  else if(tab==='practice'&&screen==='ashyk'){content=<AshykScreen locale={settings.interface_language_code} words={words} userId={authUserId.current} supabaseClient={nativeSupabase} onBack={()=>setScreen('home')}/>;showNav=false;}
+  else if(tab==='practice'){content=<PracticeScreen settings={settings} openTest={()=>openPracticeGame('test',displayWords,'home','all')} openMatch={()=>openPracticeGame('match',displayWords,'home','all')} openFavorites={()=>setScreen('favorites')} openSongs={()=>setScreen('songs')} openAshyk={()=>setScreen('ashyk')}/>;}
   else if(tab==='profile'&&screen==='account'){content=<AccountScreen settings={settings} onGuest={continueAsGuest} onBack={()=>setScreen('home')}/>;showNav=false;}
   else if(tab==='profile'){content=<ProfileGate key={`profile-${dataEpoch}`} words={displayWords} settings={settings} onSettingsChange={setSettings} onGuest={continueAsGuest} onOpenStory={openProfileStory} onBottomNavVisibilityChange={setProfileBottomNavVisible} onAccount={(action)=>{if(action==='open')setScreen('account');}}/>;showNav=profileBottomNavVisible;}
   else{content=<PathScreen key={`path-${dataEpoch}`} route={route} settings={settings} onOpenStation={openStation} onOpenWordList={openStoryWordList}/>;}

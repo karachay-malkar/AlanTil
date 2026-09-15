@@ -1,4 +1,4 @@
-import { msg } from "../shared/i18n/index.js?v=13.15.9";
+import { msg } from "../shared/i18n/index.js?v=16.6.11";
 const DEFAULT_SCREEN = Object.freeze({
   layout: "detail",
   header: "standard",
@@ -14,6 +14,7 @@ const SCREENS = Object.freeze({
   "path.test": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya" },
 
   "practice.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
+  "practice.ashyk": { layout: "detail", header: "standard", bottomNav: false, titleKey: "practice.ashyk" },
   "profile.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "admin.users": { layout: "root", header: "minimal", bottomNav: true, title: "" },

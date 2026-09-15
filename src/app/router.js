@@ -4,9 +4,10 @@ import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "13.15.9";
+const RELEASE_VERSION = "16.6.11";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
+  ashyk: "../features/ashyk/index.js",
   path: "../features/path/feature.js",
   profile: "../features/profile/index.js",
   admin: "../features/admin/index.js",
@@ -22,6 +23,7 @@ const ROUTER_STATE_KEY = "__alanTilRouter";
 const TITLE_KEY_BY_SCREEN = Object.freeze({
   path: "common.put_alan_til",
   practice: "common.praktika_alan_til",
+  ashyk: "common.ashyk_alan_til",
   profile: "common.profil_alan_til",
   admin: "admin.users_alan_til",
   learn: "common.uchit_slova_alan_til",
@@ -59,7 +61,10 @@ export function parsePathname(pathname) {
   if (!segments.length) return { route: "path.home", params: { storyType: DEFAULT_STORY } };
 
   const [first, second, third, fourth, fifth, sixth] = segments;
-  if (first === "practice" && !second) return { route: "practice.home", params: {} };
+  if (first === "practice") {
+    if (!second) return { route: "practice.home", params: {} };
+    if (second === "ashyk" && !third) return { route: "practice.ashyk", params: {} };
+  }
   if (first === "path") {
     const storyType = String(second || DEFAULT_STORY).trim() || DEFAULT_STORY;
     if (!third) return { route: "path.home", params: { storyType } };
@@ -149,6 +154,7 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "path.study") return `${stationBase}/study`;
   if (routeName === "path.test") return `${stationBase}/test`;
   if (routeName === "practice.home") return "/practice";
+  if (routeName === "practice.ashyk") return "/practice/ashyk";
   if (routeName === "profile.home") return "/profile";
   if (routeName === "profile.skills") return "/profile/skills";
   if (routeName === "profile.statistics") return "/profile/statistics";
@@ -187,11 +193,13 @@ export function buildPath(routeName, params = {}) {
 }
 
 function featureOf(route) {
+  if (route === "practice.ashyk") return "ashyk";
   return route === "home" ? "path" : String(route || "path.home").split(".")[0];
 }
 
 function screenNameOf(route) {
   if (route === "home") return "path";
+  if (route === "practice.ashyk") return "ashyk";
   if (route === "songs.song") return "song";
   if (route === "settings.privacy") return "privacy";
   if (route === "settings.version") return "version";
@@ -301,8 +309,10 @@ export function createRouter({ shell, modal, context }) {
     const features = currentFeature === "path"
       ? ["practice", "profile"]
       : currentFeature === "practice"
-        ? ["path", "test", "match"]
-        : [];
+        ? ["path", "test", "match", "ashyk"]
+        : currentFeature === "ashyk"
+          ? ["practice"]
+          : [];
     if (!features.length) return;
     const warm = () => features.forEach((feature) => void loadModule(feature).catch(() => {}));
     if (typeof requestIdleCallback === "function") requestIdleCallback(warm, { timeout: 1800 });
@@ -553,6 +563,7 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "learn.sections" && params.sectionSlug) return { route: "learn.sections", params: compactParams({ dictionarySlug: params.dictionarySlug }) };
     if (current.route === "learn.sections") return { route: "learn.catalog", params: {} };
     if (current.route.startsWith("learn.")) return { route: "path.home", params: { storyType: DEFAULT_STORY } };
+    if (current.route === "practice.ashyk") return { route: "practice.home", params: {} };
     if (["test.session", "test.results"].includes(current.route)) return { route: "test.menu", params: {} };
     if (current.route === "test.menu") return { route: "practice.home", params: {} };
     if (["match.game", "match.results"].includes(current.route)) return { route: "match.menu", params: {} };

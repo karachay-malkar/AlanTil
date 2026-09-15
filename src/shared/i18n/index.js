@@ -7,6 +7,7 @@ import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=13.10.0";
 import { RELEASE_MESSAGES_13_15_9 } from "./messages-13-15-9.js?v=13.15.9";
 import { RELEASE_MESSAGES_13_15_10 } from "./messages-13-15-10.js?v=13.15.10.12";
 import { RELEASE_MESSAGES_13_15_12 } from "./messages-13-15-12.js?v=13.15.12";
+import { RELEASE_MESSAGES_16_6_11 } from "./messages-16-6-11.js?v=16.6.11";
 import {
   SUPPORTED_INTERFACE_LANGUAGES,
   hasCompleteTranslations as coreHasCompleteTranslations,
@@ -23,6 +24,7 @@ const ALL_INTERFACE_MESSAGES = Object.freeze({
   ...RELEASE_MESSAGES_13_15_9,
   ...RELEASE_MESSAGES_13_15_10,
   ...RELEASE_MESSAGES_13_15_12,
+  ...RELEASE_MESSAGES_16_6_11,
 });
 const I18N_STATE_KEY = Symbol.for("alantil.i18n.state.v1");
 const LANGUAGE_MIRROR_KEY = "alantil_interface_language_v1";

@@ -1,0 +1,74 @@
+.appShell[data-screen="ashyk"]{--ashyk-content-top:calc(var(--safe-top) + var(--header-h) + 10px)}
+.appShell[data-screen="ashyk"] .appScreenHost{background:var(--app-bg);overflow:hidden}
+.appShell[data-screen="ashyk"] .ashykHost{width:100%;height:100%;min-height:0;background:var(--app-bg);color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykSetupScroll{width:100%;height:100%;overflow:auto;overscroll-behavior:contain;padding:var(--ashyk-content-top) 14px calc(var(--safe-bottom) + 24px);background:var(--app-bg)}
+.appShell[data-screen="ashyk"] .ashykSetup{width:min(100%,620px);margin:0 auto;padding:0 2px}
+.appShell[data-screen="ashyk"] .ashykPageHead{min-height:50px;padding:5px 0 10px;border-bottom:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykPageHead h1{margin:4px 0 0;font-size:19px;line-height:1.15;font-weight:860;color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykEyebrow,.appShell[data-screen="ashyk"] .ashykSectionLabel{font:780 9px/1.1 var(--font-terminal);letter-spacing:.12em;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykSetupSection{display:grid;grid-template-columns:minmax(100px,1fr) minmax(178px,auto);align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykFacts{margin-top:14px;border-top:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykFacts>div{min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);font-size:12px;color:var(--text-2)}
+.appShell[data-screen="ashyk"] .ashykFacts b{color:var(--text-1);font:800 11px/1 var(--font-terminal)}
+.appShell[data-screen="ashyk"] .ashykScopeNote{margin:11px 0 14px;color:var(--text-3);font:650 10px/1.45 var(--font-terminal)}
+.appShell[data-screen="ashyk"] .ashykPrimary,.appShell[data-screen="ashyk"] .ashykSecondary,.appShell[data-screen="ashyk"] .ashykJoin button{appearance:none;width:100%;min-height:38px;padding:7px 13px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface-0) 48%,transparent);color:var(--text-1);font:760 13px/17px var(--font-body);transition:transform var(--duration-fast),opacity var(--duration-fast),background var(--duration-fast)}
+.appShell[data-screen="ashyk"] .ashykPrimary{border-color:var(--accent-strong);background:var(--accent);color:var(--text-inverse)}
+.appShell[data-screen="ashyk"] .ashykPrimary:active,.appShell[data-screen="ashyk"] .ashykSecondary:active,.appShell[data-screen="ashyk"] .ashykJoin button:active{transform:scale(.985)}
+.appShell[data-screen="ashyk"] button:disabled{opacity:var(--ui-disabled-opacity,.46)}
+.appShell[data-screen="ashyk"] .ashykOnlineSetup{display:grid;gap:9px}
+.appShell[data-screen="ashyk"] .ashykJoin{display:grid;grid-template-columns:1fr 96px;gap:6px}
+.appShell[data-screen="ashyk"] .ashykJoin input{min-width:0;height:38px;padding:0 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface-0);color:var(--text-1);font:800 11px/1 var(--font-terminal);letter-spacing:.15em;text-transform:uppercase;outline:none}
+.appShell[data-screen="ashyk"] .ashykInlineNotice,.appShell[data-screen="ashyk"] .ashykInlineError{margin:0;padding:10px 2px;border-bottom:1px solid var(--line-soft);color:var(--text-2);font-size:11px;line-height:1.45}
+.appShell[data-screen="ashyk"] .ashykInlineError{color:var(--danger)}
+.appShell[data-screen="ashyk"] .ashykGame{position:relative;width:100%;height:100%;min-height:0;overflow:hidden;background:var(--app-bg)}
+.appShell[data-screen="ashyk"] .ashykScene{position:absolute;inset:0;background:var(--app-bg)}
+.appShell[data-screen="ashyk"] .ashykScene canvas{display:block;width:100%;height:100%;touch-action:none}
+.appShell[data-screen="ashyk"] .ashykScore,.appShell[data-screen="ashyk"] .ashykTopControls,.appShell[data-screen="ashyk"] .ashykShotControl,.appShell[data-screen="ashyk"] .ashykShotTimer,.appShell[data-screen="ashyk"] .ashykFace,.appShell[data-screen="ashyk"] .ashykStatus,.appShell[data-screen="ashyk"] .ashykWaiting,.appShell[data-screen="ashyk"] .ashykOutcome{position:absolute;z-index:18;border:1px solid color-mix(in srgb,var(--line) 48%,transparent);background:color-mix(in srgb,var(--surface-0) 52%,transparent);color:var(--text-1);-webkit-backdrop-filter:blur(var(--ui-system-control-blur));backdrop-filter:blur(var(--ui-system-control-blur));box-shadow:0 4px 18px rgba(41,39,33,.06)}
+.appShell[data-screen="ashyk"] .ashykScore{top:calc(var(--safe-top) + var(--header-h) + 5px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;padding:3px;border-radius:999px}
+.appShell[data-screen="ashyk"] .ashykScore>div{display:flex;align-items:center;gap:6px;min-height:30px;padding:4px 8px;border-radius:999px;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykScore>div.active{background:var(--accent-soft);color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykScore span{font:700 9px/1 var(--font-terminal);white-space:nowrap}
+.appShell[data-screen="ashyk"] .ashykScore strong{min-width:18px;text-align:center;font-size:18px;line-height:1;color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykScore>b{color:var(--text-3);font-weight:500}
+.appShell[data-screen="ashyk"] .ashykTopControls{top:calc(var(--safe-top) + var(--header-h) + 5px);right:8px;display:flex;align-items:center;gap:4px;padding:3px;border-radius:999px}
+.appShell[data-screen="ashyk"] .ashykTopControls>button{appearance:none;min-width:30px;min-height:30px;padding:4px 7px;border:0;border-radius:999px;background:transparent;color:var(--text-2);font:750 9px/1 var(--font-terminal)}
+.appShell[data-screen="ashyk"] .ashykTopControls .ashykSegmented{border:0;background:transparent;padding:0}
+.appShell[data-screen="ashyk"] .ashykTopControls .settingsChoice>span{min-height:30px;padding:4px 7px}
+.appShell[data-screen="ashyk"] .ashykShotControl{top:calc(var(--safe-top) + var(--header-h) + 48px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:3px 3px 3px 9px;border-radius:999px}
+.appShell[data-screen="ashyk"] .ashykShotControl>span{font:780 8px/1 var(--font-terminal);letter-spacing:.09em;color:var(--text-3);white-space:nowrap}
+.appShell[data-screen="ashyk"] .ashykShotControl .ashykSegmented{border:0;background:transparent;padding:0}
+.appShell[data-screen="ashyk"] .ashykShotControl .settingsChoice>span{min-height:29px;font-size:9px}
+.appShell[data-screen="ashyk"] .ashykShotTimer{top:calc(var(--safe-top) + var(--header-h) + 91px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:999px;pointer-events:none}
+.appShell[data-screen="ashyk"] .ashykShotTimer span{font:800 8px/1 var(--font-terminal);letter-spacing:.1em;color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykShotTimer strong{font:850 15px/1 var(--font-terminal);color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykShotTimer.danger{border-color:var(--danger-border);background:color-mix(in srgb,var(--surface-0) 74%,var(--danger-soft))}
+.appShell[data-screen="ashyk"] .ashykFace{left:50%;bottom:calc(var(--safe-bottom) + 46px);transform:translateX(-50%);display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;pointer-events:none;white-space:nowrap}
+.appShell[data-screen="ashyk"] .ashykFace span{font:800 8px/1 var(--font-terminal);color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykFace strong{font-size:14px}.ashykFace b{color:var(--accent-strong);font:800 9px/1 var(--font-terminal)}
+.appShell[data-screen="ashyk"] .ashykStatus{left:8px;bottom:calc(var(--safe-bottom) + 8px);display:flex;align-items:center;gap:7px;max-width:min(330px,calc(100% - 16px));padding:8px 10px;border-radius:14px;pointer-events:none}
+.appShell[data-screen="ashyk"] .ashykStatus i{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--warning)}
+.appShell[data-screen="ashyk"] .ashykStatus i.ready{background:var(--success)}
+.appShell[data-screen="ashyk"] .ashykStatus strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;line-height:1.2}
+.appShell[data-screen="ashyk"] .ashykWaiting{top:calc(var(--safe-top) + var(--header-h) + 92px);left:50%;transform:translateX(-50%);display:grid;justify-items:center;padding:9px 15px;border-radius:14px}
+.appShell[data-screen="ashyk"] .ashykWaiting span,.appShell[data-screen="ashyk"] .ashykWaiting small{font:750 8px/1.2 var(--font-terminal);color:var(--text-3)}
+.appShell[data-screen="ashyk"] .ashykWaiting strong{margin:3px 0;font:900 22px/1 var(--font-terminal);letter-spacing:.15em}
+.appShell[data-screen="ashyk"] .ashykOutcome{top:58%;left:50%;transform:translate(-50%,-50%);padding:9px 13px;border-radius:999px;font-size:11px;font-weight:800;pointer-events:none;white-space:nowrap}
+.appShell[data-screen="ashyk"] .ashykDialogBackdrop{position:absolute;z-index:40;inset:0;display:grid;place-items:center;padding:calc(var(--safe-top) + var(--header-h) + 12px) 14px calc(var(--safe-bottom) + 14px);background:color-mix(in srgb,var(--overlay) 68%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.appShell[data-screen="ashyk"] .ashykDialog{width:min(100%,520px);max-height:100%;overflow:auto;padding:16px;border:1px solid var(--line);border-radius:20px;background:var(--surface-0);box-shadow:0 12px 32px var(--modal-shadow);color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykDialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.appShell[data-screen="ashyk"] .ashykDialog h2{margin:4px 0 12px;font-size:20px;line-height:1.15}
+.appShell[data-screen="ashyk"] .ashykCircleButton{appearance:none;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--text-2);font-size:20px}
+.appShell[data-screen="ashyk"] .ashykHelp>p,.appShell[data-screen="ashyk"] .ashykFinish>p{color:var(--text-2);font-size:12px;line-height:1.5}
+.appShell[data-screen="ashyk"] .ashykRuleRows{border-top:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykRuleRows>div{padding:10px 2px;border-bottom:1px solid var(--line-soft);font-size:11px;line-height:1.45;color:var(--text-2)}
+.appShell[data-screen="ashyk"] .ashykRuleRows strong{color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykTimer{width:46px;height:46px;display:grid;place-items:center;flex:0 0 46px;border:1px solid var(--line);border-radius:50%;font:850 19px/1 var(--font-terminal);color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykTimer.danger{border-color:var(--danger-border);color:var(--danger-strong);background:var(--danger-soft)}
+.appShell[data-screen="ashyk"] .ashykPrompt{padding:10px 0 16px;text-align:center;font-size:clamp(30px,7vw,48px);font-weight:850;line-height:1.08}
+.appShell[data-screen="ashyk"] .ashykOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.appShell[data-screen="ashyk"] .ashykOptions button{appearance:none;min-height:50px;padding:9px 11px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface-0) 45%,var(--paper));color:var(--text-1);font-size:12px;line-height:1.3;text-align:left}
+.appShell[data-screen="ashyk"] .ashykOptions button.wrong{border-color:var(--danger-border);background:var(--danger-soft);color:var(--danger-strong)}
+.appShell[data-screen="ashyk"] .ashykQuestion .ashykSecondary{margin-top:8px}
+.appShell[data-screen="ashyk"] .ashykRuleNote{margin:9px 0 0;color:var(--text-3);font:650 9px/1.4 var(--font-terminal);text-align:center}
+.appShell[data-screen="ashyk"] .ashykFinish{text-align:center}.ashykFinish h2{font-size:28px}.ashykFinalScore{display:flex;justify-content:center;align-items:center;gap:14px;margin:10px 0 14px}.ashykFinalScore strong{font-size:34px;color:var(--accent-strong)}.ashykFinalScore span{font-size:20px;color:var(--text-3)}
+@media(max-width:560px){.appShell[data-screen="ashyk"] .ashykSetupScroll{padding-inline:10px}.appShell[data-screen="ashyk"] .ashykSetupSection{grid-template-columns:1fr;gap:6px;padding:9px 0}.appShell[data-screen="ashyk"] .ashykTopControls{right:6px}.appShell[data-screen="ashyk"] .ashykScore{left:6px;transform:none}.appShell[data-screen="ashyk"] .ashykScore>div{padding-inline:5px}.appShell[data-screen="ashyk"] .ashykScore span{display:none}.appShell[data-screen="ashyk"] .ashykTopControls>button{padding-inline:5px}.appShell[data-screen="ashyk"] .ashykShotControl{top:calc(var(--safe-top) + var(--header-h) + 44px)}.appShell[data-screen="ashyk"] .ashykShotTimer{top:calc(var(--safe-top) + var(--header-h) + 86px)}.appShell[data-screen="ashyk"] .ashykOptions{grid-template-columns:1fr}}

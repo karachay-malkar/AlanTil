@@ -16,7 +16,6 @@ const CORE_ASSETS = [
 ];
 
 const NETWORK_FIRST_PATHS = new Set([
-  "/assets/ashyk-game/index.html",
   "/src/config/analytics.js",
   "/src/config/supabase.js",
   "/src/config/words.js",

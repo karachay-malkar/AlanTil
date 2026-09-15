@@ -1,0 +1,12 @@
+{
+  "name":"alantil-ashyk-web-build",
+  "private":true,
+  "type":"module",
+  "dependencies":{
+    "cannon-es":"0.20.0",
+    "esbuild":"0.25.9",
+    "react":"19.1.0",
+    "react-dom":"19.1.0",
+    "three":"0.179.1"
+  }
+}
