@@ -6,13 +6,15 @@ import { msg } from '../i18n.js';
 import { useSemanticTypography } from '../ui/runtime-settings.js';
 import { theme } from '../ui/theme.js';
 import { loadNativeAnalyticsPreference, saveNativeAnalyticsPreference } from '../platform/privacy.js';
+import mobilePackage from '../package.json';
 
 const C=theme.colors;
+const APP_VERSION=mobilePackage.version,APP_UPDATED_AT='16.09.2026';
 function Document({children}){return <ScrollView contentContainerStyle={styles.document} showsVerticalScrollIndicator={false}>{children}</ScrollView>;}
 function H2({children,type}){return <Text style={[styles.h2,type.emphasis]}>{children}</Text>;}
 function P({children,type}){return <Text style={[styles.p,type.body]}>{children}</Text>;}
 function Thanks({settings,type}){return <Document><Text style={[styles.h1,type.title]}>{msg(settings,'about.blagodarstvennoe_slovo')}</Text><P type={type}>{msg(settings,'about.zdes_budet_razmeschena_blagodarnost_lyudyam_kotorye_pomoga')}</P></Document>;}
-function Version({settings,type}){return <Document><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.versiya')}</Text><Text style={[styles.factValue,type.caption]}>16.6.8</Text></View><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.poslednee_obnovlenie')}</Text><Text style={[styles.factValue,type.caption]}>13.09.2026</Text></View></Document>;}
+function Version({settings,type}){return <Document><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.versiya')}</Text><Text style={[styles.factValue,type.caption]}>{APP_VERSION}</Text></View><View style={styles.fact}><Text style={[styles.factLabel,type.body]}>{msg(settings,'about.poslednee_obnovlenie')}</Text><Text style={[styles.factValue,type.caption]}>{APP_UPDATED_AT}</Text></View></Document>;}
 function Privacy({settings,type}){
   const [enabled,setEnabled]=useState(false),[loaded,setLoaded]=useState(false),[saved,setSaved]=useState(false);
   useEffect(()=>{let alive=true;loadNativeAnalyticsPreference().then((value)=>{if(alive){setEnabled(value===true);setLoaded(true);}});return()=>{alive=false;};},[]);
