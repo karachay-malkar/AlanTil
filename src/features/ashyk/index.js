@@ -3,7 +3,9 @@ import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.1
 import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=13.10.12";
 import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.12";
 import { msg } from "../../shared/i18n/index.js?v=16.6.12";
-import { mountAshykGame } from "./runtime.js?v=16.6.12";
+import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.7.0";
+import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.7.0";
+import { mountAshykGame } from "./runtime.js?v=16.7.0";
 
 let controller=null;
 let disposeGame=null;
@@ -14,8 +16,8 @@ function ensureStyles(){
   if(styleLink?.isConnected)return;
   styleLink=document.createElement('link');
   styleLink.rel='stylesheet';
-  styleLink.href='/src/features/ashyk/ashyk-16-6-12.css?v=16.6.12';
-  styleLink.dataset.ashykUi='16.6.12';
+  styleLink.href='/src/features/ashyk/ashyk-16-7.css?v=16.7.0';
+  styleLink.dataset.ashykUi='16.7.0';
   document.head.append(styleLink);
 }
 
@@ -26,18 +28,22 @@ export async function mount(context){
   context.shell.setHeaderContent?.({title:msg("practice.ashyk")});
   context.root.innerHTML='<section class="view ashykView"><div class="ashykHost" data-ashyk-host></div></section>';
   const host=context.root.querySelector('[data-ashyk-host]');
-  const [words,supabaseClient]=await Promise.all([
+  const [words,supabaseClient,social]=await Promise.all([
     getWords().catch(()=>[]),
     getSupabaseClient().catch(()=>null),
+    fetchFriendsSnapshot().catch(()=>({friends:[]})),
   ]);
   if(controller.signal.aborted||!host)return;
   const settings=getUserSettings();
   const auth=getCurrentAuthState();
+  const pending=takePendingAshykInvite();
   disposeGame=mountAshykGame(host,{
     words,
     locale:settings.interface_language_code,
     supabaseClient,
     userId:String(auth?.session?.user?.id||''),
+    friends:Array.isArray(social?.friends)?social.friends:[],
+    initialRoom:pending?.room||null,
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onExit(){history.back();},
   });
