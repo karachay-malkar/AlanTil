@@ -12,45 +12,37 @@
       try {
         const language = localStorage.getItem("alantil_interface_language_v1");
         if (["ru", "en", "tr"].includes(language)) document.documentElement.lang = language;
-      } catch {
-        // Restricted storage must not expose the wrong language before startup.
-      }
+      } catch {}
     })();
   </script>
   <script>
     (() => {
-      // One-release compatibility for deep links created by the pre-13.15 404 page.
       try {
         const restoredPath = sessionStorage.getItem("alantil_spa_path");
         if (!restoredPath) return;
         sessionStorage.removeItem("alantil_spa_path");
         history.replaceState(null, "", restoredPath);
-      } catch {
-        // Restricted storage must not prevent the application from loading.
-      }
+      } catch {}
     })();
   </script>
   <script>
     (() => {
-      const targetVersion = "13.15.12";
+      const targetVersion = "16.7.0";
       const analyticsTargetVersion = "13.15.9";
       const analyticsPath = "/src/shared/analytics/analytics.js";
-      const singletonPaths = ["/src/app/router.js","/src/app/shell.js","/src/app/screen-registry.js","/src/config/analytics.js","/src/config/auth-providers.js","/src/config/supabase.js","/src/features/account/index.js","/src/features/account/login.js","/src/features/account/profile.js","/src/features/admin/index.js","/src/features/onboarding/index.js","/src/features/path/index.js","/src/features/path/feature.js","/src/features/path/story-stele.js","/src/features/settings/index.js","/src/features/settings/feature.js","/src/features/settings/privacy.js","/src/features/settings/version.js","/src/features/songs/index.js","/src/shared/admin/admin-activity-service.js","/src/shared/auth/auth-service.js","/src/shared/auth/auth-store.js","/src/shared/auth/google-identity.js","/src/shared/auth/guest-profile-prompt.js","/src/shared/auth/supabase-client.js","/src/shared/data/word-repository.js","/src/shared/i18n/index.js","/src/shared/i18n/messages-13-10.js","/src/shared/i18n/messages-13-15-10.js","/src/shared/i18n/messages-13-15-12.js","/src/shared/profile/profile-service.js","/src/shared/progress/progress-queue.js","/src/shared/progress/progress-repository.js","/src/shared/progress/progress-sync.js","/src/shared/progress/storage-scope.js","/src/shared/progress/station-progress-store.js","/src/shared/progress/route-settings-store.js","/src/shared/progress/session-builders.js","/src/shared/settings/learning-preview-data.js","/src/shared/settings/learning-setup.js","/src/shared/settings/user-settings-store.js","/src/features/learn/state.js","/src/features/test/state.js","/src/features/match/state.js","/src/features/path/station-view.js","/src/features/test/view.js","/src/shared/domain/alan-display.js","/src/shared/ui/modal.js","/src/shared/ui/profile-navigation.js","/src/shared/ui/analytics-consent-panel.js","/src/shared/ui/route-scale.js","/src/shared/ui/word-renderers.js"];
-      const versions = ["13.9.0","13.10.0","13.10.1","13.10.2","13.10.3","13.10.4","13.10.5","13.10.6","13.10.7","13.10.8","13.10.9","13.10.10","13.10.11","13.10.12","13.11","13.12","13.13","13.14","13.15","13.15.1","13.15.2","13.15.3","13.15.4","13.15.5","13.15.6","13.15.7","13.15.8","13.15.9","13.15.10","13.15.10.1","13.15.10.2","13.15.10.3","13.15.10.4","13.15.10.5","13.15.10.6","13.15.10.7","13.15.10.8","13.15.10.9","13.15.10.10","13.15.10.11","13.15.10.12","13.15.11","13.15.12"];
+      const singletonPaths = ["/src/app/router.js","/src/app/shell.js","/src/app/screen-registry.js","/src/config/analytics.js","/src/config/auth-providers.js","/src/config/supabase.js","/src/features/account/index.js","/src/features/account/login.js","/src/features/account/profile.js","/src/features/admin/index.js","/src/features/friends/index.js","/src/features/onboarding/index.js","/src/features/path/index.js","/src/features/path/feature.js","/src/features/path/story-stele.js","/src/features/settings/index.js","/src/features/settings/feature.js","/src/features/settings/privacy.js","/src/features/settings/version.js","/src/features/songs/index.js","/src/shared/admin/admin-activity-service.js","/src/shared/auth/auth-service.js","/src/shared/auth/auth-store.js","/src/shared/auth/google-identity.js","/src/shared/auth/guest-profile-prompt.js","/src/shared/auth/supabase-client.js","/src/shared/data/word-repository.js","/src/shared/i18n/index.js","/src/shared/i18n/messages-13-10.js","/src/shared/i18n/messages-13-15-10.js","/src/shared/i18n/messages-13-15-12.js","/src/shared/profile/profile-service.js","/src/shared/progress/progress-queue.js","/src/shared/progress/progress-repository.js","/src/shared/progress/progress-sync.js","/src/shared/progress/storage-scope.js","/src/shared/progress/station-progress-store.js","/src/shared/progress/route-settings-store.js","/src/shared/progress/session-builders.js","/src/shared/settings/learning-preview-data.js","/src/shared/settings/learning-setup.js","/src/shared/settings/user-settings-store.js","/src/features/learn/state.js","/src/features/test/state.js","/src/features/match/state.js","/src/features/path/station-view.js","/src/features/test/view.js","/src/shared/domain/alan-display.js","/src/shared/social/social-service.js","/src/shared/social/ashyk-handoff.js","/src/shared/ui/modal.js","/src/shared/ui/profile-navigation.js","/src/shared/ui/analytics-consent-panel.js","/src/shared/ui/route-scale.js","/src/shared/ui/word-renderers.js"];
+      const versions = ["13.9.0","13.10.0","13.10.1","13.10.2","13.10.3","13.10.4","13.10.5","13.10.6","13.10.7","13.10.8","13.10.9","13.10.10","13.10.11","13.10.12","13.11","13.12","13.13","13.14","13.15","13.15.1","13.15.2","13.15.3","13.15.4","13.15.5","13.15.6","13.15.7","13.15.8","13.15.9","13.15.10","13.15.10.1","13.15.10.2","13.15.10.3","13.15.10.4","13.15.10.5","13.15.10.6","13.15.10.7","13.15.10.8","13.15.10.9","13.15.10.10","13.15.10.11","13.15.10.12","13.15.11","13.15.12","16.6.11","16.6.12","16.7.0"];
       const imports = {};
-      for (const path of singletonPaths) {
-        for (const version of versions) imports[`${path}?v=${version}`] = `${path}?v=${targetVersion}`;
-      }
-      for (const version of [...versions, analyticsTargetVersion]) {
-        imports[`${analyticsPath}?v=${version}`] = `${analyticsPath}?v=${analyticsTargetVersion}`;
-      }
+      for (const path of singletonPaths) for (const version of versions) imports[`${path}?v=${version}`] = `${path}?v=${targetVersion}`;
+      for (const version of [...versions, analyticsTargetVersion]) imports[`${analyticsPath}?v=${version}`] = `${analyticsPath}?v=${analyticsTargetVersion}`;
       const importMap = document.createElement("script");
       importMap.type = "importmap";
       importMap.textContent = JSON.stringify({ imports });
       document.currentScript.after(importMap);
     })();
   </script>
-  <link rel="stylesheet" href="/src/shared/styles/app.css?v=13.15.12.7" />
+  <link rel="stylesheet" href="/src/shared/styles/app.css?v=16.7.0" />
+  <link rel="stylesheet" href="/src/features/friends/friends-16-7.css?v=16.7.0" />
 </head>
 <body>
   <div id="appShell" class="appShell" data-feature="path" data-screen="home" data-layout="map" data-header="minimal" data-bottom-nav="true">
@@ -60,23 +52,19 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
         </button>
       </div>
-      <div class="appHeaderCenter">
-        <div id="headerText" class="appHeaderText"><span id="headerTitle" class="appHeaderScreenTitle"></span><span id="headerSubtitle" class="appHeaderSubtitle hidden"></span></div>
-      </div>
-      <div class="appHeaderTrailing">
-        <div id="headerActionSlot" class="appHeaderActionSlot hidden"></div>
-        <div id="sessionStatus" class="sessionStatus hidden" aria-live="polite"><span id="counter" class="sessionCounter"></span><span id="mode" class="sessionMode"></span></div>
-      </div>
+      <div class="appHeaderCenter"><div id="headerText" class="appHeaderText"><span id="headerTitle" class="appHeaderScreenTitle"></span><span id="headerSubtitle" class="appHeaderSubtitle hidden"></span></div></div>
+      <div class="appHeaderTrailing"><div id="headerActionSlot" class="appHeaderActionSlot hidden"></div><div id="sessionStatus" class="sessionStatus hidden" aria-live="polite"><span id="counter" class="sessionCounter"></span><span id="mode" class="sessionMode"></span></div></div>
     </header>
     <main id="appViewport" class="appViewport"><div id="appRoot" class="appScreenHost" aria-live="polite" aria-busy="false"></div></main>
     <nav id="bottomNav" class="bottomNav" aria-label="Основная навигация" data-i18n-aria-label="common.osnovnaya_navigatsiya">
       <button class="tabAction bottomNavItem" type="button" data-route="practice.home"><span class="bottomNavIconBubble"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg></span><span class="bottomNavLabel" data-i18n="common.praktika">Практика</span></button>
       <button class="tabAction bottomNavItem active" type="button" data-route="path.home"><span class="bottomNavIconBubble bottomNavPathBubble"><img class="bottomNavElbrus" src="/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1" alt="" aria-hidden="true" decoding="async" /></span><span class="bottomNavLabel" data-i18n="common.put">Путь</span></button>
+      <button class="tabAction bottomNavItem" type="button" data-route="friends.home"><span class="bottomNavIconBubble"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="7" r="2.5"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><path d="M15 13.5c3.5-.1 6.5 1.8 6.5 4.5"/></svg></span><span class="bottomNavLabel" data-social-nav-label>Друзья</span><span class="friendsNavBadge" data-friends-badge hidden></span></button>
       <button class="tabAction bottomNavItem" type="button" data-route="profile.home"><span class="bottomNavIconBubble"><svg class="bottomNavIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></span><span class="bottomNavLabel" data-i18n="common.profil">Профиль</span></button>
     </nav>
   </div>
   <div id="modalRoot" class="modalRoot"></div>
   <script type="module" src="/src/shared/ui/adaptive-layout.js?v=13.15.12.5"></script>
-  <script type="module" src="/src/app/bootstrap.js?v=13.15.12"></script>
+  <script type="module" src="/src/app/bootstrap.js?v=16.7.0"></script>
 </body>
 </html>
