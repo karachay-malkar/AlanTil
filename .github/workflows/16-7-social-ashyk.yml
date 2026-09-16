@@ -28,6 +28,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Enforce registered-only Ashyk social modes
+        run: node scripts/enforce-registered-ashyk-modes-16-7.mjs
+
+      - name: Commit Ashyk registration-mode correction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/screens/ashyk.js packages/ashyk-game/web/Game.jsx
+          if ! git diff --cached --quiet; then
+            git commit -m "16.7.0: gate local and friend Ashyk modes [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
       - name: 16.7 social and Ashyk contract
         run: node --test tests/social-ashyk-16-7-0.test.mjs
 
