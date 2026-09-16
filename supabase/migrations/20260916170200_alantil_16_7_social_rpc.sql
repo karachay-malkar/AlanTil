@@ -5,9 +5,11 @@ returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare v_actor uuid:=auth.uid();v_result jsonb;
 begin
   if v_actor is null then raise exception 'authentication required' using errcode='42501'; end if;
-  select coalesce(jsonb_agg(jsonb_build_object('user_id',x.user_id,'nickname',x.nickname,'avatar_gender',x.avatar_gender,'rating_score',x.rating_score,'relation',x.relation) order by x.rating_score desc,x.nickname,x.user_id),'[]'::jsonb) into v_result
+  select coalesce(jsonb_agg(jsonb_build_object('user_id',x.user_id,'nickname',x.nickname,'avatar_gender',x.avatar_gender,'rating_score',x.rating_score,'relation',x.relation,'friendship_id',x.friendship_id) order by x.rating_score desc,x.nickname,x.user_id),'[]'::jsonb) into v_result
   from (
-    select p.user_id,p.nickname,p.avatar_gender,coalesce(s.rating_score,0) rating_score,private.social_relation(v_actor,p.user_id) relation
+    select p.user_id,p.nickname,p.avatar_gender,coalesce(s.rating_score,0) rating_score,
+      private.social_relation(v_actor,p.user_id) relation,
+      (select f.id from public.friendships f where (f.requester_id=v_actor and f.addressee_id=p.user_id) or (f.requester_id=p.user_id and f.addressee_id=v_actor) limit 1) friendship_id
     from public.profiles p left join public.user_social_stats s on s.user_id=p.user_id
     where p.user_id<>v_actor and not private.social_blocked(v_actor,p.user_id)
       and (btrim(coalesce(p_query,''))='' or p.nickname ilike '%'||btrim(p_query)||'%')
@@ -26,12 +28,14 @@ begin
     select p.user_id,p.nickname,p.avatar_gender,coalesce(s.rating_score,0)::numeric(12,2) rating_score,dense_rank() over(order by coalesce(s.rating_score,0) desc)::int rank
     from public.profiles p left join public.user_social_stats s on s.user_id=p.user_id
   ),visible as (
-    select r.*,private.social_relation(v_actor,r.user_id) relation from ranked r
+    select r.*,private.social_relation(v_actor,r.user_id) relation,
+      (select f.id from public.friendships f where (f.requester_id=v_actor and f.addressee_id=r.user_id) or (f.requester_id=r.user_id and f.addressee_id=v_actor) limit 1) friendship_id
+    from ranked r
     where r.user_id=v_actor or not private.social_blocked(v_actor,r.user_id)
     order by r.rank,r.nickname,r.user_id
     limit least(200,greatest(1,coalesce(p_limit,100))) offset greatest(0,coalesce(p_offset,0))
   )
-  select coalesce(jsonb_agg(jsonb_build_object('rank',rank,'user_id',user_id,'nickname',nickname,'avatar_gender',avatar_gender,'rating_score',rating_score,'relation',relation) order by rank,nickname,user_id),'[]'::jsonb) into v_result from visible;
+  select coalesce(jsonb_agg(jsonb_build_object('rank',rank,'user_id',user_id,'nickname',nickname,'avatar_gender',avatar_gender,'rating_score',rating_score,'relation',relation,'friendship_id',friendship_id) order by rank,nickname,user_id),'[]'::jsonb) into v_result from visible;
   return v_result;
 end $$;
 
