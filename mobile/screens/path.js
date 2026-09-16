@@ -35,7 +35,8 @@ function catalogKey(catalog){return String(catalog?.dictionaryId||catalog?.catal
 function sectionKey(catalog,section){return `${catalogKey(catalog)}::${String(section?.sectionId||section?.groupId||section?.id||section?.name||'section')}`;}
 function dotCount(height,routeHeight){if(!routeHeight)return 4;const share=Math.max(0,height)/routeHeight;return Math.max(3,Math.min(10,Math.round(3+share*24)));}
 function connectorPath(points){if(points.length<2)return'';let path=`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;for(let index=1;index<points.length;index+=1){const previous=points[index-1],current=points[index],middleY=(previous.y+current.y)/2;path+=` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;}return path;}
-function showStationLabels(catalog){const value=String(catalog?.name||catalog?.label||'').toLowerCase();return !/(beginner|intermediate|advanced|началь|средн|сложн)/i.test(value);}
+const LEVEL_DICTIONARIES=new Set(['beginner','intermediate','advanced']);
+function showStationLabels(catalog){return !LEVEL_DICTIONARIES.has(String(catalog?.dictionaryId||''));}
 function geometryBuffer(){return{map:null,stations:new Map(),sections:new Map(),catalogs:new Map()};}
 function ensureTargetRef(map,key){if(!map.has(key))map.set(key,{current:null});return map.get(key);}
 
