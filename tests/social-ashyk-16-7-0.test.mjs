@@ -13,6 +13,7 @@ const socialSql=[
   'supabase/migrations/20260916170100_alantil_16_7_ashyk_invites.sql',
   'supabase/migrations/20260916170200_alantil_16_7_social_rpc.sql',
   'supabase/migrations/20260916170300_alantil_16_7_social_snapshot.sql',
+  'supabase/migrations/20260916170400_alantil_16_7_progress_sync.sql',
 ].map(read).join('\n');
 
 test('rating uses fixed dictionary and mastery weights',()=>{
@@ -36,11 +37,14 @@ test('rating counts a word once using its highest dictionary weight',()=>{
   assert.equal(score,8.25);
 });
 
-test('mastery percent is part of local progress and cloud pull',()=>{
+test('mastery percent is part of local progress, cloud pull and snapshot merge',()=>{
   const core=read('packages/alantil-core/word-progress.js');
   const cloud=read('mobile/platform/cloud-sync.js');
+  const sync=read('supabase/migrations/20260916170400_alantil_16_7_progress_sync.sql');
   assert.match(core,/['"]mastery_percent['"]/);
   assert.match(cloud,/select=[^'\"]*mastery_percent/);
+  assert.match(sync,/mastery_percent/);
+  assert.match(sync,/greatest\(public\.user_word_progress\.mastery_percent, excluded\.mastery_percent\)/);
 });
 
 test('local duet keeps both active players local and never schedules AI',()=>{
@@ -77,10 +81,19 @@ test('web and mobile register Friends as fourth root tab with inbox badge',()=>{
   assert.match(app,/SocialBottomNav/);
   assert.match(app,/socialBadge/);
   assert.match(html,/data-route="friends\.home"/);
-  assert.match(html,/data-social-badge/);
+  assert.match(html,/data-friends-badge/);
   assert.match(router,/friends\.home/);
   assert.match(registry,/"friends\.home"/);
   assert.match(bootstrap,/startSocialInboxController/);
+  assert.match(bootstrap,/data-friends-badge/);
+});
+
+test('Friends guest and blocked copy use dedicated social labels on both platforms',()=>{
+  const web=read('src/features/friends/index.js'),mobile=read('mobile/screens/friends.js');
+  for(const source of [web,mobile]){
+    assert.match(source,/signInAction/);
+    assert.match(source,/blocked/);
+  }
 });
 
 test('Ashyk setup exposes computer, local and friend modes without room codes',()=>{
