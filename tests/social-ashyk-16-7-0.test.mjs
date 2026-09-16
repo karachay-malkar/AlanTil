@@ -76,6 +76,16 @@ test('social SQL exposes safe RPCs, invite lifecycle and no room-code entry poin
   assert.doesNotMatch(socialSql,/select\s+[^;]*email/i);
 });
 
+test('search and leaderboard expose friendship id so incoming requests are actionable',()=>{
+  const rpc=read('supabase/migrations/20260916170200_alantil_16_7_social_rpc.sql');
+  const web=read('src/features/friends/index.js');
+  const mobile=read('mobile/screens/friends.js');
+  assert.match(rpc,/friendship_id/);
+  assert.match(web,/user\.friendship_id/);
+  assert.doesNotMatch(web,/social-accept-user/);
+  assert.match(mobile,/user\.friendship_id/);
+});
+
 test('web and mobile register Friends as fourth root tab with inbox badge',()=>{
   const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js'),bootstrap=read('src/app/bootstrap.js');
   assert.match(app,/SocialBottomNav/);
