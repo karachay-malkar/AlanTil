@@ -13,6 +13,7 @@ export const WORD_PROGRESS_NUMERIC_FIELDS = Object.freeze([
   'unknown_count',
   'test_correct_count',
   'test_wrong_count',
+  'mastery_percent',
 ]);
 
 const STATUS_RANK = Object.freeze({ not_started: 0, learning: 1, mastered: 2, review: 3 });
@@ -36,6 +37,7 @@ export function emptyWordProgressRow(wordId) {
     unknown_count: 0,
     test_correct_count: 0,
     test_wrong_count: 0,
+    mastery_percent: 0,
     mastery_status: 'not_started',
     mastered_at: null,
     last_mode: null,
@@ -55,9 +57,11 @@ export function normalizeWordProgressRow(row = {}, wordId = row.word_id) {
   WORD_PROGRESS_NUMERIC_FIELDS.forEach((key) => {
     normalized[key] = Math.max(0, Number(normalized[key] || 0));
   });
+  normalized.mastery_percent=Math.max(0,Math.min(100,normalized.mastery_percent));
   if (!['not_started', 'learning', 'mastered', 'review'].includes(normalized.mastery_status)) {
     normalized.mastery_status = normalized.mastered_at ? 'mastered' : 'not_started';
   }
+  if((normalized.mastery_status==='mastered'||normalized.mastery_status==='review')&&normalized.mastery_percent<80)normalized.mastery_percent=80;
   return normalized;
 }
 
@@ -130,7 +134,8 @@ export function applyTestWordResults(state, {
   completedAt = new Date().toISOString(),
 } = {}) {
   if (!markWordProgressSessionProcessed(state, sessionId)) return { applied: false, passed: false };
-  const passed = Number(accuracy || 0) >= Number(requiredAccuracy || 80);
+  const normalizedAccuracy=Math.max(0,Math.min(100,Number(accuracy)||0));
+  const passed = normalizedAccuracy >= Number(requiredAccuracy || 80);
   (Array.isArray(answers) ? answers : []).forEach((entry) => {
     const row = withMutableRow(state, entry?.word_id || entry?.wordId);
     if (!row) return;
@@ -141,6 +146,7 @@ export function applyTestWordResults(state, {
     else row.test_wrong_count += 1;
     if (updateMastery && passed && correct) {
       row.mastery_status = 'mastered';
+      row.mastery_percent=Math.max(row.mastery_percent,normalizedAccuracy);
       row.mastered_at ||= completedAt;
     } else if (updateMastery && !correct && (row.mastered_at || ['mastered', 'review'].includes(row.mastery_status))) {
       row.mastery_status = 'review';
@@ -180,10 +186,12 @@ export function mergeCloudWordProgressState(state, rows = []) {
     WORD_PROGRESS_NUMERIC_FIELDS.forEach((field) => {
       row[field] = Math.max(row[field], Math.max(0, Number(cloud?.[field] || 0)));
     });
+    row.mastery_percent=Math.min(100,row.mastery_percent);
     row.mastery_status = strongerStatus(row.mastery_status, String(cloud.mastery_status || 'not_started').trim());
     if (cloud.mastered_at) {
       row.mastered_at = row.mastered_at || cloud.mastered_at;
       if (row.mastery_status === 'not_started') row.mastery_status = 'mastered';
+      if(row.mastery_percent<80)row.mastery_percent=80;
     }
     const localSeen = row.last_seen_at;
     row.last_seen_at = laterIso(row.last_seen_at, cloud.last_seen_at);
