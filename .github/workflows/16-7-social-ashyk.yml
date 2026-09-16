@@ -1,0 +1,20 @@
+name: Alan Til 16.7 social and Ashyk
+
+on:
+  push:
+    branches: [agent/16.7.0-friends-rating-ashyk]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: 16.7 social and Ashyk contract
+        run: node --test tests/social-ashyk-16-7-0.test.mjs
