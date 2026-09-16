@@ -1,3 +1,4 @@
+# Generator-backed launcher artwork; PNG files are reproduced before Expo prebuild.
 name: Alan Til 16.6.14 Android
 
 on:
