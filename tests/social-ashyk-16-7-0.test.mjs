@@ -14,6 +14,8 @@ const socialSql=[
   'supabase/migrations/20260916170200_alantil_16_7_social_rpc.sql',
   'supabase/migrations/20260916170300_alantil_16_7_social_snapshot.sql',
   'supabase/migrations/20260916170400_alantil_16_7_progress_sync.sql',
+  'supabase/migrations/20260916170500_alantil_16_7_mastery_percent_monotonic.sql',
+  'supabase/migrations/20260916170600_alantil_16_7_social_performance_hardening.sql',
 ].map(read).join('\n');
 
 test('rating uses fixed dictionary and mastery weights',()=>{
@@ -45,6 +47,12 @@ test('mastery percent is part of local progress, cloud pull and snapshot merge',
   assert.match(cloud,/select=[^'\"]*mastery_percent/);
   assert.match(sync,/mastery_percent/);
   assert.match(sync,/greatest\(public\.user_word_progress\.mastery_percent, excluded\.mastery_percent\)/);
+});
+
+test('database mastery guard never lowers a previously earned sign',()=>{
+  const monotonic=read('supabase/migrations/20260916170500_alantil_16_7_mastery_percent_monotonic.sql');
+  assert.match(monotonic,/v_previous:=coalesce\(old\.mastery_percent,0\)/);
+  assert.match(monotonic,/greatest\([\s\S]*v_previous/);
 });
 
 test('local duet keeps both active players local and never schedules AI',()=>{
@@ -106,14 +114,15 @@ test('Friends guest and blocked copy use dedicated social labels on both platfor
   }
 });
 
-test('Ashyk setup exposes computer, local and friend modes without room codes',()=>{
+test('Ashyk guests see only computer while registered users also get local and friend modes',()=>{
   const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   for(const source of [web,mobile]){
     assert.doesNotMatch(source,/roomCode|createRoom|joinRoom/);
     assert.match(source,/startLocal/);
     assert.match(source,/createFriendInvite/);
+    assert.match(source,/const modes=\[\["computer",sm\('computer'\)\],\.\.\.\(userId\?\[\["local",sm\('local'\)\],\["online",sm\('friend'\)\]\]:\[\]\)\]/);
+    assert.match(source,/loginForModes/);
   }
-  assert.doesNotMatch(mobile,/!userId&&state\.gameMode!==['"]computer['"]/);
 });
 
 test('social copy includes local winner and explicit sign-in action',()=>{
