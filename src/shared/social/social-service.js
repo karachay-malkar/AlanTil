@@ -2,6 +2,8 @@ import {getSupabaseClient} from '../auth/supabase-client.js?v=13.15.9';
 import {normalizeInboxCounts,normalizeLeaderboard,normalizeSocialSnapshot,normalizeSocialUser} from '../../../packages/alantil-core/social.js';
 
 async function rpc(name,parameters={}){const client=await getSupabaseClient();const{data,error}=await client.rpc(name,parameters);if(error)throw error;return data;}
+export async function getSocialClient(){return getSupabaseClient();}
+export async function getSocialSession(){const client=await getSupabaseClient();const{data}=await client.auth.getSession();return data?.session||null;}
 export async function fetchFriendsSnapshot(){return normalizeSocialSnapshot(await rpc('social_friends_snapshot'));}
 export async function fetchSocialLeaderboard(limit=100,offset=0){return normalizeLeaderboard(await rpc('social_leaderboard',{p_limit:limit,p_offset:offset}));}
 export async function searchSocialUsers(query,limit=30){const rows=await rpc('social_search_users',{p_query:String(query||''),p_limit:limit});return(Array.isArray(rows)?rows:[]).map(normalizeSocialUser);}
