@@ -1,7 +1,7 @@
 import React from 'react';
 import {ScrollView,StyleSheet,View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {FavoriteIcon,ListChecksIcon,MusicIcon,PracticeIcon,PuzzleIcon} from '../ui/icons.js';
+import {FavoriteIcon,ListChecksIcon,MusicIcon,PuzzleIcon} from '../ui/icons.js';
 import {ListRow} from '../ui/parity.js';
 import {Screen} from '../ui/components.js';
 import {msg} from '../i18n.js';
@@ -16,7 +16,7 @@ export function PracticeScreen({settings={},openTest,openMatch,openFavorites,ope
     <ListRow {...rowProps} title={m('mobile.practice.match')} subtitle={m('mobile.practice.match_sub')} leading={<PuzzleIcon size={23} color={C.text2}/>} onPress={openMatch}/>
     <ListRow {...rowProps} title={m('mobile.practice.favorites')} subtitle={m('mobile.practice.favorites_sub')} leading={<FavoriteIcon size={23} color={C.favorite} filled/>} onPress={openFavorites}/>
     <ListRow {...rowProps} title={m('mobile.practice.songs')} subtitle={m('mobile.practice.songs_sub')} leading={<MusicIcon size={23} color={C.text2}/>} onPress={openSongs}/>
-    <ListRow {...rowProps} style={[styles.menuRow,styles.singleRow]} title={ashyk.title} leading={<PracticeIcon size={23} color={C.text2}/>} onPress={openAshyk}/>
+    <ListRow {...rowProps} style={[styles.menuRow,styles.singleRow]} title={ashyk.title} leading={<PuzzleIcon size={23} color={C.text2}/>} onPress={openAshyk}/>
   </View></ScrollView></Screen>;
 }
 const styles=StyleSheet.create({

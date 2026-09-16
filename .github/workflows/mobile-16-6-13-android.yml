@@ -1,0 +1,57 @@
+name: Alan Til 16.6.13 Android
+
+on:
+  push:
+    branches: [agent/16.6.13-ashyk-web-parity]
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node -p "require('./mobile/app.json').expo.version")" = "16.6.13"
+          test "$(node -p "require('./mobile/app.json').expo.android.versionCode")" = "38"
+          test "$(node -p "require('./mobile/package.json').version")" = "16.6.13"
+      - name: Ashyk Web parity regression
+        run: node --test tests/ashyk-web-parity-16-6-13.test.mjs mobile/tests/ashyk-web-parity-16-6-13.test.mjs
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+      - name: Verify Android JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist-android
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Build release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Package APK
+        shell: bash
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.6.13.apk
+          sha256sum AlanTil-16.6.13.apk > AlanTil-16.6.13.apk.sha256
+          git archive --format=zip --output=AlanTil-16.6.13-source.zip HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.6.13-APK
+          path: |
+            AlanTil-16.6.13.apk
+            AlanTil-16.6.13.apk.sha256
+            AlanTil-16.6.13-source.zip
+          if-no-files-found: error
