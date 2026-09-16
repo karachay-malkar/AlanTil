@@ -4,15 +4,17 @@ import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=13.
 import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v=13.10.12";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
 import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.15.12";
-import { initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
+import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
+import { startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0";
+import { socialMessage } from "../../packages/alantil-core/social-i18n.js";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=13.15.12";
-import { createShell } from "./shell.js?v=13.15.10.1";
+import { createRouter } from "./router.js?v=16.7.0";
+import { createShell } from "./shell.js?v=16.7.0";
 
-const RELEASE_VERSION = "13.15.12";
+const RELEASE_VERSION = "16.7.0";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
@@ -22,7 +24,6 @@ function registerServiceWorker() {
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
-
 function restoreFallbackRoute() {
   const url = new URL(window.location.href);
   const target = String(url.searchParams.get(FALLBACK_ROUTE_PARAM) || "");
@@ -30,29 +31,34 @@ function restoreFallbackRoute() {
   window.history.replaceState(null, "", target);
   return true;
 }
-
 function normalizeInitialLearningPath() {
   if (!["/", "/path", "/path/"].includes(window.location.pathname)) return;
   window.history.replaceState(null, "", `/path/oblivion${window.location.search}${window.location.hash}`);
 }
-
 async function linkRestoredAccountVisit() {
   try {
     const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=13.15.9");
-    await recordAnonymousPageView({
-      pagePath: window.location.pathname || "/",
-      pageReferrer: document.referrer,
-      appVersion: RELEASE_VERSION,
-    });
-  } catch {
-    // Visit tracking must never delay or break restored authentication.
-  }
+    await recordAnonymousPageView({ pagePath: window.location.pathname || "/", pageReferrer: document.referrer, appVersion: RELEASE_VERSION });
+  } catch {}
+}
+function syncFriendsNavLabel() {
+  const label=document.querySelector('[data-social-nav-label]');
+  if(label)label.textContent=socialMessage(getInterfaceLanguage(),'friends');
+}
+function renderFriendsBadge(counts={}) {
+  const badge=document.querySelector('[data-friends-badge]');
+  if(!badge)return;
+  const total=Math.max(0,Number(counts.total)||0);
+  badge.hidden=!total;
+  badge.textContent=total>99?'99+':String(total);
 }
 
 async function bootstrap() {
   restoreFallbackRoute();
   normalizeInitialLearningPath();
   initializeI18n();
+  syncFriendsNavLabel();
+  window.addEventListener('alantil:languagechange',syncFriendsNavLabel);
   prepareAnalytics();
   initAdminAccess();
   registerServiceWorker();
@@ -63,31 +69,16 @@ async function bootstrap() {
   const telegram = createTelegramAdapter();
   const shell = createShell();
   const modal = createModalService(shell.modalRoot);
-  const context = {
-    root: shell.root,
-    shell,
-    modal,
-    telegram,
-    ensureStyle() {
-      // Feature styles are loaded once through app.css.
-    },
-  };
+  const context = { root: shell.root, shell, modal, telegram, ensureStyle() {} };
 
-  // OAuth callbacks must finish before routing because they rewrite the URL to
-  // /profile/account. Ordinary restored sessions initialize in the background
-  // so a slow auth network request cannot hold the whole application hostage.
   if (callbackVisit) await authInitialization;
   await initializeProgressSystem();
-
   if (!callbackVisit && !persistedAuth) {
     const setupWasShown = await runLearningSetup({ shell });
-    if (setupWasShown) {
-      window.history.replaceState(null, "", "/profile/account");
-    }
+    if (setupWasShown) window.history.replaceState(null, "", "/profile/account");
   }
 
   shell.renderHome();
-
   const router = createRouter({ shell, modal, context });
   let dictionaryRefreshQueued = false;
   const refreshDictionaryScreen = () => {
@@ -101,26 +92,19 @@ async function bootstrap() {
     }, 100);
   };
   window.addEventListener("alantil:dictionary-updated", refreshDictionaryScreen);
-  window.addEventListener("alantil:scope-ready", () => {
-    void router.refresh({ background: true, reason: "storage_scope" });
-  });
-
+  window.addEventListener("alantil:scope-ready", () => { void router.refresh({ background: true, reason: "storage_scope" }); });
   await router.start();
 
-  if (persistedAuth && !callbackVisit) {
-    void authInitialization.then(async () => {
-      await linkRestoredAccountVisit();
-      await router.refresh({ background: true, reason: "auth_ready" });
-    });
-  }
+  let stopSocial=()=>{};
+  try { stopSocial=await startSocialInboxController(renderFriendsBadge); } catch { renderFriendsBadge({total:0}); }
+  window.addEventListener('pagehide',()=>stopSocial(),{once:true});
 
+  if (persistedAuth && !callbackVisit) {
+    void authInitialization.then(async () => { await linkRestoredAccountVisit(); await router.refresh({ background: true, reason: "auth_ready" }); });
+  }
   void initPrivacyController({ appRouter: router });
   if (!callbackVisit) initGuestProfilePrompt({ modal, router });
-
-  void initTelegram({
-    adapter: telegram,
-    onReady(webApp) { router.attachTelegram(webApp); },
-  }).catch((error) => {
+  void initTelegram({ adapter: telegram, onReady(webApp) { router.attachTelegram(webApp); } }).catch((error) => {
     router.releaseTelegramLaunchUrl();
     console.warn("Telegram WebApp initialization failed", error);
   });
