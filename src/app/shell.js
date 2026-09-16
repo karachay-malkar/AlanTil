@@ -1,4 +1,4 @@
-import { screenConfig } from "./screen-registry.js?v=13.15.12";
+import { screenConfig } from "./screen-registry.js?v=16.7.0";
 import { revealScreen, showScreenError, showScreenLoading } from "./screen-transition.js?v=13.9.0";
 
 export function createShell() {
@@ -75,14 +75,16 @@ export function createShell() {
   function clearMode() { mode.textContent = ""; syncSessionStatus(); }
   function setMode(text = "") { mode.textContent = text; syncSessionStatus(); }
 
+  function rootRoute(feature) {
+    if (["test", "match", "songs", "practice"].includes(feature)) return "practice.home";
+    if (feature === "friends") return "friends.home";
+    if (["profile", "account", "settings", "admin"].includes(feature)) return "profile.home";
+    return "path.home";
+  }
+
   function setActiveNav(route = "") {
     void revealScreen(root);
-    const feature = String(route).split(".")[0];
-    const active = ["test", "match", "songs", "practice"].includes(feature)
-      ? "practice.home"
-      : ["profile", "account", "settings", "admin"].includes(feature)
-        ? "profile.home"
-        : "path.home";
+    const active = rootRoute(String(route).split(".")[0]);
     bottomNav.querySelectorAll("[data-route]").forEach((button) => {
       const on = button.dataset.route === active;
       button.classList.remove("isPending");
@@ -96,12 +98,7 @@ export function createShell() {
   }
 
   function setNavigationPending(route = "", pending = true) {
-    const feature = String(route || "").split(".")[0];
-    const pendingRoute = ["test", "match", "songs", "practice"].includes(feature)
-      ? "practice.home"
-      : ["profile", "account", "settings", "admin"].includes(feature)
-        ? "profile.home"
-        : "path.home";
+    const pendingRoute = rootRoute(String(route || "").split(".")[0]);
     appShell.dataset.navigationPending = String(Boolean(pending));
     appShell.dataset.pendingRoute = String(route || "");
     root.setAttribute("aria-busy", String(Boolean(pending)));
