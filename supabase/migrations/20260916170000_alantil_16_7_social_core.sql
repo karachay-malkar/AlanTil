@@ -108,7 +108,18 @@ create or replace function private.social_relation(p_actor uuid,p_target uuid) r
 select coalesce((select case when f.status='accepted' then 'accepted' when f.requester_id=p_actor then 'outgoing' else 'incoming' end from public.friendships f where (f.requester_id=p_actor and f.addressee_id=p_target) or (f.requester_id=p_target and f.addressee_id=p_actor) limit 1),'none') $$;
 
 create or replace function private.social_streak(p_user_id uuid) returns integer language sql stable security definer set search_path='' as $$
-with days as (select distinct (v.last_seen_at at time zone 'Europe/Moscow')::date day from public.anonymous_visit_sessions v where v.user_id=p_user_id),numbered as (select day,row_number() over(order by day desc)::int rn from days),groups as (select count(*)::int streak,max(day) latest from numbered group by day+rn)
+with days as (
+  select distinct (v.last_seen_at at time zone 'Europe/Moscow')::date as activity_day
+  from public.anonymous_visit_sessions v
+  where v.user_id=p_user_id
+), numbered as (
+  select activity_day,row_number() over(order by activity_day desc)::int rn
+  from days
+), groups as (
+  select count(*)::int streak,max(activity_day) latest
+  from numbered
+  group by activity_day+rn
+)
 select coalesce((select case when latest>=((now() at time zone 'Europe/Moscow')::date-1) then streak else 0 end from groups order by latest desc limit 1),0) $$;
 
 create or replace function private.social_story_progress(p_user_id uuid) returns jsonb language sql stable security definer set search_path='' as $$
