@@ -8,13 +8,113 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: alantil-16-7-social-ashyk
+  cancel-in-progress: true
+
 jobs:
-  contract:
+  release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: 16.7 social and Ashyk contract
         run: node --test tests/social-ashyk-16-7-0.test.mjs
+
+      - name: Shared core and unaffected regressions
+        run: >-
+          node --test
+          tests/alantil-core-16.test.mjs
+          mobile/tests/cloud-queue-race.test.mjs
+          mobile/tests/cloud-scope-transaction.test.mjs
+          mobile/tests/practice-mechanics-parity-16-6-7.test.mjs
+          mobile/tests/mobile-polish-16-6-8.test.mjs
+          mobile/tests/ashyk-ui-help-16-6-12.test.mjs
+
+      - name: Install Web Ashyk build dependencies
+        working-directory: tools/ashyk-web
+        run: npm install --no-audit --no-fund
+
+      - name: Rebuild Web Ashyk runtime
+        run: node tools/ashyk-web/build.mjs
+
+      - name: Verify generated Web Ashyk runtime
+        run: |
+          test -s src/features/ashyk/runtime.js
+          grep -q "ashyk_invite_create" src/features/ashyk/runtime.js
+          grep -q "ashyk_invite_accept" src/features/ashyk/runtime.js
+          if grep -q "ashyk_join_room" src/features/ashyk/runtime.js; then
+            echo "Legacy room-code RPC remains in generated runtime" >&2
+            exit 1
+          fi
+
+      - name: Commit generated Web Ashyk runtime
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/ashyk/runtime.js
+          if ! git diff --cached --quiet; then
+            git commit -m "16.7.0: rebuild Web Ashyk runtime [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+
+      - name: Expo Doctor
+        working-directory: mobile
+        run: npx expo-doctor
+
+      - name: Verify Android JavaScript bundle
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist-android
+
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build release APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Package APK, source and file sizes
+        env:
+          BASE_SHA: 56bf2f312d2a520ac1bff38b3c3d3067931ada97
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk AlanTil-16.7.0.apk
+          git archive --format=zip --output AlanTil-16.7.0-source.zip HEAD
+          : > AlanTil-16.7.0-filesizes.txt
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            if [ -f "$file" ]; then
+              bytes=$(stat -c%s "$file")
+              kb=$(awk -v b="$bytes" 'BEGIN { printf "%.2f", b/1024 }')
+              printf '%s — %s KB\n' "$file" "$kb" >> AlanTil-16.7.0-filesizes.txt
+            else
+              printf '%s — deleted\n' "$file" >> AlanTil-16.7.0-filesizes.txt
+            fi
+          done < <(git diff --name-only "$BASE_SHA" HEAD)
+          printf 'AlanTil-16.7.0.apk — %.2f KB\n' "$(($(stat -c%s AlanTil-16.7.0.apk)))" | awk '{if ($3 ~ /^[0-9]+$/) $3=sprintf("%.2f",$3/1024); print}' >/dev/null || true
+          sha256sum AlanTil-16.7.0.apk AlanTil-16.7.0-source.zip > AlanTil-16.7.0.sha256
+          ls -lh AlanTil-16.7.0.apk AlanTil-16.7.0-source.zip AlanTil-16.7.0-filesizes.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.7.0-friends-rating-ashyk
+          path: |
+            AlanTil-16.7.0.apk
+            AlanTil-16.7.0-source.zip
+            AlanTil-16.7.0-filesizes.txt
+            AlanTil-16.7.0.sha256
+          if-no-files-found: error
