@@ -8,6 +8,12 @@ import { createAshykGameStore } from '../packages/ashyk-game/store.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
+const socialSql=[
+  'supabase/migrations/20260916170000_alantil_16_7_social_core.sql',
+  'supabase/migrations/20260916170100_alantil_16_7_ashyk_invites.sql',
+  'supabase/migrations/20260916170200_alantil_16_7_social_rpc.sql',
+  'supabase/migrations/20260916170300_alantil_16_7_social_snapshot.sql',
+].map(read).join('\n');
 
 test('rating uses fixed dictionary and mastery weights',()=>{
   assert.equal(dictionaryRatingWeight('beginner'),1);
@@ -28,6 +34,13 @@ test('rating counts a word once using its highest dictionary weight',()=>{
     {wordId:'w2',dictionaryId:'family',masteryPercent:90},
   ]);
   assert.equal(score,8.25);
+});
+
+test('mastery percent is part of local progress and cloud pull',()=>{
+  const core=read('packages/alantil-core/word-progress.js');
+  const cloud=read('mobile/platform/cloud-sync.js');
+  assert.match(core,/['"]mastery_percent['"]/);
+  assert.match(cloud,/select=[^'\"]*mastery_percent/);
 });
 
 test('local duet keeps both active players local and never schedules AI',()=>{
@@ -52,26 +65,46 @@ test('friend online adapter contains no room-code flow',()=>{
   assert.doesNotMatch(online,/cleanCode/);
 });
 
-test('social SQL exposes safe RPCs and removes room codes',()=>{
-  const sql=read('supabase/migrations/20260916_alantil_16_7_social_friends_rating_ashyk.sql');
-  for(const name of ['social_search_users','social_leaderboard','social_friends_snapshot','social_send_friend_request','social_accept_friend_request','social_block_user','social_inbox_counts','ashyk_invite_create','ashyk_invite_accept'])assert.match(sql,new RegExp(`function public\\.${name}`));
-  assert.match(sql,/drop column if exists code/);
-  assert.match(sql,/drop function if exists public\.ashyk_join_room/);
-  assert.doesNotMatch(sql,/email/);
+test('social SQL exposes safe RPCs, invite lifecycle and no room-code entry point',()=>{
+  for(const name of ['social_search_users','social_leaderboard','social_friends_snapshot','social_send_friend_request','social_accept_friend_request','social_block_user','social_inbox_counts','ashyk_invite_create','ashyk_invite_accept'])assert.match(socialSql,new RegExp(`function public\\.${name}`));
+  assert.match(socialSql,/drop column if exists code/i);
+  assert.match(socialSql,/drop function if exists public\.ashyk_join_room/i);
+  assert.doesNotMatch(socialSql,/select\s+[^;]*email/i);
 });
 
-test('web and mobile register Friends as fourth root tab',()=>{
-  const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js');
-  assert.match(app,/friends/);
+test('web and mobile register Friends as fourth root tab with inbox badge',()=>{
+  const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js'),bootstrap=read('src/app/bootstrap.js');
+  assert.match(app,/SocialBottomNav/);
+  assert.match(app,/socialBadge/);
   assert.match(html,/data-route="friends\.home"/);
+  assert.match(html,/data-social-badge/);
   assert.match(router,/friends\.home/);
   assert.match(registry,/"friends\.home"/);
+  assert.match(bootstrap,/startSocialInboxController/);
 });
 
-test('Ashyk setup no longer exposes a room code',()=>{
+test('Ashyk setup exposes computer, local and friend modes without room codes',()=>{
   const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
-  assert.doesNotMatch(web,/roomCode|createRoom|joinRoom/);
-  assert.doesNotMatch(mobile,/roomCode|createRoom|joinRoom/);
-  assert.match(web,/startLocal/);
-  assert.match(mobile,/startLocal/);
+  for(const source of [web,mobile]){
+    assert.doesNotMatch(source,/roomCode|createRoom|joinRoom/);
+    assert.match(source,/startLocal/);
+    assert.match(source,/createFriendInvite/);
+  }
+  assert.doesNotMatch(mobile,/!userId&&state\.gameMode!==['"]computer['"]/);
+});
+
+test('social copy includes local winner and explicit sign-in action',()=>{
+  const copy=read('packages/alantil-core/social-i18n.js');
+  assert.match(copy,/playerWon:/);
+  assert.match(copy,/signInAction:/);
+});
+
+test('16.7.0 mobile version uses build 40',()=>{
+  const app=JSON.parse(read('mobile/app.json')).expo;
+  const pkg=JSON.parse(read('mobile/package.json'));
+  assert.equal(app.version,'16.7.0');
+  assert.equal(app.extra.releaseVersion,'16.7.0');
+  assert.equal(app.android.versionCode,40);
+  assert.equal(app.ios.buildNumber,'40');
+  assert.equal(pkg.version,'16.7.0');
 });
