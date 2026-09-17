@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: 16.7 social and Ashyk contract
-        run: node --test tests/social-ashyk-16-7-0.test.mjs
+        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs
 
       - name: Shared core and unaffected regressions
         run: >-
