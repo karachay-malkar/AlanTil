@@ -1,0 +1,9 @@
+{
+  "package": "@supabase/supabase-js",
+  "version": "2.110.7",
+  "source": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm",
+  "source_bytes": 11774,
+  "gzip_bytes": 4568,
+  "base64_bytes": 6092,
+  "sha256": "33dff9f4961e81672ae4cfdd659f5d516a7e7641ce21e6221cbd74d0e01fc98e"
+}
