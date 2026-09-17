@@ -13,13 +13,16 @@ test("user activity routes stay under profile and preserve user/test identifiers
   assert.match(router, /\/profile\/users\/\$\{encodeSegment\(params\.userId\)\}/);
 });
 
-test("profile navigation exposes Users only through the activity-access marker", async () => {
+test("profile navigation no longer exposes Users; Extended stats moved under Friends and stays activity-access gated", async () => {
   const navigation = await read("src/shared/ui/profile-navigation.js");
-  const styles = await read("src/features/admin/admin.css");
-  assert.match(navigation, /id: "users"[\s\S]*activityOnly: true/);
-  assert.match(navigation, /data-activity-only/);
-  assert.match(styles, /profilePrimaryTab\[data-activity-only\]\{display:none\}/);
-  assert.match(styles, /data-activity-access="true"/);
+  const friends = await read("src/features/friends/index.js");
+  const router = await read("src/app/router.js");
+  assert.doesNotMatch(navigation, /id: "users"/);
+  assert.doesNotMatch(navigation, /route: "admin\.users"/);
+  assert.match(friends, /hasActivityAccess/);
+  assert.match(friends, /data-social-tab="stats"/);
+  assert.match(router, /whenActivityAccessReady/);
+  assert.match(router, /hasActivityAccess/);
 });
 
 test("users table uses the same full-height scroll architecture as the station word list", async () => {
