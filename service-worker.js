@@ -1,4 +1,4 @@
-const VERSION = "13.15.12.7";
+const VERSION = "16.7.0.1";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
