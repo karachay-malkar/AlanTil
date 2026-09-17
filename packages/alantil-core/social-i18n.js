@@ -2,6 +2,7 @@ const M=(ru,en,tr)=>Object.freeze({ru,en,tr});
 export const SOCIAL_MESSAGES=Object.freeze({
   friends:M('Друзья','Friends','Arkadaşlar'),
   rating:M('Рейтинг','Leaderboard','Sıralama'),
+  extendedStats:M('Расширенная статистика','Extended stats','Genişletilmiş istatistik'),
   search:M('Поиск','Search','Ara'),
   searchPlaceholder:M('Найти по нику','Search by nickname','Kullanıcı adına göre ara'),
   requests:M('Заявки в друзья','Friend requests','Arkadaşlık istekleri'),

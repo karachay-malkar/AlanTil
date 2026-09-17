@@ -36,6 +36,18 @@ export async function fetchUserFavorites(userId) {
   return Array.isArray(data) ? data : [];
 }
 
+export async function blockUserAccount(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return false;
+  return Boolean(await runAdminRpc("admin_block_account", { p_user_id: id }));
+}
+
+export async function unblockUserAccount(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return false;
+  return Boolean(await runAdminRpc("admin_unblock_account", { p_user_id: id }));
+}
+
 export async function fetchStationTestDetail(sessionId) {
   const id = String(sessionId || "").trim();
   if (!id) return null;

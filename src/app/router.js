@@ -2,6 +2,7 @@ import { msg } from "../shared/i18n/index.js?v=13.10.12";
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
+import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.7.0";
 
 const DEFAULT_STORY = "oblivion";
 const RELEASE_VERSION = "16.7.0";
@@ -262,7 +263,7 @@ export function createRouter({ shell, modal, context }) {
   function startScreenTimer(route) { currentScreen = screenNameOf(route); screenPagePath = window.location.pathname || "/"; screenOpenedAt = performance.now(); activeDuration = 0; activeStartedAt = isDocumentVisible ? screenOpenedAt : 0; setAnalyticsContext({ screen_name: currentScreen, page_path: window.location.pathname || "/" }); }
   function setDocumentTitle(route) { const key = TITLE_KEY_BY_SCREEN[screenNameOf(route)]; document.title = key ? msg(key) : msg("common.alan_til"); }
   function syncBackControls() {
-    const visible = !["home", "path.home", "practice.home", "friends.home", "profile.home", "profile.skills", "profile.statistics", "admin.users", "settings.home"].includes(current.route);
+    const visible = !["home", "path.home", "practice.home", "friends.home", "profile.home", "profile.skills", "profile.statistics", "settings.home"].includes(current.route);
     shell.setBackVisible(visible);
     const backButton = telegramWebApp?.BackButton;
     try { if (visible) backButton?.show?.(); else backButton?.hide?.(); } catch (error) { console.warn("Telegram BackButton update failed", error); }
@@ -291,7 +292,15 @@ export function createRouter({ shell, modal, context }) {
   }
   function discardScreenTimer() { currentScreen = ""; screenPagePath = "/"; screenOpenedAt = 0; activeDuration = 0; activeStartedAt = 0; }
   function setAnalyticsActive(enabled) { discardScreenTimer(); if (!enabled || !started) return false; startScreenTimer(current.route); return sendPageView({ force: true }); }
-  async function show(target, { historyMode = "push", force = false, reason = "route_change", skipLeaveCheck = false, initial = false } = {}) {
+  async function guardAdminTarget(target) {
+    if (!target.route.startsWith("admin.")) return target;
+    const ready = new Promise((resolve) => globalThis.setTimeout(() => resolve(false), 4000));
+    await Promise.race([whenActivityAccessReady().then(() => true), ready]);
+    if (hasActivityAccess()) return target;
+    return { route: "profile.home", params: {}, redirected: true };
+  }
+  async function show(rawTarget, { historyMode = "push", force = false, reason = "route_change", skipLeaveCheck = false, initial = false } = {}) {
+    const target = await guardAdminTarget(rawTarget);
     const options = { historyMode, force, reason, skipLeaveCheck, initial }; shell.setNavigationPending?.(target.route, true);
     if (navigating) return queueNavigation(target, options);
     if (!initial && !force && targetsEqual(target, current)) { shell.setNavigationPending?.(target.route, false); return true; }
@@ -339,7 +348,7 @@ export function createRouter({ shell, modal, context }) {
     if (["profile.skills", "profile.statistics"].includes(current.route)) return { route: "profile.home", params: {} };
     if (current.route === "admin.test") return { route: "admin.user", params: { userId: params.userId } };
     if (current.route === "admin.user") return { route: "admin.users", params: {} };
-    if (current.route === "admin.users") return { route: "profile.home", params: {} };
+    if (current.route === "admin.users") return { route: "friends.home", params: {} };
     if (["settings.privacy", "settings.version", "settings.thanks"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "profile.home", params: {} };
     return { route: "path.home", params: { storyType: DEFAULT_STORY } };

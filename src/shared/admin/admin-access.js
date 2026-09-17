@@ -4,6 +4,8 @@ import { getSupabaseClient } from "../auth/supabase-client.js?v=13.15.9";
 let unsubscribeAuth = null;
 let requestVersion = 0;
 let currentAccess = false;
+let readyResolve = null;
+let accessReady = new Promise((resolve) => { readyResolve = resolve; });
 
 function publishAccess(value) {
   currentAccess = Boolean(value);
@@ -14,13 +16,9 @@ function publishAccess(value) {
 
 async function refreshAccess(authState) {
   const version = ++requestVersion;
-  const userId = String(authState?.user?.id || "").trim();
-  if (!authState?.ready || !userId) {
-    publishAccess(false);
-    return false;
-  }
-
   try {
+    const userId = String(authState?.user?.id || "").trim();
+    if (!authState?.ready || !userId) return publishAccess(false);
     const client = await getSupabaseClient();
     const { data, error } = await client
       .from("profiles")
@@ -34,6 +32,8 @@ async function refreshAccess(authState) {
     if (version === requestVersion) publishAccess(false);
     console.warn("Activity access check failed", error);
     return false;
+  } finally {
+    readyResolve?.();
   }
 }
 
@@ -48,6 +48,10 @@ export function initAdminAccess() {
 
 export function hasActivityAccess() {
   return currentAccess;
+}
+
+export function whenActivityAccessReady() {
+  return accessReady;
 }
 
 export function disposeAdminAccess() {

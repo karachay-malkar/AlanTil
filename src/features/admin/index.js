@@ -1,15 +1,18 @@
 import { msg, getInterfaceLanguage, getInterfaceLocale } from "../../shared/i18n/index.js?v=13.15.10";
 import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.9";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.15.9";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
+import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=13.9.0";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.12";
 import {
+  blockUserAccount,
   fetchStationTestDetail,
   fetchUserActivityDetail,
   fetchUserActivityList,
   fetchUserFavorites,
   fetchUserTestHistory,
-} from "../../shared/admin/admin-activity-service.js?v=13.15.10";
+  unblockUserAccount,
+} from "../../shared/admin/admin-activity-service.js?v=16.7.0";
 
 const STORY_ORDER = Object.freeze(["oblivion", "roots", "ascent", "pathways"]);
 const STORY_KEYS = Object.freeze({
@@ -21,6 +24,8 @@ const STORY_KEYS = Object.freeze({
 
 let controller = null;
 let activeModalClose = null;
+let usersSearchOpen = false;
+let usersSearchQuery = "";
 
 function storyLabel(type) {
   return msg(STORY_KEYS[type] || "admin.user");
@@ -126,6 +131,10 @@ function renderFailure(context, error) {
   context.root.innerHTML = `<section class="view screen adminStateView"><div class="adminStateMessage">${escapeHtml(failureMessage(error))}</div></section>`;
 }
 
+function blockToggleIcon(blocked) {
+  if (blocked) return `<svg class="adminBlockIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 7.5-2"></path></svg>`;
+  return `<svg class="adminBlockIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>`;
+}
 function medalIcon(rank) {
   if (rank < 1 || rank > 3) return "";
   return `<svg class="adminRankMedal" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -162,34 +171,63 @@ function usersTableRows(rows = []) {
 }
 
 async function renderUsers(context, signal) {
-  context.shell.setHeaderContent?.({ title: "Alan Til!" });
+  context.shell.setHeaderContent?.({ title: msg("admin.users") });
+  const search = renderExpandableSearch({ idPrefix: "adminUsersSearch", open: usersSearchOpen, placeholder: msg("admin.users") });
+  context.shell.setHeaderAction?.(search.toggle);
   context.root.innerHTML = `<section class="view screen adminUsersView">
-    ${renderProfileNavigation("users")}
-    <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0"><div class="loadingState">${msg("common.otkryvaem")}</div></div>
+    <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
+      ${search.bar}
+      <div class="loadingState">${msg("common.otkryvaem")}</div>
+    </div>
   </section>`;
-  bindProfileNavigation(context, signal);
 
   try {
     const rows = await fetchUserActivityList();
     if (signal.aborted) return;
     const scroll = context.root.querySelector(".adminUsersScroll");
     if (!scroll) return;
-    scroll.innerHTML = `<table class="adminUsersTable">
-      <thead><tr>
+    const table = document.createElement("table");
+    table.className = "adminUsersTable";
+    table.innerHTML = `<thead><tr>
         <th class="adminUserStickyCell adminUserStickyHead" scope="col">${msg("admin.user")}</th>
         <th scope="col">${msg("admin.last_visit")}</th>
         <th scope="col">${msg("admin.streak")}</th>
         ${STORY_ORDER.map((type) => `<th class="adminStoryHead" scope="col">${escapeHtml(storyLabel(type))}</th>`).join("")}
         <th scope="col">${msg("admin.mastered_words")}</th>
       </tr></thead>
-      <tbody>${usersTableRows(rows)}</tbody>
-    </table>`;
+      <tbody></tbody>`;
+    scroll.appendChild(table);
+    const tbody = table.querySelector("tbody");
 
-    scroll.querySelectorAll("[data-admin-user-id]").forEach((button) => {
-      button.addEventListener("click", () => {
-        context.router.navigate("admin.user", { userId: button.dataset.adminUserId });
-      }, { signal });
-    });
+    const bindRows = () => {
+      tbody.querySelectorAll("[data-admin-user-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          context.router.navigate("admin.user", { userId: button.dataset.adminUserId });
+        }, { signal });
+      });
+    };
+    const draw = () => {
+      const q = usersSearchQuery.trim().toLowerCase();
+      const filtered = q ? rows.filter((row) => String(row.nickname || "").toLowerCase().includes(q)) : rows;
+      tbody.innerHTML = usersTableRows(filtered);
+      bindRows();
+    };
+    draw();
+
+    const toggle = context.shell.headerActionSlot?.querySelector("#adminUsersSearchToggle");
+    const bar = context.root.querySelector("#adminUsersSearchBar");
+    const input = context.root.querySelector("#adminUsersSearchInput");
+    if (input) input.value = usersSearchQuery;
+    const setOpen = (open) => {
+      usersSearchOpen = open;
+      bar?.classList.toggle("hidden", !open);
+      toggle?.classList.toggle("active", open);
+      toggle?.setAttribute("aria-expanded", String(open));
+      if (open) requestAnimationFrame(() => input?.focus());
+      else { usersSearchQuery = ""; if (input) input.value = ""; draw(); }
+    };
+    toggle?.addEventListener("click", () => setOpen(!usersSearchOpen), { signal });
+    input?.addEventListener("input", () => { usersSearchQuery = input.value; draw(); }, { signal });
   } catch (error) {
     if (!signal.aborted) renderFailure(context, error);
   }
@@ -306,7 +344,14 @@ async function renderUserDetail(context, signal, userId) {
     if (!scroll) return;
     const tests = Array.isArray(detail.tests) ? detail.tests : [];
     const favorites = Array.isArray(detail.favorites) ? detail.favorites : [];
+    const actorId = String(getCurrentAuthState()?.user?.id || "");
+    const isSelf = actorId && actorId === String(detail.user_id || "");
+    const blocked = detail.account_blocked === true;
     scroll.innerHTML = `<div class="adminDetailContent">
+      ${isSelf ? "" : `<div class="adminBlockBar">
+        ${blocked ? `<span class="adminBlockedTag">${escapeHtml(msg("admin.account_blocked_status"))}</span>` : ""}
+        <button class="adminBlockButton ${blocked ? "isBlocked" : ""}" type="button" data-admin-block-toggle title="${escapeHtml(msg(blocked ? "admin.unblock_account" : "admin.block_account"))}" aria-label="${escapeHtml(msg(blocked ? "admin.unblock_account" : "admin.block_account"))}">${blockToggleIcon(blocked)}</button>
+      </div>`}
       <section class="adminSummaryGrid">
         <div><span>${msg("admin.last_visit")}</span><strong>${escapeHtml(formatLastVisit(detail.last_seen_at))}</strong></div>
         <div><span>${msg("admin.streak")}</span><strong>${escapeHtml(msg("admin.days_short", { count: Math.max(0, numberValue(detail.streak_days)) }))}</strong></div>
@@ -335,6 +380,19 @@ async function renderUserDetail(context, signal, userId) {
     </div>`;
 
     bindTestLinks(scroll, context, userId, signal);
+    scroll.querySelector("[data-admin-block-toggle]")?.addEventListener("click", async () => {
+      const confirmed = await context.modal.confirm({
+        message: msg(blocked ? "admin.unblock_account_confirm" : "admin.block_account_confirm", { nickname: detail.nickname || msg("admin.user") }),
+        confirmText: msg(blocked ? "admin.unblock_account" : "admin.block_account"),
+      });
+      if (!confirmed || signal.aborted) return;
+      try {
+        if (blocked) await unblockUserAccount(userId); else await blockUserAccount(userId);
+        if (!signal.aborted) await renderUserDetail(context, signal, userId);
+      } catch (error) {
+        if (!signal.aborted) scroll.insertAdjacentHTML("afterbegin", `<div class="errorState">${escapeHtml(error?.message || msg("admin.block_account_failed"))}</div>`);
+      }
+    }, { signal });
     scroll.querySelector("[data-admin-tests-all]")?.addEventListener("click", () => {
       void openHistoryModal(context, signal, userId);
     }, { signal });

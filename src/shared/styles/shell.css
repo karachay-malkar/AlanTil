@@ -100,7 +100,7 @@
   height:calc(var(--nav-h) + var(--safe-bottom));
   padding:2px 12px var(--safe-bottom);
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,1fr);
   align-items:start;
   background:transparent;
   border:0;

@@ -4,7 +4,6 @@ export function renderProfileNavigation(active = "profile") {
   const items = [
     { id: "profile", label: msg("common.profil"), route: "profile.home" },
     { id: "statistics", label: msg("common.statistika"), route: "profile.statistics" },
-    { id: "users", label: msg("admin.users"), route: "admin.users", activityOnly: true },
     { id: "settings", label: msg("common.nastroyki"), route: "settings.home" },
   ];
   return `<nav class="profilePrimaryNav" aria-label="${msg("common.razdely_profilya")}">

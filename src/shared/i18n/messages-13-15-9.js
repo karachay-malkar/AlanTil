@@ -42,6 +42,12 @@ export const RELEASE_MESSAGES_13_15_9 = Object.freeze({
   "admin.unknown_short": Object.freeze({ ru: "не знаю: {count}", en: "unknown: {count}", tr: "bilmiyor: {count}" }),
   "admin.profile_progress": Object.freeze({ ru: "Прогресс по историям", en: "Story progress", tr: "Hikâye ilerlemesi" }),
   "admin.mastered_summary": Object.freeze({ ru: "Освоено", en: "Mastered", tr: "Öğrenildi" }),
+  "admin.block_account": Object.freeze({ ru: "Заблокировать аккаунт", en: "Block account", tr: "Hesabı engelle" }),
+  "admin.unblock_account": Object.freeze({ ru: "Разблокировать аккаунт", en: "Unblock account", tr: "Hesap engelini kaldır" }),
+  "admin.block_account_confirm": Object.freeze({ ru: "Заблокировать аккаунт {nickname}?", en: "Block {nickname}’s account?", tr: "{nickname} hesabı engellensin mi?" }),
+  "admin.unblock_account_confirm": Object.freeze({ ru: "Разблокировать аккаунт {nickname}?", en: "Unblock {nickname}’s account?", tr: "{nickname} hesabının engeli kaldırılsın mı?" }),
+  "admin.account_blocked_status": Object.freeze({ ru: "Аккаунт заблокирован", en: "Account blocked", tr: "Hesap engellendi" }),
+  "admin.block_account_failed": Object.freeze({ ru: "Не удалось изменить статус блокировки.", en: "Could not change the block status.", tr: "Engelleme durumu değiştirilemedi." }),
   "privacy.visit_activity_title": Object.freeze({ ru: "Техническая активность посещений", en: "Technical visit activity", tr: "Teknik ziyaret etkinliği" }),
   "privacy.visit_activity_text": Object.freeze({
     ru: "Приложение сохраняет случайный идентификатор браузера и сессии, время посещения и версию приложения. После входа сессия может быть связана с техническим ID аккаунта. Эти данные нужны для подсчёта уникальных посещений, последней активности и серии дней; имя, email, точные координаты и содержимое вводимого текста в эту запись не включаются.",
