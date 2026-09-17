@@ -1,13 +1,12 @@
 import { msg } from "../i18n/index.js?v=13.10.12";
-import { getAuthRedirectUrl, supabaseUrl } from "../../config/supabase.js?v=13.10.12";
+import { getAuthRedirectUrl } from "../../config/supabase.js?v=13.10.12";
 import { getAuthState, setAuthState, subscribeAuthState } from "./auth-store.js?v=13.10.12";
-import { AUTH_STORAGE_KEY, getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.12";
+import { getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js?v=13.10.12";
 
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
 const OAUTH_PROVIDERS = new Set(["google", "apple"]);
 const AUTH_REQUEST_TIMEOUT_MS = 15000;
 const AUTH_DESTINATION_PATH = "/profile/account";
-const PKCE_VERIFIER_KEY = `${AUTH_STORAGE_KEY}-code-verifier`;
 
 let initializationPromise = null;
 let authSubscription = null;
@@ -43,52 +42,6 @@ function authMessage(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
   return fallback;
 }
 
-function bytesToBase64Url(bytes) {
-  let binary = "";
-  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function createPkceVerifier() {
-  const bytes = new Uint8Array(48);
-  if (globalThis.crypto?.getRandomValues) {
-    globalThis.crypto.getRandomValues(bytes);
-  } else {
-    for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
-  }
-  return bytesToBase64Url(bytes);
-}
-
-async function createPkceChallenge(verifier) {
-  if (!globalThis.crypto?.subtle || typeof TextEncoder !== "function") {
-    return { challenge: verifier, method: "plain" };
-  }
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
-  return { challenge: bytesToBase64Url(new Uint8Array(digest)), method: "s256" };
-}
-
-function persistPkceVerifier(verifier) {
-  try {
-    localStorage.setItem(PKCE_VERIFIER_KEY, JSON.stringify(verifier));
-  } catch {
-    throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
-  }
-}
-
-async function buildOAuthRedirectUrl(provider) {
-  const verifier = createPkceVerifier();
-  const { challenge, method } = await createPkceChallenge(verifier);
-  persistPkceVerifier(verifier);
-
-  const url = new URL(`${supabaseUrl}/auth/v1/authorize`);
-  url.searchParams.set("provider", provider);
-  url.searchParams.set("redirect_to", getAuthRedirectUrl());
-  url.searchParams.set("code_challenge", challenge);
-  url.searchParams.set("code_challenge_method", method);
-  if (provider === "google") url.searchParams.set("prompt", "select_account");
-  return url.toString();
-}
-
 function normalizeOAuthProvider(provider) {
   const normalized = String(provider || "").trim().toLowerCase();
   if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
@@ -100,10 +53,30 @@ export function prepareSignInWithProvider(provider) {
   const existing = preparedOAuthRedirects.get(normalized);
   if (existing) return existing;
 
-  const prepared = buildOAuthRedirectUrl(normalized).catch((error) => {
+  const prepared = (async () => {
+    const client = await withTimeout(getSupabaseClient(), "Supabase client");
+    const initialization = await withTimeout(client.auth.initialize(), "Auth client initialization");
+    if (initialization?.error) throw initialization.error;
+
+    const options = {
+      redirectTo: getAuthRedirectUrl(),
+      skipBrowserRedirect: true,
+    };
+    if (normalized === "google") options.queryParams = { prompt: "select_account" };
+
+    const { data, error } = await withTimeout(
+      client.auth.signInWithOAuth({ provider: normalized, options }),
+      "OAuth start",
+    );
+    if (error) throw error;
+    const url = String(data?.url || "").trim();
+    if (!url) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
+    return url;
+  })().catch((error) => {
     preparedOAuthRedirects.delete(normalized);
     throw error;
   });
+
   preparedOAuthRedirects.set(normalized, prepared);
   return prepared;
 }
