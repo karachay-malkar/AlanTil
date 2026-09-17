@@ -4,8 +4,26 @@ import { getSupabaseClient } from "../auth/supabase-client.js?v=13.15.9";
 let unsubscribeAuth = null;
 let requestVersion = 0;
 let currentAccess = false;
+let currentSubject = "pending";
+let accessReadyState = false;
 let readyResolve = null;
-let accessReady = new Promise((resolve) => { readyResolve = resolve; });
+let accessReady = createAccessReadyPromise();
+
+function createAccessReadyPromise() {
+  return new Promise((resolve) => { readyResolve = resolve; });
+}
+
+function resetAccessReady() {
+  accessReadyState = false;
+  accessReady = createAccessReadyPromise();
+}
+
+function markAccessReady() {
+  if (accessReadyState) return;
+  accessReadyState = true;
+  readyResolve?.();
+  readyResolve = null;
+}
 
 function publishAccess(value) {
   currentAccess = Boolean(value);
@@ -15,10 +33,24 @@ function publishAccess(value) {
 }
 
 async function refreshAccess(authState) {
+  if (!authState?.ready) return currentAccess;
+
+  const userId = String(authState?.user?.id || "").trim();
+  const subject = userId || "guest";
+  if (subject !== currentSubject) {
+    currentSubject = subject;
+    requestVersion += 1;
+    resetAccessReady();
+    publishAccess(false);
+  }
+
   const version = ++requestVersion;
+  if (!userId) {
+    if (version === requestVersion) markAccessReady();
+    return publishAccess(false);
+  }
+
   try {
-    const userId = String(authState?.user?.id || "").trim();
-    if (!authState?.ready || !userId) return publishAccess(false);
     const client = await getSupabaseClient();
     const { data, error } = await client
       .from("profiles")
@@ -33,7 +65,7 @@ async function refreshAccess(authState) {
     console.warn("Activity access check failed", error);
     return false;
   } finally {
-    readyResolve?.();
+    if (version === requestVersion) markAccessReady();
   }
 }
 
@@ -58,5 +90,7 @@ export function disposeAdminAccess() {
   requestVersion += 1;
   unsubscribeAuth?.();
   unsubscribeAuth = null;
+  currentSubject = "pending";
+  resetAccessReady();
   publishAccess(false);
 }

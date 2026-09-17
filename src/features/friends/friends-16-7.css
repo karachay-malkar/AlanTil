@@ -1,51 +1,16 @@
-.socialView{width:min(760px,100%);margin:0 auto;padding:18px 14px 96px;display:grid;gap:16px}
-.socialHeader{display:grid;gap:12px}
-.socialHeader h1{margin:0;font-size:clamp(24px,5vw,32px)}
-.socialTabs{display:flex;gap:2px;border:1px solid var(--line-strong);border-radius:999px;padding:2px;background:rgba(246,242,233,.34)}
-.socialTabs button{flex:1;min-height:32px;padding:0 6px;border:0;border-radius:999px;background:transparent;color:var(--text-2);font:750 11px/1 var(--font-terminal);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.socialTabs button.active{background:var(--accent-soft);color:var(--accent-strong)}
-.socialBody,.socialSection{display:grid;gap:8px}
-.socialSection h2{margin:5px 0 0;font:800 12px/1.2 var(--font-terminal);letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
-
-.socialSearchBar{display:flex;align-items:center;gap:8px}
-.socialSearchField{flex:1;min-width:0}
-.socialSearchField input{width:100%;min-height:38px;border:1px solid var(--line-strong);border-radius:12px;padding:0 12px;background:rgba(246,242,233,.58);color:var(--text-1);font:inherit}
-
-.socialRow{display:flex;align-items:center;gap:10px;min-height:48px;padding:5px 4px;border-bottom:1px solid var(--line)}
-.socialRank{flex:0 0 26px;text-align:center;font:800 12px/1 var(--font-terminal);color:var(--text-2);display:flex;align-items:center;justify-content:center}
-.rankMedal{width:19px;height:19px}
-.rankMedal.medal1{color:#c9971f}
-.rankMedal.medal2{color:#9aa1ab}
-.rankMedal.medal3{color:#b0713b}
-.rankMedal path,.rankMedal circle{fill:currentColor;stroke:none}
-.socialRowBody{flex:1;min-width:0;display:grid;gap:2px}
-.socialRowName{display:flex;align-items:center;gap:6px;min-width:0}
-.socialRowName strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-1)}
-.socialRowMeta{font-size:11px;color:var(--text-2)}
-.socialRowValue{flex:0 0 auto;font:800 13px/1 var(--font-terminal);color:var(--text-1);white-space:nowrap}
-.socialRowActions{flex:0 0 auto;display:flex;gap:6px}
-
-.genderIcon{flex:0 0 15px;width:15px;height:15px;display:inline-flex}
-.genderIcon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.genderIcon.male{color:#3f7fd1}
-.genderIcon.female{color:#d0679f}
-
-.iconAction{appearance:none;width:32px;height:32px;flex:0 0 32px;border-radius:999px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-2);display:grid;place-items:center;cursor:pointer}
-.iconAction svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.iconAction.primary{border-color:var(--accent);color:var(--accent-strong);background:var(--accent-soft)}
-.iconAction.ghost{background:transparent}
-.iconAction.neutral{color:var(--success-strong,var(--text-2));border-color:var(--line)}
-.iconAction.disabled{opacity:.5;pointer-events:none}
-.iconAction:active{transform:scale(.94);opacity:.85}
-.socialSearchToggle{flex:0 0 34px;width:34px;height:34px}
-
-.socialEmpty{margin:0;padding:8px 2px;color:var(--text-2);font-size:13px}
-.socialGuest{min-height:55vh;display:grid;place-items:center;align-content:center;gap:14px;text-align:center}
-.socialGuest h1,.socialGuest p{margin:0}
-.socialGuest p{max-width:420px;color:var(--text-2)}
-
-.bottomNavItem{position:relative}
-.friendsNavBadge{position:absolute;top:1px;left:50%;transform:translateX(10px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--danger);color:var(--inverse);font:800 9px/17px var(--font-terminal);text-align:center}
-.friendsNavBadge[hidden]{display:none!important}
-
-@media(max-width:560px){.socialView{padding-inline:10px}}
+.socialView{width:min(760px,100%);height:100%;min-height:0;margin:0 auto;padding:18px 14px 0;display:grid;grid-template-rows:auto minmax(0,1fr);align-content:stretch;gap:4px;overflow:hidden}
+.socialHeader{min-height:30px;align-self:start}
+.socialHeader .profilePrimaryNav{width:100%;height:30px}
+.socialBody{min-height:0;overflow:auto;overscroll-behavior:contain;display:grid;align-content:start;gap:8px;padding:4px 0 calc(var(--nav-h) + var(--safe-bottom) + 24px);-webkit-overflow-scrolling:touch}
+.socialSection{display:grid;gap:8px}
+.socialSection h2{margin:0;padding:8px 0 4px;border-bottom:1px solid var(--line-soft);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.socialRow{min-height:52px;display:flex;align-items:center;gap:10px;padding:6px 2px;border-bottom:1px solid var(--line-soft)}
+.socialRank{width:30px;flex:0 0 30px;text-align:center;font:800 11px/1 var(--font-terminal);color:var(--text-2)}
+.rankMedal{width:22px;height:22px;fill:currentColor}.medal1{color:#c9971f}.medal2{color:#9aa1ab}.medal3{color:#b0713b}
+.socialRowBody{min-width:0;flex:1;display:grid;gap:2px}.socialRowName{min-width:0;display:flex;align-items:center;gap:7px}.socialRowName strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.socialRowMeta{font-size:11px;color:var(--text-2)}
+.genderIcon{width:16px;height:16px;display:grid;place-items:center;flex:0 0 16px}.genderIcon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}.genderIcon.male{color:#3f7fd1}.genderIcon.female{color:#d0679f}
+.socialRowValue{font:800 13px/1 var(--font-terminal);white-space:nowrap}.socialRowActions{display:flex;align-items:center;gap:6px}.socialRowActions .iconAction{width:34px;height:34px;padding:7px}.socialRowActions .disabled{pointer-events:none;opacity:.45}
+.socialSearchBar{min-height:40px;display:flex;align-items:center;gap:8px}.socialSearchToggle{width:36px;height:36px;padding:8px}.socialSearchField{min-width:0;flex:1}.socialSearchField input{width:100%;height:38px;border:1px solid var(--line-strong);border-radius:12px;background:color-mix(in srgb,var(--surface-0) 74%,transparent);padding:0 12px;color:var(--text-1);font:650 13px/1 var(--font-body);outline:none}.socialSearchField input:focus{border-color:var(--accent)}
+.socialEmpty{margin:0;padding:10px 2px;color:var(--text-2);font-size:13px}.socialGuestView{display:flex;align-items:center;justify-content:center;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 24px)}.socialGuest{width:min(420px,100%);display:grid;justify-items:center;gap:14px;text-align:center}.socialGuestTitle{font-size:26px;font-weight:900}.socialGuest p{margin:0;color:var(--text-2);line-height:1.5}.socialGuest .btn{width:min(260px,100%)}
+.friendsNavBadge{position:absolute;top:0;right:calc(50% - 25px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--danger);color:#fff;font:800 9px/16px var(--font-terminal);text-align:center;box-shadow:0 0 0 2px var(--app-bg)}
+@media(max-width:560px){.socialView{padding-inline:10px}.socialRow{gap:7px}.socialRowActions{gap:4px}.socialRowActions .iconAction{width:32px;height:32px;padding:7px}}

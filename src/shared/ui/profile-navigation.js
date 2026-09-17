@@ -1,14 +1,37 @@
 import { msg } from "../i18n/index.js?v=13.15.9";
 
+function escapeAttribute(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+export function renderBracketTabs({ items = [], active = "", ariaLabel = "", dataAttribute = "profile-tab" } = {}) {
+  const attribute = /^[a-z][a-z0-9-]*$/.test(dataAttribute) ? dataAttribute : "profile-tab";
+  return `<nav class="profilePrimaryNav" aria-label="${escapeAttribute(ariaLabel)}">
+    ${items.map((item) => {
+      const id = String(item?.id || "");
+      const value = item?.value ?? item?.route ?? id;
+      const selected = active === id;
+      return `<button class="tabAction profilePrimaryTab ${selected ? "active" : ""}" type="button" data-${attribute}="${escapeAttribute(value)}" ${selected ? 'aria-current="page"' : ""}>[ ${escapeAttribute(item?.label || "")} ]</button>`;
+    }).join("")}
+  </nav>`;
+}
+
 export function renderProfileNavigation(active = "profile") {
   const items = [
     { id: "profile", label: msg("common.profil"), route: "profile.home" },
     { id: "statistics", label: msg("common.statistika"), route: "profile.statistics" },
     { id: "settings", label: msg("common.nastroyki"), route: "settings.home" },
   ];
-  return `<nav class="profilePrimaryNav" aria-label="${msg("common.razdely_profilya")}">
-    ${items.map((item) => `<button class="tabAction profilePrimaryTab ${active === item.id ? "active" : ""}" type="button" data-profile-navigation="${item.route}" ${item.activityOnly ? 'data-activity-only="true"' : ""} ${active === item.id ? 'aria-current="page"' : ""}>[ ${item.label} ]</button>`).join("")}
-  </nav>`;
+  return renderBracketTabs({
+    items,
+    active,
+    ariaLabel: msg("common.razdely_profilya"),
+    dataAttribute: "profile-navigation",
+  });
 }
 
 export function bindProfileNavigation(context, signal) {

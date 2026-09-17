@@ -3,7 +3,8 @@ import {socialMessage} from '../../../packages/alantil-core/social-i18n.js';
 import {createAshykOnlineAdapter} from '../../../packages/ashyk-game/online.js';
 import {getInterfaceLanguage} from '../../shared/i18n/index.js?v=13.15.12';
 import {escapeHtml} from '../../shared/ui/html.js?v=13.9.0';
-import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.7.0';
+import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.7.0';
+import {hasActivityAccess,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.7.0';
 import {setPendingAshykInvite} from '../../shared/social/ashyk-handoff.js';
 import {acceptFriendRequest,blockUser,declineFriendRequest,fetchFriendsSnapshot,fetchSocialLeaderboard,getSocialClient,getSocialSession,removeFriend,searchSocialUsers,sendFriendRequest,unblockUser} from '../../shared/social/social-service.js';
 
@@ -39,8 +40,13 @@ function section(title,body){return body?`<section class="socialSection"><h2>${e
 function searchToggleHtml(){return `<button class="iconAction ghost socialSearchToggle" type="button" data-social-search-toggle aria-label="${esc(t('search'))}" title="${esc(t('search'))}">${ICON.search}</button>`;}
 function searchFieldHtml(query=''){return `<div class="socialSearchField" data-social-search-field><input type="search" value="${esc(query)}" placeholder="${esc(t('searchPlaceholder'))}" data-social-search autocomplete="off"/></div>`;}
 
-function guest(context){context.root.innerHTML=`<section class="view screen socialView"><div class="socialGuest"><h1>${esc(t('friends'))}</h1><p>${esc(t('signIn'))}</p><button class="btn actionPrimary" type="button" data-route="account.home">${esc(t('signInAction'))}</button></div></section>`;}
-function shellHtml(showStats){return `<section class="view screen socialView"><header class="socialHeader"><h1>${esc(t('friends'))}</h1><div class="settingsSegments socialTabs" role="tablist"><button type="button" data-social-tab="rating" class="active">${esc(t('rating'))}</button><button type="button" data-social-tab="friends">${esc(t('friends'))}</button>${showStats?`<button type="button" data-social-tab="stats">${esc(t('extendedStats'))}</button>`:''}</div></header><div class="socialBody" data-social-body></div></section>`;}
+function guest(context){context.root.innerHTML=`<section class="view screen socialView socialGuestView"><div class="socialGuest"><strong class="socialGuestTitle">${esc(t('friends'))}</strong><p>${esc(t('signIn'))}</p><button class="btn actionPrimary" type="button" data-route="account.home">${esc(t('signInAction'))}</button></div></section>`;}
+function tabsHtml(showStats,active='rating'){
+  const items=[{id:'rating',label:t('rating')},{id:'friends',label:t('friends')},...(showStats?[{id:'stats',label:t('extendedStats')}]:[])];
+  return renderBracketTabs({items,active,ariaLabel:t('friends'),dataAttribute:'social-tab'});
+}
+function shellHtml(showStats){return `<section class="view screen socialView"><header class="socialHeader" data-social-header>${tabsHtml(showStats)}</header><div class="socialBody" data-social-body></div></section>`;}
+function syncTabs(context,showStats){const header=context.root.querySelector('[data-social-header]');if(!header)return;const active=context.root.dataset.socialMode||'rating';header.innerHTML=tabsHtml(showStats,active);}
 function setBody(context,html){const body=context.root.querySelector('[data-social-body]');if(body)body.innerHTML=html;}
 
 async function renderFriends(context){
@@ -85,7 +91,7 @@ async function renderStats(context){
 async function mutate(context,fn,mode){try{await fn();await renderMode(context,mode);}catch(error){setBody(context,`<div class="errorState">${esc(error?.message||t('error'))}</div>`);}}
 async function renderMode(context,mode){
   if(mode==='stats')return renderStats(context);
-  context.root.querySelectorAll('[data-social-tab]').forEach((b)=>b.classList.toggle('active',b.dataset.socialTab===mode));
+  context.root.querySelectorAll('[data-social-tab]').forEach((b)=>{const active=b.dataset.socialTab===mode;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   context.root.dataset.socialMode=mode;
   if(mode==='rating')return renderRating(context,context.root.dataset.socialQuery||'');
   return renderFriends(context);
@@ -114,6 +120,7 @@ function bind(context){
     else if(node.dataset.ashykAccept){try{const client=await getSocialClient(),online=createAshykOnlineAdapter(client),result=await online.acceptInvite(node.dataset.ashykAccept);if(result?.room){setPendingAshykInvite(result);await context.router.navigate('practice.ashyk');}}catch(error){setBody(context,`<div class="errorState">${esc(error?.message||t('error'))}</div>`);}}
     else if(node.dataset.ashykDecline){const client=await getSocialClient(),online=createAshykOnlineAdapter(client);await mutate(context,()=>online.declineInvite(node.dataset.ashykDecline),mode);}
   },{signal:controller.signal});
+  window.addEventListener('alantil:activity-access',(event)=>syncTabs(context,event.detail?.enabled===true),{signal:controller.signal});
 }
 export async function mount(context){
   controller=new AbortController();
@@ -126,6 +133,8 @@ export async function mount(context){
   context.root.dataset.socialSearchOpen='false';
   context.root.dataset.socialQuery='';
   bind(context);
+  const signal=controller.signal;
+  void whenActivityAccessReady().then(()=>{if(!signal.aborted)syncTabs(context,hasActivityAccess());});
   await renderRating(context,'');
   const client=await getSocialClient();
   realtime=client.channel(`friends-view:${session.user.id}:${Date.now()}`).on('postgres_changes',{event:'*',schema:'public',table:'friendships'},()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>void renderMode(context,context.root.dataset.socialMode||'rating'),100);}).on('postgres_changes',{event:'*',schema:'public',table:'ashyk_invites'},()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>void renderMode(context,context.root.dataset.socialMode||'rating'),100);}).subscribe();

@@ -125,25 +125,33 @@ function bindAuthEvents(client) {
   authSubscription = data.subscription;
 }
 
-function callbackParams() {
-  const params = new URLSearchParams(window.location.search || "");
+function callbackParams(locationObject = window.location) {
+  const query = new URLSearchParams(locationObject.search || "");
+  const hash = new URLSearchParams(String(locationObject.hash || "").replace(/^#/, ""));
+  const read = (key) => String(query.get(key) || hash.get(key) || "").trim();
   return {
-    code: String(params.get("code") || "").trim(),
-    error: String(params.get("error_description") || params.get("error") || "").trim(),
-    present: CALLBACK_KEYS.some((key) => params.has(key)),
+    code: read("code"),
+    error: read("error_description") || read("error") || read("error_code"),
+    present: CALLBACK_KEYS.some((key) => query.has(key) || hash.has(key)),
   };
 }
 
 function clearCallbackUrl() {
   const url = new URL(window.location.href);
   CALLBACK_KEYS.forEach((key) => url.searchParams.delete(key));
+  const rawHash = String(url.hash || "");
+  const hashParams = new URLSearchParams(rawHash.replace(/^#/, ""));
+  const authHashPresent = CALLBACK_KEYS.some((key) => hashParams.has(key));
+  if (authHashPresent) CALLBACK_KEYS.forEach((key) => hashParams.delete(key));
   const search = url.searchParams.toString();
-  window.history.replaceState(window.history.state, "", `${AUTH_DESTINATION_PATH}${search ? `?${search}` : ""}${url.hash}`);
+  const hash = authHashPresent ? hashParams.toString() : rawHash.replace(/^#/, "");
+  window.history.replaceState(window.history.state, "", `${AUTH_DESTINATION_PATH}${search ? `?${search}` : ""}${hash ? `#${hash}` : ""}`);
 }
 
 export function hasAuthCallback(locationObject = window.location) {
-  const params = new URLSearchParams(locationObject.search || "");
-  return CALLBACK_KEYS.some((key) => params.has(key));
+  const query = new URLSearchParams(locationObject.search || "");
+  const hash = new URLSearchParams(String(locationObject.hash || "").replace(/^#/, ""));
+  return CALLBACK_KEYS.some((key) => query.has(key) || hash.has(key));
 }
 
 async function handleAuthCallback(client) {
@@ -151,32 +159,33 @@ async function handleAuthCallback(client) {
   if (!callback.present) return false;
   if (callback.error || !callback.code) {
     applySession(null, msg("service.ne_udalos_zavershit_vhod_cherez_google"));
-    clearCallbackUrl();
     return true;
   }
 
   if (!callbackPromise) {
     callbackPromise = (async () => {
-      try {
-        const { data, error } = await withTimeout(
-          client.auth.exchangeCodeForSession(callback.code),
-          "Auth callback",
-        );
-        if (error) throw error;
-        if (!data?.session?.user) throw new Error("Session was not created");
-        applySession(data.session, null);
-      } catch (error) {
-        applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google")));
-      } finally {
-        preparedOAuthRedirects.clear();
-        clearCallbackUrl();
-      }
+      const { data, error } = await withTimeout(
+        client.auth.exchangeCodeForSession(callback.code),
+        "Auth callback",
+      );
+      if (error) throw error;
+      if (!data?.session?.user) throw new Error("Session was not created");
+      applySession(data.session, null);
+      return data.session;
     })().finally(() => {
       callbackPromise = null;
     });
   }
 
-  await callbackPromise;
+  try {
+    await callbackPromise;
+  } catch (error) {
+    applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google")));
+    return true;
+  }
+
+  preparedOAuthRedirects.clear();
+  clearCallbackUrl();
   return true;
 }
 
@@ -207,8 +216,7 @@ function startAuthInitialization() {
 }
 
 export async function initializeAuth() {
-  void startAuthInitialization();
-  return getAuthState();
+  return startAuthInitialization();
 }
 
 export function waitForAuthInitialization() {

@@ -1,13 +1,15 @@
-import {getNativeAuthSession,nativeAuthFetch} from './auth.js';
+import {bootstrapNativeAuth,getNativeAuthSession,nativeAuthFetch} from './auth.js';
 
 async function body(response){const text=await response.text();if(!text)return null;try{return JSON.parse(text);}catch{return null;}}
 async function rpc(name,payload={}){const response=await nativeAuthFetch(`/rest/v1/rpc/${name}`,{method:'POST',body:JSON.stringify(payload)});const data=await body(response);if(!response.ok){const error=new Error(data?.message||`${name} failed`);error.code=String(data?.code||'');error.status=response.status;throw error;}return data;}
 
-export async function fetchNativeActivityAccess(){
-  const userId=getNativeAuthSession()?.user?.id;
-  if(!userId)return false;
+export async function fetchNativeActivityAccess(expectedUserId=''){
   try{
-    const response=await nativeAuthFetch(`/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=activity_access&limit=1`,{headers:{Accept:'application/json'}});
+    await bootstrapNativeAuth();
+    const sessionUserId=String(getNativeAuthSession()?.user?.id||'');
+    const userId=String(expectedUserId||sessionUserId).trim();
+    if(!userId||sessionUserId!==userId)return false;
+    const response=await nativeAuthFetch(`/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=activity_access&limit=1`,{headers:{Accept:'application/json'}},userId);
     const data=await body(response);
     return Boolean(response.ok && Array.isArray(data) && data[0]?.activity_access===true);
   }catch{return false;}

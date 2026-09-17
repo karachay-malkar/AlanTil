@@ -1,10 +1,13 @@
 import React,{useEffect,useMemo,useRef,useState}from'react';
 import{Pressable,ScrollView,StyleSheet,Text,TextInput,View}from'react-native';
+import{useSafeAreaInsets}from'react-native-safe-area-context';
 import{formatRating}from'../../packages/alantil-core/social.js';
 import{socialMessage}from'../../packages/alantil-core/social-i18n.js';
 import{createAshykOnlineAdapter}from'../../packages/ashyk-game/online.js';
-import{Button,Header,HeaderCircleButton,Screen,ScreenState}from'../ui/components.js';
+import{Button,HeaderCircleButton,Screen,ScreenState}from'../ui/components.js';
 import{BlockIcon,CorrectIcon,GenderIcon,PendingIcon,SearchIcon,UserMinusIcon,UserPlusIcon,WrongIcon}from'../ui/icons.js';
+import{ProfileTabs}from'../ui/profile-tabs.js';
+import{useSemanticTypography}from'../ui/runtime-settings.js';
 import{theme}from'../ui/theme.js';
 import{nativeSupabase}from'../platform/supabase.js';
 import{fetchNativeActivityAccess}from'../platform/admin.js';
@@ -36,7 +39,7 @@ function Row({rank=0,nickname,gender,rightValue,secondary,actions}){
 function Section({title,children}){return <View style={s.section}><Text style={s.sectionTitle}>{title}</Text>{children}</View>}
 
 export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBottomNavVisibilityChange}){
-  const language=settings?.interface_language_code||'ru',t=(key,p)=>socialMessage(language,key,p);
+  const language=settings?.interface_language_code||'ru',t=(key,p)=>socialMessage(language,key,p),insets=useSafeAreaInsets(),type=useSemanticTypography(),bottomPadding=theme.control.nav+theme.chrome.contentRestGap+insets.bottom;
   const[mode,setMode]=useState('rating'),[snapshot,setSnapshot]=useState(EMPTY),[leaderboard,setLeaderboard]=useState([]),[searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(''),[searchResults,setSearchResults]=useState(null),[busy,setBusy]=useState(''),[loading,setLoading]=useState(Boolean(userId)),[error,setError]=useState(''),[hasStats,setHasStats]=useState(false),request=useRef(0),online=useMemo(()=>createAshykOnlineAdapter(nativeSupabase),[]);
 
   const refresh=async()=>{if(!userId){setSnapshot(EMPTY);setLoading(false);return;}const id=++request.current;setLoading(true);setError('');try{const next=await loadNativeFriendsSnapshot();if(id===request.current)setSnapshot(next);}catch(e){if(id===request.current)setError(e?.message||t('error'));}finally{if(id===request.current)setLoading(false);}};
@@ -44,7 +47,7 @@ export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBott
   const runSearch=async(value)=>{if(!userId||!value.trim()){setSearchResults(null);return;}setBusy('search');try{setSearchResults(await searchNativeUsers(value));}catch(e){setError(e?.message||t('error'));}finally{setBusy('');}};
 
   useEffect(()=>{void refresh();if(!userId)return undefined;let timer=null;const schedule=()=>{clearTimeout(timer);timer=setTimeout(()=>void refresh(),120);};const channel=nativeSupabase.channel(`social-mobile:${userId}:${Date.now()}`).on('postgres_changes',{event:'*',schema:'public',table:'friendships'},schedule).on('postgres_changes',{event:'*',schema:'public',table:'ashyk_invites'},schedule).subscribe();return()=>{request.current+=1;clearTimeout(timer);try{channel.unsubscribe();}catch{}try{void nativeSupabase.removeChannel(channel);}catch{}};},[userId]);
-  useEffect(()=>{if(!userId){setHasStats(false);return;}let alive=true;fetchNativeActivityAccess().then(value=>{if(alive)setHasStats(value);});return()=>{alive=false;};},[userId]);
+  useEffect(()=>{if(!userId){setHasStats(false);return;}let alive=true;setHasStats(false);fetchNativeActivityAccess(userId).then(value=>{if(alive)setHasStats(value);});return()=>{alive=false;};},[userId]);
   useEffect(()=>{onBottomNavVisibilityChange?.(mode!=='stats');return()=>onBottomNavVisibilityChange?.(true);},[mode,onBottomNavVisibilityChange]);
   useEffect(()=>{if(mode==='rating'&&!leaderboard.length)void loadRank();},[mode,userId]);
   useEffect(()=>{const timer=setTimeout(()=>void runSearch(query),280);return()=>clearTimeout(timer);},[query,userId]);
@@ -75,16 +78,10 @@ export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBott
     </Section>;
   }
 
+  const tabs=[['rating',t('rating')],['friends',t('friends')],...(hasStats?[['stats',t('extendedStats')]]:[])];
   return <Screen bottomNav>
-    <View style={s.header}>
-      <Text style={s.title}>{t('friends')}</Text>
-      <View style={s.tabs}>
-        <Pressable onPress={()=>setMode('rating')} style={[s.tab,mode==='rating'&&s.tabActive]}><Text style={[s.tabLabel,mode==='rating'&&s.tabLabelActive]}>{t('rating')}</Text></Pressable>
-        <Pressable onPress={()=>setMode('friends')} style={[s.tab,mode==='friends'&&s.tabActive]}><Text style={[s.tabLabel,mode==='friends'&&s.tabLabelActive]}>{t('friends')}</Text></Pressable>
-        {hasStats?<Pressable onPress={()=>setMode('stats')} style={s.tab}><Text style={s.tabLabel}>{t('extendedStats')}</Text></Pressable>:null}
-      </View>
-    </View>
-    <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+    <ProfileTabs items={tabs} activeId={mode} onChange={setMode} textSize={type.caption.fontSize} style={s.tabs}/>
+    <ScrollView contentContainerStyle={[s.scroll,{paddingBottom:bottomPadding}]} keyboardShouldPersistTaps="handled">
       {error?<Text style={s.error}>{error}</Text>:null}
       {mode==='rating'?<View style={s.searchBar}>
         <HeaderCircleButton icon={<SearchIcon size={18} color={C.text2}/>} onPress={()=>{setSearchOpen(v=>!v);if(searchOpen)setQuery('');}} accessibilityLabel={t('search')}/>
@@ -95,14 +92,8 @@ export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBott
   </Screen>;
 }
 const s=StyleSheet.create({
-  header:{paddingTop:18,paddingHorizontal:16,paddingBottom:8,gap:10},
-  title:{fontSize:26,fontWeight:'900',color:C.text1},
-  tabs:{flexDirection:'row',gap:4,borderWidth:1,borderColor:C.lineStrong,borderRadius:999,padding:2,backgroundColor:'rgba(246,242,233,.34)'},
-  tab:{flex:1,minHeight:30,alignItems:'center',justifyContent:'center',borderRadius:999,paddingHorizontal:4},
-  tabActive:{backgroundColor:C.accentSoft},
-  tabLabel:{fontSize:11,fontWeight:'750',color:C.text2,fontFamily:theme.font.terminal},
-  tabLabelActive:{color:C.accentStrong},
-  scroll:{paddingHorizontal:16,paddingBottom:theme.control.nav+32,gap:14},
+  tabs:{minHeight:theme.chrome.profileTabs.height,marginTop:theme.chrome.profileTabs.top,paddingHorizontal:theme.chrome.profileTabs.side},
+  scroll:{paddingHorizontal:16,gap:14},
   searchBar:{flexDirection:'row',alignItems:'center',gap:8},
   searchInput:{flex:1,minHeight:38,borderWidth:1,borderColor:C.lineStrong,borderRadius:12,paddingHorizontal:12,fontSize:14,color:C.text1,backgroundColor:'rgba(246,242,233,.58)'},
   section:{gap:2},
