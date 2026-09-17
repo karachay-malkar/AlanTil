@@ -29,6 +29,9 @@ export const theme={
   segmented:W.segmented,
   progress:W.progress,
   list:W.list,
+  practice:W.practice,
+  social:W.social,
+  ashyk:W.ashyk,
   favorite:W.favorite,
   account:W.account,
 };

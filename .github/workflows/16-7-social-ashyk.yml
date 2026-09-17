@@ -41,8 +41,14 @@ jobs:
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
-      - name: 16.7 social, Ashyk and OAuth contract
-        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs
+      - name: Verify synchronized 16.7 visual contract
+        run: |
+          node scripts/sync-mobile-parity-16-7.mjs
+          node scripts/sync-visual-contract-16-7.mjs
+          git diff --exit-code -- mobile/screens/ashyk.js mobile/ui/parity.js mobile/ui/web-visual-source.js
+
+      - name: 16.7 social, visual, Ashyk and OAuth contract
+        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs
 
       - name: Shared core and unaffected regressions
         run: >-
@@ -118,7 +124,6 @@ jobs:
               printf '%s — deleted\n' "$file" >> AlanTil-16.7.0-filesizes.txt
             fi
           done < <(git diff --name-only "$BASE_SHA" HEAD)
-          printf 'AlanTil-16.7.0.apk — %.2f KB\n' "$(($(stat -c%s AlanTil-16.7.0.apk)))" | awk '{if ($3 ~ /^[0-9]+$/) $3=sprintf("%.2f",$3/1024); print}' >/dev/null || true
           sha256sum AlanTil-16.7.0.apk AlanTil-16.7.0-source.zip > AlanTil-16.7.0.sha256
           ls -lh AlanTil-16.7.0.apk AlanTil-16.7.0-source.zip AlanTil-16.7.0-filesizes.txt
 

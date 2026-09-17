@@ -1,5 +1,5 @@
 @import url("./reset.css?v=13.9.0") layer(reset);
-@import url("./shared-visual-tokens.css?v=16.6.6") layer(theme);
+@import url("./shared-visual-tokens.css?v=16.7.0") layer(theme);
 @import url("./theme.css?v=13.15.12") layer(theme);
 @import url("./base.css?v=13.9.0") layer(base);
 @import url("./shell.css?v=13.15.10.1") layer(shell);
@@ -15,8 +15,9 @@
 @import url("../../features/learn/learn.css?v=13.9.0") layer(features);
 @import url("../../features/test/test.css?v=13.10.12") layer(features);
 @import url("../../features/match/match.css?v=13.9.0") layer(features);
-@import url("../../features/practice/practice.css?v=16.6.11") layer(features);
-@import url("../../features/ashyk/ashyk.css?v=16.6.11") layer(features);
+@import url("../../features/practice/practice.css?v=16.7.0") layer(features);
+@import url("../../features/friends/friends-16-7.css?v=16.7.0") layer(features);
+@import url("../../features/ashyk/ashyk.css?v=16.7.0") layer(features);
 @import url("../../features/profile/profile.css?v=13.15.10.1") layer(features);
 @import url("../../features/admin/admin.css?v=13.15.10.4") layer(features);
 @import url("../../features/account/account.css?v=13.10.2") layer(features);
@@ -52,7 +53,7 @@ html[data-text-size="large"] .pathView{--route-station-gap:72px;--route-station-
 .stationNode[data-route-step="3"]{--station-shift:var(--route-wave-amplitude)}
 .stationNode[data-route-step="4"]{--station-shift:0px}
 
-/* Profile sections use the same horizontal overflow contract as story tabs. */
+/* Profile/Friends use one bracket-tab geometry on both renderers. */
 .profilePrimaryNav{
   width:auto;min-width:0;display:grid;grid-template-columns:none;
   grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);align-items:center;gap:3px;
@@ -60,7 +61,17 @@ html[data-text-size="large"] .pathView{--route-station-gap:72px;--route-station-
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
 }
 .profilePrimaryNav::-webkit-scrollbar{display:none}
-.profilePrimaryTab{min-width:0;padding:1px 4px;white-space:nowrap;scroll-snap-align:center}
+.profilePrimaryTab{min-width:0;min-height:var(--ui-profile-tab-item-height);padding:1px 4px;white-space:nowrap;scroll-snap-align:center;font-size:var(--ui-profile-tab-font-size);line-height:var(--ui-profile-tab-line-height)}
+
+/* Bottom navigation consumes the same shared geometry as Mobile. */
+.bottomNav{padding:2px var(--ui-bottom-nav-side) var(--safe-bottom)}
+.bottomNavItem{gap:var(--ui-bottom-nav-gap);font-size:var(--ui-bottom-nav-label-size)}
+.bottomNavIconBubble{width:var(--ui-bottom-nav-bubble-size);height:var(--ui-bottom-nav-bubble-size);flex-basis:var(--ui-bottom-nav-bubble-size)}
+@media(max-width:360px){
+  .bottomNav{padding-left:var(--ui-bottom-nav-compact-side);padding-right:var(--ui-bottom-nav-compact-side)}
+  .bottomNavItem{font-size:var(--ui-bottom-nav-compact-label-size)}
+  .bottomNavIconBubble{width:var(--ui-bottom-nav-compact-bubble-size);height:var(--ui-bottom-nav-compact-bubble-size);flex-basis:var(--ui-bottom-nav-compact-bubble-size)}
+}
 
 .appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger{
   position:fixed;z-index:calc(var(--z-header) + 2);left:auto;right:10px;top:auto;

@@ -1,13 +1,13 @@
 import React,{useEffect,useMemo,useRef,useState}from'react';
-import{Pressable,ScrollView,StyleSheet,Text,TextInput,View}from'react-native';
+import{Pressable,ScrollView,StyleSheet,Text,TextInput,useWindowDimensions,View}from'react-native';
 import{useSafeAreaInsets}from'react-native-safe-area-context';
 import{formatRating}from'../../packages/alantil-core/social.js';
 import{socialMessage}from'../../packages/alantil-core/social-i18n.js';
+import{CONTROL_LAYOUT}from'../../packages/alantil-ui/control-layout.js';
 import{createAshykOnlineAdapter}from'../../packages/ashyk-game/online.js';
 import{Button,HeaderCircleButton,Screen,ScreenState}from'../ui/components.js';
 import{BlockIcon,CorrectIcon,GenderIcon,PendingIcon,SearchIcon,UserMinusIcon,UserPlusIcon,WrongIcon}from'../ui/icons.js';
 import{ProfileTabs}from'../ui/profile-tabs.js';
-import{useSemanticTypography}from'../ui/runtime-settings.js';
 import{theme}from'../ui/theme.js';
 import{nativeSupabase}from'../platform/supabase.js';
 import{fetchNativeActivityAccess}from'../platform/admin.js';
@@ -18,7 +18,7 @@ const EMPTY={friends:[],incoming:[],outgoing:[],blocked:[],ashyk_invites:[],ashy
 const GENDER_COLOR={male:'#3f7fd1',female:'#d0679f'};
 function genderColor(gender){return GENDER_COLOR[gender==='female'?'female':'male'];}
 function MedalOrRank({rank}){if(rank>=1&&rank<=3){const color=rank===1?'#c9971f':rank===2?'#9aa1ab':'#b0713b';return <Text style={[s.rank,{color}]}>●</Text>;}return <Text style={s.rank}>#{rank}</Text>;}
-function IconBtn({onPress,disabled,active,children,label}){return <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={onPress} style={({pressed})=>[s.iconBtn,active&&s.iconBtnActive,disabled&&s.iconBtnDisabled,pressed&&!disabled&&s.iconBtnPressed]}>{children}</Pressable>}
+function IconBtn({onPress,disabled,active,children,label}){const{width}=useWindowDimensions(),size=width<=CONTROL_LAYOUT.social.compactWidth?CONTROL_LAYOUT.social.compactActionSize:CONTROL_LAYOUT.social.actionSize;return <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={onPress} style={({pressed})=>[s.iconBtn,{width:size,height:size,borderRadius:size/2},active&&s.iconBtnActive,disabled&&s.iconBtnDisabled,pressed&&!disabled&&s.iconBtnPressed]}>{children}</Pressable>}
 function RelationActions({user,t,onAdd,onAccept}){
   if(user.relation==='accepted')return <IconBtn disabled label={t('friends')}><CorrectIcon size={16} color={C.text2}/></IconBtn>;
   if(user.relation==='outgoing')return <IconBtn disabled label={t('requested')}><PendingIcon size={16} color={C.text3}/></IconBtn>;
@@ -39,7 +39,7 @@ function Row({rank=0,nickname,gender,rightValue,secondary,actions}){
 function Section({title,children}){return <View style={s.section}><Text style={s.sectionTitle}>{title}</Text>{children}</View>}
 
 export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBottomNavVisibilityChange}){
-  const language=settings?.interface_language_code||'ru',t=(key,p)=>socialMessage(language,key,p),insets=useSafeAreaInsets(),type=useSemanticTypography(),bottomPadding=theme.control.nav+theme.chrome.contentRestGap+insets.bottom;
+  const language=settings?.interface_language_code||'ru',t=(key,p)=>socialMessage(language,key,p),insets=useSafeAreaInsets(),bottomPadding=theme.control.nav+theme.chrome.contentRestGap+insets.bottom;
   const[mode,setMode]=useState('rating'),[snapshot,setSnapshot]=useState(EMPTY),[leaderboard,setLeaderboard]=useState([]),[searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(''),[searchResults,setSearchResults]=useState(null),[busy,setBusy]=useState(''),[loading,setLoading]=useState(Boolean(userId)),[error,setError]=useState(''),[hasStats,setHasStats]=useState(false),request=useRef(0),online=useMemo(()=>createAshykOnlineAdapter(nativeSupabase),[]);
 
   const refresh=async()=>{if(!userId){setSnapshot(EMPTY);setLoading(false);return;}const id=++request.current;setLoading(true);setError('');try{const next=await loadNativeFriendsSnapshot();if(id===request.current)setSnapshot(next);}catch(e){if(id===request.current)setError(e?.message||t('error'));}finally{if(id===request.current)setLoading(false);}};
@@ -80,7 +80,7 @@ export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBott
 
   const tabs=[['rating',t('rating')],['friends',t('friends')],...(hasStats?[['stats',t('extendedStats')]]:[])];
   return <Screen bottomNav>
-    <ProfileTabs items={tabs} activeId={mode} onChange={setMode} textSize={type.caption.fontSize} style={s.tabs}/>
+    <ProfileTabs items={tabs} activeId={mode} onChange={setMode} style={s.tabs}/>
     <ScrollView contentContainerStyle={[s.scroll,{paddingBottom:bottomPadding}]} keyboardShouldPersistTaps="handled">
       {error?<Text style={s.error}>{error}</Text>:null}
       {mode==='rating'?<View style={s.searchBar}>
@@ -95,20 +95,20 @@ const s=StyleSheet.create({
   tabs:{minHeight:theme.chrome.profileTabs.height,marginTop:theme.chrome.profileTabs.top,paddingHorizontal:theme.chrome.profileTabs.side},
   scroll:{paddingHorizontal:16,gap:14},
   searchBar:{flexDirection:'row',alignItems:'center',gap:8},
-  searchInput:{flex:1,minHeight:38,borderWidth:1,borderColor:C.lineStrong,borderRadius:12,paddingHorizontal:12,fontSize:14,color:C.text1,backgroundColor:'rgba(246,242,233,.58)'},
+  searchInput:{flex:1,minHeight:CONTROL_LAYOUT.social.searchHeight,borderWidth:1,borderColor:C.lineStrong,borderRadius:CONTROL_LAYOUT.social.searchRadius,paddingHorizontal:12,fontSize:14,color:C.text1,backgroundColor:'rgba(246,242,233,.58)'},
   section:{gap:2},
   sectionTitle:{fontSize:13,fontWeight:'900',color:C.text1,textTransform:'uppercase',letterSpacing:.6,marginBottom:4},
-  row:{flexDirection:'row',alignItems:'center',gap:9,minHeight:48,paddingVertical:5,borderBottomWidth:1,borderBottomColor:C.lineSoft},
-  rankWrap:{width:24,alignItems:'center'},
-  rank:{fontSize:12,fontWeight:'800',color:C.text2,fontFamily:theme.font.terminal},
+  row:{flexDirection:'row',alignItems:'center',gap:10,minHeight:CONTROL_LAYOUT.social.rowHeight,paddingVertical:6,borderBottomWidth:1,borderBottomColor:C.lineSoft},
+  rankWrap:{width:CONTROL_LAYOUT.social.rankWidth,alignItems:'center'},
+  rank:{fontSize:11,fontWeight:'800',color:C.text2,fontFamily:theme.font.terminal},
   rowBody:{flex:1,minWidth:0,gap:2},
-  rowName:{flexDirection:'row',alignItems:'center',gap:6},
+  rowName:{flexDirection:'row',alignItems:'center',gap:7},
   rowNickname:{fontSize:14,fontWeight:'700',color:C.text1,flexShrink:1},
   rowMeta:{fontSize:11,color:C.text2},
   rowValue:{fontSize:13,fontWeight:'800',color:C.text1,fontFamily:theme.font.terminal},
   rowActions:{flexDirection:'row',gap:6},
   actionsRow:{flexDirection:'row',gap:6},
-  iconBtn:{width:32,height:32,borderRadius:16,borderWidth:1,borderColor:C.line,alignItems:'center',justifyContent:'center',backgroundColor:C.surface0},
+  iconBtn:{borderWidth:1,borderColor:C.line,alignItems:'center',justifyContent:'center',backgroundColor:C.surface0},
   iconBtnActive:{borderColor:C.accent,backgroundColor:C.accentSoft},
   iconBtnDisabled:{opacity:.55},
   iconBtnPressed:{opacity:.75,transform:[{scale:.95}]},
