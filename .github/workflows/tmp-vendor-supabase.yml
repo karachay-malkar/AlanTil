@@ -69,3 +69,91 @@ jobs:
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
           echo "BUNDLE_COMMIT=$(git rev-parse HEAD)"
+
+  live-auth-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/auth-debug && cd /tmp/auth-debug
+          npm init -y >/dev/null
+          npm install playwright@1.55.0 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Reproduce live callback
+        working-directory: /tmp/auth-debug
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright';
+          import crypto from 'node:crypto';
+
+          const browser = await chromium.launch({ headless: true });
+          const context = await browser.newContext();
+          const page = await context.newPage();
+          page.on('console', msg => console.log('BROWSER', msg.type(), msg.text()));
+          page.on('pageerror', error => console.log('PAGEERROR', error.message));
+
+          await page.goto('https://alantil.ru/profile/account', { waitUntil: 'networkidle', timeout: 60000 });
+          await page.waitForTimeout(2500);
+          const before = await page.evaluate(() => {
+            const button = document.querySelector('[data-auth-provider="google"]');
+            const verifierKey = Object.keys(localStorage).find(key => key.includes('code-verifier')) || '';
+            const verifier = verifierKey ? localStorage.getItem(verifierKey) || '' : '';
+            return {
+              url: location.href,
+              buttonExists: !!button,
+              buttonDisabled: button?.disabled ?? null,
+              preparedHref: button?.dataset?.authHref || '',
+              verifierKey,
+              verifier,
+              text: document.body.innerText.slice(0, 800),
+            };
+          });
+          console.log('LIVE_URL', before.url);
+          console.log('BUTTON_EXISTS', before.buttonExists, 'DISABLED', before.buttonDisabled);
+          console.log('PREPARED_HREF', Boolean(before.preparedHref));
+          console.log('VERIFIER_KEY', before.verifierKey, 'VERIFIER_LENGTH', before.verifier.length);
+          if (before.preparedHref && before.verifier) {
+            const u = new URL(before.preparedHref);
+            const challenge = u.searchParams.get('code_challenge') || '';
+            const rawVerifier = before.verifier.split('/')[0];
+            const digest = crypto.createHash('sha256').update(rawVerifier).digest('base64url');
+            console.log('CHALLENGE_MATCH', challenge === digest, 'METHOD', u.searchParams.get('code_challenge_method'));
+          }
+
+          let exchangeCount = 0;
+          await page.route('**/auth/v1/token?grant_type=pkce', async route => {
+            exchangeCount += 1;
+            const body = route.request().postDataJSON();
+            console.log('TOKEN_EXCHANGE_BODY', JSON.stringify({ hasCode: !!body?.auth_code, hasVerifier: !!body?.code_verifier, verifierLength: String(body?.code_verifier || '').length }));
+            const now = Math.floor(Date.now() / 1000);
+            const enc = v => Buffer.from(JSON.stringify(v)).toString('base64url');
+            const jwt = `${enc({alg:'HS256',typ:'JWT'})}.${enc({sub:'live-debug-user',aud:'authenticated',role:'authenticated',iat:now,exp:now+3600})}.signature`;
+            await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+              access_token: jwt,
+              refresh_token: 'debug-refresh-token',
+              token_type: 'bearer',
+              expires_in: 3600,
+              user: { id:'live-debug-user', aud:'authenticated', role:'authenticated', email:'debug@example.com', app_metadata:{provider:'google',providers:['google']}, user_metadata:{}, identities:[], created_at:new Date().toISOString() }
+            }) });
+          });
+          await page.route('**/rest/v1/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+
+          await page.goto('https://alantil.ru/auth/callback?code=debug-auth-code', { waitUntil: 'networkidle', timeout: 60000 });
+          await page.waitForTimeout(2500);
+          const after = await page.evaluate(() => ({
+            url: location.href,
+            sessionStored: !!localStorage.getItem('alantil_auth_session_v1'),
+            verifierStillPresent: Object.keys(localStorage).some(key => key.includes('code-verifier')),
+            text: document.body.innerText.slice(0, 1000),
+          }));
+          console.log('EXCHANGE_COUNT', exchangeCount);
+          console.log('AFTER', JSON.stringify(after));
+          if (!before.verifier) throw new Error('Live login page lost PKCE verifier before click');
+          if (exchangeCount !== 1) throw new Error(`Expected one live callback token exchange, got ${exchangeCount}`);
+          if (!after.sessionStored) throw new Error('Live callback did not persist mocked session');
+          await browser.close();
+          NODE
