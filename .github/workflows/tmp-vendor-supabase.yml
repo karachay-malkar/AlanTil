@@ -1,0 +1,46 @@
+name: Temporary Supabase 2.110.7 vendor builder
+
+on:
+  push:
+    branches:
+      - agent/tmp-supabase-2.110.7-vendor
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    if: ${{ !contains(github.event.head_commit.message, '[vendor-built]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch exact published Supabase bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm pack @supabase/supabase-js@2.110.7 --silent
+          tar -xzf supabase-supabase-js-2.110.7.tgz package/dist/umd/supabase.js package/LICENSE
+          mkdir -p tmp/vendor
+          cp package/dist/umd/supabase.js tmp/vendor/supabase-2.110.7.js
+          cp package/LICENSE tmp/vendor/SUPABASE-JS-LICENSE.txt
+          node - <<'NODE'
+          const fs = require('fs');
+          const text = fs.readFileSync('tmp/vendor/supabase-2.110.7.js', 'utf8');
+          if (!text.includes('createClient')) throw new Error('Published bundle does not expose createClient');
+          console.log('bundle-bytes=' + fs.statSync('tmp/vendor/supabase-2.110.7.js').size);
+          NODE
+      - name: Commit temporary vendor payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tmp/vendor
+          git commit -m '[vendor-built] Supabase 2.110.7 bundle'
+          git push origin HEAD:${GITHUB_REF_NAME}
+          echo "BUNDLE_COMMIT=$(git rev-parse HEAD)"
