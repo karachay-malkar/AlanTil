@@ -19,27 +19,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch exact jsDelivr ESM bundle and encode text payloads
+      - name: Fetch exact published UMD bundle and encode local ESM payloads
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf tmp/vendor
+          rm -rf tmp/vendor package supabase-supabase-js-2.110.7.tgz
           mkdir -p tmp/vendor
-          curl --fail --location --retry 3 --retry-delay 2 \
-            'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm' \
-            --output tmp/vendor/supabase-2.110.7.esm.js
+          npm pack @supabase/supabase-js@2.110.7 --silent
+          tar -xzf supabase-supabase-js-2.110.7.tgz package/dist/umd/supabase.js package/LICENSE
           python - <<'PY'
           from pathlib import Path
           import base64, gzip, hashlib, json
 
-          source_path = Path('tmp/vendor/supabase-2.110.7.esm.js')
-          source = source_path.read_bytes()
-          text = source.decode('utf-8')
-          if 'createClient' not in text:
-              raise SystemExit('jsDelivr ESM bundle does not expose createClient')
-          if '2.110.7' not in text[:1000]:
-              raise SystemExit('jsDelivr ESM bundle version marker is missing')
-
+          umd = Path('package/dist/umd/supabase.js').read_text(encoding='utf-8')
+          if 'createClient' not in umd or 'var supabase=' not in umd[:100]:
+              raise SystemExit('Unexpected @supabase/supabase-js 2.110.7 UMD bundle')
+          source = (umd + '\nexport const createClient = supabase.createClient;\n').encode('utf-8')
           packed = gzip.compress(source, compresslevel=9, mtime=0)
           encoded = base64.b64encode(packed).decode('ascii')
           width = (len(encoded) + 3) // 4
@@ -50,14 +45,14 @@ jobs:
           metadata = {
               'package': '@supabase/supabase-js',
               'version': '2.110.7',
-              'source': 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm',
+              'source': 'npm package dist/umd/supabase.js + ESM createClient export',
               'source_bytes': len(source),
               'gzip_bytes': len(packed),
               'base64_bytes': len(encoded),
               'sha256': hashlib.sha256(source).hexdigest(),
           }
           Path('tmp/vendor/metadata.json').write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')
-          source_path.unlink()
+          Path('tmp/vendor/SUPABASE-JS-LICENSE.txt').write_text(Path('package/LICENSE').read_text(encoding='utf-8'), encoding='utf-8')
           print(json.dumps(metadata))
           PY
       - name: Commit temporary vendor payload
@@ -67,6 +62,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A tmp/vendor
-          git commit -m '[vendor-built] Supabase 2.110.7 ESM payloads'
+          git commit -m '[vendor-built] Supabase 2.110.7 local ESM payloads'
           git push origin HEAD:${GITHUB_REF_NAME}
           echo "BUNDLE_COMMIT=$(git rev-parse HEAD)"
