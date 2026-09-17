@@ -86,6 +86,11 @@ export function whenActivityAccessReady() {
   return accessReady;
 }
 
+export async function refreshActivityAccessForUser(userId) {
+  const id = String(userId || "").trim();
+  return refreshAccess({ ready: true, user: id ? { id } : null });
+}
+
 export function disposeAdminAccess() {
   requestVersion += 1;
   unsubscribeAuth?.();

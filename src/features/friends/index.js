@@ -4,7 +4,7 @@ import {createAshykOnlineAdapter} from '../../../packages/ashyk-game/online.js';
 import {getInterfaceLanguage} from '../../shared/i18n/index.js?v=13.15.12';
 import {escapeHtml} from '../../shared/ui/html.js?v=13.9.0';
 import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.7.0';
-import {hasActivityAccess,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.7.0';
+import {hasActivityAccess,refreshActivityAccessForUser,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.7.0';
 import {setPendingAshykInvite} from '../../shared/social/ashyk-handoff.js';
 import {acceptFriendRequest,blockUser,declineFriendRequest,fetchFriendsSnapshot,fetchSocialLeaderboard,getSocialClient,getSocialSession,removeFriend,searchSocialUsers,sendFriendRequest,unblockUser} from '../../shared/social/social-service.js';
 
@@ -128,7 +128,9 @@ export async function mount(context){
   const session=await getSocialSession().catch(()=>null);
   if(!session?.user){guest(context);return;}
   context.selfId=session.user.id;
-  context.root.innerHTML=shellHtml(hasActivityAccess());
+  const showStats=await refreshActivityAccessForUser(context.selfId).catch(()=>false);
+  if(controller.signal.aborted)return;
+  context.root.innerHTML=shellHtml(showStats);
   context.root.dataset.socialMode='rating';
   context.root.dataset.socialSearchOpen='false';
   context.root.dataset.socialQuery='';
