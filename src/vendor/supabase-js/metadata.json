@@ -1,0 +1,9 @@
+{
+  "package": "@supabase/supabase-js",
+  "version": "2.110.7",
+  "source": "npm package dist/umd/supabase.js + ESM createClient export",
+  "source_bytes": 207774,
+  "gzip_bytes": 52679,
+  "base64_bytes": 70240,
+  "sha256": "ce482bd98b42ba1c4794827563dd8b5978a89977ec9febac405c6680f7e26fbc"
+}

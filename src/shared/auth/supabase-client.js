@@ -1,39 +1,29 @@
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.6";
 
-const PRIMARY_MODULE_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
-const LOCAL_FALLBACK_MODULE_URL = "/src/vendor/supabase-js.js?v=13.10.2";
-const FALLBACK_DELAY_MS = 800;
+const LOCAL_MODULE_URL = "/src/vendor/supabase-js.js?v=16.7.0-oauth1";
+const CDN_MODULE_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 export const AUTH_STORAGE_KEY = "alantil_auth_session_v1";
 let modulePromise = null;
 let clientPromise = null;
 
-function delayedImport(url, delayMs) {
-  return new Promise((resolve) => globalThis.setTimeout(resolve, delayMs)).then(() => import(url));
-}
-
-function firstSuccessful(promises) {
-  return new Promise((resolve, reject) => {
-    const errors = [];
-    let remaining = promises.length;
-    promises.forEach((promise, index) => {
-      Promise.resolve(promise).then(resolve).catch((error) => {
-        errors[index] = error;
-        remaining -= 1;
-        if (!remaining) reject(new AggregateError(errors, "Supabase SDK could not be loaded"));
-      });
-    });
-  });
-}
-
 function loadSupabaseModule() {
   if (!modulePromise) {
-    modulePromise = firstSuccessful([
-      import(PRIMARY_MODULE_URL),
-      delayedImport(LOCAL_FALLBACK_MODULE_URL, FALLBACK_DELAY_MS),
-    ]).catch((error) => {
-      modulePromise = null;
-      throw error;
-    });
+    modulePromise = import(LOCAL_MODULE_URL)
+      .catch(async (localError) => {
+        try {
+          return await import(CDN_MODULE_URL);
+        } catch (cdnError) {
+          throw new AggregateError([localError, cdnError], "Supabase SDK could not be loaded");
+        }
+      })
+      .then((module) => {
+        if (typeof module?.createClient !== "function") throw new Error("Supabase SDK is invalid");
+        return module;
+      })
+      .catch((error) => {
+        modulePromise = null;
+        throw error;
+      });
   }
   return modulePromise;
 }

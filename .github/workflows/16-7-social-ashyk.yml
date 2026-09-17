@@ -41,8 +41,8 @@ jobs:
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
-      - name: 16.7 social and Ashyk contract
-        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs
+      - name: 16.7 social, Ashyk and OAuth contract
+        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs
 
       - name: Shared core and unaffected regressions
         run: >-

@@ -42,6 +42,11 @@ function authMessage(error, fallback = msg("service.ne_udalos_vypolnit_vhod")) {
   return fallback;
 }
 
+function callbackAuthMessage(error, fallback = msg("service.ne_udalos_zavershit_vhod_cherez_google")) {
+  const value = String(error?.message || error || "").trim();
+  return value || fallback;
+}
+
 function normalizeOAuthProvider(provider) {
   const normalized = String(provider || "").trim().toLowerCase();
   if (!OAUTH_PROVIDERS.has(normalized)) throw new Error(msg("service.ne_udalos_vypolnit_vhod"));
@@ -55,9 +60,6 @@ export function prepareSignInWithProvider(provider) {
 
   const prepared = (async () => {
     const client = await withTimeout(getSupabaseClient(), "Supabase client");
-    const initialization = await withTimeout(client.auth.initialize(), "Auth client initialization");
-    if (initialization?.error) throw initialization.error;
-
     const options = {
       redirectTo: getAuthRedirectUrl(),
       skipBrowserRedirect: true,
@@ -121,6 +123,11 @@ function clearCallbackUrl() {
   window.history.replaceState(window.history.state, "", `${AUTH_DESTINATION_PATH}${search ? `?${search}` : ""}${hash ? `#${hash}` : ""}`);
 }
 
+function consumeAuthCallback() {
+  preparedOAuthRedirects.clear();
+  clearCallbackUrl();
+}
+
 export function hasAuthCallback(locationObject = window.location) {
   const query = new URLSearchParams(locationObject.search || "");
   const hash = new URLSearchParams(String(locationObject.hash || "").replace(/^#/, ""));
@@ -130,43 +137,41 @@ export function hasAuthCallback(locationObject = window.location) {
 async function handleAuthCallback(client) {
   const callback = callbackParams();
   if (!callback.present) return false;
-  if (callback.error || !callback.code) {
-    applySession(null, msg("service.ne_udalos_zavershit_vhod_cherez_google"));
-    return true;
-  }
-
-  if (!callbackPromise) {
-    callbackPromise = (async () => {
-      const { data, error } = await withTimeout(
-        client.auth.exchangeCodeForSession(callback.code),
-        "Auth callback",
-      );
-      if (error) throw error;
-      if (!data?.session?.user) throw new Error("Session was not created");
-      applySession(data.session, null);
-      return data.session;
-    })().finally(() => {
-      callbackPromise = null;
-    });
-  }
 
   try {
-    await callbackPromise;
-  } catch (error) {
-    applySession(null, authMessage(error, msg("service.ne_udalos_zavershit_vhod_cherez_google")));
-    return true;
-  }
+    if (callback.error) throw new Error(callback.error);
+    if (!callback.code) throw new Error("OAuth callback is missing the authorization code");
 
-  preparedOAuthRedirects.clear();
-  clearCallbackUrl();
-  return true;
+    if (!callbackPromise) {
+      callbackPromise = (async () => {
+        const { data, error } = await withTimeout(
+          client.auth.exchangeCodeForSession(callback.code),
+          "Auth callback",
+        );
+        if (error) throw error;
+        if (!data?.session?.user) throw new Error("Session was not created");
+        applySession(data.session, null);
+        return data.session;
+      })().finally(() => {
+        callbackPromise = null;
+      });
+    }
+
+    await callbackPromise;
+    return true;
+  } catch (error) {
+    applySession(null, callbackAuthMessage(error));
+    return true;
+  } finally {
+    consumeAuthCallback();
+  }
 }
 
 function startAuthInitialization() {
   if (initializationPromise) return initializationPromise;
   initializationPromise = (async () => {
+    const callbackPresent = hasAuthCallback();
     try {
-      const callbackPresent = hasAuthCallback();
       if (!callbackPresent && !hasPersistedAuthSession()) {
         return applySession(null, null);
       }
@@ -180,8 +185,15 @@ function startAuthInitialization() {
       }
       bindAuthEvents(client);
     } catch (error) {
+      if (callbackPresent) consumeAuthCallback();
       const current = getAuthState();
-      setAuthState({ ...current, ready: true, error: authMessage(error, msg("service.ne_udalos_proverit_sostoyanie_akkaunta")) });
+      setAuthState({
+        ...current,
+        ready: true,
+        error: callbackPresent
+          ? callbackAuthMessage(error)
+          : authMessage(error, msg("service.ne_udalos_proverit_sostoyanie_akkaunta")),
+      });
     }
     return getAuthState();
   })();
