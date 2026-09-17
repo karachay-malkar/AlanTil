@@ -140,3 +140,58 @@ test('16.7.0 mobile version uses build 40',()=>{
   assert.equal(app.ios.buildNumber,'40');
   assert.equal(pkg.version,'16.7.0');
 });
+
+test('Friends uses shared profile bracket tabs without pill layout or duplicate title',()=>{
+  const web=read('src/features/friends/index.js');
+  const css=read('src/features/friends/friends-16-7.css');
+  const profileNav=read('src/shared/ui/profile-navigation.js');
+  const mobile=read('mobile/screens/friends.js');
+  const mobileProfile=read('mobile/screens/profile-main.js');
+  assert.doesNotMatch(web,/settingsSegments/);
+  assert.doesNotMatch(web,/<h1\b/i);
+  assert.match(profileNav,/export function renderBracketTabs/);
+  assert.match(web,/renderBracketTabs/);
+  assert.match(css,/grid-template-rows:auto minmax\(0,1fr\)/);
+  assert.match(css,/\.socialBody\{[^}]*min-height:0[^}]*overflow:auto/s);
+  assert.doesNotMatch(css,/\.socialTabs\{[^}]*border-radius:999px/s);
+  assert.match(mobile,/ProfileTabs/);
+  assert.match(mobileProfile,/ProfileTabs/);
+  assert.doesNotMatch(mobile,/style=\{s\.title\}/);
+  assert.doesNotMatch(mobile,/borderRadius:999/);
+});
+
+test('activity_access becomes reactive on Web and waits for native auth on Mobile',()=>{
+  const web=read('src/features/friends/index.js');
+  const access=read('src/shared/admin/admin-access.js');
+  const nativeAdmin=read('mobile/platform/admin.js');
+  const mobile=read('mobile/screens/friends.js');
+  const combined=`${web}\n${access}\n${nativeAdmin}\n${mobile}`;
+  assert.match(web,/alantil:activity-access/);
+  assert.match(web,/whenActivityAccessReady/);
+  assert.match(access,/if\s*\(!authState\?\.ready\)\s*return currentAccess/);
+  assert.match(nativeAdmin,/bootstrapNativeAuth/);
+  assert.match(nativeAdmin,/expectedUserId/);
+  assert.match(mobile,/fetchNativeActivityAccess\(userId\)/);
+  assert.doesNotMatch(combined,/Taulu07/i);
+  assert.doesNotMatch(combined,/nickname[^\n]{0,80}activity_access|activity_access[^\n]{0,80}nickname/i);
+});
+
+test('Google OAuth cold start waits for the callback and clears it only after success',()=>{
+  const auth=read('src/shared/auth/auth-service.js');
+  const bootstrap=read('src/app/bootstrap.js');
+  assert.match(auth,/export async function initializeAuth\(\)\s*\{\s*return startAuthInitialization\(\);\s*\}/);
+  assert.equal((auth.match(/exchangeCodeForSession\(/g)||[]).length,1);
+  assert.equal((auth.match(/clearCallbackUrl\(\);/g)||[]).length,1);
+  assert.match(auth,/locationObject\.hash/);
+  assert.match(auth,/callbackParams\(locationObject = window\.location\)/);
+  assert.match(bootstrap,/if \(callbackVisit\) await authInitialization/);
+});
+
+test('Friends and Admin routes remain registered and Admin stays guarded',()=>{
+  const router=read('src/app/router.js');
+  assert.match(router,/friends\.home/);
+  assert.match(router,/admin\.users/);
+  assert.match(router,/guardAdminTarget/);
+  assert.match(router,/target\.route\.startsWith\("admin\."\)/);
+  assert.match(router,/whenActivityAccessReady/);
+});
