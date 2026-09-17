@@ -55,6 +55,8 @@ jobs:
           Path('tmp/vendor/SUPABASE-JS-LICENSE.txt').write_text(Path('package/LICENSE').read_text(encoding='utf-8'), encoding='utf-8')
           print(json.dumps(metadata))
           PY
+      - name: Exercise the generated SDK through a PKCE reload
+        run: node --test tmp/auth-pkce-session.test.mjs
       - name: Commit temporary vendor payload
         shell: bash
         run: |
@@ -62,6 +64,8 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A tmp/vendor
-          git commit -m '[vendor-built] Supabase 2.110.7 local ESM payloads'
-          git push origin HEAD:${GITHUB_REF_NAME}
+          if ! git diff --cached --quiet; then
+            git commit -m '[vendor-built] Supabase 2.110.7 local ESM payloads'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
           echo "BUNDLE_COMMIT=$(git rev-parse HEAD)"
