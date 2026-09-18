@@ -6,7 +6,7 @@ import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
 import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.15.12";
 import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
 import { startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0";
-import { socialMessage } from "../../packages/alantil-core/social-i18n.js";
+import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.7.0.1";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
@@ -43,7 +43,7 @@ async function linkRestoredAccountVisit() {
 }
 function syncFriendsNavLabel() {
   const label=document.querySelector('[data-social-nav-label]');
-  if(label)label.textContent=socialMessage(getInterfaceLanguage(),'friends');
+  if(label){const text=socialMessage(getInterfaceLanguage(),'community');label.textContent=text;label.closest('[data-route="friends.home"]')?.setAttribute('aria-label',text);}
 }
 function renderFriendsBadge(counts={}) {
   const badge=document.querySelector('[data-friends-badge]');

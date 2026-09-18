@@ -60,17 +60,7 @@ html[data-text-size="large"] .pathView{--route-station-gap:72px;--route-station-
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
 }
 .profilePrimaryNav::-webkit-scrollbar{display:none}
-.profilePrimaryTab{min-width:0;min-height:var(--ui-profile-tab-item-height);padding:1px 4px;white-space:nowrap;scroll-snap-align:center;font-size:var(--ui-profile-tab-font-size);line-height:var(--ui-profile-tab-line-height)}
-
-/* Bottom navigation consumes the same shared geometry as Mobile. */
-.bottomNav{padding:2px var(--ui-bottom-nav-side) var(--safe-bottom)}
-.bottomNavItem{gap:var(--ui-bottom-nav-gap);font-size:var(--ui-bottom-nav-label-size)}
-.bottomNavIconBubble{width:var(--ui-bottom-nav-bubble-size);height:var(--ui-bottom-nav-bubble-size);flex-basis:var(--ui-bottom-nav-bubble-size)}
-@media(max-width:360px){
-  .bottomNav{padding-left:var(--ui-bottom-nav-compact-side);padding-right:var(--ui-bottom-nav-compact-side)}
-  .bottomNavItem{font-size:var(--ui-bottom-nav-compact-label-size)}
-  .bottomNavIconBubble{width:var(--ui-bottom-nav-compact-bubble-size);height:var(--ui-bottom-nav-compact-bubble-size);flex-basis:var(--ui-bottom-nav-compact-bubble-size)}
-}
+.profilePrimaryTab{min-width:0;min-height:var(--ui-profile-tab-item-height);padding:1px 4px;white-space:nowrap;scroll-snap-align:center;line-height:1.35}
 
 .appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger{
   position:fixed;z-index:calc(var(--z-header) + 2);left:auto;right:10px;top:auto;

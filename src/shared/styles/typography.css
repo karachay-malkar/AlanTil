@@ -94,3 +94,5 @@
 /* Path-specific compact labels. */
 .stationLabel{font-size:var(--text-caption)}
 .stationWordCount{font-size:var(--text-micro)}
+
+:where(.profilePrimaryTab,.storyTab){font-size:var(--text-caption);line-height:1.35}
