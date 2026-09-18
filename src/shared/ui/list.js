@@ -7,13 +7,16 @@ function dataAttribute(name, value) {
 }
 
 export function renderSectionMenu(items, { dataName = "item", className = "" } = {}) {
-  return `<div class="sectionMenu ${className}">${items.map((item) => `
-    <button class="sectionMenuItem" type="button"${dataAttribute(dataName, item.id)}>
-      <span class="sectionMenuTitle">
-        ${item.favorite ? `<span class="sectionMenuFavoriteIcon" aria-hidden="true">${STAR_ICON_SVG}</span>` : ""}
-        <span>${escapeHtml(item.title)}</span>
-      </span>
-    </button>`).join("")}</div>`;
+  return `<div class="sectionMenu contentList ${className}">${items.map((item) => renderContentListRow({
+    id:item.id,
+    primary:item.title,
+    secondary:item.description||"",
+    clickable:true,
+    openAttributes:dataAttribute(dataName,item.id),
+    leadingHtml:item.favorite?`<span class="sectionMenuFavoriteIcon" aria-hidden="true">${STAR_ICON_SVG}</span>`:"",
+    trailingHtml:item.count!==undefined?`<span class="contentListService">${escapeHtml(item.count)}</span>`:"",
+    className:"sectionMenuRow",
+  })).join("")}</div>`;
 }
 
 export function renderMetaPills(values) {

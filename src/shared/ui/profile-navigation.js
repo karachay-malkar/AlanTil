@@ -10,7 +10,8 @@ function escapeAttribute(value) {
 
 export function renderBracketTabs({ items = [], active = "", ariaLabel = "", dataAttribute = "profile-tab" } = {}) {
   const attribute = /^[a-z][a-z0-9-]*$/.test(dataAttribute) ? dataAttribute : "profile-tab";
-  return `<nav class="profilePrimaryNav" aria-label="${escapeAttribute(ariaLabel)}">
+  const count=Math.max(1,items.length);
+  return `<nav class="profilePrimaryNav" style="--profile-tab-count:${count}" aria-label="${escapeAttribute(ariaLabel)}">
     ${items.map((item) => {
       const id = String(item?.id || "");
       const value = item?.value ?? item?.route ?? id;

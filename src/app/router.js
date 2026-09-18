@@ -58,7 +58,15 @@ export function parsePathname(pathname) {
     if (!second) return { route: "practice.home", params: {} };
     if (second === "ashyk" && !third) return { route: "practice.ashyk", params: {} };
   }
-  if (first === "friends" && !second) return { route: "friends.home", params: {} };
+  if (first === "friends") {
+    if (!second) return { route: "friends.home", params: {} };
+    if (second === "statistics") {
+      if (!third) return { route: "admin.users", params: {} };
+      if (third && fourth === "test" && fifth && !sixth) return { route: "admin.test", params: { userId: third, sessionId: fifth } };
+      if (third && !fourth) return { route: "admin.user", params: { userId: third } };
+      return { route: "admin.users", params: {}, notFound: true };
+    }
+  }
   if (first === "path") {
     const storyType = String(second || DEFAULT_STORY).trim() || DEFAULT_STORY;
     if (!third) return { route: "path.home", params: { storyType } };
@@ -77,9 +85,9 @@ export function parsePathname(pathname) {
     if (second === "skills") return { route: "profile.skills", params: {} };
     if (second === "statistics") return { route: "profile.statistics", params: {} };
     if (second === "users") {
-      if (!third) return { route: "admin.users", params: {} };
-      if (third && fourth === "test" && fifth && !sixth) return { route: "admin.test", params: { userId: third, sessionId: fifth } };
-      if (third && !fourth) return { route: "admin.user", params: { userId: third } };
+      if (!third) return { route: "admin.users", params: {}, redirected: true };
+      if (third && fourth === "test" && fifth && !sixth) return { route: "admin.test", params: { userId: third, sessionId: fifth }, redirected: true };
+      if (third && !fourth) return { route: "admin.user", params: { userId: third }, redirected: true };
       return { route: "admin.users", params: {}, notFound: true };
     }
     if (second === "account") return { route: "account.home", params: {} };
@@ -151,9 +159,9 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "profile.home") return "/profile";
   if (routeName === "profile.skills") return "/profile/skills";
   if (routeName === "profile.statistics") return "/profile/statistics";
-  if (routeName === "admin.users") return "/profile/users";
-  if (routeName === "admin.user") return params.userId ? `/profile/users/${encodeSegment(params.userId)}` : "/profile/users";
-  if (routeName === "admin.test") return params.userId && params.sessionId ? `/profile/users/${encodeSegment(params.userId)}/test/${encodeSegment(params.sessionId)}` : "/profile/users";
+  if (routeName === "admin.users") return "/friends/statistics";
+  if (routeName === "admin.user") return params.userId ? `/friends/statistics/${encodeSegment(params.userId)}` : "/friends/statistics";
+  if (routeName === "admin.test") return params.userId && params.sessionId ? `/friends/statistics/${encodeSegment(params.userId)}/test/${encodeSegment(params.sessionId)}` : "/friends/statistics";
   if (routeName === "learn.catalog") return "/learn";
   if (routeName === "learn.catalog-content") return dictionary ? `/learn/${dictionary}/contents` : "/learn";
   if (routeName === "learn.sections") { if (!dictionary) return "/learn"; return section ? `/learn/${dictionary}/${section}` : `/learn/${dictionary}`; }

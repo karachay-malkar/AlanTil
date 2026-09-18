@@ -38,7 +38,7 @@
   grid-template-rows:auto minmax(0,1fr) auto;
   overflow:hidden;
 }
-.setPreparationToolbar{position:relative;z-index:25;min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 4px 5px}.setSelectionCount{color:var(--text-1);font:700 11px/1.2 var(--font-terminal)}
+.setPreparationToolbar{position:relative;z-index:var(--ui-layer-floating);min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:1px 4px 5px}.setSelectionCount{color:var(--text-1);font:700 11px/1.2 var(--font-terminal)}
 .setSelectionTools{display:flex;align-items:center;gap:5px;color:var(--text-3)}
 .textAction{
   appearance:none;

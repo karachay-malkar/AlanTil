@@ -1,5 +1,6 @@
 import { UI_TOKENS } from '../../packages/alantil-ui/tokens.js';
 import { CHROME_CONTRACT } from '../../packages/alantil-ui/chrome.js';
+import { LIST_TABLE_CONTRACT } from '../../packages/alantil-ui/list-table.js';
 import { resolveTypography } from '../../packages/alantil-ui/typography.js';
 
 const W={...UI_TOKENS,chrome:CHROME_CONTRACT};
@@ -29,6 +30,7 @@ export const theme={
   segmented:W.segmented,
   progress:W.progress,
   list:W.list,
+  listTable:LIST_TABLE_CONTRACT,
   practice:W.practice,
   social:W.social,
   ashyk:W.ashyk,

@@ -4,13 +4,15 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("user activity routes stay under profile and preserve user/test identifiers", async () => {
+test("user activity routes live under Friends statistics and preserve legacy profile entry redirects", async () => {
   const router = await read("src/app/router.js");
   assert.match(router, /second === "users"/);
   assert.match(router, /route: "admin\.users"/);
   assert.match(router, /route: "admin\.user", params: \{ userId: third \}/);
   assert.match(router, /route: "admin\.test", params: \{ userId: third, sessionId: fifth \}/);
-  assert.match(router, /\/profile\/users\/\$\{encodeSegment\(params\.userId\)\}/);
+  assert.match(router, /\/friends\/statistics\/\$\{encodeSegment\(params\.userId\)\}/);
+  assert.match(router, /second === "users"/);
+  assert.match(router, /redirected: true/);
 });
 
 test("profile navigation no longer exposes Users; Extended stats moved under Friends and stays activity-access gated", async () => {
@@ -20,7 +22,9 @@ test("profile navigation no longer exposes Users; Extended stats moved under Fri
   assert.doesNotMatch(navigation, /id: "users"/);
   assert.doesNotMatch(navigation, /route: "admin\.users"/);
   assert.match(friends, /hasActivityAccess/);
-  assert.match(friends, /data-social-tab="stats"/);
+  assert.match(friends, /renderBracketTabs/);
+  assert.match(friends, /id:'stats'/);
+  assert.match(friends, /extendedStats/);
   assert.match(router, /whenActivityAccessReady/);
   assert.match(router, /hasActivityAccess/);
 });
@@ -36,13 +40,14 @@ test("users table uses the same full-height scroll architecture as the station w
   assert.match(feature, /class="adminUsersScroll" role="region"/);
   assert.match(pathStyles, /\.stationWordList\{position:absolute;z-index:1;inset:0[^}]*overflow-y:auto/);
   assert.match(styles, /\.adminUsersScroll\{position:absolute;z-index:1;inset:0[^}]*overflow:auto/);
-  assert.match(styles, /scroll-padding-bottom:calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ var\(--content-rest-gap\)\)/);
-  assert.match(chrome, /adminUsersScroll[\s\S]*padding:calc\(var\(--safe-top\) \+ 42px\) 0 calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ var\(--content-rest-gap\)\)!important/);
-  assert.match(styles, /\.adminUsersTable thead th\{position:sticky;top:0;z-index:2/);
-  assert.match(styles, /\.adminUserStickyCell\{position:sticky;left:0[^}]*z-index:3/);
-  assert.match(styles, /\.adminUserStickyHead\{z-index:4!important/);
-  assert.match(styles, /tbody tr:last-child>th[^}]*border-bottom:0/);
-  assert.match(styles, /height:46px/);
+  assert.match(styles, /scroll-padding-bottom:calc\(var\(--safe-bottom\) \+ var\(--content-rest-gap\)\)/);
+  assert.match(styles, /\.adminUsersTable thead th\{position:sticky;top:0;z-index:var\(--z-tabs\)/);
+  assert.match(styles, /height:var\(--table-row-height\)/);
+  assert.match(styles, /height:var\(--ui-list-table-header-height\)/);
+  assert.doesNotMatch(styles, /adminUserStickyCell\{position:sticky/);
+  const adminUsersChrome = chrome.match(/\[data-feature="admin"\]\[data-screen="users"\] \.adminUsersScroll\{[^}]*\}/)?.[0] || "";
+  assert.ok(adminUsersChrome, "admin users chrome rule must exist");
+  assert.doesNotMatch(adminUsersChrome, /var\(--nav-h\)/);
 });
 
 test("general table contains only agreed comparison fields", async () => {

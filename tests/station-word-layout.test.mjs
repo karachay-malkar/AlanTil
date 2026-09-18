@@ -13,7 +13,7 @@ test("stage words are static while only overflowing translations use the marquee
 });
 
 test("stage rows reserve fixed left-aligned content and action columns", () => {
-  assert.match(pathCss, /\.stationWordRow\{[^}]*grid-template-columns:36px minmax\(0,1fr\) 36px/s);
+  assert.match(pathCss, /\.stationWordRow\{[^}]*grid-template-columns:var\(--ui-list-leading\) minmax\(0,1fr\) var\(--ui-list-action\)/s);
   assert.match(pathCss, /\.stationWordRow \.contentListMain\{[^}]*justify-content:stretch[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*text-align:left!important/s);
   assert.doesNotMatch(chromeCss, /\.stationWordRow(?:\{|>| )/);
 });

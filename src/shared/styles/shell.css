@@ -5,7 +5,7 @@
   --action-edge-gap:var(--ui-action-edge-gap);
   --chrome-top-depth:calc(var(--safe-top) + var(--header-h) + var(--content-rest-gap));
   --chrome-bottom-depth:calc(var(--safe-bottom) + var(--content-rest-gap));
-  --system-mask-bg:color-mix(in srgb,var(--app-bg) 18%,transparent);
+  --system-mask-bg:rgb(238 233 223 / var(--ui-system-mask-glass-alpha));
   --system-mask-blur:var(--ui-system-mask-blur);
   --system-control-bg:color-mix(in srgb,var(--surface-0) 28%,transparent);
   --system-control-bg-active:color-mix(in srgb,var(--surface-0) 46%,transparent);
@@ -23,7 +23,7 @@
   position:absolute;
   left:0;
   right:0;
-  z-index:29;
+  z-index:var(--z-mask);
   pointer-events:none;
   background:rgba(238,233,223,.18);
   background:var(--system-mask-bg);
@@ -151,8 +151,8 @@
 .bottomNavElbrus{display:block;width:29px;height:auto;max-height:17px;object-fit:contain;opacity:.82}
 .bottomNavItem.active .bottomNavElbrus{opacity:1}
 .bottomNavLabel{line-height:1.05;white-space:nowrap}
-.stationLaunchPanel,.setPreparationFooter,.modeLaunchBar,.learnSessionActions{position:relative;z-index:30;background:transparent!important;border:0;box-shadow:none}
-.profilePrimaryNav,.stationViewTabs{position:relative;z-index:25}
+.stationLaunchPanel,.setPreparationFooter,.modeLaunchBar,.learnSessionActions{position:relative;z-index:var(--ui-layer-floating);background:transparent!important;border:0;box-shadow:none}
+.profilePrimaryNav,.stationViewTabs{position:relative;z-index:var(--z-tabs)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .appViewport::before,.appViewport::after{background:rgba(238,233,223,.16)}
   .appHeaderAction,.appHeaderTextAction,.bottomNavIconBubble{background:color-mix(in srgb,var(--surface-0) 48%,transparent)}

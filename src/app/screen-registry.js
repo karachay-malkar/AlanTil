@@ -18,7 +18,7 @@ const SCREENS = Object.freeze({
   "friends.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "profile.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, title: "" },
-  "admin.users": { layout: "root", header: "minimal", bottomNav: true, title: "" },
+  "admin.users": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.users" },
   "admin.user": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.user" },
   "admin.test": { layout: "detail", header: "standard", bottomNav: false, titleKey: "admin.test_result" },
 

@@ -23,9 +23,9 @@ export function PracticeScreen({settings={},openTest,openMatch,openFavorites,ope
 const styles=StyleSheet.create({
   scroll:{width:'100%',maxWidth:720,alignSelf:'center',paddingTop:theme.control.header+theme.chrome.contentRestGap,paddingHorizontal:16,paddingBottom:28},
   menu:{overflow:'hidden'},
-  menuRow:{minHeight:P.rowHeight,paddingHorizontal:2,paddingVertical:10,gap:P.gap},
-  singleRow:{minHeight:P.singleRowHeight},
-  menuLeading:{width:P.leadingSize,height:P.leadingSize},
+  menuRow:{paddingHorizontal:theme.listTable.horizontalPadding,paddingVertical:4,gap:theme.listTable.gap},
+  singleRow:{},
+  menuLeading:{width:theme.listTable.leadingSlot,height:theme.listTable.leadingSlot},
   menuTitle:{fontSize:P.titleSize,fontWeight:'800',lineHeight:18},
   menuSubtitle:{marginTop:2,fontSize:P.subtitleSize,lineHeight:14.3},
 });

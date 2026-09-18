@@ -73,7 +73,7 @@ export function renderSongsCatalog(context, playlist, songs, signal) {
       ? filtered.map((song) => renderContentListRow({
           id: song.id,
           primary: song.title,
-          pills: songArtists(song.artist),
+          secondary: songArtists(song.artist).join(" · "),
           clickable: true,
           openAttributes: `data-song-open="${escapeHtml(song.id)}"`,
           trailingHtml: renderFavoriteButton({

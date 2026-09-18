@@ -186,6 +186,15 @@ async function renderUsers(context, signal) {
     if (signal.aborted) return;
     const scroll = context.root.querySelector(".adminUsersScroll");
     if (!scroll) return;
+    const loading = scroll.querySelector(".loadingState");
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "adminUsersEmpty emptyState";
+      empty.textContent = msg("admin.no_data");
+      if (loading) loading.replaceWith(empty); else scroll.appendChild(empty);
+      return;
+    }
+    loading?.remove();
     const table = document.createElement("table");
     table.className = "adminUsersTable";
     table.innerHTML = `<thead><tr>
@@ -229,7 +238,14 @@ async function renderUsers(context, signal) {
     toggle?.addEventListener("click", () => setOpen(!usersSearchOpen), { signal });
     input?.addEventListener("input", () => { usersSearchQuery = input.value; draw(); }, { signal });
   } catch (error) {
-    if (!signal.aborted) renderFailure(context, error);
+    if (signal.aborted) return;
+    const scroll = context.root.querySelector(".adminUsersScroll");
+    const loading = scroll?.querySelector(".loadingState");
+    if (!scroll) return renderFailure(context, error);
+    const failure = document.createElement("div");
+    failure.className = "adminUsersError emptyState";
+    failure.textContent = failureMessage(error);
+    if (loading) loading.replaceWith(failure); else scroll.replaceChildren(failure);
   }
 }
 

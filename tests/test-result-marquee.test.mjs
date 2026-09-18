@@ -17,7 +17,7 @@ test("every result mode uses one row renderer and one overflow motion", async ()
   }
   assert.match(resultList, /renderOverflowMarquee/);
   assert.match(resultList, /bindOverflowMarquees/);
-  assert.match(css, /\.resultListRow\{[^}]*height:80px[^}]*grid-template-columns:44px minmax\(0,1fr\) 44px/s);
+  assert.match(css, /\.resultListRow\{[^}]*height:var\(--ui-list-result-height\)[^}]*grid-template-columns:var\(--ui-list-leading\) minmax\(0,1fr\) var\(--ui-list-action\)/s);
   assert.match(css, /\.resultDetailLine\{[^}]*white-space:nowrap/s);
   assert.match(css, /\.resultStatus\{[^}]*background:transparent[^}]*border:0/s);
 });

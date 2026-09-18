@@ -179,11 +179,14 @@ html[data-theme="alan-paper"]{
   --header-blur:5px;
   --segmented-progress-segments:10;
 
-  --z-header:30;
-  --z-path-controls:24;
-  --z-nav:35;
+  --z-content:var(--ui-layer-content);
+  --z-mask:var(--ui-layer-mask);
+  --z-header:var(--ui-layer-header);
+  --z-tabs:var(--ui-layer-tabs);
+  --z-path-controls:var(--ui-layer-tabs);
+  --z-nav:var(--ui-layer-floating);
   --z-overlay:100;
-  --z-modal:110;
+  --z-modal:var(--ui-layer-modal);
 
   /* Compatibility aliases retained for stable feature logic. */
   --r:var(--radius-lg);

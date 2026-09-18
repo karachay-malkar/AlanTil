@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from './theme.js';
-import { useSemanticTypography } from './runtime-settings.js';
+import { useRuntimeSettings, useSemanticTypography } from './runtime-settings.js';
 import { textMetrics } from '../../packages/alantil-ui/typography.js';
+import { listRowHeight, listTypography } from '../../packages/alantil-ui/list-table.js';
 import { CutCornerFrame } from './cut-corner.js';
 
 const C = theme.colors;
@@ -36,13 +37,14 @@ export function OverflowMarquee({ children, textStyle, style, enabled = true }) 
   return <View style={[styles.marquee,style]} onLayout={(event)=>setBoxWidth(event.nativeEvent.layout.width)}><Animated.View style={{transform:[{translateX:offset}]}}><Text onLayout={(event)=>setTextWidth(event.nativeEvent.layout.width)} numberOfLines={1} style={textStyle}>{displayText}</Text></Animated.View></View>;
 }
 
-export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, marquee = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
-  const type = useSemanticTypography();
+export function ListRow({ leading, title, subtitle, trailing, onPress, selected = false, compact = false, variant = 'standard', marquee = false, style, titleStyle, subtitleStyle, leadingStyle, trailingStyle }) {
+  const {settings}=useRuntimeSettings(),sizeCode=settings?.text_size_code||'medium',rowHeight=listRowHeight(sizeCode,variant),listType=listTypography(sizeCode);
   const Body = onPress ? Pressable : View;
-  const rowStyle = (pressed = false) => [styles.listRow, compact && styles.listRowCompact, selected && styles.listRowSelected, pressed && styles.pressed, style];
+  const rowStyle = (pressed = false) => [styles.listRow,{height:rowHeight,minHeight:rowHeight}, compact && styles.listRowCompact, selected && styles.listRowSelected, pressed && styles.pressed, style];
+  const primaryMetrics=textMetrics(listType.primary,1.2),secondaryMetrics=textMetrics(listType.secondary,4/3);
   return <Body accessibilityRole={onPress ? 'button' : undefined} accessibilityState={onPress ? { selected } : undefined} onPress={onPress} style={onPress ? ({ pressed }) => rowStyle(pressed) : rowStyle()}>
     {leading ? <View style={[styles.listLeading,leadingStyle]}>{leading}</View> : null}
-    <View style={styles.listCopy}>{marquee?<OverflowMarquee textStyle={[styles.listTitle,textMetrics(type.emphasis.fontSize,1.2),titleStyle]}>{title}</OverflowMarquee>:<Text numberOfLines={1} style={[styles.listTitle,textMetrics(type.emphasis.fontSize,1.2),titleStyle]}>{title}</Text>}{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,textMetrics(type.caption.fontSize,4/3),subtitleStyle]}>{subtitle}</Text> : null}</View>
+    <View style={styles.listCopy}>{marquee?<OverflowMarquee textStyle={[styles.listTitle,primaryMetrics,titleStyle]}>{title}</OverflowMarquee>:<Text numberOfLines={1} style={[styles.listTitle,primaryMetrics,titleStyle]}>{title}</Text>}{subtitle ? <Text numberOfLines={2} style={[styles.listSubtitle,secondaryMetrics,subtitleStyle]}>{subtitle}</Text> : null}</View>
     {trailing ? <View style={[styles.listTrailing,trailingStyle]}>{trailing}</View> : null}
   </Body>;
 }
@@ -83,14 +85,14 @@ const styles = StyleSheet.create({
   segmentItemSongsActive: { backgroundColor: 'rgba(246,242,233,.84)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   segmentLabel: { fontFamily: theme.font.terminal, fontSize: 10, fontWeight: '700', lineHeight: 10, color: C.text3, textAlign: 'center' },
   segmentLabelActive: { color: C.text1 },
-  listRow: { minHeight: 58, paddingHorizontal: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.lineSoft, flexDirection: 'row', alignItems: 'center', gap: 9 },
-  listRowCompact: { minHeight: theme.list.rowMinHeight, paddingVertical: 5 },
+  listRow: { paddingHorizontal: theme.listTable.horizontalPadding, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: C.lineSoft, backgroundColor:'transparent', borderRadius:0, flexDirection: 'row', alignItems: 'center', gap: theme.listTable.gap },
+  listRowCompact: { paddingVertical: 4 },
   listRowSelected: { backgroundColor: C.controlGlass || 'rgba(246,242,233,.36)' },
-  listLeading: { width: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' },
+  listLeading: { width: theme.listTable.leadingSlot, minWidth:theme.listTable.leadingSlot, minHeight: theme.listTable.leadingSlot, alignItems: 'center', justifyContent: 'center' },
   listCopy: { flex: 1, minWidth: 0 },
-  listTitle: { fontSize: 15, fontWeight: '800', lineHeight: 18, color: C.text1 },
-  listSubtitle: { marginTop: 2, fontSize: T.caption, lineHeight: 16, color: C.text2 },
-  listTrailing: { minWidth: 30, alignItems: 'flex-end', justifyContent: 'center' },
+  listTitle: { fontSize: theme.listTable.typography.primary.fontSize, fontWeight: theme.listTable.typography.primary.fontWeight, lineHeight: 18, color: C.text1 },
+  listSubtitle: { marginTop: 2, fontSize: theme.listTable.typography.secondary.fontSize, lineHeight: 16, color: C.text2 },
+  listTrailing: { minWidth: theme.listTable.actionSlot, width:theme.listTable.actionSlot, alignItems: 'flex-end', justifyContent: 'center' },
   marquee:{width:'100%',overflow:'hidden'},
   metrics: { width: '100%', flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.lineSoft },
   metric: { flex: 1, minWidth: 0, minHeight: 66, paddingVertical: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'center', borderRightWidth: 1, borderRightColor: C.lineSoft, overflow: 'visible' },

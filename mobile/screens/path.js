@@ -442,7 +442,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
 }
 
 const styles=StyleSheet.create({
-  pathControls:{position:'absolute',zIndex:30,elevation:30,shadowColor:Platform.OS==='android'?'transparent':undefined,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingHorizontal:0,paddingBottom:2},
+  pathControls:{position:'absolute',zIndex:theme.chrome.layers.tabs,elevation:theme.chrome.layers.tabs,shadowColor:Platform.OS==='android'?'transparent':undefined,top:0,left:0,right:0,height:theme.path.rootControlsHeight,paddingHorizontal:0,paddingBottom:2},
   storyTabsShell:{position:'relative',height:32,overflow:'hidden'},
   storyTabs:{height:32,alignItems:'center',paddingHorizontal:0,gap:theme.chrome.storyTabs.gap},
   storyEdge:{position:'absolute',zIndex:4,top:0,width:24,height:32,textAlign:'center',fontFamily:theme.font.terminal,fontSize:18,fontWeight:'800',lineHeight:32,color:C.text2,opacity:.72,backgroundColor:'rgba(238,233,223,.78)'},
@@ -487,10 +487,10 @@ const styles=StyleSheet.create({
   stationCount:{fontFamily:theme.font.terminal,fontSize:8,fontWeight:'700',lineHeight:8,color:C.text3},
   sectionHeading:{alignSelf:'center',maxWidth:360,paddingHorizontal:8,fontSize:14,fontWeight:'800',lineHeight:17,color:C.text1,textAlign:'center'},
   catalogHeading:{alignSelf:'center',maxWidth:300,paddingHorizontal:8,fontSize:17,fontWeight:'850',lineHeight:20,color:C.text1,textAlign:'center',letterSpacing:.76},
-  wordListFloat:{position:'absolute',zIndex:32,left:10,top:'80%',marginTop:-64,width:36,height:36,borderRadius:18,borderWidth:1,borderColor:C.controlBorder,backgroundColor:C.controlGlass,alignItems:'center',justifyContent:'center',shadowColor:'#292722',shadowOpacity:.025,shadowRadius:9,shadowOffset:{width:0,height:2},elevation:1},
+  wordListFloat:{position:'absolute',zIndex:theme.chrome.layers.floating,left:10,top:'80%',marginTop:-64,width:36,height:36,borderRadius:18,borderWidth:1,borderColor:C.controlBorder,backgroundColor:C.controlGlass,alignItems:'center',justifyContent:'center',shadowColor:'#292722',shadowOpacity:.025,shadowRadius:9,shadowOffset:{width:0,height:2},elevation:1},
   wordListFloatCompact:{left:9,marginTop:-61,width:34,height:34,borderRadius:17},
   floatingPressed:{opacity:.72},
-  routeScale:{position:'absolute',zIndex:30,right:theme.path.scaleRight,top:'20%',bottom:'20%',width:theme.path.scaleWidth,alignItems:'center',justifyContent:'space-evenly',backgroundColor:'transparent'},
+  routeScale:{position:'absolute',zIndex:theme.chrome.layers.tabs,right:theme.path.scaleRight,top:'20%',bottom:'20%',width:theme.path.scaleWidth,alignItems:'center',justifyContent:'space-evenly',backgroundColor:'transparent'},
   scaleDiamondHit:{width:26,height:26,alignItems:'center',justifyContent:'center'},
   scalePressed:{opacity:.65},
   scaleDiamond:{width:theme.path.scaleDiamond,height:theme.path.scaleDiamond,borderWidth:1,borderColor:'rgba(41,39,34,.55)',transform:[{rotate:'45deg'}],backgroundColor:'transparent'},
