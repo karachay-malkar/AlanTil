@@ -15,3 +15,6 @@
 .socialEmpty{margin:0;padding:10px 2px;color:var(--text-2);font-size:13px}.socialGuestView{display:flex;align-items:center;justify-content:center;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 24px)}.socialGuest{width:min(420px,100%);display:grid;justify-items:center;gap:14px;text-align:center}.socialGuestTitle{font-size:26px;font-weight:900}.socialGuest p{margin:0;color:var(--text-2);line-height:1.5}.socialGuest .btn{width:min(260px,100%)}
 .friendsNavBadge{position:absolute;top:0;right:calc(50% - 25px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--danger);color:#fff;font:800 9px/16px var(--font-terminal);text-align:center;box-shadow:0 0 0 2px var(--app-bg)}
 @media(max-width:560px){.socialView{padding-inline:10px}.socialRow{gap:var(--ui-list-gap)}.socialRowActions{gap:var(--ui-list-gap)}.socialRowActions .iconAction{width:var(--ui-social-compact-action-size);height:var(--ui-social-compact-action-size);padding:7px}}
+
+.socialBody.isStats{overflow:hidden;align-content:stretch;padding-left:0;padding-right:0}
+.socialBody.isStats>.adminUsersEmbedded{min-height:0;height:100%}

@@ -140,6 +140,9 @@
   --ui-practice-subtitle-size:12px;
   --ui-practice-title-size:15px;
   --ui-profile-gender-compact-height:150px;
+  --ui-profile-tab-gap:3px;
+  --ui-profile-tab-item-height:30px;
+  --ui-profile-tab-item-padding-horizontal:4px;
   --ui-profile-gender-compact-width:360px;
   --ui-profile-gender-gap:9px;
   --ui-profile-gender-height:180px;

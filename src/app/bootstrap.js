@@ -43,7 +43,7 @@ async function linkRestoredAccountVisit() {
 }
 function syncFriendsNavLabel() {
   const label=document.querySelector('[data-social-nav-label]');
-  if(label)label.textContent=socialMessage(getInterfaceLanguage(),'friends');
+  if(label){const text=socialMessage(getInterfaceLanguage(),'community');label.textContent=text;label.closest('[data-route="friends.home"]')?.setAttribute('aria-label',text);}
 }
 function renderFriendsBadge(counts={}) {
   const badge=document.querySelector('[data-friends-badge]');

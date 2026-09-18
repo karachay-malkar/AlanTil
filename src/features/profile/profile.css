@@ -2,7 +2,7 @@
 [data-feature="profile"] .profileView::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.25;background-image:var(--topographic-lines);background-size:420px 420px;background-position:center top}
 [data-feature="profile"] .profileView>*{position:relative;z-index:1}
 .profilePrimaryNav{display:grid;grid-template-columns:repeat(var(--profile-tab-count,3),minmax(0,1fr));align-items:center;gap:var(--ui-profile-tab-gap)}
-.profilePrimaryTab{appearance:none;min-width:0;min-height:var(--ui-profile-tab-item-height);padding:0 var(--ui-profile-tab-item-padding-horizontal);border:0;background:transparent;color:var(--text-3);font:750 var(--ui-profile-tab-font-size)/var(--ui-profile-tab-line-height) var(--font-terminal);white-space:nowrap}
+.profilePrimaryTab{appearance:none;min-width:0;min-height:var(--ui-profile-tab-item-height);padding:0 var(--ui-profile-tab-item-padding-horizontal);border:0;background:transparent;color:var(--text-3);font-family:var(--font-terminal);font-weight:750;line-height:1.35;white-space:nowrap}
 .profilePrimaryTab.active{color:var(--text-1);font-weight:900}
 .profilePrimaryTab:active{opacity:.62}
 [data-feature="profile"] .profileScroll{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 2px 28px;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 46px),transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 46px),transparent 100%)}
@@ -48,4 +48,4 @@
 [data-feature="profile"] .problemWords{display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid var(--line-soft);padding-top:9px}
 [data-feature="profile"] .problemWord{min-width:92px;padding:6px 8px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:8px;font-size:12px}
 [data-feature="profile"] .problemWord small{color:var(--danger-strong);font:700 9px/1.4 var(--font-terminal)}
-@media(max-width:360px){.profilePrimaryTab{font-size:var(--ui-profile-tab-font-size)}[data-feature="profile"] .profileAvatarFrame{width:min(69vw,242px)}[data-feature="profile"] .profileGenderChoices button{min-height:var(--ui-profile-gender-compact-height)}[data-feature="profile"] .profileGenderChoices button>span{height:105px}}
+@media(max-width:360px){[data-feature="profile"] .profileAvatarFrame{width:min(69vw,242px)}[data-feature="profile"] .profileGenderChoices button{min-height:var(--ui-profile-gender-compact-height)}[data-feature="profile"] .profileGenderChoices button>span{height:105px}}

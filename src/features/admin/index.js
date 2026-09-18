@@ -170,21 +170,29 @@ function usersTableRows(rows = []) {
   }).join("");
 }
 
-async function renderUsers(context, signal) {
-  context.shell.setHeaderContent?.({ title: msg("admin.users") });
+async function renderUsers(context, signal, { host = context.root, embedded = false } = {}) {
   const search = renderExpandableSearch({ idPrefix: "adminUsersSearch", open: usersSearchOpen, placeholder: msg("admin.users") });
-  context.shell.setHeaderAction?.(search.toggle);
-  context.root.innerHTML = `<section class="view screen adminUsersView">
-    <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
-      ${search.bar}
-      <div class="loadingState">${msg("common.otkryvaem")}</div>
-    </div>
-  </section>`;
+  if (embedded) {
+    host.innerHTML = `<div class="adminUsersToolbar">${search.toggle}</div>
+      <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
+        ${search.bar}
+        <div class="loadingState">${msg("common.otkryvaem")}</div>
+      </div>`;
+  } else {
+    context.shell.setHeaderContent?.({ title: msg("admin.users") });
+    context.shell.setHeaderAction?.(search.toggle);
+    host.innerHTML = `<section class="view screen adminUsersView">
+      <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
+        ${search.bar}
+        <div class="loadingState">${msg("common.otkryvaem")}</div>
+      </div>
+    </section>`;
+  }
 
   try {
     const rows = await fetchUserActivityList();
     if (signal.aborted) return;
-    const scroll = context.root.querySelector(".adminUsersScroll");
+    const scroll = host.querySelector(".adminUsersScroll");
     if (!scroll) return;
     const loading = scroll.querySelector(".loadingState");
     if (!rows.length) {
@@ -223,9 +231,9 @@ async function renderUsers(context, signal) {
     };
     draw();
 
-    const toggle = context.shell.headerActionSlot?.querySelector("#adminUsersSearchToggle");
-    const bar = context.root.querySelector("#adminUsersSearchBar");
-    const input = context.root.querySelector("#adminUsersSearchInput");
+    const toggle = embedded ? host.querySelector("#adminUsersSearchToggle") : context.shell.headerActionSlot?.querySelector("#adminUsersSearchToggle");
+    const bar = host.querySelector("#adminUsersSearchBar");
+    const input = host.querySelector("#adminUsersSearchInput");
     if (input) input.value = usersSearchQuery;
     const setOpen = (open) => {
       usersSearchOpen = open;
@@ -239,14 +247,23 @@ async function renderUsers(context, signal) {
     input?.addEventListener("input", () => { usersSearchQuery = input.value; draw(); }, { signal });
   } catch (error) {
     if (signal.aborted) return;
-    const scroll = context.root.querySelector(".adminUsersScroll");
+    const scroll = host.querySelector(".adminUsersScroll");
     const loading = scroll?.querySelector(".loadingState");
-    if (!scroll) return renderFailure(context, error);
+    if (!scroll) {
+      if (!embedded) return renderFailure(context, error);
+      host.innerHTML = `<div class="adminUsersError emptyState">${escapeHtml(failureMessage(error))}</div>`;
+      return;
+    }
     const failure = document.createElement("div");
     failure.className = "adminUsersError emptyState";
     failure.textContent = failureMessage(error);
     if (loading) loading.replaceWith(failure); else scroll.replaceChildren(failure);
   }
+}
+
+export async function renderAdminUsersEmbedded(context, signal, host) {
+  if (!host || signal?.aborted) return;
+  return renderUsers(context, signal, { host, embedded: true });
 }
 
 function storyProgressSection(stories = []) {
@@ -463,10 +480,10 @@ export async function mount(context, params = {}) {
   controller = new AbortController();
   const signal = controller.signal;
   const screen = params.screen || "users";
-  if (screen === "users") return renderUsers(context, signal);
+  if (screen === "users") return context.router.replace("friends.home", { mode: "stats" }, { force: true });
   if (screen === "user") return renderUserDetail(context, signal, params.userId);
   if (screen === "test") return renderTestDetail(context, signal, params.sessionId);
-  return context.router.replace("admin.users", {}, { force: true });
+  return context.router.replace("friends.home", { mode: "stats" }, { force: true });
 }
 
 export function unmount() {

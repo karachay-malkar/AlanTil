@@ -60,7 +60,7 @@ html[data-text-size="large"] .pathView{--route-station-gap:72px;--route-station-
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
 }
 .profilePrimaryNav::-webkit-scrollbar{display:none}
-.profilePrimaryTab{min-width:0;min-height:var(--ui-profile-tab-item-height);padding:1px 4px;white-space:nowrap;scroll-snap-align:center;font-size:var(--ui-profile-tab-font-size);line-height:var(--ui-profile-tab-line-height)}
+.profilePrimaryTab{min-width:0;min-height:var(--ui-profile-tab-item-height);padding:1px 4px;white-space:nowrap;scroll-snap-align:center;line-height:1.35}
 
 /* Bottom navigation consumes the same shared geometry as Mobile. */
 .bottomNav{padding:2px var(--ui-bottom-nav-side) var(--safe-bottom)}

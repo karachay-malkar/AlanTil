@@ -1,5 +1,6 @@
 const M=(ru,en,tr)=>Object.freeze({ru,en,tr});
 export const SOCIAL_MESSAGES=Object.freeze({
+  community:M('Сообщество','Community','Topluluk'),
   friends:M('Друзья','Friends','Arkadaşlar'),
   rating:M('Рейтинг','Leaderboard','Sıralama'),
   extendedStats:M('Расширенная статистика','Extended stats','Genişletilmiş istatistik'),
