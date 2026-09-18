@@ -6,7 +6,7 @@ import { CHROME_CONTRACT } from '../../packages/alantil-ui/chrome.js';
 export const WEB_VISUAL_SOURCES = Object.freeze({
   ref: '16.7.0',
   styles: Object.freeze([
-    ["src/shared/styles/shared-visual-tokens.css","4be070d3b3e6d7252a2c309454addf65d17447a3"],
+    ["src/shared/styles/shared-visual-tokens.css","f4630106abb7c431a1992b30ba9b38853ce264ef"],
     ["src/shared/styles/theme.css","607421df419079fb055af138a1875f892d9b38ce"],
     ["src/shared/styles/typography.css","1d96743682fad93533de4db1948e9a402d3e40f6"],
     ["src/shared/styles/shell.css","4a511a72d022d993090d32a8218a7781d5ebfc89"],

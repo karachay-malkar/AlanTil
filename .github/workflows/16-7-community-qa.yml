@@ -3,14 +3,52 @@ on:
   push:
     branches:
       - agent/16.7.0-community-apply
+
 jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Community RED/GREEN contracts
+
+      - name: Syntax checks for changed non-JSX JavaScript
         run: |
-          node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs
+          node --check packages/alantil-core/social-i18n.js
+          node --check src/app/bootstrap.js
+          node --check src/app/screen-registry.js
+          node --check src/app/router.js
+          node --check src/features/friends/index.js
+          node --check src/features/admin/index.js
+          node --check scripts/generate-shared-visual-css.mjs
+          node --check mobile/ui/web-visual-source.js
+          node --check tests/social-ashyk-16-7-0.test.mjs
+          node --check tests/friends-web-parity-16-7-0.test.mjs
+          node --check tests/visual-parity-16-7-0.test.mjs
+
+      - name: Regenerate and verify shared visual contracts
+        run: |
+          node scripts/generate-shared-visual-css.mjs
+          node scripts/enforce-registered-ashyk-modes-16-7.mjs
+          node scripts/sync-mobile-parity-16-7.mjs
+          node scripts/sync-visual-contract-16-7.mjs
+          git diff --exit-code --             src/shared/styles/shared-visual-tokens.css             mobile/screens/ashyk.js             packages/ashyk-game/web/Game.jsx             mobile/ui/parity.js             mobile/ui/web-visual-source.js
+
+      - name: Community social visual OAuth contracts
+        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs
+
+      - name: Shared core and unaffected regressions
+        run: >-
+          node --test
+          tests/alantil-core-16.test.mjs
+          mobile/tests/cloud-queue-race.test.mjs
+          mobile/tests/cloud-scope-transaction.test.mjs
+          mobile/tests/practice-mechanics-parity-16-6-7.test.mjs
+          mobile/tests/mobile-polish-16-6-8.test.mjs
+          mobile/tests/ashyk-ui-help-16-6-12.test.mjs
+
+      - name: Diff whitespace validation
+        run: git diff --check HEAD^ HEAD

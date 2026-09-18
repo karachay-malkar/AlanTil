@@ -34,6 +34,7 @@ export function FriendsScreen({settings={},userId='',mode='rating',onModeChange,
 
   useEffect(()=>{void refresh();if(!userId)return undefined;let timer=null;const schedule=()=>{clearTimeout(timer);timer=setTimeout(()=>void refresh(),120);};const channel=nativeSupabase.channel(`social-mobile:${userId}:${Date.now()}`).on('postgres_changes',{event:'*',schema:'public',table:'friendships'},schedule).on('postgres_changes',{event:'*',schema:'public',table:'ashyk_invites'},schedule).subscribe();return()=>{request.current+=1;clearTimeout(timer);try{channel.unsubscribe();}catch{}try{void nativeSupabase.removeChannel(channel);}catch{}};},[userId]);
   useEffect(()=>{if(!userId){setAccessState('denied');return;}let alive=true;setAccessState('checking');fetchNativeActivityAccess(userId).then(value=>{if(!alive)return;const next=value?'allowed':'denied';setAccessState(next);if(next==='denied'&&mode==='stats')onModeChange?.('rating');}).catch(()=>{if(alive){setAccessState('denied');if(mode==='stats')onModeChange?.('rating');}});return()=>{alive=false;};},[userId]);
+  useEffect(()=>{if(accessState==='denied'&&mode==='stats')onModeChange?.('rating');},[accessState,mode]);
   useEffect(()=>{if(mode==='rating'&&!leaderboard.length)void loadRank();},[mode,userId]);
   useEffect(()=>{const timer=setTimeout(()=>void runSearch(query),280);return()=>clearTimeout(timer);},[query,userId]);
 
