@@ -94,16 +94,21 @@ test('search and leaderboard expose friendship id so incoming requests are actio
   assert.match(mobile,/user\.friendship_id/);
 });
 
-test('web and mobile register Friends as fourth root tab with inbox badge',()=>{
-  const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js'),bootstrap=read('src/app/bootstrap.js');
+test('web and mobile register Community as the fourth root tab while Friends stays an inner tab',()=>{
+  const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js'),bootstrap=read('src/app/bootstrap.js'),copy=read('packages/alantil-core/social-i18n.js');
   assert.match(app,/SocialBottomNav/);
   assert.match(app,/socialBadge/);
+  assert.match(app,/socialMessage\(language,'community'\)/);
   assert.match(html,/data-route="friends\.home"/);
   assert.match(html,/data-friends-badge/);
+  assert.match(html,/>Сообщество<\/span>/);
   assert.match(router,/friends\.home/);
   assert.match(registry,/"friends\.home"/);
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
+  assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
+  assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
+  assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
 });
 
 test('Friends guest and blocked copy use dedicated social labels on both platforms',()=>{
@@ -187,11 +192,15 @@ test('Google OAuth cold start waits for the callback and clears it only after su
   assert.match(bootstrap,/if \(callbackVisit\) await authInitialization/);
 });
 
-test('Friends and Admin routes remain registered and Admin stays guarded',()=>{
+test('Community statistics is a root route while only user/test detail routes stay Admin guarded',()=>{
   const router=read('src/app/router.js');
-  assert.match(router,/friends\.home/);
-  assert.match(router,/admin\.users/);
-  assert.match(router,/guardAdminTarget/);
+  const registry=read('src/app/screen-registry.js');
+  assert.match(router,/if \(second === "statistics"\) \{\s*if \(!third\) return \{ route: "friends\.home", params: \{ mode: "stats" \} \}/);
+  assert.match(router,/admin\.user/);
+  assert.match(router,/admin\.test/);
+  assert.match(router,/target\.route === "admin\.users"/);
   assert.match(router,/target\.route\.startsWith\("admin\."\)/);
   assert.match(router,/whenActivityAccessReady/);
+  assert.match(registry,/"friends\.home": \{ layout: "root", header: "minimal", bottomNav: true/);
 });
+

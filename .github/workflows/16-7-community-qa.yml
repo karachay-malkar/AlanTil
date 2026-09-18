@@ -1,0 +1,16 @@
+name: 16.7 Community QA
+on:
+  push:
+    branches:
+      - agent/16.7.0-community-apply
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Community RED/GREEN contracts
+        run: |
+          node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs

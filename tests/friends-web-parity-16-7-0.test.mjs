@@ -7,18 +7,21 @@ import {fileURLToPath} from 'node:url';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(file)=>fs.readFileSync(path.join(ROOT,file),'utf8');
 
-test('Web Friends resolves activity_access for the authenticated user before rendering tabs',()=>{
+test('Web Community renders its shell immediately and resolves activity_access inside the stats tab',()=>{
   const web=read('src/features/friends/index.js');
   const access=read('src/shared/admin/admin-access.js');
   const router=read('src/app/router.js');
   assert.match(access,/export async function refreshActivityAccessForUser\(userId\)/);
   assert.match(access,/\.from\("profiles"\)[\s\S]*\.select\("activity_access"\)[\s\S]*\.eq\("user_id", userId\)/);
+  assert.match(web,/context\.root\.innerHTML=shellHtml\(/);
+  assert.match(web,/statsAccessState\s*=\s*["']checking["']/);
   assert.match(web,/refreshActivityAccessForUser\(context\.selfId\)/);
-  assert.match(web,/const showStats=await refreshActivityAccessForUser\(context\.selfId\)\.catch\(\(\)=>false\);[\s\S]*shellHtml\(showStats\)/);
+  assert.match(web,/renderAdminUsersEmbedded/);
   assert.match(web,/extendedStats/);
+  assert.doesNotMatch(web,/renderStats\(context\)[\s\S]{0,160}navigate\(["']admin\.users["']/);
   assert.match(router,/guardAdminTarget/);
   assert.match(router,/hasActivityAccess\(\)/);
-  assert.doesNotMatch(`${web}\n${access}`,/Taulu07|dfcf124e-735b-4caa-81d2-99eb5f02218d/i);
+  assert.doesNotMatch(web+"\n"+access,/Taulu07|dfcf124e-735b-4caa-81d2-99eb5f02218d/i);
 });
 
 test('Web Friends action icons use the same outline contract as mobile icons',()=>{
