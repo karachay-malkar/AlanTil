@@ -17,6 +17,7 @@ test('Web Community renders its shell immediately and resolves activity_access i
   assert.match(web,/statsAccessState\s*=\s*["']checking["']/);
   assert.match(web,/refreshActivityAccessForUser\(context\.selfId\)/);
   assert.match(web,/renderAdminUsersEmbedded/);
+  assert.match(web,/whenActivityAccessReady\(\)\.then[\s\S]*statsAccessState!==['\"]allowed['\"][\s\S]*canonicalize\(['\"]friends\.home['\"],\{\}\)/);
   assert.match(web,/extendedStats/);
   assert.doesNotMatch(web,/renderStats\(context\)[\s\S]{0,160}navigate\(["']admin\.users["']/);
   assert.match(router,/guardAdminTarget/);
