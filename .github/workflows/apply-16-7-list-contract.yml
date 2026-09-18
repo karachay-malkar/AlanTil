@@ -1,0 +1,69 @@
+name: Apply 16.7 list contract
+
+on:
+  push:
+    branches:
+      - agent/16.7.0-list-contract-apply
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout helper branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Reconstruct verified patch
+        shell: bash
+        run: |
+          cat .tmp-apply/patch.b64.* | base64 -d | gunzip > /tmp/alantil.patch
+          echo "90308c747d07ed69626105c50e938630b0b0bc05cbb4ae8e6c47464cbc0804c0  /tmp/alantil.patch" | sha256sum -c -
+
+      - name: Apply and verify exact target
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin agent/16.7.0-friends-rating-ashyk
+          git checkout -B agent/16.7.0-friends-rating-ashyk origin/agent/16.7.0-friends-rating-ashyk
+          test "$(git rev-parse HEAD)" = "68737a3b45c044ca816c5bbaa58c337541a129f7"
+
+          patch -p1 --forward --batch < /tmp/alantil.patch
+
+          node scripts/generate-shared-visual-css.mjs
+          node scripts/enforce-registered-ashyk-modes-16-7.mjs
+          node scripts/sync-mobile-parity-16-7.mjs
+          node scripts/sync-visual-contract-16-7.mjs
+
+          git diff --name-only --diff-filter=ACM | grep -E '\.(m?js)$' | xargs -r -n1 node --check
+
+          node --test             tests/social-ashyk-16-7-0.test.mjs             tests/friends-web-parity-16-7-0.test.mjs             tests/visual-parity-16-7-0.test.mjs             tests/web-auth-cache-16-7-0.test.mjs             tests/auth-pkce-session.test.mjs
+
+          node --test             tests/alantil-core-16.test.mjs             mobile/tests/cloud-queue-race.test.mjs             mobile/tests/cloud-scope-transaction.test.mjs             mobile/tests/practice-mechanics-parity-16-6-7.test.mjs             mobile/tests/mobile-polish-16-6-8.test.mjs             mobile/tests/ashyk-ui-help-16-6-12.test.mjs
+
+          node --test             tests/admin-activity.test.mjs             tests/table-system-13-15-12.test.mjs             tests/station-word-layout.test.mjs             tests/story-word-list.test.mjs             tests/word-list-unification.test.mjs             tests/test-result-marquee.test.mjs             tests/progress-sync-policy.test.mjs             tests/word-progress-store.test.mjs             tests/visitor-analytics.test.mjs
+
+          git diff --check
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "16.7.0: unify lists, Friends stats and chrome"
+          git push origin HEAD:agent/16.7.0-friends-rating-ashyk
+
+      - name: Start release workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run 16-7-social-ashyk.yml --ref agent/16.7.0-friends-rating-ashyk
