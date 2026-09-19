@@ -1,14 +1,16 @@
 import React,{useEffect,useMemo,useState}from'react';
 import{Pressable,ScrollView,StyleSheet,Text,TextInput,View}from'react-native';
+import Svg,{Circle,Line,Polyline}from'react-native-svg';
 import{socialMessage}from'../../packages/alantil-core/social-i18n.js';
 import{listRowHeight,listTypography}from'../../packages/alantil-ui/list-table.js';
 import{msg}from'../i18n.js';
 import{Header,HeaderCircleButton,Screen}from'../ui/components.js';
 import{ConfirmDialog}from'../ui/modal.js';
+import{ProfileTabs}from'../ui/profile-tabs.js';
 import{EmptyState,ListRow,MetricStrip,MonoLabel,ScreenSection}from'../ui/parity.js';
 import{BlockIcon,SearchIcon,UnlockedIcon}from'../ui/icons.js';
 import{theme}from'../ui/theme.js';
-import{blockNativeUserAccount,fetchNativeStationTestDetail,fetchNativeUserActivityDetail,fetchNativeUserActivityList,fetchNativeUserFavorites,fetchNativeUserTestHistory,unblockNativeUserAccount}from'../platform/admin.js';
+import{blockNativeUserAccount,fetchNativeGuestAnalytics,fetchNativeStationTestDetail,fetchNativeUserActivityDetail,fetchNativeUserActivityList,fetchNativeUserFavorites,fetchNativeUserTestHistory,unblockNativeUserAccount}from'../platform/admin.js';
 const C=theme.colors;
 const STORY_ORDER=['oblivion','roots','ascent','pathways'];
 function fmtDate(value){if(!value)return'—';try{return new Date(value).toLocaleDateString();}catch{return'—';}}
@@ -62,11 +64,41 @@ function TestDetail({sessionId,s,am}){
   return <ScrollView contentContainerStyle={styles.scroll}><MetricStrip items={[[String(detail.correct_total||0),am('admin.correct_answers')],[String(detail.wrong_total||0),am('admin.wrong_answers')],[`${Math.round(Number(detail.accuracy)||0)}%`,am('admin.accuracy')]]}/>{(detail.words||[]).map((w,i)=><ListRow key={`${w.word_id}-${i}`} title={w.word_alan_cyrillic||w.word_alan_turkic||'—'} subtitle={w.translation_ru} trailing={<MonoLabel accent={w.result==='correct'}>{w.result==='correct'?'✓':'✕'}</MonoLabel>}/>)}</ScrollView>;
 }
 
+
+function fmtNumber(value){return new Intl.NumberFormat().format(Math.max(0,Number(value)||0));}
+function GuestChart({data,s}){
+  const rows=Array.isArray(data?.timeline)?data.timeline:[],width=720,height=190,left=32,right=10,top=14,bottom=22,innerW=width-left-right,innerH=height-top-bottom,max=Math.max(1,...rows.flatMap(row=>[Number(row.unique_visitors)||0,Number(row.sessions)||0]));
+  const points=(key)=>rows.map((row,index)=>{const x=left+(rows.length===1?innerW/2:index*innerW/(rows.length-1)),y=top+innerH-((Number(row[key])||0)/max*innerH);return{x,y,row};});
+  const unique=points('unique_visitors'),sessions=points('sessions'),toString=(list)=>list.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  if(!rows.length)return <EmptyState>{s('emptySearch')}</EmptyState>;
+  return <View style={styles.guestChart}><View style={styles.guestLegend}><View style={styles.guestLegendItem}><View style={[styles.guestLegendDot,styles.guestLegendUnique]}/><Text style={styles.guestLegendText}>{s('guestUniqueVisitors')}</Text></View><View style={styles.guestLegendItem}><View style={[styles.guestLegendDot,styles.guestLegendSessions]}/><Text style={styles.guestLegendText}>{s('guestSessions')}</Text></View></View><Svg width="100%" height={190} viewBox={`0 0 ${width} ${height}`}><Line x1={left} y1={top} x2={width-right} y2={top} stroke={C.lineSoft}/><Line x1={left} y1={top+innerH/2} x2={width-right} y2={top+innerH/2} stroke={C.lineSoft}/><Line x1={left} y1={top+innerH} x2={width-right} y2={top+innerH} stroke={C.lineSoft}/><Polyline points={toString(unique)} fill="none" stroke={C.text1} strokeWidth="2.2"/><Polyline points={toString(sessions)} fill="none" stroke={C.accent} strokeWidth="2.2"/>{unique.map((p,index)=><Circle key={`u-${index}`} cx={p.x} cy={p.y} r="3" fill={C.text1}/>)}{sessions.map((p,index)=><Circle key={`s-${index}`} cx={p.x} cy={p.y} r="3" fill={C.accent}/>)}</Svg><View style={styles.guestChartLabels}><Text style={styles.guestChartLabel}>{String(rows[0]?.date||'').slice(5)}</Text><Text style={styles.guestChartLabel}>{String(rows[rows.length-1]?.date||'').slice(5)}</Text></View></View>;
+}
+function GuestRows({title,rows,s}){
+  const list=Array.isArray(rows)?rows:[];
+  return <ScreenSection title={title}>{list.length?list.map((row,index)=><ListRow key={`${row.label}-${index}`} title={row.label==='direct/unknown'?s('guestDirectUnknown'):String(row.label||'—')} subtitle={s('guestUniqueVisitors')+': '+fmtNumber(row.unique_visitors)} trailing={<MonoLabel>{fmtNumber(row.sessions)}</MonoLabel>}/>):<EmptyState>{s('emptySearch')}</EmptyState>}</ScreenSection>;
+}
+function GuestAnalyticsPane({settings={}}){
+  const s=(key,params)=>socialMessage(settings?.interface_language_code,key,params),[period,setPeriod]=useState(30),[data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
+  useEffect(()=>{let alive=true;setLoading(true);setError('');fetchNativeGuestAnalytics(period).then(value=>{if(alive){setData(value||{});setLoading(false);}}).catch(e=>{if(alive){setError(e?.message||s('error'));setLoading(false);}});return()=>{alive=false;};},[period]);
+  if(loading)return <View style={styles.inlineState}><EmptyState>{s('loading')}</EmptyState></View>;
+  if(error)return <View style={styles.inlineState}><EmptyState error>{error}</EmptyState></View>;
+  const summary=data?.summary||{},conversion=data?.conversion||{},rate=conversion.rate==null?'—':`${Number(conversion.rate).toFixed(1)}%`;
+  return <ScrollView style={styles.guestScroll} contentContainerStyle={styles.guestContent} showsVerticalScrollIndicator>
+    <ProfileTabs items={[[7,s('guestPeriod7')],[30,s('guestPeriod30')],[90,s('guestPeriod90')],[0,s('guestPeriodAll')]]} activeId={period} onChange={setPeriod}/>
+    <MetricStrip items={[[fmtNumber(summary.unique_visitors),s('guestUniqueVisitors')],[fmtNumber(summary.sessions),s('guestSessions')],[fmtNumber(summary.pageviews),s('guestPageviews')]]}/>
+    <MetricStrip items={[[Number(summary.avg_pages_per_session||0).toFixed(2),s('guestAvgPages')],[fmtNumber(summary.repeat_visitors),s('guestRepeatVisitors')],[fmtNumber(conversion.converted_visitors),s('guestConverted')]]}/>
+    <GuestChart data={data} s={s}/>
+    <View style={styles.guestMiniMetrics}><Text style={styles.guestMiniText}>{s('guestNewVisitors')}: <Text style={styles.guestMiniStrong}>{fmtNumber(summary.new_visitors)}</Text></Text><Text style={styles.guestMiniText}>{s('guestReturningVisitors')}: <Text style={styles.guestMiniStrong}>{fmtNumber(summary.returning_visitors)}</Text></Text><Text style={styles.guestMiniText}>{s('guestConversion')}: <Text style={styles.guestMiniStrong}>{rate}</Text></Text></View>
+    <GuestRows title={s('guestSources')} rows={data?.sources} s={s}/><GuestRows title={s('guestPlatforms')} rows={data?.platforms} s={s}/><GuestRows title={s('guestEntryPaths')} rows={data?.entry_paths} s={s}/><GuestRows title={s('guestVersions')} rows={data?.versions} s={s}/><GuestRows title={s('guestLanguages')} rows={data?.languages} s={s}/>
+    <Text style={styles.guestLegacyNote}>{s('guestLegacyNote')}</Text>
+  </ScrollView>;
+}
+
 export function AdminUsersPane({settings={},onOpenUser}){
   const s=(key,params)=>socialMessage(settings?.interface_language_code,key,params),am=(key,params)=>msg(settings,key,params);
-  const[rows,setRows]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState('');
+  const[rows,setRows]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(''),[statsMode,setStatsMode]=useState('users');
   useEffect(()=>{let alive=true;fetchNativeUserActivityList().then(list=>{if(alive){setRows(list);setLoading(false);}}).catch(e=>{if(alive){setError(e?.message||s('error'));setLoading(false);}});return()=>{alive=false;};},[]);
-  return <View style={styles.embeddedPane}><View style={styles.toolbar}><HeaderCircleButton icon={<SearchIcon size={theme.chrome.actionIconSize} color={C.text2}/>} onPress={()=>setSearchOpen(v=>!v)} accessibilityLabel={s('search')}/></View><UsersList rows={rows} loading={loading} error={error} onOpen={user=>onOpenUser?.(user)} s={s} am={am} settings={settings} searchOpen={searchOpen} query={query} onQueryChange={setQuery}/></View>;
+  return <View style={styles.embeddedPane}><ProfileTabs items={[["users",s('statsUsers')],["guests",s('statsGuests')]]} activeId={statsMode} onChange={setStatsMode}/>{statsMode==='guests'?<GuestAnalyticsPane settings={settings}/>:<><View style={styles.toolbar}><HeaderCircleButton icon={<SearchIcon size={theme.chrome.actionIconSize} color={C.text2}/>} onPress={()=>setSearchOpen(v=>!v)} accessibilityLabel={s('search')}/></View><UsersList rows={rows} loading={loading} error={error} onOpen={user=>onOpenUser?.(user)} s={s} am={am} settings={settings} searchOpen={searchOpen} query={query} onQueryChange={setQuery}/></>}</View>;
 }
 
 export function AdminUserDetailScreen({settings={},actorId,user,onBack}){
@@ -113,4 +145,19 @@ const styles=StyleSheet.create({
   blockedTag:{fontSize:10,fontWeight:'800',color:C.dangerStrong,paddingHorizontal:8,paddingVertical:3,borderRadius:999,backgroundColor:C.dangerSoft},
   blockButton:{width:32,height:32,borderRadius:16,borderWidth:1,borderColor:C.line,alignItems:'center',justifyContent:'center',backgroundColor:C.surface0},
   blockButtonActive:{borderColor:C.dangerStrong},
+  guestScroll:{flex:1,minHeight:0},
+  guestContent:{paddingHorizontal:theme.listTable.horizontalPadding,paddingBottom:34,gap:12},
+  guestChart:{borderTopWidth:1,borderBottomWidth:1,borderColor:C.lineSoft,paddingTop:10,paddingBottom:6},
+  guestLegend:{flexDirection:'row',gap:16,alignItems:'center',paddingHorizontal:2,paddingBottom:4},
+  guestLegendItem:{flexDirection:'row',alignItems:'center',gap:6},
+  guestLegendDot:{width:14,height:2},
+  guestLegendUnique:{backgroundColor:C.text1},
+  guestLegendSessions:{backgroundColor:C.accent},
+  guestLegendText:{fontSize:10,color:C.text2},
+  guestChartLabels:{flexDirection:'row',justifyContent:'space-between',paddingHorizontal:4,marginTop:-12},
+  guestChartLabel:{fontSize:9,color:C.text3,fontFamily:theme.font.terminal},
+  guestMiniMetrics:{flexDirection:'row',flexWrap:'wrap',gap:8,paddingVertical:2},
+  guestMiniText:{fontSize:10,color:C.text2},
+  guestMiniStrong:{fontFamily:theme.font.terminal,fontWeight:'800',color:C.text1},
+  guestLegacyNote:{fontSize:9,lineHeight:14,color:C.text3,borderTopWidth:1,borderTopColor:C.lineSoft,paddingTop:10},
 });
