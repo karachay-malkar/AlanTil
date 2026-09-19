@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dictionaryRatingWeight, masteryRatingWeight, ratingPointsForWord, ratingScoreForWords } from '../packages/alantil-core/rating.js';
 import { createAshykGameStore } from '../packages/ashyk-game/store.js';
+import { ASHYK_FEATURE_FLAGS, ashykAccessForUser } from '../packages/alantil-core/ashyk-access.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
@@ -56,16 +57,15 @@ test('database mastery guard never lowers a previously earned sign',()=>{
   assert.match(monotonic,/greatest\([\s\S]*v_previous/);
 });
 
-test('local duet keeps both active players local and never schedules AI',()=>{
+test('same-device Ashyk code remains present but is disabled by the shared feature flag',()=>{
   const engine={reset(){},clearSelection(){}};
   const store=createAshykGameStore({engine,words:[],setTimer:()=>99,clearTimer(){},setRepeater:()=>0,clearRepeater(){}});
+  assert.equal(ASHYK_FEATURE_FLAGS.allowLocalSameDevice,false);
   store.setMode('local');
-  store.startLocal('normal');
-  assert.equal(store.getState().gameMode,'local');
-  assert.equal(store.isLocalTurn(),true);
-  store.startTurn(2);
-  assert.equal(store.isLocalTurn(),true);
-  assert.equal(store.isComputerTurn(),false);
+  assert.equal(store.getState().gameMode,'computer');
+  assert.equal(store.startLocal('normal'),false);
+  assert.equal(store.getState().status,'setup');
+  assert.match(read('packages/ashyk-game/store.js'),/function startLocal/);
   store.destroy();
 });
 
@@ -163,15 +163,41 @@ test('Friends guest and blocked copy use dedicated social labels on both platfor
   }
 });
 
-test('Ashyk guests see only computer while registered users also get local and friend modes',()=>{
+test('Ashyk guests are locked while registered users get computer and online friend modes only',()=>{
+  const guest=ashykAccessForUser(''),account=ashykAccessForUser('user-1');
+  assert.equal(ASHYK_FEATURE_FLAGS.allowGuests,false);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowComputer,true);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowOnlineFriend,true);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowLocalSameDevice,false);
+  assert.equal(guest.locked,true);
+  assert.deepEqual(guest.modes,[]);
+  assert.equal(account.locked,false);
+  assert.deepEqual(account.modes,['computer','online']);
   const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   for(const source of [web,mobile]){
-    assert.doesNotMatch(source,/roomCode|createRoom|joinRoom/);
+    assert.match(source,/ashykAccessForUser\(userId\)\.modes/);
     assert.match(source,/startLocal/);
     assert.match(source,/createFriendInvite/);
-    assert.match(source,/const modes=\[\["computer",sm\('computer'\)\],\.\.\.\(userId\?\[\["local",sm\('local'\)\],\["online",sm\('friend'\)\]\]:\[\]\)\]/);
-    assert.match(source,/loginForModes/);
+    assert.doesNotMatch(source,/const modes=\[\["computer"[\s\S]{0,160}\["local"/);
   }
+});
+
+test('Ashyk guest lock covers direct Web/Mobile entry and global challenge actions',()=>{
+  const feature=read('src/features/ashyk/index.js'),mobile=read('mobile/screens/ashyk.js'),app=read('mobile/AppRoot.js'),bootstrap=read('src/app/bootstrap.js');
+  assert.match(feature,/ashykAccessForUser\(userId\)/);
+  assert.match(feature,/data-ashyk-sign-in/);
+  assert.match(feature,/router\.navigate\('account\.home'\)/);
+  assert.match(mobile,/if\(access\.locked\)return/);
+  assert.match(mobile,/ashykRegisteredOnly/);
+  assert.match(app,/onSignIn=\{\(\)=>\{setIncomingAshykRoom\(null\);setTab\('profile'\);setScreen\('account'\);\}\}/);
+  assert.match(bootstrap,/ashykAccessForUser\(userId\)\.locked/);
+});
+
+test('extended statistics exposes the same guest analytics contract on Web and Mobile',()=>{
+  const web=read('src/features/admin/index.js'),native=read('mobile/screens/admin-users.js'),webService=read('src/shared/admin/admin-activity-service.js'),nativeService=read('mobile/platform/admin.js');
+  for(const source of [web,native]){assert.match(source,/statsUsers/);assert.match(source,/statsGuests/);assert.match(source,/guestUniqueVisitors/);assert.match(source,/guestSources/);assert.match(source,/guestPlatforms/);assert.match(source,/guestEntryPaths/);}
+  assert.match(webService,/admin_guest_analytics/);
+  assert.match(nativeService,/admin_guest_analytics/);
 });
 
 test('social copy includes local winner and explicit sign-in action',()=>{
