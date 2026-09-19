@@ -7,7 +7,7 @@ import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.7.0'
 import {hasActivityAccess,refreshActivityAccessForUser,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.7.0';
 import {setPendingAshykInvite} from '../../shared/social/ashyk-handoff.js';
 import {acceptFriendRequest,blockUser,declineFriendRequest,fetchFriendsSnapshot,fetchSocialLeaderboard,getSocialClient,getSocialSession,removeFriend,searchSocialUsers,sendFriendRequest,unblockUser} from '../../shared/social/social-service.js';
-import {renderAdminUsersEmbedded} from '../admin/index.js?v=16.7.0';
+import {renderAdminUsersEmbedded} from '../admin/index.js?v=16.7.0.3';
 
 let controller=null,refreshTimer=0,realtime=null,searchTimer=0,statsAccessState='checking';
 const esc=(v)=>escapeHtml(String(v??''));
