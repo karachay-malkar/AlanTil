@@ -21,3 +21,5 @@ export async function fetchNativeUserFavorites(userId){const id=String(userId||'
 export async function fetchNativeStationTestDetail(sessionId){const id=String(sessionId||'').trim();if(!id)return null;return rpc('admin_station_test_detail',{p_session_id:id});}
 export async function blockNativeUserAccount(userId){const id=String(userId||'').trim();if(!id)return false;return Boolean(await rpc('admin_block_account',{p_user_id:id}));}
 export async function unblockNativeUserAccount(userId){const id=String(userId||'').trim();if(!id)return false;return Boolean(await rpc('admin_unblock_account',{p_user_id:id}));}
+
+export async function fetchNativeGuestAnalytics(periodDays=30){const value=Number(periodDays);return rpc('admin_guest_analytics',{p_period_days:Number.isFinite(value)?Math.trunc(value):30});}

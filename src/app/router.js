@@ -61,10 +61,10 @@ export function parsePathname(pathname) {
   if (first === "friends") {
     if (!second) return { route: "friends.home", params: {} };
     if (second === "statistics") {
-      if (!third) return { route: "admin.users", params: {} };
+      if (!third) return { route: "friends.home", params: { mode: "stats" } };
       if (third && fourth === "test" && fifth && !sixth) return { route: "admin.test", params: { userId: third, sessionId: fifth } };
       if (third && !fourth) return { route: "admin.user", params: { userId: third } };
-      return { route: "admin.users", params: {}, notFound: true };
+      return { route: "friends.home", params: { mode: "stats" }, notFound: true };
     }
   }
   if (first === "path") {
@@ -85,7 +85,7 @@ export function parsePathname(pathname) {
     if (second === "skills") return { route: "profile.skills", params: {} };
     if (second === "statistics") return { route: "profile.statistics", params: {} };
     if (second === "users") {
-      if (!third) return { route: "admin.users", params: {}, redirected: true };
+      if (!third) return { route: "friends.home", params: { mode: "stats" }, redirected: true };
       if (third && fourth === "test" && fifth && !sixth) return { route: "admin.test", params: { userId: third, sessionId: fifth }, redirected: true };
       if (third && !fourth) return { route: "admin.user", params: { userId: third }, redirected: true };
       return { route: "admin.users", params: {}, notFound: true };
@@ -155,7 +155,7 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "path.test") return `${stationBase}/test`;
   if (routeName === "practice.home") return "/practice";
   if (routeName === "practice.ashyk") return "/practice/ashyk";
-  if (routeName === "friends.home") return "/friends";
+  if (routeName === "friends.home") return params.mode === "stats" ? "/friends/statistics" : "/friends";
   if (routeName === "profile.home") return "/profile";
   if (routeName === "profile.skills") return "/profile/skills";
   if (routeName === "profile.statistics") return "/profile/statistics";
@@ -301,11 +301,12 @@ export function createRouter({ shell, modal, context }) {
   function discardScreenTimer() { currentScreen = ""; screenPagePath = "/"; screenOpenedAt = 0; activeDuration = 0; activeStartedAt = 0; }
   function setAnalyticsActive(enabled) { discardScreenTimer(); if (!enabled || !started) return false; startScreenTimer(current.route); return sendPageView({ force: true }); }
   async function guardAdminTarget(target) {
+    if (target.route === "admin.users") return { route: "friends.home", params: { mode: "stats" }, redirected: true };
     if (!target.route.startsWith("admin.")) return target;
     const ready = new Promise((resolve) => globalThis.setTimeout(() => resolve(false), 4000));
     await Promise.race([whenActivityAccessReady().then(() => true), ready]);
     if (hasActivityAccess()) return target;
-    return { route: "profile.home", params: {}, redirected: true };
+    return { route: "friends.home", params: {}, redirected: true };
   }
   async function show(rawTarget, { historyMode = "push", force = false, reason = "route_change", skipLeaveCheck = false, initial = false } = {}) {
     const target = await guardAdminTarget(rawTarget);
@@ -355,8 +356,8 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "account.home") return { route: "profile.home", params: {} };
     if (["profile.skills", "profile.statistics"].includes(current.route)) return { route: "profile.home", params: {} };
     if (current.route === "admin.test") return { route: "admin.user", params: { userId: params.userId } };
-    if (current.route === "admin.user") return { route: "admin.users", params: {} };
-    if (current.route === "admin.users") return { route: "friends.home", params: {} };
+    if (current.route === "admin.user") return { route: "friends.home", params: { mode: "stats" } };
+    if (current.route === "admin.users") return { route: "friends.home", params: { mode: "stats" } };
     if (["settings.privacy", "settings.version", "settings.thanks"].includes(current.route)) return { route: "settings.home", params: {} };
     if (current.route === "settings.home") return { route: "profile.home", params: {} };
     return { route: "path.home", params: { storyType: DEFAULT_STORY } };

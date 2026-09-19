@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dictionaryRatingWeight, masteryRatingWeight, ratingPointsForWord, ratingScoreForWords } from '../packages/alantil-core/rating.js';
 import { createAshykGameStore } from '../packages/ashyk-game/store.js';
+import { ASHYK_FEATURE_FLAGS, ashykAccessForUser } from '../packages/alantil-core/ashyk-access.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
@@ -16,6 +17,7 @@ const socialSql=[
   'supabase/migrations/20260916170400_alantil_16_7_progress_sync.sql',
   'supabase/migrations/20260916170500_alantil_16_7_mastery_percent_monotonic.sql',
   'supabase/migrations/20260916170600_alantil_16_7_social_performance_hardening.sql',
+  'supabase/migrations/20260919083923_alantil_16_7_ashyk_lobby_resilience.sql',
 ].map(read).join('\n');
 
 test('rating uses fixed dictionary and mastery weights',()=>{
@@ -55,16 +57,15 @@ test('database mastery guard never lowers a previously earned sign',()=>{
   assert.match(monotonic,/greatest\([\s\S]*v_previous/);
 });
 
-test('local duet keeps both active players local and never schedules AI',()=>{
+test('same-device Ashyk code remains present but is disabled by the shared feature flag',()=>{
   const engine={reset(){},clearSelection(){}};
   const store=createAshykGameStore({engine,words:[],setTimer:()=>99,clearTimer(){},setRepeater:()=>0,clearRepeater(){}});
+  assert.equal(ASHYK_FEATURE_FLAGS.allowLocalSameDevice,false);
   store.setMode('local');
-  store.startLocal('normal');
-  assert.equal(store.getState().gameMode,'local');
-  assert.equal(store.isLocalTurn(),true);
-  store.startTurn(2);
-  assert.equal(store.isLocalTurn(),true);
-  assert.equal(store.isComputerTurn(),false);
+  assert.equal(store.getState().gameMode,'computer');
+  assert.equal(store.startLocal('normal'),false);
+  assert.equal(store.getState().status,'setup');
+  assert.match(read('packages/ashyk-game/store.js'),/function startLocal/);
   store.destroy();
 });
 
@@ -72,16 +73,57 @@ test('friend online adapter contains no room-code flow',()=>{
   const online=read('packages/ashyk-game/online.js');
   assert.match(online,/createFriendInvite/);
   assert.match(online,/acceptInvite/);
+  assert.match(online,/getActiveRoom/);
+  assert.match(online,/markReady/);
+  assert.match(online,/pingRoom/);
   assert.match(online,/subscribeInvites/);
+  assert.match(online,/status==='SUBSCRIBED'/);
   assert.doesNotMatch(online,/ashyk_join_room/);
   assert.doesNotMatch(online,/cleanCode/);
 });
 
 test('social SQL exposes safe RPCs, invite lifecycle and no room-code entry point',()=>{
-  for(const name of ['social_search_users','social_leaderboard','social_friends_snapshot','social_send_friend_request','social_accept_friend_request','social_block_user','social_inbox_counts','ashyk_invite_create','ashyk_invite_accept'])assert.match(socialSql,new RegExp(`function public\\.${name}`));
+  for(const name of ['social_search_users','social_leaderboard','social_friends_snapshot','social_send_friend_request','social_accept_friend_request','social_block_user','social_inbox_counts','ashyk_invite_create','ashyk_invite_accept','ashyk_room_get','ashyk_active_room','ashyk_room_ready','ashyk_room_ping'])assert.match(socialSql,new RegExp(`function public\\.${name}`));
   assert.match(socialSql,/drop column if exists code/i);
   assert.match(socialSql,/drop function if exists public\.ashyk_join_room/i);
   assert.doesNotMatch(socialSql,/select\s+[^;]*email/i);
+});
+
+test('Ashyk lobby waits for both clients, keeps heartbeat and uses PostgREST-compatible RPC args',()=>{
+  const sql=read('supabase/migrations/20260919083923_alantil_16_7_ashyk_lobby_resilience.sql');
+  const online=read('packages/ashyk-game/online.js');
+  assert.match(sql,/status='preparing'/);
+  assert.match(sql,/host_ready_at/);
+  assert.match(sql,/guest_ready_at/);
+  assert.match(sql,/host_seen_at/);
+  assert.match(sql,/guest_seen_at/);
+  assert.match(sql,/create function public\.ashyk_submit_state\(\s*p_room_id uuid,\s*p_expected_revision bigint,\s*p_state jsonb,\s*p_next_active_user_id uuid/s);
+  assert.match(sql,/create function public\.ashyk_leave_room\(p_room_id uuid\)/);
+  assert.match(online,/p_room_id:room\.id/);
+  assert.match(online,/p_expected_revision:Number\(room\.revision\|\|0\)/);
+});
+
+test('Ashyk uses global challenge/resume and does not abandon rooms on technical unmount',()=>{
+  const bootstrap=read('src/app/bootstrap.js'),app=read('mobile/AppRoot.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js'),feature=read('src/features/ashyk/index.js');
+  assert.match(bootstrap,/showGlobalAshykState/);
+  assert.match(bootstrap,/returnToGame/);
+  assert.match(app,/AshykGlobalPrompt/);
+  assert.match(app,/resumeAshykRoom/);
+  assert.match(feature,/getActiveRoom/);
+  assert.match(web,/setInterval\(\(\)=>void pulse\(\),12000\)/);
+  assert.match(mobile,/setInterval\(\(\)=>void pulse\(\),12000\)/);
+  assert.match(web,/opponentAwayMs>120000/);
+  assert.match(mobile,/opponentAwayMs>120000/);
+  assert.doesNotMatch(web,/return\(\)=>\{[^}]*leaveRoom/s);
+  assert.doesNotMatch(mobile,/useEffect\(\(\)=>\(\)=>\{[^}]*leaveRoom/s);
+});
+
+test('Ashyk settles the opening field before creating a network invite',()=>{
+  const engine=read('packages/ashyk-game/engine.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
+  assert.match(engine,/function settleInitial/);
+  assert.match(engine,/eventsSuppressed/);
+  assert.match(web,/engine\.settleInitial\(\)/);
+  assert.match(mobile,/engine\.settleInitial\(\)/);
 });
 
 test('search and leaderboard expose friendship id so incoming requests are actionable',()=>{
@@ -94,16 +136,23 @@ test('search and leaderboard expose friendship id so incoming requests are actio
   assert.match(mobile,/user\.friendship_id/);
 });
 
-test('web and mobile register Friends as fourth root tab with inbox badge',()=>{
-  const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js'),bootstrap=read('src/app/bootstrap.js');
+test('web and mobile register Community as the fourth root tab while Friends stays an inner tab',()=>{
+  const app=read('mobile/AppRoot.js'),html=read('index.html'),router=read('src/app/router.js'),registry=read('src/app/screen-registry.js'),bootstrap=read('src/app/bootstrap.js'),copy=read('packages/alantil-core/social-i18n.js');
   assert.match(app,/SocialBottomNav/);
   assert.match(app,/socialBadge/);
+  assert.match(app,/socialMessage\(language,'community'\)/);
   assert.match(html,/data-route="friends\.home"/);
   assert.match(html,/data-friends-badge/);
+  assert.match(html,/>Сообщество<\/span>/);
   assert.match(router,/friends\.home/);
   assert.match(registry,/"friends\.home"/);
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
+  assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
+  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16\.7\.0\.2/);
+  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16\.7\.0\.2/);
+  assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
+  assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
 });
 
 test('Friends guest and blocked copy use dedicated social labels on both platforms',()=>{
@@ -114,15 +163,41 @@ test('Friends guest and blocked copy use dedicated social labels on both platfor
   }
 });
 
-test('Ashyk guests see only computer while registered users also get local and friend modes',()=>{
+test('Ashyk guests are locked while registered users get computer and online friend modes only',()=>{
+  const guest=ashykAccessForUser(''),account=ashykAccessForUser('user-1');
+  assert.equal(ASHYK_FEATURE_FLAGS.allowGuests,false);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowComputer,true);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowOnlineFriend,true);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowLocalSameDevice,false);
+  assert.equal(guest.locked,true);
+  assert.deepEqual(guest.modes,[]);
+  assert.equal(account.locked,false);
+  assert.deepEqual(account.modes,['computer','online']);
   const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   for(const source of [web,mobile]){
-    assert.doesNotMatch(source,/roomCode|createRoom|joinRoom/);
+    assert.match(source,/ashykAccessForUser\(userId\)\.modes/);
     assert.match(source,/startLocal/);
     assert.match(source,/createFriendInvite/);
-    assert.match(source,/const modes=\[\["computer",sm\('computer'\)\],\.\.\.\(userId\?\[\["local",sm\('local'\)\],\["online",sm\('friend'\)\]\]:\[\]\)\]/);
-    assert.match(source,/loginForModes/);
+    assert.doesNotMatch(source,/const modes=\[\["computer"[\s\S]{0,160}\["local"/);
   }
+});
+
+test('Ashyk guest lock covers direct Web/Mobile entry and global challenge actions',()=>{
+  const feature=read('src/features/ashyk/index.js'),mobile=read('mobile/screens/ashyk.js'),app=read('mobile/AppRoot.js'),bootstrap=read('src/app/bootstrap.js');
+  assert.match(feature,/ashykAccessForUser\(userId\)/);
+  assert.match(feature,/data-ashyk-sign-in/);
+  assert.match(feature,/router\.navigate\('account\.home'\)/);
+  assert.match(mobile,/if\(access\.locked\)return/);
+  assert.match(mobile,/ashykRegisteredOnly/);
+  assert.match(app,/onSignIn=\{\(\)=>\{setIncomingAshykRoom\(null\);setTab\('profile'\);setScreen\('account'\);\}\}/);
+  assert.match(bootstrap,/ashykAccessForUser\(userId\)\.locked/);
+});
+
+test('extended statistics exposes the same guest analytics contract on Web and Mobile',()=>{
+  const web=read('src/features/admin/index.js'),native=read('mobile/screens/admin-users.js'),webService=read('src/shared/admin/admin-activity-service.js'),nativeService=read('mobile/platform/admin.js');
+  for(const source of [web,native]){assert.match(source,/statsUsers/);assert.match(source,/statsGuests/);assert.match(source,/guestUniqueVisitors/);assert.match(source,/guestSources/);assert.match(source,/guestPlatforms/);assert.match(source,/guestEntryPaths/);}
+  assert.match(webService,/admin_guest_analytics/);
+  assert.match(nativeService,/admin_guest_analytics/);
 });
 
 test('social copy includes local winner and explicit sign-in action',()=>{
@@ -187,11 +262,15 @@ test('Google OAuth cold start waits for the callback and clears it only after su
   assert.match(bootstrap,/if \(callbackVisit\) await authInitialization/);
 });
 
-test('Friends and Admin routes remain registered and Admin stays guarded',()=>{
+test('Community statistics is a root route while only user/test detail routes stay Admin guarded',()=>{
   const router=read('src/app/router.js');
-  assert.match(router,/friends\.home/);
-  assert.match(router,/admin\.users/);
-  assert.match(router,/guardAdminTarget/);
+  const registry=read('src/app/screen-registry.js');
+  assert.match(router,/if \(second === "statistics"\) \{\s*if \(!third\) return \{ route: "friends\.home", params: \{ mode: "stats" \} \}/);
+  assert.match(router,/admin\.user/);
+  assert.match(router,/admin\.test/);
+  assert.match(router,/target\.route === "admin\.users"/);
   assert.match(router,/target\.route\.startsWith\("admin\."\)/);
   assert.match(router,/whenActivityAccessReady/);
+  assert.match(registry,/"friends\.home": \{ layout: "root", header: "minimal", bottomNav: true/);
 });
+

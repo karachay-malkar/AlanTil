@@ -3,16 +3,19 @@ import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
 import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=13.9.0";
+import { renderBracketTabs } from "../../shared/ui/profile-navigation.js?v=16.7.0";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.7.0.3";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.12";
 import {
   blockUserAccount,
   fetchStationTestDetail,
+  fetchGuestAnalytics,
   fetchUserActivityDetail,
   fetchUserActivityList,
   fetchUserFavorites,
   fetchUserTestHistory,
   unblockUserAccount,
-} from "../../shared/admin/admin-activity-service.js?v=16.7.0";
+} from "../../shared/admin/admin-activity-service.js?v=16.7.0.3";
 
 const STORY_ORDER = Object.freeze(["oblivion", "roots", "ascent", "pathways"]);
 const STORY_KEYS = Object.freeze({
@@ -26,6 +29,8 @@ let controller = null;
 let activeModalClose = null;
 let usersSearchOpen = false;
 let usersSearchQuery = "";
+let embeddedStatsMode = "users";
+let guestAnalyticsPeriod = 30;
 
 function storyLabel(type) {
   return msg(STORY_KEYS[type] || "admin.user");
@@ -170,21 +175,29 @@ function usersTableRows(rows = []) {
   }).join("");
 }
 
-async function renderUsers(context, signal) {
-  context.shell.setHeaderContent?.({ title: msg("admin.users") });
+async function renderUsers(context, signal, { host = context.root, embedded = false } = {}) {
   const search = renderExpandableSearch({ idPrefix: "adminUsersSearch", open: usersSearchOpen, placeholder: msg("admin.users") });
-  context.shell.setHeaderAction?.(search.toggle);
-  context.root.innerHTML = `<section class="view screen adminUsersView">
-    <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
-      ${search.bar}
-      <div class="loadingState">${msg("common.otkryvaem")}</div>
-    </div>
-  </section>`;
+  if (embedded) {
+    host.innerHTML = `<div class="adminUsersToolbar">${search.toggle}</div>
+      <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
+        ${search.bar}
+        <div class="loadingState">${msg("common.otkryvaem")}</div>
+      </div>`;
+  } else {
+    context.shell.setHeaderContent?.({ title: msg("admin.users") });
+    context.shell.setHeaderAction?.(search.toggle);
+    host.innerHTML = `<section class="view screen adminUsersView">
+      <div class="adminUsersScroll" role="region" aria-label="${escapeHtml(msg("admin.users"))}" tabindex="0">
+        ${search.bar}
+        <div class="loadingState">${msg("common.otkryvaem")}</div>
+      </div>
+    </section>`;
+  }
 
   try {
     const rows = await fetchUserActivityList();
     if (signal.aborted) return;
-    const scroll = context.root.querySelector(".adminUsersScroll");
+    const scroll = host.querySelector(".adminUsersScroll");
     if (!scroll) return;
     const loading = scroll.querySelector(".loadingState");
     if (!rows.length) {
@@ -223,9 +236,9 @@ async function renderUsers(context, signal) {
     };
     draw();
 
-    const toggle = context.shell.headerActionSlot?.querySelector("#adminUsersSearchToggle");
-    const bar = context.root.querySelector("#adminUsersSearchBar");
-    const input = context.root.querySelector("#adminUsersSearchInput");
+    const toggle = embedded ? host.querySelector("#adminUsersSearchToggle") : context.shell.headerActionSlot?.querySelector("#adminUsersSearchToggle");
+    const bar = host.querySelector("#adminUsersSearchBar");
+    const input = host.querySelector("#adminUsersSearchInput");
     if (input) input.value = usersSearchQuery;
     const setOpen = (open) => {
       usersSearchOpen = open;
@@ -239,14 +252,136 @@ async function renderUsers(context, signal) {
     input?.addEventListener("input", () => { usersSearchQuery = input.value; draw(); }, { signal });
   } catch (error) {
     if (signal.aborted) return;
-    const scroll = context.root.querySelector(".adminUsersScroll");
+    const scroll = host.querySelector(".adminUsersScroll");
     const loading = scroll?.querySelector(".loadingState");
-    if (!scroll) return renderFailure(context, error);
+    if (!scroll) {
+      if (!embedded) return renderFailure(context, error);
+      host.innerHTML = `<div class="adminUsersError emptyState">${escapeHtml(failureMessage(error))}</div>`;
+      return;
+    }
     const failure = document.createElement("div");
     failure.className = "adminUsersError emptyState";
     failure.textContent = failureMessage(error);
     if (loading) loading.replaceWith(failure); else scroll.replaceChildren(failure);
   }
+}
+
+
+function guestText(key,params={}) {
+  return socialMessage(getInterfaceLanguage(),key,params);
+}
+
+function guestNumber(value) {
+  return new Intl.NumberFormat(getInterfaceLocale()).format(Math.max(0,numberValue(value)));
+}
+
+function guestDateLabel(value) {
+  const date=new Date(`${String(value||"")}T00:00:00Z`);
+  if(!Number.isFinite(date.getTime()))return String(value||"");
+  return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"2-digit",month:"2-digit"}).format(date);
+}
+
+function guestBreakdown(title,rows=[]){
+  const safe=Array.isArray(rows)?rows:[];
+  return `<section class="adminGuestBreakdown"><h3>${escapeHtml(title)}</h3><div class="adminGuestRows">${safe.length?safe.map((row)=>`<div class="adminGuestRow"><span>${escapeHtml(row.label==="direct/unknown"?guestText("guestDirectUnknown"):row.label||"—")}</span><small>${escapeHtml(guestNumber(row.unique_visitors))} · ${escapeHtml(guestNumber(row.sessions))}</small></div>`).join(""):`<div class="adminGuestEmpty">${escapeHtml(msg("admin.no_data"))}</div>`}</div></section>`;
+}
+
+function guestChart(data){
+  const rows=Array.isArray(data?.timeline)?data.timeline:[];
+  if(!rows.length)return `<div class="adminGuestEmpty">${escapeHtml(msg("admin.no_data"))}</div>`;
+  const width=720,height=220,left=38,right=12,top=18,bottom=34,innerW=width-left-right,innerH=height-top-bottom;
+  const max=Math.max(1,...rows.flatMap((row)=>[numberValue(row.unique_visitors),numberValue(row.sessions)]));
+  const point=(row,index,key)=>{const x=left+(rows.length===1?innerW/2:(index*innerW/(rows.length-1))),y=top+innerH-(numberValue(row[key])/max*innerH);return{x,y};};
+  const points=(key)=>rows.map((row,index)=>{const p=point(row,index,key);return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(" ");
+  const circles=(key,klass)=>rows.map((row,index)=>{const p=point(row,index,key),title=`${guestDateLabel(row.date)} · ${guestText(key==="unique_visitors"?"guestUniqueVisitors":"guestSessions")}: ${guestNumber(row[key])}`;return `<circle class="${klass}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" tabindex="0"><title>${escapeHtml(title)}</title></circle>`;}).join("");
+  const labels=[rows[0],rows[Math.floor((rows.length-1)/2)],rows[rows.length-1]].filter((row,index,list)=>row&&list.indexOf(row)===index);
+  return `<div class="adminGuestChart">
+    <div class="adminGuestLegend"><span class="unique">${escapeHtml(guestText("guestUniqueVisitors"))}</span><span class="sessions">${escapeHtml(guestText("guestSessions"))}</span></div>
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(guestText("statsGuests"))}">
+      <line class="grid" x1="${left}" y1="${top+innerH}" x2="${width-right}" y2="${top+innerH}"/>
+      <line class="grid" x1="${left}" y1="${top+innerH/2}" x2="${width-right}" y2="${top+innerH/2}"/>
+      <line class="grid" x1="${left}" y1="${top}" x2="${width-right}" y2="${top}"/>
+      <text class="axis" x="4" y="${top+4}">${max}</text><text class="axis" x="4" y="${top+innerH+4}">0</text>
+      <polyline class="line unique" points="${points("unique_visitors")}"/><polyline class="line sessions" points="${points("sessions")}"/>
+      ${circles("unique_visitors","point unique")}${circles("sessions","point sessions")}
+      ${labels.map((row)=>{const index=rows.indexOf(row),p=point(row,index,"sessions");return `<text class="axis date" x="${p.x.toFixed(1)}" y="${height-8}" text-anchor="middle">${escapeHtml(guestDateLabel(row.date))}</text>`;}).join("")}
+    </svg>
+  </div>`;
+}
+
+async function renderGuestAnalytics(context,signal,host){
+  if(!host||signal?.aborted)return;
+  host.classList.add("isGuest");
+  host.innerHTML=`<div class="adminGuestLoading loadingState">${escapeHtml(msg("common.otkryvaem"))}</div>`;
+  try{
+    const data=await fetchGuestAnalytics(guestAnalyticsPeriod);
+    if(signal?.aborted||!host.isConnected)return;
+    const summary=data?.summary||{},conversion=data?.conversion||{},rate=conversion.rate==null?"—":`${numberValue(conversion.rate).toFixed(1)}%`;
+    const periods=renderBracketTabs({
+      items:[
+        {id:"7",value:"7",label:guestText("guestPeriod7")},
+        {id:"30",value:"30",label:guestText("guestPeriod30")},
+        {id:"90",value:"90",label:guestText("guestPeriod90")},
+        {id:"0",value:"0",label:guestText("guestPeriodAll")},
+      ],
+      active:String(guestAnalyticsPeriod),
+      ariaLabel:guestText("statsGuests"),
+      dataAttribute:"admin-guest-period",
+    });
+    host.innerHTML=`<div class="adminGuestScroll">
+      <div class="adminGuestPeriodTabs">${periods}</div>
+      <div class="adminGuestMetrics">
+        <div><strong>${guestNumber(summary.unique_visitors)}</strong><span>${escapeHtml(guestText("guestUniqueVisitors"))}</span></div>
+        <div><strong>${guestNumber(summary.sessions)}</strong><span>${escapeHtml(guestText("guestSessions"))}</span></div>
+        <div><strong>${guestNumber(summary.pageviews)}</strong><span>${escapeHtml(guestText("guestPageviews"))}</span></div>
+        <div><strong>${numberValue(summary.avg_pages_per_session).toFixed(2)}</strong><span>${escapeHtml(guestText("guestAvgPages"))}</span></div>
+        <div><strong>${guestNumber(summary.repeat_visitors)}</strong><span>${escapeHtml(guestText("guestRepeatVisitors"))}</span></div>
+        <div><strong>${guestNumber(conversion.converted_visitors)}</strong><span>${escapeHtml(guestText("guestConverted"))} · ${escapeHtml(rate)}</span></div>
+      </div>
+      ${guestChart(data)}
+      <div class="adminGuestSecondaryMetrics">
+        <span>${escapeHtml(guestText("guestNewVisitors"))}: <strong>${guestNumber(summary.new_visitors)}</strong></span>
+        <span>${escapeHtml(guestText("guestReturningVisitors"))}: <strong>${guestNumber(summary.returning_visitors)}</strong></span>
+        <span>${escapeHtml(guestText("guestConversion"))}: <strong>${escapeHtml(rate)}</strong></span>
+      </div>
+      <div class="adminGuestBreakdownGrid">
+        ${guestBreakdown(guestText("guestSources"),data?.sources)}
+        ${guestBreakdown(guestText("guestPlatforms"),data?.platforms)}
+        ${guestBreakdown(guestText("guestEntryPaths"),data?.entry_paths)}
+        ${guestBreakdown(guestText("guestVersions"),data?.versions)}
+        ${guestBreakdown(guestText("guestLanguages"),data?.languages)}
+      </div>
+      <p class="adminGuestLegacyNote">${escapeHtml(guestText("guestLegacyNote"))}</p>
+    </div>`;
+    host.querySelectorAll("[data-admin-guest-period]").forEach((button)=>button.addEventListener("click",()=>{
+      const value=Number(button.dataset.adminGuestPeriod);
+      guestAnalyticsPeriod=Number.isFinite(value)?value:30;
+      void renderGuestAnalytics(context,signal,host);
+    },{signal}));
+  }catch(error){
+    if(!signal?.aborted)host.innerHTML=`<div class="adminUsersError emptyState">${escapeHtml(failureMessage(error))}</div>`;
+  }
+}
+
+export async function renderAdminUsersEmbedded(context, signal, host) {
+  if (!host || signal?.aborted) return;
+  const tabs=renderBracketTabs({
+    items:[
+      {id:"users",label:guestText("statsUsers")},
+      {id:"guests",label:guestText("statsGuests")},
+    ],
+    active:embeddedStatsMode,
+    ariaLabel:guestText("extendedStats"),
+    dataAttribute:"admin-stats-mode",
+  });
+  host.innerHTML=`<div class="adminStatsModeTabs">${tabs}</div><div class="adminStatsPane" data-admin-stats-pane></div>`;
+  host.querySelectorAll("[data-admin-stats-mode]").forEach((button)=>button.addEventListener("click",()=>{
+    embeddedStatsMode=button.dataset.adminStatsMode==="guests"?"guests":"users";
+    void renderAdminUsersEmbedded(context,signal,host);
+  },{signal}));
+  const pane=host.querySelector("[data-admin-stats-pane]");
+  if(embeddedStatsMode==="guests")return renderGuestAnalytics(context,signal,pane);
+  return renderUsers(context,signal,{host:pane,embedded:true});
 }
 
 function storyProgressSection(stories = []) {
@@ -463,10 +598,10 @@ export async function mount(context, params = {}) {
   controller = new AbortController();
   const signal = controller.signal;
   const screen = params.screen || "users";
-  if (screen === "users") return renderUsers(context, signal);
+  if (screen === "users") return context.router.replace("friends.home", { mode: "stats" }, { force: true });
   if (screen === "user") return renderUserDetail(context, signal, params.userId);
   if (screen === "test") return renderTestDetail(context, signal, params.sessionId);
-  return context.router.replace("admin.users", {}, { force: true });
+  return context.router.replace("friends.home", { mode: "stats" }, { force: true });
 }
 
 export function unmount() {

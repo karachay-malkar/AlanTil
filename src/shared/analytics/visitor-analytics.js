@@ -155,12 +155,15 @@ export async function recordAnonymousPageView({ pagePath, pageReferrer, appVersi
     const scopeId = String(getCurrentAuthState().user?.id || "").trim();
     const { visitorId, sessionId } = resolveAnonymousIdentity({ scopeId });
     const client = await getAnalyticsSupabaseClient();
-    const { error } = await client.rpc("record_anonymous_visit", {
+    const language=String(document.documentElement?.lang||"").toLowerCase().split("-")[0];
+    const { error } = await client.rpc("record_anonymous_visit_v2", {
       p_visitor_id: visitorId,
       p_session_id: sessionId,
       p_page_path: cleanPath(pagePath || window.location.pathname),
       p_referrer_host: externalReferrerHost(pageReferrer || document.referrer) || null,
       p_app_version: cleanAppVersion(appVersion),
+      p_platform: "web",
+      p_interface_language: ["ru","en","tr"].includes(language)?language:null,
     });
     if (error) throw error;
     return true;

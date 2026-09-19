@@ -145,11 +145,11 @@
   transition:background var(--duration-fast),border-color var(--duration-fast),color var(--duration-fast),transform var(--duration-fast);
 }
 .bottomNavItem.active .bottomNavIconBubble{background:color-mix(in srgb,var(--text-1) 88%,transparent);border-color:color-mix(in srgb,var(--text-1) 32%,transparent);color:var(--text-inverse)}
-.bottomNavPathBubble{background:color-mix(in srgb,var(--text-1) 34%,transparent);border-color:color-mix(in srgb,var(--text-1) 18%,transparent)}
-.bottomNavItem.active .bottomNavPathBubble{background:color-mix(in srgb,var(--text-1) 88%,transparent)}
+.bottomNavPathBubble{color:var(--text-1)}
+.bottomNavItem.active .bottomNavPathBubble{color:var(--text-inverse)}
 .bottomNavIcon{display:block;width:20px;height:20px;fill:none;stroke:currentColor}
-.bottomNavElbrus{display:block;width:29px;height:auto;max-height:17px;object-fit:contain;opacity:.82}
-.bottomNavItem.active .bottomNavElbrus{opacity:1}
+.bottomNavElbrus{display:block;width:29px;height:auto;max-height:17px;object-fit:contain;opacity:.9;filter:brightness(0) saturate(100%)}
+.bottomNavItem.active .bottomNavElbrus{opacity:1;filter:none}
 .bottomNavLabel{line-height:1.05;white-space:nowrap}
 .stationLaunchPanel,.setPreparationFooter,.modeLaunchBar,.learnSessionActions{position:relative;z-index:var(--ui-layer-floating);background:transparent!important;border:0;box-shadow:none}
 .profilePrimaryNav,.stationViewTabs{position:relative;z-index:var(--z-tabs)}
