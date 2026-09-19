@@ -6,7 +6,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("users list renders server rank beside nickname and decorates only top three", async () => {
   const feature = await read("src/features/admin/index.js");
-  const styles = await read("src/features/admin/admin-13-15-10.css");
+  const styles = await read("src/features/admin/admin.css");
   assert.match(feature, /adminRankLabel">№\$\{rank\}/);
   assert.match(feature, /adminRankMedal/);
   assert.match(feature, /rank <= 3 \? ` adminRankRow adminRank\$\{rank\}`/);
@@ -63,8 +63,8 @@ test("13.15.10 migration ranks by streak then mastered words and limits profile 
 });
 
 test("new chrome keeps profile tabs intact while wrapping system navigation and CTA buttons", async () => {
-  const chrome = await read("src/shared/styles/chrome-13-15-10.css");
-  const admin = await read("src/features/admin/admin-13-15-10.css");
+  const chrome = await read("src/shared/styles/chrome.css");
+  const admin = await read("src/features/admin/admin.css");
   assert.match(chrome, /\.appHeader::before/);
   assert.match(chrome, /\.bottomNav::before/);
   assert.match(chrome, /\.profilePrimaryNav\{/);
