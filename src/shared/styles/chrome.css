@@ -14,6 +14,7 @@
   .adminUsersScroll,
   .profileScroll,
   .settingsHomeScroll,
+  .socialBody,
   .setPreparationWords,
   .modeScroll,
   .modeResultList,
@@ -25,7 +26,7 @@
   mask-image:linear-gradient(to bottom,transparent 0,#000 var(--scroll-fade-top),#000 calc(100% - var(--scroll-fade-bottom)),transparent 100%);
 }
 
-.appShell[data-bottom-nav="true"] :where(.panel-body,.profileScroll,.settingsHomeScroll,.pathMapViewport){
+.appShell[data-bottom-nav="true"] :where(.panel-body,.profileScroll,.settingsHomeScroll,.socialBody,.pathMapViewport){
   --scroll-fade-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
 }
 
@@ -92,10 +93,11 @@
 .appShell[data-feature="path"][data-screen="study"],.appShell[data-feature="learn"][data-screen="study"]{--chrome-bottom-depth:calc(var(--safe-bottom) + 80px)}
 
 /* Profile/settings/users root navigation replaces the old brand-header row. */
-[data-feature="profile"] .profileView,[data-feature="settings"] .settingsHomeView{display:block!important;padding:0!important;overflow:hidden}
+[data-feature="profile"] .profileView,[data-feature="settings"] .settingsHomeView,[data-feature="friends"] .socialView{display:block!important;padding:0!important;overflow:hidden}
 [data-feature="profile"] .profilePrimaryNav,
 [data-feature="settings"] .settingsHomeView>.profilePrimaryNav,
-[data-feature="admin"][data-screen="users"] .profilePrimaryNav{
+[data-feature="admin"][data-screen="users"] .profilePrimaryNav,
+[data-feature="friends"] .socialHeader{
   position:absolute!important;z-index:var(--z-tabs);top:calc(var(--safe-top) + 2px)!important;left:10px!important;right:10px!important;height:34px!important;min-height:34px!important;
   padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;pointer-events:auto;
 }
@@ -110,7 +112,7 @@
   scroll-padding-top:calc(var(--safe-top) + 42px);
   scroll-padding-bottom:calc(var(--safe-bottom) + var(--nav-h) + var(--content-rest-gap));
 }
-.appShell[data-feature="profile"],.appShell[data-feature="settings"][data-screen="home"],.appShell[data-feature="admin"][data-screen="users"]{--chrome-top-depth:calc(var(--safe-top) + 42px)}
+.appShell[data-feature="profile"],.appShell[data-feature="settings"][data-screen="home"],.appShell[data-feature="admin"][data-screen="users"],.appShell[data-feature="friends"]{--chrome-top-depth:calc(var(--safe-top) + 42px)}
 [data-feature="admin"][data-screen="users"] .adminUsersScroll{
   --scroll-fade-top:calc(var(--safe-top) + 42px);
   --scroll-fade-bottom:calc(var(--safe-bottom) + var(--content-rest-gap));

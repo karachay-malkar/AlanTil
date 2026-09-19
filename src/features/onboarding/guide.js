@@ -94,6 +94,7 @@ function ensureStyles() {
 function storedGuideState() {
   const value = readScopedJson(GUIDE_STATE_KEY, {});
   return {
+    general_completed: Boolean(value?.general_completed),
     learning_completed: Boolean(value?.learning_completed),
     repeat_hint_shown: Boolean(value?.repeat_hint_shown),
   };
@@ -656,9 +657,12 @@ function showStep(config = {}) {
 }
 
 function finishGeneralGuide() {
+  const wasCompleted = storedGuideState().general_completed;
+  updateGuideState({ general_completed: true });
   generalGuide = { active: false, phase: "", storyIndex: 0 };
   document.body.classList.remove("alantilGuideGeneral");
   destroyOverlay();
+  if (!wasCompleted) window.dispatchEvent(new CustomEvent("alantil:general-guide-completed"));
   scheduleScan();
 }
 
@@ -813,11 +817,7 @@ function showStages() {
     title: msg("guide.general.stages.title"),
     body: msg("guide.general.stages.body"),
     nextLabel: msg("guide.understood"),
-    onNext: () => {
-      generalGuide.phase = "await-station";
-      destroyOverlay();
-      scheduleScan();
-    },
+    onNext: finishGeneralGuide,
     onSkip: skipGeneralGuide,
     spotlightShape: selection.target.matches?.(".stationProgressRing") ? "circle" : "rounded",
     spotlightPadding: 10,
@@ -1229,6 +1229,7 @@ function overlayNeeds(stepKey) {
 }
 
 function scanGeneral() {
+  if (!generalGuide.active && !storedGuideState().general_completed && document.querySelector(".pathView")) startGeneralGuide();
   if (!generalGuide.active) return;
   closeOpenStele();
   if (generalGuide.phase === "stories-intro" && overlayNeeds("general:stories-intro")) showStoriesIntro();

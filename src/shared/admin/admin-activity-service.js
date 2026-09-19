@@ -53,3 +53,8 @@ export async function fetchStationTestDetail(sessionId) {
   if (!id) return null;
   return runAdminRpc("admin_station_test_detail", { p_session_id: id });
 }
+
+export async function fetchGuestAnalytics(periodDays=30) {
+  const value=Number(periodDays);
+  return runAdminRpc("admin_guest_analytics",{p_period_days:Number.isFinite(value)?Math.trunc(value):30});
+}
