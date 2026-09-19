@@ -48,7 +48,7 @@ jobs:
           git diff --exit-code -- mobile/screens/ashyk.js mobile/ui/parity.js mobile/ui/web-visual-source.js
 
       - name: 16.7 social, visual, Ashyk and OAuth contract
-        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs
+        run: node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs tests/visitor-analytics.test.mjs tests/admin-activity-13-15-10.test.mjs
 
       - name: Shared core and unaffected regressions
         run: >-
