@@ -41,7 +41,7 @@ function normalizeInitialLearningPath() {
 }
 async function linkRestoredAccountVisit() {
   try {
-    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=13.15.9");
+    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.7.0.3");
     await recordAnonymousPageView({ pagePath: window.location.pathname || "/", pageReferrer: document.referrer, appVersion: RELEASE_VERSION });
   } catch {}
 }
