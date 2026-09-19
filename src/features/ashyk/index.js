@@ -21,7 +21,7 @@ function ensureStyles(){
   if(styleLink?.isConnected)return;
   styleLink=document.createElement('link');
   styleLink.rel='stylesheet';
-  styleLink.href='/src/features/ashyk/ashyk-16-7.css?v=16.7.0';
+  styleLink.href='/src/features/ashyk/ashyk-16-7.css?v=16.7.0.3';
   styleLink.dataset.ashykUi='16.7.0';
   document.head.append(styleLink);
 }
