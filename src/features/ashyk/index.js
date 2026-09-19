@@ -3,14 +3,17 @@ import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.1
 import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=13.10.12";
 import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.12";
 import { msg } from "../../shared/i18n/index.js?v=16.6.12";
-import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.7.0";
-import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.7.0";
-import { mountAshykGame } from "./runtime.js?v=16.7.0";
+import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.7.0.2";
+import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.7.0.2";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.7.0.2";
+import { mountAshykGame } from "./runtime.js?v=16.7.0.2";
 
 let controller=null;
 let disposeGame=null;
 let sessionActive=false;
 let styleLink=null;
+let activeRoomId=null;
+let onlineAdapter=null;
 
 function ensureStyles(){
   if(styleLink?.isConnected)return;
@@ -36,17 +39,26 @@ export async function mount(context){
   if(controller.signal.aborted||!host)return;
   const settings=getUserSettings();
   const auth=getCurrentAuthState();
+  const userId=String(auth?.session?.user?.id||'');
   const pending=takePendingAshykInvite();
+  onlineAdapter=supabaseClient&&userId?createAshykOnlineAdapter(supabaseClient):null;
+  const recovered=pending?.room||(onlineAdapter?await onlineAdapter.getActiveRoom().catch(()=>null):null);
+  activeRoomId=recovered?.id||null;
   disposeGame=mountAshykGame(host,{
     words,
     locale:settings.interface_language_code,
     supabaseClient,
-    userId:String(auth?.session?.user?.id||''),
+    userId,
     friends:Array.isArray(social?.friends)?social.friends:[],
-    initialRoom:pending?.room||null,
+    initialRoom:recovered||null,
     onSessionActiveChange(active){sessionActive=Boolean(active);},
+    onRoomChange(room){activeRoomId=room?.id||null;},
     onExit(){history.back();},
   });
+}
+
+export async function onLeave(){
+  if(sessionActive&&activeRoomId&&onlineAdapter)await onlineAdapter.leaveRoom(activeRoomId).catch(()=>{});
 }
 
 export function unmount(){
@@ -55,6 +67,8 @@ export function unmount(){
   sessionActive=false;
   disposeGame?.();
   disposeGame=null;
+  activeRoomId=null;
+  onlineAdapter=null;
   styleLink?.remove();
   styleLink=null;
 }
