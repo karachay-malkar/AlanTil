@@ -9,6 +9,8 @@ import { getSocialClient, startSocialInboxController } from "../shared/social/so
 import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.7.0.2";
 import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.7.0.2";
 import { setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.7.0.2";
+import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.7.0.3";
+import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=13.10.12";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
@@ -99,6 +101,8 @@ async function bootstrap() {
 
   let ashykNoticeKey='';
   const showGlobalAshykState=({snapshot,activeRoom}={})=>{
+    const userId=String(getCurrentAuthState()?.session?.user?.id||'');
+    if(ashykAccessForUser(userId).locked){ashykNoticeKey='';return;}
     if(router.getCurrent().route==='practice.ashyk'){ashykNoticeKey='';return;}
     const invite=Array.isArray(snapshot?.ashyk_invites)?snapshot.ashyk_invites[0]:null;
     const resumable=activeRoom&&['waiting','preparing','playing'].includes(activeRoom.status)?activeRoom:null;
