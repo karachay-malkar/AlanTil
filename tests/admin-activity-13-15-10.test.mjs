@@ -75,3 +75,18 @@ test("new chrome keeps profile tabs intact while wrapping system navigation and 
   assert.match(admin, /calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ 12px\)/);
   assert.match(admin, /\.adminWordTiles/);
 });
+
+
+test("extended statistics nests Users and Guests dashboards without creating a root screen", async () => {
+  const web = await read("src/features/admin/index.js");
+  const css = await read("src/features/admin/admin.css");
+  const mobile = await read("mobile/screens/admin-users.js");
+  assert.match(web, /dataAttribute:"admin-stats-mode"/);
+  assert.match(web, /renderGuestAnalytics/);
+  assert.match(web, /guestChart/);
+  assert.match(css, /\.adminGuestChart/);
+  assert.match(css, /\.adminGuestMetrics/);
+  assert.match(mobile, /ProfileTabs items=\{\[\["users",s\('statsUsers'\)\],\["guests",s\('statsGuests'\)\]\]\}/);
+  assert.match(mobile, /GuestAnalyticsPane/);
+  assert.match(mobile, /react-native-svg/);
+});
