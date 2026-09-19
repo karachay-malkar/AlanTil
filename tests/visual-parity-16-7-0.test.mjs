@@ -82,9 +82,9 @@ test('bottom navigation keeps 13.15.12 geometry with selected-state inversion',(
 });
 
 test('Web consumes shared list/table, bracket tabs, Friends and flat Songs geometry',()=>{
-  const app=read('src/shared/styles/app.css'),profile=read('src/features/profile/profile.css'),friends=read('src/features/friends/friends-16-7.css'),practice=read('src/features/practice/practice.css'),songsList=read('src/shared/ui/list.js'),songsCatalog=read('src/features/songs/catalog.js'),table=read('src/shared/styles/table-system.css'),result=read('src/shared/styles/components.css');
+  const app=read('src/shared/styles/app.css'),profile=read('src/features/profile/profile.css'),friends=read('src/features/friends/friends-16-7.css'),chrome=read('src/shared/styles/chrome.css'),practice=read('src/features/practice/practice.css'),songsList=read('src/shared/ui/list.js'),songsCatalog=read('src/features/songs/catalog.js'),table=read('src/shared/styles/table-system.css'),result=read('src/shared/styles/components.css');
   assert.match(app,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)/);assert.match(profile,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)/);assert.doesNotMatch(profile,/repeat\(3,1fr\)/);
-  assert.match(friends,/z-index:var\(--z-tabs\)/);assert.match(friends,/min-height:var\(--table-row-height\)/);assert.match(friends,/gap:var\(--ui-list-gap\)/);
+  assert.match(chrome,/\[data-feature=\"friends\"\] \.socialHeader\{[\s\S]*z-index:var\(--z-tabs\)/);assert.match(friends,/min-height:var\(--table-row-height\)/);assert.match(friends,/gap:var\(--ui-list-gap\)/);
   assert.match(practice,/min-height:var\(--table-row-height\)/);
   assert.match(songsList,/renderContentListRow/);assert.doesNotMatch(songsList,/class="sectionMenuItem"/);assert.match(songsCatalog,/secondary: songArtists\(song\.artist\)\.join/);assert.doesNotMatch(songsCatalog,/pills: songArtists/);
   assert.match(table,/--table-row-height:var\(--ui-list-row-medium\)/);assert.match(table,/--table-head-height:var\(--ui-list-table-header-height\)/);
@@ -94,7 +94,7 @@ test('Web consumes shared list/table, bracket tabs, Friends and flat Songs geome
 test('Mobile consumes shared row sizing and keeps controls above the mask',()=>{
   const parity=read('mobile/ui/parity.js'),friends=read('mobile/screens/friends.js'),practice=read('mobile/screens/practice.js'),practiceGames=read('mobile/screens/practice-games.js'),songs=read('mobile/screens/songs.js'),settings=read('mobile/screens/profile-main.js'),story=read('mobile/screens/story-word-list.js'),stationTest=read('mobile/screens/station-test.js'),learn=read('mobile/screens/learn.js');
   assert.match(parity,/listRowHeight\(sizeCode,variant\)/);assert.match(parity,/theme\.listTable\.horizontalPadding/);
-  assert.match(friends,/theme\.chrome\.layers\.tabs/);assert.match(friends,/AdminUsersPane/);assert.match(friends,/mode===['"]stats['"]/);
+  assert.match(friends,/theme\.chrome\.layers\.tabs/);assert.match(friends,/AdminUsersPane/);assert.match(friends,/visibleMode===['"]stats['"]/);
   assert.doesNotMatch(friends,/onOpenExtendedStats/);
   assert.match(practice,/theme\.listTable\.horizontalPadding/);assert.doesNotMatch(practice,/minHeight:P\.rowHeight/);assert.match(practiceGames,/listRowHeight\(settings\?\.text_size_code\)/);assert.doesNotMatch(practiceGames,/scopeDictRow:\{minHeight:44|scopeSectionRow:\{minHeight:44/);
   assert.match(songs,/listRowHeight\(settings\?\.text_size_code\)/);assert.doesNotMatch(songs,/playlistRow:\{minHeight:58|songRow:\{minHeight:58/);
