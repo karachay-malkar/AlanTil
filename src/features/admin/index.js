@@ -15,7 +15,7 @@ import {
   fetchUserFavorites,
   fetchUserTestHistory,
   unblockUserAccount,
-} from "../../shared/admin/admin-activity-service.js?v=16.7.0";
+} from "../../shared/admin/admin-activity-service.js?v=16.7.0.3";
 
 const STORY_ORDER = Object.freeze(["oblivion", "roots", "ascent", "pathways"]);
 const STORY_KEYS = Object.freeze({
