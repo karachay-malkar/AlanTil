@@ -108,3 +108,45 @@
 .adminUsersEmbedded{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;background:transparent}
 .adminUsersEmbedded .adminUsersToolbar{display:flex;justify-content:flex-end;align-items:center;min-height:var(--ui-header-action-size);padding:0 var(--ui-list-horizontal) 4px}
 .adminUsersEmbedded .adminUsersScroll{position:relative!important;inset:auto!important;height:100%;min-height:0;padding:0 0 8px!important;scroll-padding-top:0!important;scroll-padding-bottom:8px!important;-webkit-mask-image:none!important;mask-image:none!important}
+
+.adminUsersEmbedded{grid-template-rows:auto minmax(0,1fr)}
+.adminStatsModeTabs{min-height:var(--ui-header-action-size);padding:0 var(--ui-list-horizontal) 4px}
+.adminStatsModeTabs .profilePrimaryNav,.adminGuestPeriodTabs .profilePrimaryNav{width:100%}
+.adminStatsPane{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
+.adminStatsPane.isGuest{display:block;overflow:auto}
+.adminGuestScroll{min-height:100%;padding:0 var(--ui-list-horizontal) 30px}
+.adminGuestPeriodTabs{position:sticky;top:0;z-index:3;padding:4px 0 8px;background:linear-gradient(to bottom,var(--app-bg) 78%,transparent)}
+.adminGuestMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+.adminGuestMetrics>div{min-height:72px;padding:12px 10px;display:grid;align-content:center;gap:4px;border-right:1px solid var(--line-soft)}
+.adminGuestMetrics>div:nth-child(3n){border-right:0}
+.adminGuestMetrics>div:nth-child(n+4){border-top:1px solid var(--line-soft)}
+.adminGuestMetrics strong{font:850 22px/1 var(--font-terminal);color:var(--text-1)}
+.adminGuestMetrics span{font-size:10px;line-height:1.3;color:var(--text-3)}
+.adminGuestChart{margin:14px 0 10px;padding:10px 10px 4px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+.adminGuestLegend{display:flex;gap:18px;align-items:center;padding:2px 4px 8px;color:var(--text-2);font-size:10px}
+.adminGuestLegend span::before{content:"";display:inline-block;width:14px;height:2px;margin-right:6px;vertical-align:middle;background:var(--text-1)}
+.adminGuestLegend .sessions::before{background:var(--accent)}
+.adminGuestChart svg{display:block;width:100%;height:auto;max-height:260px;overflow:visible}
+.adminGuestChart .grid{stroke:var(--line-soft);stroke-width:1}
+.adminGuestChart .line{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.adminGuestChart .line.unique,.adminGuestChart .point.unique{stroke:var(--text-1);fill:var(--text-1)}
+.adminGuestChart .line.sessions,.adminGuestChart .point.sessions{stroke:var(--accent);fill:var(--accent)}
+.adminGuestChart .axis{font:700 9px/1 var(--font-terminal);fill:var(--text-3)}
+.adminGuestSecondaryMetrics{display:flex;flex-wrap:wrap;gap:8px 18px;padding:6px 2px 14px;color:var(--text-2);font-size:10px}
+.adminGuestSecondaryMetrics strong{font-family:var(--font-terminal);color:var(--text-1)}
+.adminGuestBreakdownGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.adminGuestBreakdown{border-top:1px solid var(--line-soft)}
+.adminGuestBreakdown h3{margin:0;padding:10px 0 8px;font-size:11px;color:var(--text-1)}
+.adminGuestRows{display:grid}
+.adminGuestRow{min-height:34px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;border-bottom:1px solid var(--line-soft)}
+.adminGuestRow span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);font-size:10px}
+.adminGuestRow small{font:750 9px/1 var(--font-terminal);color:var(--text-3)}
+.adminGuestEmpty{padding:12px 0;color:var(--text-3);font-size:10px}
+.adminGuestLegacyNote{margin:14px 0 0;padding:10px 0;border-top:1px solid var(--line-soft);color:var(--text-3);font-size:9px;line-height:1.5}
+@media(max-width:620px){
+  .adminGuestMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adminGuestMetrics>div:nth-child(3n){border-right:1px solid var(--line-soft)}
+  .adminGuestMetrics>div:nth-child(2n){border-right:0}
+  .adminGuestMetrics>div:nth-child(n+3){border-top:1px solid var(--line-soft)}
+  .adminGuestBreakdownGrid{grid-template-columns:1fr}
+}
