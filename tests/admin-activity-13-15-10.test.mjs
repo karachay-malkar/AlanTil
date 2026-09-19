@@ -62,17 +62,17 @@ test("13.15.10 migration ranks by streak then mastered words and limits profile 
   assert.match(migration, /create or replace function public\.admin_user_favorites/);
 });
 
-test("new chrome keeps profile tabs intact while wrapping system navigation and CTA buttons", async () => {
+test("current chrome keeps bracket navigation, unified viewport masks and CTA buttons", async () => {
   const chrome = await read("src/shared/styles/chrome.css");
   const admin = await read("src/features/admin/admin.css");
-  assert.match(chrome, /\.appHeader::before/);
-  assert.match(chrome, /\.bottomNav::before/);
-  assert.match(chrome, /\.profilePrimaryNav\{/);
+  assert.match(chrome, /Unified viewport chrome/);
+  assert.match(chrome, /mask-image:linear-gradient/);
+  assert.match(chrome, /\.profilePrimaryNav/);
   assert.match(chrome, /\.storyTabsShell\{/);
   assert.match(chrome, /\.stationLaunchActions \.stationStudyButton/);
   assert.match(chrome, /\.stationLaunchActions \.stationTestButton/);
   assert.match(chrome, /backdrop-filter:blur/);
-  assert.match(admin, /calc\(var\(--safe-bottom\) \+ var\(--nav-h\) \+ 12px\)/);
+  assert.match(admin, /\.adminUsersEmbedded \.adminUsersScroll/);
   assert.match(admin, /\.adminWordTiles/);
 });
 
