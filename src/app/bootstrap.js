@@ -5,8 +5,10 @@ import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
 import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.15.12";
 import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
-import { startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0";
-import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.7.0.1";
+import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0.2";
+import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.7.0.2";
+import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.7.0.2";
+import { setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.7.0.2";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
@@ -95,8 +97,58 @@ async function bootstrap() {
   window.addEventListener("alantil:scope-ready", () => { void router.refresh({ background: true, reason: "storage_scope" }); });
   await router.start();
 
+  let ashykNoticeKey='';
+  const showGlobalAshykState=({snapshot,activeRoom}={})=>{
+    if(router.getCurrent().route==='practice.ashyk'){ashykNoticeKey='';return;}
+    const invite=Array.isArray(snapshot?.ashyk_invites)?snapshot.ashyk_invites[0]:null;
+    const resumable=activeRoom&&['waiting','preparing','playing'].includes(activeRoom.status)?activeRoom:null;
+    const key=invite?.invite_id?`invite:${invite.invite_id}`:resumable?.id?`room:${resumable.id}`:'';
+    if(!key){ashykNoticeKey='';return;}
+    if(key===ashykNoticeKey)return;
+    ashykNoticeKey=key;
+    const locale=getInterfaceLanguage(),acceptText=socialMessage(locale,'accept'),declineText=socialMessage(locale,'decline'),returnText=socialMessage(locale,'returnToGame');
+    const panel=modal.openContent({
+      title:msg("practice.ashyk"),
+      className:'ashykGlobalInviteModal',
+      contentHtml:`<p data-ashyk-global-copy></p><div class="modalActions"><button class="btn actionText" type="button" data-ashyk-global-decline>${invite?declineText:''}</button><button class="btn actionPrimary" type="button" data-ashyk-global-accept>${invite?acceptText:returnText}</button></div>`
+    });
+    const copy=panel.body?.querySelector('[data-ashyk-global-copy]');
+    if(copy)copy.textContent=invite?socialMessage(locale,'challengeFrom',{name:invite.nickname||'—'}):socialMessage(locale,'unfinishedGame');
+    const accept=panel.body?.querySelector('[data-ashyk-global-accept]');
+    const decline=panel.body?.querySelector('[data-ashyk-global-decline]');
+    if(!invite&&decline)decline.remove();
+    accept?.addEventListener('click',async()=>{
+      accept.disabled=true;
+      try{
+        if(invite){
+          const client=await getSocialClient(),online=createAshykOnlineAdapter(client),result=await online.acceptInvite(invite.invite_id);
+          if(!result?.room)throw new Error('room unavailable');
+          setPendingAshykInvite(result);
+        }else setPendingAshykInvite({room:resumable,invite:null});
+        ashykNoticeKey='';
+        panel.close();
+        await router.navigate('practice.ashyk');
+      }catch(error){
+        accept.disabled=false;
+        if(copy)copy.textContent=String(error?.message||socialMessage(locale,'error'));
+      }
+    });
+    decline?.addEventListener('click',async()=>{
+      decline.disabled=true;
+      try{
+        const client=await getSocialClient(),online=createAshykOnlineAdapter(client);
+        await online.declineInvite(invite.invite_id);
+        ashykNoticeKey='';
+        panel.close();
+      }catch(error){
+        decline.disabled=false;
+        if(copy)copy.textContent=String(error?.message||socialMessage(locale,'error'));
+      }
+    });
+  };
+
   let stopSocial=()=>{};
-  try { stopSocial=await startSocialInboxController(renderFriendsBadge); } catch { renderFriendsBadge({total:0}); }
+  try { stopSocial=await startSocialInboxController(renderFriendsBadge,showGlobalAshykState); } catch { renderFriendsBadge({total:0}); }
   window.addEventListener('pagehide',()=>stopSocial(),{once:true});
 
   if (persistedAuth && !callbackVisit) {
