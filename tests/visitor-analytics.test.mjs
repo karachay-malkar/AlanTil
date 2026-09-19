@@ -85,7 +85,7 @@ test("internal visit recording is independent from the Google Analytics consent 
   assert.doesNotMatch(analytics, /clearAnonymousAnalyticsIdentity/);
   assert.match(visitor, /getCurrentAuthState/);
   assert.match(visitor, /client\.rpc\("record_anonymous_visit_v2"/);
-  assert.match(index, /analyticsTargetVersion = "13\.15\.9"/);
+  assert.match(index, /analyticsTargetVersion = "16\.7\.0\.3"/);
   assert.doesNotMatch(visitor, /\.from\("anonymous_visit_sessions"\)/);
 });
 
