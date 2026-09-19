@@ -216,23 +216,34 @@ test('16.7.0 mobile version uses build 40',()=>{
   assert.equal(pkg.version,'16.7.0');
 });
 
-test('Friends uses shared profile bracket tabs without pill layout or duplicate title',()=>{
+test('Friends uses the same floating bracket-tab chrome as Profile without a solid header strip',()=>{
   const web=read('src/features/friends/index.js');
   const css=read('src/features/friends/friends-16-7.css');
+  const chrome=read('src/shared/styles/chrome.css');
   const profileNav=read('src/shared/ui/profile-navigation.js');
   const mobile=read('mobile/screens/friends.js');
   const mobileProfile=read('mobile/screens/profile-main.js');
-  assert.doesNotMatch(web,/settingsSegments/);
   assert.doesNotMatch(web,/<h1\b/i);
   assert.match(profileNav,/export function renderBracketTabs/);
   assert.match(web,/renderBracketTabs/);
-  assert.match(css,/grid-template-rows:auto minmax\(0,1fr\)/);
-  assert.match(css,/\.socialBody\{[^}]*min-height:0[^}]*overflow:auto/s);
+  assert.match(css,/\.socialBody\{[^}]*position:absolute[^}]*overflow:auto/s);
+  assert.match(chrome,/\[data-feature="friends"\] \.socialHeader\{/);
+  assert.match(chrome,/background:transparent!important/);
   assert.doesNotMatch(css,/\.socialTabs\{[^}]*border-radius:999px/s);
   assert.match(mobile,/ProfileTabs/);
-  assert.match(mobileProfile,/ProfileTabs/);
+  assert.match(mobile,/topChromeDepth=\{theme\.chrome\.screenDepths\.friends\.top\}/);
+  assert.match(mobile,/tabs:\{position:'absolute'/);
+  assert.match(mobileProfile,/tabs:\{position:'absolute'/);
   assert.doesNotMatch(mobile,/style=\{s\.title\}/);
-  assert.doesNotMatch(mobile,/borderRadius:999/);
+});
+
+test('Extended statistics tab is absent on Web and Mobile until activity_access is allowed',()=>{
+  const web=read('src/features/friends/index.js');
+  const mobile=read('mobile/screens/friends.js');
+  assert.match(web,/statsAccessState==='allowed'\?\[\{id:'stats'/);
+  assert.match(mobile,/accessState==='allowed'\?\[\['stats',t\('extendedStats'\)\]\]:\[\]/);
+  assert.match(mobile,/visibleMode=mode==='stats'&&accessState!=='allowed'\?'rating':mode/);
+  assert.match(mobile,/if\(id==='stats'&&accessState!=='allowed'\)/);
 });
 
 test('activity_access becomes reactive on Web and waits for native auth on Mobile',()=>{
