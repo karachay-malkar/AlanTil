@@ -1,5 +1,6 @@
 const M=(ru,en,tr)=>Object.freeze({ru,en,tr});
 export const SOCIAL_MESSAGES=Object.freeze({
+  community:M('Сообщество','Community','Topluluk'),
   friends:M('Друзья','Friends','Arkadaşlar'),
   rating:M('Рейтинг','Leaderboard','Sıralama'),
   extendedStats:M('Расширенная статистика','Extended stats','Genişletilmiş istatistik'),
@@ -28,6 +29,12 @@ export const SOCIAL_MESSAGES=Object.freeze({
   challengeFrom:M('{name} вызывает вас в Ашык','{name} challenged you to Ashyk','{name} sizi Aşık oyununa çağırdı'),
   waitingFor:M('Ожидаем ответа: {name}','Waiting for {name}','{name} bekleniyor'),
   cancelInvite:M('Отменить вызов','Cancel challenge','Daveti iptal et'),
+  preparingGame:M('Подключение к игре…','Connecting to game…','Oyuna bağlanılıyor…'),
+  reconnecting:M('Восстанавливаем соединение…','Restoring connection…','Bağlantı yeniden kuruluyor…'),
+  opponentAway:M('Связь с соперником потеряна. Ожидаем возвращения…','Connection to your opponent was lost. Waiting for them to return…','Rakiple bağlantı kesildi. Geri dönmesi bekleniyor…'),
+  finishGame:M('Завершить игру','End game','Oyunu bitir'),
+  unfinishedGame:M('Есть незавершённая игра в Ашыкъ оюн.','You have an unfinished Ashyk game.','Yarım kalan bir Aşık oyununuz var.'),
+  returnToGame:M('Вернуться в игру','Return to game','Oyuna dön'),
   computer:M('Компьютер','Computer','Bilgisayar'),
   local:M('На одном устройстве','Same device','Aynı cihaz'),
   friend:M('С другом','With a friend','Arkadaşla'),

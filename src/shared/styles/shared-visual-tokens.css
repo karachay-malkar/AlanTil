@@ -143,6 +143,9 @@
   --ui-profile-gender-compact-width:360px;
   --ui-profile-gender-gap:9px;
   --ui-profile-gender-height:180px;
+  --ui-profile-tab-gap:3px;
+  --ui-profile-tab-item-height:30px;
+  --ui-profile-tab-item-padding-horizontal:4px;
   --ui-progress-bracket-gap:5px;
   --ui-progress-fill:#292722;
   --ui-progress-segment-gap:4px;

@@ -72,6 +72,9 @@ jobs:
           test -s src/features/ashyk/runtime.js
           grep -q "ashyk_invite_create" src/features/ashyk/runtime.js
           grep -q "ashyk_invite_accept" src/features/ashyk/runtime.js
+          grep -q "ashyk_room_ready" src/features/ashyk/runtime.js
+          grep -q "ashyk_room_ping" src/features/ashyk/runtime.js
+          grep -q "ashyk_active_room" src/features/ashyk/runtime.js
           if grep -q "ashyk_join_room" src/features/ashyk/runtime.js; then
             echo "Legacy room-code RPC remains in generated runtime" >&2
             exit 1
