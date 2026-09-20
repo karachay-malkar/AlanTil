@@ -1,18 +1,18 @@
-const VERSION = "16.7.0.9";
+const VERSION = "16.7.0.11";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.7.0.9",
-  "/src/app/router.js?v=16.7.0.9",
-  "/src/app/shell.js?v=16.7.0.9",
-  "/src/app/screen-registry.js?v=16.7.0.9",
-  "/src/shared/styles/app.css?v=16.7.0.9",
-  "/src/features/path/feature.js?v=16.7.0.9",
-  "/src/shared/data/word-repository.js?v=16.7.0.9",
-  "/src/shared/data/dictionary-store.js?v=16.7.0.9",
+  "/src/app/bootstrap.js?v=16.7.0.11",
+  "/src/app/router.js?v=16.7.0.11",
+  "/src/app/shell.js?v=16.7.0.11",
+  "/src/app/screen-registry.js?v=16.7.0.11",
+  "/src/shared/styles/app.css?v=16.7.0.11",
+  "/src/features/path/feature.js?v=16.7.0.11",
+  "/src/shared/data/word-repository.js?v=16.7.0.11",
+  "/src/shared/data/dictionary-store.js?v=16.7.0.11",
   "/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1",
   "/assets/path/story-stele.webp?v=13.15.6"
 ];

@@ -181,7 +181,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code cache-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.7.0.9";'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.11";'));
   assert.ok(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'));
   assert.equal(sw.includes('cache: "no-store"'),false);
   assert.match(sw,/navigationResponse/);
@@ -433,3 +433,38 @@ test('Community statistics is a root route while only user/test detail routes st
   assert.match(registry,/"friends\.home": \{ layout: "root", header: "minimal", bottomNav: true/);
 });
 
+
+test('Extended statistics keeps transparent headers and a small systemic search icon',()=>{
+  const friendsCss=read('src/features/friends/friends-16-7.css');
+  const adminCss=read('src/features/admin/admin.css');
+  const shellCss=read('src/shared/styles/shell.css');
+  const router=read('src/app/router.js');
+  const bootstrap=read('src/app/bootstrap.js');
+  const index=read('index.html');
+  const sw=read('service-worker.js');
+  const friendsLazy=read('src/shared/styles/lazy/friends.css');
+  const adminLazy=read('src/shared/styles/lazy/admin.css');
+
+  assert.match(friendsCss,/\.socialRowActions \.iconAction svg\{width:100%;height:100%/);
+  assert.doesNotMatch(friendsCss,/\.socialView \.iconAction svg/);
+  assert.match(friendsCss,/\.socialSearchBar>\.expandSearchToggle\{order:2;[^}]*margin-left:auto/);
+
+  assert.match(shellCss,/\.expandSearchToggle\{color:var\(--text-2\)\}/);
+  assert.match(shellCss,/\.expandSearchToggle\.active\{color:var\(--accent-strong\)\}/);
+  assert.match(shellCss,/\.expandSearchToggle svg\{width:16px;height:16px;fill:currentColor;color:inherit\}/);
+
+  assert.match(adminCss,/\.adminStatsModeTabs\{[^}]*background:transparent/);
+  assert.match(adminCss,/\.adminGuestPeriodTabs\{[^}]*background:transparent[^}]*backdrop-filter:none/s);
+  assert.match(adminCss,/\.adminUsersTable thead th\{[^}]*background:transparent/s);
+  assert.match(adminCss,/\.adminUserStickyHead\{[^}]*background:transparent!important/s);
+  assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
+  assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
+
+  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.11";'));
+  assert.ok(bootstrap.includes('router.js?v=16.7.0.11'));
+  assert.ok(index.includes('const targetVersion = "16.7.0.11";'));
+  assert.ok(index.includes('app.css?v=16.7.0.11'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.11";'));
+  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.7.0.11'));
+  assert.ok(adminLazy.includes('admin.css?v=16.7.0.11'));
+});

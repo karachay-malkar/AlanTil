@@ -6,8 +6,8 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.7.0.9";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.0.9";
-const ASSET_VERSION = "16.7.0.9";
+const RELEASE_VERSION = "16.7.0.11";
+const ASSET_VERSION = "16.7.0.11";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",

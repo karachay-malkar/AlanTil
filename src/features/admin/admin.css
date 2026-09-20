@@ -11,14 +11,14 @@
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersScroll{position:absolute;z-index:1;inset:0;box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;padding:calc(var(--safe-top) + 42px) 0 calc(var(--safe-bottom) + var(--content-rest-gap));scroll-padding-top:calc(var(--safe-top) + 42px);scroll-padding-bottom:calc(var(--safe-bottom) + var(--content-rest-gap));background:transparent;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable{width:max-content;min-width:100%;margin:0;border-collapse:separate;border-spacing:0;table-layout:fixed;color:var(--text-1);font-size:11px;background:transparent}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable th,:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td{height:var(--table-row-height);box-sizing:border-box;padding:5px var(--ui-list-horizontal);border-bottom:1px solid var(--line-soft);vertical-align:middle;white-space:nowrap;text-align:center;background:transparent}
-:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable thead th{position:sticky;top:0;z-index:var(--z-tabs);height:var(--ui-list-table-header-height);min-height:var(--ui-list-table-header-height);padding-top:2px;padding-bottom:2px;background:var(--app-bg);font:800 9px/1.08 var(--font-terminal);letter-spacing:.02em;color:var(--text-2)}
+:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable thead th{position:sticky;top:0;z-index:var(--z-tabs);height:var(--ui-list-table-header-height);min-height:var(--ui-list-table-header-height);padding-top:2px;padding-bottom:2px;background:transparent;font:800 9px/1.08 var(--font-terminal);letter-spacing:.02em;color:var(--text-2)}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable th:nth-child(2),:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(2){width:92px;min-width:92px}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable th:nth-child(3),:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(3){width:72px;min-width:72px}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable th:nth-child(8),:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(8){width:94px;min-width:94px}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable .adminStoryHead,:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(4),:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(5),:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(6),:where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable td:nth-child(7){width:132px;min-width:132px;max-width:132px}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUsersTable .adminStoryHead{white-space:normal;overflow:hidden;overflow-wrap:normal;word-break:normal;text-wrap:balance;padding-left:10px;padding-right:10px;line-height:1.08}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUserStickyCell{width:150px;min-width:150px;max-width:150px;text-align:left!important;background:transparent}
-:where([data-feature="admin"],.adminUsersEmbedded) .adminUserStickyHead{z-index:var(--z-tabs)!important;background:var(--app-bg)!important}
+:where([data-feature="admin"],.adminUsersEmbedded) .adminUserStickyHead{z-index:var(--z-tabs)!important;background:transparent!important}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminUserIdentity{width:100%;min-width:0;display:flex;align-items:center;gap:5px}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminRankLabel{flex:0 0 auto;min-width:21px;color:var(--text-3);font:800 9px/1 var(--font-terminal);font-variant-numeric:tabular-nums}
 :where([data-feature="admin"],.adminUsersEmbedded) .adminRankMedal{flex:0 0 16px;width:16px;height:16px;fill:currentColor;opacity:.92}
@@ -106,16 +106,16 @@
 }
 
 .adminUsersEmbedded{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;background:transparent}
-.adminUsersEmbedded .adminUsersToolbar{display:flex;justify-content:flex-end;align-items:center;min-height:var(--ui-header-action-size);padding:0 var(--ui-list-horizontal) 4px}
+.adminUsersEmbedded .adminUsersToolbar{height:var(--ui-header-action-size);min-height:var(--ui-header-action-size);padding:0 10px;display:flex;justify-content:flex-end;align-items:center;background:transparent}.adminUsersEmbedded .adminUsersToolbar .appHeaderAction{flex:0 0 var(--ui-header-action-size)}
 .adminUsersEmbedded .adminUsersScroll{position:relative!important;inset:auto!important;height:100%;min-height:0;padding:0 0 8px!important;scroll-padding-top:0!important;scroll-padding-bottom:8px!important;-webkit-mask-image:none!important;mask-image:none!important}
 
 .adminUsersEmbedded{grid-template-rows:auto minmax(0,1fr)}
-.adminStatsModeTabs{min-height:var(--ui-header-action-size);padding:0 var(--ui-list-horizontal) 4px}
-.adminStatsModeTabs .profilePrimaryNav,.adminGuestPeriodTabs .profilePrimaryNav{width:100%}
+.adminStatsModeTabs{height:34px;min-height:34px;padding:0 10px;display:flex;align-items:center;background:transparent}
+.adminStatsModeTabs .profilePrimaryNav,.adminGuestPeriodTabs .profilePrimaryNav{width:100%;height:34px}
 .adminStatsPane{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}
 .adminStatsPane.isGuest{display:block;overflow:auto}
 .adminGuestScroll{min-height:100%;padding:0 var(--ui-list-horizontal) 30px}
-.adminGuestPeriodTabs{position:sticky;top:0;z-index:3;padding:4px 0 8px;background:linear-gradient(to bottom,var(--app-bg) 78%,transparent)}
+.adminGuestPeriodTabs{position:sticky;top:0;z-index:3;height:34px;min-height:34px;padding:0 10px;display:flex;align-items:center;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
 .adminGuestMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
 .adminGuestMetrics>div{min-height:72px;padding:12px 10px;display:grid;align-content:center;gap:4px;border-right:1px solid var(--line-soft)}
 .adminGuestMetrics>div:nth-child(3n){border-right:0}

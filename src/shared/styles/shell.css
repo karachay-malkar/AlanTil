@@ -159,3 +159,7 @@
 }
 @media(max-width:360px){.appHeader{padding-left:6px;padding-right:6px}.bottomNav{padding-left:8px;padding-right:8px}.bottomNavItem{font-size:9px}.bottomNavIconBubble{width:36px;height:36px;flex-basis:36px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+.expandSearchToggle{color:var(--text-2)}
+.expandSearchToggle.active{color:var(--accent-strong)}
+.expandSearchToggle svg{width:16px;height:16px;fill:currentColor;color:inherit}
