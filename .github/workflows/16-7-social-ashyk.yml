@@ -47,6 +47,19 @@ jobs:
           node scripts/sync-visual-contract-16-7.mjs
           git diff --exit-code -- mobile/screens/ashyk.js mobile/ui/parity.js mobile/ui/web-visual-source.js
 
+      - name: Ensure Walnut Veneer 02 PBR assets
+        run: node scripts/fetch-ashyk-walnut-veneer-02.mjs
+
+      - name: Commit Walnut Veneer 02 PBR assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/ashyk/materials/walnut-veneer-02
+          if ! git diff --cached --quiet; then
+            git commit -m "16.7.0: vendor Walnut Veneer 02 PBR assets [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
       - name: 16.7 social, visual, Ashyk and OAuth contract
         run: node --test tests/social-ashyk-16-7-0.test.mjs tests/friends-web-parity-16-7-0.test.mjs tests/visual-parity-16-7-0.test.mjs tests/web-auth-cache-16-7-0.test.mjs tests/auth-pkce-session.test.mjs tests/visitor-analytics.test.mjs tests/admin-activity-13-15-10.test.mjs tests/first-run-guide-stella-16-7-0.test.mjs tests/ashyk-wood-board-16-7-0.test.mjs
 
@@ -75,6 +88,8 @@ jobs:
           grep -q "ashyk_room_ready" src/features/ashyk/runtime.js
           grep -q "ashyk_room_ping" src/features/ashyk/runtime.js
           grep -q "ashyk_active_room" src/features/ashyk/runtime.js
+          grep -q "walnut_veneer_02_diff_1k.jpg" src/features/ashyk/runtime.js
+          grep -q "walnut_veneer_02_nor_gl_1k.jpg" src/features/ashyk/runtime.js
           if grep -q "ashyk_join_room" src/features/ashyk/runtime.js; then
             echo "Legacy room-code RPC remains in generated runtime" >&2
             exit 1
