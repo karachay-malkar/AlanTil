@@ -209,6 +209,23 @@ test('Web and Mobile ship the same complete dictionary snapshot',()=>{
   assert.equal(web.stories.length,mobile.stories.length);
 });
 
+test('Ashyk board renders a wood fallback before async PBR textures are ready',()=>{
+  const wood=read('packages/ashyk-game/model/wood-board.js'),scene=read('packages/ashyk-game/web/scene.jsx'),feature=read('src/features/ashyk/index.js');
+  assert.match(wood,/ASHYK_WOOD_FALLBACK_COLORS/);
+  assert.match(wood,/loadAshykWoodPbrTexturesAsync/);
+  assert.match(wood,/Promise\.allSettled/);
+  assert.match(wood,/hydrateAshykBoardVisual/);
+  assert.match(wood,/ashykWoodDisposed/);
+  const createStart=wood.indexOf('export function createAshykBoardVisual');
+  const hydrateStart=wood.indexOf('export async function hydrateAshykBoardVisual',createStart);
+  const createBlock=wood.slice(createStart,hydrateStart);
+  assert.doesNotMatch(createBlock,/loadAshykWoodPbrTextures\(THREE\)/);
+  assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
+  assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
+  assert.match(scene,/Ashyk board PBR load failed/);
+  assert.match(feature,/runtime\.js\?v=16\.7\.0\.8/);
+});
+
 test('Ashyk settles the opening field before creating a network invite',()=>{
   const engine=read('packages/ashyk-game/engine.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   assert.match(engine,/function settleInitial/);

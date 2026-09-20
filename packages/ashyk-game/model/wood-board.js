@@ -18,6 +18,20 @@ export const ASHYK_WOOD_PBR_ASSETS=Object.freeze({
   ao:'/assets/ashyk/materials/walnut-veneer-02/walnut_veneer_02_ao_1k.jpg',
 });
 
+const ASHYK_WOOD_FALLBACK_COLORS=Object.freeze({
+  top:'#8b6548',
+  bevel:'#7d573f',
+  side:'#694832',
+  bottom:'#5a3c2b',
+});
+
+const ASHYK_WOOD_TEXTURE_TINTS=Object.freeze({
+  top:'#f1f0ec',
+  bevel:'#e8e7e2',
+  side:'#dfded9',
+  bottom:'#d4d3cf',
+});
+
 function configureTexture(THREE,texture,{color=false}={}){
   if(!texture)return null;
   texture.wrapS=THREE.RepeatWrapping;
@@ -43,6 +57,33 @@ export function loadAshykWoodPbrTextures(THREE,{loadTexture,sources=ASHYK_WOOD_P
   };
 }
 
+function disposeTextureSet(textures){
+  textures?.baseColor?.dispose?.();
+  textures?.normal?.dispose?.();
+  textures?.roughness?.dispose?.();
+  textures?.ao?.dispose?.();
+}
+
+export async function loadAshykWoodPbrTexturesAsync(THREE,{loadTextureAsync,sources=ASHYK_WOOD_PBR_ASSETS}={}){
+  const loader=loadTextureAsync?null:new THREE.TextureLoader();
+  const load=loadTextureAsync||((url)=>loader.loadAsync(url));
+  const entries=[
+    ['baseColor',sources.baseColor,true],
+    ['normal',sources.normal,false],
+    ['roughness',sources.roughness,false],
+    ['ao',sources.ao,false],
+  ];
+  const settled=await Promise.allSettled(entries.map(([,url])=>load(url)));
+  const failed=settled.find((result)=>result.status==='rejected');
+  if(failed){
+    settled.forEach((result)=>{if(result.status==='fulfilled')result.value?.dispose?.();});
+    throw failed.reason instanceof Error?failed.reason:new Error('ASHYK_WOOD_PBR_LOAD_FAILED');
+  }
+  const textures={};
+  entries.forEach(([key,,color],index)=>{textures[key]=configureTexture(THREE,settled[index].value,{color});});
+  return textures;
+}
+
 function cloneTexture(THREE,texture,{repeatX=1,repeatY=1,rotation=0}={}){
   if(!texture)return null;
   const next=texture.clone();
@@ -57,6 +98,7 @@ function cloneTexture(THREE,texture,{repeatX=1,repeatY=1,rotation=0}={}){
 }
 
 function bindTextures(THREE,material,textures,variant,{normal=true,ao=true}={}){
+  for(const texture of material.userData?.ashykWoodTextures||[])texture?.dispose?.();
   const bound=[];
   const map=cloneTexture(THREE,textures.baseColor,variant);
   const roughnessMap=cloneTexture(THREE,textures.roughness,variant);
@@ -98,26 +140,46 @@ function addRadialGrooves(THREE,group,innerRadius,outerRadius,material,y){
   }
 }
 
-export function createAshykBoardVisual(THREE,{textures:providedTextures}={}){
-  const textures=providedTextures||loadAshykWoodPbrTextures(THREE);
-  configureTexture(THREE,textures.baseColor,{color:true});
-  configureTexture(THREE,textures.normal);
-  configureTexture(THREE,textures.roughness);
-  configureTexture(THREE,textures.ao);
+function applyBoardTextures(THREE,group,textures){
+  if(!group||group.userData?.ashykWoodDisposed)return false;
+  const materials=group.userData?.ashykWoodMaterials;
+  if(!materials){
+    disposeTextureSet(textures);
+    return false;
+  }
+  materials.top.color.set(ASHYK_WOOD_TEXTURE_TINTS.top);
+  materials.bevel.color.set(ASHYK_WOOD_TEXTURE_TINTS.bevel);
+  materials.side.color.set(ASHYK_WOOD_TEXTURE_TINTS.side);
+  materials.bottom.color.set(ASHYK_WOOD_TEXTURE_TINTS.bottom);
+  bindTextures(THREE,materials.top,textures,{repeatX:1.10,repeatY:1.10,rotation:0});
+  bindTextures(THREE,materials.bevel,textures,{repeatX:1.38,repeatY:.90,rotation:0});
+  bindTextures(THREE,materials.side,textures,{repeatX:4.2,repeatY:.62,rotation:Math.PI/2});
+  bindTextures(THREE,materials.bottom,textures,{repeatX:1.05,repeatY:1.05,rotation:0},{normal:false,ao:false});
+  group.userData.ashykWoodBaseTextures=textures;
+  group.userData.ashykWoodPbrReady=true;
+  return true;
+}
 
+export function createAshykBoardVisual(THREE,{textures:providedTextures}={}){
   const group=new THREE.Group();
   group.name='ashyk-wood-board';
-  group.userData.ashykWoodBaseTextures=textures;
+  group.userData.ashykWoodBaseTextures=null;
+  group.userData.ashykWoodPbrReady=false;
+  group.userData.ashykWoodDisposed=false;
 
-  const topMaterial=new THREE.MeshStandardMaterial({color:'#f1f0ec',roughness:.82,metalness:0,normalScale:new THREE.Vector2(.30,.30)});
-  const bevelMaterial=new THREE.MeshStandardMaterial({color:'#e8e7e2',roughness:.86,metalness:0,normalScale:new THREE.Vector2(.31,.31),side:THREE.DoubleSide});
-  const sideMaterial=new THREE.MeshStandardMaterial({color:'#dfded9',roughness:.88,metalness:0,normalScale:new THREE.Vector2(.34,.34),side:THREE.DoubleSide});
-  const bottomMaterial=new THREE.MeshStandardMaterial({color:'#d4d3cf',roughness:.94,metalness:0});
+  const topMaterial=new THREE.MeshStandardMaterial({color:ASHYK_WOOD_FALLBACK_COLORS.top,roughness:.82,metalness:0,normalScale:new THREE.Vector2(.30,.30)});
+  const bevelMaterial=new THREE.MeshStandardMaterial({color:ASHYK_WOOD_FALLBACK_COLORS.bevel,roughness:.86,metalness:0,normalScale:new THREE.Vector2(.31,.31),side:THREE.DoubleSide});
+  const sideMaterial=new THREE.MeshStandardMaterial({color:ASHYK_WOOD_FALLBACK_COLORS.side,roughness:.88,metalness:0,normalScale:new THREE.Vector2(.34,.34),side:THREE.DoubleSide});
+  const bottomMaterial=new THREE.MeshStandardMaterial({color:ASHYK_WOOD_FALLBACK_COLORS.bottom,roughness:.94,metalness:0});
+  group.userData.ashykWoodMaterials={top:topMaterial,bevel:bevelMaterial,side:sideMaterial,bottom:bottomMaterial};
 
-  bindTextures(THREE,topMaterial,textures,{repeatX:1.10,repeatY:1.10,rotation:0});
-  bindTextures(THREE,bevelMaterial,textures,{repeatX:1.38,repeatY:.90,rotation:0});
-  bindTextures(THREE,sideMaterial,textures,{repeatX:4.2,repeatY:.62,rotation:Math.PI/2});
-  bindTextures(THREE,bottomMaterial,textures,{repeatX:1.05,repeatY:1.05,rotation:0},{normal:false,ao:false});
+  if(providedTextures){
+    configureTexture(THREE,providedTextures.baseColor,{color:true});
+    configureTexture(THREE,providedTextures.normal);
+    configureTexture(THREE,providedTextures.roughness);
+    configureTexture(THREE,providedTextures.ao);
+    applyBoardTextures(THREE,group,providedTextures);
+  }
 
   const topGeometry=enableAoUv(new THREE.CircleGeometry(ASHYK_BOARD_VISUAL.topRadius,128));
   const top=new THREE.Mesh(topGeometry,topMaterial);
@@ -162,8 +224,26 @@ export function createAshykBoardVisual(THREE,{textures:providedTextures}={}){
   return group;
 }
 
+export async function hydrateAshykBoardVisual(THREE,board,options={}){
+  if(!board||board.userData?.ashykWoodDisposed)return false;
+  if(board.userData?.ashykWoodPbrReady)return true;
+  if(board.userData?.ashykWoodPbrPromise)return board.userData.ashykWoodPbrPromise;
+  const promise=(async()=>{
+    const textures=await loadAshykWoodPbrTexturesAsync(THREE,options);
+    if(board.userData?.ashykWoodDisposed){
+      disposeTextureSet(textures);
+      return false;
+    }
+    return applyBoardTextures(THREE,board,textures);
+  })();
+  board.userData.ashykWoodPbrPromise=promise;
+  try{return await promise;}
+  finally{if(board.userData)board.userData.ashykWoodPbrPromise=null;}
+}
+
 export function disposeAshykBoardVisual(board){
   if(!board)return;
+  board.userData.ashykWoodDisposed=true;
   const materials=new Set(),base=board.userData?.ashykWoodBaseTextures;
   board.traverse?.(object=>{
     object.geometry?.dispose?.();

@@ -5,8 +5,8 @@ import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.7.0";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.0";
-const ASSET_VERSION = "16.7.0.7";
+const RELEASE_VERSION = "16.7.0.8";
+const ASSET_VERSION = "16.7.0.8";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
