@@ -302,6 +302,46 @@ export async function getWords() {
   return loadingPromise;
 }
 
+
+export async function getCompleteDictionaryWords({ signal } = {}) {
+  clearLegacyDictionaryCaches();
+  const cached = readDictionaryCache();
+  if (cached) {
+    words = cached.words;
+    installedVersion = cached.version;
+    source = "cache";
+    invalidateDisplayedWords();
+    scheduleBackgroundRefresh();
+    return displayedCollection(words);
+  }
+
+  if (Array.isArray(words) && words.length && source !== "starter" && source !== "none") {
+    return displayedCollection(words);
+  }
+
+  if (backgroundPromise) {
+    await backgroundPromise;
+    const refreshedCache = readDictionaryCache();
+    if (refreshedCache) {
+      words = refreshedCache.words;
+      installedVersion = refreshedCache.version;
+      source = "cache";
+      invalidateDisplayedWords();
+      return displayedCollection(words);
+    }
+    if (Array.isArray(words) && words.length && source !== "starter" && source !== "none") {
+      return displayedCollection(words);
+    }
+  }
+
+  if (retryTimer) {
+    globalThis.clearTimeout(retryTimer);
+    retryTimer = 0;
+  }
+  const result = await retry(() => downloadDictionary("", { signal }));
+  return displayedCollection(result.words);
+}
+
 export function getCachedWords() {
   return displayedCollection(words || []);
 }
@@ -317,9 +357,9 @@ export async function getDictionaryVersionStatus({ signal, retry: shouldRetry = 
   return { currentVersion, latestVersion, needsUpdate: currentVersion !== latestVersion };
 }
 
-export async function refreshDictionary({ signal } = {}) {
+export async function refreshDictionary({ signal, force = false } = {}) {
   if (loadingPromise) await loadingPromise;
-  const result = await retry(() => refreshDictionaryIfNeeded({ signal }));
+  const result = await retry(() => force ? downloadDictionary("", { signal }) : refreshDictionaryIfNeeded({ signal }));
   return { ...result, words: displayedCollection(result.words) };
 }
 

@@ -1,4 +1,4 @@
-import { getWords } from "../../shared/data/word-repository.js?v=13.15.12";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=13.15.12";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.12";
 import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=13.10.12";
 import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.12";
@@ -8,6 +8,7 @@ import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=1
 import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.7.0.2";
 import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.7.0.3";
 import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.7.0.3";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.7.0.3";
 import { mountAshykGame } from "./runtime.js?v=16.7.0.2";
 
 let controller=null;
@@ -16,6 +17,25 @@ let sessionActive=false;
 let styleLink=null;
 let activeRoomId=null;
 let onlineAdapter=null;
+
+
+function hasQuestionSource(words){
+  try{
+    const deck=createAshykQuestionDeck(words);
+    return deck.size>0&&Boolean(deck.next());
+  }catch{
+    return false;
+  }
+}
+
+async function loadAshykWords(signal){
+  let collection=await getCompleteDictionaryWords({signal});
+  if(hasQuestionSource(collection))return collection;
+  const refreshed=await refreshDictionary({signal,force:true});
+  collection=Array.isArray(refreshed?.words)?refreshed.words:[];
+  if(!hasQuestionSource(collection))throw new Error('ASHYK_DICTIONARY_INCOMPLETE');
+  return collection;
+}
 
 function ensureStyles(){
   if(styleLink?.isConnected)return;
@@ -42,11 +62,21 @@ export async function mount(context){
     host.querySelector('[data-ashyk-sign-in]')?.addEventListener('click',()=>context.router.navigate('account.home'),{signal:controller.signal});
     return;
   }
-  const [words,supabaseClient,social]=await Promise.all([
-    getWords().catch(()=>[]),
-    getSupabaseClient().catch(()=>null),
-    fetchFriendsSnapshot().catch(()=>({friends:[]})),
-  ]);
+  let words=[];
+  let supabaseClient=null;
+  let social={friends:[]};
+  try{
+    [words,supabaseClient,social]=await Promise.all([
+      loadAshykWords(controller.signal),
+      getSupabaseClient().catch(()=>null),
+      fetchFriendsSnapshot().catch(()=>({friends:[]})),
+    ]);
+  }catch(error){
+    if(controller.signal.aborted||!host)return;
+    console.error('Ashyk dictionary load failed',error);
+    host.innerHTML=`<div class="ashykAccessLock"><h1>${msg("practice.ashyk")}</h1><p>${msg("settings.ne_udalos_obnovit_slovar")}</p></div>`;
+    return;
+  }
   if(controller.signal.aborted||!host)return;
   const pending=takePendingAshykInvite();
   onlineAdapter=supabaseClient&&userId?createAshykOnlineAdapter(supabaseClient):null;

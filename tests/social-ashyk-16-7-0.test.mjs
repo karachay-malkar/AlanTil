@@ -120,6 +120,44 @@ test('Ashyk uses global challenge/resume and does not abandon rooms on technical
 
 test('Ashyk online sync persists bonus-question phase instead of resetting it',()=>{const store=read('packages/ashyk-game/store.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');assert.match(store,/phase:state\.phase/);assert.match(store,/question:state\.question/);assert.match(store,/phase=stateData\.phase==='bonus-question'/);for(const source of[web,mobile]){assert.match(source,/state\.phase==='bonus-question'/);assert.match(source,/state\.scores\[0\]/);assert.match(source,/state\.scores\[1\]/);assert.doesNotMatch(source,/state\.scores,state\.remainingAshyks/);}});
 
+test('Web Ashyk requires the complete dictionary and never mounts from the starter snapshot',()=>{
+  const feature=read('src/features/ashyk/index.js'),repository=read('src/shared/data/word-repository.js');
+  assert.match(feature,/getCompleteDictionaryWords/);
+  assert.match(feature,/loadAshykWords\(controller\.signal\)/);
+  assert.match(feature,/createAshykQuestionDeck/);
+  assert.match(feature,/refreshDictionary\(\{signal,force:true\}\)/);
+  assert.doesNotMatch(feature,/getWords\(\)\.catch\(\(\)=>\[\]\)/);
+  const start=repository.indexOf('export async function getCompleteDictionaryWords');
+  const end=repository.indexOf('export function getCachedWords',start);
+  const block=repository.slice(start,end);
+  assert.ok(start>=0&&end>start);
+  assert.match(block,/readDictionaryCache\(\)/);
+  assert.match(block,/backgroundPromise/);
+  assert.match(block,/downloadDictionary\("", \{ signal \}\)/);
+  assert.doesNotMatch(block,/readStarterDictionary\(\)/);
+});
+
+test('bundled mobile dictionary contains the complete Ashyk Return-to-roots source',()=>{
+  const snapshot=JSON.parse(read('mobile/data/dictionary-snapshot.json'));
+  const roots=(snapshot.words||[]).filter((word)=>String(word.dictionary_id||'')==='intermediate'&&String(word.story_id||'')==='roots');
+  const counts=roots.reduce((map,word)=>{const pos=String(word.pos||'').trim().toLowerCase();map[pos]=(map[pos]||0)+1;return map;},{});
+  assert.equal(roots.length,751);
+  assert.deepEqual(counts,{noun:386,adj:148,verb:199,adv:18});
+});
+
+test('Ashyk result and vocabulary-question UI match the requested compact layout',()=>{
+  const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js'),copy=read('packages/ashyk-game/i18n.js'),css=read('src/features/ashyk/ashyk-16-7.css');
+  assert.doesNotMatch(web,/<p>\{m\.finalField\}<\/p>/);
+  assert.doesNotMatch(mobile,/styles\.finishNotice/);
+  assert.match(web,/ashykSecondary ashykQuestionAction/);
+  assert.match(web,/ashykPrimary ashykQuestionAction/);
+  assert.match(mobile,/role="generic\.default"/);
+  assert.match(mobile,/role="test\.submit"/);
+  assert.match(copy,/skip:'Пропуск'/);
+  assert.ok(copy.includes("questionRule:'Верно → +3 очка и ещё 1 удар\\nНеверно → −1 балл\\nПропуск → без штрафа'"));
+  assert.match(css,/white-space:pre-line/);
+});
+
 test('Ashyk settles the opening field before creating a network invite',()=>{
   const engine=read('packages/ashyk-game/engine.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   assert.match(engine,/function settleInitial/);
