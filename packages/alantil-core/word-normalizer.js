@@ -398,7 +398,10 @@ function normalizeCachedWordEntry(row) {
     setNameAlanTurkic: text(row.setNameAlanTurkic || row.set_name_alan_turkic),
     legacyExample: text(row.legacyExample || row.example),
   };
-  return completeModel(model, row);
+  const cachedRow = model.sourceType === "v_words_app" && row.used_in_test === undefined
+    ? { ...row, usedInTest: undefined }
+    : row;
+  return completeModel(model, cachedRow);
 }
 
 export function normalizeWordEntry(row, { source = "auto", story = null } = {}) {

@@ -118,6 +118,8 @@ test('Ashyk uses global challenge/resume and does not abandon rooms on technical
   assert.doesNotMatch(mobile,/useEffect\(\(\)=>\(\)=>\{[^}]*leaveRoom/s);
 });
 
+test('Ashyk online sync persists bonus-question phase instead of resetting it',()=>{const store=read('packages/ashyk-game/store.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');assert.match(store,/phase:state\.phase/);assert.match(store,/question:state\.question/);assert.match(store,/phase=stateData\.phase==='bonus-question'/);for(const source of[web,mobile]){assert.match(source,/state\.phase==='bonus-question'/);assert.match(source,/state\.scores\[0\]/);assert.match(source,/state\.scores\[1\]/);assert.doesNotMatch(source,/state\.scores,state\.remainingAshyks/);}});
+
 test('Ashyk settles the opening field before creating a network invite',()=>{
   const engine=read('packages/ashyk-game/engine.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   assert.match(engine,/function settleInitial/);
