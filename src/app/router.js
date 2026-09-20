@@ -6,6 +6,7 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 
 const DEFAULT_STORY = "oblivion";
 const RELEASE_VERSION = "16.7.0";
+const ASSET_VERSION = "16.7.0.7";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -19,6 +20,22 @@ const FEATURE_PATHS = Object.freeze({
   songs: "../features/songs/index.js",
   account: "../features/account/index.js",
   settings: "../features/settings/feature.js",
+});
+const FEATURE_STYLES = Object.freeze({
+  practice: ["/src/shared/styles/lazy/practice.css?v="+ASSET_VERSION],
+  ashyk: ["/src/shared/styles/lazy/ashyk.css?v="+ASSET_VERSION],
+  friends: [
+    "/src/shared/styles/lazy/friends.css?v="+ASSET_VERSION,
+    "/src/shared/styles/lazy/admin.css?v="+ASSET_VERSION,
+  ],
+  profile: ["/src/shared/styles/lazy/profile.css?v="+ASSET_VERSION],
+  admin: ["/src/shared/styles/lazy/admin.css?v="+ASSET_VERSION],
+  learn: ["/src/shared/styles/lazy/learn.css?v="+ASSET_VERSION],
+  test: ["/src/shared/styles/lazy/test.css?v="+ASSET_VERSION],
+  match: ["/src/shared/styles/lazy/match.css?v="+ASSET_VERSION],
+  songs: ["/src/shared/styles/lazy/songs.css?v="+ASSET_VERSION],
+  account: ["/src/shared/styles/lazy/account.css?v="+ASSET_VERSION],
+  settings: ["/src/shared/styles/lazy/settings.css?v="+ASSET_VERSION],
 });
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -206,6 +223,15 @@ function safeReferrer(value) { if (!value) return ""; try { const url = new URL(
 export function createRouter({ shell, modal, context }) {
   const entries = [];
   const loadedModules = new Map();
+  const loadedStyles = new Map();
+  function loadStyle(href){
+    if(loadedStyles.has(href))return loadedStyles.get(href);
+    const existing=document.querySelector('link[data-alantil-feature-style="'+href+'"]');
+    if(existing){const ready=Promise.resolve();loadedStyles.set(href,ready);return ready;}
+    const promise=new Promise((resolve,reject)=>{const link=document.createElement("link");link.rel="stylesheet";link.href=href;link.dataset.alantilFeatureStyle=href;link.addEventListener("load",()=>resolve(),{once:true});link.addEventListener("error",()=>reject(new Error("Stylesheet failed: "+href)),{once:true});document.head.append(link);});
+    loadedStyles.set(href,promise);return promise;
+  }
+  function ensureFeatureStyles(feature){return Promise.all((FEATURE_STYLES[feature]||[]).map(loadStyle));}
   let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
   let currentModule = null;
   let navigating = false;
@@ -234,8 +260,9 @@ export function createRouter({ shell, modal, context }) {
   }
   async function loadModule(feature) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);
-    try { const module = await importFeature(feature); loadedModules.set(feature, module); return module; }
-    catch (error) { console.warn(`Feature import retry: ${feature}`, error); const module = await importFeature(feature, true); loadedModules.set(feature, module); return module; }
+    const styles=ensureFeatureStyles(feature);
+    try { const [module]=await Promise.all([importFeature(feature),styles]); loadedModules.set(feature,module); return module; }
+    catch (error) { console.warn(`Feature import retry: ${feature}`, error); const [module]=await Promise.all([importFeature(feature,true),styles]); loadedModules.set(feature,module); return module; }
   }
   function settleQueuedNavigation(value = false) { if (!queuedNavigation) return; queuedNavigation.resolve(value); queuedNavigation = null; }
   function queueNavigation(target, options) { settleQueuedNavigation(false); shell.setNavigationPending?.(target.route, true); return new Promise((resolve) => { queuedNavigation = { target, options, resolve }; }); }

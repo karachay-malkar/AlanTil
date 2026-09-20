@@ -14,7 +14,6 @@ import { mountAshykGame } from "./runtime.js?v=16.7.0.2";
 let controller=null;
 let disposeGame=null;
 let sessionActive=false;
-let styleLink=null;
 let activeRoomId=null;
 let onlineAdapter=null;
 
@@ -37,19 +36,9 @@ async function loadAshykWords(signal){
   return collection;
 }
 
-function ensureStyles(){
-  if(styleLink?.isConnected)return;
-  styleLink=document.createElement('link');
-  styleLink.rel='stylesheet';
-  styleLink.href='/src/features/ashyk/ashyk-16-7.css?v=16.7.0.3';
-  styleLink.dataset.ashykUi='16.7.0';
-  document.head.append(styleLink);
-}
-
 export async function mount(context){
   controller=new AbortController();
   sessionActive=false;
-  ensureStyles();
   context.shell.setHeaderContent?.({title:msg("practice.ashyk")});
   context.root.innerHTML='<section class="view ashykView"><div class="ashykHost" data-ashyk-host></div></section>';
   const host=context.root.querySelector('[data-ashyk-host]');
@@ -107,8 +96,6 @@ export function unmount(){
   disposeGame=null;
   activeRoomId=null;
   onlineAdapter=null;
-  styleLink?.remove();
-  styleLink=null;
 }
 
 export function canLeave(){return !sessionActive;}

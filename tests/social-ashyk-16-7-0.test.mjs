@@ -131,10 +131,10 @@ test('Web Ashyk requires the complete dictionary and never mounts from the start
   const end=repository.indexOf('export function getCachedWords',start);
   const block=repository.slice(start,end);
   assert.ok(start>=0&&end>start);
-  assert.match(block,/readDictionaryCache\(\)/);
-  assert.match(block,/backgroundPromise/);
+  assert.match(block,/loadLocalSnapshot\(\{ signal, includeBundled: true \}\)/);
+  assert.match(block,/source !== "starter"/);
   assert.match(block,/downloadDictionary\("", \{ signal \}\)/);
-  assert.doesNotMatch(block,/readStarterDictionary\(\)/);
+  assert.doesNotMatch(block,/installSnapshot\(readStarterDictionary\(\)\)/);
 });
 
 test('bundled mobile dictionary contains the complete Ashyk Return-to-roots source',()=>{
@@ -156,6 +156,57 @@ test('Ashyk result and vocabulary-question UI match the requested compact layout
   assert.match(copy,/skip:'Пропуск'/);
   assert.ok(copy.includes("questionRule:'Верно → +3 очка и ещё 1 удар\\nНеверно → −1 балл\\nПропуск → без штрафа'"));
   assert.match(css,/white-space:pre-line/);
+});
+
+test('Web startup uses IndexedDB and the bundled full dictionary before network refresh',()=>{
+  const repository=read('src/shared/data/word-repository.js'),store=read('src/shared/data/dictionary-store.js');
+  assert.match(store,/indexedDB\.open/);
+  assert.match(store,/DICTIONARY_STORE_SCHEMA_VERSION/);
+  assert.match(repository,/readDictionarySnapshot/);
+  assert.match(repository,/writeDictionarySnapshot/);
+  assert.match(repository,/dictionary-snapshot\.json/);
+  assert.match(repository,/setTimeout\(run, 900\)/);
+  assert.doesNotMatch(repository,/const local = cached \|\| readStarterDictionary\(\)/);
+});
+
+test('Path waits for the complete local dictionary and patches cloud progress without rebuilding the map',()=>{
+  const feature=read('src/features/path/feature.js'),bootstrap=read('src/app/bootstrap.js');
+  assert.match(feature,/getCompleteDictionaryWords/);
+  assert.doesNotMatch(feature,/const words=await getWords\(\)/);
+  assert.match(feature,/refreshRouteProgressInPlace/);
+  assert.doesNotMatch(feature,/document\.fonts\?\.ready/);
+  assert.match(bootstrap,/if \(route === "path\.home"\) return;/);
+  assert.match(bootstrap,/if \(router\.getCurrent\(\)\.route === "path\.home"\) return;/);
+});
+
+test('Service worker serves versioned application code cache-first and lazy CSS covers route dependencies',()=>{
+  const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),ashykFeature=read('src/features/ashyk/index.js');
+  assert.match(sw,/url\.searchParams\.has\("v"\) \? cacheFirst\(request\)/);
+  assert.doesNotMatch(sw,/cache:\s*"no-store"/);
+  assert.match(sw,/navigationResponse/);
+  for(const eager of ['features/learn/learn.css','features/test/test.css','features/match/match.css','features/practice/practice.css','features/friends/friends-16-7.css','features/profile/profile.css','features/admin/admin.css','features/account/account.css','features/settings/settings.css','features/songs/songs.css','features/ashyk/ashyk.css'])assert.equal(css.includes(eager),false);
+  assert.match(router,/FEATURE_STYLES/);
+  assert.match(router,/ashyk:\s*\["\/src\/shared\/styles\/lazy\/ashyk\.css\?v="/);
+  assert.match(router,/friends:\s*\[\s*"\/src\/shared\/styles\/lazy\/friends\.css\?v="\+ASSET_VERSION,\s*"\/src\/shared\/styles\/lazy\/admin\.css\?v="\+ASSET_VERSION/s);
+  assert.match(router,/ensureFeatureStyles/);
+  for(const wrapper of ['practice','friends','profile','admin','learn','test','match','songs','account','settings']){
+    const lazy=read('src/shared/styles/lazy/'+wrapper+'.css');
+    assert.match(lazy,/^@import url\("[^"]+"\) layer\(features\);\s*$/);
+  }
+  const ashykCss=read('src/shared/styles/lazy/ashyk.css');
+  assert.match(ashykCss,/ashyk\/ashyk\.css/);
+  assert.match(ashykCss,/ashyk\/ashyk-16-7\.css/);
+  assert.equal((ashykCss.match(/layer\(features\)/g)||[]).length,2);
+  assert.doesNotMatch(ashykFeature,/function ensureStyles/);
+  assert.doesNotMatch(ashykFeature,/data\.ashykUi|styleLink/);
+});
+
+test('Web and Mobile ship the same complete dictionary snapshot',()=>{
+  const web=JSON.parse(read('src/data/dictionary-snapshot.json')),mobile=JSON.parse(read('mobile/data/dictionary-snapshot.json'));
+  assert.equal(web.version,mobile.version);
+  assert.equal(web.words.length,2976);
+  assert.equal(web.words.length,mobile.words.length);
+  assert.equal(web.stories.length,mobile.stories.length);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{

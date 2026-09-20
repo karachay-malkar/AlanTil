@@ -19,12 +19,13 @@ import { createRouter } from "./router.js?v=16.7.0";
 import { createShell } from "./shell.js?v=16.7.0";
 
 const RELEASE_VERSION = "16.7.0";
+const ASSET_VERSION = "16.7.0.7";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register(`/service-worker.js?v=${RELEASE_VERSION}`, { scope: "/" })
+    navigator.serviceWorker.register(`/service-worker.js?v=${ASSET_VERSION}`, { scope: "/" })
       .catch((error) => console.warn("Service worker registration failed", error));
   }, { once: true });
 }
@@ -58,6 +59,7 @@ function renderFriendsBadge(counts={}) {
 }
 
 async function bootstrap() {
+  try { globalThis.performance?.mark?.("alantil:bootstrap:start"); } catch {}
   restoreFallbackRoute();
   normalizeInitialLearningPath();
   initializeI18n();
@@ -72,6 +74,7 @@ async function bootstrap() {
   const authInitialization = waitForAuthInitialization();
   const telegram = createTelegramAdapter();
   const shell = createShell();
+  try { globalThis.performance?.mark?.("alantil:shell:ready"); } catch {}
   const modal = createModalService(shell.modalRoot);
   const context = { root: shell.root, shell, modal, telegram, ensureStyle() {} };
 
@@ -91,13 +94,18 @@ async function bootstrap() {
     globalThis.setTimeout(async () => {
       dictionaryRefreshQueued = false;
       const route = router.getCurrent().route;
+      if (route === "path.home") return;
       if (!route.startsWith("path.") && !route.startsWith("learn.")) return;
       await router.refresh({ background: true, reason: "dictionary_update" });
     }, 100);
   };
   window.addEventListener("alantil:dictionary-updated", refreshDictionaryScreen);
-  window.addEventListener("alantil:scope-ready", () => { void router.refresh({ background: true, reason: "storage_scope" }); });
+  window.addEventListener("alantil:scope-ready", () => {
+    if (router.getCurrent().route === "path.home") return;
+    void router.refresh({ background: true, reason: "storage_scope" });
+  });
   await router.start();
+  try { globalThis.performance?.mark?.("alantil:route:ready"); } catch {}
 
   let ashykNoticeKey='';
   const showGlobalAshykState=({snapshot,activeRoom}={})=>{
