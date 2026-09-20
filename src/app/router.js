@@ -3,10 +3,11 @@ import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analyt
 import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.7.0";
+import { screenStyleDependencies } from "./screen-registry.js?v=16.7.0.9";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.0.8";
-const ASSET_VERSION = "16.7.0.8";
+const RELEASE_VERSION = "16.7.0.9";
+const ASSET_VERSION = "16.7.0.9";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -21,22 +22,19 @@ const FEATURE_PATHS = Object.freeze({
   account: "../features/account/index.js",
   settings: "../features/settings/feature.js",
 });
-const FEATURE_STYLES = Object.freeze({
-  practice: ["/src/shared/styles/lazy/practice.css?v="+ASSET_VERSION],
-  ashyk: ["/src/shared/styles/lazy/ashyk.css?v="+ASSET_VERSION],
-  friends: [
-    "/src/shared/styles/lazy/friends.css?v="+ASSET_VERSION,
-    "/src/shared/styles/lazy/admin.css?v="+ASSET_VERSION,
-  ],
-  profile: ["/src/shared/styles/lazy/profile.css?v="+ASSET_VERSION],
-  admin: ["/src/shared/styles/lazy/admin.css?v="+ASSET_VERSION],
-  learn: ["/src/shared/styles/lazy/learn.css?v="+ASSET_VERSION],
-  test: ["/src/shared/styles/lazy/test.css?v="+ASSET_VERSION],
-  match: ["/src/shared/styles/lazy/match.css?v="+ASSET_VERSION],
-  songs: ["/src/shared/styles/lazy/songs.css?v="+ASSET_VERSION],
-  account: ["/src/shared/styles/lazy/account.css?v="+ASSET_VERSION],
-  settings: ["/src/shared/styles/lazy/settings.css?v="+ASSET_VERSION],
-});
+const STYLE_PATHS = Object.freeze({
+  practice: "/src/shared/styles/lazy/practice.css",
+  ashyk: "/src/shared/styles/lazy/ashyk.css",
+  friends: "/src/shared/styles/lazy/friends.css",
+  profile: "/src/shared/styles/lazy/profile.css",
+  admin: "/src/shared/styles/lazy/admin.css",
+  learn: "/src/shared/styles/lazy/learn.css",
+  test: "/src/shared/styles/lazy/test.css",
+  match: "/src/shared/styles/lazy/match.css",
+  songs: "/src/shared/styles/lazy/songs.css",
+  account: "/src/shared/styles/lazy/account.css",
+  settings: "/src/shared/styles/lazy/settings.css",
+})
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
 const TITLE_KEY_BY_SCREEN = Object.freeze({
@@ -231,7 +229,13 @@ export function createRouter({ shell, modal, context }) {
     const promise=new Promise((resolve,reject)=>{const link=document.createElement("link");link.rel="stylesheet";link.href=href;link.dataset.alantilFeatureStyle=href;link.addEventListener("load",()=>resolve(),{once:true});link.addEventListener("error",()=>reject(new Error("Stylesheet failed: "+href)),{once:true});document.head.append(link);});
     loadedStyles.set(href,promise);return promise;
   }
-  function ensureFeatureStyles(feature){return Promise.all((FEATURE_STYLES[feature]||[]).map(loadStyle));}
+  function ensureRouteStyles(route){
+    return Promise.all(screenStyleDependencies(route).map((style)=>{
+      const path=STYLE_PATHS[style];
+      if(!path)throw new Error(`Unknown route style dependency: ${style}`);
+      return loadStyle(`${path}?v=${ASSET_VERSION}`);
+    }));
+  }
   let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
   let currentModule = null;
   let navigating = false;
@@ -258,11 +262,14 @@ export function createRouter({ shell, modal, context }) {
     const suffix = retry ? `&retry=${Date.now()}` : "";
     return import(`${path}?v=${RELEASE_VERSION}${suffix}`);
   }
-  async function loadModule(feature) {
+  async function loadFeatureModule(feature) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);
-    const styles=ensureFeatureStyles(feature);
-    try { const [module]=await Promise.all([importFeature(feature),styles]); loadedModules.set(feature,module); return module; }
-    catch (error) { console.warn(`Feature import retry: ${feature}`, error); const [module]=await Promise.all([importFeature(feature,true),styles]); loadedModules.set(feature,module); return module; }
+    try { const module=await importFeature(feature); loadedModules.set(feature,module); return module; }
+    catch (error) { console.warn(`Feature import retry: ${feature}`, error); const module=await importFeature(feature,true); loadedModules.set(feature,module); return module; }
+  }
+  async function prepareRoute(route) {
+    const [module]=await Promise.all([loadFeatureModule(featureOf(route)),ensureRouteStyles(route)]);
+    return module;
   }
   function settleQueuedNavigation(value = false) { if (!queuedNavigation) return; queuedNavigation.resolve(value); queuedNavigation = null; }
   function queueNavigation(target, options) { settleQueuedNavigation(false); shell.setNavigationPending?.(target.route, true); return new Promise((resolve) => { queuedNavigation = { target, options, resolve }; }); }
@@ -275,7 +282,7 @@ export function createRouter({ shell, modal, context }) {
     const currentFeature = featureOf(route);
     const features = currentFeature === "path" ? ["practice", "friends", "profile"] : currentFeature === "practice" ? ["path", "friends", "test", "match", "ashyk"] : currentFeature === "friends" ? ["practice", "profile"] : currentFeature === "ashyk" ? ["practice", "friends"] : [];
     if (!features.length) return;
-    const warm = () => features.forEach((feature) => void loadModule(feature).catch(() => {}));
+    const warm = () => features.forEach((feature) => void loadFeatureModule(feature).catch(() => {}));
     if (typeof requestIdleCallback === "function") requestIdleCallback(warm, { timeout: 1800 }); else globalThis.setTimeout(warm, 250);
   }
   function targetWithInheritedParams(route, params = {}) {
@@ -314,7 +321,7 @@ export function createRouter({ shell, modal, context }) {
   function canonicalize(route = current.route, params = current.params) { current = { route, params: compactParams(params) }; entries[historyIndex] = current; const path = `${buildPath(current.route, current.params)}${navigationSuffix()}`; window.history.replaceState(historyState(current, historyIndex), "", path); return getCurrent(); }
   async function mountCurrentRoute(preloadedModule = null) {
     shell.setCounter(""); shell.clearMode(); shell.beginNavigation(current.route, msg("common.otkryvaem")); syncBackControls();
-    const feature = featureOf(current.route); currentModule = preloadedModule || await loadModule(feature);
+    currentModule = preloadedModule || await prepareRoute(current.route);
     await currentModule.mount({ ...context, router: api }, { ...current.params, screen: current.route.split(".")[1] || "home" });
     shell.setActiveNav(current.route); setDocumentTitle(current.route);
   }
@@ -343,7 +350,7 @@ export function createRouter({ shell, modal, context }) {
     navigating = true;
     try {
       if (!skipLeaveCheck && !(await mayLeave(force))) return false;
-      const nextModule = await loadModule(featureOf(target.route)); if (queuedNavigation && !initial) return false;
+      const nextModule = await prepareRoute(target.route); if (queuedNavigation && !initial) return false;
       finishScreenTimer(); await currentModule?.onLeave?.(reason); currentModule?.unmount?.(); currentModule = null; current = { route: target.route, params: compactParams(target.params) };
       if (historyMode !== "none") syncBrowserHistory(current, historyMode);
       await mountCurrentRoute(nextModule); startScreenTimer(current.route); sendPageView({ initial }); scheduleFeatureWarmup(current.route); return true;
@@ -358,7 +365,7 @@ export function createRouter({ shell, modal, context }) {
     if (navigating) { queuedRefresh = { ...queuedRefresh, ...options, target: refreshTarget }; return true; }
     if (options.background && !targetsEqual(refreshTarget, current)) return false;
     navigating = true;
-    try { if (queuedNavigation) return false; currentModule?.unmount?.(); currentModule = null; const module = await loadModule(featureOf(current.route)); await mountCurrentRoute(module); return true; }
+    try { if (queuedNavigation) return false; currentModule?.unmount?.(); currentModule = null; const module = await prepareRoute(current.route); await mountCurrentRoute(module); return true; }
     catch (error) { console.error("Router refresh failed", error); context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`; return false; }
     finally { navigating = false; drainPendingWork(); }
   }

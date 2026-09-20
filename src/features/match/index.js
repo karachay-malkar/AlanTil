@@ -7,7 +7,7 @@ import { renderMatchGame, renderMatchMenu, renderMatchResult } from "./view.js?v
 
 let controller=null;
 export async function mount(context,params={}){
-  context.ensureStyle("/src/features/test/test.css","test-feature-style");context.ensureStyle("/src/features/match/match.css","match-feature-style");controller=new AbortController();wordFavorites.reload();const words=await getWords();let screen=params.screen||"menu";
+  controller=new AbortController();wordFavorites.reload();const words=await getWords();let screen=params.screen||"menu";
   if(screen==="menu"&&!matchState.session.inProgress&&resumeMatchSession(words)){await context.router.replace("match.game",{},{force:true});return;}
   if(screen==="game"&&(!matchState.session.inProgress||!matchState.total)){if(resumeMatchSession(words)){screen="game";}else{await context.router.replace("match.menu",{},{force:true});return;}}
   if(screen==="results"&&!matchState.session.completed){await context.router.replace("match.menu",{},{force:true});return;}

@@ -7,7 +7,7 @@ import { renderTestMenu, renderTestResults, renderTestSession } from "./view.js?
 
 let controller=null;
 export async function mount(context,params={}){
-  context.ensureStyle("/src/features/test/test.css","test-feature-style");controller=new AbortController();wordFavorites.reload();const words=await getWords();let screen=params.screen||"menu";
+  controller=new AbortController();wordFavorites.reload();const words=await getWords();let screen=params.screen||"menu";
   if(screen==="menu"&&!testState.session.inProgress&&resumeTestSession(words)){await context.router.replace("test.session",{},{force:true});return;}
   if(screen==="session"&&(!testState.session.inProgress||!testState.items.length)){if(resumeTestSession(words)){screen="session";}else{await context.router.replace("test.menu",{},{force:true});return;}}
   if(screen==="results"&&!testState.session.completed){await context.router.replace("test.menu",{},{force:true});return;}

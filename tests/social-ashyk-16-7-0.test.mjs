@@ -179,26 +179,66 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
   assert.match(bootstrap,/if \(router\.getCurrent\(\)\.route === "path\.home"\) return;/);
 });
 
-test('Service worker serves versioned application code cache-first and lazy CSS covers route dependencies',()=>{
-  const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.match(sw,/url\.searchParams\.has\("v"\) \? cacheFirst\(request\)/);
-  assert.doesNotMatch(sw,/cache:\s*"no-store"/);
+test('Service worker serves versioned application code cache-first and Router owns lazy CSS loading',()=>{
+  const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
+  assert.ok(sw.includes('const VERSION = "16.7.0.9";'));
+  assert.ok(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'));
+  assert.equal(sw.includes('cache: "no-store"'),false);
   assert.match(sw,/navigationResponse/);
   for(const eager of ['features/learn/learn.css','features/test/test.css','features/match/match.css','features/practice/practice.css','features/friends/friends-16-7.css','features/profile/profile.css','features/admin/admin.css','features/account/account.css','features/settings/settings.css','features/songs/songs.css','features/ashyk/ashyk.css'])assert.equal(css.includes(eager),false);
-  assert.match(router,/FEATURE_STYLES/);
-  assert.match(router,/ashyk:\s*\["\/src\/shared\/styles\/lazy\/ashyk\.css\?v="/);
-  assert.match(router,/friends:\s*\[\s*"\/src\/shared\/styles\/lazy\/friends\.css\?v="\+ASSET_VERSION,\s*"\/src\/shared\/styles\/lazy\/admin\.css\?v="\+ASSET_VERSION/s);
-  assert.match(router,/ensureFeatureStyles/);
+  assert.ok(css.includes('profile-tabs.css?v=16.7.0.9'));
+  for(const token of ['STYLE_PATHS','screenStyleDependencies','ensureRouteStyles','prepareRoute'])assert.ok(router.includes(token));
+  assert.equal(router.includes('FEATURE_STYLES'),false);
+  assert.equal(router.includes('ensureFeatureStyles'),false);
+  assert.equal(bootstrap.includes('ensureStyle'),false);
+  for(const feature of ['src/features/test/index.js','src/features/match/index.js','src/features/account/index.js'])assert.equal(read(feature).includes('context.ensureStyle'),false);
   for(const wrapper of ['practice','friends','profile','admin','learn','test','match','songs','account','settings']){
     const lazy=read('src/shared/styles/lazy/'+wrapper+'.css');
-    assert.match(lazy,/^@import url\("[^"]+"\) layer\(features\);\s*$/);
+    assert.ok(lazy.trim().startsWith('@import url("'));
+    assert.equal((lazy.match(/layer\(features\)/g)||[]).length,1);
   }
   const ashykCss=read('src/shared/styles/lazy/ashyk.css');
-  assert.match(ashykCss,/ashyk\/ashyk\.css/);
-  assert.match(ashykCss,/ashyk\/ashyk-16-7\.css/);
+  assert.ok(ashykCss.includes('ashyk/ashyk.css'));
+  assert.ok(ashykCss.includes('ashyk/ashyk-16-7.css'));
   assert.equal((ashykCss.match(/layer\(features\)/g)||[]).length,2);
-  assert.doesNotMatch(ashykFeature,/function ensureStyles/);
-  assert.doesNotMatch(ashykFeature,/data\.ashykUi|styleLink/);
+  assert.equal(ashykFeature.includes('function ensureStyles'),false);
+  assert.equal(ashykFeature.includes('data.ashykUi'),false);
+  assert.equal(ashykFeature.includes('styleLink'),false);
+});
+
+test('screen registry declares the complete CSS dependency set for every route',()=>{
+  const registry=read('src/app/screen-registry.js');
+  const expected={
+    'path.home':[],'path.story-words':[],'path.station':[],'path.study':['learn'],'path.test':['test'],
+    'practice.home':['practice'],'practice.ashyk':['ashyk'],'friends.home':['friends','admin'],
+    'profile.home':['profile'],'profile.skills':['profile'],'profile.statistics':['profile'],
+    'admin.users':['admin'],'admin.user':['admin'],'admin.test':['admin'],
+    'learn.catalog':['learn'],'learn.catalog-content':['learn'],'learn.sections':['learn'],'learn.set':['learn'],'learn.study':['learn'],'learn.results':['learn'],
+    'test.menu':['test'],'test.session':['test'],'test.results':['test'],
+    'match.menu':['test','match'],'match.game':['test','match'],'match.results':['test','match'],
+    'songs.playlists':['songs'],'songs.catalog':['songs'],'songs.song':['songs'],
+    'account.home':['account'],
+    'settings.home':['settings'],'settings.privacy':['settings'],'settings.version':['settings'],'settings.thanks':['settings'],
+  };
+  assert.ok(registry.includes('export function screenStyleDependencies'));
+  for(const [route,styles] of Object.entries(expected)){
+    const routeStart=registry.indexOf('"'+route+'": {');
+    assert.notEqual(routeStart,-1,'missing screen registry entry for '+route);
+    const lineEnd=registry.indexOf('\n',routeStart);
+    const line=registry.slice(routeStart,lineEnd<0?registry.length:lineEnd);
+    const styleLiteral='styles: ['+styles.map((style)=>'"'+style+'"').join(', ')+']';
+    assert.ok(line.includes(styleLiteral),'wrong style dependencies for '+route);
+  }
+  const appCss=read('src/shared/styles/app.css');
+  for(const pathStyle of ['features/path/path.css','features/path/story-word-list.css','features/path/story-stele.css','features/path/path-navigation.css'])assert.ok(appCss.includes(pathStyle));
+});
+
+test('bracket tabs use one shared visual source outside Profile feature CSS',()=>{
+  const appCss=read('src/shared/styles/app.css'),shared=read('src/shared/styles/profile-tabs.css'),profile=read('src/features/profile/profile.css');
+  assert.ok(appCss.includes('profile-tabs.css'));
+  for(const token of ['.profilePrimaryNav{','.profilePrimaryTab{','appearance:none','color:var(--text-3)','font-family:var(--font-terminal)','.profilePrimaryTab.active{'])assert.ok(shared.includes(token));
+  assert.equal(profile.includes('.profilePrimaryNav{'),false);
+  assert.equal(profile.includes('.profilePrimaryTab{'),false);
 });
 
 test('Web and Mobile ship the same complete dictionary snapshot',()=>{
