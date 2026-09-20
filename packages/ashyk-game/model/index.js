@@ -1,13 +1,15 @@
+import { UI_TOKENS } from '../../alantil-ui/tokens.js';
 import { COZAIM_INDICES, COZAIM_POSITIONS, COZAIM_POSITION_SCALE } from './cozaimGeometry.js';
 
 export * from './cozaimGeometry.js';
+export * from './wood-board.js';
 
 export const ASHYK_MODEL_SIZE = 1.82;
 export const ASHYK_MODEL_MATERIAL = Object.freeze({ color: 0xd8b784, roughness: 0.86, metalness: 0 });
 export const ASHYK_SCENE_MATERIALS = Object.freeze({
-  background: '#eee9df',
-  board: Object.freeze({ color: '#b7b3aa', roughness: 0.88, metalness: 0.04 }),
-  rail: Object.freeze({ color: '#97938b', roughness: 0.9, metalness: 0.03 }),
+  background: UI_TOKENS.colors.appBg,
+  board: Object.freeze({ color: '#9a6840', roughness: 0.92, metalness: 0 }),
+  rail: Object.freeze({ color: '#70482f', roughness: 0.95, metalness: 0 }),
   trajectory: '#595653',
 });
 

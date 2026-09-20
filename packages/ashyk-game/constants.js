@@ -1,3 +1,5 @@
+import {UI_TOKENS} from '../alantil-ui/tokens.js';
+
 export const DIFFICULTY_ORDER=Object.freeze(['easy','normal','hard']);
 export const DIFFICULTIES=Object.freeze({
   easy:Object.freeze({id:'easy',computerShotAccuracy:.70,computerAnswerAccuracy:.50,humanShotSeconds:20,humanQuestionSeconds:15}),
@@ -34,4 +36,4 @@ export const TURN_READY_LINEAR_SPEED=.38;
 export const TURN_READY_ANGULAR_SPEED=.62;
 export const TURN_READY_STABLE_MS=180;
 export const DEFAULT_PIECE_COUNT=10;
-export const ASHYK_COLORS=Object.freeze({background:'#eee9df',board:'#a9aaa6',field:'#c8c9c5',rim:'#777872',ring:'#6f706b',bone:'#d8b784',accent:'#65491f'});
+export const ASHYK_COLORS=Object.freeze({background:UI_TOKENS.colors.appBg,board:'#9a6840',field:'#b27b50',rim:'#70482f',ring:'#4a2e1d',bone:'#d8b784',accent:'#65491f'});

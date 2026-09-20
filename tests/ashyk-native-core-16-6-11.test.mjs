@@ -4,6 +4,7 @@ import fs from'node:fs';
 import path from'node:path';
 import{fileURLToPath}from'node:url';
 import{DIFFICULTIES,FACE_DEFS,ASHYK_COLORS}from'../packages/ashyk-game/constants.js';
+import{UI_TOKENS}from'../packages/alantil-ui/tokens.js';
 import{isInstantKytWin,evaluateCapture}from'../packages/ashyk-game/rules.js';
 import{createAshykQuestionDeck,ashykEligibleWords}from'../packages/ashyk-game/vocabulary.js';
 import{createAshykOnlineAdapter}from'../packages/ashyk-game/online.js';
@@ -16,7 +17,7 @@ test('Ashyk Web route is native to Alan Til shell',()=>{const router=read('src/a
 
 test('exact shared cozaim mesh is present',()=>{assert.equal(COZAIM_VERTEX_COUNT,1387);assert.equal(COZAIM_TRIANGLE_COUNT,2794);assert.equal(COZAIM_POSITIONS.length,1387*3);assert.equal(COZAIM_INDICES.length,2794*3);assert.match(read('packages/ashyk-game/web/scene.jsx'),/createAshykVisual/);assert.match(read('mobile/game/ashyk-scene.js'),/createAshykVisual/);});
 
-test('shared difficulty, faces and Kyt rule match 16.6.11',()=>{assert.deepEqual([DIFFICULTIES.easy.computerShotAccuracy,DIFFICULTIES.normal.computerShotAccuracy,DIFFICULTIES.hard.computerShotAccuracy],[.70,.85,1]);assert.equal(FACE_DEFS.find(x=>x.id==='БИЙ')?.value,15);assert.equal(isInstantKytWin('КЪЫТ','КЪЫТ'),true);assert.equal(evaluateCapture('АЛЧИ','АЛЧИ',false).success,true);assert.equal(evaluateCapture('АЛЧИ','АЛЧИ',true).success,false);assert.equal(ASHYK_COLORS.background,'#eee9df');assert.equal(ASHYK_COLORS.board,'#a9aaa6');});
+test('shared difficulty, faces and Kyt rule match 16.6.11',()=>{assert.deepEqual([DIFFICULTIES.easy.computerShotAccuracy,DIFFICULTIES.normal.computerShotAccuracy,DIFFICULTIES.hard.computerShotAccuracy],[.70,.85,1]);assert.equal(FACE_DEFS.find(x=>x.id==='БИЙ')?.value,15);assert.equal(isInstantKytWin('КЪЫТ','КЪЫТ'),true);assert.equal(evaluateCapture('АЛЧИ','АЛЧИ',false).success,true);assert.equal(evaluateCapture('АЛЧИ','АЛЧИ',true).success,false);assert.equal(ASHYK_COLORS.background,UI_TOKENS.colors.appBg);assert.equal(ASHYK_COLORS.board,'#9a6840');});
 
 test('Return to the roots questions use eligible same-POS words without rapid repeats',()=>{const words=Array.from({length:6},(_,i)=>({id:`w${i}`,word:`alan${i}`,trans:`ru${i}`,pos:'noun',usedInTest:true,dictionary_id:'intermediate',story_id:'roots',synonyms:[]}));words.push({id:'wrong-story',word:'x',trans:'x',pos:'noun',usedInTest:true,dictionary_id:'intermediate',story_id:'other'});assert.equal(ashykEligibleWords(words).length,6);const deck=createAshykQuestionDeck(words,()=>.37),prompts=[];for(let i=0;i<6;i+=1){const q=deck.next();prompts.push(q.prompt);assert.equal(q.options.length,4);assert.ok(q.options.some(x=>x.id===q.answerId));}assert.equal(new Set(prompts).size,6);const next=deck.next();assert.ok(prompts.includes(next.prompt));});
 
