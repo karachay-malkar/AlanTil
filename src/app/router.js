@@ -6,8 +6,7 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.7.0.9";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.0.11";
-const ASSET_VERSION = "16.7.0.11";
+const ASSET_VERSION = "16.7.0.12";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -222,12 +221,37 @@ export function createRouter({ shell, modal, context }) {
   const entries = [];
   const loadedModules = new Map();
   const loadedStyles = new Map();
+  const STYLE_LOAD_RETRIES = 2;
+  const STYLE_RETRY_DELAY_MS = 140;
+  const findStyleLink = (href) => [...document.querySelectorAll("link[data-alantil-feature-style]")].find((link) => link.dataset.alantilFeatureStyle === href) || null;
+  const wait = (ms) => new Promise((resolve) => globalThis.setTimeout(resolve, ms));
+  function loadStyleAttempt(href, attempt){
+    const existing=findStyleLink(href);
+    if(existing?.sheet)return Promise.resolve();
+    existing?.remove();
+    return new Promise((resolve,reject)=>{
+      const link=document.createElement("link");
+      link.rel="stylesheet";
+      link.href=attempt?href+`&retry=${attempt}`:href;
+      link.dataset.alantilFeatureStyle=href;
+      link.dataset.alantilFeatureStyleState="loading";
+      link.addEventListener("load",()=>{link.dataset.alantilFeatureStyleState="loaded";resolve();},{once:true});
+      link.addEventListener("error",()=>{link.dataset.alantilFeatureStyleState="error";link.remove();reject(new Error("Stylesheet failed: "+href));},{once:true});
+      document.head.append(link);
+    });
+  }
   function loadStyle(href){
     if(loadedStyles.has(href))return loadedStyles.get(href);
-    const existing=document.querySelector('link[data-alantil-feature-style="'+href+'"]');
-    if(existing){const ready=Promise.resolve();loadedStyles.set(href,ready);return ready;}
-    const promise=new Promise((resolve,reject)=>{const link=document.createElement("link");link.rel="stylesheet";link.href=href;link.dataset.alantilFeatureStyle=href;link.addEventListener("load",()=>resolve(),{once:true});link.addEventListener("error",()=>reject(new Error("Stylesheet failed: "+href)),{once:true});document.head.append(link);});
-    loadedStyles.set(href,promise);return promise;
+    const promise=(async()=>{
+      let lastError=null;
+      for(let attempt=0;attempt<=STYLE_LOAD_RETRIES;attempt+=1){
+        try{await loadStyleAttempt(href,attempt);return;}
+        catch(error){lastError=error;if(attempt<STYLE_LOAD_RETRIES)await wait(STYLE_RETRY_DELAY_MS*(attempt+1));}
+      }
+      throw lastError||new Error("Stylesheet failed: "+href);
+    })().catch((error)=>{loadedStyles.delete(href);findStyleLink(href)?.remove();throw error;});
+    loadedStyles.set(href,promise);
+    return promise;
   }
   function ensureRouteStyles(route){
     return Promise.all(screenStyleDependencies(route).map((style)=>{
@@ -260,7 +284,7 @@ export function createRouter({ shell, modal, context }) {
     const path = FEATURE_PATHS[feature];
     if (!path) throw new Error(`Unknown feature: ${feature}`);
     const suffix = retry ? `&retry=${Date.now()}` : "";
-    return import(`${path}?v=${RELEASE_VERSION}${suffix}`);
+    return import(`${path}?v=${ASSET_VERSION}${suffix}`);
   }
   async function loadFeatureModule(feature) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);

@@ -46,7 +46,7 @@ test('Web Friends action icons use the same outline contract as mobile icons',()
   for(const name of ['add','accept','decline','pending','friend','remove','block','unblock']){
     assert.match(web,new RegExp(`\\b${name}:'<svg`));
   }
-  assert.match(css,/\.socialView \.iconAction svg\{[^}]*fill:none[^}]*stroke:currentColor[^}]*stroke-width:1\.8[^}]*stroke-linecap:round[^}]*stroke-linejoin:round[^}]*\}/);
+  assert.match(css,/\.socialRowActions \.iconAction svg\{[^}]*fill:none[^}]*stroke:currentColor[^}]*stroke-width:1\.8[^}]*stroke-linecap:round[^}]*stroke-linejoin:round[^}]*\}/);
   assert.match(mobile,/UserPlusIcon/);
   assert.match(mobile,/PendingIcon/);
   assert.match(mobile,/CorrectIcon/);

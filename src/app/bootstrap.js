@@ -15,19 +15,40 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=16.7.0.11";
+import { createRouter } from "./router.js?v=16.7.0.12";
 import { createShell } from "./shell.js?v=16.7.0";
 
 const RELEASE_VERSION = "16.7.0";
-const ASSET_VERSION = "16.7.0.11";
+const ASSET_VERSION = "16.7.0.12";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register(`/service-worker.js?v=${ASSET_VERSION}`, { scope: "/" })
-      .catch((error) => console.warn("Service worker registration failed", error));
-  }, { once: true });
+  const start = async () => {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let controllerHandled = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || controllerHandled) return;
+      controllerHandled = true;
+      const key = "alantil_sw_controller_reload_v1";
+      try {
+        if (sessionStorage.getItem(key) === ASSET_VERSION) return;
+        sessionStorage.setItem(key, ASSET_VERSION);
+      } catch {}
+      window.location.reload();
+    }, { once: true });
+    try {
+      const registration = await navigator.serviceWorker.register(`/service-worker.js?v=${ASSET_VERSION}`, {
+        scope: "/",
+        updateViaCache: "none",
+      });
+      await registration.update();
+    } catch (error) {
+      console.warn("Service worker registration failed", error);
+    }
+  };
+  if (document.readyState === "complete") void start();
+  else window.addEventListener("load", () => { void start(); }, { once: true });
 }
 function restoreFallbackRoute() {
   const url = new URL(window.location.href);
@@ -67,7 +88,6 @@ async function bootstrap() {
   window.addEventListener('alantil:languagechange',syncFriendsNavLabel);
   prepareAnalytics();
   initAdminAccess();
-  registerServiceWorker();
 
   const callbackVisit = hasAuthCallback() || window.location.pathname === "/auth/callback";
   const persistedAuth = hasPersistedAuthSession();
@@ -106,6 +126,7 @@ async function bootstrap() {
   });
   await router.start();
   try { globalThis.performance?.mark?.("alantil:route:ready"); } catch {}
+  registerServiceWorker();
 
   let ashykNoticeKey='';
   const showGlobalAshykState=({snapshot,activeRoom}={})=>{

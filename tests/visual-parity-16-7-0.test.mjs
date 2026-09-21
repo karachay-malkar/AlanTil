@@ -82,8 +82,8 @@ test('bottom navigation keeps 13.15.12 geometry with selected-state inversion',(
 });
 
 test('Web consumes shared list/table, bracket tabs, Friends and flat Songs geometry',()=>{
-  const app=read('src/shared/styles/app.css'),profile=read('src/features/profile/profile.css'),friends=read('src/features/friends/friends-16-7.css'),chrome=read('src/shared/styles/chrome.css'),practice=read('src/features/practice/practice.css'),songsList=read('src/shared/ui/list.js'),songsCatalog=read('src/features/songs/catalog.js'),table=read('src/shared/styles/table-system.css'),result=read('src/shared/styles/components.css');
-  assert.match(app,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)/);assert.match(profile,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)/);assert.doesNotMatch(profile,/repeat\(3,1fr\)/);
+  const app=read('src/shared/styles/app.css'),profile=read('src/features/profile/profile.css'),profileTabs=read('src/shared/styles/profile-tabs.css'),friends=read('src/features/friends/friends-16-7.css'),chrome=read('src/shared/styles/chrome.css'),practice=read('src/features/practice/practice.css'),songsList=read('src/shared/ui/list.js'),songsCatalog=read('src/features/songs/catalog.js'),table=read('src/shared/styles/table-system.css'),result=read('src/shared/styles/components.css');
+  assert.match(profileTabs,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)/);assert.doesNotMatch(app,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)/);assert.doesNotMatch(profile,/repeat\(var\(--profile-tab-count,3\),minmax\(0,1fr\)\)|repeat\(3,1fr\)/);
   assert.match(chrome,/\[data-feature=\"friends\"\] \.socialHeader\{[\s\S]*z-index:var\(--z-tabs\)/);assert.match(friends,/min-height:var\(--table-row-height\)/);assert.match(friends,/gap:var\(--ui-list-gap\)/);
   assert.match(practice,/min-height:var\(--table-row-height\)/);
   assert.match(songsList,/renderContentListRow/);assert.doesNotMatch(songsList,/class="sectionMenuItem"/);assert.match(songsCatalog,/secondary: songArtists\(song\.artist\)\.join/);assert.doesNotMatch(songsCatalog,/pills: songArtists/);
