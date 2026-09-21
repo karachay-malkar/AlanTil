@@ -118,7 +118,7 @@ test('Ashyk uses global challenge/resume and does not abandon rooms on technical
   assert.doesNotMatch(mobile,/useEffect\(\(\)=>\(\)=>\{[^}]*leaveRoom/s);
 });
 
-test('Ashyk online sync persists bonus-question phase instead of resetting it',()=>{const store=read('packages/ashyk-game/store.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');assert.match(store,/phase:state\.phase/);assert.match(store,/question:state\.question/);assert.match(store,/phase=stateData\.phase==='bonus-question'/);for(const source of[web,mobile]){assert.match(source,/state\.phase==='bonus-question'/);assert.match(source,/state\.scores\[0\]/);assert.match(source,/state\.scores\[1\]/);assert.doesNotMatch(source,/state\.scores,state\.remainingAshyks/);}});
+test('Ashyk online sync keeps server phase authoritative and uses the shared ordered session controller',()=>{const store=read('packages/ashyk-game/store.js'),session=read('packages/ashyk-game/session.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');assert.match(store,/phase:state\.phase/);assert.match(store,/question:state\.question/);assert.match(store,/phase=room\.phase==='bonus-question'\|\|room\.phase==='bonus-shot'/);assert.match(store,/stateData\.phase==='bonus-question'\|\|stateData\.phase==='bonus-shot'/);assert.match(session,/queue\.push/);assert.match(session,/last_action_id/);for(const source of[web,mobile]){assert.match(source,/createAshykOnlineSessionController/);assert.match(source,/state\.onlineAction/);assert.doesNotMatch(source,/pendingSync|syncing\.current/);}});
 
 test('Web Ashyk requires the complete dictionary and never mounts from the starter snapshot',()=>{
   const feature=read('src/features/ashyk/index.js'),repository=read('src/shared/data/word-repository.js');
@@ -181,7 +181,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code cache-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.7.0.12";'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.14";'));
   assert.ok(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'));
   assert.equal(sw.includes('cache: "no-store"'),false);
   assert.match(sw,/navigationResponse/);
@@ -263,7 +263,7 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16\.7\.0\.8/);
+  assert.match(feature,/runtime\.js\?v=16\.7\.0\.14/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
@@ -460,11 +460,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.12";'));
-  assert.ok(bootstrap.includes('router.js?v=16.7.0.12'));
-  assert.ok(index.includes('const targetVersion = "16.7.0.12";'));
-  assert.ok(index.includes('app.css?v=16.7.0.12'));
-  assert.ok(sw.includes('const VERSION = "16.7.0.12";'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.14";'));
+  assert.ok(bootstrap.includes('router.js?v=16.7.0.14'));
+  assert.ok(index.includes('const targetVersion = "16.7.0.14";'));
+  assert.ok(index.includes('app.css?v=16.7.0.14'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.14";'));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.7.0.11'));
   assert.ok(adminLazy.includes('admin.css?v=16.7.0.11'));
 });

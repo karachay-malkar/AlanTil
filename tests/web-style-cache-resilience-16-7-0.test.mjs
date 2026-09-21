@@ -58,8 +58,8 @@ test("service-worker upgrades bypass HTTP cache and controlled clients reload on
   assert.match(bootstrap,/addEventListener\("controllerchange"/);
   assert.match(bootstrap,/window\.location\.reload\(\)/);
   assert.ok(bootstrap.indexOf("registerServiceWorker();")>bootstrap.indexOf("await router.start();"));
-  assert.match(worker,/const VERSION = "16\.7\.0\.12"/);
-  assert.match(worker,/LEGACY_REFRESH_BEFORE_VERSION = "16\.7\.0\.12"/);
+  assert.match(worker,/const VERSION = "16\.7\.0\.14"/);
+  assert.match(worker,/LEGACY_REFRESH_BEFORE_VERSION = "16\.7\.0\.14"/);
   assert.match(worker,/self\.clients\.claim\(\)/);
   assert.match(worker,/self\.clients\.matchAll\(\{type:"window",includeUncontrolled:true\}\)/);
   assert.match(worker,/client\.navigate\(client\.url\)/);
