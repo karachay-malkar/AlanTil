@@ -1,0 +1,2 @@
+#!/bin/sh
+exec node scripts/qa/pre-push-guard.mjs

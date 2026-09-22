@@ -1,0 +1,9 @@
+{
+  "name": "alantil",
+  "private": true,
+  "scripts": {
+    "qa:final": "node scripts/qa/final.mjs",
+    "qa:guard": "node scripts/qa/pre-push-guard.mjs",
+    "release:android": "node scripts/release/android.mjs"
+  }
+}

@@ -5,7 +5,16 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const write=(file,content)=>fs.writeFileSync(path.join(ROOT,file),content);
+const CHECK_ONLY=process.argv.includes('--check');
+const write=(file,content)=>{
+  const target=path.join(ROOT,file);
+  if(CHECK_ONLY){
+    const current=fs.existsSync(target)?fs.readFileSync(target,'utf8'):null;
+    if(current!==content)throw new Error(`Generated visual contract is stale: ${file}. Run node scripts/sync-visual-contract-16-7.mjs and commit the result.`);
+    return;
+  }
+  fs.writeFileSync(target,content);
+};
 
 function replaceContract(source,before,after,label){
   if(source.includes(after))return source;
@@ -121,4 +130,4 @@ export function verifyWebVisualSourceManifest() {
 }
 `;
 write('mobile/ui/web-visual-source.js',manifest);
-console.log('16.7 visual contract synchronized');
+console.log(CHECK_ONLY?'16.7 visual contract verified':'16.7 visual contract synchronized');
