@@ -7,7 +7,7 @@ import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=
 import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
 import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0.2";
 import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.7.0.2";
-import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.7.0.14";
+import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.7.0.15";
 import { setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.7.0.2";
 import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.7.0.3";
 import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=13.10.12";
@@ -15,11 +15,11 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=16.7.0.14";
+import { createRouter } from "./router.js?v=16.7.0.15";
 import { createShell } from "./shell.js?v=16.7.0";
 
 const RELEASE_VERSION = "16.7.0";
-const ASSET_VERSION = "16.7.0.14";
+const ASSET_VERSION = "16.7.0.15";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
@@ -139,17 +139,16 @@ async function bootstrap() {
     if(!key){ashykNoticeKey='';return;}
     if(key===ashykNoticeKey)return;
     ashykNoticeKey=key;
-    const locale=getInterfaceLanguage(),acceptText=socialMessage(locale,'accept'),declineText=socialMessage(locale,'decline'),returnText=socialMessage(locale,'returnToGame');
+    const locale=getInterfaceLanguage(),acceptText=socialMessage(locale,'accept'),declineText=socialMessage(locale,'decline'),returnText=socialMessage(locale,'returnToGame'),cancelText=socialMessage(locale,'cancelInvite'),finishText=socialMessage(locale,'finishGame'),secondaryText=invite?declineText:resumable?.status==='playing'?finishText:cancelText;
     const panel=modal.openContent({
       title:msg("practice.ashyk"),
       className:'ashykGlobalInviteModal',
-      contentHtml:`<p data-ashyk-global-copy></p><div class="modalActions"><button class="btn actionText" type="button" data-ashyk-global-decline>${invite?declineText:''}</button><button class="btn actionPrimary" type="button" data-ashyk-global-accept>${invite?acceptText:returnText}</button></div>`
+      contentHtml:`<p data-ashyk-global-copy></p><div class="modalActions"><button class="btn actionText" type="button" data-ashyk-global-decline>${secondaryText}</button><button class="btn actionPrimary" type="button" data-ashyk-global-accept>${invite?acceptText:returnText}</button></div>`
     });
     const copy=panel.body?.querySelector('[data-ashyk-global-copy]');
     if(copy)copy.textContent=invite?socialMessage(locale,'challengeFrom',{name:invite.nickname||'—'}):socialMessage(locale,'unfinishedGame');
     const accept=panel.body?.querySelector('[data-ashyk-global-accept]');
     const decline=panel.body?.querySelector('[data-ashyk-global-decline]');
-    if(!invite&&decline)decline.remove();
     accept?.addEventListener('click',async()=>{
       accept.disabled=true;
       try{
@@ -170,7 +169,7 @@ async function bootstrap() {
       decline.disabled=true;
       try{
         const client=await getSocialClient(),online=createAshykOnlineAdapter(client);
-        await online.declineInvite(invite.invite_id);
+        if(invite)await online.declineInvite(invite.invite_id);else if(resumable?.id)await online.leaveRoom(resumable.id);
         ashykNoticeKey='';
         panel.close();
       }catch(error){

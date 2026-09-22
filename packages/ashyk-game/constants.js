@@ -15,7 +15,7 @@ export const FACE_DEFS=Object.freeze([
   Object.freeze({id:'ЧЫК',axis:[0,-1,0],value:1}),
 ]);
 export const BOARD_REFERENCE=32.8;
-export const BOARD=28;
+export const BOARD=23.8;
 export const BOARD_SCALE=BOARD/BOARD_REFERENCE;
 export const HALF=BOARD/2;
 export const BOUNDARY_RADIUS=HALF-1.48*BOARD_SCALE;

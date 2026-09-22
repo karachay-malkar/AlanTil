@@ -22,26 +22,26 @@ jobs:
           fetch-depth: 2
       - name: Package complete source archive
         run: |
-          git archive --format=zip --output AlanTil-16.7.0.14-source.zip HEAD
-          : > AlanTil-16.7.0.14-filesizes.txt
+          git archive --format=zip --output AlanTil-16.7.0.15-source.zip HEAD
+          : > AlanTil-16.7.0.15-filesizes.txt
           while IFS= read -r file; do
             [ -z "$file" ] && continue
             if [ -f "$file" ]; then
               bytes=$(stat -c%s "$file")
               kb=$(awk -v b="$bytes" 'BEGIN { printf "%.2f", b/1024 }')
-              printf '%s — %s KB\n' "$file" "$kb" >> AlanTil-16.7.0.14-filesizes.txt
+              printf '%s — %s KB\n' "$file" "$kb" >> AlanTil-16.7.0.15-filesizes.txt
             else
-              printf '%s — deleted\n' "$file" >> AlanTil-16.7.0.14-filesizes.txt
+              printf '%s — deleted\n' "$file" >> AlanTil-16.7.0.15-filesizes.txt
             fi
           done < <(git diff --name-only HEAD^ HEAD)
-          sha256sum AlanTil-16.7.0.14-source.zip > AlanTil-16.7.0.14-source.sha256
+          sha256sum AlanTil-16.7.0.15-source.zip > AlanTil-16.7.0.15-source.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-16.7.0.14-source
+          name: AlanTil-16.7.0.15-source
           path: |
-            AlanTil-16.7.0.14-source.zip
-            AlanTil-16.7.0.14-filesizes.txt
-            AlanTil-16.7.0.14-source.sha256
+            AlanTil-16.7.0.15-source.zip
+            AlanTil-16.7.0.15-filesizes.txt
+            AlanTil-16.7.0.15-source.sha256
           if-no-files-found: error
 
   release:
@@ -123,8 +123,14 @@ jobs:
           grep -q "ashyk_resolve_timeout" src/features/ashyk/runtime.js
           grep -q "ashyk_claim_forfeit" src/features/ashyk/runtime.js
           grep -q "ashyk-shot:" src/features/ashyk/runtime.js
-          grep -q "openShotStream" src/features/ashyk/runtime.js
-          grep -q "launchRemote" src/features/ashyk/runtime.js
+          grep -q "openVisualStream" src/features/ashyk/runtime.js
+          grep -q "beginRemotePlayback" src/features/ashyk/runtime.js
+          grep -q "question-select" src/features/ashyk/runtime.js
+          grep -q "realtime" src/features/ashyk/runtime.js
+          if grep -q "launchRemote" src/features/ashyk/runtime.js; then
+            echo "legacy opponent Cannon playback is still bundled" >&2
+            exit 1
+          fi
           grep -q "walnut_veneer_02_diff_1k.jpg" src/features/ashyk/runtime.js
           grep -q "walnut_veneer_02_nor_gl_1k.jpg" src/features/ashyk/runtime.js
           if grep -q "ashyk_join_room" src/features/ashyk/runtime.js; then

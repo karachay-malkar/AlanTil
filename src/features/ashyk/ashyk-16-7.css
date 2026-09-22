@@ -25,3 +25,12 @@
 .appShell[data-screen="ashyk"] .ashykQuestionRule{margin:0;padding-top:2px;padding-bottom:2px;font:700 10px/1.45 var(--font-terminal);color:var(--text-3);text-align:center;white-space:pre-line}
 .appShell[data-screen="ashyk"] .ashykQuestionSession>.ashykRuleNote{margin:0}
 @media(max-height:650px){.appShell[data-screen="ashyk"] .ashykQuestionPrompt{font-size:clamp(24px,7vw,38px)}.appShell[data-screen="ashyk"] .ashykQuestionMain{min-height:88px;padding-top:12px}.appShell[data-screen="ashyk"] .ashykQuestionRule{font-size:9px;line-height:1.35}}
+
+.appShell[data-screen="ashyk"] .ashykTestOption.correct{border-color:var(--success,#6f8b69);background:var(--success-soft,rgba(111,139,105,.14));color:var(--success-strong,#456140);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--success,#6f8b69) 30%,transparent)}
+.appShell[data-screen="ashyk"] .ashykScore>div.scorePulse{animation:ashykScorePulse .72s ease both;background:var(--accent-soft)}
+@keyframes ashykScorePulse{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
+.appShell[data-screen="ashyk"] .ashykMenuCurrent{display:grid;gap:7px;padding:10px 0 12px;border-bottom:1px solid var(--line-soft);margin-bottom:4px}
+.appShell[data-screen="ashyk"] .ashykMenuCurrent>strong{font-size:13px;color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykMenuCurrent>.ashykSecondary{width:100%}
+
+.appShell[data-screen="ashyk"] .ashykOutcome{z-index:56}
