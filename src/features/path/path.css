@@ -30,6 +30,15 @@
 .stationWordCount{position:absolute;left:50%;top:91px;transform:translateX(-50%);color:var(--text-3);font:700 8px/1 var(--font-terminal);white-space:nowrap}
 .stationMilestones{position:absolute;left:50%;top:49px;transform:translateX(-50%);min-height:8px;color:var(--accent-strong);font:850 8px/1 var(--font-terminal);letter-spacing:-1px;white-space:nowrap;text-shadow:0 1px 0 var(--path-label-shadow)}
 .stationNode.studying .stationProgressRing{filter:saturate(1.08)}.stationNode.mastered .stationProgressRing,.stationNode.review_1_due .stationProgressRing{--station-progress-fill:var(--success-strong)}.stationNode.mastered .millstoneFace{background-image:var(--station-stone-image),var(--millstone-face-mastered)}.stationNode.review_1_due .stationLabel{color:var(--warning)}
+.stationNode.beginnerStoneNode{width:118px;height:78px;min-height:78px}
+.beginnerStoneFrame{position:relative;width:118px;height:78px;padding:0;display:grid;place-items:center;border-radius:0;background:none!important;overflow:visible}
+.beginnerStoneImage{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:grayscale(100%) saturate(0%) brightness(.92) contrast(.9);transition:filter var(--duration-normal) var(--ease-standard)}
+.beginnerStoneTitle{position:relative;z-index:2;max-width:92px;padding:0 4px;color:color-mix(in srgb,var(--text-2) 70%,#a89b86 30%);font-family:var(--font-brand);font-size:10px;font-weight:750;line-height:1.05;text-align:center;text-wrap:balance;text-shadow:none;transition:color var(--duration-normal),text-shadow var(--duration-normal)}
+.beginnerStoneNode.isPassed .beginnerStoneImage{filter:none}
+.beginnerStoneNode.isPassed .beginnerStoneTitle{color:#d7b56d;text-shadow:0 0 6px rgba(215,181,109,.45),0 0 12px rgba(246,226,163,.28)}
+.beginnerStoneNode .stationOrdinal{position:absolute;width:1px;height:1px;margin:0;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.beginnerStoneNode .stationMilestones{top:73px}
+.beginnerStoneNode .stationWordCount{top:89px}
 .routeScale{position:absolute;z-index:calc(var(--z-path-controls) + 1);top:50%;right:4px;width:26px;height:var(--route-scale-height);transform:translateY(-46%);display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;pointer-events:none;background:transparent}
 .routeScaleDot{width:var(--route-scale-dot-size);height:var(--route-scale-dot-size);border-radius:50%;background:var(--route-scale-unpassed);pointer-events:none;transition:background var(--duration-fast),transform var(--duration-fast)}
 .routeScaleSection{width:var(--route-scale-section-size);height:var(--route-scale-section-size);border:1px solid var(--route-scale-section-color);background:transparent;pointer-events:none;transition:background var(--duration-fast)}
