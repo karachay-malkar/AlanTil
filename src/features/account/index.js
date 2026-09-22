@@ -17,16 +17,13 @@ import {
   createProfile,
   getProfile,
   isNicknameAvailable,
-  setAvatarGender,
   validateNickname,
 } from "../../shared/profile/profile-service.js?v=13.9.0";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { bindLogin, renderLogin } from "./login.js?v=13.10.2";
 import {
-  bindAvatarGenderSelection,
   bindProfile,
   bindProfileCreation,
-  renderAvatarGenderSelection,
   renderProfile,
   renderProfileCreation,
 } from "./profile.js?v=13.9.0";
@@ -334,28 +331,6 @@ async function renderAccount(context) {
     return;
   }
 
-  if (!profile.avatar_gender) {
-    prepareAccountRender(context);
-    renderAvatarGenderSelection(context, { error: actionError || authState.error || "" });
-    bindAvatarGenderSelection(context, controller.signal, {
-      onSelect: async (gender) => {
-        const label = gender === "female" ? msg("account.zhenskiy") : msg("account.muzhskoy");
-        const confirmed = await context.modal.confirm({
-          message: msg("account.vybrat_obraz_posle_sohraneniya_izmenit_vybor_budet", { label }).replace("\n", "<br>"),
-        });
-        if (!confirmed) return;
-        actionError = "";
-        try {
-          await setAvatarGender(authState.user.id, gender);
-        } catch (error) {
-          actionError = error.message;
-        }
-        scheduleAccountRender(context);
-      },
-    });
-    resetAccountViewport(context);
-    return;
-  }
 
   actionError = "";
   profileFailure = null;

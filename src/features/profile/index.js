@@ -3,7 +3,7 @@ import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.9.0"
 import { getWords } from "../../shared/data/word-repository.js?v=13.9.0";
 import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=13.9.0";
 import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=13.9.0";
-import { getProfile, setAvatarGender } from "../../shared/profile/profile-service.js?v=13.9.0";
+import { getProfile } from "../../shared/profile/profile-service.js?v=13.9.0";
 import { activitySummary } from "../../shared/progress/activity-history-store.js?v=13.9.0";
 import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=13.9.0";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
@@ -13,11 +13,6 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 
 let controller = null;
 
-const AVATAR_IMAGE_BY_GENDER = Object.freeze({
-  male: "/assets/images/profile/avatar_male.png?v=13.11",
-  female: "/assets/images/profile/avatar_female.png?v=13.11",
-});
-
 function profileNavigation(active = "profile") {
   return renderProfileNavigation(active);
 }
@@ -26,19 +21,6 @@ function durationLabel(seconds) {
   const minutes = Math.round(Math.max(0, Number(seconds || 0)) / 60);
   if (minutes < 60) return msg("profile.min", { minutes });
   return msg("profile.ch_min", { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
-}
-
-function avatarFigure(gender = "") {
-  const imageUrl = AVATAR_IMAGE_BY_GENDER[gender];
-  if (imageUrl) {
-    return `<img class="profileAvatarImage" src="${imageUrl}" alt="" aria-hidden="true" decoding="async" draggable="false" style="display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom" />`;
-  }
-
-  return `<svg class="profileAvatarSvg" viewBox="0 0 180 230" aria-hidden="true" focusable="false">
-    <circle cx="90" cy="64" r="44" />
-    <path d="M25 217c2-69 25-108 65-108s63 39 65 108z" />
-    <path class="profileAvatarDetail" d="M55 31c10-13 22-19 36-19 17 0 30 8 39 23-22-8-47-9-75-4z" />
-  </svg>`;
 }
 
 function bindAccountNavigation(context, signal) {
@@ -73,33 +55,22 @@ async function loadStoryProgress() {
 
 function unavailableStoryProgress() {
   return `<div class="profileFutureNote" role="status">
-    ${msg("profile.progress_vremenno_nedostupen_avatar_i_ostalnye_razdely")}
+    ${msg("profile.progress_vremenno_nedostupen")}
   </div>`;
 }
 
 function lockedProfile() {
   return `<div class="profileLockedState">
-    <div class="profileAvatarFrame isLocked" data-status-label="${msg("profile.status_label")}">
-      <div class="profileAvatarFigure">${avatarFigure()}</div>
-      <span class="profileAvatarLock">${uiIcon("locked")}</span>
+    <div class="profileIdentityBar profileIdentityBarLocked">
+      <div class="profileIdentityCopy">
+        <span class="profileIdentityCaption">${msg("profile.status_label")}</span>
+        <strong>${msg("profile.profil_nedostupen")}</strong>
+      </div>
       <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="${msg("profile.voyti_v_akkaunt")}">${uiIcon("account")}</button>
     </div>
-    <strong>${msg("profile.profil_nedostupen")}</strong>
-    <span>${msg("profile.voydite_chtoby_otkryt_avatar_i_svyazannuyu_s")}</span>
+    <span>${msg("profile.voydite_chtoby_otkryt_profil")}</span>
     <button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>${msg("profile.voyti")}</button>
   </div>`;
-}
-
-function genderSelection(error = "") {
-  return `<section class="profileGenderSetup">
-    ${error ? `<div class="profileInlineError" role="alert">${escapeHtml(error)}</div>` : ""}
-    <strong>${msg("profile.vyberite_pol_avatara")}</strong>
-    <span>${msg("profile.vybor_vypolnyaetsya_odin_raz_i_pozzhe_ne")}</span>
-    <div class="profileGenderChoices">
-      <button class="choiceControl" type="button" data-profile-gender="male"><span>${avatarFigure("male")}</span><strong>${msg("profile.muzhskoy")}</strong></button>
-      <button class="choiceControl" type="button" data-profile-gender="female"><span>${avatarFigure("female")}</span><strong>${msg("profile.zhenskiy")}</strong></button>
-    </div>
-  </section>`;
 }
 
 async function renderProfileHome(context, auth, profile) {
@@ -109,16 +80,16 @@ async function renderProfileHome(context, auth, profile) {
     body = lockedProfile();
   } else if (!profile) {
     body = `<div class="profileLockedState"><strong>${msg("profile.zavershite_nastroyku_akkaunta")}</strong><span>${msg("profile.sozdayte_nikneym_chtoby_otkryt_profil")}</span><button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>${msg("profile.prodolzhit")}</button></div>`;
-  } else if (!profile.avatar_gender) {
-    body = genderSelection();
   } else {
     const progress = await loadStoryProgress();
     body = `<div class="profileStatusContent">
-      <div class="profileAvatarFrame" data-avatar-gender="${escapeHtml(profile.avatar_gender)}" data-status-label="${msg("profile.status_label")}">
-        <div class="profileAvatarFigure">${avatarFigure(profile.avatar_gender)}</div>
+      <div class="profileIdentityBar">
+        <div class="profileIdentityCopy">
+          <span class="profileIdentityCaption">${msg("profile.status_label")}</span>
+          <div class="profileNickname">${escapeHtml(profile.nickname)}</div>
+        </div>
         <button class="iconAction profileAccountButton" type="button" data-profile-account aria-label="${msg("profile.otkryt_akkaunt")}">${uiIcon("account")}</button>
       </div>
-      <div class="profileNickname">${escapeHtml(profile.nickname)}</div>
       <section class="profileStatusSection profileStorySection">
         <h2 class="profileSectionTitle">${msg("profile.progress_po_istoriyam")}</h2>
         ${progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}
@@ -203,26 +174,7 @@ function bindProfileActions(context, auth, signal) {
   context.root.querySelectorAll("[data-profile-story]").forEach((button) => {
     button.addEventListener("click", () => context.router.navigate("path.home", { storyType: button.dataset.profileStory }), { signal });
   });
-  context.root.querySelectorAll("[data-profile-gender]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const gender = button.dataset.profileGender;
-      const label = gender === "female" ? msg("profile.zhenskiy_2") : msg("profile.muzhskoy_2");
-      const confirmed = await context.modal.confirm({
-        message: msg("profile.vybrat_obraz_posle_sohraneniya_izmenit_vybor_budet", { label }).replace("\n", "<br>"),
-      });
-      if (!confirmed) return;
-      const choices = Array.from(context.root.querySelectorAll("[data-profile-gender]"));
-      choices.forEach((choice) => { choice.disabled = true; });
-      try {
-        await setAvatarGender(auth.user.id, gender);
-        await context.router.replace("profile.home", {}, { force: true });
-      } catch (error) {
-        const setup = context.root.querySelector(".profileGenderSetup");
-        if (setup) setup.insertAdjacentHTML("afterbegin", `<div class="profileInlineError" role="alert">${escapeHtml(error.message)}</div>`);
-        choices.forEach((choice) => { if (choice.isConnected) choice.disabled = false; });
-      }
-    }, { signal });
-  });
+
 }
 
 export async function mount(context, params = {}) {

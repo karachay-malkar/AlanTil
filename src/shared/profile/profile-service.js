@@ -5,7 +5,6 @@ import {
   normalizeSupabaseError,
 } from "../errors/supabase-error.js?v=13.9.0";
 import {
-  normalizeAvatarGender,
   normalizeNickname,
   validateNicknameRule,
 } from "../../../packages/alantil-core/profile.js";
@@ -31,7 +30,7 @@ function withProfileTimeout(value, label) {
   ]).finally(() => globalThis.clearTimeout(timer));
 }
 
-export { normalizeNickname, normalizeAvatarGender };
+export { normalizeNickname };
 
 export function validateNickname(value) {
   const validation = validateNicknameRule(value);
@@ -50,7 +49,7 @@ export async function getProfile(userId) {
   const client = await getSupabaseClient();
   const { data, error } = await withProfileTimeout(client
     .from("profiles")
-    .select("user_id,nickname,avatar_gender,created_at,updated_at")
+    .select("user_id,nickname,created_at,updated_at")
     .eq("user_id", userId)
     .maybeSingle(), "Profile load");
   if (error) throwProfileError("get_profile", error, "get_profile");
@@ -80,27 +79,8 @@ export async function createProfile(userId, value) {
   const { data, error } = await withProfileTimeout(client
     .from("profiles")
     .insert({ user_id: userId, nickname: validation.nickname })
-    .select("user_id,nickname,avatar_gender,created_at,updated_at")
+    .select("user_id,nickname,created_at,updated_at")
     .single(), "Profile create");
   if (error) throwProfileError("create_profile", error, "create_profile");
   return data;
-}
-
-export async function setAvatarGender(userId, value) {
-  const avatarGender = normalizeAvatarGender(value);
-  if (!userId) throw new Error(msg("service.polzovatel_ne_avtorizovan"));
-  if (!avatarGender) throw new Error(msg("service.vyberite_obraz_avatara"));
-  const client = await getSupabaseClient();
-  const { data, error } = await withProfileTimeout(client
-    .from("profiles")
-    .update({ avatar_gender: avatarGender })
-    .eq("user_id", userId)
-    .is("avatar_gender", null)
-    .select("user_id,nickname,avatar_gender,created_at,updated_at")
-    .maybeSingle(), "Avatar update");
-  if (error) throwProfileError("set_avatar_gender", error, "set_avatar_gender");
-  if (data) return data;
-  const current = await getProfile(userId);
-  if (current?.avatar_gender === avatarGender) return current;
-  throw new Error(msg("service.pol_avatara_uzhe_vybran_i_ne_mozhet"));
 }
