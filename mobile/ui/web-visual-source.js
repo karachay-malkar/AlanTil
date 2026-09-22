@@ -28,7 +28,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
     ["src/shared/ui/icons.js","d3a8e379c8889edc01e4f8808ecb0b90c5c7996d"],
     ["src/shared/ui/info-modal.js","b05fbf6d41d18f112cc5239986582548cea33e47"],
     ["src/shared/ui/list.js","6b402b88b46abdcf83ecadffe53dc7d17d229153"],
-    ["src/shared/ui/modal.js","70d109486edb4ba4fd6b754fad5fc03691536489"],
+    ["src/shared/ui/modal.js","06036560e08bfb4376f9fbd9882a25560a0091c4"],
     ["src/shared/ui/panel.js","cb351a1b8ef4fee86bda4a061d48ec96ecce24b2"],
   ]),
   account: Object.freeze([
