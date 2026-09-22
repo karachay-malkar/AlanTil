@@ -147,6 +147,8 @@ test('lobby recovery always offers return plus server-side close and preparing r
   const bootstrap=read('src/app/bootstrap.js'),app=read('mobile/AppRoot.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   assert.match(bootstrap,/online\.leaveRoom\(resumable\.id\)/);
   assert.match(bootstrap,/secondaryText/);
+  assert.match(bootstrap,/dismissible:false/);
+  assert.match(read('src/shared/ui/modal.js'),/dismissible = true/);
   assert.match(app,/closeGlobalAshyk/);
   assert.match(app,/onCloseRoom/);
   for(const source of[web,mobile]){

@@ -34,6 +34,7 @@ export function createModalService(root) {
     title = "",
     contentHtml = "",
     className = "",
+    dismissible = true,
   } = {}) {
     if (root.childElementCount || resolver) close(false);
     root.innerHTML = `
@@ -54,12 +55,16 @@ export function createModalService(root) {
     const element = root.querySelector(".appContentModal");
     const closePanel = () => close(false);
 
-    backdrop?.addEventListener("click", (event) => {
-      if (event.target === backdrop) closePanel();
-    });
-    closeButton?.addEventListener("click", closePanel);
-    bindEscapeHandler(closePanel);
-    closeButton?.focus({ preventScroll: true });
+    if (dismissible) {
+      backdrop?.addEventListener("click", (event) => {
+        if (event.target === backdrop) closePanel();
+      });
+      closeButton?.addEventListener("click", closePanel);
+      bindEscapeHandler(closePanel);
+      closeButton?.focus({ preventScroll: true });
+    } else {
+      closeButton?.remove();
+    }
 
     return { element, body, close: closePanel };
   }

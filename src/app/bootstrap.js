@@ -13,7 +13,7 @@ import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?
 import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=13.10.12";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
-import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
+import { createModalService } from "../shared/ui/modal.js?v=16.7.0.15";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
 import { createRouter } from "./router.js?v=16.7.0.15";
 import { createShell } from "./shell.js?v=16.7.0";
@@ -143,6 +143,7 @@ async function bootstrap() {
     const panel=modal.openContent({
       title:msg("practice.ashyk"),
       className:'ashykGlobalInviteModal',
+      dismissible:false,
       contentHtml:`<p data-ashyk-global-copy></p><div class="modalActions"><button class="btn actionText" type="button" data-ashyk-global-decline>${secondaryText}</button><button class="btn actionPrimary" type="button" data-ashyk-global-accept>${invite?acceptText:returnText}</button></div>`
     });
     const copy=panel.body?.querySelector('[data-ashyk-global-copy]');
