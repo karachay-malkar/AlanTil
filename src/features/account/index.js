@@ -355,10 +355,19 @@ export async function mount(context) {
   resetAccountStateForAuthChange();
 
   unsubscribeAuth = subscribeToAuth((state) => {
+    const previousUserId = lastAuthUserId;
     const nextUserId = state.user?.id || "";
-    if (nextUserId !== lastAuthUserId) {
+    if (nextUserId !== previousUserId) {
       lastAuthUserId = nextUserId;
       resetAccountStateForAuthChange();
+    }
+    if (!previousUserId && nextUserId) {
+      void context.router.replace(
+        "path.home",
+        { storyType: "understanding" },
+        { force: true, reason: "auth_success" },
+      );
+      return;
     }
     scheduleAccountRender(context);
   });

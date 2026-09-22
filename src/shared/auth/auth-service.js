@@ -6,7 +6,7 @@ import { getSupabaseClient, hasPersistedAuthSession } from "./supabase-client.js
 const CALLBACK_KEYS = ["code", "error", "error_code", "error_description"];
 const OAUTH_PROVIDERS = new Set(["google", "apple"]);
 const AUTH_REQUEST_TIMEOUT_MS = 15000;
-const AUTH_DESTINATION_PATH = "/profile/account";
+const AUTH_DESTINATION_PATH = "/path/understanding";
 
 let initializationPromise = null;
 let authSubscription = null;

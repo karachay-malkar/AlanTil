@@ -1,14 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("guest prompt contains the approved Russian copy", async () => {
-  const messages = await read("src/shared/i18n/messages-13-10.js");
-  assert.match(messages, /Создайте профиль через Google или Apple/);
-  assert.match(messages, /Отдельная регистрация и пароль не нужны — просто выберите удобный способ входа\./);
-  assert.match(messages, /Профиль позволит сохранять прогресс и пользоваться расширенными функциями приложения\./);
+test("guest profile prompt is removed from first-entry runtime", async () => {
+  const bootstrap = await read("src/app/bootstrap.js");
+  const appStyles = await read("src/shared/styles/app.css");
+  const index = await read("index.html");
+  assert.doesNotMatch(bootstrap, /initGuestProfilePrompt|guest-profile-prompt/);
+  assert.doesNotMatch(appStyles, /guest-profile-prompt/);
+  assert.doesNotMatch(index, /guest-profile-prompt/);
+  await assert.rejects(access(new URL("../src/shared/auth/guest-profile-prompt.js", import.meta.url)));
+  await assert.rejects(access(new URL("../src/shared/styles/guest-profile-prompt.css", import.meta.url)));
 });
 
 test("Google is rendered as an immediate local provider button", async () => {
@@ -112,4 +116,13 @@ test("service worker caches only the guest shell eagerly", async () => {
   const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
   assert.match(coreAssets, /starter-dictionary/);
   assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
+});
+
+
+test("successful account sign-in returns directly to Path", async () => {
+  const auth = await read("src/shared/auth/auth-service.js");
+  const account = await read("src/features/account/index.js");
+  assert.match(auth, /AUTH_DESTINATION_PATH = "\/path\/understanding"/);
+  assert.match(account, /!previousUserId && nextUserId/);
+  assert.match(account, /context[.]router[.]replace\(\s*"path[.]home",[\s\S]*storyType: "understanding"[\s\S]*reason: "auth_success"/);
 });

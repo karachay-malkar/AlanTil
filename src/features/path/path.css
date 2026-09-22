@@ -30,16 +30,16 @@
 .stationWordCount{position:absolute;left:50%;top:91px;transform:translateX(-50%);color:var(--text-3);font:700 8px/1 var(--font-terminal);white-space:nowrap}
 .stationMilestones{position:absolute;left:50%;top:49px;transform:translateX(-50%);min-height:8px;color:var(--accent-strong);font:850 8px/1 var(--font-terminal);letter-spacing:-1px;white-space:nowrap;text-shadow:0 1px 0 var(--path-label-shadow)}
 .stationNode.studying .stationProgressRing{filter:saturate(1.08)}.stationNode.mastered .stationProgressRing,.stationNode.review_1_due .stationProgressRing{--station-progress-fill:var(--success-strong)}.stationNode.mastered .millstoneFace{background-image:var(--station-stone-image),var(--millstone-face-mastered)}.stationNode.review_1_due .stationLabel{color:var(--warning)}
-.stationNode.beginnerDioramaNode{width:118px;height:110px;min-height:110px}
-.beginnerDioramaFrame{position:absolute;left:0;top:-15px;width:118px;height:118px;display:block;background:transparent;overflow:visible;transition:filter var(--duration-normal) var(--ease-standard),opacity var(--duration-normal) var(--ease-standard)}
+.stationNode.beginnerDioramaNode{width:118px;height:142px;min-height:142px;display:grid;grid-template-rows:118px minmax(24px,auto);justify-items:center;align-items:start}
+.beginnerDioramaFrame{position:relative;left:auto;top:-15px;grid-column:1;grid-row:1;width:118px;height:118px;display:block;background:transparent;overflow:visible;transition:filter var(--duration-normal) var(--ease-standard),opacity var(--duration-normal) var(--ease-standard)}
 .beginnerDioramaImage{display:block;width:100%;height:100%;object-fit:contain;filter:grayscale(1) saturate(0);transition:filter var(--duration-normal) var(--ease-standard)}
-.beginnerDioramaLabel{top:108px;width:168px;max-height:30px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:10px;line-height:1.18;font-weight:700;text-wrap:balance}
+.beginnerDioramaLabel{position:static;left:auto;top:auto;transform:none;grid-column:1;grid-row:2;width:168px;max-height:30px;margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:10px;line-height:1.18;font-weight:700;text-wrap:balance}
 .beginnerDioramaFallback,.beginnerDioramaFallbackCount{display:none}
-.beginnerDioramaNode.beginnerDioramaError{width:var(--station-size);height:82px;min-height:82px}
+.beginnerDioramaNode.beginnerDioramaError{width:var(--station-size);height:88px;min-height:88px;grid-template-rows:60px 24px}
 .beginnerDioramaNode.beginnerDioramaError .beginnerDioramaFrame{display:none}
 .beginnerDioramaNode.beginnerDioramaError .beginnerDioramaFallback{display:grid}
 .beginnerDioramaNode.beginnerDioramaError .beginnerDioramaFallbackCount{display:block}
-.beginnerDioramaNode.beginnerDioramaError .beginnerDioramaLabel{top:65px;width:142px;max-height:23px}
+.beginnerDioramaNode.beginnerDioramaError .beginnerDioramaLabel{position:static;left:auto;top:auto;transform:none;grid-column:1;grid-row:2;width:142px;max-height:23px}
 .beginnerDioramaNode.mastered .beginnerDioramaImage,.beginnerDioramaNode.review_1_due .beginnerDioramaImage{filter:none}
 .beginnerDioramaNode.locked .beginnerDioramaFrame{opacity:.7}
 .beginnerDioramaNode.studying .beginnerDioramaFrame{filter:drop-shadow(0 4px 7px rgb(0 0 0 / .16))}

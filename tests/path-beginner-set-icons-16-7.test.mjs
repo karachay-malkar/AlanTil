@@ -35,8 +35,10 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
   assert.match(styles, /mastered \.beginnerDioramaImage/);
   assert.match(styles, /review_1_due \.beginnerDioramaImage/);
-  assert.match(styles, /beginnerDioramaNode\{width:118px;height:110px;min-height:110px/);
-  assert.match(styles, /beginnerDioramaLabel\{top:108px/);
+  assert.match(styles, /beginnerDioramaNode\{width:118px;height:142px;min-height:142px;display:grid;grid-template-rows:118px minmax\(24px,auto\)/);
+  assert.match(styles, /beginnerDioramaFrame\{position:relative;[^}]*grid-row:1/);
+  assert.match(styles, /beginnerDioramaLabel\{position:static;left:auto;top:auto;transform:none;grid-column:1;grid-row:2/);
+  assert.doesNotMatch(styles, /beginnerDioramaLabel\{top:108px/);
   assert.match(styles, /font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif/);
 
   assert.match(migration, /add column if not exists icon_name text/);
@@ -59,7 +61,7 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
     assert.equal(data.subarray(8, 12).toString("ascii"), "WEBP", asset);
   }
 
-  assert.match(worker, /const VERSION = "16[.]7[.]0[.]21"/);
+  assert.match(worker, /const VERSION = "16[.]7[.]0[.]22"/);
 });
 
 test("16.7 beginner set titles are localized in ru/en/tr", async () => {
@@ -78,17 +80,17 @@ test("16.7 beginner set titles are localized in ru/en/tr", async () => {
   assert.match(polish, /Sakin Göl/);
 });
 
-test("16.7.0.21 cache version is wired through the startup chain", async () => {
+test("16.7.0.22 cache version is wired through the startup chain", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
 
-  assert.match(index, /targetVersion = "16[.]7[.]0[.]21"/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]21/);
-  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]21/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]21"/);
-  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]21"/);
-  assert.match(worker, /VERSION = "16[.]7[.]0[.]21"/);
-  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]21"/);
+  assert.match(index, /targetVersion = "16[.]7[.]0[.]22"/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]22/);
+  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]22/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]22"/);
+  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]22"/);
+  assert.match(worker, /VERSION = "16[.]7[.]0[.]22"/);
+  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]22"/);
 });
