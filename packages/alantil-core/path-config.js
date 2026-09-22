@@ -6,9 +6,9 @@ export const CORE_PATH_CONFIG = Object.freeze({
   milestoneRequiredAccuracy: 90,
   summitUnlockAscentPercent: 60,
   routeBackground: "first-gorge",
-  defaultStoryType: "oblivion",
+  defaultStoryType: "understanding",
   storyColumn: "story_type",
-  storyOrder: ["oblivion", "roots", "ascent", "pathways"],
+  storyOrder: ["understanding", "roots", "ascent", "pathways"],
   mainPathWeights: Object.freeze({
     beginner: 50,
     intermediate: 30,
@@ -29,7 +29,7 @@ export const STATION_STATUSES = Object.freeze([
 ]);
 
 export const STORY_TYPES = Object.freeze({
-  OBLIVION: "oblivion",
+  UNDERSTANDING: "understanding",
   ROOTS: "roots",
   ASCENT: "ascent",
   PATHWAYS: "pathways",

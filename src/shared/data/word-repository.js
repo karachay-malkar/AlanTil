@@ -11,7 +11,7 @@ import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=
 import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=13.10.2";
 import { getDisplayedWordCollection } from "../domain/alan-display.js?v=13.13";
 import { getUserSettings } from "../settings/user-settings-store.js?v=13.12";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=13.15";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=16.7.0.17";
 import { readJson, writeJson } from "../state/storage.js?v=13.9.0";
 import { DICTIONARY_STORE_SCHEMA_VERSION, readDictionarySnapshot, writeDictionarySnapshot } from "./dictionary-store.js?v=16.7.0.5";
 
@@ -19,7 +19,7 @@ const PAGE_SIZE = 1000;
 const DOWNLOAD_TIMEOUT_MS = 15000;
 const VERSION_TIMEOUT_MS = 5000;
 const RETRY_DELAYS_MS = Object.freeze([0, 5000, 30000]);
-const BUNDLED_DICTIONARY_URL = "/src/data/dictionary-snapshot.json?v=16.7.0.5";
+const BUNDLED_DICTIONARY_URL = "/src/data/dictionary-snapshot.json?v=16.7.0.17";
 const DICTIONARY_META_KEY = "alantil_dictionary_meta_v1";
 
 let words = null;
@@ -150,8 +150,16 @@ function readStarterDictionary() {
   };
 }
 
+function migrateLegacyStoryWords(collection = []) {
+  return (Array.isArray(collection) ? collection : []).map((word) => {
+    const storyId = String(word?.storyId || word?.story_id || word?.story_type || "").trim();
+    if (storyId !== "oblivion") return word;
+    return normalizeWordEntry({ ...word, storyId: "understanding", story_id: "understanding", story_type: "understanding" });
+  }).filter(Boolean);
+}
+
 function installSnapshot(snapshot) {
-  words = snapshot.words;
+  words = migrateLegacyStoryWords(snapshot.words);
   installedVersion = String(snapshot.version || "").trim();
   source = String(snapshot.source || "local");
   invalidateDisplayedWords();

@@ -1,28 +1,28 @@
-const VERSION = "16.7.0.16";
+const VERSION = "16.7.0.17";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
-const LEGACY_REFRESH_BEFORE_VERSION = "16.7.0.16";
+const LEGACY_REFRESH_BEFORE_VERSION = "16.7.0.17";
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.7.0.16",
-  "/src/app/router.js?v=16.7.0.16",
-  "/src/app/shell.js?v=16.7.0.16",
-  "/src/app/screen-registry.js?v=16.7.0.16",
-  "/src/shared/styles/app.css?v=16.7.0.16",
-  "/src/features/path/feature.js?v=16.7.0.16",
-  "/src/shared/data/word-repository.js?v=16.7.0.16",
-  "/src/shared/data/dictionary-store.js?v=16.7.0.16",
+  "/src/app/bootstrap.js?v=16.7.0.17",
+  "/src/app/router.js?v=16.7.0.17",
+  "/src/app/shell.js?v=16.7.0.17",
+  "/src/app/screen-registry.js?v=16.7.0.17",
+  "/src/shared/styles/app.css?v=16.7.0.17",
+  "/src/features/path/feature.js?v=16.7.0.17",
+  "/src/shared/data/word-repository.js?v=16.7.0.17",
+  "/src/shared/data/dictionary-store.js?v=16.7.0.17",
   "/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1",
   "/assets/path/story-stele.webp?v=13.15.6",
-  "/assets/icons/sets/Set_stone_icon_1.png?v=16.7.0.16",
-  "/assets/icons/sets/Set_stone_icon_2.png?v=16.7.0.16",
-  "/assets/icons/sets/Set_stone_icon_3.png?v=16.7.0.16",
-  "/assets/icons/sets/Set_stone_icon_4.png?v=16.7.0.16",
-  "/assets/icons/sets/Set_stone_icon_5.png?v=16.7.0.16",
-  "/assets/icons/sets/Set_stone_icon_6.png?v=16.7.0.16",
-  "/assets/icons/sets/Set_stone_icon_7.png?v=16.7.0.16"
+  "/assets/icons/sets/Set_stone_icon_1.png?v=16.7.0.17",
+  "/assets/icons/sets/Set_stone_icon_2.png?v=16.7.0.17",
+  "/assets/icons/sets/Set_stone_icon_3.png?v=16.7.0.17",
+  "/assets/icons/sets/Set_stone_icon_4.png?v=16.7.0.17",
+  "/assets/icons/sets/Set_stone_icon_5.png?v=16.7.0.17",
+  "/assets/icons/sets/Set_stone_icon_6.png?v=16.7.0.17",
+  "/assets/icons/sets/Set_stone_icon_7.png?v=16.7.0.17"
 ];
 
 self.addEventListener("install", (event) => {

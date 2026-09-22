@@ -8,7 +8,7 @@ export const RELEASE_MESSAGES_13_15_9 = Object.freeze({
   "admin.last_visit": Object.freeze({ ru: "Последний вход", en: "Last visit", tr: "Son giriş" }),
   "admin.streak": Object.freeze({ ru: "Серия", en: "Streak", tr: "Seri" }),
   "admin.mastered_words": Object.freeze({ ru: "Освоено слов", en: "Words mastered", tr: "Öğrenilen kelime" }),
-  "admin.story_oblivion": Object.freeze({ ru: "На пороге забвения", en: "On the brink of oblivion", tr: "Unutuluşun eşiğinde" }),
+  "admin.story_understanding": Object.freeze({ ru: "Начать понимать", en: "Begin to Understand", tr: "Anlamaya Başlamak" }),
   "admin.story_roots": Object.freeze({ ru: "Возвращение к истокам", en: "Return to the roots", tr: "Köklere dönüş" }),
   "admin.story_ascent": Object.freeze({ ru: "На вершине", en: "At the summit", tr: "Zirvede" }),
   "admin.story_pathways": Object.freeze({ ru: "Тропы", en: "Trails", tr: "Patikalar" }),

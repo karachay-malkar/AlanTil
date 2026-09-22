@@ -86,9 +86,22 @@ export function permanentSectionId(dictionaryId, setId) {
   return THEMATIC_SECTION_BY_SET[set] || "";
 }
 
+const LEGACY_UNDERSTANDING_STORY_ID = "oblivion";
+const UNDERSTANDING_STORY_ID = "understanding";
+const UNDERSTANDING_STORY_CONTENT = Object.freeze({
+  ru: Object.freeze({ name: "Начать понимать", intro: "Каждый раз, оказываясь в родных краях, не можешь отделаться от странного чувства. Будто между тобой и этими местами стоит невидимая преграда, не дающая почувствовать себя здесь по-настоящему дома.\n\nЯзык слышен повсюду — в разговорах, песнях, случайных фразах. Звучание кажется знакомым, но смысл почти всегда ускользает. Песни остаются мелодиями, а речь — потоком слов, за которыми трудно уловить настоящую мысль.\n\nНачать с основ — лучший способ избавиться от ощущения, что ты здесь всего лишь турист. С этого и начинается твой первый путь." }),
+  en: Object.freeze({ name: "Begin to Understand", intro: "Whenever you find yourself back in your homeland, you can't shake a strange feeling. It's as if an invisible barrier stands between you and these places, keeping you from truly feeling at home here.\n\nThe language is everywhere — in conversations, songs, and passing phrases. It sounds familiar, yet the meaning almost always slips away. Songs remain melodies, while speech becomes a stream of words whose real meaning is difficult to grasp.\n\nStarting with the basics is the best way to leave behind the feeling that you're only a tourist here. This is where your first path begins." }),
+  tr: Object.freeze({ name: "Anlamaya Başlamak", intro: "Her memlekete geldiğinde içinden atamadığın tuhaf bir duygu beliriyor. Sanki seninle bu yerler arasında, burada gerçekten evinde hissetmene engel olan görünmez bir perde var.\n\nDil her yerde duyuluyor — konuşmalarda, şarkılarda, arada söylenen cümlelerde. Tınısı tanıdık geliyor ama anlamı çoğu zaman kaçıp gidiyor. Şarkılar melodi olarak kalıyor, konuşmalar ise ardındaki gerçek anlamı yakalamanın zor olduğu bir kelime akışına dönüşüyor.\n\nTemelden başlamak, burada yalnızca bir turistmişsin gibi hissetmekten kurtulmanın en iyi yolu. İlk yolun da burada başlıyor." }),
+});
+
+function canonicalStoryId(value) {
+  const storyId = normalizeId(value);
+  return storyId === LEGACY_UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_ID : storyId;
+}
+
 export function storyIdForDictionary(dictionaryId) {
   const dictionary = normalizeId(dictionaryId);
-  if (dictionary === "beginner") return "oblivion";
+  if (dictionary === "beginner") return UNDERSTANDING_STORY_ID;
   if (dictionary === "intermediate") return "roots";
   if (dictionary === "advanced") return "ascent";
   if (["universe", "animals", "natural_materials", "plants"].includes(dictionary)) return "pathways";
@@ -207,11 +220,12 @@ export function normalizeSupabaseWordEntry(row, story = null) {
   const dictionaryId = normalizeId(row.dictionary_id);
   const sectionId = normalizeId(row.section_id);
   const setId = normalizeId(row.set_id);
+  const storyId = canonicalStoryId(story?.story_id || row.story_id || storyIdForDictionary(dictionaryId));
   const model = {
     sourceType: "v_words_app",
     id: normalizeId(row.word_id),
     globalOrder: numberValue(row.global_order),
-    storyId: normalizeId(story?.story_id || row.story_id || storyIdForDictionary(dictionaryId)),
+    storyId,
     dictionaryId,
     sectionId,
     setId,
@@ -229,14 +243,14 @@ export function normalizeSupabaseWordEntry(row, story = null) {
     phrasesEn: text(row.phrases_en),
     phrasesTr: text(row.phrases_tr),
 
-    storyNameRu: storyValue(story, row, "name_ru", "story_name_ru"),
-    storyNameEn: storyValue(story, row, "name_en", "story_name_en"),
-    storyNameTr: storyValue(story, row, "name_tr", "story_name_tr"),
+    storyNameRu: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.ru.name : storyValue(story, row, "name_ru", "story_name_ru"),
+    storyNameEn: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.en.name : storyValue(story, row, "name_en", "story_name_en"),
+    storyNameTr: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.tr.name : storyValue(story, row, "name_tr", "story_name_tr"),
     storyNameAlanCyrillic: storyValue(story, row, "name_alan_cyrillic", "story_name_alan_cyrillic"),
     storyNameAlanTurkic: storyValue(story, row, "name_alan_turkic", "story_name_alan_turkic"),
-    storyIntroRu: storyValue(story, row, "intro_ru", "story_intro_ru"),
-    storyIntroEn: storyValue(story, row, "intro_en", "story_intro_en"),
-    storyIntroTr: storyValue(story, row, "intro_tr", "story_intro_tr"),
+    storyIntroRu: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.ru.intro : storyValue(story, row, "intro_ru", "story_intro_ru"),
+    storyIntroEn: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.en.intro : storyValue(story, row, "intro_en", "story_intro_en"),
+    storyIntroTr: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.tr.intro : storyValue(story, row, "intro_tr", "story_intro_tr"),
     storyIntroAlanCyrillic: storyValue(story, row, "intro_alan_cyrillic", "story_intro_alan_cyrillic"),
     storyIntroAlanTurkic: storyValue(story, row, "intro_alan_turkic", "story_intro_alan_turkic"),
     dictionaryNameRu: text(row.dictionary_name_ru),
@@ -314,14 +328,14 @@ export function normalizeLegacyWordEntry(row) {
     phrasesEn: text(row.phrases_en),
     phrasesTr: text(row.phrases_tr),
 
-    storyNameRu: storyId === "oblivion" ? "На пороге забвения" : text(row.story_name_ru || row.story_name),
-    storyNameEn: storyId === "oblivion" ? "" : text(row.story_name_en),
-    storyNameTr: storyId === "oblivion" ? "" : text(row.story_name_tr),
-    storyNameAlanCyrillic: storyId === "oblivion" ? "" : text(row.story_name_alan_cyrillic),
-    storyNameAlanTurkic: storyId === "oblivion" ? "" : text(row.story_name_alan_turkic),
-    storyIntroRu: storyId === "oblivion" ? "Это история о последних мгновениях жизни языка. Она написана скупо — простыми словами и примитивными понятиями, до которых беднеет некогда богатая речь, прежде чем умолкнуть навсегда. Это её последнее дыхание. Дальше — только забвение." : "",
-    storyIntroEn: "",
-    storyIntroTr: "",
+    storyNameRu: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.ru.name : text(row.story_name_ru || row.story_name),
+    storyNameEn: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.en.name : text(row.story_name_en),
+    storyNameTr: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.tr.name : text(row.story_name_tr),
+    storyNameAlanCyrillic: text(row.story_name_alan_cyrillic),
+    storyNameAlanTurkic: text(row.story_name_alan_turkic),
+    storyIntroRu: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.ru.intro : "",
+    storyIntroEn: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.en.intro : "",
+    storyIntroTr: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.tr.intro : "",
     storyIntroAlanCyrillic: "",
     storyIntroAlanTurkic: "",
     dictionaryNameRu: LEGACY_DICTIONARY_NAMES_RU[scope.dictionaryId] || "",
@@ -349,11 +363,12 @@ function normalizeCachedWordEntry(row) {
   const dictionaryId = normalizeId(row.dictionaryId || row.dictionary_id || row.catalog_id);
   const setId = normalizeId(row.setId || row.set_id);
   const sectionId = normalizeId(row.sectionId || row.section_id || row.group_id || permanentSectionId(dictionaryId, setId));
+  const storyId = canonicalStoryId(row.storyId || row.story_id || row.story_type || storyIdForDictionary(dictionaryId));
   const model = {
     sourceType: text(row.sourceType) || "v_words_app",
     id: normalizeId(row.id || row.word_id),
     globalOrder: numberValue(row.globalOrder, row.global_order, row.dict_order),
-    storyId: normalizeId(row.storyId || row.story_id || row.story_type || storyIdForDictionary(dictionaryId)),
+    storyId,
     dictionaryId,
     sectionId,
     setId,
@@ -371,14 +386,14 @@ function normalizeCachedWordEntry(row) {
     phrasesEn: text(row.phrasesEn || row.phrases_en),
     phrasesTr: text(row.phrasesTr || row.phrases_tr),
 
-    storyNameRu: text(row.storyNameRu || row.story_name_ru || row.story_name),
-    storyNameEn: text(row.storyNameEn || row.story_name_en),
-    storyNameTr: text(row.storyNameTr || row.story_name_tr),
+    storyNameRu: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.ru.name : text(row.storyNameRu || row.story_name_ru || row.story_name),
+    storyNameEn: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.en.name : text(row.storyNameEn || row.story_name_en),
+    storyNameTr: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.tr.name : text(row.storyNameTr || row.story_name_tr),
     storyNameAlanCyrillic: text(row.storyNameAlanCyrillic || row.story_name_alan_cyrillic),
     storyNameAlanTurkic: text(row.storyNameAlanTurkic || row.story_name_alan_turkic),
-    storyIntroRu: text(row.storyIntroRu || row.story_intro_ru || row.story_intro),
-    storyIntroEn: text(row.storyIntroEn || row.story_intro_en),
-    storyIntroTr: text(row.storyIntroTr || row.story_intro_tr),
+    storyIntroRu: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.ru.intro : text(row.storyIntroRu || row.story_intro_ru || row.story_intro),
+    storyIntroEn: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.en.intro : text(row.storyIntroEn || row.story_intro_en),
+    storyIntroTr: storyId === UNDERSTANDING_STORY_ID ? UNDERSTANDING_STORY_CONTENT.tr.intro : text(row.storyIntroTr || row.story_intro_tr),
     storyIntroAlanCyrillic: text(row.storyIntroAlanCyrillic || row.story_intro_alan_cyrillic),
     storyIntroAlanTurkic: text(row.storyIntroAlanTurkic || row.story_intro_alan_turkic),
     dictionaryNameRu: text(row.dictionaryNameRu || row.dictionary_name_ru || row.dictionary_name),

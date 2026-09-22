@@ -6,9 +6,21 @@ import { normalizeWordEntry } from "../src/shared/domain/word-structure-compat.j
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 const STORIES = Object.freeze({
-  oblivion: {
-    names: { ru: `На пороге забвения`, en: `On the Threshold of Oblivion`, tr: `Unutuluşun Eşiğinde` },
-    intros: { ru: `Это история о последних мгновениях жизни языка. Она написана скупо — простыми словами и примитивными понятиями, до которых беднеет некогда богатая речь, прежде чем умолкнуть навсегда. Это её последнее дыхание. Дальше — только забвение.`, en: `This is the story of the final moments in the life of a language. It is written sparsely — in simple words and primitive concepts, to which a once-rich tongue is reduced before falling silent forever. This is its last breath. Beyond it lies only oblivion.`, tr: `Bu, bir dilin ömrünün son anlarının hikâyesidir. Bir zamanlar zengin olan bir dilin sonsuza dek susmadan önce yoksullaştığı basit sözcükler ve ilkel kavramlarla, yalın bir dille yazılmıştır. Bu onun son nefesidir. Sonrası — yalnızca unutuluş.` },
+  understanding: {
+    names: { ru: `Начать понимать`, en: `Begin to Understand`, tr: `Anlamaya Başlamak` },
+    intros: { ru: `Каждый раз, оказываясь в родных краях, не можешь отделаться от странного чувства. Будто между тобой и этими местами стоит невидимая преграда, не дающая почувствовать себя здесь по-настоящему дома.
+
+Язык слышен повсюду — в разговорах, песнях, случайных фразах. Звучание кажется знакомым, но смысл почти всегда ускользает. Песни остаются мелодиями, а речь — потоком слов, за которыми трудно уловить настоящую мысль.
+
+Начать с основ — лучший способ избавиться от ощущения, что ты здесь всего лишь турист. С этого и начинается твой первый путь.`, en: `Whenever you find yourself back in your homeland, you can't shake a strange feeling. It's as if an invisible barrier stands between you and these places, keeping you from truly feeling at home here.
+
+The language is everywhere — in conversations, songs, and passing phrases. It sounds familiar, yet the meaning almost always slips away. Songs remain melodies, while speech becomes a stream of words whose real meaning is difficult to grasp.
+
+Starting with the basics is the best way to leave behind the feeling that you're only a tourist here. This is where your first path begins.`, tr: `Her memlekete geldiğinde içinden atamadığın tuhaf bir duygu beliriyor. Sanki seninle bu yerler arasında, burada gerçekten evinde hissetmene engel olan görünmez bir perde var.
+
+Dil her yerde duyuluyor — konuşmalarda, şarkılarda, arada söylenen cümlelerde. Tınısı tanıdık geliyor ama anlamı çoğu zaman kaçıp gidiyor. Şarkılar melodi olarak kalıyor, konuşmalar ise ardındaki gerçek anlamı yakalamanın zor olduğu bir kelime akışına dönüşüyor.
+
+Temelden başlamak, burada yalnızca bir turistmişsin gibi hissetmekten kurtulmanın en iyi yolu. İlk yolun da burada başlıyor.` },
   },
   roots: {
     names: { ru: `Возвращение к истокам`, en: `Back to the Roots`, tr: `Köklere Dönüş` },
@@ -85,23 +97,22 @@ Ve onu öğrenmenin yalnızca bir yolu vardır — o patikadan geçmek.` },
 });
 
 const STRUCTURE = Object.freeze({
-  oblivion: { dictionaryId: "beginner", sectionId: "beginner-starter", setId: "beginner-01" },
+  understanding: { dictionaryId: "beginner", sectionId: "beginner-starter", setId: "beginner-01" },
   roots: { dictionaryId: "intermediate", sectionId: "intermediate-intermediate", setId: "intermediate-01" },
   ascent: { dictionaryId: "advanced", sectionId: "advanced-advanced", setId: "advanced-01" },
   pathways: { dictionaryId: "thematic", sectionId: "universe", setId: "universe-01" },
 });
 
-test("13.15 migration stores the four final story texts in ru/en/tr", async () => {
-  const migration = await read("supabase/migrations/20260809140700_alantil_13_15_story_localization.sql");
-  for (const story of Object.values(STORIES)) {
-    for (const value of Object.values(story.names)) assert.ok(migration.includes(value));
-    for (const value of Object.values(story.intros)) assert.ok(migration.includes(value));
-  }
-  assert.match(migration, /current_version = '13\.15\.0'/);
-  assert.match(migration, /Expected 4 fully localized stories/);
+test("16.7 migration stores the renamed first story in ru/en/tr", async () => {
+  const migration = await read("supabase/migrations/20260922101500_alantil_16_7_understanding_story.sql");
+  const story = STORIES.understanding;
+  for (const value of Object.values(story.names)) assert.ok(migration.includes(value));
+  for (const value of Object.values(story.intros)) assert.ok(migration.includes(value));
+  assert.match(migration, /current_version = '2026\.09\.22\.1'/);
+  assert.match(migration, /entity_id = 'understanding'/);
 });
 
-test("13.15 compatibility fallback exposes the same final story texts", () => {
+test("compatibility fallback exposes the current story texts", () => {
   for (const [storyId, story] of Object.entries(STORIES)) {
     const scope = STRUCTURE[storyId];
     const word = normalizeWordEntry({
@@ -126,4 +137,15 @@ test("the old ascent title is no longer the 13.15 compatibility title", async ()
   const adapter = await read("src/shared/domain/word-structure-compat.js");
   assert.doesNotMatch(adapter, /ascent:\s*\{[\s\S]*?ru:\s*\{\s*name:\s*"Восхождение"/);
   assert.match(adapter, /ascent:\s*\{[\s\S]*?name:\s*"На вершине"/);
+});
+
+
+test("understanding guide title has no level suffix and old runtime keys are gone", async () => {
+  const messages = await read("src/shared/i18n/messages-13-15-10.js");
+  const guide = await read("src/features/onboarding/guide.js");
+  assert.match(messages, /"guide\.story\.understanding\.title"/);
+  assert.match(messages, /ru: "Начать понимать", en: "Begin to Understand", tr: "Anlamaya Başlamak"/);
+  assert.doesNotMatch(messages, /guide\.story\.understanding\.title[^\n]*(лёгкий уровень|beginner level|başlangıç seviyesi)/i);
+  assert.match(guide, /understanding: Object\.freeze/);
+  assert.doesNotMatch(guide, /guide\.story\.oblivion/);
 });

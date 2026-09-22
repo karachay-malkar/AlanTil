@@ -1,4 +1,4 @@
-export const GUIDE_STORY_SEQUENCE=Object.freeze(['oblivion','roots','ascent','pathways']);
+export const GUIDE_STORY_SEQUENCE=Object.freeze(['understanding','roots','ascent','pathways']);
 export const GENERAL_GUIDE_STEPS=Object.freeze([
   {id:'intro',titleKey:'guide.general.intro.title',bodyKey:'guide.general.intro.body'},
   {id:'stories-intro',titleKey:'guide.general.stories.title',bodyKey:'guide.general.stories.body'},

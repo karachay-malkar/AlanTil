@@ -5,9 +5,9 @@ import { msg } from "../../shared/i18n/index.js?v=13.15.10.12";
 
 const GUIDE_STATE_KEY = "alantil_guided_help_v1";
 const GUIDE_STYLE_ID = "alantil-guided-help-style";
-const STORY_SEQUENCE = ["oblivion", "roots", "ascent", "pathways"];
+const STORY_SEQUENCE = ["understanding", "roots", "ascent", "pathways"];
 const STORY_GUIDE = Object.freeze({
-  oblivion: Object.freeze({ titleKey: "guide.story.oblivion.title", bodyKey: "guide.story.oblivion.body" }),
+  understanding: Object.freeze({ titleKey: "guide.story.understanding.title", bodyKey: "guide.story.understanding.body" }),
   roots: Object.freeze({ titleKey: "guide.story.roots.title", bodyKey: "guide.story.roots.body" }),
   ascent: Object.freeze({ titleKey: "guide.story.ascent.title", bodyKey: "guide.story.ascent.body" }),
   pathways: Object.freeze({ titleKey: "guide.story.pathways.title", bodyKey: "guide.story.pathways.body" }),

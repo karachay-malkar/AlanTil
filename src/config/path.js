@@ -7,11 +7,11 @@ export const PATH_CONFIG = Object.freeze({
   milestoneRequiredAccuracy: 90,
   summitUnlockAscentPercent: 60,
   routeBackground: "first-gorge",
-  defaultStoryType: "oblivion",
+  defaultStoryType: "understanding",
   storyColumn: "story_type",
-  storyOrder: ["oblivion", "roots", "ascent", "pathways"],
+  storyOrder: ["understanding", "roots", "ascent", "pathways"],
   storyLabels: Object.freeze({
-    get oblivion() { return "На пороге забвения"; },
+    get understanding() { return "Начать понимать"; },
     get roots() { return msg("path.voshozhdenie"); },
     get ascent() { return msg("path.na_vershine"); },
     get pathways() { return msg("path.tropy"); },
@@ -36,7 +36,7 @@ export const STATION_STATUSES = Object.freeze([
 ]);
 
 export const STORY_TYPES = Object.freeze({
-  OBLIVION: "oblivion",
+  UNDERSTANDING: "understanding",
   ROOTS: "roots",
   ASCENT: "ascent",
   PATHWAYS: "pathways",

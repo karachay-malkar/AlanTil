@@ -82,7 +82,7 @@ test("legacy CSV normalization remains separate", () => {
   assert.equal(word.dictionary_id, "beginner");
   assert.equal(word.section_id, "beginner-starter");
   assert.equal(word.set_id, "beginner-01");
-  assert.equal(word.story_id, "oblivion");
+  assert.equal(word.story_id, "understanding");
   assert.equal(word.wordAlanCyrillic, "тау");
   assert.equal(word.translationRu, "гора");
   assert.equal(word.legacyExample, "бийик тау ✦ высокая гора");

@@ -1,6 +1,6 @@
 import { msg } from "../../shared/i18n/index.js?v=13.9.0";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
-import { getCompleteDictionaryWords } from "../../shared/data/word-repository.js?v=16.7.0.5";
+import { getCompleteDictionaryWords } from "../../shared/data/word-repository.js?v=16.7.0.17";
 import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.13";
 import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.13";
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";

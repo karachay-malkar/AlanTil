@@ -17,9 +17,9 @@ import {
   unblockUserAccount,
 } from "../../shared/admin/admin-activity-service.js?v=16.7.0.3";
 
-const STORY_ORDER = Object.freeze(["oblivion", "roots", "ascent", "pathways"]);
+const STORY_ORDER = Object.freeze(["understanding", "roots", "ascent", "pathways"]);
 const STORY_KEYS = Object.freeze({
-  oblivion: "admin.story_oblivion",
+  understanding: "admin.story_understanding",
   roots: "admin.story_roots",
   ascent: "admin.story_ascent",
   pathways: "admin.story_pathways",

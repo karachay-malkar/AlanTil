@@ -3,7 +3,7 @@ import * as base from "/src/shared/domain/word-normalizer.js?v=13.13&base=1";
 const THEMATIC_SECTIONS = new Set(["universe", "animals", "natural_materials", "plants"]);
 
 const STORY_NAMES = Object.freeze({
-  oblivion: { ru: "На пороге забвения", en: "On the Threshold of Oblivion", tr: "Unutuluşun Eşiğinde" },
+  understanding: { ru: "Начать понимать", en: "Begin to Understand", tr: "Anlamaya Başlamak" },
   roots: { ru: "Возвращение к истокам", en: "Back to the Roots", tr: "Köklere Dönüş" },
   ascent: { ru: "Восхождение", en: "Ascent", tr: "Tırmanış" },
   pathways: { ru: "Тропы", en: "Pathways", tr: "Patikalar" },
@@ -102,6 +102,7 @@ function adaptStructure(word) {
   let sectionId = String(word.sectionId || word.section_id || "").trim();
   const setId = String(word.setId || word.set_id || "").trim();
   let storyId = String(word.storyId || word.story_id || word.story_type || "").trim();
+  if (storyId === "oblivion") storyId = "understanding";
 
   if (THEMATIC_SECTIONS.has(dictionaryId)) {
     sectionId = dictionaryId;

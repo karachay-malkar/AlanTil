@@ -3,10 +3,10 @@ import * as base from "./word-normalizer.js?v=13.15&base=1";
 const THEMATIC_SECTIONS = new Set(["universe", "animals", "natural_materials", "plants"]);
 
 const STORY_CONTENT = Object.freeze({
-  oblivion: {
-    ru: { name: "На пороге забвения", intro: "Это история о последних мгновениях жизни языка. Она написана скупо — простыми словами и примитивными понятиями, до которых беднеет некогда богатая речь, прежде чем умолкнуть навсегда. Это её последнее дыхание. Дальше — только забвение." },
-    en: { name: "On the Threshold of Oblivion", intro: "This is the story of the final moments in the life of a language. It is written sparsely — in simple words and primitive concepts, to which a once-rich tongue is reduced before falling silent forever. This is its last breath. Beyond it lies only oblivion." },
-    tr: { name: "Unutuluşun Eşiğinde", intro: "Bu, bir dilin ömrünün son anlarının hikâyesidir. Bir zamanlar zengin olan bir dilin sonsuza dek susmadan önce yoksullaştığı basit sözcükler ve ilkel kavramlarla, yalın bir dille yazılmıştır. Bu onun son nefesidir. Sonrası — yalnızca unutuluş." },
+  understanding: {
+    ru: { name: "Начать понимать", intro: "Каждый раз, оказываясь в родных краях, не можешь отделаться от странного чувства. Будто между тобой и этими местами стоит невидимая преграда, не дающая почувствовать себя здесь по-настоящему дома.\n\nЯзык слышен повсюду — в разговорах, песнях, случайных фразах. Звучание кажется знакомым, но смысл почти всегда ускользает. Песни остаются мелодиями, а речь — потоком слов, за которыми трудно уловить настоящую мысль.\n\nНачать с основ — лучший способ избавиться от ощущения, что ты здесь всего лишь турист. С этого и начинается твой первый путь." },
+    en: { name: "Begin to Understand", intro: "Whenever you find yourself back in your homeland, you can't shake a strange feeling. It's as if an invisible barrier stands between you and these places, keeping you from truly feeling at home here.\n\nThe language is everywhere — in conversations, songs, and passing phrases. It sounds familiar, yet the meaning almost always slips away. Songs remain melodies, while speech becomes a stream of words whose real meaning is difficult to grasp.\n\nStarting with the basics is the best way to leave behind the feeling that you're only a tourist here. This is where your first path begins." },
+    tr: { name: "Anlamaya Başlamak", intro: "Her memlekete geldiğinde içinden atamadığın tuhaf bir duygu beliriyor. Sanki seninle bu yerler arasında, burada gerçekten evinde hissetmene engel olan görünmez bir perde var.\n\nDil her yerde duyuluyor — konuşmalarda, şarkılarda, arada söylenen cümlelerde. Tınısı tanıdık geliyor ama anlamı çoğu zaman kaçıp gidiyor. Şarkılar melodi olarak kalıyor, konuşmalar ise ardındaki gerçek anlamı yakalamanın zor olduğu bir kelime akışına dönüşüyor.\n\nTemelden başlamak, burada yalnızca bir turistmişsin gibi hissetmekten kurtulmanın en iyi yolu. İlk yolun da burada başlıyor." },
   },
   roots: {
     ru: { name: "Возвращение к истокам", intro: "Ты чувствуешь это давно. Что-то в этой жизни не так.\n\nСистема обещает счастье, изобилие и свободу выбора, но снова и снова возвращает тебя в один и тот же круг — работать, потреблять, желать большего и продолжать бежать. Так проходят годы — растворяясь среди тысяч таких же странствующих судеб, ты постепенно забываешь, кто ты на самом деле.\n\nВырваться из этих крысиных бегов — настоящий подвиг. Но эта история не про подвиг тела, она про подвиг духа и разума — суметь вырваться из ловушки, вновь услышать себя и вернуться к своим корням, к своему подлинному «я».\n\nНастало время действовать!" },
@@ -122,6 +122,7 @@ function adaptStructure(word) {
   let sectionId = String(word.sectionId || word.section_id || "").trim();
   const setId = String(word.setId || word.set_id || "").trim();
   let storyId = String(word.storyId || word.story_id || word.story_type || "").trim();
+  if (storyId === "oblivion") storyId = "understanding";
 
   if (THEMATIC_SECTIONS.has(dictionaryId)) {
     sectionId = dictionaryId;
