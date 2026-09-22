@@ -141,6 +141,10 @@ test('impact audio is replicated from the authoritative physics client and weak 
   assert.match(webAudio,/preload/);
   assert.match(mobileAudio,/threshold:\.035/);
   assert.match(mobileAudio,/attempt<1/);
+  for(const source of[webAudio,mobileAudio]){
+    assert.doesNotMatch(source,/31\.28|34\.65|36\.7|17\.86|10\.03|23\.05/);
+    assert.match(source,/const starts=\[\.08,\.28,\.48\]/);
+  }
 });
 
 test('lobby recovery always offers return plus server-side close and preparing rooms can be cancelled',()=>{
