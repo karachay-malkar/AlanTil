@@ -44,7 +44,7 @@ test('Ashyk board uses vendored Walnut Veneer 02 PBR maps on Web and Mobile',()=
   for(const filename of['walnut_veneer_02_diff_1k.jpg','walnut_veneer_02_nor_gl_1k.jpg','walnut_veneer_02_rough_1k.jpg','walnut_veneer_02_ao_1k.jpg'])assert.ok(exists('assets/ashyk/materials/walnut-veneer-02/'+filename),filename);
 });
 
-test('Wooden visual does not change Ashyk physics dimensions',()=>{
-  assert.equal(BOARD,28);
-  assert.ok(BOUNDARY_RADIUS>12&&BOUNDARY_RADIUS<14);
+test('Wooden board keeps visual and physics dimensions on the requested 85 percent scale',()=>{
+  assert.equal(BOARD,23.8);
+  assert.ok(BOUNDARY_RADIUS>10.5&&BOUNDARY_RADIUS<11.2);
 });
