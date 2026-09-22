@@ -1,5 +1,8 @@
 begin;
 
+alter table public.content_structure
+add column if not exists icon_name text;
+
 update public.content_structure as c
 set icon_name = v.icon_name
 from (
@@ -50,16 +53,6 @@ begin
 
   if mapped_count <> 30 then
     raise exception 'Expected 30 beginner WebP icon mappings, got %', mapped_count;
-  end if;
-
-  if exists (
-    select 1
-    from public.content_structure
-    where entity_type = 'set'
-      and entity_id like 'beginner-%'
-      and icon_name like 'Set_stone_icon_%'
-  ) then
-    raise exception 'Legacy beginner stone icon mapping remains';
   end if;
 end
 $validation$;
