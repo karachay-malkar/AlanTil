@@ -11,6 +11,7 @@
 .pathMapViewport.isPositioning{visibility:hidden;opacity:0}
 .routeBackdrop{position:absolute;inset:0;min-height:100%;pointer-events:none;background:var(--path-grain)}
 .routeMap{position:relative;z-index:1;width:min(100%,560px);min-height:100%;margin:0 auto;padding:76px 50px 108px 20px;display:flex;flex-direction:column;gap:var(--route-dictionary-gap);isolation:isolate}
+.routeMap.beginnerRouteMap{padding-bottom:94px}
 .routeConnector{position:absolute;z-index:0;left:0;top:0;display:block;overflow:visible;pointer-events:none}
 .routeConnectorPath{fill:none;stroke:color-mix(in srgb,var(--text-2) 38%,transparent);stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:3 7;vector-effect:non-scaling-stroke;opacity:.72}
 .routeCatalog{position:relative;z-index:1;display:flex;flex-direction:column;gap:var(--route-heading-gap)}
@@ -30,12 +31,13 @@
 .stationWordCount{position:absolute;left:50%;top:91px;transform:translateX(-50%);color:var(--text-3);font:700 8px/1 var(--font-terminal);white-space:nowrap}
 .stationMilestones{position:absolute;left:50%;top:49px;transform:translateX(-50%);min-height:8px;color:var(--accent-strong);font:850 8px/1 var(--font-terminal);letter-spacing:-1px;white-space:nowrap;text-shadow:0 1px 0 var(--path-label-shadow)}
 .stationNode.studying .stationProgressRing{filter:saturate(1.08)}.stationNode.mastered .stationProgressRing,.stationNode.review_1_due .stationProgressRing{--station-progress-fill:var(--success-strong)}.stationNode.mastered .millstoneFace{background-image:var(--station-stone-image),var(--millstone-face-mastered)}.stationNode.review_1_due .stationLabel{color:var(--warning)}
-.stationNode.beginnerDioramaNode{width:118px;height:142px;min-height:142px;display:grid;grid-template-rows:118px minmax(24px,auto);justify-items:center;align-items:start}
+.stationNode.beginnerDioramaNode{width:118px;height:152px;min-height:152px;display:grid;grid-template-rows:118px minmax(24px,auto);row-gap:10px;justify-items:center;align-items:start}
+.beginnerRouteMap .routeCatalogGroups,.beginnerRouteMap .routeSectionStations{gap:33px}
 .beginnerDioramaFrame{position:relative;left:auto;top:-15px;grid-column:1;grid-row:1;width:118px;height:118px;display:block;background:transparent;overflow:visible;transition:filter var(--duration-normal) var(--ease-standard),opacity var(--duration-normal) var(--ease-standard)}
 .beginnerDioramaImage{display:block;width:100%;height:100%;object-fit:contain;filter:grayscale(1) saturate(0);transition:filter var(--duration-normal) var(--ease-standard)}
 .beginnerDioramaLabel{position:static;left:auto;top:auto;transform:none;grid-column:1;grid-row:2;width:168px;max-height:30px;margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:10px;line-height:1.18;font-weight:700;text-wrap:balance}
 .beginnerDioramaFallback,.beginnerDioramaFallbackCount{display:none}
-.beginnerDioramaNode.beginnerDioramaError{width:var(--station-size);height:88px;min-height:88px;grid-template-rows:60px 24px}
+.beginnerDioramaNode.beginnerDioramaError{width:var(--station-size);height:88px;min-height:88px;grid-template-rows:60px 24px;row-gap:4px}
 .beginnerDioramaNode.beginnerDioramaError .beginnerDioramaFrame{display:none}
 .beginnerDioramaNode.beginnerDioramaError .beginnerDioramaFallback{display:grid}
 .beginnerDioramaNode.beginnerDioramaError .beginnerDioramaFallbackCount{display:block}

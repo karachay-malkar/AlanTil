@@ -10,6 +10,8 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   const styles = await read("src/features/path/path.css");
   const migration = await read("supabase/migrations/20260922124700_alantil_16_7_beginner_diorama_icons.sql");
   const worker = await read("service-worker.js");
+  const routeScale = await read("src/shared/ui/route-scale.js");
+  const groupLabelMigration = await read("supabase/migrations/20260922191240_hide_beginner_route_group_labels.sql");
 
   assert.match(feature, /content_structure/);
   assert.match(feature, /entity_id,icon_name,name_ru,name_en,name_tr/);
@@ -35,7 +37,9 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
   assert.match(styles, /mastered \.beginnerDioramaImage/);
   assert.match(styles, /review_1_due \.beginnerDioramaImage/);
-  assert.match(styles, /beginnerDioramaNode\{width:118px;height:142px;min-height:142px;display:grid;grid-template-rows:118px minmax\(24px,auto\)/);
+  assert.match(styles, /beginnerDioramaNode\{width:118px;height:152px;min-height:152px;display:grid;grid-template-rows:118px minmax\(24px,auto\);row-gap:10px/);
+  assert.match(styles, /beginnerRouteMap \.routeCatalogGroups,.beginnerRouteMap \.routeSectionStations\{gap:33px\}/);
+  assert.match(styles, /routeMap\.beginnerRouteMap\{padding-bottom:94px\}/);
   assert.match(styles, /beginnerDioramaFrame\{position:relative;[^}]*grid-row:1/);
   assert.match(styles, /beginnerDioramaLabel\{position:static;left:auto;top:auto;transform:none;grid-column:1;grid-row:2/);
   assert.doesNotMatch(styles, /beginnerDioramaLabel\{top:108px/);
@@ -61,7 +65,15 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
     assert.equal(data.subarray(8, 12).toString("ascii"), "WEBP", asset);
   }
 
-  assert.match(worker, /const VERSION = "16[.]7[.]0[.]22"/);
+  assert.match(routeScale, /node\.querySelector\("\.beginnerDioramaFrame"\) \|\| node\.querySelector\("\.stationProgressRing"\) \|\| node/);
+  assert.match(feature, /String\(catalogId\|\|""\)!=="beginner"/);
+  assert.match(feature, /String\(catalog\.catalogId\|\|""\)!=="beginner"/);
+  assert.match(feature, /beginnerRouteMap/);
+  assert.match(groupLabelMigration, /entity_id in \('beginner-elementary', 'beginner-lower'\)/);
+  assert.match(groupLabelMigration, /name_ru = null/);
+  assert.match(groupLabelMigration, /current_version = '2026[.]09[.]23[.]1'/);
+  assert.match(groupLabelMigration, /name_ru = 'Начальный'/);
+  assert.match(worker, /const VERSION = "16[.]7[.]0[.]23"/);
 });
 
 test("16.7 beginner set titles are localized in ru/en/tr", async () => {
@@ -80,17 +92,17 @@ test("16.7 beginner set titles are localized in ru/en/tr", async () => {
   assert.match(polish, /Sakin Göl/);
 });
 
-test("16.7.0.22 cache version is wired through the startup chain", async () => {
+test("16.7.0.23 cache version is wired through the startup chain", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
 
-  assert.match(index, /targetVersion = "16[.]7[.]0[.]22"/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]22/);
-  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]22/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]22"/);
-  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]22"/);
-  assert.match(worker, /VERSION = "16[.]7[.]0[.]22"/);
-  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]22"/);
+  assert.match(index, /targetVersion = "16[.]7[.]0[.]23"/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]23/);
+  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]23/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]23"/);
+  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]23"/);
+  assert.match(worker, /VERSION = "16[.]7[.]0[.]23"/);
+  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]23"/);
 });

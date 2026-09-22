@@ -50,7 +50,7 @@ function drawRouteConnector(routeMap, connector) {
 
   const mapRect = routeMap.getBoundingClientRect();
   const points = nodes.map((node) => {
-    const target = node.querySelector(".stationProgressRing") || node;
+    const target = node.querySelector(".beginnerDioramaFrame") || node.querySelector(".stationProgressRing") || node;
     const rect = target.getBoundingClientRect();
     return {
       x: rect.left - mapRect.left + rect.width / 2,
