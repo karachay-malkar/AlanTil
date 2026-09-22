@@ -26,10 +26,10 @@ const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
 function mark(name){try{globalThis.performance?.mark?.(name);}catch{}}
 const LEVEL_DICTIONARIES = new Set(["beginner", "intermediate", "advanced"]);
-const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v1";
+const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2";
 const BEGINNER_SET_PATTERN = /^beginner-(0[1-9]|[12]\d|30)$/;
 const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
-const SET_ICON_ASSET_VERSION = "16.7.0.19";
+const SET_ICON_ASSET_VERSION = "16.7.0.20";
 let beginnerSetMetadata = new Map();
 
 function normalizeBeginnerMetadataRows(rows = []) {
@@ -70,6 +70,7 @@ function readBeginnerMetadataCache() {
 function writeBeginnerMetadataCache(map) {
   try {
     localStorage.setItem(BEGINNER_METADATA_CACHE_KEY, JSON.stringify(Array.from(map.values())));
+    localStorage.removeItem("alantil_beginner_set_metadata_v1");
     localStorage.removeItem("alantil_beginner_set_icons_v1");
     localStorage.removeItem("alantil_beginner_set_icons_v2");
   } catch {}

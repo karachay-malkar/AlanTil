@@ -21,13 +21,19 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(feature, /beginnerDioramaFallback/);
   assert.match(feature, /beginnerDioramaError/);
   assert.match(feature, /stationProgressRing beginnerDioramaFallback/);
-  assert.match(feature, /SET_ICON_ASSET_VERSION = "16[.]7[.]0[.]19"/);
+  assert.match(feature, /BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2"/);
+  assert.match(feature, /SET_ICON_ASSET_VERSION = "16[.]7[.]0[.]20"/);
 
   assert.match(styles, /beginnerDioramaNode/);
   assert.match(styles, /beginnerDioramaFrame/);
   assert.match(styles, /beginnerDioramaImage/);
   assert.match(styles, /beginnerDioramaFallback/);
   assert.match(styles, /beginnerDioramaError/);
+  assert.match(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
+  assert.match(styles, /mastered \.beginnerDioramaImage/);
+  assert.match(styles, /review_1_due \.beginnerDioramaImage/);
+  assert.match(styles, /beginnerDioramaLabel\{top:108px/);
+  assert.match(styles, /font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif/);
 
   assert.match(migration, /add column if not exists icon_name text/);
   const assignments = [...migration.matchAll(/\('beginner-(\d{2})', '(\d{2})_[a-z0-9_]+[.]webp'\)/g)];
@@ -49,31 +55,36 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
     assert.equal(data.subarray(8, 12).toString("ascii"), "WEBP", asset);
   }
 
-  assert.match(worker, /const VERSION = "16[.]7[.]0[.]19"/);
+  assert.match(worker, /const VERSION = "16[.]7[.]0[.]20"/);
 });
 
 test("16.7 beginner set titles are localized in ru/en/tr", async () => {
   const names = await read("supabase/migrations/20260922123000_alantil_16_7_beginner_set_names.sql");
   const correction = await read("supabase/migrations/20260922124600_alantil_16_7_beginner_set_name_correction.sql");
+  const polish = await read("supabase/migrations/20260922163200_alantil_16_7_beginner_set_name_polish.sql");
 
   assert.equal([...names.matchAll(/\(\$q\$beginner-\d{2}\$q\$,\s*\$q\$/g)].length, 30);
   assert.match(names, /Мост через горную реку/);
   assert.match(names, /Bridge over a Mountain River/);
   assert.match(names, /Dağ Nehri Üzerindeki Köprü/);
   assert.match(correction, /Проезжая через поселок/);
+  assert.match(polish, /Проезжая через посёлок/);
+  assert.match(polish, /Тихое озеро/);
+  assert.match(polish, /Quiet Lake/);
+  assert.match(polish, /Sakin Göl/);
 });
 
-test("16.7.0.19 cache version is wired through the startup chain", async () => {
+test("16.7.0.20 cache version is wired through the startup chain", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
 
-  assert.match(index, /targetVersion = "16[.]7[.]0[.]19"/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]19/);
-  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]19/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]19"/);
-  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]19"/);
-  assert.match(worker, /VERSION = "16[.]7[.]0[.]19"/);
-  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]19"/);
+  assert.match(index, /targetVersion = "16[.]7[.]0[.]20"/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]20/);
+  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]20/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]20"/);
+  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]20"/);
+  assert.match(worker, /VERSION = "16[.]7[.]0[.]20"/);
+  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]20"/);
 });
