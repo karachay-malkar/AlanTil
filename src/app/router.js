@@ -5,8 +5,8 @@ import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.7.0";
 import { screenStyleDependencies } from "./screen-registry.js?v=16.7.0.9";
 
-const DEFAULT_STORY = "oblivion";
-const ASSET_VERSION = "16.7.0.17";
+const DEFAULT_STORY = "understanding";
+const ASSET_VERSION = "16.7.0.18";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",

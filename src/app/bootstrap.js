@@ -15,11 +15,11 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=16.7.0.16";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=16.7.0.16";
+import { createRouter } from "./router.js?v=16.7.0.18";
 import { createShell } from "./shell.js?v=16.7.0";
 
 const RELEASE_VERSION = "16.7.0";
-const ASSET_VERSION = "16.7.0.16";
+const ASSET_VERSION = "16.7.0.18";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
@@ -59,7 +59,7 @@ function restoreFallbackRoute() {
 }
 function normalizeInitialLearningPath() {
   if (!["/", "/path", "/path/"].includes(window.location.pathname)) return;
-  window.history.replaceState(null, "", `/path/oblivion${window.location.search}${window.location.hash}`);
+  window.history.replaceState(null, "", `/path/understanding${window.location.search}${window.location.hash}`);
 }
 async function linkRestoredAccountVisit() {
   try {

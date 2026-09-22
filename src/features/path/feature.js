@@ -26,9 +26,9 @@ const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
 function mark(name){try{globalThis.performance?.mark?.(name);}catch{}}
 const LEVEL_DICTIONARIES = new Set(["beginner", "intermediate", "advanced"]);
-const BEGINNER_ICON_CACHE_KEY = "alantil_beginner_set_icons_v1";
-const BEGINNER_ICON_PATTERN = /^Set_stone_icon_[1-7]\.png$/;
-const SET_ICON_ASSET_VERSION = "16.7.0.16";
+const BEGINNER_ICON_CACHE_KEY = "alantil_beginner_set_icons_v2";
+const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
+const SET_ICON_ASSET_VERSION = "16.7.0.18";
 let beginnerSetIcons = new Map();
 
 function normalizeBeginnerIconRows(rows = []) {
@@ -92,13 +92,9 @@ function beginnerSetIconName(station) {
   return BEGINNER_ICON_PATTERN.test(iconName) ? iconName : "";
 }
 
-function stationPassedStatus(status) {
-  return status === "mastered" || status === "review_1_due";
-}
-
 function stationNodeClass(station, status) {
-  const beginnerStone = Boolean(beginnerSetIconName(station));
-  return ["choiceControl", "stationNode", status, beginnerStone ? "beginnerStoneNode" : "", beginnerStone ? (stationPassedStatus(status) ? "isPassed" : "isUnpassed") : ""].filter(Boolean).join(" ");
+  const beginnerDiorama = Boolean(beginnerSetIconName(station));
+  return ["choiceControl", "stationNode", status, beginnerDiorama ? "beginnerDioramaNode" : ""].filter(Boolean).join(" ");
 }
 
 function activeStoryType(route, value) {
@@ -123,7 +119,7 @@ function stationButton(station, index, progressSnapshot) {
   const className = stationNodeClass(station, status);
   if (iconName) {
     const iconSrc = `/assets/icons/sets/${encodeURIComponent(iconName)}?v=${SET_ICON_ASSET_VERSION}`;
-    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(station.name), mastered: progress.mastered, total: progress.total })}"><span class="stationProgressRing beginnerStoneFrame" aria-hidden="true"><img class="beginnerStoneImage" src="${iconSrc}" alt="" decoding="async"><span class="beginnerStoneTitle">${escapeHtml(station.name)}</span><span class="stationOrdinal">${ordinal}</span></span><span class="stationWordCount">${progress.mastered}/${progress.total}</span>${stationMilestones(progress)}</button>`;
+    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(station.name), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true"><img class="beginnerDioramaImage" src="${iconSrc}" alt="" loading="lazy" decoding="async"></span><span class="stationLabel beginnerDioramaLabel">${escapeHtml(station.name)}</span></button>`;
   }
   const label = LEVEL_DICTIONARIES.has(String(station.dictionaryId || "")) ? "" : `<span class="stationLabel">${escapeHtml(station.name)}</span>`;
   return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(station.name), mastered: progress.mastered, total: progress.total })}"><span class="stationProgressRing" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span>${label}<span class="stationWordCount">${progress.mastered}/${progress.total}</span>${stationMilestones(progress)}</button>`;
@@ -145,9 +141,10 @@ function refreshRouteProgressInPlace(context,route,activeStory){
     button.className=stationNodeClass(station,status);
     button.style.setProperty("--station-progress",(wordProgress.percent*3.6)+"deg");
     button.setAttribute("aria-label",msg("path.osvoeno_iz_slov",{label:station.name,mastered:wordProgress.mastered,total:wordProgress.total}));
+    const beginnerDiorama=button.classList.contains("beginnerDioramaNode");
     const count=button.querySelector(".stationWordCount");if(count)count.textContent=wordProgress.mastered+"/"+wordProgress.total;
     button.querySelector(".stationMilestones")?.remove();
-    const milestone=stationMilestones(wordProgress);if(milestone)button.insertAdjacentHTML("beforeend",milestone);
+    const milestone=stationMilestones(wordProgress);if(!beginnerDiorama&&milestone)button.insertAdjacentHTML("beforeend",milestone);
   });
 }
 
