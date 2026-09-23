@@ -57,11 +57,11 @@ test("service-worker upgrades bypass HTTP cache and controlled clients reload on
   assert.match(bootstrap,/registration\.update\(\)/);
   assert.match(bootstrap,/addEventListener\("controllerchange"/);
   assert.match(bootstrap,/window\.location\.reload\(\)/);
-  assert.ok(bootstrap.indexOf("registerServiceWorker();")>bootstrap.indexOf("await router.start();"));
-  assert.match(worker,/const VERSION = "16\.7\.0\.15"/);
-  assert.match(worker,/LEGACY_REFRESH_BEFORE_VERSION = "16\.7\.0\.15"/);
+  assert.ok(bootstrap.indexOf("registerServiceWorker();")<bootstrap.indexOf("await router.start();"));
+  assert.match(worker,/const VERSION = "16\.7\.0\.31"/);
+  assert.match(worker,/LEGACY_REFRESH_BEFORE_VERSION = "16\.7\.0\.31"/);
   assert.match(worker,/self\.clients\.claim\(\)/);
   assert.match(worker,/self\.clients\.matchAll\(\{type:"window",includeUncontrolled:true\}\)/);
   assert.match(worker,/client\.navigate\(client\.url\)/);
-  assert.match(worker,/url\.pathname==="\/auth\/callback"/);
+  assert.match(worker,/url\.pathname==="\/auth\/callback"/);\n  assert.match(worker,/fetch\(request, \{ cache: "no-store" \}\)/);\n  assert.match(worker,/async function networkFirst/);\n  assert.match(worker,/networkFirst\(request, RUNTIME_CACHE, \{ noStore: true \}\)/);\n  assert.doesNotMatch(worker,/url\.searchParams\.has\("v"\) \? cacheFirst\(request\)/);
 });

@@ -30,7 +30,7 @@ const LEVEL_DICTIONARIES = new Set(["beginner", "intermediate", "advanced"]);
 const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2";
 const BEGINNER_SET_PATTERN = /^beginner-(0[1-9]|[12]\d|30)$/;
 const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
-const SET_ICON_ASSET_VERSION = "16.7.0.30";
+const SET_ICON_ASSET_VERSION = "16.7.0.31";
 let beginnerSetMetadata = new Map();
 
 function normalizeBeginnerMetadataRows(rows = []) {

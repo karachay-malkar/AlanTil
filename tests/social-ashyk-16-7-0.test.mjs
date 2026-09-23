@@ -181,7 +181,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code cache-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.7.0.30";'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.31";'));
   assert.ok(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'));
   assert.equal(sw.includes('cache: "no-store"'),false);
   assert.match(sw,/navigationResponse/);
@@ -460,11 +460,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.30";'));
-  assert.ok(bootstrap.includes('router.js?v=16.7.0.30'));
-  assert.ok(index.includes('const targetVersion = "16.7.0.30";'));
-  assert.ok(index.includes('app.css?v=16.7.0.30'));
-  assert.ok(sw.includes('const VERSION = "16.7.0.30";'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.31";'));
+  assert.ok(bootstrap.includes('router.js?v=16.7.0.31'));
+  assert.ok(index.includes('const targetVersion = "16.7.0.31";'));
+  assert.ok(index.includes('app.css?v=16.7.0.31'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.31";'));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.7.0.11'));
   assert.ok(adminLazy.includes('admin.css?v=16.7.0.11'));
 });

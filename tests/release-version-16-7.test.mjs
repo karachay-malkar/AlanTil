@@ -13,10 +13,10 @@ test("16.7 release version has one shared source for Web and Mobile runtime", as
   const mobilePackage = JSON.parse(await read("mobile/package.json"));
 
   assert.match(release, /APP_VERSION = "16[.]7[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]30"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]31"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.doesNotMatch(analytics, /13[.]15[.]9/);
-  assert.match(versionScreen, /APP_VERSION/);
+  assert.match(versionScreen, /APP_VERSION/);\n  assert.match(versionScreen, /WEB_BUILD_VERSION/);\n  assert.match(versionScreen, /Web build/);
   assert.doesNotMatch(versionScreen, /<dd>13[.]15[.]12<\/dd>/);
   assert.match(mobileAnalytics, /alantil-core\/release[.]js/);
   assert.doesNotMatch(mobileAnalytics, /const APP_VERSION='16[.]7[.]0'/);
