@@ -24,7 +24,7 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(feature, /beginnerDioramaError/);
   assert.match(feature, /stationProgressRing beginnerDioramaFallback/);
   assert.match(feature, /BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2"/);
-  assert.match(feature, /SET_ICON_ASSET_VERSION = "16[.]7[.]0[.]20"/);
+  assert.match(feature, /SET_ICON_ASSET_VERSION = "16[.]7[.]0[.]24"/);
   assert.match(feature, /loading="eager"/);
   assert.match(feature, /fetchpriority="high"/);
   assert.doesNotMatch(feature, /loading="lazy"/);
@@ -57,7 +57,8 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   const expectedAssets = assignments.map((match) => migration.slice(match.index).match(/'((?:0[1-9]|[12]\d|30)_[a-z0-9_]+[.]webp)'/)?.[1]);
   assert.equal(expectedAssets.filter(Boolean).length, 30);
   const actualAssets = (await readdir(fileUrl("assets/icons/sets"))).filter((name) => name.endsWith(".webp")).sort();
-  assert.deepEqual(actualAssets, [...expectedAssets].sort());
+  const actualBeginnerAssets = actualAssets.filter((name) => expectedAssets.includes(name));
+  assert.deepEqual(actualBeginnerAssets, [...expectedAssets].sort());
 
   for (const asset of actualAssets) {
     const data = await readFile(fileUrl(`assets/icons/sets/${asset}`));
@@ -73,7 +74,7 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(groupLabelMigration, /name_ru = null/);
   assert.match(groupLabelMigration, /current_version = '2026[.]09[.]23[.]1'/);
   assert.match(groupLabelMigration, /name_ru = 'Начальный'/);
-  assert.match(worker, /const VERSION = "16[.]7[.]0[.]23"/);
+  assert.match(worker, /const VERSION = "16[.]7[.]0[.]24"/);
 });
 
 test("16.7 beginner set titles are localized in ru/en/tr", async () => {
@@ -92,17 +93,17 @@ test("16.7 beginner set titles are localized in ru/en/tr", async () => {
   assert.match(polish, /Sakin Göl/);
 });
 
-test("16.7.0.23 cache version is wired through the startup chain", async () => {
+test("16.7.0.24 cache version is wired through the startup chain", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
 
-  assert.match(index, /targetVersion = "16[.]7[.]0[.]23"/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]23/);
-  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]23/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]23"/);
-  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]23"/);
-  assert.match(worker, /VERSION = "16[.]7[.]0[.]23"/);
-  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]23"/);
+  assert.match(index, /targetVersion = "16[.]7[.]0[.]24"/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]24/);
+  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]24/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]24"/);
+  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]24"/);
+  assert.match(worker, /VERSION = "16[.]7[.]0[.]24"/);
+  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]24"/);
 });

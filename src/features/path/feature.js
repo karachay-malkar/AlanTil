@@ -1,4 +1,5 @@
 import { getInterfaceLanguage, msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { getDisplayedSetName } from "../../shared/domain/alan-display.js?v=13.13";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
 import { getCompleteDictionaryWords } from "../../shared/data/word-repository.js?v=16.7.0.17";
 import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.13";
@@ -29,7 +30,7 @@ const LEVEL_DICTIONARIES = new Set(["beginner", "intermediate", "advanced"]);
 const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2";
 const BEGINNER_SET_PATTERN = /^beginner-(0[1-9]|[12]\d|30)$/;
 const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
-const SET_ICON_ASSET_VERSION = "16.7.0.20";
+const SET_ICON_ASSET_VERSION = "16.7.0.24";
 let beginnerSetMetadata = new Map();
 
 function normalizeBeginnerMetadataRows(rows = []) {
@@ -147,6 +148,124 @@ function applyBeginnerSetMetadataToRoute(route) {
   });
 }
 
+
+const INTERMEDIATE_METADATA_CACHE_KEY = "alantil_intermediate_set_metadata_v1";
+const INTERMEDIATE_SET_PATTERN = /^intermediate-(0[1-9]|1\d|2[0-6])$/;
+let intermediateSetMetadata = new Map();
+
+function normalizeIntermediateMetadataRows(rows = []) {
+  const map = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const entityId = String(row?.entity_id || "").trim();
+    const iconName = String(row?.icon_name || "").trim();
+    if (!INTERMEDIATE_SET_PATTERN.test(entityId) || !BEGINNER_ICON_PATTERN.test(iconName)) continue;
+    map.set(entityId, {
+      entity_id: entityId,
+      icon_name: iconName,
+      name_alan_cyrillic: String(row?.name_alan_cyrillic || "").trim(),
+      name_alan_turkic: String(row?.name_alan_turkic || "").trim(),
+    });
+  }
+  return map;
+}
+
+function hasCompleteIntermediateMetadata(map) {
+  return map.size === 26 && Array.from(map.values()).every((entry) => (
+    BEGINNER_ICON_PATTERN.test(entry.icon_name)
+    && entry.name_alan_cyrillic
+    && entry.name_alan_turkic
+  ));
+}
+
+function readIntermediateMetadataCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(INTERMEDIATE_METADATA_CACHE_KEY) || "[]");
+    return normalizeIntermediateMetadataRows(cached);
+  } catch {
+    return new Map();
+  }
+}
+
+function writeIntermediateMetadataCache(map) {
+  try {
+    localStorage.setItem(INTERMEDIATE_METADATA_CACHE_KEY, JSON.stringify(Array.from(map.values())));
+  } catch {}
+}
+
+async function fetchIntermediateSetMetadata({ signal } = {}) {
+  const url = new URL("/rest/v1/content_structure", supabaseUrl);
+  url.searchParams.set("select", "entity_id,icon_name,name_alan_cyrillic,name_alan_turkic");
+  url.searchParams.set("entity_type", "eq.set");
+  url.searchParams.set("entity_id", "like.intermediate-*");
+  url.searchParams.set("order", "entity_id.asc");
+  const response = await fetch(url, {
+    method: "GET",
+    cache: "no-store",
+    signal,
+    headers: { apikey: supabasePublishableKey, Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error("Intermediate set metadata failed: " + response.status);
+  const map = normalizeIntermediateMetadataRows(await response.json());
+  if (!hasCompleteIntermediateMetadata(map)) throw new Error("Intermediate set metadata is incomplete");
+  writeIntermediateMetadataCache(map);
+  return map;
+}
+
+async function loadIntermediateSetMetadata({ signal } = {}) {
+  const cached = readIntermediateMetadataCache();
+  if (hasCompleteIntermediateMetadata(cached)) {
+    void fetchIntermediateSetMetadata({ signal }).then((fresh) => {
+      intermediateSetMetadata = fresh;
+    }).catch((error) => {
+      if (error?.name !== "AbortError") console.warn("Intermediate set metadata refresh failed", error);
+    });
+    return cached;
+  }
+  try {
+    return await fetchIntermediateSetMetadata({ signal });
+  } catch (error) {
+    if (error?.name !== "AbortError") console.warn("Intermediate set metadata unavailable", error);
+    return cached;
+  }
+}
+
+function intermediateSetMetadataEntry(station) {
+  if (String(station?.dictionaryId || "") !== "intermediate") return null;
+  return intermediateSetMetadata.get(String(station?.setId || "")) || null;
+}
+
+function intermediateSetIconName(station) {
+  const iconName = String(intermediateSetMetadataEntry(station)?.icon_name || "");
+  return BEGINNER_ICON_PATTERN.test(iconName) ? iconName : "";
+}
+
+function displayedIntermediateSetName(entry, station, fallback = "") {
+  if (!entry) return String(fallback || "").trim();
+  return getDisplayedSetName({
+    storyId: String(station?.storyType || ""),
+    setNameAlanCyrillic: entry.name_alan_cyrillic,
+    setNameAlanTurkic: entry.name_alan_turkic,
+  }) || String(fallback || "").trim();
+}
+
+function applyIntermediateSetMetadataToRoute(route) {
+  const visited = new Set();
+  Object.values(route?.stories || {}).forEach((story) => {
+    const stations = [
+      ...(Array.isArray(story?.stations) ? story.stations : []),
+      ...(Array.isArray(story?.catalogs) ? story.catalogs.flatMap((catalog) => (
+        Array.isArray(catalog?.sections) ? catalog.sections.flatMap((section) => section?.stations || []) : []
+      )) : []),
+    ];
+    stations.forEach((station) => {
+      if (!station || visited.has(station) || String(station.dictionaryId || "") !== "intermediate") return;
+      visited.add(station);
+      const entry = intermediateSetMetadataEntry(station);
+      station.name = displayedIntermediateSetName(entry, station, station.name);
+    });
+  });
+}
+
 function bindBeginnerDioramaFallbacks(root, signal) {
   root.querySelectorAll("[data-beginner-diorama-image]").forEach((image) => {
     const sync = () => {
@@ -161,7 +280,7 @@ function bindBeginnerDioramaFallbacks(root, signal) {
 }
 
 function stationNodeClass(station, status) {
-  const beginnerDiorama = Boolean(beginnerSetIconName(station));
+  const beginnerDiorama = Boolean(beginnerSetIconName(station) || intermediateSetIconName(station));
   return ["choiceControl", "stationNode", status, beginnerDiorama ? "beginnerDioramaNode" : ""].filter(Boolean).join(" ");
 }
 
@@ -183,7 +302,7 @@ function stationButton(station, index, progressSnapshot) {
   const status = computedStationStatus(null, station, progressSnapshot);
   const progress = stationWordProgress(station, progressSnapshot);
   const ordinal = String(index + 1).padStart(2, "0");
-  const iconName = beginnerSetIconName(station);
+  const iconName = beginnerSetIconName(station) || intermediateSetIconName(station);
   const className = stationNodeClass(station, status);
   const stationName = String(station.name || ordinal);
   if (iconName) {
@@ -225,7 +344,7 @@ function refreshRouteProgressInPlace(context,route,activeStory){
 function bindStoryTabs(root,signal){const shell=root.querySelector(".storyTabsShell");const scroller=shell?.querySelector(".storyTabs");if(!shell||!scroller)return;let frame=0;const schedule=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;syncStoryTabEdges(shell,scroller);});};const active=scroller.querySelector(".storyTab.active");requestAnimationFrame(()=>{active?.scrollIntoView({behavior:"auto",block:"nearest",inline:"center"});syncStoryTabEdges(shell,scroller);});scroller.addEventListener("scroll",schedule,{signal,passive:true});if(typeof ResizeObserver==="function"){const observer=new ResizeObserver(schedule);observer.observe(scroller);signal.addEventListener("abort",()=>observer.disconnect(),{once:true});}signal.addEventListener("abort",()=>{if(frame)cancelAnimationFrame(frame);},{once:true});}
 
 function renderRoute(context,route,activeStory,progressSnapshot,storyIntro){
-  const story=route.stories[activeStory];const progress=allStoryProgress(route,progressSnapshot)[activeStory];const stationIndex=new Map(story.stations.map((station,index)=>[station.key,index]));const reversedCatalogs=[...story.catalogs].reverse();const isBeginnerRoute=story.catalogs.some((catalog)=>String(catalog.catalogId||"")==="beginner");
+  const story=route.stories[activeStory];const progress=allStoryProgress(route,progressSnapshot)[activeStory];const stationIndex=new Map(story.stations.map((station,index)=>[station.key,index]));const reversedCatalogs=[...story.catalogs].reverse();const isBeginnerRoute=story.catalogs.some((catalog)=>["beginner","intermediate"].includes(String(catalog.catalogId||"")));
   context.shell.setCounter("");context.shell.setHeaderContent?.({title:msg("common.alan_til_2")});
   context.root.innerHTML=`<section class="pathView"><div class="pathStickyControls"><div class="storyTabsShell"><nav class="storyTabs" aria-label="${msg("path.istoriya_puti")}">${route.storyOrder.map((type)=>`<button class="tabAction storyTab ${type===activeStory?"active":""}" type="button" data-story-tab="${escapeHtml(type)}" ${type===activeStory?'aria-current="page"':""}>[ ${escapeHtml(route.storyLabels[type])} ]</button>`).join("")}</nav></div><div class="storyProgress">${renderSegmentedProgress({value:progress.percent,segments:10,label:msg("path.osvoeno_slov_istorii",{percent:progress.percent,name:route.storyLabels[activeStory]})})}<span class="pathProgressPercent">${progress.percent}%</span><span class="pathProgressCount">${progress.masteredWords}/${progress.totalWords}</span></div></div><div class="pathMapViewport isPositioning"><div class="routeBackdrop" aria-hidden="true"></div><div class="routeMap ${isBeginnerRoute?"beginnerRouteMap":""}" data-story-map="${escapeHtml(activeStory)}">${reversedCatalogs.map((catalog)=>routeCatalogSection(catalog,stationIndex,progressSnapshot)).join("")}</div></div><button class="storyWordsTrigger" type="button" data-story-words aria-label="Список слов" title="Список слов"><img src="/assets/icons/ui/lucide/list-checks.svg" alt="" aria-hidden="true"></button><nav class="routeScale" aria-label="${msg("path.rubezhi_marshruta")}"></nav></section>`;
   mark("alantil:path:rendered");
@@ -242,5 +361,5 @@ function renderStation(context,route,station){renderStationView(context,station,
 function masteryLabel(level){if(level===3)return msg("path.iii_znak_vershiny");if(level===2)return msg("path.ii_marshrutnyy_znak");if(level===1)return msg("path.i_marshrutnyy_znak");return msg("path.test_ne_sdan");}
 function renderResult(context,route,station,result,allWords){if(result.passed)awardWordMilestones(allWords);const message=result.passed?masteryLabel(result.masteryLevel):msg("path.nuzhno_ne_menee",{required:result.required});const wordsById=new Map(allWords.map((word)=>[String(word.id),word]));const alanToTranslation=result.payload.direction!=="ru_to_alan";const rows=(result.payload.words||[]).map((answer)=>{const word=wordsById.get(String(answer.word_id));if(!word)return"";const wrongWord=wordsById.get(String(answer.wrong_word_id||""));const correct=answer.result==="correct"||answer.is_correct===true;const correctAnswer=alanToTranslation?word.trans:word.word;const selectedAnswer=wrongWord?(alanToTranslation?wrongWord.trans:wrongWord.word):correctAnswer;return renderResultRow({id:word.id,status:correct?"ok":"bad",primary:alanToTranslation?word.word:word.trans,details:correct?[{label:msg("test.pravilno"),value:correctAnswer,tone:"correct"}]:[{label:msg("test.otvet"),value:selectedAnswer||"—",tone:"wrong"},{label:msg("test.pravilno"),value:correctAnswer,tone:"correct"}],trailingHtml:renderStarButton(word.id,`data-word-id="${escapeHtml(word.id)}"`)});}).join("");context.shell.setHeaderContent?.({title:msg("path.rezultat_testa"),subtitle:station.name,logo:true,brand:false});context.root.innerHTML=renderResultScreen({className:"stationResultView",summaryClass:"modeResultSummary",summaryHtml:`<span class="modeResultMark" aria-hidden="true">${result.masteryLevel?"⌃".repeat(result.masteryLevel):"—"}</span><strong>${result.payload.accuracy}%</strong><span>${escapeHtml(message)} · ${result.payload.correct_total}/${result.payload.questions_total}</span>`,contentHtml:rows,emptyHtml:`<div class="hintText">${msg("test.net_rezultatov")}</div>`,footerHtml:`<div class="stationActions"><button class="btn actionText" type="button" data-result-return>${msg("path.k_etapu")}</button>${result.passed?"":`<button class="btn actionPrimary" type="button" data-result-repeat>${msg("path.povtorit")}</button>`}</div>`});bindResultRows(context.root,{signal:controller.signal});context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button)=>{button.addEventListener("click",()=>button.classList.toggle("on",wordFavorites.toggle(button.dataset.wordId)),{signal:controller.signal});});context.root.querySelector("[data-result-return]")?.addEventListener("click",()=>context.router.replace("path.station",routeParams(station,route),{force:true}),{signal:controller.signal});context.root.querySelector("[data-result-repeat]")?.addEventListener("click",()=>{const mode=result.payload.direction==="ru_to_alan"?"ru":"kb";const session=createStationTestSession(station,allWords,mode);renderStationTest(context,session,{onComplete:(next)=>renderResult(context,route,station,next,allWords)});},{signal:controller.signal});}
 
-export async function mount(context,params={}){controller=new AbortController();const [words,metadata]=await Promise.all([getCompleteDictionaryWords({signal:controller.signal}),loadBeginnerSetMetadata({signal:controller.signal})]);beginnerSetMetadata=metadata;mark("alantil:path:dictionary-ready");if(routeCache.words!==words){routeCache={words,route:buildLearningRoute(words)};mark("alantil:path:route-built");}const route=routeCache.route;applyBeginnerSetMetadataToRoute(route);const screen=params.screen||"home";const activeStory=activeStoryType(route,params.storyType||getRouteSettings().active_story);const storyIntro=localizedStoryIntro(words,activeStory,route.stories[activeStory]?.intro);updateRouteSettings({active_story:activeStory},{queue:false});if(screen==="story-words"){renderStoryWordList({context,route,storyType:activeStory,signal:controller.signal});return;}if(screen==="home"){const progressSnapshot=createRouteProgressSnapshot();if(String(params.storyType||"")!==activeStory)context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,progressSnapshot,storyIntro);return;}const station=resolveStationFromParams(route,{...params,storyType:activeStory});if(!station){context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,createRouteProgressSnapshot(),storyIntro);return;}if(screen==="station"){renderStation(context,route,station);return;}if(screen==="study"){activeStudy=true;const selectedWords=selectedWordsForStation(station);learnState.currentDict=station.dictionaryId;learnState.currentSection=station.sectionId;learnState.currentSet=station.setId;context.shell.setHeaderContent?.({title:msg("path.uchit_slova"),subtitle:station.name,logo:true,brand:false});renderStudy(context,words,controller.signal,{mode:params.mode||learnState.currentStudyMode||"kb",wordsOverride:selectedWords,stationContext:{key:station.key,wordIds:selectedWords.map((word)=>word.id),sectionId:station.sectionId,...routeParams(station,route)},onComplete(){activeStudy=false;pendingSelections.delete(station.key);renderLearnResults(context,words,controller.signal,{onDone:()=>context.router.replace("path.station",routeParams(station,route),{force:true})});}});return;}if(screen==="test"){const allWords=route.storyOrder.flatMap((type)=>route.stories[type].stations).flatMap((item)=>item.words);const session=createStationTestSession(station,allWords,params.mode||"kb");renderStationTest(context,session,{onComplete:(result)=>renderResult(context,route,station,result,allWords)});}}
+export async function mount(context,params={}){controller=new AbortController();const [words,metadata,intermediateMetadata]=await Promise.all([getCompleteDictionaryWords({signal:controller.signal}),loadBeginnerSetMetadata({signal:controller.signal}),loadIntermediateSetMetadata({signal:controller.signal})]);beginnerSetMetadata=metadata;intermediateSetMetadata=intermediateMetadata;mark("alantil:path:dictionary-ready");if(routeCache.words!==words){routeCache={words,route:buildLearningRoute(words)};mark("alantil:path:route-built");}const route=routeCache.route;applyBeginnerSetMetadataToRoute(route);applyIntermediateSetMetadataToRoute(route);const screen=params.screen||"home";const activeStory=activeStoryType(route,params.storyType||getRouteSettings().active_story);const storyIntro=localizedStoryIntro(words,activeStory,route.stories[activeStory]?.intro);updateRouteSettings({active_story:activeStory},{queue:false});if(screen==="story-words"){renderStoryWordList({context,route,storyType:activeStory,signal:controller.signal});return;}if(screen==="home"){const progressSnapshot=createRouteProgressSnapshot();if(String(params.storyType||"")!==activeStory)context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,progressSnapshot,storyIntro);return;}const station=resolveStationFromParams(route,{...params,storyType:activeStory});if(!station){context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,createRouteProgressSnapshot(),storyIntro);return;}if(screen==="station"){renderStation(context,route,station);return;}if(screen==="study"){activeStudy=true;const selectedWords=selectedWordsForStation(station);learnState.currentDict=station.dictionaryId;learnState.currentSection=station.sectionId;learnState.currentSet=station.setId;context.shell.setHeaderContent?.({title:msg("path.uchit_slova"),subtitle:station.name,logo:true,brand:false});renderStudy(context,words,controller.signal,{mode:params.mode||learnState.currentStudyMode||"kb",wordsOverride:selectedWords,stationContext:{key:station.key,wordIds:selectedWords.map((word)=>word.id),sectionId:station.sectionId,...routeParams(station,route)},onComplete(){activeStudy=false;pendingSelections.delete(station.key);renderLearnResults(context,words,controller.signal,{onDone:()=>context.router.replace("path.station",routeParams(station,route),{force:true})});}});return;}if(screen==="test"){const allWords=route.storyOrder.flatMap((type)=>route.stories[type].stations).flatMap((item)=>item.words);const session=createStationTestSession(station,allWords,params.mode||"kb");renderStationTest(context,session,{onComplete:(result)=>renderResult(context,route,station,result,allWords)});}}
 export function canLeave(){return !activeStudy||!learnState.studySession.inProgress;}export function onLeave(reason="route_change"){if(activeStudy&&learnState.studySession.inProgress)finalizeLearnSession("interrupted",reason);activeStudy=false;}export function unmount(){controller?.abort();controller=null;}

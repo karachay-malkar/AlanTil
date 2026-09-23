@@ -68,7 +68,14 @@ export function getDisplayedDictionaryName(entry, settings) {
 export function getDisplayedSectionName(entry, settings) {
   return displayedStructureName(entry, { russian: 'sectionNameRu', english: 'sectionNameEn', turkish: 'sectionNameTr' }, settings);
 }
+function structureStoryId(entry) {
+  return text(entry?.storyId || entry?.story_id || entry?.story_type);
+}
+
 export function getDisplayedSetName(entry, settings) {
+  if (structureStoryId(entry) === 'roots') {
+    return displayedAlanValue(entry, 'setNameAlanCyrillic', 'setNameAlanTurkic', settings);
+  }
   return displayedStructureName(entry, { russian: 'setNameRu', english: 'setNameEn', turkish: 'setNameTr' }, settings);
 }
 export function getDisplayedStoryIntro(entry, settings) {

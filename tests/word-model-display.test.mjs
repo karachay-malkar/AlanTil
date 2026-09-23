@@ -116,6 +116,46 @@ test("Cyrillic dialect and stored Turkic text share one display layer", () => {
   assert.equal(word.translationRu, "юноша");
 });
 
+test("roots set names stay Alan and follow script plus Cyrillic dialect settings", () => {
+  const word = normalizeSupabaseWordEntry({
+    ...supabaseRow,
+    story_id: "roots",
+    story_name_ru: "Возвращение к истокам",
+    dictionary_id: "intermediate",
+    dictionary_name_ru: "Средний",
+    section_id: "intermediate-intermediate",
+    section_name_ru: "Intermediate",
+    set_id: "intermediate-25",
+    set_name_ru: "Бабушкины сказки",
+    set_name_en: "Grandmother's Tales",
+    set_name_tr: "Büyükannenin Masalları",
+    set_name_alan_cyrillic: "Амманы җомакълары",
+    set_name_alan_turkic: "Ammanı comaqları",
+  });
+  assert.ok(word);
+
+  assert.equal(getDisplayedSetName(word, {
+    interface_language_code: "en",
+    alan_script_code: "cyrillic",
+    alan_dialect_code: "canonical",
+  }), "Амманы җомакълары");
+  assert.equal(getDisplayedSetName(word, {
+    interface_language_code: "tr",
+    alan_script_code: "cyrillic",
+    alan_dialect_code: "karachay",
+  }), "Амманы джомакълары");
+  assert.equal(getDisplayedSetName(word, {
+    interface_language_code: "ru",
+    alan_script_code: "cyrillic",
+    alan_dialect_code: "balkar",
+  }), "Амманы жомакълары");
+  assert.equal(getDisplayedSetName(word, {
+    interface_language_code: "en",
+    alan_script_code: "turkic",
+    alan_dialect_code: "balkar",
+  }), "Ammanı comaqları");
+});
+
 test("song lookup keeps working when the displayed word uses another script", () => {
   const canonical = normalizeSupabaseWordEntry(supabaseRow);
   const displayedTurkic = {
