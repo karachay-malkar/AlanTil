@@ -1,5 +1,5 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.7.0.29";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.7.0.30";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=13.10.12";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
@@ -15,10 +15,10 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=16.7.0.16";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=16.7.0.29";
+import { createRouter } from "./router.js?v=16.7.0.30";
 import { createShell } from "./shell.js?v=16.7.0";
 
-const ASSET_VERSION = "16.7.0.29";
+const ASSET_VERSION = "16.7.0.30";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {

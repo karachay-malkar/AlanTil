@@ -13,7 +13,7 @@ test("16.7 release version has one shared source for Web and Mobile runtime", as
   const mobilePackage = JSON.parse(await read("mobile/package.json"));
 
   assert.match(release, /APP_VERSION = "16[.]7[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]29"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]30"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.doesNotMatch(analytics, /13[.]15[.]9/);
   assert.match(versionScreen, /APP_VERSION/);
