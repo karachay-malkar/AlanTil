@@ -55,7 +55,7 @@
     },
     "extra": {
       "releaseVersion": "16.7.0",
-      "architecture": "web-13.15.12-shared-core",
+      "architecture": "shared-core-16.7.0",
       "preview": "expo-web-and-native-preview"
     },
     "icon": "./assets/branding/alantil-icon.png"

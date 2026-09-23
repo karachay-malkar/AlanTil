@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "13.15.12";
+const SINGLETON_URL_VERSION = "16.7.0.29";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,19 +71,23 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("13.15.12 is the published app and cache release", async () => {
+test("16.7.0 is the published app release while 16.7.0.29 is the Web cache build", async () => {
   const index = await read("index.html");
+  const release = await read("packages/alantil-core/release.js");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
-  assert.match(index, /app\.css\?v=13\.15\.12/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.12/);
-  assert.match(analytics, /appVersion = "13\.15\.9"/);
-  assert.match(versionScreen, /<dd>13\.15\.12<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.15\.12"/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.12"/);
+  assert.match(index, /app[.]css[?]v=16[.]7[.]0[.]29/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]29/);
+  assert.match(release, /APP_VERSION = "16[.]7[.]0"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]29"/);
+  assert.match(analytics, /appVersion = APP_VERSION/);
+  assert.match(versionScreen, /APP_VERSION/);
+  assert.match(worker, /const VERSION = "16[.]7[.]0[.]29"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]29"/);
+  assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
 });
@@ -128,7 +132,7 @@ test("profile keeps character assets but they are lazy and not part of the servi
   assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
 });
 
-test("historical singleton URLs canonicalize to one 13.15.12 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one current in-memory instance", async () => {
   const index = await read("index.html");
   const generated = generatedImportMapFrom(index);
   const importMap = generated.imports;

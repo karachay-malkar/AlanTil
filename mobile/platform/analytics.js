@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EVENTS, sanitizeAnalyticsParameters } from '../../packages/alantil-core/analytics.js';
+import { APP_VERSION } from '../../packages/alantil-core/release.js';
 import { nativeAuthFetch } from './auth.js';
 import { loadNativeAnalyticsPreference } from './privacy.js';
 import { getNativeStorageScope, nativeScopedStorageKey } from './storage-scope.js';
 
-const APP_VERSION='16.7.0';
 const VISITOR_KEY='alantil:analytics:visitor-id';
 const QUEUE_BASE='alantil:16.6.3:analytics-events';
 const MAX_QUEUE=240;
