@@ -149,7 +149,7 @@ function applyBeginnerSetMetadataToRoute(route) {
 }
 
 
-const INTERMEDIATE_METADATA_CACHE_KEY = "alantil_intermediate_set_metadata_v1";
+const INTERMEDIATE_METADATA_CACHE_KEY = "alantil_intermediate_set_metadata_v2";
 const INTERMEDIATE_SET_PATTERN = /^intermediate-(0[1-9]|1\d|2[0-6])$/;
 let intermediateSetMetadata = new Map();
 
@@ -307,7 +307,7 @@ function stationButton(station, index, progressSnapshot) {
   const stationName = String(station.name || ordinal);
   if (iconName) {
     const iconSrc = `/assets/icons/sets/${encodeURIComponent(iconName)}?v=${SET_ICON_ASSET_VERSION}`;
-    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true"><img class="beginnerDioramaImage" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
+    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true"><img class="beginnerDioramaImage" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:absolute;left:50%;top:126px;transform:translateX(-50%);width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
   }
   const dictionaryId = String(station.dictionaryId || "");
   const label = dictionaryId === "beginner" || !LEVEL_DICTIONARIES.has(dictionaryId)

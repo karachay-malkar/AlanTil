@@ -31,7 +31,7 @@
 .stationWordCount{position:absolute;left:50%;top:91px;transform:translateX(-50%);color:var(--text-3);font:700 8px/1 var(--font-terminal);white-space:nowrap}
 .stationMilestones{position:absolute;left:50%;top:49px;transform:translateX(-50%);min-height:8px;color:var(--accent-strong);font:850 8px/1 var(--font-terminal);letter-spacing:-1px;white-space:nowrap;text-shadow:0 1px 0 var(--path-label-shadow)}
 .stationNode.studying .stationProgressRing{filter:saturate(1.08)}.stationNode.mastered .stationProgressRing,.stationNode.review_1_due .stationProgressRing{--station-progress-fill:var(--success-strong)}.stationNode.mastered .millstoneFace{background-image:var(--station-stone-image),var(--millstone-face-mastered)}.stationNode.review_1_due .stationLabel{color:var(--warning)}
-.stationNode.beginnerDioramaNode{width:118px;height:152px;min-height:152px;display:grid;grid-template-rows:118px minmax(24px,auto);row-gap:10px;justify-items:center;align-items:start}
+.stationNode.beginnerDioramaNode{width:118px;height:164px;min-height:164px;display:grid;grid-template-rows:118px minmax(24px,auto);row-gap:22px;justify-items:center;align-items:start}
 .beginnerRouteMap .routeCatalogGroups,.beginnerRouteMap .routeSectionStations{gap:33px}
 .beginnerDioramaFrame{position:relative;left:auto;top:-15px;grid-column:1;grid-row:1;width:118px;height:118px;display:block;background:transparent;overflow:visible;transition:filter var(--duration-normal) var(--ease-standard),opacity var(--duration-normal) var(--ease-standard)}
 .beginnerDioramaImage{display:block;width:100%;height:100%;object-fit:contain;filter:grayscale(1) saturate(0);transition:filter var(--duration-normal) var(--ease-standard)}
