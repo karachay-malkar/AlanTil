@@ -14,11 +14,11 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=16.7.0.16";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=16.7.0.25";
+import { createRouter } from "./router.js?v=16.7.0.26";
 import { createShell } from "./shell.js?v=16.7.0";
 
 const RELEASE_VERSION = "16.7.0";
-const ASSET_VERSION = "16.7.0.25";
+const ASSET_VERSION = "16.7.0.26";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
