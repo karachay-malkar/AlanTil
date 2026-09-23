@@ -1,3 +1,4 @@
+import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.7.0.32";
 import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.13";
 import {
   getDictionaryVersionStatus,
@@ -185,7 +186,7 @@ function renderSettingsHome(context, signal, { actionError = "" } = {}) {
 
       <section class="settingsSection settingsLinksSection" aria-label="${msg("settings.o_prilozhenii")}">
         ${settingsLink("settings.thanks", msg("settings.blagodarnosti"))}
-        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), "13.14")}
+        ${settingsLink("settings.version", msg("settings.versiya_prilozheniya"), APP_VERSION)}
         ${settingsLink("settings.privacy", msg("settings.politika_konfidentsialnosti"))}
       </section>
     </div>

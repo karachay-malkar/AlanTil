@@ -13,10 +13,14 @@ test("16.7 release version has one shared source for Web and Mobile runtime", as
   const mobilePackage = JSON.parse(await read("mobile/package.json"));
 
   assert.match(release, /APP_VERSION = "16[.]7[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]31"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]7[.]0[.]32"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.doesNotMatch(analytics, /13[.]15[.]9/);
-  assert.match(versionScreen, /APP_VERSION/);\n  assert.match(versionScreen, /WEB_BUILD_VERSION/);\n  assert.match(versionScreen, /Web build/);
+  assert.match(versionScreen, /APP_VERSION/);
+  assert.match(versionScreen, /WEB_BUILD_VERSION/);
+  assert.match(versionScreen, /WEB_DEPLOY_BRANCH/);
+  assert.match(versionScreen, /data-pages-commit/);
+  assert.match(versionScreen, /Web build/);
   assert.doesNotMatch(versionScreen, /<dd>13[.]15[.]12<\/dd>/);
   assert.match(mobileAnalytics, /alantil-core\/release[.]js/);
   assert.doesNotMatch(mobileAnalytics, /const APP_VERSION='16[.]7[.]0'/);
@@ -32,7 +36,7 @@ test("diorama labels are structurally below their own image without absolute pos
   const appStyles = await read("src/shared/styles/app.css");
 
   assert.match(feature, /<span class="stationLabel beginnerDioramaLabel">/);
-  assert.doesNotMatch(feature, /beginnerDioramaLabel" style=/);
+  assert.match(feature, /beginnerDioramaLabel" style="position:static;/);
   assert.match(pathStyles, /beginnerDioramaNode\{width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px/);
   assert.match(pathStyles, /beginnerDioramaFrame\{[^}]*top:auto[^}]*flex:0 0 118px/);
   assert.match(pathStyles, /beginnerDioramaLabel\{position:static;[^}]*flex:0 0 auto/);

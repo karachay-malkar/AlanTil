@@ -179,11 +179,13 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
   assert.match(bootstrap,/if \(router\.getCurrent\(\)\.route === "path\.home"\) return;/);
 });
 
-test('Service worker serves versioned application code cache-first and Router owns lazy CSS loading',()=>{
+test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.7.0.31";'));
-  assert.ok(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'));
-  assert.equal(sw.includes('cache: "no-store"'),false);
+  assert.ok(sw.includes('const VERSION = "16.7.0.32";'));
+  assert.ok(sw.includes('async function networkFirst'));
+  assert.ok(sw.includes('cache: "no-store"'));
+  assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
+  assert.equal(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'),false);
   assert.match(sw,/navigationResponse/);
   for(const eager of ['features/learn/learn.css','features/test/test.css','features/match/match.css','features/practice/practice.css','features/friends/friends-16-7.css','features/profile/profile.css','features/admin/admin.css','features/account/account.css','features/settings/settings.css','features/songs/songs.css','features/ashyk/ashyk.css'])assert.equal(css.includes(eager),false);
   assert.ok(css.includes('profile-tabs.css?v=16.7.0.9'));
@@ -460,11 +462,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.31";'));
-  assert.ok(bootstrap.includes('router.js?v=16.7.0.31'));
-  assert.ok(index.includes('const targetVersion = "16.7.0.31";'));
-  assert.ok(index.includes('app.css?v=16.7.0.31'));
-  assert.ok(sw.includes('const VERSION = "16.7.0.31";'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.32";'));
+  assert.ok(bootstrap.includes('router.js?v=16.7.0.32'));
+  assert.ok(index.includes('const targetVersion = "16.7.0.32";'));
+  assert.ok(index.includes('app.css?v=16.7.0.32'));
+  assert.ok(sw.includes('const VERSION = "16.7.0.32";'));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.7.0.11'));
   assert.ok(adminLazy.includes('admin.css?v=16.7.0.11'));
 });
