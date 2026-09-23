@@ -8,12 +8,14 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const nowMs=()=>globalThis.performance?.now?.()??Date.now();
 const normalizedPull=(pullLength)=>clamp(pullLength/MAX_PULL,0,1);
 const effectiveHopPull=(pullLength)=>clamp((pullLength-SHOT_CANCEL_RADIUS)/(MAX_PULL-SHOT_CANCEL_RADIUS),0,1);
+const flatSpeedForPull=(pullRatio)=>FLAT_MAX_SPEED*Math.pow(pullRatio,1.3);
 const REMOTE_BUFFER_MS=70;
 const REMOTE_EXTRAPOLATE_MS=110;
 const REMOTE_AUTHORITATIVE_FALLBACK_MS=360;
 function hopVelocity(pullLength,directionX,directionZ){const effective=effectiveHopPull(pullLength),horizontal=HOP_MIN_SPEED+(HOP_MAX_SPEED-HOP_MIN_SPEED)*Math.pow(effective,1.22),vertical=HOP_MIN_VERTICAL_SPEED+(HOP_MAX_VERTICAL_SPEED-HOP_MIN_VERTICAL_SPEED)*Math.pow(effective,1.02);return{x:directionX*horizontal,y:vertical,z:directionZ*horizontal};}
 function resolveCircularBoundary(body){const distance=Math.hypot(body.position.x,body.position.z);if(distance<=BOUNDARY_RADIUS||distance===0)return false;const nx=body.position.x/distance,nz=body.position.z/distance,penetration=distance-BOUNDARY_RADIUS;body.position.x-=nx*penetration;body.position.z-=nz*penetration;body.aabbNeedsUpdate=true;const outward=body.velocity.x*nx+body.velocity.z*nz;if(outward>0){const tx=-nz,tz=nx,tangent=body.velocity.x*tx+body.velocity.z*tz,radial=-outward*BOUNDARY_RESTITUTION;body.velocity.x=nx*radial+tx*tangent*BOUNDARY_TANGENT_RETENTION;body.velocity.z=nz*radial+tz*tangent*BOUNDARY_TANGENT_RETENTION;if(outward>.03)body.wakeUp();}return true;}
 function createBody(id,material){const body=new CANNON.Body({mass:1,material,linearDamping:.22,angularDamping:.38,sleepSpeedLimit:.12,sleepTimeLimit:.72});body.addShape(new CANNON.Box(new CANNON.Vec3(.48,.32,.28)));body.addShape(new CANNON.Sphere(.34),new CANNON.Vec3(-.5,.07,-.01));body.addShape(new CANNON.Sphere(.35),new CANNON.Vec3(.51,-.05,.015));body.addShape(new CANNON.Box(new CANNON.Vec3(.12,.23,.2)),new CANNON.Vec3(-.78,.03,0));body.addShape(new CANNON.Box(new CANNON.Vec3(.12,.22,.2)),new CANNON.Vec3(.79,-.02,0));body.allowSleep=true;body.userData={ashykId:id};return body;}
+function clearedHopY(body){body.aabbNeedsUpdate=true;body.updateAABB();return body.position.y+Math.max(0,FLOOR_Y+HOP_LAUNCH_CLEARANCE-body.aabb.lowerBound.y);}
 function lerp(a,b,t){return a+(b-a)*t;}
 function lerpQuat(a,b,t){
   let bx=b[0],by=b[1],bz=b[2],bw=b[3],dot=a[0]*bx+a[1]*by+a[2]*bz+a[3]*bw;
