@@ -37,7 +37,24 @@ jobs:
       - name: Ashyk trajectory smoke
         run: node scripts/qa/ashyk-trajectory-smoke.mjs
       - name: Ashyk regression tests
-        run: node --test tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/social-ashyk-16-7-0.test.mjs tests/release-version-16-7.test.mjs
+        run: |
+          set +e
+          node --test tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/social-ashyk-16-7-0.test.mjs tests/release-version-16-7.test.mjs > temp-ashyk-test.log 2>&1
+          code=$?
+          echo "$code" > temp-ashyk-test-exit.txt
+          cat temp-ashyk-test.log
+          exit 0
+      - name: Commit test diagnostics
+        run: |
+          rm node_modules
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-ashyk-test.log temp-ashyk-test-exit.txt
+          git commit -m "temp: capture Ashyk regression output"
+          git push
+          ln -s tools/ashyk-web/node_modules node_modules
+      - name: Fail if regression tests failed
+        run: test "$(cat temp-ashyk-test-exit.txt)" = "0"
       - name: Verify generated runtime
         run: node scripts/qa/check-generated.mjs --ashyk
       - name: Commit generated runtime and build references
