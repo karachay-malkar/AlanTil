@@ -1,4 +1,4 @@
-import { escapeHtml } from "./html.js?v=13.9.0";
+import { escapeHtml } from "./html.js?v=16.8.0.1";
 
 function classNames(...values) {
   return values.flatMap((value) => String(value || "").split(/\s+/)).filter(Boolean).join(" ");

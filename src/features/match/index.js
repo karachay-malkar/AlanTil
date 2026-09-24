@@ -1,9 +1,9 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.13";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { resumeMatchSession, suspendMatchForResume } from "./engine.js?v=16.6.7";
-import { clearMatchSession, matchState } from "./state.js?v=13.9.0";
-import { renderMatchGame, renderMatchMenu, renderMatchResult } from "./view.js?v=13.13";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
+import { resumeMatchSession, suspendMatchForResume } from "./engine.js?v=16.8.0.1";
+import { clearMatchSession, matchState } from "./state.js?v=16.8.0.1";
+import { renderMatchGame, renderMatchMenu, renderMatchResult } from "./view.js?v=16.8.0.1";
 
 let controller=null;
 export async function mount(context,params={}){

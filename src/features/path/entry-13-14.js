@@ -1,5 +1,5 @@
-import * as basePath from "/src/features/path/index.js?v=13.13&base=1";
-import { getWords } from "/src/shared/data/word-repository.js?v=13.13";
+import * as basePath from "/src/features/path/index.js?v=16.8.0.1&base=1";
+import { getWords } from "/src/shared/data/word-repository.js?v=16.8.0.1";
 
 let enhancementController = null;
 let resizeObserver = null;
@@ -13,7 +13,7 @@ function ensureStyles() {
     if (existing) { resolve(); return; }
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/src/features/path/path-13-14.css?v=13.14";
+    link.href = "/src/features/path/path-13-14.css?v=16.8.0.1";
     link.dataset.path1314 = "";
     link.addEventListener("load", resolve, { once: true });
     link.addEventListener("error", resolve, { once: true });

@@ -1,10 +1,10 @@
-import { msg } from "../../shared/i18n/index.js?v=13.15.9";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
 import {
   getPrivacyState,
   subscribePrivacyState,
   updateAnalyticsPreference,
-} from "../../shared/privacy/privacy-controller.js?v=13.9.0";
-import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+} from "../../shared/privacy/privacy-controller.js?v=16.8.0.1";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
 
 export function renderPrivacy(context, signal, params = {}) {
   context.shell.setHeaderContent?.({ title: msg("privacy.konfidentsialnost") });

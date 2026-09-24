@@ -1,24 +1,24 @@
-import { prepareAnalytics } from "../shared/analytics/analytics.js?v=13.9.0";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.7.0.33";
-import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=13.10.12";
-import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=13.10.12";
-import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.15.12";
-import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
-import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0.2";
-import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.7.0.2";
-import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.7.0.16";
-import { setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.7.0.2";
-import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.7.0.3";
-import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=13.10.12";
-import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
-import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
-import { createModalService } from "../shared/ui/modal.js?v=16.7.0.16";
-import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
-import { createRouter } from "./router.js?v=16.7.0.33";
-import { createShell } from "./shell.js?v=16.7.0";
+import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.1";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.1";
+import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.1";
+import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.1";
+import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.1";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=16.8.0.1";
+import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.1";
+import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.1";
+import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.1";
+import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.1";
+import { setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.1";
+import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.1";
+import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.1";
+import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.1";
+import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.1";
+import { createModalService } from "../shared/ui/modal.js?v=16.8.0.1";
+import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.1";
+import { createRouter } from "./router.js?v=16.8.0.1";
+import { createShell } from "./shell.js?v=16.8.0.1";
 
-const ASSET_VERSION = "16.7.0.33";
+const ASSET_VERSION = "16.8.0.1";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
@@ -55,7 +55,7 @@ function normalizeInitialLearningPath() {
 }
 async function linkRestoredAccountVisit() {
   try {
-    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.7.0.3");
+    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.8.0.1");
     await recordAnonymousPageView({ pagePath: window.location.pathname || "/", pageReferrer: document.referrer, appVersion: APP_VERSION });
   } catch {}
 }

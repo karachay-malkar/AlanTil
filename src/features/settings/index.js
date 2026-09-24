@@ -1,19 +1,19 @@
-import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.7.0.33";
-import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.13";
+import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.8.0.1";
+import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.1";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=13.13";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.13";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.13";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.13";
-import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.7.0.33";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.13";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
+} from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.1";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.1";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=16.8.0.1";
+import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.8.0.1";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.1";
 
-const SETTINGS_ASSET_VERSION = "13.14";
+const SETTINGS_ASSET_VERSION = "16.8.0.1";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;

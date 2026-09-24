@@ -1,13 +1,13 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
-import { DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
-import { panel } from "../../shared/ui/panel.js?v=13.9.0";
-import { openInfoModal } from "../../shared/ui/info-modal.js?v=13.9.0";
-import { openWordCard } from "../../shared/ui/word-card.js?v=13.9.0";
-import { escapeHtml } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { renderSongLyrics } from "./lyrics-renderer.js?v=13.9.0";
-import { mountPlayer } from "./player.js?v=13.9.0";
-import { songsState } from "./state.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
+import { DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.1";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
+import { openInfoModal } from "../../shared/ui/info-modal.js?v=16.8.0.1";
+import { openWordCard } from "../../shared/ui/word-card.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
+import { renderSongLyrics } from "./lyrics-renderer.js?v=16.8.0.1";
+import { mountPlayer } from "./player.js?v=16.8.0.1";
+import { songsState } from "./state.js?v=16.8.0.1";
 
 function songInformation(song) {
   const blocks = [];

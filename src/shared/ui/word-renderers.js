@@ -1,7 +1,7 @@
-import { parseExampleGroups, parseTranslationGroups } from "../domain/example-groups.js?v=13.10.12";
-import { escapeHtml } from "./html.js?v=13.9.0";
-import { renderFavoriteButton } from "./favorite-button.js?v=13.9.0";
-import { wordFavorites } from "../state/word-favorites.js?v=13.9.0";
+import { parseExampleGroups, parseTranslationGroups } from "../domain/example-groups.js?v=16.8.0.1";
+import { escapeHtml } from "./html.js?v=16.8.0.1";
+import { renderFavoriteButton } from "./favorite-button.js?v=16.8.0.1";
+import { wordFavorites } from "../state/word-favorites.js?v=16.8.0.1";
 
 export { escapeHtml };
 

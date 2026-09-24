@@ -1,6 +1,6 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
-import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
 import { filterNickname } from "../../../packages/alantil-core/profile.js";
 
 function renderAccountFact(label, value) {

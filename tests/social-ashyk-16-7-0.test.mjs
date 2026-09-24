@@ -181,14 +181,14 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.7.0.33";'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.1";'));
   assert.ok(sw.includes('async function networkFirst'));
   assert.ok(sw.includes('cache: "no-store"'));
   assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
   assert.equal(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'),false);
   assert.match(sw,/navigationResponse/);
   for(const eager of ['features/learn/learn.css','features/test/test.css','features/match/match.css','features/practice/practice.css','features/friends/friends-16-7.css','features/profile/profile.css','features/admin/admin.css','features/account/account.css','features/settings/settings.css','features/songs/songs.css','features/ashyk/ashyk.css'])assert.equal(css.includes(eager),false);
-  assert.ok(css.includes('profile-tabs.css?v=16.7.0.9'));
+  assert.ok(css.includes('profile-tabs.css?v=16.8.0.1'));
   for(const token of ['STYLE_PATHS','screenStyleDependencies','ensureRouteStyles','prepareRoute'])assert.ok(router.includes(token));
   assert.equal(router.includes('FEATURE_STYLES'),false);
   assert.equal(router.includes('ensureFeatureStyles'),false);
@@ -265,7 +265,7 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16\.7\.0\.25/);
+  assert.match(feature,/runtime\.js\?v=16.8.0.1/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
@@ -299,8 +299,8 @@ test('web and mobile register Community as the fourth root tab while Friends sta
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
   assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
-  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16\.7\.0\.2/);
-  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16\.7\.0\.2/);
+  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.1/);
+  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.1/);
   assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
   assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
 });
@@ -356,14 +356,14 @@ test('social copy includes local winner and explicit sign-in action',()=>{
   assert.match(copy,/signInAction:/);
 });
 
-test('16.7.0 mobile version uses build 40',()=>{
+test('16.8.0 mobile version uses build 41',()=>{
   const app=JSON.parse(read('mobile/app.json')).expo;
   const pkg=JSON.parse(read('mobile/package.json'));
-  assert.equal(app.version,'16.7.0');
-  assert.equal(app.extra.releaseVersion,'16.7.0');
-  assert.equal(app.android.versionCode,40);
-  assert.equal(app.ios.buildNumber,'40');
-  assert.equal(pkg.version,'16.7.0');
+  assert.equal(app.version,'16.8.0');
+  assert.equal(app.extra.releaseVersion,'16.8.0');
+  assert.equal(app.android.versionCode,41);
+  assert.equal(app.ios.buildNumber,'41');
+  assert.equal(pkg.version,'16.8.0');
 });
 
 test('Friends uses the same floating bracket-tab chrome as Profile without a solid header strip',()=>{
@@ -462,11 +462,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.7.0.33";'));
-  assert.ok(bootstrap.includes('router.js?v=16.7.0.33'));
-  assert.ok(index.includes('const targetVersion = "16.7.0.33";'));
-  assert.ok(index.includes('app.css?v=16.7.0.33'));
-  assert.ok(sw.includes('const VERSION = "16.7.0.33";'));
-  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.7.0.11'));
-  assert.ok(adminLazy.includes('admin.css?v=16.7.0.11'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.1";'));
+  assert.ok(bootstrap.includes('router.js?v=16.8.0.1'));
+  assert.ok(index.includes('const targetVersion = "16.8.0.1";'));
+  assert.ok(index.includes('app.css?v=16.8.0.1'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.1";'));
+  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.1'));
+  assert.ok(adminLazy.includes('admin.css?v=16.8.0.1'));
 });

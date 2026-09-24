@@ -1,9 +1,9 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
-import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
-import { PAUSE_ICON_SVG, PLAY_ICON_SVG } from "../../shared/ui/icons.js?v=13.9.0";
-import { renderMediaPlayer } from "../../shared/ui/media-player.js?v=13.9.0";
-import { resetPlayerState, songsState } from "./state.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
+import { EVENTS } from "../../shared/analytics/events.js?v=16.8.0.1";
+import { PAUSE_ICON_SVG, PLAY_ICON_SVG } from "../../shared/ui/icons.js?v=16.8.0.1";
+import { renderMediaPlayer } from "../../shared/ui/media-player.js?v=16.8.0.1";
+import { resetPlayerState, songsState } from "./state.js?v=16.8.0.1";
 
 const PROGRESS_THRESHOLDS = [25, 50, 75, 90];
 let audio = null;

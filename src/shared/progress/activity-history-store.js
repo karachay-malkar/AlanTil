@@ -1,4 +1,4 @@
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=13.9.0";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.1";
 import {
   ACTIVITY_HISTORY_LIMIT,
   summarizeActivityHistory,

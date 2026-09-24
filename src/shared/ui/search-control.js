@@ -1,6 +1,6 @@
-import { msg } from "../i18n/index.js?v=13.9.0";
-import { SEARCH_ICON_SVG } from "./icons.js?v=13.9.0";
-import { escapeHtml } from "./html.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=16.8.0.1";
+import { SEARCH_ICON_SVG } from "./icons.js?v=16.8.0.1";
+import { escapeHtml } from "./html.js?v=16.8.0.1";
 
 export function renderExpandableSearch({
   idPrefix = "search",

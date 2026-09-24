@@ -46,7 +46,7 @@ function gitBlobSha(file){
 
 const groups={
   styles:[
-    'src/shared/styles/shared-visual-tokens.css','src/shared/styles/theme.css','src/shared/styles/typography.css','src/shared/styles/shell.css','src/shared/styles/chrome.css','src/shared/styles/components.css','src/shared/styles/paper-components.css','src/shared/styles/segmented-control.css','src/shared/styles/table-system.css','src/shared/styles/app.css','src/shared/styles/base.css','src/shared/styles/reset.css','src/shared/styles/guest-profile-prompt.css','src/shared/styles/privacy.css'
+    'src/shared/styles/shared-visual-tokens.css','src/shared/styles/theme.css','src/shared/styles/typography.css','src/shared/styles/shell.css','src/shared/styles/chrome.css','src/shared/styles/components.css','src/shared/styles/paper-components.css','src/shared/styles/segmented-control.css','src/shared/styles/table-system.css','src/shared/styles/app.css','src/shared/styles/base.css','src/shared/styles/reset.css','src/shared/styles/privacy.css'
   ],
   ui:[
     'src/shared/ui/adaptive-layout.js','src/shared/ui/auth-provider-button.js','src/shared/ui/favorite-button.js','src/shared/ui/icons.js','src/shared/ui/info-modal.js','src/shared/ui/list.js','src/shared/ui/modal.js','src/shared/ui/panel.js'
@@ -71,7 +71,6 @@ const coverage={
   'src/shared/styles/app.css':'mapped: 16.7 feature cascade, bracket tabs and shared bottom navigation geometry',
   'src/shared/styles/base.css':'mapped: base background, text and control defaults',
   'src/shared/styles/reset.css':'not-applicable: browser reset has no React Native equivalent',
-  'src/shared/styles/guest-profile-prompt.css':'mapped: guest/login prompt geometry',
   'src/shared/styles/privacy.css':'mapped by shared document typography and checkbox primitives',
   'src/shared/ui/adaptive-layout.js':'mapped: compact breakpoint and horizontal insets',
   'src/shared/ui/auth-provider-button.js':'mapped: AuthProviderButton',
@@ -81,10 +80,10 @@ const coverage={
   'src/shared/ui/list.js':'mapped: list row contract',
   'src/shared/ui/modal.js':'mapped: overlay, card, actions and motion',
   'src/shared/ui/panel.js':'mapped: Panel',
-  'src/features/account/account.css':'mapped: account stack, fields, facts, messages and gender cards',
+  'src/features/account/account.css':'mapped: account stack, fields, facts and messages',
   'src/features/account/index.js':'logic-parity target: account state machine',
   'src/features/account/login.js':'logic-parity target: provider and guest entry',
-  'src/features/account/profile.js':'logic-parity target: nickname/avatar completion flow',
+  'src/features/account/profile.js':'logic-parity target: nickname completion flow',
   'src/features/path/path.css':'mapped: route, station geometry, scale and topographic scene',
   'src/features/path/path-navigation.css':'mapped: story navigation and route controls',
   'src/features/path/story-stele.css':'mapped: story stele proportions and overlay geometry',

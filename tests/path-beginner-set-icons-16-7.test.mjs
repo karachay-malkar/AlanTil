@@ -5,7 +5,7 @@ import { readFile, readdir } from "node:fs/promises";
 const fileUrl = (path) => new URL(`../${path}`, import.meta.url);
 const read = (path) => readFile(fileUrl(path), "utf8");
 
-test("16.7 beginner path uses DB-backed localized WebP metadata with circular fallback", async () => {
+test("16.8 beginner path uses DB-backed localized WebP metadata with circular fallback", async () => {
   const feature = await read("src/features/path/feature.js");
   const styles = await read("src/features/path/path.css");
   const appStyles = await read("src/shared/styles/app.css");
@@ -26,10 +26,11 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(feature, /beginnerDioramaError/);
   assert.match(feature, /stationProgressRing beginnerDioramaFallback/);
   assert.match(feature, /BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2"/);
-  assert.match(feature, /SET_ICON_ASSET_VERSION = "16[.]7[.]0[.]33"/);
+  assert.match(feature, /SET_ICON_ASSET_VERSION = "16[.]8[.]0[.]1"/);
   assert.match(feature, /loading="eager"/);
   assert.match(feature, /fetchpriority="high"/);
-  assert.match(feature, /beginnerDioramaNode[^`]*display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px/);
+  const iconBranch = feature.slice(feature.indexOf("if (iconName)"), feature.indexOf("const dictionaryId"));
+  assert.doesNotMatch(iconBranch, /data-adaptive-station-meta/);
   assert.match(feature, /beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px/);
   assert.match(feature, /beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none/);
   assert.doesNotMatch(feature, /loading="lazy"/);
@@ -42,14 +43,14 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
   assert.match(styles, /mastered \.beginnerDioramaImage/);
   assert.match(styles, /review_1_due \.beginnerDioramaImage/);
-  assert.match(styles, /beginnerDioramaNode\\{width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px/);
+  assert.match(styles, /beginnerDioramaNode\{width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px/);
   assert.match(styles, /beginnerRouteMap \.routeCatalogGroups,.beginnerRouteMap \.routeSectionStations\{gap:33px\}/);
   assert.match(styles, /routeMap\.beginnerRouteMap\{padding-bottom:94px\}/);
   assert.match(styles, /beginnerDioramaFrame\{position:relative;left:auto;top:auto;flex:0 0 118px/);
   assert.match(styles, /beginnerDioramaLabel\{position:static;left:auto;top:auto;transform:none;flex:0 0 auto/);
   assert.doesNotMatch(styles, /beginnerDioramaLabel\{[^}]*position:absolute/);
   assert.match(styles, /font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif/);
-  assert.match(appStyles, /features\/path\/path[.]css[?]v=16[.]7[.]0[.]33/);
+  assert.match(appStyles, /features\/path\/path[.]css[?]v=16[.]8[.]0[.]1/);
 
   assert.match(migration, /add column if not exists icon_name text/);
   const assignments = [...migration.matchAll(/\('beginner-(\d{2})', '(\d{2})_[a-z0-9_]+[.]webp'\)/g)];
@@ -80,7 +81,7 @@ test("16.7 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(groupLabelMigration, /name_ru = null/);
   assert.match(groupLabelMigration, /current_version = '2026[.]09[.]23[.]1'/);
   assert.match(groupLabelMigration, /name_ru = 'Начальный'/);
-  assert.match(worker, /const VERSION = "16[.]7[.]0[.]33"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]1"/);
 });
 
 test("16.7 beginner set titles are localized in ru/en/tr", async () => {
@@ -99,17 +100,17 @@ test("16.7 beginner set titles are localized in ru/en/tr", async () => {
   assert.match(polish, /Sakin Göl/);
 });
 
-test("16.7.0.33 cache version is wired through the startup chain", async () => {
+test("16.8.0.1 cache version is wired through the startup chain", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const router = await read("src/app/router.js");
   const worker = await read("service-worker.js");
 
-  assert.match(index, /targetVersion = "16[.]7[.]0[.]33"/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]7[.]0[.]33/);
-  assert.match(bootstrap, /router[.]js[?]v=16[.]7[.]0[.]33/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]7[.]0[.]33"/);
-  assert.match(router, /ASSET_VERSION = "16[.]7[.]0[.]33"/);
-  assert.match(worker, /VERSION = "16[.]7[.]0[.]33"/);
-  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]7[.]0[.]33"/);
+  assert.match(index, /targetVersion = "16[.]8[.]0[.]1"/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]1/);
+  assert.match(bootstrap, /router[.]js[?]v=16[.]8[.]0[.]1/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(router, /ASSET_VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(worker, /VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(worker, /LEGACY_REFRESH_BEFORE_VERSION = "16[.]8[.]0[.]1"/);
 });

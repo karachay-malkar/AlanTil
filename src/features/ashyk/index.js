@@ -1,15 +1,15 @@
-import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=13.15.12";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.10.12";
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=13.10.12";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.12";
-import { msg } from "../../shared/i18n/index.js?v=16.6.12";
-import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.7.0.2";
-import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.7.0.2";
-import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.7.0.15";
-import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.7.0.3";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.7.0.3";
-import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.7.0.3";
-import { mountAshykGame } from "./runtime.js?v=16.7.0.25";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.1";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.1";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.8.0.1";
+import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.1";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.1";
+import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.1";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.1";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.1";
+import { mountAshykGame } from "./runtime.js?v=16.8.0.1";
 
 let controller=null;
 let disposeGame=null;

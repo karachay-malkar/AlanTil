@@ -1,13 +1,13 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
 import { masteryLevelForPercent } from "../../../packages/alantil-core/mastery.js";
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
-import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=13.13";
-import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=13.13";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=13.13";
-import { testState } from "./state.js?v=13.9.0";
+import { isWordEnabledInTestModes } from "../../shared/domain/word-selection.js?v=16.8.0.1";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=16.8.0.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.1";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
+import { completeTest, pickOptions, startTest, submitAnswer } from "./engine.js?v=16.8.0.1";
+import { testState } from "./state.js?v=16.8.0.1";
 
 function enabledWords(words) { return words.filter(isWordEnabledInTestModes); }
 

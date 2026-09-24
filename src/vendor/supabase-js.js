@@ -1,10 +1,10 @@
-import { gunzipSync, strFromU8 } from "./gunzip.js?v=13.10.2";
+import { gunzipSync, strFromU8 } from "./gunzip.js?v=16.8.0.1";
 
 const PAYLOADS = Object.freeze([
-  "/src/vendor/supabase-js/payload-1.txt?v=16.7.0-oauth1",
-  "/src/vendor/supabase-js/payload-2.txt?v=16.7.0-oauth1",
-  "/src/vendor/supabase-js/payload-3.txt?v=16.7.0-oauth1",
-  "/src/vendor/supabase-js/payload-4.txt?v=16.7.0-oauth1",
+  "/src/vendor/supabase-js/payload-1.txt?v=16.8.0.1",
+  "/src/vendor/supabase-js/payload-2.txt?v=16.8.0.1",
+  "/src/vendor/supabase-js/payload-3.txt?v=16.8.0.1",
+  "/src/vendor/supabase-js/payload-4.txt?v=16.8.0.1",
 ]);
 
 function decodeBase64(value) {

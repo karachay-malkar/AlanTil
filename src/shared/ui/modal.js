@@ -1,5 +1,5 @@
-import { getDisplayedSessionExitPhrase } from "../domain/alan-display.js?v=13.10.12";
-import { msg } from "../i18n/index.js?v=13.15.10";
+import { getDisplayedSessionExitPhrase } from "../domain/alan-display.js?v=16.8.0.1";
+import { msg } from "../i18n/index.js?v=16.8.0.1";
 
 export function createModalService(root) {
   let resolver = null;

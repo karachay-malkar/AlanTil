@@ -1,5 +1,5 @@
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.15.9";
-import { logSupabaseError, normalizeSupabaseError } from "../errors/supabase-error.js?v=13.9.0";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.1";
+import { logSupabaseError, normalizeSupabaseError } from "../errors/supabase-error.js?v=16.8.0.1";
 
 async function runAdminRpc(name, parameters = {}) {
   const client = await getSupabaseClient();

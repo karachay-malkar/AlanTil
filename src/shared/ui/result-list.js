@@ -1,7 +1,7 @@
-import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "./icons.js?v=13.9.0";
-import { escapeHtml } from "./html.js?v=13.9.0";
-import { renderContentListRow } from "./list.js?v=13.9.0";
-import { bindOverflowMarquees, renderOverflowMarquee } from "./overflow-marquee.js?v=13.10.12";
+import { STATUS_BAD_ICON_SVG, STATUS_OK_ICON_SVG } from "./icons.js?v=16.8.0.1";
+import { escapeHtml } from "./html.js?v=16.8.0.1";
+import { renderContentListRow } from "./list.js?v=16.8.0.1";
+import { bindOverflowMarquees, renderOverflowMarquee } from "./overflow-marquee.js?v=16.8.0.1";
 
 function renderStatus(status, count = 0, label = "") {
   const correct = status === "ok";

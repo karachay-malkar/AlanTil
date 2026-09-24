@@ -1,13 +1,13 @@
 import {
   getUserSettings,
   subscribeUserSettings,
-} from "../settings/user-settings-store.js?v=13.15.12";
-import { INTERFACE_MESSAGES } from "./messages.js?v=16.7.0.21";
-import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=13.10.0";
-import { RELEASE_MESSAGES_13_15_9 } from "./messages-13-15-9.js?v=16.7.0.17";
-import { RELEASE_MESSAGES_13_15_10 } from "./messages-13-15-10.js?v=16.7.0.17";
-import { RELEASE_MESSAGES_13_15_12 } from "./messages-13-15-12.js?v=13.15.12";
-import { RELEASE_MESSAGES_16_6_11 } from "./messages-16-6-11.js?v=16.6.11";
+} from "../settings/user-settings-store.js?v=16.8.0.1";
+import { INTERFACE_MESSAGES } from "./messages.js?v=16.8.0.1";
+import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=16.8.0.1";
+import { RELEASE_MESSAGES_13_15_9 } from "./messages-13-15-9.js?v=16.8.0.1";
+import { RELEASE_MESSAGES_13_15_10 } from "./messages-13-15-10.js?v=16.8.0.1";
+import { RELEASE_MESSAGES_13_15_12 } from "./messages-13-15-12.js?v=16.8.0.1";
+import { RELEASE_MESSAGES_16_6_11 } from "./messages-16-6-11.js?v=16.8.0.1";
 import {
   SUPPORTED_INTERFACE_LANGUAGES,
   hasCompleteTranslations as coreHasCompleteTranslations,

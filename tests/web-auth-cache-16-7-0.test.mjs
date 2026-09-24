@@ -16,16 +16,16 @@ test('16.7 Web OAuth starts through the initialized Supabase client', () => {
   assert.doesNotMatch(auth, /function buildOAuthRedirectUrl\(/);
 });
 
-test('16.7 Web auth release refreshes the service-worker cache namespace', () => {
+test('16.8 Web auth release refreshes the service-worker cache namespace', () => {
   const serviceWorker = read('service-worker.js');
-  assert.match(serviceWorker, /const VERSION = "16\.7\.0\.15";/);
+  assert.match(serviceWorker, /const VERSION = "16\.8\.0\.1";/);
 });
 
-test('16.7 Web auth keeps callback initialization blocking and singleton import mapping', () => {
+test('16.8 Web auth keeps callback initialization blocking and singleton import mapping', () => {
   const auth = read('src/shared/auth/auth-service.js');
   const index = read('index.html');
   assert.match(auth, /export async function initializeAuth\(\)\s*\{\s*return startAuthInitialization\(\);\s*\}/);
   assert.equal((auth.match(/exchangeCodeForSession\(/g) || []).length, 1);
-  assert.match(index, /const targetVersion = "16\.7\.0\.15";/);
+  assert.match(index, /const targetVersion = "16\.8\.0\.1";/);
   assert.match(index, /\/src\/shared\/auth\/auth-service\.js/);
 });

@@ -1,25 +1,25 @@
-import { getInterfaceLanguage, msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { getDisplayedSetName } from "../../shared/domain/alan-display.js?v=13.13";
-import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=13.10.3";
-import { getCompleteDictionaryWords } from "../../shared/data/word-repository.js?v=16.7.0.17";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.13";
-import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.13";
-import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";
-import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.9.0";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
-import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
-import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.9.0";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { getHiddenSet, learnState } from "../learn/state.js?v=13.13";
-import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.0";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.13";
-import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.13";
-import { renderStationView } from "./station-view.js?v=13.13";
-import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=13.15.1";
-import { readScopedJson } from "../../shared/progress/storage-scope.js?v=13.15.10.8";
-import { renderStoryWordList } from "./story-word-list.js?v=13.15.12.1";
+import { getInterfaceLanguage, msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { getDisplayedSetName } from "../../shared/domain/alan-display.js?v=16.8.0.1";
+import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.1";
+import { getCompleteDictionaryWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=16.8.0.1";
+import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=16.8.0.1";
+import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=16.8.0.1";
+import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.1";
+import { createRouteScale } from "../../shared/ui/route-scale.js?v=16.8.0.1";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.1";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
+import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.1";
+import { renderResults as renderLearnResults } from "../learn/results.js?v=16.8.0.1";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=16.8.0.1";
+import { createStationTestSession, renderStationTest } from "./station-test.js?v=16.8.0.1";
+import { renderStationView } from "./station-view.js?v=16.8.0.1";
+import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=16.8.0.1";
+import { readScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.1";
+import { renderStoryWordList } from "./story-word-list.js?v=16.8.0.1";
 
 let controller = null;
 let activeStudy = false;
@@ -30,7 +30,7 @@ const LEVEL_DICTIONARIES = new Set(["beginner", "intermediate", "advanced"]);
 const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2";
 const BEGINNER_SET_PATTERN = /^beginner-(0[1-9]|[12]\d|30)$/;
 const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
-const SET_ICON_ASSET_VERSION = "16.7.0.33";
+const SET_ICON_ASSET_VERSION = "16.8.0.1";
 let beginnerSetMetadata = new Map();
 
 function normalizeBeginnerMetadataRows(rows = []) {
@@ -313,7 +313,7 @@ function stationButton(station, index, progressSnapshot) {
   const label = dictionaryId === "beginner" || !LEVEL_DICTIONARIES.has(dictionaryId)
     ? `<span class="stationLabel">${escapeHtml(stationName)}</span>`
     : "";
-  return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="stationProgressRing" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span>${label}<span class="stationWordCount">${progress.mastered}/${progress.total}</span>${stationMilestones(progress)}</button>`;
+  return `<button id="station-${escapeHtml(station.key)}" class="${className}" data-adaptive-station-meta style="--station-progress:${progress.percent * 3.6}deg" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="stationProgressRing" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span>${label}<span class="stationWordCount">${progress.mastered}/${progress.total}</span>${stationMilestones(progress)}</button>`;
 }
 function routeSection(section, stationIndex, catalogId, progressSnapshot) { const reversedStations=[...section.stations].reverse();const showHeading=String(catalogId||"")!=="beginner"&&Boolean(section.name); return `<section class="routeSection" data-route-section="${escapeHtml(`${catalogId}::${section.sectionId}`)}"><div class="routeSectionStations">${reversedStations.map((station)=>stationButton(station,stationIndex.get(station.key),progressSnapshot)).join("")}</div>${showHeading?`<h3 class="routeSectionHeading">${escapeHtml(section.name)}</h3>`:""}</section>`; }
 function routeCatalogSection(catalog, stationIndex, progressSnapshot) { const reversedSections=[...catalog.sections].reverse();const showHeading=String(catalog.catalogId||"")!=="beginner"&&Boolean(catalog.name); return `<section class="routeCatalog" data-route-catalog="${escapeHtml(catalog.catalogId)}"><span class="routeCatalogEnd" data-catalog-end="${escapeHtml(catalog.catalogId)}" aria-hidden="true"></span><div class="routeCatalogGroups">${reversedSections.map((section)=>routeSection(section,stationIndex,catalog.catalogId,progressSnapshot)).join("")}</div>${showHeading?`<h2 class="routeCatalogHeading">${escapeHtml(catalog.name)}</h2>`:""}</section>`; }

@@ -1,20 +1,20 @@
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.13";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=13.13";
-import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=13.13";
-import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=13.9.0";
-import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=13.9.0";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
-import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=13.10.12";
-import { createRouteScale } from "../../shared/ui/route-scale.js?v=13.9.0";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=13.9.0";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
-import { getHiddenSet, learnState } from "../learn/state.js?v=13.13";
-import { renderResults as renderLearnResults } from "../learn/results.js?v=13.9.0";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=13.13";
-import { createStationTestSession, renderStationTest } from "./station-test.js?v=13.13";
-import { renderStationView } from "./station-view.js?v=13.13";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=16.8.0.1";
+import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=16.8.0.1";
+import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=16.8.0.1";
+import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.1";
+import { createRouteScale } from "../../shared/ui/route-scale.js?v=16.8.0.1";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.1";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
+import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.1";
+import { renderResults as renderLearnResults } from "../learn/results.js?v=16.8.0.1";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=16.8.0.1";
+import { createStationTestSession, renderStationTest } from "./station-test.js?v=16.8.0.1";
+import { renderStationView } from "./station-view.js?v=16.8.0.1";
 
 let controller = null;
 let activeStudy = false;
@@ -42,6 +42,7 @@ function stationButton(station, index, progressSnapshot) {
   return `<button
     id="station-${escapeHtml(station.key)}"
     class="choiceControl stationNode ${status}"
+    data-adaptive-station-meta
     style="--station-progress:${progress.percent * 3.6}deg"
     type="button"
     data-station-key="${escapeHtml(station.key)}"

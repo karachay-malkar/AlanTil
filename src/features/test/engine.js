@@ -1,10 +1,10 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
-import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=13.9.0";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=13.9.0";
-import { createSessionRuntime, finalizeSessionRuntime, persistSessionRuntime, suspendSessionRuntime } from "../../shared/progress/session-builders.js?v=16.6.7";
-import { clearPracticeSnapshot, loadPracticeSnapshot, savePracticeSnapshot } from "../../shared/state/practice-snapshot-store.js?v=16.6.7";
-import { testState } from "./state.js?v=13.9.0";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=16.8.0.1";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=16.8.0.1";
+import { createSessionRuntime, finalizeSessionRuntime, persistSessionRuntime, suspendSessionRuntime } from "../../shared/progress/session-builders.js?v=16.8.0.1";
+import { clearPracticeSnapshot, loadPracticeSnapshot, savePracticeSnapshot } from "../../shared/state/practice-snapshot-store.js?v=16.8.0.1";
+import { testState } from "./state.js?v=16.8.0.1";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
 import { applyTestAnswer, buildTestOptions, initializeTestState, restoreTestStateSnapshot, testAbandonSummary, testCompletionSummary, testSessionPayload, testStateSnapshot } from "../../../packages/alantil-core/test.js";
 
 function persistTestSession(){persistSessionRuntime(testState.session.runtime,testSessionPayload(testState));const snapshot=testStateSnapshot(testState);if(snapshot)savePracticeSnapshot("test",snapshot);}

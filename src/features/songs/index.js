@@ -1,14 +1,14 @@
-import { msg } from "../../shared/i18n/index.js?v=13.10.3";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
-import { EVENTS } from "../../shared/analytics/events.js?v=13.9.0";
-import { getWords } from "../../shared/data/word-repository.js?v=13.10.3";
-import { songFavorites } from "../../shared/state/song-favorites.js?v=13.9.0";
-import { closeInfoModal } from "../../shared/ui/info-modal.js?v=13.9.0";
-import { renderSongsCatalog } from "./catalog.js?v=13.9.0";
-import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=13.10.3";
-import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=13.9.0";
-import { renderPlaylists } from "./playlists.js?v=13.9.0";
-import { songsState } from "./state.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
+import { EVENTS } from "../../shared/analytics/events.js?v=16.8.0.1";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=16.8.0.1";
+import { closeInfoModal } from "../../shared/ui/info-modal.js?v=16.8.0.1";
+import { renderSongsCatalog } from "./catalog.js?v=16.8.0.1";
+import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=16.8.0.1";
+import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=16.8.0.1";
+import { renderPlaylists } from "./playlists.js?v=16.8.0.1";
+import { songsState } from "./state.js?v=16.8.0.1";
 
 let controller = null;
 let activeContext = null;
@@ -16,8 +16,8 @@ let disposeActivePlayer = null;
 
 async function loadSongScreen() {
   const [view, player] = await Promise.all([
-    import("./song-view.js?v=13.9.0"),
-    import("./player.js?v=13.9.0"),
+    import("./song-view.js?v=16.8.0.1"),
+    import("./player.js?v=16.8.0.1"),
   ]);
   disposeActivePlayer = player.disposePlayer;
   return view.renderSongView;

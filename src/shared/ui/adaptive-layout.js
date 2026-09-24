@@ -14,7 +14,7 @@ function durationFor(distance) {
 }
 
 function ensureStationMeta(root = document) {
-  root.querySelectorAll?.('.stationNode').forEach((node) => {
+  root.querySelectorAll?.('.stationNode[data-adaptive-station-meta]').forEach((node) => {
     if (node.querySelector(':scope > .stationMeta')) return;
     const label = node.querySelector(':scope > .stationLabel');
     const count = node.querySelector(':scope > .stationWordCount');

@@ -1,5 +1,5 @@
-import { subscribeToAuth } from "../auth/auth-service.js?v=13.15.9";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=13.15.9";
+import { subscribeToAuth } from "../auth/auth-service.js?v=16.8.0.1";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.1";
 
 let unsubscribeAuth = null;
 let requestVersion = 0;

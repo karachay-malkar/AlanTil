@@ -1,10 +1,10 @@
-import { enqueueProgress } from "../progress/progress-queue.js?v=13.10.12";
+import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.1";
 import {
   hasScopedValue,
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js?v=13.10.12";
+} from "../progress/storage-scope.js?v=16.8.0.1";
 import {
   DEFAULT_USER_SETTINGS,
   applyUserSettingsUpdate,

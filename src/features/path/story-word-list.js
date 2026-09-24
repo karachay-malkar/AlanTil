@@ -1,9 +1,9 @@
-import { msg } from "../../shared/i18n/index.js?v=13.15.12";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=13.9.0";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
-import { SEARCH_ICON_SVG } from "../../shared/ui/icons.js?v=13.9.0";
-import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=13.10.12";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=13.9.0";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
+import { SEARCH_ICON_SVG } from "../../shared/ui/icons.js?v=16.8.0.1";
+import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=16.8.0.1";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
 
 function normalized(value) { return String(value || "").normalize("NFC").trim().toLocaleLowerCase(); }
 

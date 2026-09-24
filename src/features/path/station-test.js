@@ -1,13 +1,13 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=13.9.0";
-import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=13.9.0";
-import { getCachedWords } from "../../shared/data/word-repository.js?v=13.13";
-import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=13.9.0";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
-import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=13.9.0";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=13.9.0";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.9.0";
-import { msg } from "../../shared/i18n/index.js?v=13.9.0";
-import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
+import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.1";
+import { getCachedWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
+import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=16.8.0.1";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=16.8.0.1";
+import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=16.8.0.1";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
 import {
   applyStationTestAnswer,
   buildStationTestSessionState,

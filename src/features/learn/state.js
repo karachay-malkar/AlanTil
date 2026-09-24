@@ -1,6 +1,6 @@
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=13.13";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=13.9.0";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=13.9.0";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=16.8.0.1";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=16.8.0.1";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.1";
 import { getLearnItemsCompleted as getSharedLearnItemsCompleted } from "../../../packages/alantil-core/learning.js";
 
 export const HIDDEN_KEY = "fc_hidden_by_set_v7";

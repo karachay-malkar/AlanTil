@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=13.9.0";
+import { msg } from "../i18n/index.js?v=16.8.0.1";
 let activeRoot = null;
 let escapeHandler = null;
 

@@ -1,6 +1,6 @@
-import { APP_VERSION, RELEASE_DATE, WEB_BUILD_VERSION, WEB_DEPLOY_BRANCH, WEB_DEPLOY_REPOSITORY } from "../../../packages/alantil-core/release.js?v=16.7.0.33";
-import { msg } from "../../shared/i18n/index.js?v=13.15.12";
-import { panel } from "../../shared/ui/panel.js?v=13.9.0";
+import { APP_VERSION, RELEASE_DATE, WEB_BUILD_VERSION, WEB_DEPLOY_BRANCH, WEB_DEPLOY_REPOSITORY } from "../../../packages/alantil-core/release.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
 
 function displayReleaseDate(value) {
   const [year, month, day] = String(value || "").split("-");

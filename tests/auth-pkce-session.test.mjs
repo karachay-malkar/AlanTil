@@ -65,7 +65,7 @@ test('local Supabase fallback is authoritative, importable and pinned to 2.110.7
   assert.match(clientSource, /@supabase\/supabase-js@2\.110\.7\/\+esm/);
   assert.doesNotMatch(vendorLoader, /payload-\d+\.bin/);
   for (let index = 1; index <= 4; index += 1) {
-    assert.match(vendorLoader, new RegExp(`payload-${index}\\.txt\\?v=16\\.7\\.0-oauth1`));
+    assert.match(vendorLoader, new RegExp(`payload-${index}\\.txt\\?v=16\\.8\\.0\\.1`));
   }
   await loadVendor();
 });
