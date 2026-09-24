@@ -16,11 +16,11 @@ const motionField={pieces:[
 ]};
 const stillField={pieces:motionField.pieces.map(({velocity,angularVelocity,...piece})=>piece)};
 const trajectoryCore={durationMs:50,frames:[{t:0,pieces:stillField.pieces},{t:50,pieces:stillField.pieces.map((piece)=>piece.id===0?{...piece,position:[1,1,0]}:piece)}],impacts:[{t:25,kind:'ashyk',strength:2.4,key:'0:1',pan:.2}],finalState:{pieces:stillField.pieces.map((piece)=>piece.id===0?{...piece,position:[1,1,0]}:piece)},result:{success:false,hitAny:true,reasonCode:'miss',remainingPieces:2}};
-const room=(overrides={})=>({id:'r1',status:'playing',protocol_version:3,host_user_id:'u1',guest_user_id:'u2',active_user_id:'u2',phase:'first-shot',phase_seq:7,revision:10,last_action_type:null,last_action_actor_user_id:null,game_state:{field:stillField,scores:[0,0],remainingAshyks:10,difficulty:'normal',phase:'first-shot'},...overrides});
+const room=(overrides={})=>({id:'r1',status:'playing',protocol_version:4,host_user_id:'u1',guest_user_id:'u2',active_user_id:'u2',phase:'first-shot',phase_seq:7,revision:10,last_action_type:null,last_action_actor_user_id:null,game_state:{field:stillField,scores:[0,0],remainingAshyks:10,difficulty:'normal',phase:'first-shot'},...overrides});
 
 test('trajectory engine removes streaming interpolation and keeps authoritative deferral',()=>{
   const source=read('packages/ashyk-game/engine.js');
-  assert.match(source,/simulateShotTrajectory/);assert.match(source,/function playRemoteTrajectory/);assert.match(source,/pendingAuthoritative/);assert.match(source,/TRAJECTORY_FRAME_MS/);assert.match(source,/preShotState=physicsSnapshot\(\)/);
+  assert.match(source,/simulateShotTrajectory/);assert.match(source,/function playRemoteTrajectory/);assert.match(source,/function playLocalTrajectory/);assert.match(source,/pendingAuthoritative/);assert.match(source,/TRAJECTORY_FRAME_MS/);assert.match(source,/preShotState=physicsSnapshot\(\)/);
   assert.doesNotMatch(source,/REMOTE_BUFFER_MS|REMOTE_EXTRAPOLATE_MS|beginRemotePlayback|pushRemoteFrame|shotFrame/);
 });
 
@@ -41,18 +41,25 @@ test('private Broadcast carries shot-trajectory and no legacy physics stream',as
   stream.send('shot-trajectory',{shotId:'s1'});assert.equal(sent.at(-1).event,'shot-trajectory');stream.close();
 });
 
-test('session replays duplicate trajectory once and sends exactly one precomputed trajectory',async()=>{
-  let visualReceiver=null;const sent=[],calls=[];
-  const online={openVisualStream(roomId,onVisual,onStatus){visualReceiver=onVisual;onStatus('online');return{send:(event,payload)=>{sent.push([event,payload]);return true;},close(){},ready:Promise.resolve(true)};}};
+test('session replays a remote trajectory once and uses one canonical local trajectory after shot commit',async()=>{
+  let visualReceiver=null;const sent=[],calls=[],commits=[];
   let current=room();
-  const engine={setRemoteSelection(id){calls.push(['selection',id]);},setRemoteAim(value){calls.push(['aim',value]);},playRemoteTrajectory(value){calls.push(['trajectory',value]);return true;},simulateShotTrajectory(){return trajectoryCore;}};
+  const online={commitShot:async(roomValue,phaseSeq,shotId)=>{commits.push([roomValue.id,phaseSeq,shotId]);return{...roomValue,shot_in_flight_id:shotId,shot_in_flight_phase_seq:phaseSeq,shot_in_flight_actor_user_id:'u1'};},openVisualStream(roomId,onVisual,onStatus){visualReceiver=onVisual;onStatus('online');return{send:(event,payload)=>{sent.push([event,payload]);return true;},close(){},ready:Promise.resolve(true)};}};
+  const engine={setRemoteSelection(id){calls.push(['selection',id]);},setRemoteAim(value){calls.push(['aim',value]);},playRemoteTrajectory(value){calls.push(['remoteTrajectory',value]);return true;},playLocalTrajectory(value){calls.push(['localTrajectory',value]);return true;},simulateShotTrajectory(){return trajectoryCore;},physicsSnapshot(){return motionField;},isReady(){return true;},isShotActive(){return false;}};
   const store={getState:()=>({gameMode:'online'}),onlineGameState:()=>({}),applyRemoteVisual(){}};
-  const session=createAshykOnlineSessionController({online,userId:'u1',store,engine,getRoom:()=>current,applyRoom(){}});session.attachVisual('r1');
+  const session=createAshykOnlineSessionController({online,userId:'u1',store,engine,getRoom:()=>current,applyRoom(next){current=next;}});session.attachVisual('r1');
   const packet={roomId:'r1',actorUserId:'u2',phaseSeq:7,eventId:'e1',shotId:'s1',pieceId:0,mode:'flat',directionX:1,directionZ:0,pullLength:4,pullRatio:.7,...trajectoryCore};
-  visualReceiver('shot-trajectory',packet);visualReceiver('shot-trajectory',packet);assert.equal(calls.filter(([type])=>type==='trajectory').length,1);
-  current=room({active_user_id:'u1'});session.handleEngineEvent({type:'shot',id:0,mode:'flat',directionX:1,directionZ:0,pullRatio:.7,pullLength:4,preShotState:motionField});
-  await new Promise((resolve)=>setTimeout(resolve,15));
-  assert.equal(sent.filter(([event])=>event==='shot-trajectory').length,1);assert.equal(sent.some(([event])=>['shot-start','shot-frame','impact'].includes(event)),false);session.destroy();
+  visualReceiver('shot-trajectory',packet);visualReceiver('shot-trajectory',packet);assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,1);
+  current=room({active_user_id:'u1'});assert.equal(session.launchOnlineShot(0,{mode:'flat',directionX:1,directionZ:0,pullLength:4}),true);await Promise.resolve();
+  assert.equal(commits.length,1);assert.equal(calls.filter(([type])=>type==='localTrajectory').length,1);assert.equal(sent.filter(([event])=>event==='shot-trajectory').length,1);assert.equal(sent.some(([event])=>['shot-start','shot-frame','impact'].includes(event)),false);
+  const late={...packet,shotId:'late'};current=room({active_user_id:'u1',phase_seq:8,last_action_type:'shot_result',last_action_actor_user_id:'u2'});visualReceiver('shot-trajectory',late);assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,1);session.destroy();
+});
+
+test('online shot result keeps the committed shot id for the authoritative action',()=>{
+  const fakeEngine={applyAuthoritativeSnapshot(){return true;},setRemoteSelection(){},setRemoteAim(){},clearSelection(){},snapshot(){return stillField;}};
+  const store=createAshykGameStore({engine:fakeEngine,words:[],now:()=>0,setRepeater:()=>1,clearRepeater(){},setTimer:()=>1,clearTimer(){}});
+  store.hydrateOnline(room({active_user_id:'u1'}),'u1');store.handleEngineEvent({type:'shotSettled',shotId:'shot-committed',result:{success:false,hitAny:false,reasonCode:'miss',remainingPieces:2}});
+  const state=store.getState();assert.equal(state.onlineAction?.type,'shot_result');assert.equal(state.onlineAction?.id,'shot-committed');store.destroy();
 });
 
 test('remote authoritative answer reproduces score, selected answer, correctness and the same outcome banner',()=>{
