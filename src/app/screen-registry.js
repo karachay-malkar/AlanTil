@@ -1,4 +1,4 @@
-import { msg } from "../shared/i18n/index.js?v=16.8.0.2";
+import { msg } from "../shared/i18n/index.js?v=16.8.0.3";
 const DEFAULT_SCREEN = Object.freeze({
   layout: "detail",
   header: "standard",

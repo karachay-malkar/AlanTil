@@ -1,9 +1,9 @@
-import { escapeHtml } from "../ui/html.js?v=16.8.0.2";
+import { escapeHtml } from "../ui/html.js?v=16.8.0.3";
 import {
   LEARNING_SETUP_LANGUAGES,
   previewContent,
   setupText,
-} from "./learning-preview-data.js?v=16.8.0.2";
+} from "./learning-preview-data.js?v=16.8.0.3";
 import {
   emptyLearningSetupDraft,
   isLearningSetupDraftComplete,

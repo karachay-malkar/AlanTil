@@ -1,9 +1,9 @@
-import { msg } from "../i18n/index.js?v=16.8.0.2";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.2";
+import { msg } from "../i18n/index.js?v=16.8.0.3";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.3";
 import {
   logSupabaseError,
   normalizeSupabaseError,
-} from "../errors/supabase-error.js?v=16.8.0.2";
+} from "../errors/supabase-error.js?v=16.8.0.3";
 import {
   normalizeNickname,
   validateNicknameRule,

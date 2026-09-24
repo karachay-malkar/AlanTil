@@ -1,5 +1,5 @@
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.2";
-import { readJson, writeJson } from "../../shared/state/storage.js?v=16.8.0.2";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.3";
+import { readJson, writeJson } from "../../shared/state/storage.js?v=16.8.0.3";
 import { BUNDLED_SONG_CATALOG, isSongsCacheFresh, normalizeSongsCache, normalizeSupabaseSongs } from "../../../packages/alantil-core/song-supabase.js";
 import { normalizeSongCollection } from "../../../packages/alantil-core/song-catalog.js";
 

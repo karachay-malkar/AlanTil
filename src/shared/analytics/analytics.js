@@ -1,11 +1,11 @@
-import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../config/analytics.js?v=16.8.0.2";
+import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../config/analytics.js?v=16.8.0.3";
 import {
   mergeAnalyticsContext,
   sanitizeAnalyticsParameters,
 } from "../../../packages/alantil-core/analytics.js";
 
 const GA_DISABLE_KEY = `ga-disable-${measurementId}`;
-const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=16.8.0.2";
+const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=16.8.0.3";
 let initialized = false;
 let scriptRequested = false;
 let defaultConsentSet = false;

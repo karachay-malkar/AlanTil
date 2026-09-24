@@ -1,10 +1,10 @@
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.2";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.2";
-import { renderSetPreparation } from "./set-preparation.js?v=16.8.0.2";
-import { renderResults } from "./results.js?v=16.8.0.2";
-import { clearStudySession, learnState } from "./state.js?v=16.8.0.2";
-import { finalizeLearnSession, initializeStudy, renderStudy } from "./study.js?v=16.8.0.2";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
+import { renderSetPreparation } from "./set-preparation.js?v=16.8.0.3";
+import { renderResults } from "./results.js?v=16.8.0.3";
+import { clearStudySession, learnState } from "./state.js?v=16.8.0.3";
+import { finalizeLearnSession, initializeStudy, renderStudy } from "./study.js?v=16.8.0.3";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 
 let controller = null;
 let activeScreen = "set";

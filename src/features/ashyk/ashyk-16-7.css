@@ -1,4 +1,4 @@
-@import url("./ashyk-16-6-12.css?v=16.8.0.2");
+@import url("./ashyk-16-6-12.css?v=16.8.0.3");
 
 .ashykFriendChoice{width:100%;min-height:52px;border:1px solid var(--line,#cbc4b8);border-radius:14px;background:rgba(246,242,233,.48);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;color:inherit}
 .ashykFriendChoice>span{display:grid;gap:2px;min-width:0}.ashykFriendChoice strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ashykFriendChoice small{font-size:10px;color:var(--text-3,#918b80)}.ashykFriendChoice>b{max-width:145px;text-align:right;font-size:10px;color:var(--accent-strong,#7a5b2e)}

@@ -1,9 +1,9 @@
-import { getTranslationLanguageCode } from "../settings/user-settings-store.js?v=16.8.0.2";
-import { createActivityClock } from "./activity-clock.js?v=16.8.0.2";
-import { enqueueProgress } from "./progress-queue.js?v=16.8.0.2";
-import { createSessionId, removeActiveSession, saveActiveSession } from "./session-store.js?v=16.8.0.2";
-import { getStorageScope } from "./storage-scope.js?v=16.8.0.2";
-import { recordActivitySession } from "./activity-history-store.js?v=16.8.0.2";
+import { getTranslationLanguageCode } from "../settings/user-settings-store.js?v=16.8.0.3";
+import { createActivityClock } from "./activity-clock.js?v=16.8.0.3";
+import { enqueueProgress } from "./progress-queue.js?v=16.8.0.3";
+import { createSessionId, removeActiveSession, saveActiveSession } from "./session-store.js?v=16.8.0.3";
+import { getStorageScope } from "./storage-scope.js?v=16.8.0.3";
+import { recordActivitySession } from "./activity-history-store.js?v=16.8.0.3";
 import { SESSION_QUEUE_TYPES, buildActiveSessionPayload, buildFinalSessionPayload, buildSelectedSources, normalizeSessionType, snapshotRecoveredSession } from "../../../packages/alantil-core/session.js";
 
 export { buildSelectedSources, snapshotRecoveredSession };

@@ -1,11 +1,11 @@
-import { msg, getInterfaceLanguage, getInterfaceLocale } from "../../shared/i18n/index.js?v=16.8.0.2";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.2";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.2";
-import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=16.8.0.2";
-import { renderBracketTabs } from "../../shared/ui/profile-navigation.js?v=16.8.0.2";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.2";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.2";
+import { msg, getInterfaceLanguage, getInterfaceLocale } from "../../shared/i18n/index.js?v=16.8.0.3";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.3";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.3";
+import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=16.8.0.3";
+import { renderBracketTabs } from "../../shared/ui/profile-navigation.js?v=16.8.0.3";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.3";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.3";
 import {
   blockUserAccount,
   fetchStationTestDetail,
@@ -15,7 +15,7 @@ import {
   fetchUserFavorites,
   fetchUserTestHistory,
   unblockUserAccount,
-} from "../../shared/admin/admin-activity-service.js?v=16.8.0.2";
+} from "../../shared/admin/admin-activity-service.js?v=16.8.0.3";
 
 const STORY_ORDER = Object.freeze(["understanding", "roots", "ascent", "pathways"]);
 const STORY_KEYS = Object.freeze({

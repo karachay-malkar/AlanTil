@@ -1,5 +1,5 @@
-import { getCurrentAuthState } from "../auth/auth-service.js?v=16.8.0.2";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.2";
+import { getCurrentAuthState } from "../auth/auth-service.js?v=16.8.0.3";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.3";
 
 function currentUserId() {
   return String(getCurrentAuthState().user?.id || "").trim();

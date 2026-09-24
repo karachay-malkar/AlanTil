@@ -1,4 +1,4 @@
-import { getUserSettings } from "../settings/user-settings-store.js?v=16.8.0.2";
+import { getUserSettings } from "../settings/user-settings-store.js?v=16.8.0.3";
 import * as core from "../../../packages/alantil-core/alan-display.js";
 
 function settingsOrCurrent(settings) {

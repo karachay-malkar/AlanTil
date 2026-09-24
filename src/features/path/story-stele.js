@@ -1,8 +1,8 @@
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.2";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
 
 export const STORY_STELE_SEEN_KEY = "alantil_story_intro_seen_v1";
-const ASSET_URL = "/assets/path/story-stele.webp?v=16.8.0.2";
+const ASSET_URL = "/assets/path/story-stele.webp?v=16.8.0.3";
 const STYLE_CLASSES = ["storySteleStyleBronze"];
 const CLOSE_DELAY_MS = 220;
 const AUTO_SCROLL_START_DELAY_MS = 1600;

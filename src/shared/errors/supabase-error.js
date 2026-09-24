@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=16.8.0.2";
+import { msg } from "../i18n/index.js?v=16.8.0.3";
 const EMAIL_PATTERN = /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g;
 const JWT_PATTERN = /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g;
 const LONG_TOKEN_PATTERN = /\b[A-Za-z0-9_-]{48,}\b/g;

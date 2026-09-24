@@ -1,19 +1,19 @@
-import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.8.0.2";
-import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.8.0.3";
+import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.3";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=16.8.0.2";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.2";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.2";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=16.8.0.2";
-import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.8.0.2";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.2";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.2";
+} from "../../shared/data/word-repository.js?v=16.8.0.3";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.3";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.3";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=16.8.0.3";
+import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.8.0.3";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.3";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.3";
 
-const SETTINGS_ASSET_VERSION = "16.8.0.2";
+const SETTINGS_ASSET_VERSION = "16.8.0.3";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;

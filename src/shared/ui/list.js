@@ -1,5 +1,5 @@
-import { STAR_ICON_SVG } from "./icons.js?v=16.8.0.2";
-import { escapeHtml } from "./html.js?v=16.8.0.2";
+import { STAR_ICON_SVG } from "./icons.js?v=16.8.0.3";
+import { escapeHtml } from "./html.js?v=16.8.0.3";
 
 function dataAttribute(name, value) {
   if (!name) return "";

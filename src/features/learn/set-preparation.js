@@ -1,9 +1,9 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.2";
-import { renderContentListRow } from "../../shared/ui/list.js?v=16.8.0.2";
-import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=16.8.0.2";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.2";
-import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=16.8.0.2";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
+import { renderContentListRow } from "../../shared/ui/list.js?v=16.8.0.3";
+import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=16.8.0.3";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
+import { getHiddenSet, learnState, setHiddenSet } from "./state.js?v=16.8.0.3";
 
 function normalizeContext(value, fallback = "") {
   return String(value ?? fallback).trim();

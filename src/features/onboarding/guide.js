@@ -1,7 +1,7 @@
-import { PATH_CONFIG } from "../../config/path.js?v=16.8.0.2";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.2";
-import { learnState } from "../learn/state.js?v=16.8.0.2";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { PATH_CONFIG } from "../../config/path.js?v=16.8.0.3";
+import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
+import { learnState } from "../learn/state.js?v=16.8.0.3";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 
 const GUIDE_STATE_KEY = "alantil_guided_help_v1";
 const GUIDE_STYLE_ID = "alantil-guided-help-style";

@@ -1,7 +1,7 @@
-import { getAnalyticsContext, trackEvent } from "../analytics/analytics.js?v=16.8.0.2";
-import { EVENTS } from "../analytics/events.js?v=16.8.0.2";
-import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.2";
-import { createFavoritesStore } from "./favorites-store.js?v=16.8.0.2";
+import { getAnalyticsContext, trackEvent } from "../analytics/analytics.js?v=16.8.0.3";
+import { EVENTS } from "../analytics/events.js?v=16.8.0.3";
+import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.3";
+import { createFavoritesStore } from "./favorites-store.js?v=16.8.0.3";
 
 export const SONG_FAVORITES_KEY = "alantil_song_favorites_v1";
 const store = createFavoritesStore(SONG_FAVORITES_KEY);
