@@ -15,8 +15,8 @@ async function verifyAshykRuntime() {
   const source = fs.readFileSync(committed, 'utf8');
   const required = [
     'ashyk_invite_create','ashyk_invite_accept','ashyk_room_ready','ashyk_room_ping',
-    'ashyk_active_room','ashyk_submit_action','ashyk_resolve_timeout','ashyk_claim_forfeit',
-    'ashyk-shot:','openVisualStream','playRemoteTrajectory','shot-trajectory','question-select','realtime',
+    'ashyk_active_room','ashyk_shot_commit','ashyk_submit_action','ashyk_resolve_timeout','ashyk_claim_forfeit',
+    'ashyk-shot:','openVisualStream','playRemoteTrajectory','playLocalTrajectory','shot-trajectory','question-select','realtime',
     'walnut_veneer_02_diff_1k.jpg','walnut_veneer_02_nor_gl_1k.jpg',
   ];
   for (const token of required) if (!source.includes(token)) throw new Error(`Generated Ashyk runtime is missing ${token}`);
