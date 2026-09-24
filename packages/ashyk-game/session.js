@@ -65,11 +65,17 @@ export function createAshykOnlineSessionController({online,userId,store,engine,g
     if(!validField(initialState,{motion:true})||typeof engine.simulateShotTrajectory!=='function'||typeof engine.playLocalTrajectory!=='function')return false;
     const generation=trajectoryGeneration,stream=visualStream,roomId=String(room.id),shotId=visualActionId(),phaseSeq=Number(room.phase_seq||0);
     localShotId=shotId;localShotPhaseSeq=phaseSeq;
-    localShotCommit=Promise.resolve(online.commitShot(room,phaseSeq,shotId)).then((next)=>{if(next&&generation===trajectoryGeneration&&stream===visualStream&&visualRoomId===roomId)applyRoom?.(next,false,false);return next;}).catch(async()=>{setConnection('reconnecting');return recover(room.id);});
+    let packet=null;
+    localShotCommit=Promise.resolve(online.commitShot(room,phaseSeq,shotId)).then((next)=>{
+      const accepted=Boolean(next&&String(next.shot_in_flight_id||'')===shotId&&Number(next.shot_in_flight_phase_seq)===phaseSeq&&String(next.active_user_id||'')===String(userId||''));
+      if(next&&generation===trajectoryGeneration&&stream===visualStream&&visualRoomId===roomId)applyRoom?.(next,false,!accepted);
+      if(accepted&&packet&&localShotId===shotId&&generation===trajectoryGeneration&&stream===visualStream&&visualRoomId===roomId)stream.send('shot-trajectory',packet);
+      return next;
+    }).catch(async()=>{setConnection('reconnecting');return recover(room.id);});
     try{
-      const trajectory=engine.simulateShotTrajectory({initialState,pieceId:id,mode,directionX,directionZ,pullLength,pullRatio}),packet={roomId,actorUserId:userId,phaseSeq,eventId:visualActionId(),shotId,pieceId:id,mode,directionX,directionZ,pullLength,pullRatio,...trajectory};
+      const trajectory=engine.simulateShotTrajectory({initialState,pieceId:id,mode,directionX,directionZ,pullLength,pullRatio});packet={roomId,actorUserId:userId,phaseSeq,eventId:visualActionId(),shotId,pieceId:id,mode,directionX,directionZ,pullLength,pullRatio,...trajectory};
       if(!validateTrajectoryPacket(packet)||!engine.playLocalTrajectory(packet)){localShotId=null;localShotPhaseSeq=null;localShotCommit=null;return false;}
-      stream.send('shot-trajectory',packet);return true;
+      return true;
     }catch(error){console.warn('Ashyk canonical trajectory precompute failed',error);localShotId=null;localShotPhaseSeq=null;localShotCommit=null;setConnection('reconnecting');void recover(room.id);return false;}
   }
   function sendLive(event,payload={}){
