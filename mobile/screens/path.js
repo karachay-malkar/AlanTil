@@ -1,9 +1,10 @@
 import { CONTROL_LAYOUT } from '../../packages/alantil-ui/control-layout.js';
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from 'react';
-import { AccessibilityInfo, Platform, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, BackHandler, Platform, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path as SvgPath } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Path as SvgPath, Rect } from 'react-native-svg';
 import { GENERAL_GUIDE_STEPS } from '../../packages/alantil-core/guide-contract.js';
+import { GUIDE_PROGRESS_BURST_MS, GUIDE_PROGRESS_END_PAUSE_MS, GUIDE_PROGRESS_INITIAL_DELAY_MS, createGuideProgressTimeline, guideProgressClipY, guideProgressDuration, guideProgressOffsetAt, guideProgressPulseDuration, guideProgressRouteProgressAt, guideProgressTriggerOffset, orderGuideProgressStations } from '../../packages/alantil-core/guide-progress-demo.js';
 import { computedStationStatus, createRouteProgressSnapshot, stationMilestoneCount, stationWordProgress, storyProgress } from '../../packages/alantil-core/route-progress.js';
 import { loadNativeWordProgressMap } from '../platform/progress.js';
 import { hasSeenNativeStoryStele, loadNativePathSettings, loadNativeStoryScroll, markNativeStorySteleSeen, saveNativeActiveStory, saveNativeStoryScroll } from '../platform/path-state.js';
@@ -35,11 +36,6 @@ function catalogKey(catalog){return String(catalog?.dictionaryId||catalog?.catal
 function sectionKey(catalog,section){return `${catalogKey(catalog)}::${String(section?.sectionId||section?.groupId||section?.id||section?.name||'section')}`;}
 function dotCount(height,routeHeight){if(!routeHeight)return 4;const share=Math.max(0,height)/routeHeight;return Math.max(3,Math.min(10,Math.round(3+share*24)));}
 function connectorPath(points){if(points.length<2)return'';let path=`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;for(let index=1;index<points.length;index+=1){const previous=points[index-1],current=points[index],middleY=(previous.y+current.y)/2;path+=` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;}return path;}
-const LEVEL_DICTIONARIES=new Set(['beginner','intermediate','advanced']);
-function showStationLabels(catalog){return !LEVEL_DICTIONARIES.has(String(catalog?.dictionaryId||''));}
-function geometryBuffer(){return{map:null,stations:new Map(),sections:new Map(),catalogs:new Map()};}
-function ensureTargetRef(map,key){if(!map.has(key))map.set(key,{current:null});return map.get(key);}
-
 function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef}){
   const type=useSemanticTypography(),{width}=useWindowDimensions(),fontSize=type.caption.fontSize,scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
   const syncEdges=(offset=offsetRef.current)=>{const max=Math.max(0,contentRef.current-viewportRef.current),next={start:max>3&&offset>3,end:max>3&&offset<max-3};setEdges(current=>current.start===next.start&&current.end===next.end?current:next);};
@@ -84,6 +80,35 @@ function StationProgressRing({percent=0,done=false,children,targetRef}){
       {progress>0?<Circle cx={size/2} cy={size/2} r={radius} stroke={done?C.successStrong:C.accentStrong} strokeWidth={stroke} fill="none" strokeLinecap="round" strokeDasharray={`${circumference} ${circumference}`} strokeDashoffset={circumference*(1-progress/100)} rotation="-90" origin={`${size/2} ${size/2}`}/>:null}
     </Svg>
     {children}
+  </View>;
+}
+
+
+const GUIDE_SPARK_POINTS=Object.freeze([
+  {left:5,top:34,size:7,delay:0},{left:17,top:8,size:10,delay:.04},{left:39,top:1,size:6,delay:.09},
+  {left:63,top:10,size:8,delay:.02},{left:77,top:31,size:11,delay:.08},{left:70,top:58,size:6,delay:.12},
+  {left:48,top:72,size:9,delay:.05},{left:21,top:68,size:5,delay:.11},{left:2,top:55,size:8,delay:.07},
+]);
+
+function StationSparkBurst({duration=GUIDE_PROGRESS_BURST_MS}){
+  const progress=useRef(new Animated.Value(0)).current;
+  useEffect(()=>{
+    progress.setValue(0);
+    const animation=Animated.timing(progress,{toValue:1,duration:Math.max(1,Number(duration)||GUIDE_PROGRESS_BURST_MS),easing:Easing.linear,useNativeDriver:true});
+    animation.start();
+    return()=>animation.stop();
+  },[duration,progress]);
+  const haloOpacity=progress.interpolate({inputRange:[0,.08,.20,.34,.46,.60,.72,1],outputRange:[0,.72,.24,.78,.28,.70,.48,0]});
+  const haloScale=progress.interpolate({inputRange:[0,.08,.20,.34,.46,.60,.72,1],outputRange:[.68,1.02,.90,1.08,.92,1.05,1.01,1.12]});
+  return <View pointerEvents="none" style={styles.stationSparkBurst}>
+    <Animated.View style={[styles.stationPulseHalo,{opacity:haloOpacity,transform:[{scale:haloScale}]}]}/>
+    {GUIDE_SPARK_POINTS.map((spark,index)=>{
+      const shift=Math.min(.022,spark.delay*.18);
+      const input=[0,.08+shift,.20+shift,.34+shift,.46+shift,.60+shift,.72+shift,1];
+      const opacity=progress.interpolate({inputRange:input,outputRange:[0,1,.34,1,.40,.94,.60,0]});
+      const scale=progress.interpolate({inputRange:input,outputRange:[.55,1.08,.86,1.13,.88,1.08,1.01,1.10]});
+      return <Animated.Text key={index} style={[styles.stationSpark,{left:spark.left,top:spark.top,fontSize:spark.size,opacity,transform:[{scale}]}]}>✦</Animated.Text>;
+    })}
   </View>;
 }
 
@@ -242,8 +267,10 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const type=useSemanticTypography(),routeSpacing=settings.text_size_code==='large'?{gap:72,paddingBottom:66}:settings.text_size_code==='small'?{gap:58,paddingBottom:48}:{gap:58,paddingBottom:52};
   const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[guideStateReady,setGuideStateReady]=useState(false),[generalCompleted,setGeneralCompleted]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
+  const [guideDemoActive,setGuideDemoActive]=useState(false),[guideDemoFinished,setGuideDemoFinished]=useState(false),[guideDemoDoneKeys,setGuideDemoDoneKeys]=useState(()=>new Set()),[guideDemoBursts,setGuideDemoBursts]=useState(()=>new Map());
   const stationWindow=useRef(createPathWindow(defaultStory)).current;
   const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),restoreGenerationRef=useRef(0),restoreInFlightRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
+  const guideDemoFrameRef=useRef(0),guideDemoGenerationRef=useRef(0),guideDemoTimersRef=useRef(new Set()),guideDemoOriginalOffsetRef=useRef(null),guideConnectorClipRef=useRef(null);
   const storyTargetRefs=storyTargetRefsRef.current,stationTargetRefs=stationTargetRefsRef.current,{width:viewportWidth}=useWindowDimensions(),insets=useSafeAreaInsets();
   for(const storyType of route.storyOrder||[])ensureTargetRef(storyTargetRefs,storyType);
 
@@ -256,7 +283,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
       storyRef.current=restored;setActiveStory(restored);setGeneralCompleted(Boolean(guideState.general_completed));setGuideStateReady(true);setPathReady(true);
       if(!guideState.general_completed){beginNativeGeneralGuide();setGuideStationKey('');setGuideIndex(0);}
     });
-    return()=>{alive=false;restoreGenerationRef.current+=1;saveNativeStoryScroll(storyRef.current,offsetRef.current).catch(()=>{});if(geometryFrameRef.current)cancelAnimationFrame(geometryFrameRef.current);};
+    return()=>{alive=false;restoreGenerationRef.current+=1;const savedOffset=Number.isFinite(guideDemoOriginalOffsetRef.current)?guideDemoOriginalOffsetRef.current:offsetRef.current;saveNativeStoryScroll(storyRef.current,savedOffset).catch(()=>{});if(geometryFrameRef.current)cancelAnimationFrame(geometryFrameRef.current);};
   },[defaultStory,route]);
 
   useEffect(()=>{
@@ -280,9 +307,9 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const openWordList=async()=>{await saveNativeStoryScroll(activeStory,offsetRef.current);await saveNativeActiveStory(activeStory);onOpenWordList?.(activeStory);};
   const openStele=()=>setSteleOpen(true);
   const closeStele=async()=>{setSteleOpen(false);await markNativeStorySteleSeen(activeStory).catch(()=>{});};
-  const startGuide=()=>{setSteleOpen(false);beginNativeGeneralGuide();setGuideStationKey('');setGuideIndex(0);};
+  const startGuide=()=>{resetGuideProgressDemo();setSteleOpen(false);beginNativeGeneralGuide();setGuideStationKey('');setGuideIndex(0);};
   const showUnseenStele=async()=>{const target=storyRef.current,seen=await hasSeenNativeStoryStele(target).catch(()=>true);if(!seen&&storyRef.current===target&&!getNativeGeneralGuideRuntime().active)setSteleOpen(true);};
-  const stopGuide=async()=>{resetNativeGeneralGuideRuntime();setGuideStationKey('');setGuideIndex(-1);setGeneralCompleted(true);await saveNativeGuideState({general_completed:true}).catch(()=>{});await showUnseenStele();};
+  const stopGuide=async()=>{resetGuideProgressDemo();resetNativeGeneralGuideRuntime();setGuideStationKey('');setGuideIndex(-1);setGeneralCompleted(true);await saveNativeGuideState({general_completed:true}).catch(()=>{});await showUnseenStele();};
   const currentGuide=guideIndex>=0?GENERAL_GUIDE_STEPS[guideIndex]:null;
 
   const story=route.stories?.[activeStory],stations=story?.stations||[],snapshot=useMemo(()=>createRouteProgressSnapshot(progressMap),[progressMap]),storySummary=useMemo(()=>storyProgress(route,activeStory,snapshot),[route,activeStory,snapshot]),stationIndex=useMemo(()=>new Map(stations.map((station,index)=>[station.key,index])),[stations]);
@@ -323,6 +350,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   },[geometry,displayStations,stationOrder,amplitude]);
   const stationY=useMemo(()=>new Map(points.map(point=>[point.key,theme.path.mapTop+point.y])),[points]);
   const connector=useMemo(()=>connectorPath(points),[points]);
+  const guideConnectorBounds=useMemo(()=>{if(!points.length)return{startY:0,endY:0};const ys=points.map(point=>point.y);return{startY:Math.max(...ys),endY:Math.min(...ys)};},[points]);
 
   const scaleParts=useMemo(()=>{
     const parts=[];
@@ -358,6 +386,86 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   const onContentSizeChange=(_,height)=>{contentHeightRef.current=height||1;if(positionedRef.current)stationWindow.update(offsetRef.current,viewportHeightRef.current,activeStory);syncScaleMetrics({content:contentHeightRef.current});void restoreMapPosition();};
   const onPathScroll=(event)=>{const offset=event.nativeEvent.contentOffset.y;offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);if(positionedRef.current)stationWindow.update(offset,viewportHeightRef.current,activeStory);};
   const jumpScale=(part)=>{if(!Number.isFinite(part?.targetY))return;const viewport=viewportHeightRef.current||1,target=Math.max(0,Number(part.targetY)-viewport*.16);scrollRef.current?.scrollTo({y:target,animated:true});};
+
+  function clearGuideDemoRuntime(){
+    guideDemoGenerationRef.current+=1;
+    if(guideDemoFrameRef.current){cancelAnimationFrame(guideDemoFrameRef.current);guideDemoFrameRef.current=0;}
+    guideDemoTimersRef.current.forEach(clearTimeout);guideDemoTimersRef.current.clear();
+  }
+  function resetGuideProgressDemo(){
+    clearGuideDemoRuntime();
+    const original=guideDemoOriginalOffsetRef.current;
+    guideDemoOriginalOffsetRef.current=null;
+    if(Number.isFinite(original)){
+      const viewport=Math.max(1,viewportHeightRef.current),maximum=Math.max(0,contentHeightRef.current-viewport),target=Math.max(0,Math.min(maximum,original));
+      scrollRef.current?.scrollTo({y:target,animated:false});offsetRef.current=target;routeScaleRef.current?.updateOffset(target);stationWindow.update(target,viewport,activeStory);
+    }
+    if(geometry?.map?.height)guideConnectorClipRef.current?.setNativeProps?.({y:guideConnectorBounds.startY,height:Math.max(0,geometry.map.height-guideConnectorBounds.startY)});
+    setGuideDemoActive(false);setGuideDemoFinished(false);setGuideDemoDoneKeys(new Set());setGuideDemoBursts(new Map());
+  }
+  const triggerGuideDemoStation=(key,{spark=true,pulseDuration=GUIDE_PROGRESS_BURST_MS}={})=>{
+    if(!key)return;
+    setGuideDemoDoneKeys(current=>current.has(key)?current:new Set([...current,key]));
+    if(!spark)return;
+    const duration=Math.max(1,Number(pulseDuration)||GUIDE_PROGRESS_BURST_MS);
+    setGuideDemoBursts(current=>{const next=new Map(current);next.set(key,duration);return next;});
+    const timer=setTimeout(()=>{
+      guideDemoTimersRef.current.delete(timer);
+      setGuideDemoBursts(current=>{if(!current.has(key))return current;const next=new Map(current);next.delete(key);return next;});
+    },duration+180);
+    guideDemoTimersRef.current.add(timer);
+  };
+  async function startGuideProgressDemo(){
+    if(guideDemoOriginalOffsetRef.current!==null)return;
+    clearGuideDemoRuntime();
+    const generation=guideDemoGenerationRef.current;
+    const viewport=Math.max(1,viewportHeightRef.current),maximum=Math.max(0,contentHeightRef.current-viewport);
+    const ordered=createGuideProgressTimeline(orderGuideProgressStations(points.map(point=>({key:point.key,y:theme.path.mapTop+point.y,index:point.index})))
+      .map(item=>({...item,triggerOffset:guideProgressTriggerOffset(item.y,viewport,maximum)})));
+    if(!ordered.length){setGuideDemoFinished(true);return;}
+    guideDemoOriginalOffsetRef.current=offsetRef.current;
+    setNativeGeneralGuideRuntime({active:true,phase:'progress-demo'});
+    setGuideDemoFinished(false);setGuideDemoDoneKeys(new Set());setGuideDemoBursts(new Map());setGuideDemoActive(true);
+    if(geometry?.map?.height)requestAnimationFrame(()=>guideConnectorClipRef.current?.setNativeProps?.({y:guideConnectorBounds.startY,height:Math.max(0,geometry.map.height-guideConnectorBounds.startY)}));
+    scrollRef.current?.scrollTo({y:maximum,animated:false});offsetRef.current=maximum;routeScaleRef.current?.updateOffset(maximum);stationWindow.update(maximum,viewport,activeStory);
+    let reduceMotion=false;try{reduceMotion=Boolean(await AccessibilityInfo.isReduceMotionEnabled?.());}catch{}
+    if(generation!==guideDemoGenerationRef.current)return;
+    if(reduceMotion){
+      setGuideDemoDoneKeys(new Set(ordered.map(item=>item.key)));
+      scrollRef.current?.scrollTo({y:0,animated:false});offsetRef.current=0;routeScaleRef.current?.updateOffset(0);stationWindow.update(0,viewport,activeStory);
+      if(geometry?.map?.height)requestAnimationFrame(()=>guideConnectorClipRef.current?.setNativeProps?.({y:guideConnectorBounds.endY,height:Math.max(0,geometry.map.height-guideConnectorBounds.endY)}));
+      const timer=setTimeout(()=>{guideDemoTimersRef.current.delete(timer);if(generation!==guideDemoGenerationRef.current)return;setGuideDemoActive(false);setGuideDemoFinished(true);setGuideStationKey(ordered.at(-1)?.key||'');setNativeGeneralGuideRuntime({active:true,phase:'stages'});},Math.min(260,GUIDE_PROGRESS_END_PAUSE_MS));
+      guideDemoTimersRef.current.add(timer);return;
+    }
+    const duration=guideProgressDuration({stationCount:ordered.length});
+    if(ordered[0])triggerGuideDemoStation(ordered[0].key,{pulseDuration:guideProgressPulseDuration(0,ordered.length)});
+    const startTimer=setTimeout(()=>{
+      guideDemoTimersRef.current.delete(startTimer);
+      if(generation!==guideDemoGenerationRef.current)return;
+      let startTime=0,nextIndex=ordered.length?1:0;
+      const tick=(timestamp)=>{
+        if(generation!==guideDemoGenerationRef.current)return;
+        if(!startTime)startTime=timestamp;
+        const elapsed=Math.max(0,timestamp-startTime),t=Math.min(1,elapsed/duration),routeProgress=guideProgressRouteProgressAt(t,ordered),offset=guideProgressOffsetAt(t,maximum,ordered);
+        scrollRef.current?.scrollTo({y:offset,animated:false});offsetRef.current=offset;routeScaleRef.current?.updateOffset(offset);stationWindow.update(offset,viewport,activeStory);
+        if(geometry?.map?.height){const clipY=guideProgressClipY(routeProgress,guideConnectorBounds.startY,guideConnectorBounds.endY);guideConnectorClipRef.current?.setNativeProps?.({y:clipY,height:Math.max(0,geometry.map.height-clipY)});}
+        while(nextIndex<ordered.length&&t>=ordered[nextIndex].triggerProgress){triggerGuideDemoStation(ordered[nextIndex].key,{pulseDuration:guideProgressPulseDuration(nextIndex,ordered.length)});nextIndex+=1;}
+        if(t<1){guideDemoFrameRef.current=requestAnimationFrame(tick);return;}
+        guideDemoFrameRef.current=0;
+        while(nextIndex<ordered.length){triggerGuideDemoStation(ordered[nextIndex].key,{pulseDuration:guideProgressPulseDuration(nextIndex,ordered.length)});nextIndex+=1;}
+        scrollRef.current?.scrollTo({y:0,animated:false});offsetRef.current=0;routeScaleRef.current?.updateOffset(0);stationWindow.update(0,viewport,activeStory);
+        if(geometry?.map?.height)guideConnectorClipRef.current?.setNativeProps?.({y:guideConnectorBounds.endY,height:Math.max(0,geometry.map.height-guideConnectorBounds.endY)});
+        const endTimer=setTimeout(()=>{
+          guideDemoTimersRef.current.delete(endTimer);
+          if(generation!==guideDemoGenerationRef.current)return;
+          setGuideDemoActive(false);setGuideDemoFinished(true);setGuideStationKey(ordered.at(-1)?.key||'');setNativeGeneralGuideRuntime({active:true,phase:'stages'});
+        },GUIDE_PROGRESS_END_PAUSE_MS);
+        guideDemoTimersRef.current.add(endTimer);
+      };
+      guideDemoFrameRef.current=requestAnimationFrame(tick);
+    },GUIDE_PROGRESS_INITIAL_DELAY_MS);
+    guideDemoTimersRef.current.add(startTimer);
+  }
   const selectVisibleGuideStation=()=>{
     const viewport=viewportHeightRef.current||1,center=viewport/2,hardTop=viewport*.28,preferredTop=viewport*.40,preferredBottom=viewport*.65,offset=offsetRef.current;
     const candidates=points.map(point=>({...point,screenY:theme.path.mapTop+point.y-offset})).filter(point=>point.screenY>=hardTop&&point.screenY<=viewport-8);
@@ -367,7 +475,7 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
   };
   const nextGuide=async()=>{
     if(!currentGuide)return;
-    if(currentGuide.id==='stages'){await stopGuide();return;}
+    if(currentGuide.id==='stages'){if(guideDemoFinished){await stopGuide();return;}await startGuideProgressDemo();return;}
     const nextIndex=guideIndex+1;if(nextIndex>=GENERAL_GUIDE_STEPS.length){stopGuide();return;}
     const next=GENERAL_GUIDE_STEPS[nextIndex];setSteleOpen(false);
     if(next?.story&&route.stories?.[next.story]){if(next.story!==storyRef.current)void changeStory(next.story);void storyTabsControlRef.current?.scrollToStory?.(next.story,true);}
@@ -388,16 +496,17 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
             return <View key={sectionKey(catalog,section)} style={styles.routeSection} onLayout={(event)=>recordSection(catalog,section,event)}>
               <View style={[styles.routeSectionStations,routeSpacing]}>
                 {reversedStations.map((station)=>{
-                  const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),targetRef=ensureTargetRef(stationTargetRefs,station.key);
+                  const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),targetRef=ensureTargetRef(stationTargetRefs,station.key),demoMode=guideDemoActive||guideDemoFinished,demoDone=guideDemoDoneKeys.has(station.key),visualStatus=demoMode?(demoDone?'mastered':'locked'):status,visualDone=demoMode?demoDone:done,visualPercent=demoMode?(demoDone?100:0):summary.percent,visualMastered=demoMode?(demoDone?summary.total:0):summary.mastered;
                   return <View key={station.key} style={styles.stationRow} onLayout={(event)=>recordStation(catalog,section,station,event)}>
-                    <PathStationWindow store={stationWindow} y={stationY.get(station.key)} pinned={guideStationKey===station.key}><Pressable accessibilityRole="button" accessibilityLabel={station.name||fallback} accessibilityValue={{text:status}} disabled={status==='locked'} accessibilityState={{disabled:status==='locked'}} hitSlop={8} onPress={()=>openStation(station)} style={({pressed})=>[styles.stationNode,status==='locked'&&styles.stationLocked,{transform:[{translateX:shift},{scale:pressed?0.97:1}]}]}>
-                      <StationProgressRing targetRef={targetRef} percent={summary.percent} done={done}>
-                        <MillstoneFace status={status} done={done}><Text style={[styles.stationOrdinal,textMetrics(type.micro.fontSize,1)]}>{String(index+1).padStart(2,'0')}</Text></MillstoneFace>
+                    <PathStationWindow store={stationWindow} y={stationY.get(station.key)} pinned={guideStationKey===station.key}><Pressable accessibilityRole="button" accessibilityLabel={station.name||fallback} accessibilityValue={{text:status}} disabled={guideDemoActive||status==='locked'} accessibilityState={{disabled:guideDemoActive||status==='locked'}} hitSlop={8} onPress={()=>openStation(station)} style={({pressed})=>[styles.stationNode,visualStatus==='locked'&&styles.stationLocked,demoDone&&styles.stationDemoDone,{transform:[{translateX:shift},{scale:pressed&&!guideDemoActive?0.97:1}]}]}>
+                      {guideDemoBursts.has(station.key)?<StationSparkBurst duration={guideDemoBursts.get(station.key)}/>:null}
+                      <StationProgressRing targetRef={targetRef} percent={visualPercent} done={visualDone}>
+                        <MillstoneFace status={visualStatus} done={visualDone}><Text style={[styles.stationOrdinal,textMetrics(type.micro.fontSize,1)]}>{String(index+1).padStart(2,'0')}</Text></MillstoneFace>
                       </StationProgressRing>
-                      {milestones?<Text style={[styles.stationMilestones,textMetrics(type.micro.fontSize,1)]}>{'⌃'.repeat(milestones)}</Text>:null}
+                      {!demoMode&&milestones?<Text style={[styles.stationMilestones,textMetrics(type.micro.fontSize,1)]}>{'⌃'.repeat(milestones)}</Text>:null}
                       <View style={styles.stationMeta}>
                         {labels?<Text numberOfLines={2} style={[styles.stationLabel,textMetrics(type.caption.fontSize,1.15)]}>{station.name||fallback}</Text>:null}
-                        <Text style={[styles.stationCount,textMetrics(type.micro.fontSize,1)]}>{summary.mastered}/{summary.total}</Text>
+                        <Text style={[styles.stationCount,textMetrics(type.micro.fontSize,1)]}>{visualMastered}/{summary.total}</Text>
                       </View>
                     </Pressable></PathStationWindow>
                   </View>;
@@ -412,6 +521,9 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     );
   });
 
+  useEffect(()=>()=>{clearGuideDemoRuntime();},[]);
+  useEffect(()=>{if(!guideDemoActive)return undefined;const subscription=BackHandler.addEventListener('hardwareBackPress',()=>{void stopGuide();return true;});return()=>subscription.remove();},[guideDemoActive]);
+
   const compactFloat=viewportWidth<=390,guideStoryRef=currentGuide?.story?storyTargetRefs.get(currentGuide.story):null,guideTarget=currentGuide?.id==='stages'?stationTargetRefs.get(guideStationKey):currentGuide?.id?.startsWith('story:')?guideStoryRef:currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'?storyTabsRef:null,guideStationPoint=points.find(point=>point.key===guideStationKey),guideStationY=guideStationPoint?theme.path.mapTop+guideStationPoint.y-offsetRef.current:0;
   const guideShape=currentGuide?.id==='stages'?'circle':currentGuide?.id?.startsWith('story:')?'pill':currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'?'rounded':'auto',guidePadding=currentGuide?.id==='stages'?10:currentGuide?.id?.startsWith('story:')?7:6,guidePreference=currentGuide?.id==='stages'?(guideStationY>viewportHeightRef.current/2?'top':'bottom'):currentGuide?.id==='stories-intro'||currentGuide?.id==='summary'||currentGuide?.id?.startsWith('story:')?'bottom':'auto';
 
@@ -425,9 +537,13 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
         <MonoLabel>{storySummary.masteredWords}/{storySummary.totalWords}</MonoLabel>
       </View>
     </View>
-    <FadedScrollView topFade={theme.chrome.scrollFades.path.top} bottomFade={theme.chrome.scrollFades.path.bottom} ref={scrollRef} style={styles.pathViewport} contentContainerStyle={[styles.pathContent,{paddingLeft:viewportWidth<=420?12:20,paddingRight:viewportWidth<=340?28:viewportWidth<=420?36:50,paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
+    <FadedScrollView topFade={theme.chrome.scrollFades.path.top} bottomFade={theme.chrome.scrollFades.path.bottom} ref={scrollRef} style={styles.pathViewport} scrollEnabled={!guideDemoActive} contentContainerStyle={[styles.pathContent,{paddingLeft:viewportWidth<=420?12:20,paddingRight:viewportWidth<=340?28:viewportWidth<=420?36:50,paddingBottom:insets.bottom+theme.control.nav+theme.chrome.contentRestGap}]} scrollEventThrottle={32} showsVerticalScrollIndicator={false} onLayout={onViewportLayout} onContentSizeChange={onContentSizeChange} onScroll={onPathScroll}>
       <View style={styles.routeMap} onLayout={recordMap}>
-        {connector&&geometry?.map?.width&&geometry?.map?.height?<Svg pointerEvents="none" width={geometry.map.width} height={geometry.map.height} style={styles.routeConnector}><SvgPath d={connector} fill="none" stroke="rgba(102,97,88,.38)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.72}/></Svg>:null}
+        {connector&&geometry?.map?.width&&geometry?.map?.height?<Svg pointerEvents="none" width={geometry.map.width} height={geometry.map.height} style={styles.routeConnector}>
+          <Defs><ClipPath id="guideRouteProgressClip"><Rect ref={guideConnectorClipRef} x={0} y={guideDemoFinished?guideConnectorBounds.endY:guideConnectorBounds.startY} width={geometry.map.width} height={guideDemoFinished?Math.max(0,geometry.map.height-guideConnectorBounds.endY):Math.max(0,geometry.map.height-guideConnectorBounds.startY)}/></ClipPath></Defs>
+          <SvgPath d={connector} fill="none" stroke="rgba(102,97,88,.38)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.72}/>
+          {(guideDemoActive||guideDemoFinished)?<SvgPath d={connector} clipPath="url(#guideRouteProgressClip)" fill="none" stroke="#D09A43" strokeWidth={1.65} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.96}/>:null}
+        </Svg>:null}
         {routeItems}
       </View>
     </FadedScrollView>
@@ -437,7 +553,8 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     <RouteScale ref={routeScaleRef} parts={scaleParts} onJump={jumpScale}/>
     <StoryStele story={story} visible={steleOpen} onOpen={openStele} onClose={closeStele}/>
     <GuideHelpButton onPress={startGuide} accessibilityLabel={m('mobile.path.help')}/>
-    <GuideOverlay visible={Boolean(currentGuide)} settings={settings} step={currentGuide} targetRef={guideTarget} spotlightShape={guideShape} spotlightPadding={guidePadding} contentPreference={guidePreference} onNext={nextGuide} onSkip={stopGuide} nextLabel={currentGuide?.id==='stages'?m('guide.understood'):''}/>
+    {guideDemoActive?<View testID="guide-progress-demo-blocker" style={styles.guideDemoBlocker}/>:null}
+    <GuideOverlay visible={Boolean(currentGuide)&&!guideDemoActive} settings={settings} step={currentGuide} targetRef={guideTarget} spotlightShape={guideShape} spotlightPadding={guidePadding} contentPreference={guidePreference} onNext={nextGuide} onSkip={stopGuide} nextLabel={currentGuide?.id==='stages'&&guideDemoFinished?m('guide.understood'):''}/>
   </Screen>;
 }
 
@@ -470,7 +587,11 @@ const styles=StyleSheet.create({
   stationRow:{position:'relative',width:'100%',height:theme.path.stationSize,alignItems:'center'},
   stationNode:{position:'relative',zIndex:1,width:theme.path.stationSize,height:theme.path.stationSize,alignItems:'center'},
   stationLocked:{opacity:.42},
-  stationProgressRing:{position:'relative',width:theme.path.stationSize,height:theme.path.stationSize,padding:2,alignItems:'center',justifyContent:'center'},
+  stationDemoDone:{opacity:1},
+  stationSparkBurst:{position:'absolute',zIndex:0,left:-16,top:-16,width:92,height:92,pointerEvents:'none'},
+  stationPulseHalo:{position:'absolute',left:11,top:11,width:70,height:70,borderRadius:35,backgroundColor:'rgba(208,154,67,.22)'},
+  stationSpark:{position:'absolute',fontFamily:theme.font.brand,fontWeight:'700',lineHeight:14,color:'#D09A43',textShadowColor:'rgba(101,73,31,.30)',textShadowRadius:4},
+  stationProgressRing:{position:'relative',zIndex:1,width:theme.path.stationSize,height:theme.path.stationSize,padding:2,alignItems:'center',justifyContent:'center'},
   millstoneFace:{position:'relative',width:56,height:56,borderWidth:1,borderColor:'rgba(75,70,61,.42)',borderTopLeftRadius:25,borderTopRightRadius:29,borderBottomRightRadius:26,borderBottomLeftRadius:28,backgroundColor:'#d8d0c2',alignItems:'center',justifyContent:'center',shadowColor:'#36322b',shadowOpacity:.12,shadowRadius:6,shadowOffset:{width:0,height:4},elevation:2,overflow:'hidden'},
   millstoneInnerRing:{position:'absolute',top:4,left:4,right:4,bottom:4,borderWidth:1,borderColor:'rgba(72,66,56,.18)',borderRadius:24},
   millstoneStoneMarkA:{position:'absolute',left:17,top:13,width:5,height:5,borderRadius:3,backgroundColor:'#eee8dc',opacity:.9},
@@ -490,6 +611,7 @@ const styles=StyleSheet.create({
   wordListFloat:{position:'absolute',zIndex:theme.chrome.layers.floating,left:10,top:'80%',marginTop:-64,width:36,height:36,borderRadius:18,borderWidth:1,borderColor:C.controlBorder,backgroundColor:C.controlGlass,alignItems:'center',justifyContent:'center',shadowColor:'#292722',shadowOpacity:.025,shadowRadius:9,shadowOffset:{width:0,height:2},elevation:1},
   wordListFloatCompact:{left:9,marginTop:-61,width:34,height:34,borderRadius:17},
   floatingPressed:{opacity:.72},
+  guideDemoBlocker:{...StyleSheet.absoluteFillObject,zIndex:900,elevation:900,backgroundColor:'transparent'},
   routeScale:{position:'absolute',zIndex:theme.chrome.layers.tabs,right:theme.path.scaleRight,top:'20%',bottom:'20%',width:theme.path.scaleWidth,alignItems:'center',justifyContent:'space-evenly',backgroundColor:'transparent'},
   scaleDiamondHit:{width:26,height:26,alignItems:'center',justifyContent:'center'},
   scalePressed:{opacity:.65},

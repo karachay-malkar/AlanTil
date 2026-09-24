@@ -1,4 +1,5 @@
 import { PATH_CONFIG } from "../../config/path.js?v=16.8.0.3";
+import { GUIDE_PROGRESS_BURST_MS, GUIDE_PROGRESS_END_PAUSE_MS, GUIDE_PROGRESS_INITIAL_DELAY_MS, GUIDE_PROGRESS_STORY, createGuideProgressTimeline, guideProgressClipY, guideProgressDuration, guideProgressOffsetAt, guideProgressPulseDuration, guideProgressRouteProgressAt, guideProgressTriggerOffset, orderGuideProgressStations } from "../../../packages/alantil-core/guide-progress-demo.js?v=16.8.0.3";
 import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
 import { learnState } from "../learn/state.js?v=16.8.0.3";
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
@@ -25,6 +26,31 @@ const STYLE_TEXT = `
 .alantilGuideTrigger.isLearningGuideTrigger{position:fixed;left:10px;top:80%}
 body.alantilGuideGeneral .alantilGuideTrigger,body.alantilGuideLearning .alantilGuideTrigger{opacity:0;pointer-events:none}
 body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+
+body.alantilGuideProgressDemo .pathView{pointer-events:none}
+body.alantilGuideProgressDemo .pathMapViewport{scroll-behavior:auto!important;overscroll-behavior:none;overflow-y:hidden!important}
+body.alantilGuideProgressDemo .stationNode{opacity:1!important}
+body.alantilGuideProgressDemo .stationNode:not(.isGuideDemoDone) .stationProgressRing{--station-progress:0deg!important}
+body.alantilGuideProgressDemo .stationNode:not(.isGuideDemoDone) .millstoneFace{filter:grayscale(.9) saturate(.12);background-image:var(--station-stone-image),var(--millstone-face)!important}
+body.alantilGuideProgressDemo .stationNode.isGuideDemoDone .stationProgressRing{--station-progress:360deg!important;--station-progress-fill:var(--success-strong)}
+body.alantilGuideProgressDemo .stationNode.isGuideDemoDone .millstoneFace{filter:none;background-image:var(--station-stone-image),var(--millstone-face-mastered)!important}
+body.alantilGuideProgressDemo .beginnerDioramaFrame{filter:none!important;opacity:1!important}
+body.alantilGuideProgressDemo .beginnerDioramaImage{filter:grayscale(1) saturate(0)!important}
+body.alantilGuideProgressDemo .stationNode.isGuideDemoDone .beginnerDioramaImage{filter:none!important}
+body.alantilGuideProgressDemo .stationMilestones{opacity:0}
+.alantilGuideDemoConnector{position:absolute;z-index:0;left:0;top:0;display:block;overflow:visible;pointer-events:none}
+.alantilGuideDemoConnectorBase,.alantilGuideDemoConnectorProgress{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:3 7}
+.alantilGuideDemoConnectorBase{stroke:color-mix(in srgb,var(--text-2) 38%,transparent);stroke-width:1;opacity:.72}
+.alantilGuideDemoConnectorProgress{stroke:#D09A43;stroke-width:1.65;opacity:.96;filter:drop-shadow(0 0 3px rgb(208 154 67 / .28))}
+.alantilGuideSparkHost{isolation:isolate}
+.alantilGuideSparkHost>.beginnerDioramaImage,.alantilGuideSparkHost>.millstoneFace{position:relative;z-index:1}
+.alantilGuideSparkBurst{--guide-spark-duration:${GUIDE_PROGRESS_BURST_MS}ms;position:absolute;z-index:0;inset:-14px;pointer-events:none;overflow:visible}
+.beginnerDioramaFrame.alantilGuideSparkHost>.alantilGuideSparkBurst{inset:-8px}
+.alantilGuideSparkBurst::before{content:"";position:absolute;inset:7%;border-radius:50%;background:radial-gradient(circle,rgba(208,154,67,.30) 0,rgba(208,154,67,.14) 38%,rgba(208,154,67,0) 72%);opacity:0;transform:scale(.68);animation:alantilGuideAuraPulse var(--guide-spark-duration) linear both}
+.alantilGuideSpark{position:absolute;z-index:1;color:#D09A43;font-family:var(--font-brand);font-weight:700;line-height:1;text-shadow:0 0 6px rgb(208 154 67 / .30);opacity:0;animation:alantilGuideSparkPulse var(--guide-spark-duration) linear both}
+.alantilGuideSpark:nth-child(1){left:3%;top:42%;font-size:7px;animation-delay:0ms}.alantilGuideSpark:nth-child(2){left:18%;top:6%;font-size:11px;animation-delay:18ms}.alantilGuideSpark:nth-child(3){left:44%;top:0;font-size:6px;animation-delay:42ms}.alantilGuideSpark:nth-child(4){left:72%;top:11%;font-size:9px;animation-delay:9ms}.alantilGuideSpark:nth-child(5){left:88%;top:40%;font-size:12px;animation-delay:36ms}.alantilGuideSpark:nth-child(6){left:77%;top:72%;font-size:6px;animation-delay:54ms}.alantilGuideSpark:nth-child(7){left:51%;top:88%;font-size:10px;animation-delay:22ms}.alantilGuideSpark:nth-child(8){left:20%;top:82%;font-size:5px;animation-delay:48ms}.alantilGuideSpark:nth-child(9){left:0;top:66%;font-size:8px;animation-delay:31ms}
+@keyframes alantilGuideAuraPulse{0%{opacity:0;transform:scale(.68)}8%{opacity:.72;transform:scale(1.02)}20%{opacity:.24;transform:scale(.90)}34%{opacity:.78;transform:scale(1.08)}46%{opacity:.28;transform:scale(.92)}60%{opacity:.70;transform:scale(1.05)}72%{opacity:.48;transform:scale(1.01)}100%{opacity:0;transform:scale(1.12)}}
+@keyframes alantilGuideSparkPulse{0%{opacity:0;transform:scale(.55)}8%{opacity:1;transform:scale(1.08)}20%{opacity:.34;transform:scale(.86)}34%{opacity:1;transform:scale(1.13)}46%{opacity:.40;transform:scale(.88)}60%{opacity:.94;transform:scale(1.08)}72%{opacity:.60;transform:scale(1.01)}100%{opacity:0;transform:scale(1.10)}}
 
 .alantilGuideOverlay{
   position:fixed;z-index:calc(var(--z-modal) + 24);inset:0;pointer-events:none;isolation:isolate;color:var(--text-1);
@@ -71,7 +97,7 @@ body.alantilGuideGeneral .storySteleOverlay{visibility:hidden!important;opacity:
 }
 @media(prefers-reduced-motion:reduce){
   .alantilGuideTrigger,.alantilGuideOverlay,.alantilGuideContent,.alantilGuideHalo{transition:none!important}
-  .alantilGuideHalo.isPrimary{animation:none!important}
+  .alantilGuideHalo.isPrimary,.alantilGuideSpark{animation:none!important}
 }
 `;
 
@@ -79,7 +105,8 @@ let activeOverlay = null;
 let observer = null;
 let scanQueued = false;
 let overlayCounter = 0;
-let generalGuide = { active: false, phase: "", storyIndex: 0 };
+let generalGuide = { active: false, phase: "", storyIndex: 0, demoFinished: false };
+let guideProgressDemo = { active: false, frame: 0, startTimer: 0, endTimer: 0, burstTimers: new Set(), viewport: null, originalScrollTop: null, connectorClip: null, connectorStartY: 0, connectorEndY: 0 };
 let learningBinding = null;
 let learningFlow = { active: false, phase: "", decisionWordId: "" };
 
@@ -657,6 +684,7 @@ function showStep(config = {}) {
 }
 
 function finishGeneralGuide() {
+  cancelGuideProgressDemo();
   const wasCompleted = storedGuideState().general_completed;
   updateGuideState({ general_completed: true });
   generalGuide = { active: false, phase: "", storyIndex: 0 };
@@ -756,6 +784,240 @@ function showStorySummary() {
   });
 }
 
+
+
+function guideDemoConnectorPath(points) {
+  if (!points.length) return "";
+  let path = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1];
+    const current = points[index];
+    const middleY = (previous.y + current.y) / 2;
+    path += ` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;
+  }
+  return path;
+}
+
+function mountGuideDemoConnector(viewport, stations) {
+  document.querySelectorAll(".alantilGuideDemoConnector").forEach((node) => node.remove());
+  const map = viewport?.querySelector?.(".routeMap");
+  if (!map || !stations.length) return;
+  const mapRect = map.getBoundingClientRect();
+  const visualPoints = stations.map((station, index) => {
+    const rect = station.getBoundingClientRect();
+    return { index, y: rect.top - mapRect.top + rect.height / 2, x: rect.left - mapRect.left + rect.width / 2 };
+  }).sort((left,right)=>left.y-right.y);
+  const d = guideDemoConnectorPath(visualPoints);
+  if (!d) return;
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.classList.add("routeConnector", "alantilGuideDemoConnector");
+  const width = Math.max(1, map.scrollWidth),height = Math.max(1, map.scrollHeight);
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("aria-hidden", "true");
+  const defs = document.createElementNS(ns, "defs");
+  const clipPath = document.createElementNS(ns, "clipPath");
+  const clipId = `alantil-guide-route-clip-${Date.now().toString(36)}`;
+  clipPath.setAttribute("id", clipId);
+  const clipRect = document.createElementNS(ns, "rect");
+  clipRect.setAttribute("x", "0");
+  clipRect.setAttribute("width", String(width));
+  clipRect.setAttribute("height", String(height));
+  clipPath.appendChild(clipRect);
+  defs.appendChild(clipPath);
+  const base = document.createElementNS(ns, "path");
+  base.setAttribute("class", "routeConnectorPath alantilGuideDemoConnectorBase");
+  base.setAttribute("d", d);
+  const progress = document.createElementNS(ns, "path");
+  progress.setAttribute("class", "routeConnectorPath alantilGuideDemoConnectorProgress");
+  progress.setAttribute("d", d);
+  progress.setAttribute("clip-path", `url(#${clipId})`);
+  svg.append(defs, base, progress);
+  map.prepend(svg);
+  guideProgressDemo.connectorClip = clipRect;
+  guideProgressDemo.connectorStartY = visualPoints.at(-1)?.y || height;
+  guideProgressDemo.connectorEndY = visualPoints[0]?.y || 0;
+  updateGuideDemoConnector(0);
+}
+
+function updateGuideDemoConnector(routeProgress) {
+  const clip = guideProgressDemo.connectorClip;
+  if (!clip?.isConnected) return;
+  const y = guideProgressClipY(routeProgress, guideProgressDemo.connectorStartY, guideProgressDemo.connectorEndY);
+  const svg = clip.ownerSVGElement;
+  const height = Math.max(1, Number(svg?.getAttribute("height")) || 1);
+  clip.setAttribute("y", String(y));
+  clip.setAttribute("height", String(Math.max(0, height - y)));
+}
+
+function guideDemoStationCenter(station, viewport) {
+  const viewportRect = viewport.getBoundingClientRect();
+  const rect = station.getBoundingClientRect();
+  return rect.top - viewportRect.top + viewport.scrollTop + rect.height / 2;
+}
+
+function clearGuideSparkBurst(station) {
+  station?.querySelectorAll?.(".alantilGuideSparkBurst").forEach((node) => node.remove());
+}
+
+function triggerGuideDemoStation(station, { spark = true, pulseDuration = GUIDE_PROGRESS_BURST_MS } = {}) {
+  if (!station?.isConnected) return;
+  station.classList.add("isGuideDemoDone");
+  if (!spark) return;
+  clearGuideSparkBurst(station);
+  const host = station.querySelector(".beginnerDioramaFrame") || station.querySelector(".stationProgressRing") || station;
+  host.classList.add("alantilGuideSparkHost");
+  const burst = document.createElement("span");
+  burst.className = "alantilGuideSparkBurst";
+  burst.setAttribute("aria-hidden", "true");
+  burst.style.setProperty("--guide-spark-duration", `${Math.max(1, Number(pulseDuration) || GUIDE_PROGRESS_BURST_MS)}ms`);
+  burst.innerHTML = Array.from({ length: 9 }, () => '<span class="alantilGuideSpark">✦</span>').join("");
+  host.appendChild(burst);
+  const timer = globalThis.setTimeout(() => {
+    guideProgressDemo.burstTimers.delete(timer);
+    burst.remove();
+  }, Math.max(1, Number(pulseDuration) || GUIDE_PROGRESS_BURST_MS) + 180);
+  guideProgressDemo.burstTimers.add(timer);
+}
+
+function cancelGuideProgressDemo({ restore = true } = {}) {
+  const viewport = guideProgressDemo.viewport;
+  const originalScrollTop = guideProgressDemo.originalScrollTop;
+  guideProgressDemo.active = false;
+  if (guideProgressDemo.frame) cancelAnimationFrame(guideProgressDemo.frame);
+  if (guideProgressDemo.startTimer) clearTimeout(guideProgressDemo.startTimer);
+  if (guideProgressDemo.endTimer) clearTimeout(guideProgressDemo.endTimer);
+  guideProgressDemo.burstTimers.forEach(clearTimeout);
+  guideProgressDemo = { active: false, frame: 0, startTimer: 0, endTimer: 0, burstTimers: new Set(), viewport: null, originalScrollTop: null, connectorClip: null, connectorStartY: 0, connectorEndY: 0 };
+  document.querySelectorAll(".alantilGuideDemoConnector").forEach((node) => node.remove());
+  if (restore && viewport?.isConnected && Number.isFinite(originalScrollTop)) viewport.scrollTop = originalScrollTop;
+  if (viewport?.isConnected) requestAnimationFrame(() => { if (viewport.isConnected) delete viewport.dataset.guideDemoScroll; });
+  if (!restore) return;
+  document.body.classList.remove("alantilGuideProgressDemo");
+  document.querySelectorAll(".stationNode.isGuideDemoDone").forEach((station) => station.classList.remove("isGuideDemoDone"));
+  document.querySelectorAll(".alantilGuideSparkBurst").forEach((node) => node.remove());
+  document.querySelectorAll(".alantilGuideSparkHost").forEach((node) => node.classList.remove("alantilGuideSparkHost"));
+}
+
+function abortGuideProgressDemo() {
+  const wasDemo = generalGuide.active && generalGuide.phase === "progress-demo";
+  cancelGuideProgressDemo();
+  if (!wasDemo) return;
+  generalGuide = { active: false, phase: "", storyIndex: 0, demoFinished: false };
+  document.body.classList.remove("alantilGuideGeneral");
+}
+
+function finishGuideProgressDemo(viewport) {
+  if (!guideProgressDemo.active) return;
+  viewport.scrollTop = 0;
+  updateGuideDemoConnector(1);
+  guideProgressDemo.endTimer = globalThis.setTimeout(() => {
+    guideProgressDemo.endTimer = 0;
+    if (!generalGuide.active || !guideProgressDemo.active) return;
+    guideProgressDemo.active = false;
+    generalGuide.phase = "stages";
+    generalGuide.demoFinished = true;
+    showStages();
+  }, GUIDE_PROGRESS_END_PAUSE_MS);
+}
+
+function startGuideProgressDemo() {
+  if (guideProgressDemo.active) return;
+  if (!requestStory(GUIDE_PROGRESS_STORY)) {
+    generalGuide.phase = "stages";
+    generalGuide.demoFinished = false;
+    scheduleScan();
+    return;
+  }
+  const viewport = document.querySelector(".pathMapViewport");
+  const stations = Array.from(document.querySelectorAll("[data-station-key]"));
+  if (!viewport || viewport.classList.contains("isPositioning") || !stations.length) { scheduleScan(); return; }
+
+  cancelGuideProgressDemo();
+  destroyOverlay();
+  generalGuide.phase = "progress-demo";
+  generalGuide.demoFinished = false;
+  document.body.classList.add("alantilGuideProgressDemo");
+  stations.forEach((station) => {
+    station.classList.remove("isGuideDemoDone");
+    clearGuideSparkBurst(station);
+  });
+
+  const originalScrollTop = viewport.scrollTop;
+  const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+  viewport.dataset.guideDemoScroll = "true";
+  viewport.scrollTop = maxScroll;
+  const ordered = createGuideProgressTimeline(orderGuideProgressStations(stations.map((station, index) => ({
+    key: station.dataset.stationKey || String(index),
+    index,
+    y: guideDemoStationCenter(station, viewport),
+    station,
+  }))).map((item) => ({
+    ...item,
+    triggerOffset: guideProgressTriggerOffset(item.y, viewport.clientHeight, maxScroll),
+  })));
+  mountGuideDemoConnector(viewport, stations);
+  updateGuideDemoConnector(0);
+  const reducedMotion = Boolean(globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+  guideProgressDemo.active = true;
+  guideProgressDemo.viewport = viewport;
+  guideProgressDemo.originalScrollTop = originalScrollTop;
+
+  if (reducedMotion) {
+    ordered.forEach((item) => triggerGuideDemoStation(item.station, { spark: false }));
+    viewport.scrollTop = 0;
+    guideProgressDemo.endTimer = globalThis.setTimeout(() => {
+      guideProgressDemo.endTimer = 0;
+      if (!generalGuide.active || !guideProgressDemo.active) return;
+      guideProgressDemo.active = false;
+      generalGuide.phase = "stages";
+      generalGuide.demoFinished = true;
+      showStages();
+    }, Math.min(260, GUIDE_PROGRESS_END_PAUSE_MS));
+    return;
+  }
+
+  const duration = guideProgressDuration({ stationCount: ordered.length });
+  if (ordered[0]) triggerGuideDemoStation(ordered[0].station, { pulseDuration: guideProgressPulseDuration(0, ordered.length) });
+  guideProgressDemo.startTimer = globalThis.setTimeout(() => {
+    guideProgressDemo.startTimer = 0;
+    if (!guideProgressDemo.active) return;
+    let startedAt = 0;
+    let nextIndex = ordered.length ? 1 : 0;
+    const tick = (timestamp) => {
+      if (!guideProgressDemo.active || !viewport.isConnected || !generalGuide.active || generalGuide.phase !== "progress-demo") {
+        if (!viewport.isConnected && generalGuide.active && generalGuide.phase === "progress-demo") abortGuideProgressDemo();
+        else cancelGuideProgressDemo();
+        return;
+      }
+      if (!startedAt) startedAt = timestamp;
+      const elapsed = Math.max(0, timestamp - startedAt);
+      const t = Math.min(1, elapsed / duration);
+      const routeProgress = guideProgressRouteProgressAt(t, ordered);
+      const offset = guideProgressOffsetAt(t, maxScroll, ordered);
+      viewport.scrollTop = offset;
+      updateGuideDemoConnector(routeProgress);
+      while (nextIndex < ordered.length && t >= ordered[nextIndex].triggerProgress) {
+        triggerGuideDemoStation(ordered[nextIndex].station, { pulseDuration: guideProgressPulseDuration(nextIndex, ordered.length) });
+        nextIndex += 1;
+      }
+      if (t < 1) {
+        guideProgressDemo.frame = requestAnimationFrame(tick);
+        return;
+      }
+      guideProgressDemo.frame = 0;
+      while (nextIndex < ordered.length) {
+        triggerGuideDemoStation(ordered[nextIndex].station, { pulseDuration: guideProgressPulseDuration(nextIndex, ordered.length) });
+        nextIndex += 1;
+      }
+      finishGuideProgressDemo(viewport);
+    };
+    guideProgressDemo.frame = requestAnimationFrame(tick);
+  }, GUIDE_PROGRESS_INITIAL_DELAY_MS);
+}
+
 function visibleStationTarget() {
   const viewport = document.querySelector(".pathMapViewport");
   const viewportRect = viewport?.getBoundingClientRect();
@@ -809,15 +1071,16 @@ function visibleStationTarget() {
 
 function showStages() {
   generalGuide.phase = "stages";
+  const demoFinished = Boolean(generalGuide.demoFinished);
   const selection = visibleStationTarget();
   if (!selection?.target) { scheduleScan(); return; }
   showStep({
-    stepKey: `general:stages:${selection.station.dataset.stationKey || "visible"}`,
+    stepKey: `general:stages:${selection.station.dataset.stationKey || "visible"}:${demoFinished ? "done" : "intro"}`,
     target: selection.target,
     title: msg("guide.general.stages.title"),
     body: msg("guide.general.stages.body"),
-    nextLabel: msg("guide.understood"),
-    onNext: finishGeneralGuide,
+    nextLabel: demoFinished ? msg("guide.understood") : msg("guide.next"),
+    onNext: demoFinished ? finishGeneralGuide : startGuideProgressDemo,
     onSkip: skipGeneralGuide,
     spotlightShape: selection.target.matches?.(".stationProgressRing") ? "circle" : "rounded",
     spotlightPadding: 10,
@@ -860,9 +1123,10 @@ function showStationTest() {
 }
 
 function startGeneralGuide() {
+  cancelGuideProgressDemo();
   closeOpenStele();
   destroyOverlay({ smooth: false });
-  generalGuide = { active: true, phase: "intro", storyIndex: 0 };
+  generalGuide = { active: true, phase: "intro", storyIndex: 0, demoFinished: false };
   document.body.classList.add("alantilGuideGeneral");
   showGeneralIntro();
 }
@@ -1256,7 +1520,7 @@ export function installGuidedHelp() {
   ensureStyles();
   observer = new MutationObserver(scheduleScan);
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-  window.addEventListener("popstate", scheduleScan, { passive: true });
+  window.addEventListener("popstate", () => { if (generalGuide.active && generalGuide.phase === "progress-demo") abortGuideProgressDemo(); scheduleScan(); }, { passive: true });
   scheduleScan();
 }
 
