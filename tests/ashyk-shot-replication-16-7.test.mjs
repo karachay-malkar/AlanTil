@@ -50,7 +50,7 @@ test('session replays a remote trajectory once and uses one canonical local traj
   const session=createAshykOnlineSessionController({online,userId:'u1',store,engine,getRoom:()=>current,applyRoom(next){current=next;}});session.attachVisual('r1');
   const packet={roomId:'r1',actorUserId:'u2',phaseSeq:7,eventId:'e1',shotId:'s1',pieceId:0,mode:'flat',directionX:1,directionZ:0,pullLength:4,pullRatio:.7,...trajectoryCore};
   visualReceiver('shot-trajectory',packet);visualReceiver('shot-trajectory',packet);assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,1);
-  current=room({active_user_id:'u1'});assert.equal(session.launchOnlineShot(0,{mode:'flat',directionX:1,directionZ:0,pullLength:4}),true);await Promise.resolve();
+  current=room({active_user_id:'u1'});assert.equal(session.launchOnlineShot(0,{mode:'flat',directionX:1,directionZ:0,pullLength:4}),true);await new Promise((resolve)=>setImmediate(resolve));
   assert.equal(commits.length,1);assert.equal(calls.filter(([type])=>type==='localTrajectory').length,1);assert.equal(sent.filter(([event])=>event==='shot-trajectory').length,1);assert.equal(sent.some(([event])=>['shot-start','shot-frame','impact'].includes(event)),false);
   for(const skewMs of [50,150,300,700]){const shotId=`late-${skewMs}`,late={...packet,shotId};current=room({active_user_id:'u1',phase_seq:8,last_action_id:shotId,last_action_type:'shot_result',last_action_actor_user_id:'u2',game_state:{...room().game_state,field:stillField}});visualReceiver('shot-trajectory',late);visualReceiver('shot-trajectory',late);}
   assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,5);assert.equal(calls.filter(([type])=>type==='authoritative').length,4);
