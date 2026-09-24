@@ -79,14 +79,14 @@ test("16.8.0 is the published app release while 16.8.0.2 is the Web cache build"
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
-  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]1/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]1/);
+  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]2/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]2/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]2"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]1"/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]2"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]2"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
@@ -105,7 +105,7 @@ test("13.15 feature modules are loaded explicitly and the service worker does no
 test("Settings dependencies resolve through the 16.8.0.2 singleton identity", async () => {
   const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
-  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.1"/);
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.2"/);
   assert.match(settings, /word-repository\.js\?v=16.8.0.2/);
   assert.match(settings, /auth-service\.js\?v=16.8.0.2/);
   assert.match(settings, /user-settings-store\.js\?v=16.8.0.2/);
