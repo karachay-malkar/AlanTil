@@ -1,5 +1,5 @@
 export const APP_VERSION = "16.7.0";
 export const RELEASE_DATE = "2026-09-23";
-export const WEB_BUILD_VERSION = "16.7.0.32";
+export const WEB_BUILD_VERSION = "16.7.0.33";
 export const WEB_DEPLOY_REPOSITORY = "karachay-malkar/AlanTil";
 export const WEB_DEPLOY_BRANCH = "agent/16.7.0-beginner-icons-refresh";

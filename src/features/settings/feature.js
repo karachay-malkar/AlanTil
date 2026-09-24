@@ -1,4 +1,4 @@
-import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.7.0.32";
+import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.7.0.33";
 import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=13.15.12";
 import {
   getDictionaryVersionStatus,
@@ -8,7 +8,7 @@ import {
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=13.13";
 import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=13.13";
 import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=13.13";
-import { renderLearningPreview } from "../../shared/settings/learning-setup.js?v=13.13";
+import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.7.0.33";
 import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=13.15.12";
 import { escapeHtml } from "../../shared/ui/html.js?v=13.9.0";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=13.9.0";
@@ -58,13 +58,7 @@ function updateSaveButton(root, saved = false) {
 function updateLearningPreview(root) {
   const current = root.querySelector('[data-learning-preview="settings"]');
   if (!current || !draftSettings) return;
-  const template = document.createElement("template");
-  template.innerHTML = renderLearningPreview(draftSettings, {
-    className: "settingsLearningPreview",
-    marker: "settings",
-  }).trim();
-  const next = template.content.firstElementChild;
-  if (next) current.replaceWith(next);
+  syncLearningPreview(current, draftSettings, { animate: false });
 }
 
 function settingsSyncIsPending() {

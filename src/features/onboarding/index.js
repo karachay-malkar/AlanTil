@@ -9,8 +9,9 @@ import {
   emptyLearningSetupDraft,
   isLearningSetupDraftComplete,
   renderLearningSetup,
-} from "../../shared/settings/learning-setup.js?v=13.10.8";
-import { setupText } from "../../shared/settings/learning-preview-data.js?v=13.10.8";
+  syncLearningSetupView,
+} from "../../shared/settings/learning-setup.js?v=16.7.0.33";
+import { setupText } from "../../shared/settings/learning-preview-data.js?v=16.7.0.33";
 
 export async function runLearningSetup({ shell } = {}) {
   if (hasCompletedLearningSetup()) return false;
@@ -31,37 +32,35 @@ export async function runLearningSetup({ shell } = {}) {
   shell.setCounter("");
   shell.clearMode();
 
-  return new Promise((resolve) => {
-    const render = () => {
-      shell.root.innerHTML = renderLearningSetup(draft, { error });
-      bindLearningSetup(shell.root, controller.signal, {
-        onChange(updates) {
-          Object.assign(draft, updates);
-          if (updates.interface_language_code) {
-            setInterfaceLanguage(updates.interface_language_code);
-          }
-          error = "";
-          render();
-        },
-        onContinue() {
-          if (!isLearningSetupDraftComplete(draft)) return;
-          try {
-            completeLearningSetup({
-              ...draft,
-              alan_dialect_code: draft.alan_script_code === "turkic"
-                ? (draft.alan_dialect_code || "canonical")
-                : draft.alan_dialect_code,
-            });
-            controller.abort();
-            resolve(true);
-          } catch {
-            error = setupText(draft.interface_language_code).storageError;
-            render();
-          }
-        },
-      });
-    };
+  shell.root.innerHTML = renderLearningSetup(draft, { error });
+  syncLearningSetupView(shell.root, draft, { error, animatePreview: false });
 
-    render();
+  return new Promise((resolve) => {
+    bindLearningSetup(shell.root, controller.signal, {
+      onChange(updates) {
+        Object.assign(draft, updates);
+        if (updates.interface_language_code) {
+          setInterfaceLanguage(updates.interface_language_code);
+        }
+        error = "";
+        syncLearningSetupView(shell.root, draft, { error, animatePreview: true });
+      },
+      onContinue() {
+        if (!isLearningSetupDraftComplete(draft)) return;
+        try {
+          completeLearningSetup({
+            ...draft,
+            alan_dialect_code: draft.alan_script_code === "turkic"
+              ? (draft.alan_dialect_code || "canonical")
+              : draft.alan_dialect_code,
+          });
+          controller.abort();
+          resolve(true);
+        } catch {
+          error = setupText(draft.interface_language_code).storageError;
+          syncLearningSetupView(shell.root, draft, { error, animatePreview: false });
+        }
+      },
+    });
   });
 }
