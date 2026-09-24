@@ -16,15 +16,15 @@ export function createAshykOnlineSessionController({online,userId,store,engine,g
   async function recover(roomId){if(!online||!roomId)return null;try{const room=await online.getRoom(roomId);if(room){const preserveLocal=Boolean(localShotId&&engine?.isLocalTrajectoryActive?.()&&String(room.shot_in_flight_id||'')===String(localShotId)&&Number(room.phase_seq||0)===Number(localShotPhaseSeq||0));applyRoom?.(room,true,!preserveLocal);}setConnection('online');return room;}catch{setConnection('reconnecting');return null;}}
   function enqueue(action){if(destroyed||!action?.id||!action?.type||seenActionIds.has(action.id))return false;const room=currentRoom(),state=store?.getState?.();if(!room||!state||room.status!=='playing'||room.active_user_id!==userId)return false;seenActionIds.add(action.id);if(seenActionIds.size>256){const keep=[...seenActionIds].slice(-128);seenActionIds.clear();keep.forEach((id)=>seenActionIds.add(id));}const snapshot=store.onlineGameState(),status=state.status==='finished'?'finished':'playing',nextActive=status==='finished'?userId:nextActiveFor(room,snapshot.currentPlayer);queue.push({id:String(action.id),type:String(action.type),state:snapshot,status,nextActive});void flush();return true;}
   async function flush(){if(destroyed||flushing||!online)return;flushing=true;try{while(queue.length&&!destroyed){let room=currentRoom();const item=queue[0];if(!room||room.status!=='playing'||room.active_user_id!==userId){queue=[];if(room)applyRoom?.(room,true,true);break;}try{if(item.type==='shot_result'&&item.id===localShotId&&localShotCommit){const committed=await localShotCommit;room=currentRoom();if(!committed||String(committed.shot_in_flight_id||'')!==String(item.id)||!room||room.status!=='playing'||room.active_user_id!==userId){queue=[];localShotId=null;localShotPhaseSeq=null;localShotCommit=null;if(committed)applyRoom?.(committed,true,true);break;}}const next=await online.submitAction(room,Number(room.phase_seq||0),item.id,item.type,item.state,item.nextActive,item.status);queue.shift();if(!next)continue;const accepted=String(next.last_action_id||'')===item.id||Number(next.protocol_version||1)<2;if(!accepted){queue=[];applyRoom?.(next,true,true);break;}if(item.type==='shot_result'&&item.id===localShotId){localShotId=null;localShotPhaseSeq=null;localShotCommit=null;}applyRoom?.(next,true,queue.length===0);setConnection('online');}catch{setConnection('reconnecting');const recovered=await recover(room.id);if(item.type==='shot_result'&&recovered&&String(recovered.shot_in_flight_id||'')===String(item.id)&&recovered.active_user_id===userId)break;queue=[];if(item.type==='shot_result'&&item.id===localShotId){localShotId=null;localShotPhaseSeq=null;localShotCommit=null;}break;}}}finally{flushing=false;if(queue.length&&!destroyed)queueMicrotask(()=>void flush());}}
-  async function resolveTimeoutIfDue(){if(destroyed||resolvingTimeout||flushing||queue.length||localShotId||!online)return null;const room=currentRoom();if(!room||room.status!=='playing'||!room.phase_deadline_at)return null;const deadline=Date.parse(room.phase_deadline_at);if(!Number.isFinite(deadline)||Date.now()<deadline)return null;resolvingTimeout=true;try{const next=await online.resolveTimeout(room.id);if(next)applyRoom?.(next,true,true);setConnection('online');return next;}catch{setConnection('reconnecting');return recover(room.id);}finally{resolvingTimeout=false;}}
+  async function resolveTimeoutIfDue(){if(destroyed||resolvingTimeout||flushing||queue.length||localShotId||!online)return null;const room=currentRoom();if(!room||room.status!=='playing'||room.shot_in_flight_id||!room.phase_deadline_at)return null;const deadline=Date.parse(room.phase_deadline_at);if(!Number.isFinite(deadline)||Date.now()<deadline)return null;resolvingTimeout=true;try{const next=await online.resolveTimeout(room.id);if(next)applyRoom?.(next,true,true);setConnection('online');return next;}catch{setConnection('reconnecting');return recover(room.id);}finally{resolvingTimeout=false;}}
   function baseEnvelope(payload,room){return Boolean(payload&&room&&room.status==='playing'&&String(payload.roomId||'')===String(room.id||'')&&String(payload.actorUserId||'')===String(room.active_user_id||'')&&String(payload.actorUserId||'')!==String(userId||'')&&Number(payload.phaseSeq)===Number(room.phase_seq||0));}
   function shotEnvelope(payload,room){
-    if(!payload||!room||room.status!=='playing'||String(payload.roomId||'')!==String(room.id||'')||String(payload.actorUserId||'')===String(userId||''))return false;
+    if(!payload||!room||!['playing','finished'].includes(room.status)||String(payload.roomId||'')!==String(room.id||'')||String(payload.actorUserId||'')===String(userId||''))return false;
     if(typeof payload.shotId!=='string'||!payload.shotId||payload.shotId.length>=160)return false;
     const actor=String(payload.actorUserId||''),member=actor===String(room.host_user_id||'')||actor===String(room.guest_user_id||'');
     if(!member)return false;
     const phaseSeq=Number(payload.phaseSeq),currentSeq=Number(room.phase_seq||0);
-    return phaseSeq===currentSeq&&actor===String(room.active_user_id||'');
+    return room.status==='playing'&&phaseSeq===currentSeq&&actor===String(room.active_user_id||'')||phaseSeq+1===currentSeq&&String(room.last_action_type||'')==='shot_result'&&String(room.last_action_id||'')===String(payload.shotId||'')&&String(room.last_action_actor_user_id||'')===actor;
   }
   function rememberRemoteShot(shotId){seenRemoteShotIds.add(shotId);if(seenRemoteShotIds.size>128){const keep=[...seenRemoteShotIds].slice(-64);seenRemoteShotIds.clear();keep.forEach((id)=>seenRemoteShotIds.add(id));}}
   function receiveVisual(event,payload){
@@ -32,7 +32,7 @@ export function createAshykOnlineSessionController({online,userId,store,engine,g
     const room=currentRoom();
     if(event==='shot-trajectory'){
       if(!shotEnvelope(payload,room)||!validateTrajectoryPacket(payload)||seenRemoteShotIds.has(payload.shotId))return;
-      rememberRemoteShot(payload.shotId);engine.setRemoteAim?.(null);engine.setRemoteSelection?.(null);store?.applyRemoteVisual?.('shot-mode',{mode:payload.mode});engine.playRemoteTrajectory?.(payload);return;
+      rememberRemoteShot(payload.shotId);engine.setRemoteAim?.(null);engine.setRemoteSelection?.(null);store?.applyRemoteVisual?.('shot-mode',{mode:payload.mode});if(engine.playRemoteTrajectory?.(payload)&&Number(payload.phaseSeq)+1===Number(room.phase_seq||0)&&String(room.last_action_type||'')==='shot_result'&&String(room.last_action_id||'')===String(payload.shotId||''))engine.applyAuthoritativeSnapshot?.(room.game_state?.field);return;
     }
     if(!baseEnvelope(payload,room))return;
     if(event==='piece-selected'){const id=Number(payload.pieceId);if(Number.isInteger(id)&&id>=0&&id<64)engine.setRemoteSelection?.(id);return;}
@@ -66,12 +66,12 @@ export function createAshykOnlineSessionController({online,userId,store,engine,g
     const generation=trajectoryGeneration,stream=visualStream,roomId=String(room.id),shotId=visualActionId(),phaseSeq=Number(room.phase_seq||0);
     localShotId=shotId;localShotPhaseSeq=phaseSeq;
     let packet=null;
-    localShotCommit=Promise.resolve(online.commitShot(room,phaseSeq,shotId)).then((next)=>{
+    localShotCommit=Promise.resolve(online.commitShot(room,phaseSeq,shotId)).catch(async()=>{setConnection('reconnecting');return recover(room.id);}).then((next)=>{
       const accepted=Boolean(next&&String(next.shot_in_flight_id||'')===shotId&&Number(next.shot_in_flight_phase_seq)===phaseSeq&&String(next.active_user_id||'')===String(userId||''));
       if(next&&generation===trajectoryGeneration&&stream===visualStream&&visualRoomId===roomId)applyRoom?.(next,false,!accepted);
       if(accepted&&packet&&localShotId===shotId&&generation===trajectoryGeneration&&stream===visualStream&&visualRoomId===roomId)stream.send('shot-trajectory',packet);
       return next;
-    }).catch(async()=>{setConnection('reconnecting');return recover(room.id);});
+    });
     try{
       const trajectory=engine.simulateShotTrajectory({initialState,pieceId:id,mode,directionX,directionZ,pullLength,pullRatio});packet={roomId,actorUserId:userId,phaseSeq,eventId:visualActionId(),shotId,pieceId:id,mode,directionX,directionZ,pullLength,pullRatio,...trajectory};
       if(!validateTrajectoryPacket(packet)||!engine.playLocalTrajectory(packet)){localShotId=null;localShotPhaseSeq=null;localShotCommit=null;return false;}

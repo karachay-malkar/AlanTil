@@ -45,14 +45,16 @@ test('session replays a remote trajectory once and uses one canonical local traj
   let visualReceiver=null;const sent=[],calls=[],commits=[];
   let current=room();
   const online={commitShot:async(roomValue,phaseSeq,shotId)=>{commits.push([roomValue.id,phaseSeq,shotId]);return{...roomValue,shot_in_flight_id:shotId,shot_in_flight_phase_seq:phaseSeq,shot_in_flight_actor_user_id:'u1'};},openVisualStream(roomId,onVisual,onStatus){visualReceiver=onVisual;onStatus('online');return{send:(event,payload)=>{sent.push([event,payload]);return true;},close(){},ready:Promise.resolve(true)};}};
-  const engine={setRemoteSelection(id){calls.push(['selection',id]);},setRemoteAim(value){calls.push(['aim',value]);},playRemoteTrajectory(value){calls.push(['remoteTrajectory',value]);return true;},playLocalTrajectory(value){calls.push(['localTrajectory',value]);return true;},simulateShotTrajectory(){return trajectoryCore;},physicsSnapshot(){return motionField;},isReady(){return true;},isShotActive(){return false;}};
+  const engine={setRemoteSelection(id){calls.push(['selection',id]);},setRemoteAim(value){calls.push(['aim',value]);},playRemoteTrajectory(value){calls.push(['remoteTrajectory',value]);return true;},playLocalTrajectory(value){calls.push(['localTrajectory',value]);return true;},applyAuthoritativeSnapshot(value){calls.push(['authoritative',value]);return true;},simulateShotTrajectory(){return trajectoryCore;},physicsSnapshot(){return motionField;},isReady(){return true;},isShotActive(){return false;}};
   const store={getState:()=>({gameMode:'online'}),onlineGameState:()=>({}),applyRemoteVisual(){}};
   const session=createAshykOnlineSessionController({online,userId:'u1',store,engine,getRoom:()=>current,applyRoom(next){current=next;}});session.attachVisual('r1');
   const packet={roomId:'r1',actorUserId:'u2',phaseSeq:7,eventId:'e1',shotId:'s1',pieceId:0,mode:'flat',directionX:1,directionZ:0,pullLength:4,pullRatio:.7,...trajectoryCore};
   visualReceiver('shot-trajectory',packet);visualReceiver('shot-trajectory',packet);assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,1);
   current=room({active_user_id:'u1'});assert.equal(session.launchOnlineShot(0,{mode:'flat',directionX:1,directionZ:0,pullLength:4}),true);await Promise.resolve();
   assert.equal(commits.length,1);assert.equal(calls.filter(([type])=>type==='localTrajectory').length,1);assert.equal(sent.filter(([event])=>event==='shot-trajectory').length,1);assert.equal(sent.some(([event])=>['shot-start','shot-frame','impact'].includes(event)),false);
-  const late={...packet,shotId:'late'};current=room({active_user_id:'u1',phase_seq:8,last_action_type:'shot_result',last_action_actor_user_id:'u2'});visualReceiver('shot-trajectory',late);assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,1);session.destroy();
+  for(const skewMs of [50,150,300,700]){const shotId=`late-${skewMs}`,late={...packet,shotId};current=room({active_user_id:'u1',phase_seq:8,last_action_id:shotId,last_action_type:'shot_result',last_action_actor_user_id:'u2',game_state:{...room().game_state,field:stillField}});visualReceiver('shot-trajectory',late);visualReceiver('shot-trajectory',late);}
+  assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,5);assert.equal(calls.filter(([type])=>type==='authoritative').length,4);
+  const stale={...packet,shotId:'stale'};current=room({active_user_id:'u1',phase_seq:8,last_action_id:'different-shot',last_action_type:'shot_result',last_action_actor_user_id:'u2'});visualReceiver('shot-trajectory',stale);assert.equal(calls.filter(([type])=>type==='remoteTrajectory').length,5);session.destroy();
 });
 
 test('online shot result keeps the committed shot id for the authoritative action',()=>{
@@ -137,3 +139,27 @@ test('Supabase private Broadcast policies remain room-member and active-player s
   assert.match(sql,/host_user_id/);
   assert.match(sql,/guest_user_id/);
 });
+
+test('commit recovery still broadcasts the canonical trajectory exactly once',async()=>{
+  let current=room({active_user_id:'u1',phase_deadline_at:'2999-01-01T00:00:00.000Z'}),committedId='',visualReceiver=null;
+  const sent=[],calls=[];
+  const online={
+    async commitShot(roomValue,phaseSeq,shotId){committedId=shotId;throw new Error('response lost after server commit');},
+    async getRoom(){return{...current,shot_in_flight_id:committedId,shot_in_flight_phase_seq:current.phase_seq,shot_in_flight_actor_user_id:'u1',phase_deadline_at:null};},
+    openVisualStream(roomId,onVisual,onStatus){visualReceiver=onVisual;onStatus('online');return{send:(event,payload)=>{sent.push([event,payload]);return true;},close(){},ready:Promise.resolve(true)};}
+  };
+  const engine={setRemoteSelection(){},setRemoteAim(){},playRemoteTrajectory(){return true;},playLocalTrajectory(value){calls.push(['localTrajectory',value]);return true;},simulateShotTrajectory(){return trajectoryCore;},physicsSnapshot(){return motionField;},isReady(){return true;},isShotActive(){return false;},isLocalTrajectoryActive(){return true;}};
+  const store={getState:()=>({gameMode:'online'}),onlineGameState:()=>({}),applyRemoteVisual(){}};
+  const session=createAshykOnlineSessionController({online,userId:'u1',store,engine,getRoom:()=>current,applyRoom(next){current=next;}});
+  session.attachVisual('r1');assert.equal(session.launchOnlineShot(0,{mode:'flat',directionX:1,directionZ:0,pullLength:4}),true);
+  await new Promise((resolve)=>setImmediate(resolve));
+  assert.equal(calls.filter(([type])=>type==='localTrajectory').length,1);assert.equal(sent.filter(([event])=>event==='shot-trajectory').length,1);assert.equal(sent[0][1].shotId,committedId);session.destroy();void visualReceiver;
+});
+
+test('timeout polling is suppressed for any server-committed in-flight shot',async()=>{
+  let timeoutCalls=0;const current=room({active_user_id:'u2',phase_deadline_at:'1970-01-01T00:00:00.000Z',shot_in_flight_id:'remote-shot',shot_in_flight_phase_seq:7,shot_in_flight_actor_user_id:'u2'});
+  const online={async resolveTimeout(){timeoutCalls+=1;return current;}};
+  const session=createAshykOnlineSessionController({online,userId:'u1',store:{getState:()=>({gameMode:'online'})},engine:{},getRoom:()=>current});
+  assert.equal(await session.resolveTimeoutIfDue(),null);assert.equal(timeoutCalls,0);session.destroy();
+});
+

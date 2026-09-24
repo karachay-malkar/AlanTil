@@ -1,0 +1,48 @@
+name: Temporary Ashyk 16.8 shot-commit stress build
+
+on:
+  push:
+    branches:
+      - agent/16.8.0-shot-commit-stress-build
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-generate:
+    if: github.event.head_commit.message != 'temp: generated Ashyk runtime stress fix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Regenerate Ashyk web runtime
+        run: node tools/ashyk-web/build.mjs
+      - name: Targeted online authority and replication tests
+        run: node --test tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/asset-versioning.test.mjs
+      - name: Cannon trajectory smoke
+        shell: bash
+        run: |
+          ln -s tools/ashyk-web/node_modules node_modules
+          node scripts/qa/ashyk-trajectory-smoke.mjs
+          rm node_modules
+      - name: Generated runtime parity
+        run: node scripts/qa/check-generated.mjs --ashyk
+      - name: Ashyk access invariant
+        run: node scripts/enforce-registered-ashyk-modes-16-7.mjs
+      - name: Commit generated runtime
+        shell: bash
+        run: |
+          if git diff --quiet -- src/features/ashyk/runtime.js; then
+            echo "Runtime already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/ashyk/runtime.js
+          git commit -m "temp: generated Ashyk runtime stress fix"
+          git push origin HEAD:agent/16.8.0-shot-commit-stress-build
