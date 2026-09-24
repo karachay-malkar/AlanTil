@@ -1,4 +1,4 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
 import {
   getCurrentAuthState,
   getUserProvider,
@@ -6,27 +6,27 @@ import {
   signInWithProvider,
   signOut,
   subscribeToAuth,
-} from "../../shared/auth/auth-service.js?v=16.8.0.1";
-import { renderGoogleIdentityButton } from "../../shared/auth/google-identity.js?v=16.8.0.1";
-import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.1";
+} from "../../shared/auth/auth-service.js?v=16.8.0.2";
+import { renderGoogleIdentityButton } from "../../shared/auth/google-identity.js?v=16.8.0.2";
+import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.2";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=16.8.0.1";
+} from "../../shared/errors/supabase-error.js?v=16.8.0.2";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=16.8.0.1";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
-import { bindLogin, renderLogin } from "./login.js?v=16.8.0.1";
+} from "../../shared/profile/profile-service.js?v=16.8.0.2";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.2";
+import { bindLogin, renderLogin } from "./login.js?v=16.8.0.2";
 import {
   bindProfile,
   bindProfileCreation,
   renderProfile,
   renderProfileCreation,
-} from "./profile.js?v=16.8.0.1";
+} from "./profile.js?v=16.8.0.2";
 
 let controller = null;
 let unsubscribeAuth = null;

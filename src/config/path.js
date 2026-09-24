@@ -1,4 +1,4 @@
-import { msg } from "../shared/i18n/index.js?v=16.8.0.1";
+import { msg } from "../shared/i18n/index.js?v=16.8.0.2";
 export const PATH_CONFIG = Object.freeze({
   dictionaryId: "alantil-kb-ru",
   review1DelayDays: 1,
