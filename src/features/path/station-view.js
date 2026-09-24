@@ -1,11 +1,11 @@
-import { getInterfaceLocale, msg } from "../../shared/i18n/index.js?v=16.8.0.1";
-import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
-import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=16.8.0.1";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.1";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
-import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=16.8.0.1";
+import { getInterfaceLocale, msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=16.8.0.2";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.2";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
+import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=16.8.0.2";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.2";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.2";
+import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=16.8.0.2";
 
 function storageKey(station) {
   return station.selectionSetId || station.setId || station.key;
