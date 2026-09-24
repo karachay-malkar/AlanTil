@@ -1,10 +1,10 @@
-import { getEnabledAuthProviders } from "../../config/auth-providers.js?v=16.8.0.1";
-import { prepareSignInWithProvider } from "../../shared/auth/auth-service.js?v=16.8.0.1";
-import { preloadSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.1";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
-import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=16.8.0.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
+import { getEnabledAuthProviders } from "../../config/auth-providers.js?v=16.8.0.2";
+import { prepareSignInWithProvider } from "../../shared/auth/auth-service.js?v=16.8.0.2";
+import { preloadSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.2";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { renderAuthProviderButton, setAuthProviderButtonState } from "../../shared/ui/auth-provider-button.js?v=16.8.0.2";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.2";
 
 const PROVIDER_FALLBACK_RESET_MS = 5000;
 

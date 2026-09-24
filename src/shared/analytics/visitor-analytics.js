@@ -1,4 +1,4 @@
-import { getCurrentAuthState } from "../auth/auth-service.js?v=16.8.0.1";
+import { getCurrentAuthState } from "../auth/auth-service.js?v=16.8.0.2";
 
 const VISITOR_STORAGE_KEY = "alantil_analytics_visitor_id_v1";
 const SESSION_STORAGE_KEY = "alantil_analytics_session_v1";
@@ -140,7 +140,7 @@ function cleanAppVersion(value) {
 
 async function getAnalyticsSupabaseClient() {
   if (!supabaseClientPromise) {
-    supabaseClientPromise = import("../auth/supabase-client.js?v=16.8.0.1")
+    supabaseClientPromise = import("../auth/supabase-client.js?v=16.8.0.2")
       .then(({ getSupabaseClient }) => getSupabaseClient())
       .catch((error) => {
         supabaseClientPromise = null;

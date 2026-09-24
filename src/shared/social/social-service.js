@@ -1,4 +1,4 @@
-import {getSupabaseClient} from '../auth/supabase-client.js?v=16.8.0.1';
+import {getSupabaseClient} from '../auth/supabase-client.js?v=16.8.0.2';
 import {normalizeInboxCounts,normalizeLeaderboard,normalizeSocialSnapshot,normalizeSocialUser} from '../../../packages/alantil-core/social.js';
 
 async function rpc(name,parameters={}){const client=await getSupabaseClient();const{data,error}=await client.rpc(name,parameters);if(error)throw error;return data;}

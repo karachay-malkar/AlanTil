@@ -1,4 +1,4 @@
-import { readScopedJson, removeScopedValue, writeScopedJson } from "../progress/storage-scope.js?v=16.8.0.1";
+import { readScopedJson, removeScopedValue, writeScopedJson } from "../progress/storage-scope.js?v=16.8.0.2";
 
 const KEY_PREFIX="alantil_practice_snapshot_v1";
 function key(type){const value=String(type||"").trim();return value==='test'||value==='match'?`${KEY_PREFIX}:${value}`:'';}

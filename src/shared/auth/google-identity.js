@@ -1,8 +1,8 @@
 import {
   GOOGLE_IDENTITY_SCRIPT_URL,
   GOOGLE_WEB_CLIENT_ID,
-} from "../../config/auth.js?v=16.8.0.1";
-import { msg } from "../i18n/index.js?v=16.8.0.1";
+} from "../../config/auth.js?v=16.8.0.2";
+import { msg } from "../i18n/index.js?v=16.8.0.2";
 
 const GOOGLE_SCRIPT_ID = "alantil-google-identity";
 const LOAD_TIMEOUT_MS = 30000;

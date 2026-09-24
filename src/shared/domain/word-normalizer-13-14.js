@@ -1,4 +1,4 @@
-import * as base from "/src/shared/domain/word-normalizer.js?v=16.8.0.1&base=1";
+import * as base from "/src/shared/domain/word-normalizer.js?v=16.8.0.2&base=1";
 
 const THEMATIC_SECTIONS = new Set(["universe", "animals", "natural_materials", "plants"]);
 

@@ -1,6 +1,6 @@
-import { PATH_CONFIG } from "../../config/path.js?v=16.8.0.1";
-import { enqueueProgress } from "./progress-queue.js?v=16.8.0.1";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.1";
+import { PATH_CONFIG } from "../../config/path.js?v=16.8.0.2";
+import { enqueueProgress } from "./progress-queue.js?v=16.8.0.2";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.2";
 
 export const ROUTE_SETTINGS_KEY = "alantil_route_settings_v13_1";
 const LEGACY_STORY_ID = "oblivion";

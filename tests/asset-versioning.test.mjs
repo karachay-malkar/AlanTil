@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "16.8.0.1";
+const SINGLETON_URL_VERSION = "16.8.0.2";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,7 +71,7 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.8.0 is the published app release while 16.8.0.1 is the Web cache build", async () => {
+test("16.8.0 is the published app release while 16.8.0.2 is the Web cache build", async () => {
   const index = await read("index.html");
   const release = await read("packages/alantil-core/release.js");
   const analytics = await read("src/config/analytics.js");
@@ -79,14 +79,14 @@ test("16.8.0 is the published app release while 16.8.0.1 is the Web cache build"
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
-  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]1/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]1/);
+  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]2/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]2/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]2"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]1"/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]1"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]2"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]2"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
@@ -102,13 +102,13 @@ test("13.15 feature modules are loaded explicitly and the service worker does no
   assert.doesNotMatch(worker, /MODULE_REWRITES|rewrittenModuleResponse|entry-13-14|word-normalizer-13-14/);
 });
 
-test("Settings dependencies resolve through the 16.8.0.1 singleton identity", async () => {
+test("Settings dependencies resolve through the 16.8.0.2 singleton identity", async () => {
   const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
-  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.1"/);
-  assert.match(settings, /word-repository\.js\?v=16.8.0.1/);
-  assert.match(settings, /auth-service\.js\?v=16.8.0.1/);
-  assert.match(settings, /user-settings-store\.js\?v=16.8.0.1/);
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.2"/);
+  assert.match(settings, /word-repository\.js\?v=16.8.0.2/);
+  assert.match(settings, /auth-service\.js\?v=16.8.0.2/);
+  assert.match(settings, /user-settings-store\.js\?v=16.8.0.2/);
   assert.match(worker, /\["script", "style", "worker"\]\.includes\(request\.destination\)/);
   assert.match(worker, /networkFirst\(request, RUNTIME_CACHE, \{ noStore: true \}\)/);
 });
@@ -173,7 +173,7 @@ test("shared display helpers keep their required dependencies", async () => {
   const stationView = await read("src/features/path/station-view.js");
   const testView = await read("src/features/test/view.js");
   assert.match(alanDisplay, /packages\/alantil-core\/alan-display\.js/);
-  assert.match(wordRenderers, /packages\/alantil-core\/alan-display\.js|example-groups\.js\?v=16.8.0.1/);
-  assert.match(stationView, /overflow-marquee\.js\?v=16.8.0.1/);
-  assert.match(testView, /result-list\.js\?v=16.8.0.1/);
+  assert.match(wordRenderers, /packages\/alantil-core\/alan-display\.js|example-groups\.js\?v=16.8.0.2/);
+  assert.match(stationView, /overflow-marquee\.js\?v=16.8.0.2/);
+  assert.match(testView, /result-list\.js\?v=16.8.0.2/);
 });

@@ -1,15 +1,15 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.1";
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
-import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=16.8.0.1";
-import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=16.8.0.1";
-import { getProfile } from "../../shared/profile/profile-service.js?v=16.8.0.1";
-import { activitySummary } from "../../shared/progress/activity-history-store.js?v=16.8.0.1";
-import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.1";
-import { uiIcon } from "../../shared/ui/icons.js?v=16.8.0.1";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.1";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.2";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.2";
+import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=16.8.0.2";
+import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=16.8.0.2";
+import { getProfile } from "../../shared/profile/profile-service.js?v=16.8.0.2";
+import { activitySummary } from "../../shared/progress/activity-history-store.js?v=16.8.0.2";
+import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=16.8.0.2";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
+import { uiIcon } from "../../shared/ui/icons.js?v=16.8.0.2";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.2";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.2";
 
 let controller = null;
 

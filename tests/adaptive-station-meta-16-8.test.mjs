@@ -48,7 +48,7 @@ test("16.8 runtime uses one static cache-busting version", async () => {
     let source;
     try { source = await readFile(file, "utf8"); } catch { continue; }
     for (const match of source.matchAll(/\?v=(?!\$\{)([^&"'`\s)]+)/g)) {
-      if (match[1] !== "16.8.0.1") mismatches.push(`${path.relative(root, file)} -> ${match[1]}`);
+      if (match[1] !== "16.8.0.2") mismatches.push(`${path.relative(root, file)} -> ${match[1]}`);
     }
   }
   assert.deepEqual(mismatches, []);
@@ -60,7 +60,7 @@ test("16.8 keeps persistent data schema keys while bumping public release metada
   const progress = await read("src/shared/progress/word-progress-store.js");
   const mobile = JSON.parse(await read("mobile/app.json"));
   assert.match(release, /APP_VERSION = "16\.8\.0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16\.8\.0\.1"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16\.8\.0\.2"/);
   assert.match(release, /WEB_DEPLOY_BRANCH = "agent\/16\.8\.0"/);
   assert.match(dictionary, /alantil_dictionary_cache_v5/);
   assert.match(progress, /alantil_word_progress_v13_5/);

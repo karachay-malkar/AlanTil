@@ -1,13 +1,13 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
 import { buildPracticeScope, practiceScopeKey, practiceSelectedPool } from "../../../packages/alantil-core/practice-scope.js";
-import { isWordEnabledInTestModes, shuffle } from "../../shared/domain/word-selection.js?v=16.8.0.1";
-import { normalizeId } from "../../shared/domain/word-normalizer.js?v=16.8.0.1";
-import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=16.8.0.1";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.1";
-import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.1";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
-import { completeMatch, markSolved, nextRound, recordMismatch, startMatch } from "./engine.js?v=16.8.0.1";
-import { matchState } from "./state.js?v=16.8.0.1";
+import { isWordEnabledInTestModes, shuffle } from "../../shared/domain/word-selection.js?v=16.8.0.2";
+import { normalizeId } from "../../shared/domain/word-normalizer.js?v=16.8.0.2";
+import { buildSelectedSources } from "../../shared/progress/session-builders.js?v=16.8.0.2";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.2";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.2";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.2";
+import { completeMatch, markSolved, nextRound, recordMismatch, startMatch } from "./engine.js?v=16.8.0.2";
+import { matchState } from "./state.js?v=16.8.0.2";
 
 export function renderMatchMenu(context, words, signal) {
   const available = words.filter(isWordEnabledInTestModes);

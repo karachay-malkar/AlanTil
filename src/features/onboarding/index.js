@@ -1,17 +1,17 @@
-import "./guide.js?v=16.8.0.1";
-import { setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.1";
+import "./guide.js?v=16.8.0.2";
+import { setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.2";
 import {
   completeLearningSetup,
   hasCompletedLearningSetup,
-} from "../../shared/settings/user-settings-store.js?v=16.8.0.1";
+} from "../../shared/settings/user-settings-store.js?v=16.8.0.2";
 import {
   bindLearningSetup,
   emptyLearningSetupDraft,
   isLearningSetupDraftComplete,
   renderLearningSetup,
   syncLearningSetupView,
-} from "../../shared/settings/learning-setup.js?v=16.8.0.1";
-import { setupText } from "../../shared/settings/learning-preview-data.js?v=16.8.0.1";
+} from "../../shared/settings/learning-setup.js?v=16.8.0.2";
+import { setupText } from "../../shared/settings/learning-preview-data.js?v=16.8.0.2";
 
 export async function runLearningSetup({ shell } = {}) {
   if (hasCompletedLearningSetup()) return false;

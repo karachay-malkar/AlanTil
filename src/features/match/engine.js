@@ -1,10 +1,10 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
-import { ACTIVITY_TYPES, CANCEL_REASONS, DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.1";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=16.8.0.1";
-import { createSessionRuntime, finalizeSessionRuntime, persistSessionRuntime, suspendSessionRuntime } from "../../shared/progress/session-builders.js?v=16.8.0.1";
-import { clearPracticeSnapshot, loadPracticeSnapshot, savePracticeSnapshot } from "../../shared/state/practice-snapshot-store.js?v=16.8.0.1";
-import { recordMatchWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.1";
-import { matchState } from "./state.js?v=16.8.0.1";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.2";
+import { ACTIVITY_TYPES, CANCEL_REASONS, DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.2";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=16.8.0.2";
+import { createSessionRuntime, finalizeSessionRuntime, persistSessionRuntime, suspendSessionRuntime } from "../../shared/progress/session-builders.js?v=16.8.0.2";
+import { clearPracticeSnapshot, loadPracticeSnapshot, savePracticeSnapshot } from "../../shared/state/practice-snapshot-store.js?v=16.8.0.2";
+import { recordMatchWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.2";
+import { matchState } from "./state.js?v=16.8.0.2";
 import { initializeMatchState, markMatchSolved, matchAbandonSummary, matchCompletionSummary, matchSessionPayload, matchStateSnapshot, matchWordById, recordMatchMismatch, restoreMatchStateSnapshot, takeNextMatchRound } from "../../../packages/alantil-core/match.js";
 
 function persistMatchSession(){persistSessionRuntime(matchState.session.runtime,matchSessionPayload(matchState));const snapshot=matchStateSnapshot(matchState);if(snapshot)savePracticeSnapshot("match",snapshot);}

@@ -8,7 +8,7 @@ test("all historical settings-store specifiers resolve to the current singleton 
   const index = await read("index.html");
   const versions = ["13.9.0", ...Array.from({ length: 13 }, (_, index) => `13.10.${index}`), "13.11", "13.12", "13.13", "13.14", "13.15"];
   assert.match(index, /\/src\/shared\/settings\/user-settings-store\.js/);
-  assert.match(index, /const targetVersion = "16[.]8[.]0[.]1"/);
+  assert.match(index, /const targetVersion = "16[.]8[.]0[.]2"/);
   for (const version of versions) {
     assert.ok(index.includes(`"${version}"`), `missing supported singleton version ${version}`);
   }
