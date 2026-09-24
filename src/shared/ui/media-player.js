@@ -1,5 +1,5 @@
-import { msg } from "../i18n/index.js?v=16.8.0.1";
-import { PLAY_ICON_SVG } from "./icons.js?v=16.8.0.1";
+import { msg } from "../i18n/index.js?v=16.8.0.2";
+import { PLAY_ICON_SVG } from "./icons.js?v=16.8.0.2";
 
 export function renderMediaPlayer() {
   return `
