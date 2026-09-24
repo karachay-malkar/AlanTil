@@ -48,7 +48,7 @@ test("16.8 runtime uses one static cache-busting version", async () => {
     let source;
     try { source = await readFile(file, "utf8"); } catch { continue; }
     for (const match of source.matchAll(/\?v=(?!\$\{)([^&"'`\s)]+)/g)) {
-      if (match[1] !== "16.8.0.1") mismatches.push(`${path.relative(root, file)} -> ${match[1]}`);
+      if (match[1] !== "16.8.0.2") mismatches.push(`${path.relative(root, file)} -> ${match[1]}`);
     }
   }
   assert.deepEqual(mismatches, []);

@@ -9,7 +9,7 @@ globalThis.localStorage = {
 };
 globalThis.window = { location: { pathname: "/path/test" } };
 
-const { createStationTestSession, distractorsFor } = await import("../src/features/path/station-test.js?v=16.8.0.1");
+const { createStationTestSession, distractorsFor } = await import("../src/features/path/station-test.js?v=16.8.0.2");
 
 function word(id, pos, order) {
   return {
