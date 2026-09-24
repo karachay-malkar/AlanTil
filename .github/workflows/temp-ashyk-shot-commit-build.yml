@@ -26,6 +26,8 @@ jobs:
               if not raw:
                   continue
               p=pathlib.Path(raw.decode())
+              if str(p).startswith('.github/workflows/'):
+                  continue
               try:
                   text=p.read_text()
               except (UnicodeDecodeError, OSError):
