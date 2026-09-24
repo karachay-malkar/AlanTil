@@ -16,11 +16,11 @@ async function verifyAshykRuntime() {
   const required = [
     'ashyk_invite_create','ashyk_invite_accept','ashyk_room_ready','ashyk_room_ping',
     'ashyk_active_room','ashyk_submit_action','ashyk_resolve_timeout','ashyk_claim_forfeit',
-    'ashyk-shot:','openVisualStream','beginRemotePlayback','question-select','realtime',
+    'ashyk-shot:','openVisualStream','playRemoteTrajectory','shot-trajectory','question-select','realtime',
     'walnut_veneer_02_diff_1k.jpg','walnut_veneer_02_nor_gl_1k.jpg',
   ];
   for (const token of required) if (!source.includes(token)) throw new Error(`Generated Ashyk runtime is missing ${token}`);
-  for (const forbidden of ['launchRemote', 'ashyk_join_room']) if (source.includes(forbidden)) throw new Error(`Generated Ashyk runtime still contains legacy token ${forbidden}`);
+  for (const forbidden of ['launchRemote','beginRemotePlayback','pushRemoteFrame','shot-start','shot-frame','ashyk_join_room']) if (source.includes(forbidden)) throw new Error(`Generated Ashyk runtime still contains legacy token ${forbidden}`);
   for (const asset of ['walnut_veneer_02_diff_1k.jpg','walnut_veneer_02_nor_gl_1k.jpg','walnut_veneer_02_rough_1k.jpg','walnut_veneer_02_ao_1k.jpg']) {
     const file = path.join(ROOT, 'assets/ashyk/materials/walnut-veneer-02', asset);
     if (!fs.existsSync(file) || fs.statSync(file).size === 0) throw new Error(`Missing Ashyk PBR asset ${asset}`);

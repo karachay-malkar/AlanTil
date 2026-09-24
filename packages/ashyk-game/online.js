@@ -1,8 +1,8 @@
-export const ASHYK_ONLINE_PROTOCOL_VERSION=2;
+export const ASHYK_ONLINE_PROTOCOL_VERSION=3;
 const single=(value)=>Array.isArray(value)?(value[0]||null):(value||null);
 const ACTIVE_ROOM_STATUSES=new Set(['waiting','preparing','playing']);
-const VISUAL_EVENTS=Object.freeze(['piece-selected','piece-deselected','shot-mode','aim-update','aim-clear','shot-start','shot-frame','impact','question-select','question-submit','question-skip']);
-function compatibleRoom(room){if(!room)return null;const version=Number(room.protocol_version||1);if(version>ASHYK_ONLINE_PROTOCOL_VERSION){const error=new Error('Ashyk client update required');error.code='ASHYK_PROTOCOL_NEWER';throw error;}return room;}
+const VISUAL_EVENTS=Object.freeze(['piece-selected','piece-deselected','shot-mode','aim-update','aim-clear','question-select','question-submit','question-skip','shot-trajectory']);
+function compatibleRoom(room){if(!room)return null;const version=Number(room.protocol_version||1);if(ACTIVE_ROOM_STATUSES.has(room.status)&&version!==ASHYK_ONLINE_PROTOCOL_VERSION){const error=new Error(version>ASHYK_ONLINE_PROTOCOL_VERSION?'Ashyk client update required':'Ashyk room uses an incompatible protocol');error.code=version>ASHYK_ONLINE_PROTOCOL_VERSION?'ASHYK_PROTOCOL_NEWER':'ASHYK_PROTOCOL_LEGACY';throw error;}return room;}
 function inviteResult(value){const row=single(value)||{};return{invite:row.invite||null,room:compatibleRoom(row.room||null)};}
 export function isActiveAshykRoom(room){return Boolean(room?.id&&ACTIVE_ROOM_STATUSES.has(room.status));}
 export function createAshykOnlineAdapter(client){
@@ -29,7 +29,7 @@ export function createAshykOnlineAdapter(client){
     let channel=null,subscribed=false,closed=false;
     const pendingEssential=[],pendingLatest=new Map();
     const receive=(event)=>(message)=>{if(!closed)onVisual?.(event,message?.payload||message||{});};
-    const queue=(event,payload)=>{if(['shot-start','impact','question-submit','question-skip'].includes(event)){pendingEssential.push({event,payload});if(pendingEssential.length>24)pendingEssential.shift();}else pendingLatest.set(event,{event,payload});};
+    const queue=(event,payload)=>{if(['shot-trajectory','question-submit','question-skip'].includes(event)){pendingEssential.push({event,payload});if(pendingEssential.length>24)pendingEssential.shift();}else pendingLatest.set(event,{event,payload});};
     const sendNow=(event,payload)=>{if(!channel||closed||!subscribed){queue(event,payload);return false;}Promise.resolve(channel.send({type:'broadcast',event,payload})).catch((error)=>{queue(event,payload);onError(error);});return true;};
     const flushPending=()=>{if(!subscribed||closed)return;const rows=[...pendingEssential.splice(0),...pendingLatest.values()];pendingLatest.clear();for(const row of rows)sendNow(row.event,row.payload);};
     const ready=(async()=>{try{await client.realtime?.setAuth?.();if(closed)return false;channel=client.channel(`ashyk-shot:${roomId}`,{config:{private:true,broadcast:{self:false,ack:false}}});for(const event of VISUAL_EVENTS)channel.on('broadcast',{event},receive(event));channel.subscribe((status,error)=>{if(closed)return;if(status==='SUBSCRIBED'){subscribed=true;onStatus('online');flushPending();return;}subscribed=false;if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){onStatus('reconnecting');onError(error||status);return;}if(status==='CLOSED')onStatus('offline');else onStatus('connecting');});return true;}catch(error){subscribed=false;onStatus('reconnecting');onError(error);return false;}})();
