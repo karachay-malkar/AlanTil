@@ -1,4 +1,4 @@
-export const ASHYK_ONLINE_PROTOCOL_VERSION=3;
+export const ASHYK_ONLINE_PROTOCOL_VERSION=4;
 const single=(value)=>Array.isArray(value)?(value[0]||null):(value||null);
 const ACTIVE_ROOM_STATUSES=new Set(['waiting','preparing','playing']);
 const VISUAL_EVENTS=Object.freeze(['piece-selected','piece-deselected','shot-mode','aim-update','aim-clear','question-select','question-submit','question-skip','shot-trajectory']);
@@ -16,7 +16,8 @@ export function createAshykOnlineAdapter(client){
   async function getActiveRoom(){return compatibleRoom(await rpc('ashyk_active_room',{}));}
   async function markReady(roomId){if(!roomId)return null;return compatibleRoom(await rpc('ashyk_room_ready',{p_room_id:roomId}));}
   async function pingRoom(roomId){if(!roomId)return null;return compatibleRoom(await rpc('ashyk_room_ping',{p_room_id:roomId}));}
-  async function submitAction(room,expectedPhaseSeq,actionId,actionType,state,nextActiveUserId,status='playing'){if(!room?.id)throw new Error('Missing Ashyk room');try{return compatibleRoom(await rpc('ashyk_submit_action',{p_room_id:room.id,p_expected_revision:Number(room.revision||0),p_expected_phase_seq:Number(expectedPhaseSeq||0),p_action_id:String(actionId||''),p_action_type:String(actionType||''),p_state:state||{},p_next_active_user_id:nextActiveUserId||null,p_status:status}));}catch(error){const message=String(error?.message||'');if(!/ashyk_submit_action|function.*not found|PGRST202/i.test(message))throw error;return compatibleRoom(await rpc('ashyk_submit_state',{p_room_id:room.id,p_expected_revision:Number(room.revision||0),p_state:state||{},p_next_active_user_id:nextActiveUserId||null,p_status:status}));}}
+  async function commitShot(room,expectedPhaseSeq,shotId){if(!room?.id||!shotId)throw new Error('Missing Ashyk shot commit');return compatibleRoom(await rpc('ashyk_shot_commit',{p_room_id:room.id,p_expected_revision:Number(room.revision||0),p_expected_phase_seq:Number(expectedPhaseSeq||0),p_shot_id:String(shotId)}));}
+  async function submitAction(room,expectedPhaseSeq,actionId,actionType,state,nextActiveUserId,status='playing'){if(!room?.id)throw new Error('Missing Ashyk room');try{return compatibleRoom(await rpc('ashyk_submit_action',{p_room_id:room.id,p_expected_revision:Number(room.revision||0),p_expected_phase_seq:Number(expectedPhaseSeq||0),p_action_id:String(actionId||''),p_action_type:String(actionType||''),p_state:state||{},p_next_active_user_id:nextActiveUserId||null,p_status:status}));}catch(error){const message=String(error?.message||'');if(Number(room.protocol_version||1)>=4||!/ashyk_submit_action|function.*not found|PGRST202/i.test(message))throw error;return compatibleRoom(await rpc('ashyk_submit_state',{p_room_id:room.id,p_expected_revision:Number(room.revision||0),p_state:state||{},p_next_active_user_id:nextActiveUserId||null,p_status:status}));}}
   async function resolveTimeout(roomId){if(!roomId)return null;try{return compatibleRoom(await rpc('ashyk_resolve_timeout',{p_room_id:roomId}));}catch(error){const message=String(error?.message||'');if(!/ashyk_resolve_timeout|function.*not found|PGRST202/i.test(message))throw error;return getRoom(roomId);}}
   async function claimForfeit(roomId){if(!roomId)return null;return compatibleRoom(await rpc('ashyk_claim_forfeit',{p_room_id:roomId}));}
   async function leaveRoom(roomId){if(!roomId)return null;return rpc('ashyk_leave_room',{p_room_id:roomId});}
@@ -40,5 +41,5 @@ export function createAshykOnlineAdapter(client){
     };
   }
   const openShotStream=(roomId,onVisual,onError=()=>{})=>openVisualStream(roomId,onVisual,()=>{},onError);
-  return{createFriendInvite,acceptInvite,declineInvite,cancelInvite,getRoom,getActiveRoom,markReady,pingRoom,submitAction,resolveTimeout,claimForfeit,leaveRoom,subscribeRoom,subscribeInvite,subscribeInvites,openVisualStream,openShotStream};
+  return{createFriendInvite,acceptInvite,declineInvite,cancelInvite,getRoom,getActiveRoom,markReady,pingRoom,commitShot,submitAction,resolveTimeout,claimForfeit,leaveRoom,subscribeRoom,subscribeInvite,subscribeInvites,openVisualStream,openShotStream};
 }
