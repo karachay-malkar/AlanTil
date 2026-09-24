@@ -2,7 +2,7 @@ import {
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js?v=16.8.0.1";
+} from "../progress/storage-scope.js?v=16.8.0.2";
 import {
   favoriteHas,
   favoriteValues,

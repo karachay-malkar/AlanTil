@@ -1,4 +1,4 @@
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.1";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.2";
 
 export const ACTIVE_SESSIONS_KEY = "alantil_active_sessions_v1";
 
