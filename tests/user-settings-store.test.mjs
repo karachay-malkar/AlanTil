@@ -12,8 +12,8 @@ globalThis.CustomEvent = class CustomEvent {
 };
 globalThis.window = { dispatchEvent() {} };
 
-const settingsStore = await import("../src/shared/settings/user-settings-store.js?v=16.8.0.2");
-const progressQueue = await import("../src/shared/progress/progress-queue.js?v=16.8.0.2");
+const settingsStore = await import("../src/shared/settings/user-settings-store.js?v=16.8.0.3");
+const progressQueue = await import("../src/shared/progress/progress-queue.js?v=16.8.0.3");
 
 test("all Cyrillic variants survive storage reload and enter the sync payload", () => {
   for (const dialect of ["karachay", "balkar", "canonical"]) {

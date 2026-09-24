@@ -51,6 +51,16 @@ for(const delay of [50,150,300,700]){
   assert.deepEqual(replay(delay,120),reference);
 }
 
+const localEvents=[];
+const localPlayback=createAshykEngine({random:()=>.21,onEvent:(event)=>localEvents.push(event)});
+assert.equal(localPlayback.playLocalTrajectory(packet,{startedAt:2000}),true);
+for(let t=2000;t<2000+packet.durationMs;t+=1000/60)localPlayback.step(1/60,t);
+localPlayback.step(1/60,2000+packet.durationMs);
+assert.deepEqual(snapshotSignature(localPlayback.snapshot()),reference);
+assert.equal(localEvents.filter((event)=>event.type==="shotSettled").length,1);
+assert.equal(localEvents.find((event)=>event.type==="shotSettled")?.shotId,"smoke-shot");
+localPlayback.destroy();
+
 const remote=createAshykEngine({random:()=>.33});
 assert.equal(remote.playRemoteTrajectory(packet,{startedAt:1000}),true);
 remote.step(1/60,1000+packet.durationMs/2);

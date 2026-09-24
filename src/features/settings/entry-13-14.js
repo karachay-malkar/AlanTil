@@ -1,4 +1,4 @@
-import * as baseSettings from "/src/features/settings/index.js?v=16.8.0.2&base=1";
+import * as baseSettings from "/src/features/settings/index.js?v=16.8.0.3&base=1";
 
 function applyReleaseLabel(root) {
   root.querySelectorAll(".settingsLinksSection small").forEach((node) => {

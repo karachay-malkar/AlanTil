@@ -2,7 +2,7 @@ import {
   getStorageScope,
   readScopedJson,
   writeScopedJson,
-} from "./storage-scope.js?v=16.8.0.2";
+} from "./storage-scope.js?v=16.8.0.3";
 import {
   enqueueProgressEntry,
   mergeProgressQueueEntries,

@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=16.8.0.2";
+import { msg } from "../i18n/index.js?v=16.8.0.3";
 
 function escapeAttribute(value) {
   return String(value ?? "")

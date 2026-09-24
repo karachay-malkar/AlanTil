@@ -1,11 +1,11 @@
-import { getActivityHistory } from "./activity-history-store.js?v=16.8.0.2";
+import { getActivityHistory } from "./activity-history-store.js?v=16.8.0.3";
 import {
   getStorageScope,
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "./storage-scope.js?v=16.8.0.2";
-import { awardReward } from "./reward-store.js?v=16.8.0.2";
+} from "./storage-scope.js?v=16.8.0.3";
+import { awardReward } from "./reward-store.js?v=16.8.0.3";
 import {
   applyLearnWordResults,
   applyMatchWordResults,

@@ -1,13 +1,13 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.2";
-import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js?v=16.8.0.2";
-import { songFavorites } from "../../shared/state/song-favorites.js?v=16.8.0.2";
-import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=16.8.0.2";
-import { renderContentListRow } from "../../shared/ui/list.js?v=16.8.0.2";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.2";
-import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=16.8.0.2";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.2";
-import { songsState } from "./state.js?v=16.8.0.2";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.3";
+import { EVENTS, SEARCH_AREAS } from "../../shared/analytics/events.js?v=16.8.0.3";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=16.8.0.3";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=16.8.0.3";
+import { renderContentListRow } from "../../shared/ui/list.js?v=16.8.0.3";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.3";
+import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=16.8.0.3";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
+import { songsState } from "./state.js?v=16.8.0.3";
 import {
   FAVORITES_PLAYLIST_ID,
   filterSongs,

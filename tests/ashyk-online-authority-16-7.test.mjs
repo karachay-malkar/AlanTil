@@ -9,7 +9,7 @@ import {createAshykOnlineAdapter,ASHYK_ONLINE_PROTOCOL_VERSION} from '../package
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
 const engine=()=>({reset(){},clearSelection(){},snapshot(){return{pieces:[]};},applySnapshot(){},isReady(){return true;}});
-const room=(overrides={})=>({id:'r1',status:'playing',protocol_version:3,host_user_id:'u1',guest_user_id:'u2',active_user_id:'u1',revision:3,turn_no:1,phase:'first-shot',phase_seq:4,phase_deadline_at:'1970-01-01T00:00:15.000Z',last_action_type:null,game_state:{scores:[0,0],remainingAshyks:10,difficulty:'normal',field:{pieces:[]},phase:'first-shot'},...overrides});
+const room=(overrides={})=>({id:'r1',status:'playing',protocol_version:4,host_user_id:'u1',guest_user_id:'u2',active_user_id:'u1',revision:3,turn_no:1,phase:'first-shot',phase_seq:4,phase_deadline_at:'1970-01-01T00:00:15.000Z',last_action_type:null,game_state:{scores:[0,0],remainingAshyks:10,difficulty:'normal',field:{pieces:[]},phase:'first-shot'},...overrides});
 
 test('online clock is derived from server deadline and never hands the turn over locally',()=>{
   let now=0,tick=null;
@@ -29,19 +29,20 @@ test('online wrong answer advances immediately with one typed action instead of 
   assert.equal(store.submitAnswer('w1'),false);const state=store.getState();assert.equal(state.player,2);assert.equal(state.phase,'first-shot');assert.equal(state.onlineAction?.type,'answer_wrong');store.destroy();
 });
 
-test('online adapter uses authoritative action, phase sequence and timeout RPC contracts',async()=>{const calls=[];const channel={on(){return this;},subscribe(){return this;},unsubscribe(){}};const client={rpc:async(name,args)=>{calls.push([name,args]);if(name==='ashyk_submit_action')return{data:{...room(),last_action_id:args.p_action_id,revision:4,phase_seq:5},error:null};return{data:room(),error:null};},channel:()=>channel,removeChannel(){}};const online=createAshykOnlineAdapter(client);assert.equal(ASHYK_ONLINE_PROTOCOL_VERSION,3);await online.submitAction(room(),4,'action-1','skip',{scores:[0,0],currentPlayer:2,remainingAshyks:10,difficulty:'normal',phase:'first-shot'},'u2','playing');await online.resolveTimeout('r1');await online.claimForfeit('r1');assert.deepEqual(Object.keys(calls[0][1]),['p_room_id','p_expected_revision','p_expected_phase_seq','p_action_id','p_action_type','p_state','p_next_active_user_id','p_status']);assert.equal(calls[1][0],'ashyk_resolve_timeout');assert.equal(calls[2][0],'ashyk_claim_forfeit');});
+test('online adapter commits a shot before authoritative result and keeps timeout RPC separate',async()=>{const calls=[];const channel={on(){return this;},subscribe(){return this;},unsubscribe(){}};const client={rpc:async(name,args)=>{calls.push([name,args]);if(name==='ashyk_shot_commit')return{data:{...room(),shot_in_flight_id:args.p_shot_id,shot_in_flight_phase_seq:args.p_expected_phase_seq},error:null};if(name==='ashyk_submit_action')return{data:{...room(),last_action_id:args.p_action_id,revision:4,phase_seq:5},error:null};return{data:room(),error:null};},channel:()=>channel,removeChannel(){}};const online=createAshykOnlineAdapter(client);assert.equal(ASHYK_ONLINE_PROTOCOL_VERSION,4);await online.commitShot(room(),4,'shot-1');await online.submitAction(room(),4,'shot-1','shot_result',{scores:[0,0],currentPlayer:2,remainingAshyks:10,difficulty:'normal',phase:'first-shot'},'u2','playing');await online.resolveTimeout('r1');await online.claimForfeit('r1');assert.equal(calls[0][0],'ashyk_shot_commit');assert.deepEqual(Object.keys(calls[0][1]),['p_room_id','p_expected_revision','p_expected_phase_seq','p_shot_id']);assert.equal(calls[1][0],'ashyk_submit_action');assert.equal(calls[2][0],'ashyk_resolve_timeout');assert.equal(calls[3][0],'ashyk_claim_forfeit');});
 
 test('database migration defines server deadlines, phase sequencing, idempotent actions and resign/forfeit results',()=>{const sql=read('supabase/migrations/20260921104928_alantil_16_7_ashyk_authoritative_turns.sql');for(const token of ['protocol_version','turn_no','phase_seq','phase_deadline_at','last_action_id','last_action_type','winner_user_id','finish_reason','ashyk_action_log','ashyk_submit_action','ashyk_resolve_timeout','ashyk_claim_forfeit'])assert.match(sql,new RegExp(token));assert.match(sql,/p_expected_phase_seq/);assert.match(sql,/p_action_id/);assert.match(sql,/phase_deadline_at\s*<=\s*now\(\)/);assert.match(sql,/finish_reason='resign'/);assert.match(sql,/finish_reason='disconnect'/);});
 test('Web and Mobile share the ordered online-session controller',()=>{const session=read('packages/ashyk-game/session.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');assert.match(session,/queue\.push/);assert.match(session,/last_action_id/);assert.match(session,/resolveTimeoutIfDue/);assert.match(web,/createAshykOnlineSessionController/);assert.match(mobile,/createAshykOnlineSessionController/);assert.doesNotMatch(web,/pendingSync|syncing\.current/);assert.doesNotMatch(mobile,/pendingSync|syncing\.current/);});
 
 
-test('protocol v3 accepts current rooms and rejects active legacy v2 rooms',async()=>{
+test('protocol v4 accepts current rooms and rejects active legacy v3 rooms',async()=>{
   const channel={on(){return this;},subscribe(){return this;},unsubscribe(){}};
   const clientFor=(protocol_version)=>({rpc:async()=>({data:room({protocol_version}),error:null}),channel:()=>channel,removeChannel(){}});
-  assert.equal((await createAshykOnlineAdapter(clientFor(3)).getRoom('r1')).protocol_version,3);
-  await assert.rejects(()=>createAshykOnlineAdapter(clientFor(2)).getRoom('r1'),(error)=>error?.code==='ASHYK_PROTOCOL_LEGACY');
+  assert.equal((await createAshykOnlineAdapter(clientFor(4)).getRoom('r1')).protocol_version,4);
+  await assert.rejects(()=>createAshykOnlineAdapter(clientFor(3)).getRoom('r1'),(error)=>error?.code==='ASHYK_PROTOCOL_LEGACY');
 });
-test('trajectory protocol migration defaults new rooms to v3 without rewriting existing v2 rooms',()=>{
-  const sql=read('supabase/migrations/20260924143000_alantil_16_8_ashyk_trajectory_protocol.sql');
-  assert.match(sql,/protocol_version set default 3/);assert.match(sql,/new\.protocol_version=2/);assert.match(sql,/old\.protocol_version=3 and new\.protocol_version=2/);assert.doesNotMatch(sql,/update public\.ashyk_rooms set protocol_version=3/i);
+test('shot commit migration fixes deadline ownership and requires the committed shot id',()=>{
+  const sql=read('supabase/migrations/20260924165000_alantil_16_8_ashyk_shot_commit.sql');
+  for(const token of ['protocol_version set default 4','ashyk_shot_commit','shot_in_flight_id','shot_in_flight_actor_user_id','shot_in_flight_phase_seq','shot_result_deadline_at','ashyk_guard_committed_shot'])assert.match(sql,new RegExp(token));
+  assert.match(sql,/interval '12 seconds'/);assert.match(sql,/greatest\(v_room\.phase_deadline_at,v_guard_deadline\)/);assert.match(sql,/new\.last_action_id is distinct from old\.shot_in_flight_id/);assert.match(sql,/protocol_version<4/);
 });

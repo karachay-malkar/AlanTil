@@ -1,7 +1,7 @@
-import { msg } from "../i18n/index.js?v=16.8.0.2";
-import { wordFavorites } from "../state/word-favorites.js?v=16.8.0.2";
-import { openInfoModal } from "./info-modal.js?v=16.8.0.2";
-import { escapeHtml, renderCombinedGroups, renderStarButton } from "./word-renderers.js?v=16.8.0.2";
+import { msg } from "../i18n/index.js?v=16.8.0.3";
+import { wordFavorites } from "../state/word-favorites.js?v=16.8.0.3";
+import { openInfoModal } from "./info-modal.js?v=16.8.0.3";
+import { escapeHtml, renderCombinedGroups, renderStarButton } from "./word-renderers.js?v=16.8.0.3";
 
 export function renderWordCard(word) {
   const groupsHost = document.createElement("div");

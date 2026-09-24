@@ -1,7 +1,7 @@
-import { stationKey } from "../domain/learning-route.js?v=16.8.0.2";
-import { getInterfaceLocale } from "../i18n/index.js?v=16.8.0.2";
-import { enqueueProgress } from "./progress-queue.js?v=16.8.0.2";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.2";
+import { stationKey } from "../domain/learning-route.js?v=16.8.0.3";
+import { getInterfaceLocale } from "../i18n/index.js?v=16.8.0.3";
+import { enqueueProgress } from "./progress-queue.js?v=16.8.0.3";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.3";
 import {
   createStationProgressRow,
   effectiveStationStatus,

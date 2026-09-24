@@ -100,7 +100,7 @@ test("16.7 beginner set titles are localized in ru/en/tr", async () => {
   assert.match(polish, /Sakin Göl/);
 });
 
-test("16.8.0.2 cache version is wired through the startup chain", async () => {
+test("16.8.0.3 cache version is wired through the startup chain", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const router = await read("src/app/router.js");

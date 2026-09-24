@@ -1,12 +1,12 @@
-import { trackEvent, setAnalyticsEnabled } from "../analytics/analytics.js?v=16.8.0.2";
-import { EVENTS } from "../analytics/events.js?v=16.8.0.2";
-import { hideAnalyticsConsentPanel, showAnalyticsConsentPanel } from "../ui/analytics-consent-panel.js?v=16.8.0.2";
+import { trackEvent, setAnalyticsEnabled } from "../analytics/analytics.js?v=16.8.0.3";
+import { EVENTS } from "../analytics/events.js?v=16.8.0.3";
+import { hideAnalyticsConsentPanel, showAnalyticsConsentPanel } from "../ui/analytics-consent-panel.js?v=16.8.0.3";
 import {
   hasStoredAnalyticsPreference,
   readAnalyticsPreference,
   saveAnalyticsPreference,
-} from "./analytics-preference.js?v=16.8.0.2";
-import { resolvePrivacyRegion } from "./region-service.js?v=16.8.0.2";
+} from "./analytics-preference.js?v=16.8.0.3";
+import { resolvePrivacyRegion } from "./region-service.js?v=16.8.0.3";
 
 const listeners = new Set();
 let router = null;

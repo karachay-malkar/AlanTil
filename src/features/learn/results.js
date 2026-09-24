@@ -1,8 +1,8 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.2";
-import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.2";
-import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.2";
-import { learnState } from "./state.js?v=16.8.0.2";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.3";
+import { escapeHtml, renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
+import { learnState } from "./state.js?v=16.8.0.3";
 import { buildLearnResultSummary } from "../../../packages/alantil-core/learning.js";
 
 export function renderResults(context, words, signal, { onDone } = {}) {

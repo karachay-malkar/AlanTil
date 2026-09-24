@@ -1,18 +1,18 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.2";
-import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=16.8.0.2";
-import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=16.8.0.2";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.3";
+import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=16.8.0.3";
+import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=16.8.0.3";
 import {
   createSessionRuntime,
   finalizeSessionRuntime,
   persistSessionRuntime,
-} from "../../shared/progress/session-builders.js?v=16.8.0.2";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.2";
-import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.2";
-import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=16.8.0.2";
-import { uiIcon } from "../../shared/ui/icons.js?v=16.8.0.2";
-import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js?v=16.8.0.2";
-import { getHiddenSet, learnState } from "./state.js?v=16.8.0.2";
+} from "../../shared/progress/session-builders.js?v=16.8.0.3";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
+import { recordLearnWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.3";
+import { renderFavoriteButton } from "../../shared/ui/favorite-button.js?v=16.8.0.3";
+import { uiIcon } from "../../shared/ui/icons.js?v=16.8.0.3";
+import { renderCombinedGroups, renderRuAlanFront, renderRuTitle } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
+import { getHiddenSet, learnState } from "./state.js?v=16.8.0.3";
 import {
   cloneLearnValue,
   decideLearnCard,
