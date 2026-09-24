@@ -1,0 +1,23 @@
+name: Package final AlanTil 16.8.0 shot-commit fix
+on:
+  push:
+    branches:
+      - agent/16.8.0-final-package-47dfba4
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 47dfba4cf0db554e1bc224f13683116c6b1c217d
+          fetch-depth: 0
+      - name: Create source archive
+        run: git archive --format=zip --output=AlanTil-16.8.0-47dfba4.zip 47dfba4cf0db554e1bc224f13683116c6b1c217d
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0-47dfba4
+          path: AlanTil-16.8.0-47dfba4.zip
+          compression-level: 0
+          if-no-files-found: error
