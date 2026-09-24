@@ -1,4 +1,4 @@
-import { escapeHtml } from "../../shared/ui/word-renderers.js?v=16.8.0.1";
+import { escapeHtml } from "../../shared/ui/word-renderers.js?v=16.8.0.2";
 import { buildSongLyricsModel, parseLyricsBlocks } from "../../../packages/alantil-core/songs.js";
 
 export { parseLyricsBlocks };

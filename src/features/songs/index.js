@@ -1,14 +1,14 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
-import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.1";
-import { EVENTS } from "../../shared/analytics/events.js?v=16.8.0.1";
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.1";
-import { songFavorites } from "../../shared/state/song-favorites.js?v=16.8.0.1";
-import { closeInfoModal } from "../../shared/ui/info-modal.js?v=16.8.0.1";
-import { renderSongsCatalog } from "./catalog.js?v=16.8.0.1";
-import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=16.8.0.1";
-import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=16.8.0.1";
-import { renderPlaylists } from "./playlists.js?v=16.8.0.1";
-import { songsState } from "./state.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.2";
+import { EVENTS } from "../../shared/analytics/events.js?v=16.8.0.2";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.2";
+import { songFavorites } from "../../shared/state/song-favorites.js?v=16.8.0.2";
+import { closeInfoModal } from "../../shared/ui/info-modal.js?v=16.8.0.2";
+import { renderSongsCatalog } from "./catalog.js?v=16.8.0.2";
+import { getPlaylists, getSongById, getSongs, getSongsByPlaylist } from "./repository.js?v=16.8.0.2";
+import { resolvePlaylistBySlug, slugForPlaylist } from "./routes.js?v=16.8.0.2";
+import { renderPlaylists } from "./playlists.js?v=16.8.0.2";
+import { songsState } from "./state.js?v=16.8.0.2";
 
 let controller = null;
 let activeContext = null;
@@ -16,8 +16,8 @@ let disposeActivePlayer = null;
 
 async function loadSongScreen() {
   const [view, player] = await Promise.all([
-    import("./song-view.js?v=16.8.0.1"),
-    import("./player.js?v=16.8.0.1"),
+    import("./song-view.js?v=16.8.0.2"),
+    import("./player.js?v=16.8.0.2"),
   ]);
   disposeActivePlayer = player.disposePlayer;
   return view.renderSongView;

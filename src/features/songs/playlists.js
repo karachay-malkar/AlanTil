@@ -1,7 +1,7 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.1";
-import { renderSectionMenu } from "../../shared/ui/list.js?v=16.8.0.1";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.1";
-import { buildPlaylistRoutes } from "./routes.js?v=16.8.0.1";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.2";
+import { renderSectionMenu } from "../../shared/ui/list.js?v=16.8.0.2";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.2";
+import { buildPlaylistRoutes } from "./routes.js?v=16.8.0.2";
 
 const FAVORITES_PLAYLIST_ID = "__fav__";
 
