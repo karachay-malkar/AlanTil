@@ -1,4 +1,4 @@
-import { msg } from "../i18n/index.js?v=16.8.0.1";
+import { msg } from "../i18n/index.js?v=16.8.0.2";
 import {
   DICTIONARY_CACHE_KEY,
   DICTIONARY_CONTENT_TABLE,
@@ -6,20 +6,20 @@ import {
   DICTIONARY_METADATA_TABLE,
   DICTIONARY_STORIES_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
-} from "../../config/words.js?v=16.8.0.1";
-import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.1";
-import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=16.8.0.1";
-import { getDisplayedWordCollection } from "../domain/alan-display.js?v=16.8.0.1";
-import { getUserSettings } from "../settings/user-settings-store.js?v=16.8.0.1";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=16.8.0.1";
-import { readJson, writeJson } from "../state/storage.js?v=16.8.0.1";
-import { DICTIONARY_STORE_SCHEMA_VERSION, readDictionarySnapshot, writeDictionarySnapshot } from "./dictionary-store.js?v=16.8.0.1";
+} from "../../config/words.js?v=16.8.0.2";
+import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.2";
+import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=16.8.0.2";
+import { getDisplayedWordCollection } from "../domain/alan-display.js?v=16.8.0.2";
+import { getUserSettings } from "../settings/user-settings-store.js?v=16.8.0.2";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=16.8.0.2";
+import { readJson, writeJson } from "../state/storage.js?v=16.8.0.2";
+import { DICTIONARY_STORE_SCHEMA_VERSION, readDictionarySnapshot, writeDictionarySnapshot } from "./dictionary-store.js?v=16.8.0.2";
 
 const PAGE_SIZE = 1000;
 const DOWNLOAD_TIMEOUT_MS = 15000;
 const VERSION_TIMEOUT_MS = 5000;
 const RETRY_DELAYS_MS = Object.freeze([0, 5000, 30000]);
-const BUNDLED_DICTIONARY_URL = "/src/data/dictionary-snapshot.json?v=16.8.0.1";
+const BUNDLED_DICTIONARY_URL = "/src/data/dictionary-snapshot.json?v=16.8.0.2";
 const DICTIONARY_META_KEY = "alantil_dictionary_meta_v1";
 
 let words = null;
