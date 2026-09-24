@@ -46,3 +46,11 @@ test('shot commit migration fixes deadline ownership and requires the committed 
   for(const token of ['protocol_version set default 4','ashyk_shot_commit','shot_in_flight_id','shot_in_flight_actor_user_id','shot_in_flight_phase_seq','shot_result_deadline_at','ashyk_guard_committed_shot'])assert.match(sql,new RegExp(token));
   assert.match(sql,/interval '12 seconds'/);assert.match(sql,/greatest\(v_room\.phase_deadline_at,v_guard_deadline\)/);assert.match(sql,/new\.last_action_id is distinct from old\.shot_in_flight_id/);assert.match(sql,/protocol_version<4/);
 });
+
+test('shot commit timeout guard removes the turn deadline and blocks ordinary timeout while flight is committed',()=>{
+  const sql=read('supabase/migrations/20260924200000_alantil_16_8_ashyk_shot_commit_timeout_guard.sql');
+  assert.match(sql,/create or replace function public\.ashyk_shot_commit/);
+  assert.match(sql,/phase_deadline_at=null/);
+  assert.match(sql,/shot_in_flight_id is not null then\s+return v_room/);
+  assert.match(sql,/shot_result_deadline_at=v_guard_deadline/);
+});
