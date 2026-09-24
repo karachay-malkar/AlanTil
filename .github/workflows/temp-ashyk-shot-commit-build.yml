@@ -41,14 +41,17 @@ jobs:
         run: node --test tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/social-ashyk-16-7-0.test.mjs tests/release-version-16-7.test.mjs
       - name: Verify generated runtime
         run: node scripts/qa/check-generated.mjs --ashyk
-      - name: Commit generated runtime and build references
+      - name: Remove dependency symlink
+        run: rm -f node_modules
+      - name: Stage generated runtime and build references
         run: |
-          rm node_modules
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
+      - name: Commit generated runtime and build references
+        run: |
           if ! git diff --cached --quiet; then
             git commit -m "temp: generate Ashyk runtime 16.8.0.3"
-            git pull --rebase origin "$GITHUB_REF_NAME"
-            git push origin "HEAD:$GITHUB_REF_NAME"
           fi
+      - name: Push generated runtime and build references
+        run: git push origin "HEAD:$GITHUB_REF_NAME"
