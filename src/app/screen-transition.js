@@ -1,4 +1,4 @@
-import { msg } from "../shared/i18n/index.js?v=16.8.0.1";
+import { msg } from "../shared/i18n/index.js?v=16.8.0.2";
 function reducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 }
