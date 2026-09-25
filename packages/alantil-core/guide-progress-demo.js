@@ -3,30 +3,45 @@ export const GUIDE_PROGRESS_INITIAL_DELAY_MS=0;
 export const GUIDE_PROGRESS_BURST_MS=650;
 export const GUIDE_PROGRESS_END_PAUSE_MS=900;
 export const GUIDE_PROGRESS_FOCUS_RATIO=.58;
-export const GUIDE_PROGRESS_SLOW_START_COUNT=4;
-export const GUIDE_PROGRESS_SLOW_END_COUNT=3;
+export const GUIDE_PROGRESS_CENTER_PLATEAU_INTERVALS=5;
 
-const OPENING_INTERVAL_WEIGHTS=Object.freeze([1,.9,.81]);
-const FAST_MIDDLE_WEIGHT=.16;
-const CLOSING_INTERVAL_WEIGHTS=Object.freeze([.9,1.02,1.16]);
 const BASE_INTERVAL_MS=1100;
-const SLOW_START_PULSE_MS=1850;
+const PARABOLA_MIN_INTERVAL_MS=175;
+const PARABOLA_MAX_INTERVAL_MS=875;
+const PARABOLA_MIN_WEIGHT=PARABOLA_MIN_INTERVAL_MS/BASE_INTERVAL_MS;
+const PARABOLA_MAX_WEIGHT=PARABOLA_MAX_INTERVAL_MS/BASE_INTERVAL_MS;
 const FAST_MIDDLE_PULSE_MS=650;
-const SLOW_END_PULSE_MS=2200;
+const SLOW_EDGE_PULSE_MS=2200;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const finite=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
+
+function guideProgressPlateauBounds(count){
+  const size=Math.max(0,Math.floor(finite(count)));
+  const intervalCount=Math.max(0,size-1);
+  const plateauCount=Math.min(GUIDE_PROGRESS_CENTER_PLATEAU_INTERVALS,intervalCount);
+  const start=Math.floor((intervalCount-plateauCount)/2);
+  return{intervalCount,start,end:start+plateauCount-1};
+}
+
+function guideProgressParabolaDistance(targetIndex,count){
+  const index=Math.max(0,Math.floor(finite(targetIndex)));
+  const {intervalCount,start,end}=guideProgressPlateauBounds(count);
+  if(index<=0||!intervalCount)return 0;
+  const position=clamp(index-1,0,intervalCount-1);
+  if(position<start)return start?clamp((start-position)/start,0,1):0;
+  if(position>end){
+    const rightSpan=Math.max(1,(intervalCount-1)-end);
+    return clamp((position-end)/rightSpan,0,1);
+  }
+  return 0;
+}
 
 export function guideProgressIntervalWeight(targetIndex,count){
   const size=Math.max(0,Math.floor(finite(count)));
   const index=Math.max(0,Math.floor(finite(targetIndex)));
   if(index<=0||size<=1)return 0;
-  if(index<GUIDE_PROGRESS_SLOW_START_COUNT)return OPENING_INTERVAL_WEIGHTS[index-1]??OPENING_INTERVAL_WEIGHTS.at(-1);
-  const closingStart=Math.max(GUIDE_PROGRESS_SLOW_START_COUNT,size-GUIDE_PROGRESS_SLOW_END_COUNT);
-  if(index>=closingStart){
-    const closingIndex=clamp(index-closingStart,0,CLOSING_INTERVAL_WEIGHTS.length-1);
-    return CLOSING_INTERVAL_WEIGHTS[closingIndex];
-  }
-  return FAST_MIDDLE_WEIGHT;
+  const distance=guideProgressParabolaDistance(index,size);
+  return PARABOLA_MIN_WEIGHT+(PARABOLA_MAX_WEIGHT-PARABOLA_MIN_WEIGHT)*distance*distance;
 }
 
 export function guideProgressDuration({stationCount=0}={}){
@@ -46,9 +61,11 @@ export function guideProgressTriggerOffset(centerY,viewportHeight,maxScroll){
 export function guideProgressPulseDuration(index,count){
   const size=Math.max(0,Math.floor(finite(count)));
   const position=Math.max(0,Math.floor(finite(index)));
-  if(position<Math.min(GUIDE_PROGRESS_SLOW_START_COUNT,size))return SLOW_START_PULSE_MS;
-  if(position>=Math.max(GUIDE_PROGRESS_SLOW_START_COUNT,size-GUIDE_PROGRESS_SLOW_END_COUNT))return SLOW_END_PULSE_MS;
-  return FAST_MIDDLE_PULSE_MS;
+  if(size<=1)return SLOW_EDGE_PULSE_MS;
+  const weight=position<=0?PARABOLA_MAX_WEIGHT:guideProgressIntervalWeight(position,size);
+  const span=Math.max(.000001,PARABOLA_MAX_WEIGHT-PARABOLA_MIN_WEIGHT);
+  const progress=clamp((weight-PARABOLA_MIN_WEIGHT)/span,0,1);
+  return Math.round(FAST_MIDDLE_PULSE_MS+(SLOW_EDGE_PULSE_MS-FAST_MIDDLE_PULSE_MS)*progress);
 }
 
 export function orderGuideProgressStations(stations=[]){
