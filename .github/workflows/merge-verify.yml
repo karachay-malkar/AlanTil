@@ -1,0 +1,23 @@
+name: 16.8.0 merge verification
+
+on:
+  push:
+    branches:
+      - agent/16.8.0-merge-verify
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Guide and Ashyk tests
+        run: node --test tests/guide-progress-demo-16-8.test.mjs tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/asset-versioning.test.mjs
+      - name: Cannon trajectory smoke
+        run: node scripts/qa/ashyk-trajectory-smoke.mjs
+      - name: Generated Ashyk runtime parity
+        run: node scripts/qa/check-generated.mjs --ashyk
+      - name: Ashyk registered-only invariant
+        run: node scripts/enforce-registered-ashyk-modes-16-7.mjs
