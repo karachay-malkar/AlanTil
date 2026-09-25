@@ -110,20 +110,19 @@ test('impact audio is replayed from trajectory timestamps and never sent standal
   for(const source of[webAudio,mobileAudio]){assert.doesNotMatch(source,/31\.28|34\.65|36\.7|17\.86|10\.03|23\.05/);assert.match(source,/const starts=\[\.08,\.28,\.48\]/);}
 });
 
-test('lobby recovery always offers return plus server-side close and preparing rooms can be cancelled',()=>{
-  const bootstrap=read('src/app/bootstrap.js'),app=read('mobile/AppRoot.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
-  assert.match(bootstrap,/online\.leaveRoom\(resumable\.id\)/);
-  assert.match(bootstrap,/secondaryText/);
+test('navigation preserves online rooms and recovery exposes one return action',()=>{
+  const bootstrap=read('src/app/bootstrap.js'),app=read('mobile/AppRoot.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js'),feature=read('src/features/ashyk/index.js');
+  assert.match(bootstrap,/socialMessage\(locale,'resume'\)/);
   assert.match(bootstrap,/dismissible:false/);
-  assert.match(read('src/shared/ui/modal.js'),/dismissible = true/);
-  assert.match(app,/closeGlobalAshyk/);
-  assert.match(app,/onCloseRoom/);
+  assert.doesNotMatch(bootstrap,/online\.leaveRoom\(resumable\.id\)/);
+  assert.doesNotMatch(bootstrap,/secondaryText/);
+  assert.doesNotMatch(app,/closeGlobalAshyk|onCloseRoom/);
+  assert.doesNotMatch(feature,/onLeave\(\)[\s\S]*leaveRoom/);
   for(const source of[web,mobile]){
     assert.match(source,/const cancelInvite=async\(\)=>\{const room=/);
     assert.match(source,/online\.leaveRoom\(room\.id\)/);
+    assert.doesNotMatch(source,/status==='preparing'/);
   }
-  assert.doesNotMatch(web,/!preparing\?<button[^>]+cancelInvite/);
-  assert.doesNotMatch(mobile,/!preparing\?<AshykButton[^>]+cancelInvite/);
 });
 
 test('Supabase private Broadcast policies remain room-member and active-player scoped',()=>{

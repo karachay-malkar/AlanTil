@@ -6,6 +6,7 @@ export const DIFFICULTIES=Object.freeze({
   normal:Object.freeze({id:'normal',computerShotAccuracy:.85,computerAnswerAccuracy:.70,humanShotSeconds:15,humanQuestionSeconds:10}),
   hard:Object.freeze({id:'hard',computerShotAccuracy:1,computerAnswerAccuracy:1,humanShotSeconds:15,humanQuestionSeconds:7}),
 });
+export const ONLINE_RULES=Object.freeze({humanShotSeconds:20,humanQuestionSeconds:10});
 export const FACE_DEFS=Object.freeze([
   Object.freeze({id:'КЪЫТ',axis:[1,0,0],value:6}),
   Object.freeze({id:'БИЙ',axis:[-1,0,0],value:15}),

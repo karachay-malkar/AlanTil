@@ -1,12 +1,12 @@
-import { msg } from "../shared/i18n/index.js?v=16.8.0.3";
-import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.3";
-import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.3";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.3";
-import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.3";
-import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.3";
+import { msg } from "../shared/i18n/index.js?v=16.8.0.4";
+import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.4";
+import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.4";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.4";
+import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.4";
+import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.4";
 
 const DEFAULT_STORY = "understanding";
-const ASSET_VERSION = "16.8.0.3";
+const ASSET_VERSION = "16.8.0.4";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",

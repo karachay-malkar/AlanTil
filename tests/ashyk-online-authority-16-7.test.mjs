@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createAshykGameStore} from '../packages/ashyk-game/store.js';
-import {createAshykOnlineAdapter,ASHYK_ONLINE_PROTOCOL_VERSION} from '../packages/ashyk-game/online.js';
+import {createAshykOnlineAdapter} from '../packages/ashyk-game/online.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
@@ -29,17 +29,19 @@ test('online wrong answer advances immediately with one typed action instead of 
   assert.equal(store.submitAnswer('w1'),false);const state=store.getState();assert.equal(state.player,2);assert.equal(state.phase,'first-shot');assert.equal(state.onlineAction?.type,'answer_wrong');store.destroy();
 });
 
-test('online adapter commits a shot before authoritative result and keeps timeout RPC separate',async()=>{const calls=[];const channel={on(){return this;},subscribe(){return this;},unsubscribe(){}};const client={rpc:async(name,args)=>{calls.push([name,args]);if(name==='ashyk_shot_commit')return{data:{...room(),shot_in_flight_id:args.p_shot_id,shot_in_flight_phase_seq:args.p_expected_phase_seq},error:null};if(name==='ashyk_submit_action')return{data:{...room(),last_action_id:args.p_action_id,revision:4,phase_seq:5},error:null};return{data:room(),error:null};},channel:()=>channel,removeChannel(){}};const online=createAshykOnlineAdapter(client);assert.equal(ASHYK_ONLINE_PROTOCOL_VERSION,4);await online.commitShot(room(),4,'shot-1');await online.submitAction(room(),4,'shot-1','shot_result',{scores:[0,0],currentPlayer:2,remainingAshyks:10,difficulty:'normal',phase:'first-shot'},'u2','playing');await online.resolveTimeout('r1');await online.claimForfeit('r1');assert.equal(calls[0][0],'ashyk_shot_commit');assert.deepEqual(Object.keys(calls[0][1]),['p_room_id','p_expected_revision','p_expected_phase_seq','p_shot_id']);assert.equal(calls[1][0],'ashyk_submit_action');assert.equal(calls[2][0],'ashyk_resolve_timeout');assert.equal(calls[3][0],'ashyk_claim_forfeit');});
+test('online adapter commits a shot before authoritative result and keeps timeout RPC separate',async()=>{const calls=[];const channel={on(){return this;},subscribe(){return this;},unsubscribe(){}};const client={rpc:async(name,args)=>{calls.push([name,args]);if(name==='ashyk_shot_commit')return{data:{...room(),shot_in_flight_id:args.p_shot_id,shot_in_flight_phase_seq:args.p_expected_phase_seq},error:null};if(name==='ashyk_submit_action')return{data:{...room(),last_action_id:args.p_action_id,revision:4,phase_seq:5},error:null};return{data:room(),error:null};},channel:()=>channel,removeChannel(){}};const online=createAshykOnlineAdapter(client);await online.commitShot(room(),4,'shot-1');await online.submitAction(room(),4,'shot-1','shot_result',{scores:[0,0],currentPlayer:2,remainingAshyks:10,difficulty:'normal',phase:'first-shot'},'u2','playing');await online.resolveTimeout('r1');await online.claimForfeit('r1');assert.equal(calls[0][0],'ashyk_shot_commit');assert.deepEqual(Object.keys(calls[0][1]),['p_room_id','p_expected_revision','p_expected_phase_seq','p_shot_id']);assert.equal(calls[1][0],'ashyk_submit_action');assert.equal(calls[2][0],'ashyk_resolve_timeout');assert.equal(calls[3][0],'ashyk_claim_forfeit');});
 
 test('database migration defines server deadlines, phase sequencing, idempotent actions and resign/forfeit results',()=>{const sql=read('supabase/migrations/20260921104928_alantil_16_7_ashyk_authoritative_turns.sql');for(const token of ['protocol_version','turn_no','phase_seq','phase_deadline_at','last_action_id','last_action_type','winner_user_id','finish_reason','ashyk_action_log','ashyk_submit_action','ashyk_resolve_timeout','ashyk_claim_forfeit'])assert.match(sql,new RegExp(token));assert.match(sql,/p_expected_phase_seq/);assert.match(sql,/p_action_id/);assert.match(sql,/phase_deadline_at\s*<=\s*now\(\)/);assert.match(sql,/finish_reason='resign'/);assert.match(sql,/finish_reason='disconnect'/);});
 test('Web and Mobile share the ordered online-session controller',()=>{const session=read('packages/ashyk-game/session.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');assert.match(session,/queue\.push/);assert.match(session,/last_action_id/);assert.match(session,/resolveTimeoutIfDue/);assert.match(web,/createAshykOnlineSessionController/);assert.match(mobile,/createAshykOnlineSessionController/);assert.doesNotMatch(web,/pendingSync|syncing\.current/);assert.doesNotMatch(mobile,/pendingSync|syncing\.current/);});
 
 
-test('protocol v4 accepts current rooms and rejects active legacy v3 rooms',async()=>{
+test('online adapter is room-version agnostic',async()=>{
   const channel={on(){return this;},subscribe(){return this;},unsubscribe(){}};
   const clientFor=(protocol_version)=>({rpc:async()=>({data:room({protocol_version}),error:null}),channel:()=>channel,removeChannel(){}});
   assert.equal((await createAshykOnlineAdapter(clientFor(4)).getRoom('r1')).protocol_version,4);
-  await assert.rejects(()=>createAshykOnlineAdapter(clientFor(3)).getRoom('r1'),(error)=>error?.code==='ASHYK_PROTOCOL_LEGACY');
+  assert.equal((await createAshykOnlineAdapter(clientFor(3)).getRoom('r1')).protocol_version,3);
+  const source=read('packages/ashyk-game/online.js');
+  assert.doesNotMatch(source,/ASHYK_ONLINE_PROTOCOL_VERSION|ASHYK_PROTOCOL_|incompatible protocol|protocol_version/);
 });
 test('shot commit migration fixes deadline ownership and requires the committed shot id',()=>{
   const sql=read('supabase/migrations/20260924165000_alantil_16_8_ashyk_shot_commit.sql');
@@ -53,4 +55,24 @@ test('shot commit timeout guard removes the turn deadline and blocks ordinary ti
   assert.match(sql,/phase_deadline_at=null/);
   assert.match(sql,/shot_in_flight_id is not null then\s+return v_room/);
   assert.match(sql,/shot_result_deadline_at=v_guard_deadline/);
+});
+
+
+test('single-room migration removes protocol gating, preparing state and online difficulty timers',()=>{
+  const sql=read('supabase/migrations/20260925100000_alantil_16_8_ashyk_single_room_state.sql');
+  assert.match(sql,/check\(status in \('waiting','playing','finished','abandoned'\)\)/);
+  assert.match(sql,/ashyk_rooms_single_active_guard/);
+  assert.match(sql,/raise exception 'active game exists'/);
+  assert.match(sql,/create or replace function public\.ashyk_players_snapshot/);
+  assert.match(sql,/when p_phase='bonus-question' then 10 else 20 end/);
+  assert.match(sql,/if v_room\.shot_in_flight_id is not null then\s+return v_room/);
+  assert.doesNotMatch(sql,/protocol_version<>4|protocol_version>=4|protocol_version<4|set protocol_version=4,status='playing'/);
+});
+
+test('online store uses fixed 20 second shot and 10 second question fallbacks without serializing difficulty',()=>{
+  const shotStore=createAshykGameStore({engine:engine(),words:[],now:()=>0,setRepeater:()=>1,clearRepeater(){},setTimer:()=>1,clearTimer(){}});
+  shotStore.hydrateOnline(room({phase_deadline_at:null,game_state:{scores:[0,0],remainingAshyks:10,field:{pieces:[]},phase:'first-shot'}}),'u1');
+  assert.equal(shotStore.getState().shotSeconds,20);
+  assert.equal('difficulty' in shotStore.onlineGameState(),false);
+  shotStore.destroy();
 });

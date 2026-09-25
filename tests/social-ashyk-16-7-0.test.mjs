@@ -89,16 +89,15 @@ test('social SQL exposes safe RPCs, invite lifecycle and no room-code entry poin
   assert.doesNotMatch(socialSql,/select\s+[^;]*email/i);
 });
 
-test('Ashyk lobby waits for both clients, keeps heartbeat and uses PostgREST-compatible RPC args',()=>{
-  const sql=read('supabase/migrations/20260919083923_alantil_16_7_ashyk_lobby_resilience.sql');
+test('Ashyk room waits on the game screen, keeps heartbeat and has no preparing state',()=>{
+  const sql=read('supabase/migrations/20260925100000_alantil_16_8_ashyk_single_room_state.sql');
   const online=read('packages/ashyk-game/online.js');
-  assert.match(sql,/status='preparing'/);
   assert.match(sql,/host_ready_at/);
   assert.match(sql,/guest_ready_at/);
   assert.match(sql,/host_seen_at/);
   assert.match(sql,/guest_seen_at/);
-  assert.match(sql,/create function public\.ashyk_submit_state\(\s*p_room_id uuid,\s*p_expected_revision bigint,\s*p_state jsonb,\s*p_next_active_user_id uuid/s);
-  assert.match(sql,/create function public\.ashyk_leave_room\(p_room_id uuid\)/);
+  assert.match(sql,/check\(status in \('waiting','playing','finished','abandoned'\)\)/);
+  assert.doesNotMatch(online,/preparing|protocol_version|ASHYK_PROTOCOL/);
   assert.match(online,/p_room_id:room\.id/);
   assert.match(online,/p_expected_revision:Number\(room\.revision\|\|0\)/);
 });
@@ -106,7 +105,7 @@ test('Ashyk lobby waits for both clients, keeps heartbeat and uses PostgREST-com
 test('Ashyk uses global challenge/resume and does not abandon rooms on technical unmount',()=>{
   const bootstrap=read('src/app/bootstrap.js'),app=read('mobile/AppRoot.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js'),feature=read('src/features/ashyk/index.js');
   assert.match(bootstrap,/showGlobalAshykState/);
-  assert.match(bootstrap,/returnToGame/);
+  assert.match(bootstrap,/socialMessage\(locale,'resume'\)/);
   assert.match(app,/AshykGlobalPrompt/);
   assert.match(app,/resumeAshykRoom/);
   assert.match(feature,/getActiveRoom/);
@@ -181,7 +180,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.8.0.3";'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.4";'));
   assert.ok(sw.includes('async function networkFirst'));
   assert.ok(sw.includes('cache: "no-store"'));
   assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
@@ -265,7 +264,7 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16.8.0.3/);
+  assert.match(feature,/runtime\.js\?v=16.8.0.4/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
@@ -299,8 +298,8 @@ test('web and mobile register Community as the fourth root tab while Friends sta
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
   assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
-  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.3/);
-  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.3/);
+  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.4/);
+  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.4/);
   assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
   assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
 });
@@ -462,11 +461,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.3";'));
-  assert.ok(bootstrap.includes('router.js?v=16.8.0.3'));
-  assert.ok(index.includes('const targetVersion = "16.8.0.3";'));
-  assert.ok(index.includes('app.css?v=16.8.0.3'));
-  assert.ok(sw.includes('const VERSION = "16.8.0.3";'));
-  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.3'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.4";'));
+  assert.ok(bootstrap.includes('router.js?v=16.8.0.4'));
+  assert.ok(index.includes('const targetVersion = "16.8.0.4";'));
+  assert.ok(index.includes('app.css?v=16.8.0.4'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.4";'));
+  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.4'));
   assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));
 });

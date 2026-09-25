@@ -1,4 +1,4 @@
-import {normalizeInboxCounts,normalizeLeaderboard,normalizeSocialSnapshot,normalizeSocialUser} from '../../packages/alantil-core/social.js';
+import {normalizeAshykPlayers,normalizeInboxCounts,normalizeLeaderboard,normalizeSocialSnapshot,normalizeSocialUser} from '../../packages/alantil-core/social.js';
 import {nativeAuthFetch} from './auth.js';
 
 async function body(response){const text=await response.text();if(!text)return null;try{return JSON.parse(text);}catch{return null;}}
@@ -13,3 +13,5 @@ export async function removeNativeFriend(userId){return rpc('social_remove_frien
 export async function blockNativeUser(userId){return rpc('social_block_user',{p_user_id:userId});}
 export async function unblockNativeUser(userId){return rpc('social_unblock_user',{p_user_id:userId});}
 export async function loadNativeSocialInboxCounts(){return normalizeInboxCounts(await rpc('social_inbox_counts'));}
+
+export async function loadNativeAshykPlayers(){return normalizeAshykPlayers(await rpc('ashyk_players_snapshot'));}

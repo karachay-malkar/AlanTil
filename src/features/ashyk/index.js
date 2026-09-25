@@ -1,15 +1,15 @@
-import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.3";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.3";
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.3";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.3";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
-import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.8.0.3";
-import { takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.3";
-import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.3";
-import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.3";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.3";
-import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.3";
-import { mountAshykGame } from "./runtime.js?v=16.8.0.3";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.4";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.4";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.4";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.4";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.4";
+import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.8.0.4";
+import { ensureCurrentAshykBuild, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.4";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.4";
+import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.4";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.4";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.4";
+import { mountAshykGame } from "./runtime.js?v=16.8.0.4";
 
 let controller=null;
 let disposeGame=null;
@@ -68,8 +68,19 @@ export async function mount(context){
   }
   if(controller.signal.aborted||!host)return;
   const pending=takePendingAshykInvite();
+  const intent=takePendingAshykIntent();
   onlineAdapter=supabaseClient&&userId?createAshykOnlineAdapter(supabaseClient):null;
-  const recovered=pending?.room||(onlineAdapter?await onlineAdapter.getActiveRoom().catch(()=>null):null);
+  let recovered=pending?.room||null;
+  let initialChallengeUserId='';
+  if(!recovered&&onlineAdapter&&intent){
+    try{
+      if(intent.kind==='accept'&&intent.inviteId)recovered=(await onlineAdapter.acceptInvite(intent.inviteId))?.room||null;
+      else if(intent.kind==='room'&&intent.roomId)recovered=await onlineAdapter.getRoom(intent.roomId);
+      else if(intent.kind==='challenge'&&intent.userId)initialChallengeUserId=String(intent.userId);
+    }catch{}
+  }
+  if(!recovered&&onlineAdapter)recovered=await onlineAdapter.getActiveRoom().catch(()=>null);
+  if(recovered)initialChallengeUserId='';
   activeRoomId=recovered?.id||null;
   disposeGame=mountAshykGame(host,{
     words,
@@ -78,6 +89,8 @@ export async function mount(context){
     userId,
     friends:Array.isArray(social?.friends)?social.friends:[],
     initialRoom:recovered||null,
+    initialChallengeUserId,
+    ensureOnlineBuild:ensureCurrentAshykBuild,
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onRoomChange(room){activeRoomId=room?.id||null;},
     onExit(){history.back();},
@@ -85,7 +98,7 @@ export async function mount(context){
 }
 
 export async function onLeave(){
-  if(sessionActive&&activeRoomId&&onlineAdapter)await onlineAdapter.leaveRoom(activeRoomId).catch(()=>{});
+  // Navigation only detaches the screen. Active online rooms survive and are resumable.
 }
 
 export function unmount(){
