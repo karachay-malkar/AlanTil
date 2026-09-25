@@ -16,7 +16,11 @@ jobs:
       - name: Guide and Ashyk tests
         run: node --test tests/guide-progress-demo-16-8.test.mjs tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/asset-versioning.test.mjs
       - name: Cannon trajectory smoke
-        run: node scripts/qa/ashyk-trajectory-smoke.mjs
+        shell: bash
+        run: |
+          ln -s tools/ashyk-web/node_modules node_modules
+          node scripts/qa/ashyk-trajectory-smoke.mjs
+          rm node_modules
       - name: Generated Ashyk runtime parity
         run: node scripts/qa/check-generated.mjs --ashyk
       - name: Ashyk registered-only invariant
