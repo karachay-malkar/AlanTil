@@ -4,9 +4,9 @@ import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.3";
 
 export const ROUTE_SETTINGS_KEY = "alantil_route_settings_v13_1";
 const LEGACY_STORY_ID = "oblivion";
-const CURRENT_STORY_ID = PATH_CONFIG.defaultStoryType;
+const LEGACY_STORY_REPLACEMENT_ID = "understanding";
 const LEGACY_SCROLL_KEY = `route_scroll_v3_${LEGACY_STORY_ID}`;
-const CURRENT_SCROLL_KEY = `route_scroll_v3_${CURRENT_STORY_ID}`;
+const LEGACY_REPLACEMENT_SCROLL_KEY = `route_scroll_v3_${LEGACY_STORY_REPLACEMENT_ID}`;
 
 const DEFAULTS = Object.freeze({
   selected_dictionary_id: PATH_CONFIG.dictionaryId,
@@ -18,9 +18,9 @@ const DEFAULTS = Object.freeze({
 function migrateLegacyStorySettings(settings = {}) {
   const next = { ...(settings || {}) };
   let changed = false;
-  if (next.active_story === LEGACY_STORY_ID) { next.active_story = CURRENT_STORY_ID; changed = true; }
+  if (next.active_story === LEGACY_STORY_ID) { next.active_story = LEGACY_STORY_REPLACEMENT_ID; changed = true; }
   if (Object.prototype.hasOwnProperty.call(next, LEGACY_SCROLL_KEY)) {
-    if (!Object.prototype.hasOwnProperty.call(next, CURRENT_SCROLL_KEY)) next[CURRENT_SCROLL_KEY] = next[LEGACY_SCROLL_KEY];
+    if (!Object.prototype.hasOwnProperty.call(next, LEGACY_REPLACEMENT_SCROLL_KEY)) next[LEGACY_REPLACEMENT_SCROLL_KEY] = next[LEGACY_SCROLL_KEY];
     delete next[LEGACY_SCROLL_KEY];
     changed = true;
   }

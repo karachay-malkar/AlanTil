@@ -263,9 +263,9 @@ function StoryStele({story,visible,onOpen,onClose}){
   </>;
 }
 
-export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
+export function PathScreen({route,settings={},initialStory='',onOpenStation,onOpenWordList}){
   const type=useSemanticTypography(),routeSpacing=settings.text_size_code==='large'?{gap:72,paddingBottom:66}:settings.text_size_code==='small'?{gap:58,paddingBottom:48}:{gap:58,paddingBottom:52};
-  const m=(key,params)=>msg(settings,key,params),defaultStory=route.storyOrder?.[0]||'';
+  const m=(key,params)=>msg(settings,key,params),configuredDefault=route.stories?.[route.defaultStoryType]?route.defaultStoryType:(route.storyOrder?.[0]||''),defaultStory=route.stories?.[initialStory]?initialStory:configuredDefault;
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[guideStateReady,setGuideStateReady]=useState(false),[generalCompleted,setGeneralCompleted]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
   const [guideDemoActive,setGuideDemoActive]=useState(false),[guideDemoFinished,setGuideDemoFinished]=useState(false),[guideDemoDoneKeys,setGuideDemoDoneKeys]=useState(()=>new Set()),[guideDemoBursts,setGuideDemoBursts]=useState(()=>new Map());
   const stationWindow=useRef(createPathWindow(defaultStory)).current;
@@ -279,12 +279,12 @@ export function PathScreen({route,settings={},onOpenStation,onOpenWordList}){
     Promise.all([loadNativeWordProgressMap(),loadNativePathSettings(defaultStory),loadNativeGuideState()]).then(([map,pathSettings,guideState])=>{
       if(!alive)return;
       setProgressMap(map);
-      const restored=route.stories?.[pathSettings.active_story]?pathSettings.active_story:defaultStory;
+      const restored=route.stories?.[defaultStory]?defaultStory:(route.stories?.[pathSettings.active_story]?pathSettings.active_story:(route.storyOrder?.[0]||''));
       storyRef.current=restored;setActiveStory(restored);setGeneralCompleted(Boolean(guideState.general_completed));setGuideStateReady(true);setPathReady(true);
       if(!guideState.general_completed){beginNativeGeneralGuide();setGuideStationKey('');setGuideIndex(0);}
     });
     return()=>{alive=false;restoreGenerationRef.current+=1;const savedOffset=Number.isFinite(guideDemoOriginalOffsetRef.current)?guideDemoOriginalOffsetRef.current:offsetRef.current;saveNativeStoryScroll(storyRef.current,savedOffset).catch(()=>{});if(geometryFrameRef.current)cancelAnimationFrame(geometryFrameRef.current);};
-  },[defaultStory,route]);
+  },[defaultStory,initialStory,route]);
 
   useEffect(()=>{
     let cancelled=false;

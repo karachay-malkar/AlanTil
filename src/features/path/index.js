@@ -251,7 +251,8 @@ export async function mount(context, params = {}) {
   }
   const route = routeCache.route;
   const screen = params.screen || "home";
-  const activeStory = activeStoryType(route, params.storyType || getRouteSettings().active_story);
+  const requestedStory = params.storyType || (screen === "home" ? route.defaultStoryType : getRouteSettings().active_story);
+  const activeStory = activeStoryType(route, requestedStory);
   updateRouteSettings({ active_story: activeStory }, { queue: false });
 
   if (screen === "home") {

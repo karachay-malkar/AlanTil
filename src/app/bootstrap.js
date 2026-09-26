@@ -51,7 +51,7 @@ function restoreFallbackRoute() {
 }
 function normalizeInitialLearningPath() {
   if (!["/", "/path", "/path/"].includes(window.location.pathname)) return;
-  window.history.replaceState(null, "", `/path/understanding${window.location.search}${window.location.hash}`);
+  window.history.replaceState(null, "", `/path/roots${window.location.search}${window.location.hash}`);
 }
 async function linkRestoredAccountVisit() {
   try {

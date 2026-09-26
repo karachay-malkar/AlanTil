@@ -5,7 +5,7 @@ import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.5";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.5";
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.5";
 
-const DEFAULT_STORY = "understanding";
+const DEFAULT_STORY = "roots";
 const ASSET_VERSION = "16.8.0.5";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
@@ -311,7 +311,9 @@ export function createRouter({ shell, modal, context }) {
   }
   function targetWithInheritedParams(route, params = {}) {
     const sameFeature = featureOf(route) === featureOf(current.route) && route !== "home" && !String(route).endsWith(".home");
-    return { route, params: compactParams({ ...(sameFeature ? current.params : {}), ...params }) };
+    const nextParams = compactParams({ ...(sameFeature ? current.params : {}), ...params });
+    if (["home", "path.home"].includes(route) && !nextParams.storyType) nextParams.storyType = DEFAULT_STORY;
+    return { route, params: nextParams };
   }
   async function mayLeave(force) {
     if (force || !currentModule?.canLeave || currentModule.canLeave()) return true;
