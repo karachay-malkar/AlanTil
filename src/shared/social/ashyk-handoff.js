@@ -33,16 +33,23 @@ function metaBuildFromHtml(html){
 }
 function currentBuild(){return String(document.querySelector('meta[name="alantil-build"]')?.content||'');}
 
+let buildCheck=null,latestBuild='';
+export function primeAshykBuildCheck(){
+  if(buildCheck||typeof window==='undefined'||typeof document==='undefined'||typeof fetch!=='function')return buildCheck;
+  buildCheck=(async()=>{try{
+    const response=await fetch(`/index.html?__alantil_build_check=${Date.now()}`,{cache:'no-store',headers:{'cache-control':'no-cache'},signal:AbortSignal.timeout(4000)});
+    if(response.ok)latestBuild=metaBuildFromHtml(await response.text());
+  }catch{} })();
+  return buildCheck;
+}
 export async function ensureCurrentAshykBuild(intent=null){
-  if(typeof window==='undefined'||typeof document==='undefined'||typeof fetch!=='function')return true;
-  try{
-    const response=await fetch(`/index.html?__alantil_build_check=${Date.now()}`,{cache:'no-store',headers:{'cache-control':'no-cache'}});
-    if(!response.ok)return true;
-    const latest=metaBuildFromHtml(await response.text()),current=currentBuild();
-    if(!latest||!current||latest===current)return true;
-    if(intent)setPendingAshykIntent(intent);
-    safeSessionSet(ROUTE_KEY,'/practice/ashyk');
-    window.location.reload();
-    return false;
-  }catch{return true;}
+  // The freshness request is background work, never part of the click latency.
+  void primeAshykBuildCheck();
+  if(typeof document==='undefined')return true;
+  const current=currentBuild();
+  if(!latestBuild||!current||latestBuild===current)return true;
+  if(intent)setPendingAshykIntent(intent);
+  safeSessionSet(ROUTE_KEY,'/practice/ashyk');
+  window.location.reload();
+  return false;
 }

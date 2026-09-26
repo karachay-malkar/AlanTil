@@ -1,15 +1,14 @@
-import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.4";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.4";
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.4";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.4";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.4";
-import { fetchFriendsSnapshot } from "../../shared/social/social-service.js?v=16.8.0.4";
-import { ensureCurrentAshykBuild, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.4";
-import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.4";
-import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.4";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.4";
-import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.4";
-import { mountAshykGame } from "./runtime.js?v=16.8.0.4";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.5";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.5";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.5";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.5";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.5";
+import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.5";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.5";
+import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.5";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.5";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.5";
+import { mountAshykGame } from "./runtime.js?v=16.8.0.5";
 
 let controller=null;
 let disposeGame=null;
@@ -38,6 +37,9 @@ async function loadAshykWords(signal){
 
 export async function mount(context){
   controller=new AbortController();
+  const mountController=controller;
+  const signal=mountController.signal;
+  void primeAshykBuildCheck();
   sessionActive=false;
   context.shell.setHeaderContent?.({title:msg("practice.ashyk")});
   context.root.innerHTML='<section class="view ashykView"><div class="ashykHost" data-ashyk-host></div></section>';
@@ -51,22 +53,11 @@ export async function mount(context){
     host.querySelector('[data-ashyk-sign-in]')?.addEventListener('click',()=>context.router.navigate('account.home'),{signal:controller.signal});
     return;
   }
-  let words=[];
-  let supabaseClient=null;
-  let social={friends:[]};
-  try{
-    [words,supabaseClient,social]=await Promise.all([
-      loadAshykWords(controller.signal),
-      getSupabaseClient().catch(()=>null),
-      fetchFriendsSnapshot().catch(()=>({friends:[]})),
-    ]);
-  }catch(error){
-    if(controller.signal.aborted||!host)return;
-    console.error('Ashyk dictionary load failed',error);
-    host.innerHTML=`<div class="ashykAccessLock"><h1>${msg("practice.ashyk")}</h1><p>${msg("settings.ne_udalos_obnovit_slovar")}</p></div>`;
-    return;
-  }
-  if(controller.signal.aborted||!host)return;
+  // Start vocabulary work without making room restoration wait for it.
+  const reloadWords=()=>loadAshykWords(signal).then(words=>({words}),error=>({error}));
+  const vocabularyTask=reloadWords();
+  const supabaseClient=await getSupabaseClient().catch(()=>null);
+  if(signal.aborted||controller!==mountController||!host)return;
   const pending=takePendingAshykInvite();
   const intent=takePendingAshykIntent();
   onlineAdapter=supabaseClient&&userId?createAshykOnlineAdapter(supabaseClient):null;
@@ -81,13 +72,14 @@ export async function mount(context){
   }
   if(!recovered&&onlineAdapter)recovered=await onlineAdapter.getActiveRoom().catch(()=>null);
   if(recovered)initialChallengeUserId='';
+  if(signal.aborted||controller!==mountController)return;
   activeRoomId=recovered?.id||null;
   disposeGame=mountAshykGame(host,{
-    words,
+    vocabularyTask,
+    reloadWords,
     locale:settings.interface_language_code,
     supabaseClient,
     userId,
-    friends:Array.isArray(social?.friends)?social.friends:[],
     initialRoom:recovered||null,
     initialChallengeUserId,
     ensureOnlineBuild:ensureCurrentAshykBuild,

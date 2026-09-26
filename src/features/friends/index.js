@@ -1,14 +1,14 @@
 import {formatRating} from '../../../packages/alantil-core/social.js';
-import {socialMessage} from '../../../packages/alantil-core/social-i18n.js?v=16.8.0.4';
-import {createAshykOnlineAdapter} from '../../../packages/ashyk-game/online.js?v=16.8.0.4';
-import {getInterfaceLanguage} from '../../shared/i18n/index.js?v=16.8.0.4';
-import {escapeHtml} from '../../shared/ui/html.js?v=16.8.0.4';
-import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.8.0.4';
-import {renderExpandableSearch} from '../../shared/ui/search-control.js?v=16.8.0.4';
-import {hasActivityAccess,refreshActivityAccessForUser,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.8.0.4';
+import {socialMessage} from '../../../packages/alantil-core/social-i18n.js?v=16.8.0.5';
+import {createAshykOnlineAdapter} from '../../../packages/ashyk-game/online.js?v=16.8.0.5';
+import {getInterfaceLanguage} from '../../shared/i18n/index.js?v=16.8.0.5';
+import {escapeHtml} from '../../shared/ui/html.js?v=16.8.0.5';
+import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.8.0.5';
+import {renderExpandableSearch} from '../../shared/ui/search-control.js?v=16.8.0.5';
+import {hasActivityAccess,refreshActivityAccessForUser,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.8.0.5';
 import {ensureCurrentAshykBuild,setPendingAshykInvite} from '../../shared/social/ashyk-handoff.js';
 import {acceptFriendRequest,blockUser,declineFriendRequest,fetchFriendsSnapshot,fetchSocialLeaderboard,getSocialClient,getSocialSession,removeFriend,searchSocialUsers,sendFriendRequest,unblockUser} from '../../shared/social/social-service.js';
-import {renderAdminUsersEmbedded} from '../admin/index.js?v=16.8.0.4';
+import {renderAdminUsersEmbedded} from '../admin/index.js?v=16.8.0.5';
 
 let controller=null,refreshTimer=0,realtime=null,searchTimer=0,statsAccessState='checking';
 const esc=(v)=>escapeHtml(String(v??''));

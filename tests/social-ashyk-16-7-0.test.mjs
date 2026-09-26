@@ -109,8 +109,8 @@ test('Ashyk uses global challenge/resume and does not abandon rooms on technical
   assert.match(app,/AshykGlobalPrompt/);
   assert.match(app,/resumeAshykRoom/);
   assert.match(feature,/getActiveRoom/);
-  assert.match(web,/setInterval\(\(\)=>void pulse\(\),12000\)/);
-  assert.match(mobile,/setInterval\(\(\)=>void pulse\(\),12000\)/);
+  assert.match(web,/startRoomReconciliation/);
+  assert.match(mobile,/startRoomReconciliation/);
   assert.match(web,/opponentAwayMs>120000/);
   assert.match(mobile,/opponentAwayMs>120000/);
   assert.doesNotMatch(web,/return\(\)=>\{[^}]*leaveRoom/s);
@@ -122,7 +122,7 @@ test('Ashyk online sync keeps server phase authoritative and uses the shared ord
 test('Web Ashyk requires the complete dictionary and never mounts from the starter snapshot',()=>{
   const feature=read('src/features/ashyk/index.js'),repository=read('src/shared/data/word-repository.js');
   assert.match(feature,/getCompleteDictionaryWords/);
-  assert.match(feature,/loadAshykWords\(controller\.signal\)/);
+  assert.match(feature,/loadAshykWords\(signal\)/);
   assert.match(feature,/createAshykQuestionDeck/);
   assert.match(feature,/refreshDictionary\(\{signal,force:true\}\)/);
   assert.doesNotMatch(feature,/getWords\(\)\.catch\(\(\)=>\[\]\)/);
@@ -180,7 +180,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.8.0.4";'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.5";'));
   assert.ok(sw.includes('async function networkFirst'));
   assert.ok(sw.includes('cache: "no-store"'));
   assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
@@ -264,15 +264,15 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16.8.0.4/);
+  assert.match(feature,/runtime\.js\?v=16.8.0.5/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
   const engine=read('packages/ashyk-game/engine.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   assert.match(engine,/function settleInitial/);
   assert.match(engine,/eventsSuppressed/);
-  assert.match(web,/engine\.settleInitial\(\)/);
-  assert.match(mobile,/engine\.settleInitial\(\)/);
+  assert.match(web,/prepareInitialField\(engine/);
+  assert.match(mobile,/prepareInitialField\(engine/);
 });
 
 test('search and leaderboard expose friendship id so incoming requests are actionable',()=>{
@@ -298,8 +298,8 @@ test('web and mobile register Community as the fourth root tab while Friends sta
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
   assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
-  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.4/);
-  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.4/);
+  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.5/);
+  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.5/);
   assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
   assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
 });
@@ -461,11 +461,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.4";'));
-  assert.ok(bootstrap.includes('router.js?v=16.8.0.4'));
-  assert.ok(index.includes('const targetVersion = "16.8.0.4";'));
-  assert.ok(index.includes('app.css?v=16.8.0.4'));
-  assert.ok(sw.includes('const VERSION = "16.8.0.4";'));
-  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.4'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.5";'));
+  assert.ok(bootstrap.includes('router.js?v=16.8.0.5'));
+  assert.ok(index.includes('const targetVersion = "16.8.0.5";'));
+  assert.ok(index.includes('app.css?v=16.8.0.5'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.5";'));
+  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.5'));
   assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));
 });
