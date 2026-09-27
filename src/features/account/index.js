@@ -2,12 +2,14 @@ import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import {
   getCurrentAuthState,
   getUserProvider,
-  signInWithGoogleCredential,
-  signInWithProvider,
+  sendPasswordReset,
+  signInWithEmail,
+  signInWithLegacyGoogle,
   signOut,
+  signUpWithEmail,
   subscribeToAuth,
+  updateCurrentUserPassword,
 } from "../../shared/auth/auth-service.js?v=16.8.0.3";
-import { renderGoogleIdentityButton } from "../../shared/auth/google-identity.js?v=16.8.0.3";
 import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.3";
 import {
   isProfileServiceUnavailableError,
@@ -20,7 +22,12 @@ import {
   validateNickname,
 } from "../../shared/profile/profile-service.js?v=16.8.0.3";
 import { panel } from "../../shared/ui/panel.js?v=16.8.0.3";
-import { bindLogin, renderLogin } from "./login.js?v=16.8.0.3";
+import {
+  bindLogin,
+  bindPasswordSetup,
+  renderLogin,
+  renderPasswordSetup,
+} from "./login.js?v=16.8.0.3";
 import {
   bindProfile,
   bindProfileCreation,
@@ -39,7 +46,9 @@ let nicknameValue = "";
 let nicknameStatus = { state: "", message: "", available: false };
 let profileFailure = null;
 let lastAuthUserId = "";
-let disposeGoogleIdentity = null;
+let loginMode = "signin";
+let loginEmail = "";
+let actionMessage = "";
 
 function isMounted() {
   return Boolean(controller && !controller.signal.aborted);
@@ -59,13 +68,14 @@ function resetNicknameState() {
 
 function resetAccountStateForAuthChange() {
   actionError = "";
+  actionMessage = "";
+  loginMode = "signin";
+  loginEmail = "";
   profileFailure = null;
   resetNicknameState();
 }
 
 function prepareAccountRender(context) {
-  disposeGoogleIdentity?.();
-  disposeGoogleIdentity = null;
   const activeElement = document.activeElement;
   if (activeElement && context.root.contains(activeElement) && typeof activeElement.blur === "function") {
     activeElement.blur();
@@ -110,20 +120,6 @@ function renderLoading(context) {
     body: `<div class="loadingState">${msg("account.proveryaem_akkaunt")}</div>`,
   });
   resetAccountViewport(context);
-}
-
-function showInlineLoginError(context, error) {
-  if (!isMounted()) return;
-  const message = String(error?.message || error || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe"));
-  actionError = message;
-  let element = context.root.querySelector(".accountMessageError");
-  if (!element) {
-    element = document.createElement("div");
-    element.className = "accountMessage accountMessageError";
-    element.setAttribute("role", "alert");
-    context.root.querySelector(".authProviderList")?.before(element);
-  }
-  element.textContent = message;
 }
 
 function updateNicknameState({ inputElement, messageElement, submitButton }, state, message, enabled = false) {
@@ -203,32 +199,92 @@ async function renderAccount(context) {
 
   if (!authState.user) {
     prepareAccountRender(context);
-    renderLogin(context, { error: actionError || authState.error || "" });
+    renderLogin(context, {
+      error: actionError || authState.error || "",
+      message: actionMessage,
+      mode: loginMode,
+      email: loginEmail,
+    });
     bindLogin(context, controller.signal, {
-      onGoogleMount: (container) => {
-        disposeGoogleIdentity?.();
-        disposeGoogleIdentity = renderGoogleIdentityButton(container, {
-          onCredential: async ({ credential, nonce }) => {
-            actionError = "";
-            await signInWithGoogleCredential(credential, nonce);
-          },
-          onError: (error) => showInlineLoginError(context, error),
-        });
-      },
-      onProvider: async (provider) => {
+      onMode: (mode, email) => {
+        loginMode = mode;
+        loginEmail = email;
         actionError = "";
+        actionMessage = "";
+        scheduleAccountRender(context);
+      },
+      onSubmit: async ({ mode, email, password, passwordConfirm }) => {
+        loginEmail = email;
+        actionError = "";
+        actionMessage = "";
         try {
-          await signInWithProvider(provider);
+          if (mode === "signup") {
+            if (password !== passwordConfirm) throw new Error(msg("account.paroli_ne_sovpadayut"));
+            const data = await signUpWithEmail(email, password);
+            if (!data?.session?.user) {
+              actionMessage = msg("account.proverte_pochtu_dlya_podtverzhdeniya");
+              scheduleAccountRender(context);
+            }
+            return;
+          }
+          if (mode === "forgot") {
+            await sendPasswordReset(email);
+            actionMessage = msg("account.ssylka_dlya_smeny_parolya_otpravlena");
+            scheduleAccountRender(context);
+            return;
+          }
+          await signInWithEmail(email, password);
         } catch (error) {
-          showInlineLoginError(context, error);
-          throw error;
+          actionError = error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe");
+          scheduleAccountRender(context);
+        }
+      },
+      onLegacyGoogle: async () => {
+        actionError = "";
+        actionMessage = "";
+        try {
+          await signInWithLegacyGoogle();
+        } catch (error) {
+          actionError = error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe");
+          scheduleAccountRender(context);
         }
       },
       onGuest: () => context.router.replace(
         "path.home",
-        { storyType: "ascent" },
+        { storyType: "roots" },
         { force: true, reason: "home" },
       ),
+    });
+    resetAccountViewport(context);
+    return;
+  }
+
+  if (authState.flow === "legacy_google" || authState.flow === "recovery") {
+    prepareAccountRender(context);
+    renderPasswordSetup(context, {
+      flow: authState.flow,
+      error: actionError || authState.error || "",
+      message: actionMessage,
+    });
+    bindPasswordSetup(context, controller.signal, {
+      onSubmit: async (password, passwordConfirm) => {
+        actionError = "";
+        actionMessage = "";
+        try {
+          if (password !== passwordConfirm) throw new Error(msg("account.paroli_ne_sovpadayut"));
+          await updateCurrentUserPassword(password);
+          actionMessage = msg("account.parol_sohranen");
+          await context.router.replace(
+            "path.home",
+            { storyType: "roots" },
+            { force: true, reason: "password_ready" },
+          );
+        } catch (error) {
+          actionError = error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe");
+          scheduleAccountRender(context);
+        }
+      },
+      onSignOut: () => handleSignOut(context),
     });
     resetAccountViewport(context);
     return;
@@ -362,9 +418,13 @@ export async function mount(context) {
       resetAccountStateForAuthChange();
     }
     if (!previousUserId && nextUserId) {
+      if (state.flow === "legacy_google" || state.flow === "recovery") {
+        scheduleAccountRender(context);
+        return;
+      }
       void context.router.replace(
         "path.home",
-        { storyType: "understanding" },
+        { storyType: "roots" },
         { force: true, reason: "auth_success" },
       );
       return;
@@ -383,8 +443,6 @@ export function unmount() {
   renderQueued = false;
   renderRequest += 1;
   clearNicknameTimer();
-  disposeGoogleIdentity?.();
-  disposeGoogleIdentity = null;
 }
 
 export function canLeave() {

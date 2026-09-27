@@ -33,10 +33,11 @@ test('16.6.6 first-run setup is one progressively disclosed screen with Web geom
 
 test('16.6.6 auth entry is shared and Native/Web PKCE callbacks stay separated',()=>{
   assert.match(authChoice,/AuthEntryActions/);
-  assert.match(authEntry,/AUTH_PROVIDERS/);
-  assert.match(authEntry,/continueGoogle/);
+  assert.match(authEntry,/signInWithEmailNative/);
+  assert.match(authEntry,/signUpWithEmailNative/);
+  assert.match(authEntry,/signInWithLegacyGoogleNative/);
   assert.match(authEntry,/copy\.guest/);
-  assert.match(authEntry,/GoogleMark/);
+  assert.doesNotMatch(authEntry,/GoogleMark/);
   assert.match(appRoot,/from '.\/platform\/auth\.js'/);
   assert.match(authFacade,/Platform\.OS==='web'\?require\('.\/auth\.web\.js'\):require\('.\/auth\.native\.js'\)/);
   assert.match(nativeAuth,/NATIVE_AUTH_REDIRECT_URL='alantil:\/\/auth\/callback'/);
@@ -50,9 +51,9 @@ test('16.6.6 auth entry is shared and Native/Web PKCE callbacks stay separated',
   assert.match(nativeSupabase,/persistSession:true/);
   assert.match(nativeSupabase,/detectSessionInUrl:false/);
   assert.match(nativeAuth,/nativeSupabase\.auth\.signInWithOAuth\(/);
-  assert.match(nativeAuth,/redirectTo:NATIVE_AUTH_REDIRECT_URL/);
+  assert.match(nativeAuth,/const redirectTo=nativeRedirectUrl\(flow\)/);
   assert.match(nativeAuth,/skipBrowserRedirect:true/);
-  assert.match(nativeAuth,/writePendingOAuth\(authUrl,data\.flowId\)/);
+  assert.match(nativeAuth,/writePendingOAuth\(authUrl,data\.flowId,flow\)/);
   assert.match(nativeAuth,/WebBrowser\.openAuthSessionAsync\(authUrl,NATIVE_AUTH_REDIRECT_URL/);
   assert.match(nativeAuth,/nativeSupabase\.auth\.exchangeCodeForSession\(params\.code,options\)/);
   assert.match(nativeAuth,/Linking\.getInitialURL\(\)/);

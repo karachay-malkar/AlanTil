@@ -43,3 +43,9 @@
 [data-feature="account"] .accountNicknameMessage.invalid{color:var(--danger)}
 @media(max-width:480px){[data-feature="account"] .accountFact{grid-template-columns:1fr;gap:4px;align-items:start}[data-feature="account"] .accountFact dd{text-align:left}}
 @media(prefers-reduced-motion:reduce){[data-feature="account"] .googleIdentitySpinner{animation:none}}
+
+[data-feature="account"] .accountAuthLinks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+[data-feature="account"] .accountDivider{display:flex;align-items:center;gap:10px;color:var(--text-3);font-size:12px;text-transform:lowercase}
+[data-feature="account"] .accountDivider::before,[data-feature="account"] .accountDivider::after{content:"";height:1px;flex:1;background:var(--line)}
+[data-feature="account"] .accountLegacyNote{color:var(--text-2);font-size:13px;line-height:1.45;text-align:center}
+@media(max-width:480px){[data-feature="account"] .accountAuthLinks{grid-template-columns:1fr}}

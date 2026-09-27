@@ -19,6 +19,7 @@ export function validateNicknameRule(value) {
 
 export function providerLabel(provider) {
   const value = String(provider || '').trim().toLowerCase();
+  if (value === 'email') return 'Email';
   if (value === 'google') return 'Google';
   if (value === 'apple') return 'Apple';
   return value || '—';

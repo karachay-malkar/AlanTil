@@ -1,23 +1,56 @@
 import React,{useState} from 'react';
 import {StyleSheet,View} from 'react-native';
-import Svg,{Path} from 'react-native-svg';
 import {DEFAULT_USER_SETTINGS} from '../../packages/alantil-core/settings.js';
 import {setupText} from '../../packages/alantil-core/learning-setup.js';
 import {mobileMsg} from '../i18n.js';
-import {getNativeAuthError,signInWithGoogleNative} from '../platform/auth.js';
-import {AuthProviderButton,Button,InlineMessage,TextAction} from './components.js';
+import {
+  sendPasswordResetNative,
+  signInWithEmailNative,
+  signInWithLegacyGoogleNative,
+  signUpWithEmailNative,
+  updateNativePassword,
+} from '../platform/auth.js';
+import {Button,FormField,InlineMessage,TextAction} from './components.js';
 
-function GoogleMark(){return <Svg width={20} height={20} viewBox="0 0 24 24" aria-hidden="true"><Path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.22-.2-1.75H12v3.41h5.52a4.71 4.71 0 0 1-2.05 3.09l-.02.11 2.98 2.31.21.02c1.93-1.78 2.96-4.4 2.96-7.19Z"/><Path fill="#34A853" d="M12 22c2.7 0 4.96-.89 6.64-2.58l-3.17-2.44c-.85.57-1.98.97-3.47.97-2.6 0-4.81-1.76-5.6-4.19l-.1.01-3.1 2.4-.04.1A10 10 0 0 0 12 22Z"/><Path fill="#FBBC05" d="M6.4 13.76A6 6 0 0 1 6.08 12c0-.61.11-1.2.31-1.76v-.12L3.26 7.68l-.1.05A10 10 0 0 0 2 12c0 1.53.35 2.98 1.16 4.27l3.24-2.51Z"/><Path fill="#EA4335" d="M12 6.05c1.89 0 3.17.82 3.9 1.5l2.8-2.73C16.97 3.2 14.7 2 12 2a10 10 0 0 0-8.84 5.73l3.23 2.51C7.19 7.81 9.4 6.05 12 6.05Z"/></Svg>}
-
-const AUTH_PROVIDERS=Object.freeze([
-  Object.freeze({key:'google',label:(copy)=>copy.continueGoogle,icon:()=> <GoogleMark/>,signIn:signInWithGoogleNative}),
-]);
+const MIN_PASSWORD_LENGTH=6;
+const MODES=new Set(['signin','signup','forgot']);
+function normalizeMode(value){const mode=String(value||'').trim();return MODES.has(mode)?mode:'signin';}
+function validEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||'').trim());}
 
 export function AuthEntryActions({settings=DEFAULT_USER_SETTINGS,allowGuest=false,onGuest,onAuthenticated,guestPresentation='button',disabled=false,style}){
-  const language=settings?.interface_language_code||'ru',copy=setupText(language),authFailure=mobileMsg(language,'account.ne_udalos_podklyuchitsya_k_google'),[busy,setBusy]=useState(''),[error,setError]=useState('');
-  const startProvider=async(provider)=>{if(disabled||busy)return;setBusy(provider.key);setError('');try{const session=await provider.signIn();if(session?.user)onAuthenticated?.(session);else{const authError=getNativeAuthError();if(authError)setError(authError?.message||authFailure);}}catch(authError){setError(authError?.message||authFailure);}finally{setBusy('');}};
-  const guest=allowGuest&&onGuest?(guestPresentation==='text'?<TextAction onPress={onGuest} disabled={disabled||Boolean(busy)}>{copy.guest}</TextAction>:<Button role="auth.continueGuest" onPress={onGuest} disabled={disabled||Boolean(busy)}>{copy.guest}</Button>):null;
-  return <View style={[styles.root,style]}>{error?<InlineMessage type="error">{error}</InlineMessage>:null}{AUTH_PROVIDERS.map(provider=><AuthProviderButton key={provider.key} label={provider.label(copy)} icon={provider.icon()} onPress={()=>startProvider(provider)} loading={busy===provider.key} disabled={disabled||Boolean(busy)}/>) }{guest}</View>;
+  const language=settings?.interface_language_code||'ru',copy=setupText(language),t=(key)=>mobileMsg(language,key);
+  const [mode,setMode]=useState('signin'),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[busy,setBusy]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState('');
+  const blocked=disabled||Boolean(busy);
+  const fail=(value)=>setError(value?.message||String(value||t('account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe')));
+  const submit=async()=>{if(blocked)return;const current=normalizeMode(mode);setError('');setMessage('');if(!validEmail(email)){setError(t('service.vvedite_elektronnuyu_pochtu'));return;}if(current!=='forgot'&&password.length<MIN_PASSWORD_LENGTH){setError(t('account.parol_min_6'));return;}if(current==='signup'&&password!==confirm){setError(t('account.paroli_ne_sovpadayut'));return;}setBusy(current);try{if(current==='signin'){const session=await signInWithEmailNative(email,password);if(session?.user)onAuthenticated?.(session);return;}if(current==='signup'){const data=await signUpWithEmailNative(email,password);if(data?.session?.user)onAuthenticated?.(data.session);else setMessage(t('account.proverte_pochtu_dlya_podtverzhdeniya'));return;}await sendPasswordResetNative(email);setMessage(t('account.ssylka_dlya_smeny_parolya_otpravlena'));}catch(nextError){fail(nextError);}finally{setBusy('');}};
+  const legacy=async()=>{if(blocked)return;setError('');setMessage('');setBusy('legacy');try{const session=await signInWithLegacyGoogleNative();if(session?.user)onAuthenticated?.(session);}catch(nextError){fail(nextError);}finally{setBusy('');}};
+  const switchMode=(next)=>{setMode(normalizeMode(next));setPassword('');setConfirm('');setError('');setMessage('');};
+  const guest=allowGuest&&onGuest?(guestPresentation==='text'?<TextAction onPress={onGuest} disabled={blocked}>{copy.guest}</TextAction>:<Button role="auth.continueGuest" onPress={onGuest} disabled={blocked}>{copy.guest}</Button>):null;
+  return <View style={[styles.root,style]}>
+    {error?<InlineMessage type="error">{error}</InlineMessage>:null}
+    {message?<InlineMessage type="success">{message}</InlineMessage>:null}
+    <FormField label={t('account.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress"/>
+    {mode!=='forgot'?<FormField label={t('account.parol')} value={password} onChangeText={setPassword} autoCapitalize="none" secureTextEntry autoComplete={mode==='signup'?'new-password':'current-password'} textContentType={mode==='signup'?'newPassword':'password'}/>:null}
+    {mode==='signup'?<FormField label={t('account.povtorite_parol')} value={confirm} onChangeText={setConfirm} autoCapitalize="none" secureTextEntry autoComplete="new-password" textContentType="newPassword"/>:null}
+    <Button role="generic.primary" onPress={submit} disabled={blocked}>{mode==='signup'?t('account.sozdat_akkaunt'):mode==='forgot'?t('account.otpravit_ssylku'):t('account.voyti')}</Button>
+    {mode==='signin'?<View style={styles.links}><TextAction onPress={()=>switchMode('signup')} disabled={blocked}>{t('account.sozdat_akkaunt')}</TextAction><TextAction onPress={()=>switchMode('forgot')} disabled={blocked}>{t('account.zabyli_parol')}</TextAction></View>:<TextAction onPress={()=>switchMode('signin')} disabled={blocked}>{mode==='signup'?t('account.uzhe_est_akkaunt_voyti'):t('account.nazad_ko_vhodu')}</TextAction>}
+    <InlineMessage>{t('account.legacy_google_note')}</InlineMessage>
+    <TextAction onPress={legacy} disabled={blocked}>{t('account.ranshe_vhodili_cherez_google')}</TextAction>
+    {guest}
+  </View>;
 }
 
-const styles=StyleSheet.create({root:{gap:10}});
+export function PasswordSetupActions({settings=DEFAULT_USER_SETTINGS,flow='recovery',disabled=false,onUpdated,onSignOut,style}){
+  const language=settings?.interface_language_code||'ru',t=(key)=>mobileMsg(language,key),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  const save=async()=>{if(disabled||busy)return;setError('');if(password.length<MIN_PASSWORD_LENGTH){setError(t('account.parol_min_6'));return;}if(password!==confirm){setError(t('account.paroli_ne_sovpadayut'));return;}setBusy(true);try{await updateNativePassword(password);onUpdated?.();}catch(nextError){setError(nextError?.message||t('account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe'));}finally{setBusy(false);}};
+  return <View style={[styles.root,style]}>
+    <InlineMessage>{t(flow==='legacy_google'?'account.legacy_google_password_note':'account.recovery_password_note')}</InlineMessage>
+    {error?<InlineMessage type="error">{error}</InlineMessage>:null}
+    <FormField label={t('account.novyy_parol')} value={password} onChangeText={setPassword} autoCapitalize="none" secureTextEntry autoComplete="new-password" textContentType="newPassword"/>
+    <FormField label={t('account.povtorite_parol')} value={confirm} onChangeText={setConfirm} autoCapitalize="none" secureTextEntry autoComplete="new-password" textContentType="newPassword"/>
+    <Button role="generic.primary" onPress={save} disabled={disabled||busy}>{t('account.sohranit_parol')}</Button>
+    {onSignOut?<TextAction onPress={onSignOut} disabled={disabled||busy}>{t('account.vyyti')}</TextAction>:null}
+  </View>;
+}
+
+const styles=StyleSheet.create({root:{gap:10},links:{gap:2}});

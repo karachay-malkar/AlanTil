@@ -133,7 +133,7 @@ test('Google OAuth survives a page reload and exchanges one PKCE code for a pers
   const accountSource = read('src/features/account/index.js');
   assert.match(authSource, /user:\s*session\?\.user\s*\|\|\s*null/);
   assert.match(accountSource, /if \(!authState\.user\)/);
-  assert.match(accountSource, /renderLogin\(context, \{ error: actionError \|\| authState\.error \|\| "" \}\)/);
+  assert.match(accountSource, /renderLogin\(context, \{[\s\S]*error: actionError \|\| authState\.error \|\| ""/);
 });
 
 test('callback errors are surfaced and consumed instead of silently looping the Login screen', async () => {
@@ -160,4 +160,30 @@ test('callback errors are surfaced and consumed instead of silently looping the 
   assert.ok(result.error);
   assert.match(String(result.error.message || result.error), /pkce|verifier/i);
   assert.ok(tokenExchangeCount <= 1, 'missing verifier must never trigger repeated token exchanges');
+});
+
+
+test('email/password auth is primary while legacy Google preserves the existing account path', async () => {
+  const providers = read('src/config/auth-providers.js');
+  const login = read('src/features/account/login.js');
+  const auth = read('src/shared/auth/auth-service.js');
+  const nativeAuth = read('mobile/platform/auth.native.js');
+  const nativeActions = read('mobile/ui/auth-entry-actions.js');
+
+  assert.match(providers, /id: "google"[\s\S]*?enabled: false/);
+  assert.match(login, /accountAuthEmail/);
+  assert.match(login, /accountAuthPassword/);
+  assert.match(login, /accountLegacyGoogle/);
+  assert.doesNotMatch(login, /data-auth-provider/);
+
+  assert.match(auth, /signInWithPassword/);
+  assert.match(auth, /client\.auth\.signUp/);
+  assert.match(auth, /resetPasswordForEmail/);
+  assert.match(auth, /updateUser\(\{ password: normalizedPassword \}\)/);
+  assert.match(auth, /flow: "legacy_google"/);
+
+  assert.match(nativeAuth, /signInWithEmailNative/);
+  assert.match(nativeAuth, /signInWithLegacyGoogleNative/);
+  assert.match(nativeAuth, /updateNativePassword/);
+  assert.doesNotMatch(nativeActions, /GoogleMark/);
 });

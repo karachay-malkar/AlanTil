@@ -45,9 +45,11 @@ test('16.6.6 onboarding completion no longer suppresses the independent auth cho
   assert.match(root,/if\(authChoiceRequired\).*AuthChoiceScreen/);
 });
 
-test('16.6.6 Google entry UI is reused on first run, guest profile and Account',()=>{
-  assert.match(authEntry,/AUTH_PROVIDERS/);
-  assert.match(authEntry,/signInWithGoogleNative/);
+test('16.8 Email entry UI is reused on first run, guest profile and Account',()=>{
+  assert.match(authEntry,/signInWithEmailNative/);
+  assert.match(authEntry,/signUpWithEmailNative/);
+  assert.match(authEntry,/signInWithLegacyGoogleNative/);
+  assert.doesNotMatch(authEntry,/GoogleMark/);
   assert.match(authChoice,/AuthEntryActions/);
   assert.match(profileMain,/AuthEntryActions settings=\{settings\} style=\{styles\.guestAction\}/);
   assert.doesNotMatch(profileMain,/role="profile\.guestAccount"/);
@@ -57,9 +59,9 @@ test('16.6.6 Google entry UI is reused on first run, guest profile and Account',
 
 test('16.6.6 native OAuth is constrained to the app callback and survives warm/cold callback delivery',()=>{
   assert.match(auth,/NATIVE_AUTH_REDIRECT_URL='alantil:\/\/auth\/callback'/);
-  assert.match(auth,/redirect!==NATIVE_AUTH_REDIRECT_URL/);
+  assert.match(auth,/redirect!==expectedRedirect/);
   assert.doesNotMatch(nativeSupabase,/appendPkceFlowIdToRedirects/);
-  assert.match(auth,/writePendingOAuth\(authUrl,data\.flowId\)/);
+  assert.match(auth,/writePendingOAuth\(authUrl,data\.flowId,flow\)/);
   assert.match(auth,/flowId=params\.flowId\|\|validation\.pending\?\.flowId\|\|''/);
   assert.match(auth,/OAUTH_PENDING_MAX_AGE_MS=15\*60\*1000/);
   assert.match(auth,/validatePendingCallback/);

@@ -5,6 +5,7 @@ let state = Object.freeze({
   session: null,
   user: null,
   error: null,
+  flow: null,
 });
 
 function sameUser(left, right) {
@@ -27,6 +28,7 @@ function sameSession(left, right) {
 function sameAuthState(left, right) {
   return left.ready === right.ready
     && left.error === right.error
+    && left.flow === right.flow
     && sameSession(left.session, right.session)
     && sameUser(left.user, right.user);
 }

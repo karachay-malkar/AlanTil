@@ -1,7 +1,7 @@
 export const AUTH_PROVIDERS = Object.freeze([
   Object.freeze({
     id: "google",
-    enabled: true,
+    enabled: false,
     labelKey: "account.voyti_cherez_google",
     icon: "/assets/icons/auth/google.svg",
     identityButton: false,

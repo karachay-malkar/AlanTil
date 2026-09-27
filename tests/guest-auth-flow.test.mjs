@@ -15,38 +15,30 @@ test("guest profile prompt is removed from first-entry runtime", async () => {
   await assert.rejects(access(new URL("../src/shared/styles/guest-profile-prompt.css", import.meta.url)));
 });
 
-test("Google is rendered as an immediate local provider button", async () => {
+test("email/password is the visible account entry and Google is hidden from the normal provider list", async () => {
   const providers = await read("src/config/auth-providers.js");
   const login = await read("src/features/account/login.js");
-  assert.match(providers, /id: "google"[\s\S]*?enabled: true[\s\S]*?identityButton: false/);
-  assert.match(login, /renderAuthProviderButton/);
-  assert.match(login, /data-auth-provider/);
-  assert.doesNotMatch(login, /data-google-fallback|data-google-official|onGoogleMount/);
+  assert.match(providers, /id: "google"[\s\S]*?enabled: false/);
+  assert.match(login, /accountAuthEmail/);
+  assert.match(login, /accountAuthPassword/);
+  assert.match(login, /accountLegacyGoogle/);
+  assert.doesNotMatch(login, /data-auth-provider/);
 });
 
-test("Google redirect is built locally and does not wait for the Supabase SDK", async () => {
+test("legacy Google remains available only as an explicit migration flow", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
-  const start = auth.indexOf("export async function signInWithProvider");
-  const end = auth.indexOf("export async function signOut", start);
-  const providerFlow = auth.slice(start, end);
-  assert.match(auth, /auth\/v1\/authorize/);
-  assert.match(auth, /code_challenge/);
-  assert.match(auth, /code_challenge_method/);
-  assert.match(auth, /PKCE_VERIFIER_KEY/);
-  assert.match(providerFlow, /prepareSignInWithProvider/);
-  assert.match(providerFlow, /window\.location\.href/);
-  assert.doesNotMatch(providerFlow, /getSupabaseClient|signInWithOAuth|signInWithIdToken|retryAuth/);
+  assert.match(auth, /client\.auth\.signInWithOAuth\(/);
+  assert.match(auth, /signInWithLegacyGoogle/);
+  assert.match(auth, /flow: "legacy_google"/);
+  assert.match(auth, /updateUser\(\{ password: normalizedPassword \}\)/);
 });
 
-test("Google OAuth is prepared before the tap and uses synchronous navigation", async () => {
-  const login = await read("src/features/account/login.js");
+test("email auth supports sign-in, sign-up and recovery", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
-  assert.match(login, /prepareSignInWithProvider/);
-  assert.match(login, /button\.dataset\.authHref/);
-  assert.match(login, /window\.location\.href = preparedUrl/);
-  assert.match(login, /PROVIDER_FALLBACK_RESET_MS = 5000/);
-  assert.match(auth, /preparedOAuthRedirects/);
-  assert.match(auth, /export function prepareSignInWithProvider/);
+  assert.match(auth, /signInWithPassword/);
+  assert.match(auth, /client\.auth\.signUp/);
+  assert.match(auth, /resetPasswordForEmail/);
+  assert.match(auth, /getAuthRedirectUrl\("recovery"\)/);
 });
 
 test("auth and account modules bypass stale cache", async () => {
@@ -56,7 +48,7 @@ test("auth and account modules bypass stale cache", async () => {
   assert.match(worker, /src\/features\/account/);
 });
 
-test("account screen warms the SDK without blocking the visible login button", async () => {
+test("account screen warms the SDK without blocking the visible login form", async () => {
   const login = await read("src/features/account/login.js");
   const renderIndex = login.indexOf("export function renderLogin");
   const warmIndex = login.indexOf("void preloadSupabaseClient()", renderIndex);
@@ -82,7 +74,7 @@ test("authentication has a bounded callback timeout and no automatic retry loop"
   assert.doesNotMatch(auth.slice(callbackStart, callbackEnd), /retryAuth/);
 });
 
-test("guest action remains available independently of Google", async () => {
+test("guest action remains available independently of authentication", async () => {
   const login = await read("src/features/account/login.js");
   assert.match(login, /accountContinueGuest/);
   assert.match(login, /onGuest/);
@@ -118,11 +110,10 @@ test("service worker caches only the guest shell eagerly", async () => {
   assert.doesNotMatch(coreAssets, /supabase-js|payload-[1-4]/);
 });
 
-
-test("successful account sign-in returns directly to Path", async () => {
+test("successful account sign-in and non-recovery callbacks return to Roots", async () => {
   const auth = await read("src/shared/auth/auth-service.js");
   const account = await read("src/features/account/index.js");
-  assert.match(auth, /AUTH_DESTINATION_PATH = "\/path\/understanding"/);
+  assert.match(auth, /AUTH_DESTINATION_PATH = "\/path\/roots"/);
   assert.match(account, /!previousUserId && nextUserId/);
-  assert.match(account, /context[.]router[.]replace\(\s*"path[.]home",[\s\S]*storyType: "understanding"[\s\S]*reason: "auth_success"/);
+  assert.match(account, /context[.]router[.]replace\(\s*"path[.]home",[\s\S]*storyType: "roots"[\s\S]*reason: "auth_success"/);
 });
