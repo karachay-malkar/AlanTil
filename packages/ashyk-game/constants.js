@@ -17,6 +17,7 @@ export const FACE_DEFS=Object.freeze([
 ]);
 export const BOARD_REFERENCE=32.8;
 export const BOARD=23.8;
+export const BOARD_VIEW_SCALE=.85;
 export const BOARD_SCALE=BOARD/BOARD_REFERENCE;
 export const HALF=BOARD/2;
 export const BOUNDARY_RADIUS=HALF-1.48*BOARD_SCALE;
