@@ -1,27 +1,27 @@
-import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.7";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.7";
-import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.7";
-import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.7";
-import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.7";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=16.8.0.7";
-import { migrateAllStorageKeys } from "../shared/progress/storage-scope.js?v=16.8.0.7";
-import { getProfile } from "../shared/profile/profile-service.js?v=16.8.0.7";
-import { hasCompleteProfile } from "../../packages/alantil-core/profile.js?v=16.8.0.7";
-import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.7";
-import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.7";
-import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.7";
-import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.7";
-import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.7";
-import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.7";
-import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.7";
-import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.7";
-import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.7";
-import { createModalService } from "../shared/ui/modal.js?v=16.8.0.7";
-import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.7";
-import { createRouter } from "./router.js?v=16.8.0.7";
-import { createShell } from "./shell.js?v=16.8.0.7";
+import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.8";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.8";
+import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.8";
+import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.8";
+import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.8";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=16.8.0.8";
+import { migrateAllStorageKeys } from "../shared/progress/storage-scope.js?v=16.8.0.8";
+import { getProfile } from "../shared/profile/profile-service.js?v=16.8.0.8";
+import { hasCompleteProfile } from "../../packages/alantil-core/profile.js?v=16.8.0.8";
+import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.8";
+import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.8";
+import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.8";
+import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.8";
+import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.8";
+import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.8";
+import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.8";
+import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.8";
+import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.8";
+import { createModalService } from "../shared/ui/modal.js?v=16.8.0.8";
+import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.8";
+import { createRouter } from "./router.js?v=16.8.0.8";
+import { createShell } from "./shell.js?v=16.8.0.8";
 
-const ASSET_VERSION = "16.8.0.7";
+const ASSET_VERSION = "16.8.0.8";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
@@ -66,7 +66,7 @@ async function requiresProfileCompletion() {
 }
 async function linkRestoredAccountVisit() {
   try {
-    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.8.0.7");
+    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.8.0.8");
     await recordAnonymousPageView({ pagePath: window.location.pathname || "/", pageReferrer: document.referrer, appVersion: APP_VERSION });
   } catch {}
 }

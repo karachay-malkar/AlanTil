@@ -1,23 +1,22 @@
-import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.3";
-import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.3";
-import { getCachedWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
-import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=16.8.0.3";
-import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=16.8.0.3";
-import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=16.8.0.3";
-import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.3";
-import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
+import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.8";
+import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.8";
+import { getCachedWords } from "../../shared/data/word-repository.js?v=16.8.0.8";
+import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=16.8.0.8";
+import { enqueueProgress } from "../../shared/progress/progress-queue.js?v=16.8.0.8";
+import { stationTestPhase } from "../../shared/progress/station-progress-store.js?v=16.8.0.8";
+import { recordTestWordResults } from "../../shared/progress/word-progress-store.js?v=16.8.0.8";
+import { removeScopedValue } from "../../shared/progress/storage-scope.js?v=16.8.0.8";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.8";
 import {
   applyStationTestAnswer,
   buildStationTestSessionState,
-  stationTestActiveSnapshot,
   stationTestDistractors,
   stationTestPayload,
   stationTestResult,
-} from "../../../packages/alantil-core/station-test.js";
+} from "../../../packages/alantil-core/station-test.js?v=16.8.0.8";
 
-const ACTIVE_KEY = "alantil_station_test_active_v13_5";
+const LEGACY_ACTIVE_KEY = "alantil_station_test_active_v13_5";
 
 function uuid() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -28,27 +27,33 @@ export function distractorsFor(item, allWords, count = 3) {
   return stationTestDistractors(item, allWords, count);
 }
 
-function saveActive(session) {
-  writeScopedJson(ACTIVE_KEY, stationTestActiveSnapshot(session));
+function clearLegacyActiveSnapshot() {
+  removeScopedValue(LEGACY_ACTIVE_KEY);
 }
 
-function clearActive() { writeScopedJson(ACTIVE_KEY, {}); }
-export function getInterruptedStationTest() { return readScopedJson(ACTIVE_KEY, {}); }
-
 export function createStationTestSession(station, allWords, mode = "kb") {
+  clearLegacyActiveSnapshot();
   const globalWords = getCachedWords();
   const optionWords = Array.isArray(globalWords) && globalWords.length ? globalWords : allWords;
   const session = buildStationTestSessionState({
     station,
     optionWords,
     mode,
-    interrupted: getInterruptedStationTest(),
+    interrupted: null,
     id: uuid(),
     startedAt: new Date().toISOString(),
   });
   session.phase = stationTestPhase(station);
-  saveActive(session);
   return session;
+}
+
+export function discardStationTestSession(session) {
+  clearLegacyActiveSnapshot();
+  if (!session || session.completed) return false;
+  session.answers = [];
+  session.index = 0;
+  session.completed = false;
+  return true;
 }
 
 export function renderStationTest(context, session, { onComplete } = {}) {
@@ -88,7 +93,6 @@ export function renderStationTest(context, session, { onComplete } = {}) {
       dictionary_id: session.station.dictionaryId, section_id: session.station.groupId,
       set_id: session.station.sourceSetId || "", station_key: session.station.key,
     });
-    saveActive(session);
     renderStationTest(context, session, { onComplete });
   });
 }
@@ -107,7 +111,7 @@ export function completeStationTest(context, session, onComplete) {
   });
   enqueueProgress("station_test_session", payload, { id: `station_test_session:${payload.id}`, replace: false });
   recordActivitySession("station_test", payload);
-  clearActive();
+  clearLegacyActiveSnapshot();
   context.shell.setCounter("");
   onComplete?.(result);
   return result;
