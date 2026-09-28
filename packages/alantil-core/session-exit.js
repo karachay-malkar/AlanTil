@@ -1,5 +1,7 @@
-// Navigation must not run until the latest unfinished state is durably saved.
-export async function persistBeforeSessionExit(save, leave) {
-  await save();
+export async function completeBeforeSessionExit(beforeLeave, leave) {
+  await beforeLeave();
   leave();
 }
+
+// Compatibility for older cached mobile bundles. New code uses completeBeforeSessionExit.
+export const persistBeforeSessionExit = completeBeforeSessionExit;
