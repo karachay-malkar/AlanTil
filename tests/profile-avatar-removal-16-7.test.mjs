@@ -5,7 +5,7 @@ import { access, readFile } from "node:fs/promises";
 const fileUrl = (path) => new URL(`../${path}`, import.meta.url);
 const read = (path) => readFile(fileUrl(path), "utf8");
 
-test("16.7 profile runtime no longer depends on avatar selection or avatar assets", async () => {
+test("profile keeps avatar images removed while restoring explicit gender metadata", async () => {
   const sources = await Promise.all([
     "src/features/profile/index.js",
     "src/features/profile/profile.css",
@@ -21,30 +21,26 @@ test("16.7 profile runtime no longer depends on avatar selection or avatar asset
 
   const runtime = sources.join("\n");
   assert.doesNotMatch(runtime, /avatar_male[.]png|avatar_female[.]png/);
-  assert.doesNotMatch(runtime, /setAvatarGender|setNativeAvatarGender|normalizeAvatarGender/);
-  assert.doesNotMatch(runtime, /avatar_gender|data-avatar-gender|renderAvatarGenderSelection|bindAvatarGenderSelection/);
-  assert.doesNotMatch(runtime, /profileAvatarFrame|profileGenderSetup|accountGenderChoice|AvatarFigure|LockedAvatarFigure/);
-
-  assert.match(sources[0], /profileIdentityBar/);
-  assert.match(sources[1], /profileIdentityBar\{[^}]*min-height:72px/);
-  assert.match(sources[8], /profileIdentity/);
-  assert.match(sources[8], /incomplete=!guest&&!profile[?][.]nickname/);
+  assert.doesNotMatch(runtime, /AvatarFigure|LockedAvatarFigure/);
+  assert.match(runtime, /avatar_gender/);
+  assert.match(runtime, /normalizeProfileGender/);
+  assert.match(sources[8], /!profile[?][.]avatar_gender/);
 
   await assert.rejects(access(fileUrl("assets/images/profile/avatar_male.png")));
   await assert.rejects(access(fileUrl("assets/images/profile/avatar_female.png")));
 });
 
-test("16.7 profile account flow ends after nickname creation", async () => {
+test("profile account flow requires nickname and one-time gender and supports nickname changes", async () => {
   const webAccount = await read("src/features/account/index.js");
   const webProfileService = await read("src/shared/profile/profile-service.js");
   const mobileAccount = await read("mobile/screens/profile.js");
   const mobileApi = await read("mobile/platform/profile-api.js");
 
-  assert.match(webAccount, /if \(!profile\)/);
-  assert.match(webAccount, /renderProfile\(context/);
-  assert.doesNotMatch(webAccount, /profile[.]avatar_gender/);
-  assert.doesNotMatch(mobileAccount, /profile[.]avatar_gender/);
-
-  assert.match(webProfileService, /select\("user_id,nickname,created_at,updated_at"\)/);
-  assert.match(mobileApi, /select=user_id,nickname,created_at,updated_at/);
+  assert.match(webAccount, /profileIncomplete = !profile[?][.]nickname \|\| !profile[?][.]avatar_gender/);
+  assert.match(webAccount, /updateProfileNickname/);
+  assert.match(webProfileService, /PROFILE_COLUMNS = "user_id,nickname,avatar_gender,created_at,updated_at"/);
+  assert.match(webProfileService, /updateProfileNickname/);
+  assert.match(mobileAccount, /updateNativeNickname/);
+  assert.match(mobileAccount, /profile[?][.]avatar_gender/);
+  assert.match(mobileApi, /PROFILE_SELECT='user_id,nickname,avatar_gender,created_at,updated_at'/);
 });

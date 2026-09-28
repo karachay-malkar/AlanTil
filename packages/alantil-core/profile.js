@@ -1,5 +1,7 @@
 const NICKNAME_PATTERN = /^[A-Za-z0-9_]{3,15}$/;
 const LATIN_LETTER_PATTERN = /[A-Za-z]/g;
+export const PROFILE_GENDERS = Object.freeze(['male','female']);
+
 export function normalizeNickname(value) {
   return String(value || '').trim();
 }
@@ -15,6 +17,15 @@ export function validateNicknameRule(value) {
   if (!NICKNAME_PATTERN.test(nickname)) return { valid: false, nickname, reason: 'requirements' };
   if ((nickname.match(LATIN_LETTER_PATTERN) || []).length < 3) return { valid: false, nickname, reason: 'requirements' };
   return { valid: true, nickname, reason: null };
+}
+
+export function normalizeProfileGender(value) {
+  const gender=String(value||'').trim().toLowerCase();
+  return PROFILE_GENDERS.includes(gender)?gender:'';
+}
+
+export function hasCompleteProfile(profile) {
+  return Boolean(normalizeNickname(profile?.nickname) && normalizeProfileGender(profile?.avatar_gender));
 }
 
 export function providerLabel(provider) {

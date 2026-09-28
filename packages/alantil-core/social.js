@@ -1,17 +1,10 @@
-export const EMPTY_SOCIAL_SNAPSHOT=Object.freeze({friends:[],incoming:[],outgoing:[],blocked:[],ashyk_invites:[],ashyk_sent:[]});
-const rows=(value)=>Array.isArray(value)?value:[];
-const score=(value)=>Number(Number(value||0).toFixed(2));
-export function normalizeSocialUser(row={}){return{...row,user_id:String(row?.user_id||''),nickname:String(row?.nickname||''),avatar_gender:row?.avatar_gender==='female'?'female':'male',rating_score:score(row?.rating_score),relation:String(row?.relation||'none')};}
-export function normalizeSocialSnapshot(value={}){return{
-  friends:rows(value?.friends).map(normalizeSocialUser),
-  incoming:rows(value?.incoming).map(normalizeSocialUser),
-  outgoing:rows(value?.outgoing).map(normalizeSocialUser),
-  blocked:rows(value?.blocked).map(normalizeSocialUser),
-  ashyk_invites:rows(value?.ashyk_invites).map(normalizeSocialUser),
-  ashyk_sent:rows(value?.ashyk_sent).map(normalizeSocialUser),
-};}
-export function normalizeLeaderboard(value=[]){return rows(value).map((row)=>({...normalizeSocialUser(row),rank:Math.max(1,Number(row?.rank)||1)}));}
-export function normalizeAshykPlayer(row={}){return{user_id:String(row?.user_id||''),nickname:String(row?.nickname||''),avatar_gender:row?.avatar_gender==='female'?'female':'male',wins:Math.max(0,Number(row?.wins)||0),losses:Math.max(0,Number(row?.losses)||0),game_status:String(row?.game_status||'none'),action:String(row?.action||'none'),invite_id:row?.invite_id?String(row.invite_id):'',room_id:row?.room_id?String(row.room_id):'',is_busy:Boolean(row?.is_busy)};}
-export function normalizeAshykPlayers(value=[]){return rows(value).map(normalizeAshykPlayer);}
-export function normalizeInboxCounts(value={}){const friend_requests=Math.max(0,Number(value?.friend_requests)||0),ashyk_invites=Math.max(0,Number(value?.ashyk_invites)||0);return{friend_requests,ashyk_invites,total:Math.max(0,Number(value?.total)||friend_requests+ashyk_invites)};}
-export function formatRating(value){const number=score(value);return Number.isInteger(number)?String(number):String(number).replace(/0+$/,'').replace(/\.$/,'');}
+function score(value){const n=Number(value);return Number.isFinite(n)&&n>0?n:0;}
+export function formatRating(value){const n=score(value);return Number.isInteger(n)?String(n):n.toFixed(1).replace(/\.0$/,'');}
+export function normalizeSocialGender(value){return value==='female'?'female':value==='male'?'male':'';}
+export function normalizeSocialUser(row={}){return{...row,user_id:String(row?.user_id||''),nickname:String(row?.nickname||''),avatar_gender:normalizeSocialGender(row?.avatar_gender),rating_score:score(row?.rating_score),relation:String(row?.relation||'none')};}
+export function normalizeLeaderboard(rows=[]){return(Array.isArray(rows)?rows:[]).map((row,index)=>({...normalizeSocialUser(row),rank:Math.max(1,Number(row?.rank)||index+1)}));}
+export function normalizeFriend(row={}){return{...normalizeSocialUser(row),friendship_id:String(row?.friendship_id||''),streak_days:Math.max(0,Number(row?.streak_days)||0),story_progress:row?.story_progress&&typeof row.story_progress==='object'?row.story_progress:{}};}
+export function normalizeSocialSnapshot(value={}){const input=value&&typeof value==='object'?value:{};return{friends:(Array.isArray(input.friends)?input.friends:[]).map(normalizeFriend),incoming:(Array.isArray(input.incoming)?input.incoming:[]).map(normalizeFriend),outgoing:(Array.isArray(input.outgoing)?input.outgoing:[]).map(normalizeFriend),blocked:(Array.isArray(input.blocked)?input.blocked:[]).map(normalizeFriend),ashyk_invites:(Array.isArray(input.ashyk_invites)?input.ashyk_invites:[]).map(normalizeFriend)};}
+export function normalizeInboxCounts(value={}){return{friend_requests:Math.max(0,Number(value?.friend_requests)||0),ashyk_invites:Math.max(0,Number(value?.ashyk_invites)||0),total:Math.max(0,Number(value?.total)||0)};}
+export function normalizeAshykPlayer(row={}){return{user_id:String(row?.user_id||''),nickname:String(row?.nickname||''),avatar_gender:normalizeSocialGender(row?.avatar_gender),wins:Math.max(0,Number(row?.wins)||0),losses:Math.max(0,Number(row?.losses)||0),game_status:String(row?.game_status||'none'),action:String(row?.action||'none'),invite_id:row?.invite_id?String(row.invite_id):'',room_id:row?.room_id?String(row.room_id):'',is_busy:Boolean(row?.is_busy)};}
+export function normalizeAshykPlayers(rows=[]){return(Array.isArray(rows)?rows:[]).map(normalizeAshykPlayer);}

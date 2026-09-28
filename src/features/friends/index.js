@@ -1,14 +1,14 @@
-import {formatRating} from '../../../packages/alantil-core/social.js';
-import {socialMessage} from '../../../packages/alantil-core/social-i18n.js?v=16.8.0.5';
-import {createAshykOnlineAdapter} from '../../../packages/ashyk-game/online.js?v=16.8.0.5';
-import {getInterfaceLanguage} from '../../shared/i18n/index.js?v=16.8.0.5';
-import {escapeHtml} from '../../shared/ui/html.js?v=16.8.0.5';
-import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.8.0.5';
-import {renderExpandableSearch} from '../../shared/ui/search-control.js?v=16.8.0.5';
-import {hasActivityAccess,refreshActivityAccessForUser,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.8.0.5';
+import {formatRating} from '../../../packages/alantil-core/social.js?v=16.8.0.6';
+import {socialMessage} from '../../../packages/alantil-core/social-i18n.js?v=16.8.0.6';
+import {createAshykOnlineAdapter} from '../../../packages/ashyk-game/online.js?v=16.8.0.6';
+import {getInterfaceLanguage} from '../../shared/i18n/index.js?v=16.8.0.6';
+import {escapeHtml} from '../../shared/ui/html.js?v=16.8.0.6';
+import {renderBracketTabs} from '../../shared/ui/profile-navigation.js?v=16.8.0.6';
+import {renderExpandableSearch} from '../../shared/ui/search-control.js?v=16.8.0.6';
+import {hasActivityAccess,refreshActivityAccessForUser,whenActivityAccessReady} from '../../shared/admin/admin-access.js?v=16.8.0.6';
 import {ensureCurrentAshykBuild,setPendingAshykInvite} from '../../shared/social/ashyk-handoff.js';
 import {acceptFriendRequest,blockUser,declineFriendRequest,fetchFriendsSnapshot,fetchSocialLeaderboard,getSocialClient,getSocialSession,removeFriend,searchSocialUsers,sendFriendRequest,unblockUser} from '../../shared/social/social-service.js';
-import {renderAdminUsersEmbedded} from '../admin/index.js?v=16.8.0.5';
+import {renderAdminUsersEmbedded} from '../admin/index.js?v=16.8.0.6';
 
 let controller=null,refreshTimer=0,realtime=null,searchTimer=0,statsAccessState='checking';
 const esc=(v)=>escapeHtml(String(v??''));
@@ -25,7 +25,7 @@ const ICON={
   block:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>',
   unblock:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
 };
-function genderIcon(gender){const cls=gender==='female'?'female':'male';return `<span class="genderIcon ${cls}" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M6 20a6 6 0 0 1 12 0"/></svg></span>`;}
+function genderIcon(gender){const cls=gender==='female'?'female':gender==='male'?'male':'unknown';return `<span class="genderIcon ${cls}" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M6 20a6 6 0 0 1 12 0"/></svg></span>`;}
 function medalIcon(rank){if(rank<1||rank>3)return '';return `<svg class="rankMedal medal${rank}" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h4l1 5-4.4 3.1L4 2h3Z"/><path d="M13 2h4l3 8.1L15.6 7 13 2Z"/><circle cx="12" cy="15" r="5.2"/></svg>`;}
 function relationActions(user){if(user.relation==='accepted')return iconButton(t('friends'),'neutral disabled',{},ICON.friend);if(user.relation==='outgoing')return iconButton(t('requested'),'neutral disabled',{},ICON.pending);if(user.relation==='incoming')return user.friendship_id?`${iconButton(t('accept'),'primary',{'friend-accept':user.friendship_id},ICON.accept)}${iconButton(t('decline'),'ghost',{'friend-decline':user.friendship_id},ICON.decline)}`:'';return iconButton(t('add'),'primary',{'social-add':user.user_id},ICON.add);}
 function compactRow({rank=0,nickname,gender,rightValue='',secondary='',actions=''}){return `<div class="socialRow">${rank?`<span class="socialRank">${medalIcon(rank)||`#${rank}`}</span>`:''}<div class="socialRowBody"><div class="socialRowName">${genderIcon(gender)}<strong>${esc(nickname||'—')}</strong></div>${secondary?`<span class="socialRowMeta">${secondary}</span>`:''}</div>${rightValue?`<span class="socialRowValue">${rightValue}</span>`:''}<div class="socialRowActions">${actions}</div></div>`;}

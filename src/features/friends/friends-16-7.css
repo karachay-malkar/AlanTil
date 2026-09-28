@@ -17,3 +17,5 @@
 
 .socialBody.isStats{overflow:hidden;align-content:stretch;padding-left:0;padding-right:0}
 .socialBody.isStats>.adminUsersEmbedded{min-height:0;height:100%}
+
+[data-feature="friends"] .genderIcon.unknown{color:var(--text-3)}

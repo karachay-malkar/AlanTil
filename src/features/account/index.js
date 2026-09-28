@@ -1,4 +1,4 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.6";
 import {
   getCurrentAuthState,
   getUserProvider,
@@ -9,31 +9,32 @@ import {
   signUpWithEmail,
   subscribeToAuth,
   updateCurrentUserPassword,
-} from "../../shared/auth/auth-service.js?v=16.8.0.3";
-import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.3";
+} from "../../shared/auth/auth-service.js?v=16.8.0.6";
+import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.6";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=16.8.0.3";
+} from "../../shared/errors/supabase-error.js?v=16.8.0.6";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
+  updateProfileNickname,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=16.8.0.3";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.3";
+} from "../../shared/profile/profile-service.js?v=16.8.0.6";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.6";
 import {
   bindLogin,
   bindPasswordSetup,
   renderLogin,
   renderPasswordSetup,
-} from "./login.js?v=16.8.0.3";
+} from "./login.js?v=16.8.0.6";
 import {
   bindProfile,
   bindProfileCreation,
   renderProfile,
   renderProfileCreation,
-} from "./profile.js?v=16.8.0.3";
+} from "./profile.js?v=16.8.0.6";
 
 let controller = null;
 let unsubscribeAuth = null;
@@ -43,6 +44,7 @@ let nicknameCheckTimer = 0;
 let renderQueued = false;
 let actionError = "";
 let nicknameValue = "";
+let genderValue = "";
 let nicknameStatus = { state: "", message: "", available: false };
 let profileFailure = null;
 let lastAuthUserId = "";
@@ -63,6 +65,7 @@ function clearNicknameTimer() {
 function resetNicknameState() {
   clearNicknameTimer();
   nicknameValue = "";
+  genderValue = "";
   nicknameStatus = { state: "", message: "", available: false };
 }
 
@@ -307,14 +310,23 @@ async function renderAccount(context) {
   }
   if (requestId !== renderRequest || !isMounted()) return;
 
-  if (!profile) {
+  const profileIncomplete = !profile?.nickname || !profile?.avatar_gender;
+  if (profileIncomplete) {
+    if (!nicknameValue && profile?.nickname) nicknameValue = profile.nickname;
+    if (!genderValue && profile?.avatar_gender) genderValue = profile.avatar_gender;
+    const initialValidation = validateNickname(nicknameValue);
+    if (initialValidation.valid && nicknameValue === profile?.nickname && !nicknameStatus.state) {
+      nicknameStatus = { state: "available", message: "", available: true };
+    }
     prepareAccountRender(context);
     renderProfileCreation(context, authState.user, {
       nickname: nicknameValue,
+      gender: genderValue,
       nicknameMessage: nicknameStatus.message,
       nicknameState: nicknameStatus.state,
       error: actionError || authState.error || "",
-      submitEnabled: nicknameStatus.available,
+      submitEnabled: initialValidation.valid && nicknameStatus.available && Boolean(genderValue),
+      title: profile?.nickname ? msg("account.vyberite_pol_avatara") : msg("account.sozdayte_nikneym"),
     });
     bindProfileCreation(context, controller.signal, {
       onNicknameInput: (value, elements) => {
@@ -327,7 +339,6 @@ async function renderAccount(context) {
           updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, false);
           return;
         }
-
         nicknameStatus = { state: "checking", message: msg("account.proveryaem_nikneym"), available: false };
         updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, false);
         const checkId = nicknameCheckRequest;
@@ -342,7 +353,7 @@ async function renderAccount(context) {
               message: result.message,
               available: result.available,
             };
-            updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, nicknameStatus.available);
+            updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, nicknameStatus.available && Boolean(genderValue));
           } catch (error) {
             if (!isMounted()) return;
             if (isProfileServiceUnavailableError(error)) {
@@ -355,25 +366,28 @@ async function renderAccount(context) {
           }
         }, 350);
       },
-      onSubmit: async (nickname) => {
+      onGenderChange: (value, elements) => {
+        genderValue = value;
+        if (elements.submitButton) elements.submitButton.disabled = !(nicknameStatus.available && Boolean(genderValue));
+      },
+      onSubmit: async ({ nickname, gender }) => {
         actionError = "";
         nicknameValue = nickname;
+        genderValue = gender;
         clearNicknameTimer();
         try {
           const availability = await isNicknameAvailable(nickname);
           if (!availability.available) {
             nicknameStatus = { state: "invalid", message: availability.message, available: false };
-            actionError = "";
             scheduleAccountRender(context);
             return;
           }
-          await createProfile(authState.user.id, nickname);
+          await createProfile(authState.user.id, nickname, gender);
           profileFailure = null;
           resetNicknameState();
         } catch (error) {
-          if (isProfileServiceUnavailableError(error)) {
-            setProfileFailure(error);
-          } else {
+          if (isProfileServiceUnavailableError(error)) setProfileFailure(error);
+          else {
             actionError = "";
             nicknameStatus = { state: "invalid", message: error.message, available: false };
           }
@@ -387,18 +401,65 @@ async function renderAccount(context) {
     return;
   }
 
-
   actionError = "";
   profileFailure = null;
-  resetNicknameState();
+  if (!nicknameValue) nicknameValue = profile.nickname || "";
+  if (nicknameValue === profile.nickname && !nicknameStatus.state) {
+    nicknameStatus = { state: "available", message: "", available: true };
+  }
   prepareAccountRender(context);
   renderProfile(context, {
     user: authState.user,
     profile,
     provider: getUserProvider(authState.user),
     error: authState.error || "",
+    nickname: nicknameValue,
+    nicknameMessage: nicknameStatus.message,
+    nicknameState: nicknameStatus.state,
+    submitEnabled: nicknameStatus.available && nicknameValue !== profile.nickname,
   });
   bindProfile(context, controller.signal, {
+    onNicknameInput: (value, elements) => {
+      nicknameValue = value;
+      clearNicknameTimer();
+      const validation = validateNickname(value);
+      if (!validation.valid) {
+        nicknameStatus = { state: "invalid", message: validation.message, available: false };
+        updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, false);
+        return;
+      }
+      nicknameStatus = { state: "checking", message: msg("account.proveryaem_nikneym"), available: false };
+      updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, false);
+      const checkId = nicknameCheckRequest;
+      nicknameCheckTimer = window.setTimeout(async () => {
+        nicknameCheckTimer = 0;
+        if (checkId !== nicknameCheckRequest || !isMounted()) return;
+        try {
+          const result = await isNicknameAvailable(value);
+          if (checkId !== nicknameCheckRequest || !isMounted()) return;
+          nicknameStatus = { state: result.available ? "available" : "invalid", message: result.message, available: result.available };
+          updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, result.available && value !== profile.nickname);
+        } catch (error) {
+          nicknameStatus = { state: "invalid", message: error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe"), available: false };
+          updateNicknameState(elements, nicknameStatus.state, nicknameStatus.message, false);
+        }
+      }, 350);
+    },
+    onNicknameSubmit: async (nickname) => {
+      clearNicknameTimer();
+      try {
+        const availability = await isNicknameAvailable(nickname);
+        if (!availability.available) {
+          nicknameStatus = { state: "invalid", message: availability.message, available: false };
+        } else {
+          await updateProfileNickname(authState.user.id, nickname);
+          resetNicknameState();
+        }
+      } catch (error) {
+        nicknameStatus = { state: "invalid", message: error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe"), available: false };
+      }
+      scheduleAccountRender(context);
+    },
     onSignOut: () => handleSignOut(context),
   });
   resetAccountViewport(context);
