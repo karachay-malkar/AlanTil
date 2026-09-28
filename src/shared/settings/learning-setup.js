@@ -46,8 +46,9 @@ function prefersReducedMotion() {
 
 function learningSetupCoachMarkup() {
   return `<div class="learningSetupCoach" data-learning-setup-coach aria-hidden="true">
-    <svg viewBox="0 0 40 48" focusable="false" aria-hidden="true">
-      <path d="M17.5 24V8.2a4 4 0 0 1 8 0v12.6l2-1.8a3.7 3.7 0 0 1 5.9 3v8.7c0 7.3-4.4 12.3-11.3 12.3h-3.8c-4.1 0-7.2-1.6-9.7-5.1L4.9 32.8a3.8 3.8 0 0 1 6-4.6l3.4 4.1V24a3.2 3.2 0 0 1 3.2-3.2Z"/>
+    <svg viewBox="0 0 448 512" focusable="false" aria-hidden="true">
+      <!-- Font Awesome Free 7.3.1 hand-pointer, Icons: CC BY 4.0 -->
+      <path d="M160 64c0-8.8 7.2-16 16-16s16 7.2 16 16l0 136c0 10.3 6.6 19.5 16.4 22.8s20.6-.1 26.8-8.3c3-3.9 7.6-6.4 12.8-6.4 8.8 0 16 7.2 16 16 0 10.3 6.6 19.5 16.4 22.8s20.6-.1 26.8-8.3c3-3.9 7.6-6.4 12.8-6.4 7.8 0 14.3 5.6 15.7 13 1.6 8.2 7.3 15.1 15.1 18s16.7 1.6 23.3-3.6c2.7-2.1 6.1-3.4 9.9-3.4 8.8 0 16 7.2 16 16l0 120c0 39.8-32.2 72-72 72l-116.6 0c-37.4 0-72.4-18.7-93.2-49.9L50.7 312.9c-4.9-7.4-2.9-17.3 4.4-22.2s17.3-2.9 22.2 4.4L116 353.2c5.9 8.8 16.8 12.7 26.9 9.7s17-12.4 17-23L160 64zM176 0c-35.3 0-64 28.7-64 64l0 197.7C91.2 238 55.5 232.8 28.5 250.7-.9 270.4-8.9 310.1 10.8 339.5L78.3 440.8c29.7 44.5 79.6 71.2 133.1 71.2L328 512c66.3 0 120-53.7 120-120l0-120c0-35.3-28.7-64-64-64-4.5 0-8.8 .5-13 1.3-11.7-15.4-30.2-25.3-51-25.3-6.9 0-13.5 1.1-19.7 3.1-11.6-16.4-30.7-27.1-52.3-27.1-2.7 0-5.4 .2-8 .5L240 64c0-35.3-28.7-64-64-64zm48 304c0-8.8-7.2-16-16-16s-16 7.2-16 16l0 96c0 8.8 7.2 16 16 16s16-7.2 16-16l0-96zm48-16c-8.8 0-16 7.2-16 16l0 96c0 8.8 7.2 16 16 16s16-7.2 16-16l0-96c0-8.8-7.2-16-16-16zm80 16c0-8.8-7.2-16-16-16s-16 7.2-16 16l0 96c0 8.8 7.2 16 16 16s16-7.2 16-16l0-96z"/>
     </svg>
   </div>`;
 }
@@ -77,8 +78,8 @@ function bindLearningSetupCoach(root, signal) {
     const rect = target.getBoundingClientRect();
     if (!rect.width || !rect.height) return null;
     return {
-      x: rect.left - paneRect.left + rect.width * 0.72 - 19,
-      y: rect.top - paneRect.top + rect.height * 0.62 - 23,
+      x: rect.left - paneRect.left + rect.width * 0.5 - 16.5,
+      y: rect.top - paneRect.top + rect.height - 2,
     };
   };
 
@@ -87,34 +88,29 @@ function bindLearningSetupCoach(root, signal) {
 
   const start = () => {
     if (stopped || signal.aborted) return;
-    const language = pointFor("language");
     const script = pointFor("script");
-    if (!language || !script) {
+    if (!script) {
       timer = globalThis.setTimeout(start, 120);
       return;
     }
 
     animation?.cancel?.();
     if (prefersReducedMotion() || typeof coach.animate !== "function") {
-      coach.style.transform = transformAt(language, -5, 1);
+      coach.style.transform = transformAt(script, 2, 1);
       coach.style.opacity = "1";
       return;
     }
 
     animation = coach.animate([
-      { offset: 0, opacity: 0, transform: transformAt(language, -12, 0.98) },
-      { offset: 0.07, opacity: 1, transform: transformAt(language, -7, 1) },
-      { offset: 0.12, opacity: 1, transform: transformAt(language, 1, 0.86) },
-      { offset: 0.17, opacity: 1, transform: transformAt(language, -6, 1) },
-      { offset: 0.32, opacity: 1, transform: transformAt(language, -6, 1) },
-      { offset: 0.46, opacity: 1, transform: transformAt(script, -10, 1) },
-      { offset: 0.51, opacity: 1, transform: transformAt(script, 1, 0.86) },
-      { offset: 0.56, opacity: 1, transform: transformAt(script, -6, 1) },
-      { offset: 0.72, opacity: 1, transform: transformAt(script, -6, 1) },
-      { offset: 0.87, opacity: 0.92, transform: transformAt(language, -10, 1) },
-      { offset: 1, opacity: 0.92, transform: transformAt(language, -10, 1) },
+      { offset: 0, opacity: 0, transform: transformAt(script, 9, 0.98) },
+      { offset: 0.14, opacity: 1, transform: transformAt(script, 3, 1) },
+      { offset: 0.24, opacity: 1, transform: transformAt(script, -6, 0.94) },
+      { offset: 0.34, opacity: 1, transform: transformAt(script, 2, 1) },
+      { offset: 0.72, opacity: 1, transform: transformAt(script, 2, 1) },
+      { offset: 0.88, opacity: 0.94, transform: transformAt(script, 5, 1) },
+      { offset: 1, opacity: 0, transform: transformAt(script, 8, 0.98) },
     ], {
-      duration: 5200,
+      duration: 2800,
       iterations: Infinity,
       easing: "cubic-bezier(.2,.7,.2,1)",
       fill: "both",
@@ -345,7 +341,7 @@ export function renderLearningSetup(draft = {}, { error = "" } = {}) {
     <div class="learningSetupPane">
       <section class="learningSetupStep isVisible" data-setup-step="language" aria-hidden="false">
         <h1>Язык · Language · Dil</h1>
-        ${segmentedControl(languageChoices, "learningSetupLanguageSegments", "language")}
+        ${segmentedControl(languageChoices, "learningSetupLanguageSegments")}
       </section>
 
       <section class="learningSetupStep ${scriptVisible ? "isVisible" : ""}" data-setup-step="script" aria-hidden="${scriptVisible ? "false" : "true"}" ${scriptVisible ? "" : "inert"}>

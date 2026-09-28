@@ -47,17 +47,17 @@
   position:absolute;
   left:0;
   top:0;
-  width:38px;
-  height:46px;
+  width:42px;
+  height:48px;
   z-index:8;
   opacity:0;
   pointer-events:none;
   will-change:transform,opacity;
-  transform-origin:50% 78%;
+  transform-origin:39% 0%;
   filter:drop-shadow(0 3px 5px rgba(41,39,33,.18));
 }
 .learningSetupCoach svg{display:block;width:100%;height:100%;overflow:visible}
-.learningSetupCoach path{fill:var(--surface-0);stroke:var(--text-1);stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.learningSetupCoach path{fill:var(--text-1)}
 .learningSetupStatus{
   box-sizing:border-box;
   min-width:0;

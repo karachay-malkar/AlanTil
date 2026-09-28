@@ -97,13 +97,16 @@ test("content starts below top chrome and scrolls instead of overlapping on shor
   assert.match(css, /\.learningSetupPane\{margin-top:0;margin-bottom:0\}/);
 });
 
-test("onboarding coach loops between language and script until the first real choice", async () => {
+test("onboarding coach uses Font Awesome hand-pointer and taps only the script choice", async () => {
   const setup = await source("src/shared/settings/learning-setup.js");
   const css = await source("src/features/onboarding/onboarding.css");
-  assert.match(setup, /segmentedControl\(languageChoices, "learningSetupLanguageSegments", "language"\)/);
+  assert.match(setup, /Font Awesome Free 7\.3\.1 hand-pointer/);
+  assert.match(setup, /segmentedControl\(languageChoices, "learningSetupLanguageSegments"\)/);
   assert.match(setup, /segmentedControl\(scriptChoices, "", "script"\)/);
+  assert.match(setup, /const script = pointFor\("script"\)/);
+  assert.doesNotMatch(setup, /const language = pointFor\("language"\)/);
   assert.match(setup, /iterations:\s*Infinity/);
-  assert.match(setup, /scheduleStart\(\)/);
+  assert.match(setup, /duration:\s*2800/);
   assert.match(setup, /data-learning-setup-choice/);
   assert.match(css, /\.learningSetupCoach\{[\s\S]*pointer-events:none/);
   assert.match(setup, /prefersReducedMotion\(\)/);
@@ -117,9 +120,13 @@ test("font size is a visible setup step backed by the shared segmented control",
   assert.match(setup, /copy\.medium/);
 });
 
-test("mobile onboarding mirrors the looping coach and live text-size choice", async () => {
+test("mobile onboarding mirrors the script-only Font Awesome coach and live text-size choice", async () => {
   const mobile = await source("mobile/screens/onboarding.js");
+  assert.match(mobile, /Font Awesome Free 7\.3\.1 hand-pointer/);
+  assert.match(mobile, /viewBox="0 0 448 512"/);
   assert.match(mobile, /Animated\.loop/);
+  assert.match(mobile, /const scriptY=script\.y-pane\.y\+script\.height-2/);
+  assert.doesNotMatch(mobile, /languageY=/);
   assert.match(mobile, /setTimeout\(start,800\)/);
   assert.match(mobile, /setCoachActive\(false\)/);
   assert.match(mobile, /isReduceMotionEnabled/);
