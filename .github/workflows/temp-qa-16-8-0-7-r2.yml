@@ -1,0 +1,28 @@
+name: Temporary QA 16.8.0.7 r2
+
+on:
+  push:
+    branches:
+      - agent/qa-16.8.0.7-r2
+
+permissions:
+  contents: read
+
+jobs:
+  targeted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run targeted regressions
+        run: |
+          node --test \
+            tests/storage-profile-analytics-16-8.test.mjs \
+            tests/profile-avatar-removal-16-7.test.mjs \
+            tests/web-auth-cache-16-7-0.test.mjs \
+            tests/web-style-cache-resilience-16-7-0.test.mjs \
+            tests/visitor-analytics.test.mjs \
+            tests/social-ashyk-16-7-0.test.mjs
