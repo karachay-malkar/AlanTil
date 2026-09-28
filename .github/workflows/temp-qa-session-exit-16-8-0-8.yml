@@ -1,9 +1,9 @@
-name: Temporary QA session exit 16.8.0.8
+name: Temporary QA session exit 16.8.0.8 r3
 
 on:
   push:
     branches:
-      - agent/qa-session-exit-16.8.0.8
+      - agent/qa-session-exit-16.8.0.8-r3
 
 permissions:
   contents: read
