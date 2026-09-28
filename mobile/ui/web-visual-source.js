@@ -15,7 +15,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
     ["src/shared/styles/paper-components.css","4ea005099d52fa02244dac6f2a2f8aed7f6d72b5"],
     ["src/shared/styles/segmented-control.css","c98c3144f2aafdddb4684de5b89b8c6c06a45ce1"],
     ["src/shared/styles/table-system.css","09e3c2f311441c23f04e22f9e3c75f1da143ca18"],
-    ["src/shared/styles/app.css","86e8327972be3d9f1a783af1eaa05577543058a6"],
+    ["src/shared/styles/app.css","4fc82eac7b9af3c33ea72b111ff627cf689497c6"],
     ["src/shared/styles/base.css","aff5f0473ff1b269100c5d20df98b5ad142e1bd3"],
     ["src/shared/styles/reset.css","3a1f3aa732f773c8b88c027cb5555f5fd0206fad"],
     ["src/shared/styles/privacy.css","465d6687b02ff2d52a03b2bfd8e4b82d0c4094c5"],
