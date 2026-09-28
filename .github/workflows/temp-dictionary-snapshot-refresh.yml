@@ -6,21 +6,37 @@ on:
       - agent/dictionary-snapshot-refresh
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   snapshot:
+    if: github.event.head_commit.message != 'temp: materialize dictionary snapshot'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
       - name: Generate production dictionary snapshot
         run: node scripts/generate-mobile-dictionary-snapshot.mjs
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dictionary-snapshot-refresh
-          path: mobile/data/dictionary-snapshot.json
-          if-no-files-found: error
+      - name: Stamp release dictionary version
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path('mobile/data/dictionary-snapshot.json')
+          data=json.loads(path.read_text())
+          data['version']='2026.09.28.1'
+          path.write_text(json.dumps(data,separators=(',',':'))+'\n')
+          Path('src/data/dictionary-snapshot.json').write_text(path.read_text())
+          PY
+      - name: Materialize snapshot on temporary branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/data/dictionary-snapshot.json src/data/dictionary-snapshot.json
+          git commit -m "temp: materialize dictionary snapshot"
+          git push
