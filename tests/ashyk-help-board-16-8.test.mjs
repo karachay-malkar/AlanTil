@@ -73,8 +73,26 @@ test("Ashyk feature cache keys point to the updated runtime and styles", () => {
   const feature = read("src/features/ashyk/index.js");
   const lazy = read("src/shared/styles/lazy/ashyk.css");
   const layered = read("src/features/ashyk/ashyk-16-7.css");
-  assert.match(feature, /runtime\.js\?v=16\.8\.0\.6/);
-  assert.match(lazy, /ashyk\.css\?v=16\.8\.0\.6/);
-  assert.match(lazy, /ashyk-16-7\.css\?v=16\.8\.0\.6/);
-  assert.match(layered, /ashyk-16-6-12\.css\?v=16\.8\.0\.6/);
+  assert.match(feature, /runtime\.js\?v=16\.8\.0\.7/);
+  assert.match(lazy, /ashyk\.css\?v=16\.8\.0\.7/);
+  assert.match(lazy, /ashyk-16-7\.css\?v=16\.8\.0\.7/);
+  assert.match(layered, /ashyk-16-6-12\.css\?v=16\.8\.0\.7/);
+});
+
+test("Ashyk Rules put faces before shot controls and remain vertically scrollable", () => {
+  const web = read("packages/ashyk-game/web/Game.jsx");
+  const mobile = read("mobile/screens/ashyk.js");
+  const css = read("src/features/ashyk/ashyk-16-6-12.css");
+  const i18n = read("packages/ashyk-game/i18n.js");
+  const webRules = web.slice(web.indexOf("function Help("), web.indexOf("function Menu(", web.indexOf("function Help(")));
+  const mobileRules = mobile.slice(mobile.indexOf("function RulesDialog("), mobile.indexOf("function MenuDialog(", mobile.indexOf("function RulesDialog(")));
+  assert.ok(webRules.indexOf("helpFacesTitle") < webRules.indexOf("helpControlsTitle"));
+  assert.ok(mobileRules.indexOf("helpFacesTitle") < mobileRules.indexOf("helpControlsTitle"));
+  assert.match(webRules, /ashykHelpScroll/);
+  assert.match(css, /ashykHelpScroll[^}]*overflow-y:auto/);
+  assert.match(css, /-webkit-overflow-scrolling:touch/);
+  assert.match(i18n, /help:'Правила'/);
+  assert.match(i18n, /rules:'Правила'/);
+  assert.match(webRules, /face==='kyt'\?m\.instantWin/);
+  assert.match(mobileRules, /face==='kyt'\?m\.instantWin/);
 });
