@@ -3,6 +3,8 @@ import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=
 const LOCAL_MODULE_URL = "/src/vendor/supabase-js.js?v=16.8.0.3";
 const CDN_MODULE_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7/+esm";
 export const AUTH_STORAGE_KEY = "alantil_auth_session_v1";
+export const AUTH_MIGRATION_STORAGE_KEY = "alantil_auth_migration_v1";
+const AUTH_MIGRATION_VERSION = "1";
 let modulePromise = null;
 let clientPromise = null;
 
@@ -31,6 +33,19 @@ function loadSupabaseModule() {
 export function hasPersistedAuthSession() {
   try {
     return Boolean(localStorage.getItem(AUTH_STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
+export function applyOneTimeAuthMigration({ preserveSession = false } = {}) {
+  try {
+    if (localStorage.getItem(AUTH_MIGRATION_STORAGE_KEY) === AUTH_MIGRATION_VERSION) return false;
+    const hadSession = hasPersistedAuthSession();
+    localStorage.setItem(AUTH_MIGRATION_STORAGE_KEY, AUTH_MIGRATION_VERSION);
+    if (preserveSession || !hadSession) return false;
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    return true;
   } catch {
     return false;
   }

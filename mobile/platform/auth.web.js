@@ -1,12 +1,13 @@
 import {isTerminalRefreshError} from '../../packages/alantil-core/auth-failure.js';
 import { setNativeStorageScope } from './storage-scope.js';
-import { NATIVE_SUPABASE_PUBLISHABLE_KEY, NATIVE_SUPABASE_URL, nativeSupabase } from './supabase.web.js';
+import { NATIVE_SUPABASE_PUBLISHABLE_KEY, NATIVE_SUPABASE_URL, WEB_SUPABASE_AUTH_STORAGE_KEY, nativeSupabase } from './supabase.web.js';
 
 const AUTH_FLOW_KEY='alantil:16.8:auth-flow';
+const AUTH_MIGRATION_KEY='alantil:16.8:auth-migration-v1';
 const KNOWN_AUTH_FLOWS=new Set(['legacy_google','recovery','signup']);
 const PASSWORD_SETUP_FLOWS=new Set(['legacy_google','recovery']);
 const listeners=new Set();
-let currentSession=null,currentAuthFlow='',initialized=false,syncStartedForUser='',lastAuthError=null,bootstrapPromise=null,refreshPromise=null,callbackPromise=null,oauthFlowPromise=null,lastHandledCallbackUrl='',authSubscription=null;
+let currentSession=null,currentAuthFlow='',initialized=false,syncStartedForUser='',lastAuthError=null,bootstrapPromise=null,refreshPromise=null,callbackPromise=null,oauthFlowPromise=null,lastHandledCallbackUrl='',authMigrationRequired=false,authSubscription=null;
 
 function normalizeAuthFlow(value){const flow=String(value||'').trim().toLowerCase();return KNOWN_AUTH_FLOWS.has(flow)?flow:'';}
 function postAuthFlow(value){const flow=normalizeAuthFlow(value);return PASSWORD_SETUP_FLOWS.has(flow)?flow:'';}
@@ -16,6 +17,19 @@ function normalizeSession(session){if(!session)return null;const rawExpiresAt=Nu
 function browserLocation(){return typeof window!=='undefined'&&window.location?window.location:null;}
 function readAuthFlow(){try{return postAuthFlow(sessionStorage.getItem(AUTH_FLOW_KEY));}catch{return '';}}
 function setAuthFlow(flow,{notify=true}={}){currentAuthFlow=postAuthFlow(flow);try{if(currentAuthFlow)sessionStorage.setItem(AUTH_FLOW_KEY,currentAuthFlow);else sessionStorage.removeItem(AUTH_FLOW_KEY);}catch{}if(notify)emit();return currentAuthFlow;}
+async function applyOneTimeAuthMigration({preserveSession=false}={}){
+  let storage=null;
+  try{storage=globalThis.localStorage;if(storage?.getItem(AUTH_MIGRATION_KEY)==='1')return false;}catch{return false;}
+  if(!storage)return false;
+  const hasStoredSession=Boolean(storage.getItem(WEB_SUPABASE_AUTH_STORAGE_KEY));
+  storage.setItem(AUTH_MIGRATION_KEY,'1');
+  if(preserveSession||!hasStoredSession)return false;
+  try{storage.removeItem(WEB_SUPABASE_AUTH_STORAGE_KEY);}catch{}
+  try{await nativeSupabase.auth.signOut({scope:'local'});}catch{}
+  currentSession=null;currentAuthFlow='';syncStartedForUser='';lastHandledCallbackUrl='';authMigrationRequired=true;setNativeStorageScope('');
+  return true;
+}
+export function consumeNativeAuthMigrationRequired(){const required=authMigrationRequired;authMigrationRequired=false;return required;}
 export function getNativeAuthFlow(){return currentAuthFlow||readAuthFlow();}
 export async function clearNativeAuthFlow(){setAuthFlow('');return '';}
 export function resolveWebAuthRedirectUrl(){const location=browserLocation();if(!location)return '';return location.origin+(location.pathname||'/');}
@@ -32,8 +46,8 @@ function bindWebAuthEvents(){if(authSubscription)return;const {data}=nativeSupab
 export async function refreshNativeAuthSession({clearOnFailure=true}={}){if(refreshPromise)return refreshPromise;if(!currentSession?.refresh_token)return currentSession;refreshPromise=(async()=>{try{const {data,error}=await nativeSupabase.auth.refreshSession({refresh_token:currentSession.refresh_token});if(error)throw error;if(!data?.session?.user)throw new Error('Session refresh returned no session');return await persist(data.session);}catch(error){if(clearOnFailure&&isTerminalRefreshError(error)){try{await nativeSupabase.auth.signOut({scope:'local'});}catch{}setAuthFlow('',{notify:false});await persist(null);}setAuthError(error);throw error;}})().finally(()=>{refreshPromise=null;});return refreshPromise;}
 async function ensureFreshSession(){if(currentSession?.expires_at&&currentSession.expires_at<=Date.now()+60000)await refreshNativeAuthSession();return currentSession;}
 export async function handleNativeAuthUrl(url){const value=String(url||'');if(!hasAuthCallback(value))return currentSession;if(value===lastHandledCallbackUrl&&currentSession?.user)return currentSession;if(callbackPromise)return callbackPromise;callbackPromise=(async()=>{try{const params=callbackParams(value),flow=postAuthFlow(params?.authFlow);setAuthFlow(flow,{notify:false});const session=await sessionFromCallback(params),saved=await persist(session);lastHandledCallbackUrl=value;cleanWebAuthCallback();return saved;}catch(error){setAuthError(error);throw error;}})().finally(()=>{callbackPromise=null;});return callbackPromise;}
-async function bootstrapImpl(){if(!initialized){initialized=true;currentAuthFlow=readAuthFlow();bindWebAuthEvents();}
-  const location=browserLocation();if(location&&hasAuthCallback(location.href)){try{await handleNativeAuthUrl(location.href);}catch(error){setAuthError(error);}}
+async function bootstrapImpl(){const location=browserLocation(),callbackVisit=Boolean(location&&hasAuthCallback(location.href));if(!initialized){initialized=true;await applyOneTimeAuthMigration({preserveSession:callbackVisit});currentAuthFlow=readAuthFlow();bindWebAuthEvents();}
+  if(callbackVisit){try{await handleNativeAuthUrl(location.href);}catch(error){setAuthError(error);}}
   if(!currentSession){try{const {data,error}=await nativeSupabase.auth.getSession();if(error)throw error;if(data?.session?.user)await persist(data.session);}catch(error){setAuthError(error);}}
   if(!currentSession&&currentAuthFlow)setAuthFlow('',{notify:false});
   if(currentSession?.expires_at&&currentSession.expires_at<=Date.now()+60000){try{await refreshNativeAuthSession();}catch{}}
@@ -51,7 +65,7 @@ export async function signInWithLegacyGoogleNative(){return signInWithGoogleFlow
 export async function signInWithEmailNative(email,password){setAuthFlow('',{notify:false});lastAuthError=null;const {data,error}=await nativeSupabase.auth.signInWithPassword({email:String(email||'').trim().toLowerCase(),password:String(password||'')});if(error){setAuthError(error);throw error;}if(!data?.session?.user)throw new Error('Authenticated session was not returned');return persist(data.session);}
 export async function signUpWithEmailNative(email,password){setAuthFlow('',{notify:false});lastAuthError=null;const {data,error}=await nativeSupabase.auth.signUp({email:String(email||'').trim().toLowerCase(),password:String(password||''),options:{emailRedirectTo:webAuthRedirectUrl('signup')}});if(error){setAuthError(error);throw error;}if(data?.session?.user)await persist(data.session);return data;}
 export async function sendPasswordResetNative(email){lastAuthError=null;const {data,error}=await nativeSupabase.auth.resetPasswordForEmail(String(email||'').trim().toLowerCase(),{redirectTo:webAuthRedirectUrl('recovery')});if(error){setAuthError(error);throw error;}return data;}
-export async function updateNativePassword(password){lastAuthError=null;const {data,error}=await nativeSupabase.auth.updateUser({password:String(password||'')});if(error){setAuthError(error);throw error;}const {data:sessionData,error:sessionError}=await nativeSupabase.auth.getSession();if(sessionError){setAuthError(sessionError);throw sessionError;}if(!sessionData?.session?.user)throw new Error('Authenticated session was not returned');setAuthFlow('',{notify:false});await persist(sessionData.session);return data;}
+export async function updateNativePassword(password){lastAuthError=null;const flow=currentAuthFlow,originalUserId=String(currentSession?.user?.id||'');const {data,error}=await nativeSupabase.auth.updateUser({password:String(password||'')});if(error){setAuthError(error);throw error;}const {data:sessionData,error:sessionError}=await nativeSupabase.auth.getSession();if(sessionError){setAuthError(sessionError);throw sessionError;}if(!sessionData?.session?.user)throw new Error('Authenticated session was not returned');const updatedUserId=String(sessionData.session.user.id||'');if(flow==='legacy_google'&&originalUserId&&updatedUserId!==originalUserId){const identityError=new Error('Account identity changed during legacy Google migration');setAuthError(identityError);throw identityError;}setAuthFlow('',{notify:false});await persist(sessionData.session);return data;}
 export async function signOutNative(){let error=null;try{const result=await nativeSupabase.auth.signOut({scope:'local'});error=result?.error||null;}catch(nextError){error=nextError;}setAuthFlow('',{notify:false});await persist(null);if(error){setAuthError(error);throw error;}return null;}
 async function authorizedRequest(path,options,session){const headers={apikey:NATIVE_SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json',...(session?.access_token?{Authorization:'Bearer '+session.access_token}:{}),...(options.headers||{})};return fetch(NATIVE_SUPABASE_URL+path,{...options,headers});}
 export async function nativeAuthFetch(path,options={},expectedUserId=null){const guard=()=>{if(expectedUserId!==null&&String(currentSession?.user?.id||'')!==String(expectedUserId))throw new Error('Account changed during request');};guard();await bootstrapNativeAuth();guard();await ensureFreshSession();guard();let response=await authorizedRequest(path,options,currentSession);if(response.status===401&&currentSession?.refresh_token){await refreshNativeAuthSession();guard();response=await authorizedRequest(path,options,currentSession);}return response;}

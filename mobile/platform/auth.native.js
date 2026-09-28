@@ -3,17 +3,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as WebBrowser from 'expo-web-browser';
 import { AppState, Linking } from 'react-native';
 import { setNativeStorageScope } from './storage-scope.js';
-import { NATIVE_SUPABASE_PUBLISHABLE_KEY, NATIVE_SUPABASE_URL, nativeSupabase } from './supabase.native.js';
+import { NATIVE_SUPABASE_AUTH_STORAGE_KEY, NATIVE_SUPABASE_PUBLISHABLE_KEY, NATIVE_SUPABASE_URL, nativeSupabase } from './supabase.native.js';
 
 export const NATIVE_AUTH_REDIRECT_URL='alantil://auth/callback';
 const SESSION_KEY='alantil:16.1:auth-session';
 const OAUTH_PENDING_KEY='alantil:16.6.6:oauth-pending';
 const AUTH_FLOW_KEY='alantil:16.8:auth-flow';
+const AUTH_MIGRATION_KEY='alantil:16.8:auth-migration-v1';
 const OAUTH_PENDING_MAX_AGE_MS=15*60*1000;
 const KNOWN_AUTH_FLOWS=new Set(['legacy_google','recovery','signup']);
 const PASSWORD_SETUP_FLOWS=new Set(['legacy_google','recovery']);
 const listeners=new Set();
-let currentSession=null,currentAuthFlow='',initialized=false,syncStartedForUser='',lastAuthError=null,bootstrapPromise=null,refreshPromise=null,callbackPromise=null,oauthFlowPromise=null,lastHandledCallbackUrl='',authSubscription=null,appStateSubscription=null,linkSubscription=null;
+let currentSession=null,currentAuthFlow='',initialized=false,syncStartedForUser='',lastAuthError=null,bootstrapPromise=null,refreshPromise=null,callbackPromise=null,oauthFlowPromise=null,lastHandledCallbackUrl='',authMigrationRequired=false,authSubscription=null,appStateSubscription=null,linkSubscription=null;
 
 function normalizeAuthFlow(value){const flow=String(value||'').trim().toLowerCase();return KNOWN_AUTH_FLOWS.has(flow)?flow:'';}
 function postAuthFlow(value){const flow=normalizeAuthFlow(value);return PASSWORD_SETUP_FLOWS.has(flow)?flow:'';}
@@ -22,6 +23,23 @@ function setAuthError(error){lastAuthError=error||null;emit();return lastAuthErr
 function normalizeSession(session){if(!session)return null;const rawExpiresAt=Number(session.expires_at||0),expiresAt=rawExpiresAt&&rawExpiresAt<1e12?rawExpiresAt*1000:rawExpiresAt;return {...session,expires_at:expiresAt||0};}
 async function setAuthFlow(flow,{notify=true}={}){currentAuthFlow=postAuthFlow(flow);try{if(currentAuthFlow)await AsyncStorage.setItem(AUTH_FLOW_KEY,currentAuthFlow);else await AsyncStorage.removeItem(AUTH_FLOW_KEY);}catch{}if(notify)emit();return currentAuthFlow;}
 async function restoreAuthFlow(){let raw='';try{raw=await AsyncStorage.getItem(AUTH_FLOW_KEY);}catch{}currentAuthFlow=postAuthFlow(raw);return currentAuthFlow;}
+async function applyOneTimeAuthMigration({preserveSession=false}={}){
+  let migrated=false;
+  try{migrated=(await AsyncStorage.getItem(AUTH_MIGRATION_KEY))==='1';}catch{}
+  if(migrated)return false;
+  let hasStoredSession=false;
+  try{
+    const [sdkSession,legacySession]=await Promise.all([AsyncStorage.getItem(NATIVE_SUPABASE_AUTH_STORAGE_KEY),AsyncStorage.getItem(SESSION_KEY)]);
+    hasStoredSession=Boolean(sdkSession||legacySession);
+    await AsyncStorage.setItem(AUTH_MIGRATION_KEY,'1');
+  }catch{return false;}
+  if(preserveSession||!hasStoredSession)return false;
+  try{await AsyncStorage.multiRemove([NATIVE_SUPABASE_AUTH_STORAGE_KEY,SESSION_KEY,AUTH_FLOW_KEY,OAUTH_PENDING_KEY]);}catch{}
+  try{await nativeSupabase.auth.signOut({scope:'local'});}catch{}
+  currentSession=null;currentAuthFlow='';syncStartedForUser='';lastHandledCallbackUrl='';authMigrationRequired=true;setNativeStorageScope('');
+  return true;
+}
+export function consumeNativeAuthMigrationRequired(){const required=authMigrationRequired;authMigrationRequired=false;return required;}
 export function getNativeAuthFlow(){return currentAuthFlow;}
 export async function clearNativeAuthFlow(){return setAuthFlow('');}
 function nativeRedirectUrl(flow=''){const normalized=normalizeAuthFlow(flow);return normalized?NATIVE_AUTH_REDIRECT_URL+'?auth_flow='+encodeURIComponent(normalized):NATIVE_AUTH_REDIRECT_URL;}
@@ -42,8 +60,9 @@ function bindNativeAuthEvents(){if(!authSubscription){const {data}=nativeSupabas
 export async function refreshNativeAuthSession({clearOnFailure=true}={}){if(refreshPromise)return refreshPromise;if(!currentSession?.refresh_token)return currentSession;refreshPromise=(async()=>{try{const {data,error}=await nativeSupabase.auth.refreshSession({refresh_token:currentSession.refresh_token});if(error)throw error;if(!data?.session?.user)throw new Error('Session refresh returned no session');return await persist(data.session);}catch(error){if(clearOnFailure&&isTerminalRefreshError(error)){try{await nativeSupabase.auth.signOut({scope:'local'});}catch{}await setAuthFlow('',{notify:false});await persist(null);}setAuthError(error);throw error;}})().finally(()=>{refreshPromise=null;});return refreshPromise;}
 async function ensureFreshSession(){if(currentSession?.expires_at&&currentSession.expires_at<=Date.now()+60000)await refreshNativeAuthSession();return currentSession;}
 export async function handleNativeAuthUrl(url){const value=String(url||'');if(!value.startsWith(NATIVE_AUTH_REDIRECT_URL))return currentSession;if(value===lastHandledCallbackUrl&&currentSession?.user)return currentSession;if(callbackPromise)return callbackPromise;callbackPromise=(async()=>{try{const params=callbackParams(value),callbackFlow=normalizeAuthFlow(params?.authFlow),emailFlow=callbackFlow==='recovery'||callbackFlow==='signup';let validation={pending:null,existingSession:null};if(!emailFlow)validation=await validatePendingCallback(params);const resolvedFlow=postAuthFlow(callbackFlow||validation.pending?.authFlow);await setAuthFlow(resolvedFlow,{notify:false});const flowId=params.flowId||validation.pending?.flowId||'',session=validation.existingSession||await sessionFromCallback({...params,flowId}),saved=await persist(session);lastHandledCallbackUrl=value;return saved;}catch(error){setAuthError(error);throw error;}finally{await clearPendingOAuth();await dismissAuthBrowser();}})().finally(()=>{callbackPromise=null;});return callbackPromise;}
-async function bootstrapImpl(){if(!initialized){initialized=true;await restoreAuthFlow();bindNativeAuthEvents();}
-  try{const initialUrl=await Linking.getInitialURL();if(initialUrl?.startsWith(NATIVE_AUTH_REDIRECT_URL))await handleNativeAuthUrl(initialUrl);}catch(error){setAuthError(error);}
+async function bootstrapImpl(){let initialUrl='';try{initialUrl=await Linking.getInitialURL()||'';}catch(error){setAuthError(error);}
+  if(!initialized){initialized=true;await applyOneTimeAuthMigration({preserveSession:initialUrl.startsWith(NATIVE_AUTH_REDIRECT_URL)});await restoreAuthFlow();bindNativeAuthEvents();}
+  try{if(initialUrl.startsWith(NATIVE_AUTH_REDIRECT_URL))await handleNativeAuthUrl(initialUrl);}catch(error){setAuthError(error);}
   if(!currentSession){try{const {data,error}=await nativeSupabase.auth.getSession();if(error)throw error;if(data?.session?.user)await persist(data.session);}catch(error){setAuthError(error);}}
   if(!currentSession){const restored=await restoreLegacySession();if(restored)await persist(restored);}
   if(!currentSession&&currentAuthFlow)await setAuthFlow('',{notify:false});
@@ -63,7 +82,7 @@ export async function signInWithLegacyGoogleNative(){return signInWithGoogleFlow
 export async function signInWithEmailNative(email,password){await setAuthFlow('',{notify:false});lastAuthError=null;const {data,error}=await nativeSupabase.auth.signInWithPassword({email:String(email||'').trim().toLowerCase(),password:String(password||'')});if(error){setAuthError(error);throw error;}if(!data?.session?.user)throw new Error('Authenticated session was not returned');return persist(data.session);}
 export async function signUpWithEmailNative(email,password){await setAuthFlow('',{notify:false});lastAuthError=null;const {data,error}=await nativeSupabase.auth.signUp({email:String(email||'').trim().toLowerCase(),password:String(password||''),options:{emailRedirectTo:nativeRedirectUrl('signup')}});if(error){setAuthError(error);throw error;}if(data?.session?.user)await persist(data.session);return data;}
 export async function sendPasswordResetNative(email){lastAuthError=null;const {data,error}=await nativeSupabase.auth.resetPasswordForEmail(String(email||'').trim().toLowerCase(),{redirectTo:nativeRedirectUrl('recovery')});if(error){setAuthError(error);throw error;}return data;}
-export async function updateNativePassword(password){lastAuthError=null;const {data,error}=await nativeSupabase.auth.updateUser({password:String(password||'')});if(error){setAuthError(error);throw error;}const {data:sessionData,error:sessionError}=await nativeSupabase.auth.getSession();if(sessionError){setAuthError(sessionError);throw sessionError;}if(!sessionData?.session?.user)throw new Error('Authenticated session was not returned');await setAuthFlow('',{notify:false});await persist(sessionData.session);return data;}
+export async function updateNativePassword(password){lastAuthError=null;const flow=currentAuthFlow,originalUserId=String(currentSession?.user?.id||'');const {data,error}=await nativeSupabase.auth.updateUser({password:String(password||'')});if(error){setAuthError(error);throw error;}const {data:sessionData,error:sessionError}=await nativeSupabase.auth.getSession();if(sessionError){setAuthError(sessionError);throw sessionError;}if(!sessionData?.session?.user)throw new Error('Authenticated session was not returned');const updatedUserId=String(sessionData.session.user.id||'');if(flow==='legacy_google'&&originalUserId&&updatedUserId!==originalUserId){const identityError=new Error('Account identity changed during legacy Google migration');setAuthError(identityError);throw identityError;}await setAuthFlow('',{notify:false});await persist(sessionData.session);return data;}
 export async function signOutNative(){let error=null;await clearPendingOAuth();lastHandledCallbackUrl='';try{const result=await nativeSupabase.auth.signOut({scope:'local'});error=result?.error||null;}catch(nextError){error=nextError;}await setAuthFlow('',{notify:false});await persist(null);if(error){setAuthError(error);throw error;}return null;}
 async function authorizedRequest(path,options,session){const headers={apikey:NATIVE_SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json',...(session?.access_token?{Authorization:'Bearer '+session.access_token}:{}),...(options.headers||{})};return fetch(NATIVE_SUPABASE_URL+path,{...options,headers});}
 export async function nativeAuthFetch(path,options={},expectedUserId=null){const guard=()=>{if(expectedUserId!==null&&String(currentSession?.user?.id||'')!==String(expectedUserId))throw new Error('Account changed during request');};guard();await bootstrapNativeAuth();guard();await ensureFreshSession();guard();let response=await authorizedRequest(path,options,currentSession);if(response.status===401&&currentSession?.refresh_token){await refreshNativeAuthSession();guard();response=await authorizedRequest(path,options,currentSession);}return response;}

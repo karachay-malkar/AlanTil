@@ -1,7 +1,7 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.5";
 import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.5";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.5";
-import { hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.5";
+import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.5";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.5";
 import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=16.8.0.5";
 import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.5";
@@ -82,7 +82,9 @@ async function bootstrap() {
   initAdminAccess();
 
   const callbackVisit = hasAuthCallback() || window.location.pathname === "/auth/callback";
+  const authMigrationRequired = applyOneTimeAuthMigration({ preserveSession: callbackVisit });
   const persistedAuth = hasPersistedAuthSession();
+  if (authMigrationRequired) window.history.replaceState(null, "", "/profile/account");
   const authInitialization = waitForAuthInitialization();
   const telegram = createTelegramAdapter();
   const shell = createShell();
@@ -92,7 +94,7 @@ async function bootstrap() {
 
   if (callbackVisit) await authInitialization;
   await initializeProgressSystem();
-  if (!callbackVisit && !persistedAuth) {
+  if (!callbackVisit && !persistedAuth && !authMigrationRequired) {
     const setupWasShown = await runLearningSetup({ shell });
     if (setupWasShown) window.history.replaceState(null, "", "/profile/account");
   }

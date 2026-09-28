@@ -420,6 +420,8 @@ export async function sendPasswordReset(email) {
 
 export async function updateCurrentUserPassword(password) {
   const normalizedPassword = validatePassword(password);
+  const flow = getCurrentAuthFlow();
+  const originalUserId = String(getAuthState().user?.id || "");
   try {
     const client = await withTimeout(getSupabaseClient(), "Supabase client");
     const { data, error } = await withTimeout(
@@ -433,6 +435,10 @@ export async function updateCurrentUserPassword(password) {
     );
     if (sessionError) throw sessionError;
     if (!sessionData?.session?.user) throw new Error(msg("service.sessiya_ne_byla_sozdana"));
+    const updatedUserId = String(sessionData.session.user.id || "");
+    if (flow === "legacy_google" && originalUserId && updatedUserId !== originalUserId) {
+      throw new Error("Account identity changed during legacy Google migration");
+    }
     persistAuthFlow("");
     applySession(sessionData.session, null, "");
     return data;

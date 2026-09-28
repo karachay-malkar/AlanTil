@@ -12,6 +12,7 @@ export const getNativeAuthSession=(...args)=>auth.getNativeAuthSession(...args);
 export const getNativeAuthError=(...args)=>auth.getNativeAuthError(...args);
 export const getNativeAuthProvider=(...args)=>auth.getNativeAuthProvider(...args);
 export const getNativeAuthFlow=(...args)=>auth.getNativeAuthFlow(...args);
+export const consumeNativeAuthMigrationRequired=(...args)=>auth.consumeNativeAuthMigrationRequired(...args);
 export const clearNativeAuthFlow=(...args)=>auth.clearNativeAuthFlow(...args);
 export const signInWithGoogleNative=(...args)=>auth.signInWithGoogleNative(...args);
 export const signInWithLegacyGoogleNative=(...args)=>auth.signInWithLegacyGoogleNative(...args);
