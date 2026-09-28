@@ -1,0 +1,25 @@
+name: Temporary source archive 16.8.0.7
+
+on:
+  push:
+    branches:
+      - agent/archive-16.8.0.7
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build exact source archive
+        run: git archive --format=zip --output=AlanTil-16.8.0.7.zip 7b88ca2ce3ac410d1b902c1e0899abf9b56177f7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0.7-source
+          path: AlanTil-16.8.0.7.zip
+          if-no-files-found: error
