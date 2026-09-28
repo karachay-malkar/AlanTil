@@ -140,8 +140,8 @@ test('bundled mobile dictionary contains the complete Ashyk Return-to-roots sour
   const snapshot=JSON.parse(read('mobile/data/dictionary-snapshot.json'));
   const roots=(snapshot.words||[]).filter((word)=>String(word.dictionary_id||'')==='intermediate'&&String(word.story_id||'')==='roots');
   const counts=roots.reduce((map,word)=>{const pos=String(word.pos||'').trim().toLowerCase();map[pos]=(map[pos]||0)+1;return map;},{});
-  assert.equal(roots.length,751);
-  assert.deepEqual(counts,{noun:386,adj:148,verb:199,adv:18});
+  assert.equal(roots.length,780);
+  assert.deepEqual(counts,{noun:414,adj:148,verb:199,adv:19});
 });
 
 test('Ashyk result and vocabulary-question UI match the requested compact layout',()=>{
@@ -180,7 +180,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.8.0.6";'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.7";'));
   assert.ok(sw.includes('async function networkFirst'));
   assert.ok(sw.includes('cache: "no-store"'));
   assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
@@ -264,7 +264,7 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16.8.0.6/);
+  assert.match(feature,/runtime\.js\?v=16.8.0.7/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
@@ -298,8 +298,8 @@ test('web and mobile register Community as the fourth root tab while Friends sta
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
   assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
-  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.6/);
-  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.6/);
+  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.7/);
+  assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.7/);
   assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
   assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
 });
@@ -355,13 +355,13 @@ test('social copy includes local winner and explicit sign-in action',()=>{
   assert.match(copy,/signInAction:/);
 });
 
-test('16.8.0 mobile version uses build 41',()=>{
+test('16.8.0 mobile version uses build 42',()=>{
   const app=JSON.parse(read('mobile/app.json')).expo;
   const pkg=JSON.parse(read('mobile/package.json'));
   assert.equal(app.version,'16.8.0');
   assert.equal(app.extra.releaseVersion,'16.8.0');
-  assert.equal(app.android.versionCode,41);
-  assert.equal(app.ios.buildNumber,'41');
+  assert.equal(app.android.versionCode,42);
+  assert.equal(app.ios.buildNumber,'42');
   assert.equal(pkg.version,'16.8.0');
 });
 
@@ -416,10 +416,11 @@ test('Google OAuth cold start waits for the callback and clears it only after su
   const bootstrap=read('src/app/bootstrap.js');
   assert.match(auth,/export async function initializeAuth\(\)\s*\{\s*return startAuthInitialization\(\);\s*\}/);
   assert.equal((auth.match(/exchangeCodeForSession\(/g)||[]).length,1);
-  assert.equal((auth.match(/clearCallbackUrl\(\);/g)||[]).length,1);
+  assert.equal((auth.match(/clearCallbackUrl\(flow\);/g)||[]).length,1);
+  assert.match(auth,/finally \{\s*consumeAuthCallback\(\);\s*\}/);
   assert.match(auth,/locationObject\.hash/);
   assert.match(auth,/callbackParams\(locationObject = window\.location\)/);
-  assert.match(bootstrap,/if \(callbackVisit\) await authInitialization/);
+  assert.match(bootstrap,/if \(callbackVisit \|\| persistedAuth\) await authInitialization/);
 });
 
 test('Community statistics is a root route while only user/test detail routes stay Admin guarded',()=>{
@@ -461,11 +462,11 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.6";'));
-  assert.ok(bootstrap.includes('router.js?v=16.8.0.6'));
-  assert.ok(index.includes('const targetVersion = "16.8.0.6";'));
-  assert.ok(index.includes('app.css?v=16.8.0.6'));
-  assert.ok(sw.includes('const VERSION = "16.8.0.6";'));
-  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.6'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.7";'));
+  assert.ok(bootstrap.includes('router.js?v=16.8.0.7'));
+  assert.ok(index.includes('const targetVersion = "16.8.0.7";'));
+  assert.ok(index.includes('app.css?v=16.8.0.7'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.7";'));
+  assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.7'));
   assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));
 });

@@ -1,14 +1,14 @@
-import { msg } from "../i18n/index.js?v=16.8.0.6";
-import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.6";
+import { msg } from "../i18n/index.js?v=16.8.0.7";
+import { getSupabaseClient } from "../auth/supabase-client.js?v=16.8.0.7";
 import {
   logSupabaseError,
   normalizeSupabaseError,
-} from "../errors/supabase-error.js?v=16.8.0.6";
+} from "../errors/supabase-error.js?v=16.8.0.7";
 import {
   normalizeNickname,
   normalizeProfileGender,
   validateNicknameRule,
-} from "../../../packages/alantil-core/profile.js?v=16.8.0.6";
+} from "../../../packages/alantil-core/profile.js?v=16.8.0.7";
 
 const PROFILE_REQUEST_TIMEOUT_MS = 12000;
 const PROFILE_COLUMNS = "user_id,nickname,avatar_gender,created_at,updated_at";
