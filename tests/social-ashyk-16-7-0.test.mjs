@@ -180,7 +180,7 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
 
 test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.8.0.7";'));
+  assert.ok(sw.includes('const VERSION = "16.8.0.8";'));
   assert.ok(sw.includes('async function networkFirst'));
   assert.ok(sw.includes('cache: "no-store"'));
   assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
@@ -360,8 +360,8 @@ test('16.8.0 mobile version uses build 42',()=>{
   const pkg=JSON.parse(read('mobile/package.json'));
   assert.equal(app.version,'16.8.0');
   assert.equal(app.extra.releaseVersion,'16.8.0');
-  assert.equal(app.android.versionCode,42);
-  assert.equal(app.ios.buildNumber,'42');
+  assert.equal(app.android.versionCode,43);
+  assert.equal(app.ios.buildNumber,'43');
   assert.equal(pkg.version,'16.8.0');
 });
 
@@ -462,10 +462,10 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.7";'));
-  assert.ok(bootstrap.includes('router.js?v=16.8.0.7'));
-  assert.ok(index.includes('const targetVersion = "16.8.0.7";'));
-  assert.ok(index.includes('app.css?v=16.8.0.7'));
+  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.8";'));
+  assert.ok(bootstrap.includes('router.js?v=16.8.0.8'));
+  assert.ok(index.includes('const targetVersion = "16.8.0.8";'));
+  assert.ok(index.includes('app.css?v=16.8.0.8'));
   assert.ok(sw.includes('const VERSION = "16.8.0.7";'));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.7'));
   assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));
