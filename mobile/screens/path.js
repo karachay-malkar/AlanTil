@@ -434,7 +434,7 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
       setGuideDemoDoneKeys(new Set(ordered.map(item=>item.key)));
       scrollRef.current?.scrollTo({y:0,animated:false});offsetRef.current=0;routeScaleRef.current?.updateOffset(0);stationWindow.update(0,viewport,activeStory);
       if(geometry?.map?.height)requestAnimationFrame(()=>guideConnectorClipRef.current?.setNativeProps?.({y:guideConnectorBounds.endY,height:Math.max(0,geometry.map.height-guideConnectorBounds.endY)}));
-      const timer=setTimeout(()=>{guideDemoTimersRef.current.delete(timer);if(generation!==guideDemoGenerationRef.current)return;setGuideDemoActive(false);setGuideDemoFinished(true);setGuideStationKey(ordered.at(-1)?.key||'');setNativeGeneralGuideRuntime({active:true,phase:'stages'});},Math.min(260,GUIDE_PROGRESS_END_PAUSE_MS));
+      const timer=setTimeout(()=>{guideDemoTimersRef.current.delete(timer);if(generation!==guideDemoGenerationRef.current)return;resetGuideProgressDemo();setGuideDemoFinished(true);selectVisibleGuideStation();setNativeGeneralGuideRuntime({active:true,phase:'stages'});},Math.min(260,GUIDE_PROGRESS_END_PAUSE_MS));
       guideDemoTimersRef.current.add(timer);return;
     }
     const duration=guideProgressDuration({stationCount:ordered.length});
@@ -458,7 +458,10 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
         const endTimer=setTimeout(()=>{
           guideDemoTimersRef.current.delete(endTimer);
           if(generation!==guideDemoGenerationRef.current)return;
-          setGuideDemoActive(false);setGuideDemoFinished(true);setGuideStationKey(ordered.at(-1)?.key||'');setNativeGeneralGuideRuntime({active:true,phase:'stages'});
+          resetGuideProgressDemo();
+          setGuideDemoFinished(true);
+          selectVisibleGuideStation();
+          setNativeGeneralGuideRuntime({active:true,phase:'stages'});
         },GUIDE_PROGRESS_END_PAUSE_MS);
         guideDemoTimersRef.current.add(endTimer);
       };
@@ -496,7 +499,7 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
             return <View key={sectionKey(catalog,section)} style={styles.routeSection} onLayout={(event)=>recordSection(catalog,section,event)}>
               <View style={[styles.routeSectionStations,routeSpacing]}>
                 {reversedStations.map((station)=>{
-                  const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),targetRef=ensureTargetRef(stationTargetRefs,station.key),demoMode=guideDemoActive||guideDemoFinished,demoDone=guideDemoDoneKeys.has(station.key),visualStatus=demoMode?(demoDone?'mastered':'locked'):status,visualDone=demoMode?demoDone:done,visualPercent=demoMode?(demoDone?100:0):summary.percent,visualMastered=demoMode?(demoDone?summary.total:0):summary.mastered;
+                  const summary=stationWordProgress(station,snapshot),status=computedStationStatus(station,snapshot),index=stationIndex.get(station.key)||0,shift=shiftFor(station),milestones=stationMilestoneCount(summary.mastered),done=status==='mastered'||status==='review_1_due',fallback=m('mobile.path.stage',{number:index+1}),targetRef=ensureTargetRef(stationTargetRefs,station.key),demoMode=guideDemoActive,demoDone=guideDemoDoneKeys.has(station.key),visualStatus=demoMode?(demoDone?'mastered':'locked'):status,visualDone=demoMode?demoDone:done,visualPercent=demoMode?(demoDone?100:0):summary.percent,visualMastered=demoMode?(demoDone?summary.total:0):summary.mastered;
                   return <View key={station.key} style={styles.stationRow} onLayout={(event)=>recordStation(catalog,section,station,event)}>
                     <PathStationWindow store={stationWindow} y={stationY.get(station.key)} pinned={guideStationKey===station.key}><Pressable accessibilityRole="button" accessibilityLabel={station.name||fallback} accessibilityValue={{text:status}} disabled={guideDemoActive||status==='locked'} accessibilityState={{disabled:guideDemoActive||status==='locked'}} hitSlop={8} onPress={()=>openStation(station)} style={({pressed})=>[styles.stationNode,visualStatus==='locked'&&styles.stationLocked,demoDone&&styles.stationDemoDone,{transform:[{translateX:shift},{scale:pressed&&!guideDemoActive?0.97:1}]}]}>
                       {guideDemoBursts.has(station.key)?<StationSparkBurst duration={guideDemoBursts.get(station.key)}/>:null}
@@ -542,7 +545,7 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
         {connector&&geometry?.map?.width&&geometry?.map?.height?<Svg pointerEvents="none" width={geometry.map.width} height={geometry.map.height} style={styles.routeConnector}>
           <Defs><ClipPath id="guideRouteProgressClip"><Rect ref={guideConnectorClipRef} x={0} y={guideDemoFinished?guideConnectorBounds.endY:guideConnectorBounds.startY} width={geometry.map.width} height={guideDemoFinished?Math.max(0,geometry.map.height-guideConnectorBounds.endY):Math.max(0,geometry.map.height-guideConnectorBounds.startY)}/></ClipPath></Defs>
           <SvgPath d={connector} fill="none" stroke="rgba(102,97,88,.38)" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.72}/>
-          {(guideDemoActive||guideDemoFinished)?<SvgPath d={connector} clipPath="url(#guideRouteProgressClip)" fill="none" stroke="#D09A43" strokeWidth={1.65} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.96}/>:null}
+          {guideDemoActive?<SvgPath d={connector} clipPath="url(#guideRouteProgressClip)" fill="none" stroke="#D09A43" strokeWidth={1.65} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 7" opacity={.96}/>:null}
         </Svg>:null}
         {routeItems}
       </View>

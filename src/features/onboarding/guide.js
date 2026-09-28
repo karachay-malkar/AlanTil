@@ -909,17 +909,21 @@ function abortGuideProgressDemo() {
   document.body.classList.remove("alantilGuideGeneral");
 }
 
+function completeGuideProgressDemo() {
+  if (!generalGuide.active || !guideProgressDemo.active) return;
+  cancelGuideProgressDemo();
+  generalGuide.phase = "stages";
+  generalGuide.demoFinished = true;
+  showStages();
+}
+
 function finishGuideProgressDemo(viewport) {
   if (!guideProgressDemo.active) return;
   viewport.scrollTop = 0;
   updateGuideDemoConnector(1);
   guideProgressDemo.endTimer = globalThis.setTimeout(() => {
     guideProgressDemo.endTimer = 0;
-    if (!generalGuide.active || !guideProgressDemo.active) return;
-    guideProgressDemo.active = false;
-    generalGuide.phase = "stages";
-    generalGuide.demoFinished = true;
-    showStages();
+    completeGuideProgressDemo();
   }, GUIDE_PROGRESS_END_PAUSE_MS);
 }
 
@@ -970,11 +974,7 @@ function startGuideProgressDemo() {
     viewport.scrollTop = 0;
     guideProgressDemo.endTimer = globalThis.setTimeout(() => {
       guideProgressDemo.endTimer = 0;
-      if (!generalGuide.active || !guideProgressDemo.active) return;
-      guideProgressDemo.active = false;
-      generalGuide.phase = "stages";
-      generalGuide.demoFinished = true;
-      showStages();
+      completeGuideProgressDemo();
     }, Math.min(260, GUIDE_PROGRESS_END_PAUSE_MS));
     return;
   }

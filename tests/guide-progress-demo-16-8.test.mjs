@@ -85,3 +85,19 @@ test('Web and Mobile share the common quadratic timing engine and existing dotte
   assert.match(core,/distance\*distance/);
   assert.doesNotMatch(core,/OPENING_INTERVAL_WEIGHTS|FAST_MIDDLE_WEIGHT|CLOSING_INTERVAL_WEIGHTS|GUIDE_PROGRESS_SLOW_START_COUNT|GUIDE_PROGRESS_SLOW_END_COUNT/);
 });
+
+
+test('completed progress demo restores the pre-demo position and clears simulated progress before the final guide step',()=>{
+  const web=read('src/features/onboarding/guide.js');
+  const mobile=read('mobile/screens/path.js');
+
+  assert.match(web,/function completeGuideProgressDemo\(\)[\s\S]*cancelGuideProgressDemo\(\);[\s\S]*generalGuide\.demoFinished = true;[\s\S]*showStages\(\);/);
+  assert.match(web,/finishGuideProgressDemo\(viewport\)[\s\S]*completeGuideProgressDemo\(\);/);
+
+  assert.match(mobile,/resetGuideProgressDemo\(\);\s*setGuideDemoFinished\(true\);\s*selectVisibleGuideStation\(\);/);
+  assert.match(mobile,/demoMode=guideDemoActive,/);
+  assert.doesNotMatch(mobile,/demoMode=guideDemoActive\|\|guideDemoFinished/);
+  assert.match(mobile,/\{guideDemoActive\?<SvgPath d=\{connector\}/);
+  assert.doesNotMatch(mobile,/\{\(guideDemoActive\|\|guideDemoFinished\)\?<SvgPath d=\{connector\}/);
+  assert.doesNotMatch(mobile,/setGuideStationKey\(ordered\.at\(-1\)\?\.key\|\|''\)/);
+});
