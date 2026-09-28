@@ -13,12 +13,21 @@ import {
 } from "../../shared/settings/learning-setup.js?v=16.8.0.3";
 import { setupText } from "../../shared/settings/learning-preview-data.js?v=16.8.0.3";
 
+function applySetupTextSize(value) {
+  const code = ["small", "medium", "large"].includes(value) ? value : "medium";
+  if (typeof document !== "undefined" && document.documentElement) {
+    document.documentElement.dataset.textSize = code;
+  }
+}
+
 export async function runLearningSetup({ shell } = {}) {
   if (hasCompletedLearningSetup()) return false;
 
   const controller = new AbortController();
   const draft = emptyLearningSetupDraft();
   let error = "";
+  setInterfaceLanguage(draft.interface_language_code);
+  applySetupTextSize(draft.text_size_code);
 
   shell.appShell.dataset.feature = "onboarding";
   shell.appShell.dataset.screen = "home";
@@ -41,6 +50,9 @@ export async function runLearningSetup({ shell } = {}) {
         Object.assign(draft, updates);
         if (updates.interface_language_code) {
           setInterfaceLanguage(updates.interface_language_code);
+        }
+        if (updates.text_size_code) {
+          applySetupTextSize(updates.text_size_code);
         }
         error = "";
         syncLearningSetupView(shell.root, draft, { error, animatePreview: true });

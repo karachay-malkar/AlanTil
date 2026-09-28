@@ -9,7 +9,7 @@
   display:flex;
   flex-direction:column;
 }
-.learningSetupPane{width:min(100%,560px);margin:auto;display:grid;gap:12px}
+.learningSetupPane{position:relative;width:min(100%,560px);margin:auto;display:grid;gap:12px}
 .learningSetupStep{
   min-width:0;
   visibility:hidden;
@@ -43,6 +43,21 @@
 .learningSetupFlag svg{display:block;width:100%;height:100%}
 [data-feature="onboarding"] .learningSetupCard{width:100%}
 .learningSetupContinue{width:100%}
+.learningSetupCoach{
+  position:absolute;
+  left:0;
+  top:0;
+  width:38px;
+  height:46px;
+  z-index:8;
+  opacity:0;
+  pointer-events:none;
+  will-change:transform,opacity;
+  transform-origin:50% 78%;
+  filter:drop-shadow(0 3px 5px rgba(41,39,33,.18));
+}
+.learningSetupCoach svg{display:block;width:100%;height:100%;overflow:visible}
+.learningSetupCoach path{fill:var(--surface-0);stroke:var(--text-1);stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 .learningSetupStatus{
   box-sizing:border-box;
   min-width:0;
@@ -65,4 +80,5 @@
 }
 @media(prefers-reduced-motion:reduce){
   .learningSetupStep,.learningSetupStep.isVisible,.learningSetupStatus,.learningSetupStatus.isVisible{transition:none;transform:none}
+  .learningSetupCoach{will-change:auto}
 }

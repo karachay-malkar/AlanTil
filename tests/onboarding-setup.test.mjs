@@ -70,15 +70,20 @@ test("preview content is deterministic for every supported language, script and 
   }
 });
 
-test("no option is preselected in an empty draft", async () => {
+test("first-launch draft starts in Russian with medium text and still requires a script choice", async () => {
   const moduleUrl = pathToFileURL(path.join(root, "packages/alantil-core/settings.js")).href;
-  const { emptyLearningSetupDraft } = await import(moduleUrl);
-  assert.deepEqual(emptyLearningSetupDraft(), {
-    interface_language_code: "",
-    translation_language_code: "",
+  const { emptyLearningSetupDraft, isLearningSetupDraftComplete } = await import(moduleUrl);
+  const draft = emptyLearningSetupDraft();
+  assert.deepEqual(draft, {
+    interface_language_code: "ru",
+    translation_language_code: "ru",
     alan_script_code: "",
     alan_dialect_code: "",
+    text_size_code: "medium",
   });
+  assert.equal(isLearningSetupDraftComplete(draft), false);
+  assert.equal(isLearningSetupDraftComplete({ ...draft, alan_script_code: "turkic" }), true);
+  assert.equal(isLearningSetupDraftComplete({ ...draft, alan_script_code: "cyrillic", alan_dialect_code: "karachay" }), true);
 });
 
 test("ordinary settings reuse shared preview render and sync contracts", async () => {
@@ -101,4 +106,14 @@ test("setup sync only animates preview when requested and keeps errors out of th
   const continueIndex = setup.indexOf("data-learning-setup-continue");
   const statusIndex = setup.indexOf("data-learning-setup-status");
   assert.ok(continueIndex >= 0 && statusIndex > continueIndex);
+});
+
+test("onboarding exposes text size and applies its preview before persistence", async () => {
+  const setup = await source("src/shared/settings/learning-setup.js");
+  const feature = await source("src/features/onboarding/index.js");
+  assert.match(setup, /name: "learningTextSize"/);
+  assert.match(setup, /text_size_code: input\.value/);
+  assert.match(feature, /setInterfaceLanguage\(draft\.interface_language_code\)/);
+  assert.match(feature, /applySetupTextSize\(draft\.text_size_code\)/);
+  assert.match(feature, /updates\.text_size_code/);
 });

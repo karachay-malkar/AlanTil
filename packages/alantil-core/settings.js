@@ -107,10 +107,11 @@ export function resolveTimestampedUserSettings({ localSettings = {}, localUpdate
 
 export function emptyLearningSetupDraft() {
   return {
-    interface_language_code: '',
-    translation_language_code: '',
+    interface_language_code: 'ru',
+    translation_language_code: 'ru',
     alan_script_code: '',
     alan_dialect_code: '',
+    text_size_code: 'medium',
   };
 }
 
@@ -119,5 +120,6 @@ export function isLearningSetupDraftComplete(draft = {}) {
   if (!['cyrillic', 'turkic'].includes(draft.alan_script_code)) return false;
   if (draft.alan_script_code === 'cyrillic'
       && !['canonical', 'karachay', 'balkar'].includes(draft.alan_dialect_code)) return false;
+  if (!['small', 'medium', 'large'].includes(draft.text_size_code)) return false;
   return true;
 }

@@ -24,7 +24,7 @@ function flagSvg(language) {
 }
 
 function choice({ name, value, label, checked, disabled = false, extraClass = "" }) {
-  return `<label class="settingsChoice ${extraClass}">
+  return `<label class="settingsChoice ${extraClass}" data-learning-setup-choice>
     <input type="radio" name="${escapeHtml(name)}" value="${escapeHtml(value)}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}>
     <span class="settingsChoiceBody">${label}</span>
   </label>`;
@@ -35,12 +35,116 @@ function capitalizeWord(value) {
   return text ? `${text[0].toUpperCase()}${text.slice(1)}` : "";
 }
 
-function segmentedControl(choices, className = "") {
-  return `<div class="segmentControl settingsSegments ${escapeHtml(className)}" role="radiogroup">${choices}</div>`;
+function segmentedControl(choices, className = "", coachTarget = "") {
+  const coachAttribute = coachTarget ? ` data-setup-coach-target="${escapeHtml(coachTarget)}"` : "";
+  return `<div class="segmentControl settingsSegments ${escapeHtml(className)}" role="radiogroup"${coachAttribute}>${choices}</div>`;
 }
 
 function prefersReducedMotion() {
   return globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+}
+
+function learningSetupCoachMarkup() {
+  return `<div class="learningSetupCoach" data-learning-setup-coach aria-hidden="true">
+    <svg viewBox="0 0 40 48" focusable="false" aria-hidden="true">
+      <path d="M17.5 24V8.2a4 4 0 0 1 8 0v12.6l2-1.8a3.7 3.7 0 0 1 5.9 3v8.7c0 7.3-4.4 12.3-11.3 12.3h-3.8c-4.1 0-7.2-1.6-9.7-5.1L4.9 32.8a3.8 3.8 0 0 1 6-4.6l3.4 4.1V24a3.2 3.2 0 0 1 3.2-3.2Z"/>
+    </svg>
+  </div>`;
+}
+
+function bindLearningSetupCoach(root, signal) {
+  const coach = root.querySelector("[data-learning-setup-coach]");
+  const pane = root.querySelector(".learningSetupPane");
+  if (!coach || !pane) return () => {};
+
+  let animation = null;
+  let timer = 0;
+  let stopped = false;
+
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    globalThis.clearTimeout(timer);
+    animation?.cancel?.();
+    animation = null;
+    coach.style.opacity = "0";
+  };
+
+  const pointFor = (name) => {
+    const target = root.querySelector(`[data-setup-coach-target="${name}"]`);
+    if (!target) return null;
+    const paneRect = pane.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    return {
+      x: rect.left - paneRect.left + rect.width * 0.72 - 19,
+      y: rect.top - paneRect.top + rect.height * 0.62 - 23,
+    };
+  };
+
+  const transformAt = (point, dy = 0, scale = 1) =>
+    `translate3d(${point.x}px,${point.y + dy}px,0) scale(${scale})`;
+
+  const start = () => {
+    if (stopped || signal.aborted) return;
+    const language = pointFor("language");
+    const script = pointFor("script");
+    if (!language || !script) {
+      timer = globalThis.setTimeout(start, 120);
+      return;
+    }
+
+    animation?.cancel?.();
+    if (prefersReducedMotion() || typeof coach.animate !== "function") {
+      coach.style.transform = transformAt(language, -5, 1);
+      coach.style.opacity = "1";
+      return;
+    }
+
+    animation = coach.animate([
+      { offset: 0, opacity: 0, transform: transformAt(language, -12, 0.98) },
+      { offset: 0.07, opacity: 1, transform: transformAt(language, -7, 1) },
+      { offset: 0.12, opacity: 1, transform: transformAt(language, 1, 0.86) },
+      { offset: 0.17, opacity: 1, transform: transformAt(language, -6, 1) },
+      { offset: 0.32, opacity: 1, transform: transformAt(language, -6, 1) },
+      { offset: 0.46, opacity: 1, transform: transformAt(script, -10, 1) },
+      { offset: 0.51, opacity: 1, transform: transformAt(script, 1, 0.86) },
+      { offset: 0.56, opacity: 1, transform: transformAt(script, -6, 1) },
+      { offset: 0.72, opacity: 1, transform: transformAt(script, -6, 1) },
+      { offset: 0.87, opacity: 0.92, transform: transformAt(language, -10, 1) },
+      { offset: 1, opacity: 0.92, transform: transformAt(language, -10, 1) },
+    ], {
+      duration: 5200,
+      iterations: Infinity,
+      easing: "cubic-bezier(.2,.7,.2,1)",
+      fill: "both",
+    });
+  };
+
+  const scheduleStart = (delay = 800) => {
+    globalThis.clearTimeout(timer);
+    timer = globalThis.setTimeout(start, delay);
+  };
+
+  const stopOnPointer = (event) => {
+    if (event.target?.closest?.("[data-learning-setup-choice]")) stop();
+  };
+  const stopOnKeyboard = (event) => {
+    if (!["Enter", " "].includes(event.key)) return;
+    if (event.target?.matches?.('input[name^="learning"]')) stop();
+  };
+
+  root.addEventListener("pointerdown", stopOnPointer, { signal, capture: true });
+  root.addEventListener("keydown", stopOnKeyboard, { signal, capture: true });
+  globalThis.addEventListener?.("resize", () => {
+    if (stopped) return;
+    animation?.cancel?.();
+    animation = null;
+    scheduleStart(120);
+  }, { signal });
+  signal.addEventListener("abort", stop, { once: true });
+  scheduleStart();
+  return stop;
 }
 
 function animatePreviewField(element) {
@@ -159,15 +263,21 @@ export function syncLearningSetupView(root, draft = {}, {
   syncRadioGroup(root, "learningLanguage", language);
   syncRadioGroup(root, "learningScript", draft.alan_script_code);
   syncRadioGroup(root, "learningDialect", draft.alan_dialect_code);
+  syncRadioGroup(root, "learningTextSize", draft.text_size_code);
 
   setSetupCopy(root, "script-title", copy.script);
   setSetupCopy(root, "cyrillic", copy.cyrillic);
   setSetupCopy(root, "dialect-title", copy.dialect);
+  setSetupCopy(root, "text-size-title", copy.textSize);
+  setSetupCopy(root, "small", copy.small);
+  setSetupCopy(root, "medium", copy.medium);
+  setSetupCopy(root, "large", copy.large);
   setSetupCopy(root, "continue", copy.continue);
 
   setSetupStepState(root, "language", true);
   setSetupStepState(root, "script", scriptVisible);
   setSetupStepState(root, "dialect", dialectVisible);
+  setSetupStepState(root, "text-size", true);
 
   const continueButton = root.querySelector("[data-learning-setup-continue]");
   if (continueButton) continueButton.disabled = !isLearningSetupDraftComplete(draft);
@@ -220,16 +330,27 @@ export function renderLearningSetup(draft = {}, { error = "" } = {}) {
     disabled: !dialectVisible,
   })).join("");
 
+  const textSizeChoices = [
+    ["small", `<span data-learning-setup-copy="small">${escapeHtml(copy.small)}</span>`],
+    ["medium", `<span data-learning-setup-copy="medium">${escapeHtml(copy.medium)}</span>`],
+    ["large", `<span data-learning-setup-copy="large">${escapeHtml(copy.large)}</span>`],
+  ].map(([value, label]) => choice({
+    name: "learningTextSize",
+    value,
+    label,
+    checked: draft.text_size_code === value,
+  })).join("");
+
   return `<section class="learningSetupScreen">
     <div class="learningSetupPane">
       <section class="learningSetupStep isVisible" data-setup-step="language" aria-hidden="false">
         <h1>Язык · Language · Dil</h1>
-        ${segmentedControl(languageChoices, "learningSetupLanguageSegments")}
+        ${segmentedControl(languageChoices, "learningSetupLanguageSegments", "language")}
       </section>
 
       <section class="learningSetupStep ${scriptVisible ? "isVisible" : ""}" data-setup-step="script" aria-hidden="${scriptVisible ? "false" : "true"}" ${scriptVisible ? "" : "inert"}>
         <h2 data-learning-setup-copy="script-title">${escapeHtml(copy.script)}</h2>
-        ${segmentedControl(scriptChoices)}
+        ${segmentedControl(scriptChoices, "", "script")}
       </section>
 
       <section class="learningSetupStep ${dialectVisible ? "isVisible" : ""}" data-setup-step="dialect" aria-hidden="${dialectVisible ? "false" : "true"}" ${dialectVisible ? "" : "inert"}>
@@ -237,15 +358,22 @@ export function renderLearningSetup(draft = {}, { error = "" } = {}) {
         ${segmentedControl(dialectChoices)}
       </section>
 
+      <section class="learningSetupStep isVisible" data-setup-step="text-size" aria-hidden="false">
+        <h2 data-learning-setup-copy="text-size-title">${escapeHtml(copy.textSize)}</h2>
+        ${segmentedControl(textSizeChoices)}
+      </section>
+
       ${renderLearningPreview(draft, { className: "learningSetupCard", marker: "onboarding" })}
 
       <button class="btn actionPrimary learningSetupContinue" type="button" data-learning-setup-continue ${isLearningSetupDraftComplete(draft) ? "" : "disabled"}><span data-learning-setup-copy="continue">${escapeHtml(copy.continue)}</span></button>
       <div class="learningSetupStatus learningSetupError ${error ? "isVisible" : ""}" data-learning-setup-status role="alert" aria-live="assertive" aria-hidden="${error ? "false" : "true"}">${escapeHtml(error)}</div>
+      ${learningSetupCoachMarkup()}
     </div>
   </section>`;
 }
 
 export function bindLearningSetup(root, signal, { onChange, onContinue } = {}) {
+  bindLearningSetupCoach(root, signal);
   root.querySelectorAll('input[name="learningLanguage"]').forEach((input) => {
     input.addEventListener("change", () => input.checked && onChange?.({
       interface_language_code: input.value,
@@ -257,6 +385,9 @@ export function bindLearningSetup(root, signal, { onChange, onContinue } = {}) {
   });
   root.querySelectorAll('input[name="learningDialect"]').forEach((input) => {
     input.addEventListener("change", () => input.checked && onChange?.({ alan_dialect_code: input.value }), { signal });
+  });
+  root.querySelectorAll('input[name="learningTextSize"]').forEach((input) => {
+    input.addEventListener("change", () => input.checked && onChange?.({ text_size_code: input.value }), { signal });
   });
   root.querySelector("[data-learning-setup-continue]")?.addEventListener("click", () => onContinue?.(), { signal });
 }

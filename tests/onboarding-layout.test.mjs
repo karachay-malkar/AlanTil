@@ -96,3 +96,33 @@ test("content starts below top chrome and scrolls instead of overlapping on shor
   assert.match(css, /@media\(max-height:700px\)/);
   assert.match(css, /\.learningSetupPane\{margin-top:0;margin-bottom:0\}/);
 });
+
+test("onboarding coach loops between language and script until the first real choice", async () => {
+  const setup = await source("src/shared/settings/learning-setup.js");
+  const css = await source("src/features/onboarding/onboarding.css");
+  assert.match(setup, /segmentedControl\(languageChoices, "learningSetupLanguageSegments", "language"\)/);
+  assert.match(setup, /segmentedControl\(scriptChoices, "", "script"\)/);
+  assert.match(setup, /iterations:\s*Infinity/);
+  assert.match(setup, /scheduleStart\(\)/);
+  assert.match(setup, /data-learning-setup-choice/);
+  assert.match(css, /\.learningSetupCoach\{[\s\S]*pointer-events:none/);
+  assert.match(setup, /prefersReducedMotion\(\)/);
+});
+
+test("font size is a visible setup step backed by the shared segmented control", async () => {
+  const setup = await source("src/shared/settings/learning-setup.js");
+  assert.match(setup, /data-setup-step="text-size"/);
+  assert.match(setup, /learningTextSize/);
+  assert.match(setup, /copy\.textSize/);
+  assert.match(setup, /copy\.medium/);
+});
+
+test("mobile onboarding mirrors the looping coach and live text-size choice", async () => {
+  const mobile = await source("mobile/screens/onboarding.js");
+  assert.match(mobile, /Animated\.loop/);
+  assert.match(mobile, /setTimeout\(start,800\)/);
+  assert.match(mobile, /setCoachActive\(false\)/);
+  assert.match(mobile, /isReduceMotionEnabled/);
+  assert.match(mobile, /textSizeOptions/);
+  assert.match(mobile, /semanticTypography\(draft\.text_size_code\|\|'medium'/);
+});
