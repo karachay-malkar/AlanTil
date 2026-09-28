@@ -1,0 +1,26 @@
+name: Temporary dictionary snapshot refresh
+
+on:
+  push:
+    branches:
+      - agent/dictionary-snapshot-refresh
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate production dictionary snapshot
+        run: node scripts/generate-mobile-dictionary-snapshot.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dictionary-snapshot-refresh
+          path: mobile/data/dictionary-snapshot.json
+          if-no-files-found: error
