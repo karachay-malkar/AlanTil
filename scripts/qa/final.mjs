@@ -32,6 +32,9 @@ const TESTS = Object.freeze({
     'tests/friends-web-parity-16-7-0.test.mjs',
     'tests/visitor-analytics.test.mjs',
     'tests/storage-profile-analytics-16-8.test.mjs',
+    'tests/station-test-exit-contract-16-8.test.mjs',
+    'tests/station-test-scope.test.mjs',
+    'tests/session-exit-phrase.test.mjs',
     'tests/admin-activity-13-15-10.test.mjs',
   ],
   ashyk: [
