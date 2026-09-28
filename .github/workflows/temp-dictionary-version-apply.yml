@@ -1,0 +1,37 @@
+name: Temporary dictionary version apply
+
+on:
+  push:
+    branches:
+      - agent/dictionary-version-apply
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      KEY_A: ${{ secrets.ALANTIL_SUPABASE_SERVICE_ROLE_KEY }}
+      KEY_B: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Raise dictionary version
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEY="${KEY_A:-${KEY_B:-}}"
+          if [ -z "$KEY" ]; then
+            echo "No configured Supabase service-role secret"
+            exit 2
+          fi
+          CODE=$(curl -sS -o /tmp/update.json -w "%{http_code}" \
+            -X PATCH "https://pybrzgedqjmosbmilcea.supabase.co/rest/v1/dictionary_metadata?dictionary_key=eq.main" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            --data '{"current_version":"2026.09.28.1"}')
+          test "$CODE" = "200"
+          grep -q '"current_version":"2026.09.28.1"' /tmp/update.json
+          echo "Dictionary version updated to 2026.09.28.1"
