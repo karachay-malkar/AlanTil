@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   GUEST_STORAGE_SCOPE,
   canonicalStorageBaseKey,
+  isKnownStorageBaseKey,
   legacyStorageBaseKeys,
+  parseScopedStorageKey,
   rawScopedStorageKey,
   scopedStorageKey,
   storageScopeForUser,
@@ -16,6 +18,20 @@ export function getNativeStorageScope(){ return activeScope; }
 export function getNativeStorageScopeUserId(){ return storageScopeUserId(activeScope); }
 export function setNativeStorageScope(userId){ activeScope = storageScopeForUser(userId); return activeScope; }
 export function nativeScopedStorageKey(baseKey, scope = activeScope){ return scopedStorageKey(baseKey, scope); }
+
+async function moveNativeValue(source,target){
+  if(!source||!target||source===target)return false;
+  try{
+    const raw=await AsyncStorage.getItem(source);
+    if(raw===null)return false;
+    if(await AsyncStorage.getItem(target)===null){
+      await AsyncStorage.setItem(target,raw);
+      if(await AsyncStorage.getItem(target)!==raw)return false;
+    }
+    await AsyncStorage.removeItem(source);
+    return true;
+  }catch{return false;}
+}
 
 async function migrateScopeAliases(baseKey, scope){
   const canonical=canonicalStorageBaseKey(baseKey),target=rawScopedStorageKey(canonical,scope),marker=`${scope}:${canonical}`;
@@ -61,4 +77,24 @@ export async function migrateLegacyNativeValueToGuest(baseKey){
     changed=(await migrateScopeAliases(baseKey,capturedScope))||changed;
   }
   return changed;
+}
+
+export async function migrateAllNativeStorageKeys(){
+  let keys=[];
+  try{keys=await AsyncStorage.getAllKeys();}catch{return 0;}
+  let migratedCount=0;
+  for(const key of keys){
+    const parsed=parseScopedStorageKey(key);
+    if(parsed){
+      if(!isKnownStorageBaseKey(parsed.baseKey))continue;
+      const canonical=canonicalStorageBaseKey(parsed.baseKey);
+      if(canonical===parsed.baseKey)continue;
+      if(await moveNativeValue(key,rawScopedStorageKey(canonical,parsed.scope)))migratedCount+=1;
+      continue;
+    }
+    if(!isKnownStorageBaseKey(key))continue;
+    const canonical=canonicalStorageBaseKey(key);
+    if(await moveNativeValue(key,rawScopedStorageKey(canonical,GUEST_STORAGE_SCOPE)))migratedCount+=1;
+  }
+  return migratedCount;
 }

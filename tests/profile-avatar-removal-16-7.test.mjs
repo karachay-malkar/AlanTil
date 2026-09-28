@@ -38,9 +38,12 @@ test("profile account flow requires nickname and one-time gender and supports ni
 
   assert.match(webAccount, /profileIncomplete = !profile[?][.]nickname \|\| !profile[?][.]avatar_gender/);
   assert.match(webAccount, /updateProfileNickname/);
+  assert.match(webAccount, /hasCompleteProfile/);
+  assert.match(webAccount, /profile_completed/);
   assert.match(webProfileService, /PROFILE_COLUMNS = "user_id,nickname,avatar_gender,created_at,updated_at"/);
   assert.match(webProfileService, /updateProfileNickname/);
   assert.match(mobileAccount, /updateNativeNickname/);
+  assert.match(mobileAccount, /onProfileCompleted/);
   assert.match(mobileAccount, /profile[?][.]avatar_gender/);
   assert.match(mobileApi, /PROFILE_SELECT='user_id,nickname,avatar_gender,created_at,updated_at'/);
 });

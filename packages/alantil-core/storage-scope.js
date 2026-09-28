@@ -43,6 +43,9 @@ const PREFIX_STORAGE_KEYS = Object.freeze([
   Object.freeze(['alantil:16.4.1:guest-claim:', 'migration.guest-claim.']),
 ]);
 
+const CANONICAL_EXACT_STORAGE_KEYS = new Set(Object.values(EXACT_STORAGE_KEYS));
+const CANONICAL_PREFIX_STORAGE_KEYS = PREFIX_STORAGE_KEYS.map(([, canonicalPrefix]) => canonicalPrefix);
+
 export const STORAGE_BASE_KEYS = Object.freeze({
   settings: 'settings',
   settingsSync: 'sync.settings',
@@ -69,6 +72,14 @@ export function canonicalStorageBaseKey(baseKey) {
     if (value.startsWith(legacyPrefix)) return canonicalPrefix + value.slice(legacyPrefix.length);
   }
   return value;
+}
+
+export function isKnownStorageBaseKey(baseKey) {
+  const value = String(baseKey || '');
+  if (!value) return false;
+  if (Object.prototype.hasOwnProperty.call(EXACT_STORAGE_KEYS, value) || CANONICAL_EXACT_STORAGE_KEYS.has(value)) return true;
+  return PREFIX_STORAGE_KEYS.some(([legacyPrefix]) => value.startsWith(legacyPrefix))
+    || CANONICAL_PREFIX_STORAGE_KEYS.some((canonicalPrefix) => value.startsWith(canonicalPrefix));
 }
 
 export function legacyStorageBaseKeys(baseKey) {
@@ -103,4 +114,18 @@ export function rawScopedStorageKey(baseKey, scope = GUEST_STORAGE_SCOPE) {
 
 export function scopedStorageKey(baseKey, scope = GUEST_STORAGE_SCOPE) {
   return rawScopedStorageKey(canonicalStorageBaseKey(baseKey), scope);
+}
+
+export function parseScopedStorageKey(storageKey) {
+  const prefix = `${STORAGE_SCOPE_PREFIX}:`;
+  const value = String(storageKey || '');
+  if (!value.startsWith(prefix)) return null;
+  const rest = value.slice(prefix.length);
+  if (rest.startsWith(`${GUEST_STORAGE_SCOPE}:`)) {
+    return { scope: GUEST_STORAGE_SCOPE, baseKey: rest.slice(GUEST_STORAGE_SCOPE.length + 1) };
+  }
+  if (!rest.startsWith('user:')) return null;
+  const separator = rest.indexOf(':', 5);
+  if (separator < 0) return null;
+  return { scope: rest.slice(0, separator), baseKey: rest.slice(separator + 1) };
 }

@@ -1,7 +1,7 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.6";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.6";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.6";
-import { filterNickname } from "../../../packages/alantil-core/profile.js?v=16.8.0.6";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.7";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.7";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.7";
+import { filterNickname } from "../../../packages/alantil-core/profile.js?v=16.8.0.7";
 
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;

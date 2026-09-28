@@ -1,4 +1,4 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.6";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.7";
 import {
   getCurrentAuthState,
   getUserProvider,
@@ -9,32 +9,33 @@ import {
   signUpWithEmail,
   subscribeToAuth,
   updateCurrentUserPassword,
-} from "../../shared/auth/auth-service.js?v=16.8.0.6";
-import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.6";
+} from "../../shared/auth/auth-service.js?v=16.8.0.7";
+import { hasPersistedAuthSession } from "../../shared/auth/supabase-client.js?v=16.8.0.7";
 import {
   isProfileServiceUnavailableError,
   SUPABASE_ERROR_KINDS,
-} from "../../shared/errors/supabase-error.js?v=16.8.0.6";
+} from "../../shared/errors/supabase-error.js?v=16.8.0.7";
 import {
   createProfile,
   getProfile,
   isNicknameAvailable,
   updateProfileNickname,
   validateNickname,
-} from "../../shared/profile/profile-service.js?v=16.8.0.6";
-import { panel } from "../../shared/ui/panel.js?v=16.8.0.6";
+} from "../../shared/profile/profile-service.js?v=16.8.0.7";
+import { panel } from "../../shared/ui/panel.js?v=16.8.0.7";
+import { hasCompleteProfile } from "../../../packages/alantil-core/profile.js?v=16.8.0.7";
 import {
   bindLogin,
   bindPasswordSetup,
   renderLogin,
   renderPasswordSetup,
-} from "./login.js?v=16.8.0.6";
+} from "./login.js?v=16.8.0.7";
 import {
   bindProfile,
   bindProfileCreation,
   renderProfile,
   renderProfileCreation,
-} from "./profile.js?v=16.8.0.6";
+} from "./profile.js?v=16.8.0.7";
 
 let controller = null;
 let unsubscribeAuth = null;
@@ -385,6 +386,12 @@ async function renderAccount(context) {
           await createProfile(authState.user.id, nickname, gender);
           profileFailure = null;
           resetNicknameState();
+          await context.router.replace(
+            "path.home",
+            { storyType: "roots" },
+            { force: true, reason: "profile_completed" },
+          );
+          return;
         } catch (error) {
           if (isProfileServiceUnavailableError(error)) setProfileFailure(error);
           else {
@@ -483,11 +490,23 @@ export async function mount(context) {
         scheduleAccountRender(context);
         return;
       }
-      void context.router.replace(
-        "path.home",
-        { storyType: "roots" },
-        { force: true, reason: "auth_success" },
-      );
+      void (async () => {
+        try {
+          const profile = await getProfile(nextUserId);
+          if (!hasCompleteProfile(profile)) {
+            scheduleAccountRender(context);
+            return;
+          }
+        } catch {
+          scheduleAccountRender(context);
+          return;
+        }
+        await context.router.replace(
+          "path.home",
+          { storyType: "roots" },
+          { force: true, reason: "auth_success" },
+        );
+      })();
       return;
     }
     scheduleAccountRender(context);
