@@ -9,7 +9,7 @@ globalThis.localStorage = {
 };
 globalThis.window = { location: { pathname: "/path/test" } };
 
-const { createStationTestSession, distractorsFor } = await import("../src/features/path/station-test.js?v=16.8.0.3");
+const { createStationTestSession, distractorsFor } = await import("../src/features/path/station-test.js?v=16.8.0.8");
 
 function word(id, pos, order) {
   return {
@@ -48,6 +48,18 @@ test("stage test asks every stage word regardless of study checkboxes", () => {
       .filter((option) => option.id !== question.item.id)
       .forEach((option) => assert.equal(option.word.pos, question.item.pos));
   });
+});
+
+test("stale station-test snapshot is discarded and never resumed", () => {
+  const stationWords = [word("s1", "noun", 1), word("s2", "noun", 2)];
+  const station = { key: "stage-resume", words: stationWords, dictionaryId: "dictionary", catalogId: "catalog", groupId: "section", setId: "set", storyType: "roots" };
+  const staleKey = "alantil_scope_v1:guest:alantil_station_test_active_v13_5";
+  localStorage.setItem(staleKey, JSON.stringify({ id: "old-attempt", stationKey: station.key, index: 1, answers: [{wordId:"s1",result:"correct"}] }));
+  const session = createStationTestSession(station, stationWords, "kb");
+  assert.equal(session.index, 0);
+  assert.deepEqual(session.answers, []);
+  assert.notEqual(session.id, "old-attempt");
+  assert.equal(localStorage.getItem(staleKey), null);
 });
 
 test("test distractors never fall back to another part of speech", () => {

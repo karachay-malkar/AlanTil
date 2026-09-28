@@ -1,23 +1,24 @@
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
-import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=16.8.0.3";
-import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=16.8.0.3";
-import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=16.8.0.3";
-import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=16.8.0.3";
-import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
-import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.3";
-import { createRouteScale } from "../../shared/ui/route-scale.js?v=16.8.0.3";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.3";
-import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
-import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.3";
-import { renderResults as renderLearnResults } from "../learn/results.js?v=16.8.0.3";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=16.8.0.3";
-import { createStationTestSession, renderStationTest } from "./station-test.js?v=16.8.0.3";
-import { renderStationView } from "./station-view.js?v=16.8.0.3";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.8";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.8";
+import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=16.8.0.8";
+import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=16.8.0.8";
+import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=16.8.0.8";
+import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=16.8.0.8";
+import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.8";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.8";
+import { bindResultRows, renderResultRow, renderResultScreen } from "../../shared/ui/result-list.js?v=16.8.0.8";
+import { createRouteScale } from "../../shared/ui/route-scale.js?v=16.8.0.8";
+import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.8";
+import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.8";
+import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.8";
+import { renderResults as renderLearnResults } from "../learn/results.js?v=16.8.0.8";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=16.8.0.8";
+import { createStationTestSession, discardStationTestSession, renderStationTest } from "./station-test.js?v=16.8.0.8";
+import { renderStationView } from "./station-view.js?v=16.8.0.8";
 
 let controller = null;
 let activeStudy = false;
+let activeStationTest = null;
 const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
 
@@ -239,7 +240,13 @@ function renderResult(context, route, station, result, allWords) {
   context.root.querySelector("[data-result-repeat]")?.addEventListener("click", () => {
     const mode = result.payload.direction === "ru_to_alan" ? "ru" : "kb";
     const session = createStationTestSession(station, allWords, mode);
-    renderStationTest(context, session, { onComplete: (next) => renderResult(context, route, station, next, allWords) });
+    activeStationTest = session;
+    renderStationTest(context, session, {
+      onComplete: (next) => {
+        activeStationTest = null;
+        renderResult(context, route, station, next, allWords);
+      },
+    });
   }, { signal: controller.signal });
 }
 
@@ -295,13 +302,47 @@ export async function mount(context, params = {}) {
   if (screen === "test") {
     const allWords = route.storyOrder.flatMap((type) => route.stories[type].stations).flatMap((item) => item.words);
     const session = createStationTestSession(station, allWords, params.mode || "kb");
-    renderStationTest(context, session, { onComplete: (result) => renderResult(context, route, station, result, allWords) });
+    activeStationTest = session;
+    renderStationTest(context, session, {
+      onComplete: (result) => {
+        activeStationTest = null;
+        renderResult(context, route, station, result, allWords);
+      },
+    });
   }
 }
 
-export function canLeave() { return !activeStudy || !learnState.studySession.inProgress; }
+function stationTestInProgress() {
+  return Boolean(
+    activeStationTest
+    && !activeStationTest.completed
+    && activeStationTest.index < activeStationTest.questions.length
+  );
+}
+
+export function canLeave() {
+  const studyInProgress = activeStudy && learnState.studySession.inProgress && !learnState.studySession.completed;
+  return !studyInProgress && !stationTestInProgress();
+}
+
+export function getLeaveMessage() {
+  if (stationTestInProgress() || (activeStudy && learnState.studySession.inProgress)) {
+    return msg("common.vy_tochno_hotite_vyyti_popytka_budet_sbrosena").replace("\n", "<br>");
+  }
+  return "";
+}
+
 export function onLeave(reason = "route_change") {
   if (activeStudy && learnState.studySession.inProgress) finalizeLearnSession("interrupted", reason);
+  if (stationTestInProgress()) discardStationTestSession(activeStationTest);
   activeStudy = false;
+  activeStationTest = null;
 }
-export function unmount() { controller?.abort(); controller = null; }
+
+export function unmount() {
+  controller?.abort();
+  controller = null;
+  if (stationTestInProgress()) discardStationTestSession(activeStationTest);
+  activeStudy = false;
+  activeStationTest = null;
+}
