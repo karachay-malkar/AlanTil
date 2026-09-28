@@ -100,6 +100,7 @@ export const INTERFACE_MESSAGES = Object.freeze({
   "common.vosproizvesti_pesnyu": Object.freeze({ ru: "Воспроизвести песню", en: "Play song", tr: "Şarkıyı çal" }),
   "common.voyti": Object.freeze({ ru: "Войти", en: "Sign in", tr: "Giriş yap" }),
   "common.vy_tochno_hotite_vyyti_sessiya_budet_sohranena": Object.freeze({ ru: "Вы точно хотите выйти?\nСессия будет сохранена как незавершённая.", en: "Are you sure you want to leave?\nThe session will be saved as unfinished.", tr: "Çıkmak istediğinizden emin misiniz?\nOturum tamamlanmamış olarak kaydedilecek." }),
+  "common.vy_tochno_hotite_vyyti_popytka_budet_sbrosena": Object.freeze({ ru: "Вы точно хотите выйти?\nТекущая попытка будет сброшена.", en: "Are you sure you want to leave?\nThe current attempt will be reset.", tr: "Çıkmak istediğinizden emin misiniz?\nMevcut deneme sıfırlanacak." }),
   "common.vypolnyaetsya_vhod": Object.freeze({ ru: "Выполняется вход…", en: "Signing in…", tr: "Giriş yapılıyor…" }),
   "common.zakryt": Object.freeze({ ru: "Закрыть", en: "Close", tr: "Kapat" }),
   "common.zakryt_poisk": Object.freeze({ ru: "Закрыть поиск", en: "Close search", tr: "Aramayı kapat" }),
