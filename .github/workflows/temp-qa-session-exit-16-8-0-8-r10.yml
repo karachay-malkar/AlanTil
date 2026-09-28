@@ -1,0 +1,19 @@
+name: Temporary QA session exit 16.8.0.8 r10
+on:
+  push:
+    branches: [agent/qa-session-exit-16.8.0.8-r10]
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run session exit regressions
+        run: node --test tests/station-test-exit-contract-16-8.test.mjs tests/station-test-scope.test.mjs tests/session-exit-phrase.test.mjs mobile/tests/session-exit-regression.test.mjs
+      - name: Run final project QA
+        run: node scripts/qa/final.mjs
