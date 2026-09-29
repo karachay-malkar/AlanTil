@@ -4,14 +4,15 @@ import assert from "node:assert/strict";
 import {
   nextUnattemptedProgressEntry,
   shouldDiscardProgressError,
-} from "../src/shared/progress/progress-sync-policy.js?v=16.8.0.3";
+} from "../src/shared/progress/progress-sync-policy.js?v=16.8.0.9";
+import { progressQueueRevisionToken } from "../packages/alantil-core/sync-policy.js";
 
 test("a failed entry does not hide later settings from the same queue pass", () => {
   const queue = [
     { id: "word_favorite:legacy", type: "word_favorite" },
     { id: "user_settings:current", type: "user_settings" },
   ];
-  const attempted = new Set(["word_favorite:legacy"]);
+  const attempted = new Set([progressQueueRevisionToken(queue[0])]);
   assert.equal(nextUnattemptedProgressEntry(queue, attempted)?.id, "user_settings:current");
 });
 
