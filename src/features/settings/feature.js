@@ -4,12 +4,12 @@ import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=16.8.0.3";
+} from "../../shared/data/word-repository.js?v=16.8.0.9";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.3";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.3";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.9";
 import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=16.8.0.3";
 import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.8.0.3";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.3";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.9";
 import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
 import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.3";
 

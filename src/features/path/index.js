@@ -1,5 +1,5 @@
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.8";
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.8";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.9";
 import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=16.8.0.8";
 import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=16.8.0.8";
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=16.8.0.8";

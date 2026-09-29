@@ -10,7 +10,7 @@ import {
   progressQueueEntryId,
   removeProgressQueueEntry,
   updateProgressQueueEntry,
-} from "../../../packages/alantil-core/sync-policy.js";
+} from "../../../packages/alantil-core/sync-policy.js?v=16.8.0.9";
 
 export const PROGRESS_QUEUE_KEY = "alantil_progress_queue_v1";
 const listeners = new Set();
@@ -62,14 +62,14 @@ export function enqueueProgress(type, payload, {
   return result.entry;
 }
 
-export function removeProgressEntry(id, scope = getStorageScope()) {
-  const result = removeProgressQueueEntry(readProgressQueue(scope), id);
+export function removeProgressEntry(id, scope = getStorageScope(), revision = null) {
+  const result = removeProgressQueueEntry(readProgressQueue(scope), id, revision);
   if (!result.changed) return false;
   return writeProgressQueue(result.queue, scope);
 }
 
-export function updateProgressEntry(id, updates, scope = getStorageScope()) {
-  const result = updateProgressQueueEntry(readProgressQueue(scope), id, updates);
+export function updateProgressEntry(id, updates, scope = getStorageScope(), revision = null) {
+  const result = updateProgressQueueEntry(readProgressQueue(scope), id, updates, revision);
   if (!result.changed) return false;
   return writeProgressQueue(result.queue, scope);
 }

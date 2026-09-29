@@ -1,10 +1,10 @@
-import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.3";
+import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.9";
 import {
   hasScopedValue,
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "../progress/storage-scope.js?v=16.8.0.3";
+} from "../progress/storage-scope.js?v=16.8.0.9";
 import {
   DEFAULT_USER_SETTINGS,
   applyUserSettingsUpdate,
@@ -34,7 +34,10 @@ function applyTextSizeCode(value) {
 function storedSettings(fallback = DEFAULT_USER_SETTINGS) {
   const hasStoredSettings = hasScopedValue(USER_SETTINGS_KEY);
   const stored = readScopedJson(USER_SETTINGS_KEY, fallback);
-  return migrateStoredUserSettings(stored, hasStoredSettings);
+  return {
+    hasStoredSettings,
+    value: migrateStoredUserSettings(stored, hasStoredSettings),
+  };
 }
 
 function notify() {
@@ -59,9 +62,10 @@ export function reloadUserSettings({ preserveLanguageIfMissing = false } = {}) {
         text_size_code: state.text_size_code,
       }
     : DEFAULT_USER_SETTINGS;
-  state = normalizeUserSettings(storedSettings(fallback));
+  const stored = storedSettings(fallback);
+  state = normalizeUserSettings(stored.value);
   applyTextSizeCode(state.text_size_code);
-  writeScopedJson(USER_SETTINGS_KEY, state);
+  if (stored.hasStoredSettings) writeScopedJson(USER_SETTINGS_KEY, state);
   notify();
   return getUserSettings();
 }
