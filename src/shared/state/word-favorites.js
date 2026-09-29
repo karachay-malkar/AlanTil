@@ -1,7 +1,7 @@
 import { getAnalyticsContext, trackEvent } from "../analytics/analytics.js?v=16.8.0.3";
 import { EVENTS } from "../analytics/events.js?v=16.8.0.3";
 import { normalizeId } from "../domain/word-normalizer.js?v=16.8.0.3";
-import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.3";
+import { enqueueProgress } from "../progress/progress-queue.js?v=16.8.0.9";
 import { createFavoritesStore } from "./favorites-store.js?v=16.8.0.3";
 
 export const WORD_FAVORITES_KEY = "fc_favorites_v1";

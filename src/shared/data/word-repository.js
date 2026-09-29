@@ -1,26 +1,27 @@
-import { msg } from "../i18n/index.js?v=16.8.0.7";
+import { msg } from "../i18n/index.js?v=16.8.0.9";
 import {
   DICTIONARY_CACHE_KEY,
   DICTIONARY_CONTENT_TABLE,
   DICTIONARY_KEY,
+  DICTIONARY_META_KEY,
   DICTIONARY_METADATA_TABLE,
   DICTIONARY_STORIES_TABLE,
   LEGACY_DICTIONARY_CACHE_KEYS,
-} from "../../config/words.js?v=16.8.0.7";
-import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.7";
-import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=16.8.0.7";
-import { getDisplayedWordCollection } from "../domain/alan-display.js?v=16.8.0.7";
-import { getUserSettings } from "../settings/user-settings-store.js?v=16.8.0.7";
-import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=16.8.0.7";
-import { readJson, writeJson } from "../state/storage.js?v=16.8.0.7";
-import { DICTIONARY_STORE_SCHEMA_VERSION, readDictionarySnapshot, writeDictionarySnapshot } from "./dictionary-store.js?v=16.8.0.7";
+  LEGACY_DICTIONARY_META_KEYS,
+} from "../../config/words.js?v=16.8.0.9";
+import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.9";
+import { STARTER_DICTIONARY, STARTER_DICTIONARY_VERSION } from "../../data/starter-dictionary.js?v=16.8.0.9";
+import { getDisplayedWordCollection } from "../domain/alan-display.js?v=16.8.0.9";
+import { getUserSettings } from "../settings/user-settings-store.js?v=16.8.0.9";
+import { normalizeSupabaseWordEntry, normalizeWordEntry } from "../domain/word-structure-compat.js?v=16.8.0.9";
+import { readJson, writeJson } from "../state/storage.js?v=16.8.0.9";
+import { DICTIONARY_STORE_SCHEMA_VERSION, readDictionarySnapshot, writeDictionarySnapshot } from "./dictionary-store.js?v=16.8.0.9";
 
 const PAGE_SIZE = 1000;
 const DOWNLOAD_TIMEOUT_MS = 15000;
 const VERSION_TIMEOUT_MS = 5000;
 const RETRY_DELAYS_MS = Object.freeze([0, 5000, 30000]);
-const BUNDLED_DICTIONARY_URL = "/src/data/dictionary-snapshot.json?v=16.8.0.7";
-const DICTIONARY_META_KEY = "alantil_dictionary_meta_v1";
+const BUNDLED_DICTIONARY_URL = "/src/data/dictionary-snapshot.json?v=16.8.0.9";
 
 let words = null;
 let loadingPromise = null;
@@ -111,35 +112,67 @@ function validateDictionary(collection) {
   return collection;
 }
 
-function clearLegacyDictionaryCaches() {
-  try {
-    LEGACY_DICTIONARY_CACHE_KEYS.forEach((key) => localStorage.removeItem(key));
-  } catch {}
+function removeLocalStorageKeys(keys = []) {
+  try { keys.forEach((key) => localStorage.removeItem(key)); } catch {}
+}
+
+function clearLegacyDictionaryCaches({ preserveFallback = false } = {}) {
+  removeLocalStorageKeys([
+    ...LEGACY_DICTIONARY_CACHE_KEYS,
+    ...(preserveFallback ? [] : [DICTIONARY_CACHE_KEY]),
+  ]);
+}
+
+function clearLegacyDictionaryMeta() {
+  removeLocalStorageKeys(LEGACY_DICTIONARY_META_KEYS);
 }
 
 function readDictionaryMeta() {
-  const value = readJson(DICTIONARY_META_KEY, null);
-  const version = String(value?.version || "").trim();
-  return version ? { version, schemaVersion: Number(value?.schema_version || 0) } : null;
+  const keys = [DICTIONARY_META_KEY, ...LEGACY_DICTIONARY_META_KEYS];
+  for (const key of keys) {
+    const value = readJson(key, null);
+    const version = String(value?.version || "").trim();
+    if (!version) continue;
+    if (key !== DICTIONARY_META_KEY) {
+      writeJson(DICTIONARY_META_KEY, {
+        version,
+        schema_version: Number(value?.schema_version || 0),
+      });
+      clearLegacyDictionaryMeta();
+    }
+    return { version, schemaVersion: Number(value?.schema_version || 0) };
+  }
+  return null;
 }
 
 function writeDictionaryMeta(version) {
-  writeJson(DICTIONARY_META_KEY, { version, schema_version: DICTIONARY_STORE_SCHEMA_VERSION });
+  const stored = writeJson(DICTIONARY_META_KEY, { version, schema_version: DICTIONARY_STORE_SCHEMA_VERSION });
+  if (stored) clearLegacyDictionaryMeta();
+  return stored;
+}
+
+function normalizeLegacyCacheWords(rawWords) {
+  for (const sourceName of ["cache", "legacy"]) {
+    try {
+      const normalized = validateDictionary(normalizeCollection(rawWords, sourceName));
+      if (normalized.length) return normalized;
+    } catch {}
+  }
+  return null;
 }
 
 function readLegacyDictionaryCache() {
-  const cached = readJson(DICTIONARY_CACHE_KEY, null);
-  const version = String(cached?.version || "").trim();
-  if (!version || !Array.isArray(cached?.words) || !cached.words.length) return null;
-  try {
-    return { version, words: validateDictionary(normalizeCollection(cached.words, "cache")), source: "localstorage-migration" };
-  } catch {
-    return null;
+  const metaVersion = readDictionaryMeta()?.version || "";
+  for (const key of [DICTIONARY_CACHE_KEY, ...LEGACY_DICTIONARY_CACHE_KEYS]) {
+    const cached = readJson(key, null);
+    const rawWords = Array.isArray(cached) ? cached : cached?.words;
+    if (!Array.isArray(rawWords) || !rawWords.length) continue;
+    const words = normalizeLegacyCacheWords(rawWords);
+    if (!words) continue;
+    const version = String(cached?.version || metaVersion || `legacy:${key}`).trim();
+    return { version, words, source: key === DICTIONARY_CACHE_KEY ? "localstorage-fallback" : "localstorage-migration", key };
   }
-}
-
-function removeLegacyCurrentCache() {
-  try { localStorage.removeItem(DICTIONARY_CACHE_KEY); } catch {}
+  return null;
 }
 
 function readStarterDictionary() {
@@ -170,11 +203,14 @@ async function persistSnapshot(snapshot) {
   const stored = await writeDictionarySnapshot(snapshot);
   if (stored) {
     writeDictionaryMeta(snapshot.version);
-    removeLegacyCurrentCache();
+    clearLegacyDictionaryCaches();
     return true;
   }
   const fallback = writeJson(DICTIONARY_CACHE_KEY, { version: snapshot.version, words: snapshot.words });
-  if (fallback) writeDictionaryMeta(snapshot.version);
+  if (fallback) {
+    writeDictionaryMeta(snapshot.version);
+    clearLegacyDictionaryCaches({ preserveFallback: true });
+  }
   return fallback;
 }
 
@@ -194,11 +230,10 @@ async function loadBundledSnapshot({ signal } = {}) {
 }
 
 async function loadLocalSnapshot({ signal, includeBundled = true } = {}) {
-  clearLegacyDictionaryCaches();
-
   const indexed = await readDictionarySnapshot();
   if (indexed?.version && Array.isArray(indexed.words) && indexed.words.length) {
     writeDictionaryMeta(indexed.version);
+    clearLegacyDictionaryCaches();
     mark("alantil:dictionary:local-ready");
     return installSnapshot(indexed);
   }
@@ -210,6 +245,8 @@ async function loadLocalSnapshot({ signal, includeBundled = true } = {}) {
     mark("alantil:dictionary:local-ready");
     return legacy;
   }
+
+  clearLegacyDictionaryCaches();
 
   if (!includeBundled) return null;
   try {

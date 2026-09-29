@@ -1,4 +1,4 @@
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.9";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
 import { renderSetPreparation } from "./set-preparation.js?v=16.8.0.3";
 import { renderResults } from "./results.js?v=16.8.0.3";

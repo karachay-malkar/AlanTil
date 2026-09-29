@@ -1,5 +1,5 @@
-import { enqueueProgress } from "./progress-queue.js?v=16.8.0.3";
-import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.3";
+import { enqueueProgress } from "./progress-queue.js?v=16.8.0.9";
+import { readScopedJson, writeScopedJson } from "./storage-scope.js?v=16.8.0.9";
 
 export const USER_REWARDS_KEY = "alantil_user_rewards_v13_1";
 
