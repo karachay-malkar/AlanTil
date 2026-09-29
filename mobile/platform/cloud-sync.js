@@ -7,11 +7,11 @@ import { enqueueProgressEntry, normalizeProgressQueue } from '../../packages/ala
 import { MAX_PROCESSED_WORD_SESSIONS, mergeCloudWordProgressState, normalizeWordProgressState } from '../../packages/alantil-core/word-progress.js';
 import { getNativeAuthSession, nativeAuthFetch } from './auth.js';
 import { getNativeStorageScope, migrateLegacyNativeValueToGuest, nativeScopedStorageKey } from './storage-scope.js';
-import { applyNativeFavoriteSyncRows, applyNativeSettingsFromSync, loadNativeFavoriteSyncRows, loadNativeSettings, loadNativeSettingsSyncTimestamp, saveNativeFavorites, saveNativeSettings, saveNativeSongFavorites } from './storage.js';
+import { applyNativeFavoriteSyncRows, applyNativeSettingsFromSync, loadNativeFavoriteSyncRows, loadNativeSettings, loadNativeSettingsSyncTimestamp, saveNativeSettings } from './storage.js';
 import { loadNativeWordProgressState, saveNativeWordProgressState } from './progress.js';
 
 const QUEUE_BASE='alantil:16.1:cloud-queue';
-const PROGRESS_BASE='alantil:16.1:word-progress',FAVORITES_BASE='alantil:16.1:favorites',SONG_FAVORITES_BASE='alantil:16.1:song-favorites',SETTINGS_BASE='alantil:16.1:settings',SETTINGS_SYNC_BASE='alantil:16.4.1:settings-sync';
+const PROGRESS_BASE='alantil:16.1:word-progress',FAVORITES_BASE='alantil:16.1:favorites',SONG_FAVORITES_BASE='alantil:16.1:song-favorites',SETTINGS_BASE='alantil:16.1:settings',SETTINGS_SYNC_BASE='alantil:16.4.1:settings-sync',FAVORITE_SYNC_BASE='alantil:16.4.1:favorite-sync',SONG_FAVORITE_SYNC_BASE='alantil:16.4.1:song-favorite-sync';
 const flushing=new Map(),synchronizing=new Map(),flushRequested=new Set();
 function queueContext(){return {scope:getNativeStorageScope(),key:nativeScopedStorageKey(QUEUE_BASE),userId:String(getNativeAuthSession()?.user?.id||'')};}
 function sameUser(context){return context.userId===String(getNativeAuthSession()?.user?.id||'');}
@@ -24,15 +24,49 @@ function requestFlush(){const context=queueContext();if(flushing.has(context.key
 async function json(response,fallback=null){const text=await response.text();if(!text)return fallback;try{return JSON.parse(text);}catch{return fallback;}}
 async function readScoped(base,scope,fallback){try{const raw=await AsyncStorage.getItem(scopedStorageKey(base,scope));return raw?JSON.parse(raw):fallback;}catch{return fallback;}}
 
-export async function claimNativeGuestStateToAccount(){
+export async function claimNativeGuestStateToAccount({queueAfterClaim=true}={}){
   const context=queueContext(),scope=context.scope,session=getNativeAuthSession(),userId=String(session?.user?.id||'');if(!userId)return false;
-  await Promise.all([PROGRESS_BASE,FAVORITES_BASE,SONG_FAVORITES_BASE,SETTINGS_BASE].map((base)=>migrateLegacyNativeValueToGuest(base)));
-  const marker=nativeScopedStorageKey(`alantil:16.4.1:guest-claim:${userId}`,scope);if(await AsyncStorage.getItem(marker))return false;
-  const guestProgress=normalizeWordProgressState(await readScoped(PROGRESS_BASE,GUEST_STORAGE_SCOPE,{})),accountProgress=await loadNativeWordProgressState(scope);mergeCloudWordProgressState(accountProgress,Object.values(guestProgress.rows||{}));accountProgress.processed_session_ids=Array.from(new Set([...(accountProgress.processed_session_ids||[]),...(guestProgress.processed_session_ids||[])])).slice(-MAX_PROCESSED_WORD_SESSIONS);await saveNativeWordProgressState(accountProgress,scope);
-  const guestFav=new Set((await readScoped(FAVORITES_BASE,GUEST_STORAGE_SCOPE,[])).map(String)),accountFav=new Set((await loadNativeFavoriteSyncRows('word',scope)).filter((row)=>row.is_active).map((row)=>row.id));guestFav.forEach((id)=>accountFav.add(id));await saveNativeFavorites(accountFav,scope);
-  const guestSongFav=new Set((await readScoped(SONG_FAVORITES_BASE,GUEST_STORAGE_SCOPE,[])).map(String)),accountSongFav=new Set((await loadNativeFavoriteSyncRows('song',scope)).filter((row)=>row.is_active).map((row)=>row.id));guestSongFav.forEach((id)=>accountSongFav.add(id));await saveNativeSongFavorites(accountSongFav,scope);
-  const accountSettingsKey=nativeScopedStorageKey(SETTINGS_BASE,scope),guestSettings=await readScoped(SETTINGS_BASE,GUEST_STORAGE_SCOPE,null),guestSettingsMeta=await readScoped(SETTINGS_SYNC_BASE,GUEST_STORAGE_SCOPE,null);if(guestSettings&&await AsyncStorage.getItem(accountSettingsKey)===null)await saveNativeSettings(guestSettings,{scope,sync:false,updatedAt:guestSettingsMeta?.updated_at||new Date().toISOString()});
-  await AsyncStorage.setItem(marker,new Date().toISOString());await queueNativeWordProgressSnapshot(accountProgress,context);await queueNativePreferences(context);return sameUser(context);
+  await Promise.all([PROGRESS_BASE,FAVORITES_BASE,SONG_FAVORITES_BASE,SETTINGS_BASE,SETTINGS_SYNC_BASE,FAVORITE_SYNC_BASE,SONG_FAVORITE_SYNC_BASE].map((base)=>migrateLegacyNativeValueToGuest(base)));
+  const marker=nativeScopedStorageKey(`alantil:16.4.1:guest-claim:${userId}`,scope);
+  const guestProgress=normalizeWordProgressState(await readScoped(PROGRESS_BASE,GUEST_STORAGE_SCOPE,{}));
+  const guestFavoriteValues=await readScoped(FAVORITES_BASE,GUEST_STORAGE_SCOPE,[]);
+  const guestSongFavoriteValues=await readScoped(SONG_FAVORITES_BASE,GUEST_STORAGE_SCOPE,[]);
+  const guestSettings=await readScoped(SETTINGS_BASE,GUEST_STORAGE_SCOPE,null);
+  const guestSettingsMeta=await readScoped(SETTINGS_SYNC_BASE,GUEST_STORAGE_SCOPE,null);
+  const hasGuestState=Boolean(
+    Object.keys(guestProgress.rows||{}).length
+    || (guestProgress.processed_session_ids||[]).length
+    || (Array.isArray(guestFavoriteValues)&&guestFavoriteValues.length)
+    || (Array.isArray(guestSongFavoriteValues)&&guestSongFavoriteValues.length)
+    || guestSettings
+  );
+  if(!hasGuestState)return false;
+
+  const accountProgress=await loadNativeWordProgressState(scope);mergeCloudWordProgressState(accountProgress,Object.values(guestProgress.rows||{}));accountProgress.processed_session_ids=Array.from(new Set([...(accountProgress.processed_session_ids||[]),...(guestProgress.processed_session_ids||[])])).slice(-MAX_PROCESSED_WORD_SESSIONS);await saveNativeWordProgressState(accountProgress,scope);
+
+  const now=new Date().toISOString();
+  const guestFav=new Set((Array.isArray(guestFavoriteValues)?guestFavoriteValues:[]).map(String)),accountWordRows=await loadNativeFavoriteSyncRows('word',scope),wordMap=new Map(accountWordRows.map((row)=>[row.id,row]));
+  guestFav.forEach((id)=>{if(!wordMap.get(id)?.is_active)wordMap.set(id,{id,is_active:true,updated_at:now});});
+  await applyNativeFavoriteSyncRows('word',Array.from(wordMap.values()),scope);
+
+  const guestSongFav=new Set((Array.isArray(guestSongFavoriteValues)?guestSongFavoriteValues:[]).map(String)),accountSongRows=await loadNativeFavoriteSyncRows('song',scope),songMap=new Map(accountSongRows.map((row)=>[row.id,row]));
+  guestSongFav.forEach((id)=>{if(!songMap.get(id)?.is_active)songMap.set(id,{id,is_active:true,updated_at:now});});
+  await applyNativeFavoriteSyncRows('song',Array.from(songMap.values()),scope);
+
+  const accountSettingsKey=nativeScopedStorageKey(SETTINGS_BASE,scope);if(guestSettings&&await AsyncStorage.getItem(accountSettingsKey)===null)await saveNativeSettings(guestSettings,{scope,sync:false,updatedAt:guestSettingsMeta?.updated_at||now});
+  await AsyncStorage.setItem(marker,JSON.stringify({status:'pending',created_at:now}));
+  if(queueAfterClaim){await queueNativeWordProgressSnapshot(accountProgress,context);await queueNativePreferences(context);}
+  return sameUser(context);
+}
+
+async function finalizeNativeGuestClaim(context){
+  if(!sameUser(context))return false;
+  const marker=nativeScopedStorageKey(`alantil:16.4.1:guest-claim:${context.userId}`,context.scope);
+  if(!await AsyncStorage.getItem(marker))return false;
+  const guestBases=[PROGRESS_BASE,FAVORITES_BASE,SONG_FAVORITES_BASE,SETTINGS_BASE,SETTINGS_SYNC_BASE,FAVORITE_SYNC_BASE,SONG_FAVORITE_SYNC_BASE];
+  await Promise.all(guestBases.map((base)=>AsyncStorage.removeItem(scopedStorageKey(base,GUEST_STORAGE_SCOPE))));
+  await AsyncStorage.setItem(marker,JSON.stringify({status:'completed',completed_at:new Date().toISOString()}));
+  return true;
 }
 
 export async function queueNativeWordProgressSnapshot(state,context=queueContext()){const normalized=normalizeWordProgressState(state),words=Object.values(normalized.rows||{});if(!words.length)return false;const now=new Date().toISOString(),payload={snapshot_id:`mobile:${now}`,words};await enqueue(context,'word_progress_snapshot',payload,{id:'word_progress_snapshot:current',replace:true,createdAt:now});if(sameUser(context))requestFlush();return true;}
@@ -57,10 +91,18 @@ export async function flushNativeCloudQueue(){
  })().finally(()=>{flushing.delete(context.key);if(flushRequested.delete(context.key)&&sameUser(context))requestFlush();});flushing.set(context.key,run);return run;
 }
 function cloudFavoriteRows(rows,idField){return (Array.isArray(rows)?rows:[]).map((row)=>({id:String(row?.[idField]||''),is_active:row?.is_active!==false,updated_at:row?.updated_at||null})).filter((row)=>row.id);}
-export async function pullNativeCloudState(){const context=queueContext(),scope=context.scope,session=getNativeAuthSession();if(!session?.user?.id)return false;const send=path=>nativeAuthFetch(path,{},context.userId);try{const [progressResponse,wordFavResponse,songFavResponse,settingsResponse]=await Promise.all([send('/rest/v1/user_word_progress?select=word_id,sessions_total,learn_sessions_total,learn_unfinished_total,test_answers_total,match_sessions_total,match_success_total,match_errors_total,study_shown_count,known_count,unknown_count,test_correct_count,test_wrong_count,mastery_percent,mastery_status,mastered_at,last_mode,last_result,last_seen_at,last_studied_at,last_tested_at'),send('/rest/v1/user_word_favorites?select=word_id,is_active,updated_at'),send('/rest/v1/user_song_favorites?select=song_id,is_active,updated_at'),send('/rest/v1/user_settings?select=*&limit=1')]);if(!sameUser(context))return false;const local=await loadNativeWordProgressState(scope);if(progressResponse.ok){mergeCloudWordProgressState(local,await json(progressResponse,[]));await saveNativeWordProgressState(local,scope);}if(wordFavResponse.ok){const resolved=resolveFavoriteSyncRows(await loadNativeFavoriteSyncRows('word',scope),cloudFavoriteRows(await json(wordFavResponse,[]),'word_id'));await applyNativeFavoriteSyncRows('word',resolved,scope);}if(songFavResponse.ok){const resolved=resolveFavoriteSyncRows(await loadNativeFavoriteSyncRows('song',scope),cloudFavoriteRows(await json(songFavResponse,[]),'song_id'));await applyNativeFavoriteSyncRows('song',resolved,scope);}if(settingsResponse.ok){const rows=await json(settingsResponse,[]),cloud=rows?.[0];if(cloud){const localSettings=await loadNativeSettings(scope),localUpdatedAt=await loadNativeSettingsSyncTimestamp(scope),resolved=resolveTimestampedUserSettings({localSettings,localUpdatedAt,cloudSettings:cloud,cloudUpdatedAt:cloud.updated_at});await applyNativeSettingsFromSync(resolved.settings,resolved.updated_at||localUpdatedAt||new Date().toISOString(),scope);}}await queueNativeWordProgressSnapshot(local,context);await queueNativePreferences(context);return sameUser(context)&&[progressResponse,wordFavResponse,songFavResponse,settingsResponse].every(response=>response.ok);}catch{return false;}}
+export async function pullNativeCloudState({queueAfterPull=true}={}){const context=queueContext(),scope=context.scope,session=getNativeAuthSession();if(!session?.user?.id)return false;const send=path=>nativeAuthFetch(path,{},context.userId);try{const [progressResponse,wordFavResponse,songFavResponse,settingsResponse]=await Promise.all([send('/rest/v1/user_word_progress?select=word_id,sessions_total,learn_sessions_total,learn_unfinished_total,test_answers_total,match_sessions_total,match_success_total,match_errors_total,study_shown_count,known_count,unknown_count,test_correct_count,test_wrong_count,mastery_percent,mastery_status,mastered_at,last_mode,last_result,last_seen_at,last_studied_at,last_tested_at'),send('/rest/v1/user_word_favorites?select=word_id,is_active,updated_at'),send('/rest/v1/user_song_favorites?select=song_id,is_active,updated_at'),send('/rest/v1/user_settings?select=*&limit=1')]);if(!sameUser(context))return false;const local=await loadNativeWordProgressState(scope);if(progressResponse.ok){mergeCloudWordProgressState(local,await json(progressResponse,[]));await saveNativeWordProgressState(local,scope);}if(wordFavResponse.ok){const resolved=resolveFavoriteSyncRows(await loadNativeFavoriteSyncRows('word',scope),cloudFavoriteRows(await json(wordFavResponse,[]),'word_id'));await applyNativeFavoriteSyncRows('word',resolved,scope);}if(songFavResponse.ok){const resolved=resolveFavoriteSyncRows(await loadNativeFavoriteSyncRows('song',scope),cloudFavoriteRows(await json(songFavResponse,[]),'song_id'));await applyNativeFavoriteSyncRows('song',resolved,scope);}if(settingsResponse.ok){const rows=await json(settingsResponse,[]),cloud=rows?.[0];if(cloud){const localSettings=await loadNativeSettings(scope),localUpdatedAt=await loadNativeSettingsSyncTimestamp(scope),resolved=resolveTimestampedUserSettings({localSettings,localUpdatedAt,cloudSettings:cloud,cloudUpdatedAt:cloud.updated_at});await applyNativeSettingsFromSync(resolved.settings,resolved.updated_at||localUpdatedAt||new Date().toISOString(),scope);}}if(queueAfterPull){await queueNativeWordProgressSnapshot(local,context);await queueNativePreferences(context);}return sameUser(context)&&[progressResponse,wordFavResponse,songFavResponse,settingsResponse].every(response=>response.ok);}catch{return false;}}
 export async function synchronizeNativeAccount(){
  const context=queueContext();if(!context.userId)return false;
  if(synchronizing.has(context.key))return synchronizing.get(context.key);
- const run=(async()=>{await claimNativeGuestStateToAccount();if(!sameUser(context))return false;const pulled=await pullNativeCloudState();if(!sameUser(context))return false;const sent=await flushNativeCloudQueue();return pulled&&sent;})().finally(()=>{synchronizing.delete(context.key);});
+ const run=(async()=>{
+  const pulled=await pullNativeCloudState({queueAfterPull:false});if(!sameUser(context))return false;
+  await claimNativeGuestStateToAccount({queueAfterClaim:false});if(!sameUser(context))return false;
+  const progress=await loadNativeWordProgressState(context.scope);await queueNativeWordProgressSnapshot(progress,context);await queueNativePreferences(context);
+  if(!sameUser(context))return false;
+  const sent=await flushNativeCloudQueue();
+  if(sent)await finalizeNativeGuestClaim(context);
+  return pulled&&sent;
+ })().finally(()=>{synchronizing.delete(context.key);});
  synchronizing.set(context.key,run);return run;
 }
