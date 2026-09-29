@@ -1,0 +1,41 @@
+name: Temporary QA 16.8.0.9
+
+on:
+  push:
+    branches: [agent/qa-16.8.0.9]
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run storage sync dictionary auth regressions
+        run: |
+          node --test \
+            tests/storage-sync-dictionary-auth-16-8.test.mjs \
+            tests/settings-claim.test.mjs \
+            tests/progress-sync-policy.test.mjs \
+            tests/storage-profile-analytics-16-8.test.mjs \
+            tests/auth-pkce-session.test.mjs \
+            mobile/tests/cloud-scope-transaction.test.mjs
+      - name: Production auth route smoke
+        run: |
+          set -euo pipefail
+          curl -fsS https://alantil.ru/ -o /tmp/alantil-home.html
+          STATUS=$(curl -sS -o /tmp/alantil-callback.html -w "%{http_code}" "https://alantil.ru/auth/callback?code=smoke-code&auth_flow=signup")
+          test "$STATUS" = "404" -o "$STATUS" = "200"
+          grep -q "__alantil_route" /tmp/alantil-callback.html
+          curl -fsS \
+            -H "apikey: sb_publishable_11TY-fBEAogA9JKnAku3vg_hjRxTa_a" \
+            https://pybrzgedqjmosbmilcea.supabase.co/auth/v1/settings \
+            -o /tmp/auth-settings.json
+          node -e "const fs=require('fs'); const j=JSON.parse(fs.readFileSync('/tmp/auth-settings.json','utf8')); if(!j||typeof j!=='object') process.exit(1); console.log(JSON.stringify({disable_signup:j.disable_signup,mailer_autoconfirm:j.mailer_autoconfirm,external:j.external}))"
+      - name: Run final project QA
+        run: node scripts/qa/final.mjs
