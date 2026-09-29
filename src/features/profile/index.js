@@ -1,6 +1,6 @@
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.3";
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.9";
 import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=16.8.0.3";
 import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=16.8.0.3";
 import { getProfile } from "../../shared/profile/profile-service.js?v=16.8.0.3";

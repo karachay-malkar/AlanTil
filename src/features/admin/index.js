@@ -1,5 +1,5 @@
 import { msg, getInterfaceLanguage, getInterfaceLocale } from "../../shared/i18n/index.js?v=16.8.0.3";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.3";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.9";
 import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.3";
 import { renderExpandableSearch } from "../../shared/ui/search-control.js?v=16.8.0.3";

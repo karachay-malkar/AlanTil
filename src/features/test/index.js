@@ -1,5 +1,5 @@
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
-import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
+import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.9";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
 import { resumeTestSession, suspendTestForResume } from "./engine.js?v=16.8.0.3";
 import { clearTestSession, testState } from "./state.js?v=16.8.0.3";
