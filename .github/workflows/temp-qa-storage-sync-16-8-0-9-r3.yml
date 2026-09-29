@@ -1,0 +1,19 @@
+name: Temporary QA storage sync 16.8.0.9 r3
+on:
+  push:
+    branches: [agent/qa-storage-sync-16.8.0.9-r3]
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run targeted regressions
+        run: node --test tests/sync-storage-dictionary-auth-16-8.test.mjs tests/progress-sync-policy.test.mjs mobile/tests/cloud-queue-race.test.mjs mobile/tests/cloud-scope-transaction.test.mjs tests/storage-profile-analytics-16-8.test.mjs tests/auth-pkce-session.test.mjs
+      - name: Run final project QA
+        run: node scripts/qa/final.mjs
