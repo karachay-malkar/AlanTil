@@ -1,0 +1,34 @@
+name: Temporary refresh Mobile lock
+
+on:
+  push:
+    branches: [agent/refresh-mobile-lock-16.8.0.9]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate Mobile lock
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        working-directory: mobile
+      - name: Commit lock when changed
+        run: |
+          if git diff --quiet -- mobile/package-lock.json && git ls-files --error-unmatch mobile/package-lock.json >/dev/null 2>&1; then
+            echo "Lock already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/package-lock.json
+          git commit -m "mobile-lock-refreshed"
+          git push
