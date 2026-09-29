@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dictionaryRatingWeight, masteryRatingWeight, ratingPointsForWord, ratingScoreForWords } from '../packages/alantil-core/rating.js';
 import { createAshykGameStore } from '../packages/ashyk-game/store.js';
 import { ASHYK_FEATURE_FLAGS, ashykAccessForUser } from '../packages/alantil-core/ashyk-access.js';
+import { beginAshykEntry, finishAshykEntry, isAshykEntryPending, resetAshykEntry } from '../packages/ashyk-game/entry-state.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
@@ -67,6 +68,28 @@ test('same-device Ashyk code remains present but is disabled by the shared featu
   assert.equal(store.getState().status,'setup');
   assert.match(read('packages/ashyk-game/store.js'),/function startLocal/);
   store.destroy();
+});
+
+test('Ashyk entry transition is explicit while navigation into the accepted room is in flight',()=>{
+  resetAshykEntry();
+  assert.equal(isAshykEntryPending(),false);
+  beginAshykEntry();
+  assert.equal(isAshykEntryPending(),true);
+  finishAshykEntry();
+  assert.equal(isAshykEntryPending(),false);
+});
+
+test('challenge acceptance suppresses duplicate global resume state on Web and Mobile',()=>{
+  const bootstrap=read('src/app/bootstrap.js'),friends=read('src/features/friends/index.js'),app=read('mobile/AppRoot.js'),mobileFriends=read('mobile/screens/friends.js');
+  assert.match(bootstrap,/if\(isAshykEntryPending\(\)\)\{ashykNoticeKey='';return;\}/);
+  assert.match(bootstrap,/beginAshykEntry\(\)[\s\S]{0,520}acceptInvite/);
+  assert.match(bootstrap,/await router\.navigate\('practice\.ashyk'\)[\s\S]{0,220}finishAshykEntry/);
+  assert.match(friends,/beginAshykEntry\(\)[\s\S]{0,420}acceptInvite/);
+  assert.match(friends,/navigate\('practice\.ashyk'\)[\s\S]{0,220}finishAshykEntry/);
+  assert.match(app,/if\(inGame&&isAshykEntryPending\(\)\)finishAshykEntry\(\);/);
+  assert.match(app,/if\(isAshykEntryPending\(\)\)\{setResumeAshykRoom\(null\);return;\}/);
+  assert.match(app,/beginAshykEntry\(\)[\s\S]{0,420}acceptInvite/);
+  assert.match(mobileFriends,/beginAshykEntry\(\)[\s\S]{0,420}acceptInvite/);
 });
 
 test('friend online adapter contains no room-code flow',()=>{
@@ -142,6 +165,18 @@ test('bundled mobile dictionary contains the complete Ashyk Return-to-roots sour
   const counts=roots.reduce((map,word)=>{const pos=String(word.pos||'').trim().toLowerCase();map[pos]=(map[pos]||0)+1;return map;},{});
   assert.equal(roots.length,780);
   assert.deepEqual(counts,{noun:414,adj:148,verb:199,adv:19});
+});
+
+test('Ashyk help uses concise copy, correct Fok spelling and refreshed specimen presentation',()=>{
+  const copy=read('packages/ashyk-game/i18n.js'),web=read('packages/ashyk-game/web/Game.jsx'),css=read('src/features/ashyk/ashyk-16-6-12.css');
+  assert.match(copy,/faceFok:'Фок'/);
+  assert.doesNotMatch(copy,/faceFok:'Фокъ'/);
+  assert.match(copy,/helpControlsTitle:'Ход за 3 шага'/);
+  assert.match(copy,/helpFacesTitle:'Грани = очки'/);
+  assert.match(copy,/helpQuestionsTitle:'Взял — ответь'/);
+  assert.match(web,/\/assets\/ashyk\/faces\/\$\{face\}\.png\?v=16\.8\.0\.8/);
+  assert.match(css,/ashykFaceRule::before/);
+  assert.match(css,/drop-shadow/);
 });
 
 test('Ashyk result and vocabulary-question UI match the requested compact layout',()=>{
@@ -264,7 +299,7 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16.8.0.7/);
+  assert.match(feature,/runtime\.js\?v=16.8.0.8/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
