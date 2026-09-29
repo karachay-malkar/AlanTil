@@ -1,6 +1,7 @@
-import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=16.8.0.3";
-import { normalizeId } from "../domain/word-normalizer.js?v=16.8.0.3";
-import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=16.8.0.3";
+import { getCurrentAuthState, subscribeToAuth } from "../auth/auth-service.js?v=16.8.0.9";
+import { progressQueueRevisionToken } from "../../../packages/alantil-core/sync-policy.js";
+import { normalizeId } from "../domain/word-normalizer.js?v=16.8.0.9";
+import { getUserSettings, replaceUserSettings } from "../settings/user-settings-store.js?v=16.8.0.9";
 import {
   enqueueProgress,
   mergeProgressQueues,
@@ -8,26 +9,27 @@ import {
   removeProgressEntry,
   updateProgressEntry,
   writeProgressQueue,
-} from "./progress-queue.js?v=16.8.0.3";
-import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js?v=16.8.0.3";
-import { nextUnattemptedProgressEntry, shouldDiscardProgressError } from "./progress-sync-policy.js?v=16.8.0.3";
-import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js?v=16.8.0.3";
-import { replaceUserRewards } from "./reward-store.js?v=16.8.0.3";
-import { replaceRouteSettings } from "./route-settings-store.js?v=16.8.0.3";
-import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js?v=16.8.0.3";
-import { snapshotRecoveredSession } from "./session-builders.js?v=16.8.0.3";
-import { readActiveSessions, removeActiveSession } from "./session-store.js?v=16.8.0.3";
+  PROGRESS_QUEUE_KEY,
+} from "./progress-queue.js?v=16.8.0.9";
+import { executeProgressEntry, fetchCloudProgressState } from "./progress-repository.js?v=16.8.0.9";
+import { nextUnattemptedProgressEntry, shouldDiscardProgressError } from "./progress-sync-policy.js?v=16.8.0.9";
+import { mergeStationProgressRows, replaceStationProgress } from "./station-progress-store.js?v=16.8.0.9";
+import { replaceUserRewards } from "./reward-store.js?v=16.8.0.9";
+import { replaceRouteSettings } from "./route-settings-store.js?v=16.8.0.9";
+import { mergeCloudWordProgress, WORD_PROGRESS_LOCAL_KEY } from "./word-progress-store.js?v=16.8.0.9";
+import { snapshotRecoveredSession } from "./session-builders.js?v=16.8.0.9";
+import { readActiveSessions, removeActiveSession } from "./session-store.js?v=16.8.0.9";
 import {
   getStorageScope,
   getStorageScopeUserId,
   migrateLegacyValueToGuest,
   readScopedJson,
-  removeScopedValue,
+  removeGuestScopedValueAfterClaim,
   setStorageScope,
   STORAGE_SCOPES,
   storageScopeForUser,
   writeScopedJson,
-} from "./storage-scope.js?v=16.8.0.3";
+} from "./storage-scope.js?v=16.8.0.9";
 
 const WORD_FAVORITES_KEY = "fc_favorites_v1";
 const SONG_FAVORITES_KEY = "alantil_song_favorites_v1";
@@ -41,6 +43,7 @@ const SNAPSHOT_STATUS_RANK = Object.freeze({ not_started: 0, learning: 1, master
 let initialized = false;
 let unsubscribeAuth = null;
 let syncPromise = null;
+let syncRequested = false;
 let pullPromise = null;
 let pullScope = "";
 let bound = false;
@@ -184,8 +187,8 @@ function recoverInterruptedSessions(scope = getStorageScope()) {
 
 async function applyFavoriteState(wordIds, songIds) {
   const [{ wordFavorites }, { songFavorites }] = await Promise.all([
-    import("../state/word-favorites.js?v=16.8.0.3"),
-    import("../state/song-favorites.js?v=16.8.0.3"),
+    import("../state/word-favorites.js?v=16.8.0.9"),
+    import("../state/song-favorites.js?v=16.8.0.9"),
   ]);
   wordFavorites.replace(wordIds, { notifyListeners: true });
   songFavorites.replace(songIds, { notifyListeners: true });
@@ -223,23 +226,16 @@ async function applyCloudState(state) {
   replaceUserRewards(state.rewards || []);
   mergeCloudWordProgress(state.wordProgress || []);
   if (state.routeSettings) replaceRouteSettings(state.routeSettings);
-  if (state.userSettings) {
-    replaceUserSettings(state.userSettings);
-  } else {
-    enqueueProgress("user_settings", {
-      ...getUserSettings(),
-      updated_at: new Date().toISOString(),
-    }, { id: "user_settings:current" });
-  }
+  if (state.userSettings) replaceUserSettings(state.userSettings);
 }
 
 async function applyQueueEntryLocally(entry) {
   const payload = entry?.payload || {};
   if (entry.type === "word_favorite") {
-    const { wordFavorites } = await import("../state/word-favorites.js?v=16.8.0.3");
+    const { wordFavorites } = await import("../state/word-favorites.js?v=16.8.0.9");
     wordFavorites.setActive(payload.word_id, payload.is_active, { queue: false });
   } else if (entry.type === "song_favorite") {
-    const { songFavorites } = await import("../state/song-favorites.js?v=16.8.0.3");
+    const { songFavorites } = await import("../state/song-favorites.js?v=16.8.0.9");
     songFavorites.setActive(payload.song_id, payload.is_active, { queue: false });
   } else if (entry.type === "hidden_word") {
     const map = readScopedJson(HIDDEN_KEY, {});
@@ -258,7 +254,7 @@ async function applyQueueEntryLocally(entry) {
   } else if (entry.type === "station_progress") {
     mergeStationProgressRows([payload]);
   } else if (entry.type === "user_reward") {
-    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js?v=16.8.0.3");
+    const { getUserRewards, replaceUserRewards } = await import("./reward-store.js?v=16.8.0.9");
     replaceUserRewards([...getUserRewards(), payload]);
   } else if (entry.type === "route_settings") {
     replaceRouteSettings(payload);
@@ -337,31 +333,48 @@ function guestStateEntries(now = new Date().toISOString(), snapshotId = `guest:$
   });
 }
 
-async function claimGuestData(userId) {
+function captureGuestClaimSnapshot(userId) {
+  const normalizedUserId = String(userId || "");
+  if (!normalizedUserId || getStorageScope() !== STORAGE_SCOPES.GUEST) return null;
   const marker = readClaimMarker();
-  if (marker?.status === "pending" && marker.user_id !== userId) return marker;
-  const userScope = storageScopeForUser(userId);
-  const claimId = marker?.status === "pending" && marker.user_id === userId
+  if (marker?.status === "pending" && marker.user_id !== normalizedUserId) {
+    return { user_id: normalizedUserId, blocked: true, claim_id: "", entries: [] };
+  }
+  const claimId = marker?.status === "pending" && marker.user_id === normalizedUserId
     ? marker.claim_id
-    : `claim:${userId}:${Date.now()}`;
+    : `claim:${normalizedUserId}:${Date.now()}`;
   migrateLegacyWordProgressQueue(STORAGE_SCOPES.GUEST);
   const guestQueue = readProgressQueue(STORAGE_SCOPES.GUEST);
   const stateEntries = guestStateEntries(new Date().toISOString(), claimId);
-  if (!guestQueue.length && !stateEntries.length) return marker;
-  const prepared = [...guestQueue, ...stateEntries].map((entry) => ({
+  const entries = [...guestQueue, ...stateEntries].map((entry) => ({
     ...entry,
     claim_id: claimId,
     created_at: entry.created_at || new Date().toISOString(),
     attempts: entry.attempts || 0,
   }));
-  mergeProgressQueues(prepared, userScope, { claimId });
+  return {
+    user_id: normalizedUserId,
+    blocked: false,
+    claim_id: claimId,
+    entries,
+    has_settings: stateEntries.some((entry) => entry.type === "user_settings"),
+  };
+}
+
+async function claimGuestData(userId, snapshot = null) {
+  const marker = readClaimMarker();
+  if (marker?.status === "pending" && marker.user_id !== userId) return marker;
+  if (!snapshot || snapshot.blocked || snapshot.user_id !== String(userId || "")) return marker;
+  if (!snapshot.entries.length) return marker;
+  const userScope = storageScopeForUser(userId);
+  mergeProgressQueues(snapshot.entries, userScope, { claimId: snapshot.claim_id });
   safeWriteGlobal(CLAIM_MARKER_KEY, {
     user_id: userId,
-    claim_id: claimId,
+    claim_id: snapshot.claim_id,
     status: "pending",
-    entry_ids: prepared.map((entry) => entry.id),
+    entry_ids: snapshot.entries.map((entry) => entry.id),
   });
-  for (const entry of prepared) await applyQueueEntryLocally(entry);
+  for (const entry of snapshot.entries) await applyQueueEntryLocally(entry);
   return readClaimMarker();
 }
 
@@ -370,8 +383,8 @@ function finalizeGuestClaimIfReady(scope) {
   if (!marker || marker.status !== "pending" || storageScopeForUser(marker.user_id) !== scope) return;
   const queueIds = new Set(readProgressQueue(scope).map((entry) => entry.id));
   if ((marker.entry_ids || []).some((id) => queueIds.has(id))) return;
-  [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY, WORD_PROGRESS_LOCAL_KEY].forEach((key) => removeScopedValue(key, STORAGE_SCOPES.GUEST));
-  writeProgressQueue([], STORAGE_SCOPES.GUEST);
+  [WORD_FAVORITES_KEY, SONG_FAVORITES_KEY, HIDDEN_KEY, FINISHED_KEY, USER_SETTINGS_KEY, WORD_PROGRESS_LOCAL_KEY, PROGRESS_QUEUE_KEY]
+    .forEach((key) => removeGuestScopedValueAfterClaim(key));
   safeWriteGlobal(CLAIM_MARKER_KEY, { ...marker, status: "completed", completed_at: new Date().toISOString() });
 }
 
@@ -381,31 +394,34 @@ export async function flushProgressQueue() {
   if (!userId || getCurrentAuthState().user?.id !== userId) return false;
   if (pullPromise) await pullPromise;
   if (getStorageScope() !== scope || getCurrentAuthState().user?.id !== userId) return false;
-  if (syncPromise) return syncPromise;
+  if (syncPromise) {
+    syncRequested = true;
+    return syncPromise;
+  }
 
   syncPromise = (async () => {
-    const attemptedIds = new Set();
+    const attemptedRevisions = new Set();
     let completedWithoutErrors = true;
     let queue = readProgressQueue(scope);
     while (getStorageScope() === scope && getCurrentAuthState().user?.id === userId) {
-      const entry = nextUnattemptedProgressEntry(queue, attemptedIds);
+      const entry = nextUnattemptedProgressEntry(queue, attemptedRevisions);
       if (!entry) break;
-      attemptedIds.add(entry.id);
+      attemptedRevisions.add(progressQueueRevisionToken(entry));
       try {
         await executeProgressEntry(entry);
-        removeProgressEntry(entry.id, scope);
+        removeProgressEntry(entry.id, scope, entry.revision);
       } catch (error) {
         if (shouldDiscardProgressError(entry, error)) {
           // A favorite from a removed legacy dictionary cannot satisfy the
           // canonical content_words foreign key and must not block new data.
-          removeProgressEntry(entry.id, scope);
+          removeProgressEntry(entry.id, scope, entry.revision);
           console.warn("Obsolete word favorite was discarded", entry.payload?.word_id);
         } else {
           completedWithoutErrors = false;
           updateProgressEntry(entry.id, {
             attempts: Number(entry.attempts || 0) + 1,
             last_error_at: new Date().toISOString(),
-          }, scope);
+          }, scope, entry.revision);
           console.warn("Progress entry synchronization failed", entry.type, error);
         }
       }
@@ -415,12 +431,16 @@ export async function flushProgressQueue() {
     return completedWithoutErrors;
   })().finally(() => {
     syncPromise = null;
+    if (syncRequested) {
+      syncRequested = false;
+      queueMicrotask(() => { void flushProgressQueue(); });
+    }
   });
 
   return syncPromise;
 }
 
-export async function pullCloudProgress() {
+export async function pullCloudProgress({ onCloudState } = {}) {
   const scope = getStorageScope();
   const userId = getStorageScopeUserId(scope);
   if (!userId || getCurrentAuthState().user?.id !== userId) return false;
@@ -438,6 +458,7 @@ export async function pullCloudProgress() {
     try {
       const state = await fetchCloudProgressState();
       if (getStorageScope() !== scope) return false;
+      onCloudState?.(state);
       await applyCloudState(state);
       await reapplyPendingLocalChanges(scope);
       return true;
@@ -464,12 +485,21 @@ function announceScopeReady(userId, phase) {
   }));
 }
 
-async function synchronizeActiveScope(userId) {
+async function synchronizeActiveScope(userId, guestClaim = null) {
   if (!userId || !activeScopeMatches(userId)) return false;
-  await pullCloudProgress();
+  let cloudHasSettings = false;
+  await pullCloudProgress({
+    onCloudState: (state) => { cloudHasSettings = Boolean(state?.userSettings); },
+  });
   if (!activeScopeMatches(userId)) return false;
-  await claimGuestData(userId);
+  await claimGuestData(userId, guestClaim);
   if (!activeScopeMatches(userId)) return false;
+  if (!cloudHasSettings && !readProgressQueue().some((entry) => entry.type === "user_settings")) {
+    enqueueProgress("user_settings", {
+      ...getUserSettings(),
+      updated_at: new Date().toISOString(),
+    }, { id: "user_settings:current" });
+  }
   await flushProgressQueue();
   if (!activeScopeMatches(userId)) return false;
   announceScopeReady(userId, "cloud");
@@ -477,6 +507,9 @@ async function synchronizeActiveScope(userId) {
 }
 
 async function activateScopeForUser(userId, { deferCloud = false } = {}) {
+  const guestClaim = userId && getStorageScope() === STORAGE_SCOPES.GUEST
+    ? captureGuestClaimSnapshot(userId)
+    : null;
   document.documentElement.dataset.scopeReady = "false";
   try {
     setStorageScope(userId);
@@ -487,7 +520,7 @@ async function activateScopeForUser(userId, { deferCloud = false } = {}) {
     announceScopeReady(userId, "local");
   }
   if (!userId) return true;
-  const synchronization = synchronizeActiveScope(userId).catch((error) => {
+  const synchronization = synchronizeActiveScope(userId, guestClaim).catch((error) => {
     console.warn("Account scope synchronization failed", error);
     return false;
   });

@@ -71,6 +71,17 @@ export function writeScopedJson(baseKey,value,scope=activeScope){if(isInactiveGu
 export function removeScopedValue(baseKey,scope=activeScope){if(isInactiveGuestScope(scope))return false;try{const{target}=migrateScopedValue(baseKey,scope);localStorage.removeItem(target);return true;}catch{return false;}}
 export function hasScopedValue(baseKey,scope=activeScope){if(isInactiveGuestScope(scope))return false;try{const{target}=migrateScopedValue(baseKey,scope);return localStorage.getItem(target)!==null;}catch{return false;}}
 export function migrateLegacyValueToGuest(baseKey){return migrateScopedValue(baseKey,GUEST_STORAGE_SCOPE).migrated;}
+export function removeGuestScopedValueAfterClaim(baseKey){
+  try{
+    const canonical=canonicalStorageBaseKey(baseKey);
+    const keys=new Set([
+      rawScopedStorageKey(canonical,GUEST_STORAGE_SCOPE),
+      ...legacyStorageBaseKeys(canonical).map((legacy)=>rawScopedStorageKey(legacy,GUEST_STORAGE_SCOPE)),
+    ]);
+    keys.forEach((key)=>localStorage.removeItem(key));
+    return true;
+  }catch{return false;}
+}
 export function migrateAllStorageKeys(){
   let migrated=0;
   let keys=[];
