@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   refresh:
-    if: github.event.head_commit.message != 'temp: ashyk lock refreshed'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,10 +21,14 @@ jobs:
       - name: Refresh lock only
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
         working-directory: tools/ashyk-web
-      - name: Commit refreshed lock
+      - name: Commit refreshed lock when changed
         run: |
+          if git diff --quiet -- tools/ashyk-web/package-lock.json; then
+            echo "Lock already current"
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tools/ashyk-web/package-lock.json
-          git commit -m "temp: ashyk lock refreshed"
+          git commit -m "ashyk-lock-refreshed"
           git push
