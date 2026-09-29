@@ -1,7 +1,6 @@
 export const MAX_PROCESSED_WORD_SESSIONS = 600;
 
 export const WORD_PROGRESS_NUMERIC_FIELDS = Object.freeze([
-  'sessions_total',
   'learn_sessions_total',
   'learn_unfinished_total',
   'test_answers_total',
@@ -25,7 +24,6 @@ export function normalizeProgressId(value) {
 export function emptyWordProgressRow(wordId) {
   return {
     word_id: normalizeProgressId(wordId),
-    sessions_total: 0,
     learn_sessions_total: 0,
     learn_unfinished_total: 0,
     test_answers_total: 0,
@@ -57,6 +55,14 @@ export function normalizeWordProgressRow(row = {}, wordId = row.word_id) {
   WORD_PROGRESS_NUMERIC_FIELDS.forEach((key) => {
     normalized[key] = Math.max(0, Number(normalized[key] || 0));
   });
+  [
+    'sessions_total',
+    'learn_shows_total',
+    'learn_left_swipes_total',
+    'learn_known_total',
+    'test_correct_total',
+    'test_wrong_total',
+  ].forEach((key) => { delete normalized[key]; });
   normalized.mastery_percent=Math.max(0,Math.min(100,normalized.mastery_percent));
   if (!['not_started', 'learning', 'mastered', 'review'].includes(normalized.mastery_status)) {
     normalized.mastery_status = normalized.mastered_at ? 'mastered' : 'not_started';
@@ -110,7 +116,6 @@ export function applyLearnWordResults(state, sessionId, words = [], completedAt 
   (Array.isArray(words) ? words : []).forEach((entry) => {
     const row = withMutableRow(state, entry?.word_id);
     if (!row) return;
-    row.sessions_total += 1;
     row.learn_sessions_total += 1;
     row.study_shown_count += Math.max(0, Number(entry.show_count || 0));
     row.unknown_count += Math.max(0, Number(entry.left_swipe_count || 0));
@@ -139,7 +144,6 @@ export function applyTestWordResults(state, {
   (Array.isArray(answers) ? answers : []).forEach((entry) => {
     const row = withMutableRow(state, entry?.word_id || entry?.wordId);
     if (!row) return;
-    row.sessions_total += 1;
     row.test_answers_total += 1;
     const correct = entry.result === 'correct' || entry.isCorrect === true;
     if (correct) row.test_correct_count += 1;
@@ -167,7 +171,6 @@ export function applyMatchWordResults(state, sessionId, words = [], completedAt 
     const row = withMutableRow(state, entry?.word_id);
     if (!row) return;
     const matched = entry.matched === true;
-    row.sessions_total += 1;
     row.match_sessions_total += 1;
     if (matched) row.match_success_total += 1;
     row.match_errors_total += Math.max(0, Number(entry.error_count || 0));

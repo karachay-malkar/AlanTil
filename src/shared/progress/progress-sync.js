@@ -85,7 +85,6 @@ function snapshotWordRow(row = {}) {
   if (!wordId) return null;
   return {
     word_id: wordId,
-    sessions_total: Math.max(0, Number(row.sessions_total || 0)),
     learn_sessions_total: Math.max(0, Number(row.learn_sessions_total || 0)),
     learn_unfinished_total: Math.max(0, Number(row.learn_unfinished_total || 0)),
     test_answers_total: Math.max(0, Number(row.test_answers_total || 0)),
@@ -111,7 +110,7 @@ function snapshotWordRow(row = {}) {
 
 function mergeSnapshotRows(rows = []) {
   const numericFields = [
-    "sessions_total", "learn_sessions_total", "learn_unfinished_total", "test_answers_total",
+    "learn_sessions_total", "learn_unfinished_total", "test_answers_total",
     "match_sessions_total", "match_success_total", "match_errors_total", "study_shown_count",
     "known_count", "unknown_count", "test_correct_count", "test_wrong_count",
   ];

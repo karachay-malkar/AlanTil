@@ -115,7 +115,7 @@ export async function fetchCloudProgressState() {
     optionalResult(client.from("user_station_progress").select("dictionary_id,catalog_id,group_id,set_id,story_type,status,current_phase,study_sessions_total,test_attempts_total,best_accuracy,first_test_completed_at,review_1_due_at,review_1_completed_at,review_2_due_at,review_2_completed_at,mastered_at,updated_at"), []),
     optionalResult(client.from("user_rewards").select("reward_id,set_id,group_id,catalog_id,acquired_at"), []),
     optionalResult(client.from("user_route_settings").select("selected_dictionary_id,active_story,selected_background_route,updated_at").maybeSingle(), null),
-    optionalResult(client.from("user_word_progress").select("word_id,sessions_total,learn_sessions_total,learn_unfinished_total,test_answers_total,match_sessions_total,match_success_total,match_errors_total,study_shown_count,known_count,unknown_count,test_correct_count,test_wrong_count,mastery_status,mastered_at,last_mode,last_result,last_seen_at,last_studied_at,last_tested_at,created_at,updated_at"), []),
+    optionalResult(client.from("user_word_progress").select("word_id,learn_sessions_total,learn_unfinished_total,test_answers_total,match_sessions_total,match_success_total,match_errors_total,study_shown_count,known_count,unknown_count,test_correct_count,test_wrong_count,mastery_status,mastered_at,last_mode,last_result,last_seen_at,last_studied_at,last_tested_at,created_at,updated_at"), []),
   ]);
 
   return {

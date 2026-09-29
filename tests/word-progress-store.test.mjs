@@ -39,7 +39,9 @@ test("local progress is idempotent per session and never decreases on cloud merg
   }], "2026-07-16T12:00:00.000Z");
 
   let row = progress.getWordProgress("0012");
-  assert.equal(row.sessions_total, 3);
+  assert.equal(row.learn_sessions_total, 1);
+  assert.equal(row.test_answers_total, 1);
+  assert.equal(row.match_sessions_total, 1);
   assert.equal(row.study_shown_count, 3);
   assert.equal(row.known_count, 1);
   assert.equal(row.unknown_count, 1);
@@ -49,27 +51,35 @@ test("local progress is idempotent per session and never decreases on cloud merg
 
   progress.mergeCloudWordProgress([{
     word_id: "0012",
-    sessions_total: 1,
+    learn_sessions_total: 0,
+    test_answers_total: 0,
+    match_sessions_total: 0,
     study_shown_count: 1,
     known_count: 0,
     test_wrong_count: 0,
     mastery_status: "not_started",
   }]);
   row = progress.getWordProgress("0012");
-  assert.equal(row.sessions_total, 3);
+  assert.equal(row.learn_sessions_total, 1);
+  assert.equal(row.test_answers_total, 1);
+  assert.equal(row.match_sessions_total, 1);
   assert.equal(row.study_shown_count, 3);
   assert.equal(row.known_count, 1);
 
   progress.mergeCloudWordProgress([{
     word_id: "0012",
-    sessions_total: 8,
+    learn_sessions_total: 4,
+    test_answers_total: 2,
+    match_sessions_total: 2,
     study_shown_count: 11,
     known_count: 5,
     mastery_status: "mastered",
     mastered_at: "2026-07-16T13:00:00.000Z",
   }]);
   row = progress.getWordProgress("0012");
-  assert.equal(row.sessions_total, 8);
+  assert.equal(row.learn_sessions_total, 4);
+  assert.equal(row.test_answers_total, 2);
+  assert.equal(row.match_sessions_total, 2);
   assert.equal(row.study_shown_count, 11);
   assert.equal(row.known_count, 5);
   assert.equal(row.mastery_status, "mastered");
