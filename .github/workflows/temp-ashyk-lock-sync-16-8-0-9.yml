@@ -1,0 +1,30 @@
+name: Temporary Ashyk lock sync 16.8.0.9
+on:
+  push:
+    branches: [agent/ashyk-lock-sync-16.8.0.9]
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Synchronize Ashyk lock only
+        working-directory: tools/ashyk-web
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          git diff --exit-code -- package.json
+      - name: Commit synchronized lock
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/ashyk-web/package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "temp: ashyk-lock-synced"
+          git push
