@@ -12,6 +12,9 @@ const TESTS = Object.freeze({
   ],
   core: [
     'tests/alantil-core-16.test.mjs',
+    'tests/web-progress-queue-race.test.mjs',
+    'tests/web-progress-attempt-race.test.mjs',
+    'tests/dictionary-cache-migration-16-8.test.mjs',
     'mobile/tests/cloud-queue-race.test.mjs',
     'mobile/tests/cloud-scope-transaction.test.mjs',
   ],
@@ -27,6 +30,7 @@ const TESTS = Object.freeze({
   auth: [
     'tests/web-auth-cache-16-7-0.test.mjs',
     'tests/auth-pkce-session.test.mjs',
+    'tests/web-guest-claim-16-8.test.mjs',
   ],
   social: [
     'tests/friends-web-parity-16-7-0.test.mjs',

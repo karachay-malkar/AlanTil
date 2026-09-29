@@ -62,14 +62,14 @@ export function enqueueProgress(type, payload, {
   return result.entry;
 }
 
-export function removeProgressEntry(id, scope = getStorageScope()) {
-  const result = removeProgressQueueEntry(readProgressQueue(scope), id);
+export function removeProgressEntry(id, scope = getStorageScope(), options = {}) {
+  const result = removeProgressQueueEntry(readProgressQueue(scope), id, options);
   if (!result.changed) return false;
   return writeProgressQueue(result.queue, scope);
 }
 
-export function updateProgressEntry(id, updates, scope = getStorageScope()) {
-  const result = updateProgressQueueEntry(readProgressQueue(scope), id, updates);
+export function updateProgressEntry(id, updates, scope = getStorageScope(), options = {}) {
+  const result = updateProgressQueueEntry(readProgressQueue(scope), id, updates, options);
   if (!result.changed) return false;
   return writeProgressQueue(result.queue, scope);
 }

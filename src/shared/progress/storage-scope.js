@@ -69,6 +69,7 @@ export function scopedStorageKey(baseKey,scope=activeScope){return buildScopedSt
 export function readScopedJson(baseKey,fallback,scope=activeScope){if(isInactiveGuestScope(scope))return fallback;try{const{target}=migrateScopedValue(baseKey,scope);return safeParse(localStorage.getItem(target),fallback);}catch{return fallback;}}
 export function writeScopedJson(baseKey,value,scope=activeScope){if(isInactiveGuestScope(scope))return false;try{const{target}=migrateScopedValue(baseKey,scope);localStorage.setItem(target,JSON.stringify(value));return true;}catch{return false;}}
 export function removeScopedValue(baseKey,scope=activeScope){if(isInactiveGuestScope(scope))return false;try{const{target}=migrateScopedValue(baseKey,scope);localStorage.removeItem(target);return true;}catch{return false;}}
+export function removeScopedValueForMigration(baseKey,scope=activeScope){try{const{target}=migrateScopedValue(baseKey,scope);localStorage.removeItem(target);return localStorage.getItem(target)===null;}catch{return false;}}
 export function hasScopedValue(baseKey,scope=activeScope){if(isInactiveGuestScope(scope))return false;try{const{target}=migrateScopedValue(baseKey,scope);return localStorage.getItem(target)!==null;}catch{return false;}}
 export function migrateLegacyValueToGuest(baseKey){return migrateScopedValue(baseKey,GUEST_STORAGE_SCOPE).migrated;}
 export function migrateAllStorageKeys(){
