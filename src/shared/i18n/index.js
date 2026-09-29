@@ -1,7 +1,7 @@
 import {
   getUserSettings,
   subscribeUserSettings,
-} from "../settings/user-settings-store.js?v=16.8.0.3";
+} from "../settings/user-settings-store.js?v=16.8.0.9";
 import { INTERFACE_MESSAGES } from "./messages.js?v=16.8.0.8";
 import { RELEASE_MESSAGES_13_10 } from "./messages-13-10.js?v=16.8.0.3";
 import { RELEASE_MESSAGES_13_15_9 } from "./messages-13-15-9.js?v=16.8.0.3";

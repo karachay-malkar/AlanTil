@@ -4,7 +4,7 @@ import {
   readScopedJson,
   subscribeStorageScope,
   writeScopedJson,
-} from "./storage-scope.js?v=16.8.0.3";
+} from "./storage-scope.js?v=16.8.0.9";
 import { awardReward } from "./reward-store.js?v=16.8.0.3";
 import {
   applyLearnWordResults,

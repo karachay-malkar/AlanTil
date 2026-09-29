@@ -17,7 +17,7 @@ function harness(){
  const env={...analytics,trackNativeEvent:async()=>{},...favorites,...settings,...progress,...scopes,...policy,createDurableQueue,
  getNativeStorageScope:()=>`user:${user}`,nativeScopedStorageKey:key,getNativeAuthSession:()=>({user:{id:user}}),
  migrateLegacyNativeValueToGuest:async()=>{if(pause){const p=pause;pause=null;p.entered.resolve();await p.release.promise;}},
- AsyncStorage:{getItem:async k=>db.get(k)??null,setItem:async(k,v)=>{writes.push(k);db.set(k,v);}},
+ AsyncStorage:{getItem:async k=>db.get(k)??null,setItem:async(k,v)=>{writes.push(k);db.set(k,v);},removeItem:async k=>{writes.push(k);db.delete(k);}},
  nativeAuthFetch:async(path,options,expected)=>{assert.equal(expected,user);return {ok:true,text:async()=>JSON.stringify(path.includes('user_word_favorites')?[{word_id:'remote',is_active:true}]:[])};}
  };
  const storage=module('storage',env),prog=module('progress',env);
@@ -35,7 +35,7 @@ test('favorite values and sync metadata stay with initiating user',async()=>{
 test('guest claim cannot write into account selected during migration',async()=>{
  const h=harness();h.db.set(h.key('alantil:16.1:favorites','guest'),JSON.stringify(['guest-word']));
  const p=h.pause(),run=h.cloud.claimNativeGuestStateToAccount();await p.entered.promise;h.switch();p.release.resolve();assert.equal(await run,false);
- assert.ok(h.writes.length);assert.ok(h.writes.every(k=>k.includes(':user:A:')));assert.deepEqual(JSON.parse(h.db.get(h.key('alantil:16.1:favorites','user:A'))),['guest-word']);
+ assert.ok(h.writes.length);assert.ok(h.writes.every(k=>k.includes(':user:A:')||k.includes(':guest:')));assert.deepEqual(JSON.parse(h.db.get(h.key('alantil:16.1:favorites','user:A'))),['guest-word']);
 });
 test('cloud merge keeps initial account after responses but before local read completes',async()=>{
  const h=harness(),p=h.pause(),run=h.cloud.pullNativeCloudState();await p.entered.promise;h.switch();p.release.resolve();assert.equal(await run,false);
