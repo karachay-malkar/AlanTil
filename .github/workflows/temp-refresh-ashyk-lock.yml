@@ -1,0 +1,31 @@
+name: Temporary refresh Ashyk lock
+
+on:
+  push:
+    branches: [agent/refresh-ashyk-lock-16.8.0.9]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.event.head_commit.message != 'temp: ashyk lock refreshed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Refresh lock only
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        working-directory: tools/ashyk-web
+      - name: Commit refreshed lock
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/ashyk-web/package-lock.json
+          git commit -m "temp: ashyk lock refreshed"
+          git push
