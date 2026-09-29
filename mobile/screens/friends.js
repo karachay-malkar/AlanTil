@@ -6,6 +6,7 @@ import{socialMessage}from'../../packages/alantil-core/social-i18n.js';
 import{CONTROL_LAYOUT}from'../../packages/alantil-ui/control-layout.js';
 import{listRowHeight,listTypography}from'../../packages/alantil-ui/list-table.js';
 import{createAshykOnlineAdapter}from'../../packages/ashyk-game/online.js';
+import{beginAshykEntry,finishAshykEntry}from'../../packages/ashyk-game/entry-state.js';
 import{Button,HeaderCircleButton,Screen,ScreenState}from'../ui/components.js';
 import{BlockIcon,CorrectIcon,GenderIcon,PendingIcon,SearchIcon,UserMinusIcon,UserPlusIcon,WrongIcon}from'../ui/icons.js';
 import{ProfileTabs}from'../ui/profile-tabs.js';
@@ -44,7 +45,7 @@ export function FriendsScreen({settings={},userId='',mode='rating',onModeChange,
 
   if(!userId)return <Screen bottomNav><View style={s.guest}><Text style={s.guestTitle}>{t('community')}</Text><Text style={s.guestText}>{t('signIn')}</Text><Button role="generic.primary" onPress={onSignIn}>{t('signInAction')}</Button></View></Screen>;
 
-  const acceptInvite=async(invite)=>{if(busy)return;setBusy(`invite:${invite.invite_id}`);try{const result=await online.acceptInvite(invite.invite_id);await refresh();if(result.room)onOpenAshyk?.(result.room,result.invite);}catch(e){setError(e?.message||t('error'));}finally{setBusy('');}};
+  const acceptInvite=async(invite)=>{if(busy)return;setBusy(`invite:${invite.invite_id}`);let opened=false;beginAshykEntry();try{const result=await online.acceptInvite(invite.invite_id);await refresh();if(result.room&&onOpenAshyk){onOpenAshyk(result.room,result.invite);opened=true;}}catch(e){setError(e?.message||t('error'));}finally{if(!opened)finishAshykEntry();setBusy('');}};
   const declineInvite=async(invite)=>{await mutate(`decline-invite:${invite.invite_id}`,()=>online.declineInvite(invite.invite_id));};
 
   const visibleMode=mode==='stats'&&accessState!=='allowed'?'rating':mode;

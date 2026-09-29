@@ -11,6 +11,7 @@ import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.
 import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.8";
 import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.8";
 import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.8";
+import { beginAshykEntry, finishAshykEntry, isAshykEntryPending } from "../../packages/ashyk-game/entry-state.js?v=16.8.0.8";
 import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.8";
 import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.8";
 import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.8";
@@ -142,6 +143,7 @@ async function bootstrap() {
     const userId=String(getCurrentAuthState()?.session?.user?.id||'');
     if(ashykAccessForUser(userId).locked){ashykNoticeKey='';return;}
     if(router.getCurrent().route==='practice.ashyk'){ashykNoticeKey='';return;}
+    if(isAshykEntryPending()){ashykNoticeKey='';return;}
     const invite=Array.isArray(snapshot?.ashyk_invites)?snapshot.ashyk_invites[0]:null;
     const resumable=activeRoom?.status==='playing'||(activeRoom?.status==='waiting'&&activeRoom?.guest_user_id)?activeRoom:null;
     const key=invite?.invite_id?`invite:${invite.invite_id}`:resumable?.id?`room:${resumable.id}:${resumable.status}`:'';
@@ -172,22 +174,26 @@ async function bootstrap() {
     const decline=panel.body?.querySelector('[data-ashyk-global-decline]');
     accept?.addEventListener('click',async()=>{
       accept.disabled=true;
+      let entering=false;
       try{
         if(invite){
           if(!(await ensureCurrentAshykBuild({kind:'accept',inviteId:String(invite.invite_id)}))){return;}
+        }else if(!(await ensureCurrentAshykBuild({kind:'room',roomId:String(resumable.id)}))){return;}
+        beginAshykEntry();
+        entering=true;
+        if(invite){
           const client=await getSocialClient(),online=createAshykOnlineAdapter(client),result=await online.acceptInvite(invite.invite_id);
           if(!result?.room)throw new Error('room unavailable');
           setPendingAshykInvite(result);
-        }else{
-          if(!(await ensureCurrentAshykBuild({kind:'room',roomId:String(resumable.id)}))){return;}
-          setPendingAshykInvite({room:resumable,invite:null});
-        }
+        }else setPendingAshykInvite({room:resumable,invite:null});
         ashykNoticeKey='';
         panel.close();
         await router.navigate('practice.ashyk');
       }catch(error){
         accept.disabled=false;
         if(copy)copy.textContent=String(error?.message||socialMessage(locale,'error'));
+      }finally{
+        if(entering)finishAshykEntry();
       }
     });
     decline?.addEventListener('click',async()=>{
