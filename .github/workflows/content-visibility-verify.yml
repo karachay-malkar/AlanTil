@@ -1,0 +1,40 @@
+name: Content visibility verification
+
+on:
+  pull_request:
+    branches:
+      - agent/16.8.0
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run content visibility regression tests
+        run: node --test mobile/tests/content-visibility.test.mjs
+
+      - name: Run full mobile/core test suite
+        working-directory: mobile
+        run: npm test
+
+      - name: Build verified project archive
+        if: success()
+        run: |
+          rm -f .github/workflows/content-visibility-verify.yml
+          zip -qr /tmp/AlanTil-16.8.0-content-visibility.zip . -x ".git/*"
+
+      - name: Upload verified project archive
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0-content-visibility
+          path: /tmp/AlanTil-16.8.0-content-visibility.zip
+          if-no-files-found: error
+          retention-days: 7
