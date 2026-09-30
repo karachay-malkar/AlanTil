@@ -13,7 +13,7 @@ if(!/export function ashykModeOptionsForUser/.test(flags))throw new Error('Ashyk
 
 for(const file of files){
   const source=fs.readFileSync(file,'utf8');
-  if(!/ashykAccessForUser/.test(source))throw new Error(`Shared Ashyk access contract is missing in ${file}`);
+  if(!/ashykModeOptionsForUser/.test(source))throw new Error(`Shared Ashyk visible/allowed mode contract is missing in ${file}`);
   if(/const modes=\[\["computer"[\s\S]{0,160}\["local"/.test(source))throw new Error(`Hard-coded same-device Ashyk mode remains in ${file}`);
 }
 console.log('Ashyk access flags verified');
