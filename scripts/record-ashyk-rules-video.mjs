@@ -72,7 +72,7 @@ async function layout(kind='same'){
 async function shoot(kind,mode='flat'){
  await page.evaluate(({kind,mode})=>{
  const{engine}=globalThis.__ashykRecording;engine.select(0);
- const a=engine.getPiece(0).body.position,b=engine.getPiece(1).body.position;
+ const a=engine.getPiece(0).body.position,b=engine.getPiece(1)?.body.position||{x:a.x,z:a.z+5};
  if(!engine.launch(0,{mode,directionX:kind==='miss'?0:b.x-a.x,directionZ:kind==='miss'?1:b.z-a.z,pullRatio:kind==='third'?.48:.36,pullLength:(kind==='third'?.48:.36)*6.8}))throw Error('Launch rejected');
  },{kind,mode});
  await page.waitForFunction(()=>!globalThis.__ashykRecording.engine.isShotActive(),{timeout:12000});
