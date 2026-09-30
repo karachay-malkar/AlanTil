@@ -45,7 +45,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
     ["src/features/settings/settings.css","0bfda54e5db67e53fee368b3a6eff72f848ddf3a"],
     ["src/features/practice/practice.css","0b20cba6a0dd3a73682d88ef1864b5dd4d08a759"],
     ["src/features/friends/friends-16-7.css","92d7d677066c548b440cc36fe9c05aac55c7677c"],
-    ["src/features/ashyk/ashyk.css","bc0b7edddd69d9b95e79d0f98514c4e60478d2e6"],
+    ["src/features/ashyk/ashyk.css","849aec0fee4486dfe42ac6f1a30633133edf08a2"],
     ["src/features/admin/admin.css","f018503b75de9bc3a956014f486a50b0ca188424"],
     ["src/features/learn/learn.css","bf944453057f72626416077ab35033d71ead6dd7"],
     ["src/features/test/test.css","454e1bcbf60462c10243c8da9c86d7ba7b63b139"],
