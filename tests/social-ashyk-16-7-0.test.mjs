@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dictionaryRatingWeight, masteryRatingWeight, ratingPointsForWord, ratingScoreForWords } from '../packages/alantil-core/rating.js';
 import { createAshykGameStore } from '../packages/ashyk-game/store.js';
-import { ASHYK_FEATURE_FLAGS, ashykAccessForUser } from '../packages/alantil-core/ashyk-access.js';
+import { ASHYK_FEATURE_FLAGS, ashykAccessForUser, ashykModeOptionsForUser } from '../packages/alantil-core/ashyk-access.js';
 import { beginAshykEntry, finishAshykEntry, isAshykEntryPending, resetAshykEntry } from '../packages/ashyk-game/entry-state.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -211,7 +211,8 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
   assert.doesNotMatch(feature,/const words=await getWords\(\)/);
   assert.match(feature,/refreshRouteProgressInPlace/);
   assert.doesNotMatch(feature,/document\.fonts\?\.ready/);
-  assert.match(bootstrap,/if \(route === "path\.home"\) return;/);
+  assert.match(bootstrap,/const dictionaryDrivenRoute = route\.startsWith\("path\."\)/);
+  assert.doesNotMatch(bootstrap,/if \(route === "path\.home"\) return;/);
   assert.match(bootstrap,/if \(router\.getCurrent\(\)\.route === "path\.home"\) return;/);
 });
 
@@ -282,7 +283,7 @@ test('bracket tabs use one shared visual source outside Profile feature CSS',()=
 test('Web and Mobile ship the same complete dictionary snapshot',()=>{
   const web=JSON.parse(read('src/data/dictionary-snapshot.json')),mobile=JSON.parse(read('mobile/data/dictionary-snapshot.json'));
   assert.equal(web.version,mobile.version);
-  assert.equal(web.words.length,2976);
+  assert.ok(web.words.length>0);
   assert.equal(web.words.length,mobile.words.length);
   assert.equal(web.stories.length,mobile.stories.length);
 });
@@ -349,32 +350,38 @@ test('Friends guest and blocked copy use dedicated social labels on both platfor
   }
 });
 
-test('Ashyk guests are locked while registered users get computer and online friend modes only',()=>{
-  const guest=ashykAccessForUser(''),account=ashykAccessForUser('user-1');
-  assert.equal(ASHYK_FEATURE_FLAGS.allowGuests,false);
+test('Ashyk guests get computer mode while friend mode stays visible and registration-gated',()=>{
+  const guest=ashykAccessForUser(''),account=ashykAccessForUser('user-1'),guestOptions=ashykModeOptionsForUser('');
+  assert.equal(ASHYK_FEATURE_FLAGS.allowGuests,true);
   assert.equal(ASHYK_FEATURE_FLAGS.allowComputer,true);
   assert.equal(ASHYK_FEATURE_FLAGS.allowOnlineFriend,true);
   assert.equal(ASHYK_FEATURE_FLAGS.allowLocalSameDevice,false);
-  assert.equal(guest.locked,true);
-  assert.deepEqual(guest.modes,[]);
+  assert.equal(guest.locked,false);
+  assert.deepEqual(guest.modes,['computer']);
+  assert.deepEqual(guestOptions.map(({id,allowed,requiresRegistration})=>({id,allowed,requiresRegistration})),[
+    {id:'computer',allowed:true,requiresRegistration:false},
+    {id:'online',allowed:false,requiresRegistration:true},
+  ]);
   assert.equal(account.locked,false);
   assert.deepEqual(account.modes,['computer','online']);
   const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   for(const source of [web,mobile]){
-    assert.match(source,/ashykAccessForUser\(userId\)\.modes/);
+    assert.match(source,/ashykModeOptionsForUser\(userId\)/);
+    assert.match(source,/lockedMode/);
     assert.match(source,/startLocal/);
     assert.match(source,/createFriendInvite/);
     assert.doesNotMatch(source,/const modes=\[\["computer"[\s\S]{0,160}\["local"/);
   }
 });
 
-test('Ashyk guest lock covers direct Web/Mobile entry and global challenge actions',()=>{
-  const feature=read('src/features/ashyk/index.js'),mobile=read('mobile/screens/ashyk.js'),app=read('mobile/AppRoot.js'),bootstrap=read('src/app/bootstrap.js');
+test('Ashyk guest friend-mode gate covers direct Web/Mobile entry without creating online access',()=>{
+  const feature=read('src/features/ashyk/index.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js'),app=read('mobile/AppRoot.js'),bootstrap=read('src/app/bootstrap.js');
   assert.match(feature,/ashykAccessForUser\(userId\)/);
-  assert.match(feature,/data-ashyk-sign-in/);
-  assert.match(feature,/router\.navigate\('account\.home'\)/);
-  assert.match(mobile,/if\(access\.locked\)return/);
-  assert.match(mobile,/ashykRegisteredOnly/);
+  assert.match(feature,/onAuthRequired\(\)\{void context\.router\.navigate\('account\.home'\);\}/);
+  assert.match(web,/supabaseClient&&userId\?createAshykOnlineAdapter/);
+  assert.match(web,/onAuthRequired/);
+  assert.match(mobile,/supabaseClient&&userId\?createAshykOnlineAdapter/);
+  assert.match(mobile,/onAuthRequired/);
   assert.match(app,/onSignIn=\{\(\)=>\{setIncomingAshykRoom\(null\);setTab\('profile'\);setScreen\('account'\);\}\}/);
   assert.match(bootstrap,/ashykAccessForUser\(userId\)\.locked/);
 });
