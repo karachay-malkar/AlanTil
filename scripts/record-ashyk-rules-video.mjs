@@ -61,7 +61,7 @@ async function layout(kind='same'){
  const{engine,store}=globalThis.__ashykRecording;
  store.startLocal('easy');
  const q=(face)=>face==='kyt'?[0,0,Math.SQRT1_2,Math.SQRT1_2]:face==='chyk'?[1,0,0,0]:[0,0,0,1];
- const positions=[[-4,.8,0],[0,.8,0],kind==='third'?[2,.8,0]:[8,.8,7]];
+ const positions=[[-2.2,.8,0],[0,.8,0],kind==='third'?[2,.8,0]:[8,.8,7]];
  const s=engine.snapshot();
  for(const p of s.pieces){p.alive=p.id<3;if(p.alive){p.position=positions[p.id];p.quaternion=q(kind==='kyt'?'kyt':kind==='mismatch'&&p.id===1?'chyk':'fok');}}
  engine.applySnapshot(s);
@@ -72,14 +72,22 @@ async function layout(kind='same'){
 async function shoot(kind,mode='flat'){
  await page.evaluate(({kind,mode})=>{
  const{engine}=globalThis.__ashykRecording;engine.select(0);
- if(!engine.launch(0,{mode,directionX:kind==='miss'?0:1,directionZ:kind==='miss'?1:0,pullRatio:kind==='third'?.30:.23,pullLength:(kind==='third'?.30:.23)*6.8}))throw Error('Launch rejected');
+ const a=engine.getPiece(0).body.position,b=engine.getPiece(1).body.position;
+ if(!engine.launch(0,{mode,directionX:kind==='miss'?0:b.x-a.x,directionZ:kind==='miss'?1:b.z-a.z,pullRatio:kind==='third'?.48:.36,pullLength:(kind==='third'?.48:.36)*6.8}))throw Error('Launch rejected');
  },{kind,mode});
  await page.waitForFunction(()=>!globalThis.__ashykRecording.engine.isShotActive(),{timeout:12000});
  const state=await page.evaluate(()=>globalThis.__ashykRecording.store.getState());
+ console.log('SCENE_RESULT',kind,JSON.stringify({outcome:state.lastOutcome,phase:state.phase,remaining:state.remainingAshyks}));
  results.push({kind,mode,scores:state.scores,outcome:state.lastOutcome,phase:state.phase,winner:state.winner});
  return state;
 }
 try{
+ await layout();
+ console.log('PREFLIGHT_BEFORE',JSON.stringify(await page.evaluate(()=>({state:globalThis.__ashykRecording.store.getState(),pieces:globalThis.__ashykRecording.engine.getPieces().filter(p=>p.alive).map(p=>({id:p.id,face:globalThis.__ashykRecording.engine.getFace(p.id),pos:p.body.position}))}))));
+ await page.screenshot({path:'video-output/preview.png'});
+ const preflight=await shoot('same');
+ if(preflight.lastOutcome?.code!=='capture')throw Error('Preflight capture failed');
+ await page.evaluate(()=>globalThis.__ashykRecording.store.restart());
  await caption('Как играть','Цель — набрать больше очков.\n\nВыберите ашык и ударьте им по другому ашыку с такой же верхней гранью.',9000);
  await layout();
  await caption('Сначала сравните грани','Сравнивайте верхние грани при ударе.\n\nПоложение после столкновения не определяет взятие.',8000);
