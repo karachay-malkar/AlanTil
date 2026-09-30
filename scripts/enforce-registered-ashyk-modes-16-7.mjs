@@ -5,7 +5,7 @@ const files=[
   'packages/ashyk-game/web/Game.jsx',
 ];
 const flags=fs.readFileSync('packages/alantil-core/ashyk-access.js','utf8');
-if(!/allowGuests:false/.test(flags))throw new Error('Ashyk guest lock must stay disabled for this release');
+if(!/allowGuests:true/.test(flags))throw new Error('Ashyk computer mode must be available to guests');
 if(!/allowComputer:true/.test(flags))throw new Error('Ashyk computer mode must stay enabled');
 if(!/allowOnlineFriend:true/.test(flags))throw new Error('Ashyk online friend mode must stay enabled');
 if(!/allowLocalSameDevice:false/.test(flags))throw new Error('Ashyk same-device mode must stay disabled');

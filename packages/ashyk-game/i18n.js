@@ -36,3 +36,4 @@ const M=Object.freeze({
 export function ashykLocale(value){return value==='en'||value==='tr'?value:'ru';}
 export function ashykMessages(value){return M[ashykLocale(value)];}
 export function difficultyLabel(id,locale){const m=ashykMessages(locale);return id==='easy'?m.easy:id==='hard'?m.hard:m.normal;}
+export function difficultyDescription(config,locale){const m=ashykMessages(locale),shot=Math.round(Number(config?.computerShotAccuracy||0)*100),answer=Math.round(Number(config?.computerAnswerAccuracy||0)*100);return `${m.computerAccuracy}: ${shot}% · ${m.computerAnswers}: ${answer}%`;}
