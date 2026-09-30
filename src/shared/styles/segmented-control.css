@@ -26,9 +26,9 @@
   transition:background var(--duration-fast),color var(--duration-fast),box-shadow var(--duration-fast);
 }
 .settingsChoice input:checked+.settingsChoiceBody,.settingsChoice input:checked+span{
-  background:color-mix(in srgb,var(--surface-0) 72%,transparent);
-  color:var(--text-1);
-  box-shadow:var(--shadow-xs);
+  background:var(--surface-0);
+  color:var(--accent-strong);
+  box-shadow:0 0 0 1px var(--line-strong),var(--shadow-xs);
 }
 .settingsChoice input:focus-visible+.settingsChoiceBody,.settingsChoice input:focus-visible+span{outline:2px solid var(--accent-strong);outline-offset:2px}
 @media(max-width:360px){

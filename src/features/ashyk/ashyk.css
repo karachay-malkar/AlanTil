@@ -12,6 +12,8 @@
 .appShell[data-screen="ashyk"] .ashykPageHead h1{margin:4px 0 0;font-size:19px;line-height:1.15;font-weight:860;color:var(--text-1)}
 .appShell[data-screen="ashyk"] .ashykEyebrow,.appShell[data-screen="ashyk"] .ashykSectionLabel{font:780 9px/1.1 var(--font-terminal);letter-spacing:.12em;color:var(--text-3)}
 .appShell[data-screen="ashyk"] .ashykSetupSection{display:grid;grid-template-columns:minmax(100px,1fr) minmax(178px,auto);align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--line-soft)}
+.appShell[data-screen="ashyk"] .ashykDifficultyHint{min-height:40px;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--line-soft);border-radius:12px;background:color-mix(in srgb,var(--surface-0) 54%,transparent);display:flex;align-items:center}
+.appShell[data-screen="ashyk"] .ashykDifficultyHint span{color:var(--text-2);font:650 10px/1.45 var(--font-terminal)}
 .appShell[data-screen="ashyk"] .ashykFacts{margin-top:14px;border-top:1px solid var(--line-soft)}
 .appShell[data-screen="ashyk"] .ashykFacts>div{min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);font-size:12px;color:var(--text-2)}
 .appShell[data-screen="ashyk"] .ashykFacts b{color:var(--text-1);font:800 11px/1 var(--font-terminal)}

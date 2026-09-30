@@ -1,6 +1,6 @@
 export const ASHYK_FEATURE_FLAGS=Object.freeze({
   enabled:true,
-  allowGuests:false,
+  allowGuests:true,
   allowComputer:true,
   allowOnlineFriend:true,
   allowLocalSameDevice:false,
