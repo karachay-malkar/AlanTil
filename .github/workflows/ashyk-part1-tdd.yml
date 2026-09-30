@@ -61,5 +61,17 @@ jobs:
         run: |
           node scripts/sync-visual-contract-16-7.mjs --check
           node scripts/qa/check-generated.mjs --ashyk
+      - name: Repair Ashyk build lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+        working-directory: tools/ashyk-web
+      - name: Commit repaired lockfile
+        run: |
+          if ! git diff --quiet -- tools/ashyk-web/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add tools/ashyk-web/package-lock.json
+            git commit -m "build: repair Ashyk web dependency lock"
+            git push
+          fi
       - name: Full project QA
         run: node scripts/qa/final.mjs
