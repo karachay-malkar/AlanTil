@@ -53,7 +53,7 @@ await page.goto('http://localhost:8080/video-output/index.html');
 await page.waitForFunction(()=>!!globalThis.__ashykRecording);
 await page.locator('body').click({position:{x:880,y:880}});
 await page.waitForTimeout(3000);
-const ffmpeg=spawn('ffmpeg',['-y','-f','x11grab','-framerate','30','-video_size','1280x900','-i',process.env.DISPLAY||':99','-f','pulse','-i','default','-c:v','libx264','-preset','veryfast','-crf','19','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','video-output/ashyk-rules.mp4'],{stdio:['pipe','ignore','inherit']});
+let ffmpeg=null;
 const results=[];
 async function caption(title,copy,ms=6000){await page.evaluate(({title,copy})=>{document.querySelector('#title').textContent=title;document.querySelector('#copy').textContent=copy;},{title,copy});await page.waitForTimeout(ms);}
 async function layout(kind='same'){
@@ -87,7 +87,12 @@ try{
  await page.screenshot({path:'video-output/preview.png'});
  const preflight=await shoot('same');
  if(preflight.lastOutcome?.code!=='capture')throw Error('Preflight capture failed');
+ for(const [kind,code] of [['miss','miss'],['mismatch','faceMismatch'],['third','thirdTouched'],['kyt','capture']]){
+  await layout(kind);const check=await shoot(kind);
+  if(check.lastOutcome?.code!==code||(kind==='kyt'&&!check.winByKyt))throw Error('Preflight '+kind+' failed');
+ }
  await page.evaluate(()=>globalThis.__ashykRecording.store.restart());
+ ffmpeg=spawn('ffmpeg',['-y','-f','x11grab','-framerate','30','-video_size','1280x900','-i',process.env.DISPLAY||':99','-f','pulse','-i','default','-c:v','libx264','-preset','veryfast','-crf','19','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','video-output/ashyk-rules.mp4'],{stdio:['pipe','ignore','inherit']});
  await caption('Как играть','Цель — набрать больше очков.\n\nВыберите ашык и ударьте им по другому ашыку с такой же верхней гранью.',9000);
  await layout();
  await caption('Сначала сравните грани','Сравнивайте верхние грани при ударе.\n\nПоложение после столкновения не определяет взятие.',8000);
@@ -133,7 +138,7 @@ try{
  if(errors.length)throw Error('Browser errors: '+errors.join('\n'));
  await fs.writeFile('video-output/verification.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,scenes:results,errors,notes:'Offline instructional arrangements, original renderer, engine and audio. No generated imagery.'},null,2));
 }finally{
- ffmpeg.stdin.write('q\n');await new Promise(r=>ffmpeg.once('exit',r));await browser.close();server.kill();
+ if(ffmpeg){ffmpeg.stdin.write('q\n');await new Promise(r=>ffmpeg.once('exit',r));}await browser.close();server.kill();
  await fs.writeFile('packages/ashyk-game/web/Game.jsx',original);
  await fs.writeFile(storePath,originalStore);
 }
