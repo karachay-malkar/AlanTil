@@ -17,6 +17,8 @@ jobs:
           node-version: '24'
       - name: Part 1 regression
         run: node --test tests/ashyk-guest-computer-16-8.test.mjs
+      - name: Word scope regression
+        run: node --test tests/ashyk-word-scopes-16-8.test.mjs
       - name: Architecture regressions
         run: node --test tests/unified-core-boundary-16.test.mjs mobile/tests/architecture.test.mjs
       - name: Native core
