@@ -6,7 +6,7 @@ import{fileURLToPath}from'node:url';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
 
-test('Ashyk Web uses compact icon HUD without restart',()=>{const game=read('packages/ashyk-game/web/Game.jsx'),icons=read('packages/ashyk-game/shot-icons.js');assert.match(game,/ShotIcon kind="tap"/);assert.match(game,/ShotIcon kind="flat"/);assert.match(game,/ShotIcon kind="hop"/);assert.match(icons,/stroke|paths|circles/i);assert.doesNotMatch(game,/store\.restart\(/);assert.doesNotMatch(game,/>↻</);});
+test('Ashyk Web uses only direct and lob shot controls without a finished-game restart action',()=>{const game=read('packages/ashyk-game/web/Game.jsx'),icons=read('packages/ashyk-game/shot-icons.js');assert.doesNotMatch(game,/<ShotIcon kind="tap"/);assert.doesNotMatch(game,/ashykShotInfo/);assert.match(game,/ShotIcon kind="flat"/);assert.match(game,/ShotIcon kind="hop"/);assert.match(icons,/stroke|paths|circles/i);const start=game.indexOf('function Finish'),end=game.indexOf('function Hud');const finish=game.slice(start,end);assert.doesNotMatch(finish,/store\.restart\(/);assert.doesNotMatch(game,/>↻</);});
 
 test('Ashyk Web help is structured and includes all six faces',()=>{const game=read('packages/ashyk-game/web/Game.jsx'),i18n=read('packages/ashyk-game/i18n.js');for(const key of['faceChyk','faceFok','faceTau','faceAlchi','faceBiy','faceKyt'])assert.match(i18n,new RegExp(`${key}:`));for(const key of['helpGoalTitle','helpControlsTitle','helpFacesTitle','helpQuestionsTitle','helpKytTitle'])assert.match(game,new RegExp(`m\\.${key}`));assert.match(i18n,/youWon:'Вы победили'/);assert.match(i18n,/youLost:'Вы проиграли'/);});
 

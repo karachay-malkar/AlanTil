@@ -25,9 +25,9 @@ test("Ashyk help matches the authoritative capture and scoring mechanics", () =>
   const engine = read("packages/ashyk-game/engine.js");
   const store = read("packages/ashyk-game/store.js");
   for (const key of ["helpCaptureTitle","helpPenaltyTitle","helpEndTitle"]) assert.match(i18n, new RegExp(key + ":"));
-  assert.match(i18n, /грани до удара/);
-  assert.match(i18n, /Полный промах[^']*−1 очко/);
-  assert.match(i18n, /Дополнительный удар[^']*новый вопрос после него не появляется/);
+  assert.match(i18n, /Перед ударом игра запоминает верхние грани/);
+  assert.match(i18n, /Промах мимо всех ашыков[^']*−1 очко/);
+  assert.match(i18n, /После дополнительного удара нового вопроса нет/);
   assert.match(engine, /preShotFaces=new Map\(alive\(\)\.map/);
   assert.match(engine, /if\(targetId===null\)\{targetId=contacted/);
   assert.match(engine, /evaluateCapture\(attackerStartFace,targetStartFace,third\)/);
@@ -45,8 +45,11 @@ test("Ashyk help includes six model-derived face previews on Web and Mobile", ()
     assert.match(mobile, new RegExp(`faces/${face}\\.png`));
     const webAsset = path.join(ROOT, "assets/ashyk/faces", face + ".png");
     const mobileAsset = path.join(ROOT, "mobile/assets/ashyk/faces", face + ".png");
-    assert.ok(fs.statSync(webAsset).size > 1000);
-    assert.ok(fs.statSync(mobileAsset).size > 1000);
+    const webBytes=fs.readFileSync(webAsset),mobileBytes=fs.readFileSync(mobileAsset);
+    assert.ok(webBytes.length > 40000);
+    assert.deepEqual(webBytes,mobileBytes);
+    assert.equal(webBytes.readUInt32BE(16),512);
+    assert.equal(webBytes.readUInt32BE(20),512);
   }
 });
 
@@ -65,18 +68,18 @@ test("Ashyk board is framed 15 percent smaller without changing physics", () => 
 test("Published Web runtime contains the new help and 15 percent framing", () => {
   const runtime = read("src/features/ashyk/runtime.js");
   for (const marker of ["ashykSetupHelpButton","ashykHelpButton","helpCaptureTitle","helpPenaltyTitle","helpEndTitle","/assets/ashyk/faces/"]) assert.ok(runtime.includes(marker), marker);
-  assert.match(runtime, /31\.7647058824/);
-  assert.match(runtime, /47\.0588235294/);
+  assert.doesNotMatch(runtime, /ashykShotInfo/);
+  assert.ok(runtime.includes('Direct shot')||runtime.includes('Прямой удар'));
 });
 
 test("Ashyk feature cache keys point to the updated runtime and styles", () => {
   const feature = read("src/features/ashyk/index.js");
   const lazy = read("src/shared/styles/lazy/ashyk.css");
   const layered = read("src/features/ashyk/ashyk-16-7.css");
-  assert.match(feature, /runtime\.js\?v=16\.8\.0\.7/);
-  assert.match(lazy, /ashyk\.css\?v=16\.8\.0\.7/);
-  assert.match(lazy, /ashyk-16-7\.css\?v=16\.8\.0\.7/);
-  assert.match(layered, /ashyk-16-6-12\.css\?v=16\.8\.0\.7/);
+  assert.match(feature, /runtime\.js\?v=16\.8\.0\.9/);
+  assert.match(lazy, /ashyk\.css\?v=16\.8\.0\.8/);
+  assert.match(lazy, /ashyk-16-7\.css\?v=16\.8\.0\.8/);
+  assert.match(layered, /ashyk-16-6-12\.css\?v=16\.8\.0\.8/);
 });
 
 test("Ashyk Rules put faces before shot controls and remain vertically scrollable", () => {

@@ -167,16 +167,18 @@ test('bundled mobile dictionary contains the complete Ashyk Return-to-roots sour
   assert.deepEqual(counts,{noun:414,adj:148,verb:199,adv:19});
 });
 
-test('Ashyk help uses concise copy, correct Fok spelling and refreshed specimen presentation',()=>{
-  const copy=read('packages/ashyk-game/i18n.js'),web=read('packages/ashyk-game/web/Game.jsx'),css=read('src/features/ashyk/ashyk-16-6-12.css');
+test('Ashyk help explains the goal clearly, keeps Fok spelling and shows only the two real shot types',()=>{
+  const copy=read('packages/ashyk-game/i18n.js'),web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   assert.match(copy,/faceFok:'Фок'/);
   assert.doesNotMatch(copy,/faceFok:'Фокъ'/);
-  assert.match(copy,/helpControlsTitle:'Ход за 3 шага'/);
-  assert.match(copy,/helpFacesTitle:'Грани = очки'/);
-  assert.match(copy,/helpQuestionsTitle:'Взял — ответь'/);
-  assert.match(web,/\/assets\/ashyk\/faces\/\$\{face\}\.png\?v=16\.8\.0\.8/);
-  assert.match(css,/ashykFaceRule::before/);
-  assert.match(css,/drop-shadow/);
+  assert.match(copy,/helpGoalText:'Цель — набрать как можно больше очков, попадая выбранным ашыком по другому ашыку с такой же верхней гранью\.'/);
+  assert.match(copy,/helpControlsTitle:'Как бить'/);
+  assert.match(copy,/helpControlsText:'Сначала выберите ашык\. Затем выберите удар и потяните в нужную сторону, задавая направление и силу\.'/);
+  assert.doesNotMatch(web,/<ShotIcon kind="tap"/);
+  assert.doesNotMatch(mobile,/<ShotIcon kind="tap"/);
+  assert.doesNotMatch(mobile,/HelpControl kind="tap"/);
+  for(const source of[web,mobile]){assert.match(source,/kind="flat"/);assert.match(source,/kind="hop"/);}
+  assert.match(web,/\/assets\/ashyk\/faces\/\$\{face\}\.png\?v=16\.8\.0\.9/);
 });
 
 test('Ashyk result and vocabulary-question UI match the requested compact layout',()=>{
@@ -299,7 +301,7 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16.8.0.8/);
+  assert.match(feature,/runtime\.js\?v=16.8.0.9/);
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{

@@ -8,7 +8,7 @@ import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js
 import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.5";
 import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.5";
 import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.5";
-import { mountAshykGame } from "./runtime.js?v=16.8.0.8";
+import { mountAshykGame } from "./runtime.js?v=16.8.0.9";
 
 let controller=null;
 let disposeGame=null;
