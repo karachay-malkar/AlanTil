@@ -1,0 +1,28 @@
+name: Temp production visibility probe
+on:
+  push:
+    branches:
+      - agent/16.8.0-visibility-audit-temp
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6a511c2e14607bdcb275ab4817fb6c3c4abbfca5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check production dictionary
+        run: node scripts/verify-mobile-dictionary-snapshot-parity.mjs
+      - name: Check visibility view availability
+        shell: bash
+        run: |
+          KEY="$(sed -n 's/.*supabasePublishableKey = "\([^"]*\)".*/\1/p' src/config/supabase.js)"
+          URL="$(sed -n 's/.*supabaseUrl = "\([^"]*\)".*/\1/p' src/config/supabase.js)"
+          code="$(curl -sS -o /tmp/visibility.json -w '%{http_code}' -H "apikey: $KEY" "$URL/rest/v1/content_structure_app?select=entity_id&limit=1")"
+          echo "CONTENT_STRUCTURE_APP_HTTP=$code"
+          cat /tmp/visibility.json
+          echo
