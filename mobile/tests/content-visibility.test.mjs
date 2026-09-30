@@ -8,6 +8,7 @@ const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../
 const bootstrap=await readFile(path.join(projectRoot,'src/app/bootstrap.js'),'utf8');
 const webSnapshot=JSON.parse(await readFile(path.join(projectRoot,'src/data/dictionary-snapshot.json'),'utf8'));
 const mobileSnapshot=JSON.parse(await readFile(path.join(projectRoot,'mobile/data/dictionary-snapshot.json'),'utf8'));
+const starterDictionarySource=await readFile(path.join(projectRoot,'src/data/starter-dictionary.js'),'utf8');
 
 function snapshotWords(snapshot){return Array.isArray(snapshot?.words)?snapshot.words:[];}
 function hiddenAdvancedWords(snapshot){
@@ -28,4 +29,8 @@ test('bundled Web dictionary does not ship hidden Advanced content',()=>{
 
 test('bundled Mobile dictionary does not ship hidden Advanced content',()=>{
   assert.equal(hiddenAdvancedWords(mobileSnapshot).length,0);
+});
+
+test('emergency starter does not expose hidden Advanced content',()=>{
+  assert.doesNotMatch(starterDictionarySource,/Восхождение|advanced|ascent/);
 });
