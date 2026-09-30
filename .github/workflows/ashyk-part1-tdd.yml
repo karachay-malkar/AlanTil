@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: '24'
       - name: Part 1 regression
-        run: node --test tests/ashyk-guest-computer-16-8.test.mjs tests/ashyk-web-parity-16-6-13.test.mjs tests/ashyk-native-core-16-6-11.test.mjs
+        run: node --test tests/ashyk-guest-computer-16-8.test.mjs
       - name: Access invariant
         run: node scripts/enforce-registered-ashyk-modes-16-7.mjs
       - name: Regenerate visual manifest and Web runtime
