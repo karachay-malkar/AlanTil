@@ -11,7 +11,7 @@ const {build}=requireDeps('esbuild');
 await fs.mkdir('video-output',{recursive:true});
 const hash=v=>createHash('sha256').update(v).digest('hex');
 const parity={};
-for(const file of ['src/features/ashyk/runtime.js','src/shared/styles/app.css','src/features/ashyk/ashyk.css','src/features/ashyk/ashyk-16-7.css']){
+for(const file of ['src/features/ashyk/runtime.js','src/shared/styles/app.css','src/features/ashyk/ashyk.css','src/features/ashyk/ashyk-16-7.css','assets/ashyk/audio/clack.mp3','assets/ashyk/audio/smaller-horn-dropped-on-stone-floor.mp3','assets/ashyk/audio/wood-hard-hit.wav']){
  const local=await fs.readFile(file);const response=await fetch('https://alantil.ru/'+file,{signal:AbortSignal.timeout(20000)});
  if(!response.ok)throw Error('Live source check failed: '+file+' '+response.status);
  const live=Buffer.from(await response.arrayBuffer());parity[file]={local:hash(local),live:hash(live),matches:hash(local)===hash(live)};
@@ -94,6 +94,7 @@ try{
  await page.evaluate(()=>globalThis.__ashykRecording.store.restart());
  ffmpeg=spawn('ffmpeg',['-y','-f','x11grab','-framerate','30','-video_size','1280x900','-i',process.env.DISPLAY||':99','-f','pulse','-i','default','-c:v','libx264','-preset','veryfast','-crf','19','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','video-output/ashyk-rules.mp4'],{stdio:['pipe','ignore','inherit']});
  await caption('Как играть','Цель — набрать больше очков.\n\nВыберите ашык и ударьте им по другому ашыку с такой же верхней гранью.',9000);
+ await caption('Грани и очки','Чык — 1 очко\nФок — 2 очка\nТау — 3 очка\nАлчы — 4 очка\nБий — 15 очков\n\nКъыт → Къыт — мгновенная победа.',11000);
  await layout();
  await caption('Сначала сравните грани','Сравнивайте верхние грани при ударе.\n\nПоложение после столкновения не определяет взятие.',8000);
  await page.evaluate(()=>globalThis.__ashykRecording.engine.select(0));
@@ -127,8 +128,8 @@ try{
  await caption('Неверный ответ','За ошибочный перевод снимается 1 очко.\n\nОчки уже выполненного взятия сохраняются. Дополнительного удара нет.',7000);
  const wrong=await page.evaluate(()=>{const q=globalThis.__ashykRecording.store.getState().question;return q.options.find(x=>String(x.id)!==String(q.answerId)).text;});
  await page.getByRole('button',{name:wrong,exact:true}).click();await page.getByRole('button',{name:'Ответить',exact:true}).click();
- await caption('Можно пропустить?','Да. «Не отвечать» передаёт ход сопернику без штрафа за ответ.\n\nДополнительный удар при пропуске не выдаётся.',6000);
- await layout();await shoot('same');await page.getByRole('button',{name:'Не отвечать',exact:true}).click();
+ await caption('Можно пропустить?','Да. «Пропуск» передаёт ход сопернику без штрафа за ответ.\n\nДополнительный удар при пропуске не выдаётся.',6000);
+ await layout();await shoot('same');await page.getByRole('button',{name:'Пропуск',exact:true}).click();
  await caption('Время и завершение','Следите за таймером в игре.\n\nПосле окончания времени ход переходит сопернику. В обычной партии победитель определяется по счёту, когда остаётся один ашык.',8000);
  await layout('kyt');
  await caption('Особое правило: Къыт','Успешное взятие «Къыт → Къыт» — мгновенная победа.\n\nТекущий счёт не имеет значения. Касание третьего ашыка всё равно отменяет взятие.',7500);
@@ -136,6 +137,7 @@ try{
  await caption('Запомните главное','Одинаковые грани при ударе.\nНе заденьте третий ашык.\nВерный ответ даёт +3 и ещё удар.\n«Къыт → Къыт» сразу завершает игру.',10000);
  await page.screenshot({path:'video-output/preview.png'});
  if(errors.length)throw Error('Browser errors: '+errors.join('\n'));
+ console.log('VIDEO_VERIFICATION',JSON.stringify({scenes:results,errors}));
  await fs.writeFile('video-output/verification.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,scenes:results,errors,notes:'Offline instructional arrangements, original renderer, engine and audio. No generated imagery.'},null,2));
 }finally{
  if(ffmpeg){ffmpeg.stdin.write('q\n');await new Promise(r=>ffmpeg.once('exit',r));}await browser.close();server.kill();
