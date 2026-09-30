@@ -61,3 +61,5 @@ jobs:
         run: |
           node scripts/sync-visual-contract-16-7.mjs --check
           node scripts/qa/check-generated.mjs --ashyk
+      - name: Full project QA
+        run: node scripts/qa/final.mjs
