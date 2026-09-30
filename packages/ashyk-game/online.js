@@ -3,6 +3,13 @@ const ACTIVE_ROOM_STATUSES=new Set(['waiting','playing']);
 const VISUAL_EVENTS=Object.freeze(['piece-selected','piece-deselected','shot-mode','aim-update','aim-clear','question-select','question-submit','question-skip','shot-trajectory']);
 function inviteResult(value){const row=single(value)||{};return{invite:row.invite||null,room:row.room||null};}
 export function isActiveAshykRoom(room){return Boolean(room?.id&&ACTIVE_ROOM_STATUSES.has(room.status));}
+export async function resignAshykRoom(online,roomId){
+  const id=String(roomId||'').trim();
+  if(!online||!id)return null;
+  await online.leaveRoom(id);
+  return online.getRoom(id);
+}
+
 export function createAshykOnlineAdapter(client,{setTimer=globalThis.setTimeout,clearTimer=globalThis.clearTimeout}={}){
   if(!client)throw new Error('Ashyk online client is required');
   async function rpc(name,args){

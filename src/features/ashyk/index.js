@@ -85,7 +85,7 @@ export async function mount(context){
     ensureOnlineBuild:ensureCurrentAshykBuild,
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onRoomChange(room){activeRoomId=room?.id||null;},
-    onExit(){history.back();},
+    onExit(){void context.router.replace('practice.home');},
   });
 }
 
