@@ -6,7 +6,7 @@ import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 
 const GUIDE_STATE_KEY = "alantil_guided_help_v1";
 const GUIDE_STYLE_ID = "alantil-guided-help-style";
-const STORY_SEQUENCE = ["understanding", "roots", "ascent", "pathways"];
+const STORY_ORDER = Object.freeze(["understanding", "roots", "ascent", "pathways"]);
 const STORY_GUIDE = Object.freeze({
   understanding: Object.freeze({ titleKey: "guide.story.understanding.title", bodyKey: "guide.story.understanding.body" }),
   roots: Object.freeze({ titleKey: "guide.story.roots.title", bodyKey: "guide.story.roots.body" }),
@@ -714,6 +714,21 @@ function storyPanelTarget() {
   return document.querySelector(".pathStickyControls") || document.querySelector(".storyTabs");
 }
 
+function availableStorySequence() {
+  const available = new Set(
+    Array.from(document.querySelectorAll("[data-story-tab]"))
+      .map((node) => String(node?.dataset?.storyTab || "").trim())
+      .filter(Boolean),
+  );
+  return STORY_ORDER.filter((storyId) => available.has(storyId));
+}
+
+function summaryStoryId() {
+  const stories = availableStorySequence();
+  if (stories.includes("roots")) return "roots";
+  return stories[0] || "";
+}
+
 function showStoriesIntro() {
   generalGuide.phase = "stories-intro";
   const target = storyPanelTarget();
@@ -742,10 +757,12 @@ function requestStory(storyId) {
 }
 
 function showStory(index) {
-  const safeIndex = clamp(index, 0, STORY_SEQUENCE.length - 1);
+  const stories = availableStorySequence();
+  if (!stories.length) { scheduleScan(); return; }
+  const safeIndex = clamp(index, 0, stories.length - 1);
   generalGuide.phase = "story";
   generalGuide.storyIndex = safeIndex;
-  const storyId = STORY_SEQUENCE[safeIndex];
+  const storyId = stories[safeIndex];
   if (!requestStory(storyId)) return;
   closeOpenStele();
   const target = document.querySelector(`[data-story-tab="${storyId}"]`);
@@ -756,7 +773,7 @@ function showStory(index) {
     target,
     title: msg(copy.titleKey),
     body: msg(copy.bodyKey),
-    onNext: () => safeIndex < STORY_SEQUENCE.length - 1 ? showStory(safeIndex + 1) : showStorySummary(),
+    onNext: () => safeIndex < stories.length - 1 ? showStory(safeIndex + 1) : showStorySummary(),
     onSkip: skipGeneralGuide,
     spotlightShape: "pill",
     spotlightPadding: 7,
@@ -767,7 +784,9 @@ function showStory(index) {
 
 function showStorySummary() {
   generalGuide.phase = "summary";
-  if (!requestStory("roots")) return;
+  const storyId = summaryStoryId();
+  if (!storyId) { scheduleScan(); return; }
+  if (!requestStory(storyId)) return;
   closeOpenStele();
   const target = storyPanelTarget();
   if (!target) { scheduleScan(); return; }
@@ -1498,8 +1517,10 @@ function scanGeneral() {
   closeOpenStele();
   if (generalGuide.phase === "stories-intro" && overlayNeeds("general:stories-intro")) showStoriesIntro();
   else if (generalGuide.phase === "story") {
-    const storyId = STORY_SEQUENCE[generalGuide.storyIndex];
-    if (overlayNeeds(`general:story:${storyId}`)) showStory(generalGuide.storyIndex);
+    const stories = availableStorySequence();
+    const storyId = stories[generalGuide.storyIndex];
+    if (!storyId) showStorySummary();
+    else if (overlayNeeds(`general:story:${storyId}`)) showStory(generalGuide.storyIndex);
   } else if (generalGuide.phase === "summary" && overlayNeeds("general:summary")) showStorySummary();
   else if (generalGuide.phase === "stages"
     && (!activeOverlay || !activeOverlay.stepKey.startsWith("general:stages:") || activeOverlay.hasDisconnectedTargets())) showStages();
