@@ -41,6 +41,7 @@ jobs:
             ffprobe -v error -show_format -show_streams -of json video-output/ashyk-rules.mp4 > video-output/media-info.json
             ffmpeg -i video-output/ashyk-rules.mp4 -af volumedetect -vn -sn -dn -f null - 2> video-output/audio-check.txt
           fi
+          python3 -c 'import json,re,pathlib; p=pathlib.Path("video-output"); m=json.loads((p/"media-info.json").read_text()); a=(p/"audio-check.txt").read_text(); v=re.search(r"max_volume: ([\-0-9.]+) dB",a); print("MEDIA_VERIFIED",m["format"]["duration"],m["format"]["size"],v.group(1) if v else "missing"); assert v and float(v.group(1)) > -55; assert len(m["streams"]) == 2; assert (p/"verification.json").exists()'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
