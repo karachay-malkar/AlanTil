@@ -1,0 +1,34 @@
+name: Temp visibility source export
+on:
+  push:
+    branches:
+      - agent/16.8.0-visibility-audit-temp
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6a511c2e14607bdcb275ab4817fb6c3c4abbfca5
+          fetch-depth: 1
+      - name: Zip source
+        run: |
+          python - <<'PY'
+          import os, zipfile
+          out='/tmp/alantil-visibility-source.zip'
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED,allowZip64=True) as z:
+              for root, dirs, files in os.walk('.'):
+                  dirs[:] = [d for d in dirs if d != '.git']
+                  for f in files:
+                      p=os.path.join(root,f)
+                      rel=os.path.relpath(p,'.')
+                      z.write(p,rel)
+          print(out, os.path.getsize(out))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alantil-visibility-source
+          path: /tmp/alantil-visibility-source.zip
+          compression-level: 0
