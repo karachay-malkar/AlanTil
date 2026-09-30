@@ -10,6 +10,8 @@ const webSnapshot=JSON.parse(await readFile(path.join(projectRoot,'src/data/dict
 const mobileSnapshot=JSON.parse(await readFile(path.join(projectRoot,'mobile/data/dictionary-snapshot.json'),'utf8'));
 const starterDictionarySource=await readFile(path.join(projectRoot,'src/data/starter-dictionary.js'),'utf8');
 const guideSource=await readFile(path.join(projectRoot,'src/features/onboarding/guide.js'),'utf8');
+const mobilePathSource=await readFile(path.join(projectRoot,'mobile/screens/path.js'),'utf8');
+const mobileAppRootSource=await readFile(path.join(projectRoot,'mobile/AppRoot.js'),'utf8');
 
 function snapshotWords(snapshot){return Array.isArray(snapshot?.words)?snapshot.words:[];}
 function hiddenAdvancedWords(snapshot){
@@ -40,4 +42,18 @@ test('guided help derives story steps from currently rendered Path stories',()=>
   assert.match(guideSource,/function\s+availableStorySequence\s*\(/);
   assert.match(guideSource,/querySelectorAll\(["']\[data-story-tab\]["']\)/);
   assert.doesNotMatch(guideSource,/const\s+STORY_SEQUENCE\s*=\s*\[/);
+});
+
+
+test('native Path consumes the runtime-visible story sequence for guided help',()=>{
+  assert.match(mobilePathSource,/visibleStories=new Set\(route\.storyOrder\|\|\[\]\)/);
+  assert.match(mobilePathSource,/visibleStories\.has\(step\.story\)/);
+  assert.doesNotMatch(mobilePathSource,/GENERAL_GUIDE_STEPS\[guideIndex\]/);
+});
+
+test('native dictionary refresh invalidates sessions that retain unavailable content',()=>{
+  assert.match(mobileAppRootSource,/function\s+routeHasStation\s*\(/);
+  assert.match(mobileAppRootSource,/invalidPracticeContext/);
+  assert.match(mobileAppRootSource,/invalidLearnContext/);
+  assert.match(mobileAppRootSource,/setScreen\('home'\)/);
 });
