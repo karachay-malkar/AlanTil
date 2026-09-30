@@ -9,6 +9,7 @@ const bootstrap=await readFile(path.join(projectRoot,'src/app/bootstrap.js'),'ut
 const webSnapshot=JSON.parse(await readFile(path.join(projectRoot,'src/data/dictionary-snapshot.json'),'utf8'));
 const mobileSnapshot=JSON.parse(await readFile(path.join(projectRoot,'mobile/data/dictionary-snapshot.json'),'utf8'));
 const starterDictionarySource=await readFile(path.join(projectRoot,'src/data/starter-dictionary.js'),'utf8');
+const guideSource=await readFile(path.join(projectRoot,'src/features/onboarding/guide.js'),'utf8');
 
 function snapshotWords(snapshot){return Array.isArray(snapshot?.words)?snapshot.words:[];}
 function hiddenAdvancedWords(snapshot){
@@ -33,4 +34,10 @@ test('bundled Mobile dictionary does not ship hidden Advanced content',()=>{
 
 test('emergency starter does not expose hidden Advanced content',()=>{
   assert.doesNotMatch(starterDictionarySource,/Восхождение|advanced|ascent/);
+});
+
+test('guided help derives story steps from currently rendered Path stories',()=>{
+  assert.match(guideSource,/function\s+availableStorySequence\s*\(/);
+  assert.match(guideSource,/querySelectorAll\(\["']?\[data-story-tab\]/);
+  assert.doesNotMatch(guideSource,/const\s+STORY_SEQUENCE\s*=\s*\[/);
 });
