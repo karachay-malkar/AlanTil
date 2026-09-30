@@ -14,6 +14,16 @@
 .appShell[data-screen="ashyk"] .ashykSetupSection{display:grid;grid-template-columns:minmax(100px,1fr) minmax(178px,auto);align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--line-soft)}
 .appShell[data-screen="ashyk"] .ashykDifficultyHint{min-height:40px;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--line-soft);border-radius:12px;background:color-mix(in srgb,var(--surface-0) 54%,transparent);display:flex;align-items:center}
 .appShell[data-screen="ashyk"] .ashykDifficultyHint span{color:var(--text-2);font:650 10px/1.45 var(--font-terminal)}
+.appShell[data-screen="ashyk"] .ashykWordScopeSection{margin-top:12px}
+.appShell[data-screen="ashyk"] .ashykWordScopes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.appShell[data-screen="ashyk"] .ashykWordScope{min-height:42px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--surface-0) 46%,transparent);display:flex;align-items:center;gap:9px;cursor:pointer}
+.appShell[data-screen="ashyk"] .ashykWordScope input{position:absolute;opacity:0;pointer-events:none}
+.appShell[data-screen="ashyk"] .ashykWordScope>span{width:18px;height:18px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface-0);display:grid;place-items:center;flex:0 0 auto}
+.appShell[data-screen="ashyk"] .ashykWordScope input:checked+span{background:var(--accent);border-color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykWordScope input:checked+span:after{content:"✓";color:var(--surface-0);font:800 12px/1 var(--font-sans)}
+.appShell[data-screen="ashyk"] .ashykWordScope b{color:var(--text-2);font-size:12px;line-height:1.35}
+.appShell[data-screen="ashyk"] .ashykWordScope:has(input:checked){border-color:var(--line-strong);background:var(--surface-0);box-shadow:var(--shadow-xs)}
+.appShell[data-screen="ashyk"] .ashykWordScope:has(input:checked) b{color:var(--text-1)}
 .appShell[data-screen="ashyk"] .ashykModeLock{min-height:148px;margin-top:12px;padding:18px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface-0) 62%,transparent);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px}
 .appShell[data-screen="ashyk"] .ashykModeLock p{margin:0;color:var(--text-2);font-size:13px;line-height:1.5}
 .appShell[data-screen="ashyk"] .ashykModeLock .ashykPrimary{width:auto;min-width:190px}

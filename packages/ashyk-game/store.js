@@ -1,17 +1,17 @@
 import {DIFFICULTIES,ONLINE_RULES} from './constants.js';
 import {faceValue} from './faces.js';
-import {createAshykQuestionDeck} from './vocabulary.js';
+import {ashykAvailableStoryScopes,createAshykQuestionDeck} from './vocabulary.js';
 import {ASHYK_FEATURE_FLAGS} from '../alantil-core/ashyk-access.js';
 
-const clone=(state)=>({...state,scores:[...state.scores],question:state.question?{...state.question,options:state.question.options.map((item)=>({...item}))}:null,questionReview:state.questionReview?{...state.questionReview,question:state.questionReview.question?{...state.questionReview.question,options:state.questionReview.question.options.map((item)=>({...item}))}:null}:null,lastOutcome:state.lastOutcome?{...state.lastOutcome}:null,scorePulse:state.scorePulse?{...state.scorePulse}:null,onlineRoom:state.onlineRoom?{...state.onlineRoom}:null,onlineAction:state.onlineAction?{...state.onlineAction}:null});
+const clone=(state)=>({...state,scores:[...state.scores],selectedStoryIds:[...(state.selectedStoryIds||[])],availableStoryScopes:(state.availableStoryScopes||[]).map((scope)=>({...scope,names:{...(scope.names||{})}})),question:state.question?{...state.question,options:state.question.options.map((item)=>({...item}))}:null,questionReview:state.questionReview?{...state.questionReview,question:state.questionReview.question?{...state.questionReview.question,options:state.questionReview.question.options.map((item)=>({...item}))}:null}:null,lastOutcome:state.lastOutcome?{...state.lastOutcome}:null,scorePulse:state.scorePulse?{...state.scorePulse}:null,onlineRoom:state.onlineRoom?{...state.onlineRoom}:null,onlineAction:state.onlineAction?{...state.onlineAction}:null});
 const actionId=()=>globalThis.crypto?.randomUUID?.()||`ashyk-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 const transientId=(prefix)=>`${prefix}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`;
 const remainingSeconds=(deadline,nowMs)=>{const end=Date.parse(String(deadline||''));return Number.isFinite(end)?Math.max(0,Math.ceil((end-nowMs)/1000)):null;};
 const activeRoomStatus=(status)=>status==='waiting'||status==='playing';
 
 export function createAshykGameStore({engine,words=[],random=Math.random,setTimer=globalThis.setTimeout?.bind(globalThis),clearTimer=globalThis.clearTimeout?.bind(globalThis),setRepeater=globalThis.setInterval?.bind(globalThis),clearRepeater=globalThis.clearInterval?.bind(globalThis),now=()=>Date.now()}={}){
-  let deck=createAshykQuestionDeck(words),computerTimer=0,ticker=0,listeners=new Set();
-  let state={gameMode:'computer',selectedDifficulty:'normal',difficulty:null,status:'setup',player:1,localPlayer:1,scores:[0,0],phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:0,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusChoose',onlineRoom:null,onlineAction:null};
+  let questionWords=Array.isArray(words)?words:[],availableStoryScopes=ashykAvailableStoryScopes(questionWords),selectedStoryIds=availableStoryScopes.map((scope)=>scope.id),scopeSelectionInitialized=availableStoryScopes.length>0,deck=createAshykQuestionDeck(questionWords,{storyIds:selectedStoryIds}),computerTimer=0,ticker=0,listeners=new Set();
+  let state={gameMode:'computer',selectedDifficulty:'normal',difficulty:null,status:'setup',player:1,localPlayer:1,scores:[0,0],availableStoryScopes,selectedStoryIds,phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:0,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusChoose',onlineRoom:null,onlineAction:null};
   const emit=()=>{const value=clone(state);listeners.forEach((listener)=>listener(value));};
   const patch=(next)=>{state={...state,...next};emit();};
   const config=()=>state.gameMode==='online'?ONLINE_RULES:(DIFFICULTIES[state.difficulty||state.selectedDifficulty]||DIFFICULTIES.normal);
@@ -55,7 +55,7 @@ export function createAshykGameStore({engine,words=[],random=Math.random,setTime
   function scheduleComputer(){clearComputerTimer();if(!setTimer||state.status!=='playing'||!isComputerTurn())return;if(state.phase==='bonus-question'&&state.question&&!state.questionLocked){computerTimer=setTimer(()=>{computerTimer=0;const correct=random()<config().computerAnswerAccuracy,wrong=state.question.options.filter((item)=>String(item.id)!==String(state.question.answerId)),choice=correct?state.question.answerId:(wrong[Math.floor(random()*wrong.length)]?.id??state.question.answerId);submitAnswer(choice);},700);return;}if(state.ready&&state.phase!=='bonus-question'){computerTimer=setTimer(()=>{computerTimer=0;engine?.launchComputer?.(config().computerShotAccuracy);},650);}}
   function tick(){if(state.status!=='playing'||!isLocalTurn())return;if(state.gameMode==='online'){const seconds=remainingSeconds(state.onlineRoom?.phase_deadline_at,now());if(state.phase==='bonus-question'&&state.question&&!state.questionLocked){const next=seconds??Math.max(0,state.questionSeconds-1);if(next!==state.questionSeconds)patch({questionSeconds:next});return;}const next=seconds??Math.max(0,state.shotSeconds-1);if(next!==state.shotSeconds)patch({shotSeconds:next});return;}if(state.phase==='bonus-question'&&state.question&&!state.questionLocked){if(state.questionSeconds<=1){showOutcome('timeout',{},false);startTurn(state.player===1?2:1);}else patch({questionSeconds:state.questionSeconds-1});return;}if(state.ready&&state.phase!=='bonus-question'){if(state.shotSeconds<=1){showOutcome('timeout',{},false);startTurn(state.player===1?2:1);}else patch({shotSeconds:state.shotSeconds-1});}}
   function handleEngineEvent(event){if(event.type==='ready'){patch({ready:Boolean(event.ready)});scheduleComputer();return;}if(event.type==='selection'){patch({selectedId:event.selectedId??null,selectedFace:event.face??null,statusCode:event.selectedId!==null?'statusSelected':isLocalTurn()?'statusChoosePiece':'statusOpponent'});return;}if(event.type==='shot')patch({ready:false,selectedId:null,selectedFace:null});if(event.type==='shotSettled')onShotSettled(event.result,event.shotId||null);}
-  function startComputer(level=state.selectedDifficulty){const difficulty=DIFFICULTIES[level]?level:'normal';clearComputerTimer();deck.reset();engine?.reset?.();patch({gameMode:'computer',selectedDifficulty:difficulty,difficulty,status:'playing',player:1,localPlayer:1,scores:[0,0],phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:DIFFICULTIES[difficulty].humanShotSeconds,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusSettling',onlineRoom:null,onlineAction:null});ensureTicker();}
+  function startComputer(level=state.selectedDifficulty){if(state.availableStoryScopes.length&&!state.selectedStoryIds.length)return false;const difficulty=DIFFICULTIES[level]?level:'normal';clearComputerTimer();deck.reset();engine?.reset?.();patch({gameMode:'computer',selectedDifficulty:difficulty,difficulty,status:'playing',player:1,localPlayer:1,scores:[0,0],phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:DIFFICULTIES[difficulty].humanShotSeconds,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusSettling',onlineRoom:null,onlineAction:null});ensureTicker();return true;}
   function startLocal(level=state.selectedDifficulty){if(!ASHYK_FEATURE_FLAGS.allowLocalSameDevice)return false;const difficulty=DIFFICULTIES[level]?level:'normal';clearComputerTimer();deck.reset();engine?.reset?.();patch({gameMode:'local',selectedDifficulty:difficulty,difficulty,status:'playing',player:1,localPlayer:1,scores:[0,0],phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:DIFFICULTIES[difficulty].humanShotSeconds,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusSettling',onlineRoom:null,onlineAction:null});ensureTicker();}
   function serverOutcome(room,stateData,localPlayer){
     const actionType=String(room.last_action_type||''),actorPlayer=room.last_action_actor_user_id===room.host_user_id?1:room.last_action_actor_user_id===room.guest_user_id?2:null,actionId=String(room.last_action_id||'');
@@ -93,11 +93,30 @@ export function createAshykGameStore({engine,words=[],random=Math.random,setTime
   }
   function onlineGameState(){return{field:engine?.snapshot?.()||{pieces:[]},scores:[...state.scores],currentPlayer:state.player,remainingAshyks:state.remainingAshyks,winner:state.winner,winByKyt:state.winByKyt,phase:state.phase,question:state.question?{...state.question,options:state.question.options.map((item)=>({...item}))}:null,questionLocked:state.questionLocked,wrongAnswerId:state.wrongAnswerId,lastOutcome:state.lastOutcome?{...state.lastOutcome}:null};}
   function restart(){clearComputerTimer();deck.reset();engine?.reset?.();patch({difficulty:null,status:'setup',player:1,localPlayer:1,scores:[0,0],phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:0,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusChoose',onlineRoom:null,onlineAction:null});}
-  function setWords(next){deck=createAshykQuestionDeck(next||[]);}
+  function setWords(next){
+    questionWords=Array.isArray(next)?next:[];
+    availableStoryScopes=ashykAvailableStoryScopes(questionWords);
+    const availableIds=availableStoryScopes.map((scope)=>scope.id),available=new Set(availableIds);
+    let selected=(state.selectedStoryIds||[]).filter((id)=>available.has(id));
+    if(!scopeSelectionInitialized&&availableIds.length){selected=[...availableIds];scopeSelectionInitialized=true;}
+    else if((state.selectedStoryIds||[]).length&&availableIds.length&&!selected.length)selected=[...availableIds];
+    selectedStoryIds=selected;
+    deck=createAshykQuestionDeck(questionWords,{storyIds:selectedStoryIds});
+    patch({availableStoryScopes,selectedStoryIds:[...selectedStoryIds]});
+  }
+  function setWordStories(ids){
+    if(state.status!=='setup')return false;
+    scopeSelectionInitialized=true;
+    const allowed=new Set(availableStoryScopes.map((scope)=>scope.id));
+    selectedStoryIds=Array.from(new Set((Array.isArray(ids)?ids:[]).map((id)=>String(id||'').trim()).filter((id)=>allowed.has(id))));
+    deck=createAshykQuestionDeck(questionWords,{storyIds:selectedStoryIds});
+    patch({selectedStoryIds:[...selectedStoryIds]});
+    return selectedStoryIds.length>0;
+  }
   function setMode(mode){if(state.status!=='setup')return;const next=mode==='online'&&ASHYK_FEATURE_FLAGS.allowOnlineFriend?'online':mode==='local'&&ASHYK_FEATURE_FLAGS.allowLocalSameDevice?'local':'computer';patch({gameMode:next});}
   function setDifficulty(level){if(state.status!=='setup'||!DIFFICULTIES[level])return;patch({selectedDifficulty:level});}
   function subscribe(listener){listeners.add(listener);listener(clone(state));return()=>listeners.delete(listener);}
   function destroy(){clearComputerTimer();stopTicker();listeners.clear();}
   ensureTicker();
-  return{subscribe,getState:()=>clone(state),setWords,setMode,setDifficulty,startComputer,startLocal,hydrateOnline,applyRemoteVisual,onlineGameState,restart,skipQuestion,submitAnswer,handleEngineEvent,startTurn,finish,destroy,isLocalTurn,isHumanTurn,isComputerTurn};
+  return{subscribe,getState:()=>clone(state),setWords,setWordStories,setMode,setDifficulty,startComputer,startLocal,hydrateOnline,applyRemoteVisual,onlineGameState,restart,skipQuestion,submitAnswer,handleEngineEvent,startTurn,finish,destroy,isLocalTurn,isHumanTurn,isComputerTurn};
 }
