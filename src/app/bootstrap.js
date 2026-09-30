@@ -124,8 +124,11 @@ async function bootstrap() {
     globalThis.setTimeout(async () => {
       dictionaryRefreshQueued = false;
       const route = router.getCurrent().route;
-      if (route === "path.home") return;
-      if (!route.startsWith("path.") && !route.startsWith("learn.")) return;
+      const dictionaryDrivenRoute = route.startsWith("path.")
+        || route.startsWith("learn.")
+        || route === "test.menu"
+        || route === "match.menu";
+      if (!dictionaryDrivenRoute) return;
       await router.refresh({ background: true, reason: "dictionary_update" });
     }, 100);
   };

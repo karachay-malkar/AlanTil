@@ -268,6 +268,7 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
   const m=(key,params)=>msg(settings,key,params),configuredDefault=route.stories?.[route.defaultStoryType]?route.defaultStoryType:(route.storyOrder?.[0]||''),defaultStory=route.stories?.[initialStory]?initialStory:configuredDefault;
   const [activeStory,setActiveStory]=useState(defaultStory),[pathReady,setPathReady]=useState(false),[guideStateReady,setGuideStateReady]=useState(false),[generalCompleted,setGeneralCompleted]=useState(false),[progressMap,setProgressMap]=useState(()=>new Map()),[geometry,setGeometry]=useState(null),[guideIndex,setGuideIndex]=useState(-1),[guideStationKey,setGuideStationKey]=useState(''),[steleOpen,setSteleOpen]=useState(false);
   const [guideDemoActive,setGuideDemoActive]=useState(false),[guideDemoFinished,setGuideDemoFinished]=useState(false),[guideDemoDoneKeys,setGuideDemoDoneKeys]=useState(()=>new Set()),[guideDemoBursts,setGuideDemoBursts]=useState(()=>new Map());
+  const generalGuideSteps=useMemo(()=>{const visibleStories=new Set(route.storyOrder||[]);return GENERAL_GUIDE_STEPS.filter((step)=>!step?.id?.startsWith('story:')||visibleStories.has(step.story));},[route]);
   const stationWindow=useRef(createPathWindow(defaultStory)).current;
   const scrollRef=useRef(null),positionedRef=useRef(false),offsetRef=useRef(0),contentHeightRef=useRef(1),viewportHeightRef=useRef(1),storyRef=useRef(defaultStory),storyTabsRef=useRef(null),storyTabsControlRef=useRef(null),routeScaleRef=useRef(null),geometryRef=useRef(geometryBuffer()),geometryFrameRef=useRef(0),geometrySignatureRef=useRef(''),restoreGenerationRef=useRef(0),restoreInFlightRef=useRef(''),storyTargetRefsRef=useRef(new Map()),stationTargetRefsRef=useRef(new Map());
   const guideDemoFrameRef=useRef(0),guideDemoGenerationRef=useRef(0),guideDemoTimersRef=useRef(new Set()),guideDemoOriginalOffsetRef=useRef(null),guideConnectorClipRef=useRef(null);
@@ -310,7 +311,7 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
   const startGuide=()=>{resetGuideProgressDemo();setSteleOpen(false);beginNativeGeneralGuide();setGuideStationKey('');setGuideIndex(0);};
   const showUnseenStele=async()=>{const target=storyRef.current,seen=await hasSeenNativeStoryStele(target).catch(()=>true);if(!seen&&storyRef.current===target&&!getNativeGeneralGuideRuntime().active)setSteleOpen(true);};
   const stopGuide=async()=>{resetGuideProgressDemo();resetNativeGeneralGuideRuntime();setGuideStationKey('');setGuideIndex(-1);setGeneralCompleted(true);await saveNativeGuideState({general_completed:true}).catch(()=>{});await showUnseenStele();};
-  const currentGuide=guideIndex>=0?GENERAL_GUIDE_STEPS[guideIndex]:null;
+  const currentGuide=guideIndex>=0?generalGuideSteps[guideIndex]:null;
 
   const story=route.stories?.[activeStory],stations=story?.stations||[],snapshot=useMemo(()=>createRouteProgressSnapshot(progressMap),[progressMap]),storySummary=useMemo(()=>storyProgress(route,activeStory,snapshot),[route,activeStory,snapshot]),stationIndex=useMemo(()=>new Map(stations.map((station,index)=>[station.key,index])),[stations]);
   const amplitude=Math.min(theme.path.waveAmplitudeMax,Math.max(theme.path.waveAmplitudeMin,viewportWidth*theme.path.waveAmplitudeWidthRatio));
@@ -479,10 +480,10 @@ export function PathScreen({route,settings={},initialStory='',onOpenStation,onOp
   const nextGuide=async()=>{
     if(!currentGuide)return;
     if(currentGuide.id==='stages'){if(guideDemoFinished){await stopGuide();return;}await startGuideProgressDemo();return;}
-    const nextIndex=guideIndex+1;if(nextIndex>=GENERAL_GUIDE_STEPS.length){stopGuide();return;}
-    const next=GENERAL_GUIDE_STEPS[nextIndex];setSteleOpen(false);
+    const nextIndex=guideIndex+1;if(nextIndex>=generalGuideSteps.length){stopGuide();return;}
+    const next=generalGuideSteps[nextIndex];setSteleOpen(false);
     if(next?.story&&route.stories?.[next.story]){if(next.story!==storyRef.current)void changeStory(next.story);void storyTabsControlRef.current?.scrollToStory?.(next.story,true);}
-    const storyIndex=next?.story?Math.max(0,GENERAL_GUIDE_STEPS.filter(step=>step?.id?.startsWith('story:')).findIndex(step=>step.story===next.story)):getNativeGeneralGuideRuntime().storyIndex;
+    const storyIndex=next?.story?Math.max(0,generalGuideSteps.filter(step=>step?.id?.startsWith('story:')).findIndex(step=>step.story===next.story)):getNativeGeneralGuideRuntime().storyIndex;
     setNativeGeneralGuideRuntime({active:true,phase:next?.id?.startsWith('story:')?'story':next?.id||'',storyIndex});
     if(next?.id==='stages'){selectVisibleGuideStation();requestAnimationFrame(()=>setGuideIndex(nextIndex));return;}
     setGuideIndex(nextIndex);
