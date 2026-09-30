@@ -3,9 +3,22 @@ import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {chromium} from 'playwright';
+import {normalizeSupabaseWordEntry} from '../packages/alantil-core/word-normalizer.js';
+import {storiesByDictionary} from '../packages/alantil-core/dictionary-contract.js';
+import {createHash} from 'node:crypto';
 const requireDeps=createRequire(path.resolve('tools/ashyk-web/package.json'));
 const {build}=requireDeps('esbuild');
 await fs.mkdir('video-output',{recursive:true});
+const hash=v=>createHash('sha256').update(v).digest('hex');
+const parity={};
+for(const file of ['src/features/ashyk/runtime.js','src/shared/styles/app.css','src/features/ashyk/ashyk.css','src/features/ashyk/ashyk-16-7.css']){
+ const local=await fs.readFile(file);const response=await fetch('https://alantil.ru/'+file,{signal:AbortSignal.timeout(20000)});
+ if(!response.ok)throw Error('Live source check failed: '+file+' '+response.status);
+ const live=Buffer.from(await response.arrayBuffer());parity[file]={local:hash(local),live:hash(live),matches:hash(local)===hash(live)};
+}
+await fs.writeFile('video-output/source-parity.json',JSON.stringify(parity,null,2));
+console.log('SOURCE_PARITY',JSON.stringify(parity));
+if(Object.values(parity).some(v=>!v.matches))throw Error('Copied build differs from current website; refusing to claim exact visual parity');
 const original=await fs.readFile('packages/ashyk-game/web/Game.jsx','utf8');
 const needle='const {engine,store}=storeRef.current,state=useStore(store)';
 if(!original.includes(needle))throw Error('Recording hook location changed');
@@ -17,7 +30,9 @@ const originalStore=await fs.readFile(storePath,'utf8');
 await fs.writeFile(storePath,originalStore.replace('if(!ASHYK_FEATURE_FLAGS.allowLocalSameDevice)return false;',''));
 const snapshot=JSON.parse(await fs.readFile('src/data/dictionary-snapshot.json','utf8'));
 function findWords(o){if(Array.isArray(o)){if(o.some(v=>v&&typeof v==='object'&&(v.word||v.wordAlanCyrillic)))return o;for(const v of o){const r=findWords(v);if(r)return r;}}else if(o&&typeof o==='object'){for(const v of Object.values(o)){const r=findWords(v);if(r)return r;}}return null;}
-const words=findWords(snapshot);if(!words)throw Error('No dictionary words found');
+const stories=storiesByDictionary(snapshot.stories||[]);
+const words=(snapshot.words||[]).map(row=>normalizeSupabaseWordEntry(row,stories.get(String(row.dictionary_id||''))||null)).filter(Boolean);
+if(!words.length)throw Error('No dictionary words found');
 await fs.writeFile('video-output/words.json',JSON.stringify(words));
 await fs.writeFile('video-output/entry.jsx',String.raw`import {mountAshykGame} from '../packages/ashyk-game/web/entry.jsx';
 const words=await fetch('/video-output/words.json').then(r=>r.json());
