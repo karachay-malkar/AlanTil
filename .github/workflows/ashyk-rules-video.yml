@@ -1,0 +1,51 @@
+name: Ashyk instructional video
+on:
+  push:
+    branches: [agent/ashyk-rules-video-20260930]
+    paths:
+      - scripts/record-ashyk-rules-video.mjs
+      - .github/workflows/ashyk-rules-video.yml
+permissions:
+  contents: read
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser and media tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg xvfb pulseaudio
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npm install --prefix tools/ashyk-web --no-package-lock
+          npx playwright install --with-deps chromium
+      - name: Start sound output
+        run: |
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=recording sink_properties=device.description=Recording
+          pactl set-default-sink recording
+          pactl set-default-source recording.monitor
+      - name: Record original game
+        run: xvfb-run -a -s "-screen 0 1280x900x24" node scripts/record-ashyk-rules-video.mjs
+      - name: Validate video and sound
+        if: always()
+        run: |
+          if test -f video-output/ashyk-rules.mp4; then
+            ffprobe -v error -show_format -show_streams -of json video-output/ashyk-rules.mp4 > video-output/media-info.json
+            ffmpeg -i video-output/ashyk-rules.mp4 -af volumedetect -vn -sn -dn -f null - 2> video-output/audio-check.txt
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ashyk-rules-video
+          path: |
+            video-output/ashyk-rules.mp4
+            video-output/preview.png
+            video-output/verification.json
+            video-output/media-info.json
+            video-output/audio-check.txt
+          retention-days: 30
