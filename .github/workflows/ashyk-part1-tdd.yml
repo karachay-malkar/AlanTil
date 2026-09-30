@@ -4,7 +4,7 @@ on:
     branches:
       - agent/16.8.0-ashyk-guest-part1-tdd
 permissions:
-  contents: write
+  contents: read
 jobs:
   test:
     if: github.actor != 'github-actions[bot]'
@@ -17,21 +17,12 @@ jobs:
           node-version: '24'
       - name: Part 1 regression
         run: node --test tests/ashyk-guest-computer-16-8.test.mjs
+      - name: Architecture regressions
+        run: node --test tests/unified-core-boundary-16.test.mjs mobile/tests/architecture.test.mjs
+      - name: Existing Ashyk regressions
+        run: node --test tests/ashyk-native-core-16-6-11.test.mjs tests/ashyk-web-parity-16-6-13.test.mjs tests/social-ashyk-16-7-0.test.mjs tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/ashyk-wood-board-16-7-0.test.mjs mobile/tests/ashyk-ui-help-16-6-12.test.mjs
       - name: Access invariant
         run: node scripts/enforce-registered-ashyk-modes-16-7.mjs
-      - name: Regenerate visual manifest and Web runtime
-        run: |
-          node scripts/sync-visual-contract-16-7.mjs
-          node tools/ashyk-web/build.mjs
-      - name: Commit generated artifacts
-        run: |
-          if ! git diff --quiet -- mobile/ui/web-visual-source.js src/features/ashyk/runtime.js; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add mobile/ui/web-visual-source.js src/features/ashyk/runtime.js
-            git commit -m "build: refresh Ashyk part 1 generated artifacts"
-            git push
-          fi
       - name: Generated checks
         run: |
           node scripts/sync-visual-contract-16-7.mjs --check
