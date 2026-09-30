@@ -5,6 +5,9 @@ on:
     paths:
       - scripts/record-ashyk-rules-video.mjs
       - .github/workflows/ashyk-rules-video.yml
+concurrency:
+  group: ashyk-rules-video
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -45,6 +48,7 @@ jobs:
           path: |
             video-output/ashyk-rules.mp4
             video-output/preview.png
+            video-output/source-parity.json
             video-output/verification.json
             video-output/media-info.json
             video-output/audio-check.txt
