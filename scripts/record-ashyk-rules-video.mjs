@@ -10,6 +10,11 @@ const original=await fs.readFile('packages/ashyk-game/web/Game.jsx','utf8');
 const needle='const {engine,store}=storeRef.current,state=useStore(store)';
 if(!original.includes(needle))throw Error('Recording hook location changed');
 await fs.writeFile('packages/ashyk-game/web/Game.jsx',original.replace(needle,'globalThis.__ashykRecording=storeRef.current;'+needle));
+// Enable only the existing local store controller in this disposable build.
+// The UI flags and online access stay identical to the copied game.
+const storePath='packages/ashyk-game/store.js';
+const originalStore=await fs.readFile(storePath,'utf8');
+await fs.writeFile(storePath,originalStore.replace('if(!ASHYK_FEATURE_FLAGS.allowLocalSameDevice)return false;',''));
 const snapshot=JSON.parse(await fs.readFile('src/data/dictionary-snapshot.json','utf8'));
 function findWords(o){if(Array.isArray(o)){if(o.some(v=>v&&typeof v==='object'&&(v.word||v.wordAlanCyrillic)))return o;for(const v of o){const r=findWords(v);if(r)return r;}}else if(o&&typeof o==='object'){for(const v of Object.values(o)){const r=findWords(v);if(r)return r;}}return null;}
 const words=findWords(snapshot);if(!words)throw Error('No dictionary words found');
@@ -107,4 +112,5 @@ try{
 }finally{
  ffmpeg.stdin.write('q\n');await new Promise(r=>ffmpeg.once('exit',r));await browser.close();server.kill();
  await fs.writeFile('packages/ashyk-game/web/Game.jsx',original);
+ await fs.writeFile(storePath,originalStore);
 }
