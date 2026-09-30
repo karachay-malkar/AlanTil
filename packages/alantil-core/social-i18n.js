@@ -76,6 +76,8 @@ export const SOCIAL_MESSAGES=Object.freeze({
   guestPeriodAll:M('Всё время','All time','Tüm zamanlar'),
   friend:M('С другом','With a friend','Arkadaşla'),
   loginForModes:M('Войдите, чтобы играть с другом по сети.','Sign in to play online with a friend.','Bir arkadaşınızla çevrimiçi oynamak için giriş yapın.'),
+  friendModeRegisteredOnly:M('Игра с другом доступна только зарегистрированным пользователям.','Playing with a friend is available only to registered users.','Arkadaşla oyun yalnızca kayıtlı kullanıcılar için kullanılabilir.'),
+  signInOrCreateAccount:M('Войти или создать аккаунт','Sign in or create an account','Giriş yap veya hesap oluştur'),
   chooseFriend:M('Выберите друга','Choose a friend','Arkadaş seçin'),
   noFriendsForGame:M('Сначала добавьте друга во вкладке «Друзья».','Add a friend in the Friends tab first.','Önce Arkadaşlar sekmesinden bir arkadaş ekleyin.'),
   player1:M('Игрок 1','Player 1','Oyuncu 1'),

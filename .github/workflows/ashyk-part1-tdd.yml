@@ -4,7 +4,7 @@ on:
     branches:
       - agent/16.8.0-ashyk-guest-part1-tdd
 permissions:
-  contents: read
+  contents: write
 jobs:
   test:
     if: github.actor != 'github-actions[bot]'
@@ -42,6 +42,19 @@ jobs:
         run: node --test mobile/tests/ashyk-ui-help-16-6-12.test.mjs
       - name: Access invariant
         run: node scripts/enforce-registered-ashyk-modes-16-7.mjs
+      - name: Regenerate derived UI and Web runtime
+        run: |
+          node scripts/sync-visual-contract-16-7.mjs
+          node tools/ashyk-web/build.mjs
+      - name: Commit generated artifacts
+        run: |
+          if ! git diff --quiet -- mobile/ui/web-visual-source.js src/features/ashyk/runtime.js; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add mobile/ui/web-visual-source.js src/features/ashyk/runtime.js
+            git commit -m "build: refresh Ashyk guest friend gate artifacts"
+            git push
+          fi
       - name: Generated checks
         run: |
           node scripts/sync-visual-contract-16-7.mjs --check

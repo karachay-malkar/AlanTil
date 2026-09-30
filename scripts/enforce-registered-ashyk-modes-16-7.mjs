@@ -9,6 +9,7 @@ if(!/allowGuests:true/.test(flags))throw new Error('Ashyk guests must retain com
 if(!/allowComputer:true/.test(flags))throw new Error('Ashyk computer mode must stay enabled');
 if(!/allowOnlineFriend:true/.test(flags))throw new Error('Ashyk online friend mode must stay enabled');
 if(!/allowLocalSameDevice:false/.test(flags))throw new Error('Ashyk same-device mode must stay disabled');
+if(!/export function ashykModeOptionsForUser/.test(flags))throw new Error('Ashyk visible/allowed mode contract is missing');
 
 for(const file of files){
   const source=fs.readFileSync(file,'utf8');

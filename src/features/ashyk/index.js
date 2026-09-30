@@ -86,6 +86,7 @@ export async function mount(context){
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onRoomChange(room){activeRoomId=room?.id||null;},
     onExit(){void context.router.replace('practice.home');},
+    onAuthRequired(){void context.router.navigate('account.home');},
   });
 }
 
