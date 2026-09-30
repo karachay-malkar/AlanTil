@@ -19,13 +19,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser and media tools
+      - name: Install system recording tools
+        timeout-minutes: 4
         run: |
-          sudo apt-get update -qq
+          sudo apt-get -o Acquire::Retries=0 -o Acquire::http::Timeout=30 update -qq
           sudo apt-get install -y -qq ffmpeg xvfb pulseaudio
-          npm install --no-save --no-package-lock playwright@1.55.0
-          npm install --prefix tools/ashyk-web --no-package-lock
-          npx playwright install --with-deps chromium
+      - name: Install JavaScript dependencies
+        timeout-minutes: 3
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.55.0
+          npm install --prefix tools/ashyk-web --no-package-lock --no-audit --no-fund
+      - name: Install Chromium
+        timeout-minutes: 4
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '120000'
+        run: npx playwright install --with-deps --no-shell chromium
       - name: Start sound output
         run: |
           pulseaudio --start --exit-idle-time=-1
