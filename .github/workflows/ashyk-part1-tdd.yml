@@ -1,0 +1,19 @@
+name: Ashyk part 1 TDD
+on:
+  push:
+    branches:
+      - agent/16.8.0-ashyk-guest-part1-tdd
+permissions:
+  contents: write
+jobs:
+  test:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Part 1 regression
+        run: node --test tests/ashyk-guest-computer-16-8.test.mjs
