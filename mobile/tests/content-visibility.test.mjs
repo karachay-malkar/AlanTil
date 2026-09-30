@@ -38,6 +38,6 @@ test('emergency starter does not expose hidden Advanced content',()=>{
 
 test('guided help derives story steps from currently rendered Path stories',()=>{
   assert.match(guideSource,/function\s+availableStorySequence\s*\(/);
-  assert.match(guideSource,/querySelectorAll\(\["']?\[data-story-tab\]/);
+  assert.match(guideSource,/querySelectorAll\(["']\[data-story-tab\]["']\)/);
   assert.doesNotMatch(guideSource,/const\s+STORY_SEQUENCE\s*=\s*\[/);
 });
