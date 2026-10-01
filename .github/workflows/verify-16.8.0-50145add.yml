@@ -1,0 +1,132 @@
+name: Verify AlanTil 16.8.0 merged head
+
+'on':
+  push:
+    branches:
+      - agent/verify-16.8.0-50145add
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 50145add45819a812f87e8ce1a64b4a7c7e24d11
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Record source identity
+        run: |
+          mkdir -p verification
+          {
+            echo "expected=50145add45819a812f87e8ce1a64b4a7c7e24d11"
+            echo "actual=$(git rev-parse HEAD)"
+            echo "tree=$(git rev-parse HEAD^{tree})"
+            git status --short
+          } | tee verification/source.txt
+          test "$(git rev-parse HEAD)" = "50145add45819a812f87e8ce1a64b4a7c7e24d11"
+
+      - name: Focused Ashyk integration
+        id: ashyk
+        shell: bash
+        run: |
+          set +e
+          node --test tests/*ashyk*.test.mjs mobile/tests/*ashyk*.test.mjs > verification/ashyk-suite.tap 2>&1
+          code=$?
+          echo "exit_code=$code" | tee verification/ashyk-exit.txt
+          tail -n 40 verification/ashyk-suite.tap
+          exit 0
+
+      - name: Visual contract
+        shell: bash
+        run: |
+          set +e
+          node scripts/sync-visual-contract-16-7.mjs --check > verification/visual-contract.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> verification/visual-contract.log
+          cat verification/visual-contract.log
+          exit 0
+
+      - name: Ashyk access invariants
+        shell: bash
+        run: |
+          set +e
+          node scripts/enforce-registered-ashyk-modes-16-7.mjs > verification/access-invariants.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> verification/access-invariants.log
+          cat verification/access-invariants.log
+          exit 0
+
+      - name: Full repository Node test suite
+        shell: bash
+        run: |
+          set +e
+          node --test tests/*.test.mjs mobile/tests/*.test.mjs > verification/full-suite.tap 2>&1
+          code=$?
+          echo "exit_code=$code" | tee verification/full-suite-exit.txt
+          tail -n 50 verification/full-suite.tap
+          exit 0
+
+      - name: Final QA
+        shell: bash
+        run: |
+          set +e
+          npm run qa:final > verification/qa-final.log 2>&1
+          code=$?
+          echo "exit_code=$code" | tee verification/qa-final-exit.txt
+          tail -n 80 verification/qa-final.log
+          exit 0
+
+      - name: Build verification report and source archive
+        shell: bash
+        run: |
+          set -e
+          node <<'NODE'
+          const fs=require('fs');
+          function parseTap(path){
+            const s=fs.readFileSync(path,'utf8');
+            const pick=(name)=>{const m=s.match(new RegExp('^# '+name+'\\s+(\\d+)','m'));return m?Number(m[1]):null};
+            return {tests:pick('tests'),pass:pick('pass'),fail:pick('fail'),skipped:pick('skipped'),cancelled:pick('cancelled'),todo:pick('todo')};
+          }
+          const readExit=p=>Number((fs.readFileSync(p,'utf8').match(/exit_code=(\d+)/)||[])[1]??-1);
+          const report={
+            commit: require('child_process').execSync('git rev-parse HEAD',{encoding:'utf8'}).trim(),
+            ashyk:{...parseTap('verification/ashyk-suite.tap'),exit_code:readExit('verification/ashyk-exit.txt')},
+            full:{...parseTap('verification/full-suite.tap'),exit_code:readExit('verification/full-suite-exit.txt')},
+            visual_contract_exit_code:Number((fs.readFileSync('verification/visual-contract.log','utf8').match(/exit_code=(\d+)/)||[])[1]??-1),
+            access_invariants_exit_code:Number((fs.readFileSync('verification/access-invariants.log','utf8').match(/exit_code=(\d+)/)||[])[1]??-1),
+            qa_final_exit_code:readExit('verification/qa-final-exit.txt')
+          };
+          fs.writeFileSync('verification/summary.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report,null,2));
+          NODE
+
+          git diff --name-only 8a728b82955706ceef364ec16de43fc89970c685 50145add45819a812f87e8ce1a64b4a7c7e24d11 > verification/changed-files.txt
+          : > verification/changed-file-sizes.txt
+          while IFS= read -r f; do
+            if [ -f "$f" ]; then
+              bytes=$(stat -c%s "$f")
+              awk -v f="$f" -v b="$bytes" 'BEGIN{printf "%s — %.2f KB (%d bytes)\n",f,b/1024,b}' >> verification/changed-file-sizes.txt
+            fi
+          done < verification/changed-files.txt
+
+          git archive --format=zip --output=AlanTil-16.8.0-final-50145add.zip 50145add45819a812f87e8ce1a64b4a7c7e24d11
+          unzip -t AlanTil-16.8.0-final-50145add.zip > verification/archive-test.txt
+          sha256sum AlanTil-16.8.0-final-50145add.zip | tee verification/archive-sha256.txt
+          stat -c '%s' AlanTil-16.8.0-final-50145add.zip | tee verification/archive-size-bytes.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0-final-verification-50145add
+          path: |
+            AlanTil-16.8.0-final-50145add.zip
+            verification/
+          if-no-files-found: error
+          retention-days: 7
