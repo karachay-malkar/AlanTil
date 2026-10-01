@@ -1,4 +1,4 @@
-name: Compare merge regression names
+name: Final verify AlanTil 16.8.0 Ashyk merge
 
 'on':
   push:
@@ -9,34 +9,166 @@ permissions:
   contents: read
 
 jobs:
-  compare:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: 91f89869727a21f565c5bf0db002781c91de8c08
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Compare failure names
+
+      - name: Verify exact source
+        shell: bash
+        run: |
+          set -e
+          test "$(git rev-parse HEAD)" = "91f89869727a21f565c5bf0db002781c91de8c08"
+          test -z "$(git status --porcelain)"
+          echo "commit=$(git rev-parse HEAD)"
+          echo "tree=$(git rev-parse HEAD^{tree})"
+
+      - name: Focused Ashyk integration
+        shell: bash
+        run: |
+          mkdir -p verification
+          set +e
+          node --test --test-reporter=tap \
+            tests/ashyk-computer-part1-16-8.test.mjs \
+            tests/ashyk-word-scopes-16-8.test.mjs \
+            tests/ashyk-friend-auth-16-8.test.mjs \
+            tests/ashyk-recovery-16-8.test.mjs \
+            tests/ashyk-online-authority-16-7.test.mjs \
+            tests/ashyk-single-room-16-8.test.mjs \
+            tests/ashyk-part4-integration-16-8.test.mjs \
+            tests/ashyk-web-parity-16-6-13.test.mjs \
+            tests/ashyk-shot-replication-16-7.test.mjs \
+            mobile/tests/ashyk-ui-help-16-6-12.test.mjs \
+            mobile/tests/architecture.test.mjs > verification/ashyk-suite.tap 2>&1
+          echo "exit_code=$?" > verification/ashyk-exit.txt
+          tail -n 20 verification/ashyk-suite.tap
+          exit 0
+
+      - name: Visual and access contracts
+        shell: bash
+        run: |
+          set +e
+          node scripts/sync-visual-contract-16-7.mjs --check > verification/visual-contract.log 2>&1
+          echo "exit_code=$?" >> verification/visual-contract.log
+          node scripts/enforce-registered-ashyk-modes-16-7.mjs > verification/access-invariants.log 2>&1
+          echo "exit_code=$?" >> verification/access-invariants.log
+          cat verification/visual-contract.log
+          cat verification/access-invariants.log
+          exit 0
+
+      - name: Compare full-suite failures with pre-merge baseline
         shell: bash
         run: |
           set +e
           git checkout --detach 8a728b82955706ceef364ec16de43fc89970c685
           node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/base.tap 2>&1
-          grep '^not ok ' /tmp/base.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/base.failures
+          grep '^not ok ' /tmp/base.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/base.failures || true
 
-          git checkout --detach 50145add45819a812f87e8ce1a64b4a7c7e24d11
-          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/head.tap 2>&1
-          grep '^not ok ' /tmp/head.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/head.failures
+          git checkout --detach 91f89869727a21f565c5bf0db002781c91de8c08
+          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > verification/full-suite.tap 2>&1
+          echo "exit_code=$?" > verification/full-suite-exit.txt
+          grep '^not ok ' verification/full-suite.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/head.failures || true
 
-          echo '=== BASE SUMMARY ==='
-          tail -n 9 /tmp/base.tap
-          echo '=== HEAD SUMMARY ==='
-          tail -n 9 /tmp/head.tap
-          echo '=== NEW FAILURE NAMES ==='
-          comm -13 /tmp/base.failures /tmp/head.failures
-          echo '=== RESOLVED FAILURE NAMES ==='
-          comm -23 /tmp/base.failures /tmp/head.failures
+          comm -13 /tmp/base.failures /tmp/head.failures > verification/new-failures.txt
+          comm -23 /tmp/base.failures /tmp/head.failures > verification/resolved-failures.txt
+          tail -n 9 /tmp/base.tap > verification/base-summary.txt
+          tail -n 9 verification/full-suite.tap > verification/head-summary.txt
+          echo 'BASE'; cat verification/base-summary.txt
+          echo 'HEAD'; cat verification/head-summary.txt
+          echo 'NEW'; cat verification/new-failures.txt
+          echo 'RESOLVED'; cat verification/resolved-failures.txt
           exit 0
+
+      - name: Final QA diagnostic
+        shell: bash
+        run: |
+          set +e
+          git clean -fd
+          npm run qa:final > "$RUNNER_TEMP/qa-final.log" 2>&1
+          code=$?
+          mkdir -p verification
+          cp "$RUNNER_TEMP/qa-final.log" verification/qa-final.log
+          echo "exit_code=$code" > verification/qa-final-exit.txt
+          tail -n 80 verification/qa-final.log
+          exit 0
+
+      - name: Build report and exact source archive
+        shell: bash
+        run: |
+          set -e
+          git checkout --detach 91f89869727a21f565c5bf0db002781c91de8c08
+          mkdir -p verification
+          node <<'NODE'
+          const fs=require('fs');
+          function parseTap(path){
+            const s=fs.readFileSync(path,'utf8');
+            const pick=n=>Number((s.match(new RegExp('^# '+n+'\\s+(\\d+)','m'))||[])[1]??-1);
+            return {tests:pick('tests'),pass:pick('pass'),fail:pick('fail'),skipped:pick('skipped')};
+          }
+          const exit=p=>Number((fs.readFileSync(p,'utf8').match(/exit_code=(\d+)/)||[])[1]??-1);
+          const tagged=p=>{
+            const all=[...fs.readFileSync(p,'utf8').matchAll(/exit_code=(\d+)/g)];
+            return Number(all.at(-1)?.[1]??-1);
+          };
+          const report={
+            commit:'91f89869727a21f565c5bf0db002781c91de8c08',
+            tree:require('child_process').execSync('git rev-parse HEAD^{tree}',{encoding:'utf8'}).trim(),
+            ashyk:{...parseTap('verification/ashyk-suite.tap'),exit_code:exit('verification/ashyk-exit.txt')},
+            full:{...parseTap('verification/full-suite.tap'),exit_code:exit('verification/full-suite-exit.txt')},
+            new_failures:fs.readFileSync('verification/new-failures.txt','utf8').trim().split('\n').filter(Boolean),
+            resolved_failures:fs.readFileSync('verification/resolved-failures.txt','utf8').trim().split('\n').filter(Boolean),
+            visual_contract_exit_code:tagged('verification/visual-contract.log'),
+            access_invariants_exit_code:tagged('verification/access-invariants.log'),
+            qa_final_exit_code:exit('verification/qa-final-exit.txt')
+          };
+          fs.writeFileSync('verification/summary.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report,null,2));
+          NODE
+
+          git diff --name-only 8a728b82955706ceef364ec16de43fc89970c685 91f89869727a21f565c5bf0db002781c91de8c08 > verification/changed-files.txt
+          : > verification/changed-file-sizes.txt
+          while IFS= read -r f; do
+            if [ -f "$f" ]; then
+              bytes=$(stat -c%s "$f")
+              awk -v f="$f" -v b="$bytes" 'BEGIN{printf "%s — %.2f KB (%d bytes)\n",f,b/1024,b}' >> verification/changed-file-sizes.txt
+            fi
+          done < verification/changed-files.txt
+
+          git archive --format=zip --output=AlanTil-16.8.0-final-91f89869.zip 91f89869727a21f565c5bf0db002781c91de8c08
+          unzip -t AlanTil-16.8.0-final-91f89869.zip > verification/archive-test.txt
+          sha256sum AlanTil-16.8.0-final-91f89869.zip | tee verification/archive-sha256.txt
+          stat -c '%s' AlanTil-16.8.0-final-91f89869.zip | tee verification/archive-size-bytes.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AlanTil-16.8.0-final-91f89869
+          path: |
+            AlanTil-16.8.0-final-91f89869.zip
+            verification/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Verification gate
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('verification/summary.json','utf8'));
+          const problems=[];
+          if(r.commit!=='91f89869727a21f565c5bf0db002781c91de8c08') problems.push('wrong commit');
+          if(r.ashyk.exit_code!==0 || r.ashyk.fail!==0) problems.push('focused Ashyk suite failed');
+          if(r.visual_contract_exit_code!==0) problems.push('visual contract failed');
+          if(r.access_invariants_exit_code!==0) problems.push('access invariants failed');
+          if(r.new_failures.length) problems.push('new failures: '+r.new_failures.join('; '));
+          if(r.full.fail>103) problems.push('failure count exceeds pre-merge baseline');
+          if(problems.length){console.error(problems.join('\n'));process.exit(1);}
+          console.log('Verification gate passed: no new regressions over pre-merge baseline.');
+          NODE
