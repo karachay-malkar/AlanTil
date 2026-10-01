@@ -79,14 +79,14 @@ test("16.8.0 is the published app release while 16.8.0.11 is the Web cache build
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
-  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]3/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]3/);
+  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]11/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]11/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]3"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]11"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]3"/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]3"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]11"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]11"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
@@ -105,7 +105,7 @@ test("13.15 feature modules are loaded explicitly and the service worker does no
 test("Settings dependencies resolve through the 16.8.0.11 singleton identity", async () => {
   const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
-  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.3"/);
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.11"/);
   assert.match(settings, /word-repository\.js\?v=16.8.0.11/);
   assert.match(settings, /auth-service\.js\?v=16.8.0.11/);
   assert.match(settings, /user-settings-store\.js\?v=16.8.0.11/);
@@ -131,7 +131,7 @@ test("historical singleton URLs canonicalize to one current in-memory instance",
   assert.equal(generated.targetVersion, SINGLETON_URL_VERSION);
   for (const path of singletonPaths) {
     assert.ok(generated.paths.includes(path), `missing singleton path ${path}`);
-    for (const version of [...versions, "16.8.0.8", "16.8.0.9", "16.8.0.10"]) {
+    for (const version of [...versions, "16.8.0.3", "16.8.0.5", "16.8.0.6", "16.8.0.7", "16.8.0.8", "16.8.0.9", "16.8.0.10"]) {
       assert.ok(generated.versions.includes(version), `missing supported version ${version}`);
       assert.equal(importMap[`${path}?v=${version}`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing ${path} alias for ${version}`);
     }
@@ -173,7 +173,7 @@ test("shared display helpers keep their required dependencies", async () => {
   const stationView = await read("src/features/path/station-view.js");
   const testView = await read("src/features/test/view.js");
   assert.match(alanDisplay, /packages\/alantil-core\/alan-display\.js/);
-  assert.match(wordRenderers, /packages\/alantil-core\/alan-display\.js|example-groups\.js\?v=16.8.0.11/);
-  assert.match(stationView, /overflow-marquee\.js\?v=16.8.0.11/);
-  assert.match(testView, /result-list\.js\?v=16.8.0.11/);
+  assert.match(wordRenderers, /packages\/alantil-core\/alan-display\.js|example-groups\.js\?v=16.8.0.3/);
+  assert.match(stationView, /overflow-marquee\.js\?v=16.8.0.3/);
+  assert.match(testView, /result-list\.js\?v=16.8.0.3/);
 });
