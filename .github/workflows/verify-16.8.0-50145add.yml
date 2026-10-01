@@ -1,4 +1,4 @@
-name: Final verify AlanTil 16.8.0 Ashyk merge
+name: Package verified AlanTil 16.8.0
 
 'on':
   push:
@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  package:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,19 +22,15 @@ jobs:
           node-version: '24'
 
       - name: Verify exact source
-        shell: bash
         run: |
-          set -e
           test "$(git rev-parse HEAD)" = "91f89869727a21f565c5bf0db002781c91de8c08"
           test -z "$(git status --porcelain)"
-          echo "commit=$(git rev-parse HEAD)"
-          echo "tree=$(git rev-parse HEAD^{tree})"
 
-      - name: Focused Ashyk integration
+      - name: Run verification into temp storage
         shell: bash
         run: |
-          mkdir -p verification
           set +e
+
           node --test --test-reporter=tap \
             tests/ashyk-computer-part1-16-8.test.mjs \
             tests/ashyk-word-scopes-16-8.test.mjs \
@@ -46,65 +42,48 @@ jobs:
             tests/ashyk-web-parity-16-6-13.test.mjs \
             tests/ashyk-shot-replication-16-7.test.mjs \
             mobile/tests/ashyk-ui-help-16-6-12.test.mjs \
-            mobile/tests/architecture.test.mjs > verification/ashyk-suite.tap 2>&1
-          echo "exit_code=$?" > verification/ashyk-exit.txt
-          tail -n 20 verification/ashyk-suite.tap
-          exit 0
+            mobile/tests/architecture.test.mjs > /tmp/ashyk.tap 2>&1
+          echo "exit_code=$?" > /tmp/ashyk.exit
 
-      - name: Visual and access contracts
-        shell: bash
-        run: |
-          set +e
-          node scripts/sync-visual-contract-16-7.mjs --check > verification/visual-contract.log 2>&1
-          echo "exit_code=$?" >> verification/visual-contract.log
-          node scripts/enforce-registered-ashyk-modes-16-7.mjs > verification/access-invariants.log 2>&1
-          echo "exit_code=$?" >> verification/access-invariants.log
-          cat verification/visual-contract.log
-          cat verification/access-invariants.log
-          exit 0
+          node scripts/sync-visual-contract-16-7.mjs --check > /tmp/visual.log 2>&1
+          echo "exit_code=$?" >> /tmp/visual.log
+          node scripts/enforce-registered-ashyk-modes-16-7.mjs > /tmp/access.log 2>&1
+          echo "exit_code=$?" >> /tmp/access.log
 
-      - name: Compare full-suite failures with pre-merge baseline
-        shell: bash
-        run: |
-          set +e
           git checkout --detach 8a728b82955706ceef364ec16de43fc89970c685
           node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/base.tap 2>&1
           grep '^not ok ' /tmp/base.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/base.failures || true
 
           git checkout --detach 91f89869727a21f565c5bf0db002781c91de8c08
-          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > verification/full-suite.tap 2>&1
-          echo "exit_code=$?" > verification/full-suite-exit.txt
-          grep '^not ok ' verification/full-suite.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/head.failures || true
+          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/head.tap 2>&1
+          echo "exit_code=$?" > /tmp/head.exit
+          grep '^not ok ' /tmp/head.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/head.failures || true
+          comm -13 /tmp/base.failures /tmp/head.failures > /tmp/new.failures
+          comm -23 /tmp/base.failures /tmp/head.failures > /tmp/resolved.failures
 
-          comm -13 /tmp/base.failures /tmp/head.failures > verification/new-failures.txt
-          comm -23 /tmp/base.failures /tmp/head.failures > verification/resolved-failures.txt
-          tail -n 9 /tmp/base.tap > verification/base-summary.txt
-          tail -n 9 verification/full-suite.tap > verification/head-summary.txt
-          echo 'BASE'; cat verification/base-summary.txt
-          echo 'HEAD'; cat verification/head-summary.txt
-          echo 'NEW'; cat verification/new-failures.txt
-          echo 'RESOLVED'; cat verification/resolved-failures.txt
+          npm run qa:final > /tmp/qa-final.log 2>&1
+          echo "exit_code=$?" > /tmp/qa-final.exit
           exit 0
 
-      - name: Final QA diagnostic
-        shell: bash
-        run: |
-          set +e
-          git clean -fd
-          npm run qa:final > "$RUNNER_TEMP/qa-final.log" 2>&1
-          code=$?
-          mkdir -p verification
-          cp "$RUNNER_TEMP/qa-final.log" verification/qa-final.log
-          echo "exit_code=$code" > verification/qa-final-exit.txt
-          tail -n 80 verification/qa-final.log
-          exit 0
-
-      - name: Build report and exact source archive
+      - name: Build verification report and archive
         shell: bash
         run: |
           set -e
           git checkout --detach 91f89869727a21f565c5bf0db002781c91de8c08
           mkdir -p verification
+          cp /tmp/ashyk.tap verification/ashyk-suite.tap
+          cp /tmp/ashyk.exit verification/ashyk-exit.txt
+          cp /tmp/visual.log verification/visual-contract.log
+          cp /tmp/access.log verification/access-invariants.log
+          cp /tmp/head.tap verification/full-suite.tap
+          cp /tmp/head.exit verification/full-suite-exit.txt
+          cp /tmp/new.failures verification/new-failures.txt
+          cp /tmp/resolved.failures verification/resolved-failures.txt
+          cp /tmp/qa-final.log verification/qa-final.log
+          cp /tmp/qa-final.exit verification/qa-final-exit.txt
+          tail -n 9 /tmp/base.tap > verification/base-summary.txt
+          tail -n 9 /tmp/head.tap > verification/head-summary.txt
+
           node <<'NODE'
           const fs=require('fs');
           function parseTap(path){
@@ -113,13 +92,11 @@ jobs:
             return {tests:pick('tests'),pass:pick('pass'),fail:pick('fail'),skipped:pick('skipped')};
           }
           const exit=p=>Number((fs.readFileSync(p,'utf8').match(/exit_code=(\d+)/)||[])[1]??-1);
-          const tagged=p=>{
-            const all=[...fs.readFileSync(p,'utf8').matchAll(/exit_code=(\d+)/g)];
-            return Number(all.at(-1)?.[1]??-1);
-          };
+          const tagged=p=>{const a=[...fs.readFileSync(p,'utf8').matchAll(/exit_code=(\d+)/g)];return Number(a.at(-1)?.[1]??-1)};
           const report={
             commit:'91f89869727a21f565c5bf0db002781c91de8c08',
             tree:require('child_process').execSync('git rev-parse HEAD^{tree}',{encoding:'utf8'}).trim(),
+            base:parseTap('verification/base-summary.txt'),
             ashyk:{...parseTap('verification/ashyk-suite.tap'),exit_code:exit('verification/ashyk-exit.txt')},
             full:{...parseTap('verification/full-suite.tap'),exit_code:exit('verification/full-suite-exit.txt')},
             new_failures:fs.readFileSync('verification/new-failures.txt','utf8').trim().split('\n').filter(Boolean),
@@ -146,16 +123,6 @@ jobs:
           sha256sum AlanTil-16.8.0-final-91f89869.zip | tee verification/archive-sha256.txt
           stat -c '%s' AlanTil-16.8.0-final-91f89869.zip | tee verification/archive-size-bytes.txt
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: AlanTil-16.8.0-final-91f89869
-          path: |
-            AlanTil-16.8.0-final-91f89869.zip
-            verification/
-          if-no-files-found: error
-          retention-days: 7
-
       - name: Verification gate
         shell: bash
         run: |
@@ -168,7 +135,16 @@ jobs:
           if(r.visual_contract_exit_code!==0) problems.push('visual contract failed');
           if(r.access_invariants_exit_code!==0) problems.push('access invariants failed');
           if(r.new_failures.length) problems.push('new failures: '+r.new_failures.join('; '));
-          if(r.full.fail>103) problems.push('failure count exceeds pre-merge baseline');
+          if(r.full.fail>r.base.fail) problems.push('failure count exceeds pre-merge baseline');
           if(problems.length){console.error(problems.join('\n'));process.exit(1);}
           console.log('Verification gate passed: no new regressions over pre-merge baseline.');
           NODE
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0-final-91f89869
+          path: |
+            AlanTil-16.8.0-final-91f89869.zip
+            verification/
+          if-no-files-found: error
+          retention-days: 7
