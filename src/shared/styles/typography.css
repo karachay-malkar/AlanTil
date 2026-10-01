@@ -96,3 +96,29 @@
 .stationWordCount{font-size:var(--text-micro)}
 
 :where(.profilePrimaryTab,.storyTab){font-size:var(--text-caption);line-height:1.35}
+
+
+/* Ashyk — same semantic typography contract as the rest of the application. */
+:where(
+  .ashykEyebrow,.ashykSectionLabel,.ashykDifficultyHint,.ashykQuestionScopeRow small,
+  .ashykFacts b,.ashykScopeNote,.ashykPlayerHead,.ashykPlayerStatus,.ashykPlayerActionCell,
+  .ashykPlayerAction,.ashykPlayerDualAction button,.ashykScore span,.ashykTopControls>button,
+  .ashykShotControl>span,.ashykShotControl .settingsChoice>span,.ashykShotTimer span,
+  .ashykFace span,.ashykFace b,.ashykStatus strong,.ashykWaiting span,.ashykWaiting small,
+  .ashykRuleNote,.ashykQuestionRule,.ashykFriendChoice small,.ashykFriendChoice>b
+){font-size:var(--text-micro)}
+
+:where(
+  .ashykModeButton,.ashykModeAccessLock p,.ashykQuestionScopeRow,.ashykFacts>div,
+  .ashykJoin input,.ashykInlineNotice,.ashykInlineError,.ashykOutcome,.ashykHelp>p,
+  .ashykFinish>p,.ashykRuleRows>div,.ashykOptions button,.ashykFriendChoice strong,
+  .ashykQuestionMeta strong,.ashykMenuCurrent>strong
+){font-size:var(--text-body)}
+
+:where(
+  .ashykSetupHelpButton span,.ashykPageHead h1,.ashykModeAccessLock strong,.ashykScore strong,
+  .ashykShotTimer strong,.ashykFace strong,.ashykWaiting>strong,.ashykDialog h2,
+  .ashykTimer,.ashykQuestionPrompt,.ashykFinish h2,.ashykFinalScore span,.ashykAccessLock h1
+){font-size:var(--text-title)}
+
+:where(.ashykFinalScore strong){font-size:var(--text-result)}

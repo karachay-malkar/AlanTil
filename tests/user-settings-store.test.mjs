@@ -47,3 +47,12 @@ test("legacy station_size input is discarded instead of becoming application sta
   assert.equal(Object.prototype.hasOwnProperty.call(saved, "station_size"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(settingsStore.reloadUserSettings(), "station_size"), false);
 });
+
+
+test("huge text size survives storage reload and invalid values fall back to medium", () => {
+  const huge = settingsStore.setUserSettings({ text_size_code: "huge" }, { queue: false });
+  assert.equal(huge.text_size_code, "huge");
+  assert.equal(settingsStore.reloadUserSettings().text_size_code, "huge");
+  const fallback = settingsStore.setUserSettings({ text_size_code: "invalid" }, { queue: false });
+  assert.equal(fallback.text_size_code, "medium");
+});

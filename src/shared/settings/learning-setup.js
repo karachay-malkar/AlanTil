@@ -268,6 +268,7 @@ export function syncLearningSetupView(root, draft = {}, {
   setSetupCopy(root, "small", copy.small);
   setSetupCopy(root, "medium", copy.medium);
   setSetupCopy(root, "large", copy.large);
+  setSetupCopy(root, "huge", copy.huge);
   setSetupCopy(root, "continue", copy.continue);
 
   setSetupStepState(root, "language", true);
@@ -330,6 +331,7 @@ export function renderLearningSetup(draft = {}, { error = "" } = {}) {
     ["small", `<span data-learning-setup-copy="small">${escapeHtml(copy.small)}</span>`],
     ["medium", `<span data-learning-setup-copy="medium">${escapeHtml(copy.medium)}</span>`],
     ["large", `<span data-learning-setup-copy="large">${escapeHtml(copy.large)}</span>`],
+    ["huge", `<span data-learning-setup-copy="huge">${escapeHtml(copy.huge)}</span>`],
   ].map(([value, label]) => choice({
     name: "learningTextSize",
     value,

@@ -29,7 +29,7 @@ export function normalizeAlanDialectCode(value) {
 }
 
 export function normalizeTextSizeCode(value) {
-  return ['small', 'medium', 'large'].includes(value) ? value : DEFAULT_USER_SETTINGS.text_size_code;
+  return ['small', 'medium', 'large', 'huge'].includes(value) ? value : DEFAULT_USER_SETTINGS.text_size_code;
 }
 
 export function normalizeCompletionTimestamp(value) {
@@ -120,6 +120,6 @@ export function isLearningSetupDraftComplete(draft = {}) {
   if (!['cyrillic', 'turkic'].includes(draft.alan_script_code)) return false;
   if (draft.alan_script_code === 'cyrillic'
       && !['canonical', 'karachay', 'balkar'].includes(draft.alan_dialect_code)) return false;
-  if (!['small', 'medium', 'large'].includes(draft.text_size_code)) return false;
+  if (!['small', 'medium', 'large', 'huge'].includes(draft.text_size_code)) return false;
   return true;
 }

@@ -1,11 +1,12 @@
 import { UI_TOKENS } from './tokens.js';
 
-// Web 13.15.12, commit 3249e0d: theme.css --text-display/--text-result.
-// Width is the viewport in CSS pixels / native layout points, never physical pixels.
+// Compatibility shape for Web/Mobile consumers. Typography is intentionally fixed:
+// each mode has technical/body/accent sizes, while result remains 48px.
 export const ADAPTIVE_TYPE = Object.freeze({
-  small: Object.freeze({ display: [24, 7, 40], result: [36, 12, 54] }),
-  medium: Object.freeze({ display: [28, 8, 48], result: [40, 14, 64] }),
-  large: Object.freeze({ display: [32, 9, 56], result: [44, 15, 72] }),
+  small: Object.freeze({ display: [16, 0, 16], result: [48, 0, 48] }),
+  medium: Object.freeze({ display: [20, 0, 20], result: [48, 0, 48] }),
+  large: Object.freeze({ display: [24, 0, 24], result: [48, 0, 48] }),
+  huge: Object.freeze({ display: [28, 0, 28], result: [48, 0, 48] }),
 });
 
 export function resolveTypography(textSizeCode = 'medium', viewportWidth) {
