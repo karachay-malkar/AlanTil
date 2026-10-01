@@ -36,7 +36,11 @@ const replacements=[
   ["questionChoice:{width:'100%',minHeight:50,paddingVertical:9,paddingHorizontal:11,borderWidth:1,borderColor:C.line,borderRadius:14,","questionChoice:{width:'100%',minHeight:50,paddingVertical:9,paddingHorizontal:11,borderWidth:1,borderColor:C.line,borderRadius:theme.ashyk.buttonRadius,",'Ashyk question choice'],
   ["finishCard:{width:'100%',maxWidth:420,padding:18,alignItems:'center',borderRadius:20},","finishCard:{width:'100%',maxWidth:420,padding:18,alignItems:'center',borderRadius:theme.ashyk.dialogRadius},",'Ashyk finish card'],
 ];
-for(const [before,after,label] of replacements)ashyk=replaceContract(ashyk,before,after,label);
+const usesSharedSegmented=/import\{[^}]*SegmentedControl[^}]*\}from['"]\.\.\/ui\/components\.js['"]/.test(ashyk);
+for(const [before,after,label] of replacements){
+  if(label.startsWith('Ashyk segmented')&&usesSharedSegmented&&!ashyk.includes(before)&&!ashyk.includes(after))continue;
+  ashyk=replaceContract(ashyk,before,after,label);
+}
 write(ashykPath,ashyk);
 
 function gitBlobSha(file){

@@ -31,13 +31,14 @@ test('player snapshot exposes head-to-head score, status and one action column',
   assert.match(css,/ashykPlayerScore em\{color:var\(--danger/);
 });
 
-test('friend mode is fixed at 20 seconds per shot and 10 seconds per answer',()=>{
+test('friend mode is fixed at 20 seconds per shot and 15 seconds per answer',()=>{
   const constants=read('packages/ashyk-game/constants.js');
   const store=read('packages/ashyk-game/store.js');
-  const sql=read('supabase/migrations/20260925100000_alantil_16_8_ashyk_single_room_state.sql');
-  assert.match(constants,/ONLINE_RULES=Object\.freeze\(\{humanShotSeconds:20,humanQuestionSeconds:10\}\)/);
+  const sql=read('supabase/migrations/20261001045947_alantil_16_8_ashyk_part4_server_alignment.sql');
+  assert.match(constants,/HUMAN_TURN_TIMING=Object\.freeze\(\{humanShotSeconds:20,humanQuestionSeconds:15\}\)/);
+  assert.match(constants,/ONLINE_RULES=HUMAN_TURN_TIMING/);
   assert.match(store,/state\.gameMode==='online'\?ONLINE_RULES/);
-  assert.match(sql,/when p_phase='bonus-question' then 10 else 20 end/);
+  assert.match(sql,/when p_phase='bonus-question' then 15 else 20 end/);
   assert.doesNotMatch(read('packages/ashyk-game/web/Game.jsx'),/m\.mediumWords/);
 });
 
@@ -71,7 +72,7 @@ test('adapter fetches one server-composed player snapshot and listens to room/in
 });
 
 test('web build is bumped as one cache generation',()=>{
-  assert.match(read('index.html'),/name="alantil-build" content="16\.8\.0\.5"/);
-  assert.match(read('service-worker.js'),/const VERSION = "16\.8\.0\.5"/);
-  assert.match(read('packages/alantil-core/release.js'),/16\.8\.0\.5/);
+  assert.match(read('index.html'),/name="alantil-build" content="16\.8\.0\.8"/);
+  assert.match(read('service-worker.js'),/const VERSION = "16\.8\.0\.8"/);
+  assert.match(read('packages/alantil-core/release.js'),/16\.8\.0\.8/);
 });

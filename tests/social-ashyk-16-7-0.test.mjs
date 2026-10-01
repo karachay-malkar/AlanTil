@@ -349,34 +349,32 @@ test('Friends guest and blocked copy use dedicated social labels on both platfor
   }
 });
 
-test('Ashyk guests are locked while registered users get computer and online friend modes only',()=>{
+test('Ashyk guests get computer mode while registered users also get online friend mode',()=>{
   const guest=ashykAccessForUser(''),account=ashykAccessForUser('user-1');
-  assert.equal(ASHYK_FEATURE_FLAGS.allowGuests,false);
+  assert.equal(ASHYK_FEATURE_FLAGS.allowGuests,true);
   assert.equal(ASHYK_FEATURE_FLAGS.allowComputer,true);
   assert.equal(ASHYK_FEATURE_FLAGS.allowOnlineFriend,true);
   assert.equal(ASHYK_FEATURE_FLAGS.allowLocalSameDevice,false);
-  assert.equal(guest.locked,true);
-  assert.deepEqual(guest.modes,[]);
+  assert.equal(guest.locked,false);
+  assert.deepEqual(guest.modes,['computer']);
   assert.equal(account.locked,false);
   assert.deepEqual(account.modes,['computer','online']);
   const web=read('packages/ashyk-game/web/Game.jsx'),mobile=read('mobile/screens/ashyk.js');
   for(const source of [web,mobile]){
-    assert.match(source,/ashykAccessForUser\(userId\)\.modes/);
+    assert.match(source,/ashykVisibleModesForUser\(userId\)/);
     assert.match(source,/startLocal/);
     assert.match(source,/createFriendInvite/);
     assert.doesNotMatch(source,/const modes=\[\["computer"[\s\S]{0,160}\["local"/);
   }
 });
 
-test('Ashyk guest lock covers direct Web/Mobile entry and global challenge actions',()=>{
+test('Ashyk guest entry stays available while online challenge actions stay authenticated',()=>{
   const feature=read('src/features/ashyk/index.js'),mobile=read('mobile/screens/ashyk.js'),app=read('mobile/AppRoot.js'),bootstrap=read('src/app/bootstrap.js');
   assert.match(feature,/ashykAccessForUser\(userId\)/);
-  assert.match(feature,/data-ashyk-sign-in/);
-  assert.match(feature,/router\.navigate\('account\.home'\)/);
-  assert.match(mobile,/if\(access\.locked\)return/);
-  assert.match(mobile,/ashykRegisteredOnly/);
-  assert.match(app,/onSignIn=\{\(\)=>\{setIncomingAshykRoom\(null\);setTab\('profile'\);setScreen\('account'\);\}\}/);
-  assert.match(bootstrap,/ashykAccessForUser\(userId\)\.locked/);
+  assert.match(feature,/onlineAdapter=supabaseClient&&onlineAllowed\?createAshykOnlineAdapter/);
+  assert.match(mobile,/ashykModeAccess\('online',\{userId\}\)/);
+  assert.match(app,/if\(!bootstrapped\|\|!authUserKey\)\{setGlobalAshykInvite\(null\)/);
+  assert.match(bootstrap,/!isAshykModeAllowed\('online',\{userId\}\)/);
 });
 
 test('extended statistics exposes the same guest analytics contract on Web and Mobile',()=>{
