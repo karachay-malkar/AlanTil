@@ -56,11 +56,11 @@ test('Checkboxes preserve both Web checkbox vocabularies: native accent and brac
 });
 
 test('Segmented controls expose the final per-feature active surfaces',()=>{
-  assert.match(sharedTokens,/settingsActiveAlpha:\.72/);
+  assert.match(sharedTokens,/settingsActiveAlpha:\.94/);
   assert.match(sharedTokens,/setActiveAlpha:\.82/);
   assert.match(sharedTokens,/testActiveAlpha:\.86/);
   assert.match(sharedTokens,/songsActiveAlpha:\.84/);
-  assert.match(parity,/segmentItemActive:\s*\{[^}]*backgroundColor:\s*'rgba\(246,242,233,\.72\)'/s);
+  assert.match(parity,/segmentItemActive:\s*\{[^}]*theme\.segmented\.settingsActiveAlpha/s);
   assert.match(parity,/segmentItemSetActive:\s*\{[^}]*backgroundColor:\s*'rgba\(246,242,233,\.82\)'/s);
   assert.match(parity,/segmentItemTestActive:\s*\{[^}]*backgroundColor:\s*'rgba\(246,242,233,\.86\)'/s);
   assert.match(parity,/segmentItemSongsActive:\s*\{[^}]*backgroundColor:\s*'rgba\(246,242,233,\.84\)'/s);

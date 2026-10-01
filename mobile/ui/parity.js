@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   surfaceInset: { position: 'absolute', top: 9, left: 9, right: 9, bottom: 9, borderWidth: 1, borderColor: C.lineSoft, borderRadius: Math.max(1, theme.radius.lg - 6), opacity: .6 },
   segmented: { width: '100%', minHeight: theme.segmented.itemMinHeight + theme.segmented.padding * 2, padding: theme.segmented.padding, borderWidth: 1, borderColor: C.line, borderRadius: theme.segmented.radius, flexDirection: 'row', backgroundColor: 'transparent' },
   segmentItem: { flex: 1, minHeight: theme.segmented.itemMinHeight, borderRadius: theme.segmented.radius, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, paddingVertical: 4 },
-  segmentItemActive: { backgroundColor: 'rgba(246,242,233,.72)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  segmentItemActive: { backgroundColor: `rgba(246,242,233,${theme.segmented.settingsActiveAlpha})`, shadowColor: '#292721', shadowOpacity: theme.segmented.activeShadowOpacity, shadowRadius: theme.segmented.activeShadowRadius, shadowOffset: { width: 0, height: theme.segmented.activeShadowY }, elevation: 2 },
   segmentItemSetActive: { backgroundColor: 'rgba(246,242,233,.82)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   segmentItemTestActive: { backgroundColor: 'rgba(246,242,233,.86)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   segmentItemSongsActive: { backgroundColor: 'rgba(246,242,233,.84)', shadowColor: '#292721', shadowOpacity: .05, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 },

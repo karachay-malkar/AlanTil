@@ -127,8 +127,8 @@ test('Extended statistics is a Community tab and only user/test details leave th
 });
 
 test('Ashyk UI consumes shared visual geometry without changing game modules',()=>{
-  const mobileTheme=read('mobile/ui/theme.js'),mobileAshyk=read('mobile/screens/ashyk.js');
-  assert.match(mobileTheme,/ashyk:W\.ashyk/);assert.match(mobileAshyk,/theme\.ashyk\.buttonHeight/);assert.match(mobileAshyk,/theme\.ashyk\.buttonRadius/);assert.match(mobileAshyk,/theme\.ashyk\.segmentedHeight/);
+  const mobileTheme=read('mobile/ui/theme.js'),mobileAshyk=read('mobile/screens/ashyk.js'),components=read('mobile/ui/components.js');
+  assert.match(mobileTheme,/ashyk:W\.ashyk/);assert.match(mobileAshyk,/theme\.ashyk\.buttonHeight/);assert.match(mobileAshyk,/theme\.ashyk\.buttonRadius/);assert.match(mobileAshyk,/SegmentedControl/);assert.match(components,/export function SegmentedControl/);assert.match(components,/theme\.segmented\.itemMinHeight/);assert.match(components,/theme\.segmented\.settingsActiveAlpha/);
 });
 
 test('Web visual manifest is complete and every recorded blob SHA matches current 16.7 source',()=>{
