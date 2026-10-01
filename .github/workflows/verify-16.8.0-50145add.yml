@@ -22,26 +22,57 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Record source identity
+      - name: Verify exact source
+        shell: bash
+        run: |
+          set -e
+          echo "expected=50145add45819a812f87e8ce1a64b4a7c7e24d11"
+          echo "actual=$(git rev-parse HEAD)"
+          echo "tree=$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD)" = "50145add45819a812f87e8ce1a64b4a7c7e24d11"
+          test -z "$(git status --porcelain)"
+
+      - name: Final QA on clean tree
+        shell: bash
+        run: |
+          set +e
+          npm run qa:final > "$RUNNER_TEMP/qa-final.log" 2>&1
+          code=$?
+          echo "$code" > "$RUNNER_TEMP/qa-final.exit"
+          tail -n 100 "$RUNNER_TEMP/qa-final.log"
+          exit 0
+
+      - name: Prepare verification output
+        shell: bash
         run: |
           mkdir -p verification
+          cp "$RUNNER_TEMP/qa-final.log" verification/qa-final.log
+          echo "exit_code=$(cat "$RUNNER_TEMP/qa-final.exit")" > verification/qa-final-exit.txt
           {
             echo "expected=50145add45819a812f87e8ce1a64b4a7c7e24d11"
             echo "actual=$(git rev-parse HEAD)"
             echo "tree=$(git rev-parse HEAD^{tree})"
-            git status --short
-          } | tee verification/source.txt
-          test "$(git rev-parse HEAD)" = "50145add45819a812f87e8ce1a64b4a7c7e24d11"
+          } > verification/source.txt
 
-      - name: Focused Ashyk integration
-        id: ashyk
+      - name: Focused Ashyk integration - exact Part 4 set
         shell: bash
         run: |
           set +e
-          node --test tests/*ashyk*.test.mjs mobile/tests/*ashyk*.test.mjs > verification/ashyk-suite.tap 2>&1
+          node --test --test-reporter=tap \
+            tests/ashyk-computer-part1-16-8.test.mjs \
+            tests/ashyk-word-scopes-16-8.test.mjs \
+            tests/ashyk-friend-auth-16-8.test.mjs \
+            tests/ashyk-recovery-16-8.test.mjs \
+            tests/ashyk-online-authority-16-7.test.mjs \
+            tests/ashyk-single-room-16-8.test.mjs \
+            tests/ashyk-part4-integration-16-8.test.mjs \
+            tests/ashyk-web-parity-16-6-13.test.mjs \
+            tests/ashyk-shot-replication-16-7.test.mjs \
+            mobile/tests/ashyk-ui-help-16-6-12.test.mjs \
+            mobile/tests/architecture.test.mjs > verification/ashyk-suite.tap 2>&1
           code=$?
-          echo "exit_code=$code" | tee verification/ashyk-exit.txt
-          tail -n 40 verification/ashyk-suite.tap
+          echo "exit_code=$code" > verification/ashyk-exit.txt
+          tail -n 35 verification/ashyk-suite.tap
           exit 0
 
       - name: Visual contract
@@ -68,20 +99,10 @@ jobs:
         shell: bash
         run: |
           set +e
-          node --test tests/*.test.mjs mobile/tests/*.test.mjs > verification/full-suite.tap 2>&1
+          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > verification/full-suite.tap 2>&1
           code=$?
-          echo "exit_code=$code" | tee verification/full-suite-exit.txt
-          tail -n 50 verification/full-suite.tap
-          exit 0
-
-      - name: Final QA
-        shell: bash
-        run: |
-          set +e
-          npm run qa:final > verification/qa-final.log 2>&1
-          code=$?
-          echo "exit_code=$code" | tee verification/qa-final-exit.txt
-          tail -n 80 verification/qa-final.log
+          echo "exit_code=$code" > verification/full-suite-exit.txt
+          tail -n 35 verification/full-suite.tap
           exit 0
 
       - name: Build verification report and source archive
@@ -96,12 +117,14 @@ jobs:
             return {tests:pick('tests'),pass:pick('pass'),fail:pick('fail'),skipped:pick('skipped'),cancelled:pick('cancelled'),todo:pick('todo')};
           }
           const readExit=p=>Number((fs.readFileSync(p,'utf8').match(/exit_code=(\d+)/)||[])[1]??-1);
+          const readTaggedExit=p=>Number((fs.readFileSync(p,'utf8').match(/exit_code=(\d+)/)||[])[1]??-1);
           const report={
             commit: require('child_process').execSync('git rev-parse HEAD',{encoding:'utf8'}).trim(),
+            tree: require('child_process').execSync('git rev-parse HEAD^{tree}',{encoding:'utf8'}).trim(),
             ashyk:{...parseTap('verification/ashyk-suite.tap'),exit_code:readExit('verification/ashyk-exit.txt')},
             full:{...parseTap('verification/full-suite.tap'),exit_code:readExit('verification/full-suite-exit.txt')},
-            visual_contract_exit_code:Number((fs.readFileSync('verification/visual-contract.log','utf8').match(/exit_code=(\d+)/)||[])[1]??-1),
-            access_invariants_exit_code:Number((fs.readFileSync('verification/access-invariants.log','utf8').match(/exit_code=(\d+)/)||[])[1]??-1),
+            visual_contract_exit_code:readTaggedExit('verification/visual-contract.log'),
+            access_invariants_exit_code:readTaggedExit('verification/access-invariants.log'),
             qa_final_exit_code:readExit('verification/qa-final-exit.txt')
           };
           fs.writeFileSync('verification/summary.json',JSON.stringify(report,null,2)+'\n');
@@ -123,10 +146,28 @@ jobs:
           stat -c '%s' AlanTil-16.8.0-final-50145add.zip | tee verification/archive-size-bytes.txt
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: AlanTil-16.8.0-final-verification-50145add
+          name: AlanTil-16.8.0-final-verification-50145add-r2
           path: |
             AlanTil-16.8.0-final-50145add.zip
             verification/
           if-no-files-found: error
           retention-days: 7
+
+      - name: Verification gate
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('verification/summary.json','utf8'));
+          const problems=[];
+          if(r.commit!=='50145add45819a812f87e8ce1a64b4a7c7e24d11') problems.push('wrong commit');
+          if(r.ashyk.exit_code!==0 || r.ashyk.fail!==0) problems.push('focused Ashyk suite failed');
+          if(r.visual_contract_exit_code!==0) problems.push('visual contract failed');
+          if(r.access_invariants_exit_code!==0) problems.push('access invariants failed');
+          if(r.qa_final_exit_code!==0) problems.push('qa:final failed');
+          if(r.full.tests!==643 || r.full.fail!==103) problems.push('full-suite baseline changed');
+          if(problems.length){console.error(problems.join('\n'));process.exit(1);}
+          console.log('Verification gate passed.');
+          NODE
