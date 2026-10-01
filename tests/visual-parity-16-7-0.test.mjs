@@ -18,7 +18,7 @@ const blobSha=(file)=>{const content=fs.readFileSync(path.join(ROOT,file));retur
 test('16.7 shared LIST_TABLE_CONTRACT is the canonical list geometry',()=>{
   assert.equal(VISUAL_CONTRACT_VERSION,'16.7.0');
   assert.equal(WEB_VISUAL_REFERENCE,'16.7.0');
-  assert.deepEqual(LIST_TABLE_CONTRACT.standard,{small:48,medium:52,large:58});
+  assert.deepEqual(LIST_TABLE_CONTRACT.standard,{small:48,medium:56,large:64,huge:72});
   assert.equal(LIST_TABLE_CONTRACT.result,80);
   assert.equal(LIST_TABLE_CONTRACT.table.header,38);
   assert.equal(LIST_TABLE_CONTRACT.horizontalPadding,12);
@@ -28,7 +28,7 @@ test('16.7 shared LIST_TABLE_CONTRACT is the canonical list geometry',()=>{
   assert.equal(LIST_TABLE_CONTRACT.background,'transparent');
   assert.equal(LIST_TABLE_CONTRACT.radius,0);
   assert.equal(LIST_TABLE_CONTRACT.shadow,'none');
-  assert.equal(listRowHeight('small'),48);assert.equal(listRowHeight('medium'),52);assert.equal(listRowHeight('large'),58);assert.equal(listRowHeight('large','result'),80);
+  assert.equal(listRowHeight('small'),48);assert.equal(listRowHeight('medium'),56);assert.equal(listRowHeight('large'),64);assert.equal(listRowHeight('huge'),72);assert.equal(listRowHeight('large','result'),80);
   assert.deepEqual(CONTROL_LAYOUT.practice,{rowHeight:52,singleRowHeight:52,leadingSize:36,iconSize:23,gap:8,titleSize:15,subtitleSize:12});
   assert.equal(CONTROL_LAYOUT.social.rowHeight,52);
   assert.equal(CONTROL_LAYOUT.social.rankWidth,36);
