@@ -1,4 +1,4 @@
-name: Compare pre-merge QA baseline
+name: Compare merge regression names
 
 'on':
   push:
@@ -15,32 +15,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 8a728b82955706ceef364ec16de43fc89970c685
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Baseline QA
+      - name: Compare failure names
         shell: bash
         run: |
           set +e
-          npm run qa:final > /tmp/base-qa.log 2>&1
-          echo "qa_exit=$?"
-          tail -n 100 /tmp/base-qa.log
-          exit 0
-      - name: Baseline focused affected tests
-        shell: bash
-        run: |
-          set +e
-          node --test --test-reporter=tap tests/visual-parity-16-7-0.test.mjs tests/social-ashyk-16-7-0.test.mjs > /tmp/base-affected.tap 2>&1
-          echo "affected_exit=$?"
-          tail -n 70 /tmp/base-affected.tap
-          exit 0
-      - name: Baseline broad suite
-        shell: bash
-        run: |
-          set +e
-          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/base-full.tap 2>&1
-          echo "full_exit=$?"
-          tail -n 20 /tmp/base-full.tap
+          git checkout --detach 8a728b82955706ceef364ec16de43fc89970c685
+          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/base.tap 2>&1
+          grep '^not ok ' /tmp/base.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/base.failures
+
+          git checkout --detach 50145add45819a812f87e8ce1a64b4a7c7e24d11
+          node --test --test-reporter=tap tests/*.test.mjs mobile/tests/*.test.mjs > /tmp/head.tap 2>&1
+          grep '^not ok ' /tmp/head.tap | sed -E 's/^not ok [0-9]+ - //' | sort > /tmp/head.failures
+
+          echo '=== BASE SUMMARY ==='
+          tail -n 9 /tmp/base.tap
+          echo '=== HEAD SUMMARY ==='
+          tail -n 9 /tmp/head.tap
+          echo '=== NEW FAILURE NAMES ==='
+          comm -13 /tmp/base.failures /tmp/head.failures
+          echo '=== RESOLVED FAILURE NAMES ==='
+          comm -23 /tmp/base.failures /tmp/head.failures
           exit 0
