@@ -4,6 +4,7 @@
 .appShell[data-screen="ashyk"] .ashykSetupScroll{width:100%;height:100%;overflow:auto;overscroll-behavior:contain;padding:var(--ashyk-content-top) 14px calc(var(--safe-bottom) + 24px);background:var(--app-bg)}
 .appShell[data-screen="ashyk"] .ashykSetup{width:min(100%,620px);margin:0 auto;padding:0 2px}
 .appShell[data-screen="ashyk"] .ashykPageHead{min-height:50px;padding:5px 0 10px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.appShell[data-screen="ashyk"] .ashykPageHeadCompact{min-height:34px;padding:0 0 8px;border-bottom:0;justify-content:flex-end}
 .appShell[data-screen="ashyk"] .ashykPageHeadCopy{min-width:0;flex:1}
 .appShell[data-screen="ashyk"] .ashykSetupHelpButton{appearance:none;flex:0 0 auto;min-height:34px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface-0) 58%,transparent);display:flex;align-items:center;justify-content:center;gap:5px;color:var(--text-2);box-shadow:0 4px 18px rgba(41,39,33,.05)}
 .appShell[data-screen="ashyk"] .ashykSetupHelpButton span{font:850 16px/1 var(--font-body);color:var(--text-1)}
@@ -12,7 +13,15 @@
 .appShell[data-screen="ashyk"] .ashykPageHead h1{margin:4px 0 0;font-size:19px;line-height:1.15;font-weight:860;color:var(--text-1)}
 .appShell[data-screen="ashyk"] .ashykEyebrow,.appShell[data-screen="ashyk"] .ashykSectionLabel{font:780 9px/1.1 var(--font-terminal);letter-spacing:.12em;color:var(--text-3)}
 .appShell[data-screen="ashyk"] .ashykSetupSection{display:grid;grid-template-columns:minmax(100px,1fr) minmax(178px,auto);align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--line-soft)}
-.appShell[data-screen="ashyk"] .ashykDifficultyHint{min-height:34px;margin:0;padding:8px 2px 7px;color:var(--text-2);font:700 10px/1.45 var(--font-terminal)}
+.appShell[data-screen="ashyk"] .ashykModeButtons{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.appShell[data-screen="ashyk"] .ashykModeButton{appearance:none;border:0;background:transparent;padding:0;display:inline-flex;align-items:center;gap:4px;color:var(--text-3);cursor:pointer}
+.appShell[data-screen="ashyk"] .ashykModeButton b{font:800 12px/1.15 var(--font-body);color:inherit}
+.appShell[data-screen="ashyk"] .ashykModeBracket{font:800 11px/1 var(--font-terminal);color:inherit}
+.appShell[data-screen="ashyk"] .ashykModeButton.active{color:var(--text-1)}
+.appShell[data-screen="ashyk"] .ashykModeButton.active .ashykModeBracket{color:var(--accent-strong)}
+.appShell[data-screen="ashyk"] .ashykModeButton:disabled{opacity:.48;cursor:default}
+.appShell[data-screen="ashyk"] .ashykModeButton:active{transform:scale(.97)}
+.appShell[data-screen="ashyk"] .ashykDifficultyHint{min-height:34px;margin:0;padding:8px 2px 7px;color:var(--text-2);font:700 10px/1.45 var(--font-terminal);white-space:pre-line}
 .appShell[data-screen="ashyk"] .ashykModeAccessLock{min-height:190px;display:grid;place-items:center;align-content:center;gap:10px;padding:24px 18px;border-bottom:1px solid var(--line-soft);text-align:center}
 .appShell[data-screen="ashyk"] .ashykModeAccessLock strong{font-size:16px;line-height:1.25;color:var(--text-1)}
 .appShell[data-screen="ashyk"] .ashykModeAccessLock p{max-width:360px;margin:0;color:var(--text-2);font-size:12px;line-height:1.5}
