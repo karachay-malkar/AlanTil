@@ -13,7 +13,7 @@ import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8
 import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.8";
 import { beginAshykEntry, finishAshykEntry, isAshykEntryPending } from "../../packages/ashyk-game/entry-state.js?v=16.8.0.8";
 import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.8";
-import { ashykAccessForUser } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.8";
+import { isAshykModeAllowed } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.8";
 import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.8";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.8";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.8";
@@ -144,7 +144,7 @@ async function bootstrap() {
   let ashykNoticeKey='';
   const showGlobalAshykState=({snapshot,activeRoom}={})=>{
     const userId=String(getCurrentAuthState()?.session?.user?.id||'');
-    if(ashykAccessForUser(userId).locked){ashykNoticeKey='';return;}
+    if(!isAshykModeAllowed('online',{userId})){ashykNoticeKey='';return;}
     if(router.getCurrent().route==='practice.ashyk'){ashykNoticeKey='';return;}
     if(isAshykEntryPending()){ashykNoticeKey='';return;}
     const invite=Array.isArray(snapshot?.ashyk_invites)?snapshot.ashyk_invites[0]:null;

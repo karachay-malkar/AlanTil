@@ -1,13 +1,13 @@
-import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.5";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.5";
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.5";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.5";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.5";
-import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.5";
-import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.5";
-import { ashykAccessForUser } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.5";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.5";
-import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.5";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.8";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.8";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.8";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.8";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.8";
+import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.8";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.8";
+import { ashykAccessForUser, isAshykModeAllowed } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.8";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.8";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.8";
 import { mountAshykGame } from "./runtime.js?v=16.8.0.9";
 
 let controller=null;
@@ -48,6 +48,7 @@ export async function mount(context){
   const auth=getCurrentAuthState();
   const userId=String(auth?.session?.user?.id||'');
   const access=ashykAccessForUser(userId);
+  const onlineAllowed=isAshykModeAllowed('online',{userId});
   if(access.locked){
     host.innerHTML=`<div class="ashykAccessLock"><h1>${msg("practice.ashyk")}</h1><p>${socialMessage(settings.interface_language_code,'ashykRegisteredOnly')}</p><button class="btn actionPrimary" type="button" data-ashyk-sign-in>${socialMessage(settings.interface_language_code,'signInAction')}</button></div>`;
     host.querySelector('[data-ashyk-sign-in]')?.addEventListener('click',()=>context.router.navigate('account.home'),{signal:controller.signal});
@@ -56,11 +57,11 @@ export async function mount(context){
   // Start vocabulary work without making room restoration wait for it.
   const reloadWords=()=>loadAshykWords(signal).then(words=>({words}),error=>({error}));
   const vocabularyTask=reloadWords();
-  const supabaseClient=await getSupabaseClient().catch(()=>null);
+  const supabaseClient=onlineAllowed?await getSupabaseClient().catch(()=>null):null;
   if(signal.aborted||controller!==mountController||!host)return;
-  const pending=takePendingAshykInvite();
-  const intent=takePendingAshykIntent();
-  onlineAdapter=supabaseClient&&userId?createAshykOnlineAdapter(supabaseClient):null;
+  const pending=onlineAllowed?takePendingAshykInvite():(takePendingAshykInvite(),null);
+  const intent=onlineAllowed?takePendingAshykIntent():(takePendingAshykIntent(),null);
+  onlineAdapter=supabaseClient&&onlineAllowed?createAshykOnlineAdapter(supabaseClient):null;
   let recovered=pending?.room||null;
   let initialChallengeUserId='';
   if(!recovered&&onlineAdapter&&intent){
@@ -85,6 +86,7 @@ export async function mount(context){
     ensureOnlineBuild:ensureCurrentAshykBuild,
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onRoomChange(room){activeRoomId=room?.id||null;},
+    onAuthRequired:()=>context.router.navigate('account.home'),
     onExit(){void context.router.replace('practice.home');},
   });
 }

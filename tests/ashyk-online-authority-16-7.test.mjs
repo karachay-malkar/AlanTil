@@ -69,10 +69,14 @@ test('single-room migration removes protocol gating, preparing state and online 
   assert.doesNotMatch(sql,/protocol_version<>4|protocol_version>=4|protocol_version<4|set protocol_version=4,status='playing'/);
 });
 
-test('online store uses fixed 20 second shot and 10 second question fallbacks without serializing difficulty',()=>{
+test('online store uses fixed 20 second shot and 15 second question fallbacks without serializing difficulty',()=>{
   const shotStore=createAshykGameStore({engine:engine(),words:[],now:()=>0,setRepeater:()=>1,clearRepeater(){},setTimer:()=>1,clearTimer(){}});
   shotStore.hydrateOnline(room({phase_deadline_at:null,game_state:{scores:[0,0],remainingAshyks:10,field:{pieces:[]},phase:'first-shot'}}),'u1');
   assert.equal(shotStore.getState().shotSeconds,20);
   assert.equal('difficulty' in shotStore.onlineGameState(),false);
   shotStore.destroy();
+  const questionStore=createAshykGameStore({engine:engine(),words:[],now:()=>0,setRepeater:()=>1,clearRepeater(){},setTimer:()=>1,clearTimer(){}});
+  questionStore.hydrateOnline(room({phase:'bonus-question',phase_deadline_at:null,game_state:{scores:[0,0],remainingAshyks:9,field:{pieces:[]},phase:'bonus-question',question:{id:'w0',prompt:'alan0',answer:'ru0',answerId:'w0',options:[{id:'w0',text:'ru0'},{id:'w1',text:'ru1'}]},questionLocked:false}}),'u1');
+  assert.equal(questionStore.getState().questionSeconds,15);
+  questionStore.destroy();
 });

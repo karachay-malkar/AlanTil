@@ -25,7 +25,7 @@ export const UI_TOKENS=F({
   input:F({height:44,horizontal:12,radius:2,borderWidth:1}),
   panel:F({radius:20,borderWidth:1,headerMinHeight:42}),
   modal:F({maxWidth:500,padding:18,radius:20,overlay:'overlay'}),
-  segmented:F({padding:2,itemMinHeight:28,itemMinWidth:38,radius:999,settingsActiveAlpha:.72,setActiveAlpha:.82,testActiveAlpha:.86,songsActiveAlpha:.84}),
+  segmented:F({padding:2,itemMinHeight:28,itemMinWidth:38,radius:999,settingsActiveAlpha:.94,activeShadowOpacity:.10,activeShadowRadius:4,activeShadowY:1,setActiveAlpha:.82,testActiveAlpha:.86,songsActiveAlpha:.84}),
   progress:F({height:4,radius:999}),
   list:F({rowMinHeight:LIST_TABLE_CONTRACT.standard.medium,rowSmall:LIST_TABLE_CONTRACT.standard.small,rowLarge:LIST_TABLE_CONTRACT.standard.large,resultHeight:LIST_TABLE_CONTRACT.result,tableHeaderHeight:LIST_TABLE_CONTRACT.table.header,profileProgressHeight:LIST_TABLE_CONTRACT.profileProgress,horizontal:LIST_TABLE_CONTRACT.horizontalPadding,gap:LIST_TABLE_CONTRACT.gap,leadingSize:LIST_TABLE_CONTRACT.leadingSlot,trailingSize:LIST_TABLE_CONTRACT.actionSlot,separator:LIST_TABLE_CONTRACT.separator}),
   practice:F({rowHeight:LIST_TABLE_CONTRACT.standard.medium,singleRowHeight:LIST_TABLE_CONTRACT.standard.medium,leadingSize:LIST_TABLE_CONTRACT.leadingSlot,iconSize:23,gap:LIST_TABLE_CONTRACT.gap,titleSize:LIST_TABLE_CONTRACT.typography.primary.fontSize,subtitleSize:LIST_TABLE_CONTRACT.typography.secondary.fontSize}),

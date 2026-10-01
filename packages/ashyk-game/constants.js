@@ -1,12 +1,13 @@
 import {UI_TOKENS} from '../alantil-ui/tokens.js';
 
 export const DIFFICULTY_ORDER=Object.freeze(['easy','normal','hard']);
+export const HUMAN_TURN_TIMING=Object.freeze({humanShotSeconds:20,humanQuestionSeconds:15});
 export const DIFFICULTIES=Object.freeze({
-  easy:Object.freeze({id:'easy',computerShotAccuracy:.70,computerAnswerAccuracy:.50,humanShotSeconds:20,humanQuestionSeconds:15}),
-  normal:Object.freeze({id:'normal',computerShotAccuracy:.85,computerAnswerAccuracy:.70,humanShotSeconds:15,humanQuestionSeconds:10}),
-  hard:Object.freeze({id:'hard',computerShotAccuracy:1,computerAnswerAccuracy:1,humanShotSeconds:15,humanQuestionSeconds:7}),
+  easy:Object.freeze({id:'easy',computerShotAccuracy:.70,computerAnswerAccuracy:.50,...HUMAN_TURN_TIMING}),
+  normal:Object.freeze({id:'normal',computerShotAccuracy:.85,computerAnswerAccuracy:.70,...HUMAN_TURN_TIMING}),
+  hard:Object.freeze({id:'hard',computerShotAccuracy:1,computerAnswerAccuracy:1,...HUMAN_TURN_TIMING}),
 });
-export const ONLINE_RULES=Object.freeze({humanShotSeconds:20,humanQuestionSeconds:10});
+export const ONLINE_RULES=HUMAN_TURN_TIMING;
 export const FACE_DEFS=Object.freeze([
   Object.freeze({id:'КЪЫТ',axis:[1,0,0],value:6}),
   Object.freeze({id:'БИЙ',axis:[-1,0,0],value:15}),
