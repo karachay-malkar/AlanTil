@@ -32,6 +32,23 @@ const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2";
 const BEGINNER_SET_PATTERN = /^beginner-(0[1-9]|[12]\d|30)$/;
 const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
 const SET_ICON_ASSET_VERSION = "16.8.0.14";
+const STATION_STAR_COUNT = 30;
+const STATION_STAR_RADII = [64, 76, 88];
+const STATION_STAR_SIZES = [15, 18, 21];
+
+function stationStarField() {
+  return `<span class="stationStarField" aria-hidden="true">${Array.from({ length: STATION_STAR_COUNT }, (_, index) => {
+    const orbit = index % 3;
+    const slot = Math.floor(index / 3);
+    const angle = (slot * 36) + (orbit * 12);
+    const radius = STATION_STAR_RADII[orbit];
+    const size = STATION_STAR_SIZES[(index + orbit) % STATION_STAR_SIZES.length];
+    const duration = [8, 11, 14][orbit];
+    const delay = -((slot * duration) / 10).toFixed(2);
+    const directionClass = orbit === 1 ? " isReverse" : "";
+    return `<span class="stationOrbitStar stationOrbitStar${orbit + 1}${directionClass}" style="--star-angle:${angle}deg;--star-radius:${radius}px;--star-size:${size}px;--star-duration:${duration}s;--star-delay:${delay}s">✦</span>`;
+  }).join("")}</span>`;
+}
 let beginnerSetMetadata = new Map();
 
 function normalizeBeginnerMetadataRows(rows = []) {
@@ -314,7 +331,7 @@ function stationButton(station, index, progressSnapshot) {
       const earned = achievementLevel >= markLevel;
       return `<img class="stationAchievementLogo${earned ? " isEarned" : ""}" src="/assets/images/logo.png?v=${SET_ICON_ASSET_VERSION}" alt="" aria-hidden="true" decoding="async">`;
     }).join("");
-    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-station-progress-percent="${progress.percent}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block"><img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"><img class="beginnerDioramaImage beginnerDioramaImageProgress" src="${iconSrc}" alt="" aria-hidden="true" loading="eager" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationAchievementMarks" data-achievement-level="${achievementLevel}" aria-hidden="true">${achievementMarks}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
+    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-station-progress-percent="${progress.percent}" data-achievement-level="${achievementLevel}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block">${stationStarField()}<img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"><img class="beginnerDioramaImage beginnerDioramaImageProgress" src="${iconSrc}" alt="" aria-hidden="true" loading="eager" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationAchievementMarks" data-achievement-level="${achievementLevel}" aria-hidden="true">${achievementMarks}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
   }
   const dictionaryId = String(station.dictionaryId || "");
   const label = dictionaryId === "beginner" || !LEVEL_DICTIONARIES.has(dictionaryId)
@@ -346,6 +363,7 @@ function refreshRouteProgressInPlace(context,route,activeStory){
     const beginnerDiorama=button.classList.contains("beginnerDioramaNode");
     if(beginnerDiorama){
       const achievementLevel=masteryLevelForPercent(wordProgress.percent);
+      button.setAttribute("data-achievement-level",String(achievementLevel));
       const achievementMarks=button.querySelector(".stationAchievementMarks");
       if(achievementMarks){
         achievementMarks.setAttribute("data-achievement-level",String(achievementLevel));

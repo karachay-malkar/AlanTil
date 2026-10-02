@@ -66,7 +66,7 @@ async function readVisualState(page, key) {
     const progress = node.querySelector('.beginnerDioramaImageProgress');
     const frame = node.querySelector('.beginnerDioramaFrame');
     const markNodes = Array.from(node.querySelectorAll('.stationAchievementLogo'));
-    const frameBefore = getComputedStyle(frame, '::before');
+    const starNodes = Array.from(node.querySelectorAll('.stationOrbitStar'));
     const progressStyle = getComputedStyle(progress);
     return {
       progressAttr: Number(node.dataset.stationProgressPercent),
@@ -78,8 +78,11 @@ async function readVisualState(page, key) {
       labelBeforeMarks: Boolean(label && marks && label.nextElementSibling === marks),
       mutedFilter: getComputedStyle(muted).filter,
       clipPath: progressStyle.clipPath,
-      frameBeforeAnimation: frameBefore.animationName,
-      frameBeforeColor: frameBefore.color,
+      nodeAchievementLevel: Number(node.dataset.achievementLevel || 0),
+      starCount: starNodes.length,
+      starSizes: starNodes.map((item) => Number.parseFloat(getComputedStyle(item).fontSize)),
+      starAnimationNames: starNodes.map((item) => getComputedStyle(item).animationName),
+      starColors: starNodes.map((item) => getComputedStyle(item).color),
       frameZ: getComputedStyle(frame).zIndex,
       imageZ: getComputedStyle(progress).zIndex,
     };
@@ -122,23 +125,34 @@ async function readVisualState(page, key) {
       assert.equal(state.progressAttr, expected.percent, `wrong progress attribute at ${expected.percent}%`);
       assert.equal(state.progressVariable, `${expected.percent}%`, `wrong CSS progress value at ${expected.percent}%`);
       assert.equal(state.level, level, `wrong achievement level at ${expected.percent}%`);
+      assert.equal(state.nodeAchievementLevel, level, `wrong node achievement level at ${expected.percent}%`);
       assert.equal(state.markCount, 3, 'each set must render exactly three application logos');
       assert.equal(state.earnedCount, level, `wrong earned logo count at ${expected.percent}%`);
       assert.deepEqual(state.logoPaths, ['/assets/images/logo.png', '/assets/images/logo.png', '/assets/images/logo.png']);
       assert.equal(state.labelBeforeMarks, true, 'achievement logos must sit directly below the set name');
+      const logoBox = await page.locator(`[data-station-key="${expected.key}"] .stationAchievementLogo`).first().boundingBox();
+      assert.ok(logoBox && Math.abs(logoBox.width - 33) < 0.6 && Math.abs(logoBox.height - 33) < 0.6, `achievement logo is not 33x33: ${JSON.stringify(logoBox)}`);
       assert.ok(state.mutedFilter.includes('saturate(0.42)'), `base image is not softly muted: ${state.mutedFilter}`);
       assert.notEqual(state.clipPath, 'none', 'exact progress layer is not clipped');
-      assert.equal(state.frameBeforeAnimation, 'stationDioramaStars', 'background stars must animate slowly');
-      assert.ok(state.frameBeforeColor.includes('208') && state.frameBeforeColor.includes('154') && state.frameBeforeColor.includes('67'), `stars are not stele-gold: ${state.frameBeforeColor}`);
+      assert.equal(state.starCount, 30, 'each set must render exactly 30 stars');
+      assert.ok(Math.min(...state.starSizes) >= 15, `stars are smaller than 15px: ${state.starSizes.join(',')}`);
+      assert.ok(Math.max(...state.starSizes) >= 21, `largest stars are smaller than 21px: ${state.starSizes.join(',')}`);
+      assert.ok(state.starColors.every((color) => color.includes('208') && color.includes('154') && color.includes('67')), 'stars are not stele-gold');
+      if (level === 0) {
+        assert.ok(state.starAnimationNames.every((name) => name === 'stationDioramaStars'), `unpassed set should only twinkle: ${state.starAnimationNames.join(' | ')}`);
+      } else {
+        assert.ok(state.starAnimationNames.every((name) => name.includes('stationDioramaOrbit')), `passed set stars are not orbiting: ${state.starAnimationNames.join(' | ')}`);
+        assert.ok(state.starAnimationNames.some((name) => name.includes('stationDioramaOrbitReverse')), 'passed set needs a counter-rotating orbit');
+      }
       assert.equal(state.imageZ, '1', 'diorama must stay above background stars');
     }
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const reduced = await readVisualState(page, renderedStationKey);
-    assert.equal(reduced.frameBeforeAnimation, 'none', 'reduced-motion must disable the star loop');
+    assert.ok(reduced.starAnimationNames.every((name) => name === 'none'), 'reduced-motion must disable all star animation');
 
     await context.close();
-    console.log('Path set progress verification passed: exact fill, 80/90/100 logo marks, muted base, gold stars, reduced motion');
+    console.log('Path set progress verification passed: exact fill, 33px logo marks, 30 large gold stars, active earned-set orbits, reduced motion');
   } finally {
     await browser.close();
   }
