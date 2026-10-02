@@ -58,8 +58,8 @@ test('Header actions and bracket tabs consume semantic shared contracts',()=>{
   const shell=read('src/shared/styles/shell.css'),components=read('mobile/ui/components.js'),profileTabs=read('mobile/ui/profile-tabs.js'),typography=read('src/shared/styles/typography.css'),pathCss=read('src/features/path/path.css'),profileCss=read('src/features/profile/profile.css'),appCss=read('src/shared/styles/app.css'),adminMobile=read('mobile/screens/admin-users.js'),friendsMobile=read('mobile/screens/friends.js');
   assert.match(shell,/width:var\(--ui-header-action-size\)/);assert.match(shell,/height:var\(--ui-header-action-size\)/);assert.match(shell,/width:var\(--ui-header-action-icon-size\)/);
   assert.match(components,/BackIcon size=\{CH\.actionIconSize\}/);assert.match(components,/width:CH\.actionSize,height:CH\.actionSize/);
-  assert.match(profileTabs,/useSemanticTypography/);assert.match(profileTabs,/type\.caption\.fontSize/);assert.match(profileTabs,/type\.caption\.lineHeight/);
-  assert.match(typography,/\.profilePrimaryTab,\.storyTab,\.ashykModeButton\{[^}]*font-size:var\(--text-body\)/);
+  assert.match(profileTabs,/useSemanticTypography/);assert.match(profileTabs,/BRACKET_NAVIGATION_TEXT_ROLE/);assert.match(profileTabs,/fontSize:nav\.fontSize/);
+  assert.match(typography,/\.profilePrimaryTab,\.storyTab,\.stationViewTab,\.ashykModeButton\{[^}]*font-size:var\(--text-body\)/);
   assert.doesNotMatch(pathCss,/\.storyTab\{[^}]*clamp\(10px/s);
   assert.doesNotMatch(pathCss,/\.storyTab\{font-size:9px/);
   assert.doesNotMatch(profileCss,/--ui-profile-tab-font-size|--ui-profile-tab-line-height/);
