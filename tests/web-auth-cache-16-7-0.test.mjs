@@ -16,16 +16,26 @@ test('16.7 Web OAuth starts through the initialized Supabase client', () => {
   assert.doesNotMatch(auth, /function buildOAuthRedirectUrl\(/);
 });
 
-test('16.8 Web auth release refreshes the service-worker cache namespace', () => {
+function currentWebBuild() {
+  const index = read('index.html');
+  const meta = index.match(/<meta name="alantil-build" content="([^"]+)"/);
+  const target = index.match(/const targetVersion = "([^"]+)"/);
+  assert.ok(meta, 'index.html must expose alantil-build');
+  assert.ok(target, 'index.html must expose targetVersion');
+  assert.equal(target[1], meta[1], 'import-map target must match the declared build');
+  return { build: meta[1], index };
+}
+
+test('Web auth release keeps the service-worker cache namespace aligned with the declared build', () => {
   const serviceWorker = read('service-worker.js');
-  assert.match(serviceWorker, /const VERSION = "16\.8\.0\.8";/);
+  const { build } = currentWebBuild();
+  assert.ok(serviceWorker.includes(`const VERSION = "${build}";`));
 });
 
-test('16.8 Web auth keeps callback initialization blocking and singleton import mapping', () => {
+test('Web auth keeps callback initialization blocking and singleton import mapping', () => {
   const auth = read('src/shared/auth/auth-service.js');
-  const index = read('index.html');
+  const { index } = currentWebBuild();
   assert.match(auth, /export async function initializeAuth\(\)\s*\{\s*return startAuthInitialization\(\);\s*\}/);
   assert.equal((auth.match(/exchangeCodeForSession\(/g) || []).length, 1);
-  assert.match(index, /const targetVersion = "16\.8\.0\.8";/);
   assert.match(index, /\/src\/shared\/auth\/auth-service\.js/);
 });

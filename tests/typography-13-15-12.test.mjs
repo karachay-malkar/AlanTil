@@ -51,14 +51,17 @@ test("final typography layer maps Ashyk technical, body, accent and result roles
   assert.match(typography, /ashykDifficultyHint/);
   assert.match(typography, /ashykModeButton/);
   assert.match(typography, /ashykQuestionPrompt/);
-  assert.match(typography, /ashykFinalScore strong\)\{font-size:var\(--text-result\)\}/);
+  assert.match(typography, /ashykTurnTimer/);
+  assert.match(typography, /ashykFinalScore strong,.ashykScore strong\)\{font-size:var\(--text-result\)\}/);
 });
 
 test("settings and both onboarding surfaces expose the huge option", async () => {
   const settings = await read("src/features/settings/feature.js");
   const webSetup = await read("src/shared/settings/learning-setup.js");
+  const webOnboarding = await read("src/features/onboarding/index.js");
   const mobileSetup = await read("mobile/screens/onboarding.js");
   assert.match(settings, /\["huge", msg\("settings\.razmer_teksta_ogromnyy"\)\]/);
   assert.match(webSetup, /\["huge",/);
+  assert.match(webOnboarding, /\["small", "medium", "large", "huge"\]\.includes/);
   assert.match(mobileSetup, /\['huge',copy\.huge\]/);
 });

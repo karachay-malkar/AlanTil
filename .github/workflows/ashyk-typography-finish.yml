@@ -21,6 +21,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Advance build and cache version
+        run: |
+          git grep -lz '16\\.8\\.0\\.11' -- . | xargs -0 -r sed -i 's/16\\.8\\.0\\.11/16.8.0.12/g'
+          if git grep -n '16\\.8\\.0\\.11' -- .; then
+            echo "Stale 16.8.0.11 references remain"
+            exit 1
+          fi
       - name: Generate shared visual tokens
         run: node scripts/generate-shared-visual-css.mjs
       - name: Rebuild Ashyk runtime from Game.jsx
@@ -71,5 +78,19 @@ jobs:
         run: node --test tests/social-ashyk-16-7-0.test.mjs tests/ashyk-online-authority-16-7.test.mjs tests/ashyk-shot-replication-16-7.test.mjs tests/ashyk-wood-board-16-7-0.test.mjs mobile/tests/ashyk-ui-help-16-6-12.test.mjs
       - name: Run final repository QA
         run: npm run qa:final
+      - name: Browser verification
+        run: |
+          BROWSER_DEPS="$RUNNER_TEMP/alantil-browser-qa"
+          mkdir -p "$BROWSER_DEPS"
+          npm install --prefix "$BROWSER_DEPS" --no-audit --no-fund playwright@1.55.0
+          "$BROWSER_DEPS/node_modules/.bin/playwright" install --with-deps chromium
+          python3 -m http.server 4173 --bind 127.0.0.1 >"$RUNNER_TEMP/alantil-http.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          ASHYK_BROWSER_DEPS_ROOT="$BROWSER_DEPS" ASHYK_BROWSER_BASE_URL="http://127.0.0.1:4173" node scripts/qa/browser-ashyk.cjs
       - name: Push verified final commit
         run: git push origin HEAD:agent/16.8.0

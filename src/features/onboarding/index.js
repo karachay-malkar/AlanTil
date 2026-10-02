@@ -14,7 +14,7 @@ import {
 import { setupText } from "../../shared/settings/learning-preview-data.js?v=16.8.0.3";
 
 function applySetupTextSize(value) {
-  const code = ["small", "medium", "large"].includes(value) ? value : "medium";
+  const code = ["small", "medium", "large", "huge"].includes(value) ? value : "medium";
   if (typeof document !== "undefined" && document.documentElement) {
     document.documentElement.dataset.textSize = code;
   }
