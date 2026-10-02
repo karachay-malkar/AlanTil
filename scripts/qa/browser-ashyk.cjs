@@ -24,6 +24,7 @@ const expected = {
 };
 
 function trackBrowserErrors(page, bucket) {
+  page.on('requestfailed', (request) => bucket.push(`requestfailed: ${request.url()} ${request.failure()?.errorText}`));
   page.on('pageerror', (error) => bucket.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
     if (message.type() === 'error') bucket.push(`console.error: ${message.text()}`);
@@ -79,14 +80,22 @@ async function roleSizes(page) {
 
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
     await context.addInitScript((settings) => {
-      localStorage.setItem('alantil_scope_v1:guest:settings', JSON.stringify(settings));
+      if (!localStorage.getItem('alantil_scope_v1:guest:settings')) {
+        localStorage.setItem('alantil_scope_v1:guest:settings', JSON.stringify(settings));
+      }
       localStorage.setItem('alantil_analytics_enabled_v1', 'false');
+      localStorage.setItem('alantil_scope_v1:guest:guide.state', JSON.stringify({ general_completed: true, learning_completed: true }));
     }, guestSettings);
     const page = await context.newPage();
     trackBrowserErrors(page, errors);
 
     await page.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-route="practice.home"]');
+    await page.waitForFunction(() => document.querySelector('[data-guide-skip]') || document.querySelector('.practiceMenu') || document.querySelector('.pathView'));
+    if (await page.locator('[data-guide-skip]').isVisible()) await page.locator('[data-guide-skip]').click();
+    await page.waitForSelector('.storySteleBackdrop', { state: 'visible' });
+    await page.locator('.storySteleDialog').press('Escape');
+    await page.waitForSelector('.storySteleBackdrop', { state: 'hidden' });
     await page.locator('[data-route="practice.home"]').click();
     await waitForPath(page, '/practice');
     await page.waitForSelector('.practiceMenu');
@@ -131,6 +140,8 @@ async function roleSizes(page) {
     await setTextSize(page, 'huge');
     await page.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-route="practice.home"]');
+    await page.waitForFunction(() => document.querySelector('[data-guide-skip]') || document.querySelector('.practiceMenu') || document.querySelector('.pathView'));
+    if (await page.locator('[data-guide-skip]').isVisible()) await page.locator('[data-guide-skip]').click();
     assert.equal(await page.locator('html').getAttribute('data-text-size'), 'huge', 'text size did not survive a full reload');
 
     await page.locator('[data-route="practice.home"]').click();
@@ -155,6 +166,10 @@ async function roleSizes(page) {
     assert.equal(await page.locator('.ashykScore strong').first().evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), 48, 'in-game score must use fixed result size');
     assert.equal(await page.locator('.ashykTurnTimer').evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), 28, 'huge mode timer must use accent size');
 
+    await page.waitForFunction(() => Number.parseInt(document.querySelector('.ashykTurnTimer')?.textContent, 10) > 0, null, { timeout: 30000 });
+    const timerStart = await page.locator('.ashykTurnTimer').innerText();
+    await page.waitForFunction((previous) => { const text = document.querySelector('.ashykTurnTimer')?.textContent?.trim(); return text && text !== previous && Number.parseInt(text, 10) >= 0; }, timerStart);
+
     const viewport = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
@@ -163,7 +178,10 @@ async function roleSizes(page) {
 
     const text = await page.locator('body').innerText();
     assert.equal(text.includes('Не удалось открыть раздел'), false);
+    if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT, fullPage: true });
+    console.log('Functional browser checks passed: routes, modes, difficulties, dictionaries, four text sizes, reload, game, timer, 48px score and mobile layout');
     assert.deepEqual(errors, [], `browser console/runtime errors:\n${errors.join('\n')}`);
+    if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT, fullPage: true });
     await context.close();
     console.log('Ashyk browser verification passed');
   } finally {
