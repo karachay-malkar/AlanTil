@@ -43,12 +43,14 @@ async function writeProgress(page, ratio, stationKey) {
     ids.slice(0, mastered).forEach((id) => {
       rows[id] = { word_id: id, mastery_status: 'mastered', mastery_percent: 100, mastered_at: now, last_seen_at: now };
     });
-    storage.writeScopedJson(wordStore.WORD_PROGRESS_LOCAL_KEY, { rows, processed_session_ids: [] });
+    wordStore.mergeCloudWordProgress(Object.values(rows));
+    const percent = ids.length ? Math.round((mastered / ids.length) * 100) : 0;
+    window.dispatchEvent(new CustomEvent('alantil:scope-ready'));
     return {
       key: String(station.key),
       total: ids.length,
       mastered,
-      percent: ids.length ? Math.round((mastered / ids.length) * 100) : 0,
+      percent,
     };
   }, { targetRatio: ratio, stationKey });
 }
@@ -109,8 +111,10 @@ async function readVisualState(page, key) {
     const ratios = [0.47, 0.80, 0.90, 1];
     for (const ratio of ratios) {
       const expected = await writeProgress(page, ratio, renderedStationKey);
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await waitForDiorama(page, expected.key);
+      await page.waitForFunction(({ key, percent }) => {
+        const node = Array.from(document.querySelectorAll('[data-station-key]')).find((item) => item.dataset.stationKey === key);
+        return node && Number(node.dataset.stationProgressPercent) === percent;
+      }, { key: expected.key, percent: expected.percent }, { timeout: 10000 });
       const state = await readVisualState(page, expected.key);
       const level = expected.percent >= 100 ? 3 : expected.percent >= 90 ? 2 : expected.percent >= 80 ? 1 : 0;
 
@@ -129,10 +133,7 @@ async function readVisualState(page, key) {
     }
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    const final = await writeProgress(page, 1, renderedStationKey);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await waitForDiorama(page, final.key);
-    const reduced = await readVisualState(page, final.key);
+    const reduced = await readVisualState(page, renderedStationKey);
     assert.equal(reduced.frameBeforeAnimation, 'none', 'reduced-motion must disable the star loop');
 
     await context.close();

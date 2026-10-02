@@ -340,8 +340,18 @@ function refreshRouteProgressInPlace(context,route,activeStory){
     button.className=stationNodeClass(station,status);
     if(beginnerImageError)button.classList.add("beginnerDioramaError");
     button.style.setProperty("--station-progress",(wordProgress.percent*3.6)+"deg");
+    button.style.setProperty("--station-progress-percent",wordProgress.percent+"%");
+    button.setAttribute("data-station-progress-percent",String(wordProgress.percent));
     button.setAttribute("aria-label",msg("path.osvoeno_iz_slov",{label:station.name,mastered:wordProgress.mastered,total:wordProgress.total}));
     const beginnerDiorama=button.classList.contains("beginnerDioramaNode");
+    if(beginnerDiorama){
+      const achievementLevel=masteryLevelForPercent(wordProgress.percent);
+      const achievementMarks=button.querySelector(".stationAchievementMarks");
+      if(achievementMarks){
+        achievementMarks.setAttribute("data-achievement-level",String(achievementLevel));
+        achievementMarks.querySelectorAll(".stationAchievementLogo").forEach((logo,index)=>logo.classList.toggle("isEarned",index<achievementLevel));
+      }
+    }
     const count=button.querySelector(".stationWordCount");if(count)count.textContent=wordProgress.mastered+"/"+wordProgress.total;
     button.querySelector(".stationMilestones")?.remove();
     const milestone=stationMilestones(wordProgress);if(!beginnerDiorama&&milestone)button.insertAdjacentHTML("beforeend",milestone);
