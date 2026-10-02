@@ -60,8 +60,12 @@ test("settings and both onboarding surfaces expose the huge option", async () =>
   const webSetup = await read("src/shared/settings/learning-setup.js");
   const webOnboarding = await read("src/features/onboarding/index.js");
   const mobileSetup = await read("mobile/screens/onboarding.js");
+  const mobileProfile = await read("mobile/screens/profile-main.js");
   assert.match(settings, /\["huge", msg\("settings\.razmer_teksta_ogromnyy"\)\]/);
   assert.match(webSetup, /\["huge",/);
   assert.match(webOnboarding, /\["small", "medium", "large", "huge"\]\.includes/);
   assert.match(mobileSetup, /\['huge',copy\.huge\]/);
+  assert.match(mobileProfile, /\["huge","XL"\]/);
+  assert.match(mobileProfile, /semanticTypography\(draft\.text_size_code\|\|'medium'\)/);
+  assert.match(mobileProfile, /previewType\.wordCard/);
 });
