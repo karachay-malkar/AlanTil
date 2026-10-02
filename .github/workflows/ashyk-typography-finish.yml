@@ -72,6 +72,8 @@ jobs:
           if stale:
               raise SystemExit("stale build references: " + ", ".join(stale))
           PY
+      - name: Refresh visual parity manifest after version bump
+        run: node scripts/sync-visual-contract-16-7.mjs
       - name: Stage generated result as final candidate
         run: |
           rm .github/workflows/ashyk-typography-finish.yml
