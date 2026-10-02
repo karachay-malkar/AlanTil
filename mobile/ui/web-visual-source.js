@@ -37,7 +37,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
     ["src/features/account/profile.js","77b7730df56f9f21dc7173fbdcc0a837cf4152a3"],
   ]),
   features: Object.freeze([
-    ["src/features/path/path.css","92999cb5d3f38b46b2b2729abe130804abf0dfca"],
+    ["src/features/path/path.css","15a6e7f4a8ff0d44959418456c6b2c0df5d35dd0"],
     ["src/features/path/path-navigation.css","f17954314fae6f71f425a53c3be64cdc742739ea"],
     ["src/features/path/story-stele.css","525a13a2d1f407ec63f9e920ed25e5927430aa3e"],
     ["src/features/path/story-word-list.css","a701b69d6a9d1a64f66e89c07aecc02735409f95"],
