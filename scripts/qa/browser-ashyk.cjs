@@ -138,7 +138,7 @@ async function roleSizes(page) {
     await page.waitForSelector('.ashykSetup', { timeout: 20000 });
 
     assert.equal(await page.locator('.ashykSetup .ashykModeButtons').count(), 0);
-    assert.equal(await page.locator('.ashykSetupToolbar .ashykModeButtons').count(), 1);
+    assert.equal(await page.locator('.ashykModeToolbar .ashykModeButtons').count(), 1);
     const modes = page.locator('.ashykModeButton');
     assert.ok(await modes.count() >= 2, 'computer/friend mode controls are missing');
     await modes.last().click();
@@ -206,12 +206,24 @@ async function roleSizes(page) {
 
     const setupGeometry = await page.evaluate(() => ({
       title: document.querySelector('#headerTitle').getBoundingClientRect().bottom,
-      toolbar: document.querySelector('.ashykSetupToolbar').getBoundingClientRect().top,
-      toolbarBottom: document.querySelector('.ashykSetupToolbar').getBoundingClientRect().bottom,
+      toolbar: document.querySelector('.ashykModeToolbar').getBoundingClientRect().top,
+      toolbarBottom: document.querySelector('.ashykModeToolbar').getBoundingClientRect().bottom,
       difficulty: document.querySelector('.ashykSetupSection').getBoundingClientRect().top,
+      hostLeft: document.querySelector('.ashykHost').getBoundingClientRect().left,
+      hostRight: document.querySelector('.ashykHost').getBoundingClientRect().right,
+      hostBottom: document.querySelector('.ashykHost').getBoundingClientRect().bottom,
+      modeLeft: document.querySelector('.ashykModeButtons').getBoundingClientRect().left,
+      modeRight: document.querySelector('.ashykModeButtons').getBoundingClientRect().right,
+      rulesRight: document.querySelector('.ashykSetupHelpButton').getBoundingClientRect().right,
+      rulesBottom: document.querySelector('.ashykSetupHelpButton').getBoundingClientRect().bottom,
+      rulesText: document.querySelector('.ashykSetupHelpButton').textContent.trim(),
     }));
     assert.ok(setupGeometry.toolbar >= setupGeometry.title, 'modes must sit below the section title');
     assert.ok(setupGeometry.difficulty >= setupGeometry.toolbarBottom, `difficulty must not overlap the toolbar: ${JSON.stringify(setupGeometry)}`);
+    assert.ok(Math.abs(((setupGeometry.modeLeft + setupGeometry.modeRight) / 2) - ((setupGeometry.hostLeft + setupGeometry.hostRight) / 2)) <= 2, `mode controls must be horizontally centered: ${JSON.stringify(setupGeometry)}`);
+    assert.ok(setupGeometry.hostRight - setupGeometry.rulesRight >= 8 && setupGeometry.hostRight - setupGeometry.rulesRight <= 18, `Rules must sit at the lower-right edge: ${JSON.stringify(setupGeometry)}`);
+    assert.ok(setupGeometry.hostBottom - setupGeometry.rulesBottom >= 10 && setupGeometry.hostBottom - setupGeometry.rulesBottom <= 22, `Rules must sit at the lower-right edge: ${JSON.stringify(setupGeometry)}`);
+    assert.equal(setupGeometry.rulesText, 'Правила');
     if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT + '.setup.png', fullPage: true });
     const checkedScopes = page.locator('.ashykQuestionScopeRow input:checked');
     if (await checkedScopes.count() === 0) await page.locator('.ashykQuestionScopeRow').first().click();

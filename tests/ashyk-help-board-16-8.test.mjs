@@ -109,7 +109,7 @@ test("Ashyk setup centers mode tabs below the title and anchors Rules at bottom-
   assert.match(setup, /className="ashykSetupHelpButton"/);
   assert.match(setup, /aria-label=\{m\.rules\}/);
   assert.match(setup, /title=\{m\.rules\}/);
-  assert.match(setup, />\{m\.rules\}<\/button>/);
+  assert.match(setup, /<span>\{m\.rules\}<\/span><\/button>/);
   assert.doesNotMatch(setup, /aria-hidden="true">\?<\/span>/);
   assert.match(css, /\.ashykModeToolbar\{[^}]*justify-content:center/);
   assert.match(css, /\.ashykSetupHelpButton\{[^}]*position:absolute[^}]*right:[^;}]+[^}]*bottom:/);
