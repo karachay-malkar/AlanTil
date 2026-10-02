@@ -40,9 +40,11 @@ test("16.8 beginner path uses DB-backed localized WebP metadata with circular fa
   assert.match(styles, /beginnerDioramaImage/);
   assert.match(styles, /beginnerDioramaFallback/);
   assert.match(styles, /beginnerDioramaError/);
-  assert.match(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
-  assert.match(styles, /mastered \.beginnerDioramaImage/);
-  assert.match(styles, /review_1_due \.beginnerDioramaImage/);
+  assert.match(styles, /beginnerDioramaImageMuted\{[^}]*saturate\(\.42\)/);
+  assert.match(styles, /beginnerDioramaImageProgress\{[^}]*clip-path:inset\(calc\(100% - var\(--station-progress-percent\)\) 0 0 0\)/);
+  assert.doesNotMatch(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
+  assert.match(feature, /stationAchievementMarks/);
+  assert.match(feature, /assets\/images\/logo\.png/);
   assert.match(styles, /beginnerDioramaNode\{width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px/);
   assert.match(styles, /beginnerRouteMap \.routeCatalogGroups,.beginnerRouteMap \.routeSectionStations\{gap:33px\}/);
   assert.match(styles, /routeMap\.beginnerRouteMap\{padding-bottom:94px\}/);

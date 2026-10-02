@@ -4,6 +4,7 @@ import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=
 import { getCompleteDictionaryWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
 import { buildLearningRoute, resolveStationFromParams, stationPathParams } from "../../shared/domain/learning-route.js?v=16.8.0.3";
 import { allStoryProgress, computedStationStatus, createRouteProgressSnapshot, stationWordProgress } from "../../shared/domain/route-progress.js?v=16.8.0.3";
+import { masteryLevelForPercent } from "../../../packages/alantil-core/mastery.js";
 import { getRouteSettings, updateRouteSettings } from "../../shared/progress/route-settings-store.js?v=16.8.0.3";
 import { awardWordMilestones } from "../../shared/progress/word-progress-store.js?v=16.8.0.3";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
@@ -307,7 +308,13 @@ function stationButton(station, index, progressSnapshot) {
   const stationName = String(station.name || ordinal);
   if (iconName) {
     const iconSrc = `/assets/icons/sets/${encodeURIComponent(iconName)}?v=${SET_ICON_ASSET_VERSION}`;
-    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block"><img class="beginnerDioramaImage" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
+    const achievementLevel = masteryLevelForPercent(progress.percent);
+    const achievementMarks = Array.from({ length: 3 }, (_, index) => {
+      const markLevel = index + 1;
+      const earned = achievementLevel >= markLevel;
+      return `<img class="stationAchievementLogo${earned ? " isEarned" : ""}" src="/assets/images/logo.png?v=${SET_ICON_ASSET_VERSION}" alt="" aria-hidden="true" decoding="async">`;
+    }).join("");
+    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-station-progress-percent="${progress.percent}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block"><img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"><img class="beginnerDioramaImage beginnerDioramaImageProgress" src="${iconSrc}" alt="" aria-hidden="true" loading="eager" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationAchievementMarks" data-achievement-level="${achievementLevel}" aria-hidden="true">${achievementMarks}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
   }
   const dictionaryId = String(station.dictionaryId || "");
   const label = dictionaryId === "beginner" || !LEVEL_DICTIONARIES.has(dictionaryId)
