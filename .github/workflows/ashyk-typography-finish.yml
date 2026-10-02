@@ -39,6 +39,8 @@ jobs:
           new_plain = "16.8.0.12"
           old_regex = r"16\.8\.0\.11"
           new_regex = r"16\.8\.0\.12"
+          old_bracket = "16[.]8[.]0[.]11"
+          new_bracket = "16[.]8[.]0[.]12"
           changed = []
           stale = []
 
@@ -50,7 +52,7 @@ jobs:
                   text = path.read_text()
               except (UnicodeDecodeError, OSError):
                   continue
-              updated = text.replace(old_plain, new_plain).replace(old_regex, new_regex)
+              updated = text.replace(old_plain, new_plain).replace(old_regex, new_regex).replace(old_bracket, new_bracket)
               if updated != text:
                   path.write_text(updated)
                   changed.append(str(path))
@@ -63,7 +65,7 @@ jobs:
                   text = path.read_text()
               except (UnicodeDecodeError, OSError):
                   continue
-              if old_plain in text or old_regex in text:
+              if old_plain in text or old_regex in text or old_bracket in text:
                   stale.append(str(path))
 
           print(f"updated {len(changed)} tracked files to {new_plain}")
