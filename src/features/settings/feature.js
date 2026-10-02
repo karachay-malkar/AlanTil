@@ -1,19 +1,19 @@
-import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.8.0.11";
-import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.11";
+import { APP_VERSION } from "../../../packages/alantil-core/release.js?v=16.8.0.12";
+import { msg, setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.12";
 import {
   getDictionaryVersionStatus,
   getInstalledDictionaryVersion,
   refreshDictionary,
-} from "../../shared/data/word-repository.js?v=16.8.0.11";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.11";
-import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.11";
-import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=16.8.0.11";
-import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.8.0.11";
-import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.11";
-import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.11";
-import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.11";
+} from "../../shared/data/word-repository.js?v=16.8.0.12";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.12";
+import { readProgressQueue } from "../../shared/progress/progress-queue.js?v=16.8.0.12";
+import { flushProgressQueue } from "../../shared/progress/progress-sync.js?v=16.8.0.12";
+import { renderLearningPreview, syncLearningPreview } from "../../shared/settings/learning-setup.js?v=16.8.0.12";
+import { getUserSettings, setUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.12";
+import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.12";
+import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/profile-navigation.js?v=16.8.0.12";
 
-const SETTINGS_ASSET_VERSION = "16.8.0.11";
+const SETTINGS_ASSET_VERSION = "16.8.0.12";
 let controller = null;
 let hasUnsavedChanges = false;
 let draftSettings = null;

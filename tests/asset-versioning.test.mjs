@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "16.8.0.11";
+const SINGLETON_URL_VERSION = "16.8.0.12";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,7 +71,7 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.8.0 is the published app release while 16.8.0.11 is the Web cache build", async () => {
+test("16.8.0 is the published app release while 16.8.0.12 is the Web cache build", async () => {
   const index = await read("index.html");
   const release = await read("packages/alantil-core/release.js");
   const analytics = await read("src/config/analytics.js");
@@ -79,14 +79,14 @@ test("16.8.0 is the published app release while 16.8.0.11 is the Web cache build
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
-  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]11/);
-  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]11/);
+  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]12/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]12/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]11"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]12"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]11"/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]11"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]12"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]12"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
@@ -102,13 +102,13 @@ test("13.15 feature modules are loaded explicitly and the service worker does no
   assert.doesNotMatch(worker, /MODULE_REWRITES|rewrittenModuleResponse|entry-13-14|word-normalizer-13-14/);
 });
 
-test("Settings dependencies resolve through the 16.8.0.11 singleton identity", async () => {
+test("Settings dependencies resolve through the 16.8.0.12 singleton identity", async () => {
   const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
-  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.11"/);
-  assert.match(settings, /word-repository\.js\?v=16.8.0.11/);
-  assert.match(settings, /auth-service\.js\?v=16.8.0.11/);
-  assert.match(settings, /user-settings-store\.js\?v=16.8.0.11/);
+  assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.12"/);
+  assert.match(settings, /word-repository\.js\?v=16.8.0.12/);
+  assert.match(settings, /auth-service\.js\?v=16.8.0.12/);
+  assert.match(settings, /user-settings-store\.js\?v=16.8.0.12/);
   assert.match(worker, /\["script", "style", "worker"\]\.includes\(request\.destination\)/);
   assert.match(worker, /networkFirst\(request, RUNTIME_CACHE, \{ noStore: true \}\)/);
 });
@@ -131,11 +131,23 @@ test("historical singleton URLs canonicalize to one current in-memory instance",
   assert.equal(generated.targetVersion, SINGLETON_URL_VERSION);
   for (const path of singletonPaths) {
     assert.ok(generated.paths.includes(path), `missing singleton path ${path}`);
-    for (const version of [...versions, "16.8.0.3", "16.8.0.5", "16.8.0.6", "16.8.0.7", "16.8.0.8", "16.8.0.9", "16.8.0.10"]) {
+    for (const version of [...versions, "16.8.0.3", "16.8.0.5", "16.8.0.6", "16.8.0.7", "16.8.0.8", "16.8.0.9", "16.8.0.10", "16.8.0.11"]) {
       assert.ok(generated.versions.includes(version), `missing supported version ${version}`);
       assert.equal(importMap[`${path}?v=${version}`], `${path}?v=${SINGLETON_URL_VERSION}`, `missing ${path} alias for ${version}`);
     }
   }
+});
+
+test("Ashyk runtime and stylesheet URLs use the current Web build", async () => {
+  const { WEB_BUILD_VERSION } = await import("../packages/alantil-core/release.js");
+  const entry = await read("src/features/ashyk/index.js");
+  const wrapper = await read("src/shared/styles/lazy/ashyk.css");
+  const runtimeUrls = [...entry.matchAll(/runtime\.js\?v=([^"']+)/g)];
+  assert.equal(runtimeUrls.length, 1);
+  assert.equal(runtimeUrls[0][1], WEB_BUILD_VERSION);
+  const styles = [...wrapper.matchAll(/ashyk[^"?]*\.css\?v=([^"')]+)/g)];
+  assert.equal(styles.length, 2);
+  for (const style of styles) assert.equal(style[1], WEB_BUILD_VERSION);
 });
 
 test("current singleton imports do not create a second state instance", async () => {
