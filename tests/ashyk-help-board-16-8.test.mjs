@@ -99,3 +99,16 @@ test("Ashyk Rules put faces before shot controls and remain vertically scrollabl
   assert.match(webRules, /face==='kyt'\?m\.instantWin/);
   assert.match(mobileRules, /face==='kyt'\?m\.instantWin/);
 });
+
+test("Ashyk setup centers mode tabs below the title and anchors Rules at bottom-right", () => {
+  const web = read("packages/ashyk-game/web/Game.jsx");
+  const css = read("src/features/ashyk/ashyk.css");
+  const setup = web.slice(web.indexOf("function Setup("), web.indexOf("function Help(", web.indexOf("function Setup(")));
+  assert.match(setup, /className="ashykModeToolbar"><ModeButtons/);
+  assert.doesNotMatch(setup, /ashykSetupToolbar/);
+  assert.match(setup, /className="ashykSetupHelpButton"[^>]*aria-label=\{m\.rules\}[^>]*title=\{m\.rules\}[^>]*>\{m\.rules\}<\/button>/);
+  assert.doesNotMatch(setup, /aria-hidden="true">\?<\/span>/);
+  assert.match(css, /\.ashykModeToolbar\{[^}]*justify-content:center/);
+  assert.match(css, /\.ashykSetupHelpButton\{[^}]*position:absolute[^}]*right:[^;}]+[^}]*bottom:/);
+  assert.match(css, /\.ashykModeToolbar \+ \.ashykSetupScroll\{[^}]*padding-bottom:calc\(var\(--safe-bottom\) \+ 72px\)/);
+});
