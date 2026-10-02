@@ -1,0 +1,30 @@
+name: Package verified AlanTil branch
+
+on:
+  push:
+    branches:
+      - agent/package-16.8.0-ashyk-layout-20261002
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/16.8.0
+          fetch-depth: 0
+      - name: Confirm verified source
+        run: |
+          test "$(git rev-parse HEAD)" = "9a335700c2d9dc888760e4bcd126ff13f7f027ff"
+      - name: Create project archive
+        run: git archive --format=zip --output=AlanTil-16.8.0-ashyk-layout.zip HEAD
+      - name: Upload project archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0-ashyk-layout
+          path: AlanTil-16.8.0-ashyk-layout.zip
+          if-no-files-found: error
+          retention-days: 1
