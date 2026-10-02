@@ -24,11 +24,12 @@ async function waitForDiorama(page, stationKey) {
 async function writeProgress(page, ratio, stationKey) {
   return page.evaluate(async ({ targetRatio, stationKey }) => {
     const build = document.querySelector('meta[name="alantil-build"]')?.content || '16.8.0.14';
-    const [{ getCompleteDictionaryWords }, { buildLearningRoute }, storage, wordStore] = await Promise.all([
+    const [{ getCompleteDictionaryWords }, { buildLearningRoute }, wordStore] = await Promise.all([
       import(`/src/shared/data/word-repository.js?v=${build}`),
       import(`/src/shared/domain/learning-route.js?v=${build}`),
-      import(`/src/shared/progress/storage-scope.js?v=${build}`),
-      import(`/src/shared/progress/word-progress-store.js?v=${build}`),
+      // Path's route-progress wrapper currently owns the v16.8.0.3 word-progress-store module instance.
+      // Use that same instance so this QA exercises the real live refresh path instead of a second cache.
+      import('/src/shared/progress/word-progress-store.js?v=16.8.0.3'),
     ]);
     const words = await getCompleteDictionaryWords();
     const route = buildLearningRoute(words);
