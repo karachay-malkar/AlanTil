@@ -1,0 +1,29 @@
+name: Package verified Path set progress
+
+on:
+  push:
+    branches:
+      - agent/package-16.8.0-set-progress-20261002
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/16.8.0
+          fetch-depth: 0
+      - name: Confirm verified source
+        run: test "$(git rev-parse HEAD)" = "90dc59b98bd72f9a60942360816eead3d3d778a2"
+      - name: Create full project archive
+        run: git archive --format=zip --output=AlanTil-16.8.0-set-progress.zip HEAD
+      - name: Upload full project archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-16.8.0-set-progress
+          path: AlanTil-16.8.0-set-progress.zip
+          if-no-files-found: error
+          retention-days: 1
