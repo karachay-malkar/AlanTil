@@ -21,32 +21,33 @@ test("set dioramas use exact progress fill, three app-logo marks, and slow backg
   assert.match(iconBranch, /--station-progress-percent:\${progress\.percent}%/);
   assert.match(iconBranch, /beginnerDioramaImageMuted/);
   assert.match(iconBranch, /beginnerDioramaImageProgress/);
-  assert.match(iconBranch, /stationAchievementMarks/);
-  assert.match(iconBranch, /stationAchievementLogo/);
-  assert.match(iconBranch, /assets\/images\/logo\.png/);
-  assert.match(iconBranch, /length:\s*3/);
   assert.match(iconBranch, /data-achievement-level="\${achievementLevel}"/);
-  assert.match(feature, /STATION_STAR_COUNT = 30/);
-  assert.match(feature, /stationStarField/);
+  assert.match(iconBranch, /achievementLevel > 0 \? stationStarField\(station\.key\) : ""/);
+  assert.doesNotMatch(iconBranch, /stationAchievementMarks/);
+  assert.doesNotMatch(iconBranch, /stationAchievementLogo/);
+  assert.doesNotMatch(iconBranch, /assets\/images\/logo\.png/);
+  assert.match(feature, /STATION_STAR_COUNT = 12/);
+  assert.match(feature, /STATION_STAR_ORBITS/);
+  assert.match(feature, /STATION_STAR_SIZES = \[5, 6, 7, 8, 9, 10\]/);
+  assert.match(feature, /stationStarRandom/);
+  assert.match(feature, /stationStarField\(stationKey\)/);
   assert.match(feature, /length: STATION_STAR_COUNT/);
 
   assert.match(styles, /beginnerDioramaImageMuted\{[^}]*saturate\(\.4[0-9]?\)/);
   assert.match(styles, /beginnerDioramaImageProgress\{[^}]*clip-path:inset\(calc\(100% - var\(--station-progress-percent\)\) 0 0 0\)/);
-  assert.match(styles, /stationAchievementMarks\{[^}]*height:36px/);
-  assert.match(styles, /stationAchievementLogo\{[^}]*width:33px[^}]*height:33px/);
-  assert.match(styles, /stationAchievementLogo\.isEarned/);
+  assert.doesNotMatch(styles, /stationAchievementMarks/);
+  assert.doesNotMatch(styles, /stationAchievementLogo/);
   assert.match(styles, /#D09A43/i);
-  assert.match(styles, /stationStarField/);
-  assert.match(styles, /stationOrbitStar/);
+  assert.match(styles, /data-achievement-level="0"[^}]*stationStarField/);
+  assert.match(styles, /stationOrbitStar\.isReverse/);
   assert.match(styles, /@keyframes stationDioramaStars/);
   assert.match(styles, /@keyframes stationDioramaOrbit/);
   assert.match(styles, /@keyframes stationDioramaOrbitReverse/);
-  assert.match(styles, /data-achievement-level="1"/);
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)[\s\S]*stationOrbitStar/);
   assert.doesNotMatch(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
 });
 
-test("live path progress refresh updates exact fill and earned logo marks without remounting", async () => {
+test("live path progress refresh updates exact fill and passed-set star field without remounting", async () => {
   const feature = await read("src/features/path/feature.js");
   const refreshStart = feature.indexOf("function refreshRouteProgressInPlace");
   const refreshEnd = feature.indexOf("function bindStoryTabs", refreshStart);
@@ -57,6 +58,8 @@ test("live path progress refresh updates exact fill and earned logo marks withou
   assert.match(refresh, /data-station-progress-percent/);
   assert.match(refresh, /masteryLevelForPercent\(wordProgress\.percent\)/);
   assert.match(refresh, /data-achievement-level/);
-  assert.match(refresh, /stationAchievementLogo/);
-  assert.match(refresh, /isEarned/);
+  assert.match(refresh, /stationStarField\(station\.key\)/);
+  assert.match(refresh, /insertAdjacentHTML\("afterbegin"/);
+  assert.match(refresh, /stars\.remove\(\)/);
+  assert.doesNotMatch(refresh, /stationAchievementLogo/);
 });
