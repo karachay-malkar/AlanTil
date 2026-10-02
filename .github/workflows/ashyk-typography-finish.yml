@@ -97,3 +97,4 @@ jobs:
             sleep 1
           done
           ASHYK_BROWSER_DEPS_ROOT="$BROWSER_DEPS" ASHYK_BROWSER_BASE_URL="http://127.0.0.1:4173" node scripts/qa/browser-ashyk.cjs
+          ASHYK_BROWSER_DEPS_ROOT="$BROWSER_DEPS" ASHYK_BROWSER_BASE_URL="http://127.0.0.1:4173" node scripts/qa/browser-path-set-progress.cjs
