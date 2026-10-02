@@ -52,6 +52,8 @@ export const INTERFACE_MESSAGES = Object.freeze({
   "common.nastroyki": Object.freeze({ ru: "Настройки", en: "Settings", tr: "Ayarlar" }),
   "common.nastroyki_alan_til": Object.freeze({ ru: "Настройки — Алан тил", en: "Settings — Alan Til", tr: "Ayarlar — Alan Til" }),
   "common.nazad": Object.freeze({ ru: "Назад", en: "Back", tr: "Geri" }),
+  "ashyk.confirm_exit_loss": Object.freeze({ ru: "Выйти из игры? Вам будет засчитано поражение.", en: "Leave the game? This will count as a loss.", tr: "Oyundan çıkılsın mı? Bu bir yenilgi sayılacak." }),
+  "ashyk.exit_failed": Object.freeze({ ru: "Не удалось завершить игру. Вы остались в игре. Повторите выход.", en: "Could not finish the game. You are still in the game. Try leaving again.", tr: "Oyun bitirilemedi. Hâlâ oyundasınız. Çıkmayı tekrar deneyin." }),
   "common.ne_bolsa_da_bolsun": Object.freeze({ ru: "Не болса да болсун!", en: "Не болса да болсун!", tr: "Не болса да болсун!" }),
   "common.ne_sobirat_statistiku": Object.freeze({ ru: "Не собирать статистику", en: "Do not collect analytics", tr: "İstatistik toplama" }),
   "common.ne_udalos_otkryt_razdel": Object.freeze({ ru: "Не удалось открыть раздел.", en: "Could not open this section.", tr: "Bu bölüm açılamadı." }),

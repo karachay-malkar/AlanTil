@@ -42,12 +42,13 @@ test('friend mode is fixed at 20 seconds per shot and 15 seconds per answer',()=
   assert.doesNotMatch(read('packages/ashyk-game/web/Game.jsx'),/m\.mediumWords/);
 });
 
-test('ordinary navigation never resigns an online game',()=>{
+test('navigation completes the confirmed leave before detaching the game',()=>{
   const feature=read('src/features/ashyk/index.js');
   const bootstrap=read('src/app/bootstrap.js');
   assert.doesNotMatch(feature,/onLeave\(\)[\s\S]{0,220}leaveRoom/);
   assert.doesNotMatch(bootstrap,/leaveRoom\(resumable\.id\)/);
-  assert.match(feature,/Active online rooms survive and are resumable/);
+  assert.match(feature,/requestLeave\(\)\{return leaveController/);
+  assert.match(read('src/app/router.js'),/currentModule\?\.requestLeave/);
 });
 
 test('build freshness check stores the requested online action and reloads silently',()=>{
@@ -72,7 +73,7 @@ test('adapter fetches one server-composed player snapshot and listens to room/in
 });
 
 test('web build is bumped as one cache generation',()=>{
-  assert.match(read('index.html'),/name="alantil-build" content="16\.8\.0\.13"/);
-  assert.match(read('service-worker.js'),/const VERSION = "16\.8\.0\.13"/);
-  assert.match(read('packages/alantil-core/release.js'),/16\.8\.0\.13/);
+  assert.match(read('index.html'),/name="alantil-build" content="16\.8\.0\.14"/);
+  assert.match(read('service-worker.js'),/const VERSION = "16\.8\.0\.14"/);
+  assert.match(read('packages/alantil-core/release.js'),/16\.8\.0\.14/);
 });

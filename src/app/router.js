@@ -1,12 +1,12 @@
-import { msg } from "../shared/i18n/index.js?v=16.8.0.13";
-import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.13";
-import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.13";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.13";
-import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.13";
-import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.13";
+import { msg } from "../shared/i18n/index.js?v=16.8.0.14";
+import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.14";
+import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.14";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.14";
+import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.14";
+import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.14";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "16.8.0.13";
+const ASSET_VERSION = "16.8.0.14";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -316,6 +316,7 @@ export function createRouter({ shell, modal, context }) {
     return { route, params: nextParams };
   }
   async function mayLeave(force) {
+    if (currentModule?.requestLeave) return currentModule.requestLeave();
     if (force || !currentModule?.canLeave || currentModule.canLeave()) return true;
     const message = currentModule?.getLeaveMessage?.() || msg("common.vy_tochno_hotite_vyyti_sessiya_budet_sohranena").replace("\n", "<br>");
     return modal.confirm({ message });

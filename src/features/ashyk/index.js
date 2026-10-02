@@ -1,20 +1,23 @@
-import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.13";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.13";
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.13";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.13";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.13";
-import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.13";
-import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.13";
-import { ashykAccessForUser, isAshykModeAllowed } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.13";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.13";
-import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.13";
-import { mountAshykGame } from "./runtime.js?v=16.8.0.13";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.14";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.14";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.14";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.14";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.14";
+import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.14";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.14";
+import { ashykAccessForUser, isAshykModeAllowed } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.14";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.14";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.14";
+import { createAshykLeaveController } from "../../../packages/ashyk-game/leave.js?v=16.8.0.14";
+import { mountAshykGame } from "./runtime.js?v=16.8.0.14";
 
 let controller=null;
 let disposeGame=null;
 let sessionActive=false;
 let activeRoomId=null;
 let onlineAdapter=null;
+let gameController=null;
+let leaveController=null;
 
 
 function hasQuestionSource(words){
@@ -41,6 +44,12 @@ export async function mount(context){
   const signal=mountController.signal;
   void primeAshykBuildCheck();
   sessionActive=false;
+  leaveController=createAshykLeaveController({
+    getGame:()=>gameController,
+    confirm:(message)=>context.modal.confirm({message}),
+    message:msg('ashyk.confirm_exit_loss'),
+    onError:()=>context.modal.openContent({title:msg('practice.ashyk'),contentHtml:`<p>${msg('ashyk.exit_failed')}</p>`}),
+  });
   context.shell.setHeaderContent?.({title:msg("practice.ashyk")});
   context.root.innerHTML='<section class="view ashykView"><div class="ashykHost" data-ashyk-host></div></section>';
   const host=context.root.querySelector('[data-ashyk-host]');
@@ -86,6 +95,7 @@ export async function mount(context){
     ensureOnlineBuild:ensureCurrentAshykBuild,
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onRoomChange(room){activeRoomId=room?.id||null;},
+    onControllerReady(value){gameController=value;},
     onAuthRequired:()=>context.router.navigate('account.home'),
     confirmResign:(message)=>context.modal.confirm({message}),
     onExit(){void context.router.replace('practice.home');},
@@ -93,7 +103,7 @@ export async function mount(context){
 }
 
 export async function onLeave(){
-  // Navigation only detaches the screen. Active online rooms survive and are resumable.
+  // The router awaits requestLeave before detaching this screen.
 }
 
 export function unmount(){
@@ -102,8 +112,12 @@ export function unmount(){
   sessionActive=false;
   disposeGame?.();
   disposeGame=null;
+  gameController=null;
+  leaveController=null;
   activeRoomId=null;
   onlineAdapter=null;
 }
+
+export function requestLeave(){return leaveController?.requestLeave()??true;}
 
 export function canLeave(){return !sessionActive;}

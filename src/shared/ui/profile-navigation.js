@@ -11,13 +11,13 @@ function escapeAttribute(value) {
 export function renderBracketTabs({ items = [], active = "", ariaLabel = "", dataAttribute = "profile-tab" } = {}) {
   const attribute = /^[a-z][a-z0-9-]*$/.test(dataAttribute) ? dataAttribute : "profile-tab";
   const count=Math.max(1,items.length);
-  return `<nav class="profilePrimaryNav" style="--profile-tab-count:${count}" aria-label="${escapeAttribute(ariaLabel)}">
-    ${items.map((item) => {
+  return `<nav class="profilePrimaryNav bracketTabsShell" style="--profile-tab-count:${count}" aria-label="${escapeAttribute(ariaLabel)}">
+    <div class="bracketTabsTrack">${items.map((item) => {
       const id = String(item?.id || "");
       const value = item?.value ?? item?.route ?? id;
       const selected = active === id;
       return `<button class="tabAction profilePrimaryTab ${selected ? "active" : ""}" type="button" data-${attribute}="${escapeAttribute(value)}" ${selected ? 'aria-current="page"' : ""}>[ ${escapeAttribute(item?.label || "")} ]</button>`;
-    }).join("")}
+    }).join("")}</div>
   </nav>`;
 }
 

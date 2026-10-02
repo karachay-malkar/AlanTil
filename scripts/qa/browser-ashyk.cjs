@@ -162,6 +162,34 @@ async function roleSizes(page) {
       assert.deepEqual(await roleSizes(page), sizes, `semantic typography mismatch for ${mode}`);
     }
 
+    // Use the production Community tab renderer, including its longest label.
+    await page.evaluate(async () => {
+      const build=document.querySelector('meta[name="alantil-build"]').content;
+      const {renderBracketTabs}=await import(`/src/shared/ui/profile-navigation.js?v=${build}`);
+      const fixture=document.createElement('div');fixture.id='qaBracketFixture';
+      fixture.style.cssText='position:fixed;left:10px;right:10px;bottom:80px;z-index:9999;background:var(--app-bg)';
+      fixture.innerHTML=renderBracketTabs({items:[{id:'rating',label:'Рейтинг'},{id:'friends',label:'Друзья'},{id:'stats',label:'Расширенная статистика'}],active:'stats'});
+      document.body.appendChild(fixture);
+    });
+    for(const width of [320,390,1280]){
+      await page.setViewportSize({width,height:844});
+      for(const [size,roles] of Object.entries(expected)){
+        await setTextSize(page,size);
+        const track=page.locator('#qaBracketFixture .bracketTabsTrack');
+        const metrics=await track.evaluate(node=>({width:node.clientWidth,total:node.scrollWidth,size:parseFloat(getComputedStyle(node.querySelector('button')).fontSize),height:node.clientHeight,childHeight:node.querySelector('button').getBoundingClientRect().height}));
+        assert.equal(metrics.size,roles[1]);
+        assert.ok(metrics.childHeight<=metrics.height+1,'tab label is vertically clipped');
+        if(metrics.total>metrics.width+2){
+          await page.waitForFunction(()=>document.querySelector('#qaBracketFixture .bracketTabsShell').classList.contains('canScrollEnd'));
+          await track.evaluate(node=>{node.scrollLeft=node.scrollWidth;});
+          await page.waitForFunction(()=>document.querySelector('#qaBracketFixture .bracketTabsTrack').scrollLeft>0);
+          assert.equal(await track.evaluate(node=>{const label=node.querySelector('button:last-child').getBoundingClientRect(),box=node.getBoundingClientRect();return label.right<=box.right+2;}),true,'last Community tab cannot be reached');
+          await track.evaluate(node=>{node.scrollLeft=0;});
+        }else assert.ok(metrics.total<=metrics.width+2);
+      }
+    }
+    await page.evaluate(()=>document.querySelector('#qaBracketFixture').remove());
+    await page.setViewportSize({width:390,height:844});
     await setTextSize(page, 'huge');
     await page.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-route="practice.home"]');
@@ -237,7 +265,22 @@ async function roleSizes(page) {
     console.log('Functional browser checks passed: routes, modes, difficulties, dictionaries, four text sizes, reload, game, timer, accent score and mobile layout');
     assert.deepEqual(errors, [], `browser console/runtime errors:\n${errors.join('\n')}`);
     if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT, fullPage: true });
+    await page.locator('#btnBackArrow').click();
+    await page.waitForSelector('.exitModal');
+    assert.ok((await page.locator('.exitModalText').innerText()).includes('поражение'));
+    assert.equal((await page.locator('.exitModalText').innerText()).includes('незаверш'),false);
+    await page.locator('.exitStay').click();
+    assert.equal(new URL(page.url()).pathname,'/practice/ashyk');
+    await page.evaluate(()=>history.back());
+    await page.waitForSelector('.exitModal');
+    await page.locator('.exitConfirm').click();
+    await waitForPath(page,'/practice');
+    await page.waitForSelector('.practiceMenu');
+    await page.locator('[data-practice-route="practice.ashyk"]').click();
+    await page.waitForSelector('.ashykSetup');
+    assert.equal(await page.locator('.ashykGame').count(),0,'resigned computer game must not resume');
     await context.close();
+    console.log('Bracket overflow and confirmed game exit verification passed');
     console.log('Ashyk browser verification passed');
   } finally {
     await browser.close();

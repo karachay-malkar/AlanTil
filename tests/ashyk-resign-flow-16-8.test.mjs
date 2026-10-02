@@ -25,7 +25,7 @@ test('Web resignation stays on the game result until explicit exit',()=>{
   const web=read('packages/ashyk-game/web/Game.jsx');
   const feature=read('src/features/ashyk/index.js');
   assert.match(web,/resignAshykRoom/);
-  const block=web.slice(web.indexOf('const endCurrentGame=async'),web.indexOf('const claimForfeit=async'));
+  const block=web.slice(web.indexOf('const resignCurrentGame=async'),web.indexOf('const claimForfeit=async'));
   assert.match(block,/await resignAshykRoom\(online,room\.id\)/);
   assert.match(block,/applyRoom\(next,true,true\)/);
   assert.doesNotMatch(block,/clearRoomLocal\(\)/);

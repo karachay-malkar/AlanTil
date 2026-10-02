@@ -47,7 +47,7 @@ test("generated Web tokens and theme expose all four modes with a fixed 48px res
 test("final typography layer maps Ashyk technical, body, accent and result roles", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const typography = await read("src/shared/styles/typography.css");
-  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.13/);
+  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.14/);
   assert.match(typography, /ashykDifficultyHint/);
   assert.match(typography, /ashykModeButton/);
   assert.match(typography, /ashykQuestionPrompt/);

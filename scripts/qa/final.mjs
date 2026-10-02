@@ -43,6 +43,8 @@ const TESTS = Object.freeze({
   ],
   ashyk: [
     'tests/social-ashyk-16-7-0.test.mjs',
+    'tests/ashyk-exit-navigation.test.mjs',
+    'tests/profile-navigation-overflow-13-15-12.test.mjs',
     'tests/ashyk-online-authority-16-7.test.mjs',
     'tests/ashyk-shot-replication-16-7.test.mjs',
     'tests/ashyk-wood-board-16-7-0.test.mjs',
