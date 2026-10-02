@@ -146,5 +146,24 @@ jobs:
             sleep 1
           done
           ASHYK_BROWSER_DEPS_ROOT="$BROWSER_DEPS" ASHYK_BROWSER_BASE_URL="http://127.0.0.1:4173" node scripts/qa/browser-ashyk.cjs
+      - name: Package verified generated candidate
+        run: |
+          rm -rf _verified_candidate
+          mkdir -p _verified_candidate
+          git diff-tree --no-commit-id --name-only -r HEAD | while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              mkdir -p "_verified_candidate/$(dirname "$file")"
+              cp "$file" "_verified_candidate/$file"
+            fi
+          done
+          git rev-parse HEAD > _verified_candidate/VERIFIED_LOCAL_COMMIT
+          git rev-parse HEAD^ > _verified_candidate/VERIFIED_PARENT
+      - name: Upload verified generated candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: ashyk-verified-candidate
+          path: _verified_candidate
+          if-no-files-found: error
+          retention-days: 1
       - name: Push verified final commit
         run: git push origin HEAD:agent/16.8.0
