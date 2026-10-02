@@ -72,7 +72,7 @@ test('adapter fetches one server-composed player snapshot and listens to room/in
 });
 
 test('web build is bumped as one cache generation',()=>{
-  assert.match(read('index.html'),/name="alantil-build" content="16\.8\.0\.8"/);
-  assert.match(read('service-worker.js'),/const VERSION = "16\.8\.0\.8"/);
-  assert.match(read('packages/alantil-core/release.js'),/16\.8\.0\.8/);
+  assert.match(read('index.html'),/name="alantil-build" content="16\.8\.0\.12"/);
+  assert.match(read('service-worker.js'),/const VERSION = "16\.8\.0\.12"/);
+  assert.match(read('packages/alantil-core/release.js'),/16\.8\.0\.12/);
 });

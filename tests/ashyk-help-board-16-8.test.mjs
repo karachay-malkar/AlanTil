@@ -76,9 +76,9 @@ test("Ashyk feature cache keys point to the updated runtime and styles", () => {
   const feature = read("src/features/ashyk/index.js");
   const lazy = read("src/shared/styles/lazy/ashyk.css");
   const layered = read("src/features/ashyk/ashyk-16-7.css");
-  assert.match(feature, /runtime\.js\?v=16\.8\.0\.9/);
-  assert.match(lazy, /ashyk\.css\?v=16\.8\.0\.8/);
-  assert.match(lazy, /ashyk-16-7\.css\?v=16\.8\.0\.8/);
+  assert.match(feature, /runtime\.js\?v=16\.8\.0\.12/);
+  assert.match(lazy, /ashyk\.css\?v=16\.8\.0\.12/);
+  assert.match(lazy, /ashyk-16-7\.css\?v=16\.8\.0\.12/);
   assert.match(layered, /ashyk-16-6-12\.css\?v=16\.8\.0\.8/);
 });
 
