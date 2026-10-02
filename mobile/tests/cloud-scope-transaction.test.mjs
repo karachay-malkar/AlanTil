@@ -7,6 +7,7 @@ import * as settings from '../../packages/alantil-core/settings.js';
 import * as progress from '../../packages/alantil-core/word-progress.js';
 import * as scopes from '../../packages/alantil-core/storage-scope.js';
 import * as analytics from '../../packages/alantil-core/analytics.js';
+import * as statistics from '../../packages/alantil-core/statistics.js';
 import * as policy from '../../packages/alantil-core/sync-policy.js';
 import {createDurableQueue} from '../../packages/alantil-core/durable-queue.js';
 function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};}
@@ -14,7 +15,7 @@ function module(name,env){const source=readFileSync(new URL(`../platform/${name}
 function harness(){
  let user='A',pause=null;const db=new Map(),writes=[];
  const key=(base,scope=`user:${user}`)=>scopes.scopedStorageKey(base,scope);
- const env={...analytics,trackNativeEvent:async()=>{},...favorites,...settings,...progress,...scopes,...policy,createDurableQueue,
+ const env={...analytics,...statistics,trackNativeEvent:async()=>{},...favorites,...settings,...progress,...scopes,...policy,createDurableQueue,
  getNativeStorageScope:()=>`user:${user}`,nativeScopedStorageKey:key,getNativeAuthSession:()=>({user:{id:user}}),
  migrateLegacyNativeValueToGuest:async()=>{if(pause){const p=pause;pause=null;p.entered.resolve();await p.release.promise;}},
  AsyncStorage:{getItem:async k=>db.get(k)??null,setItem:async(k,v)=>{writes.push(k);db.set(k,v);}},
