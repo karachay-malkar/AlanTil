@@ -36,3 +36,17 @@ test("set dioramas use exact progress fill, three app-logo marks, and slow backg
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)[\s\S]*beginnerDioramaFrame::before/);
   assert.doesNotMatch(styles, /beginnerDioramaImage\{[^}]*grayscale\(1\) saturate\(0\)/);
 });
+
+test("live path progress refresh updates exact fill and earned logo marks without remounting", async () => {
+  const feature = await read("src/features/path/feature.js");
+  const refreshStart = feature.indexOf("function refreshRouteProgressInPlace");
+  const refreshEnd = feature.indexOf("function bindStoryTabs", refreshStart);
+  const refresh = feature.slice(refreshStart, refreshEnd);
+
+  assert.ok(refreshStart >= 0 && refreshEnd > refreshStart);
+  assert.match(refresh, /--station-progress-percent/);
+  assert.match(refresh, /data-station-progress-percent/);
+  assert.match(refresh, /masteryLevelForPercent\(wordProgress\.percent\)/);
+  assert.match(refresh, /stationAchievementLogo/);
+  assert.match(refresh, /isEarned/);
+});
