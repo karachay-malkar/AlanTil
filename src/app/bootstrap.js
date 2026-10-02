@@ -1,28 +1,28 @@
-import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.12";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.12";
-import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.12";
-import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.12";
-import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.12";
-import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=16.8.0.12";
-import { migrateAllStorageKeys } from "../shared/progress/storage-scope.js?v=16.8.0.12";
-import { getProfile } from "../shared/profile/profile-service.js?v=16.8.0.12";
-import { hasCompleteProfile } from "../../packages/alantil-core/profile.js?v=16.8.0.12";
-import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.12";
-import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.12";
-import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.12";
-import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.12";
-import { beginAshykEntry, finishAshykEntry, isAshykEntryPending } from "../../packages/ashyk-game/entry-state.js?v=16.8.0.12";
-import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.12";
-import { isAshykModeAllowed } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.12";
-import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.12";
-import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.12";
-import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.12";
-import { createModalService } from "../shared/ui/modal.js?v=16.8.0.12";
-import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.12";
-import { createRouter } from "./router.js?v=16.8.0.12";
-import { createShell } from "./shell.js?v=16.8.0.12";
+import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.13";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.13";
+import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.13";
+import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.13";
+import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.13";
+import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=16.8.0.13";
+import { migrateAllStorageKeys } from "../shared/progress/storage-scope.js?v=16.8.0.13";
+import { getProfile } from "../shared/profile/profile-service.js?v=16.8.0.13";
+import { hasCompleteProfile } from "../../packages/alantil-core/profile.js?v=16.8.0.13";
+import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.13";
+import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.13";
+import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.13";
+import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.13";
+import { beginAshykEntry, finishAshykEntry, isAshykEntryPending } from "../../packages/ashyk-game/entry-state.js?v=16.8.0.13";
+import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.13";
+import { isAshykModeAllowed } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.13";
+import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.13";
+import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.13";
+import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.13";
+import { createModalService } from "../shared/ui/modal.js?v=16.8.0.13";
+import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.13";
+import { createRouter } from "./router.js?v=16.8.0.13";
+import { createShell } from "./shell.js?v=16.8.0.13";
 
-const ASSET_VERSION = "16.8.0.12";
+const ASSET_VERSION = "16.8.0.13";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
@@ -67,7 +67,7 @@ async function requiresProfileCompletion() {
 }
 async function linkRestoredAccountVisit() {
   try {
-    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.8.0.12");
+    const { recordAnonymousPageView } = await import("../shared/analytics/visitor-analytics.js?v=16.8.0.13");
     await recordAnonymousPageView({ pagePath: window.location.pathname || "/", pageReferrer: document.referrer, appVersion: APP_VERSION });
   } catch {}
 }
@@ -145,9 +145,9 @@ async function bootstrap() {
   const showGlobalAshykState=({snapshot,activeRoom}={})=>{
     const userId=String(getCurrentAuthState()?.session?.user?.id||'');
     if(!isAshykModeAllowed('online',{userId})){ashykNoticeKey='';return;}
-    if(router.getCurrent().route==='practice.ashyk'){ashykNoticeKey='';return;}
     if(isAshykEntryPending()){ashykNoticeKey='';return;}
     const invite=Array.isArray(snapshot?.ashyk_invites)?snapshot.ashyk_invites[0]:null;
+    if(router.getCurrent().route==='practice.ashyk'&&(!invite||activeRoom?.status==='playing'))return;
     const resumable=activeRoom?.status==='playing'||(activeRoom?.status==='waiting'&&activeRoom?.guest_user_id)?activeRoom:null;
     const key=invite?.invite_id?`invite:${invite.invite_id}`:resumable?.id?`room:${resumable.id}:${resumable.status}`:'';
     if(!key){ashykNoticeKey='';return;}
@@ -191,7 +191,8 @@ async function bootstrap() {
         }else setPendingAshykInvite({room:resumable,invite:null});
         ashykNoticeKey='';
         panel.close();
-        await router.navigate('practice.ashyk');
+        if(router.getCurrent().route==='practice.ashyk')await router.refresh();
+        else await router.navigate('practice.ashyk');
       }catch(error){
         accept.disabled=false;
         if(copy)copy.textContent=String(error?.message||socialMessage(locale,'error'));

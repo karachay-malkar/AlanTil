@@ -83,8 +83,10 @@ async function roleSizes(page) {
     if (!apiTransport) return;
     await context.route('https://*.supabase.co/**', async (route) => {
       const incoming = route.request();
+      try {
       const response = await apiTransport.fetch(incoming.url(), { method: incoming.method(), headers: incoming.headers(), data: incoming.postDataBuffer() || undefined, timeout: 20000 });
       await route.fulfill({ response });
+      } catch { await route.abort().catch(() => {}); }
     });
   };
   const errors = [];
@@ -135,6 +137,8 @@ async function roleSizes(page) {
     await waitForPath(page, '/practice/ashyk');
     await page.waitForSelector('.ashykSetup', { timeout: 20000 });
 
+    assert.equal(await page.locator('.ashykSetup .ashykModeButtons').count(), 0);
+    assert.equal(await page.locator('.ashykSetupToolbar .ashykModeButtons').count(), 1);
     const modes = page.locator('.ashykModeButton');
     assert.ok(await modes.count() >= 2, 'computer/friend mode controls are missing');
     await modes.last().click();
@@ -172,6 +176,15 @@ async function roleSizes(page) {
     await page.waitForSelector('.ashykSetup', { timeout: 20000 });
     await page.waitForSelector('.ashykQuestionScopeRow', { timeout: 20000 });
 
+    const setupGeometry = await page.evaluate(() => ({
+      title: document.querySelector('#headerTitle').getBoundingClientRect().bottom,
+      toolbar: document.querySelector('.ashykSetupToolbar').getBoundingClientRect().top,
+      toolbarBottom: document.querySelector('.ashykSetupToolbar').getBoundingClientRect().bottom,
+      difficulty: document.querySelector('.ashykSetupSection').getBoundingClientRect().top,
+    }));
+    assert.ok(setupGeometry.toolbar >= setupGeometry.title, 'modes must sit below the section title');
+    assert.ok(setupGeometry.difficulty >= setupGeometry.toolbarBottom, `difficulty must not overlap the toolbar: ${JSON.stringify(setupGeometry)}`);
+    if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT + '.setup.png', fullPage: true });
     const checkedScopes = page.locator('.ashykQuestionScopeRow input:checked');
     if (await checkedScopes.count() === 0) await page.locator('.ashykQuestionScopeRow').first().click();
 
@@ -184,8 +197,29 @@ async function roleSizes(page) {
 
     await page.waitForSelector('.ashykGame .ashykScene', { timeout: 20000 });
     await page.waitForSelector('.ashykScene canvas', { timeout: 20000 });
-    assert.equal(await page.locator('.ashykScore strong').first().evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), 48, 'in-game score must use fixed result size');
+    assert.equal(await page.locator('.ashykScore strong').first().evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), 28, 'in-game score must use accent size');
     assert.equal(await page.locator('.ashykTurnTimer').evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), 28, 'huge mode timer must use accent size');
+    for (const [size, roles] of Object.entries(expected)) {
+      await setTextSize(page, size);
+      assert.equal(await page.locator('.ashykScore strong').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize)), roles[2]);
+    }
+    await setTextSize(page, 'huge');
+    // Exercise the exact shared dialog service used by Ashyk's resignation callback.
+    await page.evaluate(async () => {
+      const build = document.querySelector('meta[name="alantil-build"]').content;
+      const { createModalService } = await import(`/src/shared/ui/modal.js?v=${build}`);
+      window.__qaModal = createModalService(document.querySelector('#modalRoot'));
+      window.__qaModalResult = null;
+      void window.__qaModal.confirm({message:'Сдаться и завершить текущую игру?'}).then(value => { window.__qaModalResult = value; });
+    });
+    await page.waitForSelector('.exitModal');
+    assert.ok((await page.locator('.exitConfirm').innerText()).includes('Не болса да болсун!'));
+    await page.locator('.exitStay').click();
+    assert.equal(await page.evaluate(() => window.__qaModalResult), false);
+    await page.evaluate(() => { void window.__qaModal.confirm({message:'Сдаться и завершить текущую игру?'}).then(value => { window.__qaModalResult = value; }); });
+    await page.locator('.exitConfirm').click();
+    assert.equal(await page.evaluate(() => window.__qaModalResult), true);
+
 
     await page.waitForFunction(() => Number.parseInt(document.querySelector('.ashykTurnTimer')?.textContent, 10) > 0, null, { timeout: 30000 });
     const timerStart = await page.locator('.ashykTurnTimer').innerText();
@@ -200,14 +234,14 @@ async function roleSizes(page) {
     const text = await page.locator('body').innerText();
     assert.equal(text.includes('Не удалось открыть раздел'), false);
     if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT, fullPage: true });
-    console.log('Functional browser checks passed: routes, modes, difficulties, dictionaries, four text sizes, reload, game, timer, 48px score and mobile layout');
+    console.log('Functional browser checks passed: routes, modes, difficulties, dictionaries, four text sizes, reload, game, timer, accent score and mobile layout');
     assert.deepEqual(errors, [], `browser console/runtime errors:\n${errors.join('\n')}`);
     if (process.env.ASHYK_BROWSER_SCREENSHOT) await page.screenshot({ path: process.env.ASHYK_BROWSER_SCREENSHOT, fullPage: true });
     await context.close();
     console.log('Ashyk browser verification passed');
   } finally {
-    await apiTransport?.dispose();
     await browser.close();
+    await apiTransport?.dispose();
   }
 })().catch((error) => {
   console.error(error);

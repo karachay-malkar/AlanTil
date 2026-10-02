@@ -118,7 +118,7 @@
 :where(
   .ashykSetupHelpButton span,.ashykPageHead h1,.ashykModeAccessLock strong,
   .ashykShotTimer strong,.ashykFace strong,.ashykWaiting>strong,.ashykDialog h2,
-  .ashykTimer,.ashykTurnTimer,.ashykQuestionPrompt,.ashykFinish h2,.ashykFinalScore span,.ashykAccessLock h1
+  .ashykScore strong,.ashykTimer,.ashykTurnTimer,.ashykQuestionPrompt,.ashykFinish h2,.ashykFinalScore span,.ashykAccessLock h1
 ){font-size:var(--text-title)}
 
-:where(.ashykFinalScore strong,.ashykScore strong){font-size:var(--text-result)}
+:where(.ashykFinalScore strong){font-size:var(--text-result)}

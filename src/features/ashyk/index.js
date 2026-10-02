@@ -1,14 +1,14 @@
-import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.12";
-import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.12";
-import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.12";
-import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.12";
-import { msg } from "../../shared/i18n/index.js?v=16.8.0.12";
-import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.12";
-import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.12";
-import { ashykAccessForUser, isAshykModeAllowed } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.12";
-import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.12";
-import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.12";
-import { mountAshykGame } from "./runtime.js?v=16.8.0.12";
+import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.13";
+import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.13";
+import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.13";
+import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.13";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.13";
+import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.13";
+import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.13";
+import { ashykAccessForUser, isAshykModeAllowed } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.13";
+import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.13";
+import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.13";
+import { mountAshykGame } from "./runtime.js?v=16.8.0.13";
 
 let controller=null;
 let disposeGame=null;
@@ -87,6 +87,7 @@ export async function mount(context){
     onSessionActiveChange(active){sessionActive=Boolean(active);},
     onRoomChange(room){activeRoomId=room?.id||null;},
     onAuthRequired:()=>context.router.navigate('account.home'),
+    confirmResign:(message)=>context.modal.confirm({message}),
     onExit(){void context.router.replace('practice.home');},
   });
 }
