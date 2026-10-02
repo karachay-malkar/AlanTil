@@ -46,7 +46,7 @@ function stationStarField() {
     const duration = [8, 11, 14][orbit];
     const delay = -((slot * duration) / 10).toFixed(2);
     const directionClass = orbit === 1 ? " isReverse" : "";
-    return `<span class="stationOrbitStar stationOrbitStar${orbit + 1}${directionClass}" style="--star-angle:${angle}deg;--star-radius:${radius}px;--star-size:${size}px;--star-duration:${duration}s;--star-delay:${delay}s">✦</span>`;
+    return `<span class="stationOrbitStar stationOrbitStar${orbit + 1}${directionClass}" style="--star-angle:${angle}deg;--star-radius:${radius}px;--star-size:${size}px;--star-duration:${duration}s;--star-delay:${delay}s;font-size:${size}px">✦</span>`;
   }).join("")}</span>`;
 }
 let beginnerSetMetadata = new Map();
