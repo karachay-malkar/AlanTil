@@ -21,8 +21,8 @@ async function waitForDiorama(page, stationKey) {
   await page.waitForFunction((key) => Array.from(document.querySelectorAll('[data-station-key]')).some((node) => node.dataset.stationKey === key && node.classList.contains('beginnerDioramaNode')), stationKey, { timeout: 20000 });
 }
 
-async function writeProgress(page, ratio) {
-  return page.evaluate(async (targetRatio) => {
+async function writeProgress(page, ratio, stationKey) {
+  return page.evaluate(async ({ targetRatio, stationKey }) => {
     const build = document.querySelector('meta[name="alantil-build"]')?.content || '16.8.0.14';
     const [{ getCompleteDictionaryWords }, { buildLearningRoute }, storage, wordStore] = await Promise.all([
       import(`/src/shared/data/word-repository.js?v=${build}`),
@@ -32,10 +32,10 @@ async function writeProgress(page, ratio) {
     ]);
     const words = await getCompleteDictionaryWords();
     const route = buildLearningRoute(words);
-    const story = route.stories?.[route.defaultStoryType] || route.stories?.[route.storyOrder?.[0]];
-    const station = story?.stations?.find((item) => String(item?.dictionaryId || '') === 'beginner' && Array.isArray(item?.words) && item.words.length >= 10)
-      || story?.stations?.find((item) => Array.isArray(item?.words) && item.words.length >= 10);
-    if (!station) throw new Error('No path station available for progress verification');
+    const station = (route.storyOrder || [])
+      .flatMap((storyId) => route.stories?.[storyId]?.stations || [])
+      .find((item) => String(item?.key || '') === String(stationKey || ''));
+    if (!station) throw new Error(`Rendered station ${stationKey} is missing from the learning route`);
     const ids = station.words.map((word) => String(word.id));
     const mastered = Math.max(0, Math.min(ids.length, Math.round(ids.length * targetRatio)));
     const rows = {};
@@ -50,7 +50,7 @@ async function writeProgress(page, ratio) {
       mastered,
       percent: ids.length ? Math.round((mastered / ids.length) * 100) : 0,
     };
-  }, ratio);
+  }, { targetRatio: ratio, stationKey });
 }
 
 async function readVisualState(page, key) {
@@ -103,10 +103,12 @@ async function readVisualState(page, key) {
     await page.waitForSelector('#appShell');
     await page.waitForSelector('.beginnerDioramaNode', { timeout: 20000 });
     assert.equal((await page.locator('body').innerText()).includes('Не удалось открыть раздел'), false);
+    const renderedStationKey = await page.locator('.beginnerDioramaNode').first().getAttribute('data-station-key');
+    assert.ok(renderedStationKey, 'rendered set station key is missing');
 
     const ratios = [0.47, 0.80, 0.90, 1];
     for (const ratio of ratios) {
-      const expected = await writeProgress(page, ratio);
+      const expected = await writeProgress(page, ratio, renderedStationKey);
       await page.reload({ waitUntil: 'domcontentloaded' });
       await waitForDiorama(page, expected.key);
       const state = await readVisualState(page, expected.key);
@@ -127,7 +129,7 @@ async function readVisualState(page, key) {
     }
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    const final = await writeProgress(page, 1);
+    const final = await writeProgress(page, 1, renderedStationKey);
     await page.reload({ waitUntil: 'domcontentloaded' });
     await waitForDiorama(page, final.key);
     const reduced = await readVisualState(page, final.key);
