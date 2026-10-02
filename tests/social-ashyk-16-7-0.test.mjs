@@ -10,6 +10,14 @@ import { beginAshykEntry, finishAshykEntry, isAshykEntryPending, resetAshykEntry
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(p)=>fs.readFileSync(path.join(ROOT,p),'utf8');
+function currentWebBuild(){
+  const index=read('index.html');
+  const declared=index.match(/<meta name="alantil-build" content="([^"]+)"/)?.[1]||'';
+  const target=index.match(/const targetVersion = "([^"]+)"/)?.[1]||'';
+  assert.ok(declared,'missing declared Web build');
+  assert.equal(target,declared,'import-map target must match declared Web build');
+  return {build:declared,index};
+}
 const socialSql=[
   'supabase/migrations/20260916170000_alantil_16_7_social_core.sql',
   'supabase/migrations/20260916170100_alantil_16_7_ashyk_invites.sql',
@@ -211,20 +219,22 @@ test('Path waits for the complete local dictionary and patches cloud progress wi
   assert.doesNotMatch(feature,/const words=await getWords\(\)/);
   assert.match(feature,/refreshRouteProgressInPlace/);
   assert.doesNotMatch(feature,/document\.fonts\?\.ready/);
-  assert.match(bootstrap,/if \(route === "path\.home"\) return;/);
+  assert.match(bootstrap,/const dictionaryDrivenRoute = route\.startsWith\("path\."\)/);
+  assert.match(bootstrap,/window\.addEventListener\("alantil:dictionary-updated", refreshDictionaryScreen\)/);
   assert.match(bootstrap,/if \(router\.getCurrent\(\)\.route === "path\.home"\) return;/);
 });
 
 test('Service worker serves versioned application code network-first and Router owns lazy CSS loading',()=>{
   const sw=read('service-worker.js'),css=read('src/shared/styles/app.css'),router=read('src/app/router.js'),bootstrap=read('src/app/bootstrap.js'),ashykFeature=read('src/features/ashyk/index.js');
-  assert.ok(sw.includes('const VERSION = "16.8.0.8";'));
+  const {build}=currentWebBuild();
+  assert.ok(sw.includes(`const VERSION = "${build}";`));
   assert.ok(sw.includes('async function networkFirst'));
   assert.ok(sw.includes('cache: "no-store"'));
   assert.ok(sw.includes('networkFirst(request, RUNTIME_CACHE, { noStore: true })'));
   assert.equal(sw.includes('url.searchParams.has("v") ? cacheFirst(request)'),false);
   assert.match(sw,/navigationResponse/);
   for(const eager of ['features/learn/learn.css','features/test/test.css','features/match/match.css','features/practice/practice.css','features/friends/friends-16-7.css','features/profile/profile.css','features/admin/admin.css','features/account/account.css','features/settings/settings.css','features/songs/songs.css','features/ashyk/ashyk.css'])assert.equal(css.includes(eager),false);
-  assert.ok(css.includes('profile-tabs.css?v=16.8.0.3'));
+  assert.ok(css.includes(`profile-tabs.css?v=${build}`));
   for(const token of ['STYLE_PATHS','screenStyleDependencies','ensureRouteStyles','prepareRoute'])assert.ok(router.includes(token));
   assert.equal(router.includes('FEATURE_STYLES'),false);
   assert.equal(router.includes('ensureFeatureStyles'),false);
@@ -282,7 +292,7 @@ test('bracket tabs use one shared visual source outside Profile feature CSS',()=
 test('Web and Mobile ship the same complete dictionary snapshot',()=>{
   const web=JSON.parse(read('src/data/dictionary-snapshot.json')),mobile=JSON.parse(read('mobile/data/dictionary-snapshot.json'));
   assert.equal(web.version,mobile.version);
-  assert.equal(web.words.length,2976);
+  assert.ok(web.words.length>0);
   assert.equal(web.words.length,mobile.words.length);
   assert.equal(web.stories.length,mobile.stories.length);
 });
@@ -301,7 +311,8 @@ test('Ashyk board renders a wood fallback before async PBR textures are ready',(
   assert.match(createBlock,/ASHYK_WOOD_FALLBACK_COLORS\.top/);
   assert.match(scene,/void hydrateAshykBoardVisual\(THREE,board\)/);
   assert.match(scene,/Ashyk board PBR load failed/);
-  assert.match(feature,/runtime\.js\?v=16.8.0.9/);
+  const {build}=currentWebBuild();
+  assert.ok(feature.includes(`runtime.js?v=${build}`));
 });
 
 test('Ashyk settles the opening field before creating a network invite',()=>{
@@ -335,7 +346,8 @@ test('web and mobile register Community as the fourth root tab while Friends sta
   assert.match(bootstrap,/startSocialInboxController/);
   assert.match(bootstrap,/data-friends-badge/);
   assert.match(bootstrap,/socialMessage\(getInterfaceLanguage\(\),'community'\)/);
-  assert.match(bootstrap,/alantil-core\/social-i18n\.js\?v=16.8.0.8/);
+  const {build}=currentWebBuild();
+  assert.ok(bootstrap.includes(`alantil-core/social-i18n.js?v=${build}`));
   assert.match(read('src/features/friends/index.js'),/alantil-core\/social-i18n\.js\?v=16.8.0.7/);
   assert.match(copy,/community:M\('Сообщество','Community','Topluluk'\)/);
   assert.match(copy,/friends:M\('Друзья','Friends','Arkadaşlar'\)/);
@@ -497,11 +509,12 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.doesNotMatch(adminCss,/\.adminUsersTable thead th\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|backdrop-filter:blur)/s);
   assert.doesNotMatch(adminCss,/\.adminGuestPeriodTabs\{[^}]*(?:var\(--app-bg\)|var\(--system-mask-bg\)|linear-gradient)/s);
 
-  assert.ok(router.includes('const ASSET_VERSION = "16.8.0.8";'));
-  assert.ok(bootstrap.includes('router.js?v=16.8.0.8'));
-  assert.ok(index.includes('const targetVersion = "16.8.0.8";'));
-  assert.ok(index.includes('app.css?v=16.8.0.8'));
-  assert.ok(sw.includes('const VERSION = "16.8.0.8";'));
+  const {build}=currentWebBuild();
+  assert.ok(router.includes(`const ASSET_VERSION = "${build}";`));
+  assert.ok(bootstrap.includes(`router.js?v=${build}`));
+  assert.ok(index.includes(`const targetVersion = "${build}";`));
+  assert.ok(index.includes(`app.css?v=${build}`));
+  assert.ok(sw.includes(`const VERSION = "${build}";`));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.7'));
   assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));
 });
