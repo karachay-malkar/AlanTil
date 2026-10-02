@@ -116,8 +116,9 @@
 .appShell[data-screen="ashyk"] .ashykFinish{text-align:center}.ashykFinish h2{font-size:28px}.ashykFinalScore{display:flex;justify-content:center;align-items:center;gap:14px;margin:10px 0 14px}.ashykFinalScore strong{font-size:34px;color:var(--accent-strong)}.ashykFinalScore span{font-size:20px;color:var(--text-3)}
 @media(max-width:560px){.appShell[data-screen="ashyk"] .ashykSetupScroll{padding-inline:10px}.appShell[data-screen="ashyk"] .ashykSetupSection{grid-template-columns:1fr;gap:6px;padding:9px 0}.appShell[data-screen="ashyk"] .ashykTopControls{right:6px}.appShell[data-screen="ashyk"] .ashykScore{left:6px;transform:none}.appShell[data-screen="ashyk"] .ashykScore>div{padding-inline:5px}.appShell[data-screen="ashyk"] .ashykScore span{display:none}.appShell[data-screen="ashyk"] .ashykTopControls>button{padding-inline:5px}.appShell[data-screen="ashyk"] .ashykShotControl{top:calc(var(--safe-top) + var(--header-h) + 44px)}.appShell[data-screen="ashyk"] .ashykShotTimer{top:calc(var(--safe-top) + var(--header-h) + 86px)}.appShell[data-screen="ashyk"] .ashykOptions{grid-template-columns:1fr}}
 
-/* Setup modes belong to the screen toolbar, above the first content block. */
-.appShell[data-screen="ashyk"] .ashykSetupToolbar{position:absolute;z-index:var(--z-tabs);top:calc(var(--safe-top) + var(--header-h) + 4px);left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:56px}
-.appShell[data-screen="ashyk"] .ashykSetupToolbar + .ashykSetupScroll{padding-top:calc(var(--ashyk-content-top) + 64px)}
-.appShell[data-screen="ashyk"] .ashykSetupToolbar .ashykModeButtons{flex-wrap:wrap;min-width:0}
-@media(max-width:560px){.appShell[data-screen="ashyk"] .ashykSetupToolbar .ashykSetupHelpButton{flex-shrink:0;width:34px;height:34px;min-height:34px;padding:0;justify-content:center}.appShell[data-screen="ashyk"] .ashykSetupToolbar .ashykSetupHelpButton b{display:none}}
+/* Setup modes sit centered directly below the screen title; Rules floats independently at bottom-right. */
+.appShell[data-screen="ashyk"] .ashykModeToolbar{position:absolute;z-index:var(--z-tabs);top:calc(var(--safe-top) + var(--header-h) + 4px);left:14px;right:14px;display:flex;align-items:center;justify-content:center;min-height:56px;pointer-events:none}
+.appShell[data-screen="ashyk"] .ashykModeToolbar .ashykModeButtons{width:min(100%,360px);max-width:100%;min-width:0;pointer-events:auto}
+.appShell[data-screen="ashyk"] .ashykModeToolbar + .ashykSetupScroll{padding-top:calc(var(--ashyk-content-top) + 64px);padding-bottom:calc(var(--safe-bottom) + 72px)}
+.appShell[data-screen="ashyk"] .ashykSetupHelpButton{position:absolute;z-index:var(--z-tabs);right:14px;bottom:calc(var(--safe-bottom) + 14px);min-width:78px;min-height:34px;padding:0 12px}
+@media(max-width:560px){.appShell[data-screen="ashyk"] .ashykModeToolbar{left:10px;right:10px}.appShell[data-screen="ashyk"] .ashykSetupHelpButton{right:10px}}
