@@ -21,13 +21,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Advance build and cache version
-        run: |
-          git grep -lz '16\\.8\\.0\\.11' -- . | xargs -0 -r sed -i 's/16\\.8\\.0\\.11/16.8.0.12/g'
-          if git grep -n '16\\.8\\.0\\.11' -- .; then
-            echo "Stale 16.8.0.11 references remain"
-            exit 1
-          fi
       - name: Generate shared visual tokens
         run: node scripts/generate-shared-visual-css.mjs
       - name: Rebuild Ashyk runtime from Game.jsx
@@ -36,6 +29,21 @@ jobs:
         run: |
           node scripts/sync-mobile-parity-16-7.mjs
           node scripts/sync-visual-contract-16-7.mjs
+      - name: Advance build and cache version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          paths = subprocess.check_output(["git", "grep", "-Il", "16.8.0.11", "--", "."]).decode().splitlines()
+          for raw in paths:
+              path = Path(raw)
+              path.write_text(path.read_text().replace("16.8.0.11", "16.8.0.12"))
+          print(f"updated {len(paths)} tracked files to 16.8.0.12")
+          PY
+          if git grep -nF '16.8.0.11' -- .; then
+            echo "Stale 16.8.0.11 references remain"
+            exit 1
+          fi
       - name: Stage generated result as final candidate
         run: |
           rm .github/workflows/ashyk-typography-finish.yml
