@@ -1,0 +1,47 @@
+name: Ashyk runtime part 1 final
+
+on:
+  push:
+    branches:
+      - agent/16.8.0
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-runtime:
+    if: "${{ github.actor != 'github-actions[bot]' }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/16.8.0
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify source and build process
+        run: |
+          test -s packages/ashyk-game/web/Game.jsx
+          test -s packages/ashyk-game/store.js
+          test -s tools/ashyk-web/build.mjs
+          node --input-type=module -e "import fs from 'node:fs'; const s=fs.readFileSync('packages/ashyk-game/store.js','utf8'); if(s.includes('sameRoom?(scores[0]')) throw new Error('nested score ternary still present')"
+      - name: Rebuild runtime from current sources
+        run: node tools/ashyk-web/build.mjs
+      - name: Verify generated runtime
+        run: |
+          test -s src/features/ashyk/runtime.js
+          node --check src/features/ashyk/runtime.js
+          node --input-type=module -e "import fs from 'node:fs'; const s=fs.readFileSync('src/features/ashyk/runtime.js','utf8'); if(s.includes(':null:null')) throw new Error('forbidden :null:null pattern remains'); if(!s.includes('mountAshykGame')) throw new Error('mountAshykGame export text missing')"
+          node --input-type=module -e "import('./src/features/ashyk/runtime.js').then((m)=>{if(typeof m.mountAshykGame!=='function')throw new Error('mountAshykGame export missing')})"
+          wc -c src/features/ashyk/runtime.js
+      - name: Commit and push verified runtime
+        run: |
+          rm .github/workflows/__ashyk-runtime-part1-final.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/ashyk-game/store.js src/features/ashyk/runtime.js .github/workflows/__ashyk-runtime-part1-final.yml
+          git diff --cached --check
+          git commit -m "fix: finalize Ashyk web runtime rebuild"
+          git push origin HEAD:agent/16.8.0
