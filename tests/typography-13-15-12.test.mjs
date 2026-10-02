@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { UI_TOKENS } from "../packages/alantil-ui/tokens.js";
-import { resolveTypography } from "../packages/alantil-ui/typography.js";
+import { BRACKET_NAVIGATION_TEXT_ROLE, resolveTypography } from "../packages/alantil-ui/typography.js";
 import { normalizeTextSizeCode, DEFAULT_USER_SETTINGS } from "../packages/alantil-core/settings.js";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
@@ -68,4 +68,15 @@ test("settings and both onboarding surfaces expose the huge option", async () =>
   assert.match(mobileProfile, /\["huge","XL"\]/);
   assert.match(mobileProfile, /semanticTypography\(draft\.text_size_code\|\|'medium'\)/);
   assert.match(mobileProfile, /previewType\.wordCard/);
+});
+
+test("all bracket navigation controls use the shared body-size role", async () => {
+  assert.equal(BRACKET_NAVIGATION_TEXT_ROLE, "body");
+  const typography = await read("src/shared/styles/typography.css");
+  const pathCss = await read("src/features/path/path.css");
+  assert.match(typography, /\.profilePrimaryTab,\.storyTab,\.stationViewTab,\.ashykModeButton\{[^}]*font-size:var\(--text-body\)/s);
+  assert.doesNotMatch(pathCss, /\.stationViewTab\{[^}]*font:/s);
+  for (const path of ["mobile/ui/profile-tabs.js", "mobile/screens/path.js", "mobile/screens/station.js", "mobile/screens/ashyk.js"]) {
+    assert.match(await read(path), /BRACKET_NAVIGATION_TEXT_ROLE/, path);
+  }
 });

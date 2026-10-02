@@ -1,12 +1,13 @@
 import React from'react';
 import{Pressable,StyleSheet,Text,View}from'react-native';
+import{BRACKET_NAVIGATION_TEXT_ROLE}from'../../packages/alantil-ui/typography.js';
 import{useSemanticTypography}from'./runtime-settings.js';
 import{theme}from'./theme.js';
 const C=theme.colors,T=theme.chrome.profileTabs;
 
 export function ProfileTabs({items=[],activeId='',onChange,style}){
-  const type=useSemanticTypography();
-  return <View style={[styles.tabs,style]}>{items.map(([id,label])=><Pressable key={id} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{selected:activeId===id}} onPress={()=>onChange?.(id)} style={({pressed})=>[styles.profileTab,pressed&&styles.profileTabPressed]}><Text numberOfLines={1} style={[styles.profileTabText,{fontSize:type.caption.fontSize,lineHeight:type.caption.lineHeight},activeId===id&&styles.profileTabActive]}>{`[ ${label} ]`}</Text></Pressable>)}</View>;
+  const type=useSemanticTypography(),nav=type[BRACKET_NAVIGATION_TEXT_ROLE];
+  return <View style={[styles.tabs,style]}>{items.map(([id,label])=><Pressable key={id} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{selected:activeId===id}} onPress={()=>onChange?.(id)} style={({pressed})=>[styles.profileTab,pressed&&styles.profileTabPressed]}><Text numberOfLines={1} style={[styles.profileTabText,{fontSize:nav.fontSize,lineHeight:nav.fontSize*1.35},activeId===id&&styles.profileTabActive]}>{`[ ${label} ]`}</Text></Pressable>)}</View>;
 }
 
 const styles=StyleSheet.create({

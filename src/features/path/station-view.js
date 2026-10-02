@@ -1,46 +1,13 @@
-import { getInterfaceLocale, msg } from "../../shared/i18n/index.js?v=16.8.0.3";
-import { problemWordRows, recentTestSummariesForWords, testSummariesForWords, wordProgressSummary } from "../../shared/progress/word-progress-store.js?v=16.8.0.3";
+import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
 import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
 import { bindOverflowMarquees, renderOverflowMarquee } from "../../shared/ui/overflow-marquee.js?v=16.8.0.3";
-import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.3";
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
+import { bindStationStatistics, renderStationStatistics } from "./station-statistics.js?v=16.8.0.3";
 import { getHiddenSet, setHiddenSet } from "../learn/state.js?v=16.8.0.3";
 
 function storageKey(station) {
   return station.selectionSetId || station.setId || station.key;
-}
-
-function masteryMark(percent) {
-  if (percent >= 100) return { level: 3, label: msg("stage.iii_znak"), symbol: "⌃⌃⌃" };
-  if (percent >= 90) return { level: 2, label: msg("stage.ii_znak"), symbol: "⌃⌃" };
-  if (percent >= 80) return { level: 1, label: msg("stage.i_znak"), symbol: "⌃" };
-  return { level: 0, label: msg("stage.ne_sdan"), symbol: "—" };
-}
-
-function resultCard(result) {
-  const mark = masteryMark(result.percent);
-  const date = result.date ? new Intl.DateTimeFormat(getInterfaceLocale(), { day: "2-digit", month: "2-digit" }).format(new Date(result.date)) : "";
-  return `<div class="stationAttempt ${result.percent >= 80 ? "isPassed" : "isFailed"}">
-    <strong>${result.percent}%</strong>
-    <span>${escapeHtml(mark.label)}</span>
-    ${date ? `<small>${escapeHtml(date)}</small>` : ""}
-  </div>`;
-}
-
-function problemRows(words) {
-  const rows = problemWordRows(words, 7);
-  if (!rows.length) return `<div class="stationEmptyState">${msg("stage.poka_nedostatochno_dannyh")}</div>`;
-  return `<div class="stationProblemList">
-    <div class="stationProblemHead"><span>${msg("stage.slovo")}</span><span>${msg("stage.pokazy")}</span><span>${msg("stage.ne_znayu")}</span><span>${msg("stage.zatrudnenie")}</span><span></span></div>
-    ${rows.map(({ word, progress, evaluated, unknownRate }) => `<div class="stationProblemRow">
-      <span class="stationProblemWord">${escapeHtml(word.word)}</span>
-      <span>${evaluated}</span>
-      <span>${progress.unknown_count}</span>
-      <span>${unknownRate}%</span>
-      ${renderStarButton(word.id, `data-stat-favorite="${escapeHtml(word.id)}"`)}
-    </div>`).join("")}
-  </div>`;
 }
 
 export function renderStationView(context, station, {
@@ -149,34 +116,7 @@ export function renderStationView(context, station, {
   }
 
   function renderStatistics() {
-    const summary = wordProgressSummary(allWords);
-    const recent = recentTestSummariesForWords(allWords, 3);
-    const attempts = testSummariesForWords(allWords);
-    const best = attempts.reduce((value, row) => Math.max(value, Number(row.percent || 0)), 0);
-    const mark = masteryMark(best);
-    return `<section class="stationPane stationStatisticsPane" data-station-pane="statistics">
-      <div class="stationStatsSummary">
-        <div class="stationMasteryBlock">
-          <span class="stationStatLabel">${msg("stage.osvoeno_slov_2")}</span>
-          <strong>${summary.mastered}/${summary.total}</strong>
-          ${renderSegmentedProgress({ value: summary.percent, segments: 10, label: msg("stage.osvoeno_slov", { percent: summary.percent }), className: "stationMasteryProgress" })}
-        </div>
-        <div class="stationMasteryBadge" aria-label="${escapeHtml(mark.label)}"><span>${escapeHtml(mark.symbol)}</span><small>${escapeHtml(mark.label)}</small></div>
-      </div>
-      <div class="stationMetricGrid">
-        <div><strong>${attempts.length}</strong><span>${msg("stage.popytok")}</span></div>
-        <div><strong>${best}%</strong><span>${msg("stage.luchshiy_rezultat")}</span></div>
-        <div><strong>${summary.review}</strong><span>${msg("stage.trebuyut_povtoreniya")}</span></div>
-      </div>
-      <section class="stationStatsSection">
-        <h2 class="stationStatsHeading">${msg("stage.poslednie_rezultaty")}</h2>
-        <div class="stationAttempts">${recent.length ? recent.map(resultCard).join("") : `<div class="stationEmptyState">${msg("stage.testy_esche_ne_prohodilis")}</div>`}</div>
-      </section>
-      <section class="stationStatsSection">
-        <h2 class="stationStatsHeading">${msg("stage.problemnye_slova")}</h2>
-        ${problemRows(allWords)}
-      </section>
-    </section>`;
+    return renderStationStatistics(station);
   }
 
   function wireMenu() {
@@ -230,9 +170,7 @@ export function renderStationView(context, station, {
   }
 
   function wireStatistics() {
-    context.root.querySelectorAll("[data-stat-favorite]").forEach((button) => {
-      button.addEventListener("click", () => button.classList.toggle("on", wordFavorites.toggle(button.dataset.statFavorite)), { signal });
-    });
+    bindStationStatistics(context, station, { signal });
   }
 
   function draw() {

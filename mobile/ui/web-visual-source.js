@@ -8,7 +8,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
   styles: Object.freeze([
     ["src/shared/styles/shared-visual-tokens.css","70539357e9538f1efa8062bf2ab666f82f52dbcb"],
     ["src/shared/styles/theme.css","90219ea3b1d01aa9e5799b4ee769ba694ab8321d"],
-    ["src/shared/styles/typography.css","b0eaa8b418073343b198a0a658406a0985b18027"],
+    ["src/shared/styles/typography.css","12dc78f587640b37b597cb3b6d43412ab22c7383"],
     ["src/shared/styles/shell.css","c26709a7d4d0e90549912d299c5e42a21bd468a1"],
     ["src/shared/styles/chrome.css","6188c4c3a1d2e1296106b4a7dff5ce60c168912d"],
     ["src/shared/styles/components.css","90fe2738897baa9f6d24eb68e4ede9f079d41721"],
@@ -37,7 +37,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
     ["src/features/account/profile.js","77b7730df56f9f21dc7173fbdcc0a837cf4152a3"],
   ]),
   features: Object.freeze([
-    ["src/features/path/path.css","8e3c5f4111308fd5b6e40eff26ee1a51e8e271d1"],
+    ["src/features/path/path.css","ce25143c74b40db8f61d36684e52098c7e60c574"],
     ["src/features/path/path-navigation.css","f17954314fae6f71f425a53c3be64cdc742739ea"],
     ["src/features/path/story-stele.css","525a13a2d1f407ec63f9e920ed25e5927430aa3e"],
     ["src/features/path/story-word-list.css","a701b69d6a9d1a64f66e89c07aecc02735409f95"],

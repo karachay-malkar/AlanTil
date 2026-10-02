@@ -20,7 +20,7 @@ import {createPathWindow} from '../../packages/alantil-ui/path-window.js';
 import {PathStationWindow} from '../ui/path-station-window.js';
 import { theme } from '../ui/theme.js';
 import { useSemanticTypography } from '../ui/runtime-settings.js';
-import { textMetrics } from '../../packages/alantil-ui/typography.js';
+import { BRACKET_NAVIGATION_TEXT_ROLE, textMetrics } from '../../packages/alantil-ui/typography.js';
 
 const C=theme.colors;
 const POSITION_PATTERN=[-1,0,1,0];
@@ -37,7 +37,7 @@ function sectionKey(catalog,section){return `${catalogKey(catalog)}::${String(se
 function dotCount(height,routeHeight){if(!routeHeight)return 4;const share=Math.max(0,height)/routeHeight;return Math.max(3,Math.min(10,Math.round(3+share*24)));}
 function connectorPath(points){if(points.length<2)return'';let path=`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;for(let index=1;index<points.length;index+=1){const previous=points[index-1],current=points[index],middleY=(previous.y+current.y)/2;path+=` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;}return path;}
 function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef}){
-  const type=useSemanticTypography(),{width}=useWindowDimensions(),fontSize=type.caption.fontSize,scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
+  const type=useSemanticTypography(),{width}=useWindowDimensions(),fontSize=type[BRACKET_NAVIGATION_TEXT_ROLE].fontSize,scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
   const syncEdges=(offset=offsetRef.current)=>{const max=Math.max(0,contentRef.current-viewportRef.current),next={start:max>3&&offset>3,end:max>3&&offset<max-3};setEdges(current=>current.start===next.start&&current.end===next.end?current:next);};
   const scrollToStory=(type,animated=true)=>new Promise(resolve=>{const layout=layoutsRef.current.get(type),viewport=viewportRef.current;if(!layout||!viewport){resolve(false);return;}const max=Math.max(0,contentRef.current-viewport),x=Math.max(0,Math.min(max,layout.x+layout.width/2-viewport/2));offsetRef.current=x;scrollRef.current?.scrollTo({x,animated});syncEdges(x);resolve(true);});
   useImperativeHandle(controlRef,()=>({scrollToStory}),[route.storyOrder,width]);

@@ -33,7 +33,7 @@
   .googleIdentityLoading,.accountField>span,.googleIdentityStatus,.accountMessage,.accountPrivacyNote,
   .accountNicknameMessage,.accountGenderIntro span,
   .learningSetupError,.learningSetupStep h1,.learningSetupStep h2,.learningSetupLanguageSegments .settingsChoiceBody,
-  .stationLabel,.stationViewTab,.stationMenuToolbar,.stationWordRow .contentListSecondary,
+  .stationLabel,.stationMenuToolbar,.stationWordRow .contentListSecondary,
   .stationProblemRow,.stationEmptyState,.learnCard .hint,.learnResultCount,
   .matchCard,.profileStoryHead>span,.profileFutureNote,
   .profileInlineError,.profileStat span,.problemWord,
@@ -124,8 +124,8 @@
 :where(.ashykFinalScore strong){font-size:var(--text-result)}
 
 /* Bracket navigation has one reading role across screens. */
-.profilePrimaryTab,.storyTab,.ashykModeButton{font-family:var(--font-terminal);font-size:var(--text-body);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
-.profilePrimaryTab.active,.storyTab.active,.ashykModeButton.active{font-weight:900;color:var(--text-1)}
+.profilePrimaryTab,.storyTab,.stationViewTab,.ashykModeButton{font-family:var(--font-terminal);font-size:var(--text-body);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.profilePrimaryTab.active,.storyTab.active,.stationViewTab.active,.ashykModeButton.active{font-weight:900;color:var(--text-1)}
 .appShell[data-screen="ashyk"] .ashykModeButton{justify-content:center;padding:0 6px;min-height:30px}
 .appShell[data-screen="ashyk"] .ashykModeButton b{font:inherit}
 

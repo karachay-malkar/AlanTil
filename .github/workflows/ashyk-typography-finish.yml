@@ -47,11 +47,13 @@ jobs:
       - name: QA architecture
         run: node --test tests/unified-core-boundary-16.test.mjs mobile/tests/architecture.test.mjs
       - name: QA shared core
-        run: node --test tests/alantil-core-16.test.mjs tests/web-progress-queue-race.test.mjs tests/web-progress-attempt-race.test.mjs tests/dictionary-cache-migration-16-8.test.mjs mobile/tests/cloud-queue-race.test.mjs mobile/tests/cloud-scope-transaction.test.mjs
+        run: node --test tests/alantil-core-16.test.mjs tests/web-progress-queue-race.test.mjs tests/web-progress-attempt-race.test.mjs tests/dictionary-cache-migration-16-8.test.mjs tests/station-learning-statistics-16-8.test.mjs mobile/tests/cloud-queue-race.test.mjs mobile/tests/cloud-scope-transaction.test.mjs
       - name: QA Web visual parity
         run: node --test tests/visual-parity-16-7-0.test.mjs
       - name: QA Path set progress visuals
         run: node --test tests/path-set-progress-visuals-16-8.test.mjs
+      - name: QA Station statistics UI
+        run: node --test tests/station-statistics-ui-16-8.test.mjs
       - name: QA Web style cache
         run: node --test tests/web-style-cache-resilience-16-7-0.test.mjs
       - name: QA Web first-run guide

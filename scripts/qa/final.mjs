@@ -15,6 +15,7 @@ const TESTS = Object.freeze({
     'tests/web-progress-queue-race.test.mjs',
     'tests/web-progress-attempt-race.test.mjs',
     'tests/dictionary-cache-migration-16-8.test.mjs',
+    'tests/station-learning-statistics-16-8.test.mjs',
     'mobile/tests/cloud-queue-race.test.mjs',
     'mobile/tests/cloud-scope-transaction.test.mjs',
   ],
@@ -22,6 +23,7 @@ const TESTS = Object.freeze({
     'tests/visual-parity-16-7-0.test.mjs',
     'tests/web-style-cache-resilience-16-7-0.test.mjs',
     'tests/first-run-guide-stella-16-7-0.test.mjs',
+    'tests/station-statistics-ui-16-8.test.mjs',
   ],
   mobile: [
     'mobile/tests/practice-mechanics-parity-16-6-7.test.mjs',
