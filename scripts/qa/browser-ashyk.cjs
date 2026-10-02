@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const depsRoot = process.env.ASHYK_BROWSER_DEPS_ROOT;
 if (!depsRoot) throw new Error('ASHYK_BROWSER_DEPS_ROOT is required');
-const { chromium } = require(path.join(depsRoot, 'node_modules', 'playwright'));
+const { chromium, request: httpRequest } = require(path.join(depsRoot, 'node_modules', 'playwright'));
 
 const baseURL = process.env.ASHYK_BROWSER_BASE_URL || 'http://127.0.0.1:4173';
 const guestSettings = {
@@ -24,7 +24,10 @@ const expected = {
 };
 
 function trackBrowserErrors(page, bucket) {
-  page.on('requestfailed', (request) => bucket.push(`requestfailed: ${request.url()} ${request.failure()?.errorText}`));
+  page.on('requestfailed', (request) => {
+    // Navigation/reload cancels in-flight requests; cancellation is not a transport failure.
+    if (request.failure()?.errorText !== 'net::ERR_ABORTED') bucket.push(`requestfailed: ${request.url()} ${request.failure()?.errorText}`);
+  });
   page.on('pageerror', (error) => bucket.push(`pageerror: ${error.message}`));
   page.on('console', (message) => {
     if (message.type() === 'error') bucket.push(`console.error: ${message.text()}`);
@@ -64,13 +67,30 @@ async function roleSizes(page) {
 }
 
 (async () => {
+  const proxyUrl = process.env.ASHYK_BROWSER_PROXY;
+  const parsedProxy = proxyUrl ? new URL(proxyUrl) : null;
+  const proxy = parsedProxy ? {
+    server: `${parsedProxy.protocol}//${parsedProxy.host}`,
+    bypass: '127.0.0.1,localhost',
+    ...(parsedProxy.username ? { username: decodeURIComponent(parsedProxy.username), password: decodeURIComponent(parsedProxy.password) } : {}),
+  } : undefined;
   const browser = await chromium.launch({
     headless: true,
     args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
   });
+  const apiTransport = proxy ? await httpRequest.newContext({ proxy, ignoreHTTPSErrors: process.env.ASHYK_BROWSER_IGNORE_HTTPS_ERRORS === 'true' }) : null;
+  const connectApiTransport = async (context) => {
+    if (!apiTransport) return;
+    await context.route('https://*.supabase.co/**', async (route) => {
+      const incoming = route.request();
+      const response = await apiTransport.fetch(incoming.url(), { method: incoming.method(), headers: incoming.headers(), data: incoming.postDataBuffer() || undefined, timeout: 20000 });
+      await route.fulfill({ response });
+    });
+  };
   const errors = [];
   try {
     const clean = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await connectApiTransport(clean);
     const cleanPage = await clean.newPage();
     trackBrowserErrors(cleanPage, errors);
     await cleanPage.goto(`${baseURL}/`, { waitUntil: 'domcontentloaded' });
@@ -79,6 +99,7 @@ async function roleSizes(page) {
     await clean.close();
 
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await connectApiTransport(context);
     await context.addInitScript((settings) => {
       if (!localStorage.getItem('alantil_scope_v1:guest:settings')) {
         localStorage.setItem('alantil_scope_v1:guest:settings', JSON.stringify(settings));
@@ -185,6 +206,7 @@ async function roleSizes(page) {
     await context.close();
     console.log('Ashyk browser verification passed');
   } finally {
+    await apiTransport?.dispose();
     await browser.close();
   }
 })().catch((error) => {
