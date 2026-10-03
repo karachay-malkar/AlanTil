@@ -104,8 +104,8 @@ function openHistory(context, stats) {
   const draw = () => {
     if (!panel.body) return;
     panel.body.innerHTML = `<div class="stationHistoryTabs bracketTabsShell"><div class="bracketTabsTrack">
-      <button class="profilePrimaryTab ${mode === "learn" ? "active" : ""}" type="button" data-history-mode="learn">[ ${msg("stage.uchit_slova")} ]</button>
-      <button class="profilePrimaryTab ${mode === "tests" ? "active" : ""}" type="button" data-history-mode="tests">[ ${msg("stage.tests")} ]</button>
+      <button class="bracketNavigation profilePrimaryTab ${mode === "learn" ? "active" : ""}" type="button" data-history-mode="learn">[ ${msg("stage.uchit_slova")} ]</button>
+      <button class="bracketNavigation profilePrimaryTab ${mode === "tests" ? "active" : ""}" type="button" data-history-mode="tests">[ ${msg("stage.tests")} ]</button>
     </div></div><div class="stationHistoryTable">${historyRows(stats, mode)}</div>`;
     panel.body.querySelectorAll("[data-history-mode]").forEach((button) => button.addEventListener("click", () => {
       const next = button.dataset.historyMode === "tests" ? "tests" : "learn";

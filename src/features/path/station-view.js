@@ -179,8 +179,8 @@ export function renderStationView(context, station, {
     context.shell.appShell.dataset.stationPane = activeTab;
     context.root.innerHTML = `<section class="view screen stationView">
       <div class="stationViewTabs" role="tablist" aria-label="${msg("stage.razdel_etapa")}">
-        <button class="tabAction stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">${msg("stage.menyu")}</button>
-        <button class="tabAction stationViewTab ${activeTab === "statistics" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "statistics"}" data-station-tab="statistics">${msg("stage.statistika")}</button>
+        <button class="tabAction bracketNavigation stationViewTab ${activeTab === "menu" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "menu"}" data-station-tab="menu">${msg("stage.menyu")}</button>
+        <button class="tabAction bracketNavigation stationViewTab ${activeTab === "statistics" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "statistics"}" data-station-tab="statistics">${msg("stage.statistika")}</button>
       </div>
       ${activeTab === "menu" ? renderMenu() : renderStatistics()}
     </section>`;

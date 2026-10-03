@@ -16,7 +16,7 @@ export function renderBracketTabs({ items = [], active = "", ariaLabel = "", dat
       const id = String(item?.id || "");
       const value = item?.value ?? item?.route ?? id;
       const selected = active === id;
-      return `<button class="tabAction profilePrimaryTab ${selected ? "active" : ""}" type="button" data-${attribute}="${escapeAttribute(value)}" ${selected ? 'aria-current="page"' : ""}>[ ${escapeAttribute(item?.label || "")} ]</button>`;
+      return `<button class="tabAction bracketNavigation profilePrimaryTab ${selected ? "active" : ""}" type="button" data-${attribute}="${escapeAttribute(value)}" ${selected ? 'aria-current="page"' : ""}>[ ${escapeAttribute(item?.label || "")} ]</button>`;
     }).join("")}</div>
   </nav>`;
 }

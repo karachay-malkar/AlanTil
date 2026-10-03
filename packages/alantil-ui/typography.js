@@ -3,6 +3,20 @@ import { UI_TOKENS } from './tokens.js';
 // Compatibility shape for Web/Mobile consumers. Typography is intentionally fixed:
 // each mode has technical/body/accent sizes, while result remains 48px.
 export const BRACKET_NAVIGATION_TEXT_ROLE = 'body';
+export const BRACKET_NAVIGATION_LINE_HEIGHT = 1.35;
+export const BRACKET_NAVIGATION_FONT_WEIGHT = '750';
+export const BRACKET_NAVIGATION_ACTIVE_FONT_WEIGHT = '900';
+
+export function bracketNavigationTextStyle(typography = {}, active = false) {
+  const role = typography?.[BRACKET_NAVIGATION_TEXT_ROLE] || typography?.body;
+  const fontSize = Number(role?.fontSize);
+  if (!Number.isFinite(fontSize) || fontSize <= 0) return {};
+  return {
+    fontSize,
+    lineHeight: fontSize * BRACKET_NAVIGATION_LINE_HEIGHT,
+    fontWeight: active ? BRACKET_NAVIGATION_ACTIVE_FONT_WEIGHT : BRACKET_NAVIGATION_FONT_WEIGHT,
+  };
+}
 
 export const ADAPTIVE_TYPE = Object.freeze({
   small: Object.freeze({ display: [16, 0, 16], result: [48, 0, 48] }),

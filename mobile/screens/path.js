@@ -20,7 +20,7 @@ import {createPathWindow} from '../../packages/alantil-ui/path-window.js';
 import {PathStationWindow} from '../ui/path-station-window.js';
 import { theme } from '../ui/theme.js';
 import { useSemanticTypography } from '../ui/runtime-settings.js';
-import { BRACKET_NAVIGATION_TEXT_ROLE, textMetrics } from '../../packages/alantil-ui/typography.js';
+import { bracketNavigationTextStyle, textMetrics } from '../../packages/alantil-ui/typography.js';
 
 const C=theme.colors;
 const POSITION_PATTERN=[-1,0,1,0];
@@ -37,7 +37,7 @@ function sectionKey(catalog,section){return `${catalogKey(catalog)}::${String(se
 function dotCount(height,routeHeight){if(!routeHeight)return 4;const share=Math.max(0,height)/routeHeight;return Math.max(3,Math.min(10,Math.round(3+share*24)));}
 function connectorPath(points){if(points.length<2)return'';let path=`M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;for(let index=1;index<points.length;index+=1){const previous=points[index-1],current=points[index],middleY=(previous.y+current.y)/2;path+=` C ${previous.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${middleY.toFixed(2)}, ${current.x.toFixed(2)} ${current.y.toFixed(2)}`;}return path;}
 function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,controlRef}){
-  const type=useSemanticTypography(),{width}=useWindowDimensions(),fontSize=type[BRACKET_NAVIGATION_TEXT_ROLE].fontSize,scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
+  const type=useSemanticTypography(),{width}=useWindowDimensions(),scrollRef=useRef(null),viewportRef=useRef(1),contentRef=useRef(1),offsetRef=useRef(0),layoutsRef=useRef(new Map()),[edges,setEdges]=useState({start:false,end:false});
   const syncEdges=(offset=offsetRef.current)=>{const max=Math.max(0,contentRef.current-viewportRef.current),next={start:max>3&&offset>3,end:max>3&&offset<max-3};setEdges(current=>current.start===next.start&&current.end===next.end?current:next);};
   const scrollToStory=(type,animated=true)=>new Promise(resolve=>{const layout=layoutsRef.current.get(type),viewport=viewportRef.current;if(!layout||!viewport){resolve(false);return;}const max=Math.max(0,contentRef.current-viewport),x=Math.max(0,Math.min(max,layout.x+layout.width/2-viewport/2));offsetRef.current=x;scrollRef.current?.scrollTo({x,animated});syncEdges(x);resolve(true);});
   useImperativeHandle(controlRef,()=>({scrollToStory}),[route.storyOrder,width]);
@@ -57,7 +57,7 @@ function StoryTabs({route,activeStory,onChange,targetRef,storyTargetRefs,control
           onPress={()=>onChange(type)}
           style={({pressed})=>[styles.storyTab,type===route.storyOrder?.[0]&&styles.storyTabFirst,type===route.storyOrder?.[route.storyOrder.length-1]&&styles.storyTabLast,active&&styles.storyTabSelected,pressed&&styles.storyTabPressed]}
         >
-          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.storyTabText,{fontSize,lineHeight:fontSize*1.1},active&&styles.storyTabActive]}>[ {route.stories[type]?.label||type} ]</Text>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.storyTabText,bracketNavigationTextStyle(type,active),active&&styles.storyTabActive]}>[ {route.stories[type]?.label||type} ]</Text>
         </Pressable>;
       })}
     </ScrollView>
@@ -572,7 +572,7 @@ const styles=StyleSheet.create({
   storyTab:{flexShrink:0,maxWidth:280,height:30,paddingHorizontal:8,marginVertical:1,borderRadius:12,alignItems:'center',justifyContent:'center'},storyTabFirst:{marginLeft:theme.chrome.storyTabs.edgeInset},storyTabLast:{marginRight:theme.chrome.storyTabs.edgeInset},
   storyTabSelected:{backgroundColor:'rgba(246,242,233,.28)'},
   storyTabPressed:{opacity:.68,transform:[{translateY:1}]},
-  storyTabText:{fontFamily:theme.font.terminal,fontWeight:'700',color:C.text3,opacity:.64},
+  storyTabText:{fontFamily:theme.font.terminal,color:C.text3,opacity:.64},
   storyTabActive:{color:C.text1,opacity:1},
   storyProgress:{height:22,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:7},
   segmentedProgress:{flexDirection:'row',alignItems:'center',gap:CONTROL_LAYOUT.progress.bracketGap},
