@@ -89,7 +89,7 @@ test("segmented choices, scope checkboxes and direction controls use the shared 
   assert.match(settings, /\.settingsRow\{[^}]*grid-template-columns:minmax\(0,\.9fr\) minmax\(0,1\.1fr\)/s);
 
   for (const css of [testCss, pathCss]) {
-    assert.match(css, /DirectionControl>span\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
+    assert.match(css, /DirectionControl>span\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);\n    assert.match(css, /DirectionControl\{[^}]*grid-template-columns:minmax\(0,1fr\)/s);
     assert.match(css, /DirectionToggle\{[^}]*width:100%[^}]*min-width:0/s);
     assert.match(css, /DirectionToggle button\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
   }

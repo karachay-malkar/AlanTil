@@ -513,7 +513,7 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.ok(router.includes(`const ASSET_VERSION = "${build}";`));
   assert.ok(bootstrap.includes(`router.js?v=${build}`));
   assert.ok(index.includes(`const targetVersion = "${build}";`));
-  assert.ok(index.includes("app.css?v=16.8.0.16"));
+  assert.ok(index.includes("app.css?v=16.8.0.17"));
   assert.ok(sw.includes(`const VERSION = "${build}";`));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.7'));
   assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));

@@ -9,7 +9,7 @@
 @import url("./profile-tabs.css?v=16.8.0.14") layer(components);
 @import url("./privacy.css?v=16.8.0.14") layer(components);
 @import url("../../features/onboarding/onboarding.css?v=16.8.0.14") layer(features);
-@import url("../../features/path/path.css?v=16.8.0.16") layer(features);
+@import url("../../features/path/path.css?v=16.8.0.17") layer(features);
 @import url("../../features/path/story-word-list.css?v=16.8.0.14") layer(features);
 @import url("../../features/path/story-stele.css?v=16.8.0.14") layer(features);
 @import url("../../features/path/path-navigation.css?v=16.8.0.14") layer(features);
