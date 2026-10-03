@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const SINGLETON_URL_VERSION = "16.8.0.14";
+const STYLE_ENTRY_VERSION = "16.8.0.15";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,7 +72,7 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.8.0 is the published app release while 16.8.0.14 is the Web cache build", async () => {
+test("16.8.0 keeps the 16.8.0.14 JS singleton while the style entry advances independently", async () => {
   const index = await read("index.html");
   const release = await read("packages/alantil-core/release.js");
   const analytics = await read("src/config/analytics.js");
@@ -79,7 +80,7 @@ test("16.8.0 is the published app release while 16.8.0.14 is the Web cache build
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
-  assert.match(index, /app[.]css[?]v=16[.]8[.]0[.]14/);
+  assert.match(index, new RegExp(`app[.]css[?]v=${STYLE_ENTRY_VERSION.replaceAll(".", "[.]")}`));
   assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]14/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
   assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]14"/);
