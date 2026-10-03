@@ -48,7 +48,6 @@ async function setTextSize(page, code) {
 
 async function roleSizes(page) {
   return page.evaluate(() => {
-    const px = (selector) => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
     const variablePx = (name) => {
       const probe = document.createElement('span');
       probe.style.cssText = `position:fixed;visibility:hidden;font-size:var(${name})`;
@@ -58,9 +57,9 @@ async function roleSizes(page) {
       return value;
     };
     return [
-      px('.ashykDifficultyHint'),
-      px('.ashykModeButton'),
-      px('.ashykSetupHelpButton span'),
+      variablePx('--text-technical'),
+      variablePx('--text-body'),
+      variablePx('--text-accent'),
       variablePx('--text-result'),
     ];
   });
@@ -160,6 +159,10 @@ async function roleSizes(page) {
       await setTextSize(page, mode);
       assert.equal(await page.locator('html').getAttribute('data-text-size'), mode);
       assert.deepEqual(await roleSizes(page), sizes, `semantic typography mismatch for ${mode}`);
+      for (const selector of ['.ashykDifficultyHint', '.ashykModeButton', '.ashykSetupHelpButton span']) {
+        assert.equal(await page.locator(selector).first().evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), sizes[1], `${selector} must use Body for ${mode}`);
+      }
+      assert.equal(await page.locator('.ashykPageHead h1').evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), sizes[2], `Ashyk heading must use Accent for ${mode}`);
     }
 
     // Use the production Community tab renderer, including its longest label.
