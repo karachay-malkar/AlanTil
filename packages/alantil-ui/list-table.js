@@ -1,10 +1,10 @@
 const F=Object.freeze;
 const standard=F({small:48,medium:56,large:64,huge:72});
 const typeBySize=F({
-  small:F({primary:16,secondary:12,service:10}),
-  medium:F({primary:20,secondary:14,service:10}),
-  large:F({primary:24,secondary:16,service:12}),
-  huge:F({primary:28,secondary:18,service:14}),
+  small:F({primary:12,secondary:12,service:10}),
+  medium:F({primary:14,secondary:14,service:10}),
+  large:F({primary:16,secondary:16,service:12}),
+  huge:F({primary:18,secondary:18,service:14}),
 });
 export const LIST_TABLE_CONTRACT=F({
   standard,

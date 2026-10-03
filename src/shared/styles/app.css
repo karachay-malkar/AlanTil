@@ -1,6 +1,6 @@
 @import url("./reset.css?v=16.8.0.14") layer(reset);
-@import url("./shared-visual-tokens.css?v=16.8.0.14") layer(theme);
-@import url("./theme.css?v=16.8.0.14") layer(theme);
+@import url("./shared-visual-tokens.css?v=16.8.0.15") layer(theme);
+@import url("./theme.css?v=16.8.0.15") layer(theme);
 @import url("./base.css?v=16.8.0.14") layer(base);
 @import url("./shell.css?v=16.8.0.14") layer(shell);
 @import url("./components.css?v=16.8.0.14") layer(components);
@@ -18,7 +18,7 @@
 @import url("./utilities.css?v=16.8.0.14") layer(utilities);
 @import url("./table-system.css?v=16.8.0.14") layer(utilities);
 @import url("./bracket-tabs.css?v=16.8.0.14") layer(utilities);
-@import url("./typography.css?v=16.8.0.14") layer(typography);
+@import url("./typography.css?v=16.8.0.15") layer(typography);
 
 @layer features {
   .pathStickyControls{padding:0 0 2px!important}

@@ -7,14 +7,18 @@ html[data-theme="alan-paper"]{
   --font-brand:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --font-terminal:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
 
-  /* Single typography source. Medium is the application default. */
-  --text-micro:var(--ui-text-medium-micro);
-  --text-caption:var(--ui-text-medium-caption);
+  /* Four-role typography source. Medium is the application default. */
+  --text-technical:var(--ui-text-medium-technical);
   --text-body:var(--ui-text-medium-body);
-  --text-emphasis:var(--ui-text-medium-emphasis);
-  --text-title:var(--ui-text-medium-title);
-  --text-display:var(--ui-text-medium-display);
+  --text-accent:var(--ui-text-medium-accent);
   --text-result:var(--ui-text-medium-result);
+
+  /* Transitional aliases: no selector may use these as a semantic role. */
+  --text-micro:var(--text-technical);
+  --text-caption:var(--text-technical);
+  --text-emphasis:var(--text-accent);
+  --text-title:var(--text-accent);
+  --text-display:var(--text-accent);
 
   --text-1:var(--ui-text-1);
   --text-2:var(--ui-text-2);
@@ -201,11 +205,11 @@ html[data-theme="alan-paper"]{
   --fw-bold:850;
   --fw-semibold:720;
   --fw-regular:400;
-  --fs-24px:var(--text-title);
-  --fs-22px:var(--text-title);
-  --fs-20px:var(--text-title);
-  --fs-18px:var(--text-emphasis);
-  --fs-16px:var(--text-emphasis);
+  --fs-24px:var(--text-accent);
+  --fs-22px:var(--text-accent);
+  --fs-20px:var(--text-accent);
+  --fs-18px:var(--text-accent);
+  --fs-16px:var(--text-accent);
   --fs-14px:var(--text-body);
   --color-main:var(--text-1);
   --color-muted:var(--text-2);
@@ -252,41 +256,29 @@ html[data-theme="alan-paper"]{
 }
 
 html[data-text-size="small"]{
-  --text-micro:var(--ui-text-small-micro);
-  --text-caption:var(--ui-text-small-caption);
+  --text-technical:var(--ui-text-small-technical);
   --text-body:var(--ui-text-small-body);
-  --text-emphasis:var(--ui-text-small-emphasis);
-  --text-title:var(--ui-text-small-title);
-  --text-display:var(--ui-text-small-display);
+  --text-accent:var(--ui-text-small-accent);
   --text-result:var(--ui-text-small-result);
 }
 
 html[data-text-size="medium"]{
-  --text-micro:var(--ui-text-medium-micro);
-  --text-caption:var(--ui-text-medium-caption);
+  --text-technical:var(--ui-text-medium-technical);
   --text-body:var(--ui-text-medium-body);
-  --text-emphasis:var(--ui-text-medium-emphasis);
-  --text-title:var(--ui-text-medium-title);
-  --text-display:var(--ui-text-medium-display);
+  --text-accent:var(--ui-text-medium-accent);
   --text-result:var(--ui-text-medium-result);
 }
 
 html[data-text-size="large"]{
-  --text-micro:var(--ui-text-large-micro);
-  --text-caption:var(--ui-text-large-caption);
+  --text-technical:var(--ui-text-large-technical);
   --text-body:var(--ui-text-large-body);
-  --text-emphasis:var(--ui-text-large-emphasis);
-  --text-title:var(--ui-text-large-title);
-  --text-display:var(--ui-text-large-display);
+  --text-accent:var(--ui-text-large-accent);
   --text-result:var(--ui-text-large-result);
 }
 
 html[data-text-size="huge"]{
-  --text-micro:var(--ui-text-huge-micro);
-  --text-caption:var(--ui-text-huge-caption);
+  --text-technical:var(--ui-text-huge-technical);
   --text-body:var(--ui-text-huge-body);
-  --text-emphasis:var(--ui-text-huge-emphasis);
-  --text-title:var(--ui-text-huge-title);
-  --text-display:var(--ui-text-huge-display);
+  --text-accent:var(--ui-text-huge-accent);
   --text-result:var(--ui-text-huge-result);
 }

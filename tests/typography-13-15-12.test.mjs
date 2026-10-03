@@ -7,26 +7,27 @@ import { normalizeTextSizeCode, DEFAULT_USER_SETTINGS } from "../packages/alanti
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("four text-size modes expose exactly technical, body and accent sizes", () => {
+test("four text-size modes expose exactly four semantic roles", () => {
   const expected = {
-    small: [10, 12, 16],
-    medium: [10, 14, 20],
-    large: [12, 16, 24],
-    huge: [14, 18, 28],
+    small: { technical: 10, body: 12, accent: 16, result: 48 },
+    medium: { technical: 10, body: 14, accent: 20, result: 48 },
+    large: { technical: 12, body: 16, accent: 24, result: 48 },
+    huge: { technical: 14, body: 18, accent: 28, result: 48 },
   };
-  for (const [mode, sizes] of Object.entries(expected)) {
+  for (const [mode, roles] of Object.entries(expected)) {
     const scale = UI_TOKENS.typeScale[mode];
-    assert.deepEqual([...new Set([scale.micro, scale.caption, scale.body, scale.emphasis, scale.title, scale.display])], sizes);
-    assert.equal(scale.result, 48);
-    assert.equal(resolveTypography(mode, 320).result, 48);
-    assert.equal(resolveTypography(mode, 1440).display, sizes[2]);
+    assert.deepEqual(scale, roles);
+    const resolved = resolveTypography(mode, 320);
+    assert.deepEqual(Object.keys(resolved), ["technical", "body", "accent", "result"]);
+    assert.equal(resolved.result, 48);
+    assert.equal(resolveTypography(mode, 1440).accent, roles.accent);
   }
   assert.equal(DEFAULT_USER_SETTINGS.text_size_code, "medium");
   assert.equal(normalizeTextSizeCode("huge"), "huge");
   assert.equal(normalizeTextSizeCode("invalid"), "medium");
 });
 
-test("generated Web tokens and theme expose all four modes with a fixed 48px result", async () => {
+test("generated Web tokens and theme expose the four-role typography contract", async () => {
   const theme = await read("src/shared/styles/theme.css");
   const shared = await read("src/shared/styles/shared-visual-tokens.css");
   for (const [mode, technical, body, accent] of [
@@ -35,24 +36,42 @@ test("generated Web tokens and theme expose all four modes with a fixed 48px res
     ["large", 12, 16, 24],
     ["huge", 14, 18, 28],
   ]) {
-    assert.match(shared, new RegExp(`--ui-text-${mode}-micro:${technical}px;`));
+    assert.match(shared, new RegExp(`--ui-text-${mode}-technical:${technical}px;`));
     assert.match(shared, new RegExp(`--ui-text-${mode}-body:${body}px;`));
-    assert.match(shared, new RegExp(`--ui-text-${mode}-title:${accent}px;`));
+    assert.match(shared, new RegExp(`--ui-text-${mode}-accent:${accent}px;`));
     assert.match(shared, new RegExp(`--ui-text-${mode}-result:48px;`));
     assert.match(theme, new RegExp(`html\\[data-text-size="${mode}"\\]`));
   }
+  assert.doesNotMatch(shared, /--ui-text-(?:small|medium|large|huge)-(?:micro|caption|emphasis|title|display):/);
+  assert.match(theme, /--text-technical:var\(--ui-text-medium-technical\)/);
+  assert.match(theme, /--text-accent:var\(--ui-text-medium-accent\)/);
   assert.match(theme, /--text-result:var\(--ui-text-medium-result\)/);
 });
 
-test("final typography layer maps Ashyk technical, body, accent and result roles", async () => {
+test("final typography layer assigns roles by object meaning", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const typography = await read("src/shared/styles/typography.css");
-  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.14/);
-  assert.match(typography, /ashykDifficultyHint/);
-  assert.match(typography, /ashykModeButton/);
+  const listTable = await read("packages/alantil-ui/list-table.js");
+  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.15/);
+  assert.doesNotMatch(typography, /var\(--text-(?:micro|caption|emphasis|title|display)\)/);
+  for (const selector of [
+    ".stationLabel",
+    ".stationWordRow .contentListPrimary",
+    ".stationWordRow .contentListSecondary",
+    ".settingsSectionTitle",
+    ".settingsRowLabel",
+    ".settingsLink",
+    ".settingsChoiceBody",
+    ".learnCard .trans",
+    ".gTrans",
+    ".gEx",
+  ]) assert.ok(typography.includes(selector), selector);
+  assert.match(typography, /font-family:var\(--font-body\);font-size:var\(--text-body\)/);
+  assert.match(typography, /\.groupNum/);
+  assert.match(typography, /font-family:var\(--font-terminal\);font-size:var\(--text-technical\)/);
   assert.match(typography, /ashykQuestionPrompt/);
-  assert.match(typography, /ashykTurnTimer/);
-  assert.match(typography, /ashykFinalScore strong\)\{font-size:var\(--text-result\)\}/);
+  assert.match(typography, /ashykFinalScore strong\)\{font-family:var\(--font-terminal\);font-size:var\(--text-result\)\}/);
+  assert.match(listTable, /medium:F\(\{primary:14,secondary:14,service:10\}\)/);
 });
 
 test("settings and both onboarding surfaces expose the huge option", async () => {

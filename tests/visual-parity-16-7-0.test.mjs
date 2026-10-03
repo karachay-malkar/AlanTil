@@ -29,7 +29,7 @@ test('16.7 shared LIST_TABLE_CONTRACT is the canonical list geometry',()=>{
   assert.equal(LIST_TABLE_CONTRACT.radius,0);
   assert.equal(LIST_TABLE_CONTRACT.shadow,'none');
   assert.equal(listRowHeight('small'),48);assert.equal(listRowHeight('medium'),56);assert.equal(listRowHeight('large'),64);assert.equal(listRowHeight('huge'),72);assert.equal(listRowHeight('large','result'),80);
-  assert.deepEqual(CONTROL_LAYOUT.practice,{rowHeight:56,singleRowHeight:56,leadingSize:36,iconSize:23,gap:8,titleSize:20,subtitleSize:14});
+  assert.deepEqual(CONTROL_LAYOUT.practice,{rowHeight:56,singleRowHeight:56,leadingSize:36,iconSize:23,gap:8,titleSize:14,subtitleSize:14});
   assert.equal(CONTROL_LAYOUT.social.rowHeight,56);
   assert.equal(CONTROL_LAYOUT.social.rankWidth,36);
   assert.equal(CONTROL_LAYOUT.social.actionSize,36);

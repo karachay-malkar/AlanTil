@@ -48,20 +48,20 @@ export function semanticTypography(textSizeCode='medium',viewportWidth) {
   const body={fontFamily:theme.font.body};
   const display={fontFamily:theme.font.display};
   return {
-    display:{fontSize:t.display,lineHeight:line(t.display,1.16),fontWeight:'800',...display},
-    title:{fontSize:t.title,lineHeight:line(t.title,1.18),fontWeight:'800',...display},
-    heading:{fontSize:t.emphasis,lineHeight:line(t.emphasis,1.25),fontWeight:'800',...body},
+    display:{fontSize:t.accent,lineHeight:line(t.accent,1.16),fontWeight:'800',...display},
+    title:{fontSize:t.accent,lineHeight:line(t.accent,1.18),fontWeight:'800',...display},
+    heading:{fontSize:t.body,lineHeight:line(t.body,1.25),fontWeight:'800',...body},
     body:{fontSize:t.body,lineHeight:line(t.body,1.45),...body},
-    emphasis:{fontSize:t.emphasis,lineHeight:line(t.emphasis,1.3),fontWeight:'700',...body},
-    caption:{fontSize:t.caption,lineHeight:line(t.caption,1.35),...body},
-    helper:{fontSize:t.caption,lineHeight:line(t.caption,1.35),fontWeight:'600',...terminal},
-    micro:{fontSize:t.micro,lineHeight:line(t.micro,1.2),...terminal},
-    terminal:{fontSize:t.caption,lineHeight:line(t.caption,1.25),fontWeight:'700',...terminal},
+    emphasis:{fontSize:t.body,lineHeight:line(t.body,1.3),fontWeight:'700',...body},
+    caption:{fontSize:t.body,lineHeight:line(t.body,1.35),...body},
+    helper:{fontSize:t.body,lineHeight:line(t.body,1.35),fontWeight:'600',...body},
+    micro:{fontSize:t.technical,lineHeight:line(t.technical,1.2),...terminal},
+    terminal:{fontSize:t.technical,lineHeight:line(t.technical,1.25),fontWeight:'700',...terminal},
     result:{fontSize:t.result,lineHeight:line(t.result,1.02),fontWeight:'800',...display},
     button:{fontSize:t.body,lineHeight:line(t.body,1.2),fontWeight:'800',...body},
-    navigation:{fontSize:t.micro,lineHeight:line(t.micro,1.15),fontWeight:'750',...terminal},
-    wordCard:{fontSize:t.display,lineHeight:line(t.display,1.18),fontWeight:'900',...display},
-    question:{fontSize:t.display,lineHeight:line(t.display,1.18),fontWeight:'900',...display},
+    navigation:{fontSize:t.technical,lineHeight:line(t.technical,1.15),fontWeight:'750',...body},
+    wordCard:{fontSize:t.accent,lineHeight:line(t.accent,1.18),fontWeight:'900',...display},
+    question:{fontSize:t.accent,lineHeight:line(t.accent,1.18),fontWeight:'900',...display},
   };
 }
 

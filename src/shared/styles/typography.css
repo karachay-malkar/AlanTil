@@ -1,133 +1,101 @@
-/* 13.15.12 — semantic typography contract.
-   Effective application sizes come from theme.css. This final cascade layer
-   normalizes legacy feature declarations without changing weight, family or line-height. */
+/* 16.8.0.15 — four-role semantic typography contract.
+   Roles own both size and family:
+   Technical = service data / counters / IDs, Body = readable UI/content,
+   Accent = primary headings/questions/metrics, Result = final score.
+   Bracket navigation intentionally uses Body size with terminal family. */
 
 :where(body,body *,body *::before,body *::after){font-size:var(--text-body)}
 
-/* Micro — technical counters, compact status marks and dense controls. */
+/* Technical — service data, counters, versions, dates and compact numeric metadata. */
 :where(
-  .appHeaderSubtitle,.sessionStatus,.bottomNavItem,.btn.actionCompact,
-  .contentListPill,.analyticsFailCount,.resultStatusCount,.resultDetailLine>strong,
-  .stationOrdinal,.stationWordCount,.stationMilestones,.stationDirectionControl>span,
-  .stationDirectionToggle button,.stationLaunchActions .btn,.stationStatLabel,
-  .stationMasteryBadge small,.stationMetricGrid span,.stationAttempt span,.stationAttempt small,
-  .stationProblemHead,.storyProgress .pathProgressCount,
-  .learnCardAction>span,.sessionDecision,.learnResultSummary span,
-  .settingsSmallAction,.settingsUpdateBadge,.settingsLinkEnd small,
-  .searchModeItem span,.mediaTimeline,.profileAvatarFrame::before,.problemWord small,
-  .adminUsersTable thead th,.adminRankLabel,.adminTestDate,.adminInlineAction,
-  .adminProblemCounts,.adminTestTitle>span,.adminTestFacts dt,.adminResultWordMain span,
+  .sessionStatus,.contentListPill,.contentListIndex,.analyticsFailCount,
+  .resultStatusCount,.resultDetailLine>strong,
+  .stationOrdinal,.stationWordCount,.stationMilestones,.stationProblemHead,.stationAttempt small,
+  .storyProgress .pathProgressCount,.groupNum,.learnResultCount,
+  .settingsUpdateBadge,.settingsDictionaryVersions dd,.settingsLinkEnd small,.settingsDocumentDate,
+  .mediaTimeline,.profileAvatarFrame::before,.profileStoryHead>span,.problemWord small,
+  .adminUsersTable thead th,.adminRankLabel,.adminTableNumber,.adminTestDate,.adminInlineAction,
+  .adminProblemCounts,.adminTestTitle>span,.adminTestFacts dt,
   .adminResultWordStatus strong,.adminResultWordStatus small,
-  .modeLead small,.scopeLabel small,.modeDirectionControl>span,.modeDirectionToggle button,
-  .testResultAnswerLine>strong,.storySteleTriggerGlyph>span
-){font-size:var(--text-micro)}
+  .testResultAnswerLine>strong,
+  .ashykScore span,.ashykTopControls>button,.ashykShotControl>span,.ashykShotTimer span,
+  .ashykFace span,.ashykFace b,.ashykWaiting span,.ashykWaiting small,.ashykJoin input
+){font-family:var(--font-terminal);font-size:var(--text-technical)}
 
-/* Caption — labels, secondary rows, counts and compact navigation. */
+/* Body — all ordinary interface copy, object names, labels, translations and examples. */
 :where(
-  .appHeaderTextAction,.storyProgress,
+  .appHeaderSubtitle,.appHeaderTextAction,.btn.actionCompact,.storyProgress,
+  .typo-subtitle,.hintText,.meta,.learnLabel,.typo-body,.trans,
   .typo-muted,.setTileCount,.hint,.smallNote,.dictNum,
-  .contentListSecondary,.contentListIndex,.groupNum,.gEx,.bracketHeading,.segmentedProgress,
-  .instagramBadge,.instagramSubtitle,.textAction,.directionChoiceButton,
+  .contentListPrimary,.contentListSecondary,.gTrans,.gEx,.groupPill,
+  .field span,.secTitle,.scopeSectionRow,.bracketCheckboxMark,.resultDetailTrack,
+  .bracketHeading,.segmentedProgress,.instagramBadge,.instagramSubtitle,.textAction,.directionChoiceButton,
   .settingsChoiceBody,.settingsChoice>span,
   .analyticsConsentText,.analyticsConsentButton,.analyticsPreferenceMessage,
   .googleIdentityLoading,.accountField>span,.googleIdentityStatus,.accountMessage,.accountPrivacyNote,
-  .accountNicknameMessage,.accountGenderIntro span,
+  .accountNicknameMessage,.accountGenderIntro span,.accountIntro,.analyticsPreferenceRow,
   .learningSetupError,.learningSetupStep h1,.learningSetupStep h2,.learningSetupLanguageSegments .settingsChoiceBody,
-  .stationLabel,.stationMenuToolbar,.stationWordRow .contentListSecondary,
-  .stationProblemRow,.stationEmptyState,.learnCard .hint,.learnResultCount,
-  .matchCard,.profileStoryHead>span,.profileFutureNote,
-  .profileInlineError,.profileStat span,.problemWord,
-  .settingsRowLabel,.settingsDictionaryVersions>div,.settingsDictionaryVersions dd,
-  .settingsDictionaryNotice,.settingsDictionaryError,.settingsLink,.settingsDocumentDate,
-  .expandSearchInput,.mediaError,.modeLead,.modeOptionLabel,.modeResultSummary>span:last-child,
-  .testResultAnswerTrack,.adminUsersTable,.adminUserLink,.adminTableNumber,.adminStoryRowHead,
-  .adminStoryRowHead span,.adminTestRow,.adminTestRow strong,.adminTestRow>span:last-child,
+  .guestProfilePrompt p,.routeCatalogHeading,.routeSectionHeading,.stationLabel,.stationMenuToolbar,
+  .stationWordRow .contentListPrimary,.stationWordRow .contentListSecondary,
+  .stationDirectionControl>span,.stationDirectionToggle button,.stationLaunchActions .btn,
+  .stationStatLabel,.stationMasteryBadge small,.stationMetricGrid span,.stationAttempt span,
+  .stationStatsHeading,.stationProblemWord,.stationProblemRow,.stationEmptyState,.storyIntro,
+  .learnCard .hint,.learnCard .trans,.learnCardAction>span,.sessionDecision,.learnResultSummary span,
+  .optionBtn,.matchCard,.songOriginalLine,.songTranslatedLine,.songInfoButton,
+  .profileStoryHead,.profileFutureNote,.profileInlineError,.profileStat span,.problemWord,
+  .profileLockedState>span,.profileGenderSetup>span,.profileSectionTitle,
+  .settingsSectionTitle,.settingsRowLabel,.settingsDictionaryVersions>div,
+  .settingsDictionaryNotice,.settingsDictionaryError,.settingsLink,.settingsDocument,.settingsSmallAction,
+  .expandSearchInput,.searchModeItem span,.mediaError,
+  .modeLead,.modeLead small,.modeOptionLabel,.modeResultSummary>span:last-child,
+  .modeDirectionControl>span,.modeDirectionToggle button,.scopeLabel small,.testResultAnswerTrack,
+  .adminUsersTable,.adminUserLink,.adminStoryRowHead,.adminStoryRowHead span,
+  .adminTestRow,.adminTestRow strong,.adminTestRow>span:last-child,
   .adminTestStory,.adminTestSet,.adminTestResult,.adminProblemRow,.adminProblemRow strong,
-  .adminEmpty,.adminWordTile strong,.adminResultWordMain strong,.adminStateMessage,.adminModalState,
-  .practiceMenu .menuItem small
-){font-size:var(--text-caption)}
-
-/* Body — the standard application reading size. */
-:where(
-  .typo-subtitle,.hintText,.meta,.learnLabel,.typo-body,.trans,
-  .field span,.secTitle,.scopeSectionRow,.bracketCheckboxMark,.resultDetailTrack,
-  .accountIntro,.analyticsPreferenceRow,.guestProfilePrompt p,
-  .routeSectionHeading,.stationStatsHeading,.stationProblemWord,.storyIntro,
-  .learnCard .trans,.optionBtn,.songTranslatedLine,.profileStoryHead,
-  .profileLockedState>span,.profileGenderSetup>span,.settingsSectionTitle,.settingsDocument,
-  .adminTestFacts dd
-){font-size:var(--text-body)}
-
-/* Emphasis — set/row names, important labels and section-level headings. */
-:where(
-  .typo-card-main,.groupPill,.emptyStateTitle,.noteTitle,.modalTitle,.exitModalText,
-  .contentListPrimary,.sectionMenuTitle,.setTileTitle,.gTrans,
-  .scopeDictRow,.routeCatalogHeading,.stationWordRow .contentListPrimary,
-  .stationMasteryBadge>span,.stationMetricGrid strong,
-  .modeResultMark,.songOriginalLine,.songInfoButton,.profileSectionTitle,
-  .practiceMenu .menuItem strong,.adminSummaryGrid strong,
+  .adminEmpty,.adminWordTile strong,.adminResultWordMain strong,.adminResultWordMain span,
+  .adminStateMessage,.adminModalState,.adminTestFacts dd,
   .adminDetailSection>h2,.adminSectionHead h2,
-  .appHeaderScreenTitle,.storyTabsShell::before,.storyTabsShell::after
-){font-size:var(--text-emphasis)}
-
-/* Titles — screen/document headings, primary metrics and prominent names. */
-:where(
-  h1,.panelTitle,.typo-title,.profileNickname,.profileGenderSetup>strong,
-  .settingsPageHead h1,.settingsDocument h1,.wordCardWord,.instagramArrow,.modalClose,
-  .stationMasteryBlock strong,.stationAttempt strong,.stationResultMark,
-  .learnResultSummary strong,.accountGenderIntro strong,.profileLockedState>strong,
-  .profileStat strong,.adminUserSummaryHead h1,.adminTestTitle h1,
-  .storySteleCard::before
-){font-size:var(--text-title)}
-
-:where(h2,.settingsDocument h2){font-size:var(--text-emphasis)}
-:where(h3,.settingsDocument h3){font-size:var(--text-body)}
-
-/* Unified adaptive display sizes. */
-:where(.learnCard .word,.modeQuestion,.stationTestQuestion){font-size:var(--text-display)}
-:where(.stationResultScore,.modeResultSummary strong){font-size:var(--text-result)}
-
-/* The stele still measures overflow in JS; semantic sizes remain authoritative. */
-.storySteleTitle{font-size:var(--text-title)!important}
-.storySteleBody{font-size:var(--text-body)!important}
-
-/* Path-specific compact labels. */
-.stationLabel{font-size:var(--text-caption)}
-.stationWordCount{font-size:var(--text-micro)}
-
-
-
-
-/* Ashyk — same semantic typography contract as the rest of the application. */
-:where(
-  .ashykEyebrow,.ashykSectionLabel,.ashykDifficultyHint,.ashykQuestionScopeRow small,
-  .ashykFacts b,.ashykScopeNote,.ashykPlayerHead,.ashykPlayerStatus,.ashykPlayerActionCell,
-  .ashykPlayerAction,.ashykPlayerDualAction button,.ashykScore span,.ashykTopControls>button,
-  .ashykShotControl>span,.ashykShotControl .settingsChoice>span,.ashykShotTimer span,
-  .ashykFace span,.ashykFace b,.ashykStatus strong,.ashykWaiting span,.ashykWaiting small,
-  .ashykRuleNote,.ashykQuestionRule,.ashykFriendChoice small,.ashykFriendChoice>b
-){font-size:var(--text-micro)}
-
-:where(
-  .ashykModeButton,.ashykModeAccessLock p,.ashykQuestionScopeRow,.ashykFacts>div,
-  .ashykJoin input,.ashykInlineNotice,.ashykInlineError,.ashykOutcome,.ashykHelp>p,
-  .ashykFinish>p,.ashykRuleRows>div,.ashykOptions button,.ashykFriendChoice strong,
+  .practiceMenu .menuItem strong,.practiceMenu .menuItem small,.sectionMenuTitle,.setTileTitle,.scopeDictRow,
+  h2,h3,.settingsDocument h2,.settingsDocument h3,
+  .ashykSetupHelpButton span,.ashykSetupHelpButton b,.ashykEyebrow,.ashykSectionLabel,
+  .ashykDifficultyHint,.ashykModeAccessLock p,.ashykQuestionScopeRow,.ashykQuestionScopeRow small,
+  .ashykFacts>div,.ashykFacts b,.ashykScopeNote,.ashykPrimary,.ashykSecondary,.ashykJoin button,
+  .ashykPlayerHead,.ashykPlayerStatus,.ashykPlayerActionCell,.ashykPlayerAction,.ashykPlayerDualAction button,
+  .ashykInlineNotice,.ashykInlineError,.ashykStatus strong,.ashykOutcome,.ashykHelp>p,.ashykFinish>p,
+  .ashykRuleRows>div,.ashykOptions button,.ashykRuleNote,.ashykQuestionRule,
+  .ashykFriendChoice small,.ashykFriendChoice>b,.ashykFriendChoice strong,
   .ashykQuestionMeta strong,.ashykMenuCurrent>strong
-){font-size:var(--text-body)}
+){font-family:var(--font-body);font-size:var(--text-body)}
 
+/* Accent — primary headings, questions and important numeric metrics. */
 :where(
-  .ashykSetupHelpButton span,.ashykPageHead h1,.ashykModeAccessLock strong,
-  .ashykShotTimer strong,.ashykFace strong,.ashykWaiting>strong,.ashykDialog h2,
-  .ashykScore strong,.ashykTimer,.ashykTurnTimer,.ashykQuestionPrompt,.ashykFinish h2,.ashykFinalScore span,.ashykAccessLock h1
-){font-size:var(--text-title)}
+  h1,.panelTitle,.typo-title,.emptyStateTitle,.noteTitle,.modalTitle,.exitModalText,
+  .profileNickname,.profileGenderSetup>strong,.settingsPageHead h1,.settingsDocument h1,
+  .wordCardWord,.instagramArrow,.modalClose,
+  .stationMasteryBlock strong,.stationMasteryBadge>span,.stationMetricGrid strong,
+  .stationAttempt strong,.stationResultMark,.learnResultSummary strong,
+  .accountGenderIntro strong,.profileLockedState>strong,.profileStat strong,
+  .adminSummaryGrid strong,.adminUserSummaryHead h1,.adminTestTitle h1,
+  .appHeaderScreenTitle,.learnCard .word,.modeQuestion,.stationTestQuestion,.modeResultMark,
+  .ashykPageHead h1,.ashykModeAccessLock strong,.ashykShotTimer strong,.ashykFace strong,
+  .ashykWaiting>strong,.ashykDialog h2,.ashykScore strong,.ashykTimer,.ashykTurnTimer,
+  .ashykQuestionPrompt,.ashykFinish h2,.ashykFinalScore span,.ashykAccessLock h1,
+  .storySteleCard::before
+){font-family:var(--font-body);font-size:var(--text-accent)}
 
-:where(.ashykFinalScore strong){font-size:var(--text-result)}
+/* Result — final scores stay fixed at 48px. */
+:where(.stationResultScore,.modeResultSummary strong,.ashykFinalScore strong){font-family:var(--font-terminal);font-size:var(--text-result)}
 
-/* Bracket navigation has one reading role across screens. */
+/* Intentional family exceptions. */
+.bottomNavItem{font-family:var(--font-body);font-size:var(--text-technical)}
 .bracketNavigation{font-family:var(--font-terminal);font-size:var(--text-body);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
 .bracketNavigation.active{font-weight:900;color:var(--text-1)}
+.storyTabsShell::before,.storyTabsShell::after{font-family:var(--font-terminal);font-size:var(--text-body)}
+.storySteleContent,.storySteleTitle,.storySteleBody,.storySteleCard::before,.storySteleTriggerGlyph>span{font-family:var(--font-brand)}
+.storySteleTitle{font-size:var(--text-accent)!important}
+.storySteleBody{font-size:var(--text-body)!important}
+.storySteleTriggerGlyph>span{font-size:var(--text-technical)}
 .appShell[data-screen="ashyk"] .ashykModeButton{justify-content:center;padding:0 6px;min-height:30px}
 .appShell[data-screen="ashyk"] .ashykModeButton b{font:inherit}
-
 .storyTab:not(.active){opacity:1}
 .appShell[data-screen="ashyk"] .ashykModeBracket{font:inherit;color:inherit}
