@@ -67,6 +67,7 @@ test('profile completion requires nickname and an explicit avatar gender',()=>{
 
 test('authenticated incomplete profile is a blocking gate before the learning path',()=>{
   const web=read('src/app/bootstrap.js');
+  const router=read('src/app/router.js');
   const account=read('src/features/account/index.js');
   const accountView=read('src/features/account/profile.js');
   const accountStyles=read('src/features/account/account.css');
@@ -82,7 +83,13 @@ test('authenticated incomplete profile is a blocking gate before the learning pa
   assert.match(account,/const profileIncomplete = !hasCompleteProfile\(profile\)/);
   assert.match(account,/if \(pendingAuthSuccess \|\| pendingPasswordReady\)/);
   assert.match(account,/pendingPasswordReady \? "password_ready" : "auth_success"/);
+  assert.match(account,/export function requestLeave\(\) \{\s*return !profileCompletionRequired;\s*\}/);
   assert.match(account,/export function canLeave\(\) \{\s*return !profileCompletionRequired;\s*\}/);
+  assert.match(account,/setBackVisible\?\.\(!profileCompletionRequired\)/);
+  assert.match(account,/profileCompletionLock/);
+  assert.match(account,/bottomNav/);
+  assert.ok(router.indexOf('currentModule?.requestLeave')>=0);
+  assert.ok(router.indexOf('currentModule?.requestLeave')<router.indexOf('modal.confirm'));
   assert.doesNotMatch(account,/getProfile\(nextUserId\)/);
   assert.match(account,/reason: "profile_completed"/);
   assert.match(accountView,/segmentControl settingsSegments accountGenderOptions/);
