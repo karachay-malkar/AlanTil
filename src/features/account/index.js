@@ -55,6 +55,29 @@ let actionMessage = "";
 let profileCompletionRequired = false;
 let pendingAuthSuccess = false;
 let pendingPasswordReady = false;
+let mountedContext = null;
+
+function setProfileCompletionGuard(context, required) {
+  profileCompletionRequired = Boolean(required);
+  context?.shell?.setBackVisible?.(!profileCompletionRequired);
+  const bottomNav = context?.shell?.bottomNav;
+  if (!bottomNav) return;
+  if (profileCompletionRequired) bottomNav.dataset.profileCompletionLock = "true";
+  else delete bottomNav.dataset.profileCompletionLock;
+  bottomNav.querySelectorAll("[data-route]").forEach((button) => {
+    if (profileCompletionRequired) {
+      if (button.disabled) return;
+      button.dataset.profileCompletionLock = "true";
+      button.disabled = true;
+      button.setAttribute("aria-disabled", "true");
+      return;
+    }
+    if (button.dataset.profileCompletionLock !== "true") return;
+    button.disabled = false;
+    button.removeAttribute("aria-disabled");
+    delete button.dataset.profileCompletionLock;
+  });
+}
 
 function isMounted() {
   return Boolean(controller && !controller.signal.aborted);
@@ -158,6 +181,7 @@ async function handleSignOut(context) {
   clearNicknameTimer();
   try {
     await signOut();
+    setProfileCompletionGuard(context, false);
   } catch (error) {
     actionError = error.message;
     scheduleAccountRender(context);
@@ -208,7 +232,7 @@ async function renderAccount(context) {
   }
 
   if (!authState.user) {
-    profileCompletionRequired = false;
+    setProfileCompletionGuard(context, false);
     pendingAuthSuccess = false;
     pendingPasswordReady = false;
     prepareAccountRender(context);
@@ -273,7 +297,7 @@ async function renderAccount(context) {
   }
 
   if (authState.flow === "legacy_google" || authState.flow === "recovery") {
-    profileCompletionRequired = true;
+    setProfileCompletionGuard(context, true);
     prepareAccountRender(context);
     renderPasswordSetup(context, {
       flow: authState.flow,
@@ -320,7 +344,7 @@ async function renderAccount(context) {
   if (requestId !== renderRequest || !isMounted()) return;
 
   const profileIncomplete = !hasCompleteProfile(profile);
-  profileCompletionRequired = profileIncomplete;
+  setProfileCompletionGuard(context, profileIncomplete);
   if (profileIncomplete) {
     pendingAuthSuccess = false;
     pendingPasswordReady = false;
@@ -396,7 +420,7 @@ async function renderAccount(context) {
           }
           await createProfile(authState.user.id, nickname, gender);
           profileFailure = null;
-          profileCompletionRequired = false;
+          setProfileCompletionGuard(context, false);
           pendingAuthSuccess = false;
           pendingPasswordReady = false;
           resetNicknameState();
@@ -500,10 +524,11 @@ async function renderAccount(context) {
 
 export async function mount(context) {
   controller = new AbortController();
+  mountedContext = context;
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";
   resetAccountStateForAuthChange();
-  profileCompletionRequired = Boolean(lastAuthUserId);
+  setProfileCompletionGuard(context, Boolean(lastAuthUserId));
 
   unsubscribeAuth = subscribeToAuth((state) => {
     const previousUserId = lastAuthUserId;
@@ -511,7 +536,7 @@ export async function mount(context) {
     if (nextUserId !== previousUserId) {
       lastAuthUserId = nextUserId;
       resetAccountStateForAuthChange();
-      profileCompletionRequired = Boolean(nextUserId);
+      setProfileCompletionGuard(context, Boolean(nextUserId));
       pendingAuthSuccess = Boolean(!previousUserId && nextUserId)
         && state.flow !== "legacy_google"
         && state.flow !== "recovery";
@@ -524,6 +549,8 @@ export async function mount(context) {
 
 export function unmount() {
   controller?.abort();
+  if (mountedContext) setProfileCompletionGuard(mountedContext, false);
+  mountedContext = null;
   unsubscribeAuth?.();
   unsubscribeAuth = null;
   controller = null;
@@ -533,6 +560,10 @@ export function unmount() {
   pendingAuthSuccess = false;
   pendingPasswordReady = false;
   clearNicknameTimer();
+}
+
+export function requestLeave() {
+  return !profileCompletionRequired;
 }
 
 export function canLeave() {
