@@ -52,6 +52,9 @@ let lastAuthUserId = "";
 let loginMode = "signin";
 let loginEmail = "";
 let actionMessage = "";
+let profileCompletionRequired = false;
+let pendingAuthSuccess = false;
+let pendingPasswordReady = false;
 
 function isMounted() {
   return Boolean(controller && !controller.signal.aborted);
@@ -76,6 +79,9 @@ function resetAccountStateForAuthChange() {
   loginMode = "signin";
   loginEmail = "";
   profileFailure = null;
+  profileCompletionRequired = false;
+  pendingAuthSuccess = false;
+  pendingPasswordReady = false;
   resetNicknameState();
 }
 
@@ -202,6 +208,9 @@ async function renderAccount(context) {
   }
 
   if (!authState.user) {
+    profileCompletionRequired = false;
+    pendingAuthSuccess = false;
+    pendingPasswordReady = false;
     prepareAccountRender(context);
     renderLogin(context, {
       error: actionError || authState.error || "",
@@ -264,6 +273,7 @@ async function renderAccount(context) {
   }
 
   if (authState.flow === "legacy_google" || authState.flow === "recovery") {
+    profileCompletionRequired = true;
     prepareAccountRender(context);
     renderPasswordSetup(context, {
       flow: authState.flow,
@@ -276,14 +286,12 @@ async function renderAccount(context) {
         actionMessage = "";
         try {
           if (password !== passwordConfirm) throw new Error(msg("account.paroli_ne_sovpadayut"));
+          pendingPasswordReady = true;
           await updateCurrentUserPassword(password);
           actionMessage = msg("account.parol_sohranen");
-          await context.router.replace(
-            "path.home",
-            { storyType: "roots" },
-            { force: true, reason: "password_ready" },
-          );
+          scheduleAccountRender(context);
         } catch (error) {
+          pendingPasswordReady = false;
           actionError = error?.message || msg("account.ne_udalos_vypolnit_operatsiyu_povtorite_pozzhe");
           scheduleAccountRender(context);
         }
@@ -311,8 +319,11 @@ async function renderAccount(context) {
   }
   if (requestId !== renderRequest || !isMounted()) return;
 
-  const profileIncomplete = !profile?.nickname || !profile?.avatar_gender;
+  const profileIncomplete = !hasCompleteProfile(profile);
+  profileCompletionRequired = profileIncomplete;
   if (profileIncomplete) {
+    pendingAuthSuccess = false;
+    pendingPasswordReady = false;
     if (!nicknameValue && profile?.nickname) nicknameValue = profile.nickname;
     if (!genderValue && profile?.avatar_gender) genderValue = profile.avatar_gender;
     const initialValidation = validateNickname(nicknameValue);
@@ -385,6 +396,9 @@ async function renderAccount(context) {
           }
           await createProfile(authState.user.id, nickname, gender);
           profileFailure = null;
+          profileCompletionRequired = false;
+          pendingAuthSuccess = false;
+          pendingPasswordReady = false;
           resetNicknameState();
           await context.router.replace(
             "path.home",
@@ -405,6 +419,18 @@ async function renderAccount(context) {
       onSignOut: () => handleSignOut(context),
     });
     resetAccountViewport(context);
+    return;
+  }
+
+  if (pendingAuthSuccess || pendingPasswordReady) {
+    const reason = pendingPasswordReady ? "password_ready" : "auth_success";
+    pendingAuthSuccess = false;
+    pendingPasswordReady = false;
+    await context.router.replace(
+      "path.home",
+      { storyType: "roots" },
+      { force: true, reason },
+    );
     return;
   }
 
@@ -477,6 +503,7 @@ export async function mount(context) {
   renderQueued = false;
   lastAuthUserId = getCurrentAuthState().user?.id || "";
   resetAccountStateForAuthChange();
+  profileCompletionRequired = Boolean(lastAuthUserId);
 
   unsubscribeAuth = subscribeToAuth((state) => {
     const previousUserId = lastAuthUserId;
@@ -484,30 +511,10 @@ export async function mount(context) {
     if (nextUserId !== previousUserId) {
       lastAuthUserId = nextUserId;
       resetAccountStateForAuthChange();
-    }
-    if (!previousUserId && nextUserId) {
-      if (state.flow === "legacy_google" || state.flow === "recovery") {
-        scheduleAccountRender(context);
-        return;
-      }
-      void (async () => {
-        try {
-          const profile = await getProfile(nextUserId);
-          if (!hasCompleteProfile(profile)) {
-            scheduleAccountRender(context);
-            return;
-          }
-        } catch {
-          scheduleAccountRender(context);
-          return;
-        }
-        await context.router.replace(
-          "path.home",
-          { storyType: "roots" },
-          { force: true, reason: "auth_success" },
-        );
-      })();
-      return;
+      profileCompletionRequired = Boolean(nextUserId);
+      pendingAuthSuccess = Boolean(!previousUserId && nextUserId)
+        && state.flow !== "legacy_google"
+        && state.flow !== "recovery";
     }
     scheduleAccountRender(context);
   });
@@ -522,9 +529,12 @@ export function unmount() {
   controller = null;
   renderQueued = false;
   renderRequest += 1;
+  profileCompletionRequired = false;
+  pendingAuthSuccess = false;
+  pendingPasswordReady = false;
   clearNicknameTimer();
 }
 
 export function canLeave() {
-  return true;
+  return !profileCompletionRequired;
 }
