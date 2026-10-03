@@ -16,10 +16,16 @@ export function renderTestMenu(context, words, signal) {
   let selectedMode = testState.mode === "ru" ? "ru" : "kb";
   const scope = buildPracticeScope(available);
   const scopeHtml = scope.map((dictionary) => `<div class="scopeBlock">
-    <label class="scopeDictRow"><input class="scopeCheckbox scopeDict" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" checked /><span class="scopeLabel"><strong>${escapeHtml(dictionary.name)}</strong><small>${dictionary.count}</small></span></label>
+    <label class="scopeDictRow">
+      <span class="bracketCheckbox scopeCheckboxControl"><input class="scopeCheckbox scopeDict" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" checked /><span class="bracketCheckboxMark" aria-hidden="true"></span></span>
+      <span class="scopeLabel"><strong>${escapeHtml(dictionary.name)}</strong><small>${dictionary.count}</small></span>
+    </label>
     ${dictionary.sections.map((section) => {
       const checked = testState.selectedScopeKeys.size === 0 || testState.selectedScopeKeys.has(practiceScopeKey(dictionary.id, section.id));
-      return `<label class="scopeSectionRow"><input class="scopeCheckbox scopeSection" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" data-section="${escapeHtml(section.id)}" ${checked ? "checked" : ""} /><span class="scopeLabel"><span>${escapeHtml(section.name)}</span><small>${section.count}</small></span></label>`;
+      const sectionName = String(section.name || "").trim();
+      const input = `<input class="scopeCheckbox scopeSection${sectionName ? "" : " scopeSectionHidden"}" type="checkbox" data-dict="${escapeHtml(dictionary.id)}" data-section="${escapeHtml(section.id)}" ${checked ? "checked" : ""} ${sectionName ? "" : "hidden"} />`;
+      if (!sectionName) return input;
+      return `<label class="scopeSectionRow"><span class="bracketCheckbox scopeCheckboxControl">${input}<span class="bracketCheckboxMark" aria-hidden="true"></span></span><span class="scopeLabel"><span>${escapeHtml(sectionName)}</span><small>${section.count}</small></span></label>`;
     }).join("")}
   </div>`).join("");
 

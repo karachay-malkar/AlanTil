@@ -52,7 +52,7 @@ test("final typography layer assigns roles by object meaning", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const typography = await read("src/shared/styles/typography.css");
   const listTable = await read("packages/alantil-ui/list-table.js");
-  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.15/);
+  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.16/);
   assert.doesNotMatch(typography, /var\(--text-(?:micro|caption|emphasis|title|display)\)/);
   for (const selector of [
     ".stationLabel",
@@ -72,6 +72,40 @@ test("final typography layer assigns roles by object meaning", async () => {
   assert.match(typography, /ashykQuestionPrompt/);
   assert.match(typography, /ashykFinalScore strong\)\{font-family:var\(--font-terminal\);font-size:var\(--text-result\)\}/);
   assert.match(listTable, /medium:F\(\{primary:14,secondary:14,service:10\}\)/);
+});
+
+test("segmented choices, scope checkboxes and direction controls use the shared Body contract", async () => {
+  const segmented = await read("src/shared/styles/segmented-control.css");
+  const settings = await read("src/features/settings/settings.css");
+  const testCss = await read("src/features/test/test.css");
+  const pathCss = await read("src/features/path/path.css");
+  const testView = await read("src/features/test/view.js");
+  const matchView = await read("src/features/match/view.js");
+  const game = await read("packages/ashyk-game/web/Game.jsx");
+
+  assert.match(segmented, /\.settingsSegments\{[^}]*width:100%[^}]*min-width:0/s);
+  assert.match(segmented, /\.settingsChoiceBody,\.settingsChoice>span\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-body\)/s);
+  assert.doesNotMatch(segmented, /min-width:142px|font:750 10px\/1 var\(--font-terminal\)|font-size:9px/);
+  assert.match(settings, /\.settingsRow\{[^}]*grid-template-columns:minmax\(0,\.9fr\) minmax\(0,1\.1fr\)/s);
+
+  for (const css of [testCss, pathCss]) {
+    assert.match(css, /DirectionControl>span\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
+    assert.match(css, /DirectionToggle\{[^}]*width:100%[^}]*min-width:0/s);
+    assert.match(css, /DirectionToggle button\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
+  }
+  assert.match(testCss, /\.radioOpt span\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
+  assert.match(pathCss, /\.stationLegendRow\{[^}]*font-size:var\(--text-body\)/s);
+  assert.match(pathCss, /\.stationHistoryRow\{[^}]*font-size:var\(--text-body\)/s);
+  assert.doesNotMatch(pathCss, /var\(--text-caption\)/);
+
+  for (const source of [testView, matchView]) {
+    assert.match(source, /bracketCheckbox scopeCheckboxControl/);
+    assert.match(source, /bracketCheckboxMark/);
+    assert.match(source, /sectionName = String\(section\.name \|\| ""\)\.trim\(\)/);
+    assert.match(source, /scopeSectionHidden/);
+  }
+  assert.match(game, /bracketCheckbox scopeCheckboxControl/);
+  assert.match(game, /ashykQuestionScopeName/);
 });
 
 test("settings and both onboarding surfaces expose the huge option", async () => {

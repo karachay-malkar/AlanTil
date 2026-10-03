@@ -2,7 +2,8 @@
   display:grid;
   grid-auto-flow:column;
   grid-auto-columns:minmax(0,1fr);
-  min-width:142px;
+  width:100%;
+  min-width:0;
   padding:2px;
   border:1px solid var(--line);
   border-radius:999px;
@@ -11,6 +12,7 @@
 .settingsChoice{position:relative;display:block;min-width:0}
 .settingsChoice input{position:absolute;opacity:0;pointer-events:none}
 .settingsChoiceBody,.settingsChoice>span{
+  min-width:0;
   min-height:28px;
   padding:4px 7px;
   display:flex;
@@ -21,7 +23,10 @@
   border-radius:999px;
   background:transparent;
   color:var(--text-3);
-  font:750 10px/1 var(--font-terminal);
+  font-family:var(--font-body);
+  font-size:var(--text-body);
+  font-weight:750;
+  line-height:1.15;
   white-space:nowrap;
   transition:background var(--duration-fast),color var(--duration-fast),box-shadow var(--duration-fast);
 }
@@ -33,6 +38,5 @@
 }
 .settingsChoice input:focus-visible+.settingsChoiceBody,.settingsChoice input:focus-visible+span{outline:2px solid var(--accent-strong);outline-offset:2px}
 @media(max-width:360px){
-  .settingsSegments{min-width:132px}
-  .settingsChoiceBody,.settingsChoice>span{padding-inline:5px;font-size:9px}
+  .settingsChoiceBody,.settingsChoice>span{padding-inline:5px}
 }

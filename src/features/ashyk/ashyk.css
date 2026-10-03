@@ -28,8 +28,8 @@
 .appShell[data-screen="ashyk"] .ashykModeAccessLock .ashykPrimary{width:min(100%,240px);margin-top:4px}
 .appShell[data-screen="ashyk"] .ashykQuestionScopes{padding:9px 0 5px;border-top:1px solid var(--line-soft)}
 .appShell[data-screen="ashyk"] .ashykQuestionScopeList{margin-top:6px}
-.appShell[data-screen="ashyk"] .ashykQuestionScopeRow{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:38px;padding:4px 2px;border-bottom:1px solid var(--line-soft);color:var(--text-1);font-size:12px;cursor:pointer}
-.appShell[data-screen="ashyk"] .ashykQuestionScopeRow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.appShell[data-screen="ashyk"] .ashykQuestionScopeRow{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:38px;padding:4px 2px;border-bottom:1px solid var(--line-soft);color:var(--text-1);font-size:12px;cursor:pointer}
+.appShell[data-screen="ashyk"] .ashykQuestionScopeName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .appShell[data-screen="ashyk"] .ashykQuestionScopeRow small{color:var(--text-3);font:750 10px/1 var(--font-terminal)}
 .appShell[data-screen="ashyk"] .ashykFacts{margin-top:6px;border-top:1px solid var(--line-soft)}
 .appShell[data-screen="ashyk"] .ashykFacts>div{min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);font-size:12px;color:var(--text-2)}

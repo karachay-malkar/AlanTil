@@ -19,7 +19,7 @@
   .adminResultWordStatus strong,.adminResultWordStatus small,
   .testResultAnswerLine>strong,
   .ashykScore span,.ashykTopControls>button,.ashykShotControl>span,.ashykShotTimer span,
-  .ashykFace span,.ashykFace b,.ashykWaiting span,.ashykWaiting small,.ashykJoin input
+  .ashykFace span,.ashykFace b,.ashykWaiting span,.ashykWaiting small,.ashykJoin input,.scopeLabel small
 ){font-family:var(--font-terminal);font-size:var(--text-technical)}
 
 /* Body — all ordinary interface copy, object names, labels, translations and examples. */
@@ -48,7 +48,7 @@
   .settingsDictionaryNotice,.settingsDictionaryError,.settingsLink,.settingsDocument,.settingsSmallAction,
   .expandSearchInput,.searchModeItem span,.mediaError,
   .modeLead,.modeLead small,.modeOptionLabel,.modeResultSummary>span:last-child,
-  .modeDirectionControl>span,.modeDirectionToggle button,.scopeLabel small,.testResultAnswerTrack,
+  .modeDirectionControl>span,.modeDirectionToggle button,.radioOpt span,.stationLegendRow,.stationHistoryRow,.testResultAnswerTrack,
   .adminUsersTable,.adminUserLink,.adminStoryRowHead,.adminStoryRowHead span,
   .adminTestRow,.adminTestRow strong,.adminTestRow>span:last-child,
   .adminTestStory,.adminTestSet,.adminTestResult,.adminProblemRow,.adminProblemRow strong,
@@ -58,7 +58,7 @@
   .practiceMenu .menuItem strong,.practiceMenu .menuItem small,.sectionMenuTitle,.setTileTitle,.scopeDictRow,
   h2,h3,.settingsDocument h2,.settingsDocument h3,
   .ashykSetupHelpButton span,.ashykSetupHelpButton b,.ashykEyebrow,.ashykSectionLabel,
-  .ashykDifficultyHint,.ashykModeAccessLock p,.ashykQuestionScopeRow,.ashykQuestionScopeRow small,
+  .ashykDifficultyHint,.ashykModeAccessLock p,.ashykQuestionScopeRow,.ashykQuestionScopeName,
   .ashykFacts>div,.ashykFacts b,.ashykScopeNote,.ashykPrimary,.ashykSecondary,.ashykJoin button,
   .ashykPlayerHead,.ashykPlayerStatus,.ashykPlayerActionCell,.ashykPlayerAction,.ashykPlayerDualAction button,
   .ashykInlineNotice,.ashykInlineError,.ashykStatus strong,.ashykOutcome,.ashykHelp>p,.ashykFinish>p,

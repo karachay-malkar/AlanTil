@@ -213,8 +213,9 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 .bracketCheckboxMark{position:relative;width:30px;height:20px;display:grid;place-items:center;color:var(--text-3);font:850 14px/1 var(--font-terminal)}
 .bracketCheckboxMark::before{content:"[ ]";display:block;width:30px;text-align:center}
 .bracketCheckboxMark::after{content:"";position:absolute;left:50%;top:50%;width:12px;text-align:center;font-size:10px;line-height:1;transform:translate(-50%,-52%)}
-.bracketCheckbox input:checked+.bracketCheckboxMark{color:var(--accent-strong)}
+.bracketCheckbox input:checked+.bracketCheckboxMark,.bracketCheckbox input:indeterminate+.bracketCheckboxMark{color:var(--accent-strong)}
 .bracketCheckbox input:checked+.bracketCheckboxMark::after{content:"✓"}
+.bracketCheckbox input:indeterminate+.bracketCheckboxMark::after{content:"–"}
 .bracketCheckbox input:focus-visible+.bracketCheckboxMark{outline:2px solid var(--accent);outline-offset:4px}
 
 /* Shared single-line overflow motion used by vocabulary lists and test results. */

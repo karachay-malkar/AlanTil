@@ -97,23 +97,18 @@ export function buildStationLearningStatistics(rows = [], station = {}) {
 
   const completedLearn = history.filter((row) => row.type === 'learn');
   const completedTests = history.filter((row) => row.type === 'station_test');
-  const seen = new Set();
-
   const learn = completedLearn.map((row) => {
     const sessionWords = (Array.isArray(row.words) ? row.words : [])
       .filter((entry) => wordIds.has(stationWordId(entry?.word_id)) && Number(entry?.show_count || 0) > 0);
-    const eligible = sessionWords.filter((entry) => seen.has(stationWordId(entry.word_id)));
-    const firstTry = eligible.filter((entry) => Number(entry.show_count || 0) === 1 && entry.final_result === 'known').length;
+    const firstTry = sessionWords.filter((entry) => Number(entry.show_count || 0) === 1 && entry.final_result === 'known').length;
     const shows = sessionWords.reduce((sum, entry) => sum + Math.max(0, Number(entry.show_count || 0)), 0);
-    const result = {
+    return {
       id: row.id,
       date: row.ended_at || row.started_at || null,
-      firstTryPercent: eligible.length ? Math.round((firstTry / eligible.length) * 100) : null,
+      firstTryPercent: sessionWords.length ? Math.round((firstTry / sessionWords.length) * 100) : null,
       showsPerWord: sessionWords.length ? stationMetric(shows / sessionWords.length) : null,
       wordCount: sessionWords.length,
     };
-    sessionWords.forEach((entry) => seen.add(stationWordId(entry.word_id)));
-    return result;
   });
 
   const tests = completedTests.map((row) => {

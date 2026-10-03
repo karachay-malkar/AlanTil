@@ -14,7 +14,7 @@ const station = {
 
 const base = { status: "completed", dictionary_id: "middle", section_id: "roots", set_id: "set-1" };
 
-test("station learning statistics use only completed sessions and start first-try recall after the first completed exposure", () => {
+test("station learning statistics calculate first-try recall for every completed learning session", () => {
   const rows = [
     { ...base, id: "learn-1", type: "learn", ended_at: "2026-10-01T10:00:00Z", words: [
       { word_id: "w1", show_count: 4, left_swipe_count: 3, final_result: "known" },
@@ -30,11 +30,41 @@ test("station learning statistics use only completed sessions and start first-tr
   ];
   const stats = buildStationLearningStatistics(rows, station);
   assert.equal(stats.learn.length, 2);
-  assert.equal(stats.learn[0].firstTryPercent, null);
+  assert.equal(stats.learn[0].firstTryPercent, 50);
   assert.equal(stats.learn[0].showsPerWord, 2.5);
   assert.equal(stats.learn[1].firstTryPercent, 50);
   assert.equal(stats.learn[1].showsPerWord, 1.5);
 });
+
+test("first-try recall covers 100 percent, zero percent and ignores interrupted sessions", () => {
+  const rows = [
+    { ...base, id: "all-first", type: "learn", ended_at: "2026-10-01T10:00:00Z", words: [
+      { word_id: "w1", show_count: 1, left_swipe_count: 0, final_result: "known" },
+      { word_id: "w2", show_count: 1, left_swipe_count: 0, final_result: "known" },
+    ] },
+    { ...base, id: "none-first", type: "learn", ended_at: "2026-10-02T10:00:00Z", words: [
+      { word_id: "w1", show_count: 2, left_swipe_count: 1, final_result: "known" },
+      { word_id: "w2", show_count: 3, left_swipe_count: 2, final_result: "known" },
+    ] },
+    { ...base, id: "ignored", type: "learn", status: "interrupted", ended_at: "2026-10-03T10:00:00Z", words: [
+      { word_id: "w1", show_count: 1, left_swipe_count: 0, final_result: "known" },
+      { word_id: "w2", show_count: 1, left_swipe_count: 0, final_result: "known" },
+    ] },
+  ];
+  const stats = buildStationLearningStatistics(rows, station);
+  assert.deepEqual(stats.learn.map((row) => row.firstTryPercent), [100, 0]);
+});
+
+test("first-try recall uses only words actually shown in the completed session", () => {
+  const rows = [{ ...base, id: "partial", type: "learn", ended_at: "2026-10-01T10:00:00Z", words: [
+    { word_id: "w1", show_count: 1, final_result: "known" },
+    { word_id: "w2", show_count: 0, final_result: "unfinished" },
+  ] }];
+  const stats = buildStationLearningStatistics(rows, station);
+  assert.equal(stats.learn[0].firstTryPercent, 100);
+  assert.equal(stats.learn[0].wordCount, 1);
+});
+
 
 test("station problem words average completed learning shows and count completed test errors", () => {
   const rows = [

@@ -123,6 +123,46 @@ async function roleSizes(page) {
     await page.waitForSelector('.practiceMenu');
     assert.ok(await page.locator('[data-practice-route]').count() >= 5, 'practice menu regression');
 
+    const verifyPracticePickerLayout = async (route, pathname, selector) => {
+      await page.locator(`[data-practice-route="${route}"]`).click();
+      await waitForPath(page, pathname);
+      await page.waitForSelector(selector, { timeout: 20000 });
+      assert.equal(await page.locator('.scopeSectionRow .scopeLabel>span:first-child').evaluateAll((nodes) => nodes.filter((node) => !node.textContent.trim()).length), 0, `${route} renders empty section rows`);
+      assert.ok(await page.locator('.scopeDictRow .bracketCheckboxMark').count() > 0, `${route} dictionary checkboxes do not use bracket marks`);
+      assert.equal(await page.locator('.scopeDictRow input.scopeCheckbox:not(:checked)').count(), 0, `${route} must start with dictionary scopes selected`);
+      for (const width of [320, 360, 390, 412]) {
+        await page.setViewportSize({ width, height: 844 });
+        for (const [size, roles] of Object.entries(expected)) {
+          await setTextSize(page, size);
+          const radio = page.locator('.radioOpt span').first();
+          assert.equal(await radio.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), roles[1], `${route} radio text must use Body for ${size}`);
+          if (route === 'test.menu') {
+            const label = page.locator('.modeDirectionControl>span');
+            const option = page.locator('.modeDirectionToggle button').first();
+            assert.equal(await label.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), roles[1], `direction label must use Body for ${size}`);
+            assert.equal(await option.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)), roles[1], `direction option must use Body for ${size}`);
+            const geometry = await page.locator('.modeDirectionControl').evaluate((node) => {
+              const control = node.getBoundingClientRect();
+              const toggle = node.querySelector('.modeDirectionToggle').getBoundingClientRect();
+              return { controlWidth: control.width, toggleWidth: toggle.width, right: toggle.right, controlRight: control.right };
+            });
+            assert.ok(geometry.toggleWidth >= geometry.controlWidth * .5, `direction picker narrowed unexpectedly: ${JSON.stringify(geometry)}`);
+            assert.ok(geometry.right <= geometry.controlRight + 1, `direction picker overflows its row: ${JSON.stringify(geometry)}`);
+          }
+          const viewport = await page.evaluate(() => ({ clientWidth: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }));
+          assert.ok(viewport.scrollWidth <= viewport.clientWidth + 2, `${route} overflows at ${width}px/${size}: ${viewport.scrollWidth} > ${viewport.clientWidth}`);
+        }
+      }
+      await setTextSize(page, 'medium');
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.locator('#btnBackArrow').click();
+      await waitForPath(page, '/practice');
+      await page.waitForSelector('.practiceMenu');
+    };
+
+    await verifyPracticePickerLayout('test.menu', '/test', '.testMenuView');
+    await verifyPracticePickerLayout('match.menu', '/match', '.matchMenuView');
+
     await page.locator('[data-practice-route="practice.ashyk"]').click();
     await waitForPath(page, '/practice/ashyk');
     await page.waitForSelector('.ashykSetup', { timeout: 20000 });

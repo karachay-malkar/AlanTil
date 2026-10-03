@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
 const SINGLETON_URL_VERSION = "16.8.0.14";
-const STYLE_ENTRY_VERSION = "16.8.0.15";
+const STYLE_ENTRY_VERSION = "16.8.0.16";
 
 async function javascriptFiles(directory) {
   const output = [];

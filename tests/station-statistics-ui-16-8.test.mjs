@@ -15,7 +15,11 @@ test("set statistics use one memory graph, history dialog and three problem colu
   assert.match(stats,/data-history-mode="tests"/);
   assert.match(stats,/stage\.shows_per_word/);
   assert.match(stats,/stage\.test_errors/);
+  assert.match(stats,/row\.firstTryPercent != null/);
+  assert.match(stats,/row\.firstTryPercent == null \? "—" : `\$\{row\.firstTryPercent\}%`/);
   assert.match(css,/\.stationMemoryChart/);
+  assert.match(css,/\.stationLegendRow\{[^}]*font-size:var\(--text-body\)/s);
+  assert.match(css,/\.stationHistoryRow\{[^}]*font-size:var\(--text-body\)/s);
   assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(82px,\.58fr\) minmax\(82px,\.58fr\)/);
 });
 
