@@ -11,7 +11,7 @@ import {
   scopedStorageKey,
 } from '../packages/alantil-core/storage-scope.js';
 import {normalizeSocialUser} from '../packages/alantil-core/social.js';
-import {normalizeProfileGender} from '../packages/alantil-core/profile.js';
+import {hasCompleteProfile,normalizeProfileGender} from '../packages/alantil-core/profile.js';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(file)=>fs.readFileSync(path.join(ROOT,file),'utf8');
@@ -58,15 +58,37 @@ test('profile gender accepts only supported explicit values',()=>{
   assert.equal(normalizeProfileGender('unknown'),'');
 });
 
+test('profile completion requires nickname and an explicit avatar gender',()=>{
+  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:null}),false);
+  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:''}),false);
+  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:'male'}),true);
+  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:'female'}),true);
+});
+
 test('authenticated incomplete profile is a blocking gate before the learning path',()=>{
   const web=read('src/app/bootstrap.js');
   const account=read('src/features/account/index.js');
+  const accountView=read('src/features/account/profile.js');
+  const accountStyles=read('src/features/account/account.css');
   const mobile=read('mobile/AppRoot.js');
   const mobileAccount=read('mobile/screens/profile.js');
   assert.match(web,/requiresProfileCompletion/);
   assert.match(web,/\/profile\/account/);
-  assert.match(account,/hasCompleteProfile/);
+  assert.match(account,/let profileCompletionRequired = false/);
+  assert.match(account,/let pendingAuthSuccess = false/);
+  assert.match(account,/let pendingPasswordReady = false/);
+  assert.match(account,/pendingPasswordReady = true;[\s\S]{0,160}await updateCurrentUserPassword\(password\)/);
+  assert.doesNotMatch(account,/await updateCurrentUserPassword\(password\);[\s\S]{0,400}context\.router\.replace/);
+  assert.match(account,/const profileIncomplete = !hasCompleteProfile\(profile\)/);
+  assert.match(account,/if \(pendingAuthSuccess \|\| pendingPasswordReady\)/);
+  assert.match(account,/pendingPasswordReady \? "password_ready" : "auth_success"/);
+  assert.match(account,/export function canLeave\(\) \{\s*return !profileCompletionRequired;\s*\}/);
+  assert.doesNotMatch(account,/getProfile\(nextUserId\)/);
   assert.match(account,/reason: "profile_completed"/);
+  assert.match(accountView,/segmentControl settingsSegments accountGenderOptions/);
+  assert.match(accountView,/settingsChoice accountGenderOption/);
+  assert.match(accountView,/settingsChoiceBody/);
+  assert.doesNotMatch(accountStyles,/accountGenderOption\.active/);
   assert.match(mobile,/profileCompletionRequired&&authUserKey/);
   assert.match(mobile,/nativeProfileCompletionRequired/);
   assert.match(mobileAccount,/onProfileCompleted/);
