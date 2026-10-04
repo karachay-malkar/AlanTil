@@ -2,9 +2,10 @@ import { CONTROL_LAYOUT } from './control-layout.js';
 import { UI_TOKENS } from './tokens.js';
 const F=Object.freeze,B=UI_TOKENS.button,C=UI_TOKENS.colors;
 export const CONTROL_SHAPES=F({cut2:F({kind:'cut2',cut:B.cut,radius:B.radius}),actionCut2:F({kind:'cut2',cut:B.cut,radius:B.actionRadius}),plain:F({kind:'plain'}),pill:F({kind:'pill',radius:999}),circle:F({kind:'circle',radius:999})});
+export const BUTTON_FAMILIES=F({action:'action',segment:'segment',bracket:'bracket',choice:'choice',icon:'icon'});
 const styles=F({
- guidePrimary:F({minHeight:CONTROL_LAYOUT.guide.height,paddingVertical:6,paddingHorizontal:CONTROL_LAYOUT.guide.paddingHorizontal,radius:B.radius,fontSize:CONTROL_LAYOUT.guide.fontSize,fontWeight:CONTROL_LAYOUT.guide.fontWeight,lineHeight:11,fontFamily:'terminal',fill:'accent',stroke:'accentStrong',label:'inverse'}),
- guideSkip:F({minHeight:CONTROL_LAYOUT.guide.height,paddingVertical:6,paddingHorizontal:CONTROL_LAYOUT.guide.paddingHorizontal,radius:0,fontSize:CONTROL_LAYOUT.guide.fontSize,fontWeight:CONTROL_LAYOUT.guide.fontWeight,lineHeight:11,fontFamily:'terminal',fill:'transparent',stroke:'transparent',label:'text2'}),
+ guidePrimary:F({minHeight:CONTROL_LAYOUT.guide.height,paddingVertical:6,paddingHorizontal:CONTROL_LAYOUT.guide.paddingHorizontal,radius:B.radius,fontSize:CONTROL_LAYOUT.guide.fontSize,fontWeight:CONTROL_LAYOUT.guide.fontWeight,lineHeight:11,fontFamily:'body',fill:'accent',stroke:'accentStrong',label:'inverse'}),
+ guideSkip:F({minHeight:CONTROL_LAYOUT.guide.height,paddingVertical:6,paddingHorizontal:CONTROL_LAYOUT.guide.paddingHorizontal,radius:0,fontSize:CONTROL_LAYOUT.guide.fontSize,fontWeight:CONTROL_LAYOUT.guide.fontWeight,lineHeight:11,fontFamily:'body',fill:'transparent',stroke:'transparent',label:'text2'}),
  default:F({minHeight:B.height,paddingVertical:B.vertical,paddingHorizontal:B.horizontal,radius:B.radius,fontSize:B.fontSize,fontWeight:B.fontWeight,lineHeight:B.lineHeight,fill:'surface0',stroke:'lineStrong',label:'text1',disabledOpacity:B.disabledOpacity,pressedOpacity:B.pressedOpacity,pressedScale:B.pressedScale}),
  primary:F({minHeight:B.height,paddingVertical:B.vertical,paddingHorizontal:B.horizontal,radius:B.radius,fontSize:B.fontSize,fontWeight:B.fontWeight,lineHeight:B.lineHeight,fill:'accent',stroke:'accentStrong',label:'inverse',disabledOpacity:B.disabledOpacity,pressedOpacity:B.pressedOpacity,pressedScale:B.pressedScale}),
  text:F({minHeight:B.height,paddingVertical:0,paddingHorizontal:4,radius:0,fontSize:B.fontSize,fontWeight:B.fontWeight,lineHeight:B.lineHeight,fill:'transparent',stroke:'transparent',label:'text2',disabledOpacity:B.disabledOpacity,pressedOpacity:.68,pressedScale:1}),
@@ -19,7 +20,7 @@ const styles=F({
  match:F({minHeight:UI_TOKENS.control.normal,paddingVertical:B.matchPadding,paddingHorizontal:B.matchPadding,radius:2,fontSize:B.matchFontSize,fontWeight:B.matchFontWeight,lineHeight:B.matchLineHeight,fill:'surface0',stroke:'lineStrong',label:'text1',disabledOpacity:B.disabledOpacity,pressedOpacity:B.pressedOpacity,pressedScale:1}),
  favorite:F({width:UI_TOKENS.favorite.size,minHeight:UI_TOKENS.favorite.size,iconSize:UI_TOKENS.favorite.iconSize,radius:0,fill:'transparent',stroke:'transparent',label:'favorite'})
 });
-const def=(mobileKind,style,webClasses,extra={})=>F({mobileKind,style,webClasses:F(webClasses),shape:extra.shape||((webClasses.includes('actionText')||webClasses.includes('textAction')||webClasses.includes('appHeaderTextAction')||webClasses.includes('starBtn'))?'plain':'cut2'),...extra});
+const def=(mobileKind,style,webClasses,extra={})=>F({family:extra.family||BUTTON_FAMILIES.action,mobileKind,style,webClasses:F(webClasses),shape:extra.shape||((webClasses.includes('actionText')||webClasses.includes('textAction')||webClasses.includes('appHeaderTextAction')||webClasses.includes('starBtn'))?'plain':'cut2'),...extra});
 export const BUTTON_ROLES=F({
  'guide.next':def('primary','guidePrimary',['btn','actionPrimary','alantilGuideNext']),
  'guide.skip':def('text','guideSkip',['btn','actionText','alantilGuideSkip'],{shape:'plain'}),
@@ -29,7 +30,7 @@ export const BUTTON_ROLES=F({
  'generic.compactPrimary':def('compactPrimary','compactPrimary',['btn','actionPrimary','actionCompact']),
  'text.action':def('text','textAction',['textAction']),
  'header.text':def('headerText','headerText',['appHeaderTextAction'],{shape:'pill'}),
- 'header.icon':def('icon','default',['appHeaderAction']),
+ 'header.icon':def('icon','default',['appHeaderAction'],{family:BUTTON_FAMILIES.icon}),
  'auth.provider':def('primary','provider',['btn','actionPrimary','authProviderButton']),
  'auth.continueGoogle':def('primary','provider',['btn','actionPrimary','authProviderButton']),
  'auth.continueGuest':def('text','text',['btn','actionText']),
@@ -39,12 +40,12 @@ export const BUTTON_ROLES=F({
  'learn.results':def('primary','primary',['btn','actionPrimary'],{action:true}),
  'station.study':def('stationStudy','stationStudy',['btn','stationStudyButton'],{action:true,shape:'actionCut2'}),
  'station.test':def('stationTest','stationTest',['btn','actionPrimary','stationTestButton'],{action:true,shape:'actionCut2'}),
- 'test.answer':def('option','option',['optionBtn']),
+ 'test.answer':def('option','option',['optionBtn'],{family:BUTTON_FAMILIES.choice}),
  'test.submit':def('primary','primary',['btn','actionPrimary'],{action:true}),
  'test.retry':def('primary','primary',['btn','actionPrimary'],{action:true}),
  'test.start':def('primary','primary',['btn','actionPrimary'],{action:true}),
  'test.back':def('text','text',['btn','actionText']),
- 'match.card':def('match','match',['matchCard']),
+ 'match.card':def('match','match',['matchCard'],{family:BUTTON_FAMILIES.choice}),
  'match.start':def('primary','primary',['btn','actionPrimary'],{action:true}),
  'match.retry':def('primary','primary',['btn','actionPrimary'],{action:true}),
  'practice.test':def('default','default',['btn']),
@@ -57,13 +58,13 @@ export const BUTTON_ROLES=F({
  'settings.save':def('settingsSmall','settingsSmall',['btn','actionPrimary','actionCompact','settingsSmallAction']),
  'settings.dictionaryUpdate':def('settingsSmall','settingsSmall',['btn','actionPrimary','actionCompact','settingsSmallAction']),
  'songs.info':def('headerText','headerText',['iconAction','appHeaderTextAction','songInfoButton'],{shape:'pill'}),
- 'songs.play':def('icon','default',['mediaPlayButton']),
- 'favorite.toggle':def('favorite','favorite',['starBtn'],{shape:'plain'}),
+ 'songs.play':def('icon','default',['mediaPlayButton'],{family:BUTTON_FAMILIES.icon}),
+ 'favorite.toggle':def('favorite','favorite',['starBtn'],{shape:'plain',family:BUTTON_FAMILIES.icon}),
  'modal.confirm':def('primary','primary',['btn','actionPrimary']),
  'modal.cancel':def('text','text',['btn','actionText']),
  'path.resultBack':def('primary','primary',['btn','actionPrimary'],{action:true}),
- 'path.storyTab':def('tab','text',['storyTab']),
- 'direction.choice':def('segment','default',['directionChoiceButton'],{shape:'cut2'}),
+ 'path.storyTab':def('tab','text',['storyTab'],{family:BUTTON_FAMILIES.bracket}),
+ 'direction.choice':def('segment','default',['directionChoiceButton'],{shape:'cut2',family:BUTTON_FAMILIES.segment}),
  'set.start':def('primary','primary',['btn','actionPrimary'],{action:true})
 });
 export function buttonRole(role){const key=String(role||'generic.default');return BUTTON_ROLES[key]||BUTTON_ROLES['generic.default'];}

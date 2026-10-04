@@ -27,7 +27,7 @@ const vars={
 };
 for(const [group,values] of Object.entries(CONTROL_LAYOUT))for(const [key,value] of Object.entries(values)){const name=`--ui-${group}-${key}`.replace(/[A-Z]/g,c=>`-${c.toLowerCase()}`);vars[name]=typeof value==='number'&&!/segments|Ratio|fontWeight/.test(key)?px(value):String(value);}
 for(const size of ['small','medium','large','huge']){vars[`--ui-list-${size}-primary-size`]=px(L.typography.bySize[size].primary);vars[`--ui-list-${size}-secondary-size`]=px(L.typography.bySize[size].secondary);vars[`--ui-list-${size}-service-size`]=px(L.typography.bySize[size].service);}
-for(const size of ['small','medium','large','huge'])for(const key of ['technical','body','accent','result'])vars[`--ui-text-${size}-${key}`]=px(T.typeScale[size][key]);
+for(const size of ['small','medium','large','huge'])for(const key of ['technical','body','button','accent','result'])vars[`--ui-text-${size}-${key}`]=px(T.typeScale[size][key]);
 const css=`/* GENERATED from packages/alantil-ui. Do not edit by hand. */\n:root{\n${Object.entries(vars).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`  ${k}:${v};`).join('\n')}\n}\n`;
 const target=path.join(root,'src/shared/styles/shared-visual-tokens.css');fs.writeFileSync(target,css,'utf8');
 console.log(`generated ${path.relative(root,target)} (${Object.keys(vars).length} tokens)`);

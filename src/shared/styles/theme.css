@@ -10,6 +10,7 @@ html[data-theme="alan-paper"]{
   /* Four-role typography source. Medium is the application default. */
   --text-technical:var(--ui-text-medium-technical);
   --text-body:var(--ui-text-medium-body);
+  --text-button:var(--ui-text-medium-button);
   --text-accent:var(--ui-text-medium-accent);
   --text-result:var(--ui-text-medium-result);
 
@@ -258,6 +259,7 @@ html[data-theme="alan-paper"]{
 html[data-text-size="small"]{
   --text-technical:var(--ui-text-small-technical);
   --text-body:var(--ui-text-small-body);
+  --text-button:var(--ui-text-small-button);
   --text-accent:var(--ui-text-small-accent);
   --text-result:var(--ui-text-small-result);
 }
@@ -265,6 +267,7 @@ html[data-text-size="small"]{
 html[data-text-size="medium"]{
   --text-technical:var(--ui-text-medium-technical);
   --text-body:var(--ui-text-medium-body);
+  --text-button:var(--ui-text-medium-button);
   --text-accent:var(--ui-text-medium-accent);
   --text-result:var(--ui-text-medium-result);
 }
@@ -272,6 +275,7 @@ html[data-text-size="medium"]{
 html[data-text-size="large"]{
   --text-technical:var(--ui-text-large-technical);
   --text-body:var(--ui-text-large-body);
+  --text-button:var(--ui-text-large-button);
   --text-accent:var(--ui-text-large-accent);
   --text-result:var(--ui-text-large-result);
 }
@@ -279,6 +283,7 @@ html[data-text-size="large"]{
 html[data-text-size="huge"]{
   --text-technical:var(--ui-text-huge-technical);
   --text-body:var(--ui-text-huge-body);
+  --text-button:var(--ui-text-huge-button);
   --text-accent:var(--ui-text-huge-accent);
   --text-result:var(--ui-text-huge-result);
 }
