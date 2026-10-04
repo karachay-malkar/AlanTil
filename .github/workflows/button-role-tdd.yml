@@ -1,4 +1,4 @@
-name: Button role TDD
+name: Button role verification
 
 on:
   push:
@@ -9,11 +9,23 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test tests/typography-13-15-12.test.mjs
+      - name: Verify generated visual tokens
+        run: |
+          node scripts/generate-shared-visual-css.mjs
+          node scripts/sync-mobile-parity-16-7.mjs
+          node scripts/sync-visual-contract-16-7.mjs --check
+          git diff --exit-code
+      - name: Verify typography and asset identity
+        run: node --test tests/typography-13-15-12.test.mjs tests/asset-versioning.test.mjs
+      - name: Verify Web and Mobile visual contracts
+        run: node --test tests/visual-parity-16-7-0.test.mjs mobile/tests/visual-contract-16-6-5.test.mjs mobile/tests/responsive-reference-parity.test.mjs
+      - name: Verify architecture and control layout
+        run: node --test tests/unified-core-boundary-16.test.mjs mobile/tests/architecture.test.mjs mobile/tests/control-layout.test.mjs
