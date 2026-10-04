@@ -58,7 +58,7 @@ export function semanticTypography(textSizeCode='medium',viewportWidth) {
     micro:{fontSize:t.technical,lineHeight:line(t.technical,1.2),...terminal},
     terminal:{fontSize:t.technical,lineHeight:line(t.technical,1.25),fontWeight:'700',...terminal},
     result:{fontSize:t.result,lineHeight:line(t.result,1.02),fontWeight:'800',...display},
-    button:{fontSize:t.body,lineHeight:line(t.body,1.2),fontWeight:'800',...body},
+    button:{fontSize:t.button,lineHeight:line(t.button,1.2),fontWeight:'800',...body},
     navigation:{fontSize:t.technical,lineHeight:line(t.technical,1.15),fontWeight:'750',...body},
     wordCard:{fontSize:t.accent,lineHeight:line(t.accent,1.18),fontWeight:'900',...display},
     question:{fontSize:t.accent,lineHeight:line(t.accent,1.18),fontWeight:'900',...display},

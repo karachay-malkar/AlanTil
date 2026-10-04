@@ -59,7 +59,7 @@ test('Header actions and bracket tabs consume semantic shared contracts',()=>{
   assert.match(shell,/width:var\(--ui-header-action-size\)/);assert.match(shell,/height:var\(--ui-header-action-size\)/);assert.match(shell,/width:var\(--ui-header-action-icon-size\)/);
   assert.match(components,/BackIcon size=\{CH\.actionIconSize\}/);assert.match(components,/width:CH\.actionSize,height:CH\.actionSize/);
   assert.match(profileTabs,/useSemanticTypography/);assert.match(profileTabs,/bracketNavigationTextStyle/);
-  assert.match(typography,/\.bracketNavigation\{[^}]*font-size:var\(--text-body\)/);
+  assert.match(typography,/\.bracketNavigation\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-button\)/);
   assert.doesNotMatch(pathCss,/\.storyTab\{[^}]*clamp\(10px/s);
   assert.doesNotMatch(pathCss,/\.storyTab\{font-size:9px/);
   assert.doesNotMatch(profileCss,/--ui-profile-tab-font-size|--ui-profile-tab-line-height/);

@@ -2,23 +2,25 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { UI_TOKENS } from "../packages/alantil-ui/tokens.js";
+import { BUTTON_FAMILIES, BUTTON_ROLES } from "../packages/alantil-ui/buttons.js";
 import { BRACKET_NAVIGATION_TEXT_ROLE, bracketNavigationTextStyle, resolveTypography } from "../packages/alantil-ui/typography.js";
 import { normalizeTextSizeCode, DEFAULT_USER_SETTINGS } from "../packages/alantil-core/settings.js";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("four text-size modes expose exactly four semantic roles", () => {
+test("four text-size modes expose five semantic roles including Button", () => {
   const expected = {
-    small: { technical: 10, body: 12, accent: 16, result: 48 },
-    medium: { technical: 10, body: 14, accent: 20, result: 48 },
-    large: { technical: 12, body: 16, accent: 24, result: 48 },
-    huge: { technical: 14, body: 18, accent: 28, result: 48 },
+    small: { technical: 10, body: 12, button: 11, accent: 16, result: 48 },
+    medium: { technical: 10, body: 14, button: 12, accent: 20, result: 48 },
+    large: { technical: 12, body: 16, button: 14, accent: 24, result: 48 },
+    huge: { technical: 14, body: 18, button: 16, accent: 28, result: 48 },
   };
   for (const [mode, roles] of Object.entries(expected)) {
     const scale = UI_TOKENS.typeScale[mode];
     assert.deepEqual(scale, roles);
     const resolved = resolveTypography(mode, 320);
-    assert.deepEqual(Object.keys(resolved), ["technical", "body", "accent", "result"]);
+    assert.deepEqual(Object.keys(resolved), ["technical", "body", "button", "accent", "result"]);
+    assert.equal(resolved.button, roles.button);
     assert.equal(resolved.result, 48);
     assert.equal(resolveTypography(mode, 1440).accent, roles.accent);
   }
@@ -27,23 +29,25 @@ test("four text-size modes expose exactly four semantic roles", () => {
   assert.equal(normalizeTextSizeCode("invalid"), "medium");
 });
 
-test("generated Web tokens and theme expose the four-role typography contract", async () => {
+test("generated Web tokens and theme expose the five-role typography contract", async () => {
   const theme = await read("src/shared/styles/theme.css");
   const shared = await read("src/shared/styles/shared-visual-tokens.css");
-  for (const [mode, technical, body, accent] of [
-    ["small", 10, 12, 16],
-    ["medium", 10, 14, 20],
-    ["large", 12, 16, 24],
-    ["huge", 14, 18, 28],
+  for (const [mode, technical, body, button, accent] of [
+    ["small", 10, 12, 11, 16],
+    ["medium", 10, 14, 12, 20],
+    ["large", 12, 16, 14, 24],
+    ["huge", 14, 18, 16, 28],
   ]) {
     assert.match(shared, new RegExp(`--ui-text-${mode}-technical:${technical}px;`));
     assert.match(shared, new RegExp(`--ui-text-${mode}-body:${body}px;`));
+    assert.match(shared, new RegExp(`--ui-text-${mode}-button:${button}px;`));
     assert.match(shared, new RegExp(`--ui-text-${mode}-accent:${accent}px;`));
     assert.match(shared, new RegExp(`--ui-text-${mode}-result:48px;`));
     assert.match(theme, new RegExp(`html\\[data-text-size="${mode}"\\]`));
   }
   assert.doesNotMatch(shared, /--ui-text-(?:small|medium|large|huge)-(?:micro|caption|emphasis|title|display):/);
   assert.match(theme, /--text-technical:var\(--ui-text-medium-technical\)/);
+  assert.match(theme, /--text-button:var\(--ui-text-medium-button\)/);
   assert.match(theme, /--text-accent:var\(--ui-text-medium-accent\)/);
   assert.match(theme, /--text-result:var\(--ui-text-medium-result\)/);
 });
@@ -52,7 +56,7 @@ test("final typography layer assigns roles by object meaning", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const typography = await read("src/shared/styles/typography.css");
   const listTable = await read("packages/alantil-ui/list-table.js");
-  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.16/);
+  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.17/);
   assert.doesNotMatch(typography, /var\(--text-(?:micro|caption|emphasis|title|display)\)/);
   for (const selector of [
     ".stationLabel",
@@ -74,27 +78,23 @@ test("final typography layer assigns roles by object meaning", async () => {
   assert.match(listTable, /medium:F\(\{primary:14,secondary:14,service:10\}\)/);
 });
 
-test("segmented choices, scope checkboxes and direction controls use the shared Body contract", async () => {
+test("segmented choices, scope checkboxes and direction controls use the shared Button contract", async () => {
+  const appStyles = await read("src/shared/styles/app.css");
   const segmented = await read("src/shared/styles/segmented-control.css");
   const settings = await read("src/features/settings/settings.css");
-  const testCss = await read("src/features/test/test.css");
   const pathCss = await read("src/features/path/path.css");
   const testView = await read("src/features/test/view.js");
   const matchView = await read("src/features/match/view.js");
   const game = await read("packages/ashyk-game/web/Game.jsx");
 
-  assert.match(segmented, /\.settingsSegments\{[^}]*width:100%[^}]*min-width:0/s);
-  assert.match(segmented, /\.settingsChoiceBody,\.settingsChoice>span\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-body\)/s);
-  assert.doesNotMatch(segmented, /min-width:142px|font:750 10px\/1 var\(--font-terminal\)|font-size:9px/);
+  assert.ok(appStyles.indexOf("segmented-control.css") > appStyles.indexOf("layer(features)"));
+  assert.match(segmented, /\.segmentControl\{[^}]*width:100%[^}]*min-width:0[^}]*padding:2px[^}]*border:1px solid var\(--line\)[^}]*border-radius:999px/s);
+  assert.match(segmented, /\.settingsChoiceBody,\.settingsChoice>span,[^\{]*\.radioOpt span,[^\{]*\.modeDirectionToggle button,[^\{]*\.stationDirectionToggle button[^\{]*\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-button\)[^}]*font-weight:750/s);
+  assert.match(segmented, /:checked[^\{]*\{[^}]*font-weight:850/s);
+  assert.match(segmented, /\.modeDirectionToggle button\.active[^\{]*\{[^}]*font-weight:850/s);
+  assert.match(segmented, /\.stationDirectionToggle button\.active[^\{]*\{[^}]*font-weight:850/s);
+  assert.doesNotMatch(segmented, /font-size:(?:8|8\.5|9|10|11|12|13|14|15|16)px/);
   assert.match(settings, /\.settingsRow\{[^}]*grid-template-columns:minmax\(0,\.9fr\) minmax\(0,1\.1fr\)/s);
-
-  for (const css of [testCss, pathCss]) {
-    assert.match(css, /DirectionControl>span\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
-    assert.match(css, /DirectionControl\{[^}]*grid-template-columns:minmax\(0,1fr\)/s);
-    assert.match(css, /DirectionToggle\{[^}]*width:100%[^}]*min-width:0/s);
-    assert.match(css, /DirectionToggle button\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
-  }
-  assert.match(testCss, /\.radioOpt span\{[^}]*var\(--text-body\)[^}]*var\(--font-body\)/s);
   assert.match(pathCss, /\.stationLegendRow\{[^}]*font-size:var\(--text-body\)/s);
   assert.match(pathCss, /\.stationHistoryRow\{[^}]*font-size:var\(--text-body\)/s);
   assert.doesNotMatch(pathCss, /var\(--text-caption\)/);
@@ -107,6 +107,29 @@ test("segmented choices, scope checkboxes and direction controls use the shared 
   }
   assert.match(game, /bracketCheckbox scopeCheckboxControl/);
   assert.match(game, /ashykQuestionScopeName/);
+  const mobileAshyk = await read("mobile/screens/ashyk.js");
+  assert.match(mobileAshyk, /type\.button\.fontSize/);
+  assert.match(mobileAshyk, /labelStyle=\{semantic\.button\}/);
+});
+
+test("button system exposes exactly five visual families", () => {
+  assert.deepEqual(Object.keys(BUTTON_FAMILIES), ["action", "segment", "bracket", "choice", "icon"]);
+  assert.deepEqual(new Set(Object.values(BUTTON_ROLES).map((role) => role.family)), new Set(Object.keys(BUTTON_FAMILIES)));
+  assert.equal(BUTTON_ROLES["generic.primary"].family, "action");
+  assert.equal(BUTTON_ROLES["direction.choice"].family, "segment");
+  assert.equal(BUTTON_ROLES["path.storyTab"].family, "bracket");
+  assert.equal(BUTTON_ROLES["test.answer"].family, "choice");
+  assert.equal(BUTTON_ROLES["favorite.toggle"].family, "icon");
+});
+
+test("bracket checkbox renders each state as one complete glyph string", async () => {
+  const components = await read("src/shared/styles/components.css");
+  const typography = await read("src/shared/styles/typography.css");
+  assert.match(components, /\.bracketCheckboxMark::before\{[^}]*content:"\[ \]"/s);
+  assert.match(components, /input:checked\+\.bracketCheckboxMark::before\{content:"\[✓\]"\}/);
+  assert.match(components, /input:indeterminate\+\.bracketCheckboxMark::before\{content:"\[-\]"\}/);
+  assert.doesNotMatch(components, /\.bracketCheckboxMark::after/);
+  assert.doesNotMatch(typography, /\.bracketCheckboxMark/);
 });
 
 test("settings and both onboarding surfaces expose the huge option", async () => {
@@ -125,17 +148,17 @@ test("settings and both onboarding surfaces expose the huge option", async () =>
 });
 
 test("all bracket navigation controls use one shared semantic contract", async () => {
-  assert.equal(BRACKET_NAVIGATION_TEXT_ROLE, "body");
-  const normal = bracketNavigationTextStyle({ body: { fontSize: 14 } });
-  const active = bracketNavigationTextStyle({ body: { fontSize: 14 } }, true);
-  assert.equal(normal.fontSize, 14);
-  assert.equal(normal.lineHeight, 14 * 1.35);
+  assert.equal(BRACKET_NAVIGATION_TEXT_ROLE, "button");
+  const normal = bracketNavigationTextStyle({ button: { fontSize: 12 }, body: { fontSize: 14 } });
+  const active = bracketNavigationTextStyle({ button: { fontSize: 12 }, body: { fontSize: 14 } }, true);
+  assert.equal(normal.fontSize, 12);
+  assert.equal(normal.lineHeight, 12 * 1.35);
   assert.equal(normal.fontWeight, "750");
   assert.equal(active.fontWeight, "900");
 
   const typography = await read("src/shared/styles/typography.css");
   const pathCss = await read("src/features/path/path.css");
-  assert.match(typography, /\.bracketNavigation\{[^}]*font-size:var\(--text-body\)[^}]*font-weight:750[^}]*line-height:1\.35/s);
+  assert.match(typography, /\.bracketNavigation\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-button\)[^}]*font-weight:750[^}]*line-height:1\.35/s);
   assert.match(typography, /\.bracketNavigation\.active\{[^}]*font-weight:900/);
   assert.doesNotMatch(typography, /\.profilePrimaryTab,\.storyTab,\.stationViewTab,\.ashykModeButton/);
   assert.doesNotMatch(pathCss, /\.stationViewTab\{[^}]*font:/s);

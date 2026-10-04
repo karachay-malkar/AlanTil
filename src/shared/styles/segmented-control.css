@@ -1,17 +1,33 @@
-.settingsSegments{
-  display:grid;
-  grid-auto-flow:column;
-  grid-auto-columns:minmax(0,1fr);
+.segmentControl{
   width:100%;
   min-width:0;
   padding:2px;
   border:1px solid var(--line);
   border-radius:999px;
   background:transparent;
+  box-shadow:none;
 }
-.settingsChoice{position:relative;display:block;min-width:0}
-.settingsChoice input{position:absolute;opacity:0;pointer-events:none}
-.settingsChoiceBody,.settingsChoice>span{
+.settingsSegments{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(0,1fr);
+}
+.settingsChoice,.radioOpt,.searchModeItem{position:relative;display:block;min-width:0}
+.settingsChoice input,.radioOpt input,.searchModeItem input{
+  position:absolute;
+  width:1px;
+  height:1px;
+  min-height:0;
+  opacity:0;
+  pointer-events:none;
+}
+.settingsChoiceBody,.settingsChoice>span,
+.radioOpt span,
+.modeDirectionToggle button,
+.stationDirectionToggle button,
+.directionChoiceButton,
+.searchModeItem span{
+  appearance:none;
   min-width:0;
   min-height:28px;
   padding:4px 7px;
@@ -24,19 +40,52 @@
   background:transparent;
   color:var(--text-3);
   font-family:var(--font-body);
-  font-size:var(--text-body);
+  font-size:var(--text-button);
   font-weight:750;
   line-height:1.15;
   white-space:nowrap;
-  transition:background var(--duration-fast),color var(--duration-fast),box-shadow var(--duration-fast);
+  transition:background var(--duration-fast),color var(--duration-fast),box-shadow var(--duration-fast),opacity var(--duration-fast);
 }
-.settingsChoice input:checked+.settingsChoiceBody,.settingsChoice input:checked+span{
-  background:color-mix(in srgb,var(--surface-0) 94%,var(--accent-soft));
+.settingsChoice input:checked+.settingsChoiceBody,
+.settingsChoice input:checked+span,
+.radioOpt input:checked+span,
+.searchModeItem input:checked+span{
+  background:color-mix(in srgb,var(--surface-0) 90%,var(--accent-soft));
   color:var(--text-1);
   font-weight:850;
   box-shadow:inset 0 0 0 1px var(--line-strong),0 2px 6px rgba(41,39,34,.12);
 }
-.settingsChoice input:focus-visible+.settingsChoiceBody,.settingsChoice input:focus-visible+span{outline:2px solid var(--accent-strong);outline-offset:2px}
+.modeDirectionToggle button.active,
+.stationDirectionToggle button.active,
+.directionChoiceButton.active,
+.searchModeItem.active span{
+  background:color-mix(in srgb,var(--surface-0) 90%,var(--accent-soft));
+  color:var(--text-1);
+  font-weight:850;
+  box-shadow:inset 0 0 0 1px var(--line-strong),0 2px 6px rgba(41,39,34,.12);
+}
+.settingsChoice input:focus-visible+.settingsChoiceBody,
+.settingsChoice input:focus-visible+span,
+.radioOpt input:focus-visible+span,
+.searchModeItem input:focus-visible+span,
+.modeDirectionToggle button:focus-visible,
+.stationDirectionToggle button:focus-visible,
+.directionChoiceButton:focus-visible{
+  outline:2px solid var(--accent-strong);
+  outline-offset:2px;
+}
+.settingsChoice input:disabled+.settingsChoiceBody,
+.settingsChoice input:disabled+span,
+.radioOpt input:disabled+span,
+.searchModeItem input:disabled+span,
+.modeDirectionToggle button:disabled,
+.stationDirectionToggle button:disabled,
+.directionChoiceButton:disabled{
+  opacity:var(--ui-button-disabled-opacity);
+  cursor:default;
+}
 @media(max-width:360px){
-  .settingsChoiceBody,.settingsChoice>span{padding-inline:5px}
+  .settingsChoiceBody,.settingsChoice>span,
+  .radioOpt span,.modeDirectionToggle button,.stationDirectionToggle button,
+  .directionChoiceButton,.searchModeItem span{padding-inline:5px}
 }

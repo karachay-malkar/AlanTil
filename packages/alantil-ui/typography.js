@@ -1,14 +1,14 @@
 import { UI_TOKENS } from './tokens.js';
 
-// Canonical typography has four roles only: technical, body, accent and result.
-// Semantic component styles may expose compatibility names, but they resolve to these roles.
-export const BRACKET_NAVIGATION_TEXT_ROLE = 'body';
+// Canonical typography has five roles: technical, body, button, accent and result.
+// Button is reserved for interactive control labels; Body stays ordinary interface/content copy.
+export const BRACKET_NAVIGATION_TEXT_ROLE = 'button';
 export const BRACKET_NAVIGATION_LINE_HEIGHT = 1.35;
 export const BRACKET_NAVIGATION_FONT_WEIGHT = '750';
 export const BRACKET_NAVIGATION_ACTIVE_FONT_WEIGHT = '900';
 
 export function bracketNavigationTextStyle(typography = {}, active = false) {
-  const role = typography?.[BRACKET_NAVIGATION_TEXT_ROLE] || typography?.body;
+  const role = typography?.[BRACKET_NAVIGATION_TEXT_ROLE] || typography?.button || typography?.body;
   const fontSize = Number(role?.fontSize);
   if (!Number.isFinite(fontSize) || fontSize <= 0) return {};
   return {
@@ -34,9 +34,9 @@ export function resolveTypography(textSizeCode = 'medium', viewportWidth) {
   return { ...scale, accent: resolve(ADAPTIVE_TYPE[code].accent), result: resolve(ADAPTIVE_TYPE[code].result) };
 }
 
-// Buttons are readable interface text. Technical typography is reserved for data/status values.
+// Buttons use their own semantic scale. Technical typography remains reserved for data/status values.
 export function buttonTextRole() {
-  return 'body';
+  return 'button';
 }
 
 export function textMetrics(size, lineHeight = 1.2) {
