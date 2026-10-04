@@ -210,12 +210,11 @@ button:active,a:active,[role="button"]:active,label:active{background-color:tran
 
 .bracketCheckbox{position:relative;display:grid;place-items:center;min-width:36px;min-height:44px;cursor:pointer}
 .bracketCheckbox input{position:absolute;width:1px;height:1px;min-height:0;opacity:0;pointer-events:none}
-.bracketCheckboxMark{position:relative;width:30px;height:20px;display:grid;place-items:center;color:var(--text-3);font:850 14px/1 var(--font-terminal)}
-.bracketCheckboxMark::before{content:"[ ]";display:block;width:30px;text-align:center}
-.bracketCheckboxMark::after{content:"";position:absolute;left:50%;top:50%;width:12px;text-align:center;font-size:10px;line-height:1;transform:translate(-50%,-52%)}
+.bracketCheckboxMark{position:relative;width:34px;height:20px;display:grid;place-items:center;color:var(--text-3);font:850 14px/1 var(--font-terminal);font-variant-ligatures:none;white-space:nowrap}
+.bracketCheckboxMark::before{content:"[ ]";display:block;width:34px;text-align:center}
 .bracketCheckbox input:checked+.bracketCheckboxMark,.bracketCheckbox input:indeterminate+.bracketCheckboxMark{color:var(--accent-strong)}
-.bracketCheckbox input:checked+.bracketCheckboxMark::after{content:"✓"}
-.bracketCheckbox input:indeterminate+.bracketCheckboxMark::after{content:"–"}
+.bracketCheckbox input:checked+.bracketCheckboxMark::before{content:"[✓]"}
+.bracketCheckbox input:indeterminate+.bracketCheckboxMark::before{content:"[-]"}
 .bracketCheckbox input:focus-visible+.bracketCheckboxMark{outline:2px solid var(--accent);outline-offset:4px}
 
 /* Shared single-line overflow motion used by vocabulary lists and test results. */

@@ -1,4 +1,4 @@
-/* 16.8.0.15 — four-role semantic typography contract.
+/* 16.8.0.18 — five-role semantic typography contract.
    Roles own both size and family:
    Technical = service data / counters / IDs, Body = readable UI/content,
    Accent = primary headings/questions/metrics, Result = final score.
@@ -28,7 +28,7 @@
   .typo-subtitle,.hintText,.meta,.learnLabel,.typo-body,.trans,
   .typo-muted,.setTileCount,.hint,.smallNote,.dictNum,
   .contentListPrimary,.contentListSecondary,.gTrans,.gEx,.groupPill,
-  .field span,.secTitle,.scopeSectionRow,.bracketCheckboxMark,.resultDetailTrack,
+  .field span,.secTitle,.scopeSectionRow,.resultDetailTrack,
   .bracketHeading,.segmentedProgress,.instagramBadge,.instagramSubtitle,.textAction,.directionChoiceButton,
   .settingsChoiceBody,.settingsChoice>span,
   .analyticsConsentText,.analyticsConsentButton,.analyticsPreferenceMessage,
@@ -67,6 +67,18 @@
   .ashykQuestionMeta strong,.ashykMenuCurrent>strong
 ){font-family:var(--font-body);font-size:var(--text-body)}
 
+/* Button — labels of interactive controls only. Lists and ordinary copy remain Body. */
+:where(
+  .btn,.textAction,.appHeaderTextAction,.settingsSmallAction,
+  .settingsChoiceBody,.settingsChoice>span,.radioOpt span,
+  .modeDirectionToggle button,.stationDirectionToggle button,.directionChoiceButton,.searchModeItem span,
+  .bracketNavigation,.optionBtn,.matchCard,.profileGenderChoices button,
+  .analyticsConsentButton,.learnCardAction>span,.sessionDecision,.songInfoButton,
+  .adminInlineAction,.ashykTopControls>button,.ashykSetupHelpButton span,.ashykSetupHelpButton b,
+  .ashykModeButton,.ashykJoin button,.ashykPlayerAction,.ashykPlayerDualAction button,
+  .ashykOptions button,.ashykFriendChoice small,.ashykFriendChoice>b,.ashykFriendChoice strong
+){font-family:var(--font-body);font-size:var(--text-button)}
+
 /* Accent — primary headings, questions and important numeric metrics. */
 :where(
   h1,.panelTitle,.typo-title,.emptyStateTitle,.noteTitle,.modalTitle,.exitModalText,
@@ -87,10 +99,10 @@
 :where(.stationResultScore,.modeResultSummary strong,.ashykFinalScore strong){font-family:var(--font-terminal);font-size:var(--text-result)}
 
 /* Intentional family exceptions. */
-.bottomNavItem{font-family:var(--font-body);font-size:var(--text-technical)}
-.bracketNavigation{font-family:var(--font-terminal);font-size:var(--text-body);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.bottomNavItem{font-family:var(--font-body);font-size:var(--text-button)}
+.bracketNavigation{font-family:var(--font-body);font-size:var(--text-button);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
 .bracketNavigation.active{font-weight:900;color:var(--text-1)}
-.storyTabsShell::before,.storyTabsShell::after{font-family:var(--font-terminal);font-size:var(--text-body)}
+.storyTabsShell::before,.storyTabsShell::after{font-family:var(--font-body);font-size:var(--text-button)}
 .storySteleContent,.storySteleTitle,.storySteleBody,.storySteleCard::before,.storySteleTriggerGlyph>span{font-family:var(--font-brand)}
 .storySteleTitle{font-size:var(--text-accent)!important}
 .storySteleBody{font-size:var(--text-body)!important}
