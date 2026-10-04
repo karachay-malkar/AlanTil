@@ -1,8 +1,8 @@
 /* 16.8.0.18 — five-role semantic typography contract.
    Roles own both size and family:
    Technical = service data / counters / IDs, Body = readable UI/content,
-   Accent = primary headings/questions/metrics, Result = final score.
-   Bracket navigation intentionally uses Body size with terminal family. */
+   Button = interactive control labels, Accent = primary headings/questions/metrics,
+   Result = final score. Bracket navigation uses Button size with the body family. */
 
 :where(body,body *,body *::before,body *::after){font-size:var(--text-body)}
 
