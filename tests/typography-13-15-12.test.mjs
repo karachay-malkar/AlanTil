@@ -29,16 +29,6 @@ test("four text-size modes expose five semantic roles including Button", () => {
   assert.equal(normalizeTextSizeCode("invalid"), "medium");
 });
 
-test("button system exposes exactly five visual families", () => {
-  assert.deepEqual(Object.keys(BUTTON_FAMILIES), ["action", "segment", "bracket", "choice", "icon"]);
-  assert.deepEqual(new Set(Object.values(BUTTON_ROLES).map((role) => role.family)), new Set(Object.keys(BUTTON_FAMILIES)));
-  assert.equal(BUTTON_ROLES["generic.primary"].family, "action");
-  assert.equal(BUTTON_ROLES["direction.choice"].family, "segment");
-  assert.equal(BUTTON_ROLES["path.storyTab"].family, "bracket");
-  assert.equal(BUTTON_ROLES["test.answer"].family, "choice");
-  assert.equal(BUTTON_ROLES["favorite.toggle"].family, "icon");
-});
-
 test("generated Web tokens and theme expose the five-role typography contract", async () => {
   const theme = await read("src/shared/styles/theme.css");
   const shared = await read("src/shared/styles/shared-visual-tokens.css");
@@ -55,43 +45,49 @@ test("generated Web tokens and theme expose the five-role typography contract", 
     assert.match(shared, new RegExp(`--ui-text-${mode}-result:48px;`));
     assert.match(theme, new RegExp(`html\\[data-text-size="${mode}"\\]`));
   }
+  assert.doesNotMatch(shared, /--ui-text-(?:small|medium|large|huge)-(?:micro|caption|emphasis|title|display):/);
   assert.match(theme, /--text-technical:var\(--ui-text-medium-technical\)/);
-  assert.match(theme, /--text-body:var\(--ui-text-medium-body\)/);
   assert.match(theme, /--text-button:var\(--ui-text-medium-button\)/);
   assert.match(theme, /--text-accent:var\(--ui-text-medium-accent\)/);
   assert.match(theme, /--text-result:var\(--ui-text-medium-result\)/);
 });
 
-test("final typography layer assigns Button to text controls without changing ordinary rows", async () => {
+test("final typography layer assigns roles by object meaning", async () => {
+  const appStyles = await read("src/shared/styles/app.css");
   const typography = await read("src/shared/styles/typography.css");
-  const mobileTheme = await read("mobile/ui/theme.js");
-  const mobileComponents = await read("mobile/ui/components.js");
-
-  assert.match(typography, /\.btn/);
-  assert.match(typography, /\.settingsChoiceBody/);
-  assert.match(typography, /\.radioOpt span/);
-  assert.match(typography, /\.modeDirectionToggle button/);
-  assert.match(typography, /\.stationDirectionToggle button/);
-  assert.match(typography, /\.optionBtn/);
-  assert.match(typography, /\.matchCard/);
-  assert.match(typography, /\.bracketNavigation/);
-  assert.match(typography, /font-family:var\(--font-body\);font-size:var\(--text-button\)/);
-  assert.match(typography, /\.settingsLink/);
+  const listTable = await read("packages/alantil-ui/list-table.js");
+  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.16/);
+  assert.doesNotMatch(typography, /var\(--text-(?:micro|caption|emphasis|title|display)\)/);
+  for (const selector of [
+    ".stationLabel",
+    ".stationWordRow .contentListPrimary",
+    ".stationWordRow .contentListSecondary",
+    ".settingsSectionTitle",
+    ".settingsRowLabel",
+    ".settingsLink",
+    ".settingsChoiceBody",
+    ".learnCard .trans",
+    ".gTrans",
+    ".gEx",
+  ]) assert.ok(typography.includes(selector), selector);
   assert.match(typography, /font-family:var\(--font-body\);font-size:var\(--text-body\)/);
-
-  assert.match(mobileTheme, /button:\{fontSize:t\.button/);
-  assert.match(mobileComponents, /textType\.button\.fontSize/);
+  assert.match(typography, /\.groupNum/);
+  assert.match(typography, /font-family:var\(--font-terminal\);font-size:var\(--text-technical\)/);
+  assert.match(typography, /ashykQuestionPrompt/);
+  assert.match(typography, /ashykFinalScore strong\)\{font-family:var\(--font-terminal\);font-size:var\(--text-result\)\}/);
+  assert.match(listTable, /medium:F\(\{primary:14,secondary:14,service:10\}\)/);
 });
 
-test("segmented controls share one geometry and Button typography", async () => {
+test("segmented choices, scope checkboxes and direction controls use the shared Button contract", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const segmented = await read("src/shared/styles/segmented-control.css");
   const settings = await read("src/features/settings/settings.css");
+  const pathCss = await read("src/features/path/path.css");
+  const testView = await read("src/features/test/view.js");
+  const matchView = await read("src/features/match/view.js");
+  const game = await read("packages/ashyk-game/web/Game.jsx");
 
-  const featuresIndex = appStyles.indexOf('layer(features)');
-  const segmentedIndex = appStyles.indexOf('segmented-control.css');
-  assert.ok(featuresIndex >= 0 && segmentedIndex > featuresIndex, "segmented-control.css must load after feature styles");
-
+  assert.ok(appStyles.indexOf("segmented-control.css") > appStyles.indexOf("layer(features)"));
   assert.match(segmented, /\.segmentControl\{[^}]*width:100%[^}]*min-width:0[^}]*padding:2px[^}]*border:1px solid var\(--line\)[^}]*border-radius:999px/s);
   assert.match(segmented, /\.settingsChoiceBody,\.settingsChoice>span,[^\{]*\.radioOpt span,[^\{]*\.modeDirectionToggle button,[^\{]*\.stationDirectionToggle button[^\{]*\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-button\)[^}]*font-weight:750/s);
   assert.match(segmented, /:checked[^\{]*\{[^}]*font-weight:850/s);
@@ -99,6 +95,28 @@ test("segmented controls share one geometry and Button typography", async () => 
   assert.match(segmented, /\.stationDirectionToggle button\.active[^\{]*\{[^}]*font-weight:850/s);
   assert.doesNotMatch(segmented, /font-size:(?:8|8\.5|9|10|11|12|13|14|15|16)px/);
   assert.match(settings, /\.settingsRow\{[^}]*grid-template-columns:minmax\(0,\.9fr\) minmax\(0,1\.1fr\)/s);
+  assert.match(pathCss, /\.stationLegendRow\{[^}]*font-size:var\(--text-body\)/s);
+  assert.match(pathCss, /\.stationHistoryRow\{[^}]*font-size:var\(--text-body\)/s);
+  assert.doesNotMatch(pathCss, /var\(--text-caption\)/);
+
+  for (const source of [testView, matchView]) {
+    assert.match(source, /bracketCheckbox scopeCheckboxControl/);
+    assert.match(source, /bracketCheckboxMark/);
+    assert.match(source, /sectionName = String\(section\.name \|\| ""\)\.trim\(\)/);
+    assert.match(source, /scopeSectionHidden/);
+  }
+  assert.match(game, /bracketCheckbox scopeCheckboxControl/);
+  assert.match(game, /ashykQuestionScopeName/);
+});
+
+test("button system exposes exactly five visual families", () => {
+  assert.deepEqual(Object.keys(BUTTON_FAMILIES), ["action", "segment", "bracket", "choice", "icon"]);
+  assert.deepEqual(new Set(Object.values(BUTTON_ROLES).map((role) => role.family)), new Set(Object.keys(BUTTON_FAMILIES)));
+  assert.equal(BUTTON_ROLES["generic.primary"].family, "action");
+  assert.equal(BUTTON_ROLES["direction.choice"].family, "segment");
+  assert.equal(BUTTON_ROLES["path.storyTab"].family, "bracket");
+  assert.equal(BUTTON_ROLES["test.answer"].family, "choice");
+  assert.equal(BUTTON_ROLES["favorite.toggle"].family, "icon");
 });
 
 test("bracket checkbox renders each state as one complete glyph string", async () => {
@@ -126,7 +144,7 @@ test("settings and both onboarding surfaces expose the huge option", async () =>
   assert.match(mobileProfile, /previewType\.wordCard/);
 });
 
-test("all bracket navigation controls use the shared Button role", async () => {
+test("all bracket navigation controls use one shared semantic contract", async () => {
   assert.equal(BRACKET_NAVIGATION_TEXT_ROLE, "button");
   const normal = bracketNavigationTextStyle({ button: { fontSize: 12 }, body: { fontSize: 14 } });
   const active = bracketNavigationTextStyle({ button: { fontSize: 12 }, body: { fontSize: 14 } }, true);
@@ -136,7 +154,11 @@ test("all bracket navigation controls use the shared Button role", async () => {
   assert.equal(active.fontWeight, "900");
 
   const typography = await read("src/shared/styles/typography.css");
-  assert.match(typography, /\.bracketNavigation[^\{]*\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-button\)/s);
+  const pathCss = await read("src/features/path/path.css");
+  assert.match(typography, /\.bracketNavigation\{[^}]*font-family:var\(--font-body\)[^}]*font-size:var\(--text-button\)[^}]*font-weight:750[^}]*line-height:1\.35/s);
+  assert.match(typography, /\.bracketNavigation\.active\{[^}]*font-weight:900/);
+  assert.doesNotMatch(typography, /\.profilePrimaryTab,\.storyTab,\.stationViewTab,\.ashykModeButton/);
+  assert.doesNotMatch(pathCss, /\.stationViewTab\{[^}]*font:/s);
 
   for (const [path, pattern] of [
     ["src/shared/ui/profile-navigation.js", /class="tabAction bracketNavigation profilePrimaryTab/],
@@ -150,4 +172,8 @@ test("all bracket navigation controls use the shared Button role", async () => {
   for (const path of ["mobile/ui/profile-tabs.js", "mobile/screens/path.js", "mobile/screens/station.js", "mobile/screens/ashyk.js"]) {
     assert.match(await read(path), /bracketNavigationTextStyle/, path);
   }
+  assert.doesNotMatch(await read("mobile/screens/path.js"), /storyTabText:\{[^}]*fontWeight/);
+  assert.doesNotMatch(await read("mobile/screens/station.js"), /stationTabText:\{[^}]*fontWeight/);
+  assert.doesNotMatch(await read("mobile/screens/ashyk.js"), /modeButtonText:\{[^}]*fontWeight/);
+  assert.doesNotMatch(await read("mobile/ui/profile-tabs.js"), /profileTabText:\{[^}]*fontWeight/);
 });
