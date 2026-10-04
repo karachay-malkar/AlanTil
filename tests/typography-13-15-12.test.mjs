@@ -107,6 +107,9 @@ test("segmented choices, scope checkboxes and direction controls use the shared 
   }
   assert.match(game, /bracketCheckbox scopeCheckboxControl/);
   assert.match(game, /ashykQuestionScopeName/);
+  const mobileAshyk = await read("mobile/screens/ashyk.js");
+  assert.match(mobileAshyk, /type\.button\.fontSize/);
+  assert.match(mobileAshyk, /labelStyle=\{semantic\.button\}/);
 });
 
 test("button system exposes exactly five visual families", () => {
