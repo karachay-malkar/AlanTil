@@ -56,7 +56,7 @@ test("final typography layer assigns roles by object meaning", async () => {
   const appStyles = await read("src/shared/styles/app.css");
   const typography = await read("src/shared/styles/typography.css");
   const listTable = await read("packages/alantil-ui/list-table.js");
-  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.16/);
+  assert.match(appStyles, /typography\.css\?v=16\.8\.0\.17/);
   assert.doesNotMatch(typography, /var\(--text-(?:micro|caption|emphasis|title|display)\)/);
   for (const selector of [
     ".stationLabel",
