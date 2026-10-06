@@ -8,7 +8,7 @@ export const WEB_VISUAL_SOURCES = Object.freeze({
   styles: Object.freeze([
     ["src/shared/styles/shared-visual-tokens.css","7ddea6059bddc8ddb5472a53ccb7e8291ded164b"],
     ["src/shared/styles/theme.css","add3d0fb6724c7341c28f17c4ebbcfae2b011042"],
-    ["src/shared/styles/typography.css","71846f5be820c65c033e56de159742f54d5c8411"],
+    ["src/shared/styles/typography.css","7b1fc2da059f1d18b6d9759cae823e9acc6573cc"],
     ["src/shared/styles/shell.css","c26709a7d4d0e90549912d299c5e42a21bd468a1"],
     ["src/shared/styles/chrome.css","6188c4c3a1d2e1296106b4a7dff5ce60c168912d"],
     ["src/shared/styles/components.css","d63e9e752fe8931833daf93fc7c13110d58d0f30"],
