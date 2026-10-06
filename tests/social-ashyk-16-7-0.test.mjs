@@ -389,11 +389,16 @@ test('Ashyk guest entry stays available while online challenge actions stay auth
   assert.match(bootstrap,/!isAshykModeAllowed\('online',\{userId\}\)/);
 });
 
-test('extended statistics exposes the same guest analytics contract on Web and Mobile',()=>{
+test('extended statistics exposes the same simplified analytics data contract on Web and Mobile',()=>{
   const web=read('src/features/admin/index.js'),native=read('mobile/screens/admin-users.js'),webService=read('src/shared/admin/admin-activity-service.js'),nativeService=read('mobile/platform/admin.js');
-  for(const source of [web,native]){assert.match(source,/statsUsers/);assert.match(source,/statsGuests/);assert.match(source,/guestUniqueVisitors/);assert.match(source,/guestSources/);assert.match(source,/guestPlatforms/);assert.match(source,/guestEntryPaths/);}
-  assert.match(webService,/admin_guest_analytics/);
-  assert.match(nativeService,/admin_guest_analytics/);
+  for(const source of [web,native]){
+    assert.match(source,/guestUniqueVisitors/);
+    assert.match(source,/daily_visitors/);
+    assert.match(source,/monthly_visitors/);
+    assert.match(source,/usage_months/);
+  }
+  assert.match(webService,/admin_extended_analytics/);
+  assert.match(nativeService,/admin_extended_analytics/);
 });
 
 test('social copy includes local winner and explicit sign-in action',()=>{
