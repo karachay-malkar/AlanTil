@@ -37,7 +37,7 @@
 ## Точки реализации
 
 - `src/features/admin/index.js` — daily chart и tooltip.
-- `packages/alantil-core/social-i18n.js` — полный label «человек».
+- `src/shared/i18n/messages-13-15-9.js` — полный label «человек».
 - `supabase/migrations/20261006172000_alantil_16_8_extended_statistics_source_map.sql` — объединённая person identity и `count(distinct person_key)`.
 - `src/shared/analytics/visitor-analytics.js` — стабильный Web visitor id и запись visits.
 - `mobile/platform/analytics.js` — стабильный Native visitor id и запись visits.
