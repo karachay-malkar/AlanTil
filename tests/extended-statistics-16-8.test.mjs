@@ -171,16 +171,16 @@ test("part 1 data audit uses canonical domain sources without authenticated comp
 
 test("part 2 daily visitors uses one combined person per UTC calendar day", () => {
   const admin = read("src/features/admin/index.js");
-  const messages = read("packages/alantil-core/social-i18n.js");
+  const messages = read("src/shared/i18n/messages-13-15-9.js");
   const migration = read("supabase/migrations/20261006172000_alantil_16_8_extended_statistics_source_map.sql");
 
   const dailyChart = admin.match(/function dailyVisitorsChart\(data\) \{[\s\S]*?\n\}/)?.[0] || "";
   assert.match(dailyChart, /data\?\.daily_visitors/);
   assert.match(dailyChart, /visitorDailyTitle/);
-  assert.match(dailyChart, /visitorPeople/);
+  assert.match(dailyChart, /msg\("admin\.people"\)/);
   assert.match(admin, /day:"numeric",month:"long",timeZone:"UTC"/);
   assert.match(admin, /day:"2-digit",month:"2-digit",timeZone:"UTC"/);
-  assert.match(messages, /visitorPeople:M\('человек','people','kişi'\)/);
+  assert.match(messages, /"admin\.people": Object\.freeze\(\{ ru: "человек", en: "people", tr: "kişi" \}\)/);
 
   const visitorBlock = migration.match(/visitor_accounts as \([\s\S]*?\n  daily_json as \(/)?.[0] || "";
   assert.match(visitorBlock, /visitor_accounts as/);
