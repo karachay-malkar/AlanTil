@@ -23,3 +23,4 @@ export async function blockNativeUserAccount(userId){const id=String(userId||'')
 export async function unblockNativeUserAccount(userId){const id=String(userId||'').trim();if(!id)return false;return Boolean(await rpc('admin_unblock_account',{p_user_id:id}));}
 
 export async function fetchNativeGuestAnalytics(periodDays=30){const value=Number(periodDays);return rpc('admin_guest_analytics',{p_period_days:Number.isFinite(value)?Math.trunc(value):30});}
+export async function fetchNativeExtendedAnalytics(periodDays=30){const value=Number(periodDays);return rpc('admin_extended_analytics',{p_period_days:Number.isFinite(value)?Math.trunc(value):30});}

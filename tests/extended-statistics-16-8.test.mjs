@@ -58,7 +58,9 @@ test("database contract counts completed months at 1, 3, 7, 14 and 28 active day
   const aggregateFix = read("supabase/migrations/20261006094000_alantil_16_8_extended_statistics_aggregate_fix.sql");
   assert.match(aggregateFix, /usage_by_month as/);
   assert.match(aggregateFix, /jsonb_agg\(ubm\.value order by ubm\.month_start\)/);
-  assert.doesNotMatch(aggregateFix, /jsonb_agg\(jsonb_build_object/);
+  const usageByMonth = aggregateFix.match(/usage_by_month as \([\s\S]*?\n  \),\n  usage_months as/)?.[0] || "";
+  assert.match(usageByMonth, /group by us\.month_start/);
+  assert.doesNotMatch(usageByMonth, /jsonb_agg/);
 });
 
 test("meaningful web actions feed the usage event contract", () => {
@@ -73,6 +75,11 @@ test("meaningful web actions feed the usage event contract", () => {
   assert.match(stationTest, /path_test_complete/);
   assert.match(songs, /song_lyrics_open/);
   assert.match(ashyk, /ashyk_computer_complete/);
+  assert.match(admin, /VisitorAnalyticsPane/);
+  assert.match(admin, /daily_visitors/);
+  assert.match(admin, /monthly_visitors/);
+  assert.match(admin, /usage_months/);
+  assert.match(adminPlatform, /admin_extended_analytics/);
 });
 
 test("statistics chrome stays transparent and uses the shared system chrome beneath it", () => {
@@ -89,6 +96,8 @@ test("native screens feed the same usage contract", () => {
   const stationTest = read("mobile/screens/station-test.js");
   const songs = read("mobile/screens/songs.js");
   const ashyk = read("mobile/screens/ashyk.js");
+  const admin = read("mobile/screens/admin-users.js");
+  const adminPlatform = read("mobile/platform/admin.js");
 
   assert.match(analytics, /recordNativeUsageEvent/);
   assert.match(analytics, /record_app_usage_event/);

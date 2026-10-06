@@ -77,16 +77,19 @@ test("current chrome keeps bracket navigation, unified viewport masks and CTA bu
 });
 
 
-test("extended statistics nests Users and Guests dashboards without creating a root screen", async () => {
+test("extended statistics nests Users and Visitors dashboards without creating a root screen", async () => {
   const web = await read("src/features/admin/index.js");
   const css = await read("src/features/admin/admin.css");
   const mobile = await read("mobile/screens/admin-users.js");
+  const mobileAdmin = await read("mobile/platform/admin.js");
   assert.match(web, /dataAttribute:"admin-stats-mode"/);
   assert.match(web, /renderGuestAnalytics/);
-  assert.match(web, /guestChart/);
+  assert.match(web, /dailyVisitorsChart/);
+  assert.match(web, /monthlyVisitorsChart/);
   assert.match(css, /\.adminGuestChart/);
-  assert.match(css, /\.adminGuestMetrics/);
-  assert.match(mobile, /ProfileTabs items=\{\[\["users",s\('statsUsers'\)\],\["guests",s\('statsGuests'\)\]\]\}/);
-  assert.match(mobile, /GuestAnalyticsPane/);
-  assert.match(mobile, /react-native-svg/);
+  assert.match(css, /\.adminUsageMetric/);
+  assert.match(mobile, /ProfileTabs items=\{\[\["users",s\('statsUsers'\)\],\["guests",s\('statsVisitors'\)\]\]\}/);
+  assert.match(mobile, /VisitorAnalyticsPane/);
+  assert.match(mobile, /AnalyticsChart/);
+  assert.match(mobileAdmin, /admin_extended_analytics/);
 });
