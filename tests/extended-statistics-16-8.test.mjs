@@ -132,3 +132,33 @@ test("native screens feed the same usage contract", () => {
   assert.match(songs, /song_lyrics_open/);
   assert.match(ashyk, /ashyk_computer_complete/);
 });
+
+
+test("part 1 data audit uses canonical domain sources without authenticated completion duplicates", () => {
+  const audit = read("docs/analytics/extended-statistics-part1-data-map.md");
+  const migration = read("supabase/migrations/20261006172000_alantil_16_8_extended_statistics_source_map.sql");
+
+  for (const source of [
+    "anonymous_visit_sessions",
+    "learn_sessions",
+    "station_test_sessions",
+    "ashyk_rooms",
+    "app_usage_events",
+  ]) {
+    assert.match(audit, new RegExp(source));
+  }
+
+  assert.match(migration, /drop trigger if exists learn_sessions_capture_usage on public\.learn_sessions/);
+  assert.match(migration, /drop trigger if exists station_test_sessions_capture_usage on public\.station_test_sessions/);
+  assert.match(migration, /drop trigger if exists ashyk_rooms_capture_usage on public\.ashyk_rooms/);
+  assert.match(migration, /delete from public\.app_usage_events[\s\S]*event_type in \('path_learn_complete','path_test_complete'\)[\s\S]*user_id is not null/);
+  assert.match(migration, /delete from public\.app_usage_events[\s\S]*event_type='ashyk_online_complete'/);
+  assert.match(migration, /if v_user_id is not null and p_event_type in \('path_learn_complete','path_test_complete'\) then[\s\S]*return true/);
+
+  const usageSources = migration.match(/usage_people as \([\s\S]*?\n  \),\n  usage_agg as/)?.[0] || "";
+  assert.match(usageSources, /from public\.learn_sessions ls/);
+  assert.match(usageSources, /from public\.station_test_sessions sts/);
+  assert.match(usageSources, /from public\.ashyk_rooms r/);
+  assert.match(usageSources, /from public\.app_usage_events ue/);
+  assert.match(usageSources, /ue\.event_type in \('path_learn_complete','path_test_complete','ashyk_computer_complete','song_lyrics_open'\)/);
+});
