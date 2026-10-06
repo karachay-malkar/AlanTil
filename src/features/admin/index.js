@@ -477,6 +477,7 @@ async function renderGuestAnalytics(context,signal,host){
 
 export async function renderAdminUsersEmbedded(context, signal, host) {
   if (!host || signal?.aborted) return;
+  host.classList.add("isAnalyticsOnly");
   host.innerHTML=`<div class="adminStatsPane" data-admin-stats-pane></div>`;
   return renderGuestAnalytics(context,signal,host.querySelector("[data-admin-stats-pane]"));
 }
