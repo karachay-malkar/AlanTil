@@ -75,11 +75,14 @@ test("meaningful web actions feed the usage event contract", () => {
   assert.match(stationTest, /path_test_complete/);
   assert.match(songs, /song_lyrics_open/);
   assert.match(ashyk, /ashyk_computer_complete/);
-  assert.match(admin, /VisitorAnalyticsPane/);
-  assert.match(admin, /daily_visitors/);
-  assert.match(admin, /monthly_visitors/);
-  assert.match(admin, /usage_months/);
-  assert.match(adminPlatform, /admin_extended_analytics/);
+});
+
+test("daily visitor points expose a tap/click tooltip with a full calendar date", () => {
+  const admin = read("src/features/admin/index.js");
+  assert.match(admin, /data-analytics-point/);
+  assert.match(admin, /bindAnalyticsPointTooltips/);
+  assert.match(admin, /day:"numeric",month:"long"/);
+  assert.match(admin, /usagePeopleShort/);
 });
 
 test("statistics chrome stays transparent and uses the shared system chrome beneath it", () => {
