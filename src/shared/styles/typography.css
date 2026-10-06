@@ -70,8 +70,8 @@
 /* Button — labels of interactive controls only. Lists and ordinary copy remain Body. */
 :where(
   .btn,.textAction,.appHeaderTextAction,.settingsSmallAction,
-  .settingsChoiceBody,.settingsChoice>span,.radioOpt span,
-  .modeDirectionToggle button,.stationDirectionToggle button,.directionChoiceButton,.searchModeItem span,
+  .settingsChoiceBody,.settingsChoice>span,
+  .stationDirectionToggle button,.directionChoiceButton,.searchModeItem span,
   .bracketNavigation,.optionBtn,.matchCard,.profileGenderChoices button,
   .analyticsConsentButton,.learnCardAction>span,.sessionDecision,.songInfoButton,
   .adminInlineAction,.ashykTopControls>button,.ashykSetupHelpButton span,.ashykSetupHelpButton b,
