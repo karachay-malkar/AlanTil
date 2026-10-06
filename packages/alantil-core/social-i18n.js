@@ -92,7 +92,6 @@ export const SOCIAL_MESSAGES=Object.freeze({
   usageAshykOnline:M('Онлайн','Online','Çevrimiçi'),
   usageSongs:M('Песни','Songs','Şarkılar'),
   usageLyrics:M('Тексты песен','Song texts','Şarkı sözleri'),
-  visitorPeople:M('человек','people','kişi'),
   usagePeopleShort:M('чел.','people','kişi'),
   usageSets:M('сетов','sets','set'),
   usageTestsCount:M('тестов','tests','test'),
