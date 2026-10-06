@@ -29,7 +29,6 @@ let controller = null;
 let activeModalClose = null;
 let usersSearchOpen = false;
 let usersSearchQuery = "";
-let embeddedStatsMode = "users";
 let guestAnalyticsPeriod = 30;
 let usageAnalyticsMonth = "";
 
@@ -478,23 +477,8 @@ async function renderGuestAnalytics(context,signal,host){
 
 export async function renderAdminUsersEmbedded(context, signal, host) {
   if (!host || signal?.aborted) return;
-  const tabs=renderBracketTabs({
-    items:[
-      {id:"users",label:guestText("statsUsers")},
-      {id:"guests",label:guestText("statsVisitors")},
-    ],
-    active:embeddedStatsMode,
-    ariaLabel:guestText("extendedStats"),
-    dataAttribute:"admin-stats-mode",
-  });
-  host.innerHTML=`<div class="adminStatsModeTabs">${tabs}</div><div class="adminStatsPane" data-admin-stats-pane></div>`;
-  host.querySelectorAll("[data-admin-stats-mode]").forEach((button)=>button.addEventListener("click",()=>{
-    embeddedStatsMode=button.dataset.adminStatsMode==="guests"?"guests":"users";
-    void renderAdminUsersEmbedded(context,signal,host);
-  },{signal}));
-  const pane=host.querySelector("[data-admin-stats-pane]");
-  if(embeddedStatsMode==="guests")return renderGuestAnalytics(context,signal,pane);
-  return renderUsers(context,signal,{host:pane,embedded:true});
+  host.innerHTML=`<div class="adminStatsPane" data-admin-stats-pane></div>`;
+  return renderGuestAnalytics(context,signal,host.querySelector("[data-admin-stats-pane]"));
 }
 
 function storyProgressSection(stories = []) {
