@@ -282,6 +282,12 @@ function guestDateLabel(value) {
   return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"2-digit",month:"2-digit"}).format(date);
 }
 
+function guestFullDateLabel(value) {
+  const date=new Date(`${String(value||"")}T00:00:00Z`);
+  if(!Number.isFinite(date.getTime()))return String(value||"");
+  return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"numeric",month:"long"}).format(date);
+}
+
 function guestMonthLabel(value) {
   const date=new Date(`${String(value||"")}-01T00:00:00Z`);
   if(!Number.isFinite(date.getTime()))return String(value||"");
@@ -292,6 +298,7 @@ function analyticsChart(rows=[],series=[],{
   title="",
   xKey="date",
   formatLabel=(value)=>String(value||""),
+  formatTooltip=null,
   className="",
 }={}) {
   const safe=Array.isArray(rows)?rows:[];
@@ -310,8 +317,10 @@ function analyticsChart(rows=[],series=[],{
   const circles=(item,seriesIndex)=>safe.map((row,index)=>{
     const p=point(row,index,item.key);
     const label=formatLabel(row[xKey]);
-    const tooltip=`${label} · ${item.label}: ${guestNumber(row[item.key])}`;
-    return `<circle class="point s${seriesIndex}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" tabindex="0"><title>${escapeHtml(tooltip)}</title></circle>`;
+    const tooltip=typeof formatTooltip==="function"
+      ? formatTooltip(row,item)
+      : `${label} · ${item.label}: ${guestNumber(row[item.key])}`;
+    return `<circle class="point s${seriesIndex}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" tabindex="0" role="button" aria-label="${escapeHtml(tooltip)}" data-analytics-point data-tooltip="${escapeHtml(tooltip)}"><title>${escapeHtml(tooltip)}</title></circle>`;
   }).join("");
   const labelRows=[safe[0],safe[Math.floor((safe.length-1)/2)],safe[safe.length-1]]
     .filter((row,index,list)=>row&&list.indexOf(row)===index);
@@ -330,7 +339,22 @@ function analyticsChart(rows=[],series=[],{
         return `<text class="axis date" x="${p.x.toFixed(1)}" y="${height-8}" text-anchor="middle">${escapeHtml(formatLabel(row[xKey]))}</text>`;
       }).join("")}
     </svg>
+    <div class="adminAnalyticsPointTooltip" data-analytics-tooltip aria-live="polite"></div>
   </div>`;
+}
+
+function bindAnalyticsPointTooltips(host,signal) {
+  host?.querySelectorAll("[data-analytics-point]").forEach((point)=>{
+    const show=()=>{
+      const chart=point.closest(".adminGuestChart");
+      const tooltip=chart?.querySelector("[data-analytics-tooltip]");
+      if(!tooltip)return;
+      tooltip.textContent=String(point.dataset.tooltip||"");
+      tooltip.classList.toggle("isVisible",Boolean(tooltip.textContent));
+    };
+    point.addEventListener("click",show,{signal});
+    point.addEventListener("focus",show,{signal});
+  });
 }
 
 function dailyVisitorsChart(data) {
@@ -338,6 +362,7 @@ function dailyVisitorsChart(data) {
     title:guestText("visitorDailyTitle"),
     xKey:"date",
     formatLabel:guestDateLabel,
+    formatTooltip:(row)=>`${guestFullDateLabel(row.date)} — ${guestNumber(row.people)} ${guestText("usagePeopleShort")}`,
     className:"adminDailyVisitorsChart",
   });
 }
@@ -436,6 +461,7 @@ async function renderGuestAnalytics(context,signal,host){
         ${renderUsageSections(data)}
       </section>
     </div>`;
+    bindAnalyticsPointTooltips(host,signal);
     host.querySelectorAll("[data-admin-guest-period]").forEach((button)=>button.addEventListener("click",()=>{
       const value=Number(button.dataset.adminGuestPeriod);
       guestAnalyticsPeriod=Number.isFinite(value)?value:30;
