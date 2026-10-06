@@ -87,11 +87,21 @@ test("daily visitor points expose a tap/click tooltip with a full calendar date"
   assert.match(css, /adminAnalyticsPointTooltip/);
 });
 
-test("statistics chrome stays transparent and uses the shared system chrome beneath it", () => {
+test("embedded extended statistics opens directly without a second users/visitors mode", () => {
+  const admin = read("src/features/admin/index.js");
+  const embedded = admin.match(/export async function renderAdminUsersEmbedded[\s\S]*?\n}\n\nfunction storyProgressSection/)?.[0] || "";
+  assert.match(embedded, /renderGuestAnalytics/);
+  assert.doesNotMatch(embedded, /data-admin-stats-mode/);
+  assert.doesNotMatch(embedded, /renderUsers\(/);
+});
+
+test("statistics chrome relies on the shared system chrome instead of feature-specific masks", () => {
   const css = read("src/features/admin/admin.css");
-  assert.match(css, /socialBody\.isStats[\s\S]*background:transparent!important/);
-  assert.match(css, /adminStatsModeTabs[\s\S]*background:transparent!important/);
-  assert.match(css, /adminGuestPeriodTabs[\s\S]*background:transparent!important/);
+  const shell = read("src/shared/styles/shell.css");
+  assert.doesNotMatch(css, /\[data-feature="friends"\] \.socialBody\.isStats[\s\S]*?background:transparent!important/);
+  assert.match(shell, /\.appViewport::before,\.appViewport::after[\s\S]*backdrop-filter:blur\(var\(--system-mask-blur\)\)/);
+  assert.match(shell, /\.appHeader[\s\S]*background:transparent/);
+  assert.match(shell, /\.bottomNav[\s\S]*background:transparent/);
 });
 
 
