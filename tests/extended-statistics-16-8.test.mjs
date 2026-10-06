@@ -63,6 +63,15 @@ test("database contract counts completed months at 1, 3, 7, 14 and 28 active day
   assert.doesNotMatch(usageByMonth, /jsonb_agg/);
 });
 
+test("identity dedup keeps global one-account linking and resolves shared visitors by calendar day", () => {
+  const migration = read("supabase/migrations/20261006123000_alantil_16_8_extended_statistics_identity_fix.sql");
+  assert.match(migration, /visitor_accounts as/);
+  assert.match(migration, /visitor_day_accounts as/);
+  assert.match(migration, /vda\.linked_user_id/);
+  assert.match(migration, /ue\.occurred_at at time zone 'UTC'/);
+  assert.match(migration, /count\(distinct av\.user_id\)=1/);
+});
+
 test("meaningful web actions feed the usage event contract", () => {
   const visitor = read("src/shared/analytics/visitor-analytics.js");
   const learn = read("src/features/learn/study.js");
