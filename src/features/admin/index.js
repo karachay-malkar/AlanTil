@@ -278,13 +278,13 @@ function guestNumber(value) {
 function guestDateLabel(value) {
   const date=new Date(`${String(value||"")}T00:00:00Z`);
   if(!Number.isFinite(date.getTime()))return String(value||"");
-  return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"2-digit",month:"2-digit"}).format(date);
+  return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"2-digit",month:"2-digit",timeZone:"UTC"}).format(date);
 }
 
 function guestFullDateLabel(value) {
   const date=new Date(`${String(value||"")}T00:00:00Z`);
   if(!Number.isFinite(date.getTime()))return String(value||"");
-  return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"numeric",month:"long"}).format(date);
+  return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"numeric",month:"long",timeZone:"UTC"}).format(date);
 }
 
 function guestMonthLabel(value) {
@@ -361,7 +361,7 @@ function dailyVisitorsChart(data) {
     title:guestText("visitorDailyTitle"),
     xKey:"date",
     formatLabel:guestDateLabel,
-    formatTooltip:(row)=>`${guestFullDateLabel(row.date)} — ${guestNumber(row.people)} ${guestText("usagePeopleShort")}`,
+    formatTooltip:(row)=>`${guestFullDateLabel(row.date)} — ${guestNumber(row.people)} ${guestText("visitorPeople")}`,
     className:"adminDailyVisitorsChart",
   });
 }
