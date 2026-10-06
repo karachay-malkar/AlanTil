@@ -151,7 +151,7 @@ test("part 1 data audit uses canonical domain sources without authenticated comp
   assert.match(migration, /drop trigger if exists learn_sessions_capture_usage on public\.learn_sessions/);
   assert.match(migration, /drop trigger if exists station_test_sessions_capture_usage on public\.station_test_sessions/);
   assert.match(migration, /drop trigger if exists ashyk_rooms_capture_usage on public\.ashyk_rooms/);
-  assert.match(migration, /delete from public\.app_usage_events[\s\S]*event_type in \('path_learn_complete','path_test_complete'\)[\s\S]*coalesce\(platform,'web'\)<>'mobile'/);
+  assert.match(migration, /delete from public\.app_usage_events[\s\S]*event_type in \('path_learn_complete','path_test_complete'\)[\s\S]*coalesce\(ue\.platform,'web'\)<>'mobile'/);
   assert.match(migration, /delete from public\.app_usage_events[\s\S]*event_type='ashyk_online_complete'/);
   assert.match(migration, /if v_user_id is not null and v_platform='web' and p_event_type in \('path_learn_complete','path_test_complete'\) then[\s\S]*return true/);
   const duplicateCleanup = migration.match(/-- Remove only rows that are known duplicates[\s\S]*?-- Online Ashyk has a complete canonical room ledger\./)?.[0] || "";
