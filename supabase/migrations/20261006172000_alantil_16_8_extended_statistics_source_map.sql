@@ -12,10 +12,30 @@ drop function if exists public.capture_ashyk_online_usage_event();
 -- Remove only rows that are known duplicates of canonical Web/domain records.
 -- Native path completions stay because Native currently syncs aggregate word progress,
 -- not learn_sessions/station_test_sessions history.
-delete from public.app_usage_events
-where event_type in ('path_learn_complete','path_test_complete')
-  and user_id is not null
-  and coalesce(platform,'web')<>'mobile';
+delete from public.app_usage_events ue
+where ue.event_type in ('path_learn_complete','path_test_complete')
+  and coalesce(ue.platform,'web')<>'mobile'
+  and (
+    (
+      ue.event_type='path_learn_complete'
+      and exists (
+        select 1
+        from public.learn_sessions ls
+        where ls.id::text=ue.item_key
+          and ls.status='completed'
+      )
+    )
+    or
+    (
+      ue.event_type='path_test_complete'
+      and exists (
+        select 1
+        from public.station_test_sessions sts
+        where sts.id::text=ue.item_key
+          and sts.status='completed'
+      )
+    )
+  );
 
 -- Online Ashyk has a complete canonical room ledger.
 delete from public.app_usage_events
@@ -333,11 +353,6 @@ begin
       on vda.visitor_id=ue.visitor_id
      and vda.day=(ue.occurred_at at time zone 'UTC')::date
     where ue.event_type in ('path_learn_complete','path_test_complete','ashyk_computer_complete','song_lyrics_open')
-      and (
-        ue.event_type in ('ashyk_computer_complete','song_lyrics_open')
-        or ue.platform='mobile'
-        or ue.user_id is null
-      )
       and (
         ue.event_type<>'path_learn_complete'
         or not exists (
