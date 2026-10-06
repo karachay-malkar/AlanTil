@@ -152,23 +152,7 @@
 }
 
 
-/* 16.8 extended statistics: one transparent chrome model and readable product metrics. */
-[data-feature="friends"] .socialBody.isStats,
-[data-feature="friends"] .socialBody.isStats .adminUsersEmbedded,
-[data-feature="friends"] .socialBody.isStats .adminStatsModeTabs,
-[data-feature="friends"] .socialBody.isStats .adminStatsPane,
-[data-feature="friends"] .socialBody.isStats .adminGuestScroll,
-[data-feature="friends"] .socialBody.isStats .adminGuestPeriodTabs,
-[data-feature="friends"] .socialBody.isStats .adminUsageMonthTabs{
-  background:transparent!important;
-  box-shadow:none!important;
-}
-[data-feature="friends"] .socialBody.isStats .adminStatsModeTabs,
-[data-feature="friends"] .socialBody.isStats .adminGuestPeriodTabs,
-[data-feature="friends"] .socialBody.isStats .adminUsageMonthTabs{
-  -webkit-backdrop-filter:none!important;
-  backdrop-filter:none!important;
-}
+/* 16.8 extended statistics: product metrics use the shared application chrome. */
 .adminStatsPane.isGuest{display:block;overflow:hidden}
 .adminGuestScroll{
   box-sizing:border-box;
