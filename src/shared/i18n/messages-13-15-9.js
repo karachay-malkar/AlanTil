@@ -5,6 +5,7 @@ export const RELEASE_MESSAGES_13_15_9 = Object.freeze({
   "admin.users": Object.freeze({ ru: "Пользователи", en: "Users", tr: "Kullanıcılar" }),
   "admin.users_alan_til": Object.freeze({ ru: "Пользователи — Алан тил", en: "Users — Alan Til", tr: "Kullanıcılar — Alan Til" }),
   "admin.user": Object.freeze({ ru: "Пользователь", en: "User", tr: "Kullanıcı" }),
+  "admin.people": Object.freeze({ ru: "человек", en: "people", tr: "kişi" }),
   "admin.last_visit": Object.freeze({ ru: "Последний вход", en: "Last visit", tr: "Son giriş" }),
   "admin.streak": Object.freeze({ ru: "Серия", en: "Streak", tr: "Seri" }),
   "admin.mastered_words": Object.freeze({ ru: "Освоено слов", en: "Words mastered", tr: "Öğrenilen kelime" }),
