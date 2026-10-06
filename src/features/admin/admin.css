@@ -210,6 +210,16 @@
 .adminGuestChart .grid{stroke:var(--line-soft);stroke-width:1}
 .adminGuestChart .line{fill:none;stroke-width:2.15;stroke-linejoin:round;stroke-linecap:round}
 .adminGuestChart .point{stroke-width:1;outline:none}
+.adminGuestChart .point{cursor:pointer}
+.adminAnalyticsPointTooltip{
+  min-height:22px;
+  margin:2px 2px 0;
+  color:var(--text-2);
+  font:750 10px/1.35 var(--font-terminal);
+  opacity:0;
+  transition:opacity var(--duration-fast);
+}
+.adminAnalyticsPointTooltip.isVisible{opacity:1}
 .adminGuestChart .axis{font:700 9px/1 var(--font-terminal);fill:var(--text-3)}
 .adminGuestLegend{
   display:flex;
