@@ -74,8 +74,8 @@
   .stationDirectionToggle button,.directionChoiceButton,.searchModeItem span,
   .bracketNavigation,.optionBtn,.matchCard,.profileGenderChoices button,
   .analyticsConsentButton,.learnCardAction>span,.sessionDecision,.songInfoButton,
-  .adminInlineAction,.ashykTopControls>button,.ashykSetupHelpButton span,.ashykSetupHelpButton b,
-  .ashykModeButton,.ashykPrimary,.ashykSecondary,.ashykJoin button,.ashykPlayerAction,.ashykPlayerDualAction button,
+  .adminInlineAction,.ashykTopControls>button,
+  .ashykPrimary,.ashykSecondary,.ashykJoin button,.ashykPlayerAction,.ashykPlayerDualAction button,
   .ashykOptions button,.ashykFriendChoice small,.ashykFriendChoice>b,.ashykFriendChoice strong
 ){font-family:var(--font-body);font-size:var(--text-button)}
 
