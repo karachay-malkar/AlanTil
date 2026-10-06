@@ -1,5 +1,6 @@
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.3";
+import { recordUsageEvent } from "../../shared/analytics/visitor-analytics.js?v=16.8.0.14";
 import { ACTIVITY_TYPES, CANCEL_REASONS, EVENTS, WORD_RESULTS, WORD_SOURCES, directionFromMode } from "../../shared/analytics/events.js?v=16.8.0.3";
 import { createActivityTracker } from "../../shared/analytics/session-tracker.js?v=16.8.0.3";
 import {
@@ -52,6 +53,21 @@ export function finalizeLearnSession(status = "interrupted", exitReason = "route
     payload,
   });
   if (result?.id) recordLearnWordResults(result.id, payload.words, result.ended_at || new Date().toISOString());
+  if (result?.id && status === "completed") {
+    const storyType = payload.dictionary_id === "beginner"
+      ? "understanding"
+      : payload.dictionary_id === "intermediate"
+        ? "roots"
+        : "";
+    if (storyType) {
+      void recordUsageEvent({
+        eventType: "path_learn_complete",
+        eventKey: `learn:${result.id}`,
+        storyType,
+        itemKey: String(result.id),
+      });
+    }
+  }
   session.inProgress = false;
   session.completed = status === "completed";
   return result;

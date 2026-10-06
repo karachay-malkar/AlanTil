@@ -1,5 +1,6 @@
 import { getCompleteDictionaryWords, refreshDictionary } from "../../shared/data/word-repository.js?v=16.8.0.14";
 import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.14";
+import { recordUsageEvent } from "../../shared/analytics/visitor-analytics.js?v=16.8.0.14";
 import { getSupabaseClient } from "../../shared/auth/supabase-client.js?v=16.8.0.14";
 import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=16.8.0.14";
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.14";
@@ -93,7 +94,16 @@ export async function mount(context){
     initialRoom:recovered||null,
     initialChallengeUserId,
     ensureOnlineBuild:ensureCurrentAshykBuild,
-    onSessionActiveChange(active){sessionActive=Boolean(active);},
+    onSessionActiveChange(active){
+      const wasActive=sessionActive;
+      sessionActive=Boolean(active);
+      if(wasActive&&!sessionActive){
+        const finished=gameController?.getState?.();
+        if(finished?.status==="finished"&&finished?.gameMode==="computer"){
+          void recordUsageEvent({eventType:"ashyk_computer_complete"});
+        }
+      }
+    },
     onRoomChange(room){activeRoomId=room?.id||null;},
     onControllerReady(value){gameController=value;},
     onAuthRequired:()=>context.router.navigate('account.home'),

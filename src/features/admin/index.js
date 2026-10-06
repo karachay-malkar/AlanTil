@@ -9,7 +9,7 @@ import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.
 import {
   blockUserAccount,
   fetchStationTestDetail,
-  fetchGuestAnalytics,
+  fetchExtendedAnalytics,
   fetchUserActivityDetail,
   fetchUserActivityList,
   fetchUserFavorites,
@@ -31,6 +31,7 @@ let usersSearchOpen = false;
 let usersSearchQuery = "";
 let embeddedStatsMode = "users";
 let guestAnalyticsPeriod = 30;
+let usageAnalyticsMonth = "";
 
 function storyLabel(type) {
   return msg(STORY_KEYS[type] || "admin.user");
@@ -281,31 +282,121 @@ function guestDateLabel(value) {
   return new Intl.DateTimeFormat(getInterfaceLocale(),{day:"2-digit",month:"2-digit"}).format(date);
 }
 
-function guestBreakdown(title,rows=[]){
-  const safe=Array.isArray(rows)?rows:[];
-  return `<section class="adminGuestBreakdown"><h3>${escapeHtml(title)}</h3><div class="adminGuestRows">${safe.length?safe.map((row)=>`<div class="adminGuestRow"><span>${escapeHtml(row.label==="direct/unknown"?guestText("guestDirectUnknown"):row.label||"—")}</span><small>${escapeHtml(guestNumber(row.unique_visitors))} · ${escapeHtml(guestNumber(row.sessions))}</small></div>`).join(""):`<div class="adminGuestEmpty">${escapeHtml(msg("admin.no_data"))}</div>`}</div></section>`;
+function guestMonthLabel(value) {
+  const date=new Date(`${String(value||"")}-01T00:00:00Z`);
+  if(!Number.isFinite(date.getTime()))return String(value||"");
+  return new Intl.DateTimeFormat(getInterfaceLocale(),{month:"short",year:"2-digit"}).format(date);
 }
 
-function guestChart(data){
-  const rows=Array.isArray(data?.timeline)?data.timeline:[];
-  if(!rows.length)return `<div class="adminGuestEmpty">${escapeHtml(msg("admin.no_data"))}</div>`;
-  const width=720,height=220,left=38,right=12,top=18,bottom=34,innerW=width-left-right,innerH=height-top-bottom;
-  const max=Math.max(1,...rows.flatMap((row)=>[numberValue(row.unique_visitors),numberValue(row.sessions)]));
-  const point=(row,index,key)=>{const x=left+(rows.length===1?innerW/2:(index*innerW/(rows.length-1))),y=top+innerH-(numberValue(row[key])/max*innerH);return{x,y};};
-  const points=(key)=>rows.map((row,index)=>{const p=point(row,index,key);return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(" ");
-  const circles=(key,klass)=>rows.map((row,index)=>{const p=point(row,index,key),title=`${guestDateLabel(row.date)} · ${guestText(key==="unique_visitors"?"guestUniqueVisitors":"guestSessions")}: ${guestNumber(row[key])}`;return `<circle class="${klass}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" tabindex="0"><title>${escapeHtml(title)}</title></circle>`;}).join("");
-  const labels=[rows[0],rows[Math.floor((rows.length-1)/2)],rows[rows.length-1]].filter((row,index,list)=>row&&list.indexOf(row)===index);
-  return `<div class="adminGuestChart">
-    <div class="adminGuestLegend"><span class="unique">${escapeHtml(guestText("guestUniqueVisitors"))}</span><span class="sessions">${escapeHtml(guestText("guestSessions"))}</span></div>
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(guestText("statsGuests"))}">
+function analyticsChart(rows=[],series=[],{
+  title="",
+  xKey="date",
+  formatLabel=(value)=>String(value||""),
+  className="",
+}={}) {
+  const safe=Array.isArray(rows)?rows:[];
+  if(!safe.length)return `<div class="adminGuestEmpty">${escapeHtml(msg("admin.no_data"))}</div>`;
+  const width=720,height=230,left=38,right=12,top=20,bottom=38,innerW=width-left-right,innerH=height-top-bottom;
+  const max=Math.max(1,...safe.flatMap((row)=>series.map((item)=>numberValue(row[item.key]))));
+  const point=(row,index,key)=>{
+    const x=left+(safe.length===1?innerW/2:(index*innerW/(safe.length-1)));
+    const y=top+innerH-(numberValue(row[key])/max*innerH);
+    return{x,y};
+  };
+  const points=(key)=>safe.map((row,index)=>{
+    const p=point(row,index,key);
+    return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+  }).join(" ");
+  const circles=(item,seriesIndex)=>safe.map((row,index)=>{
+    const p=point(row,index,item.key);
+    const label=formatLabel(row[xKey]);
+    const tooltip=`${label} · ${item.label}: ${guestNumber(row[item.key])}`;
+    return `<circle class="point s${seriesIndex}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" tabindex="0"><title>${escapeHtml(tooltip)}</title></circle>`;
+  }).join("");
+  const labelRows=[safe[0],safe[Math.floor((safe.length-1)/2)],safe[safe.length-1]]
+    .filter((row,index,list)=>row&&list.indexOf(row)===index);
+  return `<div class="adminGuestChart ${escapeHtml(className)}">
+    <div class="adminGuestLegend">${series.map((item,index)=>`<span class="s${index}"><i></i>${escapeHtml(item.label)}</span>`).join("")}</div>
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title)}">
       <line class="grid" x1="${left}" y1="${top+innerH}" x2="${width-right}" y2="${top+innerH}"/>
       <line class="grid" x1="${left}" y1="${top+innerH/2}" x2="${width-right}" y2="${top+innerH/2}"/>
       <line class="grid" x1="${left}" y1="${top}" x2="${width-right}" y2="${top}"/>
-      <text class="axis" x="4" y="${top+4}">${max}</text><text class="axis" x="4" y="${top+innerH+4}">0</text>
-      <polyline class="line unique" points="${points("unique_visitors")}"/><polyline class="line sessions" points="${points("sessions")}"/>
-      ${circles("unique_visitors","point unique")}${circles("sessions","point sessions")}
-      ${labels.map((row)=>{const index=rows.indexOf(row),p=point(row,index,"sessions");return `<text class="axis date" x="${p.x.toFixed(1)}" y="${height-8}" text-anchor="middle">${escapeHtml(guestDateLabel(row.date))}</text>`;}).join("")}
+      <text class="axis" x="4" y="${top+4}">${guestNumber(max)}</text>
+      <text class="axis" x="4" y="${top+innerH+4}">0</text>
+      ${series.map((item,index)=>`<polyline class="line s${index}" points="${points(item.key)}"/>`).join("")}
+      ${series.map((item,index)=>circles(item,index)).join("")}
+      ${labelRows.map((row)=>{
+        const index=safe.indexOf(row),p=point(row,index,series[0].key);
+        return `<text class="axis date" x="${p.x.toFixed(1)}" y="${height-8}" text-anchor="middle">${escapeHtml(formatLabel(row[xKey]))}</text>`;
+      }).join("")}
     </svg>
+  </div>`;
+}
+
+function dailyVisitorsChart(data) {
+  return analyticsChart(data?.daily_visitors,[{key:"people",label:guestText("guestUniqueVisitors")}],{
+    title:guestText("visitorDailyTitle"),
+    xKey:"date",
+    formatLabel:guestDateLabel,
+    className:"adminDailyVisitorsChart",
+  });
+}
+
+function monthlyVisitorsChart(data) {
+  return analyticsChart(data?.monthly_visitors,[
+    {key:"d1",label:guestText("visitorDay1")},
+    {key:"d3",label:guestText("visitorDay3")},
+    {key:"d7",label:guestText("visitorDay7")},
+    {key:"d14",label:guestText("visitorDay14")},
+    {key:"d28",label:guestText("visitorDay28")},
+  ],{
+    title:guestText("visitorMonthlyTitle"),
+    xKey:"month",
+    formatLabel:guestMonthLabel,
+    className:"adminMonthlyVisitorsChart",
+  });
+}
+
+function usageMetricRow(label,metric,actionLabel) {
+  const people=guestNumber(metric?.people);
+  const actions=guestNumber(metric?.actions);
+  return `<div class="adminUsageMetric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(people)} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(actions)} ${escapeHtml(actionLabel)}</strong></div>`;
+}
+
+function usageBlock(title,rows) {
+  return `<section class="adminUsageBlock"><h3>${escapeHtml(title)}</h3><div class="adminUsageRows">${rows.join("")}</div></section>`;
+}
+
+function renderUsageSections(data) {
+  const months=Array.isArray(data?.usage_months)?data.usage_months:[];
+  if(!months.length)return `<div class="adminGuestEmpty">${escapeHtml(msg("admin.no_data"))}</div>`;
+  if(!usageAnalyticsMonth||!months.some((row)=>row.month===usageAnalyticsMonth)){
+    usageAnalyticsMonth=months.at(-1)?.month||"";
+  }
+  const selected=months.find((row)=>row.month===usageAnalyticsMonth)||months.at(-1)||{};
+  const tabs=renderBracketTabs({
+    items:months.map((row)=>({id:row.month,value:row.month,label:guestMonthLabel(row.month)})),
+    active:usageAnalyticsMonth,
+    ariaLabel:guestText("usageTitle"),
+    dataAttribute:"admin-usage-month",
+  });
+  return `<div class="adminUsage">
+    <div class="adminUsageMonthTabs">${tabs}</div>
+    ${usageBlock(guestText("usagePathUnderstanding"),[
+      usageMetricRow(guestText("usageLearn"),selected.understanding_learn,guestText("usageSets")),
+      usageMetricRow(guestText("usageTests"),selected.understanding_test,guestText("usageTestsCount")),
+    ])}
+    ${usageBlock(guestText("usagePathRoots"),[
+      usageMetricRow(guestText("usageLearn"),selected.roots_learn,guestText("usageSets")),
+      usageMetricRow(guestText("usageTests"),selected.roots_test,guestText("usageTestsCount")),
+    ])}
+    ${usageBlock(guestText("usageAshyk"),[
+      usageMetricRow(guestText("usageAshykComputer"),selected.ashyk_computer,guestText("usageGames")),
+      usageMetricRow(guestText("usageAshykOnline"),selected.ashyk_online,guestText("usageGames")),
+    ])}
+    ${usageBlock(guestText("usageSongs"),[
+      usageMetricRow(guestText("usageLyrics"),selected.song_lyrics,guestText("usageOpens")),
+    ])}
   </div>`;
 }
 
@@ -314,9 +405,9 @@ async function renderGuestAnalytics(context,signal,host){
   host.classList.add("isGuest");
   host.innerHTML=`<div class="adminGuestLoading loadingState">${escapeHtml(msg("common.otkryvaem"))}</div>`;
   try{
-    const data=await fetchGuestAnalytics(guestAnalyticsPeriod);
+    const data=await fetchExtendedAnalytics(guestAnalyticsPeriod);
     if(signal?.aborted||!host.isConnected)return;
-    const summary=data?.summary||{},conversion=data?.conversion||{},rate=conversion.rate==null?"—":`${numberValue(conversion.rate).toFixed(1)}%`;
+    const summary=data?.summary||{};
     const periods=renderBracketTabs({
       items:[
         {id:"7",value:"7",label:guestText("guestPeriod7")},
@@ -325,37 +416,33 @@ async function renderGuestAnalytics(context,signal,host){
         {id:"0",value:"0",label:guestText("guestPeriodAll")},
       ],
       active:String(guestAnalyticsPeriod),
-      ariaLabel:guestText("statsGuests"),
+      ariaLabel:guestText("statsVisitors"),
       dataAttribute:"admin-guest-period",
     });
     host.innerHTML=`<div class="adminGuestScroll">
-      <div class="adminGuestPeriodTabs">${periods}</div>
-      <div class="adminGuestMetrics">
-        <div><strong>${guestNumber(summary.unique_visitors)}</strong><span>${escapeHtml(guestText("guestUniqueVisitors"))}</span></div>
-        <div><strong>${guestNumber(summary.sessions)}</strong><span>${escapeHtml(guestText("guestSessions"))}</span></div>
-        <div><strong>${guestNumber(summary.pageviews)}</strong><span>${escapeHtml(guestText("guestPageviews"))}</span></div>
-        <div><strong>${numberValue(summary.avg_pages_per_session).toFixed(2)}</strong><span>${escapeHtml(guestText("guestAvgPages"))}</span></div>
-        <div><strong>${guestNumber(summary.repeat_visitors)}</strong><span>${escapeHtml(guestText("guestRepeatVisitors"))}</span></div>
-        <div><strong>${guestNumber(conversion.converted_visitors)}</strong><span>${escapeHtml(guestText("guestConverted"))} · ${escapeHtml(rate)}</span></div>
-      </div>
-      ${guestChart(data)}
-      <div class="adminGuestSecondaryMetrics">
-        <span>${escapeHtml(guestText("guestNewVisitors"))}: <strong>${guestNumber(summary.new_visitors)}</strong></span>
-        <span>${escapeHtml(guestText("guestReturningVisitors"))}: <strong>${guestNumber(summary.returning_visitors)}</strong></span>
-        <span>${escapeHtml(guestText("guestConversion"))}: <strong>${escapeHtml(rate)}</strong></span>
-      </div>
-      <div class="adminGuestBreakdownGrid">
-        ${guestBreakdown(guestText("guestSources"),data?.sources)}
-        ${guestBreakdown(guestText("guestPlatforms"),data?.platforms)}
-        ${guestBreakdown(guestText("guestEntryPaths"),data?.entry_paths)}
-        ${guestBreakdown(guestText("guestVersions"),data?.versions)}
-        ${guestBreakdown(guestText("guestLanguages"),data?.languages)}
-      </div>
-      <p class="adminGuestLegacyNote">${escapeHtml(guestText("guestLegacyNote"))}</p>
+      <section class="adminAnalyticsSection adminAnalyticsDaily">
+        <div class="adminAnalyticsSectionHead">
+          <div><h2>${escapeHtml(guestText("visitorDailyTitle"))}</h2><p><strong>${escapeHtml(guestNumber(summary.unique_visitors))}</strong> ${escapeHtml(guestText("guestUniqueVisitors"))}</p></div>
+          <div class="adminGuestPeriodTabs">${periods}</div>
+        </div>
+        ${dailyVisitorsChart(data)}
+      </section>
+      <section class="adminAnalyticsSection">
+        <div class="adminAnalyticsSectionHead"><div><h2>${escapeHtml(guestText("visitorMonthlyTitle"))}</h2></div></div>
+        ${monthlyVisitorsChart(data)}
+      </section>
+      <section class="adminAnalyticsSection adminUsageSection">
+        <div class="adminAnalyticsSectionHead"><div><h2>${escapeHtml(guestText("usageTitle"))}</h2></div></div>
+        ${renderUsageSections(data)}
+      </section>
     </div>`;
     host.querySelectorAll("[data-admin-guest-period]").forEach((button)=>button.addEventListener("click",()=>{
       const value=Number(button.dataset.adminGuestPeriod);
       guestAnalyticsPeriod=Number.isFinite(value)?value:30;
+      void renderGuestAnalytics(context,signal,host);
+    },{signal}));
+    host.querySelectorAll("[data-admin-usage-month]").forEach((button)=>button.addEventListener("click",()=>{
+      usageAnalyticsMonth=String(button.dataset.adminUsageMonth||"");
       void renderGuestAnalytics(context,signal,host);
     },{signal}));
   }catch(error){
@@ -368,7 +455,7 @@ export async function renderAdminUsersEmbedded(context, signal, host) {
   const tabs=renderBracketTabs({
     items:[
       {id:"users",label:guestText("statsUsers")},
-      {id:"guests",label:guestText("statsGuests")},
+      {id:"guests",label:guestText("statsVisitors")},
     ],
     active:embeddedStatsMode,
     ariaLabel:guestText("extendedStats"),

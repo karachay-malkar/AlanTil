@@ -23,6 +23,7 @@ import{useSessionExit}from'../ui/session-exit.js';
 import{ConfirmDialog}from'../ui/modal.js';
 import{Checkbox}from'../ui/checkbox.js';
 import{theme}from'../ui/theme.js';
+import{recordNativeUsageEvent}from'../platform/analytics.js';
 
 const C=theme.colors;
 const FACE_HELP=Object.freeze([['chyk','faceChyk',1],['fok','faceFok',2],['tau','faceTau',3],['alchi','faceAlchi',4],['biy','faceBiy',15],['kyt','faceKyt',6]]);
@@ -76,8 +77,10 @@ export function AshykScreen({locale='ru',words=[],userId='',supabaseClient=null,
  const vocabularyReadyRef=useRef(words.length>0);vocabularyReadyRef.current=words.length>0;
  const access=ashykAccessForUser(userId);
  const sessionActive=state.status==='playing'&&state.gameMode!=='online';
+ const computerGameActiveRef=useRef(false);
  const exit=useSessionExit({active:sessionActive,save:async()=>{},onLeave:()=>onBack?.()});
  useEffect(()=>store.subscribe(setState),[store]);
+ useEffect(()=>{if(state.gameMode==='computer'&&state.status==='playing'){computerGameActiveRef.current=true;return;}if(computerGameActiveRef.current&&state.gameMode==='computer'&&state.status==='finished'){computerGameActiveRef.current=false;recordNativeUsageEvent({eventType:'ashyk_computer_complete'}).catch(()=>{});return;}if(state.status==='setup')computerGameActiveRef.current=false;},[state.status,state.gameMode]);
  useEffect(()=>{store.setWords(words);},[store,words]);
  const stopInvite=()=>{unsubscribeInvite.current?.();unsubscribeInvite.current=null;};
  const mountedRef=useRef(true);

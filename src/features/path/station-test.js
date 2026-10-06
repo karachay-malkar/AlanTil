@@ -1,4 +1,5 @@
 import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.8";
+import { recordUsageEvent } from "../../shared/analytics/visitor-analytics.js?v=16.8.0.14";
 import { EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.8";
 import { getCachedWords } from "../../shared/data/word-repository.js?v=16.8.0.8";
 import { recordActivitySession } from "../../shared/progress/activity-history-store.js?v=16.8.0.8";
@@ -111,6 +112,14 @@ export function completeStationTest(context, session, onComplete) {
   });
   enqueueProgress("station_test_session", payload, { id: `station_test_session:${payload.id}`, replace: false });
   recordActivitySession("station_test", payload);
+  if (["understanding", "roots"].includes(payload.story_type)) {
+    void recordUsageEvent({
+      eventType: "path_test_complete",
+      eventKey: `test:${payload.id}`,
+      storyType: payload.story_type,
+      itemKey: String(payload.id),
+    });
+  }
   clearLegacyActiveSnapshot();
   context.shell.setCounter("");
   onComplete?.(result);

@@ -19,6 +19,32 @@ function activeVisitSessionId(){if(!visitSessionId)visitSessionId=uuid();return 
 async function appendLocalEvent(event){try{const key=queueKey(),raw=await AsyncStorage.getItem(key),rows=raw?JSON.parse(raw):[],next=Array.isArray(rows)?rows:[];next.push(event);await AsyncStorage.setItem(key,JSON.stringify(next.slice(-MAX_QUEUE)));}catch{}}
 async function recordScreenVisit(screen,interfaceLanguage=''){const safe=String(screen||'').toLowerCase().replace(/[^a-z0-9_/-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'home',language=String(interfaceLanguage||'').toLowerCase().split('-')[0];try{const response=await nativeAuthFetch('/rest/v1/rpc/record_anonymous_visit_v2',{method:'POST',body:JSON.stringify({p_visitor_id:await visitorId(),p_session_id:activeVisitSessionId(),p_page_path:`/mobile/${safe}`,p_referrer_host:null,p_app_version:APP_VERSION,p_platform:'mobile',p_interface_language:['ru','en','tr'].includes(language)?language:null})});return Boolean(response?.ok);}catch{return false;}}
 
+export async function recordNativeUsageEvent({
+  eventType,
+  eventKey='',
+  storyType='',
+  itemKey='',
+}={}){
+  try{
+    const normalized=String(eventType||'').trim();
+    if(!normalized)return false;
+    const response=await nativeAuthFetch('/rest/v1/rpc/record_app_usage_event',{
+      method:'POST',
+      body:JSON.stringify({
+        p_visitor_id:await visitorId(),
+        p_event_type:normalized,
+        p_event_key:String(eventKey||'').trim()||null,
+        p_story_type:String(storyType||'').trim()||null,
+        p_item_key:String(itemKey||'').trim()||null,
+        p_platform:'mobile',
+      }),
+    });
+    return Boolean(response?.ok);
+  }catch{
+    return false;
+  }
+}
+
 export async function setNativeAnalyticsRuntimeEnabled(enabled){enabledCache={scope:getNativeStorageScope(),value:Boolean(enabled)};if(enabledCache.value)return true;currentScreen=null;eventSessionId='';try{await AsyncStorage.removeItem(queueKey());}catch{}return false;}
 export async function trackNativeEvent(name,parameters={}){if(!await analyticsEnabled())return false;const eventName=String(name||'').trim();if(!eventName)return false;const safe=sanitizeAnalyticsParameters(parameters,{appVersion:APP_VERSION});await appendLocalEvent({event:eventName,parameters:safe,occurred_at:new Date().toISOString(),session_id:activeEventSessionId()});return true;}
 export async function trackNativeScreen(screen,context={}){const visitRecorded=await recordScreenVisit(screen,context?.interface_language||context?.language||'');if(!await analyticsEnabled())return visitRecorded;const now=Date.now(),name=String(screen||'home');if(currentScreen?.name&&currentScreen.startedAt){const seconds=Math.max(0,Math.round((now-currentScreen.startedAt)/1000));if(seconds)await trackNativeEvent(EVENTS.SCREEN_TIME,{screen:currentScreen.name,seconds,...currentScreen.context});}currentScreen={name,startedAt:now,context:sanitizeAnalyticsParameters(context,{appVersion:APP_VERSION})};return true;}

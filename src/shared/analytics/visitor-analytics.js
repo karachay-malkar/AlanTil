@@ -172,6 +172,34 @@ export async function recordAnonymousPageView({ pagePath, pageReferrer, appVersi
   }
 }
 
+export async function recordUsageEvent({
+  eventType,
+  eventKey = "",
+  storyType = "",
+  itemKey = "",
+  platform = "web",
+} = {}) {
+  try {
+    const normalizedEventType = String(eventType || "").trim();
+    if (!normalizedEventType) return false;
+    const scopeId = String(getCurrentAuthState().user?.id || "").trim();
+    const { visitorId } = resolveAnonymousIdentity({ scopeId });
+    const client = await getAnalyticsSupabaseClient();
+    const { error } = await client.rpc("record_app_usage_event", {
+      p_visitor_id: visitorId,
+      p_event_type: normalizedEventType,
+      p_event_key: String(eventKey || "").trim() || null,
+      p_story_type: String(storyType || "").trim() || null,
+      p_item_key: String(itemKey || "").trim() || null,
+      p_platform: platform === "mobile" ? "mobile" : "web",
+    });
+    if (error) throw error;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function clearAnonymousAnalyticsIdentity({ storage = storageOrNull() } = {}) {
   memoryVisitorId = "";
   memorySession = null;

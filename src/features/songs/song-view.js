@@ -1,5 +1,6 @@
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { trackEvent } from "../../shared/analytics/analytics.js?v=16.8.0.3";
+import { recordUsageEvent } from "../../shared/analytics/visitor-analytics.js?v=16.8.0.14";
 import { DIRECTIONS, EVENTS, WORD_RESULTS, WORD_SOURCES } from "../../shared/analytics/events.js?v=16.8.0.3";
 import { panel } from "../../shared/ui/panel.js?v=16.8.0.3";
 import { openInfoModal } from "../../shared/ui/info-modal.js?v=16.8.0.3";
@@ -44,6 +45,12 @@ export function renderSongView(context, song, words, signal) {
     playlist_id: song.playlistId,
     has_audio: Boolean(song.audioUrl),
   });
+  if (lyricsMarkup) {
+    void recordUsageEvent({
+      eventType: "song_lyrics_open",
+      itemKey: String(song.id),
+    });
+  }
 
   const playerRoot = context.root.querySelector("#songPlayerRoot");
   if (playerRoot) {

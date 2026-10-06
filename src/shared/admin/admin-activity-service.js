@@ -58,3 +58,9 @@ export async function fetchGuestAnalytics(periodDays=30) {
   const value=Number(periodDays);
   return runAdminRpc("admin_guest_analytics",{p_period_days:Number.isFinite(value)?Math.trunc(value):30});
 }
+
+
+export async function fetchExtendedAnalytics(periodDays=30) {
+  const value=Number(periodDays);
+  return runAdminRpc("admin_extended_analytics",{p_period_days:Number.isFinite(value)?Math.trunc(value):30});
+}

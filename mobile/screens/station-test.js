@@ -10,6 +10,7 @@ import { EmptyState, OverflowMarquee } from '../ui/parity.js';
 import { useMobileMsg, useRuntimeSettings, useSemanticTypography } from '../ui/runtime-settings.js';
 import { theme } from '../ui/theme.js';
 import { recordNativeTestSession } from '../platform/progress.js';
+import { recordNativeUsageEvent } from '../platform/analytics.js';
 import { clearNativeSessionSnapshot } from '../platform/session-store.js';
 
 const C=theme.colors;
@@ -22,7 +23,7 @@ export function StationTestScreen({station,allWords,mode='kb',favorites=new Set(
   useEffect(()=>{let alive=true;(async()=>{await clearNativeSessionSnapshot('station-test').catch(()=>{});const next=createSession();if(alive)setSession(next);})();return()=>{alive=false;};},[station,allWords,mode]);
   const question=session?.questions?.[session.index],done=Boolean(session&&!question),result=useMemo(()=>done?stationTestResult(session,stationTestPayload(session)):null,[done,session]);
   useEffect(()=>{setSelectedId('');},[session?.index]);
-  useEffect(()=>{if(!done||!result||recorded.current)return;recorded.current=true;session.completed=true;const payload=stationTestPayload(session);recordNativeTestSession({sessionId:session.id,answers:payload.words.map((row)=>({word_id:row.word_id,result:row.result})),accuracy:payload.accuracy,requiredAccuracy:payload.required_accuracy,updateMastery:true,startedAt:session.startedAt,type:'station_test',stationKey:station?.key||'',dictionaryId:station?.dictionaryId||'',sectionId:station?.sectionId||station?.groupId||'',setId:station?.setId||station?.sourceSetId||'',phase:payload.phase||session.phase||''}).catch(()=>{});clearNativeSessionSnapshot('station-test').catch(()=>{});},[done,result,session,station?.key]);
+  useEffect(()=>{if(!done||!result||recorded.current)return;recorded.current=true;session.completed=true;const payload=stationTestPayload(session);recordNativeTestSession({sessionId:session.id,answers:payload.words.map((row)=>({word_id:row.word_id,result:row.result})),accuracy:payload.accuracy,requiredAccuracy:payload.required_accuracy,updateMastery:true,startedAt:session.startedAt,type:'station_test',stationKey:station?.key||'',dictionaryId:station?.dictionaryId||'',sectionId:station?.sectionId||station?.groupId||'',setId:station?.setId||station?.sourceSetId||'',phase:payload.phase||session.phase||''}).catch(()=>{});if(['understanding','roots'].includes(payload.story_type))recordNativeUsageEvent({eventType:'path_test_complete',eventKey:`test:${session.id}`,storyType:payload.story_type,itemKey:session.id}).catch(()=>{});clearNativeSessionSnapshot('station-test').catch(()=>{});},[done,result,session,station?.key]);
   const exit=useSessionExit({active:Boolean(session&&!session.completed&&!done),beforeLeave:()=>clearNativeSessionSnapshot('station-test'),onLeave:onBack,message:m('common.vy_tochno_hotite_vyyti_popytka_budet_sbrosena')});const back=exit.request;
   const retry=async()=>{await clearNativeSessionSnapshot('station-test').catch(()=>{});recorded.current=false;setSelectedId('');const next=createSession();setSession(next);redraw((value)=>value+1);};
   useEffect(()=>{const sub=BackHandler.addEventListener('hardwareBackPress',()=>{back();return true;});return()=>sub.remove();},[session,onBack]);
