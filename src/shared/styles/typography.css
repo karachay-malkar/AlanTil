@@ -107,7 +107,9 @@
 .storySteleTitle{font-size:var(--text-accent)!important}
 .storySteleBody{font-size:var(--text-body)!important}
 .storySteleTriggerGlyph>span{font-size:var(--text-technical)}
-.appShell[data-screen="ashyk"] .ashykModeButton{justify-content:center;padding:0 6px;min-height:30px}
+.appShell[data-screen="ashyk"] .ashykModeButton{justify-content:center;padding:0 6px;min-height:30px;font-family:var(--font-body);font-size:var(--text-body)}
 .appShell[data-screen="ashyk"] .ashykModeButton b{font:inherit}
+.appShell[data-screen="ashyk"] .ashykSetupHelpButton span,
+.appShell[data-screen="ashyk"] .ashykSetupHelpButton b{font-family:var(--font-body);font-size:var(--text-body)}
 .storyTab:not(.active){opacity:1}
 .appShell[data-screen="ashyk"] .ashykModeBracket{font:inherit;color:inherit}
