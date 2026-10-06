@@ -83,6 +83,8 @@ test("daily visitor points expose a tap/click tooltip with a full calendar date"
   assert.match(admin, /bindAnalyticsPointTooltips/);
   assert.match(admin, /day:"numeric",month:"long"/);
   assert.match(admin, /usagePeopleShort/);
+  const css = read("src/features/admin/admin.css");
+  assert.match(css, /adminAnalyticsPointTooltip/);
 });
 
 test("statistics chrome stays transparent and uses the shared system chrome beneath it", () => {
