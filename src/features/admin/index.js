@@ -361,7 +361,7 @@ function dailyVisitorsChart(data) {
     title:guestText("visitorDailyTitle"),
     xKey:"date",
     formatLabel:guestDateLabel,
-    formatTooltip:(row)=>`${guestFullDateLabel(row.date)} — ${guestNumber(row.people)} ${guestText("visitorPeople")}`,
+    formatTooltip:(row)=>`${guestFullDateLabel(row.date)} — ${guestNumber(row.people)} ${msg("admin.people")}`,
     className:"adminDailyVisitorsChart",
   });
 }
