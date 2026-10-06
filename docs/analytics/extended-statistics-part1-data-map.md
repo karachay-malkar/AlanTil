@@ -50,9 +50,10 @@ Native в текущей архитектуре сохраняет локаль�
 Поэтому `app_usage_events` для `path_learn_complete` и `path_test_complete` остаётся только как дополнительный источник для:
 
 1. Native — guest и authenticated;
-2. Web guest — пока guest session ещё не перенесена в аккаунт.
+2. Web guest — пока guest session ещё не перенесена в аккаунт;
+3. исторического Web fallback, если completion-event сохранился, а canonical session RPC не дошёл до Supabase.
 
-Authenticated Web completion не записывается в `app_usage_events`. Если guest Web session позднее была claim-нута и появилась в canonical session table с тем же session id, analytics query исключает соответствующий event по `item_key`.
+Новые authenticated Web completion не записываются в `app_usage_events`. Если event имеет canonical session row с тем же session id, он удаляется/исключается по `item_key`; unmatched event сохраняется, чтобы не терять реально зафиксированное завершение.
 
 ## Что удалено как дублирование
 
@@ -60,7 +61,7 @@ Authenticated Web completion не записывается в `app_usage_events`
 
 - удаляет triggers `learn_sessions_capture_usage`, `station_test_sessions_capture_usage`, `ashyk_rooms_capture_usage`;
 - удаляет trigger functions, которые копировали canonical rows в `app_usage_events`;
-- удаляет исторические authenticated Web path-event копии;
+- удаляет Web path-event только когда существует соответствующая canonical `learn_sessions` / `station_test_sessions` row;
 - удаляет все `ashyk_online_complete` event copies;
 - запрещает новые `ashyk_online_complete` события;
 - оставляет `app_usage_events` только как supplementary event ledger там, где canonical domain row отсутствует.
@@ -72,7 +73,7 @@ Authenticated Web completion не записывается в `app_usage_events`
 - `learn_sessions` — Web authenticated learning;
 - `station_test_sessions` — Web authenticated path tests;
 - `ashyk_rooms` — online games;
-- `app_usage_events` — Native/guest path completions, computer games, song lyric opens.
+- `app_usage_events` — Native/guest path completions, unmatched legacy Web fallback, computer games, song lyric opens.
 
 Посещаемость и person identity продолжают строиться только через `anonymous_visit_sessions`.
 
@@ -95,4 +96,4 @@ Authenticated Web completion не записывается в `app_usage_events`
 
 ## Итоговое архитектурное правило
 
-Один факт завершения должен иметь один канонический источник. Event table не копирует server-side domain rows. Она используется только там, где доменного журнала нет или где платформа ещё не сохраняет session history в Supabase.
+Один факт завершения должен иметь один канонический источник. Event table не должна дублировать существующую server-side domain row; она используется там, где доменного журнала нет, где платформа ещё не сохраняет session history в Supabase, либо как fallback для уже зафиксированного события, если canonical row отсутствует.
