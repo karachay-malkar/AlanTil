@@ -200,3 +200,50 @@ test("part 2 daily visitors uses one combined person per UTC calendar day", () =
     assert.doesNotMatch(admin, legacyMetric);
   }
 });
+
+
+test("part 4 path usage is counted only from completed actions with exact path ids", () => {
+  const migration = read("supabase/migrations/20261007083000_alantil_16_8_extended_statistics_path_usage.sql");
+  const webAnalytics = read("src/shared/analytics/visitor-analytics.js");
+  const webLearn = read("src/features/learn/study.js");
+  const webTest = read("src/features/path/station-test.js");
+  const nativeAnalytics = read("mobile/platform/analytics.js");
+  const nativeLearn = read("mobile/screens/learn.js");
+  const nativeTest = read("mobile/screens/station-test.js");
+  const admin = read("src/features/admin/index.js");
+
+  for (const column of ["dictionary_id", "section_id", "set_id"]) {
+    assert.match(migration, new RegExp(`add column if not exists ${column} text`));
+  }
+  assert.match(migration, /create or replace function public\.record_path_usage_event/);
+  assert.match(migration, /from public\.content_words cw/);
+  assert.match(migration, /cw\.story_id=v_story_type/);
+  assert.match(migration, /cw\.dictionary_id=v_dictionary_id/);
+  assert.match(migration, /cw\.section_id=v_section_id/);
+  assert.match(migration, /cw\.set_id=v_set_id/);
+
+  const usageSources = migration.match(/path_sets as \([\s\S]*?\n  \),\n  usage_agg as/)?.[0] || "";
+  assert.match(usageSources, /select distinct[\s\S]*cw\.story_id[\s\S]*cw\.dictionary_id[\s\S]*cw\.section_id[\s\S]*cw\.set_id/);
+  assert.match(usageSources, /from public\.learn_sessions ls[\s\S]*join path_sets ps[\s\S]*ps\.dictionary_id=ls\.dictionary_id[\s\S]*ps\.section_id=ls\.section_id[\s\S]*ps\.set_id=ls\.set_id[\s\S]*ls\.status='completed'/);
+  assert.match(usageSources, /from public\.station_test_sessions sts[\s\S]*join path_sets ps[\s\S]*ps\.story_id=sts\.story_type[\s\S]*ps\.dictionary_id=sts\.dictionary_id[\s\S]*ps\.section_id=sts\.group_id[\s\S]*ps\.set_id=sts\.set_id[\s\S]*sts\.status='completed'/);
+  assert.match(usageSources, /ue\.dictionary_id=ps\.dictionary_id[\s\S]*ue\.section_id=ps\.section_id[\s\S]*ue\.set_id=ps\.set_id/);
+
+  for (const analytics of [webAnalytics, nativeAnalytics]) {
+    assert.match(analytics, /record_path_usage_event/);
+    assert.match(analytics, /p_dictionary_id/);
+    assert.match(analytics, /p_section_id/);
+    assert.match(analytics, /p_set_id/);
+  }
+  for (const caller of [webLearn, webTest, nativeLearn, nativeTest]) {
+    assert.match(caller, /dictionaryId/);
+    assert.match(caller, /sectionId/);
+    assert.match(caller, /setId/);
+  }
+
+  assert.match(admin, /selected\.understanding_learn/);
+  assert.match(admin, /selected\.understanding_test/);
+  assert.match(admin, /selected\.roots_learn/);
+  assert.match(admin, /selected\.roots_test/);
+  assert.match(admin, /usageSets/);
+  assert.match(admin, /usageTestsCount/);
+});
