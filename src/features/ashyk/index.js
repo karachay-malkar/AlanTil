@@ -6,11 +6,10 @@ import { getUserSettings } from "../../shared/settings/user-settings-store.js?v=
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.14";
 import { ensureCurrentAshykBuild, primeAshykBuildCheck, takePendingAshykIntent, takePendingAshykInvite } from "../../shared/social/ashyk-handoff.js?v=16.8.0.14";
 import { createAshykOnlineAdapter } from "../../../packages/ashyk-game/online.js?v=16.8.0.14";
-import { isNaturalAshykComputerCompletion } from "../../../packages/ashyk-game/store.js?v=16.8.0.14";
 import { ashykAccessForUser, isAshykModeAllowed } from "../../../packages/alantil-core/ashyk-access.js?v=16.8.0.14";
 import { socialMessage } from "../../../packages/alantil-core/social-i18n.js?v=16.8.0.14";
 import { createAshykQuestionDeck } from "../../../packages/ashyk-game/vocabulary.js?v=16.8.0.14";
-import { createAshykLeaveController } from "../../../packages/ashyk-game/leave.js?v=16.8.0.14";
+import { createAshykLeaveController, isNaturalAshykComputerCompletion } from "../../../packages/ashyk-game/leave.js?v=16.8.0.14";
 import { mountAshykGame } from "./runtime.js?v=16.8.0.14";
 
 let controller=null;

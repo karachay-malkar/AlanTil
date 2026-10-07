@@ -9,10 +9,6 @@ const transientId=(prefix)=>`${prefix}:${Date.now().toString(36)}:${Math.random(
 const remainingSeconds=(deadline,nowMs)=>{const end=Date.parse(String(deadline||''));return Number.isFinite(end)?Math.max(0,Math.ceil((end-nowMs)/1000)):null;};
 const activeRoomStatus=(status)=>status==='waiting'||status==='playing';
 
-export function isNaturalAshykComputerCompletion(state){
-  return Boolean(state?.gameMode==='computer'&&state?.status==='finished'&&state?.lastOutcome?.code==='capture');
-}
-
 export function createAshykGameStore({engine,words=[],userId='',random=Math.random,setTimer=globalThis.setTimeout?.bind(globalThis),clearTimer=globalThis.clearTimeout?.bind(globalThis),setRepeater=globalThis.setInterval?.bind(globalThis),clearRepeater=globalThis.clearInterval?.bind(globalThis),now=()=>Date.now()}={}){
   let sourceWords=Array.isArray(words)?words:[],availableQuestionStoryIds=ashykQuestionStoryIds(sourceWords),selectionTouched=false,deck=createAshykQuestionDeck(sourceWords,availableQuestionStoryIds),computerTimer=0,ticker=0,listeners=new Set();
   let state={gameMode:'computer',selectedQuestionStoryIds:[...availableQuestionStoryIds],selectedDifficulty:'normal',difficulty:null,status:'setup',player:1,localPlayer:1,scores:[0,0],phase:'first-shot',question:null,questionLocked:false,wrongAnswerId:null,questionReview:null,remoteQuestionSelectedId:null,remoteQuestionSubmitting:false,remoteShotMode:null,shotSeconds:0,questionSeconds:0,winner:null,winByKyt:false,remainingAshyks:10,ready:false,selectedId:null,selectedFace:null,outcome:null,lastOutcome:null,scorePulse:null,statusCode:'statusChoose',onlineRoom:null,onlineAction:null};

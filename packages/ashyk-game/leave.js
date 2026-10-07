@@ -1,4 +1,8 @@
 // Navigation must wait for the authoritative terminal result, including retries.
+export function isNaturalAshykComputerCompletion(state){
+  return Boolean(state?.gameMode==='computer'&&state?.status==='finished'&&state?.lastOutcome?.code==='capture');
+}
+
 export function createAshykLeaveController({getGame,confirm,message,onError=()=>{}}){
   let pending=null;
   const run=async()=>{
