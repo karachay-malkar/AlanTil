@@ -7,7 +7,7 @@ import Svg,{Circle,Path}from'react-native-svg';
 import{socialMessage}from'../../packages/alantil-core/social-i18n.js';
 import{ashykAccessForUser,ashykModeAccess,ashykVisibleModesForUser}from'../../packages/alantil-core/ashyk-access.js';
 import{createAshykEngine}from'../../packages/ashyk-game/engine.js';
-import{createAshykGameStore}from'../../packages/ashyk-game/store.js';
+import{createAshykGameStore,isNaturalAshykComputerCompletion}from'../../packages/ashyk-game/store.js';
 import{createAshykOnlineAdapter,resignAshykRoom}from'../../packages/ashyk-game/online.js';
 import{createAshykOnlineSessionController}from'../../packages/ashyk-game/session.js';
 import{DIFFICULTIES,DIFFICULTY_ORDER,ONLINE_RULES}from'../../packages/ashyk-game/constants.js';
@@ -80,7 +80,7 @@ export function AshykScreen({locale='ru',words=[],userId='',supabaseClient=null,
  const computerGameActiveRef=useRef(false);
  const exit=useSessionExit({active:sessionActive,save:async()=>{},onLeave:()=>onBack?.()});
  useEffect(()=>store.subscribe(setState),[store]);
- useEffect(()=>{if(state.gameMode==='computer'&&state.status==='playing'){computerGameActiveRef.current=true;return;}if(computerGameActiveRef.current&&state.gameMode==='computer'&&state.status==='finished'){computerGameActiveRef.current=false;recordNativeUsageEvent({eventType:'ashyk_computer_complete'}).catch(()=>{});return;}if(state.status==='setup')computerGameActiveRef.current=false;},[state.status,state.gameMode]);
+ useEffect(()=>{if(state.gameMode==='computer'&&state.status==='playing'){computerGameActiveRef.current=true;return;}if(computerGameActiveRef.current&&state.gameMode==='computer'&&state.status==='finished'){computerGameActiveRef.current=false;if(isNaturalAshykComputerCompletion(state))recordNativeUsageEvent({eventType:'ashyk_computer_complete',itemKey:state.winByKyt?'kyt':'score'}).catch(()=>{});return;}if(state.status==='setup')computerGameActiveRef.current=false;},[state.status,state.gameMode,state.lastOutcome?.code,state.winByKyt]);
  useEffect(()=>{store.setWords(words);},[store,words]);
  const stopInvite=()=>{unsubscribeInvite.current?.();unsubscribeInvite.current=null;};
  const mountedRef=useRef(true);
