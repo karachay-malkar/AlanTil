@@ -116,7 +116,7 @@
 .adminGuestEmpty{padding:12px 0;color:var(--text-3);font-size:10px}
 
 /* 16.8 extended statistics: product metrics use the shared application chrome. */
-.adminStatsPane.isGuest{display:block;overflow:hidden}
+.adminStatsPane.isGuest{height:100%;min-height:0;display:block;overflow:hidden}
 .adminGuestScroll{
   box-sizing:border-box;
   width:100%;
