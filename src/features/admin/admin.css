@@ -140,8 +140,6 @@
 }
 .adminAnalyticsSectionHead>div:first-child{min-width:0}
 .adminAnalyticsSectionHead h2{margin:0;font-size:14px;line-height:1.25;font-weight:850;color:var(--text-1)}
-.adminAnalyticsSectionHead p{margin:5px 0 0;color:var(--text-3);font-size:10px;line-height:1.25}
-.adminAnalyticsSectionHead p strong{font:850 15px/1 var(--font-terminal);color:var(--text-1)}
 .adminGuestPeriodTabs{
   position:static;
   flex:0 1 360px;

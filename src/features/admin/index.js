@@ -431,7 +431,6 @@ async function renderGuestAnalytics(context,signal,host){
   try{
     const data=await fetchExtendedAnalytics(guestAnalyticsPeriod);
     if(signal?.aborted||!host.isConnected)return;
-    const summary=data?.summary||{};
     const periods=renderBracketTabs({
       items:[
         {id:"7",value:"7",label:guestText("guestPeriod7")},
@@ -446,7 +445,7 @@ async function renderGuestAnalytics(context,signal,host){
     host.innerHTML=`<div class="adminGuestScroll">
       <section class="adminAnalyticsSection adminAnalyticsDaily">
         <div class="adminAnalyticsSectionHead">
-          <div><h2>${escapeHtml(guestText("visitorDailyTitle"))}</h2><p><strong>${escapeHtml(guestNumber(summary.unique_visitors))}</strong> ${escapeHtml(guestText("guestUniqueVisitors"))}</p></div>
+          <div><h2>${escapeHtml(guestText("visitorDailyTitle"))}</h2></div>
           <div class="adminGuestPeriodTabs">${periods}</div>
         </div>
         ${dailyVisitorsChart(data)}
