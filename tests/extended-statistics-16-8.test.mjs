@@ -255,7 +255,7 @@ test("part 5 Ashyk and songs count only real completed usage", () => {
   const nativeAshyk = read("mobile/screens/ashyk.js");
   const webSongs = read("src/features/songs/song-view.js");
   const nativeSongs = read("mobile/screens/songs.js");
-  const migration = read("supabase/migrations/20261007043500_alantil_16_8_extended_statistics_ashyk_songs.sql");
+  const migration = read("supabase/migrations/20261007090000_alantil_16_8_extended_statistics_ashyk_songs.sql");
 
   assert.match(leave, /export function isNaturalAshykComputerCompletion/);
   assert.match(leave, /state\?\.lastOutcome\?\.code==='capture'/);
