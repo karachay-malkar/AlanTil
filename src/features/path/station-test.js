@@ -118,6 +118,9 @@ export function completeStationTest(context, session, onComplete) {
       eventKey: `test:${payload.id}`,
       storyType: payload.story_type,
       itemKey: String(payload.id),
+      dictionaryId: payload.dictionary_id,
+      sectionId: payload.section_id,
+      setId: payload.set_id,
     });
   }
   clearLegacyActiveSnapshot();

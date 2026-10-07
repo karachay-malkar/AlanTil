@@ -24,20 +24,30 @@ export async function recordNativeUsageEvent({
   eventKey='',
   storyType='',
   itemKey='',
+  dictionaryId='',
+  sectionId='',
+  setId='',
 }={}){
   try{
     const normalized=String(eventType||'').trim();
     if(!normalized)return false;
-    const response=await nativeAuthFetch('/rest/v1/rpc/record_app_usage_event',{
+    const isPathEvent=normalized==='path_learn_complete'||normalized==='path_test_complete';
+    const payload={
+      p_visitor_id:await visitorId(),
+      p_event_type:normalized,
+      p_event_key:String(eventKey||'').trim()||null,
+      p_story_type:String(storyType||'').trim()||null,
+      p_item_key:String(itemKey||'').trim()||null,
+      p_platform:'mobile',
+    };
+    if(isPathEvent){
+      payload.p_dictionary_id=String(dictionaryId||'').trim()||null;
+      payload.p_section_id=String(sectionId||'').trim()||null;
+      payload.p_set_id=String(setId||'').trim()||null;
+    }
+    const response=await nativeAuthFetch(`/rest/v1/rpc/${isPathEvent?'record_path_usage_event':'record_app_usage_event'}`,{
       method:'POST',
-      body:JSON.stringify({
-        p_visitor_id:await visitorId(),
-        p_event_type:normalized,
-        p_event_key:String(eventKey||'').trim()||null,
-        p_story_type:String(storyType||'').trim()||null,
-        p_item_key:String(itemKey||'').trim()||null,
-        p_platform:'mobile',
-      }),
+      body:JSON.stringify(payload),
     });
     return Boolean(response?.ok);
   }catch{

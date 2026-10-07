@@ -65,6 +65,9 @@ export function finalizeLearnSession(status = "interrupted", exitReason = "route
         eventKey: `learn:${result.id}`,
         storyType,
         itemKey: String(result.id),
+        dictionaryId: payload.dictionary_id,
+        sectionId: payload.section_id,
+        setId: payload.set_id,
       });
     }
   }

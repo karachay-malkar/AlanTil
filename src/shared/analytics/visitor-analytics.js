@@ -177,6 +177,9 @@ export async function recordUsageEvent({
   eventKey = "",
   storyType = "",
   itemKey = "",
+  dictionaryId = "",
+  sectionId = "",
+  setId = "",
   platform = "web",
 } = {}) {
   try {
@@ -185,14 +188,21 @@ export async function recordUsageEvent({
     const scopeId = String(getCurrentAuthState().user?.id || "").trim();
     const { visitorId } = resolveAnonymousIdentity({ scopeId });
     const client = await getAnalyticsSupabaseClient();
-    const { error } = await client.rpc("record_app_usage_event", {
+    const isPathEvent = normalizedEventType === "path_learn_complete" || normalizedEventType === "path_test_complete";
+    const payload = {
       p_visitor_id: visitorId,
       p_event_type: normalizedEventType,
       p_event_key: String(eventKey || "").trim() || null,
       p_story_type: String(storyType || "").trim() || null,
       p_item_key: String(itemKey || "").trim() || null,
       p_platform: platform === "mobile" ? "mobile" : "web",
-    });
+    };
+    if (isPathEvent) {
+      payload.p_dictionary_id = String(dictionaryId || "").trim() || null;
+      payload.p_section_id = String(sectionId || "").trim() || null;
+      payload.p_set_id = String(setId || "").trim() || null;
+    }
+    const { error } = await client.rpc(isPathEvent ? "record_path_usage_event" : "record_app_usage_event", payload);
     if (error) throw error;
     return true;
   } catch {
