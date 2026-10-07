@@ -17,7 +17,7 @@ test("part 6 extended statistics keeps shared chrome and owns only the inner scr
 
   assert.match(css, /\.adminUsersEmbedded\{[^}]*overflow:hidden[^}]*background:transparent/);
   assert.match(css, /\.adminUsersEmbedded\.isAnalyticsOnly\{grid-template-rows:minmax\(0,1fr\)\}/);
-  assert.match(css, /\.adminStatsPane\.isGuest\{display:block;overflow:hidden\}/);
+  assert.match(css, /\.adminStatsPane\.isGuest\{[^}]*height:100%[^}]*min-height:0[^}]*display:block[^}]*overflow:hidden/);
 
   const scroll = css.match(/\.adminGuestScroll\{[\s\S]*?\n}/)?.[0] || "";
   assert.match(scroll, /height:100%/);
