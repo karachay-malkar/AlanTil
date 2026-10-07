@@ -280,6 +280,9 @@ test("part 5 Ashyk and songs count only real completed usage", () => {
 
 test("part 6 final statistics UI exposes only the approved metric set", () => {
   const admin = read("src/features/admin/index.js");
+  const css = read("src/features/admin/admin.css");
+  const friendsCss = read("src/features/friends/friends-16-7.css");
+  const shell = read("src/shared/styles/shell.css");
   const render = admin.match(/async function renderGuestAnalytics\(context,signal,host\)[\s\S]*?\n}\n\nexport async function renderAdminUsersEmbedded/)?.[0] || "";
 
   assert.match(render, /dailyVisitorsChart\(data\)/);
@@ -301,4 +304,11 @@ test("part 6 final statistics UI exposes only the approved metric set", () => {
   ]) {
     assert.match(admin, new RegExp(`selected\\.${metric}`));
   }
+
+  assert.match(css, /\.adminStatsPane\.isGuest\{[^}]*height:100%[^}]*min-height:0[^}]*display:block[^}]*overflow:hidden/);
+  assert.match(css, /\.adminGuestScroll\{[^}]*height:100%[^}]*min-height:0[^}]*overflow:auto/);
+  assert.doesNotMatch(css, /\.adminGuestMetrics|\.adminGuestBreakdown|\.adminGuestLegacyNote/);
+  assert.match(friendsCss, /\.socialBody\.isStats\{[^}]*overflow:hidden[^}]*align-content:stretch/);
+  assert.match(shell, /\.appHeader\{[\s\S]*?background:transparent/);
+  assert.match(shell, /\.bottomNav\{[\s\S]*?background:transparent/);
 });
