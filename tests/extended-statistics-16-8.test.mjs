@@ -276,3 +276,29 @@ test("part 5 Ashyk and songs count only real completed usage", () => {
   assert.match(nativeSongs, /song\?\.id&&model\.length[\s\S]*song_lyrics_open/);
   assert.match(migration, /p_event_type='song_lyrics_open'[\s\S]*from public\.songs s[\s\S]*s\.is_published is true[\s\S]*from public\.song_lines sl/);
 });
+
+
+test("part 6 final statistics UI exposes only the approved metric set", () => {
+  const admin = read("src/features/admin/index.js");
+  const render = admin.match(/async function renderGuestAnalytics\(context,signal,host\)[\s\S]*?\n}\n\nexport async function renderAdminUsersEmbedded/)?.[0] || "";
+
+  assert.match(render, /dailyVisitorsChart\(data\)/);
+  assert.match(render, /monthlyVisitorsChart\(data\)/);
+  assert.match(render, /renderUsageSections\(data\)/);
+
+  assert.doesNotMatch(render, /summary\.unique_visitors/);
+  assert.doesNotMatch(render, /const summary=data\?\.summary/);
+  assert.doesNotMatch(render, /summary\.sessions|summary\.pageviews|avg_pages_per_session|guestBreakdown/);
+
+  for (const metric of [
+    "understanding_learn",
+    "understanding_test",
+    "roots_learn",
+    "roots_test",
+    "ashyk_computer",
+    "ashyk_online",
+    "song_lyrics",
+  ]) {
+    assert.match(admin, new RegExp(`selected\\.${metric}`));
+  }
+});
