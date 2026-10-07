@@ -250,15 +250,17 @@ test("part 4 path usage is counted only from completed actions with exact path i
 
 
 test("part 5 Ashyk and songs count only real completed usage", () => {
-  const store = read("packages/ashyk-game/store.js");
+  const leave = read("packages/ashyk-game/leave.js");
   const webAshyk = read("src/features/ashyk/index.js");
   const nativeAshyk = read("mobile/screens/ashyk.js");
   const webSongs = read("src/features/songs/song-view.js");
   const nativeSongs = read("mobile/screens/songs.js");
   const migration = read("supabase/migrations/20261007043500_alantil_16_8_extended_statistics_ashyk_songs.sql");
 
-  assert.match(store, /export function isNaturalAshykComputerCompletion/);
-  assert.match(store, /state\?\.lastOutcome\?\.code==='capture'/);
+  assert.match(leave, /export function isNaturalAshykComputerCompletion/);
+  assert.match(leave, /state\?\.lastOutcome\?\.code==='capture'/);
+  assert.match(webAshyk, /createAshykLeaveController, isNaturalAshykComputerCompletion/);
+  assert.doesNotMatch(webAshyk, /from "\.\.\/\.\.\/\.\.\/packages\/ashyk-game\/store\.js/);
   assert.match(webAshyk, /isNaturalAshykComputerCompletion\(finished\)/);
   assert.match(webAshyk, /itemKey:finished\.winByKyt\?"kyt":"score"/);
   assert.match(nativeAshyk, /isNaturalAshykComputerCompletion\(state\)/);
