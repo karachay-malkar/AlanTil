@@ -78,7 +78,7 @@ function AnalyticsChart({rows=[],series=[],xKey='date',monthly=false,s}){
   const lastLabel=monthly?monthLabel(list[list.length-1]?.[xKey]):String(list[list.length-1]?.[xKey]||'').slice(5);
   return <View style={styles.analyticsChart}><View style={styles.analyticsLegend}>{series.map((item,index)=><View key={item.key} style={styles.analyticsLegendItem}><View style={[styles.analyticsLegendLine,{backgroundColor:palette[index%palette.length]}]}/><Text style={styles.analyticsLegendText}>{item.label}</Text></View>)}</View><Svg width="100%" height={height} viewBox={'0 0 '+width+' '+height}><Line x1={left} y1={top} x2={width-right} y2={top} stroke={C.lineSoft}/><Line x1={left} y1={top+innerH/2} x2={width-right} y2={top+innerH/2} stroke={C.lineSoft}/><Line x1={left} y1={top+innerH} x2={width-right} y2={top+innerH} stroke={C.lineSoft}/>{series.map((item,index)=><React.Fragment key={item.key}><Polyline points={linePoints(item.key)} fill="none" stroke={palette[index%palette.length]} strokeWidth="2.2"/>{list.map((row,rowIndex)=>{const p=point(row,rowIndex,item.key);return <Circle key={item.key+'-'+rowIndex} cx={p.x} cy={p.y} r="3" fill={palette[index%palette.length]}/>;})}</React.Fragment>)}</Svg><View style={styles.analyticsChartLabels}><Text style={styles.analyticsChartLabel}>{firstLabel}</Text><Text style={styles.analyticsChartLabel}>{lastLabel}</Text></View></View>;
 }
-function UsageMetric({label,metric,actionLabel,s}){return <View style={styles.usageMetric}><Text style={styles.usageMetricLabel}>{label}</Text><Text style={styles.usageMetricValue}>{fmtNumber(metric?.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(metric?.actions)+' '+actionLabel}</Text></View>;}
+function UsageMetric({label,metric,actionLabel,s}){const authorized=metric?.authorized||{},guests=metric?.guests||{};return <View style={styles.usageMetric}><Text style={styles.usageMetricLabel}>{label}</Text><View style={styles.usageAudienceValues}><Text style={styles.usageMetricValue}>{s('statsAuthorized')+': '+fmtNumber(authorized.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(authorized.actions)+' '+actionLabel}</Text><Text style={styles.usageMetricValue}>{s('statsGuests')+': '+fmtNumber(guests.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(guests.actions)+' '+actionLabel}</Text></View></View>;}
 function UsageBlock({title,children}){return <View style={styles.usageBlock}><Text style={styles.usageBlockTitle}>{title}</Text>{children}</View>;}
 function UsageSections({data,s,month,setMonth}){
   const months=Array.isArray(data?.usage_months)?data.usage_months:[];
@@ -87,13 +87,30 @@ function UsageSections({data,s,month,setMonth}){
   const selected=months.find(row=>row.month===month)||months[months.length-1]||{};
   return <View style={styles.usageRoot}><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.usageMonthScroll}><ProfileTabs items={months.map(row=>[row.month,monthLabel(row.month)])} activeId={selected.month} onChange={setMonth} style={styles.usageMonthTabs}/></ScrollView><UsageBlock title={s('usagePathUnderstanding')}><UsageMetric label={s('usageLearn')} metric={selected.understanding_learn} actionLabel={s('usageSets')} s={s}/><UsageMetric label={s('usageTests')} metric={selected.understanding_test} actionLabel={s('usageTestsCount')} s={s}/></UsageBlock><UsageBlock title={s('usagePathRoots')}><UsageMetric label={s('usageLearn')} metric={selected.roots_learn} actionLabel={s('usageSets')} s={s}/><UsageMetric label={s('usageTests')} metric={selected.roots_test} actionLabel={s('usageTestsCount')} s={s}/></UsageBlock><UsageBlock title={s('usageAshyk')}><UsageMetric label={s('usageAshykComputer')} metric={selected.ashyk_computer} actionLabel={s('usageGames')} s={s}/><UsageMetric label={s('usageAshykOnline')} metric={selected.ashyk_online} actionLabel={s('usageGames')} s={s}/></UsageBlock><UsageBlock title={s('usageSongs')}><UsageMetric label={s('usageLyrics')} metric={selected.song_lyrics} actionLabel={s('usageOpens')} s={s}/></UsageBlock></View>;
 }
+function monthlyAudienceRows(data,audience){const rows=Array.isArray(data?.monthly_visitors)?data.monthly_visitors:[];return rows.map(row=>({month:row.month,...(row?.[audience]||{})}));}
 function VisitorAnalyticsPane({settings={}}){
   const s=(key,params)=>socialMessage(settings?.interface_language_code,key,params),[period,setPeriod]=useState(30),[usageMonth,setUsageMonth]=useState(''),[data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
   useEffect(()=>{let alive=true;setLoading(true);setError('');fetchNativeExtendedAnalytics(period).then(value=>{if(alive){setData(value||{});setLoading(false);}}).catch(e=>{if(alive){setError(e?.message||s('error'));setLoading(false);}});return()=>{alive=false;};},[period]);
   if(loading)return <View style={styles.inlineState}><EmptyState>{s('loading')}</EmptyState></View>;
   if(error)return <View style={styles.inlineState}><EmptyState error>{error}</EmptyState></View>;
-  const summary=data?.summary||{};
-  return <ScrollView style={styles.guestScroll} contentContainerStyle={styles.guestContent} showsVerticalScrollIndicator><View style={styles.analyticsPeriodTabs}><ProfileTabs items={[[7,s('guestPeriod7')],[30,s('guestPeriod30')],[90,s('guestPeriod90')],[0,s('guestPeriodAll')]]} activeId={period} onChange={setPeriod}/></View><ScreenSection title={s('visitorDailyTitle')}><View style={styles.analyticsHeadline}><Text style={styles.analyticsHeadlineValue}>{fmtNumber(summary.unique_visitors)}</Text><Text style={styles.analyticsHeadlineLabel}>{s('guestUniqueVisitors')}</Text></View><AnalyticsChart rows={data?.daily_visitors} series={[{key:'people',label:s('guestUniqueVisitors')}]} s={s}/></ScreenSection><ScreenSection title={s('visitorMonthlyTitle')}><AnalyticsChart monthly rows={data?.monthly_visitors} series={[{key:'d1',label:s('visitorDay1')},{key:'d3',label:s('visitorDay3')},{key:'d7',label:s('visitorDay7')},{key:'d14',label:s('visitorDay14')},{key:'d28',label:s('visitorDay28')}]} xKey="month" s={s}/></ScreenSection><ScreenSection title={s('usageTitle')}><UsageSections data={data} s={s} month={usageMonth} setMonth={setUsageMonth}/></ScreenSection></ScrollView>;
+  const summary=data?.summary||{},regularitySeries=[{key:'d1',label:s('visitorDay1')},{key:'d3',label:s('visitorDay3')},{key:'d7',label:s('visitorDay7')},{key:'d14',label:s('visitorDay14')},{key:'d28',label:s('visitorDay28')}];
+  return <ScrollView style={styles.guestScroll} contentContainerStyle={styles.guestContent} showsVerticalScrollIndicator>
+    <View style={styles.analyticsPeriodTabs}><ProfileTabs items={[[7,s('guestPeriod7')],[30,s('guestPeriod30')],[90,s('guestPeriod90')],[0,s('guestPeriodAll')]]} activeId={period} onChange={setPeriod}/></View>
+    <ScreenSection title={s('visitorDailyTitle')}>
+      <View style={styles.analyticsAudienceSummary}>
+        <View style={styles.analyticsAudienceSummaryItem}><Text style={styles.analyticsHeadlineValue}>{fmtNumber(summary.authorized)}</Text><Text style={styles.analyticsHeadlineLabel}>{s('statsAuthorized')}</Text></View>
+        <View style={styles.analyticsAudienceSummaryItem}><Text style={styles.analyticsHeadlineValue}>{fmtNumber(summary.guests)}</Text><Text style={styles.analyticsHeadlineLabel}>{s('statsGuests')}</Text></View>
+      </View>
+      <AnalyticsChart rows={data?.daily_visitors} series={[{key:'authorized',label:s('statsAuthorized')},{key:'guests',label:s('statsGuests')}]} s={s}/>
+    </ScreenSection>
+    <ScreenSection title={s('visitorMonthlyTitle')}>
+      <Text style={styles.analyticsAudienceTitle}>{s('statsAuthorized')}</Text>
+      <AnalyticsChart monthly rows={monthlyAudienceRows(data,'authorized')} series={regularitySeries} xKey="month" s={s}/>
+      <Text style={styles.analyticsAudienceTitle}>{s('statsGuests')}</Text>
+      <AnalyticsChart monthly rows={monthlyAudienceRows(data,'guests')} series={regularitySeries} xKey="month" s={s}/>
+    </ScreenSection>
+    <ScreenSection title={s('usageTitle')}><UsageSections data={data} s={s} month={usageMonth} setMonth={setUsageMonth}/></ScreenSection>
+  </ScrollView>;
 }
 
 export function AdminUsersPane({settings={},onOpenUser}){
@@ -151,6 +168,9 @@ const styles=StyleSheet.create({
   guestContent:{paddingHorizontal:theme.listTable.horizontalPadding,paddingBottom:34,gap:12},
   analyticsPeriodTabs:{paddingTop:2,paddingBottom:4},
   analyticsHeadline:{flexDirection:'row',alignItems:'baseline',gap:8,paddingHorizontal:2,paddingBottom:4},
+  analyticsAudienceSummary:{flexDirection:'row',gap:8,paddingHorizontal:2,paddingBottom:6},
+  analyticsAudienceSummaryItem:{flex:1,minWidth:0,borderWidth:1,borderColor:C.lineSoft,borderRadius:10,paddingHorizontal:10,paddingVertical:8},
+  analyticsAudienceTitle:{fontSize:10,fontWeight:'800',color:C.text2,paddingHorizontal:2,paddingTop:4,paddingBottom:3},
   analyticsHeadlineValue:{fontFamily:theme.font.terminal,fontWeight:'900',fontSize:16,color:C.text1},
   analyticsHeadlineLabel:{fontSize:10,color:C.text2},
   analyticsChart:{borderTopWidth:1,borderBottomWidth:1,borderColor:C.lineSoft,paddingTop:8,paddingBottom:6},
@@ -167,5 +187,6 @@ const styles=StyleSheet.create({
   usageBlockTitle:{fontSize:12,fontWeight:'800',color:C.text1,paddingVertical:9},
   usageMetric:{minHeight:42,borderBottomWidth:1,borderBottomColor:C.lineSoft,paddingVertical:7,gap:4},
   usageMetricLabel:{fontSize:11,color:C.text2},
+  usageAudienceValues:{gap:3},
   usageMetricValue:{fontFamily:theme.font.terminal,fontWeight:'800',fontSize:10,color:C.text1},
 });
