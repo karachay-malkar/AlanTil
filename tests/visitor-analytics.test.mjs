@@ -37,7 +37,7 @@ test("visitor id persists while the session id is reused inside 30 minutes", asy
   assert.equal(anonymousAnalyticsConfig.sessionTimeoutMs, 30 * 60 * 1000);
 });
 
-test("a restored account can claim a guest session while another account starts a new session", async () => {
+test("auth scope changes always start a new visit session while preserving the visitor id", async () => {
   const { resolveAnonymousIdentity } = await loadVisitorModule();
   const storage = new MemoryStorage();
   let index = 0;
@@ -46,8 +46,8 @@ test("a restored account can claim a guest session while another account starts 
   const signed = resolveAnonymousIdentity({ storage, nowMs: 3_000, uuidFactory, scopeId: UUIDS[2] });
   const other = resolveAnonymousIdentity({ storage, nowMs: 4_000, uuidFactory, scopeId: UUIDS[3] });
   assert.equal(signed.visitorId, guest.visitorId);
-  assert.equal(signed.sessionId, guest.sessionId);
-  assert.equal(signed.isNewSession, false);
+  assert.notEqual(signed.sessionId, guest.sessionId);
+  assert.equal(signed.isNewSession, true);
   assert.notEqual(other.sessionId, signed.sessionId);
   assert.equal(other.isNewSession, true);
 });
