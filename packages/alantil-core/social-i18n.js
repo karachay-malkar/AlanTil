@@ -54,7 +54,6 @@ export const SOCIAL_MESSAGES=Object.freeze({
   ashykRegisteredOnly:M('Игра с другом доступна только зарегистрированным пользователям. Войдите или создайте аккаунт.','Playing with a friend is available only to registered users. Sign in or create an account.','Arkadaşla oyun yalnızca kayıtlı kullanıcılar için kullanılabilir. Giriş yapın veya hesap oluşturun.'),
   statsUsers:M('Пользователи','Users','Kullanıcılar'),
   statsGuests:M('Гости','Guests','Misafirler'),
-  statsAuthorized:M('Авторизованные','Signed-in users','Giriş yapanlar'),
   statsVisitors:M('Посетители','Visitors','Ziyaretçiler'),
   guestUniqueVisitors:M('Уникальные посетители','Unique visitors','Benzersiz ziyaretçiler'),
   guestSessions:M('Сессии','Sessions','Oturumlar'),
