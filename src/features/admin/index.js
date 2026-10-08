@@ -357,34 +357,61 @@ function bindAnalyticsPointTooltips(host,signal) {
 }
 
 function dailyVisitorsChart(data) {
-  return analyticsChart(data?.daily_visitors,[{key:"people",label:guestText("guestUniqueVisitors")}],{
+  return analyticsChart(data?.daily_visitors,[
+    {key:"authorized",label:guestText("statsAuthorized")},
+    {key:"guests",label:guestText("statsGuests")},
+  ],{
     title:guestText("visitorDailyTitle"),
     xKey:"date",
     formatLabel:guestDateLabel,
-    formatTooltip:(row)=>`${guestFullDateLabel(row.date)} — ${guestNumber(row.people)} ${msg("admin.people")}`,
+    formatTooltip:(row,item)=>`${guestFullDateLabel(row.date)} · ${item.label}: ${guestNumber(row[item.key])}`,
     className:"adminDailyVisitorsChart",
   });
 }
 
-function monthlyVisitorsChart(data) {
-  return analyticsChart(data?.monthly_visitors,[
+function monthlyAudienceRows(data,audience) {
+  const rows=Array.isArray(data?.monthly_visitors)?data.monthly_visitors:[];
+  return rows.map((row)=>({month:row.month,...(row?.[audience]||{})}));
+}
+
+function monthlyVisitorsChart(data,audience) {
+  return analyticsChart(monthlyAudienceRows(data,audience),[
     {key:"d1",label:guestText("visitorDay1")},
     {key:"d3",label:guestText("visitorDay3")},
     {key:"d7",label:guestText("visitorDay7")},
     {key:"d14",label:guestText("visitorDay14")},
     {key:"d28",label:guestText("visitorDay28")},
   ],{
-    title:guestText("visitorMonthlyTitle"),
+    title:`${guestText("visitorMonthlyTitle")} · ${guestText(audience==="authorized"?"statsAuthorized":"statsGuests")}`,
     xKey:"month",
     formatLabel:guestMonthLabel,
     className:"adminMonthlyVisitorsChart",
   });
 }
 
+function monthlyVisitorsCharts(data) {
+  return `<div class="adminAudienceCharts">
+    <div class="adminAudienceChart"><h3>${escapeHtml(guestText("statsAuthorized"))}</h3>${monthlyVisitorsChart(data,"authorized")}</div>
+    <div class="adminAudienceChart"><h3>${escapeHtml(guestText("statsGuests"))}</h3>${monthlyVisitorsChart(data,"guests")}</div>
+  </div>`;
+}
+
+function audienceSummary(data) {
+  const summary=data?.summary||{};
+  return `<div class="adminAudienceSummary">
+    <div><span>${escapeHtml(guestText("statsAuthorized"))}</span><strong>${guestNumber(summary.authorized)}</strong></div>
+    <div><span>${escapeHtml(guestText("statsGuests"))}</span><strong>${guestNumber(summary.guests)}</strong></div>
+  </div>`;
+}
+
 function usageMetricRow(label,metric,actionLabel) {
-  const people=guestNumber(metric?.people);
-  const actions=guestNumber(metric?.actions);
-  return `<div class="adminUsageMetric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(people)} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(actions)} ${escapeHtml(actionLabel)}</strong></div>`;
+  const authorized=metric?.authorized||{};
+  const guests=metric?.guests||{};
+  const value=(audienceLabel,item)=>`<div class="adminUsageAudienceValue"><span>${escapeHtml(audienceLabel)}</span><strong>${escapeHtml(guestNumber(item?.people))} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(guestNumber(item?.actions))} ${escapeHtml(actionLabel)}</strong></div>`;
+  return `<div class="adminUsageMetric"><span>${escapeHtml(label)}</span><div class="adminUsageAudienceValues">
+    ${value(guestText("statsAuthorized"),authorized)}
+    ${value(guestText("statsGuests"),guests)}
+  </div></div>`;
 }
 
 function usageBlock(title,rows) {
@@ -448,11 +475,12 @@ async function renderGuestAnalytics(context,signal,host){
           <div><h2>${escapeHtml(guestText("visitorDailyTitle"))}</h2></div>
           <div class="adminGuestPeriodTabs">${periods}</div>
         </div>
+        ${audienceSummary(data)}
         ${dailyVisitorsChart(data)}
       </section>
       <section class="adminAnalyticsSection">
         <div class="adminAnalyticsSectionHead"><div><h2>${escapeHtml(guestText("visitorMonthlyTitle"))}</h2></div></div>
-        ${monthlyVisitorsChart(data)}
+        ${monthlyVisitorsCharts(data)}
       </section>
       <section class="adminAnalyticsSection adminUsageSection">
         <div class="adminAnalyticsSectionHead"><div><h2>${escapeHtml(guestText("usageTitle"))}</h2></div></div>
