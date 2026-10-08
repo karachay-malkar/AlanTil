@@ -392,10 +392,12 @@ test('Ashyk guest entry stays available while online challenge actions stay auth
 test('extended statistics exposes the same simplified analytics data contract on Web and Mobile',()=>{
   const web=read('src/features/admin/index.js'),native=read('mobile/screens/admin-users.js'),webService=read('src/shared/admin/admin-activity-service.js'),nativeService=read('mobile/platform/admin.js');
   for(const source of [web,native]){
-    assert.match(source,/guestUniqueVisitors/);
     assert.match(source,/daily_visitors/);
     assert.match(source,/monthly_visitors/);
     assert.match(source,/usage_months/);
+    assert.match(source,/authorized/);
+    assert.match(source,/guests/);
+    assert.doesNotMatch(source,/guestUniqueVisitors/);
   }
   assert.match(webService,/admin_extended_analytics/);
   assert.match(nativeService,/admin_extended_analytics/);
