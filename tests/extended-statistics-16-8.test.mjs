@@ -312,3 +312,34 @@ test("part 6 final statistics UI exposes only the approved metric set", () => {
   assert.match(shell, /\.appHeader\{[\s\S]*?background:transparent/);
   assert.match(shell, /\.bottomNav\{[\s\S]*?background:transparent/);
 });
+
+
+test("authorized users and guests remain separate across visits, regularity and usage", () => {
+  const migration = read("supabase/migrations/20261008060000_alantil_16_8_extended_statistics_audience_split.sql");
+  const admin = read("src/features/admin/index.js");
+  const mobileAdmin = read("mobile/screens/admin-users.js");
+  const visitor = read("src/shared/analytics/visitor-analytics.js");
+  const nativeAnalytics = read("mobile/platform/analytics.js");
+
+  assert.match(migration, /started_as_guest/);
+  assert.match(migration, /'authorized'/);
+  assert.match(migration, /'guests'/);
+  assert.match(migration, /'authorized',jsonb_build_object/);
+  assert.match(migration, /'guests',jsonb_build_object/);
+  assert.doesNotMatch(migration, /visitor_accounts as/);
+  assert.doesNotMatch(migration, /visitor_day_accounts as/);
+
+  assert.match(admin, /key:"authorized"/);
+  assert.match(admin, /key:"guests"/);
+  assert.match(admin, /metric\?\.authorized/);
+  assert.match(admin, /metric\?\.guests/);
+
+  assert.match(mobileAdmin, /key:'authorized'/);
+  assert.match(mobileAdmin, /key:'guests'/);
+  assert.match(mobileAdmin, /metric\?\.authorized/);
+  assert.match(mobileAdmin, /metric\?\.guests/);
+
+  assert.match(visitor, /previous\.scopeId === normalizedScope/);
+  assert.doesNotMatch(visitor, /!previous\.scopeId && Boolean\(normalizedScope\)/);
+  assert.match(nativeAnalytics, /visitSessionScope/);
+});
