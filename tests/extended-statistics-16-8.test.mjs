@@ -169,36 +169,27 @@ test("part 1 data audit uses canonical domain sources without authenticated comp
 });
 
 
-test("part 2 daily visitors uses one combined person per UTC calendar day", () => {
+test("current daily visitor contract separates authorized users from guests per UTC calendar day", () => {
   const admin = read("src/features/admin/index.js");
   const messages = read("src/shared/i18n/messages-13-15-9.js");
-  const migration = read("supabase/migrations/20261006172000_alantil_16_8_extended_statistics_source_map.sql");
+  const migration = read("supabase/migrations/20261008060000_alantil_16_8_extended_statistics_audience_split.sql");
 
   const dailyChart = admin.match(/function dailyVisitorsChart\(data\) \{[\s\S]*?\n\}/)?.[0] || "";
   assert.match(dailyChart, /data\?\.daily_visitors/);
-  assert.match(dailyChart, /visitorDailyTitle/);
-  assert.match(dailyChart, /msg\("admin\.people"\)/);
+  assert.match(dailyChart, /key:"authorized"/);
+  assert.match(dailyChart, /key:"guests"/);
   assert.match(admin, /day:"numeric",month:"long",timeZone:"UTC"/);
-  assert.match(admin, /day:"2-digit",month:"2-digit",timeZone:"UTC"/);
   assert.match(messages, /"admin\.people": Object\.freeze\(\{ ru: "человек", en: "people", tr: "kişi" \}\)/);
 
-  const visitorBlock = migration.match(/visitor_accounts as \([\s\S]*?\n  daily_json as \(/)?.[0] || "";
-  assert.match(visitorBlock, /visitor_accounts as/);
-  assert.match(visitorBlock, /visitor_day_accounts as/);
-  assert.match(visitorBlock, /when av\.user_id is not null then 'u:'/);
-  assert.match(visitorBlock, /when va\.linked_user_id is not null then 'u:'/);
-  assert.match(visitorBlock, /when vda\.linked_user_id is not null then 'u:'/);
-  assert.match(visitorBlock, /else 'v:'\|\|av\.visitor_id::text/);
-  assert.match(visitorBlock, /count\(distinct vd\.person_key\)::int as people/);
-
-  for (const legacyMetric of [
-    /summary\.sessions/,
-    /summary\.pageviews/,
-    /avg_pages_per_session/,
-    /guestBreakdown\(/,
-  ]) {
-    assert.doesNotMatch(admin, legacyMetric);
-  }
+  const visitorBlock = migration.match(/visit_days as \([\s\S]*?\n  daily_json as \(/)?.[0] || "";
+  assert.match(visitorBlock, /'guests'::text as audience/);
+  assert.match(visitorBlock, /'authorized'::text as audience/);
+  assert.match(visitorBlock, /started_as_guest is true/);
+  assert.match(visitorBlock, /av\.user_id is not null/);
+  assert.match(visitorBlock, /filter\(where vd\.audience='authorized'\)/);
+  assert.match(visitorBlock, /filter\(where vd\.audience='guests'\)/);
+  assert.doesNotMatch(visitorBlock, /visitor_accounts as/);
+  assert.doesNotMatch(visitorBlock, /visitor_day_accounts as/);
 });
 
 
@@ -326,6 +317,9 @@ test("authorized users and guests remain separate across visits, regularity and 
   assert.match(migration, /'guests'/);
   assert.match(migration, /'authorized',jsonb_build_object/);
   assert.match(migration, /'guests',jsonb_build_object/);
+  assert.match(migration, /case when ue\.user_id is not null then 'authorized' else 'guests' end as audience/);
+  assert.doesNotMatch(migration, /when va\.linked_user_id/);
+  assert.doesNotMatch(migration, /when vda\.linked_user_id/);
   assert.doesNotMatch(migration, /visitor_accounts as/);
   assert.doesNotMatch(migration, /visitor_day_accounts as/);
 
