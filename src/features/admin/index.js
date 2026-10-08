@@ -389,7 +389,7 @@ function monthlyVisitorsChart(data,audience) {
     {key:"d14",label:guestText("visitorDay14")},
     {key:"d28",label:guestText("visitorDay28")},
   ],{
-    title:`${guestText("visitorMonthlyTitle")} · ${guestText(audience==="authorized"?"statsAuthorized":"statsGuests")}`,
+    title:`${guestText("visitorMonthlyTitle")} · ${audience==="authorized"?authorizedAudienceText():guestText("statsGuests")}`,
     xKey:"month",
     formatLabel:guestMonthLabel,
     className:"adminMonthlyVisitorsChart",
@@ -414,9 +414,9 @@ function audienceSummary(data) {
 function usageMetricRow(label,metric,actionLabel) {
   const authorized=metric?.authorized||{};
   const guests=metric?.guests||{};
-  const value=(audienceLabel,item)=>`${escapeHtml(guestNumber(item?.people))} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(guestNumber(item?.actions))} ${escapeHtml(actionLabel)}`;
-  return `<div class="adminUsageMetric"><span>${escapeHtml(label)} · ${escapeHtml(authorizedAudienceText())}</span><strong>${value(authorizedAudienceText(),authorized)}</strong></div>
-    <div class="adminUsageMetric"><span>${escapeHtml(label)} · ${escapeHtml(guestText("statsGuests"))}</span><strong>${value(guestText("statsGuests"),guests)}</strong></div>`;
+  const value=(item)=>`${escapeHtml(guestNumber(item?.people))} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(guestNumber(item?.actions))} ${escapeHtml(actionLabel)}`;
+  return `<div class="adminUsageMetric"><span>${escapeHtml(label)} · ${escapeHtml(authorizedAudienceText())}</span><strong>${value(authorized)}</strong></div>
+    <div class="adminUsageMetric"><span>${escapeHtml(label)} · ${escapeHtml(guestText("statsGuests"))}</span><strong>${value(guests)}</strong></div>`;
 }
 
 function usageBlock(title,rows) {
