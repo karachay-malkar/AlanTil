@@ -276,8 +276,9 @@ test("part 6 final statistics UI exposes only the approved metric set", () => {
   const shell = read("src/shared/styles/shell.css");
   const render = admin.match(/async function renderGuestAnalytics\(context,signal,host\)[\s\S]*?\n}\n\nexport async function renderAdminUsersEmbedded/)?.[0] || "";
 
+  assert.match(render, /audienceSummary\(data\)/);
   assert.match(render, /dailyVisitorsChart\(data\)/);
-  assert.match(render, /monthlyVisitorsChart\(data\)/);
+  assert.match(render, /monthlyVisitorsCharts\(data\)/);
   assert.match(render, /renderUsageSections\(data\)/);
 
   assert.doesNotMatch(render, /summary\.unique_visitors/);
@@ -325,6 +326,8 @@ test("authorized users and guests remain separate across visits, regularity and 
 
   assert.match(admin, /key:"authorized"/);
   assert.match(admin, /key:"guests"/);
+  assert.match(admin, /function authorizedAudienceText\(\)/);
+  assert.doesNotMatch(admin, /statsAuthorized/);
   assert.match(admin, /metric\?\.authorized/);
   assert.match(admin, /metric\?\.guests/);
 
