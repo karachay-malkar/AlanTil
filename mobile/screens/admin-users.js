@@ -67,6 +67,7 @@ function TestDetail({sessionId,s,am}){
 
 function fmtNumber(value){return new Intl.NumberFormat().format(Math.max(0,Number(value)||0));}
 function monthLabel(value){const raw=String(value||'');if(!raw)return'—';try{return new Date(raw+'-01T00:00:00Z').toLocaleDateString(undefined,{month:'short',year:'2-digit',timeZone:'UTC'});}catch{return raw;}}
+function authorizedAudienceLabel(languageCode='ru'){const language=String(languageCode||'ru').toLowerCase();if(language==='en')return'Signed-in users';if(language==='tr')return'Giriş yapanlar';return'Авторизованные';}
 function AnalyticsChart({rows=[],series=[],xKey='date',monthly=false,s}){
   const list=Array.isArray(rows)?rows:[],width=720,height=210,left=34,right=10,top=14,bottom=26,innerW=width-left-right,innerH=height-top-bottom;
   if(!list.length)return <EmptyState>{s('emptySearch')}</EmptyState>;
@@ -78,18 +79,19 @@ function AnalyticsChart({rows=[],series=[],xKey='date',monthly=false,s}){
   const lastLabel=monthly?monthLabel(list[list.length-1]?.[xKey]):String(list[list.length-1]?.[xKey]||'').slice(5);
   return <View style={styles.analyticsChart}><View style={styles.analyticsLegend}>{series.map((item,index)=><View key={item.key} style={styles.analyticsLegendItem}><View style={[styles.analyticsLegendLine,{backgroundColor:palette[index%palette.length]}]}/><Text style={styles.analyticsLegendText}>{item.label}</Text></View>)}</View><Svg width="100%" height={height} viewBox={'0 0 '+width+' '+height}><Line x1={left} y1={top} x2={width-right} y2={top} stroke={C.lineSoft}/><Line x1={left} y1={top+innerH/2} x2={width-right} y2={top+innerH/2} stroke={C.lineSoft}/><Line x1={left} y1={top+innerH} x2={width-right} y2={top+innerH} stroke={C.lineSoft}/>{series.map((item,index)=><React.Fragment key={item.key}><Polyline points={linePoints(item.key)} fill="none" stroke={palette[index%palette.length]} strokeWidth="2.2"/>{list.map((row,rowIndex)=>{const p=point(row,rowIndex,item.key);return <Circle key={item.key+'-'+rowIndex} cx={p.x} cy={p.y} r="3" fill={palette[index%palette.length]}/>;})}</React.Fragment>)}</Svg><View style={styles.analyticsChartLabels}><Text style={styles.analyticsChartLabel}>{firstLabel}</Text><Text style={styles.analyticsChartLabel}>{lastLabel}</Text></View></View>;
 }
-function UsageMetric({label,metric,actionLabel,s}){const authorized=metric?.authorized||{},guests=metric?.guests||{};return <View style={styles.usageMetric}><Text style={styles.usageMetricLabel}>{label}</Text><View style={styles.usageAudienceValues}><Text style={styles.usageMetricValue}>{s('statsAuthorized')+': '+fmtNumber(authorized.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(authorized.actions)+' '+actionLabel}</Text><Text style={styles.usageMetricValue}>{s('statsGuests')+': '+fmtNumber(guests.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(guests.actions)+' '+actionLabel}</Text></View></View>;}
+function UsageMetric({label,metric,actionLabel,s,authorizedLabel}){const authorized=metric?.authorized||{},guests=metric?.guests||{};return <View style={styles.usageMetric}><Text style={styles.usageMetricLabel}>{label}</Text><View style={styles.usageAudienceValues}><Text style={styles.usageMetricValue}>{authorizedLabel+': '+fmtNumber(authorized.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(authorized.actions)+' '+actionLabel}</Text><Text style={styles.usageMetricValue}>{s('statsGuests')+': '+fmtNumber(guests.people)+' '+s('usagePeopleShort')+' · '+fmtNumber(guests.actions)+' '+actionLabel}</Text></View></View>;}
 function UsageBlock({title,children}){return <View style={styles.usageBlock}><Text style={styles.usageBlockTitle}>{title}</Text>{children}</View>;}
-function UsageSections({data,s,month,setMonth}){
+function UsageSections({data,s,month,setMonth,authorizedLabel}){
   const months=Array.isArray(data?.usage_months)?data.usage_months:[];
   useEffect(()=>{if(!months.length)return;if(!month||!months.some(row=>row.month===month))setMonth(months[months.length-1]?.month||'');},[data,month,setMonth]);
   if(!months.length)return <EmptyState>{s('emptySearch')}</EmptyState>;
   const selected=months.find(row=>row.month===month)||months[months.length-1]||{};
-  return <View style={styles.usageRoot}><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.usageMonthScroll}><ProfileTabs items={months.map(row=>[row.month,monthLabel(row.month)])} activeId={selected.month} onChange={setMonth} style={styles.usageMonthTabs}/></ScrollView><UsageBlock title={s('usagePathUnderstanding')}><UsageMetric label={s('usageLearn')} metric={selected.understanding_learn} actionLabel={s('usageSets')} s={s}/><UsageMetric label={s('usageTests')} metric={selected.understanding_test} actionLabel={s('usageTestsCount')} s={s}/></UsageBlock><UsageBlock title={s('usagePathRoots')}><UsageMetric label={s('usageLearn')} metric={selected.roots_learn} actionLabel={s('usageSets')} s={s}/><UsageMetric label={s('usageTests')} metric={selected.roots_test} actionLabel={s('usageTestsCount')} s={s}/></UsageBlock><UsageBlock title={s('usageAshyk')}><UsageMetric label={s('usageAshykComputer')} metric={selected.ashyk_computer} actionLabel={s('usageGames')} s={s}/><UsageMetric label={s('usageAshykOnline')} metric={selected.ashyk_online} actionLabel={s('usageGames')} s={s}/></UsageBlock><UsageBlock title={s('usageSongs')}><UsageMetric label={s('usageLyrics')} metric={selected.song_lyrics} actionLabel={s('usageOpens')} s={s}/></UsageBlock></View>;
+  return <View style={styles.usageRoot}><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.usageMonthScroll}><ProfileTabs items={months.map(row=>[row.month,monthLabel(row.month)])} activeId={selected.month} onChange={setMonth} style={styles.usageMonthTabs}/></ScrollView><UsageBlock title={s('usagePathUnderstanding')}><UsageMetric label={s('usageLearn')} metric={selected.understanding_learn} actionLabel={s('usageSets')} s={s} authorizedLabel={authorizedLabel}/><UsageMetric label={s('usageTests')} metric={selected.understanding_test} actionLabel={s('usageTestsCount')} s={s} authorizedLabel={authorizedLabel}/></UsageBlock><UsageBlock title={s('usagePathRoots')}><UsageMetric label={s('usageLearn')} metric={selected.roots_learn} actionLabel={s('usageSets')} s={s} authorizedLabel={authorizedLabel}/><UsageMetric label={s('usageTests')} metric={selected.roots_test} actionLabel={s('usageTestsCount')} s={s} authorizedLabel={authorizedLabel}/></UsageBlock><UsageBlock title={s('usageAshyk')}><UsageMetric label={s('usageAshykComputer')} metric={selected.ashyk_computer} actionLabel={s('usageGames')} s={s} authorizedLabel={authorizedLabel}/><UsageMetric label={s('usageAshykOnline')} metric={selected.ashyk_online} actionLabel={s('usageGames')} s={s} authorizedLabel={authorizedLabel}/></UsageBlock><UsageBlock title={s('usageSongs')}><UsageMetric label={s('usageLyrics')} metric={selected.song_lyrics} actionLabel={s('usageOpens')} s={s} authorizedLabel={authorizedLabel}/></UsageBlock></View>;
 }
 function monthlyAudienceRows(data,audience){const rows=Array.isArray(data?.monthly_visitors)?data.monthly_visitors:[];return rows.map(row=>({month:row.month,...(row?.[audience]||{})}));}
 function VisitorAnalyticsPane({settings={}}){
   const s=(key,params)=>socialMessage(settings?.interface_language_code,key,params),[period,setPeriod]=useState(30),[usageMonth,setUsageMonth]=useState(''),[data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
+  const authorizedLabel=authorizedAudienceLabel(settings?.interface_language_code);
   useEffect(()=>{let alive=true;setLoading(true);setError('');fetchNativeExtendedAnalytics(period).then(value=>{if(alive){setData(value||{});setLoading(false);}}).catch(e=>{if(alive){setError(e?.message||s('error'));setLoading(false);}});return()=>{alive=false;};},[period]);
   if(loading)return <View style={styles.inlineState}><EmptyState>{s('loading')}</EmptyState></View>;
   if(error)return <View style={styles.inlineState}><EmptyState error>{error}</EmptyState></View>;
@@ -98,18 +100,18 @@ function VisitorAnalyticsPane({settings={}}){
     <View style={styles.analyticsPeriodTabs}><ProfileTabs items={[[7,s('guestPeriod7')],[30,s('guestPeriod30')],[90,s('guestPeriod90')],[0,s('guestPeriodAll')]]} activeId={period} onChange={setPeriod}/></View>
     <ScreenSection title={s('visitorDailyTitle')}>
       <View style={styles.analyticsAudienceSummary}>
-        <View style={styles.analyticsAudienceSummaryItem}><Text style={styles.analyticsHeadlineValue}>{fmtNumber(summary.authorized)}</Text><Text style={styles.analyticsHeadlineLabel}>{s('statsAuthorized')}</Text></View>
+        <View style={styles.analyticsAudienceSummaryItem}><Text style={styles.analyticsHeadlineValue}>{fmtNumber(summary.authorized)}</Text><Text style={styles.analyticsHeadlineLabel}>{authorizedLabel}</Text></View>
         <View style={styles.analyticsAudienceSummaryItem}><Text style={styles.analyticsHeadlineValue}>{fmtNumber(summary.guests)}</Text><Text style={styles.analyticsHeadlineLabel}>{s('statsGuests')}</Text></View>
       </View>
-      <AnalyticsChart rows={data?.daily_visitors} series={[{key:'authorized',label:s('statsAuthorized')},{key:'guests',label:s('statsGuests')}]} s={s}/>
+      <AnalyticsChart rows={data?.daily_visitors} series={[{key:'authorized',label:authorizedLabel},{key:'guests',label:s('statsGuests')}]} s={s}/>
     </ScreenSection>
     <ScreenSection title={s('visitorMonthlyTitle')}>
-      <Text style={styles.analyticsAudienceTitle}>{s('statsAuthorized')}</Text>
+      <Text style={styles.analyticsAudienceTitle}>{authorizedLabel}</Text>
       <AnalyticsChart monthly rows={monthlyAudienceRows(data,'authorized')} series={regularitySeries} xKey="month" s={s}/>
       <Text style={styles.analyticsAudienceTitle}>{s('statsGuests')}</Text>
       <AnalyticsChart monthly rows={monthlyAudienceRows(data,'guests')} series={regularitySeries} xKey="month" s={s}/>
     </ScreenSection>
-    <ScreenSection title={s('usageTitle')}><UsageSections data={data} s={s} month={usageMonth} setMonth={setUsageMonth}/></ScreenSection>
+    <ScreenSection title={s('usageTitle')}><UsageSections data={data} s={s} month={usageMonth} setMonth={setUsageMonth} authorizedLabel={authorizedLabel}/></ScreenSection>
   </ScrollView>;
 }
 
