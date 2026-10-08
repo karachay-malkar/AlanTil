@@ -105,10 +105,7 @@ export function resolveAnonymousIdentity({
   const normalizedScope = cleanScopeId(scopeId);
   const previous = readSession(storage);
   const elapsed = previous ? Number(nowMs) - Number(previous.lastActivityAt) : Number.POSITIVE_INFINITY;
-  const scopeCompatible = previous && (
-    previous.scopeId === normalizedScope
-    || (!previous.scopeId && Boolean(normalizedScope))
-  );
+  const scopeCompatible = previous && previous.scopeId === normalizedScope;
   const reuse = previous && scopeCompatible && elapsed >= 0 && elapsed <= SESSION_TIMEOUT_MS;
   const sessionId = reuse ? previous.sessionId : uuidFactory();
   if (!validUuid(sessionId)) throw new Error("Visit UUID factory returned an invalid session id.");
