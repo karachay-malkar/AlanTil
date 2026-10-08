@@ -271,6 +271,13 @@ function guestText(key,params={}) {
   return socialMessage(getInterfaceLanguage(),key,params);
 }
 
+function authorizedAudienceText() {
+  const language=String(getInterfaceLanguage()||"ru").toLowerCase();
+  if(language==="en")return "Signed-in users";
+  if(language==="tr")return "Giriş yapanlar";
+  return "Авторизованные";
+}
+
 function guestNumber(value) {
   return new Intl.NumberFormat(getInterfaceLocale()).format(Math.max(0,numberValue(value)));
 }
@@ -358,7 +365,7 @@ function bindAnalyticsPointTooltips(host,signal) {
 
 function dailyVisitorsChart(data) {
   return analyticsChart(data?.daily_visitors,[
-    {key:"authorized",label:guestText("statsAuthorized")},
+    {key:"authorized",label:authorizedAudienceText()},
     {key:"guests",label:guestText("statsGuests")},
   ],{
     title:guestText("visitorDailyTitle"),
@@ -390,28 +397,26 @@ function monthlyVisitorsChart(data,audience) {
 }
 
 function monthlyVisitorsCharts(data) {
-  return `<div class="adminAudienceCharts">
-    <div class="adminAudienceChart"><h3>${escapeHtml(guestText("statsAuthorized"))}</h3>${monthlyVisitorsChart(data,"authorized")}</div>
-    <div class="adminAudienceChart"><h3>${escapeHtml(guestText("statsGuests"))}</h3>${monthlyVisitorsChart(data,"guests")}</div>
+  return `<div class="adminUsage">
+    <div class="adminUsageBlock"><h3>${escapeHtml(authorizedAudienceText())}</h3>${monthlyVisitorsChart(data,"authorized")}</div>
+    <div class="adminUsageBlock"><h3>${escapeHtml(guestText("statsGuests"))}</h3>${monthlyVisitorsChart(data,"guests")}</div>
   </div>`;
 }
 
 function audienceSummary(data) {
   const summary=data?.summary||{};
-  return `<div class="adminAudienceSummary">
-    <div><span>${escapeHtml(guestText("statsAuthorized"))}</span><strong>${guestNumber(summary.authorized)}</strong></div>
-    <div><span>${escapeHtml(guestText("statsGuests"))}</span><strong>${guestNumber(summary.guests)}</strong></div>
+  return `<div class="adminGuestLegend">
+    <span class="s0"><i></i>${escapeHtml(authorizedAudienceText())}: ${guestNumber(summary.authorized)}</span>
+    <span class="s1"><i></i>${escapeHtml(guestText("statsGuests"))}: ${guestNumber(summary.guests)}</span>
   </div>`;
 }
 
 function usageMetricRow(label,metric,actionLabel) {
   const authorized=metric?.authorized||{};
   const guests=metric?.guests||{};
-  const value=(audienceLabel,item)=>`<div class="adminUsageAudienceValue"><span>${escapeHtml(audienceLabel)}</span><strong>${escapeHtml(guestNumber(item?.people))} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(guestNumber(item?.actions))} ${escapeHtml(actionLabel)}</strong></div>`;
-  return `<div class="adminUsageMetric"><span>${escapeHtml(label)}</span><div class="adminUsageAudienceValues">
-    ${value(guestText("statsAuthorized"),authorized)}
-    ${value(guestText("statsGuests"),guests)}
-  </div></div>`;
+  const value=(audienceLabel,item)=>`${escapeHtml(guestNumber(item?.people))} ${escapeHtml(guestText("usagePeopleShort"))} · ${escapeHtml(guestNumber(item?.actions))} ${escapeHtml(actionLabel)}`;
+  return `<div class="adminUsageMetric"><span>${escapeHtml(label)} · ${escapeHtml(authorizedAudienceText())}</span><strong>${value(authorizedAudienceText(),authorized)}</strong></div>
+    <div class="adminUsageMetric"><span>${escapeHtml(label)} · ${escapeHtml(guestText("statsGuests"))}</span><strong>${value(guestText("statsGuests"),guests)}</strong></div>`;
 }
 
 function usageBlock(title,rows) {
