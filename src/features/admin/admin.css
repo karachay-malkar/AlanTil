@@ -226,3 +226,26 @@
   .adminGuestLegend{gap:6px 10px;font-size:9px}
   .adminUsageMetric{grid-template-columns:1fr;gap:4px}
 }
+
+/* stats users detail 20261010 */
+.adminUsersEmbedded .adminStatsPane{min-height:0;min-width:0;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr)}
+.adminUsersEmbedded .adminStatsPane.isGuest{display:block;height:100%}
+.adminUsersEmbedded .adminStatsModeTabs{height:38px;min-height:38px;padding:0 10px}
+.adminUsersEmbedded .adminStatsModeTabs .profilePrimaryNav{width:100%;height:38px}
+.adminUsersEmbedded .adminUsersTable .adminUserStickyCell{width:194px;min-width:194px;max-width:194px}
+.adminUsersEmbedded .adminUsersTable th:nth-child(3),.adminUsersEmbedded .adminUsersTable td:nth-child(3){width:132px;min-width:132px;max-width:132px}
+.adminUsersEmbedded .adminUsersTable th:nth-child(7),.adminUsersEmbedded .adminUsersTable td:nth-child(7){width:94px;min-width:94px}
+.adminStreakBadge{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;flex:none;min-height:20px;padding:2px 5px;border:1px solid var(--line-soft);border-radius:5px;font:800 10px/1 var(--font-terminal);color:var(--text-1);background:color-mix(in srgb,var(--surface-0) 66%,transparent)}
+.adminHistoryActionBar{display:flex;justify-content:flex-end;padding:7px 0 3px}
+.adminProgressTable{width:100%;border-collapse:collapse;border-top:1px solid var(--line-soft);font-size:12px}
+.adminProgressTable th,.adminProgressTable td{padding:10px 3px;border-bottom:1px solid var(--line-soft);text-align:left}
+.adminProgressTable thead th{color:var(--text-3);font:750 10px/1.2 var(--font-terminal)}
+.adminProgressTable tbody th{font-weight:750;max-width:230px}
+.adminProgressTable tbody td{text-align:right;font:800 12px/1.2 var(--font-terminal);white-space:nowrap;font-variant-numeric:tabular-nums}
+.adminStudyHistory{width:100%;display:grid}
+.adminStudyHistoryRow{display:grid;grid-template-columns:100px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 3px;border-bottom:1px solid var(--line-soft)}
+.adminStudyHistoryRow time{color:var(--text-3);font:750 10px/1.3 var(--font-terminal)}
+.adminStudyHistoryRow div{min-width:0;display:grid;gap:4px}
+.adminStudyHistoryRow strong{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.adminStudyHistoryRow small{font:750 10px/1.2 var(--font-terminal);color:var(--text-2)}
+@media(max-width:430px){.adminStudyHistoryRow{grid-template-columns:80px minmax(0,1fr) auto;gap:6px}.adminUsersEmbedded .adminUsersTable .adminUserStickyCell{width:170px;min-width:170px;max-width:170px}.adminStreakBadge{padding:2px 4px;font-size:9px}}
