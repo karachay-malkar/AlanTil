@@ -218,8 +218,8 @@ async function roleSizes(page) {
       for(const [size,roles] of Object.entries(expected)){
         await setTextSize(page,size);
         const track=page.locator('#qaBracketFixture .bracketTabsTrack');
-        const metrics=await track.evaluate(node=>({width:node.clientWidth,total:node.scrollWidth,size:parseFloat(getComputedStyle(node.querySelector('button')).fontSize),height:node.clientHeight,childHeight:node.querySelector('button').getBoundingClientRect().height}));
-        assert.equal(metrics.size,roles[1]);
+        const metrics=await track.evaluate(node=>{const probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;font-size:var(--text-button)';node.appendChild(probe);const buttonRole=parseFloat(getComputedStyle(probe).fontSize);probe.remove();return{width:node.clientWidth,total:node.scrollWidth,size:parseFloat(getComputedStyle(node.querySelector('button')).fontSize),buttonRole,height:node.clientHeight,childHeight:node.querySelector('button').getBoundingClientRect().height};});
+        assert.equal(metrics.size,metrics.buttonRole,'bracket navigation must use shared Button typography');
         assert.ok(metrics.childHeight<=metrics.height+1,'tab label is vertically clipped');
         if(metrics.total>metrics.width+2){
           await page.waitForFunction(()=>document.querySelector('#qaBracketFixture .bracketTabsShell').classList.contains('canScrollEnd'));
