@@ -14,6 +14,7 @@ import {
   fetchUserActivityList,
   fetchUserFavorites,
   fetchUserTestHistory,
+  fetchUserStudyHistory,
   unblockUserAccount,
 } from "../../shared/admin/admin-activity-service.js?v=16.8.0.3";
 
@@ -31,7 +32,23 @@ let usersSearchOpen = false;
 let usersSearchQuery = "";
 let guestAnalyticsPeriod = 30;
 let usageAnalyticsMonth = "";
+let embeddedStatsMode = "users";
 
+function statsUiText(key) {
+  const lang = getInterfaceLanguage();
+  const words = {
+    users: {ru:"Пользователи",en:"Users",tr:"Kullanıcılar"},
+    general: {ru:"Общая",en:"Overview",tr:"Genel"},
+    history: {ru:"История",en:"History",tr:"Geçmiş"},
+    learning: {ru:"Изучение слов",en:"Study words",tr:"Kelime öğrenme"},
+    test: {ru:"Тест",en:"Test",tr:"Test"},
+    shows: {ru:"Показов на слово",en:"Shows per word",tr:"Kelime başına gösterim"},
+    levels: {ru:"Пройдено уровней",en:"Completed levels",tr:"Tamamlanan seviyeler"},
+    section: {ru:"Раздел",en:"Section",tr:"Bölüm"},
+    noHistory: {ru:"Нет завершённых занятий",en:"No completed sessions",tr:"Tamamlanan oturum yok"}
+  };
+  return words[key]?.[lang] || words[key]?.ru || key;
+}
 function storyLabel(type) {
   return msg(STORY_KEYS[type] || "admin.user");
 }
@@ -165,10 +182,10 @@ function usersTableRows(rows = []) {
           <span class="adminRankLabel">№${rank}</span>
           ${medalIcon(rank)}
           <button class="adminUserLink" type="button" data-admin-user-id="${escapeHtml(row.user_id)}">${escapeHtml(row.nickname)}</button>
+          <span class="adminStreakBadge" title="${escapeHtml(msg("admin.streak"))}">🔥 ${Math.max(0, numberValue(row.streak_days))}</span>
         </div>
       </th>
       <td>${escapeHtml(formatLastVisit(row.last_seen_at))}</td>
-      <td class="adminTableNumber">${escapeHtml(msg("admin.days_short", { count: Math.max(0, numberValue(row.streak_days)) }))}</td>
       ${storyCells}
       <td class="adminTableNumber">${Math.max(0, numberValue(row.mastered_words))}</td>
     </tr>`;
@@ -195,7 +212,7 @@ async function renderUsers(context, signal, { host = context.root, embedded = fa
   }
 
   try {
-    const rows = await fetchUserActivityList();
+    const rows = (await fetchUserActivityList()).sort((a,b) => numberValue(a.rank) - numberValue(b.rank));
     if (signal.aborted) return;
     const scroll = host.querySelector(".adminUsersScroll");
     if (!scroll) return;
@@ -213,7 +230,6 @@ async function renderUsers(context, signal, { host = context.root, embedded = fa
     table.innerHTML = `<thead><tr>
         <th class="adminUserStickyCell adminUserStickyHead" scope="col">${msg("admin.user")}</th>
         <th scope="col">${msg("admin.last_visit")}</th>
-        <th scope="col">${msg("admin.streak")}</th>
         ${STORY_ORDER.map((type) => `<th class="adminStoryHead" scope="col">${escapeHtml(storyLabel(type))}</th>`).join("")}
         <th scope="col">${msg("admin.mastered_words")}</th>
       </tr></thead>
@@ -509,25 +525,48 @@ async function renderGuestAnalytics(context,signal,host){
 
 export async function renderAdminUsersEmbedded(context, signal, host) {
   if (!host || signal?.aborted) return;
-  host.classList.add("isAnalyticsOnly");
-  host.innerHTML=`<div class="adminStatsPane" data-admin-stats-pane></div>`;
-  return renderGuestAnalytics(context,signal,host.querySelector("[data-admin-stats-pane]"));
+  host.classList.remove("isAnalyticsOnly");
+  host.innerHTML = `<div class="adminStatsModeTabs" data-admin-stats-tabs></div><div class="adminStatsPane" data-admin-stats-pane></div>`;
+  const bar = host.querySelector("[data-admin-stats-tabs]");
+  const pane = host.querySelector("[data-admin-stats-pane]");
+  let paneController = null;
+  const open = (mode) => {
+    embeddedStatsMode = mode === "general" ? "general" : "users";
+    paneController?.abort();
+    paneController = new AbortController();
+    if (signal.aborted) paneController.abort();
+    else signal.addEventListener("abort", () => paneController?.abort(), { once: true });
+    bar.innerHTML = renderBracketTabs({
+      items: [{id:"users",label:statsUiText("users")},{id:"general",label:statsUiText("general")}],
+      active:embeddedStatsMode,
+      ariaLabel:msg("admin.users"),
+      dataAttribute:"admin-stats-mode"
+    });
+    pane.classList.toggle("isGuest", embeddedStatsMode === "general");
+    if (embeddedStatsMode === "general") void renderGuestAnalytics(context, paneController.signal, pane);
+    else void renderUsers(context, paneController.signal, { host:pane, embedded:true });
+  };
+  bar.addEventListener("click", (event) => {
+    const tab = event.target.closest("[data-admin-stats-mode]");
+    if (tab && bar.contains(tab)) open(tab.dataset.adminStatsMode);
+  }, { signal });
+  open(embeddedStatsMode);
 }
 
 function storyProgressSection(stories = []) {
-  const byType = new Map((Array.isArray(stories) ? stories : []).map((row) => [row.story_type, row]));
+  const byType = new Map((Array.isArray(stories) ? stories : []).map(row => [row.story_type, row]));
+  const allTypes = [...new Set([...STORY_ORDER, ...byType.keys()])];
   return `<section class="adminDetailSection">
     <h2>${msg("admin.profile_progress")}</h2>
-    <div class="adminStoryRows">
-      ${STORY_ORDER.map((type) => {
+    <table class="adminProgressTable"><thead><tr>
+      <th scope="col">${statsUiText("section")}</th>
+      <th scope="col">${statsUiText("levels")}</th>
+    </tr></thead><tbody>
+      ${allTypes.map(type => {
         const progress = storyProgress(byType.get(type));
-        const percent = progress.total ? Math.round((progress.passed / progress.total) * 100) : 0;
-        return `<div class="adminStoryRow">
-          <div class="adminStoryRowHead"><strong>${escapeHtml(storyLabel(type))}</strong><span>${progress.passed} / ${progress.total}</span></div>
-          ${renderSegmentedProgress({ value: percent, segments: 10, label: `${storyLabel(type)} ${progress.passed}/${progress.total}`, className: "adminStoryProgress" })}
-        </div>`;
+        return `<tr><th scope="row">${escapeHtml(STORY_KEYS[type] ? storyLabel(type) : type)}</th><td>${progress.passed} / ${progress.total}</td></tr>`;
       }).join("")}
-    </div>
+    </tbody></table>
   </section>`;
 }
 
@@ -590,6 +629,42 @@ async function openHistoryModal(context, signal, userId) {
   }
 }
 
+async function openStudyHistoryModal(context, signal, userId) {
+  activeModalClose?.();
+  const panel = context.modal.openContent({
+    title: escapeHtml(statsUiText("history")),
+    className: "adminActivityModal adminHistoryModal",
+    contentHtml: `<div class="adminModalState">${msg("common.otkryvaem")}</div>`
+  });
+  const close = () => {
+    if (panel.element?.isConnected) panel.close();
+    if (activeModalClose === close) activeModalClose = null;
+  };
+  activeModalClose = close;
+  try {
+    const events = await fetchUserStudyHistory(userId);
+    if (signal.aborted || !panel.body?.isConnected) return;
+    panel.body.innerHTML = events.length
+      ? `<div class="adminStudyHistory">${events.map(row => {
+        const isTest = row.event_type === "test";
+        const outcome = isTest
+          ? formatAccuracy(row.accuracy)
+          : `${statsUiText("shows")}: ${row.shows_per_word == null ? "—" : numberValue(row.shows_per_word).toLocaleString(getInterfaceLocale(), {maximumFractionDigits:2, minimumFractionDigits:1})}`;
+        const title = `${isTest ? statsUiText("test") : statsUiText("learning")} · ${STORY_KEYS[row.story_type] ? storyLabel(row.story_type) : row.story_type || ""} · ${row.set_name || row.set_id || ""}`;
+        return `<div class="adminStudyHistoryRow">
+          <time>${escapeHtml(formatDateTime(row.event_at))}</time>
+          <div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(outcome)}</small></div>
+          ${isTest ? `<button type="button" class="adminInlineAction" data-admin-test-id="${escapeHtml(row.session_id)}" aria-label="${escapeHtml(statsUiText("test"))}">↗</button>` : ""}
+        </div>`;
+      }).join("")}</div>`
+      : `<div class="adminEmpty">${escapeHtml(statsUiText("noHistory"))}</div>`;
+    bindTestLinks(panel.body, context, userId, signal, { closeModal:true });
+  } catch (error) {
+    if (!signal.aborted && panel.body?.isConnected)
+      panel.body.innerHTML = `<div class="adminModalState">${escapeHtml(failureMessage(error))}</div>`;
+  }
+}
+
 async function openFavoritesModal(context, signal, userId) {
   activeModalClose?.();
   const panel = context.modal.openContent({
@@ -629,6 +704,7 @@ async function renderUserDetail(context, signal, userId) {
     const isSelf = actorId && actorId === String(detail.user_id || "");
     const blocked = detail.account_blocked === true;
     scroll.innerHTML = `<div class="adminDetailContent">
+      <div class="adminHistoryActionBar"><button class="adminInlineAction" type="button" data-admin-study-history>${escapeHtml(statsUiText("history"))}</button></div>
       ${isSelf ? "" : `<div class="adminBlockBar">
         ${blocked ? `<span class="adminBlockedTag">${escapeHtml(msg("admin.account_blocked_status"))}</span>` : ""}
         <button class="adminBlockButton ${blocked ? "isBlocked" : ""}" type="button" data-admin-block-toggle title="${escapeHtml(msg(blocked ? "admin.unblock_account" : "admin.block_account"))}" aria-label="${escapeHtml(msg(blocked ? "admin.unblock_account" : "admin.block_account"))}">${blockToggleIcon(blocked)}</button>
@@ -661,6 +737,7 @@ async function renderUserDetail(context, signal, userId) {
     </div>`;
 
     bindTestLinks(scroll, context, userId, signal);
+    scroll.querySelector("[data-admin-study-history]")?.addEventListener("click", () => void openStudyHistoryModal(context, signal, userId), { signal });
     scroll.querySelector("[data-admin-block-toggle]")?.addEventListener("click", async () => {
       const confirmed = await context.modal.confirm({
         message: msg(blocked ? "admin.unblock_account_confirm" : "admin.block_account_confirm", { nickname: detail.nickname || msg("admin.user") }),
