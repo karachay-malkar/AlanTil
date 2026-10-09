@@ -100,7 +100,7 @@
 
 /* Intentional family exceptions. */
 .bottomNavItem{font-family:var(--font-body);font-size:var(--text-button)}
-.bracketNavigation{font-family:var(--font-body);font-size:var(--text-button);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.bracketNavigation{font-family:var(--font-body);font-size:var(--text-body);font-weight:750;line-height:1.35;letter-spacing:normal;white-space:nowrap;text-align:center;min-height:30px;padding:0 6px;border:0;border-radius:0;background:transparent;box-shadow:none}
 .bracketNavigation.active{font-weight:900;color:var(--text-1)}
 .storyTabsShell::before,.storyTabsShell::after{font-family:var(--font-body);font-size:var(--text-button)}
 .storySteleContent,.storySteleTitle,.storySteleBody,.storySteleCard::before,.storySteleTriggerGlyph>span{font-family:var(--font-brand)}
