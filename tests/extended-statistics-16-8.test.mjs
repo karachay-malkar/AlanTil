@@ -96,13 +96,14 @@ test("daily visitor points expose a tap/click tooltip with a full calendar date"
   assert.match(css, /adminAnalyticsPointTooltip/);
 });
 
-test("embedded extended statistics opens directly without a second users/visitors mode", () => {
+test("embedded extended statistics offers users and general modes", () => {
   const admin = read("src/features/admin/index.js");
   const embedded = admin.match(/export async function renderAdminUsersEmbedded[\s\S]*?\n}\n\nfunction storyProgressSection/)?.[0] || "";
   assert.match(embedded, /renderGuestAnalytics/);
   assert.match(embedded, /isAnalyticsOnly/);
-  assert.doesNotMatch(embedded, /data-admin-stats-mode/);
-  assert.doesNotMatch(embedded, /renderUsers\(/);
+  assert.match(embedded, /data-admin-stats-mode/);
+  assert.match(embedded, /embeddedStatsMode = "users"/);
+  assert.match(embedded, /renderUsers\(/);
 });
 
 test("statistics chrome relies on the shared system chrome instead of feature-specific masks", () => {
