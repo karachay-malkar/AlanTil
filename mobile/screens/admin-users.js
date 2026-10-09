@@ -10,7 +10,7 @@ import{ProfileTabs}from'../ui/profile-tabs.js';
 import{EmptyState,ListRow,MetricStrip,MonoLabel,ScreenSection}from'../ui/parity.js';
 import{BlockIcon,SearchIcon,UnlockedIcon}from'../ui/icons.js';
 import{theme}from'../ui/theme.js';
-import{blockNativeUserAccount,fetchNativeExtendedAnalytics,fetchNativeStationTestDetail,fetchNativeUserActivityDetail,fetchNativeUserActivityList,fetchNativeUserFavorites,fetchNativeUserTestHistory,unblockNativeUserAccount}from'../platform/admin.js';
+import{blockNativeUserAccount,fetchNativeExtendedAnalytics,fetchNativeStationTestDetail,fetchNativeUserActivityDetail,fetchNativeUserActivityList,fetchNativeUserFavorites,fetchNativeUserTestHistory,fetchNativeUserStudyHistory,unblockNativeUserAccount}from'../platform/admin.js';
 const C=theme.colors;
 const STORY_ORDER=['understanding','roots','ascent','pathways'];
 function fmtDate(value){if(!value)return'—';try{return new Date(value).toLocaleDateString();}catch{return'—';}}
@@ -25,12 +25,12 @@ function UsersList({rows,loading,error,onOpen,s,am,settings,searchOpen,query,onQ
     {loading?<View style={styles.inlineState}><EmptyState>{s('loading')}</EmptyState></View>:error?<View style={styles.inlineState}><EmptyState>{error}</EmptyState></View>:!filtered.length?<View style={styles.inlineState}><EmptyState>{s('emptySearch')}</EmptyState></View>:<ScrollView horizontal style={styles.tableHorizontal} contentContainerStyle={styles.tableHorizontalContent} showsHorizontalScrollIndicator>
       <View style={styles.usersTable}>
         <View style={[styles.tableRow,styles.tableHead,{height:theme.listTable.table.header,minHeight:theme.listTable.table.header}]}>
-          <TableCell width={170} head fontSize={text.service} style={styles.userCell}>{am('admin.user')}</TableCell><TableCell width={88} head fontSize={text.service}>{am('admin.last_visit')}</TableCell><TableCell width={72} head fontSize={text.service}>{am('admin.streak')}</TableCell>{storyKeys.map(([key,label])=><TableCell key={key} width={110} head fontSize={text.service}>{label}</TableCell>)}<TableCell width={94} head fontSize={text.service}>{am('admin.mastered_words')}</TableCell>
+          <TableCell width={190} head fontSize={text.service} style={styles.userCell}>{am('admin.user')}</TableCell><TableCell width={88} head fontSize={text.service}>{am('admin.last_visit')}</TableCell>{storyKeys.map(([key,label])=><TableCell key={key} width={110} head fontSize={text.service}>{label}</TableCell>)}<TableCell width={94} head fontSize={text.service}>{am('admin.mastered_words')}</TableCell>
         </View>
         <ScrollView style={styles.tableBody} showsVerticalScrollIndicator contentContainerStyle={styles.tableRows}>
           {filtered.map((user,index)=>{const rank=Math.max(1,Number(user.rank)||index+1);return <View key={user.user_id} style={[styles.tableRow,{height:rowHeight,minHeight:rowHeight}]}>
-            <TableCell width={170} style={styles.userCell}><Pressable accessibilityRole="button" accessibilityLabel={user.nickname||am('admin.user')} onPress={()=>onOpen(user)} style={({pressed})=>[styles.userLink,pressed&&styles.userLinkPressed]}><Text style={[styles.rankLabel,{fontSize:text.service}]}>№{rank}</Text><RankMark rank={rank} fontSize={text.secondary}/><Text numberOfLines={1} style={[styles.userName,{fontSize:text.primary}]}>{user.nickname||'—'}</Text></Pressable></TableCell>
-            <TableCell width={88} numeric fontSize={text.service}>{fmtDate(user.last_seen_at)}</TableCell><TableCell width={72} numeric fontSize={text.service}>{Math.max(0,Number(user.streak_days)||0)}</TableCell>{storyKeys.map(([key])=><TableCell key={key} width={110} numeric fontSize={text.service}>{storyValue(user.stories,key)}</TableCell>)}<TableCell width={94} numeric fontSize={text.service}>{Math.max(0,Number(user.mastered_words)||0)}</TableCell>
+            <TableCell width={190} style={styles.userCell}><Pressable accessibilityRole="button" accessibilityLabel={user.nickname||am('admin.user')} onPress={()=>onOpen(user)} style={({pressed})=>[styles.userLink,pressed&&styles.userLinkPressed]}><Text style={[styles.rankLabel,{fontSize:text.service}]}>№{rank}</Text><RankMark rank={rank} fontSize={text.secondary}/><Text numberOfLines={1} style={[styles.userName,{fontSize:text.primary}]}>{user.nickname||'—'}</Text><Text style={styles.streakBadge}>🔥 {Math.max(0,Number(user.streak_days)||0)}</Text></Pressable></TableCell>
+            <TableCell width={88} numeric fontSize={text.service}>{fmtDate(user.last_seen_at)}</TableCell>{storyKeys.map(([key])=><TableCell key={key} width={110} numeric fontSize={text.service}>{storyValue(user.stories,key)}</TableCell>)}<TableCell width={94} numeric fontSize={text.service}>{Math.max(0,Number(user.mastered_words)||0)}</TableCell>
           </View>;})}
         </ScrollView>
       </View>
@@ -118,8 +118,8 @@ function VisitorAnalyticsPane({settings={}}){
 export function AdminUsersPane({settings={},onOpenUser}){
   const s=(key,params)=>socialMessage(settings?.interface_language_code,key,params),am=(key,params)=>msg(settings,key,params);
   const[rows,setRows]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(''),[statsMode,setStatsMode]=useState('users');
-  useEffect(()=>{let alive=true;fetchNativeUserActivityList().then(list=>{if(alive){setRows(list);setLoading(false);}}).catch(e=>{if(alive){setError(e?.message||s('error'));setLoading(false);}});return()=>{alive=false;};},[]);
-  return <View style={styles.embeddedPane}><ProfileTabs items={[["users",s('statsUsers')],["guests",s('statsVisitors')]]} activeId={statsMode} onChange={setStatsMode}/>{statsMode==='guests'?<VisitorAnalyticsPane settings={settings}/>:<><View style={styles.toolbar}><HeaderCircleButton icon={<SearchIcon size={theme.chrome.actionIconSize} color={C.text2}/>} onPress={()=>setSearchOpen(v=>!v)} accessibilityLabel={s('search')}/></View><UsersList rows={rows} loading={loading} error={error} onOpen={user=>onOpenUser?.(user)} s={s} am={am} settings={settings} searchOpen={searchOpen} query={query} onQueryChange={setQuery}/></>}</View>;
+  useEffect(()=>{let alive=true;fetchNativeUserActivityList().then(list=>{if(alive){setRows([...list].sort((a,b)=>(Number(a.rank)||0)-(Number(b.rank)||0)));setLoading(false);}}).catch(e=>{if(alive){setError(e?.message||s('error'));setLoading(false);}});return()=>{alive=false;};},[]);
+  return <View style={styles.embeddedPane}><ProfileTabs items={[["users",s('statsUsers')],["general",settings?.interface_language_code==='en'?'Overview':settings?.interface_language_code==='tr'?'Genel':'Общая']]} activeId={statsMode} onChange={setStatsMode}/>{statsMode==='general'?<VisitorAnalyticsPane settings={settings}/>:<><View style={styles.toolbar}><HeaderCircleButton icon={<SearchIcon size={theme.chrome.actionIconSize} color={C.text2}/>} onPress={()=>setSearchOpen(v=>!v)} accessibilityLabel={s('search')}/></View><UsersList rows={rows} loading={loading} error={error} onOpen={user=>onOpenUser?.(user)} s={s} am={am} settings={settings} searchOpen={searchOpen} query={query} onQueryChange={setQuery}/></>}</View>;
 }
 
 export function AdminUserDetailScreen({settings={},actorId,user,onBack}){
@@ -140,7 +140,7 @@ const styles=StyleSheet.create({
   inlineState:{paddingHorizontal:theme.listTable.horizontalPadding,paddingTop:10},
   tableHorizontal:{flex:1,minHeight:0},
   tableHorizontalContent:{minHeight:'100%'},
-  usersTable:{width:864,minHeight:'100%'},
+  usersTable:{width:812,minHeight:'100%'},
   tableHead:{backgroundColor:C.appBg},
   tableBody:{flex:1,minHeight:0},
   tableRows:{paddingBottom:24},
@@ -157,6 +157,7 @@ const styles=StyleSheet.create({
   rankMedal:{width:14,textAlign:'center'},
   rankGold:{color:'#b58b23'},rankSilver:{color:'#8f969c'},rankBronze:{color:'#a8693d'},
   userName:{flex:1,minWidth:0,fontWeight:'800',color:C.text1},
+  streakBadge:{fontSize:10,fontFamily:theme.font.terminal,fontWeight:'800',color:C.text1,borderWidth:1,borderColor:C.lineSoft,borderRadius:5,overflow:'hidden',paddingHorizontal:4,paddingVertical:3},
   storyRow:{flexDirection:'row',alignItems:'center',gap:8,minHeight:24},
   storyLabel:{width:80,fontSize:11,color:C.text2},
   storyTrack:{flex:1,height:5,borderRadius:999,overflow:'hidden',backgroundColor:C.line},
