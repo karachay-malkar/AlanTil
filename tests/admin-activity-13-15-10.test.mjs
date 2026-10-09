@@ -77,20 +77,22 @@ test("current chrome keeps bracket navigation, unified viewport masks and CTA bu
 });
 
 
-test("extended statistics opens the simplified visitors dashboard directly on Web without creating a root screen", async () => {
+test("extended statistics restores both users and overview statistics panes", async () => {
   const web = await read("src/features/admin/index.js");
   const css = await read("src/features/admin/admin.css");
   const mobile = await read("mobile/screens/admin-users.js");
   const mobileAdmin = await read("mobile/platform/admin.js");
   const embedded = web.match(/export async function renderAdminUsersEmbedded[\s\S]*?\n}\n\nfunction storyProgressSection/)?.[0] || "";
   assert.match(embedded, /renderGuestAnalytics/);
-  assert.doesNotMatch(embedded, /data-admin-stats-mode/);
-  assert.doesNotMatch(embedded, /renderUsers\(/);
+  assert.match(embedded, /data-admin-stats-mode/);
+  assert.match(embedded, /embeddedStatsMode = "users"/);
+  assert.match(embedded, /renderUsers\(/);
   assert.match(web, /dailyVisitorsChart/);
   assert.match(web, /monthlyVisitorsChart/);
   assert.match(css, /\.adminGuestChart/);
   assert.match(css, /\.adminUsageMetric/);
-  assert.match(mobile, /ProfileTabs items=\{\[\["users",s\('statsUsers'\)\],\["guests",s\('statsVisitors'\)\]\]\}/);
+  assert.match(mobile, /statsUsers/);
+  assert.match(mobile, /general/);
   assert.match(mobile, /VisitorAnalyticsPane/);
   assert.match(mobile, /AnalyticsChart/);
   assert.match(mobileAdmin, /admin_extended_analytics/);
