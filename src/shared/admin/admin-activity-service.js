@@ -29,6 +29,13 @@ export async function fetchUserTestHistory(userId) {
   return Array.isArray(data) ? data : [];
 }
 
+export async function fetchUserStudyHistory(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return [];
+  const data = await runAdminRpc("admin_user_study_history", { p_user_id: id, p_limit: 5000 });
+  return Array.isArray(data) ? data : [];
+}
+
 export async function fetchUserFavorites(userId) {
   const id = String(userId || "").trim();
   if (!id) return [];
