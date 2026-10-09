@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "16.8.0.14";
+const SINGLETON_URL_VERSION = "16.8.0.15";
 const STYLE_ENTRY_VERSION = "16.8.0.18";
 
 async function javascriptFiles(directory) {
@@ -72,7 +72,7 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.8.0 keeps the 16.8.0.14 JS singleton while the style entry advances independently", async () => {
+test("16.8.0.15 refreshes the JS singleton while retaining the independent style and Ashyk builds", async () => {
   const index = await read("index.html");
   const release = await read("packages/alantil-core/release.js");
   const analytics = await read("src/config/analytics.js");
@@ -81,13 +81,13 @@ test("16.8.0 keeps the 16.8.0.14 JS singleton while the style entry advances ind
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
   assert.match(index, new RegExp(`app[.]css[?]v=${STYLE_ENTRY_VERSION.replaceAll(".", "[.]")}`));
-  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]14/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]15/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
   assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]14"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]14"/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]14"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]15"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]15"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
@@ -103,7 +103,7 @@ test("13.15 feature modules are loaded explicitly and the service worker does no
   assert.doesNotMatch(worker, /MODULE_REWRITES|rewrittenModuleResponse|entry-13-14|word-normalizer-13-14/);
 });
 
-test("Settings dependencies resolve through the 16.8.0.14 singleton identity", async () => {
+test("Settings legacy version imports are canonicalized to the new singleton identity", async () => {
   const settings = await read("src/features/settings/feature.js");
   const worker = await read("service-worker.js");
   assert.match(settings, /SETTINGS_ASSET_VERSION = "16\.8\.0\.14"/);
