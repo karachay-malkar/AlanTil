@@ -5,7 +5,7 @@
 @import url("./shell.css?v=16.8.0.14") layer(shell);
 @import url("./components.css?v=16.8.0.17") layer(components);
 @import url("./learning-preview.css?v=16.8.0.14") layer(components);
-@import url("./profile-tabs.css?v=16.8.0.14") layer(components);
+@import url("./profile-tabs.css?v=16.8.0.15") layer(components);
 @import url("./privacy.css?v=16.8.0.14") layer(components);
 @import url("../../features/onboarding/onboarding.css?v=16.8.0.14") layer(features);
 @import url("../../features/path/path.css?v=16.8.0.17") layer(features);
