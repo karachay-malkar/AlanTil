@@ -17,6 +17,7 @@ export async function fetchNativeActivityAccess(expectedUserId=''){
 export async function fetchNativeUserActivityList(){const rows=await rpc('admin_user_activity_list');return Array.isArray(rows)?rows:[];}
 export async function fetchNativeUserActivityDetail(userId){const id=String(userId||'').trim();if(!id)return null;return rpc('admin_user_activity_detail',{p_user_id:id});}
 export async function fetchNativeUserTestHistory(userId){const id=String(userId||'').trim();if(!id)return[];const rows=await rpc('admin_user_test_history',{p_user_id:id});return Array.isArray(rows)?rows:[];}
+export async function fetchNativeUserStudyHistory(userId){const id=String(userId||'').trim();if(!id)return[];const rows=await rpc('admin_user_study_history',{p_user_id:id,p_limit:5000});return Array.isArray(rows)?rows:[];}
 export async function fetchNativeUserFavorites(userId){const id=String(userId||'').trim();if(!id)return[];const rows=await rpc('admin_user_favorites',{p_user_id:id});return Array.isArray(rows)?rows:[];}
 export async function fetchNativeStationTestDetail(sessionId){const id=String(sessionId||'').trim();if(!id)return null;return rpc('admin_station_test_detail',{p_session_id:id});}
 export async function blockNativeUserAccount(userId){const id=String(userId||'').trim();if(!id)return false;return Boolean(await rpc('admin_block_account',{p_user_id:id}));}
