@@ -523,5 +523,5 @@ test('Extended statistics keeps transparent headers and a small systemic search 
   assert.ok(index.includes("app.css?v=16.8.0.18"));
   assert.ok(sw.includes(`const VERSION = "${build}";`));
   assert.ok(friendsLazy.includes('friends-16-7.css?v=16.8.0.7'));
-  assert.ok(adminLazy.includes('admin.css?v=16.8.0.3'));
+  assert.ok(adminLazy.includes(`admin.css?v=${build}`));
 });
