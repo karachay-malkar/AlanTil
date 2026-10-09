@@ -169,7 +169,7 @@ function medalIcon(rank) {
 
 function usersTableRows(rows = []) {
   return rows.map((row, index) => {
-    const rank = Math.max(1, Math.round(numberValue(row.rank) || index + 1));
+    const rank = Math.max(1, Math.round(numberValue(row.list_position) || index + 1));
     const stories = row.stories || {};
     const storyCells = STORY_ORDER.map((type) => {
       const value = storyProgress(stories[type]);
@@ -212,7 +212,7 @@ async function renderUsers(context, signal, { host = context.root, embedded = fa
   }
 
   try {
-    const rows = (await fetchUserActivityList()).sort((a,b) => numberValue(a.rank) - numberValue(b.rank));
+    const rows = (await fetchUserActivityList()).sort((a,b) => numberValue(a.rank) - numberValue(b.rank)).map((row,index) => ({...row,list_position:index+1}));
     if (signal.aborted) return;
     const scroll = host.querySelector(".adminUsersScroll");
     if (!scroll) return;
@@ -525,6 +525,7 @@ async function renderGuestAnalytics(context,signal,host){
 
 export async function renderAdminUsersEmbedded(context, signal, host) {
   if (!host || signal?.aborted) return;
+  embeddedStatsMode = "users";
   host.classList.remove("isAnalyticsOnly");
   host.innerHTML = `<div class="adminStatsModeTabs" data-admin-stats-tabs></div><div class="adminStatsPane" data-admin-stats-pane></div>`;
   const bar = host.querySelector("[data-admin-stats-tabs]");
