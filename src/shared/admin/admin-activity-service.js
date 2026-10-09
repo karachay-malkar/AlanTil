@@ -12,7 +12,7 @@ async function runAdminRpc(name, parameters = {}) {
 }
 
 export async function fetchUserActivityList() {
-  const data = await runAdminRpc("admin_user_activity_list");
+  const data = await runAdminRpc("admin_user_ranked_list");
   return Array.isArray(data) ? data : [];
 }
 
