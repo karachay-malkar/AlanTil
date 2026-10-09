@@ -1,9 +1,9 @@
-import { msg } from "../shared/i18n/index.js?v=16.8.0.14";
-import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.14";
-import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.14";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.14";
-import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.14";
-import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.14";
+import { msg } from "../shared/i18n/index.js?v=16.8.0.15";
+import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.15";
+import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.15";
+import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.15";
+import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.15";
+import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.15";
 
 const DEFAULT_STORY = "roots";
 const ASSET_VERSION = "16.8.0.15";
