@@ -6,7 +6,7 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.14";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "16.8.0.14";
+const ASSET_VERSION = "16.8.0.15";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
