@@ -39,20 +39,43 @@ function UsersList({rows,loading,error,onOpen,s,am,settings,searchOpen,query,onQ
 }
 function StoryRow({label,passed,total}){const percent=total?Math.round((passed/total)*100):0;return <View style={styles.storyRow}><Text style={styles.storyLabel}>{label}</Text><View style={styles.storyTrack}><View style={[styles.storyFill,{width:`${percent}%`}]}/></View><Text style={styles.storyPercent}>{passed}/{total}</Text></View>;}
 
-function UserDetail({userId,onOpenTest,s,am,actorId}){
-  const[detail,setDetail]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[favorites,setFavorites]=useState([]),[tests,setTests]=useState([]),[pendingBlock,setPendingBlock]=useState(false),[busy,setBusy]=useState(false);
+function UserDetail({userId,onOpenTest,s,am,actorId,settings={}}){
+  const[detail,setDetail]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[favorites,setFavorites]=useState([]),[tests,setTests]=useState([]),[pendingBlock,setPendingBlock]=useState(false),[busy,setBusy]=useState(false),[historyOpen,setHistoryOpen]=useState(false),[historyRows,setHistoryRows]=useState([]),[historyLoading,setHistoryLoading]=useState(false),[historyError,setHistoryError]=useState('');
   const load=async()=>{setLoading(true);setError('');try{const [d,f,t]=await Promise.all([fetchNativeUserActivityDetail(userId),fetchNativeUserFavorites(userId),fetchNativeUserTestHistory(userId)]);setDetail(d);setFavorites(f);setTests(t);}catch(e){setError(e?.message||s('error'));}finally{setLoading(false);}};
   useEffect(()=>{void load();},[userId]);
   const blocked=detail?.account_blocked===true,isSelf=Boolean(actorId)&&actorId===userId;
   const toggleBlock=async()=>{setPendingBlock(false);setBusy(true);try{if(blocked)await unblockNativeUserAccount(userId);else await blockNativeUserAccount(userId);await load();}catch(e){setError(e?.message||s('error'));}finally{setBusy(false);}};
+  const language=settings?.interface_language_code||'ru';
+  const localized=(ru,en,tr)=>language==='en'?en:language==='tr'?tr:ru;
+  const toggleHistory=async()=>{
+    if(historyOpen){setHistoryOpen(false);return;}
+    setHistoryOpen(true);setHistoryLoading(true);setHistoryError('');
+    try{setHistoryRows(await fetchNativeUserStudyHistory(userId));}
+    catch(e){setHistoryError(e?.message||s('error'));}
+    finally{setHistoryLoading(false);}
+  };
   if(loading)return <EmptyState>{s('loading')}</EmptyState>;
   if(error||!detail)return <EmptyState error>{error||s('error')}</EmptyState>;
   return <ScrollView contentContainerStyle={styles.scroll}>
+    <View style={styles.blockBar}><Pressable accessibilityRole="button" accessibilityLabel={localized('История','History','Geçmiş')} onPress={()=>void toggleHistory()} style={styles.historyButton}><Text style={styles.historyButtonText}>{historyOpen?am('common.nazad'):localized('История','History','Geçmiş')}</Text></Pressable></View>
+    {historyOpen?<ScreenSection title={localized('История','History','Geçmiş')}>
+      {historyLoading?<EmptyState>{s('loading')}</EmptyState>:historyError?<EmptyState error>{historyError}</EmptyState>:historyRows.length?historyRows.map(row=>{
+        const isTest=row.event_type==='test',value=isTest?`${Math.round(Number(row.accuracy)||0)}%`:`${row.shows_per_word==null?'—':Number(row.shows_per_word).toLocaleString(language==='ru'?'ru-RU':language==='tr'?'tr-TR':'en-US',{minimumFractionDigits:1,maximumFractionDigits:2})} ${localized('пок./сл.','shows/word','göst./kel.')}`;
+        return <ListRow key={row.session_id} title={`${isTest?localized('Тест','Test','Test'):localized('Изучение слов','Study words','Kelime öğrenme')} · ${row.set_name||row.set_id||''}`} subtitle={row.event_at?new Date(row.event_at).toLocaleString():''} trailing={<MonoLabel>{value}</MonoLabel>} onPress={isTest?()=>onOpenTest(row.session_id):undefined}/>;
+      }):<EmptyState>{localized('Нет завершённых занятий','No completed sessions','Tamamlanan oturum yok')}</EmptyState>}
+    </ScreenSection>:<>
     {!isSelf?<View style={styles.blockBar}>{blocked?<Text style={styles.blockedTag}>{am('admin.account_blocked_status')}</Text>:null}<Pressable accessibilityRole="button" accessibilityLabel={am(blocked?'admin.unblock_account':'admin.block_account')} onPress={()=>setPendingBlock(true)} disabled={busy} style={[styles.blockButton,blocked&&styles.blockButtonActive]}>{blocked?<UnlockedIcon size={16} color={C.dangerStrong}/>:<BlockIcon size={16} color={C.text2}/>}</Pressable></View>:null}
     <ScreenSection title={am('admin.user')}><MetricStrip items={[[s('streak',{count:Number(detail.streak_days)||0}),''],[String(Math.max(0,Number(detail.mastered_words)||0)),am('admin.mastered_words')],[String(Math.max(0,Number(detail.favorite_words)||0)),am('admin.favorite_words')],[fmtDate(detail.last_seen_at),am('admin.last_visit')]]}/></ScreenSection>
-    <ScreenSection title={am('admin.profile_progress')}>{STORY_ORDER.map(key=>{const row=(detail.stories||[]).find(row=>row.story_type===key)||{passed:0,total:0};return <StoryRow key={key} label={key} passed={row.passed} total={row.total}/>;})}</ScreenSection>
+    <ScreenSection title={am('admin.profile_progress')}>
+      <View style={styles.detailProgressRow}><Text style={styles.detailProgressHead}>{localized('Раздел','Section','Bölüm')}</Text><Text style={styles.detailProgressHead}>{localized('Пройдено','Completed','Tamamlanan')}</Text></View>
+      {[...new Set([...STORY_ORDER,...(detail.stories||[]).map(item=>item.story_type).filter(Boolean)])].map(key=>{
+        const row=(detail.stories||[]).find(item=>item.story_type===key)||{passed:0,total:0};
+        return <View key={key} style={styles.detailProgressRow}><Text style={styles.detailProgressName}>{STORY_ORDER.includes(key)?am('admin.story_'+key):key}</Text><Text style={styles.detailProgressValue}>{Math.max(0,Number(row.passed)||0)} / {Math.max(0,Number(row.total)||0)}</Text></View>;
+      })}
+    </ScreenSection>
     <ScreenSection title={am('admin.station_tests')}>{tests.length?tests.slice(0,20).map(test=><ListRow key={test.session_id} title={`${test.story_type} · ${test.station_number}`} subtitle={fmtDate(test.ended_at||test.started_at)} trailing={<MonoLabel>{Math.round(Number(test.accuracy)||0)}%</MonoLabel>} onPress={()=>onOpenTest(test.session_id)}/>):<EmptyState>{am('admin.no_tests')}</EmptyState>}</ScreenSection>
     <ScreenSection title={am('admin.favorite_words')}>{favorites.length?favorites.slice(0,20).map(w=><ListRow key={w.word_id} title={w.word_alan_cyrillic||w.word_alan_turkic||'—'}/>):<EmptyState>{am('admin.no_favorites')}</EmptyState>}</ScreenSection>
+    </>}
     <ConfirmDialog visible={pendingBlock} message={am(blocked?'admin.unblock_account_confirm':'admin.block_account_confirm',{nickname:detail.nickname||''})} confirmLabel={am(blocked?'admin.unblock_account':'admin.block_account')} cancelLabel={am('common.otmena')} onConfirm={toggleBlock} onCancel={()=>setPendingBlock(false)}/>
   </ScrollView>;
 }
@@ -127,7 +150,7 @@ export function AdminUserDetailScreen({settings={},actorId,user,onBack}){
   const userId=String(user?.user_id||'');
   const back=()=>{if(sessionId){setSessionId('');return;}onBack?.();};
   const title=sessionId?am('admin.test_result'):(user?.nickname||am('admin.user'));
-  return <Screen><Header title={title} onBack={back}/><View style={styles.body}>{sessionId?<TestDetail sessionId={sessionId} s={s} am={am}/>:<UserDetail userId={userId} actorId={actorId} onOpenTest={setSessionId} s={s} am={am}/>}</View></Screen>;
+  return <Screen><Header title={title} onBack={back}/><View style={styles.body}>{sessionId?<TestDetail sessionId={sessionId} s={s} am={am}/>:<UserDetail userId={userId} actorId={actorId} onOpenTest={setSessionId} s={s} am={am} settings={settings}/>}</View></Screen>;
 }
 const styles=StyleSheet.create({
   body:{flex:1,paddingTop:theme.control.header+theme.chrome.contentRestGap},
@@ -163,6 +186,12 @@ const styles=StyleSheet.create({
   storyTrack:{flex:1,height:5,borderRadius:999,overflow:'hidden',backgroundColor:C.line},
   storyFill:{height:'100%',backgroundColor:C.accent},
   storyPercent:{width:44,textAlign:'right',fontSize:11,color:C.text2},
+  historyButton:{minHeight:32,borderWidth:1,borderColor:C.line,borderRadius:9,paddingHorizontal:12,justifyContent:'center',backgroundColor:C.surface0},
+  historyButtonText:{fontSize:12,fontWeight:'800',color:C.text1},
+  detailProgressRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',gap:14,paddingVertical:10,borderBottomWidth:1,borderBottomColor:C.lineSoft},
+  detailProgressHead:{fontSize:10,fontWeight:'750',color:C.text3},
+  detailProgressName:{flex:1,minWidth:0,fontSize:12,fontWeight:'750',color:C.text1},
+  detailProgressValue:{fontSize:12,fontFamily:theme.font.terminal,fontWeight:'800',color:C.text1},
   blockBar:{flexDirection:'row',alignItems:'center',justifyContent:'flex-end',gap:8,paddingTop:4},
   blockedTag:{fontSize:10,fontWeight:'800',color:C.dangerStrong,paddingHorizontal:8,paddingVertical:3,borderRadius:999,backgroundColor:C.dangerSoft},
   blockButton:{width:32,height:32,borderRadius:16,borderWidth:1,borderColor:C.line,alignItems:'center',justifyContent:'center',backgroundColor:C.surface0},
