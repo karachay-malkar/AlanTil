@@ -83,7 +83,7 @@ test("16.8.0.15 refreshes the JS singleton while retaining the independent style
   assert.match(index, new RegExp(`app[.]css[?]v=${STYLE_ENTRY_VERSION.replaceAll(".", "[.]")}`));
   assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]15/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]14"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]15"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
   assert.match(worker, /const VERSION = "16[.]8[.]0[.]15"/);
