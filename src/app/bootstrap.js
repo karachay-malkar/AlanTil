@@ -22,7 +22,7 @@ import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.14";
 import { createRouter } from "./router.js?v=16.8.0.14";
 import { createShell } from "./shell.js?v=16.8.0.14";
 
-const ASSET_VERSION = "16.8.0.14";
+const ASSET_VERSION = "16.8.0.15";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
