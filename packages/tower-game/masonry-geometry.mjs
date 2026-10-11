@@ -21,7 +21,7 @@ export function buildStoneProfiles(pack, resolution = 40) {
         const min = new Float32Array(resolution * resolution).fill(Infinity);
         const max = new Float32Array(resolution * resolution).fill(-Infinity);
         for (let k = 0; k < faceCount; k++) {
-          const o = vertexCount * 3 + k * 3;
+          const o = k * 3;
           const a = verts[mesh.indices[o]], b = verts[mesh.indices[o + 1]], c = verts[mesh.indices[o + 2]];
           if (!a || !b || !c) continue;
           const determinant = (b[v] - c[v]) * (a[u] - c[u]) + (c[u] - b[u]) * (a[v] - c[v]);
