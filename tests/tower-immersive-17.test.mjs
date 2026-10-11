@@ -20,7 +20,7 @@ test('tower uses real camera tween, meadow and depth controls without changing r
 test('all 23 authored variants appear per stone type with native AlanTil bracket tabs',()=>{
  const app=read('src/features/tower/index.js'),css=read('src/features/tower/tower.css');
  assert.match(app,/data-stone-kind/);
- assert.match(app,/STONE_CONFIGURATIONS\[s\.type\]\.map\(\(dimensions,index\)/);
+ assert.match(app,/PURCHASABLE_STONE_TYPES\.flatMap\(type=>STONE_CONFIGURATIONS\[type\]\.map/);
  assert.match(app,/data-config/);
  assert.match(app,/s\.scene\.thumbnail\(/);
  assert.match(app,/class="bracketNavigation/);
@@ -43,7 +43,7 @@ test('catalog uses fixed size presets and only exposes preview-time change-form 
  assert.doesNotMatch(css,/\.towerAxisHandles/);
  assert.match(css,/prefers-reduced-motion/);
 });
-test('tower uses scoped 17.0.9 asset cache without changing app global version',()=>{
+test('tower uses scoped 17.0.10 asset cache without changing app global version',()=>{
  const router=read('src/app/router.js');
  assert.match(router,/TOWER_ASSET_VERSION = "17\.0\.9"/);
  assert.match(router,/const ASSET_VERSION = "16\.8\.0\.16"/);

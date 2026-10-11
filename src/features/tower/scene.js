@@ -1,4 +1,6 @@
 import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
+import {worldDimensions} from '../../../packages/tower-game/core.mjs';
+import {adaptRockMesh} from '../../../packages/tower-game/rock-adaptation.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
@@ -6,7 +8,7 @@ import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 const CELL=.25;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ROOT=new URL('../../../',import.meta.url);
-const dimensions=b=> b.rotation===4?[b.sy,b.sx,b.sz]:b.rotation===5?[b.sx,b.sz,b.sy]:b.rotation%2?[b.sz,b.sy,b.sx]:[b.sx,b.sy,b.sz];
+const dimensions=worldDimensions;
 const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 
 /** Local assets only. Coordinates are integer cells with y pointing up. */
@@ -84,7 +86,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const stoneTemplates={};
  for(const [category,entries] of Object.entries(ROCK_PACK)){
   stoneTemplates[category]=entries.map((source,variant)=>{
-   const mesh=originalRockMesh(source,variant);
+   const mesh=adaptRockMesh(originalRockMesh(source,variant));
    const geometry=keepG(new THREE.BufferGeometry());
    geometry.setAttribute('position',new THREE.BufferAttribute(mesh.positions,3));
    // Incoming sRGB palette needs conversion to linear before vertex color lighting.
@@ -145,6 +147,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const r=block.rotation||0;
   if(r===4)return quat.setFromAxisAngle(new THREE.Vector3(0,0,1),-Math.PI/2);
   if(r===5)return quat.setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);
+  if(r===6||r===7)return quat.setFromAxisAngle(new THREE.Vector3(1,1,1).normalize(),(r===6?-1:1)*Math.PI*2/3);
   return quat.setFromAxisAngle(new THREE.Vector3(0,1,0),r*Math.PI/2);
  }
  function previewMeshes(b){
@@ -236,7 +239,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  if(typeof Worker!=='undefined'){
   try{
-   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.9',import.meta.url),{type:'module'});
+   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.10',import.meta.url),{type:'module'});
    masonryWorker.onmessage=({data})=>{
     if(disposed||data.generation!==masonryGeneration)return;
     if(data.error){console.warn('Masonry geometry:',data.error);return;}

@@ -1,0 +1,58 @@
+/** Preserve the 23 authored irregular meshes while extending contact patches
+ * toward their cell faces. Strictly monotone per-axis warping keeps vertex
+ * ordering and face winding; adaptive subdivision avoids long stretched faces.
+ * Input/output local coordinates are [-.5, .5].
+ */
+const distance2=(p,a,b)=>{let s=0;for(let k=0;k<3;k++)s+=(p[a*3+k]-p[b*3+k])**2;return s;};
+const warp=(v,strength)=>{const r=Math.min(1,Math.abs(v)*2);return Math.sign(v)*.5*(r+strength*r*(1-r));};
+export function adaptRockMesh(mesh,{strength=.91,maxEdge=.18,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
+ if(!mesh?.positions||!mesh.indices||!mesh.colors||mesh.positions.length!==mesh.colors.length||mesh.positions.length%3||mesh.indices.length%3)throw new TypeError('Invalid authored mesh');
+ if(!Number.isFinite(strength)||strength<0||strength>=1||!Number.isFinite(maxEdge)||maxEdge<=0)throw new RangeError('Invalid contact warp');
+ const p=Array.from(mesh.positions),colors=Array.from(mesh.colors),limits=Array.from({length:3},(_,axis)=>{
+  let lo=Infinity,hi=-Infinity;for(let i=axis;i<p.length;i+=3){lo=Math.min(lo,p[i]);hi=Math.max(hi,p[i]);}
+  if(hi-lo<.0001)throw new RangeError('Degenerate source rock axis');
+  return [lo,hi];
+ });
+ // The source may occupy only part of its authored bounding cube. Normalize
+ // the true extremal vertices, then distribute interior material non-linearly.
+ for(let i=0;i<p.length;i++) {
+  const [lo,hi]=limits[i%3];
+  p[i]=warp((p[i]-lo)/(hi-lo)-.5,strength);
+ }
+ let faces=Array.from(mesh.indices);
+ if(subdivide)for(let pass=0;pass<maxPasses;pass++){
+  let oversized=false;const mid=new Map(),next=[];
+  const midpoint=(a,b)=>{
+   const key=a<b?a+'/'+b:b+'/'+a;
+   if(mid.has(key))return mid.get(key);
+   const n=p.length/3;
+   for(let k=0;k<3;k++){p.push((p[a*3+k]+p[b*3+k])*.5);colors.push((colors[a*3+k]+colors[b*3+k])*.5);}
+   mid.set(key,n);return n;
+  };
+  for(let i=0;i<faces.length;i+=3){
+   const a=faces[i],b=faces[i+1],c=faces[i+2];
+   if(Math.max(distance2(p,a,b),distance2(p,b,c),distance2(p,c,a))<=maxEdge**2){next.push(a,b,c);continue;}
+   oversized=true;
+   const ab=midpoint(a,b),bc=midpoint(b,c),ca=midpoint(c,a);
+   next.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);
+   if(next.length/3>maxTriangles)throw new RangeError('Stone triangle budget exceeded');
+  }
+  faces=next;if(!oversized)break;
+ }
+ const Index=p.length/3<65536?Uint16Array:Uint32Array;
+ return {positions:Float32Array.from(p),colors:Float32Array.from(colors),indices:Index.from(faces)};
+}
+export function inspectRockMesh(mesh){
+ const {positions:p,indices:indices}=mesh;let invalidTriangles=0,outOfBounds=0,maxEdge=0;
+ for(const v of p)if(!Number.isFinite(v)||v<-.50001||v>.50001)outOfBounds++;
+ for(let i=0;i<indices.length;i+=3){
+  const a=indices[i],b=indices[i+1],c=indices[i+2];
+  if(a===b||b===c||a===c||[a,b,c].some(v=>v<0||v*3+2>=p.length)){invalidTriangles++;continue;}
+  const u=[0,1,2].map(k=>p[b*3+k]-p[a*3+k]);
+  const v=[0,1,2].map(k=>p[c*3+k]-p[a*3+k]);
+  const area=Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])*.5;
+  if(area<1e-12)invalidTriangles++;
+  maxEdge=Math.max(maxEdge,Math.sqrt(distance2(p,a,b)),Math.sqrt(distance2(p,b,c)),Math.sqrt(distance2(p,c,a)));
+ }
+ return {vertexCount:p.length/3,triangles:indices.length/3,invalidTriangles,outOfBounds,maxEdge};
+}

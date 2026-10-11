@@ -1,5 +1,5 @@
-import {CATALOG,STONE_CONFIGURATIONS,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js?v=17.0.9';
+import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
+import {createTowerScene} from './scene.js?v=17.0.10';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {towerUserId,loadTower,mutateTower} from './repository.js?v=17.0.1';
 let active=null;
@@ -8,11 +8,11 @@ const icons={stone:'◆',medium:'▰',long:'▬',big:'⬟',beam:'╱',deck:'▤'
 const categories={stone:'Камень',wood:'Дерево',openings:'Проёмы',finish:'Завершение'};
 const escape=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mount(context,params={}){
- const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'stone',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false};active=s;
+ const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false};active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  // The route remains practice.tower; the scoped feature identifies its immersive scene.
  context.shell.appShell.dataset.feature='tower';
- context.root.innerHTML=`<section class="view towerView"><div class="towerGame"><div class="towerStage"><div class="towerCanvas" role="application" aria-label="Трёхмерный редактор башни"></div><div class="towerHud"><div class="towerPill towerBalance"><span class="towerCoin"><i></i><b data-silver>0</b></span><span class="towerCoin gold"><i></i><b data-gold>0</b></span></div></div><div class="towerCamera"><button type="button" class="iconBtn" data-camera="home" aria-label="Вся башня" title="Вся башня"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg></button></div><div class="towerPill towerReadOnly" hidden></div></div><aside class="towerSide"><h2>Каталог</h2><div class="towerTabs" role="tablist" aria-label="Материалы">${Object.entries(categories).map(([k,n])=>`<button type="button" class="bracketNavigation ${k==='stone'?'active':''}" role="tab" data-category="${k}" aria-selected="${k==='stone'}">[ ${n} ]</button>`).join('')}</div><div class="towerStoneKinds bracketTabsTrack" role="tablist" aria-label="Типы камней">${Object.keys(STONE_KIND).map((kind)=>`<button type="button" class="bracketNavigation" data-stone-kind="${kind}" role="tab" aria-selected="${kind==='stone'}">[ ${CATALOG[kind].name.replace(' камень','')} ]</button>`).join('')}</div><div class="towerCatalog"></div><div class="towerTool"><button type="button" class="btn actionCompact" data-tool="place" aria-pressed="true">Строить</button><button type="button" class="btn actionCompact" data-tool="select" aria-pressed="false">Выбрать</button><button type="button" class="btn actionCompact" data-vertical hidden>Столб ↥</button></div><div class="towerDimensions"></div><div class="towerPosition">${['x','y','z'].map((a,i)=>`<label>${['X','Высота','Z'][i]}<input data-position="${a}" type="number" min="0" max="${a==='y'?HEIGHT_LIMIT-1:GRID_SIZE-1}" step="1" value="0" aria-label="Положение ${a}"></label>`).join('')}</div><div class="towerCurrency segmentControl" role="group" aria-label="Способ оплаты" hidden><label class="settingsChoice"><input type="radio" name="tower-currency" value="silver" checked><span>24 серебра</span></label><label class="settingsChoice"><input type="radio" name="tower-currency" value="gold"><span>3 золота</span></label></div><div class="towerExchange"><button type="button" class="btn actionCompact" data-exchange="exchange_gold">1 золото → 8 серебра</button><button type="button" class="btn actionCompact" data-exchange="exchange_silver">8 серебра → 1 золото</button></div><div class="towerSelected" hidden></div><div class="towerActions"><button class="btn actionPrimary towerAction" data-confirm disabled>Установить · 1 серебро</button><button class="btn towerAction" data-remove hidden>Удалить и вернуть монеты</button><button class="btn towerAction towerRetry" data-retry hidden>Повторить действие</button><button class="btn actionCompact towerAction" data-refresh>Обновить сохранение</button></div><div class="towerStatus" role="status" aria-live="polite" hidden></div><span class="towerSaved"></span><label class="towerLayer">Разрез: <span data-layer-label>вся башня</span><input data-layer type="range" min="0" max="${HEIGHT_LIMIT}" value="${HEIGHT_LIMIT}"></label><p class="towerHelp">Выбери готовый размер в ячейках. Перед покупкой можно изменить форму и повернуть камень. Перемычкам нужна опора с двух сторон.</p><p class="towerHelp">Монеты за первое верное слово в завершённом тесте: начальный и тематический словари — серебро, средний и сложный — золото. 1 золотая = 8 серебряных.</p></aside></div></section>`;
+ context.root.innerHTML=`<section class="view towerView"><div class="towerGame"><div class="towerStage"><div class="towerCanvas" role="application" aria-label="Трёхмерный редактор башни"></div><div class="towerHud"><div class="towerPill towerBalance"><span class="towerCoin"><i></i><b data-silver>0</b></span><span class="towerCoin gold"><i></i><b data-gold>0</b></span></div></div><div class="towerCamera"><button type="button" class="iconBtn" data-camera="home" aria-label="Вся башня" title="Вся башня"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg></button></div><div class="towerPill towerReadOnly" hidden></div></div><aside class="towerSide"><h2>Каталог</h2><div class="towerTabs" role="tablist" aria-label="Материалы">${Object.entries(categories).map(([k,n])=>`<button type="button" class="bracketNavigation ${k==='stone'?'active':''}" role="tab" data-category="${k}" aria-selected="${k==='stone'}">[ ${n} ]</button>`).join('')}</div><div class="towerStoneKinds bracketTabsTrack" role="tablist" aria-label="Типы камней">${PURCHASABLE_STONE_TYPES.map((kind)=>`<button type="button" class="bracketNavigation" data-stone-kind="${kind}" role="tab" aria-selected="${kind==='stone'}">[ ${CATALOG[kind].name.replace(' камень','')} ]</button>`).join('')}</div><div class="towerCatalog"></div><div class="towerTool"><button type="button" class="btn actionCompact" data-tool="place" aria-pressed="true">Строить</button><button type="button" class="btn actionCompact" data-tool="select" aria-pressed="false">Выбрать</button><button type="button" class="btn actionCompact" data-vertical hidden>Столб ↥</button></div><div class="towerDimensions"></div><div class="towerPosition">${['x','y','z'].map((a,i)=>`<label>${['X','Высота','Z'][i]}<input data-position="${a}" type="number" min="0" max="${a==='y'?HEIGHT_LIMIT-1:GRID_SIZE-1}" step="1" value="0" aria-label="Положение ${a}"></label>`).join('')}</div><div class="towerCurrency segmentControl" role="group" aria-label="Способ оплаты" hidden><label class="settingsChoice"><input type="radio" name="tower-currency" value="silver" checked><span>24 серебра</span></label><label class="settingsChoice"><input type="radio" name="tower-currency" value="gold"><span>3 золота</span></label></div><div class="towerExchange"><button type="button" class="btn actionCompact" data-exchange="exchange_gold">1 золото → 8 серебра</button><button type="button" class="btn actionCompact" data-exchange="exchange_silver">8 серебра → 1 золото</button></div><div class="towerSelected" hidden></div><div class="towerActions"><button class="btn actionPrimary towerAction" data-confirm disabled>Установить · 1 серебро</button><button class="btn towerAction" data-remove hidden>Удалить и вернуть монеты</button><button class="btn towerAction towerRetry" data-retry hidden>Повторить действие</button><button class="btn actionCompact towerAction" data-refresh>Обновить сохранение</button></div><div class="towerStatus" role="status" aria-live="polite" hidden></div><span class="towerSaved"></span><label class="towerLayer">Разрез: <span data-layer-label>вся башня</span><input data-layer type="range" min="0" max="${HEIGHT_LIMIT}" value="${HEIGHT_LIMIT}"></label><p class="towerHelp">Выбери готовый размер в ячейках. Перед покупкой можно изменить форму и повернуть камень. Перемычкам нужна опора с двух сторон.</p><p class="towerHelp">Монеты за первое верное слово в завершённом тесте: начальный и тематический словари — серебро, средний и сложный — золото. 1 золотая = 8 серебряных.</p></aside></div></section>`;
  // Keep the stage unobstructed: the catalogue is a compact bottom dock,
  // while dimensions, currencies and layer tools stay available on demand.
  const dock=context.root.querySelector('.towerSide');
@@ -103,22 +103,18 @@ export async function mount(context,params={}){
   if(button.dataset.quick==='cancel'){
    s.positionTouched=false;s.preview=null;status('');updatePreview();
   }else if(button.dataset.quick==='rotate'){
-   s.rotation=(s.rotation+1)%4;updatePreview();
+   s.rotation=(s.rotation+1)%(PURCHASABLE_STONE_TYPES.includes(s.type)?8:4);updatePreview();
   }else if(button.dataset.quick==='variant'&&STONE_KIND[s.type]&&s.positionTouched){
    s.variant=(s.variant+1)%ROCK_PACK[STONE_KIND[s.type]].length;
    updatePreview();
   }
  },{signal:controller.signal});
  function renderCatalog(){
-  const catalog=q('.towerCatalog'),stone=Boolean(STONE_KIND[s.type]);
-  q('.towerStoneKinds').hidden=s.category!=='stone';
-  root.querySelectorAll('[data-stone-kind]').forEach(b=>{
-   const active=s.type===b.dataset.stoneKind&&s.category==='stone';
-   b.setAttribute('aria-selected',String(active));b.classList.toggle('active',active);
-  });
+  const catalog=q('.towerCatalog'),stone=s.category==='stone';
+  q('.towerStoneKinds').hidden=true;
   const configurations=stone
-   ?STONE_CONFIGURATIONS[s.type].map((dimensions,index)=>({type:s.type,configIndex:index,dimensions}))
-   :Object.entries(CATALOG).filter(([,c])=>c.category===s.category)
+   ?PURCHASABLE_STONE_TYPES.flatMap(type=>STONE_CONFIGURATIONS[type].map((dimensions,index)=>({type,configIndex:index,dimensions})))
+   :Object.entries(CATALOG).filter(([type,c])=>c.category===s.category&&type!=='stone')
      .map(([type])=>({type,configIndex:0,dimensions:CATALOG[type].defaults}));
   catalog.innerHTML=configurations.map(({type,configIndex,dimensions})=>{
    const selected=s.type===type&&s.configIndex===configIndex;
@@ -167,29 +163,46 @@ export async function mount(context,params={}){
  on('.towerTabs','click',e=>{
   const b=e.target.closest('[data-category]');if(!b)return;
   const category=b.dataset.category;
-  const first=Object.keys(CATALOG).find(type=>CATALOG[type].category===category);
+  const first=Object.keys(CATALOG).find(type=>CATALOG[type].category===category&&type!=='stone');
   if(first)chooseItem(first,0);
  });
- on('.towerStoneKinds','click',e=>{const b=e.target.closest('[data-stone-kind]');if(b)chooseItem(b.dataset.stoneKind,0);});
  function chooseItem(type,configIndex=0){
-  if(!CATALOG[type]||s.busy||s.pending)return;
-  s.positionTouched=false;
-  s.type=type;s.configIndex=STONE_CONFIGURATIONS[type]?Math.max(0,Math.min(configIndex,STONE_CONFIGURATIONS[type].length-1)):0;s.variant=0;s.category=CATALOG[type].category;s.rotation=0;s.preview=null;s.selected=null;
+  if(!CATALOG[type]||type==='stone'||s.busy||s.pending)return;
+  // Change shape/configuration at the same unconfirmed placement point.
+  const keepGhost=s.tool==='place'&&s.positionTouched;
+  const keepId=keepGhost?s.preview?.id:null;
+  const oldRotation=s.rotation;
+  s.type=type;
+  s.configIndex=STONE_CONFIGURATIONS[type]?Math.max(0,Math.min(configIndex,STONE_CONFIGURATIONS[type].length-1)):0;
+  s.variant=0;s.category=CATALOG[type].category;
+  s.rotation=oldRotation<=(PURCHASABLE_STONE_TYPES.includes(type)?7:type==='beam'?5:3)?oldRotation:0;
+  s.preview=keepGhost&&keepId?{...s.preview,id:keepId}:null;
+  s.positionTouched=keepGhost;s.selected=null;
   root.querySelectorAll('[data-category]').forEach(b=>{const active=b.dataset.category===s.category;b.setAttribute('aria-selected',String(active));b.classList.toggle('active',active);});
   setTool('place');renderDimensions();
  }
- on('.towerCatalog','click',e=>{const b=e.target.closest('[data-item]');if(b)chooseItem(b.dataset.item,Number(b.dataset.config||0));});
- // Desktop: drag any catalogue card. Touch: drag its icon, swipe the name to scroll.
- let dragging=null;
+ // Horizontal catalogue movement cannot place an element in the 3D scene.
+ let scrollPointer=null,swipeUntil=0;
  on('.towerCatalog','pointerdown',e=>{
-  const item=e.target.closest('[data-item]');
-  if(!item||s.busy||s.pending||!s.editable||e.button!==0)return;
-  if(e.pointerType==='touch'&&!e.target.closest('.towerItemIcon'))return;
-  chooseItem(item.dataset.item,Number(item.dataset.config||0));
-  dragging={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};
-  if(e.target.closest('.towerItemIcon'))e.preventDefault();
+  if(e.button!==0)return;
+  scrollPointer={id:e.pointerId,x:e.clientX,scrolled:false};
  });
- function stopDragging(e){if(dragging?.id===e.pointerId)dragging=null;}
+ on('.towerCatalog','pointermove',e=>{
+  if(scrollPointer?.id!==e.pointerId)return;
+  if(Math.abs(e.clientX-scrollPointer.x)>7)scrollPointer.scrolled=true;
+ });
+ const finishCatalogPointer=e=>{
+  if(scrollPointer?.id!==e.pointerId)return;
+  if(scrollPointer.scrolled)swipeUntil=performance.now()+220;
+  scrollPointer=null;
+ };
+ on('.towerCatalog','pointerup',finishCatalogPointer);
+ on('.towerCatalog','pointercancel',finishCatalogPointer);
+ on('.towerCatalog','click',e=>{
+  if(performance.now()<swipeUntil){e.preventDefault();return;}
+  const b=e.target.closest('[data-item]');
+  if(b)chooseItem(b.dataset.item,Number(b.dataset.config||0));
+ });
  function locateHit(hit){
   if(!hit||s.disposed||s.busy||s.pending||s.tool!=='place')return;
   const dims=worldDimensions(chosen()),n=hit.normal||{x:0,y:1,z:0};
@@ -198,21 +211,13 @@ export async function mount(context,params={}){
   for(const a of ['x','y','z'])q(`[data-position="${a}"]`).value=Math.max(0,Math.floor(p[a]));
   s.positionTouched=true;updatePreview();
  }
- window.addEventListener('pointermove',e=>{
-  if(!dragging||dragging.id!==e.pointerId||s.disposed||!s.scene)return;
-  if(!dragging.moved&&Math.hypot(e.clientX-dragging.x,e.clientY-dragging.y)<7)return;
-  dragging.moved=true;
-  const hit=s.scene.pickAt(e.clientX,e.pointerType==='touch'?e.clientY-65:e.clientY);
-  if(hit){locateHit(hit);if(e.cancelable)e.preventDefault();}
- },{signal:controller.signal,passive:false});
- window.addEventListener('pointerup',stopDragging,{signal:controller.signal});
- window.addEventListener('pointercancel',stopDragging,{signal:controller.signal});
  window.addEventListener('keydown',e=>{
   if(s.disposed||s.busy||s.pending||e.ctrlKey||e.metaKey||e.altKey)return;
   if(e.target?.closest?.('input,textarea,select,[contenteditable]'))return;
   if(e.key==='Escape'&&s.positionTouched){e.preventDefault();q('[data-quick="cancel"]')?.click();}
   else if(['q','e'].includes(e.key.toLowerCase())&&s.tool==='place'&&s.positionTouched){
-   e.preventDefault();s.rotation=(s.rotation+(e.key.toLowerCase()==='q'?3:1))%4;updatePreview();
+   e.preventDefault();const limit=PURCHASABLE_STONE_TYPES.includes(s.type)?8:4;
+   s.rotation=(s.rotation+(e.key.toLowerCase()==='q'?limit-1:1))%limit;updatePreview();
   }else if(e.key==='Enter'&&s.tool==='place'&&s.positionTouched&&!q('[data-confirm]').disabled){e.preventDefault();q('[data-confirm]').click();}
   else if(['Delete','Backspace'].includes(e.key)&&s.tool==='select'&&s.selected&&!q('[data-remove]').disabled){e.preventDefault();q('[data-remove]').click();}
  },{signal:controller.signal});
