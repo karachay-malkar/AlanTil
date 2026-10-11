@@ -1,5 +1,5 @@
 import {bounds} from './core.mjs';
-import {rockContains} from './masonry-geometry.mjs';
+import {rockContains,rockCategory} from './masonry-geometry.mjs';
 
 const STONES=new Set(['stone','medium','long','big']), OPENINGS=new Set(['door','window']);
 const AXES=['x','y','z'];
@@ -107,7 +107,7 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
 
 function nearestSeed(x,y,z){
  // Stable jittered 3D Voronoi cells yield irregular, coherent rubble fragments.
- const w=3.4,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
+ const w=6.5,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
  let nearest=Infinity,key=0;
  for(let dz=-1;dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
   const a=cx+dx,b=cy+dy,c=cz+dz;
@@ -127,11 +127,18 @@ const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColo
  * when the actual cavity provides that much space; narrow cracks necessarily
  * get thinner wedges.
  */
-function surface(volume,joint){
+function surface(volume,joint,profiles){
  const out=empty();
  out.candidateCells=volume.candidateCells;
  const {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid}=volume;
  const count=stride*nz,stoneId=new Int32Array(count);
+ const tone=block=>{
+   const variants=profiles[rockCategory(block.type)]||[];
+   const variant=variants.length?variants[((block.variant||0)%variants.length+variants.length)%variants.length]:null;
+   return variant?.[0]?.tint||[.30,.29,.26];
+ };
+ const primary=tone(joint.a),secondary=tone(joint.b);
+ const palette=[0,1,2].map(i=>(primary[i]+secondary[i])*.5);
  const seeds=new Map();
  const raw=(x,y,z)=>[min[0]+x*dimension[0],min[1]+y*dimension[1],min[2]+z*dimension[2]];
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
@@ -152,7 +159,7 @@ function surface(volume,joint){
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const idx=x+nx*y+stride*z;if(!mask[idx])continue;
   const id=stoneId[idx];
-  const tint=(hash(id,3,0,2)-.5)*.105;
+  const tint=(hash(id,3,0,2)-.5)*.032;
   for(let face=0;face<6;face++){
    const [dx,dy,dz]=DIRS[face],xx=x+dx,yy=y+dy,zz=z+dz;
    const neighbor=inside(xx,yy,zz)?xx+nx*yy+stride*zz:-1;
@@ -172,12 +179,12 @@ function surface(volume,joint){
    const center=[0,1,2].map(k=>corners.reduce((sum,p)=>sum+p[k],0)/4);
    center[normalAxis]+=normalSign*(hash(x,y,z,face+60)-.5)*Math.min(...dimension)*.17;
    const light=face===2?1.08:face===3?.82:face===0||face===4?.99:.90;
-   const color=[.61+tint,.595+tint,.555+tint].map(v=>Math.max(.12,Math.min(.91,v*light)));
+   const color=palette.map(v=>Math.max(.06,Math.min(.68,(v+tint)*light)));
    addQuad(corners,center,out.stonePositions,out.stoneColors,color);
    if(touchesOther&&id<stoneId[neighbor]){
     const slab=CORNERS[face].map(v=>raw(x+v[0],y+v[1],z+v[2]));
     const mid=[0,1,2].map(k=>slab.reduce((sum,p)=>sum+p[k],0)/4);
-    addQuad(slab,mid,out.mortarPositions,out.mortarColors,[.30,.287,.267]);
+    addQuad(slab,mid,out.mortarPositions,out.mortarColors,[.14,.13,.115]);
    }
   }
  }
@@ -204,7 +211,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
   const surroundings=neighbors.map(e=>e.signature).sort().join('/');
   const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing;
   let piece=store.get(key);
-  if(!piece){const grid=cavity(joint,profiles,openings,spacing,neighbors);piece=grid?surface(grid,joint):empty();store.set(key,piece);}
+  if(!piece){const grid=cavity(joint,profiles,openings,spacing,neighbors);piece=grid?surface(grid,joint,profiles):empty();store.set(key,piece);}
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
   out.candidateCells+=piece.candidateCells;
   if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles){out.truncated=true;continue;}
