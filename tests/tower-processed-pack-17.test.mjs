@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {ROCK_PACK,ROCK_SOURCES} from '../assets/tower/processed-rocks.mjs';
-import {CATALOG,encodeTower,decodeTower,validatePlacement} from '../packages/tower-game/core.mjs';
+import {CATALOG,STONE_CONFIGURATIONS,encodeTower,decodeTower,validatePlacement} from '../packages/tower-game/core.mjs';
 
 test('processed rock variants are present for all four build categories',()=>{
  assert.deepEqual(Object.fromEntries(Object.entries(ROCK_PACK).map(([category,entries])=>[category,entries.length])),
@@ -19,6 +19,24 @@ test('processed rock variants are present for all four build categories',()=>{
    assert.ok(payload.subarray(0,count*3).some(v=>v>0),'nonempty geometry');
   }
  }
+});
+
+test('there are exactly 36 distinct fixed-size cards and new big depth is 2–4 cells',()=>{
+ assert.deepEqual(Object.fromEntries(Object.entries(STONE_CONFIGURATIONS).map(([type,dims])=>[type,dims.length])),{
+  stone:1,medium:2,long:6,big:27,
+ });
+ const seen=new Set();
+ for(const [type,configs] of Object.entries(STONE_CONFIGURATIONS)){
+  for(const [sx,sy,sz]of configs){
+   assert.equal(validatePlacement([],{id:'q',type,x:0,y:0,z:0,sx,sy,sz,rotation:0}).ok,true,type+' '+[sx,sy,sz].join('x'));
+   const key=type+':'+sx+'x'+sy+'x'+sz;
+   assert.equal(seen.has(key),false,key);seen.add(key);
+   if(type==='medium')assert.equal(sz,1);
+   if(type==='long')assert.equal(sz,1);
+   if(type==='big')assert.ok(sz>=2&&sz<=4);
+  }
+ }
+ assert.equal(seen.size,36);
 });
 
 test('placing all variants keeps server-compatible stone dimensions and serialized variant',()=>{
