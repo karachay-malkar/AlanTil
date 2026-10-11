@@ -1,6 +1,6 @@
 import {CATALOG,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js';
-import {towerUserId,loadTower,mutateTower} from './repository.js';
+import {createTowerScene} from './scene.js?v=17.0.1';
+import {towerUserId,loadTower,mutateTower} from './repository.js?v=17.0.1';
 let active=null;
 const icons={stone:'◆',medium:'▰',long:'▬',big:'⬟',beam:'╱',deck:'▤',window:'▣',door:'▥',ladder:'☷',roof:'⌂'};
 const categories={stone:'Камень',wood:'Дерево',openings:'Проёмы',finish:'Завершение'};
