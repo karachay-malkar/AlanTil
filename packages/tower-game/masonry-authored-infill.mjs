@@ -42,6 +42,7 @@ export function buildAuthoredProfiles(mesh,res=28){
  });
 }
 export function authoredContains(fields,p){
+ if(p.some(v=>v<0||v>1))return false;
  for(let a=0;a<3;a++){
   const [u,v]=AXES[a],f=fields[a];
   const x=clamp(Math.floor(p[u]*f.res),0,f.res-1),y=clamp(Math.floor(p[v]*f.res),0,f.res-1),i=y*f.res+x;
@@ -68,15 +69,16 @@ function physicalMesh(result,mesh,box,min,dimension,rotation,fit=.93){
   }
  }
 }
-function mortarShell(result,g,assigned){
+function mortarShell(result,g,assigned,maxTriangles){
  const min=g.min,delta=g.dimension;
  const verts=(x,y,z)=>[min[0]+x*delta[0],min[1]+y*delta[1],min[2]+z*delta[2]];
- const faces=[[[0,0,0],[0,0,1],[0,1,1],[0,1,0]],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]],[[0,0,1],[0,0,0],[1,0,0],[1,0,1]]];
- for(let z=0;z<g.nz;z++)for(let y=0;y<g.ny;y++)for(let x=0;x<g.nx;x++){
+ const faces=[[[0,0,0],[0,0,1],[0,1,1],[0,1,0]],[[1,0,1],[1,0,0],[1,1,0],[1,1,1]],[[0,0,1],[0,0,0],[1,0,0],[1,0,1]],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]],[[1,0,0],[0,0,0],[0,1,0],[1,1,0]],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]];
+ outer:for(let z=0;z<g.nz;z++)for(let y=0;y<g.ny;y++)for(let x=0;x<g.nx;x++){
   const i=offset(g,x,y,z);if(!g.mask[i]||assigned[i])continue;
   for(let f=0;f<6;f++){
    const [dx,dy,dz]=D[f],xx=x+dx,yy=y+dy,zz=z+dz;
    if(inGrid(g,xx,yy,zz)&&g.mask[offset(g,xx,yy,zz)]&&!assigned[offset(g,xx,yy,zz)])continue;
+   if((result.stonePositions.length+result.mortarPositions.length)/9+2>maxTriangles){result.truncated=true;break outer;}
    const c=faces[f].map(v=>verts(x+v[0],y+v[1],z+v[2]));
    for(const k of [0,1,2,0,2,3]){result.mortarPositions.push(...c[k]);result.mortarColors.push(.11,.105,.095);}
   }
@@ -109,7 +111,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  if(!grid||!smallMeshes?.length)throw new TypeError('Cavity mask and small authored meshes required');
  const g=grid,num=g.nx*g.ny*g.nz,mask=g.mask;
  if(num!==mask.length||g.stride!==g.nx*g.ny)throw new RangeError('Invalid cavity grid');
- const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0};
+ const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0,truncated:false};
  for(let i=0;i<num;i++)out.candidateCells+=+!!mask[i];
  if(!out.candidateCells)return out;
  const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
@@ -127,7 +129,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   };return depth(b)-depth(a)||a-b;
  });
  for(const i of cells){
-  if(out.fragments>=maxFragments||out.stonePositions.length/9>=maxTriangles)break;
+  if(out.fragments>=maxFragments||out.stonePositions.length/9>=maxTriangles){out.truncated=true;break;}
   if(occupied[i])continue;
   const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride),lo=[x,y,z],hi=[x,y,z];
   if(!boxFree(lo,hi))continue;
@@ -153,7 +155,8 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
     if(!candidateClear(smallMeshes[variant],lo,hi,g.min,g.dimension,fit,rotation,isSolidAt))continue;
     const samples=[];
     for(let zz=lo[2];zz<=hi[2];zz++)for(let yy=lo[1];yy<=hi[1];yy++)for(let xx=lo[0];xx<=hi[0];xx++){
-     const p=[xx,yy,zz].map((v,k)=>((v+.5-center[k])*g.dimension[k]/(extent[k]*fit)+.5));
+     const relative=[xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]);
+     const p=rot(relative,(4-rotation)%4).map((v,k)=>v/(extent[k]*fit)+.5);
      if(authoredContains(field,p))samples.push(offset(g,xx,yy,zz));
     }
     if(samples.length>matched.length){matched=samples;model=variant;bestFit=fit;}
@@ -162,14 +165,14 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    if(matched.length>(hi[0]-lo[0]+1)*(hi[1]-lo[1]+1)*(hi[2]-lo[2]+1)*.48)break;
   }
   if(!matched.length)continue;
-  if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>maxTriangles)break;
+  if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>maxTriangles){out.truncated=true;break;}
   physicalMesh(out,smallMeshes[model],{lo,hi},g.min,g.dimension,rotation,bestFit);
   for(const k of matched)occupied[k]=1;
   out.fragments++;out.stoneFilledCells+=matched.length;
  }
  // Mortar renders only exterior faces of the residual voids, not fictitious
  // cubic stones. The residual volume remains unfilled in reported metrics.
- mortarShell(out,g,occupied);
+ mortarShell(out,g,occupied,maxTriangles);
  out.filledCells=out.stoneFilledCells;
  out.stoneCoverage=out.stoneFilledCells/out.candidateCells;
  out.residualFreeVolume=(out.candidateCells-out.stoneFilledCells)*g.dimension.reduce((a,b)=>a*b,1);
