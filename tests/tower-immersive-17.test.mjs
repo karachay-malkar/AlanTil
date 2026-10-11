@@ -13,15 +13,15 @@ test('tower uses real camera tween, meadow and depth controls without changing r
  assert.match(scene,/grid\.visible=!!b/);
  assert.match(scene,/const contact=new THREE\.Mesh/);
  assert.match(scene,/function screenPosition\(b\)/);
- assert.match(scene,/function sizeHandlePositions\(b\)/);
- assert.match(scene,/sizeHandlePositions,pickAt/);
+ assert.doesNotMatch(scene,/function sizeHandlePositions\(b\)/);
+ assert.match(scene,/thumbnail,screenPosition,pickAt/);
 });
 
 test('all 23 authored variants appear per stone type with native AlanTil bracket tabs',()=>{
  const app=read('src/features/tower/index.js'),css=read('src/features/tower/tower.css');
  assert.match(app,/data-stone-kind/);
- assert.match(app,/ROCK_PACK\[STONE_KIND\[s\.type\]\]\.map\(\(_,variant\)/);
- assert.match(app,/data-variant/);
+ assert.match(app,/STONE_CONFIGURATIONS\[s\.type\]\.map\(\(dimensions,index\)/);
+ assert.match(app,/data-config/);
  assert.match(app,/s\.scene\.thumbnail\(/);
  assert.match(app,/class="bracketNavigation/);
  assert.match(app,/class="btn actionPrimary towerAction"/);
@@ -31,20 +31,18 @@ test('all 23 authored variants appear per stone type with native AlanTil bracket
  assert.match(css,/\.towerTabs \.bracketNavigation/);
 });
 
-test('axis-sized 3D controls replace old stretch and variant toolbar',()=>{
+test('catalog uses fixed size presets and only exposes preview-time change-form action',()=>{
  const app=read('src/features/tower/index.js'),scene=read('src/features/tower/scene.js'),css=read('src/features/tower/tower.css');
- assert.match(app,/data-axis/);
- assert.match(app,/resizeAxis\(axis,step\)/);
- assert.match(app,/sizeHandlePositions\(s\.preview\)/);
+ assert.match(app,/STONE_CONFIGURATIONS\[s\.type\]/);
+ assert.match(app,/data-config/);
+ assert.match(app,/data-quick="variant"/);
+ assert.match(app,/s\.variant=\(s\.variant\+1\)%ROCK_PACK/);
  assert.match(app,/setCatalogOpen\(true\)/);
- assert.match(app,/data-quick="cancel"/);
- assert.doesNotMatch(app,/data-quick="stretch"|data-quick="shrink"|data-quick="variant"/);
- assert.match(scene,/sizeHandlePositions/);
- assert.match(css,/\.towerAxisHandles/);
- assert.match(css,/width:44px;min-width:44px;height:44px/);
+ assert.doesNotMatch(app,/data-axis|resizeAxis\(/);
+ assert.doesNotMatch(scene,/sizeHandlePositions/);
+ assert.doesNotMatch(css,/\.towerAxisHandles/);
  assert.match(css,/prefers-reduced-motion/);
 });
-
 test('tower uses scoped 17.0.8 asset cache without changing app global version',()=>{
  const router=read('src/app/router.js');
  assert.match(router,/TOWER_ASSET_VERSION = "17\.0\.8"/);
