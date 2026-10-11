@@ -1,8 +1,82 @@
-.towerView{width:100%;max-width:1400px;margin:auto}.towerGame{--tower-paper:#eee6d8;--tower-ink:#372f27;--tower-accent:#6f7853;color:var(--tower-ink);display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:12px;padding:8px}.towerStage{position:relative;min-height:560px;height:min(72vh,850px);background:#c6c5b3;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px #30251c20}.towerCanvas{width:100%;height:100%;touch-action:none}.towerCanvas canvas{display:block;width:100%;height:100%;outline:none}.towerHud{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;gap:10px;pointer-events:none}.towerPill{background:#faf5e9eb;border:1px solid #fff8;border-radius:12px;padding:9px 14px;box-shadow:0 3px 14px #0001;backdrop-filter:blur(10px)}.towerBalance{display:flex;gap:18px;align-items:center}.towerCoin{display:inline-flex;gap:6px;align-items:center}.towerCoin i{width:18px;height:18px;border-radius:50%;display:inline-block;background:radial-gradient(circle at 35% 30%,#fff,#adadad);border:2px solid #85857b}.towerCoin.gold i{background:radial-gradient(circle at 35% 30%,#ffe7a4,#bb8632);border-color:#9c6d26}.towerCamera{position:absolute;bottom:14px;right:14px;display:flex;gap:5px}.towerGame button{font:inherit;color:inherit;cursor:pointer}.towerCamera button,.towerTool button,.towerAction{border:1px solid #9d927b50;background:#faf5e9ed;border-radius:9px;padding:9px 12px;min-height:40px}.towerGame button:focus-visible,.towerGame input:focus-visible{outline:3px solid #6f7853;outline-offset:2px}.towerGame button:disabled{opacity:.45;cursor:default}.towerSide{background:#f2ebdf;border:1px solid #c9bda8;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:13px}.towerSide h2{font-size:18px;margin:0}.towerTabs{display:flex;flex-wrap:wrap;gap:5px}.towerTabs button{border:0;background:#e4dccd;padding:7px 9px;border-radius:7px;font-size:12px}.towerTabs button[aria-selected=true]{background:#6f7853;color:white}.towerCatalog{display:grid;gap:6px;max-height:260px;overflow:auto}.towerItem{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:10px;border:1px solid transparent;border-radius:10px;background:#fff7}.towerItem[aria-pressed=true]{border-color:#6f7853;background:#dce0cb}.towerItemIcon{font-size:25px;width:32px;text-align:center}.towerItemName{flex:1;font-size:14px}.towerPrice{font-size:12px;white-space:nowrap}.towerDimensions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.towerDimensions label,.towerPosition label{display:grid;gap:4px;font-size:12px}.towerDimensions input,.towerPosition input{width:100%;min-width:0;border:1px solid #b7ab94;border-radius:7px;padding:7px;background:#fff9;color:inherit}.towerPosition{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.towerTool{display:flex;gap:6px;flex-wrap:wrap}.towerTool button[aria-pressed=true]{background:#6f7853;color:white}.towerAction.primary{background:#6f7853;color:white;border:0}.towerActions{display:grid;gap:7px}.towerStatus{font-size:13px;line-height:1.4;min-height:38px}.towerStatus[data-kind=error]{color:#974a3c}.towerHelp{font-size:12px;line-height:1.5;color:#756b5a;margin:0}.towerLayer{display:grid;gap:4px;font-size:12px}.towerLayer input{width:100%;accent-color:#6f7853}.towerReadOnly{position:absolute;bottom:65px;left:14px;right:14px;max-width:450px;font-size:13px}.towerLoading{display:grid;place-content:center;height:350px;text-align:center;padding:25px}.towerRetry{margin-top:10px}.towerSaved{font-size:12px;color:#686e4e}.towerSelected{font-size:13px;padding:9px;background:#e4dccd;border-radius:8px}.towerCurrency{display:flex;gap:10px;font-size:13px}.towerCurrency label{display:flex;gap:5px;align-items:center}
-@media(max-width:800px){.towerGame{grid-template-columns:1fr;padding:0;gap:8px}.towerStage{height:52vh;min-height:310px;border-radius:12px}.towerSide{padding:12px;border-radius:12px;gap:10px}.towerCatalog{grid-template-columns:repeat(2,minmax(0,1fr));max-height:170px}.towerItem{padding:8px;gap:5px}.towerItemIcon{font-size:19px;width:25px}.towerItemName{font-size:12px}.towerHud{top:9px;left:9px;right:9px}.towerPill{padding:7px 10px;font-size:12px}.towerBalance{gap:10px}.towerHelp{font-size:12px}.towerReadOnly{bottom:60px}}
-
-.towerExchange{display:flex;gap:6px;flex-wrap:wrap}.towerExchange button{font:inherit;font-size:11px;border:1px solid #d8d3c5;background:#f4f1e8;border-radius:8px;padding:7px;color:#4e5749;cursor:pointer}
-
-.appShell[data-feature="tower"]{width:min(100%,1400px)}.towerView{padding-top:var(--chrome-top-depth,54px);padding-bottom:24px}.towerSide{max-height:calc(100dvh - 85px);overflow:auto}@media(max-width:800px){.towerSide{max-height:none;overflow:visible}}
-
-.towerSide>*{flex-shrink:0}.towerGame [hidden]{display:none!important}
+/* Tower editor: construction always occupies the available viewport. */
+.appShell[data-feature="tower"]{width:100%;max-width:none}
+.appShell[data-feature="tower"] .appViewport,
+.appShell[data-feature="tower"] .appScreenHost{min-width:0;width:100%;padding:0}
+.towerView{width:100%;max-width:none;margin:0;padding:0}
+.towerGame{--tower-ink:#302b23;--tower-paper:rgba(251,247,238,.94);--tower-accent:#566c52;position:relative;width:100%;height:calc(100dvh - var(--chrome-top-depth,56px));min-height:490px;overflow:hidden;color:var(--tower-ink);isolation:isolate}
+.towerStage{position:absolute;inset:0;background:#b9c8c8;overflow:hidden}
+.towerCanvas,.towerCanvas canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+.towerHud{position:absolute;z-index:2;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
+.towerPill{display:inline-flex;align-items:center;gap:7px;background:var(--tower-paper);border:1px solid #fff9;border-radius:14px;padding:9px 13px;box-shadow:0 3px 18px #1c25162e;backdrop-filter:blur(14px);font-size:13px;font-weight:600}
+.towerPill small{font-size:11px;font-weight:400;opacity:.7}
+.towerBalance{gap:16px;font-variant-numeric:tabular-nums}
+.towerCoin{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.towerCoin i{width:17px;height:17px;flex:none;border-radius:50%;border:2px solid #888b8e;background:radial-gradient(circle at 34% 28%,#fff,#b6c0c7 65%,#899399)}
+.towerCoin.gold i{border-color:#a77b2c;background:radial-gradient(circle at 32% 24%,#fff2b3,#ddb449 63%,#a87826)}
+.towerCamera{position:absolute;z-index:3;top:88px;right:16px;display:flex;flex-direction:column;gap:7px}
+.towerGame button{font:inherit;color:inherit;cursor:pointer}
+.towerCamera button{width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffffffa8;border-radius:13px;background:var(--tower-paper);box-shadow:0 4px 18px #1c251625;font-size:21px;backdrop-filter:blur(12px)}
+.towerGame button:focus-visible,.towerGame input:focus-visible,.towerOptions summary:focus-visible{outline:3px solid #5a7752;outline-offset:2px}
+.towerGame button:disabled{opacity:.43;cursor:default}
+.towerReadOnly{position:absolute;top:72px;left:16px;right:75px;max-width:440px;font-size:12px}
+.towerSide{position:absolute;z-index:4;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(860px,calc(100% - 24px));max-height:calc(100% - 112px);display:flex;flex-direction:column;gap:8px;padding:11px 13px 10px;border:1px solid #fffc;border-radius:19px;background:var(--tower-paper);box-shadow:0 12px 40px #29261847;backdrop-filter:blur(20px)}
+.towerSide h2{display:none}
+.towerTabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.towerTabs::-webkit-scrollbar{display:none}
+.towerTabs button{flex:none;border:0;background:#ebe5d9;border-radius:9px;font-size:12px;padding:7px 11px;white-space:nowrap;min-height:31px}
+.towerTabs button[aria-selected="true"],.towerTool button[aria-pressed="true"]{background:var(--tower-accent);color:white}
+.towerCatalog{display:flex;gap:8px;width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding:2px 0 5px}
+.towerItem{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center;flex:none;width:156px;min-height:60px;text-align:left;padding:8px 11px;background:#fff9;border:1px solid #c7beae88;border-radius:12px;scroll-snap-align:start}
+.towerItem[aria-pressed="true"]{background:#e5ecdc;border-color:#829277}
+.towerItemIcon{grid-row:span 2;display:grid;place-items:center;width:34px;height:36px;flex:none;font-size:24px;color:#736956;touch-action:none}
+.towerItemName{font-size:12px;line-height:1.2;font-weight:600}
+.towerPrice{font-size:11px;color:#6a675a;line-height:1.2;white-space:nowrap}
+.towerTool{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.towerTool button,.towerOptions summary,.towerAction,.towerExchange button{border:1px solid #bdb7a9;border-radius:10px;background:#faf8f1;padding:7px 11px;min-height:34px;font-size:12px}
+.towerOptions{min-width:0;border-top:1px solid #c6c0b552;padding-top:6px}
+.towerOptions summary{display:inline-flex;align-items:center;gap:7px;list-style:revert;cursor:pointer;font-weight:600;background:transparent;border:0;padding:3px 5px;min-height:24px}
+.towerOptions[open]{overflow-y:auto;overflow-x:hidden;max-height:min(44dvh,360px);padding-bottom:7px}
+.towerOptions[open]>:not(summary){margin-top:9px}
+.towerDimensions,.towerPosition{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.towerDimensions label,.towerPosition label{display:grid;gap:4px;font-size:11px}
+.towerDimensions input,.towerPosition input{box-sizing:border-box;min-width:0;width:100%;border:1px solid #bcb5a4;border-radius:8px;padding:8px;background:#fffc;color:inherit;font:inherit}
+.towerCurrency,.towerExchange{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px}
+.towerCurrency label{display:flex;gap:5px;align-items:center}
+.towerCurrency input{accent-color:#5d7358}
+.towerSelected{padding:6px 9px;background:#e8e4d8;border-radius:8px;font-size:12px}
+.towerActions{display:flex;flex-wrap:wrap;gap:7px}
+.towerAction{min-width:0;flex:1}
+.towerAction.primary{border-color:var(--tower-accent);background:var(--tower-accent);color:white;font-weight:700}
+.towerAction[data-refresh]{flex:0}
+.towerStatus{font-size:11px;line-height:1.35;min-height:15px;max-height:32px;overflow:auto}
+.towerStatus[data-kind="error"]{color:#9d3936}
+.towerSaved{font-size:10px;color:#59714e}
+.towerSide>.towerHelp,.towerSide>.towerLayer{display:none}
+.towerHelp{font-size:11px;line-height:1.5;color:#686253;margin:6px 0}
+.towerLayer{display:grid;gap:5px;font-size:12px}
+.towerLayer input{width:100%;accent-color:#637855}
+.towerExchange button{font-size:11px}
+.towerGame [hidden]{display:none!important}
+.towerCanvas[data-context-lost="true"]::after{content:"3D-контекст потерян. Перезагрузите экран.";position:absolute;inset:0;display:grid;place-items:center;background:#fff9}
+@media(max-width:650px){
+ .towerGame{height:calc(100dvh - var(--chrome-top-depth,52px));min-height:420px}
+ .towerHud{top:8px;left:9px;right:9px;gap:5px}
+ .towerPill{padding:7px 9px;border-radius:11px;font-size:11px}
+ .towerPill small{display:none}
+ .towerBalance{gap:9px}
+ .towerCoin{gap:4px}
+ .towerCoin i{width:14px;height:14px}
+ .towerCamera{top:66px;right:9px;gap:6px}
+ .towerCamera button{width:37px;height:37px;border-radius:10px;font-size:18px}
+ .towerSide{bottom:max(7px,env(safe-area-inset-bottom));width:calc(100% - 12px);max-height:calc(100% - 90px);padding:8px 9px;border-radius:13px;gap:6px}
+ .towerItem{width:136px;min-height:51px;padding:6px 8px;grid-template-columns:28px 1fr;column-gap:7px}
+ .towerItemIcon{width:28px;height:30px;font-size:21px}
+ .towerItemName{font-size:11px}
+ .towerCatalog{gap:6px}
+ .towerTool button{padding:6px 9px;min-height:33px}
+ .towerTabs button{padding:6px 9px}
+ .towerReadOnly{top:57px;left:9px;right:53px}
+ .towerOptions[open]{max-height:min(43dvh,260px)}
+}
+@media(max-height:590px) and (min-width:651px){.towerGame{min-height:380px}.towerSide{gap:5px;padding:7px 11px}.towerItem{min-height:46px}.towerCamera{top:60px}}
+@media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important}}
