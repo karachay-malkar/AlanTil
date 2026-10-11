@@ -1,3 +1,4 @@
+import {regularizedRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
@@ -81,38 +82,20 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // They are quantized only for transport; topology and hand-adjusted contours remain intact.
  const stoneTemplates={};
  for(const [category,entries] of Object.entries(ROCK_PACK)){
-  stoneTemplates[category]=entries.map(([count,faceCount,base,alternate,encoded],variant)=>{
-   const binary=atob(encoded),bytes=new Uint8Array(binary.length);
-   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-   if(bytes.length!==count*3+faceCount*3)throw new Error('Некорректная геометрия камня');
-   const coords=new Float32Array(count*3),colors=new Float32Array(count*3);
-   const color=new THREE.Color();
-   for(let i=0;i<count;i++){
-    const x=bytes[3*i]/255,y=bytes[3*i+2]/255,z=bytes[3*i+1]/255;
-    coords.set([x-.5,y-.5,z-.5],i*3);
-    const wave=(Math.sin(x*11.7+z*7.3+variant*.87)+Math.cos(y*8.4-x*9.1))*.12;
-    const blend=THREE.MathUtils.clamp(.48+wave,0,1);
-    const shade=.92+.07*y;
-    color.setRGB(
-     (base[0]*(1-blend)+alternate[0]*blend)*shade/255,
-     (base[1]*(1-blend)+alternate[1]*blend)*shade/255,
-     (base[2]*(1-blend)+alternate[2]*blend)*shade/255,
-     THREE.SRGBColorSpace);
-    color.toArray(colors,i*3);
+  stoneTemplates[category]=entries.map((source,variant)=>{
+   const mesh=regularizedRockMesh(source,variant);
+   const geometry=keepG(new THREE.BufferGeometry());
+   geometry.setAttribute('position',new THREE.BufferAttribute(mesh.positions,3));
+   // Incoming sRGB palette needs conversion to linear before vertex color lighting.
+   const colors=new Float32Array(mesh.colors.length);
+   const conversion=new THREE.Color();
+   for(let i=0;i<mesh.colors.length;i+=3){
+    conversion.setRGB(mesh.colors[i],mesh.colors[i+1],mesh.colors[i+2],THREE.SRGBColorSpace);
+    colors[i]=conversion.r;colors[i+1]=conversion.g;colors[i+2]=conversion.b;
    }
-   const indices=new Uint16Array(faceCount*3),offset=count*3;
-   for(let i=0;i<faceCount;i++){
-    indices[3*i]=bytes[offset+3*i];
-    // Source axes are Z-up, so swapping axes reverses triangle winding.
-    indices[3*i+1]=bytes[offset+3*i+2];
-    indices[3*i+2]=bytes[offset+3*i+1];
-   }
-   const g=keepG(new THREE.BufferGeometry());
-   g.setAttribute('position',new THREE.BufferAttribute(coords,3));
-   g.setAttribute('color',new THREE.BufferAttribute(colors,3));
-   g.setIndex(new THREE.BufferAttribute(indices,1));
-   // Every facet casts light naturally, without arbitrary extra stone decals.
-   const flat=keepG(g.toNonIndexed());flat.computeVertexNormals();
+   geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+   geometry.setIndex(new THREE.BufferAttribute(mesh.indices,1));
+   const flat=keepG(geometry.toNonIndexed());flat.computeVertexNormals();
    return {g:flat,m:stoneMaterial,variant};
   });
  }
