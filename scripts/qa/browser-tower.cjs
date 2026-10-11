@@ -37,6 +37,14 @@ assert.equal(await page.locator('[data-dimension="1"]').inputValue(),'4');
 assert.equal(await page.locator('[data-dimension="2"]').inputValue(),'4');
 assert.equal(await page.locator('.towerDimensions input[type=number]').count(),0,'stone size cannot be stretched');
 await page.locator('canvas').click({position:{x:640,y:450}});
+const draftCoords=await page.locator('[data-position]').evaluateAll(els=>els.map(x=>x.value));
+await page.locator('[data-item=medium][data-config="1"]').click();
+assert.equal(await page.locator('[data-confirm]').isVisible(),true,'ghost must survive a different category configuration');
+assert.deepEqual(await page.locator('[data-position]').evaluateAll(els=>els.map(x=>x.value)),draftCoords);
+await page.locator('[data-item=big][data-config="2"]').click();
+assert.equal(await page.locator('[data-confirm]').isVisible(),true,'ghost must survive return to big stone');
+assert.deepEqual(await page.locator('[data-position]').evaluateAll(els=>els.map(x=>x.value)),draftCoords);
+assert.equal(state.elements.length,0,'catalogue changes are preview-only; no RPC mutation');
 await page.locator('[data-quick=variant]').waitFor({state:'visible'});
 await page.locator('[data-quick=variant]').click();
 assert.match(await page.locator('[data-quick=variant]').innerText(),/2\/7/,'preview may change shape while preserving dimensions');
@@ -60,4 +68,11 @@ await page.screenshot({path:path.join(output,'tower-infill-desktop.png'),fullPag
 const masonry=await page.locator('.towerCanvas').evaluate(el=>({coverage:el.dataset.masonryCoverage,fragments:el.dataset.masonryFragments}));
 console.log('INFILL_QA',masonry);
 assert.ok(Number(masonry.fragments)>0,'Real adjacent stones must generate volumetric rubble');
-await page.locator('.towerOptions summary').click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(720);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(output,'tower-built-mobile.png'),fullPage:true});assert.deepEqual(errors,[]);console.log('PASS real WebGL desktop/mobile, purchase, lost response retry, selection, exact refund, 12 fixed catalog sizes, preserved stone variants, gold payment; no JS errors');}finally{await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
+await page.locator('.towerOptions summary').click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(720);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(output,'tower-built-mobile.png'),fullPage:true});
+for(const width of [320,768,1440]){
+ await page.setViewportSize({width,height:844});
+ await page.waitForTimeout(200);
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no horizontal document overflow at '+width+'px');
+ await page.screenshot({path:path.join(output,'tower-built-'+width+'.png'),fullPage:true});
+}
+assert.deepEqual(errors,[]);console.log('PASS real WebGL desktop/mobile, purchase, lost response retry, selection, exact refund, 12 fixed catalog sizes, preserved stone variants, gold payment; no JS errors');}finally{await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});

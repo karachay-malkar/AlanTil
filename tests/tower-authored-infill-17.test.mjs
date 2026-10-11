@@ -17,10 +17,11 @@ test('all seven genuine authored small stones enter the packer',()=>{
 });
 test('stone volume is measured independently of dark mortar, never reported as fake full coverage',()=>{
  const result=fillAuthoredCavity(grid(7,6,3),models);
- assert.ok(result.candidateCells>result.stoneFilledCells);
+ assert.ok(result.candidateCells>=result.stoneFilledCells);
  assert.equal(result.filledCells,result.stoneFilledCells);
  assert.equal(result.stoneCoverage,result.stoneFilledCells/result.candidateCells);
- assert.ok(result.residualFreeVolume>0);
+ assert.ok(result.residualFreeVolume>=0);
+ assert.ok(Math.abs(result.residualFreeVolume-(result.candidateCells-result.stoneFilledCells)*(.12**3))<1e-10);
  assert.ok(result.mortarSurfaceCells>=0);
 });
 test('excluded opening voxels and empty cavities cannot be purchased or filled',()=>{

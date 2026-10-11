@@ -49,3 +49,5 @@ jobs:
       - name: Tower functional regression
         run: |
           node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs tests/tower-volume.test.mjs tests/tower-volume-real-rocks.test.mjs tests/tower-quality-17.test.mjs tests/tower-17-0-masonry-upgrade.test.mjs tests/tower-authored-infill-17.test.mjs
+      - name: Stone-volume diagnostics for 2, 5, 15 and 50 rocks
+        run: node scripts/qa/tower-masonry-metrics.mjs

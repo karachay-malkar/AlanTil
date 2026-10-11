@@ -61,7 +61,11 @@ function physicalMesh(result,mesh,box,min,dimension,rotation,fit=.93){
   const n=idx[i]*3,p=[src[n]*size[0],src[n+1]*size[1],src[n+2]*size[2]];
   const q=rot(p,rotation);
   for(let k=0;k<3;k++)result.stonePositions.push(center[k]+q[k]);
-  for(let k=0;k<3;k++)result.stoneColors.push(Math.max(.04,Math.min(1,(mesh.colors[n+k]??.52)*shade)));
+  for(let k=0;k<3;k++){
+   const srgb=mesh.colors[n+k]??.52;
+   const linear=srgb<=.04045?srgb/12.92:((srgb+.055)/1.055)**2.4;
+   result.stoneColors.push(Math.max(.01,Math.min(1,linear*shade)));
+  }
  }
 }
 function mortarShell(result,g,assigned){
