@@ -23,7 +23,7 @@ export async function mount(context,params={}){
  quick.innerHTML='<button type="button" class="btn actionCompact" data-quick="cancel" aria-label="Отменить установку">Отмена</button><button type="button" class="btn actionCompact" data-quick="rotate" aria-label="Повернуть камень">Повернуть</button>';
  actionBar.append(quick);
  const axisLayer=document.createElement('div');axisLayer.className='towerAxisHandles';stage.append(axisLayer);
- axisLayer.innerHTML=['x','y','z'].flatMap(axis=>[-1,1].map(delta=>`<button type="button" class="btn actionCompact towerAxisHandle" data-axis="${axis}" data-delta="${delta}" aria-label="${delta>0?'Увеличить':'Уменьшить'} ${axis==='x'?'длину':axis==='y'?'высоту':'глубину'}" hidden><svg aria-hidden="true" class="towerAxisArrow" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4m-6 6 6-6 6 6"/></svg><span class="towerAxisLetter">${axis.toUpperCase()}</span></button>`)).join('');
+ axisLayer.innerHTML=['x','y','z'].flatMap(axis=>[-1,1].map(delta=>`<button type="button" class="btn actionCompact towerAxisHandle" data-axis="${axis}" data-delta="${delta}" aria-label="${delta>0?'Увеличить':'Уменьшить'} ${axis==='x'?'длину':axis==='y'?'высоту':'глубину'}" hidden><svg aria-hidden="true" class="towerAxisArrow" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4m-6 6 6-6 6 6"/></svg><span class="towerAxisLetter">${axis.toUpperCase()}${delta>0?'+':'−'}</span></button>`)).join('');
  for(const selector of ['.towerSelected','.towerActions','.towerStatus','.towerSaved']){
   const el=dock.querySelector(selector);if(el)actionBar.append(el);
  }
@@ -54,7 +54,7 @@ export async function mount(context,params={}){
   const visible=s.tool==='place'&&s.positionTouched&&!s.busy&&!s.pending&&s.scene&&s.preview;
   const points=visible?s.scene.sizeHandlePositions(s.preview):null;
   const rect=stage.getBoundingClientRect();
-  const center=visible?s.scene.screenPosition(s.preview):null;
+  const center=points?.center||null;
   const occupied=[];
   for(const button of axisLayer.querySelectorAll('[data-axis]')){
    const axis=button.dataset.axis,step=Number(button.dataset.delta),idx={x:0,y:1,z:2}[axis];
@@ -75,7 +75,7 @@ export async function mount(context,params={}){
     y=Math.min(rect.height-36,Math.max(36,y+(y>=other.y?1:-1)*18));
    }
    occupied.push({x,y});button.style.left=x+'px';button.style.top=y+'px';
-   const direction=Math.atan2(pos.y-(center?.y??rect.height/2),pos.x-(center?.x??rect.width/2))*180/Math.PI+90;
+   const direction=Math.atan2(pos.y-(center?.y??rect.height/2),pos.x-(center?.x??rect.width/2))*180/Math.PI+90+(step<0?180:0);
    const arrow=button.querySelector('.towerAxisArrow');if(arrow)arrow.style.transform='rotate('+direction+'deg)';
   }
   actionFrame=requestAnimationFrame(followPreview);
