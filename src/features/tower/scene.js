@@ -315,6 +315,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function contextLost(e){e.preventDefault();container.dataset.contextLost='true';}function contextRestored(){delete container.dataset.contextLost;}
  renderer.domElement.addEventListener('webglcontextlost',contextLost);renderer.domElement.addEventListener('webglcontextrestored',contextRestored);
  function resize(){const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,300);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}const observer=new ResizeObserver(resize);observer.observe(container);resize();
+ let flight=null;
  let frame;function animate(time=performance.now()){
   if(disposed)return;frame=requestAnimationFrame(animate);
   if(ghostTween){
@@ -360,7 +361,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    ctx.putImageData(img,0,0);const result=canvas.toDataURL('image/png');thumbnailCache.set(key,result);return result;
   }finally{renderer.setRenderTarget(prev);target.dispose();resize();}
  }
- let flight=null;
  const cancelFlight=()=>{flight=null;};
  controls.addEventListener('start',cancelFlight);
  function flyTo(target,position,duration=480){
