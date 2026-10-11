@@ -1,186 +1,233 @@
-/* Tower editor: construction always occupies the available viewport. */
-.appShell[data-feature="tower"]{width:100%;max-width:none}
-.appShell[data-feature="tower"] .appViewport,
-.appShell[data-feature="tower"] .appScreenHost{min-width:0;width:100%;padding:0}
-.towerView{width:100%;max-width:none;margin:0;padding:0}
-.towerGame{--tower-ink:#302b23;--tower-paper:rgba(251,247,238,.94);--tower-accent:#566c52;position:relative;width:100%;height:calc(100dvh - var(--chrome-top-depth,56px));min-height:490px;overflow:hidden;color:var(--tower-ink);isolation:isolate}
-.towerStage{position:absolute;inset:0;background:#b9c8c8;overflow:hidden}
-.towerCanvas,.towerCanvas canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
-.towerHud{position:absolute;z-index:2;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
-.towerPill{display:inline-flex;align-items:center;gap:7px;background:var(--tower-paper);border:1px solid #fff9;border-radius:14px;padding:9px 13px;box-shadow:0 3px 18px #1c25162e;backdrop-filter:blur(14px);font-size:13px;font-weight:600}
-.towerPill small{font-size:11px;font-weight:400;opacity:.7}
-.towerBalance{gap:16px;font-variant-numeric:tabular-nums}
-.towerCoin{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-.towerCoin i{width:17px;height:17px;flex:none;border-radius:50%;border:2px solid #888b8e;background:radial-gradient(circle at 34% 28%,#fff,#b6c0c7 65%,#899399)}
-.towerCoin.gold i{border-color:#a77b2c;background:radial-gradient(circle at 32% 24%,#fff2b3,#ddb449 63%,#a87826)}
-.towerCamera{position:absolute;z-index:3;top:88px;right:16px;display:flex;flex-direction:column;gap:7px}
-.towerGame button{font:inherit;color:inherit;cursor:pointer}
-.towerCamera button{width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffffffa8;border-radius:13px;background:var(--tower-paper);box-shadow:0 4px 18px #1c251625;font-size:21px;backdrop-filter:blur(12px)}
-.towerGame button:focus-visible,.towerGame input:focus-visible,.towerOptions summary:focus-visible{outline:3px solid #5a7752;outline-offset:2px}
-.towerGame button:disabled{opacity:.43;cursor:default}
-.towerReadOnly{position:absolute;top:72px;left:16px;right:75px;max-width:440px;font-size:12px}
-.towerSide{position:absolute;z-index:4;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(860px,calc(100% - 24px));max-height:calc(100% - 112px);display:flex;flex-direction:column;gap:8px;padding:11px 13px 10px;border:1px solid #fffc;border-radius:19px;background:var(--tower-paper);box-shadow:0 12px 40px #29261847;backdrop-filter:blur(20px)}
-.towerSide h2{display:none}
-.towerTabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-.towerTabs::-webkit-scrollbar{display:none}
-.towerTabs button{flex:none;border:0;background:#ebe5d9;border-radius:9px;font-size:12px;padding:7px 11px;white-space:nowrap;min-height:31px}
-.towerTabs button[aria-selected="true"],.towerTool button[aria-pressed="true"]{background:var(--tower-accent);color:white}
-.towerCatalog{display:flex;gap:8px;width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding:2px 0 5px}
-.towerItem{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center;flex:none;width:156px;min-height:60px;text-align:left;padding:8px 11px;background:#fff9;border:1px solid #c7beae88;border-radius:12px;scroll-snap-align:start}
-.towerItem[aria-pressed="true"]{background:#e5ecdc;border-color:#829277}
-.towerItemIcon{grid-row:span 2;display:grid;place-items:center;width:34px;height:36px;flex:none;font-size:24px;color:#736956;touch-action:none}
-.towerItemName{font-size:12px;line-height:1.2;font-weight:600}
-.towerPrice{font-size:11px;color:#6a675a;line-height:1.2;white-space:nowrap}
-.towerTool{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.towerTool button,.towerOptions summary,.towerAction,.towerExchange button{border:1px solid #bdb7a9;border-radius:10px;background:#faf8f1;padding:7px 11px;min-height:34px;font-size:12px}
-.towerOptions{min-width:0;border-top:1px solid #c6c0b552;padding-top:6px}
-.towerOptions summary{display:inline-flex;align-items:center;gap:7px;list-style:revert;cursor:pointer;font-weight:600;background:transparent;border:0;padding:3px 5px;min-height:24px}
-.towerOptions[open]{overflow-y:auto;overflow-x:hidden;max-height:min(44dvh,360px);padding-bottom:7px}
-.towerOptions[open]>:not(summary){margin-top:9px}
-.towerDimensions,.towerPosition{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.towerDimensions label,.towerPosition label{display:grid;gap:4px;font-size:11px}
-.towerDimensions input,.towerPosition input{box-sizing:border-box;min-width:0;width:100%;border:1px solid #bcb5a4;border-radius:8px;padding:8px;background:#fffc;color:inherit;font:inherit}
-.towerCurrency,.towerExchange{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px}
-.towerCurrency label{display:flex;gap:5px;align-items:center}
-.towerCurrency input{accent-color:#5d7358}
-.towerSelected{padding:6px 9px;background:#e8e4d8;border-radius:8px;font-size:12px}
-.towerActions{display:flex;flex-wrap:wrap;gap:7px}
-.towerAction{min-width:0;flex:1}
-.towerAction.primary{border-color:var(--tower-accent);background:var(--tower-accent);color:white;font-weight:700}
-.towerAction[data-refresh]{flex:0}
-.towerStatus{font-size:11px;line-height:1.35;min-height:15px;max-height:32px;overflow:auto}
-.towerStatus[data-kind="error"]{color:#9d3936}
-.towerSaved{font-size:10px;color:#59714e}
-.towerSide>.towerHelp,.towerSide>.towerLayer{display:none}
-.towerHelp{font-size:11px;line-height:1.5;color:#686253;margin:6px 0}
-.towerLayer{display:grid;gap:5px;font-size:12px}
-.towerLayer input{width:100%;accent-color:#637855}
-.towerExchange button{font-size:11px}
-.towerGame [hidden]{display:none!important}
-.towerCanvas[data-context-lost="true"]::after{content:"3D-контекст потерян. Перезагрузите экран.";position:absolute;inset:0;display:grid;place-items:center;background:#fff9}
-@media(max-width:650px){
- .towerGame{height:calc(100dvh - var(--chrome-top-depth,52px));min-height:420px}
- .towerHud{top:8px;left:9px;right:9px;gap:5px}
- .towerPill{padding:7px 9px;border-radius:11px;font-size:11px}
- .towerPill small{display:none}
- .towerBalance{gap:9px}
- .towerCoin{gap:4px}
- .towerCoin i{width:14px;height:14px}
- .towerCamera{top:66px;right:9px;gap:6px}
- .towerCamera button{width:37px;height:37px;border-radius:10px;font-size:18px}
- .towerSide{bottom:max(7px,env(safe-area-inset-bottom));width:calc(100% - 12px);max-height:calc(100% - 90px);padding:8px 9px;border-radius:13px;gap:6px}
- .towerItem{width:136px;min-height:51px;padding:6px 8px;grid-template-columns:28px 1fr;column-gap:7px}
- .towerItemIcon{width:28px;height:30px;font-size:21px}
- .towerItemName{font-size:11px}
- .towerCatalog{gap:6px}
- .towerTool button{padding:6px 9px;min-height:33px}
- .towerTabs button{padding:6px 9px}
- .towerReadOnly{top:57px;left:9px;right:53px}
- .towerOptions[open]{max-height:min(43dvh,260px)}
+/* Tower layout only. Controls inherit the established AlanTil design system. */
+.appShell[data-feature="tower"]{
+ position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;
+ --chrome-top-depth:0px;--chrome-bottom-depth:0px;
 }
-@media(max-height:590px) and (min-width:651px){.towerGame{min-height:380px}.towerSide{gap:5px;padding:7px 11px}.towerItem{min-height:46px}.towerCamera{top:60px}}
-@media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important}}
-/* 17.0.2 immersive tower layout: shell chrome never reduces the build viewport. */
-.appShell[data-feature="tower"]{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;--chrome-top-depth:0px;--chrome-bottom-depth:0px}
 .appShell[data-feature="tower"] .appHeader{z-index:10;pointer-events:none}
 .appShell[data-feature="tower"] .appHeaderCenter,
 .appShell[data-feature="tower"] .appHeaderTrailing{display:none}
 .appShell[data-feature="tower"] .appHeaderLeading{pointer-events:auto}
-.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{min-width:44px;min-height:44px;background:rgba(250,246,236,.92);border:1px solid #ffffffb0;box-shadow:0 3px 12px #21301b28}
+.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{
+ min-width:44px;min-height:44px;border:1px solid var(--line);
+ background:var(--surface-0);color:var(--text-1);box-shadow:var(--shadow-sm)
+}
 .appShell[data-feature="tower"] .appViewport::before,
 .appShell[data-feature="tower"] .appViewport::after{display:none}
 .appShell[data-feature="tower"] .appViewport,
-.appShell[data-feature="tower"] .appScreenHost{position:absolute;inset:0;width:100%;height:100%;max-width:none;overflow:hidden;padding:0}
-.appShell[data-feature="tower"] .towerView{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;padding:0;margin:0}
-.appShell[data-feature="tower"] .towerGame{width:100%;height:100dvh;min-height:0;max-height:100dvh}
-.appShell[data-feature="tower"] .towerHud{top:calc(var(--safe-top,0px) + 8px);right:12px;justify-content:flex-end}
-.appShell[data-feature="tower"] .towerHud>.towerPill:first-child{display:none}
-.appShell[data-feature="tower"] .towerCamera{top:calc(var(--safe-top,0px) + 69px)}
-.towerSide{width:min(780px,calc(100% - 20px));padding:9px 11px 10px;gap:0;max-height:calc(100% - 140px);transition:width .18s ease}
-.towerSide.is-collapsed{width:max-content;max-width:calc(100% - 20px);padding:6px}
-.towerCatalogToggle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;font:650 13px/1.2 var(--font-body,system-ui);border:0;border-radius:11px;background:#e2e9d9;color:#314334;cursor:pointer}
-.towerSide.is-collapsed .towerCatalogToggle{min-width:132px;background:rgba(246,244,236,.96)}
-.towerCatalogContent{display:flex;flex-direction:column;gap:8px;min-width:0;margin-top:8px;overflow:auto;scrollbar-width:thin}
-.towerCatalogContent[hidden]{display:none!important}
-.towerCatalogContent>.towerTabs,.towerCatalogContent>.towerCatalog{flex-shrink:0}
-.towerCatalogContent>.towerHelp{display:none}
-.towerCatalogContent>.towerOptions{flex-shrink:0}
-.towerActionBar{position:absolute;z-index:4;left:50%;bottom:calc(var(--tower-dock-height,145px) + max(18px,env(safe-area-inset-bottom)));transform:translateX(-50%);width:min(620px,calc(100% - 100px));display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
-.towerActionBar>*{pointer-events:auto}
-.towerActionBar .towerActions{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;width:100%}
-.towerActionBar .towerAction{min-height:44px;flex:0 1 auto;min-width:120px;padding:10px 15px;box-shadow:0 3px 16px #1d2e2026}
-.towerActionBar .towerAction[data-confirm]{min-width:170px}
-.towerActionBar .towerStatus{max-width:100%;padding:5px 10px;min-height:0;max-height:64px;font-size:12px;background:rgba(253,249,241,.94);border-radius:10px;box-shadow:0 3px 12px #1d2e2026}
-.towerActionBar .towerStatus[hidden],.towerActionBar .towerSaved{display:none!important}
-.towerActionBar .towerSelected{font-size:12px;background:rgba(249,246,236,.94);box-shadow:0 3px 12px #1d2e2026}
-@media(max-width:650px){
- .appShell[data-feature="tower"] .towerHud{top:calc(var(--safe-top,0px) + 9px);left:64px;right:9px}
- .appShell[data-feature="tower"] .towerCamera{top:calc(var(--safe-top,0px) + 61px);right:9px}
- .towerSide{max-height:calc(100% - 145px);width:calc(100% - 12px);padding:8px 8px 9px}
- .towerSide.is-collapsed{width:max-content;max-width:calc(100% - 12px);padding:5px}
- .towerCatalogContent{gap:6px;margin-top:6px}
- .towerActionBar{width:calc(100% - 24px);bottom:calc(var(--tower-dock-height,148px) + max(12px,env(safe-area-inset-bottom)))}
- .towerActionBar .towerActions{gap:5px}
- .towerActionBar .towerAction{min-height:44px;min-width:100px;padding:9px 10px;font-size:12px}
- .towerActionBar .towerAction[data-confirm]{min-width:160px}
- .towerTabs button{min-height:44px;font-size:13px}
- .towerTool button{min-height:44px;font-size:13px}
+.appShell[data-feature="tower"] .appScreenHost{
+ position:absolute;inset:0;min-width:0;width:100%;height:100%;max-width:none;
+ overflow:hidden;padding:0
 }
-@media(max-height:500px){
- .towerSide{max-height:calc(100% - 90px)}
- .towerCatalogContent{max-height:45dvh}
- .towerActionBar{width:min(540px,calc(100% - 96px))}
+.appShell[data-feature="tower"] .towerView{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+ max-width:none;padding:0;margin:0
 }
-
-/* 17.0.3: model previews, contextual placement, quieter camera and landscape */
-.towerStage{background:#9fbea0}
+.towerGame{
+ position:relative;isolation:isolate;width:100%;height:100dvh;min-height:0;max-height:100dvh;
+ color:var(--text-1);font-family:var(--font-body);overflow:hidden
+}
+.towerStage{position:absolute;inset:0;overflow:hidden;background:var(--surface-1)}
+.towerCanvas,.towerCanvas canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 .towerCanvas canvas{cursor:crosshair}
-.towerSide{background:rgba(247,247,238,.94);border-color:rgba(235,238,222,.8);box-shadow:0 9px 28px rgba(31,50,31,.2)}
-.towerSide.is-collapsed{background:rgba(245,247,237,.96)}
-.towerCatalogToggle{font-size:14px;font-weight:700;color:#304e35;background:#dae6cd}
-.towerItem{width:150px;grid-template-columns:56px 1fr;grid-template-rows:auto auto;column-gap:9px;min-height:70px;background:rgba(255,255,251,.85);border-color:rgba(117,139,104,.26)}
-.towerItem[aria-pressed="true"]{border-color:#55754b;background:#dce9d4}
-.towerItemIcon{grid-row:1 / span 2;width:56px;height:56px;position:relative;display:grid;place-items:center;touch-action:none}
-.towerItemImage{position:absolute;inset:0;width:56px;height:56px;object-fit:contain;display:block;opacity:0;border-radius:9px}
+.towerGame [hidden]{display:none!important}
+.towerGame button:focus-visible,.towerGame input:focus-visible,
+.towerGame summary:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
+.towerGame button:disabled{opacity:var(--ui-button-disabled-opacity);cursor:default}
+.towerHud{
+ position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 8px);right:12px;
+ display:flex;align-items:center;justify-content:flex-end;pointer-events:none
+}
+.towerPill{
+ display:inline-flex;align-items:center;gap:10px;padding:7px 11px;
+ border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);
+ border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);
+ font:750 var(--text-technical)/1.15 var(--font-terminal);
+ font-variant-numeric:tabular-nums
+}
+.towerBalance{gap:14px}
+.towerCoin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.towerCoin i{
+ display:inline-block;width:15px;height:15px;flex:0 0 15px;border-radius:50%;
+ border:2px solid #90989c;
+ background:radial-gradient(circle at 30% 26%,#fff,#bac3c8 64%,#818c94)
+}
+.towerCoin.gold i{
+ border-color:#a77b2c;
+ background:radial-gradient(circle at 28% 25%,#fff4b9,#dcb149 66%,#a87826)
+}
+.towerCamera{
+ position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 68px);right:12px;
+ display:flex;flex-direction:column
+}
+.towerCamera .iconBtn{
+ width:44px;height:44px;flex-basis:44px;border:1px solid var(--line);
+ background:var(--surface-0);color:var(--text-1);border-radius:var(--radius-sm);
+ box-shadow:var(--shadow-sm);font-size:24px
+}
+.towerReadOnly{
+ position:absolute;top:calc(var(--safe-top,0px) + 66px);left:12px;
+ right:74px;max-width:410px;font:600 var(--text-technical)/1.3 var(--font-body)
+}
+.towerSide{
+ position:absolute;z-index:5;left:50%;bottom:max(10px,var(--safe-bottom,0px));
+ transform:translateX(-50%);width:min(760px,calc(100% - 20px));max-height:calc(100% - 150px);
+ display:flex;flex-direction:column;gap:0;min-width:0;padding:8px;
+ border:1px solid var(--line);border-radius:var(--radius-lg);
+ background:var(--surface-0);box-shadow:var(--shadow-md,var(--shadow-sm))
+}
+.towerSide h2{display:none}
+.towerSide.is-collapsed{
+ width:max-content;max-width:calc(100% - 20px);padding:5px
+}
+.towerCatalogToggle{
+ display:flex;justify-content:center;align-items:center;gap:6px;
+ width:100%;min-height:36px;white-space:nowrap
+}
+.towerSide.is-collapsed .towerCatalogToggle{min-width:130px}
+.towerCatalogContent{
+ display:flex;flex-direction:column;gap:5px;min-width:0;margin-top:6px;
+ max-height:min(39dvh,320px);overflow-x:hidden;overflow-y:auto;scrollbar-width:thin
+}
+.towerCatalogContent[hidden]{display:none!important}
+.towerTabs,.towerStoneKinds{
+ flex:0 0 auto;display:flex;gap:5px;align-items:center;min-width:0;
+ overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+ scroll-snap-type:x proximity;scrollbar-width:none
+}
+.towerTabs::-webkit-scrollbar,.towerStoneKinds::-webkit-scrollbar{display:none}
+.towerTabs .bracketNavigation,.towerStoneKinds .bracketNavigation{
+ flex:0 0 auto;white-space:nowrap;min-height:30px;padding:2px 8px;
+ font-family:var(--font-body);font-size:var(--text-button);
+ color:var(--text-2);background:transparent;border:0;border-radius:0
+}
+.towerTabs .bracketNavigation.active,.towerStoneKinds .bracketNavigation.active{
+ color:var(--text-1);font-weight:900
+}
+.towerCatalog{
+ flex:0 0 auto;display:flex;align-items:stretch;gap:7px;width:100%;min-width:0;
+ overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+ scroll-snap-type:x proximity;scrollbar-width:thin;padding:3px 1px 5px
+}
+.towerCatalog .towerItem{
+ flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;
+ width:84px;min-height:85px;gap:2px;padding:4px 6px;
+ text-align:center;scroll-snap-align:start;
+ background:var(--surface-0);border:1px solid var(--line);
+ color:var(--text-1);box-shadow:none
+}
+.towerCatalog .towerItem[aria-pressed="true"]{
+ border-color:var(--accent);background:var(--accent-soft);
+ box-shadow:inset 0 0 0 1px var(--accent-strong)
+}
+.towerItemIcon{
+ position:relative;flex:0 0 auto;display:grid;place-items:center;
+ width:58px;height:58px;touch-action:none
+}
+.towerItemIcon>span{font-size:25px;color:var(--text-2)}
+.towerItemImage{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;opacity:0}
 .towerItem.has-thumbnail .towerItemImage{opacity:1}
 .towerItem.has-thumbnail .towerItemIcon>span{display:none}
-.towerItemName{font-size:12px;line-height:1.25}
-.towerPrice{font-size:11px;color:#526a49}
-.towerActionBar{display:none}
+.towerItemName{
+ width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+ font:700 var(--text-technical)/1.1 var(--font-body)
+}
+.towerPrice{font:650 var(--text-technical)/1.1 var(--font-terminal);color:var(--text-2)}
+.towerOptions{flex:0 0 auto;border-top:1px solid var(--line-soft);padding-top:3px}
+.towerOptions summary{
+ display:inline-flex;align-items:center;justify-content:center;
+ list-style:none;cursor:pointer;min-height:32px
+}
+.towerOptions summary::-webkit-details-marker{display:none}
+.towerOptions[open]{max-height:min(42dvh,300px);overflow-y:auto;overflow-x:hidden}
+.towerOptions[open]>:not(summary){margin-top:9px}
+.towerDimensions,.towerPosition{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px
+}
+.towerDimensions label,.towerPosition label{
+ display:grid;gap:4px;font:650 var(--text-technical)/1.15 var(--font-body)
+}
+.towerDimensions input,.towerPosition input{
+ width:100%;min-width:0;min-height:44px;
+ border:1px solid var(--line);border-radius:var(--radius-sm);
+ background:var(--surface-component);color:var(--text-1);
+ font:600 var(--text-button)/1.2 var(--font-body);padding:7px
+}
+.towerTool,.towerExchange{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.towerLayer{display:grid;gap:4px;font:650 var(--text-technical)/1.1 var(--font-body)}
+.towerLayer input{width:100%;accent-color:var(--accent)}
+.towerActionBar{
+ position:absolute;z-index:6;left:50%;
+ bottom:calc(var(--tower-dock-height,165px) + max(15px,var(--safe-bottom,0px)));
+ transform:translateX(-50%);width:min(560px,calc(100% - 26px));
+ display:none;flex-direction:column;align-items:center;gap:5px;pointer-events:none
+}
 .towerActionBar.is-visible{display:flex}
-.towerActionBar.towerContextual{bottom:auto;top:var(--tower-action-y,90px);left:var(--tower-action-x,50%);width:min(400px,calc(100% - 28px));transform:translateX(-50%)}
-.towerQuickTools{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;padding:5px 7px;background:rgba(252,251,243,.94);border:1px solid #f8f8f2;border-radius:14px;box-shadow:0 5px 22px #24392135;backdrop-filter:blur(12px)}
-.towerQuickTools[hidden]{display:none!important}
-.towerQuickTools button{display:grid;place-items:center;min-height:44px;min-width:44px;padding:4px 7px;border:0;border-radius:10px;background:#e4ecdc;color:#304c36;font-size:23px;line-height:1}
-.towerQuickTools button[data-quick="cancel"]{background:#efe1dc;color:#8f453c}
-.towerQuickTools button:disabled{opacity:.35}
-.towerQuickSize{font-size:12px;color:#3b5840;min-width:100px;text-align:center;font-variant-numeric:tabular-nums}
-.towerActionBar .towerActions{width:auto;max-width:100%}
-.towerActionBar .towerAction{border-color:#9eb097;font-size:13px;background:#f9f8f2;min-height:45px}
-.towerActionBar .towerAction.primary{background:#4f7150;color:white;border-color:#4f7150}
-.towerActionBar .towerStatus[data-kind="error"]{color:#983d35}
-.towerCamera{gap:7px}
-.towerCamera button,.towerCameraMore summary{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;border:1px solid #ffffffad;background:rgba(247,249,240,.91);color:#345038;box-shadow:0 3px 13px #233a2333;cursor:pointer;font-size:22px}
-.towerCameraMore summary{list-style:none}
-.towerCameraMore summary::-webkit-details-marker{display:none}
-.towerCameraExtra{position:absolute;right:49px;top:0;display:grid;grid-template-columns:repeat(2,44px);gap:6px;padding:6px;background:rgba(246,248,239,.9);border-radius:12px;box-shadow:0 6px 18px #24372135}
-.towerOptions summary{font-size:12px;min-height:38px}
-.towerOptions .towerDimensions label,.towerOptions .towerPosition label{font-size:12px}
-.towerOptions .towerDimensions input,.towerOptions .towerPosition input{min-height:44px;font-size:14px}
+.towerActionBar>*{pointer-events:auto}
+.towerQuickTools{display:flex;justify-content:center;gap:6px}
+.towerQuickTools .btn{min-height:44px;padding:7px 12px;white-space:nowrap}
+.towerCurrency{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ width:min(290px,100%);font-size:var(--text-button);
+ background:var(--surface-0)
+}
+.towerCurrency label{display:block}
+.towerCurrency .settingsChoice span{min-height:34px}
+.towerActionBar .towerActions{
+ display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;width:100%
+}
+.towerActionBar .towerAction{
+ min-height:44px;flex:0 1 auto;max-width:100%;white-space:normal
+}
+.towerActionBar .towerAction[data-confirm]{min-width:190px}
+.towerActionBar .towerStatus,.towerActionBar .towerSelected{
+ max-width:100%;padding:6px 9px;background:var(--surface-0);
+ border:1px solid var(--line);border-radius:var(--radius-sm);
+ font:650 var(--text-technical)/1.25 var(--font-body);color:var(--text-2)
+}
+.towerActionBar .towerStatus[data-kind="error"]{color:var(--danger)}
+.towerActionBar .towerSaved{display:none}
+.towerAxisHandles{
+ position:absolute;z-index:4;inset:0;pointer-events:none;
+}
+.towerAxisHandles .towerAxisHandle{
+ position:absolute;display:flex;align-items:center;justify-content:center;gap:3px;
+ width:44px;min-width:44px;height:44px;padding:0;
+ transform:translate(-50%,-50%);pointer-events:auto;
+ background:var(--surface-0);border-color:var(--accent);
+ box-shadow:var(--shadow-sm);font-size:18px;font-weight:800;
+ touch-action:manipulation
+}
+.towerAxisLetter{font:800 11px/1 var(--font-terminal);color:var(--accent-strong)}
+.towerCanvas[data-context-lost="true"]::after{
+ content:"3D-контекст потерян. Перезагрузите экран.";
+ position:absolute;inset:0;display:grid;place-items:center;
+ background:var(--surface-0);color:var(--danger)
+}
 @media(max-width:749px){
- .towerActionBar.towerContextual{top:auto;left:50%;bottom:calc(var(--tower-dock-height,148px) + max(12px,env(safe-area-inset-bottom)));width:calc(100% - 24px);transform:translateX(-50%)}
- .towerActionBar{max-width:450px}
- .towerQuickTools{gap:4px;padding:4px 6px;max-width:100%}
- .towerQuickTools button{min-width:44px;min-height:44px}
- .towerQuickSize{width:100%;font-size:11px}
- .towerItem{grid-template-columns:52px 1fr;width:145px;min-height:65px}
- .towerItemIcon,.towerItemImage{width:52px;height:52px}
- .towerCamera button,.towerCameraMore summary{width:44px;height:44px}
- .towerCameraExtra{right:49px;grid-template-columns:repeat(2,44px)}
+ .towerHud{top:calc(var(--safe-top,0px) + 7px);right:9px}
+ .towerBalance{gap:9px}
+ .towerPill{padding:7px 9px}
+ .towerCoin{gap:4px}
+ .towerCoin i{width:13px;height:13px;flex-basis:13px}
+ .towerCamera{top:calc(var(--safe-top,0px) + 63px);right:9px}
+ .towerSide{width:calc(100% - 12px);max-height:calc(100% - 125px);padding:6px}
+ .towerCatalogContent{gap:3px;margin-top:5px}
+ .towerCatalog .towerItem{width:73px;min-height:78px}
+ .towerItemIcon{width:52px;height:52px}
+ .towerActionBar{width:calc(100% - 16px);gap:4px;bottom:calc(var(--tower-dock-height,165px) + max(10px,var(--safe-bottom,0px)))}
+ .towerActionBar .towerAction[data-confirm]{min-width:165px}
 }
-@media(max-height:520px){
- .towerQuickTools .towerQuickSize{display:none}
- .towerQuickTools{padding:3px;gap:3px}
- .towerActionBar .towerAction{min-height:42px;padding:7px 10px}
+@media(max-width:340px){
+ .towerCatalog .towerItem{width:66px;min-height:74px;padding:3px}
+ .towerItemIcon{width:46px;height:46px}
+ .towerTabs .bracketNavigation,.towerStoneKinds .bracketNavigation{padding-inline:5px}
+ .towerActionBar .towerAction{min-height:44px}
 }
-
+@media(max-height:590px){
+ .towerCatalogContent{max-height:33dvh}
+ .towerSide{max-height:calc(100% - 90px)}
+ .towerActionBar{bottom:calc(var(--tower-dock-height,120px) + 6px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
