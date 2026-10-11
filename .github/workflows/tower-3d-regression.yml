@@ -23,6 +23,12 @@ jobs:
           node --check src/features/tower/scene.js
           node --check src/features/tower/index.js
           node --check packages/tower-game/masonry.mjs
+      - name: Chromium setup
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Real WebGL interaction
+        run: node scripts/qa/browser-tower.cjs
       - name: Tower functional regression
         run: |
           node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs
