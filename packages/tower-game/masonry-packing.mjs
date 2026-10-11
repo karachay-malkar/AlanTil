@@ -169,7 +169,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.19,maxTriangles=1800
  if(!profiles||!Array.isArray(blocks)||spacing<.10||spacing>.40)return empty();
  const openings=blocks.filter(b=>!STONES.has(b.type)).map(bounds);
  const stoneBoxes=blocks.filter(b=>STONES.has(b.type)).map(b=>({block:b,box:bounds(b),signature:signature(b)}));
- const openingSignature=blocks.filter(b=>OPENINGS.has(b.type)).map(signature).sort().join('/');
+ const openingSignature=blocks.filter(b=>!STONES.has(b.type)).map(signature).sort().join('/');
  const out=empty(),joints=findMasonryJoints(blocks).slice(0,maxJoints);
  const store=cache||new Map();
  for(const joint of joints){
