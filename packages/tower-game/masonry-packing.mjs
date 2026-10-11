@@ -148,7 +148,7 @@ function surface(volume,joint){
    const color=tint.map(v=>Math.min(1,Math.max(.04,(v+variation)*shade)));
    const corners=CORNERS[face].map(v=>{
     const point=raw(x+v[0],y+v[1],z+v[2]),jitter=.055*Math.min(...dimension);
-    return point.map((val,k)=>val+(hash(x+v[0],y+v[1],z+v[2],k+11)-.5)*jitter);
+    return point.map((val,k)=>Math.max(min[k],Math.min(min[k]+[nx,ny,nz][k]*dimension[k],val+(hash(x+v[0],y+v[1],z+v[2],k+11)-.5)*jitter)));
    });
    const center=[0,1,2].map(i=>corners.reduce((sum,p)=>sum+p[i],0)/4);
    const perpendicular=Math.floor(face/2),sign=face%2===0?1:-1;
