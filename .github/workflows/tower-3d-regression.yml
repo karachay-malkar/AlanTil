@@ -24,6 +24,9 @@ jobs:
           node --check src/features/tower/scene.js
           node --check src/features/tower/index.js
           node --check packages/tower-game/masonry.mjs
+          node --check packages/tower-game/masonry-geometry.mjs
+          node --check packages/tower-game/masonry-packing.mjs
+          node --check src/features/tower/masonry-worker.js
       - name: Chromium setup
         run: |
           npm install --no-save playwright@1.55.0
@@ -39,4 +42,4 @@ jobs:
           if-no-files-found: warn
       - name: Tower functional regression
         run: |
-          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs
+          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs tests/tower-volume.test.mjs
