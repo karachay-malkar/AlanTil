@@ -99,6 +99,7 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
   if(da[i]>radius||db[i]>radius)continue;
   mask[i]=1;countFilled++;
  }
+ const candidateCells=countFilled;
  // Remove isolated flakes. Nothing may be placed solely from an AABB seam.
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const i=x+nx*y+stride*z;if(!mask[i])continue;
@@ -110,12 +111,12 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
   }
   if(neighbors<2){mask[i]=0;countFilled--;}
  }
- return {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid,countFilled};
+ return {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid,countFilled,candidateCells};
 }
 
 function nearestSeed(x,y,z){
  // Stable jittered 3D Voronoi cells yield irregular, coherent rubble fragments.
- const w=2.8,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
+ const w=3.4,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
  let nearest=Infinity,key=0;
  for(let dz=-1;dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
   const a=cx+dx,b=cy+dy,c=cz+dz;
@@ -125,60 +126,67 @@ function nearestSeed(x,y,z){
  }
  return key;
 }
-const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,joints:0});
+const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,joints:0,fragments:0,truncated:false});
 
+/**
+ * A contiguous cavity is partitioned into individually closed, irregular
+ * small stones. Neighbouring fragments are bevelled away from the same contact
+ * plane and a much thinner mortar face is put behind that physical gap.
+ * Target seed pitch ~16-18 cm = ~25% the volume of the 25cm construction stone,
+ * when the actual cavity provides that much space; narrow cracks necessarily
+ * get thinner wedges.
+ */
 function surface(volume,joint){
- const out=empty();out.candidateCells=volume.countFilled;out.filledCells=volume.countFilled;
+ const out=empty();
+ out.candidateCells=volume.candidateCells;
  const {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid}=volume;
- const positions=joint.axis===1?out.mortarPositions:out.stonePositions;
- const colors=joint.axis===1?out.mortarColors:out.stoneColors;
- const tint=joint.axis===1?[.365,.35,.325]:[.62,.61,.56];
+ const count=stride*nz,stoneId=new Int32Array(count);
+ const seeds=new Map();
  const raw=(x,y,z)=>[min[0]+x*dimension[0],min[1]+y*dimension[1],min[2]+z*dimension[2]];
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
+  const i=x+nx*y+stride*z;if(!mask[i])continue;
+  const p=raw(x+.5,y+.5,z+.5);
+  const id=nearestSeed(p[0]/.2,p[1]/.2,p[2]/.2);
+  stoneId[i]=id||1;
+  seeds.set(stoneId[i],(seeds.get(stoneId[i])||0)+1);
+  out.filledCells++;
+ }
+ out.fragments=seeds.size;
+ const inside=(x,y,z)=>x>=0&&x<nx&&y>=0&&y<ny&&z>=0&&z<nz;
+ function addQuad(corners,center,positions,colors,color){
+  for(let k=0;k<4;k++)for(const p of [corners[k],corners[(k+1)%4],center]){
+   positions.push(...p);colors.push(...color);
+  }
+ }
+ for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const idx=x+nx*y+stride*z;if(!mask[idx])continue;
-  const key=nearestSeed(x+min[0]/dimension[0],y+min[1]/dimension[1],z+min[2]/dimension[2]);
-  const variation=(hash(key,0,0,8)-.5)*.15;
+  const id=stoneId[idx];
+  const tint=(hash(id,3,0,2)-.5)*.105;
   for(let face=0;face<6;face++){
    const [dx,dy,dz]=DIRS[face],xx=x+dx,yy=y+dy,zz=z+dz;
-   if(xx>=0&&xx<nx&&yy>=0&&yy<ny&&zz>=0&&zz<nz){
-    const n=xx+nx*yy+stride*zz;
-    if(mask[n]||aSolid[n]||bSolid[n])continue;
-   }
-   const shade=face===2?1.08:face===3?.81:face===0||face===4?.95:.87;
-   const color=tint.map(v=>Math.min(1,Math.max(.04,(v+variation)*shade)));
+   const neighbor=inside(xx,yy,zz)?xx+nx*yy+stride*zz:-1;
+   if(neighbor>=0&&mask[neighbor]&&stoneId[neighbor]===id)continue;
+   if(neighbor>=0&&(aSolid[neighbor]||bSolid[neighbor]))continue;
+   const touchesOther=neighbor>=0&&mask[neighbor]&&stoneId[neighbor]!==id;
+   const normalAxis=Math.floor(face/2),normalSign=face%2===0?1:-1;
+   const inset=Math.min(...dimension)*(touchesOther?.038:.005);
    const corners=CORNERS[face].map(v=>{
-    const point=raw(x+v[0],y+v[1],z+v[2]),jitter=.055*Math.min(...dimension);
-    return point.map((val,k)=>Math.max(min[k],Math.min(min[k]+[nx,ny,nz][k]*dimension[k],val+(hash(x+v[0],y+v[1],z+v[2],k+11)-.5)*jitter)));
+    const p=raw(x+v[0],y+v[1],z+v[2]);
+    return p.map((value,k)=>{
+     // Each global grid corner gets the same facet perturbation on every face.
+     const jitter=(hash(Math.round(p[0]*80),Math.round(p[1]*80),Math.round(p[2]*80),k+7)-.5)*.055*dimension[k];
+     return value+jitter-(k===normalAxis?normalSign*inset:0);
+    });
    });
-   const center=[0,1,2].map(i=>corners.reduce((sum,p)=>sum+p[i],0)/4);
-   const perpendicular=Math.floor(face/2),sign=face%2===0?1:-1;
-   center[perpendicular]+=sign*(hash(x,y,z,face+60)-.5)*Math.min(...dimension)*.14;
-   for(let k=0;k<4;k++)for(const p of [corners[k],corners[(k+1)%4],center]){
-    positions.push(...p);colors.push(...color);
-   }
-   // Mortar is visible only between different Voronoi fragments, not on every voxel.
-   if(joint.axis!==1)for(let edge=0;edge<4;edge++){
-    const left=CORNERS[face][edge],right=CORNERS[face][(edge+1)%4];
-    const normalAxis=Math.floor(face/2);
-    const tangent=[0,1,2].find(k=>k!==normalAxis&&left[k]===right[k]);
-    if(tangent===undefined)continue;
-    const neighbor=[x,y,z];neighbor[tangent]+=left[tangent]===0?-1:1;
-    if(neighbor.some((v,k)=>v<0||v>=[nx,ny,nz][k]))continue;
-    const other=neighbor[0]+nx*neighbor[1]+stride*neighbor[2];
-    if(!mask[other])continue;
-    const exposed=neighbor.slice();exposed[normalAxis]+=face%2===0?1:-1;
-    if(exposed.every((v,k)=>v>=0&&v<[nx,ny,nz][k])){
-     const i=exposed[0]+nx*exposed[1]+stride*exposed[2];
-     if(mask[i]||aSolid[i]||bSolid[i])continue;
-    }
-    const neighborSeed=nearestSeed(neighbor[0]+min[0]/dimension[0],neighbor[1]+min[1]/dimension[1],neighbor[2]+min[2]/dimension[2]);
-    if(neighborSeed===key||neighborSeed<key)continue;
-    const strip=.085,nudge=(face%2===0?1:-1)*Math.min(...dimension)*.017;
-    const lift=p=>p.map((v,k)=>v+(k===normalAxis?nudge:0));
-    const inset=p=>p.map((v,k)=>v*(1-strip)+center[k]*strip+(k===normalAxis?nudge:0));
-    const p0=lift(corners[edge]),p1=lift(corners[(edge+1)%4]);
-    for(const triangle of [[p0,p1,inset(corners[(edge+1)%4])],[p0,inset(corners[(edge+1)%4]),inset(corners[edge])]])
-     for(const p of triangle){positions.push(...p);colors.push(.31,.30,.275);}
+   const center=[0,1,2].map(k=>corners.reduce((sum,p)=>sum+p[k],0)/4);
+   center[normalAxis]+=normalSign*(hash(x,y,z,face+60)-.5)*Math.min(...dimension)*.17;
+   const light=face===2?1.08:face===3?.82:face===0||face===4?.99:.90;
+   const color=[.61+tint,.595+tint,.555+tint].map(v=>Math.max(.12,Math.min(.91,v*light)));
+   addQuad(corners,center,out.stonePositions,out.stoneColors,color);
+   if(touchesOther&&id<stoneId[neighbor]){
+    const slab=CORNERS[face].map(v=>raw(x+v[0],y+v[1],z+v[2]));
+    const mid=[0,1,2].map(k=>slab.reduce((sum,p)=>sum+p[k],0)/4);
+    addQuad(slab,mid,out.mortarPositions,out.mortarColors,[.30,.287,.267]);
    }
   }
  }
@@ -207,10 +215,11 @@ export function packMasonryVolume(blocks,profiles,{spacing=.19,maxTriangles=1800
   let piece=store.get(key);
   if(!piece){const grid=cavity(joint,profiles,openings,spacing,neighbors);piece=grid?surface(grid,joint):empty();store.set(key,piece);}
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
-  if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles)break;
+  out.candidateCells+=piece.candidateCells;
+  if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles){out.truncated=true;continue;}
   for(const [target,values]of [[out.stonePositions,piece.stonePositions],[out.stoneColors,piece.stoneColors],[out.mortarPositions,piece.mortarPositions],[out.mortarColors,piece.mortarColors]])
    for(let k=0;k<values.length;k++)target.push(values[k]);
-  out.candidateCells+=piece.candidateCells;out.filledCells+=piece.filledCells;out.joints++;
+  out.filledCells+=piece.filledCells;out.fragments+=piece.fragments||0;out.joints++;
  }
  if(cache){
   // Keep recently used joints to avoid expensive revoxelization on layer toggles.
@@ -223,6 +232,6 @@ export function packMasonryVolume(blocks,profiles,{spacing=.19,maxTriangles=1800
  return {
   stonePositions:Float32Array.from(out.stonePositions),stoneColors:Float32Array.from(out.stoneColors),
   mortarPositions:Float32Array.from(out.mortarPositions),mortarColors:Float32Array.from(out.mortarColors),
-  candidateCells:out.candidateCells,filledCells:out.filledCells,joints:out.joints,
+  candidateCells:out.candidateCells,filledCells:out.filledCells,joints:out.joints,fragments:out.fragments,truncated:out.truncated,
  };
 }
