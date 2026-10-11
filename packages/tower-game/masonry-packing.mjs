@@ -213,6 +213,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
   out.filledCells+=piece.filledCells;out.fragments+=piece.fragments||0;out.joints++;
  }
  if(cache){
+  if(!joints.length)cache.clear();
   // Keep recently used joints to avoid expensive revoxelization on layer toggles.
   // Bound memory without retaining an unbounded history of saved revisions.
   if(cache.size>Math.max(128,joints.length*2)){
