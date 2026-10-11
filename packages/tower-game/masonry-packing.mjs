@@ -70,10 +70,11 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
  if(sizes.some(v=>v<=0)||sizes.reduce((a,b)=>a*b,1)>30000)return null;
  const [nx,ny,nz]=sizes,stride=nx*ny,count=stride*nz,dimension=min.map((v,i)=>(max[i]-v)/sizes[i]);
  const aSolid=new Uint8Array(count),bSolid=new Uint8Array(count),blocked=new Uint8Array(count);
+ const left=bounds(a),right=bounds(b),lowY=Math.max(left.y0,right.y0),highY=Math.min(left.y1,right.y1);
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const i=x+nx*y+stride*z,p=[x,y,z].map((v,k)=>min[k]+(v+.5)*dimension[k]);
   aSolid[i]=+rockContains(a,p,profiles);bSolid[i]=+rockContains(b,p,profiles);
-  blocked[i]=+(openings.some(o=>p[0]>=o.x0-.08&&p[0]<=o.x1+.08&&p[1]>=o.y0-.08&&p[1]<=o.y1+.08&&p[2]>=o.z0-.08&&p[2]<=o.z1+.08)
+  blocked[i]=+(axis!==1&&(p[1]<lowY+.18||p[1]>highY-.18)||openings.some(o=>p[0]>=o.x0-.08&&p[0]<=o.x1+.08&&p[1]>=o.y0-.08&&p[1]<=o.y1+.08&&p[2]>=o.z0-.08&&p[2]<=o.z1+.08)
     ||otherSolids.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles)));
  }
  function distances(solids){
