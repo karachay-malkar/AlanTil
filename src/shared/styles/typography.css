@@ -19,7 +19,8 @@
   .adminResultWordStatus strong,.adminResultWordStatus small,
   .testResultAnswerLine>strong,
   .ashykScore span,.ashykTopControls>button,.ashykShotControl>span,.ashykShotTimer span,
-  .ashykFace span,.ashykFace b,.ashykWaiting span,.ashykWaiting small,.ashykJoin input,.scopeLabel small
+  .ashykFace span,.ashykFace b,.ashykWaiting span,.ashykWaiting small,.ashykJoin input,.scopeLabel small,
+  .towerPill,.towerItemName,.towerPrice,.towerStatus,.towerSelected,.towerAxisLetter
 ){font-family:var(--font-terminal);font-size:var(--text-technical)}
 
 /* Body — all ordinary interface copy, object names, labels, translations and examples. */
@@ -64,7 +65,8 @@
   .ashykInlineNotice,.ashykInlineError,.ashykStatus strong,.ashykOutcome,.ashykHelp>p,.ashykFinish>p,
   .ashykRuleRows>div,.ashykOptions button,.ashykRuleNote,.ashykQuestionRule,
   .ashykFriendChoice small,.ashykFriendChoice>b,.ashykFriendChoice strong,
-  .ashykQuestionMeta strong,.ashykMenuCurrent>strong
+  .ashykQuestionMeta strong,.ashykMenuCurrent>strong,
+  .towerReadOnly,.towerDimensions label,.towerPosition label
 ){font-family:var(--font-body);font-size:var(--text-body)}
 
 /* Button — labels of interactive controls only. Lists and ordinary copy remain Body. */
