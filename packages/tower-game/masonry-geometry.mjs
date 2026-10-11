@@ -1,4 +1,4 @@
-import {regularizedRockMesh} from './rock-shapes.mjs';
+import {originalRockMesh} from './rock-shapes.mjs';
 import {worldDimensions} from './core.mjs';
 
 const OTHER_AXES = [[1, 2], [0, 2], [0, 1]];
@@ -7,12 +7,12 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 /** Rasterize the actual stone meshes as three double-sided silhouette depth fields.
  * Unlike AABB seam heuristics, this can distinguish faceted rock from empty space.
  * Source models need not be watertight. */
-export function buildStoneProfiles(pack, resolution = 64) {
+export function buildStoneProfiles(pack, resolution = 40) {
   if (!Number.isInteger(resolution) || resolution < 12 || resolution > 96) throw new RangeError('Invalid resolution');
   const profiles = {};
   for (const [category, entries] of Object.entries(pack)) {
     profiles[category] = entries.map((source,variant) => {
-      const mesh=regularizedRockMesh(source,variant);
+      const mesh=originalRockMesh(source,variant);
       const vertexCount=mesh.positions.length/3,faceCount=mesh.indices.length/3;
       const verts=Array.from({length:vertexCount},(_,i)=>[
         mesh.positions[i*3]+.5,mesh.positions[i*3+1]+.5,mesh.positions[i*3+2]+.5
