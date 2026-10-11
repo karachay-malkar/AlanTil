@@ -20,7 +20,7 @@ export function regularizedRockMesh(source, variant = 0, detail = 5) {
     const cornerCount=xyz.filter(v=>Math.abs(v)>.4999).length;
     const ripple=(hash(...q,4)-.5)*.017;
     // Broad faces remain near the construction cell; modest cut edges/corners.
-    const cut=.026+(cornerCount>=2?.050:0)+(cornerCount>=3?.011:0)+ripple;
+    const cut=.009+(cornerCount>=2?.016:0)+(cornerCount>=3?.007:0)+(hash(...q,4)-.5)*.010;
     return xyz.map(v=>v*(1-cut));
   };
   for(let axis=0;axis<3;axis++)for(const sign of [-1,1]){
