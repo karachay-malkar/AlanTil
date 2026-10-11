@@ -1,5 +1,5 @@
 import {CATALOG,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js?v=17.0.3';
+import {createTowerScene} from './scene.js?v=17.0.4';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {towerUserId,loadTower,mutateTower} from './repository.js?v=17.0.1';
 let active=null;
@@ -164,6 +164,15 @@ export async function mount(context,params={}){
  },{signal:controller.signal,passive:false});
  window.addEventListener('pointerup',stopDragging,{signal:controller.signal});
  window.addEventListener('pointercancel',stopDragging,{signal:controller.signal});
+ window.addEventListener('keydown',e=>{
+  if(s.disposed||s.busy||s.pending||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.target?.closest?.('input,textarea,select,[contenteditable]'))return;
+  if(e.key==='Escape'&&s.positionTouched){e.preventDefault();q('[data-quick="cancel"]')?.click();}
+  else if(['q','e'].includes(e.key.toLowerCase())&&s.tool==='place'&&s.positionTouched){
+   e.preventDefault();s.rotation=(s.rotation+(e.key.toLowerCase()==='q'?3:1))%4;updatePreview();
+  }else if(e.key==='Enter'&&s.tool==='place'&&s.positionTouched&&!q('[data-confirm]').disabled){e.preventDefault();q('[data-confirm]').click();}
+  else if(['Delete','Backspace'].includes(e.key)&&s.tool==='select'&&s.selected&&!q('[data-remove]').disabled){e.preventDefault();q('[data-remove]').click();}
+ },{signal:controller.signal});
  on('.towerDimensions','input',()=>{if(!s.busy&&!s.pending)updatePreview();});on('.towerPosition','input',()=>{if(!s.busy&&!s.pending){s.positionTouched=true;updatePreview();}});on('.towerCurrency','change',updatePreview);
  root.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{if(!s.busy&&!s.pending)setTool(b.dataset.tool);},{signal:controller.signal}));
  on('[data-rotate]','click',()=>{if(s.busy||s.pending)return;s.rotation=(s.rotation+1)%4;updatePreview();});on('[data-vertical]','click',()=>{if(s.busy||s.pending)return;s.rotation=s.rotation===4?0:4;updatePreview();});
