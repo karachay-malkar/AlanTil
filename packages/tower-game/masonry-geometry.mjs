@@ -7,7 +7,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 /** Rasterize the actual stone meshes as three double-sided silhouette depth fields.
  * Unlike AABB seam heuristics, this can distinguish faceted rock from empty space.
  * Source models need not be watertight. */
-export function buildStoneProfiles(pack, resolution = 40) {
+export function buildStoneProfiles(pack, resolution = 64) {
   if (!Number.isInteger(resolution) || resolution < 12 || resolution > 96) throw new RangeError('Invalid resolution');
   const profiles = {};
   for (const [category, entries] of Object.entries(pack)) {
