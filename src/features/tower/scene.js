@@ -391,7 +391,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(!b||disposed)return {};
   const {p}=transform(b),q=orientation(b),size=[b.sx,b.sy,b.sz];
   const basis=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)];
-  const result={};
+  const center=p.clone().project(camera);
+  const result={center:{
+   x:(center.x+1)*container.clientWidth/2,
+   y:(1-center.y)*container.clientHeight/2,
+  }};
   for(let i=0;i<3;i++){
    const direction=basis[i].applyQuaternion(q).normalize();
    for(const delta of [-1,1]){
