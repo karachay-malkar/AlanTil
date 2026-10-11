@@ -49,12 +49,12 @@ export async function mount(context,params={}){
  const options=document.createElement('details');
  options.className='towerOptions';
  options.innerHTML='<summary>Размеры, положение и настройки</summary>';
- dock.insertBefore(options,dock.querySelector('.towerDimensions'));
+ catalogBody.insertBefore(options,catalogBody.querySelector('.towerDimensions'));
  for(const selector of ['.towerDimensions','.towerPosition','.towerCurrency','.towerExchange','.towerLayer']){
   const item=dock.querySelector(selector);if(item)options.append(item);
  }
  for(const help of dock.querySelectorAll('.towerHelp'))options.append(help);
- const refresh=dock.querySelector('[data-refresh]');if(refresh)options.append(refresh);
+ const refresh=actionBar.querySelector('[data-refresh]');if(refresh)options.append(refresh);
  s.positionTouched=false;
  const pendingKey='alantil_tower_pending_'+(towerUserId()||'guest');
  const persistPending=()=>{try{if(s.pending)localStorage.setItem(pendingKey,JSON.stringify(s.pending));else localStorage.removeItem(pendingKey);}catch{}};
