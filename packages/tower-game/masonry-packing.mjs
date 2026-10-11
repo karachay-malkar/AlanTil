@@ -61,7 +61,7 @@ export function findMasonryJoints(blocks){
  return joints.sort((a,b)=>a.key.localeCompare(b.key));
 }
 
-function cavity(joint,profiles,openings,spacing){
+function cavity(joint,profiles,openings,spacing,otherSolids=[]){
  const {axis,plane,ranges,transverse,a,b}=joint;
  const min=[0,0,0],max=[0,0,0];
  min[axis]=plane-.7;max[axis]=plane+.7;
@@ -73,7 +73,8 @@ function cavity(joint,profiles,openings,spacing){
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const i=x+nx*y+stride*z,p=[x,y,z].map((v,k)=>min[k]+(v+.5)*dimension[k]);
   aSolid[i]=+rockContains(a,p,profiles);bSolid[i]=+rockContains(b,p,profiles);
-  blocked[i]=+openings.some(o=>p[0]>=o.x0-.08&&p[0]<=o.x1+.08&&p[1]>=o.y0-.08&&p[1]<=o.y1+.08&&p[2]>=o.z0-.08&&p[2]<=o.z1+.08);
+  blocked[i]=+(openings.some(o=>p[0]>=o.x0-.08&&p[0]<=o.x1+.08&&p[1]>=o.y0-.08&&p[1]<=o.y1+.08&&p[2]>=o.z0-.08&&p[2]<=o.z1+.08)
+    ||otherSolids.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles)));
  }
  function distances(solids){
   const dist=new Uint8Array(count).fill(255),queue=new Int32Array(count);let head=0,tail=0;
@@ -166,14 +167,21 @@ function surface(volume,joint){
  */
 export function packMasonryVolume(blocks,profiles,{spacing=.19,maxTriangles=180000,maxJoints=4500,cache=null}={}){
  if(!profiles||!Array.isArray(blocks)||spacing<.10||spacing>.40)return empty();
- const openings=blocks.filter(b=>OPENINGS.has(b.type)).map(bounds);
+ const openings=blocks.filter(b=>!STONES.has(b.type)).map(bounds);
+ const stoneBoxes=blocks.filter(b=>STONES.has(b.type)).map(b=>({block:b,box:bounds(b),signature:signature(b)}));
  const openingSignature=blocks.filter(b=>OPENINGS.has(b.type)).map(signature).sort().join('/');
  const out=empty(),joints=findMasonryJoints(blocks).slice(0,maxJoints);
  const store=cache||new Map();
  for(const joint of joints){
-  const key=joint.key+'|'+openingSignature+'|'+spacing;
+  const corridor=[0,1,2].map(i=>i===joint.axis?[joint.plane-.7,joint.plane+.7]:joint.ranges[joint.transverse.indexOf(i)]);
+  const neighbors=stoneBoxes.filter(entry=>
+   entry.block.id!==joint.a.id&&entry.block.id!==joint.b.id&&
+   corridor.every(([lo,hi],i)=>entry.box[AXES[i]+'0']<hi&&entry.box[AXES[i]+'1']>lo)
+  );
+  const surroundings=neighbors.map(e=>e.signature).sort().join('/');
+  const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing;
   let piece=store.get(key);
-  if(!piece){const grid=cavity(joint,profiles,openings,spacing);piece=grid?surface(grid,joint):empty();store.set(key,piece);}
+  if(!piece){const grid=cavity(joint,profiles,openings,spacing,neighbors);piece=grid?surface(grid,joint):empty();store.set(key,piece);}
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
   if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles)break;
   for(const [target,values]of [[out.stonePositions,piece.stonePositions],[out.stoneColors,piece.stoneColors],[out.mortarPositions,piece.mortarPositions],[out.mortarColors,piece.mortarColors]])
@@ -181,8 +189,12 @@ export function packMasonryVolume(blocks,profiles,{spacing=.19,maxTriangles=1800
   out.candidateCells+=piece.candidateCells;out.filledCells+=piece.filledCells;out.joints++;
  }
  if(cache){
-  const active=new Set(joints.map(j=>j.key+'|'+openingSignature+'|'+spacing));
-  for(const key of cache.keys())if(!active.has(key))cache.delete(key);
+  // Keep recently used joints to avoid expensive revoxelization on layer toggles.
+  // Bound memory without retaining an unbounded history of saved revisions.
+  if(cache.size>Math.max(128,joints.length*2)){
+   const obsolete=cache.size-Math.max(128,joints.length*2);
+   for(const key of [...cache.keys()].slice(0,obsolete))cache.delete(key);
+  }
  }
  return {
   stonePositions:Float32Array.from(out.stonePositions),stoneColors:Float32Array.from(out.stoneColors),
