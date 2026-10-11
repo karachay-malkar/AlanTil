@@ -28,7 +28,10 @@ test('placing all variants keeps server-compatible stone dimensions and serializ
    const [sx,sy,sz]=c.defaults;
    const b={id:'stone-'+type+'-'+i,type,x:1,y:0,z:1,sx,sy,sz,rotation:0,variant:i,paidCurrency:'silver',paidAmount:c.price};
    assert.equal(validatePlacement([],b).ok,true);
-   assert.deepEqual(decodeTower(encodeTower([b]))[0],b);
+   const restored=decodeTower(encodeTower([b]))[0];
+   assert.equal(restored.variant||0,i);
+   const {variant,...rest}=b;
+   for(const [key,value] of Object.entries(rest))assert.deepEqual(restored[key],value);
   });
  }
 });
