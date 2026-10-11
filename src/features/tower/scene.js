@@ -1,7 +1,6 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
-import {generateMasonry} from '../../../packages/tower-game/masonry.mjs?v=17.0.4';
 
 const CELL=.25;
 const ROOT=new URL('../../../',import.meta.url);
@@ -207,6 +206,59 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   contact.material.color.set(valid?'#e3f2cc':'#e68d79');contact.visible=true;
  }
  const CATALOG_STONES=new Set(['stone','medium','long','big']);
+ // Render-only infill is computed from real rock meshes off the UI thread.
+ // It is intentionally absent from pickables, tower blocks and server mutations.
+ const masonryMeshes=[];
+ let masonryGeneration=0;
+ const masonryMobile=matchMedia('(max-width:749px), (max-height:520px)').matches;
+ let masonryWorker=null;
+ function clearMasonry(){
+  for(const mesh of masonryMeshes.splice(0)){
+   content.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();
+  }
+ }
+ function drawMasonry(data){
+  if(disposed)return;
+  clearMasonry();
+  for(const kind of ['stone','mortar']){
+   const positions=data[kind+'Positions'],colors=data[kind+'Colors'];
+   if(!positions?.length||positions.length!==colors?.length)continue;
+   const geometry=new THREE.BufferGeometry();
+   const scaled=new Float32Array(positions.length);
+   for(let i=0;i<positions.length;i++)scaled[i]=positions[i]*CELL;
+   geometry.setAttribute('position',new THREE.BufferAttribute(scaled,3));
+   geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+   geometry.computeVertexNormals();geometry.computeBoundingSphere();
+   const material=new THREE.MeshStandardMaterial({
+    vertexColors:true,roughness:1,metalness:0,flatShading:true,
+    side:THREE.FrontSide,clippingPlanes:layer===null?[]:[clipPlane],clipShadows:true
+   });
+   const mesh=new THREE.Mesh(geometry,material);
+   mesh.castShadow=false;mesh.receiveShadow=true;
+   mesh.userData.masonryPresentation=true;
+   content.add(mesh);masonryMeshes.push(mesh);
+  }
+  container.dataset.masonryReady='true';
+  container.dataset.masonryCoverage=data.candidateCells
+   ?String(Math.round(100*data.filledCells/data.candidateCells)):'100';
+ }
+ function rebuildMasonry(){
+  const generation=++masonryGeneration;
+  clearMasonry();delete container.dataset.masonryReady;
+  if(!masonryWorker||blocks.length<2)return;
+  masonryWorker.postMessage({generation,blocks,layer,mobile:masonryMobile});
+ }
+ if(typeof Worker!=='undefined'){
+  try{
+   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.6',import.meta.url),{type:'module'});
+   masonryWorker.onmessage=({data})=>{
+    if(disposed||data.generation!==masonryGeneration)return;
+    if(data.error){console.warn('Masonry geometry:',data.error);return;}
+    drawMasonry(data.result);
+   };
+   masonryWorker.onerror=e=>console.warn('Masonry worker unavailable',e.message);
+  }catch(e){console.warn('Masonry worker unavailable',e);}
+ }
  let loadedOnce=false,settling=null;
  function rebuild(){
   if(settling)settling.parts=[];
@@ -250,24 +302,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     content.add(instances);groups.push(instances);pickables.push(instances);
    }
   }
-  // These stones are a disposable visual projection, never purchasable blocks.
-  const pebbles=generateMasonry(blocks,{layer,maxStones:Math.min(12000,Math.max(400,blocks.length*9))});
-  const variants=stoneTemplates.small||[];
-  if(variants.length){
-   const batches=new Map();
-   for(const pebble of pebbles){const v=pebble.variant%variants.length;if(!batches.has(v))batches.set(v,[]);batches.get(v).push(pebble);}
-   for(const [variant,items] of batches){
-    const entry=variants[variant],mesh=new THREE.InstancedMesh(entry.g,entry.m,items.length);
-    mesh.castShadow=false;mesh.receiveShadow=true;
-    const matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0);
-    for(let i=0;i<items.length;i++){
-     const p=items[i];q.setFromAxisAngle(up,p.rotation);
-     matrix.compose(new THREE.Vector3(p.x*CELL,p.y*CELL,p.z*CELL),q,new THREE.Vector3(p.sx*CELL,p.sy*CELL,p.sz*CELL));
-     mesh.setMatrixAt(i,matrix);
-    }
-    mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();content.add(mesh);groups.push(mesh);
-   }
-  }
+  rebuildMasonry();
  }
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down=null;const pointers=new Set();
  function pickAt(clientX,clientY){
@@ -372,5 +407,5 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const projection=p.project(camera);if(projection.z>1||projection.z< -1)return null;
   return{x:(projection.x+1)*container.clientWidth/2,y:(1-projection.y)*container.clientHeight/2};
  }
- return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {p}=transform(added),target=p.clone();const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(3.4);flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=Math.max(3,Math.max(size.x,size.y,size.z)*1.7);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
+ return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {p}=transform(added),target=p.clone();const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(3.4);flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=Math.max(3,Math.max(size.x,size.y,size.z)*1.7);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;masonryWorker?.terminate();clearMasonry();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
 }
