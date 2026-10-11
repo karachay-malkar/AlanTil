@@ -83,6 +83,7 @@ export async function mount(context,params={}){
  }
  actionFrame=requestAnimationFrame(followPreview);
  controller.signal.addEventListener('abort',()=>cancelAnimationFrame(actionFrame),{once:true});
+ const game=context.root.querySelector('.towerGame');
  const dockObserver=new ResizeObserver(()=>game.style.setProperty('--tower-dock-height',Math.ceil(dock.getBoundingClientRect().height)+'px'));
  dockObserver.observe(dock);
  controller.signal.addEventListener('abort',()=>dockObserver.disconnect(),{once:true});
