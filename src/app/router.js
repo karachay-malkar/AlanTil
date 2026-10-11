@@ -7,6 +7,7 @@ import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.16";
 
 const DEFAULT_STORY = "roots";
 const ASSET_VERSION = "16.8.0.16";
+const TOWER_ASSET_VERSION = "17.0.1";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -262,7 +263,7 @@ export function createRouter({ shell, modal, context }) {
     return Promise.all(screenStyleDependencies(route).map((style)=>{
       const path=STYLE_PATHS[style];
       if(!path)throw new Error(`Unknown route style dependency: ${style}`);
-      return loadStyle(`${path}?v=${ASSET_VERSION}`);
+      return loadStyle(`${path}?v=${style==="tower"?TOWER_ASSET_VERSION:ASSET_VERSION}`);
     }));
   }
   let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
@@ -289,7 +290,7 @@ export function createRouter({ shell, modal, context }) {
     const path = FEATURE_PATHS[feature];
     if (!path) throw new Error(`Unknown feature: ${feature}`);
     const suffix = retry ? `&retry=${Date.now()}` : "";
-    return import(`${path}?v=${ASSET_VERSION}${suffix}`);
+    return import(`${path}?v=${feature==="tower"?TOWER_ASSET_VERSION:ASSET_VERSION}${suffix}`);
   }
   async function loadFeatureModule(feature) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);
