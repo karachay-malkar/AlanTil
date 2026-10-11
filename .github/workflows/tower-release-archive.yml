@@ -1,5 +1,5 @@
 name: AlanTil 17.0 complete source archive
-# Final post-QA archive; preserve exact current HEAD and include all tracked files.
+# Fixed stone presets 17.0.9: archive full reviewed branch with restored authored 3D meshes.
 on:
   push:
     branches: ["17.0"]
