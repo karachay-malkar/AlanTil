@@ -80,3 +80,54 @@
 }
 @media(max-height:590px) and (min-width:651px){.towerGame{min-height:380px}.towerSide{gap:5px;padding:7px 11px}.towerItem{min-height:46px}.towerCamera{top:60px}}
 @media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important}}
+/* 17.0.2 immersive tower layout: shell chrome never reduces the build viewport. */
+.appShell[data-feature="tower"]{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;--chrome-top-depth:0px;--chrome-bottom-depth:0px}
+.appShell[data-feature="tower"] .appHeader{z-index:10;pointer-events:none}
+.appShell[data-feature="tower"] .appHeaderCenter,
+.appShell[data-feature="tower"] .appHeaderTrailing{display:none}
+.appShell[data-feature="tower"] .appHeaderLeading{pointer-events:auto}
+.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{min-width:44px;min-height:44px;background:rgba(250,246,236,.92);border:1px solid #ffffffb0;box-shadow:0 3px 12px #21301b28}
+.appShell[data-feature="tower"] .appViewport::before,
+.appShell[data-feature="tower"] .appViewport::after{display:none}
+.appShell[data-feature="tower"] .appViewport,
+.appShell[data-feature="tower"] .appScreenHost{position:absolute;inset:0;width:100%;height:100%;max-width:none;overflow:hidden;padding:0}
+.appShell[data-feature="tower"] .towerView{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;padding:0;margin:0}
+.appShell[data-feature="tower"] .towerGame{width:100%;height:100dvh;min-height:0;max-height:100dvh}
+.appShell[data-feature="tower"] .towerHud{top:calc(var(--safe-top,0px) + 8px);right:12px;justify-content:flex-end}
+.appShell[data-feature="tower"] .towerHud>.towerPill:first-child{display:none}
+.appShell[data-feature="tower"] .towerCamera{top:calc(var(--safe-top,0px) + 69px)}
+.towerSide{width:min(780px,calc(100% - 20px));padding:9px 11px 10px;gap:0;max-height:calc(100% - 140px);transition:width .18s ease}
+.towerSide.is-collapsed{width:max-content;max-width:calc(100% - 20px);padding:6px}
+.towerCatalogToggle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;font:650 13px/1.2 var(--font-body,system-ui);border:0;border-radius:11px;background:#e2e9d9;color:#314334;cursor:pointer}
+.towerSide.is-collapsed .towerCatalogToggle{min-width:132px;background:rgba(246,244,236,.96)}
+.towerCatalogContent{display:flex;flex-direction:column;gap:8px;min-width:0;margin-top:8px;overflow:auto;scrollbar-width:thin}
+.towerCatalogContent[hidden]{display:none!important}
+.towerCatalogContent>.towerTabs,.towerCatalogContent>.towerCatalog{flex-shrink:0}
+.towerCatalogContent>.towerHelp{display:none}
+.towerCatalogContent>.towerOptions{flex-shrink:0}
+.towerActionBar{position:absolute;z-index:4;left:50%;bottom:calc(var(--tower-dock-height,145px) + max(18px,env(safe-area-inset-bottom)));transform:translateX(-50%);width:min(620px,calc(100% - 100px));display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.towerActionBar>*{pointer-events:auto}
+.towerActionBar .towerActions{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;width:100%}
+.towerActionBar .towerAction{min-height:44px;flex:0 1 auto;min-width:120px;padding:10px 15px;box-shadow:0 3px 16px #1d2e2026}
+.towerActionBar .towerAction[data-confirm]{min-width:170px}
+.towerActionBar .towerStatus{max-width:100%;padding:5px 10px;min-height:0;max-height:64px;font-size:12px;background:rgba(253,249,241,.94);border-radius:10px;box-shadow:0 3px 12px #1d2e2026}
+.towerActionBar .towerStatus[hidden],.towerActionBar .towerSaved{display:none!important}
+.towerActionBar .towerSelected{font-size:12px;background:rgba(249,246,236,.94);box-shadow:0 3px 12px #1d2e2026}
+@media(max-width:650px){
+ .appShell[data-feature="tower"] .towerHud{top:calc(var(--safe-top,0px) + 9px);left:64px;right:9px}
+ .appShell[data-feature="tower"] .towerCamera{top:calc(var(--safe-top,0px) + 61px);right:9px}
+ .towerSide{max-height:calc(100% - 145px);width:calc(100% - 12px);padding:8px 8px 9px}
+ .towerSide.is-collapsed{width:max-content;max-width:calc(100% - 12px);padding:5px}
+ .towerCatalogContent{gap:6px;margin-top:6px}
+ .towerActionBar{width:calc(100% - 24px);bottom:calc(var(--tower-dock-height,148px) + max(12px,env(safe-area-inset-bottom)))}
+ .towerActionBar .towerActions{gap:5px}
+ .towerActionBar .towerAction{min-height:44px;min-width:100px;padding:9px 10px;font-size:12px}
+ .towerActionBar .towerAction[data-confirm]{min-width:160px}
+ .towerTabs button{min-height:44px;font-size:13px}
+ .towerTool button{min-height:44px;font-size:13px}
+}
+@media(max-height:500px){
+ .towerSide{max-height:calc(100% - 90px)}
+ .towerCatalogContent{max-height:45dvh}
+ .towerActionBar{width:min(540px,calc(100% - 96px))}
+}
