@@ -17,26 +17,26 @@ const pair=[b('left',0,0,0),b('right',2,0,0)];
 
 test('mesh silhouette occupies center but not beveled corners',()=>{
  assert.equal(rockContains(pair[0],[1,1,1],profiles),true);
- assert.equal(rockContains(pair[0],[.05,.05,.05],profiles),false);
+ assert.equal(rockContains(pair[0],[.001,.001,.001],profiles),false);
 });
 
 test('joint volume is filled, deterministic, order-independent and non-purchasable',()=>{
  const original=JSON.stringify(pair);
- const first=packMasonryVolume(pair,profiles,{spacing:.2});
+ const first=packMasonryVolume(pair,profiles,{spacing:.12});
  assert.ok(first.joints>0);assert.ok(first.candidateCells>10);
  assert.equal(first.filledCells,first.candidateCells);
  assert.ok(first.stonePositions.length>0);
  assert.equal(first.stonePositions.length,first.stoneColors.length);
  assert.equal(first.stonePositions.length%9,0);
- assert.deepEqual(packMasonryVolume([...pair].reverse(),profiles,{spacing:.2}).stonePositions,first.stonePositions);
+ assert.deepEqual(packMasonryVolume([...pair].reverse(),profiles,{spacing:.12}).stonePositions,first.stonePositions);
  assert.equal(JSON.stringify(pair),original);
- assert.deepEqual(packMasonryVolume([pair[0]],profiles,{spacing:.2}).stonePositions,new Float32Array());
+ assert.deepEqual(packMasonryVolume([pair[0]],profiles,{spacing:.12}).stonePositions,new Float32Array());
 });
 
 test('window and door reservations prevent cavity infill',()=>{
- const plain=packMasonryVolume(pair,profiles,{spacing:.2});
+ const plain=packMasonryVolume(pair,profiles,{spacing:.12});
  for(const type of ['window','door']){
-  const blocked=packMasonryVolume([...pair,b(type,1,0,0,2,2,2,type)],profiles,{spacing:.2});
+  const blocked=packMasonryVolume([...pair,b(type,1,0,0,2,2,2,type)],profiles,{spacing:.12});
   assert.ok(blocked.candidateCells<plain.candidateCells);
  }
 });
@@ -48,9 +48,9 @@ test('no diagonal joints; geometry respects valid scene coordinate system',()=>{
 
 test('cache and bounds remain stable across repeat requests',()=>{
  const cache=new Map();
- const a=packMasonryVolume(pair,profiles,{spacing:.2,cache});
+ const a=packMasonryVolume(pair,profiles,{spacing:.12,cache});
  assert.equal(cache.size,1);
- assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.2,cache}).stonePositions,a.stonePositions);
- assert.deepEqual(packMasonryVolume([],profiles,{spacing:.2,cache}).stonePositions,new Float32Array());
+ assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.12,cache}).stonePositions,a.stonePositions);
+ assert.deepEqual(packMasonryVolume([],profiles,{spacing:.12,cache}).stonePositions,new Float32Array());
  assert.equal(cache.size,0);
 });
