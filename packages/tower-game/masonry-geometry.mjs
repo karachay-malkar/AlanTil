@@ -1,3 +1,4 @@
+import {regularizedRockMesh} from './rock-shapes.mjs';
 import {worldDimensions} from './core.mjs';
 
 const OTHER_AXES = [[1, 2], [0, 2], [0, 1]];
@@ -10,19 +11,18 @@ export function buildStoneProfiles(pack, resolution = 40) {
   if (!Number.isInteger(resolution) || resolution < 12 || resolution > 96) throw new RangeError('Invalid resolution');
   const profiles = {};
   for (const [category, entries] of Object.entries(pack)) {
-    profiles[category] = entries.map(([vertexCount, faceCount, , , encoded]) => {
-      const binary = atob(encoded);
-      if (binary.length !== vertexCount * 3 + faceCount * 3) throw new Error('Invalid rock mesh');
-      const verts = [];
-      for (let i = 0; i < vertexCount; i++) {
-        verts.push([binary.charCodeAt(i * 3) / 255, binary.charCodeAt(i * 3 + 2) / 255, binary.charCodeAt(i * 3 + 1) / 255]);
-      }
+    profiles[category] = entries.map((source,variant) => {
+      const mesh=regularizedRockMesh(source,variant);
+      const vertexCount=mesh.positions.length/3,faceCount=mesh.indices.length/3;
+      const verts=Array.from({length:vertexCount},(_,i)=>[
+        mesh.positions[i*3]+.5,mesh.positions[i*3+1]+.5,mesh.positions[i*3+2]+.5
+      ]);
       const fields = OTHER_AXES.map(([u, v], axis) => {
         const min = new Float32Array(resolution * resolution).fill(Infinity);
         const max = new Float32Array(resolution * resolution).fill(-Infinity);
         for (let k = 0; k < faceCount; k++) {
           const o = vertexCount * 3 + k * 3;
-          const a = verts[binary.charCodeAt(o)], b = verts[binary.charCodeAt(o + 1)], c = verts[binary.charCodeAt(o + 2)];
+          const a = verts[mesh.indices[o]], b = verts[mesh.indices[o + 1]], c = verts[mesh.indices[o + 2]];
           if (!a || !b || !c) continue;
           const determinant = (b[v] - c[v]) * (a[u] - c[u]) + (c[u] - b[u]) * (a[v] - c[v]);
           if (Math.abs(determinant) < 1e-9) continue;
