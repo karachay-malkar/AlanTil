@@ -100,17 +100,8 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
   mask[i]=1;countFilled++;
  }
  const candidateCells=countFilled;
- // Remove isolated flakes. Nothing may be placed solely from an AABB seam.
- for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
-  const i=x+nx*y+stride*z;if(!mask[i])continue;
-  let neighbors=0;
-  for(const [dx,dy,dz]of DIRS){
-   const xx=x+dx,yy=y+dy,zz=z+dz;
-   if(xx<0||xx>=nx||yy<0||yy>=ny||zz<0||zz>=nz)continue;
-   if(mask[xx+nx*yy+stride*zz])neighbors++;
-  }
-  if(neighbors<2){mask[i]=0;countFilled--;}
- }
+ // Every independently classified free cell is accounted for; tiny residual
+ // voids remain eligible for a narrow wedge or mortar substrate.
  return {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid,countFilled,candidateCells};
 }
 
@@ -197,8 +188,8 @@ function surface(volume,joint){
  * Derived presentation only: no saved blocks, no paid elements, no raycast targets.
  * A shared pair-cache makes repeated snapshots and layer refreshes cheap.
  */
-export function packMasonryVolume(blocks,profiles,{spacing=.19,maxTriangles=180000,maxJoints=4500,cache=null}={}){
- if(!profiles||!Array.isArray(blocks)||spacing<.10||spacing>.40)return empty();
+export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=180000,maxJoints=4500,cache=null}={}){
+ if(!profiles||!Array.isArray(blocks)||spacing<.08||spacing>.40)return empty();
  const openings=blocks.filter(b=>!STONES.has(b.type)).map(bounds);
  const stoneBoxes=blocks.filter(b=>STONES.has(b.type)).map(b=>({block:b,box:bounds(b),signature:signature(b)}));
  const openingSignature=blocks.filter(b=>!STONES.has(b.type)).map(signature).sort().join('/');
