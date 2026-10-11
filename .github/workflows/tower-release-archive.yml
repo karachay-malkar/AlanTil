@@ -1,4 +1,5 @@
 name: AlanTil 17.0 complete source archive
+# Final post-QA archive; preserve exact current HEAD and include all tracked files.
 on:
   push:
     branches: ["17.0"]
