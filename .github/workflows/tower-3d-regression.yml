@@ -7,6 +7,7 @@ on:
       - "packages/tower-game/**"
       - "assets/tower/processed-rocks.mjs"
       - "tests/tower-*.test.mjs"
+      - "scripts/qa/browser-tower.cjs"
       - ".github/workflows/tower-3d-regression.yml"
   workflow_dispatch:
 jobs:
