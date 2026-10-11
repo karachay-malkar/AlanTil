@@ -21,7 +21,7 @@ export function regularizedRockMesh(source, variant = 0, detail = 5) {
     const ripple=(hash(...q,4)-.5)*.017;
     // Broad faces remain near the construction cell; modest cut edges/corners.
     const cut=.003+(cornerCount>=2?.055:0)+(cornerCount>=3?.020:0)+(hash(...q,4)-.5)*.008;
-    return xyz.map(v=>v*(1-cut));
+    return xyz.map(v=>v*(1-Math.max(.0015,cut)));
   };
   for(let axis=0;axis<3;axis++)for(const sign of [-1,1]){
     const start=positions.length/3,u=(axis+1)%3,v=(axis+2)%3;
