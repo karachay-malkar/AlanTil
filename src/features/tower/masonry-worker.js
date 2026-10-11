@@ -11,7 +11,7 @@ self.onmessage=({data})=>{
  try{
   const visible=layer===null?blocks:blocks.filter(b=>b.y<=layer);
   const result=packMasonryVolume(visible,profiles,{
-   cache,spacing:mobile?.14:.12,maxTriangles:mobile?90000:200000,
+   cache,spacing:.12,maxTriangles:mobile?90000:200000,
   });
   self.postMessage({generation,result},[
    result.stonePositions.buffer,result.stoneColors.buffer,
