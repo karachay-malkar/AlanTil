@@ -60,6 +60,11 @@ export function buildStoneProfiles(pack, resolution = 64) {
         }
         return {min, max, resolution};
       });
+      // Keep infill stone color in the exact same linear-light palette as its
+      // two neighboring authored mesh variants.
+      const toLinear=n=>{const v=n/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;};
+      const tint=[0,1,2].map(k=>toLinear((source[2][k]+source[3][k])*.5));
+      for(const field of fields)field.tint=tint;
       return fields;
     });
   }
