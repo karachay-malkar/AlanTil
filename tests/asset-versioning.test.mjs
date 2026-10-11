@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "16.8.0.15";
+const SINGLETON_URL_VERSION = "16.8.0.16";
 const STYLE_ENTRY_VERSION = "16.8.0.18";
 
 async function javascriptFiles(directory) {
@@ -72,7 +72,7 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.8.0.15 refreshes the JS singleton while retaining the independent style and Ashyk builds", async () => {
+test("16.8.0.16 refreshes the JS singleton while retaining the independent style and Ashyk builds", async () => {
   const index = await read("index.html");
   const release = await read("packages/alantil-core/release.js");
   const analytics = await read("src/config/analytics.js");
@@ -81,13 +81,13 @@ test("16.8.0.15 refreshes the JS singleton while retaining the independent style
   const worker = await read("service-worker.js");
   const wordsConfig = await read("packages/alantil-core/dictionary-contract.js");
   assert.match(index, new RegExp(`app[.]css[?]v=${STYLE_ENTRY_VERSION.replaceAll(".", "[.]")}`));
-  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]15/);
+  assert.match(index, /bootstrap[.]js[?]v=16[.]8[.]0[.]16/);
   assert.match(release, /APP_VERSION = "16[.]8[.]0"/);
-  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]15"/);
+  assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]16"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]15"/);
-  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]15"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]16"/);
+  assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]16"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);

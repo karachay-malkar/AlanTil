@@ -18,6 +18,7 @@ export function mount(context){
         <button class="menuItem" type="button" data-practice-route="learn.set" data-dictionary-slug="favorites"><span class="menuIcon">${uiIcon("favorite")}</span><span class="menuItemText"><strong>${msg("common.izbrannoe")}</strong><small>${msg("learn.uchit_slova")}</small></span></button>
         <button class="menuItem" type="button" data-practice-route="songs.playlists"><span class="menuIcon">${uiIcon("music2")}</span><span class="menuItemText"><strong>${msg("practice.pesni")}</strong><small>${msg("practice.yazyk_v_zhivom_kontekste")}</small></span></button>
         <button class="menuItem menuItemSingle" type="button" data-practice-route="practice.ashyk"><span class="menuIcon">${uiIcon("puzzle")}</span><span class="menuItemText"><strong>${msg("practice.ashyk")}</strong></span></button>
+        <button class="menuItem" type="button" data-practice-route="practice.tower"><span class="menuIcon">⌂</span><span class="menuItemText"><strong>Къала · Башня</strong><small>Строй за освоенные слова</small></span></button>
       </div>`,
   });
   context.root.querySelectorAll("[data-practice-route]").forEach((button)=>{

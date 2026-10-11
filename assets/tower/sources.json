@@ -1,0 +1,146 @@
+[
+  {
+    "file": "modular_wooden_pier/modular_wooden_pier.gltf",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modular_wooden_pier/modular_wooden_pier_1k.gltf",
+    "md5": "5a5c75c7711b8804c680970a60bd382f",
+    "sha256": "eeea9853deb63e43510f8d9d6af21963c88adab77e17ccac9f9b8d3a7d34a923",
+    "bytes": 21127,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/textures/modular_wooden_pier_poles_arm_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_wooden_pier/modular_wooden_pier_poles_arm_1k.jpg",
+    "md5": "feb305e6fc0f59f48c57e0e5e591b637",
+    "sha256": "dacaff86f936bef10220aa60843efadae53039f064ad1a6fad735b912f1ba285",
+    "bytes": 813524,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/modular_wooden_pier.bin",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/modular_wooden_pier/modular_wooden_pier.bin",
+    "md5": "dbdbeca4676a3012a64b4daa75d1f97c",
+    "sha256": "6ec10b84aaaa02800b095850fc92cf850632e5becd76698dc6609f40f05e1b60",
+    "bytes": 2651092,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/textures/modular_wooden_pier_planks_arm_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_wooden_pier/modular_wooden_pier_planks_arm_1k.jpg",
+    "md5": "e6ffdf7314cc015aaa5c0899326b42a7",
+    "sha256": "4c03bcee7d0fb9708be5e5ebc4dd5fd73789f4eb24b6391dff6167f11c3ce95d",
+    "bytes": 722511,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/textures/modular_wooden_pier_planks_diff_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_wooden_pier/modular_wooden_pier_planks_diff_1k.jpg",
+    "md5": "f3fef39b0ec16e4006678c846d3601ab",
+    "sha256": "2670a7eae2a3104e8537e61d90a8d8b169c7eb0f69b51622bec10e9472dc4573",
+    "bytes": 764066,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/textures/modular_wooden_pier_poles_diff_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_wooden_pier/modular_wooden_pier_poles_diff_1k.jpg",
+    "md5": "7aade157e5892017ee86a6e13074b727",
+    "sha256": "da9e017b41e052d5e47558bb98e61b577f66e9d44eb2d26dc9b085e317bede9e",
+    "bytes": 836152,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/textures/modular_wooden_pier_poles_nor_gl_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_wooden_pier/modular_wooden_pier_poles_nor_gl_1k.jpg",
+    "md5": "2a6f536ed9057bb8e2a813b7755cc534",
+    "sha256": "9b2d7ca04642e249428969fa32189f36fcea8577a282dbccca1ac15d59dce18e",
+    "bytes": 978238,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "modular_wooden_pier/textures/modular_wooden_pier_planks_nor_gl_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modular_wooden_pier/modular_wooden_pier_planks_nor_gl_1k.jpg",
+    "md5": "b752108fe7504d5dd4ae0f4701b1218b",
+    "sha256": "b23d7b0c23c9a41d50b7e1691e183902765aa4c21ac6ca6da678e874c4ddfb04",
+    "bytes": 1055218,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_07/rock_07.gltf",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_07/rock_07_1k.gltf",
+    "md5": "2bdb563c126a9d284e60e94951759e2f",
+    "sha256": "efcc2dcaa133ff8ad5c865dc2135772e8f5dbc83fa38db2ee2cf25382436b6e6",
+    "bytes": 2979,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_07/rock_07.bin",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_07/rock_07.bin",
+    "md5": "817b2cfd1626cb06f18a825f87f58ec3",
+    "sha256": "e4a532a6d6cf4a08c288f501b790f32cba0528136a29959ce774c3cd39369e7e",
+    "bytes": 468936,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_07/textures/rock_07_arm_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_arm_1k.jpg",
+    "md5": "530bfd2a510fe6f778bb1198a2395574",
+    "sha256": "1ed76e9a8542c76bdc6b7b018720ae1f52cd75d9f5ae719f613de3f5032cf4da",
+    "bytes": 309735,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_07/textures/rock_07_diff_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_diff_1k.jpg",
+    "md5": "b68ac1824bb3bd3867641b830ad02099",
+    "sha256": "8ff1965aa1664cc4abcc0131c44ee2b97ab14d6e131d7a51429ff261eeb101c8",
+    "bytes": 635452,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_07/textures/rock_07_nor_gl_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_nor_gl_1k.jpg",
+    "md5": "d3a2a0df0db0177c4df8ef644b003652",
+    "sha256": "57cb2210951aeb376164fce5f7c65f03e5599def04873b56cad0f173c275d78d",
+    "bytes": 766986,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_09/rock_09.gltf",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_09/rock_09_1k.gltf",
+    "md5": "d12ac6e8433fe1346fe6945154269f66",
+    "sha256": "636e57eb0090889627da18edaec202ff9f65f83101b94f91b7da4d21dc080ab9",
+    "bytes": 2745,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_09/textures/rock_09_arm_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_09/rock_09_arm_1k.jpg",
+    "md5": "323d7cca17cd87656e7f80230a372368",
+    "sha256": "594e2cec49e6bb40bd9bab2649e37dcc261079456cf4d6f680f56770c19db5ea",
+    "bytes": 322950,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_09/textures/rock_09_nor_gl_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_09/rock_09_nor_gl_1k.jpg",
+    "md5": "dc1a208133a23006582f792a309c2dcc",
+    "sha256": "2195b5c7da3a23af2a5f93dbb20f38bc069028509b106397bc8d2aee0bc55729",
+    "bytes": 757031,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_09/textures/rock_09_diff_1k.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_09/rock_09_diff_1k.jpg",
+    "md5": "07f92b23d6e05fbd28cbabecdd98b321",
+    "sha256": "afb7ae5ae82238d304aba589391ac6bc87f7cf1dbfe50980c21f762cfdd87efd",
+    "bytes": 595103,
+    "license": "CC0-1.0"
+  },
+  {
+    "file": "rock_09/rock_09.bin",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_09/rock_09.bin",
+    "md5": "6f2f71c9ca594566c1a3b29da27293a1",
+    "sha256": "780c37d6fc11ca3a01c3763535ef883908b6007271a46bd446d2289ded820751",
+    "bytes": 286592,
+    "license": "CC0-1.0"
+  }
+]

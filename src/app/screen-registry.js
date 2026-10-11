@@ -14,6 +14,7 @@ const SCREENS = Object.freeze({
   "path.test": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya", styles: ["test"] },
 
   "practice.home": { layout: "root", header: "minimal", bottomNav: true, title: "", styles: ["practice"] },
+  "practice.tower": { layout: "detail", header: "standard", bottomNav: false, title: "Къала · Башня", styles: ["tower"] },
   "practice.ashyk": { layout: "detail", header: "standard", bottomNav: false, titleKey: "practice.ashyk", styles: ["ashyk"] },
   "friends.home": { layout: "root", header: "minimal", bottomNav: true, title: "", styles: ["friends", "admin"] },
   "profile.home": { layout: "root", header: "minimal", bottomNav: true, title: "", styles: ["profile"] },
