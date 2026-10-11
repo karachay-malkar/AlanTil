@@ -40,6 +40,10 @@ export async function mount(context,params={}){
   toggle.textContent=catalogOpen?'▾  Каталог':'▴  Каталог';
  }
  setCatalogOpen(true);
+ const game=context.root.querySelector('.towerGame');
+ const dockObserver=new ResizeObserver(()=>game.style.setProperty('--tower-dock-height',Math.ceil(dock.getBoundingClientRect().height)+'px'));
+ dockObserver.observe(dock);
+ controller.signal.addEventListener('abort',()=>dockObserver.disconnect(),{once:true});
  toggle.addEventListener('click',()=>setCatalogOpen(!catalogOpen),{signal:controller.signal});
 
  const options=document.createElement('details');
