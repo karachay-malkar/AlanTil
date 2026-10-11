@@ -263,7 +263,8 @@ export function createRouter({ shell, modal, context }) {
     return Promise.all(screenStyleDependencies(route).map((style)=>{
       const path=STYLE_PATHS[style];
       if(!path)throw new Error(`Unknown route style dependency: ${style}`);
-      return loadStyle(`${path}?v=${style==="tower"?TOWER_ASSET_VERSION:ASSET_VERSION}`);
+      const standardHref=`${path}?v=${ASSET_VERSION}`;
+      return loadStyle(style==="tower"?`${path}?v=${TOWER_ASSET_VERSION}`:standardHref);
     }));
   }
   let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
