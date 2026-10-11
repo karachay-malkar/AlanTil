@@ -9,7 +9,7 @@ test('tower uses real camera tween, meadow and depth controls without changing r
  assert.match(scene,/controls\.addEventListener\('start',cancelFlight\)/);
  assert.match(scene,/function grassTexture\(\)/);
  assert.match(scene,/new THREE\.CanvasTexture\(canvas\)/);
- assert.match(scene,/grid\.material\.opacity=\.12/);
+ assert.match(scene,/grid\.material\.opacity=\.055/);\n assert.match(scene,/grid\.visible=!!b/);
  assert.match(scene,/const contact=new THREE\.Mesh/);
  assert.match(scene,/function screenPosition\(b\)/);
  assert.match(scene,/function sizeHandlePositions\(b\)/);
