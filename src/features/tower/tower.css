@@ -131,3 +131,56 @@
  .towerCatalogContent{max-height:45dvh}
  .towerActionBar{width:min(540px,calc(100% - 96px))}
 }
+
+/* 17.0.3: model previews, contextual placement, quieter camera and landscape */
+.towerStage{background:#9fbea0}
+.towerCanvas canvas{cursor:crosshair}
+.towerSide{background:rgba(247,247,238,.94);border-color:rgba(235,238,222,.8);box-shadow:0 9px 28px rgba(31,50,31,.2)}
+.towerSide.is-collapsed{background:rgba(245,247,237,.96)}
+.towerCatalogToggle{font-size:14px;font-weight:700;color:#304e35;background:#dae6cd}
+.towerItem{width:150px;grid-template-columns:56px 1fr;grid-template-rows:auto auto;column-gap:9px;min-height:70px;background:rgba(255,255,251,.85);border-color:rgba(117,139,104,.26)}
+.towerItem[aria-pressed="true"]{border-color:#55754b;background:#dce9d4}
+.towerItemIcon{grid-row:1 / span 2;width:56px;height:56px;position:relative;display:grid;place-items:center;touch-action:none}
+.towerItemImage{position:absolute;inset:0;width:56px;height:56px;object-fit:contain;display:block;opacity:0;border-radius:9px}
+.towerItem.has-thumbnail .towerItemImage{opacity:1}
+.towerItem.has-thumbnail .towerItemIcon>span{display:none}
+.towerItemName{font-size:12px;line-height:1.25}
+.towerPrice{font-size:11px;color:#526a49}
+.towerActionBar{display:none}
+.towerActionBar.is-visible{display:flex}
+.towerActionBar.towerContextual{bottom:auto;top:var(--tower-action-y,90px);left:var(--tower-action-x,50%);width:min(400px,calc(100% - 28px));transform:translateX(-50%)}
+.towerQuickTools{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;padding:5px 7px;background:rgba(252,251,243,.94);border:1px solid #f8f8f2;border-radius:14px;box-shadow:0 5px 22px #24392135;backdrop-filter:blur(12px)}
+.towerQuickTools[hidden]{display:none!important}
+.towerQuickTools button{display:grid;place-items:center;min-height:44px;min-width:44px;padding:4px 7px;border:0;border-radius:10px;background:#e4ecdc;color:#304c36;font-size:23px;line-height:1}
+.towerQuickTools button[data-quick="cancel"]{background:#efe1dc;color:#8f453c}
+.towerQuickTools button:disabled{opacity:.35}
+.towerQuickSize{font-size:12px;color:#3b5840;min-width:100px;text-align:center;font-variant-numeric:tabular-nums}
+.towerActionBar .towerActions{width:auto;max-width:100%}
+.towerActionBar .towerAction{border-color:#9eb097;font-size:13px;background:#f9f8f2;min-height:45px}
+.towerActionBar .towerAction.primary{background:#4f7150;color:white;border-color:#4f7150}
+.towerActionBar .towerStatus[data-kind="error"]{color:#983d35}
+.towerCamera{gap:7px}
+.towerCamera button,.towerCameraMore summary{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;border:1px solid #ffffffad;background:rgba(247,249,240,.91);color:#345038;box-shadow:0 3px 13px #233a2333;cursor:pointer;font-size:22px}
+.towerCameraMore summary{list-style:none}
+.towerCameraMore summary::-webkit-details-marker{display:none}
+.towerCameraExtra{position:absolute;right:49px;top:0;display:grid;grid-template-columns:repeat(2,44px);gap:6px;padding:6px;background:rgba(246,248,239,.9);border-radius:12px;box-shadow:0 6px 18px #24372135}
+.towerOptions summary{font-size:12px;min-height:38px}
+.towerOptions .towerDimensions label,.towerOptions .towerPosition label{font-size:12px}
+.towerOptions .towerDimensions input,.towerOptions .towerPosition input{min-height:44px;font-size:14px}
+@media(max-width:749px){
+ .towerActionBar.towerContextual{top:auto;left:50%;bottom:calc(var(--tower-dock-height,148px) + max(12px,env(safe-area-inset-bottom)));width:calc(100% - 24px);transform:translateX(-50%)}
+ .towerActionBar{max-width:450px}
+ .towerQuickTools{gap:4px;padding:4px 6px;max-width:100%}
+ .towerQuickTools button{min-width:44px;min-height:44px}
+ .towerQuickSize{width:100%;font-size:11px}
+ .towerItem{grid-template-columns:52px 1fr;width:145px;min-height:65px}
+ .towerItemIcon,.towerItemImage{width:52px;height:52px}
+ .towerCamera button,.towerCameraMore summary{width:44px;height:44px}
+ .towerCameraExtra{right:49px;grid-template-columns:repeat(2,44px)}
+}
+@media(max-height:520px){
+ .towerQuickTools .towerQuickSize{display:none}
+ .towerQuickTools{padding:3px;gap:3px}
+ .towerActionBar .towerAction{min-height:42px;padding:7px 10px}
+}
+
