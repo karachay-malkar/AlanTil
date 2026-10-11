@@ -27,10 +27,12 @@ for(const [ox,oy] of [[0,0],[0,-18],[0,18],[-18,0],[18,0],[-32,-24],[32,-24]]){
  if(await page.locator('[data-remove]').isVisible()){selected=true;break;}
 }
 if(!selected){await page.screenshot({path:path.join(output,'tower-selection-failure.png'),fullPage:true});throw Error('Placed 3D element is not pickable in center camera view');}await page.locator('[data-remove]').click();await page.waitForFunction(()=>document.querySelector('[data-silver]').textContent==='1000');assert.equal(state.elements.length,0);
-await page.locator('[data-stone-kind=big]').click();await page.locator('[data-item=big][data-variant="0"]').click();await page.locator('.towerOptions summary').click();await page.locator('[data-dimension="0"]').fill('5');await page.locator('[data-dimension="1"]').fill('4');await page.locator('[data-dimension="2"]').fill('5');await page.locator('.towerOptions summary').click();await page.locator('canvas').click({position:{x:640,y:450}});
+await page.locator('[data-stone-kind=big]').click();await page.locator('[data-item=big][data-variant="0"]').click();
+await page.locator('canvas').click({position:{x:640,y:450}});
 await page.locator('[data-axis=x][data-delta="1"]').waitFor({state:'visible'});
 await page.locator('[data-axis=x][data-delta="1"]').click();
 assert.equal(await page.locator('[data-dimension="0"]').inputValue(),'5','X arrow grows stone by one 25cm cell');
+await page.locator('.towerOptions summary').click();await page.locator('[data-dimension="1"]').fill('4');await page.locator('[data-dimension="2"]').fill('5');await page.locator('.towerOptions summary').click();
 await page.locator('.towerCurrency label').nth(1).click();assert.equal(await page.locator('[name=tower-currency][value=gold]').isChecked(),true);await page.locator('[data-confirm]').waitFor({state:'visible'});assert.match(await page.locator('[data-confirm]').innerText(),/3/);await page.locator('[data-confirm]').click();await page.waitForFunction(()=>document.querySelector('[data-gold]').textContent==='17');assert.equal(state.elements[0].sx,5);await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(350);await page.locator('.towerOptions summary').click();await page.locator('[data-tool=select]').click();await page.locator('.towerOptions summary').click();await page.screenshot({path:path.join(output,'tower-built-desktop.png'),fullPage:true});
 // A second adjoining model forces the real irregular-volume worker path.
 const original=state.elements[0];
