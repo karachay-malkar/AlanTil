@@ -108,7 +108,7 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
 
 function nearestSeed(x,y,z){
  // Stable jittered 3D Voronoi cells yield irregular, coherent rubble fragments.
- const w=6.5,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
+ const w=10,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
  let nearest=Infinity,key=0;
  for(let dz=-1;dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
   const a=cx+dx,b=cy+dy,c=cz+dz;
