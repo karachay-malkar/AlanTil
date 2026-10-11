@@ -1,0 +1,28 @@
+name: Tower 3D regression
+on:
+  push:
+    branches: ["17.0"]
+    paths:
+      - "src/features/tower/**"
+      - "packages/tower-game/**"
+      - "assets/tower/processed-rocks.mjs"
+      - "tests/tower-*.test.mjs"
+      - ".github/workflows/tower-3d-regression.yml"
+  workflow_dispatch:
+jobs:
+  tower-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax
+        run: |
+          node --check src/features/tower/scene.js
+          node --check src/features/tower/index.js
+          node --check packages/tower-game/masonry.mjs
+      - name: Tower functional regression
+        run: |
+          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs
