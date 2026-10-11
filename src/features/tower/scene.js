@@ -1,4 +1,4 @@
-import {regularizedRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
+import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
@@ -84,7 +84,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const stoneTemplates={};
  for(const [category,entries] of Object.entries(ROCK_PACK)){
   stoneTemplates[category]=entries.map((source,variant)=>{
-   const mesh=regularizedRockMesh(source,variant);
+   const mesh=originalRockMesh(source,variant);
    const geometry=keepG(new THREE.BufferGeometry());
    geometry.setAttribute('position',new THREE.BufferAttribute(mesh.positions,3));
    // Incoming sRGB palette needs conversion to linear before vertex color lighting.
@@ -375,8 +375,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   controls.update();renderer.render(scene,camera);
  }animate();container.dataset.ready="true";
  const thumbnailCache=new Map();
- function thumbnail(type,variant=0){
-  const key=type+':'+variant;if(thumbnailCache.has(key))return thumbnailCache.get(key);
+ function thumbnail(type,variant=0,dimensions=null){
+  const key=type+':'+variant+':'+(dimensions?.join('x')||'default');if(thumbnailCache.has(key))return thumbnailCache.get(key);
   const thumbScene=new THREE.Scene();thumbScene.background=new THREE.Color('#e3e9dd');
   thumbScene.add(new THREE.AmbientLight('#ffffff',2));
   const light=new THREE.DirectionalLight('#fff6e1',3.3);light.position.set(-3,7,8);thumbScene.add(light);
@@ -384,7 +384,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const variants=stoneTemplates[stoneCategory(type)]||[];
   const template=variants.length?variants[variant%variants.length]:null;
   const source=template?[[template.g,template.m,[0,0,0],[1,1,1]]]:parts(type);
-  for(const [geo,material,offset,factor]of source){const mesh=new THREE.Mesh(geo,material);mesh.position.set(...offset);mesh.scale.set(...factor);group.add(mesh);}
+  for(const [geo,material,offset,factor]of source){const mesh=new THREE.Mesh(geo,material);mesh.position.set(...offset);mesh.scale.set(...(dimensions||factor));group.add(mesh);}
   group.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(group),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
   group.position.sub(center);group.scale.setScalar(1.25/Math.max(size.x,size.y,size.z,.01));
@@ -411,34 +411,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   return Math.max(2.6,size.y/(2*tangent)*1.38,projectedWidth/(2*tangent*aspect)*1.35,
     Math.max(size.x,size.y,size.z)*1.65);
  }
- function sizeHandlePositions(b){
-  if(!b||disposed)return {};
-  const {p}=transform(b),q=orientation(b),size=[b.sx,b.sy,b.sz];
-  const basis=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)];
-  const center=p.clone().project(camera);
-  const result={center:{
-   x:(center.x+1)*container.clientWidth/2,
-   y:(1-center.y)*container.clientHeight/2,
-  }};
-  for(let i=0;i<3;i++){
-   const direction=basis[i].applyQuaternion(q).normalize();
-   for(const delta of [-1,1]){
-    const point=p.clone().addScaledVector(direction,delta*(size[i]*CELL/2+.095));
-    const projected=point.project(camera);
-    if(projected.z>1||projected.z< -1)continue;
-    result[['x','y','z'][i]+delta]={
-     x:(projected.x+1)*container.clientWidth/2,
-     y:(1-projected.y)*container.clientHeight/2,
-    };
-   }
-  }
-  return result;
- }
  function screenPosition(b){
   if(!b||disposed)return null;
   const {d,p}=transform(b);p.y=b.y*CELL+d[1]*CELL+.17;
   const projection=p.project(camera);if(projection.z>1||projection.z< -1)return null;
   return{x:(projection.x+1)*container.clientWidth/2,y:(1-projection.y)*container.clientHeight/2};
  }
- return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {d,p}=transform(added),target=p.clone();const fit=new THREE.Vector3(...d.map(v=>v*CELL));const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(fitDistanceFor(fit));flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;grid.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,sizeHandlePositions,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=fitDistanceFor(size);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;masonryWorker?.terminate();clearMasonry();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
+ return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {d,p}=transform(added),target=p.clone();const fit=new THREE.Vector3(...d.map(v=>v*CELL));const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(fitDistanceFor(fit));flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;grid.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=fitDistanceFor(size);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;masonryWorker?.terminate();clearMasonry();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
 }
