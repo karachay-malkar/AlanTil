@@ -17,16 +17,16 @@ test('all 23 authored stone variants decode and contain their geometric center',
 });
 test('real irregular rocks form filled rather than scattered joins',()=>{
  const pair=[b('left',0,0,0),b('right',2,0,0,'medium',1)];
- const out=packMasonryVolume(pair,profiles,{spacing:.19});
+ const out=packMasonryVolume(pair,profiles,{spacing:.12});
  assert.ok(out.joints===1);
  assert.ok(out.candidateCells>0);
  assert.equal(out.candidateCells,out.filledCells);
  assert.ok(out.stonePositions.length>0);
- assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.19}),out);
+ assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.12}),out);
 });
 test('real 50-piece dry wall respects worker geometry budget',()=>{
  const wall=Array.from({length:50},(_,i)=>b('s'+i,i*2,0,0,'medium',i%ROCK_PACK.medium.length));
- const out=packMasonryVolume(wall,profiles,{spacing:.19,maxTriangles:90000});
+ const out=packMasonryVolume(wall,profiles,{spacing:.12,maxTriangles:90000});
  assert.equal(out.joints,49);
  assert.ok(out.candidateCells>1000);
  assert.ok((out.stonePositions.length+out.mortarPositions.length)/9<=90000);
