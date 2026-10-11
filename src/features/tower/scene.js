@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from '../../vendor/three/addons/loaders/GLTFLoader.js';
+import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 
 const CELL=.25;
 const ROOT=new URL('../../../',import.meta.url);
@@ -28,20 +28,50 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  const geometries=[],materials=[],textures=[];const keepG=g=>(geometries.push(g),g);const keepM=m=>(materials.push(m),m);
  const box=keepG(new THREE.BoxGeometry(1,1,1));
- const stoneMaterial=keepM(new THREE.MeshStandardMaterial({color:'#a19b87',roughness:.94}));
+ const stoneMaterial=keepM(new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.96,metalness:0,vertexColors:true,flatShading:true}));
  const woodMaterial=keepM(new THREE.MeshStandardMaterial({color:'#6e4c30',roughness:.85}));
  const mortarMaterial=keepM(new THREE.MeshStandardMaterial({color:'#8a8473',roughness:1}));
  const darkMaterial=keepM(new THREE.MeshStandardMaterial({color:'#292725',roughness:.8}));
  const loader=new THREE.TextureLoader();
  async function texture(path,srgb=false){try{const t=await loader.loadAsync(new URL(path,ROOT).href);t.colorSpace=srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());textures.push(t);return t;}catch{return null;}}
- const stoneTemplates=[];
- const gltfLoader=new GLTFLoader();
- // Prefer optimized derivatives; fall back to original model, sampled down when indexed.
- for(const name of ['rock_07','rock_09']){
-  try{const gltf=await gltfLoader.loadAsync(new URL(`assets/tower/${name}/${name}-lod.glb`,ROOT).href);let mesh;gltf.scene.updateMatrixWorld(true);gltf.scene.traverse(o=>{if(o.isMesh){if(!mesh)mesh=o;keepG(o.geometry);for(const material of(Array.isArray(o.material)?o.material:[o.material])){keepM(material);for(const value of Object.values(material)){if(value?.isTexture&&!textures.includes(value))textures.push(value);}}}});if(!mesh)continue;
-   let g=mesh.geometry.clone();g.applyMatrix4(mesh.matrixWorld);g.computeBoundingBox();const bb=g.boundingBox,sz=bb.getSize(new THREE.Vector3()),center=bb.getCenter(new THREE.Vector3());g.translate(-center.x,-center.y,-center.z);g.scale(1/sz.x,1/sz.y,1/sz.z);keepG(g);
-   const m=mesh.material.clone();m.color.multiplyScalar(.9);keepM(m);stoneTemplates.push({g,m});
-  }catch{/* Other local candidate may be present. */}
+ // The 23 repaired meshes come from the supplied FBX/GLB set.
+ // They are quantized only for transport; topology and hand-adjusted contours remain intact.
+ const stoneTemplates={};
+ for(const [category,entries] of Object.entries(ROCK_PACK)){
+  stoneTemplates[category]=entries.map(([count,faceCount,base,alternate,encoded],variant)=>{
+   const binary=atob(encoded),bytes=new Uint8Array(binary.length);
+   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+   if(bytes.length!==count*3+faceCount*3)throw new Error('Некорректная геометрия камня');
+   const coords=new Float32Array(count*3),colors=new Float32Array(count*3);
+   const color=new THREE.Color();
+   for(let i=0;i<count;i++){
+    const x=bytes[3*i]/255,y=bytes[3*i+2]/255,z=bytes[3*i+1]/255;
+    coords.set([x-.5,y-.5,z-.5],i*3);
+    const wave=(Math.sin(x*11.7+z*7.3+variant*.87)+Math.cos(y*8.4-x*9.1))*.12;
+    const blend=THREE.MathUtils.clamp(.48+wave,0,1);
+    const shade=.92+.07*y;
+    color.setRGB(
+     (base[0]*(1-blend)+alternate[0]*blend)*shade/255,
+     (base[1]*(1-blend)+alternate[1]*blend)*shade/255,
+     (base[2]*(1-blend)+alternate[2]*blend)*shade/255,
+     THREE.SRGBColorSpace);
+    color.toArray(colors,i*3);
+   }
+   const indices=new Uint16Array(faceCount*3),offset=count*3;
+   for(let i=0;i<faceCount;i++){
+    indices[3*i]=bytes[offset+3*i];
+    // Source axes are Z-up, so swapping axes reverses triangle winding.
+    indices[3*i+1]=bytes[offset+3*i+2];
+    indices[3*i+2]=bytes[offset+3*i+1];
+   }
+   const g=keepG(new THREE.BufferGeometry());
+   g.setAttribute('position',new THREE.BufferAttribute(coords,3));
+   g.setAttribute('color',new THREE.BufferAttribute(colors,3));
+   g.setIndex(new THREE.BufferAttribute(indices,1));
+   // Every facet casts light naturally, without arbitrary extra stone decals.
+   const flat=keepG(g.toNonIndexed());flat.computeVertexNormals();
+   return {g:flat,m:stoneMaterial,variant};
+  });
  }
  const woodMap=await texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_diff_1k.jpg',true);if(woodMap){woodMaterial.map=woodMap;woodMaterial.color.set('#a99a85');woodMaterial.needsUpdate=true;}
  const [woodNormal,woodArm]=await Promise.all([texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_nor_gl_1k.jpg'),texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_arm_1k.jpg')]);if(woodNormal){woodMaterial.normalMap=woodNormal;woodMaterial.normalScale.set(.45,.45);}if(woodArm)woodMaterial.roughnessMap=woodArm;woodMaterial.needsUpdate=true;
@@ -70,7 +100,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const roofMaterial=keepM(new THREE.MeshStandardMaterial({color:'#615f52',roughness:.92,map:woodMap||null}));
  function previewMeshes(b){
   const stone=CATALOG_STONES.has(b.type);
-  const template=stone?stoneTemplates[(b.variant||0)%Math.max(stoneTemplates.length,1)]:null;
+  const variants=stoneTemplates[b.type]||[];const template=stone?variants[(b.variant||0)%Math.max(variants.length,1)]:null;
   return stone?[[template?.g||box,template?.m||stoneMaterial,[0,0,0],[1,1,1]]]:parts(b.type);
  }
  function clearPreview(){
@@ -88,7 +118,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(b.type==='door'||b.type==='window')scale.z=.25;
    if(b.type==='deck')scale.y=.065;
    for(const [geometry,material,offset,factor] of previewMeshes(b)){
-    const translucent=material.clone();translucent.transparent=true;translucent.depthWrite=false;translucent.side=THREE.DoubleSide;previewMaterials.push(translucent);
+    const translucent=material.clone();translucent.transparent=true;translucent.depthWrite=false;translucent.side=THREE.DoubleSide;translucent.vertexColors=false;translucent.flatShading=true;previewMaterials.push(translucent);
     const mesh=new THREE.Mesh(geometry,translucent);
     mesh.position.set(...offset).multiply(scale).applyQuaternion(q);
     mesh.quaternion.copy(q);mesh.scale.copy(scale).multiply(new THREE.Vector3(...factor));mesh.renderOrder=6;
@@ -105,19 +135,43 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(b.type==='deck')preview.position.y=b.y*CELL+.0325;
  }
  const CATALOG_STONES=new Set(['stone','medium','long','big']);
- function rebuild(){for(const g of groups){content.remove(g);g.dispose?.();}groups=[];pickables=[];
-  const buckets=new Map();for(const b of blocks){if(layer!==null&&b.y>layer)continue;const key=['ordinary','medium','elongated','large','stone','stone_small','stone_medium','stone_long','stone_large','small','long','big'].includes(b.type)?('stone'+((b.x+b.y+b.z)%2)):b.type;if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(b);}
-  for(const [type,list]of buckets){
-   const stone=type.startsWith('stone');const template=stoneTemplates[Number(type.slice(5))%Math.max(stoneTemplates.length,1)];const templates=stone?[[box,mortarMaterial,[0,0,0],[.65,.65,.65]],[template?.g||box,template?.m||stoneMaterial,[0,0,0],[1,1,1]]]:parts(type);
-   for(const [g,mat,offset,factor]of templates){
+ function rebuild(){
+  for(const instance of groups){content.remove(instance);instance.dispose?.();}
+  groups=[];pickables=[];
+  const buckets=new Map();
+  for(const block of blocks){
+   if(layer!==null&&block.y>layer)continue;
+   const stone=CATALOG_STONES.has(block.type);
+   const count=stoneTemplates[block.type]?.length||1;
+   const variant=((block.variant||0)%count+count)%count;
+   const key=stone?`stone:${block.type}:${variant}`:block.type;
+   if(!buckets.has(key))buckets.set(key,[]);
+   buckets.get(key).push(block);
+  }
+  for(const [key,list] of buckets){
+   const stone=key.startsWith('stone:');
+   const type=stone?key.split(':')[1]:key;
+   const template=stone?stoneTemplates[type]?.[Number(key.split(':')[2])]:null;
+   const templates=stone?[[template?.g||box,template?.m||stoneMaterial,[0,0,0],[1,1,1]]]:parts(type);
+   for(const [g,mat,offset,factor] of templates){
     mat.clippingPlanes=layer===null?[]:[clipPlane];mat.clipShadows=true;mat.needsUpdate=true;
-    const instances=new THREE.InstancedMesh(g,mat,list.length);instances.castShadow=true;instances.receiveShadow=true;instances.userData.blocks=list;
-    const matrix=new THREE.Matrix4(),quat=new THREE.Quaternion();list.forEach((b,i)=>{const {d,p}=transform(b);quat.identity();const special=!stone&&['window','door','stairs','ladder','roof','deck','floor','plank'].includes(type);if(special)quat.setFromAxisAngle(new THREE.Vector3(0,1,0),(b.rotation||0)*Math.PI/2);const scale=new THREE.Vector3(...(special?[b.sx,b.sy,b.sz]:d).map(v=>v*CELL));
-     if(type==='window'||type==='door'){scale.z=.25;}
-     if(type==='deck'||type==='floor'||type==='plank'){scale.y=.065;p.y=b.y*CELL+.0325;}
-     const local=new THREE.Vector3(...offset).multiply(scale).applyQuaternion(quat);p.add(local);scale.multiply(new THREE.Vector3(...factor));
-     matrix.compose(p,quat,scale);instances.setMatrixAt(i,matrix);instances.setColorAt(i,new THREE.Color().setHSL(stone?.105:.085,stone?.09:.12,(stone?.75:.67)+hash((b.variant||0)+b.x*61+b.y*367+b.z*997)*.08));
-    });instances.instanceMatrix.needsUpdate=true;instances.computeBoundingSphere();content.add(instances);groups.push(instances);pickables.push(instances);
+    const instances=new THREE.InstancedMesh(g,mat,list.length);
+    instances.castShadow=true;instances.receiveShadow=true;instances.userData.blocks=list;
+    const matrix=new THREE.Matrix4(),quat=new THREE.Quaternion();
+    list.forEach((block,i)=>{
+     const {d,p}=transform(block);quat.identity();
+     const special=!stone&&['window','door','stairs','ladder','roof','deck','floor','plank'].includes(type);
+     if(special)quat.setFromAxisAngle(new THREE.Vector3(0,1,0),(block.rotation||0)*Math.PI/2);
+     const scale=new THREE.Vector3(...(special?[block.sx,block.sy,block.sz]:d).map(v=>v*CELL));
+     if(type==='window'||type==='door')scale.z=.25;
+     if(type==='deck'||type==='floor'||type==='plank'){scale.y=.065;p.y=block.y*CELL+.0325;}
+     const local=new THREE.Vector3(...offset).multiply(scale).applyQuaternion(quat);
+     p.add(local);scale.multiply(new THREE.Vector3(...factor));
+     matrix.compose(p,quat,scale);instances.setMatrixAt(i,matrix);
+     instances.setColorAt(i,stone?new THREE.Color('#ffffff'):new THREE.Color().setHSL(.085,.12,.67+hash((block.variant||0)+block.x*61+block.y*367+block.z*997)*.08));
+    });
+    instances.instanceMatrix.needsUpdate=true;instances.computeBoundingSphere();
+    content.add(instances);groups.push(instances);pickables.push(instances);
    }
   }
  }
