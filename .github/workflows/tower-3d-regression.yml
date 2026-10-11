@@ -29,6 +29,13 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Real WebGL interaction
         run: node scripts/qa/browser-tower.cjs
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tower-browser-evidence
+          path: /tmp/alantil-tower-qa/*.png
+          if-no-files-found: warn
       - name: Tower functional regression
         run: |
           node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs
