@@ -4,6 +4,12 @@ import {readFileSync} from 'node:fs';
 
 const read=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
+test('camera tween state exists before the renderer begins its first frame',()=>{
+ const scene=read('src/features/tower/scene.js');
+ assert.ok(scene.indexOf('let flight=null;')<scene.indexOf('let frame;function animate('));
+ assert.match(scene,/controls\.addEventListener\('start',cancelFlight\)/);
+});
+
 test('meadow scene, subdued grid and responsive shadow budget',()=>{
  const scene=read('src/features/tower/scene.js');
  assert.match(scene,/function grassTexture\(\)/);
