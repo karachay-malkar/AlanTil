@@ -27,13 +27,27 @@ for(const [ox,oy] of [[0,0],[0,-18],[0,18],[-18,0],[18,0],[-32,-24],[32,-24]]){
  if(await page.locator('[data-remove]').isVisible()){selected=true;break;}
 }
 if(!selected){await page.screenshot({path:path.join(output,'tower-selection-failure.png'),fullPage:true});throw Error('Placed 3D element is not pickable in center camera view');}await page.locator('[data-remove]').click();await page.waitForFunction(()=>document.querySelector('[data-silver]').textContent==='1000');assert.equal(state.elements.length,0);
-await page.locator('[data-stone-kind=big]').click();await page.locator('[data-item=big][data-variant="0"]').click();
+await page.locator('[data-stone-kind=big]').click();
+assert.equal(await page.locator('[data-item=big]').count(),27,'catalog must expose 27 big preset dimensions');
+await page.locator('[data-item=big][data-config="26"]').click();
+assert.equal(await page.locator('[data-dimension="0"]').inputValue(),'5');
+assert.equal(await page.locator('[data-dimension="1"]').inputValue(),'4');
+assert.equal(await page.locator('[data-dimension="2"]').inputValue(),'4');
+assert.equal(await page.locator('.towerDimensions input[type=number]').count(),0,'stone size cannot be stretched');
 await page.locator('canvas').click({position:{x:640,y:450}});
-await page.locator('[data-axis=x][data-delta="1"]').waitFor({state:'visible'});
-await page.locator('[data-axis=x][data-delta="1"]').click();
-assert.equal(await page.locator('[data-dimension="0"]').inputValue(),'5','X arrow grows stone by one 25cm cell');
-await page.locator('.towerOptions summary').click();await page.locator('[data-dimension="1"]').fill('4');await page.locator('[data-dimension="2"]').fill('5');await page.locator('.towerOptions summary').click();
-await page.locator('.towerCurrency label').nth(1).click();assert.equal(await page.locator('[name=tower-currency][value=gold]').isChecked(),true);await page.locator('[data-confirm]').waitFor({state:'visible'});assert.match(await page.locator('[data-confirm]').innerText(),/3/);await page.locator('[data-confirm]').click();await page.waitForFunction(()=>document.querySelector('[data-gold]').textContent==='17');assert.equal(state.elements[0].sx,5);await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(350);await page.locator('.towerOptions summary').click();await page.locator('[data-tool=select]').click();await page.locator('.towerOptions summary').click();await page.screenshot({path:path.join(output,'tower-built-desktop.png'),fullPage:true});
+await page.locator('[data-quick=variant]').waitFor({state:'visible'});
+await page.locator('[data-quick=variant]').click();
+assert.match(await page.locator('[data-quick=variant]').innerText(),/2\/7/,'preview may change shape while preserving dimensions');
+assert.equal(await page.locator('[data-dimension="0"]').inputValue(),'5');
+await page.locator('.towerCurrency label').nth(1).click();
+assert.equal(await page.locator('[name=tower-currency][value=gold]').isChecked(),true);
+await page.locator('[data-confirm]').waitFor({state:'visible'});
+assert.match(await page.locator('[data-confirm]').innerText(),/3/);
+await page.locator('[data-confirm]').click();
+await page.waitForFunction(()=>document.querySelector('[data-gold]').textContent==='17');
+assert.deepEqual([state.elements[0].sx,state.elements[0].sy,state.elements[0].sz],[5,4,4]);
+assert.equal(state.elements[0].variant,1,'server fixture must save selected authored shape variant');
+await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(350);await page.locator('.towerOptions summary').click();await page.locator('[data-tool=select]').click();await page.locator('.towerOptions summary').click();await page.screenshot({path:path.join(output,'tower-built-desktop.png'),fullPage:true});
 // A second adjoining model forces the real irregular-volume worker path.
 const original=state.elements[0];
 const second={...original,id:require('node:crypto').randomUUID(),x:original.x+original.sx,variant:1};
@@ -44,4 +58,4 @@ await page.screenshot({path:path.join(output,'tower-infill-desktop.png'),fullPag
 const masonry=await page.locator('.towerCanvas').evaluate(el=>({coverage:el.dataset.masonryCoverage,fragments:el.dataset.masonryFragments}));
 console.log('INFILL_QA',masonry);
 assert.ok(Number(masonry.fragments)>0,'Real adjacent stones must generate volumetric rubble');
-await page.locator('.towerOptions summary').click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(720);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(output,'tower-built-mobile.png'),fullPage:true});assert.deepEqual(errors,[]);console.log('PASS real WebGL desktop/mobile, purchase, lost response retry, selection, exact refund, fixed resize price, gold payment; no JS errors');}finally{await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
+await page.locator('.towerOptions summary').click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(720);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(output,'tower-built-mobile.png'),fullPage:true});assert.deepEqual(errors,[]);console.log('PASS real WebGL desktop/mobile, purchase, lost response retry, selection, exact refund, fixed catalog sizes, preserved stone variants, gold payment; no JS errors');}finally{await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
