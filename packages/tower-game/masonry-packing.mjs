@@ -156,6 +156,30 @@ function surface(volume,joint){
    for(let k=0;k<4;k++)for(const p of [corners[k],corners[(k+1)%4],center]){
     positions.push(...p);colors.push(...color);
    }
+   // Mortar is visible only between different Voronoi fragments, not on every voxel.
+   if(joint.axis!==1)for(let edge=0;edge<4;edge++){
+    const left=CORNERS[face][edge],right=CORNERS[face][(edge+1)%4];
+    const normalAxis=Math.floor(face/2);
+    const tangent=[0,1,2].find(k=>k!==normalAxis&&left[k]===right[k]);
+    if(tangent===undefined)continue;
+    const neighbor=[x,y,z];neighbor[tangent]+=left[tangent]===0?-1:1;
+    if(neighbor.some((v,k)=>v<0||v>=[nx,ny,nz][k]))continue;
+    const other=neighbor[0]+nx*neighbor[1]+stride*neighbor[2];
+    if(!mask[other])continue;
+    const exposed=neighbor.slice();exposed[normalAxis]+=face%2===0?1:-1;
+    if(exposed.every((v,k)=>v>=0&&v<[nx,ny,nz][k])){
+     const i=exposed[0]+nx*exposed[1]+stride*exposed[2];
+     if(mask[i]||aSolid[i]||bSolid[i])continue;
+    }
+    const neighborSeed=nearestSeed(neighbor[0]+min[0]/dimension[0],neighbor[1]+min[1]/dimension[1],neighbor[2]+min[2]/dimension[2]);
+    if(neighborSeed===key||neighborSeed<key)continue;
+    const strip=.085,nudge=(face%2===0?1:-1)*Math.min(...dimension)*.017;
+    const lift=p=>p.map((v,k)=>v+(k===normalAxis?nudge:0));
+    const inset=p=>p.map((v,k)=>v*(1-strip)+center[k]*strip+(k===normalAxis?nudge:0));
+    const p0=lift(corners[edge]),p1=lift(corners[(edge+1)%4]);
+    for(const triangle of [[p0,p1,inset(corners[(edge+1)%4])],[p0,inset(corners[(edge+1)%4]),inset(corners[edge])]])
+     for(const p of triangle){positions.push(...p);colors.push(.31,.30,.275);}
+   }
   }
  }
  return out;
