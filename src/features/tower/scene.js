@@ -335,7 +335,24 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  function contextLost(e){e.preventDefault();container.dataset.contextLost='true';}function contextRestored(){delete container.dataset.contextLost;}
  renderer.domElement.addEventListener('webglcontextlost',contextLost);renderer.domElement.addEventListener('webglcontextrestored',contextRestored);
- function resize(){const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,300);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}const observer=new ResizeObserver(resize);observer.observe(container);resize();
+ function resize(){
+  const previousAspect=camera.aspect,w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,300);
+  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  if(loadedOnce&&blocks.length&&Math.abs(previousAspect-camera.aspect)>.22){
+   const extent=new THREE.Box3();
+   for(const block of blocks){
+    const {d,p}=transform(block),r=new THREE.Vector3(...d.map(v=>v*CELL/2));
+    extent.expandByPoint(p.clone().sub(r));extent.expandByPoint(p.clone().add(r));
+   }
+   const size=extent.getSize(new THREE.Vector3()),center=extent.getCenter(new THREE.Vector3());
+   const distance=fitDistanceFor(size);
+   const direction=camera.position.clone().sub(controls.target).normalize();
+   if(direction.lengthSq()>.5){
+    camera.position.copy(center).addScaledVector(direction,distance);
+    controls.target.copy(center);controls.update();
+   }
+  }
+ }const observer=new ResizeObserver(resize);observer.observe(container);resize();
  let flight=null;
  let frame;function animate(time=performance.now()){
   if(disposed)return;frame=requestAnimationFrame(animate);
