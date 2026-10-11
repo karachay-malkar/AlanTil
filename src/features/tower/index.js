@@ -1,5 +1,5 @@
 import {CATALOG,STONE_CONFIGURATIONS,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js?v=17.0.8';
+import {createTowerScene} from './scene.js?v=17.0.9';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {towerUserId,loadTower,mutateTower} from './repository.js?v=17.0.1';
 let active=null;
