@@ -20,7 +20,7 @@ test('real irregular rocks form filled rather than scattered joins',()=>{
  const out=packMasonryVolume(pair,profiles,{spacing:.12});
  assert.ok(out.joints===1);
  assert.ok(out.candidateCells>0);
- assert.equal(out.candidateCells,out.filledCells);
+ assert.ok(out.filledCells>0&&out.filledCells<=out.candidateCells);assert.equal(out.stoneFilledCells,out.filledCells);assert.ok(out.residualFreeVolume>=0);
  assert.ok(out.stonePositions.length>0);
  assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.12}),out);
 });

@@ -228,6 +228,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   container.dataset.masonryReady='true';
   container.dataset.masonryCoverage=data.candidateCells
    ?String(Math.round(100*data.filledCells/data.candidateCells)):'n/a';
+  container.dataset.masonryStoneCoverage=data.candidateCells?String((100*(data.stoneFilledCells||0)/data.candidateCells).toFixed(1)):'n/a';
+  container.dataset.masonryResidualVolume=String(data.residualFreeVolume??0);
+  container.dataset.masonryMortarFaces=String(data.mortarSurfaceCells??0);
   container.dataset.masonryFragments=String(data.fragments||0);
   container.dataset.masonryTruncated=String(!!data.truncated);
  }

@@ -24,7 +24,7 @@ test('joint volume is filled, deterministic, order-independent and non-purchasab
  const original=JSON.stringify(pair);
  const first=packMasonryVolume(pair,profiles,{spacing:.12});
  assert.ok(first.joints>0);assert.ok(first.candidateCells>10);
- assert.equal(first.filledCells,first.candidateCells);
+ assert.ok(first.filledCells>0&&first.filledCells<=first.candidateCells);assert.equal(first.stoneFilledCells,first.filledCells);assert.equal(first.stoneCoverage,first.filledCells/first.candidateCells);
  assert.ok(first.stonePositions.length>0);
  assert.equal(first.stonePositions.length,first.stoneColors.length);
  assert.equal(first.stonePositions.length%9,0);

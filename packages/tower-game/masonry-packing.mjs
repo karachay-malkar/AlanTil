@@ -1,22 +1,13 @@
 import {bounds} from './core.mjs';
 import {rockContains,rockCategory} from './masonry-geometry.mjs';
+import {originalRockMesh} from './rock-shapes.mjs';
+import {fillAuthoredCavity} from './masonry-authored-infill.mjs';
+import {ROCK_PACK} from '../../assets/tower/processed-rocks.mjs';
+const SMALL_ROCKS=Object.freeze(ROCK_PACK.small.map((rock,i)=>originalRockMesh(rock,i)));
 
 const STONES=new Set(['stone','medium','long','big']), OPENINGS=new Set(['door','window']);
 const AXES=['x','y','z'];
 const DIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-const CORNERS=[
- [[1,0,0],[1,1,0],[1,1,1],[1,0,1]],
- [[0,0,1],[0,1,1],[0,1,0],[0,0,0]],
- [[0,1,0],[0,1,1],[1,1,1],[1,1,0]],
- [[0,0,1],[0,0,0],[1,0,0],[1,0,1]],
- [[0,0,1],[1,0,1],[1,1,1],[0,1,1]],
- [[1,0,0],[0,0,0],[0,1,0],[1,1,0]],
-];
-const hash=(x,y=0,z=0,salt=0)=>{
- let n=(Math.imul(x|0,73856093)^Math.imul(y|0,19349663)^Math.imul(z|0,83492791)^salt^0x45d9f3b)|0;
- n^=n>>>16;n=Math.imul(n,0x7feb352d);n^=n>>>15;n=Math.imul(n,0x846ca68b);n^=n>>>16;
- return (n>>>0)/4294967296;
-};
 const signature=b=>[b.x,b.y,b.z,b.sx,b.sy,b.sz,b.rotation||0,b.variant||0,b.id].join(':');
 const overlap=(a,b,c,d)=>[Math.max(a,c),Math.min(b,d)];
 
@@ -106,91 +97,7 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
  return {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid,countFilled,candidateCells};
 }
 
-function nearestSeed(x,y,z){
- // Stable jittered 3D Voronoi cells yield irregular, coherent rubble fragments.
- const w=10,cx=Math.floor(x/w),cy=Math.floor(y/w),cz=Math.floor(z/w);
- let nearest=Infinity,key=0;
- for(let dz=-1;dz<=1;dz++)for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-  const a=cx+dx,b=cy+dy,c=cz+dz;
-  const sx=(a+.17+.66*hash(a,b,c,1))*w,sy=(b+.17+.66*hash(a,b,c,2))*w,sz=(c+.17+.66*hash(a,b,c,3))*w;
-  const length=(x-sx)**2*.9+(y-sy)**2*1.2+(z-sz)**2*.85;
-  if(length<nearest){nearest=length;key=(Math.imul(a,73856093)^Math.imul(b,19349663)^Math.imul(c,83492791))|0;}
- }
- return key;
-}
-const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,joints:0,fragments:0,truncated:false});
-
-/**
- * A contiguous cavity is partitioned into individually closed, irregular
- * small stones. Neighbouring fragments are bevelled away from the same contact
- * plane and a much thinner mortar face is put behind that physical gap.
- * Target seed pitch ~16-18 cm = ~25% the volume of the 25cm construction stone,
- * when the actual cavity provides that much space; narrow cracks necessarily
- * get thinner wedges.
- */
-function surface(volume,joint,profiles){
- const out=empty();
- out.candidateCells=volume.candidateCells;
- const {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid}=volume;
- const count=stride*nz,stoneId=new Int32Array(count);
- const tone=block=>{
-   const variants=profiles[rockCategory(block.type)]||[];
-   const variant=variants.length?variants[((block.variant||0)%variants.length+variants.length)%variants.length]:null;
-   return variant?.[0]?.tint||[.30,.29,.26];
- };
- const primary=tone(joint.a),secondary=tone(joint.b);
- const palette=[0,1,2].map(i=>(primary[i]+secondary[i])*.5);
- const seeds=new Map();
- const raw=(x,y,z)=>[min[0]+x*dimension[0],min[1]+y*dimension[1],min[2]+z*dimension[2]];
- for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
-  const i=x+nx*y+stride*z;if(!mask[i])continue;
-  const p=raw(x+.5,y+.5,z+.5);
-  const id=nearestSeed(p[0]/.2,p[1]/.2,p[2]/.2);
-  stoneId[i]=id||1;
-  seeds.set(stoneId[i],(seeds.get(stoneId[i])||0)+1);
-  out.filledCells++;
- }
- out.fragments=seeds.size;
- const inside=(x,y,z)=>x>=0&&x<nx&&y>=0&&y<ny&&z>=0&&z<nz;
- function addQuad(corners,center,positions,colors,color){
-  for(let k=0;k<4;k++)for(const p of [corners[k],corners[(k+1)%4],center]){
-   positions.push(...p);colors.push(...color);
-  }
- }
- for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
-  const idx=x+nx*y+stride*z;if(!mask[idx])continue;
-  const id=stoneId[idx];
-  const tint=(hash(id,3,0,2)-.5)*.032;
-  for(let face=0;face<6;face++){
-   const [dx,dy,dz]=DIRS[face],xx=x+dx,yy=y+dy,zz=z+dz;
-   const neighbor=inside(xx,yy,zz)?xx+nx*yy+stride*zz:-1;
-   if(neighbor>=0&&mask[neighbor]&&stoneId[neighbor]===id)continue;
-   if(neighbor>=0&&(aSolid[neighbor]||bSolid[neighbor]))continue;
-   const touchesOther=neighbor>=0&&mask[neighbor]&&stoneId[neighbor]!==id;
-   const normalAxis=Math.floor(face/2),normalSign=face%2===0?1:-1;
-   const inset=Math.min(...dimension)*(touchesOther?.038:.005);
-   const corners=CORNERS[face].map(v=>{
-    const p=raw(x+v[0],y+v[1],z+v[2]);
-    return p.map((value,k)=>{
-     // Each global grid corner gets the same facet perturbation on every face.
-     const jitter=(hash(Math.round(p[0]*80),Math.round(p[1]*80),Math.round(p[2]*80),k+7)-.5)*.055*dimension[k];
-     return value+jitter-(k===normalAxis?normalSign*inset:0);
-    });
-   });
-   const center=[0,1,2].map(k=>corners.reduce((sum,p)=>sum+p[k],0)/4);
-   center[normalAxis]+=normalSign*(hash(x,y,z,face+60)-.5)*Math.min(...dimension)*.17;
-   const light=face===2?1.08:face===3?.82:face===0||face===4?.99:.90;
-   const color=palette.map(v=>Math.max(.06,Math.min(.68,(v+tint)*light)));
-   addQuad(corners,center,out.stonePositions,out.stoneColors,color);
-   if(touchesOther&&id<stoneId[neighbor]){
-    const slab=CORNERS[face].map(v=>raw(x+v[0],y+v[1],z+v[2]));
-    const mid=[0,1,2].map(k=>slab.reduce((sum,p)=>sum+p[k],0)/4);
-    addQuad(slab,mid,out.mortarPositions,out.mortarColors,[.14,.13,.115]);
-   }
-  }
- }
- return out;
-}
+const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,stoneFilledCells:0,mortarSurfaceCells:0,residualFreeVolume:0,joints:0,fragments:0,truncated:false});
 
 /** Fully tessellated rubble infill from real occupied/free volume in grid cells.
  * Derived presentation only: no saved blocks, no paid elements, no raycast targets.
@@ -212,13 +119,22 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
   const surroundings=neighbors.map(e=>e.signature).sort().join('/');
   const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing;
   let piece=store.get(key);
-  if(!piece){const grid=cavity(joint,profiles,openings,spacing,neighbors);piece=grid?surface(grid,joint,profiles):empty();store.set(key,piece);}
+  if(!piece){
+   const grid=cavity(joint,profiles,openings,spacing,neighbors);
+   const isSolidAt=p=>{
+    if(rockContains(joint.a,p,profiles,0)||rockContains(joint.b,p,profiles,0))return true;
+    if(openings.some(o=>p[0]>=o.x0&&p[0]<=o.x1&&p[1]>=o.y0&&p[1]<=o.y1&&p[2]>=o.z0&&p[2]<=o.z1))return true;
+    return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0));
+   };
+   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:240,maxTriangles:Math.min(maxTriangles,95000),isSolidAt}):empty();
+   store.set(key,piece);
+  }
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
   out.candidateCells+=piece.candidateCells;
   if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles){out.truncated=true;continue;}
   for(const [target,values]of [[out.stonePositions,piece.stonePositions],[out.stoneColors,piece.stoneColors],[out.mortarPositions,piece.mortarPositions],[out.mortarColors,piece.mortarColors]])
    for(let k=0;k<values.length;k++)target.push(values[k]);
-  out.filledCells+=piece.filledCells;out.fragments+=piece.fragments||0;out.joints++;
+  out.filledCells+=piece.filledCells;out.stoneFilledCells+=piece.stoneFilledCells||0;out.mortarSurfaceCells+=piece.mortarSurfaceCells||0;out.residualFreeVolume+=piece.residualFreeVolume||0;out.fragments+=piece.fragments||0;out.joints++;
  }
  if(cache){
   if(!joints.length)cache.clear();
@@ -232,6 +148,6 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
  return {
   stonePositions:Float32Array.from(out.stonePositions),stoneColors:Float32Array.from(out.stoneColors),
   mortarPositions:Float32Array.from(out.mortarPositions),mortarColors:Float32Array.from(out.mortarColors),
-  candidateCells:out.candidateCells,filledCells:out.filledCells,joints:out.joints,fragments:out.fragments,truncated:out.truncated,
+  candidateCells:out.candidateCells,filledCells:out.filledCells,stoneFilledCells:out.stoneFilledCells,mortarSurfaceCells:out.mortarSurfaceCells,residualFreeVolume:out.residualFreeVolume,stoneCoverage:out.candidateCells?out.stoneFilledCells/out.candidateCells:0,joints:out.joints,fragments:out.fragments,truncated:out.truncated,
  };
 }
