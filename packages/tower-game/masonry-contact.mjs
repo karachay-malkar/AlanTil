@@ -124,8 +124,13 @@ export function refineContactMesh(mesh,block,joints,{maxPasses=4,maxTriangles=12
    if(marked.has(key(b,c)))polygon.push(midpoint(b,c));
    polygon.push(c);
    if(marked.has(key(c,a)))polygon.push(midpoint(c,a));
-   // Fan triangulation, in the same winding orientation as original.
-   for(let j=1;j<polygon.length-1;j++)next.push(polygon[0],polygon[j],polygon[j+1]);
+   if(polygon.length===3){next.push(a,b,c);continue;}
+   const centroid=p.length/3;
+   for(let k=0;k<3;k++){
+    p.push((p[a*3+k]+p[b*3+k]+p[c*3+k])/3);
+    colors.push((colors[a*3+k]+colors[b*3+k]+colors[c*3+k])/3);
+   }
+   for(let j=0;j<polygon.length;j++)next.push(centroid,polygon[j],polygon[(j+1)%polygon.length]);
   }
   if(next.length/3>maxTriangles)break;
   faces=next;
