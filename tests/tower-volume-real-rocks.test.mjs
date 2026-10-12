@@ -50,7 +50,7 @@ test('stacked stones acquire a new horizontal joint with hidden solid mortar',()
  const wall=[b('lower',0,0,0),b('upper',0,2,0,'medium',1)];
  const out=packMasonryVolume(wall,profiles,{spacing:.12,maxTriangles:90000});
  assert.equal(out.joints,1);
- assert.ok(out.mortarPhysicalVolume>0,'new vertical contact must fill its internal core');
+ assert.ok(out.mortarPhysicalVolume>0,'horizontal diagnostic '+JSON.stringify({free:out.candidateFreeVolume,rock:out.stonePhysicalVolume,mortar:out.mortarPhysicalVolume,wedges:out.wedgePhysicalVolume,coverage:out.totalCoverage,truncated:out.truncated}));
  assert.ok(out.wedgePhysicalVolume>0,'outer band receives physical stone clippings');
  assert.ok(out.totalCoverage>=.90);
  assert.equal(out.mortarForbiddenVolume,0);
@@ -61,6 +61,6 @@ test('new upper stone retains the existing side joint and adds another solid sea
  const before=packMasonryVolume(side,profiles,{spacing:.12,maxTriangles:90000});
  const after=packMasonryVolume([...side,b('upper',0,2,0)],profiles,{spacing:.12,maxTriangles:90000});
  assert.ok(after.joints>before.joints);
- assert.ok(after.mortarPhysicalVolume>before.mortarPhysicalVolume);
+ assert.ok(after.mortarPhysicalVolume>before.mortarPhysicalVolume,'corner diagnostic '+JSON.stringify({before:before.candidateFreeVolume,after:after.candidateFreeVolume,rock:after.stonePhysicalVolume,mortar:after.mortarPhysicalVolume,joints:after.joints}));
  assert.ok(after.totalCoverage>=.90);
 });
