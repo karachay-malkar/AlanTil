@@ -5,11 +5,71 @@
  */
 const distance2=(p,a,b)=>{let s=0;for(let k=0;k<3;k++)s+=(p[a*3+k]-p[b*3+k])**2;return s;};
 const warp=(v,strength)=>{const r=Math.min(1,Math.abs(v)*2);return Math.sign(v)*.5*(r+strength*r*(1-r));};
+/** Seal source GLB open edge loops before subdivision. Faces follow the
+ * authored silhouette and use reverse boundary winding, not replacement boxes. */
+export function sealAuthoredRockMesh(mesh){
+ const positions=Array.from(mesh.positions),colors=Array.from(mesh.colors),faces=Array.from(mesh.indices);
+ const directed=new Map();
+ for(let i=0;i<faces.length;i+=3){
+  const a=faces[i],b=faces[i+1],c=faces[i+2];
+  for(const [u,v]of [[a,b],[b,c],[c,a]]){
+   const key=u<v?u+'/'+v:v+'/'+u;
+   if(!directed.has(key))directed.set(key,[]);
+   directed.get(key).push([u,v]);
+  }
+ }
+ const boundary=[...directed.values()].filter(edges=>edges.length===1).map(edges=>edges[0]);
+ const next=new Map();for(const [a,b]of boundary){
+  if(!next.has(a))next.set(a,[]);
+  next.get(a).push(b);
+ }
+ const visited=new Set(),key=(a,b)=>a+'>'+b;
+ const distance=(from,target)=>{
+  if(from===target)return 0;
+  const queue=[[from,0]],seen=new Set([from]);
+  while(queue.length){
+   const [u,steps]=queue.shift();
+   for(const v of next.get(u)||[]){
+    if(visited.has(key(u,v)))continue;
+    if(v===target)return steps+1;
+    if(!seen.has(v)){seen.add(v);queue.push([v,steps+1]);}
+   }
+  }
+  return Infinity;
+ };
+ for(const [start,first]of boundary){
+  if(visited.has(key(start,first)))continue;
+  const loop=[];let point=start,following=first;
+  for(let steps=0;steps<=boundary.length;steps++){
+   if(visited.has(key(point,following)))break;
+   visited.add(key(point,following));loop.push(point);point=following;
+   if(point===start)break;
+   const options=(next.get(point)||[]).filter(v=>!visited.has(key(point,v)));
+   if(!options.length)break;
+   options.sort((a,b)=>distance(a,start)-distance(b,start)||a-b);
+   following=options[0];
+  }
+  if(point!==start||loop.length<3)continue;
+  const n=positions.length/3,center=[0,0,0],shade=[0,0,0];
+  for(const id of loop)for(let k=0;k<3;k++){
+   center[k]+=positions[id*3+k]/loop.length;
+   shade[k]+=colors[id*3+k]/loop.length;
+  }
+  positions.push(...center);colors.push(...shade);
+  for(let i=0;i<loop.length;i++){
+   const u=loop[i],v=loop[(i+1)%loop.length];
+   faces.push(v,u,n);
+  }
+ }
+ const Index=positions.length/3<65536?Uint16Array:Uint32Array;
+ return {positions:Float32Array.from(positions),colors:Float32Array.from(colors),indices:Index.from(faces)};
+}
 export function adaptRockMesh(mesh,{strength=.16,maxEdge=.14,relief=.022,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
  if(!mesh?.positions||!mesh.indices||!mesh.colors||mesh.positions.length!==mesh.colors.length||mesh.positions.length%3||mesh.indices.length%3)throw new TypeError('Invalid authored mesh');
  if(!Number.isFinite(strength)||strength<0||strength>=1||!Number.isFinite(maxEdge)||maxEdge<=0)throw new RangeError('Invalid contact warp');
  if(!Number.isFinite(relief)||relief<0||relief>.06)throw new RangeError('Invalid stone relief');
- const p=Array.from(mesh.positions),colors=Array.from(mesh.colors),sourceVertexCount=mesh.positions.length/3,limits=Array.from({length:3},(_,axis)=>{
+ const repaired=subdivide?sealAuthoredRockMesh(mesh):mesh;
+ const p=Array.from(repaired.positions),colors=Array.from(repaired.colors),sourceVertexCount=repaired.positions.length/3,limits=Array.from({length:3},(_,axis)=>{
   let lo=Infinity,hi=-Infinity;for(let i=axis;i<p.length;i+=3){lo=Math.min(lo,p[i]);hi=Math.max(hi,p[i]);}
   if(hi-lo<.0001)throw new RangeError('Degenerate source rock axis');
   return [lo,hi];
@@ -20,7 +80,7 @@ export function adaptRockMesh(mesh,{strength=.16,maxEdge=.14,relief=.022,subdivi
   const [lo,hi]=limits[i%3];
   p[i]=warp((p[i]-lo)/(hi-lo)-.5,strength);
  }
- let faces=Array.from(mesh.indices);
+ let faces=Array.from(repaired.indices);
  if(subdivide)for(let pass=0;pass<maxPasses;pass++){
   let oversized=false;const mid=new Map(),next=[];
   const midpoint=(a,b)=>{
