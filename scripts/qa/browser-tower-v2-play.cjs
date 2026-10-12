@@ -60,11 +60,55 @@ fs.mkdirSync(output,{recursive:true});
   assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('v2-test')).elements.length),1);
   assert.equal(await page.evaluate(()=>Boolean(globalThis.__MUTATED)),false);
   await page.screenshot({path:path.join(output,'tower-v2-play-1200.png')});
+  // Reload a server-shaped V2 snapshot with actual side-by-side authored
+  // stones. Worker must fill only their real measured gap using source pebbles.
+  await page.evaluate(()=>{
+   const state=JSON.parse(sessionStorage.getItem('v2-test'));
+   state.elements=[
+    {id:'qa-real-stone-a',type:'medium',x:20,y:0,z:20,sx:2,sy:1,sz:1,rotation:0,variant:0,paidCurrency:'silver',paidAmount:4},
+    {id:'qa-real-stone-b',type:'medium',x:22.1,y:0,z:20,sx:2,sy:1,sz:1,rotation:0,variant:0,paidCurrency:'silver',paidAmount:4}
+   ];
+   state.revision=9;state.silver=92;
+   sessionStorage.setItem('v2-test',JSON.stringify(state));
+   document.querySelector('[data-refresh]').click();
+  });
+  await page.waitForFunction(()=>{const el=document.querySelector('.towerCanvas');return el?.dataset.masonryReady==='true'&&Number(el.dataset.masonryFragments)>0&&Number(el.dataset.masonryFittedVertices)>0;},{timeout:20000});
+  const quality=await page.locator('.towerCanvas').evaluate(el=>({
+   sourceOnly:el.dataset.masonrySourceOnly,
+   fragments:Number(el.dataset.masonryFragments),
+   fittedVertices:Number(el.dataset.masonryFittedVertices),
+   windingRepaired:Number(el.dataset.repairedWinding),
+   mortarVolume:Number(el.dataset.masonryMortarVolume),
+   gapJoints:Number(el.dataset.masonryJoints)
+  }));
+  assert.equal(quality.sourceOnly,'true','Only authored source rocks may fill V2 gaps');
+  assert(quality.fragments>0&&quality.gapJoints>0);
+  assert(quality.fittedVertices>0,'Measured neighboring source stones should adapt');
+  assert.equal(quality.mortarVolume,0,'No procedural mortar in V2');
+  assert.equal(quality.windingRepaired,3,'Three long rock variants must have repaired display winding');
+  await page.screenshot({path:path.join(output,'tower-v2-authored-joint-desktop.png')});
   await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(500);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.screenshot({path:path.join(output,'tower-v2-play-mobile390.png')});
+  await page.screenshot({path:path.join(output,'tower-v2-authored-joint-mobile390.png')});
+  // Mobile heavy saved snapshot: 50 genuine sourced rock meshes, no invented
+  // filler where pairs are physically distant. This is render QA, not a save.
+  await page.evaluate(()=>{
+   const state=JSON.parse(sessionStorage.getItem('v2-test'));
+   state.elements=Array.from({length:50},(_,i)=>({
+    id:'test-stone-'+i,type:'medium',x:2+(i%7)*7,y:0,z:2+Math.floor(i/7)*7,
+    sx:2,sy:1,sz:1,rotation:0,variant:i%5,paidCurrency:'silver',paidAmount:4
+   }));state.revision=51;state.silver=100;
+   sessionStorage.setItem('v2-test',JSON.stringify(state));
+   document.querySelector('[data-refresh]').click();
+  });
+  await page.waitForFunction(()=>{
+   const el=document.querySelector('.towerCanvas');
+   return el?.dataset.masonryReady==='true'&&el?.dataset.masonrySourceOnly==='true'&&el?.dataset.masonryFragments==='0';
+  },{timeout:30000});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.screenshot({path:path.join(output,'tower-v2-50-stones-mobile390.png')});
   assert.deepEqual(errors,[],'No JS exceptions');
-  console.log('TOWER_V2_PLAY_BROWSER_QA',JSON.stringify(info));
+  console.log('TOWER_V2_PLAY_BROWSER_QA',JSON.stringify({...info,quality}));
  }finally{await browser.close();server.kill();}
 })().catch(e=>{console.error(e);process.exitCode=1});

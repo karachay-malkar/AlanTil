@@ -1,7 +1,7 @@
 name: Tower V2 server authority
 on:
   push:
-    branches: ["17.1-stage4-integration", "17.1-stage4-access-qa", "17.1"]
+    branches: ["17.1-stage4-integration", "17.1-stage4-access-qa", "17.1-stage5-masonry", "17.1"]
     paths:
       - 'supabase/migrations/*tower_v2*.sql'
       - 'packages/tower-game/**'
@@ -10,6 +10,9 @@ on:
       - 'tests/sql/tower_v2*.sql'
       - 'scripts/qa/generate-tower-v2-shapes.mjs'
       - 'scripts/qa/browser-tower-v2-play.cjs'
+      - 'packages/tower-game/masonry-v2-*.mjs'
+      - 'packages/tower-game/rock-display-winding.mjs'
+      - 'src/app/router.js'
       - '.github/workflows/tower-v2-server.yml'
   workflow_dispatch:
 permissions:

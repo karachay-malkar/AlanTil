@@ -1,9 +1,9 @@
 import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js?v=17.1.5';
+import {createTowerScene} from './scene.js?v=17.1.6';
 import {suggestCameraPlacement} from '../../../packages/tower-game/camera-placement.mjs';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {towerModeUrl} from '../../../packages/tower-game/tower-mode-url.mjs';
-import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2} from './repository.js?v=17.1.5';
+import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2} from './repository.js?v=17.1.6';
 let active=null;
 const STONE_KIND={stone:'small',medium:'medium',long:'long',big:'big'};
 const icons={stone:'◆',medium:'▰',long:'▬',big:'⬟',beam:'╱',deck:'▤',window:'▣',door:'▥',ladder:'☷',roof:'⌂'};
@@ -267,7 +267,7 @@ export async function mount(context,params={}){
  if(s.v2Enabled){
   root.querySelectorAll('.towerPosition input').forEach(input=>{input.step='0.0001';input.min='-8';input.disabled=true;});
   try{
-   s.v2Worker=new Worker(new URL('./stone-placement-v2-worker.js?v=17.1.5',import.meta.url),{type:'module'});
+   s.v2Worker=new Worker(new URL('./stone-placement-v2-worker.js?v=17.1.6',import.meta.url),{type:'module'});
    s.v2Worker.onmessage=({data})=>{
     s.v2Busy=false;
     if(s.disposed)return;

@@ -1,16 +1,19 @@
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {buildStoneProfiles} from '../../../packages/tower-game/masonry-geometry.mjs';
 import {packMasonryVolume} from '../../../packages/tower-game/masonry-packing.mjs';
+import {packV2AuthoredInfill} from '../../../packages/tower-game/masonry-v2-authored.mjs';
 
 // Created once; reuse geometry profiles and unchanged joint meshes across revisions.
 const profiles=buildStoneProfiles(ROCK_PACK);
 const cache=new Map();
 
 self.onmessage=({data})=>{
- const {generation,blocks,layer,mobile}=data;
+ const {generation,blocks,layer,mobile,mode}=data;
  try{
   const visible=layer===null?blocks:blocks.filter(b=>b.y<=layer);
-  const result=packMasonryVolume(visible,profiles,{
+  const result=mode==='v2'?packV2AuthoredInfill(visible,{
+   maxStones:mobile?36:72,maxJoints:mobile?90:160,steps:mobile?7:9
+  }):packMasonryVolume(visible,profiles,{
    cache,spacing:.12,maxTriangles:mobile?90000:200000,
   });
   self.postMessage({generation,result},[

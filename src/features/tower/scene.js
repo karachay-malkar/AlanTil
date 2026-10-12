@@ -2,6 +2,9 @@ import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
 import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/masonry-contact.mjs';
 import {worldDimensions} from '../../../packages/tower-game/core.mjs';
 import {adaptRockMesh} from '../../../packages/tower-game/rock-adaptation.mjs';
+import {repairRockDisplayWinding} from '../../../packages/tower-game/rock-display-winding.mjs';
+import {fitV2DisplayMesh} from '../../../packages/tower-game/masonry-v2-fit.mjs';
+import {bodyForTowerBlock} from '../../../packages/tower-game/stone-mesh-adapter.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
@@ -76,7 +79,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const box=keepG(new THREE.BoxGeometry(1,1,1));
  const timberLog=keepG(new THREE.CylinderGeometry(.32,.35,1,9));timberLog.rotateZ(-Math.PI/2);
  const rail=keepG(new THREE.CylinderGeometry(.022,.027,1,7));
- const stoneMaterial=keepM(new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.96,metalness:0,vertexColors:true,flatShading:false}));
+ const stoneMaterial=keepM(new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.97,metalness:0,vertexColors:true,flatShading:false,side:THREE.FrontSide}));
  const woodMaterial=keepM(new THREE.MeshStandardMaterial({color:'#6e4c30',roughness:.85}));
  const mortarMaterial=keepM(new THREE.MeshStandardMaterial({color:'#8a8473',roughness:1}));
  const frameStone=keepM(new THREE.MeshStandardMaterial({color:'#938d7d',roughness:1,metalness:0}));
@@ -86,9 +89,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // The 23 repaired meshes come from the supplied FBX/GLB set.
  // They are quantized only for transport; topology and hand-adjusted contours remain intact.
  const stoneTemplates={};
+ let windingRepaired=0;
  for(const [category,entries] of Object.entries(ROCK_PACK)){
   stoneTemplates[category]=entries.map((source,variant)=>{
-   const mesh=adaptRockMesh(originalRockMesh(source,variant));
+   const display=repairRockDisplayWinding(originalRockMesh(source,variant));
+   const mesh=adaptRockMesh(display);
+   if(display.displayWinding.reversed)windingRepaired++;
    const geometry=keepG(new THREE.BufferGeometry());
    geometry.setAttribute('position',new THREE.BufferAttribute(mesh.positions,3));
    // Incoming sRGB palette needs conversion to linear before vertex color lighting.
@@ -104,6 +110,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    return {g:geometry,m:stoneMaterial,variant,source:mesh};
   });
  }
+ container.dataset.repairedWinding=String(windingRepaired);
  const woodMap=await texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_diff_1k.jpg',true);if(woodMap){woodMaterial.map=woodMap;woodMaterial.color.set('#a99a85');woodMaterial.needsUpdate=true;}
  const [woodNormal,woodArm]=await Promise.all([texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_nor_gl_1k.jpg'),texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_arm_1k.jpg')]);if(woodNormal){woodMaterial.normalMap=woodNormal;woodMaterial.normalScale.set(.45,.45);}if(woodArm)woodMaterial.roughnessMap=woodArm;woodMaterial.needsUpdate=true;
  let blocks=[],layer=null,tool='place',disposed=false,groups=[],pickables=[];
@@ -215,7 +222,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(!positions?.length||positions.length!==colors?.length)continue;
    const geometry=new THREE.BufferGeometry();
    const scaled=new Float32Array(positions.length);
-   for(let i=0;i<positions.length;i++)scaled[i]=positions[i]*CELL;
+   const units=data.unit==='meters'?1:CELL;
+   for(let i=0;i<positions.length;i++)scaled[i]=positions[i]*units;
    geometry.setAttribute('position',new THREE.BufferAttribute(scaled,3));
    geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
    geometry.computeVertexNormals();geometry.computeBoundingSphere();
@@ -229,6 +237,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    content.add(mesh);masonryMeshes.push(mesh);
   }
   container.dataset.masonryReady='true';
+  container.dataset.masonrySourceOnly=String(Boolean(data.sourceOnly));
+  container.dataset.masonryJoints=String(data.joints||0);
   container.dataset.masonryCoverage=data.coverageComplete&&data.candidateFreeVolume?String((100*(data.totalCoverage||0)).toFixed(1)):'n/a';
   container.dataset.masonryStoneCoverage=data.candidateFreeVolume?String((100*(data.stoneCoverage||0)).toFixed(1)):'n/a';
   container.dataset.masonryTotalCoverage=data.candidateFreeVolume?String((100*(data.totalCoverage||0)).toFixed(1)):'n/a';
@@ -245,12 +255,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function rebuildMasonry(){
   const generation=++masonryGeneration;
   clearMasonry();delete container.dataset.masonryReady;
-  if(enableV2Aim||!masonryWorker||blocks.length<2)return;
-  masonryWorker.postMessage({generation,blocks,layer,mobile:masonryMobile});
+  if(!masonryWorker||blocks.length<2)return;
+  masonryWorker.postMessage({generation,blocks,layer,mobile:masonryMobile,mode:enableV2Aim?'v2':'classic'});
  }
  if(typeof Worker!=='undefined'){
   try{
-   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.1.5',import.meta.url),{type:'module'});
+   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.1.6',import.meta.url),{type:'module'});
    masonryWorker.onmessage=({data})=>{
     if(disposed||data.generation!==masonryGeneration)return;
     if(data.error){console.warn('Masonry geometry:',data.error);return;}
@@ -265,14 +275,35 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   for(const instance of groups){content.remove(instance);instance.dispose?.();}
   groups=[];pickables=[];
   for(const g of contactGeometries.splice(0))g.dispose();
-  const contactMap=mapContactJoints(blocks);
+  const contactMap=enableV2Aim?new Map():mapContactJoints(blocks);
+  const v2Fits=new Map();let fittedVertices=0;
+  if(enableV2Aim&&blocks.length>1){
+   // Display-only 20mm contact warp. All collision and persistence data stay
+   // canonical; never feed fitted vertices back into placements or Supabase.
+   const stones=blocks.filter(b=>CATALOG_STONES.has(b.type));
+   const bodies=[];
+   for(const b of stones){
+    const type=stoneCategory(b.type),source=ROCK_PACK[type]?.[b.variant||0];
+    if(source)try{bodies.push({block:b,body:bodyForTowerBlock(originalRockMesh(source,b.variant||0),b)});}catch{}
+   }
+   for(const {block,body} of bodies){
+    const others=bodies.filter(entry=>entry.block.id!==block.id&&[0,1,2].every(axis=>
+     entry.body.bbox.max[axis]+.15>=body.bbox.min[axis]&&entry.body.bbox.min[axis]-.15<=body.bbox.max[axis])).map(entry=>entry.body);
+    if(!others.length)continue;
+    const mesh=stoneTemplates[stoneCategory(block.type)]?.[block.variant||0]?.source;
+    if(!mesh)continue;
+    const fit=fitV2DisplayMesh(mesh,block,body,others);
+    if(fit.movedVertices){v2Fits.set(block.id,fit);fittedVertices+=fit.movedVertices;}
+   }
+  }
+  container.dataset.masonryFittedVertices=String(fittedVertices);
   const buckets=new Map();
   for(const block of blocks){
    if(layer!==null&&block.y>layer)continue;
    const stone=CATALOG_STONES.has(block.type);
    const count=stoneTemplates[stoneCategory(block.type)]?.length||1;
    const variant=((block.variant||0)%count+count)%count;
-   const key=stone?`stone:${block.type}:${variant}${contactMap.has(block.id)?':contact:'+block.id:''}`:block.type;
+   const key=stone?`stone:${block.type}:${variant}${contactMap.has(block.id)?':contact:'+block.id:''}${v2Fits.has(block.id)?':v2fit:'+block.id:''}`:block.type;
    if(!buckets.has(key))buckets.set(key,[]);
    buckets.get(key).push(block);
   }
@@ -281,6 +312,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const type=stone?key.split(':')[1]:key;
    const template=stone?stoneTemplates[stoneCategory(type)]?.[Number(key.split(':')[2])]:null;
    let body=template?.g||box;
+   if(stone&&key.includes(':v2fit:')&&template?.source){
+    body=template.g.clone();
+    body.setAttribute('position',new THREE.BufferAttribute(v2Fits.get(list[0].id).positions,3));
+    body.computeVertexNormals();body.computeBoundingSphere();
+    contactGeometries.push(body);
+   }
    if(stone&&key.includes(':contact:')&&template?.source){
     const contactBlock=list[0],reshaped=deformContactMesh(template.source,contactBlock,contactMap.get(contactBlock.id));
     body=template.g.clone();

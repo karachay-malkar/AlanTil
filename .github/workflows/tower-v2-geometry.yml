@@ -1,9 +1,13 @@
 name: Tower V2 experimental geometry
 on:
   push:
-    branches: ['17.1', '17.1-stage3-verification', '17.1-stage4-access-qa']
+    branches: ['17.1', '17.1-stage3-verification', '17.1-stage4-access-qa', '17.1-stage5-masonry']
     paths:
       - 'packages/tower-game/stone-*v2.mjs'
+      - 'packages/tower-game/masonry-v2-*.mjs'
+      - 'packages/tower-game/rock-display-winding.mjs'
+      - 'src/app/router.js'
+      - 'src/shared/styles/lazy/tower.css'
       - 'packages/tower-game/stone-mesh-adapter.mjs'
       - 'packages/tower-game/tower-v2-proposals.mjs'
       - 'src/features/tower/**'
