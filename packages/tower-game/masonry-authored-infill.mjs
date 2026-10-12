@@ -246,7 +246,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   });
   const mortar=buildCoreMortar(g,coverage,{
    isSolidAt,maxTriangles:Math.max(0,maxTriangles-out.stonePositions.length/9),
-   subdivisions:sampleAxis,rockPalette,rockContours:smallMeshes.map(mesh=>mesh.positions),
+   subdivisions:sampleAxis,rockPalette,rockContours:smallMeshes.map(mesh=>mesh.positions),rockMeshes:smallMeshes,
   });
   for(const v of mortar.wedgePositions)out.stonePositions.push(v);
   for(const v of mortar.wedgeColors)out.stoneColors.push(v);
