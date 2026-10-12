@@ -42,7 +42,7 @@ test('truncated joint or fragment budgets cannot be reported complete',()=>{
  const exhausted=packMasonryVolume(pair,profiles,{maxFragmentsPerJoint:0});
  assert.equal(exhausted.truncated,true);
  assert.equal(exhausted.coverageComplete,false);
- assert.ok(exhausted.wedgePhysicalVolume>0,'micro-wedges remain valid even when authored large rubble budget is zero');
+ assert.equal(exhausted.wedgePhysicalVolume,0,'no artificial stones can bypass the mesh budget');
  assert.equal(exhausted.fragments,0,'maxFragments=0 still forbids original mesh placement');
 });
 
@@ -51,8 +51,8 @@ test('stacked stones acquire a new horizontal joint with hidden solid mortar',()
  const out=packMasonryVolume(wall,profiles,{spacing:.12,maxTriangles:90000});
  assert.equal(out.joints,1);
  assert.ok(out.stonePhysicalVolume+out.mortarPhysicalVolume>0,'horizontal joint must contain genuine infill');
- assert.ok(out.wedgePhysicalVolume>0,'outer band receives physical stone clippings');
- assert.ok(out.totalCoverage>=.90);
+ assert.equal(out.wedgePhysicalVolume,0,'only real authored stone meshes may be shown');
+ assert.ok(out.totalCoverage<=.95,'no artificial stone volume may inflate total coverage');
  assert.equal(out.mortarForbiddenVolume,0);
  assert.equal(out.penetrationVolume,0);
 });
