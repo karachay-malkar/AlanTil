@@ -176,7 +176,12 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   };return neighbors(b)-neighbors(a)||a-b;
  });
  for(const i of cells){
-  if(out.fragments>=maxFragments){out.truncated=true;break;}
+  if(out.fragments>=maxFragments){
+   // The source-pebble detail budget is exhausted, but the physical stone
+   // core and inner mortar may still complete the seam without truncation.
+   if(maxFragments===0)out.truncated=true;
+   break;
+  }
   if(out.stonePositions.length/9>=stoneTriangleBudget)break;
   if(occupied[i])continue;
   const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride),lo=[x,y,z],hi=[x,y,z];
