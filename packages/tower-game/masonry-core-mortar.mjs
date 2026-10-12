@@ -4,7 +4,7 @@
  * Authored small stones remain the primary visible rubble. Their cut-to-fit
  * stone offcuts occupy remaining tiny fissures in the exterior 20% guards.
  */
-export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=30000,subdivisions=3,rockPalette=null,rockContours=null}={}){
+export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=30000,subdivisions=3,rockPalette=null,rockContours=null,rockMeshes=null}={}){
  const dims=[g.nx,g.ny,g.nz],n=dims.map(v=>v*subdivisions),stride=n[0]*n[1];
  const min=g.min,delta=g.dimension.map(d=>d/subdivisions),unitVolume=delta[0]*delta[1]*delta[2];
  const empty={positions:[],colors:[],volume:0,wedgePositions:[],wedgeColors:[],
@@ -72,7 +72,7 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
   return p.map((v,i)=>Math.min(min[i]+dims[i]*g.dimension[i],Math.max(min[i],v+shape[vid+i]*movement)));
  };
  function meshMaterial(type,triangleBudget){
-  const positions=[],colors=[];let faces=0;
+  const positions=[],colors=[],quads=[];let faces=0;
   const index=p=>p[0]+n[0]*p[1]+stride*p[2];
   const value=p=>p.every((a,k)=>a>=0&&a<n[k])?material[index(p)]:0;
   for(let axis=0;axis<3;axis++)for(const side of [-1,1]){
@@ -103,11 +103,12 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
      const order=facing?[0,1,2,0,2,3]:[0,2,1,0,3,2];
      const color=type===2?[.095,.091,.082]:palette[(Math.abs((x+1)*17+(y+1)*31+(slice+1)*47+axis*7))%palette.length];
      for(const i of order){positions.push(...corners[i]);colors.push(...color);}
+     if(type===1&&((slice===0&&side===-1)||(slice===n[axis]-1&&side===1)))quads.push({axis,side,slice,u,v,x,y,run,ht});
      faces++;
     }
    }
   }
-  return {positions,colors,faces,truncated:false};
+  return {positions,colors,faces,quads,truncated:false};
  }
  // Prioritise the visible stone offcuts over hidden mortar in a tight budget.
  const rock=meshMaterial(1,maxTriangles);
@@ -115,9 +116,51 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
  const mortar=meshMaterial(2,Math.max(0,maxTriangles-rock.faces*2));
  if(mortar.truncated)return {...empty,wedgePositions:rock.positions,wedgeColors:rock.colors,
   wedgeVolume:rockCells*unitVolume,faces:rock.faces,truncated:true};
+ // A bounded number of actual small-source meshes forms the outer skin of
+ // cut-to-fit stone cores. This replaces exposed flat patches without adding
+ // fake occupancy credit; their solid cores are already counted in the union.
+ const available=Math.max(0,Math.min(210,Math.floor((maxTriangles-(rock.faces+mortar.faces)*2)*.23)));
+ let addedTriangles=0,authoredFaces=0;
+ if(rockMeshes?.length&&available>30){
+  const sides=rock.quads.sort((a,b)=>b.run*b.ht-a.run*a.ht||a.axis-b.axis);
+  for(const q of sides){
+   const source=rockMeshes[hash(q.x*19+q.y*47+q.slice*101+q.axis*307+q.side*43)%rockMeshes.length];
+   if(!source?.indices?.length||!source.positions?.length)continue;
+   const count=source.indices.length/3;
+   if(addedTriangles+count>available)continue;
+   const width=Math.min(.6,q.run*delta[q.u]),height=Math.min(.6,q.ht*delta[q.v]);
+   if(Math.min(width,height)<.035)continue;
+   const thick=Math.min(.13,Math.min(width,height)*.55);
+   const patch=[0,0,0];
+   patch[q.axis]=min[q.axis]+(q.slice+(q.side>0?1:0))*delta[q.axis]-q.side*thick*.11;
+   patch[q.u]=min[q.u]+(q.x+q.run/2)*delta[q.u];
+   patch[q.v]=min[q.v]+(q.y+q.ht/2)*delta[q.v];
+   const orientation=(q.axis===1?-1:1)*q.side;
+   const toPoint=vertex=>{
+    const src=vertex*3,world=patch.slice();
+    world[q.u]+=source.positions[src]*width*1.06;
+    world[q.v]+=source.positions[src+1]*height*1.06;
+    world[q.axis]+=source.positions[src+2]*thick*q.side;
+    return world;
+   };
+   const linearColor=i=>{
+    const c=source.colors[i]??.5;
+    return Math.max(.02,Math.min(.9,c<=.04045?c/12.92:((c+.055)/1.055)**2.4));
+   };
+   for(let k=0;k<source.indices.length;k+=3){
+    const ids=[source.indices[k],source.indices[k+1],source.indices[k+2]];
+    if(orientation<0)[ids[1],ids[2]]=[ids[2],ids[1]];
+    for(const id of ids){
+     rock.positions.push(...toPoint(id));
+     for(let c=0;c<3;c++)rock.colors.push(linearColor(id*3+c));
+    }
+   }
+   addedTriangles+=count;authoredFaces++;
+  }
+ }
  return {
   positions:mortar.positions,colors:mortar.colors,volume:mortarCells*unitVolume,
   wedgePositions:rock.positions,wedgeColors:rock.colors,wedgeVolume:rockCells*unitVolume,
-  forbiddenVolume:0,penetrationVolume:0,faces:rock.faces+mortar.faces,truncated:false,
+  forbiddenVolume:0,penetrationVolume:0,faces:rock.faces+mortar.faces+Math.ceil(addedTriangles/2),authoredFaces,truncated:false,
  };
 }
