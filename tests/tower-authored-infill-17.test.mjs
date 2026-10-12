@@ -68,3 +68,32 @@ test('subvoxel volume measurements separate stone, residual and penetration',()=
  assert.equal(result.mortarPhysicalVolume,0,'surface-only dark backing must never count as solid mortar');
  assert.equal(result.penetrationVolume,0);
 });
+
+test('real 3D mortar occupies only the inner 60% of transverse seam dimensions',()=>{
+ const g=grid(10,15,15);
+ g.seamAxis=0;
+ g.exteriorFaces=[[1,0],[1,1],[2,0],[2,1]];
+ const result=fillAuthoredCavity(g,models,{maxFragments:0,maxTriangles:40000});
+ assert.ok(result.mortarPhysicalVolume>0,'closed volumetric mortar, not a flat surface');
+ assert.equal(result.mortarForbiddenVolume,0,'no mortar in outside 20% strips');
+ assert.equal(result.mortarPenetrationVolume,0);
+ assert.ok(Math.abs(result.candidateFreeVolume-result.stonePhysicalVolume-result.mortarPhysicalVolume-result.residualFreeVolume)<1e-8);
+ assert.equal(result.mortarPositions.length,result.mortarColors.length);
+ assert.ok(result.mortarPositions.length>0);
+ // Every emitted mortar vertex must stay fully inside the 20%-protected exterior.
+ const lo=[g.min[1]+g.ny*g.dimension[1]*.2,g.min[2]+g.nz*g.dimension[2]*.2];
+ const hi=[g.min[1]+g.ny*g.dimension[1]*.8,g.min[2]+g.nz*g.dimension[2]*.8];
+ for(let i=0;i<result.mortarPositions.length;i+=3){
+  assert.ok(result.mortarPositions[i+1]>=lo[0]-1e-7&&result.mortarPositions[i+1]<=hi[0]+1e-7);
+  assert.ok(result.mortarPositions[i+2]>=lo[1]-1e-7&&result.mortarPositions[i+2]<=hi[1]+1e-7);
+ }
+});
+test('exterior guard bands overlap at corners and mortar cannot leak into them',()=>{
+ const g=grid(8,4,4);
+ g.seamAxis=0;
+ g.exteriorFaces=[[1,0],[1,1],[2,0],[2,1]];
+ const result=fillAuthoredCavity(g,models,{maxFragments:0,maxTriangles:40000});
+ assert.equal(result.mortarForbiddenVolume,0);
+ assert.ok(result.mortarPhysicalVolume>0);
+ assert.ok(result.mortarPhysicalVolume<result.candidateFreeVolume*.40);
+});
