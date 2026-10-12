@@ -118,7 +118,7 @@ function candidateClear(mesh,lo,hi,min,delta,fit,rotation,isSolidAt){
 }
 /** Occupied stone cells are sampled from real authored meshes; enclosing boxes
  * and flat mortar faces receive NO fictitious stone volume credit. */
-export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangles=95000,isSolidAt=null}={}){
+export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangles=95000,isSolidAt=null,naturalMeshes=null}={}){
  if(!grid||!smallMeshes?.length)throw new TypeError('Cavity mask and small authored meshes required');
  const g=grid,num=g.nx*g.ny*g.nz,mask=g.mask;
  if(num!==mask.length||g.stride!==g.nx*g.ny)throw new RangeError('Invalid cavity grid');
@@ -251,7 +251,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   });
   const mortar=buildCoreMortar(g,coverage,{
    isSolidAt,maxTriangles:Math.max(0,maxTriangles-out.stonePositions.length/9),
-   subdivisions:sampleAxis,rockPalette,rockContours:smallMeshes.map(mesh=>mesh.positions),rockMeshes:smallMeshes,
+   subdivisions:sampleAxis,rockPalette,rockContours:smallMeshes.map(mesh=>mesh.positions),rockMeshes:naturalMeshes||smallMeshes,
   });
   for(const v of mortar.wedgePositions)out.stonePositions.push(v);
   for(const v of mortar.wedgeColors)out.stoneColors.push(v);
