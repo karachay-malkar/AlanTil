@@ -97,7 +97,7 @@ for(const count of [2,5,15,50]){
  await page.mouse.up();
  await page.waitForTimeout(400);
  await page.screenshot({path:path.join(output,'tower-scene-'+count+'-side.png'),fullPage:true});
- await page.locator('[data-layer]').evaluate(input=>{input.value='1';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.locator('[data-layer]').evaluate(input=>{input.value='0';input.dispatchEvent(new Event('input',{bubbles:true}));});
  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.masonryReady==='true',{timeout:60000});
  await page.waitForTimeout(220);
  await page.screenshot({path:path.join(output,'tower-scene-'+count+'-section.png'),fullPage:true});
