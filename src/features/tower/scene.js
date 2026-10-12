@@ -13,7 +13,7 @@ const dimensions=worldDimensions;
 const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 
 /** Local assets only. Coordinates are integer cells with y pointing up. */
-export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{}}={}){
+export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
  const scene=new THREE.Scene(); scene.background=new THREE.Color('#afc6b9');scene.fog=new THREE.Fog('#afc6b9',34,100);
  const geometries=[],materials=[],textures=[];const keepG=g=>(geometries.push(g),g);const keepM=m=>(materials.push(m),m);
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -181,7 +181,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    }
    previewType=key;
   }
-  for(const material of previewMaterials){material.opacity=valid?.43:.24;material.color.set(valid?'#f6f6ec':'#ee8b80');}
+  for(const material of previewMaterials){material.opacity=valid?.43:.24;material.color.set(valid?'#72cf95':'#ee8b80');}
   edges.material.color.set(valid?'#e8f5ec':'#da6254');
   edges.position.set(0,0,0);edges.rotation.set(0,0,0);edges.scale.set(...d.map(v=>v*CELL*1.012));
   if(b.type==='deck')edges.scale.y=.075;
@@ -384,7 +384,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   }
  }const observer=new ResizeObserver(resize);observer.observe(container);resize();
  let flight=null;
- let frame;function animate(time=performance.now()){
+ let frame,lastCameraSuggestion=0;function animate(time=performance.now()){
   if(disposed)return;frame=requestAnimationFrame(animate);
   if(ghostTween){
    const t=reducedMotion?1:Math.min(1,(time-ghostTween.started)/240);
@@ -402,7 +402,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    camera.position.lerpVectors(flight.fromPosition,flight.toPosition,ease);
    if(t>=1)flight=null;
   }
-  controls.update();renderer.render(scene,camera);
+  controls.update();if(tool==='place'&&time-lastCameraSuggestion>200){lastCameraSuggestion=time;const direction=new THREE.Vector3();camera.getWorldDirection(direction);onCameraChange({origin:camera.position.toArray().map(v=>v/CELL),forward:direction.toArray(),target:controls.target.toArray().map(v=>v/CELL)});}renderer.render(scene,camera);
  }animate();container.dataset.ready="true";
  const thumbnailCache=new Map();
  function thumbnail(type,variant=0,dimensions=null){
