@@ -18,6 +18,7 @@ for(const count of [2,5,15,50])for(const maxTriangles of [90000,200000]){
   candidateFreeVolume:Number(r.candidateFreeVolume.toFixed(4)),
   stonePhysicalVolume:Number(r.stonePhysicalVolume.toFixed(4)),
   mortarPhysicalVolume:Number(r.mortarPhysicalVolume.toFixed(4)),
+  wedgePhysicalVolume:Number((r.wedgePhysicalVolume||0).toFixed(4)),
   totalCoveragePercent:Number((100*r.totalCoverage).toFixed(2)),
   mortarForbiddenVolume:Number((r.mortarForbiddenVolume||0).toFixed(6)),
   mortarPenetrationVolume:Number((r.mortarPenetrationVolume||0).toFixed(6)),
