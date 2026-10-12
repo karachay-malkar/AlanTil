@@ -40,7 +40,7 @@ for(const count of [2,5,15,50])for(const maxTriangles of [90000,200000]){
  console.log(JSON.stringify(record));
  const occupied=r.stonePhysicalVolume+r.mortarPhysicalVolume;
  const ratio=r.candidateFreeVolume?occupied/r.candidateFreeVolume:0;
- if(!r.coverageComplete||ratio<.90||r.penetrationVolume>1e-5||r.selfOverlapVolume>1e-5||r.mortarForbiddenVolume>1e-5||r.mortarPenetrationVolume>1e-5)
+ if(!r.coverageComplete||ratio<.90||ratio>.95||r.penetrationVolume>1e-5||r.selfOverlapVolume>1e-5||r.mortarForbiddenVolume>1e-5||r.mortarPenetrationVolume>1e-5)
   incomplete.push(`${count} stones, ${maxTriangles} triangles: filled ${(100*ratio).toFixed(2)}%, complete=${r.coverageComplete}, collisions=${r.penetrationVolume+r.selfOverlapVolume}`);
 }
 if(incomplete.length)throw new Error('Masonry acceptance not met: '+incomplete.join(' | '));
