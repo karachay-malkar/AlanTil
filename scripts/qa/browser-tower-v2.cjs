@@ -20,6 +20,7 @@ fs.mkdirSync(output,{recursive:true});
    export async function loadTower(){return {elements:[],silver:100,gold:10,revision:0}}
    export async function mutateTower(){globalThis.__MUTATED=true;throw Error('V2 preview attempted a mutation')}
    export async function loadTowerV2(){throw Error('V2_PLAY_RPC_USED_IN_READONLY_PREVIEW')}
+   export async function loadTowerV2Geometry(){throw Error('V2_GEOMETRY_RPC_USED_IN_READONLY_PREVIEW')}
    export async function mutateTowerV2(){globalThis.__MUTATED=true;throw Error('V2_PLAY_MUTATION_USED_IN_READONLY_PREVIEW')}
   `}));
   await page.route('**/tower-v2-fixture*',r=>r.fulfill({contentType:'text/html',body:`
