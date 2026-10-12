@@ -1,9 +1,10 @@
 import {bounds} from './core.mjs';
 import {rockContains,rockCategory} from './masonry-geometry.mjs';
 import {originalRockMesh} from './rock-shapes.mjs';
+import {expandInfillRock} from './rock-adaptation.mjs';
 import {fillAuthoredCavity} from './masonry-authored-infill.mjs';
 import {ROCK_PACK} from '../../assets/tower/processed-rocks.mjs';
-const SMALL_ROCKS=Object.freeze(ROCK_PACK.small.map((rock,i)=>originalRockMesh(rock,i)));
+const SMALL_ROCKS=Object.freeze(ROCK_PACK.small.map((rock,i)=>expandInfillRock(originalRockMesh(rock,i))));
 
 const STONES=new Set(['stone','medium','long','big']), OPENINGS=new Set(['door','window']);
 const AXES=['x','y','z'];
