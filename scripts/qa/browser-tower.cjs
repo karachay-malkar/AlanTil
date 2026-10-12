@@ -68,6 +68,15 @@ await page.screenshot({path:path.join(output,'tower-infill-desktop.png'),fullPag
 const masonry=await page.locator('.towerCanvas').evaluate(el=>({coverage:el.dataset.masonryCoverage,fragments:el.dataset.masonryFragments}));
 console.log('INFILL_QA',masonry);
 assert.ok(Number(masonry.fragments)>0,'Real adjacent stones must generate volumetric rubble');
+const physical=await page.locator('.towerCanvas').evaluate(el=>({
+ total:Number(el.dataset.masonryTotalCoverage),stone:Number(el.dataset.masonryStoneCoverage),
+ mortar:Number(el.dataset.masonryMortarVolume),leak:Number(el.dataset.masonryMortarForbiddenVolume),
+ incomplete:el.dataset.masonryTruncated
+}));
+assert.ok(physical.total>=90,'Real WebGL must render at least 90% physical infill');
+assert.ok(physical.stone>0&&physical.mortar>0,'Stone and solid mortar must both be present');
+assert.equal(physical.leak,0,'Mortar forbidden in exterior 20% guard');
+assert.equal(physical.incomplete,'false','Partial joint geometry is not acceptable');
 await page.locator('.towerOptions summary').click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Вся башня'}).click();await page.waitForTimeout(720);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:path.join(output,'tower-built-mobile.png'),fullPage:true});
 for(const width of [320,768,1440]){
  await page.setViewportSize({width,height:844});
