@@ -1,4 +1,5 @@
 import {bounds} from './core.mjs';
+import {mapContactJoints} from './masonry-contact.mjs';
 import {rockContains,rockCategory} from './masonry-geometry.mjs';
 import {originalRockMesh} from './rock-shapes.mjs';
 import {expandInfillRock} from './rock-adaptation.mjs';
@@ -53,7 +54,7 @@ export function findMasonryJoints(blocks){
  return joints.sort((a,b)=>a.key.localeCompare(b.key));
 }
 
-function cavity(joint,profiles,openings,spacing,otherSolids=[]){
+function cavity(joint,profiles,openings,spacing,otherSolids=[],contactMap=null){
  const {axis,plane,ranges,transverse,a,b}=joint;
  const min=[0,0,0],max=[0,0,0];
  min[axis]=plane-.7;max[axis]=plane+.7;
@@ -65,9 +66,9 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
  const left=bounds(a),right=bounds(b),lowY=Math.max(left.y0,right.y0),highY=Math.min(left.y1,right.y1);
  for(let z=0;z<nz;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const i=x+nx*y+stride*z,p=[x,y,z].map((v,k)=>min[k]+(v+.5)*dimension[k]);
-  aSolid[i]=+rockContains(a,p,profiles);bSolid[i]=+rockContains(b,p,profiles);
+  aSolid[i]=+rockContains(a,p,profiles,.02,contactMap?.get(a.id));bSolid[i]=+rockContains(b,p,profiles,.02,contactMap?.get(b.id));
   blocked[i]=+(axis!==1&&(p[1]<lowY+.18||p[1]>highY-.18)||openings.some(o=>p[0]>=o.x0-.08&&p[0]<=o.x1+.08&&p[1]>=o.y0-.08&&p[1]<=o.y1+.08&&p[2]>=o.z0-.08&&p[2]<=o.z1+.08)
-    ||otherSolids.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles)));
+    ||otherSolids.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,.02,contactMap?.get(o.block.id))));
  }
  function distances(solids){
   const dist=new Uint8Array(count).fill(255),queue=new Int32Array(count);let head=0,tail=0;
@@ -108,6 +109,7 @@ const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColo
 export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=180000,maxJoints=4500,maxFragmentsPerJoint=240,cache=null}={}){
  if(!profiles||!Array.isArray(blocks)||spacing<.08||spacing>.40)return empty();
  const openings=blocks.filter(b=>!STONES.has(b.type)).map(bounds);
+ const contacts=mapContactJoints(blocks);
  const stoneBoxes=blocks.filter(b=>STONES.has(b.type)).map(b=>({block:b,box:bounds(b),signature:signature(b)}));
  const openingSignature=blocks.filter(b=>!STONES.has(b.type)).map(signature).sort().join('/');
  const allJoints=findMasonryJoints(blocks),joints=allJoints.slice(0,maxJoints),out=empty();
@@ -130,11 +132,11 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
   const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing+'|'+jointBudget+'|'+maxFragmentsPerJoint;
   let piece=store.get(key);
   if(!piece){
-   const grid=cavity(joint,profiles,openings,spacing,neighbors);
+   const grid=cavity(joint,profiles,openings,spacing,neighbors,contacts);
    const isSolidAt=p=>{
-    if(rockContains(joint.a,p,profiles,0)||rockContains(joint.b,p,profiles,0))return true;
+    if(rockContains(joint.a,p,profiles,0,contacts.get(joint.a.id))||rockContains(joint.b,p,profiles,0,contacts.get(joint.b.id)))return true;
     if(openings.some(o=>p[0]>=o.x0&&p[0]<=o.x1&&p[1]>=o.y0&&p[1]<=o.y1&&p[2]>=o.z0&&p[2]<=o.z1))return true;
-    return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0));
+    return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0,contacts.get(o.block.id));
    };
    piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(jointBudget,95000),isSolidAt}):{...empty(),truncated:true};
    store.set(key,piece);
