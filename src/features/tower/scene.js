@@ -74,7 +74,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const box=keepG(new THREE.BoxGeometry(1,1,1));
  const timberLog=keepG(new THREE.CylinderGeometry(.32,.35,1,9));timberLog.rotateZ(-Math.PI/2);
  const rail=keepG(new THREE.CylinderGeometry(.022,.027,1,7));
- const stoneMaterial=keepM(new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.96,metalness:0,vertexColors:true,flatShading:true}));
+ const stoneMaterial=keepM(new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.96,metalness:0,vertexColors:true,flatShading:false}));
  const woodMaterial=keepM(new THREE.MeshStandardMaterial({color:'#6e4c30',roughness:.85}));
  const mortarMaterial=keepM(new THREE.MeshStandardMaterial({color:'#8a8473',roughness:1}));
  const frameStone=keepM(new THREE.MeshStandardMaterial({color:'#938d7d',roughness:1,metalness:0}));
@@ -98,8 +98,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    }
    geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
    geometry.setIndex(new THREE.BufferAttribute(mesh.indices,1));
-   const flat=keepG(geometry.toNonIndexed());flat.computeVertexNormals();
-   return {g:flat,m:stoneMaterial,variant};
+   geometry.computeVertexNormals();
+   return {g:geometry,m:stoneMaterial,variant};
   });
  }
  const woodMap=await texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_diff_1k.jpg',true);if(woodMap){woodMaterial.map=woodMap;woodMaterial.color.set('#a99a85');woodMaterial.needsUpdate=true;}
@@ -247,7 +247,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  if(typeof Worker!=='undefined'){
   try{
-   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.11',import.meta.url),{type:'module'});
+   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.12',import.meta.url),{type:'module'});
    masonryWorker.onmessage=({data})=>{
     if(disposed||data.generation!==masonryGeneration)return;
     if(data.error){console.warn('Masonry geometry:',data.error);return;}
