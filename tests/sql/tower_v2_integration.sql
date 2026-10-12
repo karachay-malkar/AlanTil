@@ -110,7 +110,9 @@ begin
   end if;
  end loop;
  if jsonb_array_length(s->'elements')<>50 then raise exception 'FRACTIONAL_50_COUNT_FAILURE';end if;
- if (select count(*) from private.tower_v2_elements where user_id='00000000-0000-0000-0000-000000000003')<>50 then raise exception 'FRACTIONAL_50_DB_FAILURE';end if;
 end $$;
 reset role;
+DO $$begin
+ if (select count(*) from private.tower_v2_elements where user_id='00000000-0000-0000-0000-000000000003')<>50 then raise exception 'FRACTIONAL_50_DB_FAILURE';end if;
+end $$;
 \echo TOWER_V2_50_FRACTIONAL_STONES_OK
