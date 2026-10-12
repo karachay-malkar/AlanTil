@@ -43,9 +43,9 @@ test('catalog uses fixed size presets and only exposes preview-time change-form 
  assert.doesNotMatch(css,/\.towerAxisHandles/);
  assert.match(css,/prefers-reduced-motion/);
 });
-test('tower uses scoped 17.0.11 asset cache without changing app global version',()=>{
+test('tower uses scoped 17.0.12 asset cache without changing app global version',()=>{
  const router=read('src/app/router.js');
- assert.match(router,/TOWER_ASSET_VERSION = "17\.0\.11"/);
+ assert.match(router,/TOWER_ASSET_VERSION = "17\.0\.12"/);
  assert.match(router,/const ASSET_VERSION = "16\.8\.0\.16"/);
  assert.match(read('src/shared/styles/lazy/tower.css'),/tower\.css\?v=17\.0\.11/);
  assert.match(read('src/features/tower/index.js'),/scene\.js\?v=17\.0\.11/);
