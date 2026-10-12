@@ -136,7 +136,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
    const isSolidAt=p=>{
     if(rockContains(joint.a,p,profiles,0,contacts.get(joint.a.id))||rockContains(joint.b,p,profiles,0,contacts.get(joint.b.id)))return true;
     if(openings.some(o=>p[0]>=o.x0&&p[0]<=o.x1&&p[1]>=o.y0&&p[1]<=o.y1&&p[2]>=o.z0&&p[2]<=o.z1))return true;
-    return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0,contacts.get(o.block.id));
+    return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0,contacts.get(o.block.id)));
    };
    piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(jointBudget,95000),isSolidAt}):{...empty(),truncated:true};
    store.set(key,piece);
