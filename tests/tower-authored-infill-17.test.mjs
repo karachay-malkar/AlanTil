@@ -97,3 +97,15 @@ test('exterior guard bands overlap at corners and mortar cannot leak into them',
  assert.ok(result.mortarPhysicalVolume>0);
  assert.ok(result.mortarPhysicalVolume<result.candidateFreeVolume*.40);
 });
+
+test('unfilled outer fifths are fitted with solid stone clippings, never mortar',()=>{
+ const g=grid(7,12,12);
+ g.seamAxis=0;
+ g.exteriorFaces=[[1,0],[1,1],[2,0],[2,1]];
+ const result=fillAuthoredCavity(g,models,{maxTriangles:60000,maxFragments:0});
+ assert.ok(result.wedgePhysicalVolume>0,'the original rock infill must fit thin border cracks');
+ assert.ok(result.stonePhysicalVolume>0);
+ assert.equal(result.mortarForbiddenVolume,0);
+ assert.ok(result.totalCoverage>=.90,'combined solid rock and core mortar should fill 90%');
+ assert.ok(Math.abs(result.stonePhysicalVolume+result.mortarPhysicalVolume+result.residualFreeVolume-result.candidateFreeVolume)<1e-8);
+});
