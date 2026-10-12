@@ -13,7 +13,7 @@ fs.mkdirSync(output,{recursive:true});
  const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  try{
   const page=await browser.newPage({viewport:{width:1200,height:820}});
-  const errors=[],rpc=[];page.on('pageerror',e=>errors.push(e.message));
+  const errors=[],rpc=[],warnings=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(['warning','error'].includes(m.type()))warnings.push(m.text())});
   await page.route('**/src/features/tower/repository.js*',r=>r.fulfill({contentType:'text/javascript',body:`
    export function towerUserId(){return 'fixture-v2-play'}
    export async function loadTower(){throw Error('V1_RPC_USED_IN_V2')}
@@ -72,7 +72,20 @@ fs.mkdirSync(output,{recursive:true});
    sessionStorage.setItem('v2-test',JSON.stringify(state));
    document.querySelector('[data-refresh]').click();
   });
-  await page.waitForFunction(()=>{const el=document.querySelector('.towerCanvas');return el?.dataset.masonryReady==='true'&&Number(el.dataset.masonryFragments)>0&&Number(el.dataset.masonryFittedVertices)>0;},{timeout:20000});
+  try{
+   await page.waitForFunction(()=>{const el=document.querySelector('.towerCanvas');return el?.dataset.masonryReady==='true'&&Number(el.dataset.masonryFragments)>0&&Number(el.dataset.masonryFittedVertices)>0;},null,{timeout:13000});
+  }catch(e){
+   const state=await page.evaluate(()=>({
+    ready:document.querySelector('.towerCanvas')?.dataset.ready,
+    data:{...document.querySelector('.towerCanvas')?.dataset},
+    selected:document.querySelector('.towerSelected')?.textContent,
+    status:document.querySelector('.towerStatus')?.textContent,
+    snapshot:sessionStorage.getItem('v2-test')?.slice(0,800)
+   }));
+   console.error('STAGE5_V2_JOINT_FAILURE',JSON.stringify({state,errors,warnings}));
+   await page.screenshot({path:path.join(output,'tower-v2-play-debug.png')});
+   throw e;
+  }
   const quality=await page.locator('.towerCanvas').evaluate(el=>({
    sourceOnly:el.dataset.masonrySourceOnly,
    fragments:Number(el.dataset.masonryFragments),
