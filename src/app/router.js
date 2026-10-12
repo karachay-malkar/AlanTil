@@ -7,7 +7,7 @@ import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.16";
 
 const DEFAULT_STORY = "roots";
 const ASSET_VERSION = "16.8.0.16";
-const TOWER_ASSET_VERSION = "17.0.15";
+const TOWER_ASSET_VERSION = "17.0.16";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
