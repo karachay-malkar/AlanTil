@@ -19,9 +19,9 @@ test('stone volume is measured independently of dark mortar, never reported as f
  const result=fillAuthoredCavity(grid(7,6,3),models);
  assert.ok(result.candidateCells>=result.stoneFilledCells);
  assert.equal(result.filledCells,result.stoneFilledCells);
- assert.equal(result.stoneCoverage,result.stoneFilledCells/result.candidateCells);
+ assert.ok(Math.abs(result.stoneCoverage-result.stonePhysicalVolume/result.candidateFreeVolume)<1e-9);
  assert.ok(result.residualFreeVolume>=0);
- assert.ok(Math.abs(result.residualFreeVolume-(result.candidateCells-result.stoneFilledCells)*(.12**3))<1e-10);
+ assert.ok(Math.abs(result.residualFreeVolume-(result.candidateFreeVolume-result.stonePhysicalVolume))<1e-9);
  assert.ok(result.mortarSurfaceCells>=0);
 });
 test('excluded opening voxels and empty cavities cannot be purchased or filled',()=>{
