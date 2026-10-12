@@ -6,3 +6,20 @@ function normalize(data){return{...data,elements:decodeTower(data.elements||[]),
 async function rpc(name,args){const client=await getSupabaseClient();const r=await client.rpc(name,args);if(r.error)throw r.error;return normalize(r.data);}
 export async function loadTower(userId=null){return rpc('get_tower_snapshot',{p_user_id:userId});}
 export async function mutateTower(operation){return rpc('mutate_tower',{p_revision:operation.revision,p_operation_id:operation.id,p_action:operation.action,p_element:operation.element||null,p_element_id:operation.elementId||null,p_currency:operation.currency||'silver'});}
+
+// V2 towers have a separate element collection and share the existing wallet
+// and monotonic revision. Never pass V2 coordinates through decodeTower().
+function normalizeV2(data){
+ if(data?.format!==2||!Array.isArray(data.elements))throw new Error('INVALID_V2_SNAPSHOT');
+ return {...data,elements:data.elements,silver:Number(data.silver)||0,gold:Number(data.gold)||0,revision:Number(data.revision)||0};
+}
+async function rpcV2(name,args){
+ const client=await getSupabaseClient();const r=await client.rpc(name,args);
+ if(r.error)throw r.error;return normalizeV2(r.data);
+}
+export async function loadTowerV2(userId=null){return rpcV2('get_tower_v2_snapshot',{p_user_id:userId});}
+export async function mutateTowerV2(operation){return rpcV2('mutate_tower_v2',{
+ p_revision:operation.revision,p_operation_id:operation.id,p_action:operation.action,
+ p_element:operation.element||null,p_element_id:operation.elementId||null,
+ p_currency:operation.currency||'silver'
+});}

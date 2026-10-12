@@ -245,7 +245,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function rebuildMasonry(){
   const generation=++masonryGeneration;
   clearMasonry();delete container.dataset.masonryReady;
-  if(!masonryWorker||blocks.length<2)return;
+  if(enableV2Aim||!masonryWorker||blocks.length<2)return;
   masonryWorker.postMessage({generation,blocks,layer,mobile:masonryMobile});
  }
  if(typeof Worker!=='undefined'){
