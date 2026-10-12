@@ -284,6 +284,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     const contactBlock=list[0],reshaped=deformContactMesh(template.source,contactBlock,contactMap.get(contactBlock.id));
     body=template.g.clone();
     body.setAttribute('position',new THREE.BufferAttribute(reshaped.positions,3));
+    body.setIndex(new THREE.BufferAttribute(reshaped.indices,1));
+    const contactColors=new Float32Array(reshaped.colors.length),contactTint=new THREE.Color();
+    for(let n=0;n<reshaped.colors.length;n+=3){
+     contactTint.setRGB(reshaped.colors[n],reshaped.colors[n+1],reshaped.colors[n+2],THREE.SRGBColorSpace);
+     contactColors[n]=contactTint.r;contactColors[n+1]=contactTint.g;contactColors[n+2]=contactTint.b;
+    }
+    body.setAttribute('color',new THREE.BufferAttribute(contactColors,3));
     body.computeVertexNormals();body.computeBoundingSphere();
     contactGeometries.push(body);
    }
