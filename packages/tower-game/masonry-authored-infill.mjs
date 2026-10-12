@@ -53,15 +53,25 @@ export function authoredContains(fields,p){
 }
 const offset=(g,x,y,z)=>x+g.nx*y+g.stride*z;
 const inGrid=(g,x,y,z)=>x>=0&&x<g.nx&&y>=0&&y<g.ny&&z>=0&&z<g.nz;
-const rot=(p,r)=>r===1?[p[2],p[1],-p[0]]:r===2?[-p[0],p[1],-p[2]]:r===3?[-p[2],p[1],p[0]]:p;
+// Twenty-four proper cube rotations preserve the seven authored source forms.
+const PARITY=p=>(p[0]>p[1])+(p[0]>p[2])+(p[1]>p[2]);
+const CUBE_ROTATIONS=[];
+for(const p of [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]])
+ for(const x of [-1,1])for(const y of [-1,1])for(const z of [-1,1]){
+  if((PARITY(p)%2?-1:1)*x*y*z===1)CUBE_ROTATIONS.push([p,[x,y,z]]);
+ }
+const identity=CUBE_ROTATIONS.findIndex(([p,s])=>p.every((v,i)=>v===i)&&s.every(v=>v===1));
+[CUBE_ROTATIONS[0],CUBE_ROTATIONS[identity]]=[CUBE_ROTATIONS[identity],CUBE_ROTATIONS[0]];
+const rot=(v,r)=>{const [p,s]=CUBE_ROTATIONS[r%24];return p.map((axis,i)=>s[i]*v[axis]);};
+const invrot=(v,r)=>{const [p,s]=CUBE_ROTATIONS[r%24],out=[0,0,0];for(let i=0;i<3;i++)out[p[i]]=v[i]*s[i];return out;};
 function physicalMesh(result,mesh,box,min,dimension,rotation,fit=.93){
  const size=box.lo.map((v,i)=>(box.hi[i]-v+1)*dimension[i]*fit);
  const center=box.lo.map((v,i)=>min[i]+(v+box.hi[i]+1)*.5*dimension[i]);
  const shade=[.84,.86,.89,.9,.93,.97,1.02][result.fragments%7];
  const src=mesh.positions,idx=mesh.indices;
  for(let i=0;i<idx.length;i++){
-  const n=idx[i]*3,p=[src[n]*size[0],src[n+1]*size[1],src[n+2]*size[2]];
-  const q=rot(p,rotation);
+  const n=idx[i]*3,p=[src[n],src[n+1],src[n+2]];
+  const q=rot(p,rotation).map((v,k)=>v*size[k]);
   for(let k=0;k<3;k++)result.stonePositions.push(center[k]+q[k]);
   for(let k=0;k<3;k++){
    const srgb=mesh.colors[n+k]??.52;
@@ -91,7 +101,7 @@ function candidateClear(mesh,lo,hi,min,delta,fit,rotation,isSolidAt){
  const center=lo.map((v,k)=>min[k]+(v+hi[k]+1)*.5*delta[k]);
  const size=lo.map((v,k)=>(hi[k]-v+1)*delta[k]*fit);
  const at=j=>{
-  const p=rot([mesh.positions[j*3]*size[0],mesh.positions[j*3+1]*size[1],mesh.positions[j*3+2]*size[2]],rotation);
+  const p=rot([mesh.positions[j*3],mesh.positions[j*3+1],mesh.positions[j*3+2]],rotation).map((v,k)=>v*size[k]);
   return p.map((v,k)=>center[k]+v);
  };
  const checked=new Set();
@@ -140,7 +150,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    const cell=offset(g,x,y,z);if(!mask[cell])return null;
    for(let sz=0;sz<sampleAxis;sz++)for(let sy=0;sy<sampleAxis;sy++)for(let sx=0;sx<sampleAxis;sx++){
     const p=samplePoint(x,y,z,sx,sy,sz);
-    const local=rot(p.map((v,k)=>v-center[k]),(4-rotation)%4).map((v,k)=>v/(extent[k]*fit)+.5);
+    const local=invrot(p.map((v,k)=>(v-center[k])/(extent[k]*fit)),rotation).map(v=>v+.5);
     if(!authoredContains(field,local))continue;
     const at=cell*perCell+sx+sampleAxis*sy+sampleAxis*sampleAxis*sz;
     if(coverage[at]||isSolidAt?.(p))return null;
@@ -150,12 +160,20 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   return samples;
  };
  const cells=Array.from({length:num},(_,i)=>i).filter(i=>mask[i]);
+ // Prioritize actual authored pebbles along visible outer recesses.
+ const exteriorDepth=i=>{
+  const c=[i%g.nx,Math.floor(i/g.nx)%g.ny,Math.floor(i/g.stride)];
+  const faces=g.exteriorFaces||[];
+  return faces.length?Math.min(...faces.map(([axis,side])=>side===0?c[axis]:[g.nx,g.ny,g.nz][axis]-1-c[axis])):Infinity;
+ };
  cells.sort((a,b)=>{
-  const depth=i=>{
+  const dist=exteriorDepth(a)-exteriorDepth(b);
+  if(dist)return dist;
+  const neighbors=i=>{
    const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride);let n=0;
    for(const [dx,dy,dz]of D)if(inGrid(g,x+dx,y+dy,z+dz)&&mask[offset(g,x+dx,y+dy,z+dz)])n++;
    return n;
-  };return depth(b)-depth(a)||a-b;
+  };return neighbors(b)-neighbors(a)||a-b;
  });
  for(const i of cells){
   if(out.fragments>=maxFragments){out.truncated=true;break;}
@@ -175,7 +193,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    }
    if(best){lo.splice(0,3,...best.L);hi.splice(0,3,...best.H);moved=true;}
   }
-  const rotation=out.fragments%2===0?0:2;
+  const rotation=(i*17+out.fragments*11)%24;
   const center=lo.map((v,k)=>(v+hi[k]+1)*.5);
   const extent=lo.map((v,k)=>(hi[k]-v+1)*g.dimension[k]);
   let model=-1,matched=[],bestFit=.93;
@@ -186,7 +204,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
     const samples=[];
     for(let zz=lo[2];zz<=hi[2];zz++)for(let yy=lo[1];yy<=hi[1];yy++)for(let xx=lo[0];xx<=hi[0];xx++){
      const relative=[xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]);
-     const p=rot(relative,(4-rotation)%4).map((v,k)=>v/(extent[k]*fit)+.5);
+     const p=invrot(relative.map((v,k)=>v/(extent[k]*fit)),rotation).map(v=>v+.5);
      if(authoredContains(field,p))samples.push(offset(g,xx,yy,zz));
     }
     if(samples.length>matched.length){matched=samples;model=variant;bestFit=fit;}
@@ -206,7 +224,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   if(bestFit!==chosen){
    matched=[];
    for(let zz=lo[2];zz<=hi[2];zz++)for(let yy=lo[1];yy<=hi[1];yy++)for(let xx=lo[0];xx<=hi[0];xx++){
-    const p=rot([xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]),(4-rotation)%4).map((v,k)=>v/(extent[k]*bestFit)+.5);
+    const p=invrot([xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]/(extent[k]*bestFit)),rotation).map(v=>v+.5);
     if(authoredContains(profiles[model],p))matched.push(offset(g,xx,yy,zz));
    }
    if(!matched.length)continue;
