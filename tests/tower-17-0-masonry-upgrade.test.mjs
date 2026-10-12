@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,worldDimensions,validatePlacement,encodeTower,decodeTower} from '../packages/tower-game/core.mjs';
 import {ROCK_PACK} from '../assets/tower/processed-rocks.mjs';
 import {originalRockMesh} from '../packages/tower-game/rock-shapes.mjs';
-import {adaptRockMesh,inspectRockMesh} from '../packages/tower-game/rock-adaptation.mjs';
+import {adaptRockMesh,expandInfillRock,inspectRockMesh} from '../packages/tower-game/rock-adaptation.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const dims=[[2,1,1],[2,2,1],[2,2,2],[3,1,1],[3,2,1],[4,1,1],[4,2,1],[5,1,1],[5,2,1],[2,3,3],[2,3,4],[3,4,4]];
 test('the 12 purchasable stone cards use exactly the approved cell sizes',()=>{
@@ -63,4 +63,21 @@ test('database disallows new 1×1×1 purchases without rewriting historic elemen
  assert.match(sql,/OPERATION_ID_REUSED/);
  assert.match(sql,/p_action='remove'/);
  assert.match(sql,/rot>5 and typ not in/);
+});
+
+test('seven authored small stones may expand into contacts without cubic replacement',()=>{
+ const signatures=new Set();
+ for(let i=0;i<ROCK_PACK.small.length;i++){
+  const original=originalRockMesh(ROCK_PACK.small[i],i);
+  const expanded=expandInfillRock(original);
+  assert.equal(expanded.indices.length,original.indices.length);
+  assert.equal(expanded.positions.length,original.positions.length);
+  const metric=mesh=>Array.from(mesh.positions).reduce((sum,v)=>sum+Math.abs(v),0)/mesh.positions.length;
+  assert.ok(metric(expanded)>metric(original)*1.15,'enlarge actual irregular stone contours');
+  const diagnostics=inspectRockMesh(expanded);
+  assert.equal(diagnostics.invalidTriangles,0);
+  assert.equal(diagnostics.outOfBounds,0);
+  signatures.add(Buffer.from(expanded.positions.buffer).toString('base64'));
+ }
+ assert.equal(signatures.size,7);
 });
