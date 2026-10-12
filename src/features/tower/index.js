@@ -1,16 +1,16 @@
 import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js?v=17.1.6';
+import {createTowerScene} from './scene.js?v=17.1.7';
 import {suggestCameraPlacement} from '../../../packages/tower-game/camera-placement.mjs';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {towerModeUrl} from '../../../packages/tower-game/tower-mode-url.mjs';
-import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2} from './repository.js?v=17.1.6';
+import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2,loadTowerV2Geometry} from './repository.js?v=17.1.7';
 let active=null;
 const STONE_KIND={stone:'small',medium:'medium',long:'long',big:'big'};
 const icons={stone:'◆',medium:'▰',long:'▬',big:'⬟',beam:'╱',deck:'▤',window:'▣',door:'▥',ladder:'☷',roof:'⌂'};
 const categories={stone:'Камень',wood:'Дерево',openings:'Проёмы',finish:'Завершение'};
 const escape=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mount(context,params={}){
- const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false,v2Play:new URLSearchParams(location.search).get('tower_v2_play')==='1',v2Enabled:new URLSearchParams(location.search).get('tower_v2_preview')==='1'||new URLSearchParams(location.search).get('tower_v2_play')==='1',v2Worker:null,v2Camera:null,v2CandidateValid:false,v2DesiredKey:'',v2Queued:null,v2Busy:false,v2RequestId:0};active=s;
+ const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false,v2Play:new URLSearchParams(location.search).get('tower_v2_play')==='1',v2Enabled:new URLSearchParams(location.search).get('tower_v2_preview')==='1'||new URLSearchParams(location.search).get('tower_v2_play')==='1',v2Worker:null,v2GeometryRequestId:0,v2Camera:null,v2CandidateValid:false,v2DesiredKey:'',v2Queued:null,v2Busy:false,v2RequestId:0};active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  // The route remains practice.tower; the scoped feature identifies its immersive scene.
  context.shell.appShell.dataset.feature='tower';
@@ -168,7 +168,20 @@ export async function mount(context,params={}){
   renderCatalog();updatePreview();
  }
  function setTool(tool){s.tool=tool;if(tool!=='place')s.positionTouched=false;s.scene?.setTool(tool);root.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===tool)));q('[data-confirm]').hidden=tool!=='place'||!s.positionTouched;q('[data-remove]').hidden=tool!=='select'||!s.selected;q('.towerDimensions').hidden=tool!=='place';q('.towerPosition').hidden=tool!=='place';q('.towerSelected').hidden=tool!=='select'||!s.selected;updatePreview();actionBar.classList.toggle('is-visible',!!s.selected||s.positionTouched);}
- function apply(data){s.v2CandidateValid=false;s.v2DesiredKey='';s.v2Target=null;s.blocks=data.elements;s.revision=data.revision;s.balance={silver:data.silver,gold:data.gold};q('[data-silver]').textContent=data.silver;q('[data-gold]').textContent=data.gold;s.scene?.setBlocks(s.blocks);q('.towerSaved').textContent='';s.positionTouched=false;s.selected=null;q('[data-remove]').hidden=true;q('.towerSelected').hidden=true;updatePreview();}
+ async function syncV2CertifiedGeometry(expectedRevision){
+  if(!s.v2Play||!s.scene||s.disposed)return;
+  const requestId=++s.v2GeometryRequestId;
+  try{
+   const manifest=await loadTowerV2Geometry(params.userId||null);
+   if(s.disposed||requestId!==s.v2GeometryRequestId||expectedRevision!==s.revision)return;
+   s.scene.setCertifiedV2Geometry(manifest,expectedRevision);
+  }catch(error){
+   if(s.disposed||requestId!==s.v2GeometryRequestId)return;
+   // A missing manifest suppresses cosmetic data ONLY, not purchased stones.
+   console.warn('Tower V2 authoritative geometry unavailable:',error?.message||error);
+  }
+ }
+ function apply(data){s.v2GeometryRequestId++;s.v2CandidateValid=false;s.v2DesiredKey='';s.v2Target=null;s.blocks=data.elements;s.revision=data.revision;s.balance={silver:data.silver,gold:data.gold};q('[data-silver]').textContent=data.silver;q('[data-gold]').textContent=data.gold;s.scene?.setBlocks(s.blocks);if(s.v2Play)void syncV2CertifiedGeometry(s.revision);q('.towerSaved').textContent='';s.positionTouched=false;s.selected=null;q('[data-remove]').hidden=true;q('.towerSelected').hidden=true;updatePreview();}
  async function reload(){if(s.busy)return;if(!towerUserId()){s.editable=false;q('.towerReadOnly').hidden=false;q('.towerReadOnly').textContent='Войди в аккаунт, чтобы строить за освоенные слова.';updatePreview();return;}status('Загрузка сохранения…');try{const data=await (s.v2Play?loadTowerV2(params.userId||null):loadTower(params.userId||null));if(s.disposed)return;s.editable=!!towerUserId()&&(!params.userId||params.userId===towerUserId());apply(data);status('');q('.towerReadOnly').hidden=s.editable;if(!s.editable)q('.towerReadOnly').textContent=params.userId?'Башня игрока · только просмотр':'Войди в аккаунт, чтобы строить башню за освоенные слова.';}catch(e){s.editable=false;status('Не удалось загрузить башню. '+friendlyError(e),true);q('.towerSaved').textContent='Сохранение недоступно';updateButtons();}}
  function updateButtons(){updatePreview();q('[data-remove]').disabled=(s.v2Enabled&&!s.v2Play)||s.busy||!!s.pending||!s.editable;}
  async function submit(operation){if((s.v2Enabled&&!s.v2Play)||s.busy||!s.editable)return;s.busy=true;s.pending=operation;persistPending();updateButtons();q('[data-retry]').hidden=true;status('Сохраняем…');try{const data=await (s.v2Play?mutateTowerV2(operation):mutateTower(operation));if(s.disposed)return;s.pending=null;persistPending();s.preview=null;s.busy=false;apply(data);status('');updatePreview();}catch(e){if(s.disposed)return;s.busy=false;const rejected=e?.code==='P0001'||/REVISION_CONFLICT|INSUFFICIENT|INVALID|OUT_OF_BOUNDS|OVERLAP|UNSUPPORTED|DEPENDENT|AUTH_REQUIRED|OPERATION_ID_REUSED/i.test(String(e?.message||''));if(rejected){s.pending=null;persistPending();}q('[data-retry]').hidden=!s.pending;updateButtons();status(friendlyError(e),true);}finally{if(!s.disposed)s.busy=false;}}
@@ -267,7 +280,7 @@ export async function mount(context,params={}){
  if(s.v2Enabled){
   root.querySelectorAll('.towerPosition input').forEach(input=>{input.step='0.0001';input.min='-8';input.disabled=true;});
   try{
-   s.v2Worker=new Worker(new URL('./stone-placement-v2-worker.js?v=17.1.6',import.meta.url),{type:'module'});
+   s.v2Worker=new Worker(new URL('./stone-placement-v2-worker.js?v=17.1.7',import.meta.url),{type:'module'});
    s.v2Worker.onmessage=({data})=>{
     s.v2Busy=false;
     if(s.disposed)return;

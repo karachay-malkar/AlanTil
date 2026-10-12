@@ -3,8 +3,7 @@ import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/m
 import {worldDimensions} from '../../../packages/tower-game/core.mjs';
 import {adaptRockMesh} from '../../../packages/tower-game/rock-adaptation.mjs';
 import {repairRockDisplayWinding} from '../../../packages/tower-game/rock-display-winding.mjs';
-import {fitV2DisplayMesh} from '../../../packages/tower-game/masonry-v2-fit.mjs';
-import {bodyForTowerBlock} from '../../../packages/tower-game/stone-mesh-adapter.mjs';
+import {verifyV2GeometryManifest} from '../../../packages/tower-game/tower-v2-authority.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
@@ -207,6 +206,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const masonryMeshes=[];
  const contactGeometries=[];
  let masonryGeneration=0;
+ // Fit geometry never changes a persisted pose or server collision proxy.
+ let v2Fits=new Map(),v2FittedCount=0,certifiedGeometry=null;
  const masonryMobile=matchMedia('(max-width:749px), (max-height:520px)').matches;
  let masonryWorker=null;
  function clearMasonry(){
@@ -251,52 +252,44 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   container.dataset.masonryMortarFaces=String(data.mortarSurfaceCells??0);
   container.dataset.masonryFragments=String(data.fragments||0);
   container.dataset.masonryTruncated=String(!!data.truncated);
+  container.dataset.masonryContractVersion=String(data.masonryContractVersion||0);
+  container.dataset.masonryComputeMs=String(Math.round(data.computeMs||0));
+  container.dataset.masonryBlockedFitPairs=String(data.blockedFitPairs||0);
+  container.dataset.masonryMaxMoveM=String(data.maxMoveM||0);
+  container.dataset.masonryCertifiedFitPairs=String(data.certifiedFitPairs||0);
  }
  function rebuildMasonry(){
   const generation=++masonryGeneration;
   clearMasonry();delete container.dataset.masonryReady;
-  if(!masonryWorker||blocks.length<2)return;
+  if(!masonryWorker||blocks.length<2||(enableV2Aim&&!certifiedGeometry?.ok))return;
   masonryWorker.postMessage({generation,blocks,layer,mobile:masonryMobile,mode:enableV2Aim?'v2':'classic'});
  }
  if(typeof Worker!=='undefined'){
   try{
-   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.1.6',import.meta.url),{type:'module'});
+   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.1.7',import.meta.url),{type:'module'});
    masonryWorker.onmessage=({data})=>{
     if(disposed||data.generation!==masonryGeneration)return;
     if(data.error){console.warn('Masonry geometry:',data.error);return;}
+    if(enableV2Aim){
+     v2Fits=new Map((data.result.fits||[]).map(f=>[String(f.id),f]));
+     v2FittedCount=data.result.movedVertices||0;
+     // Apply render-only geometry. Do NOT recursively enqueue another Worker.
+     rebuild(true);
+    }
     drawMasonry(data.result);
    };
    masonryWorker.onerror=e=>console.warn('Masonry worker unavailable',e.message);
   }catch(e){console.warn('Masonry worker unavailable',e);}
  }
  let loadedOnce=false,settling=null;
- function rebuild(){
+ function rebuild(skipMasonry=false){
   if(settling)settling.parts=[];
   for(const instance of groups){content.remove(instance);instance.dispose?.();}
   groups=[];pickables=[];
   for(const g of contactGeometries.splice(0))g.dispose();
   const contactMap=enableV2Aim?new Map():mapContactJoints(blocks);
-  const v2Fits=new Map();let fittedVertices=0;
-  if(enableV2Aim&&blocks.length>1){
-   // Display-only 20mm contact warp. All collision and persistence data stay
-   // canonical; never feed fitted vertices back into placements or Supabase.
-   const stones=blocks.filter(b=>CATALOG_STONES.has(b.type));
-   const bodies=[];
-   for(const b of stones){
-    const type=stoneCategory(b.type),source=ROCK_PACK[type]?.[b.variant||0];
-    if(source)try{bodies.push({block:b,body:bodyForTowerBlock(originalRockMesh(source,b.variant||0),b)});}catch{}
-   }
-   for(const {block,body} of bodies){
-    const others=bodies.filter(entry=>entry.block.id!==block.id&&[0,1,2].every(axis=>
-     entry.body.bbox.max[axis]+.15>=body.bbox.min[axis]&&entry.body.bbox.min[axis]-.15<=body.bbox.max[axis])).map(entry=>entry.body);
-    if(!others.length)continue;
-    const mesh=stoneTemplates[stoneCategory(block.type)]?.[block.variant||0]?.source;
-    if(!mesh)continue;
-    const fit=fitV2DisplayMesh(mesh,block,body,others);
-    if(fit.movedVertices){v2Fits.set(block.id,fit);fittedVertices+=fit.movedVertices;}
-   }
-  }
-  container.dataset.masonryFittedVertices=String(fittedVertices);
+  if(enableV2Aim&&!skipMasonry){v2Fits.clear();v2FittedCount=0;}
+  container.dataset.masonryFittedVertices=String(enableV2Aim?v2FittedCount:0);
   const buckets=new Map();
   for(const block of blocks){
    if(layer!==null&&block.y>layer)continue;
@@ -356,7 +349,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     content.add(instances);groups.push(instances);pickables.push(instances);
    }
   }
-  rebuildMasonry();
+  if(!skipMasonry)rebuildMasonry();
  }
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down=null;const pointers=new Set();
  function pickAt(clientX,clientY){
@@ -485,5 +478,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const projection=p.project(camera);if(projection.z>1||projection.z< -1)return null;
   return{x:(projection.x+1)*container.clientWidth/2,y:(1-projection.y)*container.clientHeight/2};
  }
- return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {d,p}=transform(added),target=p.clone();const fit=new THREE.Vector3(...d.map(v=>v*CELL));const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(fitDistanceFor(fit));flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;grid.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=fitDistanceFor(size);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;masonryWorker?.terminate();clearMasonry();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
+ return {setBlocks(value){
+ certifiedGeometry=null;container.dataset.masonryServerVerified='false';
+ delete container.dataset.masonryReady;container.dataset.masonryFragments='0';
+ container.dataset.masonryFittedVertices='0';
+ const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {d,p}=transform(added),target=p.clone();const fit=new THREE.Vector3(...d.map(v=>v*CELL));const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(fitDistanceFor(fit));flyTo(target,target.clone().add(offset),620);}},setCertifiedV2Geometry(manifest,revision){
+  if(!enableV2Aim)return false;
+  const proof=verifyV2GeometryManifest(blocks,revision,manifest);
+  certifiedGeometry=proof.ok?proof:null;
+  container.dataset.masonryServerVerified=String(proof.ok);
+  container.dataset.masonryServerReason=proof.reason;
+  rebuild();return proof.ok;
+ },setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;grid.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=fitDistanceFor(size);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;masonryWorker?.terminate();clearMasonry();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
 }

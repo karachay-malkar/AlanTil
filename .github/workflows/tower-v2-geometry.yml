@@ -1,7 +1,7 @@
 name: Tower V2 experimental geometry
 on:
   push:
-    branches: ['17.1', '17.1-stage3-verification', '17.1-stage4-access-qa', '17.1-stage5-masonry']
+    branches: ['17.1', '17.1-stage3-verification', '17.1-stage4-access-qa', '17.1-stage5-masonry', '17.1-stage6-geometry']
     paths:
       - 'packages/tower-game/stone-*v2.mjs'
       - 'packages/tower-game/masonry-v2-*.mjs'

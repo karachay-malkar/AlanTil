@@ -92,10 +92,18 @@ fs.mkdirSync(output,{recursive:true});
    fittedVertices:Number(el.dataset.masonryFittedVertices),
    windingRepaired:Number(el.dataset.repairedWinding),
    mortarVolume:Number(el.dataset.masonryMortarVolume),
-   gapJoints:Number(el.dataset.masonryJoints)
+   gapJoints:Number(el.dataset.masonryJoints),
+   certifiedVersion:Number(el.dataset.masonryContractVersion),
+   computeMs:Number(el.dataset.masonryComputeMs),
+   maxMoveM:Number(el.dataset.masonryMaxMoveM),
+   safePairs:Number(el.dataset.masonryCertifiedFitPairs),
+   blockedPairs:Number(el.dataset.masonryBlockedFitPairs)
   }));
   assert.equal(quality.sourceOnly,'true','Only authored source rocks may fill V2 gaps');
   assert(quality.fragments>0&&quality.gapJoints>0);
+  assert.equal(quality.certifiedVersion,2,'Only certified V2 fit geometry may be rendered');
+  assert(quality.maxMoveM>=0&&quality.maxMoveM<=.020001,'Original source hulls must remain separated');
+  assert(quality.computeMs>=0&&Number.isFinite(quality.computeMs));
   assert(quality.fittedVertices>0,'Measured neighboring source stones should adapt');
   assert.equal(quality.mortarVolume,0,'No procedural mortar in V2');
   assert.equal(quality.windingRepaired,3,'Three long rock variants must have repaired display winding');
@@ -120,7 +128,19 @@ fs.mkdirSync(output,{recursive:true});
    return el?.dataset.masonryReady==='true'&&el?.dataset.masonrySourceOnly==='true'&&el?.dataset.masonryFragments==='0';
   },{timeout:30000});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  const mobileMetrics=await page.locator('.towerCanvas').evaluate(el=>({
+   serverVerified:el.dataset.masonryServerVerified,
+   sourceOnly:el.dataset.masonrySourceOnly,
+   computeMs:Number(el.dataset.masonryComputeMs),
+   fragments:Number(el.dataset.masonryFragments),
+   contractVersion:Number(el.dataset.masonryContractVersion)
+  }));
+  assert.equal(mobileMetrics.serverVerified,'true','50 stone saved geometry is certified by the manifest');
+  assert.equal(mobileMetrics.sourceOnly,'true');
+  assert.equal(mobileMetrics.contractVersion,2);
+  assert(mobileMetrics.computeMs<3500,'Worker must finish 50 separated stones promptly');
   await page.screenshot({path:path.join(output,'tower-v2-50-stones-mobile390.png')});
+  console.log('TOWER_V2_MOBILE_WORKER_QA',JSON.stringify(mobileMetrics));
   assert.deepEqual(errors,[],'No JS exceptions');
   console.log('TOWER_V2_PLAY_BROWSER_QA',JSON.stringify({...info,quality}));
  }finally{await browser.close();server.kill();}

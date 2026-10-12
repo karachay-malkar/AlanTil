@@ -1,7 +1,7 @@
 name: Tower V2 server authority
 on:
   push:
-    branches: ["17.1-stage4-integration", "17.1-stage4-access-qa", "17.1-stage5-masonry", "17.1"]
+    branches: ["17.1-stage4-integration", "17.1-stage4-access-qa", "17.1-stage5-masonry", "17.1-stage6-geometry", "17.1"]
     paths:
       - 'supabase/migrations/*tower_v2*.sql'
       - 'packages/tower-game/**'
@@ -58,7 +58,9 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_fixture.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180000_tower_v2_authoritative.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180100_tower_v2_authored_shapes.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012212500_tower_v2_authoritative_geometry_manifest.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_geometry_stage6.sql
   browser-play:
     runs-on: ubuntu-latest
     timeout-minutes: 16

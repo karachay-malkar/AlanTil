@@ -23,3 +23,15 @@ export async function mutateTowerV2(operation){return rpcV2('mutate_tower_v2',{
  p_element:operation.element||null,p_element_id:operation.elementId||null,
  p_currency:operation.currency||'silver'
 });}
+
+// Read-only PostgreSQL-computed authored triangles. This cannot change coins,
+// placement, revision or any saved block.
+export async function loadTowerV2Geometry(userId=null){
+ const client=await getSupabaseClient();
+ const response=await client.rpc('get_tower_v2_geometry',{p_user_id:userId});
+ if(response.error)throw response.error;
+ const data=response.data;
+ if(data?.format!==2||data.geometryVersion!==1||!Array.isArray(data.bodies)||
+  !Number.isSafeInteger(Number(data.revision)))throw new Error('INVALID_V2_GEOMETRY_MANIFEST');
+ return data;
+}

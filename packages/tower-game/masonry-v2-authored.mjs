@@ -84,10 +84,12 @@ function triangleSoup(placements){
  return{stonePositions:Float32Array.from(positions),stoneColors:Float32Array.from(colors),mortarPositions:new Float32Array(0),mortarColors:new Float32Array(0)};
 }
 /** Enforce deterministic output irrespective of incoming save-row ordering. */
-export function packV2AuthoredInfill(blocks,{maxStones=48,maxJoints=160,steps=9,perJoint=2}={}){
+export function packV2AuthoredInfill(blocks,{maxStones=48,maxJoints=160,steps=9,perJoint=2,renderBodies=null}={}){
  if(!Array.isArray(blocks)||blocks.length<2)return{...triangleSoup([]),placements:[],fragments:0,joints:0,scannedPairs:0,truncated:false,unit:'meters',sourceOnly:true};
  if(blocks.length>250)throw new RangeError('V2 stone limit');
- const entries=blocks.filter(validBlock).sort(stable).map(b=>({block:b,body:sourceBody(b)}));
+ const entries=blocks.filter(validBlock).sort(stable).map(b=>({block:b,body:sourceBody(b),
+  // Certified fitted skins may only veto source-gap infill, never authorize it.
+  visibleBody:renderBodies?.get(String(b.id))||null}));
  const pebbles=[],placements=[];let joints=0,scannedPairs=0,truncated=false;
  const limit=Math.max(0,Math.min(120,Math.floor(maxStones)));
  for(let j=1;j<entries.length;j++){
@@ -126,8 +128,13 @@ export function packV2AuthoredInfill(blocks,{maxStones=48,maxJoints=160,steps=9,
       // Always test against unrelated stones and every previous pebble by SAT;
       // for the two defining stones, use their actual sourced triangle cavity.
       if(!fitsRealTriangleGap(body,first,second,axis))continue;
+      const renderedFirst=first===A.body?A.visibleBody:B.visibleBody;
+      const renderedSecond=first===A.body?B.visibleBody:A.visibleBody;
+      if((renderedFirst||renderedSecond)&&
+       !fitsRealTriangleGap(body,renderedFirst||first,renderedSecond||second,axis))continue;
       if(pebbles.some(other=>penetrates(body,other)))continue;
-      if(entries.some(entry=>entry.body!==first&&entry.body!==second&&penetrates(body,entry.body)))continue;
+      if(entries.some(entry=>entry.body!==first&&entry.body!==second&&
+       (penetrates(body,entry.body)||(entry.visibleBody&&penetrates(body,entry.visibleBody)))))continue;
       pebbles.push(body);
       placements.push({sourceVariant:variant,center:[...center],dimensions,axis,between:pairKey(A.block,B.block),gap,leftClearance,rightClearance});
       accepted++;break;

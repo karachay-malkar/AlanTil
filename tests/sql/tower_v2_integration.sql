@@ -116,3 +116,15 @@ DO $$begin
  if (select count(*) from private.tower_v2_elements where user_id='00000000-0000-0000-0000-000000000003')<>50 then raise exception 'FRACTIONAL_50_DB_FAILURE';end if;
 end $$;
 \echo TOWER_V2_50_FRACTIONAL_STONES_OK
+
+-- Physical source solids, not display-fitted meshes, remain authoritative.
+DO $$begin
+ if exists(select 1 from private.tower_v2_elements
+  where data ?| array['fits','fittedVertices','masonry','infill','fragments','renderBodies','maxMoveM']) then
+   raise exception 'COSMETIC_MASONRY_PERSISTED';
+ end if;
+ if (select count(*) from private.tower_v2_shapes)<>23 then
+   raise exception 'AUTHORITATIVE_SOURCE_MESH_COUNT_CHANGED';
+ end if;
+end $$;
+\echo TOWER_V2_COSMETIC_NON_PERSISTENCE_OK
