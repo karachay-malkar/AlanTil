@@ -5,10 +5,11 @@
  */
 const distance2=(p,a,b)=>{let s=0;for(let k=0;k<3;k++)s+=(p[a*3+k]-p[b*3+k])**2;return s;};
 const warp=(v,strength)=>{const r=Math.min(1,Math.abs(v)*2);return Math.sign(v)*.5*(r+strength*r*(1-r));};
-export function adaptRockMesh(mesh,{strength=.91,maxEdge=.18,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
+export function adaptRockMesh(mesh,{strength=.91,maxEdge=.14,relief=.018,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
  if(!mesh?.positions||!mesh.indices||!mesh.colors||mesh.positions.length!==mesh.colors.length||mesh.positions.length%3||mesh.indices.length%3)throw new TypeError('Invalid authored mesh');
  if(!Number.isFinite(strength)||strength<0||strength>=1||!Number.isFinite(maxEdge)||maxEdge<=0)throw new RangeError('Invalid contact warp');
- const p=Array.from(mesh.positions),colors=Array.from(mesh.colors),limits=Array.from({length:3},(_,axis)=>{
+ if(!Number.isFinite(relief)||relief<0||relief>.06)throw new RangeError('Invalid stone relief');
+ const p=Array.from(mesh.positions),colors=Array.from(mesh.colors),sourceVertexCount=mesh.positions.length/3,limits=Array.from({length:3},(_,axis)=>{
   let lo=Infinity,hi=-Infinity;for(let i=axis;i<p.length;i+=3){lo=Math.min(lo,p[i]);hi=Math.max(hi,p[i]);}
   if(hi-lo<.0001)throw new RangeError('Degenerate source rock axis');
   return [lo,hi];
@@ -38,6 +39,28 @@ export function adaptRockMesh(mesh,{strength=.91,maxEdge=.18,subdivide=true,maxP
    if(next.length/3>maxTriangles)throw new RangeError('Stone triangle budget exceeded');
   }
   faces=next;if(!oversized)break;
+ }
+ // Subdivision without displacement is still a planar, artificial block.
+ // Sculpt new shared vertices using the ORIGINAL triangle normals so relief
+ // cannot detach from the authored silhouette or produce procedural cubes.
+ if(subdivide&&relief>0){
+  const normal=new Float64Array(p.length);
+  for(let f=0;f<faces.length;f+=3){
+   const a=faces[f],b=faces[f+1],c=faces[f+2];
+   const u=[0,1,2].map(k=>p[b*3+k]-p[a*3+k]),v=[0,1,2].map(k=>p[c*3+k]-p[a*3+k]);
+   const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+   for(const i of [a,b,c])for(let k=0;k<3;k++)normal[i*3+k]+=n[k];
+  }
+  for(let i=sourceVertexCount;i<p.length/3;i++){
+   const o=i*3,x=p[o],y=p[o+1],z=p[o+2];
+   const length=Math.hypot(normal[o],normal[o+1],normal[o+2])||1;
+   const grain=Math.sin(x*127.17+y*43.79+z*93.11)*Math.cos(z*69.23-x*37.73+y*13.21);
+   const amplitude=relief*grain;
+   for(let k=0;k<3;k++){
+    p[o+k]=Math.max(-.5,Math.min(.5,p[o+k]+amplitude*normal[o+k]/length));
+    colors[o+k]=Math.max(0,Math.min(1,colors[o+k]+grain*.025));
+   }
+  }
  }
  const Index=p.length/3<65536?Uint16Array:Uint32Array;
  return {positions:Float32Array.from(p),colors:Float32Array.from(colors),indices:Index.from(faces)};
