@@ -109,3 +109,17 @@ test('unfilled outer fifths are fitted with solid stone clippings, never mortar'
  assert.ok(result.totalCoverage>=.90,'combined solid rock and core mortar should fill 90%');
  assert.ok(Math.abs(result.stonePhysicalVolume+result.mortarPhysicalVolume+result.residualFreeVolume-result.candidateFreeVolume)<1e-8);
 });
+
+test('90–95% fill leaves real small internal voids and irregular authored-derived outer stones',()=>{
+ const g=grid(7,15,15);g.seamAxis=0;g.exteriorFaces=[[1,0],[1,1],[2,0],[2,1]];
+ const result=fillAuthoredCavity(g,models,{maxTriangles:60000});
+ assert.ok(result.totalCoverage>=.90&&result.totalCoverage<=.95,'fill: '+result.totalCoverage);
+ assert.ok(result.residualFreeVolume>0,'residual physical cavities cannot be fictitiously filled');
+ assert.ok(Math.abs(result.stonePhysicalVolume+result.mortarPhysicalVolume+result.residualFreeVolume-result.candidateFreeVolume)<1e-8);
+ assert.equal(result.mortarForbiddenVolume,0);
+ assert.ok(result.wedgePhysicalVolume>0);
+ const gstep=g.dimension.map(v=>v/3);
+ assert.ok(result.stonePositions.some((v,i)=>
+  Math.abs((v-g.min[i%3])/gstep[i%3]-Math.round((v-g.min[i%3])/gstep[i%3]))>.03),
+  'outside stone fragments must not all be rectangular grid blocks');
+});
