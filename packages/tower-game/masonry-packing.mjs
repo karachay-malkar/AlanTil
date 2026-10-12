@@ -5,7 +5,8 @@ import {originalRockMesh} from './rock-shapes.mjs';
 import {expandInfillRock} from './rock-adaptation.mjs';
 import {fillAuthoredCavity} from './masonry-authored-infill.mjs';
 import {ROCK_PACK} from '../../assets/tower/processed-rocks.mjs';
-const SMALL_ROCKS=Object.freeze(ROCK_PACK.small.map((rock,i)=>expandInfillRock(originalRockMesh(rock,i))));
+const ORIGINAL_SMALL_ROCKS=Object.freeze(ROCK_PACK.small.map((rock,i)=>originalRockMesh(rock,i)));
+const SMALL_ROCKS=Object.freeze(ORIGINAL_SMALL_ROCKS.map(mesh=>expandInfillRock(mesh)));
 
 const STONES=new Set(['stone','medium','long','big']), OPENINGS=new Set(['door','window']);
 const AXES=['x','y','z'];
@@ -138,7 +139,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
     if(openings.some(o=>p[0]>=o.x0&&p[0]<=o.x1&&p[1]>=o.y0&&p[1]<=o.y1&&p[2]>=o.z0&&p[2]<=o.z1))return true;
     return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0,contacts.get(o.block.id)));
    };
-   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(jointBudget,95000),isSolidAt}):{...empty(),truncated:true};
+   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(jointBudget,95000),isSolidAt,naturalMeshes:ORIGINAL_SMALL_ROCKS}):{...empty(),truncated:true};
    store.set(key,piece);
   }
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
