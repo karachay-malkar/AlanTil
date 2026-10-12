@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,worldDimensions,validatePlacement,encodeTower,decodeTower} from '../packages/tower-game/core.mjs';
 import {ROCK_PACK} from '../assets/tower/processed-rocks.mjs';
 import {originalRockMesh} from '../packages/tower-game/rock-shapes.mjs';
-import {adaptRockMesh,expandInfillRock,inspectRockMesh} from '../packages/tower-game/rock-adaptation.mjs';
+import {adaptRockMesh,expandInfillRock,inspectRockMesh,sealAuthoredRockMesh} from '../packages/tower-game/rock-adaptation.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const dims=[[2,1,1],[2,2,1],[2,2,2],[3,1,1],[3,2,1],[4,1,1],[4,2,1],[5,1,1],[5,2,1],[2,3,3],[2,3,4],[3,4,4]];
 test('the 12 purchasable stone cards use exactly the approved cell sizes',()=>{
@@ -109,4 +109,22 @@ test('all 23 source contours retain authored vertex positions under gentle conta
  const scene=readFileSync(new URL('../src/features/tower/scene.js',import.meta.url),'utf8');
  assert.match(scene,/flatShading:false/);
  assert.doesNotMatch(scene,/geometry\.toNonIndexed\(\)/);
+});
+
+test('all 23 original open GLB meshes are sealed without replacement cuboids',()=>{
+ for(const [category,packs] of Object.entries(ROCK_PACK))for(let i=0;i<packs.length;i++){
+  const source=originalRockMesh(packs[i],i),closed=sealAuthoredRockMesh(source);
+  const edges=new Map();
+  for(let j=0;j<closed.indices.length;j+=3){
+   const a=closed.indices[j],b=closed.indices[j+1],c=closed.indices[j+2];
+   for(const [u,v] of [[a,b],[b,c],[c,a]]){
+    const key=u<v?u+'/'+v:v+'/'+u;
+    edges.set(key,(edges.get(key)||0)+1);
+   }
+  }
+  assert.ok([...edges.values()].every(n=>n===2),category+':'+i+' left open boundaries');
+  assert.equal(inspectRockMesh(closed).invalidTriangles,0);
+  assert.deepEqual(Array.from(closed.positions.slice(0,source.positions.length)),Array.from(source.positions),
+   'original 3D source coordinates must remain unchanged');
+ }
 });
