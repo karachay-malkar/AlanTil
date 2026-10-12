@@ -1,0 +1,1 @@
+QA-only marker for testing the exact current 17.0 contact geometry; do not merge this marker. 3173752edd25a9fe2a096379f23a3e48614a7e5a
