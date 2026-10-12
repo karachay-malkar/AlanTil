@@ -31,3 +31,14 @@ test('real 50-piece dry wall respects worker geometry budget',()=>{
  assert.ok(out.candidateCells>1000);
  assert.ok((out.stonePositions.length+out.mortarPositions.length)/9<=90000);
 });
+
+test('truncated joint or fragment budgets cannot be reported complete',()=>{
+ const pair=[b('left',0,0,0),b('right',2,0,0,'medium',1)];
+ const skipped=packMasonryVolume(pair,profiles,{maxJoints:0});
+ assert.equal(skipped.truncated,true);
+ assert.equal(skipped.coverageComplete,false);
+ const exhausted=packMasonryVolume(pair,profiles,{maxFragmentsPerJoint:0});
+ assert.equal(exhausted.truncated,true);
+ assert.equal(exhausted.coverageComplete,false);
+ assert.equal(exhausted.stonePhysicalVolume,0);
+});
