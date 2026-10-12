@@ -169,7 +169,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    for(let a=0;a<3;a++)for(const dir of [-1,1]){
     const L=lo.slice(),H=hi.slice();if(dir<0)L[a]--;else H[a]++;
     const size=L.map((v,k)=>(H[k]-v+1)*g.dimension[k]);
-    if(size.some(v=>v>.88)||size.reduce((s,v)=>s*v,1)>.27||!boxFree(L,H))continue;
+    if(size.some(v=>v>.60)||size.reduce((s,v)=>s*v,1)>.27||!boxFree(L,H))continue;
     const score=size.reduce((s,v)=>s+Math.sqrt(v),0)-size.reduce((s,v)=>s*v,1)*.2;
     if(score>bestScore){bestScore=score;best={L,H};}
    }
