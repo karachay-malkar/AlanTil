@@ -249,7 +249,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  if(typeof Worker!=='undefined'){
   try{
-   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.15',import.meta.url),{type:'module'});
+   masonryWorker=new Worker(new URL('./masonry-worker.js?v=17.0.16',import.meta.url),{type:'module'});
    masonryWorker.onmessage=({data})=>{
     if(disposed||data.generation!==masonryGeneration)return;
     if(data.error){console.warn('Masonry geometry:',data.error);return;}
