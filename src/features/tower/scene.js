@@ -1,4 +1,5 @@
 import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
+import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/masonry-contact.mjs';
 import {worldDimensions} from '../../../packages/tower-game/core.mjs';
 import {adaptRockMesh} from '../../../packages/tower-game/rock-adaptation.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
@@ -99,7 +100,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
    geometry.setIndex(new THREE.BufferAttribute(mesh.indices,1));
    geometry.computeVertexNormals();
-   return {g:geometry,m:stoneMaterial,variant};
+   return {g:geometry,m:stoneMaterial,variant,source:mesh};
   });
  }
  const woodMap=await texture('assets/tower/modular_wooden_pier/textures/modular_wooden_pier_planks_diff_1k.jpg',true);if(woodMap){woodMaterial.map=woodMap;woodMaterial.color.set('#a99a85');woodMaterial.needsUpdate=true;}
@@ -196,6 +197,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // Render-only infill is computed from real rock meshes off the UI thread.
  // It is intentionally absent from pickables, tower blocks and server mutations.
  const masonryMeshes=[];
+ const contactGeometries=[];
  let masonryGeneration=0;
  const masonryMobile=matchMedia('(max-width:749px), (max-height:520px)').matches;
  let masonryWorker=null;
@@ -261,13 +263,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(settling)settling.parts=[];
   for(const instance of groups){content.remove(instance);instance.dispose?.();}
   groups=[];pickables=[];
+  for(const g of contactGeometries.splice(0))g.dispose();
+  const contactMap=mapContactJoints(blocks);
   const buckets=new Map();
   for(const block of blocks){
    if(layer!==null&&block.y>layer)continue;
    const stone=CATALOG_STONES.has(block.type);
    const count=stoneTemplates[stoneCategory(block.type)]?.length||1;
    const variant=((block.variant||0)%count+count)%count;
-   const key=stone?`stone:${block.type}:${variant}`:block.type;
+   const key=stone?`stone:${block.type}:${variant}${contactMap.has(block.id)?':contact:'+block.id:''}`:block.type;
    if(!buckets.has(key))buckets.set(key,[]);
    buckets.get(key).push(block);
   }
@@ -275,7 +279,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const stone=key.startsWith('stone:');
    const type=stone?key.split(':')[1]:key;
    const template=stone?stoneTemplates[stoneCategory(type)]?.[Number(key.split(':')[2])]:null;
-   const templates=stone?[[template?.g||box,template?.m||stoneMaterial,[0,0,0],[1,1,1]]]:parts(type);
+   let body=template?.g||box;
+   if(stone&&key.includes(':contact:')&&template?.source){
+    const contactBlock=list[0],reshaped=deformContactMesh(template.source,contactBlock,contactMap.get(contactBlock.id));
+    body=template.g.clone();
+    body.setAttribute('position',new THREE.BufferAttribute(reshaped.positions,3));
+    body.computeVertexNormals();body.computeBoundingSphere();
+    contactGeometries.push(body);
+   }
+   const templates=stone?[[body,template?.m||stoneMaterial,[0,0,0],[1,1,1]]]:parts(type);
    for(const [g,mat,offset,factor] of templates){
     mat.clippingPlanes=layer===null?[]:[clipPlane];mat.clipShadows=true;mat.needsUpdate=true;
     const instances=new THREE.InstancedMesh(g,mat,list.length);
