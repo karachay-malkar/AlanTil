@@ -99,7 +99,7 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
   seamAxis:axis,exteriorFaces:transverse.flatMap(a=>[[a,0],[a,1]])};
 }
 
-const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,stoneFilledCells:0,mortarSurfaceCells:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,mortarForbiddenVolume:0,mortarPenetrationVolume:0,penetrationVolume:0,selfOverlapVolume:0,joints:0,fragments:0,truncated:false});
+const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,stoneFilledCells:0,mortarSurfaceCells:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,wedgePhysicalVolume:0,mortarForbiddenVolume:0,mortarPenetrationVolume:0,penetrationVolume:0,selfOverlapVolume:0,joints:0,fragments:0,truncated:false});
 
 /** Fully tessellated rubble infill from real occupied/free volume in grid cells.
  * Derived presentation only: no saved blocks, no paid elements, no raycast targets.
@@ -151,6 +151,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
   out.residualFreeVolume+=piece.residualFreeVolume||0;out.stonePhysicalVolume+=piece.stonePhysicalVolume||0;
   out.penetrationVolume+=piece.penetrationVolume||0;out.selfOverlapVolume+=piece.selfOverlapVolume||0;
   out.mortarPhysicalVolume+=piece.mortarPhysicalVolume||0;
+  out.wedgePhysicalVolume+=piece.wedgePhysicalVolume||0;
   out.mortarForbiddenVolume+=piece.mortarForbiddenVolume||0;
   out.mortarPenetrationVolume+=piece.mortarPenetrationVolume||0;
   out.fragments+=piece.fragments||0;out.joints++;
@@ -170,7 +171,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
   candidateCells:out.candidateCells,filledCells:out.filledCells,stoneFilledCells:out.stoneFilledCells,
   mortarSurfaceCells:out.mortarSurfaceCells,residualFreeVolume:out.residualFreeVolume,
   candidateFreeVolume:out.candidateFreeVolume,stonePhysicalVolume:out.stonePhysicalVolume,
-  mortarPhysicalVolume:out.mortarPhysicalVolume,mortarForbiddenVolume:out.mortarForbiddenVolume,
+  mortarPhysicalVolume:out.mortarPhysicalVolume,wedgePhysicalVolume:out.wedgePhysicalVolume,mortarForbiddenVolume:out.mortarForbiddenVolume,
   mortarPenetrationVolume:out.mortarPenetrationVolume,penetrationVolume:out.penetrationVolume,
   selfOverlapVolume:out.selfOverlapVolume,
   stoneCoverage:out.candidateFreeVolume?out.stonePhysicalVolume/out.candidateFreeVolume:0,
