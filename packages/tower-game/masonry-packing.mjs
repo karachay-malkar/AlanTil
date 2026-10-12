@@ -97,18 +97,19 @@ function cavity(joint,profiles,openings,spacing,otherSolids=[]){
  return {nx,ny,nz,stride,min,dimension,mask,aSolid,bSolid,countFilled,candidateCells};
 }
 
-const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,stoneFilledCells:0,mortarSurfaceCells:0,residualFreeVolume:0,joints:0,fragments:0,truncated:false});
+const empty=()=>({stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],candidateCells:0,filledCells:0,stoneFilledCells:0,mortarSurfaceCells:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,penetrationVolume:0,selfOverlapVolume:0,joints:0,fragments:0,truncated:false});
 
 /** Fully tessellated rubble infill from real occupied/free volume in grid cells.
  * Derived presentation only: no saved blocks, no paid elements, no raycast targets.
  * A shared pair-cache makes repeated snapshots and layer refreshes cheap.
  */
-export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=180000,maxJoints=4500,cache=null}={}){
+export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=180000,maxJoints=4500,maxFragmentsPerJoint=240,cache=null}={}){
  if(!profiles||!Array.isArray(blocks)||spacing<.08||spacing>.40)return empty();
  const openings=blocks.filter(b=>!STONES.has(b.type)).map(bounds);
  const stoneBoxes=blocks.filter(b=>STONES.has(b.type)).map(b=>({block:b,box:bounds(b),signature:signature(b)}));
  const openingSignature=blocks.filter(b=>!STONES.has(b.type)).map(signature).sort().join('/');
- const out=empty(),joints=findMasonryJoints(blocks).slice(0,maxJoints);
+ const allJoints=findMasonryJoints(blocks),joints=allJoints.slice(0,maxJoints),out=empty();
+ out.truncated=allJoints.length>joints.length;
  const store=cache||new Map();
  for(const joint of joints){
   const corridor=[0,1,2].map(i=>i===joint.axis?[joint.plane-.7,joint.plane+.7]:joint.ranges[joint.transverse.indexOf(i)]);
@@ -117,7 +118,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
    corridor.every(([lo,hi],i)=>entry.box[AXES[i]+'0']<hi&&entry.box[AXES[i]+'1']>lo)
   );
   const surroundings=neighbors.map(e=>e.signature).sort().join('/');
-  const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing;
+  const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing+'|'+maxTriangles+'|'+maxFragmentsPerJoint;
   let piece=store.get(key);
   if(!piece){
    const grid=cavity(joint,profiles,openings,spacing,neighbors);
@@ -126,15 +127,24 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
     if(openings.some(o=>p[0]>=o.x0&&p[0]<=o.x1&&p[1]>=o.y0&&p[1]<=o.y1&&p[2]>=o.z0&&p[2]<=o.z1))return true;
     return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0));
    };
-   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:240,maxTriangles:Math.min(maxTriangles,95000),isSolidAt}):empty();
+   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(maxTriangles,95000),isSolidAt}):{...empty(),truncated:true};
    store.set(key,piece);
   }
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
   out.candidateCells+=piece.candidateCells;
-  if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles){out.truncated=true;continue;}
+  out.candidateFreeVolume+=piece.candidateFreeVolume||0;
+  out.truncated=out.truncated||Boolean(piece.truncated);
+  if((out.stonePositions.length+out.mortarPositions.length)/9+triangles>maxTriangles){
+   out.truncated=true;
+   out.residualFreeVolume+=piece.candidateFreeVolume||0;
+   continue;
+  }
   for(const [target,values]of [[out.stonePositions,piece.stonePositions],[out.stoneColors,piece.stoneColors],[out.mortarPositions,piece.mortarPositions],[out.mortarColors,piece.mortarColors]])
    for(let k=0;k<values.length;k++)target.push(values[k]);
-  out.filledCells+=piece.filledCells;out.stoneFilledCells+=piece.stoneFilledCells||0;out.mortarSurfaceCells+=piece.mortarSurfaceCells||0;out.residualFreeVolume+=piece.residualFreeVolume||0;out.fragments+=piece.fragments||0;out.joints++;
+  out.filledCells+=piece.filledCells;out.stoneFilledCells+=piece.stoneFilledCells||0;out.mortarSurfaceCells+=piece.mortarSurfaceCells||0;
+  out.residualFreeVolume+=piece.residualFreeVolume||0;out.stonePhysicalVolume+=piece.stonePhysicalVolume||0;
+  out.penetrationVolume+=piece.penetrationVolume||0;out.selfOverlapVolume+=piece.selfOverlapVolume||0;
+  out.mortarPhysicalVolume+=piece.mortarPhysicalVolume||0;out.fragments+=piece.fragments||0;out.joints++;
  }
  if(cache){
   if(!joints.length)cache.clear();
@@ -148,6 +158,12 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
  return {
   stonePositions:Float32Array.from(out.stonePositions),stoneColors:Float32Array.from(out.stoneColors),
   mortarPositions:Float32Array.from(out.mortarPositions),mortarColors:Float32Array.from(out.mortarColors),
-  candidateCells:out.candidateCells,filledCells:out.filledCells,stoneFilledCells:out.stoneFilledCells,mortarSurfaceCells:out.mortarSurfaceCells,residualFreeVolume:out.residualFreeVolume,stoneCoverage:out.candidateCells?out.stoneFilledCells/out.candidateCells:0,joints:out.joints,fragments:out.fragments,truncated:out.truncated,
+  candidateCells:out.candidateCells,filledCells:out.filledCells,stoneFilledCells:out.stoneFilledCells,
+  mortarSurfaceCells:out.mortarSurfaceCells,residualFreeVolume:out.residualFreeVolume,
+  candidateFreeVolume:out.candidateFreeVolume,stonePhysicalVolume:out.stonePhysicalVolume,
+  mortarPhysicalVolume:out.mortarPhysicalVolume,penetrationVolume:out.penetrationVolume,
+  selfOverlapVolume:out.selfOverlapVolume,
+  stoneCoverage:out.candidateFreeVolume?out.stonePhysicalVolume/out.candidateFreeVolume:0,
+  coverageComplete:!out.truncated,joints:out.joints,fragments:out.fragments,truncated:out.truncated,
  };
 }
