@@ -50,9 +50,10 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
      if(value(p)!==type)visible[y*w+x]=1;
     }
     for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(visible[y*w+x]){
-     let run=1;while(run<6&&x+run<w&&visible[y*w+x+run])run++;
+     const maxSpan=triangleBudget<8000?256:6;
+     let run=1;while(run<maxSpan&&x+run<w&&visible[y*w+x+run])run++;
      let ht=1,ok=true;
-     while(ok&&ht<6&&y+ht<h){
+     while(ok&&ht<maxSpan&&y+ht<h){
       for(let j=0;j<run;j++)if(!visible[(y+ht)*w+x+j]){ok=false;break;}
       if(ok)ht++;
      }
