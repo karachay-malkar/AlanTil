@@ -119,7 +119,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
  const share=maxTriangles/Math.max(1,joints.length);
  // Most seams are cheaper than their equal share. Allow complex seams to
  // borrow unused geometry while retaining the strict global triangle cap.
- const jointBudget=Math.floor(share*(share<1400&&joints.length>30?1.30:1));
+ const jointBudget=Math.floor(share*(share<1400&&joints.length>30?1.50:1));
  for(const joint of joints){
   const corridor=[0,1,2].map(i=>i===joint.axis?[joint.plane-.7,joint.plane+.7]:joint.ranges[joint.transverse.indexOf(i)]);
   const neighbors=stoneBoxes.filter(entry=>
