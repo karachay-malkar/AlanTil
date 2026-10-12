@@ -1,3 +1,4 @@
+import {buildCoreMortar} from './masonry-core-mortar.mjs';
 /** Worker-safe placement of seven authored small-rock meshes into measured
  * seam masks. Rocks are never bought, serialized or pickable.
  * Physical coverage is tracked separately from dark backing mortar.
@@ -111,7 +112,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  if(!grid||!smallMeshes?.length)throw new TypeError('Cavity mask and small authored meshes required');
  const g=grid,num=g.nx*g.ny*g.nz,mask=g.mask;
  if(num!==mask.length||g.stride!==g.nx*g.ny)throw new RangeError('Invalid cavity grid');
- const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,penetrationVolume:0,selfOverlapVolume:0,truncated:false};
+ const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,mortarForbiddenVolume:0,mortarPenetrationVolume:0,penetrationVolume:0,selfOverlapVolume:0,truncated:false};
  for(let i=0;i<num;i++)out.candidateCells+=+!!mask[i];
  if(!out.candidateCells)return out;
  const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
@@ -213,9 +214,24 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   for(const k of matched)occupied[k]=1;
   out.fragments++;out.stoneFilledCells+=matched.length;
  }
- // Mortar renders only exterior faces of the residual voids, not fictitious
- // cubic stones. The residual volume remains unfilled in reported metrics.
- mortarShell(out,g,occupied,maxTriangles);
+ // Under the 20/60/20 rule a real 3D central mortar solid is meshed
+ // after all authored exterior rubble has been placed. The legacy
+ // surface-only diagnostic remains for standalone callers without a seam.
+ if(Number.isInteger(g.seamAxis)){
+  const mortar=buildCoreMortar(g,coverage,{
+   isSolidAt,maxTriangles:Math.max(0,maxTriangles-out.stonePositions.length/9),
+   subdivisions:sampleAxis,
+  });
+  out.mortarPositions.push(...mortar.positions);
+  out.mortarColors.push(...mortar.colors);
+  out.mortarPhysicalVolume=mortar.volume;
+  out.mortarForbiddenVolume=mortar.forbiddenVolume;
+  out.mortarPenetrationVolume=mortar.penetrationVolume;
+  out.mortarSurfaceCells=mortar.faces;
+  out.truncated=out.truncated||mortar.truncated;
+ }else{
+  mortarShell(out,g,occupied,maxTriangles);
+ }
 
  // Measure occupied physical volume using samples inside the rendered source
  // meshes, NOT the greedy envelopes or a single center sample per cell.
@@ -238,8 +254,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  out.stonePhysicalVolume=stoneSamples*sampleVolume;
  out.penetrationVolume=penetrationSamples*sampleVolume;
  out.selfOverlapVolume=overlapSamples*sampleVolume;
- out.mortarPhysicalVolume=0; // mortarShell renders zero-thickness backing faces
- out.residualFreeVolume=Math.max(0,out.candidateFreeVolume-out.stonePhysicalVolume);
+ out.residualFreeVolume=Math.max(0,out.candidateFreeVolume-out.stonePhysicalVolume-out.mortarPhysicalVolume);
  out.filledCells=out.stoneFilledCells; // legacy diagnostic, NOT physical coverage
  out.stoneCoverage=out.candidateFreeVolume?out.stonePhysicalVolume/out.candidateFreeVolume:0;
  return out;
