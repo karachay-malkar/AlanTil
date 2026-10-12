@@ -226,9 +226,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    content.add(mesh);masonryMeshes.push(mesh);
   }
   container.dataset.masonryReady='true';
-  container.dataset.masonryCoverage=data.candidateCells
-   ?String(Math.round(100*data.filledCells/data.candidateCells)):'n/a';
-  container.dataset.masonryStoneCoverage=data.candidateCells?String((100*(data.stoneFilledCells||0)/data.candidateCells).toFixed(1)):'n/a';
+  container.dataset.masonryCoverage=data.coverageComplete&&data.candidateFreeVolume?String((100*(data.stoneCoverage||0)).toFixed(1)):'n/a';
+  container.dataset.masonryStoneCoverage=data.candidateFreeVolume?String((100*(data.stoneCoverage||0)).toFixed(1)):'n/a';
+  container.dataset.masonryCoverageComplete=String(Boolean(data.coverageComplete));
+  container.dataset.masonryPenetrationVolume=String(data.penetrationVolume||0);
+  container.dataset.masonryOverlapVolume=String(data.selfOverlapVolume||0);
   container.dataset.masonryResidualVolume=String(data.residualFreeVolume??0);
   container.dataset.masonryMortarFaces=String(data.mortarSurfaceCells??0);
   container.dataset.masonryFragments=String(data.fragments||0);
