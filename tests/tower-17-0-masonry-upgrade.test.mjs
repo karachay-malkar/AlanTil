@@ -97,3 +97,16 @@ test('subdivided authored main stones acquire real nonplanar rock relief',()=>{
   assert.equal(inspectRockMesh(sculpted).outOfBounds,0);
  }
 });
+
+test('all 23 source contours retain authored vertex positions under gentle contact adaptation',()=>{
+ for(const [category,sources]of Object.entries(ROCK_PACK))for(let i=0;i<sources.length;i++){
+  const original=originalRockMesh(sources[i],i);
+  const natural=adaptRockMesh(original);
+  let maximum=0;
+  for(let j=0;j<original.positions.length;j++)maximum=Math.max(maximum,Math.abs(original.positions[j]-natural.positions[j]));
+  assert.ok(maximum<=.025,category+':'+i+' regularized excessively: '+maximum);
+ }
+ const scene=readFileSync(new URL('../src/features/tower/scene.js',import.meta.url),'utf8');
+ assert.match(scene,/flatShading:false/);
+ assert.doesNotMatch(scene,/geometry\.toNonIndexed\(\)/);
+});
