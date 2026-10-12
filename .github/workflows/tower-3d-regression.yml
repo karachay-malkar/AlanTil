@@ -32,6 +32,7 @@ jobs:
           node --check packages/tower-game/rock-shapes.mjs
           node --check packages/tower-game/rock-adaptation.mjs
           node --check packages/tower-game/masonry-authored-infill.mjs
+          node --check packages/tower-game/masonry-core-mortar.mjs
           node --check src/features/tower/masonry-worker.js
       - name: Chromium setup
         run: |
