@@ -5,7 +5,7 @@
  */
 const distance2=(p,a,b)=>{let s=0;for(let k=0;k<3;k++)s+=(p[a*3+k]-p[b*3+k])**2;return s;};
 const warp=(v,strength)=>{const r=Math.min(1,Math.abs(v)*2);return Math.sign(v)*.5*(r+strength*r*(1-r));};
-export function adaptRockMesh(mesh,{strength=.91,maxEdge=.14,relief=.018,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
+export function adaptRockMesh(mesh,{strength=.16,maxEdge=.14,relief=.022,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
  if(!mesh?.positions||!mesh.indices||!mesh.colors||mesh.positions.length!==mesh.colors.length||mesh.positions.length%3||mesh.indices.length%3)throw new TypeError('Invalid authored mesh');
  if(!Number.isFinite(strength)||strength<0||strength>=1||!Number.isFinite(maxEdge)||maxEdge<=0)throw new RangeError('Invalid contact warp');
  if(!Number.isFinite(relief)||relief<0||relief>.06)throw new RangeError('Invalid stone relief');
@@ -111,7 +111,7 @@ export function inspectRockMesh(mesh){
  */
 export function expandInfillRock(mesh,{power=.48}={}){
  if(!Number.isFinite(power)||power<=0||power>1)throw new RangeError('Invalid infill expansion power');
- const base=adaptRockMesh(mesh,{subdivide:false,strength:.91});
+ const base=adaptRockMesh(mesh,{subdivide:false,strength:.16});
  const positions=base.positions.slice();
  for(let i=0;i<positions.length;i++){
   const value=positions[i],normalized=Math.min(1,Math.abs(value)*2);
