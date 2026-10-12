@@ -33,6 +33,7 @@ jobs:
           node --check packages/tower-game/rock-adaptation.mjs
           node --check packages/tower-game/masonry-authored-infill.mjs
           node --check packages/tower-game/masonry-core-mortar.mjs
+          node --check packages/tower-game/masonry-contact.mjs
           node --check src/features/tower/masonry-worker.js
       - name: Chromium setup
         run: |
@@ -49,7 +50,7 @@ jobs:
           if-no-files-found: warn
       - name: Tower functional regression
         run: |
-          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs tests/tower-volume.test.mjs tests/tower-volume-real-rocks.test.mjs tests/tower-quality-17.test.mjs tests/tower-17-0-masonry-upgrade.test.mjs tests/tower-authored-infill-17.test.mjs
+          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs tests/tower-volume.test.mjs tests/tower-volume-real-rocks.test.mjs tests/tower-quality-17.test.mjs tests/tower-17-0-masonry-upgrade.test.mjs tests/tower-authored-infill-17.test.mjs tests/tower-contact-17.test.mjs
       - name: Stone-volume diagnostics for 2, 5, 15 and 50 rocks
         if: always()
         run: node scripts/qa/tower-masonry-metrics.mjs
@@ -64,7 +65,7 @@ jobs:
           node-version: "22"
       - name: Functional geometry and save compatibility
         run: |
-          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs tests/tower-volume.test.mjs tests/tower-volume-real-rocks.test.mjs tests/tower-quality-17.test.mjs tests/tower-17-0-masonry-upgrade.test.mjs tests/tower-authored-infill-17.test.mjs
+          node --test tests/tower-core.test.mjs tests/tower-processed-pack-17.test.mjs tests/tower-immersive-17.test.mjs tests/tower-masonry.test.mjs tests/tower-volume.test.mjs tests/tower-volume-real-rocks.test.mjs tests/tower-quality-17.test.mjs tests/tower-17-0-masonry-upgrade.test.mjs tests/tower-authored-infill-17.test.mjs tests/tower-contact-17.test.mjs
       - name: Actual physical masonry QA
         if: always()
         run: node scripts/qa/tower-masonry-metrics.mjs
