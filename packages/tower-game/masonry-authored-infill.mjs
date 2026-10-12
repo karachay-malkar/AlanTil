@@ -1,3 +1,4 @@
+import {packOriginalPebbles} from './masonry-original-pebbles.mjs';
 import {buildCoreMortar} from './masonry-core-mortar.mjs';
 /** Worker-safe placement of seven authored small-rock meshes into measured
  * seam masks. Rocks are never bought, serialized or pickable.
@@ -134,112 +135,18 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   g.min[1]+(y+(sy+.5)/sampleAxis)*g.dimension[1],
   g.min[2]+(z+(sz+.5)/sampleAxis)*g.dimension[2],
  ];
- const boxFree=(lo,hi)=>{
-  for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++)
-   if(!inGrid(g,x,y,z)||!mask[offset(g,x,y,z)])return false;
-  return true;
- };
-
- // Reserve actual sampled geometry, not just center voxels. Two fillers may
- // share an enclosing grid cell, but cannot occupy the same physical sample.
- const physicalFootprint=(field,lo,hi,rotation,fit)=>{
-  const center=lo.map((v,k)=>g.min[k]+(v+hi[k]+1)*.5*g.dimension[k]);
-  const extent=lo.map((v,k)=>(hi[k]-v+1)*g.dimension[k]);
-  const samples=[];
-  for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){
-   const cell=offset(g,x,y,z);if(!mask[cell])return null;
-   for(let sz=0;sz<sampleAxis;sz++)for(let sy=0;sy<sampleAxis;sy++)for(let sx=0;sx<sampleAxis;sx++){
-    const p=samplePoint(x,y,z,sx,sy,sz);
-    const local=invrot(p.map((v,k)=>(v-center[k])/(extent[k]*fit)),rotation).map(v=>v+.5);
-    if(!authoredContains(field,local))continue;
-    const at=cell*perCell+sx+sampleAxis*sy+sampleAxis*sampleAxis*sz;
-    if(coverage[at]||isSolidAt?.(p))return null;
-    samples.push(at);
-   }
-  }
-  return samples;
- };
- const cells=Array.from({length:num},(_,i)=>i).filter(i=>mask[i]);
- // Prioritize actual authored pebbles along visible outer recesses.
- const exteriorDepth=i=>{
-  const c=[i%g.nx,Math.floor(i/g.nx)%g.ny,Math.floor(i/g.stride)];
-  const faces=g.exteriorFaces||[];
-  return faces.length?Math.min(...faces.map(([axis,side])=>side===0?c[axis]:[g.nx,g.ny,g.nz][axis]-1-c[axis])):Infinity;
- };
- cells.sort((a,b)=>{
-  const dist=exteriorDepth(a)-exteriorDepth(b);
-  if(dist)return dist;
-  const neighbors=i=>{
-   const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride);let n=0;
-   for(const [dx,dy,dz]of D)if(inGrid(g,x+dx,y+dy,z+dz)&&mask[offset(g,x+dx,y+dy,z+dz)])n++;
-   return n;
-  };return neighbors(b)-neighbors(a)||a-b;
+ // Mesh placement is driven by fine-volume occupancy. One coarse cavity
+ // cell may hold several rotated original rocks, but the same fine sample
+ // cannot be assigned to more than one rock, mortar or source stone.
+ const pebbles=packOriginalPebbles(g,smallMeshes,profiles,authoredContains,{
+  maxFragments,maxTriangles:stoneTriangleBudget,isSolidAt,subdivisions:sampleAxis,
  });
- for(const i of cells){
-  if(out.fragments>=maxFragments){
-   // The source-pebble detail budget is exhausted, but the physical stone
-   // core and inner mortar may still complete the seam without truncation.
-   if(maxFragments===0)out.truncated=true;
-   break;
-  }
-  if(out.stonePositions.length/9>=stoneTriangleBudget)break;
-  if(Array.from({length:perCell},(_,sub)=>coverage[i*perCell+sub]).every(Boolean))continue;
-  const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride),lo=[x,y,z],hi=[x,y,z];
-  if(!boxFree(lo,hi))continue;
-  let moved=true;
-  while(moved){
-   moved=false;let best=null,bestScore=-Infinity;
-   for(let a=0;a<3;a++)for(const dir of [-1,1]){
-    const L=lo.slice(),H=hi.slice();if(dir<0)L[a]--;else H[a]++;
-    const size=L.map((v,k)=>(H[k]-v+1)*g.dimension[k]);
-    if(size.some(v=>v>.60)||size.reduce((s,v)=>s*v,1)>.27||!boxFree(L,H))continue;
-    const score=size.reduce((s,v)=>s+Math.sqrt(v),0)-size.reduce((s,v)=>s*v,1)*.2;
-    if(score>bestScore){bestScore=score;best={L,H};}
-   }
-   if(best){lo.splice(0,3,...best.L);hi.splice(0,3,...best.H);moved=true;}
-  }
-  const rotation=(i*17+out.fragments*11)%24;
-  const center=lo.map((v,k)=>(v+hi[k]+1)*.5);
-  const extent=lo.map((v,k)=>(hi[k]-v+1)*g.dimension[k]);
-  let model=-1,matched=[],bestFit=.93;
-  for(let attempt=0;attempt<smallMeshes.length;attempt++){
-   const variant=(attempt+out.fragments)%smallMeshes.length,field=profiles[variant];
-   for(const fit of [.93,.82,.72,.62,.52]){
-    if(!candidateClear(smallMeshes[variant],lo,hi,g.min,g.dimension,fit,rotation,isSolidAt))continue;
-    const samples=[];
-    for(let zz=lo[2];zz<=hi[2];zz++)for(let yy=lo[1];yy<=hi[1];yy++)for(let xx=lo[0];xx<=hi[0];xx++){
-     const relative=[xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]);
-     const p=invrot(relative.map((v,k)=>v/(extent[k]*fit)),rotation).map(v=>v+.5);
-     if(authoredContains(field,p))samples.push(offset(g,xx,yy,zz));
-    }
-    if(samples.length>matched.length){matched=samples;model=variant;bestFit=fit;}
-    if(matched.length>(hi[0]-lo[0]+1)*(hi[1]-lo[1]+1)*(hi[2]-lo[2]+1)*.48)break;
-   }
-   if(matched.length>(hi[0]-lo[0]+1)*(hi[1]-lo[1]+1)*(hi[2]-lo[2]+1)*.48)break;
-  }
-  if(!matched.length)continue;
-  let physical=null;
-  const chosen=bestFit;
-  for(const fit of [chosen,...[.82,.72,.62,.52,.42,.32].filter(value=>value<chosen-.001)]){
-   if(!candidateClear(smallMeshes[model],lo,hi,g.min,g.dimension,fit,rotation,isSolidAt))continue;
-   const trial=physicalFootprint(profiles[model],lo,hi,rotation,fit);
-   if(trial?.length){physical=trial;bestFit=fit;break;}
-  }
-  if(!physical)continue; // Candidate collides with installed source/infill.
-  if(bestFit!==chosen){
-   matched=[];
-   for(let zz=lo[2];zz<=hi[2];zz++)for(let yy=lo[1];yy<=hi[1];yy++)for(let xx=lo[0];xx<=hi[0];xx++){
-    const p=invrot([xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]/(extent[k]*bestFit)),rotation).map(v=>v+.5);
-    if(authoredContains(profiles[model],p))matched.push(offset(g,xx,yy,zz));
-   }
-   if(!matched.length)continue;
-  }
-  if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>stoneTriangleBudget)break;
-  physicalMesh(out,smallMeshes[model],{lo,hi},g.min,g.dimension,rotation,bestFit);
-  for(const at of physical)coverage[at]=1;
-  for(const k of matched)if(!occupied[k]){occupied[k]=1;out.stoneFilledCells++;}
-  out.fragments++;
- }
+ for(const v of pebbles.positions)out.stonePositions.push(v);
+ for(const v of pebbles.colors)out.stoneColors.push(v);
+ coverage.set(pebbles.coverage);
+ out.fragments=pebbles.fragments;
+ out.truncated=pebbles.truncated;
+ for(let i=0;i<num;i++)if(coverage.subarray(i*perCell,(i+1)*perCell).some(Boolean))out.stoneFilledCells++;
  // Under the 20/60/20 rule a real 3D central mortar solid is meshed
  // after all authored exterior rubble has been placed. The legacy
  // surface-only diagnostic remains for standalone callers without a seam.
