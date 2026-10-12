@@ -127,7 +127,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  if(!out.candidateCells)return out;
  const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
  const sampleAxis=Number.isInteger(g.seamAxis)&&maxTriangles<6500?2:3;
- const stoneTriangleBudget=Number.isInteger(g.seamAxis)?Math.floor(maxTriangles*(maxTriangles<1600?.10:maxTriangles<6500?.18:.28)):maxTriangles;
+ const stoneTriangleBudget=Number.isInteger(g.seamAxis)?Math.floor(maxTriangles*(maxTriangles<1600?.62:maxTriangles<6500?.55:.45)):maxTriangles;
  const perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
  const samplePoint=(x,y,z,sx,sy,sz)=>[
   g.min[0]+(x+(sx+.5)/sampleAxis)*g.dimension[0],
@@ -136,7 +136,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  ];
  const boxFree=(lo,hi)=>{
   for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++)
-   if(!inGrid(g,x,y,z)||!mask[offset(g,x,y,z)]||occupied[offset(g,x,y,z)])return false;
+   if(!inGrid(g,x,y,z)||!mask[offset(g,x,y,z)])return false;
   return true;
  };
 
@@ -183,7 +183,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    break;
   }
   if(out.stonePositions.length/9>=stoneTriangleBudget)break;
-  if(occupied[i])continue;
+  if(Array.from({length:perCell},(_,sub)=>coverage[i*perCell+sub]).every(Boolean))continue;
   const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride),lo=[x,y,z],hi=[x,y,z];
   if(!boxFree(lo,hi))continue;
   let moved=true;
@@ -237,8 +237,8 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>stoneTriangleBudget)break;
   physicalMesh(out,smallMeshes[model],{lo,hi},g.min,g.dimension,rotation,bestFit);
   for(const at of physical)coverage[at]=1;
-  for(const k of matched)occupied[k]=1;
-  out.fragments++;out.stoneFilledCells+=matched.length;
+  for(const k of matched)if(!occupied[k]){occupied[k]=1;out.stoneFilledCells++;}
+  out.fragments++;
  }
  // Under the 20/60/20 rule a real 3D central mortar solid is meshed
  // after all authored exterior rubble has been placed. The legacy
