@@ -117,7 +117,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  if(!out.candidateCells)return out;
  const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
  const sampleAxis=Number.isInteger(g.seamAxis)&&maxTriangles<6500?2:3;
- const stoneTriangleBudget=Number.isInteger(g.seamAxis)?Math.floor(maxTriangles*(maxTriangles<6500?.28:.60)):maxTriangles;
+ const stoneTriangleBudget=Number.isInteger(g.seamAxis)?Math.floor(maxTriangles*(maxTriangles<1600?.10:maxTriangles<6500?.18:.28)):maxTriangles;
  const perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
  const samplePoint=(x,y,z,sx,sy,sz)=>[
   g.min[0]+(x+(sx+.5)/sampleAxis)*g.dimension[0],
@@ -228,7 +228,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   });
   const mortar=buildCoreMortar(g,coverage,{
    isSolidAt,maxTriangles:Math.max(0,maxTriangles-out.stonePositions.length/9),
-   subdivisions:sampleAxis,rockPalette,
+   subdivisions:sampleAxis,rockPalette,rockContours:smallMeshes.map(mesh=>mesh.positions),
   });
   for(const v of mortar.wedgePositions)out.stonePositions.push(v);
   for(const v of mortar.wedgeColors)out.stoneColors.push(v);
