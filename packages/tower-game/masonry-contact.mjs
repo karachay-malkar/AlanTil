@@ -63,30 +63,113 @@ export function contactDisplacement(point,id,joints){
  for(const j of joints){
   const side=j.left===id?1:j.right===id?-1:0;if(!side)continue;
   const d=side*(j.plane-point[j.axis]);
-  if(d<-.11||d>.60)continue;
+  if(d<-.08||d>1.12)continue;
   let footprint=1;
   for(let i=0;i<2;i++){
    const axis=j.other[i],p=point[axis],[lo,hi]=j.ranges[i];
    footprint*=smooth((p-lo+.07)/.18)*smooth((hi+.07-p)/.18);
   }
   if(footprint<.0001)continue;
-  const band=smooth((.62-d)/.50)*footprint;
+  const band=smooth((1.12-d)/.30)*footprint;
   const aim=contactSurface(j,point)-side*.021;
-  const desired=Math.max(-.055,Math.min(.39,side*(aim-point[j.axis])));
+  const desired=Math.max(-.035,Math.min(.69,side*(aim-point[j.axis])));
   total[j.axis]+=side*desired*band;
  }
- const length=Math.hypot(...total);return length>.42?total.map(v=>v*.42/length):total;
+ const length=Math.hypot(...total);return length>.70?total.map(v=>v*.70/length):total;
+}
+/**
+ * Add vertices to the CONTACT PATCH only. Split every marked shared edge in
+ * both adjacent faces so there are no T-junctions or invented source rocks.
+ * The source positions/triangles are immutable and unchanged when isolated.
+ */
+export function refineContactMesh(mesh,block,joints,{maxPasses=4,maxTriangles=12000}={}){
+ if(!joints?.length)return {positions:mesh.positions.slice(),colors:mesh.colors.slice(),indices:mesh.indices.slice()};
+ const p=Array.from(mesh.positions),colors=Array.from(mesh.colors);
+ let faces=Array.from(mesh.indices);
+ const sideNear=point=>joints.some(j=>{
+  const distance=Math.abs(j.plane-point[j.axis]);
+  if(distance>1.28)return false;
+  return j.other.every((axis,i)=>point[axis]>=j.ranges[i][0]-.22&&point[axis]<=j.ranges[i][1]+.22);
+ });
+ const wpoint=i=>localToWorld(block,p.slice(i*3,i*3+3));
+ const key=(i,j)=>i<j?i+':'+j:j+':'+i;
+ for(let pass=0;pass<maxPasses;pass++){
+  const marked=new Set(),mid=new Map();
+  for(let i=0;i<faces.length;i+=3){
+   const ids=faces.slice(i,i+3),pts=ids.map(wpoint);
+   const center=[0,1,2].map(k=>(pts[0][k]+pts[1][k]+pts[2][k])/3);
+   if(!sideNear(center)&&!pts.some(sideNear))continue;
+   for(let e=0;e<3;e++){
+    const first=e,second=(e+1)%3;
+    if(Math.hypot(...pts[first].map((v,k)=>v-pts[second][k]))>.16)marked.add(key(ids[first],ids[second]));
+   }
+  }
+  if(!marked.size)break;
+  // Polygon fan keeps each triangle's source winding, and every shared edge
+  // has the exact same inserted midpoint in adjacent source triangles.
+  const midpoint=(a,b)=>{
+   const k=key(a,b);if(mid.has(k))return mid.get(k);
+   const index=p.length/3;
+   for(let axis=0;axis<3;axis++){
+    p.push((p[a*3+axis]+p[b*3+axis])/2);
+    colors.push((colors[a*3+axis]+colors[b*3+axis])/2);
+   }
+   mid.set(k,index);return index;
+  };
+  const next=[];
+  for(let i=0;i<faces.length;i+=3){
+   const [a,b,c]=faces.slice(i,i+3),polygon=[a];
+   if(marked.has(key(a,b)))polygon.push(midpoint(a,b));
+   polygon.push(b);
+   if(marked.has(key(b,c)))polygon.push(midpoint(b,c));
+   polygon.push(c);
+   if(marked.has(key(c,a)))polygon.push(midpoint(c,a));
+   // Fan triangulation, in the same winding orientation as original.
+   for(let j=1;j<polygon.length-1;j++)next.push(polygon[0],polygon[j],polygon[j+1]);
+  }
+  if(next.length/3>maxTriangles)break;
+  faces=next;
+ }
+ const ArrayType=p.length/3>65535?Uint32Array:Uint16Array;
+ return {positions:Float32Array.from(p),colors:Float32Array.from(colors),indices:ArrayType.from(faces)};
 }
 export function deformContactMesh(mesh,block,joints){
- const positions=mesh.positions.slice();
- if(!joints?.length)return {...mesh,positions};
- for(let i=0;i<positions.length;i+=3){
-  const p=[positions[i],positions[i+1],positions[i+2]],world=localToWorld(block,p);
-  const delta=contactDisplacement(world,block.id,joints);
-  const displaced=worldToLocal(block,world.map((v,k)=>v+delta[k]));
-  positions.set(displaced,i);
+ if(!joints?.length)return {...mesh,positions:mesh.positions.slice(),indices:mesh.indices.slice()};
+ const refined=refineContactMesh(mesh,block,joints),base=refined.positions;
+ const displacement=new Float32Array(base.length);
+ let moved=0,maxContactDisplacement=0;
+ for(let i=0;i<base.length;i+=3){
+  const world=localToWorld(block,[base[i],base[i+1],base[i+2]]);
+  const d=contactDisplacement(world,block.id,joints);
+  if(Math.hypot(...d)>1e-5)moved++;
+  maxContactDisplacement=Math.max(maxContactDisplacement,Math.hypot(...d));
+  const corrected=worldToLocal(block,world.map((v,k)=>v+d[k]));
+  for(let k=0;k<3;k++)displacement[i+k]=corrected[k]-base[i+k];
  }
- return {...mesh,positions};
+ // Keep the source triangle winding. When a narrow original polygon would
+ // invert under stretching, back off the deformation rather than tear it.
+ const result=base.slice(),f=refined.indices;
+ const windingSafe=()=>{
+  for(let t=0;t<f.length;t+=3){
+   const ids=[f[t],f[t+1],f[t+2]];
+   const normal=q=>{
+    const a=ids[0]*3,b=ids[1]*3,c=ids[2]*3;
+    const u=[q[b]-q[a],q[b+1]-q[a+1],q[b+2]-q[a+2]];
+    const v=[q[c]-q[a],q[c+1]-q[a+1],q[c+2]-q[a+2]];
+    return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+   };
+   const a=normal(base),b=normal(result);
+   if(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]<=1e-10)return false;
+  }return true;
+ };
+ let scale=1;
+ for(let attempt=0;attempt<7;attempt++){
+  for(let i=0;i<result.length;i++)result[i]=base[i]+displacement[i]*scale;
+  if(windingSafe())break;
+  scale*=.7;
+ }
+ return {...refined,positions:result,contactMovedVertices:moved,
+  maxContactDisplacement:maxContactDisplacement*scale};
 }
 export function unwarpContactPoint(point,id,joints){
  let q=point.slice();for(let i=0;i<5;i++){
