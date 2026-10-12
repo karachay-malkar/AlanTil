@@ -15,6 +15,7 @@ test('V2 fills measured source-triangle joints only; no source pair means no inf
  const apart=packV2AuthoredInfill([A,block(40,'remote')]);assert.equal(apart.joints,0);assert.equal(apart.placements.length,0);
  const joined=packV2AuthoredInfill(fresh());
  assert.equal(joined.sourceOnly,true);assert.equal(joined.unit,'meters');
+ assert.equal(joined.fragments,joined.placements.length,'Worker must report real pebble count for WebGL QA');
  assert.equal(joined.joints>=1,true);assert.equal(joined.placements.length>=1,true);
  assert.equal(joined.mortarPositions.length,0,'V2 must not generate rectangular mortar');
  assert.equal(joined.mortarColors.length,0,'V2 must not use artificial mortar geometry');

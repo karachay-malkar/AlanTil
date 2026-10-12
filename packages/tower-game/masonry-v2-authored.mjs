@@ -85,7 +85,7 @@ function triangleSoup(placements){
 }
 /** Enforce deterministic output irrespective of incoming save-row ordering. */
 export function packV2AuthoredInfill(blocks,{maxStones=48,maxJoints=160,steps=9,perJoint=2}={}){
- if(!Array.isArray(blocks)||blocks.length<2)return{...triangleSoup([]),placements:[],joints:0,scannedPairs:0,truncated:false,unit:'meters',sourceOnly:true};
+ if(!Array.isArray(blocks)||blocks.length<2)return{...triangleSoup([]),placements:[],fragments:0,joints:0,scannedPairs:0,truncated:false,unit:'meters',sourceOnly:true};
  if(blocks.length>250)throw new RangeError('V2 stone limit');
  const entries=blocks.filter(validBlock).sort(stable).map(b=>({block:b,body:sourceBody(b)}));
  const pebbles=[],placements=[];let joints=0,scannedPairs=0,truncated=false;
@@ -137,5 +137,5 @@ export function packV2AuthoredInfill(blocks,{maxStones=48,maxJoints=160,steps=9,
   }
   if(truncated)break;
  }
- return{...triangleSoup(placements),placements,joints,scannedPairs,truncated,unit:'meters',sourceOnly:true};
+ return{...triangleSoup(placements),placements,fragments:placements.length,joints,scannedPairs,truncated,unit:'meters',sourceOnly:true};
 }
