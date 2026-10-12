@@ -1,0 +1,21 @@
+name: Tower V2 experimental geometry
+on:
+  push:
+    branches: ['17.1', '17.1-stage3-verification']
+    paths:
+      - 'packages/tower-game/stone-*v2.mjs'
+      - 'packages/tower-game/stone-mesh-adapter.mjs'
+      - 'tests/tower-v2-*.test.mjs'
+      - '.github/workflows/tower-v2-geometry.yml'
+  workflow_dispatch:
+jobs:
+  geometry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Standalone v2 geometry tests (actual packed rocks)
+        run: node --test tests/tower-v2-mesh-adapter.test.mjs tests/tower-v2-packed-geometry.test.mjs
