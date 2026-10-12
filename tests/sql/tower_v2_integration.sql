@@ -70,3 +70,24 @@ DO $$declare elem jsonb;v bigint;begin
  if (select count(*) from private.tower_v2_elements)>0 then raise exception 'V2_ITEMS_NOT_REMOVED';end if;
 end $$;
 \echo TOWER_V2_POSTGRES_INTEGRATION_OK
+-- Bounded 5 x 5 foundation test: 25 purchases using the existing wallet,
+-- no pairs inside each other's physical envelope, all 25 server-authorized.
+set role authenticated;
+set "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000002';
+DO $$declare i int;ex int;ez int;eid uuid;opid uuid;result jsonb;
+begin
+ for i in 0..24 loop
+  ex:=2+(i%5)*7;ez:=2+(i/5)*7;
+  eid:=('30000000-0000-0000-0000-'||lpad((i+1)::text,12,'0'))::uuid;
+  opid:=('40000000-0000-0000-0000-'||lpad((i+1)::text,12,'0'))::uuid;
+  result:=public.mutate_tower_v2(i,opid,'place',
+    jsonb_build_object('id',eid,'type','medium','x',ex,'y',0,'z',ez,
+      'sx',2,'sy',1,'sz',1,'rotation',0,'variant',0),null,'silver');
+  if (result->>'revision')::int<>i+1 or (result->>'silver')::int<>100-(i+1)*4 then
+   raise exception 'FOUNDATION_WALLET_OR_REVISION_INVALID % %',i,result;
+  end if;
+ end loop;
+ if jsonb_array_length(result->'elements')<>25 then raise exception 'FOUNDATION_25_COUNT_MISMATCH';end if;
+end $$;
+reset role;
+\echo TOWER_V2_25_FOUNDATION_STONES_OK
