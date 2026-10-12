@@ -111,6 +111,10 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
  const allJoints=findMasonryJoints(blocks),joints=allJoints.slice(0,maxJoints),out=empty();
  out.truncated=allJoints.length>joints.length;
  const store=cache||new Map();
+ // Reserve enough GPU triangles for EVERY detected joint before adding detail.
+ // Previously early joints consumed the entire mobile budget, leaving whole
+ // later contacts visibly unfilled (48 of 49 in the 50-piece regression).
+ const jointBudget=Math.floor(maxTriangles/Math.max(1,joints.length));
  for(const joint of joints){
   const corridor=[0,1,2].map(i=>i===joint.axis?[joint.plane-.7,joint.plane+.7]:joint.ranges[joint.transverse.indexOf(i)]);
   const neighbors=stoneBoxes.filter(entry=>
@@ -118,7 +122,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
    corridor.every(([lo,hi],i)=>entry.box[AXES[i]+'0']<hi&&entry.box[AXES[i]+'1']>lo)
   );
   const surroundings=neighbors.map(e=>e.signature).sort().join('/');
-  const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing+'|'+maxTriangles+'|'+maxFragmentsPerJoint;
+  const key=joint.key+'|'+openingSignature+'|'+surroundings+'|'+spacing+'|'+jointBudget+'|'+maxFragmentsPerJoint;
   let piece=store.get(key);
   if(!piece){
    const grid=cavity(joint,profiles,openings,spacing,neighbors);
@@ -127,7 +131,7 @@ export function packMasonryVolume(blocks,profiles,{spacing=.12,maxTriangles=1800
     if(openings.some(o=>p[0]>=o.x0&&p[0]<=o.x1&&p[1]>=o.y0&&p[1]<=o.y1&&p[2]>=o.z0&&p[2]<=o.z1))return true;
     return neighbors.some(o=>p[0]>=o.box.x0&&p[0]<=o.box.x1&&p[1]>=o.box.y0&&p[1]<=o.box.y1&&p[2]>=o.box.z0&&p[2]<=o.box.z1&&rockContains(o.block,p,profiles,0));
    };
-   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(maxTriangles,95000),isSolidAt}):{...empty(),truncated:true};
+   piece=grid?fillAuthoredCavity(grid,SMALL_ROCKS,{maxFragments:maxFragmentsPerJoint,maxTriangles:Math.min(jointBudget,95000),isSolidAt}):{...empty(),truncated:true};
    store.set(key,piece);
   }
   const triangles=(piece.stonePositions.length+piece.mortarPositions.length)/9;
