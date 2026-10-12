@@ -42,5 +42,6 @@ test('truncated joint or fragment budgets cannot be reported complete',()=>{
  const exhausted=packMasonryVolume(pair,profiles,{maxFragmentsPerJoint:0});
  assert.equal(exhausted.truncated,true);
  assert.equal(exhausted.coverageComplete,false);
- assert.equal(exhausted.stonePhysicalVolume,0);
+ assert.ok(exhausted.wedgePhysicalVolume>0,'micro-wedges remain valid even when authored large rubble budget is zero');
+ assert.equal(exhausted.fragments,0,'maxFragments=0 still forbids original mesh placement');
 });
