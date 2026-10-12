@@ -36,3 +36,10 @@ test('v2 always protects mutation at RPC entry regardless of UI control state',(
  assert.match(script,/on\('\[data-remove\]'\,'click',\(\)=>\{if\(s\.v2Enabled/);
  assert.match(script,/root\.querySelectorAll\('\[data-exchange\]'\).*?if\(s\.v2Enabled/);
 });
+
+test('v2 valid preview uses a visible green unlit ghost and a non-error status',()=>{
+ const scene=source('src/features/tower/scene.js'),index=source('src/features/tower/index.js');
+ assert.match(scene,/enableV2Aim\&\&stone/);
+ assert.match(scene,/THREE\.MeshBasicMaterial\(\{color:/);
+ assert.match(index,/s\.v2Enabled\?false:Boolean\(message\)/);
+});

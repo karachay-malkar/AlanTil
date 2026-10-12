@@ -97,7 +97,7 @@ export async function mount(context,params={}){
   s.scene?.setPreview(positionReady?s.preview:null,v.ok);
   if(s.busy)return;
   const message=s.v2Enabled?(s.v2CandidateValid?'Расчётная опора подтверждена · только просмотр':'Поиск положения без сетки…'):!s.editable?'':!v.ok&&s.positionTouched?v.reason:!payable?'Оплата только серебром':s.balance[cur]<amount?'Недостаточно монет':'';
-  status(message,Boolean(message));
+  status(message,s.v2Enabled?false:Boolean(message));
  }
 
  let thumbnailObserver=null;

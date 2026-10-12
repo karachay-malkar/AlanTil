@@ -22,6 +22,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  renderer.domElement.setAttribute('aria-label','Трёхмерная стройка башни');renderer.domElement.style.cssText='display:block;width:100%;height:100%;touch-action:none;';container.append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(42,1,.1,180);camera.position.set(17,12,20);
  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(7.5,1,7.5);controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=2;controls.maxDistance=48;controls.maxPolarAngle=Math.PI*.485;
+ if(enableV2Aim){camera.position.set(11.6,5.1,12.2);controls.target.set(7.5,.5,7.5);controls.update();}
  scene.add(new THREE.HemisphereLight('#e7f4ff','#695d41',2.3));
  const sun=new THREE.DirectionalLight('#fff1dc',3.3);sun.position.set(-9,24,14);sun.castShadow=true;sun.shadow.mapSize.set(matchMedia('(max-width:749px), (max-height:520px)').matches?1024:2048,matchMedia('(max-width:749px), (max-height:520px)').matches?1024:2048);Object.assign(sun.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:.5,far:70});sun.shadow.bias=-.0003;sun.shadow.normalBias=.035;sun.target.position.set(7.5,0,7.5);scene.add(sun,sun.target);
  // The playable 60x60 ground is grass with an unobtrusive quarter-metre grid.
@@ -173,7 +174,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(b.type==='door'||b.type==='window')scale.z=.25;
    if(b.type==='deck')scale.y=.065;
    for(const [geometry,material,offset,factor] of previewMeshes(b)){
-    const translucent=material.clone();translucent.transparent=true;translucent.depthWrite=false;translucent.side=THREE.DoubleSide;translucent.vertexColors=false;translucent.flatShading=true;previewMaterials.push(translucent);
+    const translucent=enableV2Aim&&stone?new THREE.MeshBasicMaterial({color:'#72cf95'}):material.clone();translucent.transparent=true;translucent.depthWrite=false;translucent.side=THREE.DoubleSide;translucent.vertexColors=false;translucent.flatShading=true;previewMaterials.push(translucent);
     const mesh=new THREE.Mesh(geometry,translucent);
     mesh.position.set(...offset).multiply(scale).applyQuaternion(q);
     mesh.quaternion.copy(q);mesh.scale.copy(scale).multiply(new THREE.Vector3(...factor));mesh.renderOrder=6;
@@ -181,7 +182,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    }
    previewType=key;
   }
-  for(const material of previewMaterials){material.opacity=valid?.43:.24;material.color.set(valid?'#72cf95':'#ee8b80');}
+  for(const material of previewMaterials){material.opacity=enableV2Aim?(valid?.78:.24):(valid?.43:.24);material.color.set(valid?'#72cf95':'#ee8b80');}
   edges.material.color.set(valid?'#e8f5ec':'#da6254');
   edges.position.set(0,0,0);edges.rotation.set(0,0,0);edges.scale.set(...d.map(v=>v*CELL*1.012));
   if(b.type==='deck')edges.scale.y=.075;
