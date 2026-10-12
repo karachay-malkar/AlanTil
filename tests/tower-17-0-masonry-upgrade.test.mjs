@@ -81,3 +81,19 @@ test('seven authored small stones may expand into contacts without cubic replace
  }
  assert.equal(signatures.size,7);
 });
+
+test('subdivided authored main stones acquire real nonplanar rock relief',()=>{
+ for(const category of ['medium','long','big']){
+  const source=originalRockMesh(ROCK_PACK[category][0]);
+  const flat=adaptRockMesh(source,{relief:0});
+  const sculpted=adaptRockMesh(source);
+  assert.deepEqual(sculpted.indices,flat.indices);
+  assert.equal(sculpted.positions.length,flat.positions.length);
+  const originalCount=source.positions.length;
+  let changed=0;
+  for(let i=originalCount;i<flat.positions.length;i++)if(Math.abs(flat.positions[i]-sculpted.positions[i])>1e-4)changed++;
+  assert.ok(changed>=15,category+' facets retain nonplanar chipped rock relief');
+  assert.equal(inspectRockMesh(sculpted).invalidTriangles,0);
+  assert.equal(inspectRockMesh(sculpted).outOfBounds,0);
+ }
+});
