@@ -40,7 +40,7 @@ test('source rock silhouettes stay irregular while extension remains inside the 
    assert.equal(result.invalidTriangles,0,type+' '+i);
    assert.equal(result.outOfBounds,0,type+' '+i);
    assert.ok(result.triangles>=source.indices.length/3);
-   assert.ok(result.maxEdge<=.185,type+' '+i);
+   assert.equal(result.maxEdge,inspectRockMesh(source).maxEdge,type+' '+i+' source triangles must be unchanged');
   }
  }
  assert.deepEqual(counts,{small:7,medium:5,long:4,big:7});
@@ -73,7 +73,8 @@ test('seven authored small stones may expand into contacts without cubic replace
   assert.equal(expanded.indices.length,original.indices.length);
   assert.equal(expanded.positions.length,original.positions.length);
   const metric=mesh=>Array.from(mesh.positions).reduce((sum,v)=>sum+Math.abs(v),0)/mesh.positions.length;
-  assert.ok(metric(expanded)>metric(original)*1.15,'enlarge actual irregular stone contours');
+  assert.equal(metric(expanded),metric(original),'do not expand or generate pebbles before placement');
+  assert.deepEqual(expanded.positions,original.positions);
   const diagnostics=inspectRockMesh(expanded);
   assert.equal(diagnostics.invalidTriangles,0);
   assert.equal(diagnostics.outOfBounds,0);
@@ -82,19 +83,13 @@ test('seven authored small stones may expand into contacts without cubic replace
  assert.equal(signatures.size,7);
 });
 
-test('subdivided authored main stones acquire real nonplanar rock relief',()=>{
- for(const category of ['medium','long','big']){
-  const source=originalRockMesh(ROCK_PACK[category][0]);
-  const flat=adaptRockMesh(source,{relief:0});
-  const sculpted=adaptRockMesh(source);
-  assert.deepEqual(sculpted.indices,flat.indices);
-  assert.equal(sculpted.positions.length,flat.positions.length);
-  const originalCount=source.positions.length;
-  let changed=0;
-  for(let i=originalCount;i<flat.positions.length;i++)if(Math.abs(flat.positions[i]-sculpted.positions[i])>1e-4)changed++;
-  assert.ok(changed>=15,category+' facets retain nonplanar chipped rock relief');
-  assert.equal(inspectRockMesh(sculpted).invalidTriangles,0);
-  assert.equal(inspectRockMesh(sculpted).outOfBounds,0);
+test('isolated stones keep exact authored polygons and surface without a procedural relief pass',()=>{
+ for(const category of ['small','medium','long','big']){
+  const source=originalRockMesh(ROCK_PACK[category][0],0);
+  const idle=adaptRockMesh(source);
+  assert.deepEqual(idle.positions,source.positions);
+  assert.deepEqual(idle.indices,source.indices);
+  assert.deepEqual(idle.colors,source.colors);
  }
 });
 
