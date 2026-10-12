@@ -44,6 +44,7 @@ export function adaptRockMesh(mesh,{strength=.91,maxEdge=.14,relief=.018,subdivi
  // Sculpt new shared vertices using the ORIGINAL triangle normals so relief
  // cannot detach from the authored silhouette or produce procedural cubes.
  if(subdivide&&relief>0){
+  const undeformed=p.slice();
   const normal=new Float64Array(p.length);
   for(let f=0;f<faces.length;f+=3){
    const a=faces[f],b=faces[f+1],c=faces[f+2];
@@ -60,6 +61,28 @@ export function adaptRockMesh(mesh,{strength=.91,maxEdge=.14,relief=.018,subdivi
     p[o+k]=Math.max(-.5,Math.min(.5,p[o+k]+amplitude*normal[o+k]/length));
     colors[o+k]=Math.max(0,Math.min(1,colors[o+k]+grain*.025));
    }
+  }
+  // Bound sculpting by the actual authored triangle orientation. An individual
+  // displaced vertex must never collapse or turn a face inside out.
+  for(let pass=0;pass<3;pass++){
+   let corrected=false;
+   for(let f=0;f<faces.length;f+=3){
+    const ids=[faces[f],faces[f+1],faces[f+2]];
+    const cross=(positions)=>{
+     const a=ids[0]*3,b=ids[1]*3,c=ids[2]*3;
+     const u=[0,1,2].map(k=>positions[b+k]-positions[a+k]);
+     const v=[0,1,2].map(k=>positions[c+k]-positions[a+k]);
+     return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+    };
+    const base=cross(undeformed),now=cross(p);
+    const signed=base.reduce((sum,value,k)=>sum+value*now[k],0);
+    if(Math.hypot(...now)>1e-6&&signed>1e-11)continue;
+    for(const id of ids)if(id>=sourceVertexCount){
+     for(let k=0;k<3;k++)p[id*3+k]=undeformed[id*3+k];
+     corrected=true;
+    }
+   }
+   if(!corrected)break;
   }
  }
  const Index=p.length/3<65536?Uint16Array:Uint32Array;
