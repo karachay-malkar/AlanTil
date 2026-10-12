@@ -1,5 +1,6 @@
 import {originalRockMesh} from './rock-shapes.mjs';
 import {adaptRockMesh} from './rock-adaptation.mjs';
+import {unwarpContactPoint} from './masonry-contact.mjs';
 import {worldDimensions} from './core.mjs';
 
 const OTHER_AXES = [[1, 2], [0, 2], [0, 1]];
@@ -75,7 +76,8 @@ export function buildStoneProfiles(pack, resolution = 40) {
 export function rockCategory(type) { return type === 'stone' ? 'small' : type; }
 
 /** Point in the same grid cells and rock orientation as scene.js. */
-export function rockContains(block, point, profiles, tolerance = .02) {
+export function rockContains(block, point, profiles, tolerance = .02, contacts = null) {
+  if(contacts?.length)point=unwarpContactPoint(point,block.id,contacts);
   const shapes = profiles[rockCategory(block.type)];
   if (!shapes?.length) return false;
   const fields = shapes[((block.variant || 0) % shapes.length + shapes.length) % shapes.length];
