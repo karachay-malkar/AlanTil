@@ -82,7 +82,7 @@ export function contactDisplacement(point,id,joints){
  * both adjacent faces so there are no T-junctions or invented source rocks.
  * The source positions/triangles are immutable and unchanged when isolated.
  */
-export function refineContactMesh(mesh,block,joints,{maxPasses=4,maxTriangles=12000}={}){
+export function refineContactMesh(mesh,block,joints,{maxPasses=3,maxTriangles=6000}={}){
  if(!joints?.length)return {positions:mesh.positions.slice(),colors:mesh.colors.slice(),indices:mesh.indices.slice()};
  const p=Array.from(mesh.positions),colors=Array.from(mesh.colors);
  let faces=Array.from(mesh.indices);
@@ -151,30 +151,34 @@ export function deformContactMesh(mesh,block,joints){
   const corrected=worldToLocal(block,world.map((v,k)=>v+d[k]));
   for(let k=0;k<3;k++)displacement[i+k]=corrected[k]-base[i+k];
  }
- // Keep the source triangle winding. When a narrow original polygon would
- // invert under stretching, back off the deformation rather than tear it.
- const result=base.slice(),f=refined.indices;
- const windingSafe=()=>{
-  for(let t=0;t<f.length;t+=3){
-   const ids=[f[t],f[t+1],f[t+2]];
-   const normal=q=>{
-    const a=ids[0]*3,b=ids[1]*3,c=ids[2]*3;
-    const u=[q[b]-q[a],q[b+1]-q[a+1],q[b+2]-q[a+2]];
-    const v=[q[c]-q[a],q[c+1]-q[a+1],q[c+2]-q[a+2]];
-    return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
-   };
-   const a=normal(base),b=normal(result);
-   if(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]<=1e-10)return false;
-  }return true;
+ // Keep each source triangle's original orientation, reducing only the
+ // local displacement around narrow triangles rather than shrinking the
+ // entire contact deformation across the stone.
+ const result=base.slice(),f=refined.indices,weight=new Float32Array(base.length/3).fill(1);
+ const normal=(q,ids)=>{
+  const a=ids[0]*3,b=ids[1]*3,c=ids[2]*3;
+  const u=[q[b]-q[a],q[b+1]-q[a+1],q[b+2]-q[a+2]];
+  const v=[q[c]-q[a],q[c+1]-q[a+1],q[c+2]-q[a+2]];
+  return [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
  };
- let scale=1;
- for(let attempt=0;attempt<7;attempt++){
-  for(let i=0;i<result.length;i++)result[i]=base[i]+displacement[i]*scale;
-  if(windingSafe())break;
-  scale*=.7;
+ let invalid=0;
+ for(let attempt=0;attempt<50;attempt++){
+  for(let i=0;i<result.length;i++)result[i]=base[i]+displacement[i]*weight[Math.floor(i/3)];
+  invalid=0;const affected=new Set();
+  for(let i=0;i<f.length;i+=3){
+   const ids=[f[i],f[i+1],f[i+2]],a=normal(base,ids),b=normal(result,ids);
+   if(a.reduce((total,x,k)=>total+x*b[k],0)>1e-11)continue;
+   invalid++;
+   for(const id of ids)affected.add(id);
+  }
+  if(!invalid)break;
+  for(const id of affected)weight[id]*=.60;
+ }
+ let effective=0;for(let i=0;i<displacement.length;i+=3){
+  effective=Math.max(effective,Math.hypot(...[0,1,2].map(k=>displacement[i+k]*weight[i/3])));
  }
  return {...refined,positions:result,contactMovedVertices:moved,
-  maxContactDisplacement:maxContactDisplacement*scale};
+  maxContactDisplacement:effective,invalidContactFaces:invalid};
 }
 export function unwarpContactPoint(point,id,joints){
  let q=point.slice();for(let i=0;i<5;i++){
