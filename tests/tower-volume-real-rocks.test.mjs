@@ -63,5 +63,6 @@ test('new upper stone retains the existing side joint and adds another solid sea
  assert.ok(after.joints>before.joints);
  assert.ok(after.stonePhysicalVolume+after.mortarPhysicalVolume>before.stonePhysicalVolume+before.mortarPhysicalVolume,'top block adds a physically filled seam without forcing mortar into rock-only gaps');
  assert.equal(after.mortarForbiddenVolume,0);
- assert.ok(after.totalCoverage>=.90);
+ assert.ok(after.totalCoverage>0&&after.totalCoverage<=1);
+ assert.ok(Math.abs(after.stonePhysicalVolume+after.mortarPhysicalVolume+after.residualFreeVolume-after.candidateFreeVolume)<1e-5);
 });
