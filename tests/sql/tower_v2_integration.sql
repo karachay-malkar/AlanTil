@@ -91,3 +91,26 @@ begin
 end $$;
 reset role;
 \echo TOWER_V2_25_FOUNDATION_STONES_OK
+
+-- 50 genuine V2 free-coordinate purchases on a separately owned test tower.
+-- This is CI-only; the live production wallet and user records are untouched.
+set role authenticated;
+set "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000003';
+DO $$declare i int;ex numeric;ez numeric;eid uuid;opid uuid;s jsonb;
+begin
+ for i in 0..49 loop
+  ex:=3.137+(i%7)*7;ez:=3.221+(i/7)*7;
+  eid:=('50000000-0000-0000-0000-'||lpad((i+1)::text,12,'0'))::uuid;
+  opid:=('60000000-0000-0000-0000-'||lpad((i+1)::text,12,'0'))::uuid;
+  s:=public.mutate_tower_v2(i,opid,'place',
+    jsonb_build_object('id',eid,'type','medium','x',ex,'y',0,'z',ez,
+      'sx',2,'sy',1,'sz',1,'rotation',0,'variant',0),null,'silver');
+  if (s->>'revision')::int<>i+1 or (s->>'silver')::int<>250-4*(i+1) then
+   raise exception 'FRACTIONAL_50_REVISION_OR_WALLET_FAILURE % %',i,s;
+  end if;
+ end loop;
+ if jsonb_array_length(s->'elements')<>50 then raise exception 'FRACTIONAL_50_COUNT_FAILURE';end if;
+ if (select count(*) from private.tower_v2_elements where user_id='00000000-0000-0000-0000-000000000003')<>50 then raise exception 'FRACTIONAL_50_DB_FAILURE';end if;
+end $$;
+reset role;
+\echo TOWER_V2_50_FRACTIONAL_STONES_OK

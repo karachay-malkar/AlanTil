@@ -41,7 +41,8 @@ fs.mkdirSync(output,{recursive:true});
   await new Promise(r=>setTimeout(r,500));
   await page.goto('http://127.0.0.1:8771/tower-v2-fixture?tower_v2_play=1');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
-  assert.match(await page.locator('.towerV2Notice').innerText(),/сохранение V2/);
+  assert.match(await page.locator('.towerV2Notice').innerText(),/отдельное сохранение/);
+  assert.equal(await page.locator('[data-tower-mode="classic"]').getAttribute('href'),'/tower-v2-fixture');
   try{await page.waitForFunction(()=>document.querySelector('.towerStatus')?.textContent?.includes('Предварительная проверка пройдена'),{timeout:14000});}catch(e){
    const debug=await page.evaluate(()=>({ready:document.querySelector('.towerCanvas')?.dataset.ready,status:document.querySelector('.towerStatus')?.textContent,kind:document.querySelector('.towerStatus')?.dataset.kind,values:[...document.querySelectorAll('[data-position]')].map(x=>x.value),visible:!document.querySelector('[data-confirm]')?.hidden,workerNotice:document.querySelector('.towerV2Notice')?.textContent}));
    console.error('V2_DEBUG_FAILURE',JSON.stringify({debug,errors}));

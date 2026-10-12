@@ -2,6 +2,7 @@ import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,GRID_SIZE,HEIGHT_LI
 import {createTowerScene} from './scene.js?v=17.1.4';
 import {suggestCameraPlacement} from '../../../packages/tower-game/camera-placement.mjs';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
+import {towerModeUrl} from '../../../packages/tower-game/tower-mode-url.mjs';
 import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2} from './repository.js?v=17.1.4';
 let active=null;
 const STONE_KIND={stone:'small',medium:'medium',long:'long',big:'big'};
@@ -18,7 +19,15 @@ export async function mount(context,params={}){
  // while dimensions, currencies and layer tools stay available on demand.
  const dock=context.root.querySelector('.towerSide');
  const stage=context.root.querySelector('.towerStage');
- if(s.v2Enabled){const marker=document.createElement('div');marker.className='towerPill towerV2Notice';marker.textContent=s.v2Play?'Укладка без сетки · сохранение V2':'Укладка без сетки · демонстрация без сохранения';stage.append(marker);}
+ // Two independent builds; preserve all other route/query state. V2 is
+ // explicitly opt-in and never copies or overwrites the classic tower.
+ const modeSwitch=document.createElement('nav');
+ modeSwitch.className='towerModeSwitch';modeSwitch.setAttribute('aria-label','Режим строительства');
+ const classicUrl=towerModeUrl(location.href,'classic'),freeUrl=towerModeUrl(location.href,'free');
+ modeSwitch.innerHTML=`<a class="bracketNavigation" data-tower-mode="classic" href="${escape(classicUrl)}" ${!s.v2Enabled?'aria-current="page"':''}>[ Классика ]</a><a class="bracketNavigation" data-tower-mode="free" href="${escape(freeUrl)}" ${s.v2Play?'aria-current="page"':''}>[ Без сетки ]</a>`;
+ modeSwitch.addEventListener('click',event=>{if(s.busy||s.pending){event.preventDefault();status('Сначала заверши или повтори сохранение.',true);}}, {signal:controller.signal});
+ stage.append(modeSwitch);
+ if(s.v2Enabled){const marker=document.createElement('div');marker.className='towerPill towerV2Notice';marker.textContent=s.v2Play?'Свободная башня · отдельное сохранение, общие монеты':'Укладка без сетки · демонстрация без сохранения';stage.append(marker);}
 
  const actionBar=document.createElement('div');
  actionBar.className='towerActionBar';stage.append(actionBar);

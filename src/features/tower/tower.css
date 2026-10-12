@@ -44,8 +44,12 @@
  font:750 var(--text-technical)/1.15 var(--font-terminal);
  font-variant-numeric:tabular-nums
 }
-/* Opt-in, read-only development preview; stays off the camera controls. */
-.towerV2Notice{position:absolute;z-index:4;left:12px;top:calc(var(--safe-top,0px) + 66px);max-width:min(380px,calc(100% - 100px));pointer-events:none;white-space:normal;line-height:1.3}
+/* Explicit choice between independent V1/V2 structures; the wallet is shared. */
+.towerModeSwitch{position:absolute;z-index:5;left:10px;top:calc(var(--safe-top,0px) + 66px);display:flex;align-items:center;gap:5px;max-width:calc(100% - 80px)}
+.towerModeSwitch .bracketNavigation{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:4px 7px;white-space:nowrap;text-decoration:none;color:var(--text-2);font:700 var(--text-technical)/1.2 var(--font-body);border:1px solid transparent;border-radius:var(--radius-sm);background:var(--surface-0)}
+.towerModeSwitch .bracketNavigation[aria-current="page"]{color:var(--text-1);border-color:var(--line);background:var(--accent-soft)}
+.towerModeSwitch .bracketNavigation:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
+.towerV2Notice{position:absolute;z-index:4;left:12px;top:calc(var(--safe-top,0px) + 109px);max-width:min(380px,calc(100% - 90px));pointer-events:none;white-space:normal;line-height:1.3}
 .towerBalance{gap:14px}
 .towerCoin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .towerCoin i{

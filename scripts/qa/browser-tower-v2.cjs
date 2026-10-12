@@ -19,6 +19,8 @@ fs.mkdirSync(output,{recursive:true});
    export function towerUserId(){return 'fixture-v2-readonly'}
    export async function loadTower(){return {elements:[],silver:100,gold:10,revision:0}}
    export async function mutateTower(){globalThis.__MUTATED=true;throw Error('V2 preview attempted a mutation')}
+   export async function loadTowerV2(){throw Error('V2_PLAY_RPC_USED_IN_READONLY_PREVIEW')}
+   export async function mutateTowerV2(){globalThis.__MUTATED=true;throw Error('V2_PLAY_MUTATION_USED_IN_READONLY_PREVIEW')}
   `}));
   await page.route('**/tower-v2-fixture*',r=>r.fulfill({contentType:'text/html',body:`
    <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -32,6 +34,7 @@ fs.mkdirSync(output,{recursive:true});
   await page.goto('http://127.0.0.1:8771/tower-v2-fixture?tower_v2_preview=1');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
   assert.match(await page.locator('.towerV2Notice').innerText(),/без сохранения/);
+  assert.equal(await page.locator('[data-tower-mode="free"]').getAttribute('href'),'/tower-v2-fixture?tower_v2_play=1');
   try{await page.waitForFunction(()=>document.querySelector('.towerStatus')?.textContent?.includes('Расчётная опора подтверждена'),{timeout:14000});}catch(e){
    const debug=await page.evaluate(()=>({ready:document.querySelector('.towerCanvas')?.dataset.ready,status:document.querySelector('.towerStatus')?.textContent,kind:document.querySelector('.towerStatus')?.dataset.kind,values:[...document.querySelectorAll('[data-position]')].map(x=>x.value),visible:!document.querySelector('[data-confirm]')?.hidden,workerNotice:document.querySelector('.towerV2Notice')?.textContent}));
    console.error('V2_DEBUG_FAILURE',JSON.stringify({debug,errors}));

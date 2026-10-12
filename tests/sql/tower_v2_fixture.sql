@@ -20,7 +20,8 @@ create table private.tower_receipts (
 );
 create function private.tower_refresh_rewards(uuid) returns void language plpgsql as $$begin return;end$$;
 grant usage on schema auth,private to authenticated;
-insert into auth.users(id) values ('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');
+insert into auth.users(id) values ('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002'),('00000000-0000-0000-0000-000000000003');
 insert into private.tower_accounts(user_id,silver,gold,elements) values
  ('00000000-0000-0000-0000-000000000001',200,10,'[["legacy-unchanged", "medium", 1,0,1,2,1,1,0,0,0,4]]'::jsonb),
- ('00000000-0000-0000-0000-000000000002',100,10,'[]'::jsonb);
+ ('00000000-0000-0000-0000-000000000002',100,10,'[]'::jsonb),
+ ('00000000-0000-0000-0000-000000000003',250,10,'[]'::jsonb);
