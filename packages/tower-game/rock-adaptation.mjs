@@ -56,3 +56,19 @@ export function inspectRockMesh(mesh){
  }
  return {vertexCount:p.length/3,triangles:indices.length/3,invalidTriangles,outOfBounds,maxEdge};
 }
+
+/** Expand irregular authored infill contours toward available seam space.
+ * This strictly monotone deformation retains every source vertex, triangle,
+ * crack and asymmetry. No cubes or replacement procedural meshes are used.
+ * Local fit and collision tests decide whether an expanded stone can be placed.
+ */
+export function expandInfillRock(mesh,{power=.48}={}){
+ if(!Number.isFinite(power)||power<=0||power>1)throw new RangeError('Invalid infill expansion power');
+ const base=adaptRockMesh(mesh,{subdivide:false,strength:.91});
+ const positions=base.positions.slice();
+ for(let i=0;i<positions.length;i++){
+  const value=positions[i],normalized=Math.min(1,Math.abs(value)*2);
+  positions[i]=Math.sign(value)*.5*Math.pow(normalized,power);
+ }
+ return {...base,positions};
+}
