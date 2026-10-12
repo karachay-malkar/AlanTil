@@ -31,8 +31,14 @@ test('contact surfaces add vertices and actually extend toward adjacent stone wi
  const mesh=adaptRockMesh(source);
  const result=deformContactMesh(mesh,a,joints.get('a'));
  assert.ok(result.positions.length>mesh.positions.length,'contact-only local tessellation needed');
- const maximum=m=>Math.max(...Array.from({length:m.positions.length/3},(_,i)=>localToWorld(a,[...m.positions.slice(i*3,i*3+3)])[0]));
- assert.ok(maximum(result)>maximum(mesh)+.05,'actual extension toward neighbor must be observable');
+ let toward=0;
+ for(let i=0;i<mesh.positions.length;i+=3){
+  const original=localToWorld(a,Array.from(mesh.positions.slice(i,i+3)))[0];
+  const advanced=localToWorld(a,Array.from(result.positions.slice(i,i+3)))[0];
+  if(advanced-original>.05)toward++;
+ }
+ assert.ok(toward>0,'real authored surface vertices must move at least 1.25 cm toward the neighbor');
+ assert.equal(result.invalidContactFaces,0,'contact deform must not invert source triangles');
  assert.deepEqual(mesh.positions,source.positions,'source must not mutate');
  assert.deepEqual(deformContactMesh(mesh,a,[]).positions,mesh.positions);
 });
