@@ -75,4 +75,32 @@ for(const width of [320,768,1440]){
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no horizontal document overflow at '+width+'px');
  await page.screenshot({path:path.join(output,'tower-built-'+width+'.png'),fullPage:true});
 }
+// Real authored-mesh construction evidence for the full mandatory 2/5/15/50 scenes.
+await page.setViewportSize({width:1280,height:900});
+for(const count of [2,5,15,50]){
+ state.elements=Array.from({length:count},(_,i)=>({
+  id:'scene-'+count+'-'+i,type:'medium',x:(i%10)*2,y:0,z:Math.floor(i/10)*2,
+  sx:2,sy:2,sz:2,rotation:0,variant:i%5,paidCurrency:'silver',paidAmount:4
+ }));
+ state.revision++;
+ await page.locator('.towerOptions summary').click();
+ await page.locator('[data-refresh]').click();
+ await page.locator('.towerOptions summary').click();
+ await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.masonryReady==='true',{timeout:60000});
+ await page.getByRole('button',{name:'Вся башня'}).click();
+ await page.waitForTimeout(620);
+ await page.screenshot({path:path.join(output,'tower-scene-'+count+'-oblique.png'),fullPage:true});
+ const frame=await page.locator('canvas').boundingBox();
+ await page.mouse.move(frame.x+frame.width*.6,frame.y+frame.height*.4);
+ await page.mouse.down();
+ await page.mouse.move(frame.x+frame.width*.3,frame.y+frame.height*.4,{steps:18});
+ await page.mouse.up();
+ await page.waitForTimeout(400);
+ await page.screenshot({path:path.join(output,'tower-scene-'+count+'-side.png'),fullPage:true});
+ await page.locator('[data-layer]').evaluate(input=>{input.value='1';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.masonryReady==='true',{timeout:60000});
+ await page.waitForTimeout(220);
+ await page.screenshot({path:path.join(output,'tower-scene-'+count+'-section.png'),fullPage:true});
+ await page.locator('[data-layer]').evaluate(input=>{input.value=input.max;input.dispatchEvent(new Event('input',{bubbles:true}));});
+}
 assert.deepEqual(errors,[]);console.log('PASS real WebGL desktop/mobile, purchase, lost response retry, selection, exact refund, 12 fixed catalog sizes, preserved stone variants, gold payment; no JS errors');}finally{await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1)});
