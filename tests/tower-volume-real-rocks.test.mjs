@@ -20,8 +20,10 @@ test('real irregular rocks form filled rather than scattered joins',()=>{
  const out=packMasonryVolume(pair,profiles,{spacing:.12});
  assert.ok(out.joints===1);
  assert.ok(out.candidateCells>0);
- assert.equal(out.candidateCells,out.filledCells);
+ assert.ok(out.filledCells>0&&out.filledCells<=out.candidateCells);assert.equal(out.stoneFilledCells,out.filledCells);assert.ok(out.residualFreeVolume>=0);
  assert.ok(out.stonePositions.length>0);
+ assert.ok(out.penetrationVolume<=1e-5,'infill must not intrude into the two source stones: '+out.penetrationVolume);
+ assert.ok(out.selfOverlapVolume<=1e-5,'separate infill stones must not intersect: '+out.selfOverlapVolume);
  assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.12}),out);
 });
 test('real 50-piece dry wall respects worker geometry budget',()=>{
@@ -30,4 +32,36 @@ test('real 50-piece dry wall respects worker geometry budget',()=>{
  assert.equal(out.joints,49);
  assert.ok(out.candidateCells>1000);
  assert.ok((out.stonePositions.length+out.mortarPositions.length)/9<=90000);
+});
+
+test('truncated joint or fragment budgets cannot be reported complete',()=>{
+ const pair=[b('left',0,0,0),b('right',2,0,0,'medium',1)];
+ const skipped=packMasonryVolume(pair,profiles,{maxJoints:0});
+ assert.equal(skipped.truncated,true);
+ assert.equal(skipped.coverageComplete,false);
+ const exhausted=packMasonryVolume(pair,profiles,{maxFragmentsPerJoint:0});
+ assert.equal(exhausted.truncated,true);
+ assert.equal(exhausted.coverageComplete,false);
+ assert.ok(exhausted.wedgePhysicalVolume>0,'micro-wedges remain valid even when authored large rubble budget is zero');
+ assert.equal(exhausted.fragments,0,'maxFragments=0 still forbids original mesh placement');
+});
+
+test('stacked stones acquire a new horizontal joint with hidden solid mortar',()=>{
+ const wall=[b('lower',0,0,0),b('upper',0,2,0,'medium',1)];
+ const out=packMasonryVolume(wall,profiles,{spacing:.12,maxTriangles:90000});
+ assert.equal(out.joints,1);
+ assert.ok(out.stonePhysicalVolume+out.mortarPhysicalVolume>0,'horizontal joint must contain genuine infill');
+ assert.ok(out.wedgePhysicalVolume>0,'outer band receives physical stone clippings');
+ assert.ok(out.totalCoverage>=.90);
+ assert.equal(out.mortarForbiddenVolume,0);
+ assert.equal(out.penetrationVolume,0);
+});
+test('new upper stone retains the existing side joint and adds another solid seam',()=>{
+ const side=[b('left',0,0,0),b('right',2,0,0,'medium',1)];
+ const before=packMasonryVolume(side,profiles,{spacing:.12,maxTriangles:90000});
+ const after=packMasonryVolume([...side,b('upper',0,2,0)],profiles,{spacing:.12,maxTriangles:90000});
+ assert.ok(after.joints>before.joints);
+ assert.ok(after.stonePhysicalVolume+after.mortarPhysicalVolume>before.stonePhysicalVolume+before.mortarPhysicalVolume,'top block adds a physically filled seam without forcing mortar into rock-only gaps');
+ assert.equal(after.mortarForbiddenVolume,0);
+ assert.ok(after.totalCoverage>=.90);
 });

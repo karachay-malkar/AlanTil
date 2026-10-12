@@ -21,9 +21,9 @@ test('processed rock variants are present for all four build categories',()=>{
  }
 });
 
-test('there are exactly 36 distinct fixed-size cards and new big depth is 2–4 cells',()=>{
+test('there are 12 purchasable fixed sizes and one preserved historic stone',()=>{
  assert.deepEqual(Object.fromEntries(Object.entries(STONE_CONFIGURATIONS).map(([type,dims])=>[type,dims.length])),{
-  stone:1,medium:2,long:6,big:27,
+  stone:1,medium:3,long:6,big:3,
  });
  const seen=new Set();
  for(const [type,configs] of Object.entries(STONE_CONFIGURATIONS)){
@@ -31,12 +31,12 @@ test('there are exactly 36 distinct fixed-size cards and new big depth is 2–4 
    assert.equal(validatePlacement([],{id:'q',type,x:0,y:0,z:0,sx,sy,sz,rotation:0}).ok,true,type+' '+[sx,sy,sz].join('x'));
    const key=type+':'+sx+'x'+sy+'x'+sz;
    assert.equal(seen.has(key),false,key);seen.add(key);
-   if(type==='medium')assert.equal(sz,1);
+   if(type==='medium')assert.equal(sx,2);
    if(type==='long')assert.equal(sz,1);
-   if(type==='big')assert.ok(sz>=2&&sz<=4);
+   if(type==='big')assert.ok([[2,3,3],[2,3,4],[3,4,4]].some(d=>d.join() === [sx,sy,sz].join()));
   }
  }
- assert.equal(seen.size,36);
+ assert.equal(seen.size,13);
 });
 
 test('placing all variants keeps server-compatible stone dimensions and serialized variant',()=>{

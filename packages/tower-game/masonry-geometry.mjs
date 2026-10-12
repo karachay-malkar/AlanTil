@@ -1,4 +1,5 @@
 import {originalRockMesh} from './rock-shapes.mjs';
+import {adaptRockMesh} from './rock-adaptation.mjs';
 import {worldDimensions} from './core.mjs';
 
 const OTHER_AXES = [[1, 2], [0, 2], [0, 1]];
@@ -12,7 +13,7 @@ export function buildStoneProfiles(pack, resolution = 40) {
   const profiles = {};
   for (const [category, entries] of Object.entries(pack)) {
     profiles[category] = entries.map((source,variant) => {
-      const mesh=originalRockMesh(source,variant);
+      const mesh=adaptRockMesh(originalRockMesh(source,variant));
       const vertexCount=mesh.positions.length/3,faceCount=mesh.indices.length/3;
       const verts=Array.from({length:vertexCount},(_,i)=>[
         mesh.positions[i*3]+.5,mesh.positions[i*3+1]+.5,mesh.positions[i*3+2]+.5
@@ -88,6 +89,8 @@ export function rockContains(block, point, profiles, tolerance = .02) {
   else if (r === 3) [x, z] = [z, -x];
   else if (r === 4) [x, y] = [-y, x];
   else if (r === 5) [y, z] = [z, -y];
+  else if (r === 6) [x, y, z] = [z, x, y];
+  else if (r === 7) [x, y, z] = [y, z, x];
   const p = [x / block.sx + .5, y / block.sy + .5, z / block.sz + .5];
   if (p.some(v => v < 0 || v > 1)) return false;
   for (let axis = 0; axis < 3; axis++) {
