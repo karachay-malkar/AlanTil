@@ -1,0 +1,57 @@
+name: Tower V2 server authority
+on:
+  push:
+    branches: ["17.1-stage4-integration", "17.1"]
+    paths:
+      - 'supabase/migrations/*tower_v2*.sql'
+      - 'packages/tower-game/**'
+      - 'src/features/tower/**'
+      - 'tests/tower-v2-*.test.mjs'
+      - 'tests/sql/tower_v2*.sql'
+      - 'scripts/qa/generate-tower-v2-shapes.mjs'
+      - '.github/workflows/tower-v2-server.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: tower_ci_only
+          POSTGRES_DB: tower_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tower_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: tower_ci_only
+      PGDATABASE: tower_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check generated source meshes have not drifted
+        run: |
+          sha256sum supabase/migrations/20261012180100_tower_v2_authored_shapes.sql > /tmp/shapes.before
+          node scripts/qa/generate-tower-v2-shapes.mjs
+          sha256sum supabase/migrations/20261012180100_tower_v2_authored_shapes.sql > /tmp/shapes.after
+          diff /tmp/shapes.before /tmp/shapes.after
+      - name: Frontend and existing tower tests
+        run: |
+          node --test tests/tower-v2-*.test.mjs
+          node --test $(find tests -maxdepth 1 -name 'tower-*.test.mjs' ! -name 'tower-immersive-17.test.mjs' | sort)
+      - name: PostgreSQL authoritative geometry and transactions
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180000_tower_v2_authoritative.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180100_tower_v2_authored_shapes.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_integration.sql
