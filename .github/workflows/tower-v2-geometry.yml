@@ -19,3 +19,18 @@ jobs:
           node-version: '22'
       - name: Standalone v2 geometry tests (actual packed rocks)
         run: node --test tests/tower-v2-mesh-adapter.test.mjs tests/tower-v2-packed-geometry.test.mjs
+      - name: Existing tower regression tests
+        run: node --test tests/tower-*.test.mjs
+      - name: Build complete tracked project archive
+        run: |
+          git archive --format=zip -o AlanTil-17.1-stage3-full-source.zip HEAD
+          unzip -t AlanTil-17.1-stage3-full-source.zip | tail -n 1
+          git ls-files -z | xargs -0 -n1 stat -c '%n | %s bytes' > FILE_SIZES_BYTES.txt
+      - name: Export all source files and sizes
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-17.1-stage3-complete-source
+          path: |
+            AlanTil-17.1-stage3-full-source.zip
+            FILE_SIZES_BYTES.txt
+          if-no-files-found: error
