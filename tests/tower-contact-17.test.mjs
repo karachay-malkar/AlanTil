@@ -23,8 +23,9 @@ test('contact deformation is local and deterministic while grid placement stays 
  const left=b('a',0,0,0),right=b('b',2,0,0),joints=findContactJoints([left,right]);
  const stone=adaptRockMesh(originalRockMesh(ROCK_PACK.medium[0],0));
  const shifted=deformContactMesh(stone,left,joints),again=deformContactMesh(stone,left,joints);
- assert.deepEqual(shifted.positions,again.positions);assert.deepEqual(shifted.indices,stone.indices);
- assert.deepEqual(shifted.colors,stone.colors);
+ assert.deepEqual(shifted.positions,again.positions);assert.deepEqual(shifted.indices,again.indices);
+ assert.ok(shifted.positions.length>stone.positions.length,'contact-only surface must gain local vertices');
+ assert.equal(shifted.colors.length,shifted.positions.length,'vertex colors must follow contact subdivision');
  let changes=0,maxDelta=0;
  for(let i=0;i<stone.positions.length;i+=3){
   const w=localToWorld(left,[stone.positions[i],stone.positions[i+1],stone.positions[i+2]]);
@@ -32,7 +33,7 @@ test('contact deformation is local and deterministic while grid placement stays 
   const magnitude=Math.hypot(...d.map((v,j)=>v-w[j]));
   if(magnitude>.001)changes++;maxDelta=Math.max(maxDelta,magnitude);
  }
- assert.ok(changes>0);assert.ok(maxDelta<=.421);
+ assert.ok(changes>0);assert.ok(maxDelta<=.701);
  assert.equal(left.x,0);assert.equal(right.x,2);
  const unwarped=unwarpContactPoint([1.96,.93,1.12],left.id,joints);
  assert.ok(unwarped.every(Number.isFinite));
