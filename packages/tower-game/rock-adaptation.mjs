@@ -5,10 +5,13 @@
  */
 const distance2=(p,a,b)=>{let s=0;for(let k=0;k<3;k++)s+=(p[a*3+k]-p[b*3+k])**2;return s;};
 const warp=(v,strength)=>{const r=Math.min(1,Math.abs(v)*2);return Math.sign(v)*.5*(r+strength*r*(1-r));};
-export function adaptRockMesh(mesh,{strength=.16,maxEdge=.14,relief=.022,subdivide=true,maxPasses=6,maxTriangles=45000}={}){
+export function adaptRockMesh(mesh,{strength=0,maxEdge=.14,relief=0,subdivide=false,maxPasses=6,maxTriangles=45000}={}){
  if(!mesh?.positions||!mesh.indices||!mesh.colors||mesh.positions.length!==mesh.colors.length||mesh.positions.length%3||mesh.indices.length%3)throw new TypeError('Invalid authored mesh');
  if(!Number.isFinite(strength)||strength<0||strength>=1||!Number.isFinite(maxEdge)||maxEdge<=0)throw new RangeError('Invalid contact warp');
  if(!Number.isFinite(relief)||relief<0||relief>.06)throw new RangeError('Invalid stone relief');
+ // An idle rock is the exact authored model. Contact-only tessellation is
+ // performed later, with neighboring stones known; never normalize the source.
+ if(!subdivide)return {positions:mesh.positions.slice(),colors:mesh.colors.slice(),indices:mesh.indices.slice()};
  const p=Array.from(mesh.positions),colors=Array.from(mesh.colors),sourceVertexCount=mesh.positions.length/3,limits=Array.from({length:3},(_,axis)=>{
   let lo=Infinity,hi=-Infinity;for(let i=axis;i<p.length;i+=3){lo=Math.min(lo,p[i]);hi=Math.max(hi,p[i]);}
   if(hi-lo<.0001)throw new RangeError('Degenerate source rock axis');
@@ -111,11 +114,8 @@ export function inspectRockMesh(mesh){
  */
 export function expandInfillRock(mesh,{power=.48}={}){
  if(!Number.isFinite(power)||power<=0||power>1)throw new RangeError('Invalid infill expansion power');
- const base=adaptRockMesh(mesh,{subdivide:false,strength:.16});
- const positions=base.positions.slice();
- for(let i=0;i<positions.length;i++){
-  const value=positions[i],normalized=Math.min(1,Math.abs(value)*2);
-  positions[i]=Math.sign(value)*.5*Math.pow(normalized,power);
- }
- return {...base,positions};
+ const base=adaptRockMesh(mesh);
+ // Preserve every original pebble vertex, face and proportion; only the
+ // placement-specific transform may rotate or anisotropically scale it.
+ return base;
 }
