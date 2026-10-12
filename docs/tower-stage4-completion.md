@@ -11,7 +11,7 @@
 
 ## Test scope
 
-- Unit tests: mode switching, deep-link/query preservation, authorization guards and all original tower tests.
+- Unit tests: mode switching, deep-link/query preservation, authorization guards and all original tower tests (including the previously obsolete camera/asset version assertions). Scoped tower version is `17.1.5` without changing the global `16.8.0.16` release.
 - CI: PostgreSQL with real source mesh seed, installation/removal/refund/replay/revision/ownership, 25 grid-compatible and 50 fractional ground stones (50 purchases), V1 unchanged.
 - CI: headless Chromium WebGL with V2 read-only mode and V2 saved-stone opt-in, desktop and 390px mobile width, no JavaScript page errors.
 - Live Supabase introspection is read-only; test fixtures exist exclusively in disposable CI PostgreSQL.

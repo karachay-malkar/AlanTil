@@ -5,7 +5,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('tower uses real camera tween, meadow and depth controls without changing routing',()=>{
  const scene=read('src/features/tower/scene.js');
- assert.ok(scene.indexOf('let flight=null;')<scene.indexOf('let frame;function animate('));
+ assert.ok(scene.indexOf('let flight=null;')<scene.indexOf('function animate('));
  assert.match(scene,/controls\.addEventListener\('start',cancelFlight\)/);
  assert.match(scene,/function grassTexture\(\)/);
  assert.match(scene,/new THREE\.CanvasTexture\(canvas\)/);
@@ -43,11 +43,11 @@ test('catalog uses fixed size presets and only exposes preview-time change-form 
  assert.doesNotMatch(css,/\.towerAxisHandles/);
  assert.match(css,/prefers-reduced-motion/);
 });
-test('tower uses scoped 17.0.16 asset cache without changing app global version',()=>{
+test('tower uses scoped 17.1.5 asset cache without changing app global version',()=>{
  const router=read('src/app/router.js');
- assert.match(router,/TOWER_ASSET_VERSION = "17\.0\.16"/);
+ assert.match(router,/TOWER_ASSET_VERSION = "17\.1\.5"/);
  assert.match(router,/const ASSET_VERSION = "16\.8\.0\.16"/);
- assert.match(read('src/shared/styles/lazy/tower.css'),/tower\.css\?v=17\.0\.16/);
- assert.match(read('src/features/tower/index.js'),/scene\.js\?v=17\.0\.16/);
- assert.match(read('src/features/tower/scene.js'),/masonry-worker\.js\?v=17\.0\.16/);
+ assert.match(read('src/shared/styles/lazy/tower.css'),/tower\.css\?v=17\.1\.5/);
+ assert.match(read('src/features/tower/index.js'),/scene\.js\?v=17\.1\.5/);
+ assert.match(read('src/features/tower/scene.js'),/masonry-worker\.js\?v=17\.1\.5/);
 });

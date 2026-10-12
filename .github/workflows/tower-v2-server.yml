@@ -49,7 +49,7 @@ jobs:
       - name: Frontend and existing tower tests
         run: |
           node --test tests/tower-v2-*.test.mjs
-          node --test $(find tests -maxdepth 1 -name 'tower-*.test.mjs' ! -name 'tower-immersive-17.test.mjs' | sort)
+          node --test tests/tower-*.test.mjs
       - name: PostgreSQL authoritative geometry and transactions
         run: |
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_fixture.sql

@@ -22,11 +22,8 @@ jobs:
           node-version: '22'
       - name: Standalone v2 geometry tests (actual packed rocks)
         run: node --test tests/tower-v2-*.test.mjs
-      - name: Tower regression tests (exclude outdated 17.0 string assertions)
-        run: node --test $(find tests -maxdepth 1 -type f -name 'tower-*.test.mjs' ! -name 'tower-immersive-17.test.mjs' | sort)
-      - name: Known stale 17.0 immersive string assertions
-        continue-on-error: true
-        run: node --test tests/tower-immersive-17.test.mjs
+      - name: All tower regressions (no ignored failures)
+        run: node --test tests/tower-*.test.mjs
       - name: Build complete tracked project archive
         run: |
           git archive --format=zip -o AlanTil-17.1-stage3-full-source.zip HEAD
