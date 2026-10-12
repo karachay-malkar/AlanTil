@@ -4,14 +4,15 @@
  * Authored small stones remain the primary visible rubble. Their cut-to-fit
  * stone offcuts occupy remaining tiny fissures in the exterior 20% guards.
  */
-export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=30000,subdivisions=3,rockPalette=null}={}){
+export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=30000,subdivisions=3,rockPalette=null,rockContours=null}={}){
  const dims=[g.nx,g.ny,g.nz],n=dims.map(v=>v*subdivisions),stride=n[0]*n[1];
  const min=g.min,delta=g.dimension.map(d=>d/subdivisions),unitVolume=delta[0]*delta[1]*delta[2];
  const empty={positions:[],colors:[],volume:0,wedgePositions:[],wedgeColors:[],
    wedgeVolume:0,forbiddenVolume:0,penetrationVolume:0,faces:0,truncated:false};
  if(!Number.isInteger(g.seamAxis)||g.seamAxis<0||g.seamAxis>2)return empty;
  const exterior=g.exteriorFaces||[0,1,2].filter(a=>a!==g.seamAxis).flatMap(a=>[[a,0],[a,1]]);
- const material=new Uint8Array(n[0]*n[1]*n[2]);let rockCells=0,mortarCells=0;
+ const material=new Uint8Array(n[0]*n[1]*n[2]);let rockCells=0,mortarCells=0,freeCount=0,authoredCount=0;
+ const mortarCandidates=[];
  const interior=p=>{
   for(const [axis,side]of exterior){
    const size=dims[axis]*g.dimension[axis],bound=min[axis]+(side?size:0);
@@ -25,16 +26,51 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
   const coarse=xx+g.nx*yy+g.stride*zz;
   if(!g.mask[coarse])continue;
   const sub=coarse*subdivisions**3+x%subdivisions+subdivisions*(y%subdivisions)+subdivisions*subdivisions*(z%subdivisions);
-  if(stoneSamples[sub])continue;
+  if(stoneSamples[sub]){authoredCount++;continue;}
   const p=[x,y,z].map((v,k)=>min[k]+(v+.5)*delta[k]);
   if(isSolidAt?.(p))continue;
+  freeCount++;
   const type=interior(p)?2:1;
   material[x+n[0]*y+stride*z]=type;
-  if(type===1)rockCells++;else mortarCells++;
+  if(type===1)rockCells++;else {mortarCells++;mortarCandidates.push(x+n[0]*y+stride*z);}
  }
  if(!rockCells&&!mortarCells)return empty;
+ // Retain real 5–10% microcavities inside the central core, never in the
+ // exterior stone-only guards. No face is generated for an empty microcell.
+ const total=authoredCount+freeCount,desiredOccupied=Math.round(total*.935);
+ const deleteCount=Math.min(mortarCandidates.length,Math.max(0,authoredCount+rockCells+mortarCells-desiredOccupied));
+ const hash=id=>{
+  let h=Math.imul(id+0x9e3779b9,0x85ebca6b);
+  h=Math.imul(h^(h>>>13),0xc2b2ae35);return (h^(h>>>16))>>>0;
+ };
+ const cluster=id=>{
+  const z=Math.floor(id/stride),y=Math.floor((id-z*stride)/n[0]),x=id%n[0];
+  const cx=Math.floor(x/4),cy=Math.floor(y/4),cz=Math.floor(z/4);
+  return hash(cx+503*cy+65537*cz);
+ };
+ mortarCandidates.sort((a,b)=>cluster(a)-cluster(b)||a-b);
+ for(let j=0;j<deleteCount;j++)material[mortarCandidates[j]]=0;
+ mortarCells-=deleteCount;
  const orientations=[[1,2],[0,2],[0,1]];
  const palette=rockPalette?.length?rockPalette:[[.29,.27,.23],[.34,.31,.27],[.37,.34,.29]];
+ // Reuse vertices from the seven original irregular stones to break up the
+ // artificial right-angled silhouette of cut-to-fit outer micro-stones.
+ // Adjacent faces receive identical displaced world-space junctions.
+ const rockVertex=(p)=>{
+  if(!rockContours?.length)return p;
+  const q=p.map((v,i)=>Math.round((v-min[i])/delta[i]));
+  for(const da of [-1,0])for(const db of [-1,0])for(const dc of [-1,0]){
+   const at=[q[0]+da,q[1]+db,q[2]+dc];
+   if(at.some((v,i)=>v<0||v>=n[i]))continue;
+   if(material[at[0]+n[0]*at[1]+stride*at[2]]===2)return p;
+  }
+  const h=hash(q[0]*71+q[1]*211+q[2]*509);
+  const shape=rockContours[h%rockContours.length],count=Math.floor(shape.length/3);
+  if(!count)return p;
+  const vid=((h>>>7)%count)*3;
+  const movement=.31*Math.min(...delta);
+  return p.map((v,i)=>Math.min(min[i]+dims[i]*g.dimension[i],Math.max(min[i],v+shape[vid+i]*movement)));
+ };
  function meshMaterial(type,triangleBudget){
   const positions=[],colors=[];let faces=0;
   const index=p=>p[0]+n[0]*p[1]+stride*p[2];
@@ -61,7 +97,8 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
      if((faces+1)*2>triangleBudget)return {positions:[],colors:[],faces:0,truncated:true};
      const base=[0,0,0];base[axis]=slice+(side>0?1:0);base[u]=x;base[v]=y;
      const point=(a,b)=>base.map((c,i)=>min[i]+(c+(i===u?a:i===v?b:0))*delta[i]);
-     const corners=[point(0,0),point(run,0),point(run,ht),point(0,ht)];
+     const corners=[point(0,0),point(run,0),point(run,ht),point(0,ht)]
+      .map(p=>type===1?rockVertex(p):p);
      const facing=(axis===1?-1:1)===side;
      const order=facing?[0,1,2,0,2,3]:[0,2,1,0,3,2];
      const color=type===2?[.095,.091,.082]:palette[(Math.abs((x+1)*17+(y+1)*31+(slice+1)*47+axis*7))%palette.length];
