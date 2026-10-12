@@ -22,6 +22,8 @@ test('real irregular rocks form filled rather than scattered joins',()=>{
  assert.ok(out.candidateCells>0);
  assert.ok(out.filledCells>0&&out.filledCells<=out.candidateCells);assert.equal(out.stoneFilledCells,out.filledCells);assert.ok(out.residualFreeVolume>=0);
  assert.ok(out.stonePositions.length>0);
+ assert.ok(out.penetrationVolume<=1e-5,'infill must not intrude into the two source stones: '+out.penetrationVolume);
+ assert.ok(out.selfOverlapVolume<=1e-5,'separate infill stones must not intersect: '+out.selfOverlapVolume);
  assert.deepEqual(packMasonryVolume(pair,profiles,{spacing:.12}),out);
 });
 test('real 50-piece dry wall respects worker geometry budget',()=>{
