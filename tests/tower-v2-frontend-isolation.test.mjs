@@ -4,8 +4,8 @@ const source=p=>readFileSync(new URL(p,root),'utf8');
 test('v2 preview is opt-in and the server v1 mutation is never exposed to experimental coordinates',()=>{
  const script=source('src/features/tower/index.js');
  assert.match(script,/tower_v2_preview/);
- assert.match(script,/s\.v2Enabled\s*\|\|\s*s\.busy/);
- assert.match(script,/if\(s\.v2Enabled\)return;/);
+ assert.match(script,/tower_v2_play/);
+ assert.match(script,/if\(s\.v2Enabled\&\&!s\.v2Play\)return;/);
  assert.match(script,/stone-placement-v2-worker\.js/);
  assert.match(script,/s\.v2CandidateValid/);
 });
@@ -20,7 +20,7 @@ test('v2 never changes legacy route, purchases, release or RPC export',()=>{
  const script=source('src/features/tower/index.js');
  assert.match(script,/practice\.tower/);
  assert.match(script,/mutateTower/);
- assert.doesNotMatch(script,/mutateTowerV2/);
+ assert.match(script,/s\.v2Play\?mutateTowerV2\(operation\):mutateTower\(operation\)/);
 });
 
 test('v2 camera data exposes physical meter aim without altering legacy cell coordinates',()=>{
@@ -32,8 +32,8 @@ test('v2 camera data exposes physical meter aim without altering legacy cell coo
 });
 test('v2 always protects mutation at RPC entry regardless of UI control state',()=>{
  const script=source('src/features/tower/index.js');
- assert.match(script,/async function submit\(operation\)\{if\(s\.v2Enabled\|\|s\.busy/);
- assert.match(script,/on\('\[data-remove\]'\,'click',\(\)=>\{if\(s\.v2Enabled/);
+ assert.match(script,/async function submit\(operation\)\{if\(\(s\.v2Enabled\&\&!s\.v2Play\)\|\|s\.busy/);
+ assert.match(script,/on\('\[data-remove\]'\,'click',\(\)=>\{if\(\(s\.v2Enabled\&\&!s\.v2Play\)/);
  assert.match(script,/root\.querySelectorAll\('\[data-exchange\]'\).*?if\(s\.v2Enabled/);
 });
 
