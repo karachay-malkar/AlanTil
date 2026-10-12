@@ -37,7 +37,7 @@ test('excluded opening voxels and empty cavities cannot be purchased or filled',
 
 test('mortar surface normals match all six grid directions',()=>{
  const result=fillAuthoredCavity(grid(1,1,1),models,{maxFragments:0});
- assert.equal(result.mortarPositions.length,6*6*9);
+ assert.equal(result.mortarPositions.length,6*6*3);
  const expected=[[-1,0,0],[1,0,0],[0,-1,0],[0,1,0],[0,0,-1],[0,0,1]];
  for(let f=0;f<6;f++){
   const i=f*18,p=result.mortarPositions;
@@ -55,5 +55,5 @@ test('stone fragment budget exhaustion is explicit and never counts mortar as st
  assert.equal(result.fragments,0);
  assert.equal(result.stoneFilledCells,0);
  assert.equal(result.stoneCoverage,0);
- assert.equal(result.residualFreeVolume,result.candidateCells*.12**3);
+ assert.ok(Math.abs(result.residualFreeVolume-result.candidateCells*.12**3)<1e-10);
 });
