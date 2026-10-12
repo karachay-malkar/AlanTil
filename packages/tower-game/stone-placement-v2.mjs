@@ -180,10 +180,10 @@ export function overlapYInterval(a,b,tol=POLICY.penetrationToleranceM){
 export function findPlacement(mesh,placed,target={x:0,z:0,yaw:0,mode:'auto'},policy=POLICY){
  const start=performance.now();let candidates=0,best=null;
  const offsets=[0,.025,-.025,.055,-.055,.095,-.095,.14,-.14];
- const rotations=[0,.13,-.13];
+ const rotations=target.fixedOrientation?[0]:[0,.13,-.13];
  outer:for(const da of rotations)for(const r of offsets){
   if(candidates>=policy.maxCandidates)break outer;
-  const x=target.x+r*Math.cos(target.yaw),z=target.z+r*Math.sin(target.yaw),yaw=target.yaw+da;
+  const x=target.x+r*Math.cos(target.yaw),z=target.z+r*Math.sin(target.yaw),yaw=target.fixedOrientation?0:target.yaw+da;
   const basic=makeBody(mesh,[x,0,z],yaw);
   const neighbors=placed.filter(p=>overlapXZ(basic,p));
   const groundY=-basic.bbox.min[1],intervals=neighbors.map(p=>overlapYInterval(basic,p,policy.penetrationToleranceM)).filter(Boolean);

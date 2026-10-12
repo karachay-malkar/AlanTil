@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '22'
       - name: Standalone v2 geometry tests (actual packed rocks)
-        run: node --test tests/tower-v2-mesh-adapter.test.mjs tests/tower-v2-packed-geometry.test.mjs
+        run: node --test tests/tower-v2-*.test.mjs
       - name: Tower regression tests (exclude outdated 17.0 string assertions)
         run: node --test $(find tests -maxdepth 1 -type f -name 'tower-*.test.mjs' ! -name 'tower-immersive-17.test.mjs' | sort)
       - name: Known stale 17.0 immersive string assertions
@@ -37,3 +37,25 @@ jobs:
             AlanTil-17.1-stage3-full-source.zip
             FILE_SIZES_BYTES.txt
           if-no-files-found: error
+
+  v2-browser-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium harness
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Read-only WebGL preview
+        run: node scripts/qa/browser-tower-v2.cjs
+      - name: Capture preview QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-17.1-stage3-browser-evidence
+          path: /tmp/alantil-tower-v2/*.png
+          if-no-files-found: warn

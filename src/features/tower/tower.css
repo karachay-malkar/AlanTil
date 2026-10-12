@@ -44,6 +44,8 @@
  font:750 var(--text-technical)/1.15 var(--font-terminal);
  font-variant-numeric:tabular-nums
 }
+/* Opt-in, read-only development preview; stays off the camera controls. */
+.towerV2Notice{position:absolute;z-index:4;left:12px;top:calc(var(--safe-top,0px) + 66px);max-width:min(380px,calc(100% - 100px));pointer-events:none;white-space:normal;line-height:1.3}
 .towerBalance{gap:14px}
 .towerCoin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .towerCoin i{

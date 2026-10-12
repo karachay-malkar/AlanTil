@@ -9,7 +9,7 @@ const icons={stone:'◆',medium:'▰',long:'▬',big:'⬟',beam:'╱',deck:'▤'
 const categories={stone:'Камень',wood:'Дерево',openings:'Проёмы',finish:'Завершение'};
 const escape=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mount(context,params={}){
- const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false};active=s;
+ const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false,v2Enabled:new URLSearchParams(location.search).get('tower_v2_preview')==='1',v2Worker:null,v2Camera:null,v2CandidateValid:false,v2DesiredKey:'',v2Queued:null,v2Busy:false,v2RequestId:0};active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  // The route remains practice.tower; the scoped feature identifies its immersive scene.
  context.shell.appShell.dataset.feature='tower';
@@ -18,6 +18,8 @@ export async function mount(context,params={}){
  // while dimensions, currencies and layer tools stay available on demand.
  const dock=context.root.querySelector('.towerSide');
  const stage=context.root.querySelector('.towerStage');
+ if(s.v2Enabled){const marker=document.createElement('div');marker.className='towerPill towerV2Notice';marker.textContent='Укладка без сетки · демонстрация без сохранения';stage.append(marker);}
+
  const actionBar=document.createElement('div');
  actionBar.className='towerActionBar';stage.append(actionBar);
  const quick=document.createElement('div');quick.className='towerQuickTools';
@@ -71,6 +73,7 @@ export async function mount(context,params={}){
  function currency(){return q('[name="tower-currency"]:checked')?.value||'silver';}
  function chosen(){const dims=[...q('.towerDimensions').querySelectorAll('input')].map(i=>Number(i.value));const pos=['x','y','z'].map(a=>Number(q(`[data-position="${a}"]`).value));return{id:s.preview?.id||crypto.randomUUID(),type:s.type,x:pos[0],y:pos[1],z:pos[2],sx:dims[0],sy:dims[1],sz:dims[2],rotation:s.rotation,variant:s.variant};}
  function updatePreview(){if(s.disposed)return;
+  if(s.v2Enabled&&s.v2Camera)requestV2(s.v2Camera);
   const positionReady=s.tool==='place'&&s.positionTouched;
   if(!positionReady){s.scene?.setPreview(null,false);q('[data-confirm]').hidden=true;quick.hidden=true;actionBar.classList.toggle('is-visible',Boolean(s.selected&&s.tool==='select')||Boolean(s.pending)||Boolean(q('.towerStatus').textContent));if(s.tool!=='place')return;}
   else {q('[data-confirm]').hidden=false;quick.hidden=false;actionBar.classList.add('is-visible');}
@@ -79,7 +82,7 @@ export async function mount(context,params={}){
   shapeButton.hidden=!positionReady||!shapeCount;
   if(shapeCount)shapeButton.textContent=`Форма ${s.variant+1}/${shapeCount} · сменить`;
   s.preview=chosen();
-  const v=validatePlacement(s.blocks,s.preview),price=CATALOG[s.type].price;
+  const v=s.v2Enabled?{ok:s.v2CandidateValid,reason:'Расчёт опоры не подтверждён'}:validatePlacement(s.blocks,s.preview),price=CATALOG[s.type].price;
   const goldAllowed=(s.type==='big'||!STONE_KIND[s.type]&&price%8===0);
   q('[name="tower-currency"][value="gold"]').disabled=!goldAllowed;
   if(!goldAllowed)q('[name="tower-currency"][value="silver"]').checked=true;
@@ -88,12 +91,12 @@ export async function mount(context,params={}){
   choices[0].textContent=price+' серебра';choices[1].textContent=(price/8)+' золота';
   const cur=currency(),amount=cur==='gold'?price/8:price;
   const payable=Number.isInteger(amount)&&(!STONE_KIND[s.type]||s.type==='big'||cur==='silver');
-  q('[data-confirm]').disabled=s.busy||!!s.pending||!s.editable||!v.ok||!payable||s.balance[cur]<amount;
-  q('[data-confirm]').textContent='Установить · '+(payable?amount:'—')+' '+coins(cur,amount);
-  root.querySelectorAll('[data-exchange]').forEach(b=>b.disabled=s.busy||!!s.pending||!s.editable||(b.dataset.exchange==='exchange_gold'?s.balance.gold<1:s.balance.silver<8));
+  q('[data-confirm]').disabled=s.v2Enabled||s.busy||!!s.pending||!s.editable||!v.ok||!payable||s.balance[cur]<amount;
+  q('[data-confirm]').textContent=s.v2Enabled?'Демонстрация · сохранение отключено':'Установить · '+(payable?amount:'—')+' '+coins(cur,amount);
+  root.querySelectorAll('[data-exchange]').forEach(b=>b.disabled=s.v2Enabled||s.busy||!!s.pending||!s.editable||(b.dataset.exchange==='exchange_gold'?s.balance.gold<1:s.balance.silver<8));
   s.scene?.setPreview(positionReady?s.preview:null,v.ok);
   if(s.busy)return;
-  const message=!s.editable?'':!v.ok&&s.positionTouched?v.reason:!payable?'Оплата только серебром':s.balance[cur]<amount?'Недостаточно монет':'';
+  const message=s.v2Enabled?(s.v2CandidateValid?'Расчётная опора подтверждена · только просмотр':'Поиск положения без сетки…'):!s.editable?'':!v.ok&&s.positionTouched?v.reason:!payable?'Оплата только серебром':s.balance[cur]<amount?'Недостаточно монет':'';
   status(message,Boolean(message));
  }
 
@@ -158,8 +161,8 @@ export async function mount(context,params={}){
  function setTool(tool){s.tool=tool;if(tool!=='place')s.positionTouched=false;s.scene?.setTool(tool);root.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tool===tool)));q('[data-confirm]').hidden=tool!=='place'||!s.positionTouched;q('[data-remove]').hidden=tool!=='select'||!s.selected;q('.towerDimensions').hidden=tool!=='place';q('.towerPosition').hidden=tool!=='place';q('.towerSelected').hidden=tool!=='select'||!s.selected;updatePreview();actionBar.classList.toggle('is-visible',!!s.selected||s.positionTouched);}
  function apply(data){s.blocks=data.elements;s.revision=data.revision;s.balance={silver:data.silver,gold:data.gold};q('[data-silver]').textContent=data.silver;q('[data-gold]').textContent=data.gold;s.scene?.setBlocks(s.blocks);q('.towerSaved').textContent='';s.positionTouched=false;s.selected=null;q('[data-remove]').hidden=true;q('.towerSelected').hidden=true;updatePreview();}
  async function reload(){if(s.busy)return;if(!towerUserId()){s.editable=false;q('.towerReadOnly').hidden=false;q('.towerReadOnly').textContent='Войди в аккаунт, чтобы строить за освоенные слова.';updatePreview();return;}status('Загрузка сохранения…');try{const data=await loadTower(params.userId||null);if(s.disposed)return;s.editable=!!towerUserId()&&(!params.userId||params.userId===towerUserId());apply(data);status('');q('.towerReadOnly').hidden=s.editable;if(!s.editable)q('.towerReadOnly').textContent=params.userId?'Башня игрока · только просмотр':'Войди в аккаунт, чтобы строить башню за освоенные слова.';}catch(e){s.editable=false;status('Не удалось загрузить башню. '+friendlyError(e),true);q('.towerSaved').textContent='Сохранение недоступно';updateButtons();}}
- function updateButtons(){updatePreview();q('[data-remove]').disabled=s.busy||!!s.pending||!s.editable;}
- async function submit(operation){if(s.busy||!s.editable)return;s.busy=true;s.pending=operation;persistPending();updateButtons();q('[data-retry]').hidden=true;status('Сохраняем…');try{const data=await mutateTower(operation);if(s.disposed)return;s.pending=null;persistPending();s.preview=null;s.busy=false;apply(data);status('');updatePreview();}catch(e){if(s.disposed)return;s.busy=false;const rejected=e?.code==='P0001'||/REVISION_CONFLICT|INSUFFICIENT|INVALID|OUT_OF_BOUNDS|OVERLAP|UNSUPPORTED|DEPENDENT|AUTH_REQUIRED|OPERATION_ID_REUSED/i.test(String(e?.message||''));if(rejected){s.pending=null;persistPending();}q('[data-retry]').hidden=!s.pending;updateButtons();status(friendlyError(e),true);}finally{if(!s.disposed)s.busy=false;}}
+ function updateButtons(){updatePreview();q('[data-remove]').disabled=s.v2Enabled||s.busy||!!s.pending||!s.editable;}
+ async function submit(operation){if(s.v2Enabled||s.busy||!s.editable)return;s.busy=true;s.pending=operation;persistPending();updateButtons();q('[data-retry]').hidden=true;status('Сохраняем…');try{const data=await mutateTower(operation);if(s.disposed)return;s.pending=null;persistPending();s.preview=null;s.busy=false;apply(data);status('');updatePreview();}catch(e){if(s.disposed)return;s.busy=false;const rejected=e?.code==='P0001'||/REVISION_CONFLICT|INSUFFICIENT|INVALID|OUT_OF_BOUNDS|OVERLAP|UNSUPPORTED|DEPENDENT|AUTH_REQUIRED|OPERATION_ID_REUSED/i.test(String(e?.message||''));if(rejected){s.pending=null;persistPending();}q('[data-retry]').hidden=!s.pending;updateButtons();status(friendlyError(e),true);}finally{if(!s.disposed)s.busy=false;}}
  s.canLeave=()=>!s.busy;
  on('.towerTabs','click',e=>{
   const b=e.target.closest('[data-category]');if(!b)return;
@@ -206,6 +209,7 @@ export async function mount(context,params={}){
  });
  function locateHit(hit){
   if(!hit||s.disposed||s.busy||s.pending||s.tool!=='place')return;
+  if(s.v2Enabled){if(s.v2Camera&&hit.worldPoint){s.v2Target=hit.worldPoint;requestV2(s.v2Camera);}return;}
   const dims=worldDimensions(chosen()),n=hit.normal||{x:0,y:1,z:0};
   const p={x:hit.x,y:hit.y,z:hit.z};
   if(hit.blockId){if(n.x<0)p.x-=dims[0]-1;if(n.y<0)p.y-=dims[1]-1;if(n.z<0)p.z-=dims[2]-1;}
@@ -225,14 +229,54 @@ export async function mount(context,params={}){
  on('.towerDimensions','input',()=>{if(!s.busy&&!s.pending)updatePreview();});on('.towerPosition','input',()=>{if(!s.busy&&!s.pending){s.positionTouched=true;updatePreview();}});on('.towerCurrency','change',updatePreview);
  root.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{if(!s.busy&&!s.pending)setTool(b.dataset.tool);},{signal:controller.signal}));
  on('[data-vertical]','click',()=>{if(s.busy||s.pending)return;s.rotation=s.rotation===4?0:4;updatePreview();});
- on('[data-confirm]','click',()=>{if(!s.preview||s.busy||s.pending||!validatePlacement(s.blocks,s.preview).ok)return;void submit({id:crypto.randomUUID(),revision:s.revision,action:'place',element:{...s.preview},currency:currency()});});
- on('[data-remove]','click',()=>{if(!s.selected||s.busy||s.pending)return;const dependent=removalDependents(s.blocks,s.selected);if(dependent.length){status(`Сначала убери элементы, которые опираются на этот: ${dependent.length}.`,true);return;}void submit({id:crypto.randomUUID(),revision:s.revision,action:'remove',elementId:s.selected});});
- root.querySelectorAll('[data-exchange]').forEach(b=>b.addEventListener('click',()=>{if(s.busy||s.pending||!s.editable)return;void submit({id:crypto.randomUUID(),revision:s.revision,action:b.dataset.exchange});},{signal:controller.signal}));
+ on('[data-confirm]','click',()=>{if(s.v2Enabled)return;if(!s.preview||s.busy||s.pending||!validatePlacement(s.blocks,s.preview).ok)return;void submit({id:crypto.randomUUID(),revision:s.revision,action:'place',element:{...s.preview},currency:currency()});});
+ on('[data-remove]','click',()=>{if(s.v2Enabled||!s.selected||s.busy||s.pending)return;const dependent=removalDependents(s.blocks,s.selected);if(dependent.length){status(`Сначала убери элементы, которые опираются на этот: ${dependent.length}.`,true);return;}void submit({id:crypto.randomUUID(),revision:s.revision,action:'remove',elementId:s.selected});});
+ root.querySelectorAll('[data-exchange]').forEach(b=>b.addEventListener('click',()=>{if(s.v2Enabled||s.busy||s.pending||!s.editable)return;void submit({id:crypto.randomUUID(),revision:s.revision,action:b.dataset.exchange});},{signal:controller.signal}));
  on('[data-retry]','click',()=>{if(s.pending)void submit(s.pending);});on('[data-refresh]','click',()=>{if(s.busy)return;if(s.pending){void submit(s.pending);return;}q('[data-retry]').hidden=true;void reload();});
  on('[data-layer]','input',e=>{const y=Number(e.target.value);q('[data-layer-label]').textContent=y===HEIGHT_LIMIT?'вся башня':`до слоя ${y}`;s.scene?.setLayer(y===HEIGHT_LIMIT?null:y);});
  root.querySelectorAll('[data-camera]').forEach(b=>b.addEventListener('click',()=>{const a=b.dataset.camera;if(a==='home')s.scene?.home();else if(a==='left'||a==='right')s.scene?.rotateView(a==='left'?-Math.PI/8:Math.PI/8);else s.scene?.zoom(a==='in'?.85:1.18);},{signal:controller.signal}));
+ // V2 preview is explicit opt-in. Saved towers, prices, RPC and old placement
+ // remain unchanged. Latest-request-wins worker with camera quantisation.
+ function sendV2(){
+  if(!s.v2Worker||s.v2Busy||!s.v2Queued)return;
+  const value=s.v2Queued;s.v2Queued=null;s.v2Busy=true;
+  s.v2Worker.postMessage({...value,requestId:++s.v2RequestId});
+ }
+ function requestV2(camera){
+  if(!s.v2Enabled||!s.v2Worker||!camera?.target)return;
+  s.v2Camera=camera;
+  const stone=chosen();
+  // Camera v1 keeps target in 25cm construction cells; solver v2 uses metres.
+  const target=s.v2Target||camera.aimMeters||camera.target.map(v=>v*.25);
+  const vector=target.map(x=>Math.round(Number(x)*10)/10);
+  const key=[s.type,stone.sx,stone.sy,stone.sz,stone.rotation,stone.variant,s.revision,s.blocks.length,...vector,...(camera.forward||[]).map(v=>Math.round(v*10)/10)].join(':');
+  if(s.v2DesiredKey===key)return;
+  s.v2DesiredKey=key;s.v2CandidateValid=false;
+  s.v2Queued={revision:s.revision,key,payload:{stone,blocks:s.blocks,camera:{...camera,target}}};
+  sendV2();
+ }
+ if(s.v2Enabled){
+  root.querySelectorAll('.towerPosition input').forEach(input=>{input.step='0.0001';input.min='-8';input.disabled=true;});
+  try{
+   s.v2Worker=new Worker(new URL('./stone-placement-v2-worker.js?v=17.1.3',import.meta.url),{type:'module'});
+   s.v2Worker.onmessage=({data})=>{
+    s.v2Busy=false;
+    if(s.disposed)return;
+    if(s.v2Queued){sendV2();return;}
+    if(data?.key!==s.v2DesiredKey||data.revision!==s.revision)return;
+    const result=data.result;
+    if(!result?.ok){s.v2CandidateValid=false;s.positionTouched=false;updatePreview();return;}
+    if(result.block?.type!==s.type||result.block.rotation!==s.rotation||result.block.variant!==s.variant)return;
+    s.v2CandidateValid=true;
+    for(const axis of ['x','y','z'])q('[data-position="'+axis+'"]').value=result.block[axis].toFixed(5);
+    s.positionTouched=true;updatePreview();
+   };
+   s.v2Worker.onerror=()=>{s.v2CandidateValid=false;s.v2Busy=false;s.v2Worker?.terminate();s.v2Worker=null;status('Экспериментальный поиск недоступен.',true);};
+  }catch(e){status('Не удалось запустить экспериментальный поиск.',true);}
+  controller.signal.addEventListener('abort',()=>s.v2Worker?.terminate(),{once:true});
+ }
  renderDimensions();
- try{s.scene=await createTowerScene(q('.towerCanvas'),{onPick(hit){locateHit(hit);},onCameraChange(camera){if(s.disposed||s.busy||s.pending||s.tool!=='place'||!PURCHASABLE_STONE_TYPES.includes(s.type)||!s.editable)return;const proposal=suggestCameraPlacement(s.blocks,chosen(),camera,s.preview);if(!proposal)return;if(s.preview&&proposal.x===s.preview.x&&proposal.y===s.preview.y&&proposal.z===s.preview.z)return;for(const axis of ['x','y','z'])q('[data-position="'+axis+'"]').value=proposal[axis];s.positionTouched=true;updatePreview();},onSelection(id){if(s.disposed)return;if(id)setTool('select');s.selected=id;const b=s.blocks.find(a=>a.id===id);q('[data-remove]').hidden=!b;q('.towerSelected').hidden=!b;actionBar.classList.toggle('is-visible',!!b);if(b){q('.towerSelected').textContent=`${CATALOG[b.type].name} · возврат ${b.paidAmount} ${coins(b.paidCurrency,b.paidAmount)}`;q('[data-remove]').disabled=!s.editable||s.busy;}}});if(s.disposed){s.scene.dispose();return;}renderCatalog();await reload();if(s.pending&&s.editable){q('[data-retry]').hidden=false;status('Осталось неподтверждённое действие. Повтори его, чтобы проверить сохранение.');updateButtons();}}catch(e){status('Не удалось запустить 3D: '+friendlyError(e),true);}
+ try{s.scene=await createTowerScene(q('.towerCanvas'),{enableV2Aim:s.v2Enabled,onPick(hit){locateHit(hit);},onCameraChange(camera){if(s.disposed||s.busy||s.pending||s.tool!=='place'||!PURCHASABLE_STONE_TYPES.includes(s.type)||(!s.editable&&!s.v2Enabled))return;if(s.v2Enabled){requestV2(camera);return;}const proposal=suggestCameraPlacement(s.blocks,chosen(),camera,s.preview);if(!proposal)return;if(s.preview&&proposal.x===s.preview.x&&proposal.y===s.preview.y&&proposal.z===s.preview.z)return;for(const axis of ['x','y','z'])q('[data-position="'+axis+'"]').value=proposal[axis];s.positionTouched=true;updatePreview();},onSelection(id){if(s.disposed)return;if(id)setTool('select');s.selected=id;const b=s.blocks.find(a=>a.id===id);q('[data-remove]').hidden=!b;q('.towerSelected').hidden=!b;actionBar.classList.toggle('is-visible',!!b);if(b){q('.towerSelected').textContent=`${CATALOG[b.type].name} · возврат ${b.paidAmount} ${coins(b.paidCurrency,b.paidAmount)}`;q('[data-remove]').disabled=s.v2Enabled||!s.editable||s.busy;}}});if(s.disposed){s.scene.dispose();return;}renderCatalog();await reload();if(s.pending&&s.editable){q('[data-retry]').hidden=false;status('Осталось неподтверждённое действие. Повтори его, чтобы проверить сохранение.');updateButtons();}}catch(e){status('Не удалось запустить 3D: '+friendlyError(e),true);}
 }
 function friendlyError(e){const m=String(e?.message||e||'Ошибка соединения');if(/ELEMENT_LIMIT/.test(m))return'Достигнут предел: 10 000 элементов.';if(/ELEMENT_NOT_FOUND/.test(m))return'Элемент уже удалён. Обнови сохранение.';if(/USE_SILVER/.test(m))return'Этот элемент оплачивается серебром.';if(/INVALID/.test(m))return'Проверь размеры, положение и опоры элемента.';if(/revision|conflict/i.test(m))return'Башня изменена на другом устройстве. Обнови сохранение.';if(/insufficient|balance/i.test(m))return'Недостаточно монет.';if(/support|depend/i.test(m))return'Нельзя оставить элементы без опоры.';if(/auth|login|permission/i.test(m))return'Для строительства войди в аккаунт.';if(/function.*not|PGRST202/i.test(m))return'Сервер игры ещё не подключён.';return m;}
 export function canLeave(){return active?.canLeave?.()??true;}

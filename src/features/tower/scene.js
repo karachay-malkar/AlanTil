@@ -13,7 +13,7 @@ const dimensions=worldDimensions;
 const hash=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 
 /** Local assets only. Coordinates are integer cells with y pointing up. */
-export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
+export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{},enableV2Aim=false}={}){
  const scene=new THREE.Scene(); scene.background=new THREE.Color('#afc6b9');scene.fog=new THREE.Fog('#afc6b9',34,100);
  const geometries=[],materials=[],textures=[];const keepG=g=>(geometries.push(g),g);const keepM=m=>(materials.push(m),m);
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -344,7 +344,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(normal.y)y=normal.y>0?b.y+d[1]:b.y-1;
    if(normal.z)z=normal.z>0?b.z+d[2]:b.z-1;
   }else y=0;
-  return {x,y,z,blockId:b?.id??null,normal};
+  return {x,y,z,blockId:b?.id??null,normal,worldPoint:hit.point.toArray()};
  }
  function pointerDown(e){pointers.add(e.pointerId);if(pointers.size===1)down={pointerId:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()};else down=null;}
  function pointerUp(e){
@@ -402,7 +402,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    camera.position.lerpVectors(flight.fromPosition,flight.toPosition,ease);
    if(t>=1)flight=null;
   }
-  controls.update();if(tool==='place'&&time-lastCameraSuggestion>200){lastCameraSuggestion=time;const direction=new THREE.Vector3();camera.getWorldDirection(direction);onCameraChange({origin:camera.position.toArray().map(v=>v/CELL),forward:direction.toArray(),target:controls.target.toArray().map(v=>v/CELL)});}renderer.render(scene,camera);
+  controls.update();if(tool==='place'&&time-lastCameraSuggestion>200){lastCameraSuggestion=time;const direction=new THREE.Vector3();camera.getWorldDirection(direction);const aimRay=new THREE.Raycaster();let aimMeters=null;if(enableV2Aim){aimRay.setFromCamera(new THREE.Vector2(0,0),camera);aimMeters=aimRay.intersectObjects([...pickables,platform],false)[0]?.point.toArray()||controls.target.toArray();}onCameraChange({origin:camera.position.toArray().map(v=>v/CELL),forward:direction.toArray(),target:controls.target.toArray().map(v=>v/CELL),aimMeters});}renderer.render(scene,camera);
  }animate();container.dataset.ready="true";
  const thumbnailCache=new Map();
  function thumbnail(type,variant=0,dimensions=null){
