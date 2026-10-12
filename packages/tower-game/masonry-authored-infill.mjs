@@ -116,7 +116,9 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  for(let i=0;i<num;i++)out.candidateCells+=+!!mask[i];
  if(!out.candidateCells)return out;
  const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
- const sampleAxis=3,perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
+ const sampleAxis=Number.isInteger(g.seamAxis)&&maxTriangles<6500?2:3;
+ const stoneTriangleBudget=Number.isInteger(g.seamAxis)?Math.floor(maxTriangles*(maxTriangles<6500?.28:.60)):maxTriangles;
+ const perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
  const samplePoint=(x,y,z,sx,sy,sz)=>[
   g.min[0]+(x+(sx+.5)/sampleAxis)*g.dimension[0],
   g.min[1]+(y+(sy+.5)/sampleAxis)*g.dimension[1],
@@ -156,7 +158,8 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   };return depth(b)-depth(a)||a-b;
  });
  for(const i of cells){
-  if(out.fragments>=maxFragments||out.stonePositions.length/9>=maxTriangles){out.truncated=true;break;}
+  if(out.fragments>=maxFragments){out.truncated=true;break;}
+  if(out.stonePositions.length/9>=stoneTriangleBudget)break;
   if(occupied[i])continue;
   const x=i%g.nx,y=Math.floor(i/g.nx)%g.ny,z=Math.floor(i/g.stride),lo=[x,y,z],hi=[x,y,z];
   if(!boxFree(lo,hi))continue;
@@ -208,7 +211,7 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    }
    if(!matched.length)continue;
   }
-  if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>maxTriangles){out.truncated=true;break;}
+  if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>stoneTriangleBudget)break;
   physicalMesh(out,smallMeshes[model],{lo,hi},g.min,g.dimension,rotation,bestFit);
   for(const at of physical)coverage[at]=1;
   for(const k of matched)occupied[k]=1;
