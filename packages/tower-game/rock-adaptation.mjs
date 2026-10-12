@@ -55,7 +55,8 @@ export function adaptRockMesh(mesh,{strength=.91,maxEdge=.14,relief=.018,subdivi
   for(let i=sourceVertexCount;i<p.length/3;i++){
    const o=i*3,x=p[o],y=p[o+1],z=p[o+2];
    const length=Math.hypot(normal[o],normal[o+1],normal[o+2])||1;
-   const grain=Math.sin(x*127.17+y*43.79+z*93.11)*Math.cos(z*69.23-x*37.73+y*13.21);
+   const grain=.55*Math.sin(x*22.7+y*15.3+z*6.1)*Math.cos(z*17.2-x*11.3+y*13.7)
+    +.45*Math.sin(x*8.7-y*12.4+z*7.6);
    const amplitude=relief*grain;
    for(let k=0;k<3;k++){
     p[o+k]=Math.max(-.5,Math.min(.5,p[o+k]+amplitude*normal[o+k]/length));
