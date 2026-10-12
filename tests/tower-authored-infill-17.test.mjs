@@ -57,3 +57,14 @@ test('stone fragment budget exhaustion is explicit and never counts mortar as st
  assert.equal(result.stoneCoverage,0);
  assert.ok(Math.abs(result.residualFreeVolume-result.candidateCells*.12**3)<1e-10);
 });
+
+test('subvoxel volume measurements separate stone, residual and penetration',()=>{
+ const result=fillAuthoredCavity(grid(7,6,3),models);
+ const expected=7*6*3*.12**3;
+ assert.ok(Math.abs(result.candidateFreeVolume-expected)<1e-9);
+ assert.ok(result.stonePhysicalVolume>0&&result.stonePhysicalVolume<=result.candidateFreeVolume);
+ assert.ok(Math.abs(result.residualFreeVolume+result.stonePhysicalVolume-result.candidateFreeVolume)<1e-9);
+ assert.ok(Math.abs(result.stoneCoverage-result.stonePhysicalVolume/result.candidateFreeVolume)<1e-9);
+ assert.equal(result.mortarPhysicalVolume,0,'surface-only dark backing must never count as solid mortar');
+ assert.equal(result.penetrationVolume,0);
+});
