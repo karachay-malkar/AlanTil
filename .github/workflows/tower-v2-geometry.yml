@@ -12,6 +12,7 @@ on:
       - 'packages/tower-game/tower-v2-proposals.mjs'
       - 'src/features/tower/**'
       - 'scripts/qa/browser-tower-v2.cjs'
+      - 'scripts/qa/browser-tower-v2-play.cjs'
       - 'tests/tower-v2-*.test.mjs'
       - '.github/workflows/tower-v2-geometry.yml'
   workflow_dispatch:
