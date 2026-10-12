@@ -111,10 +111,10 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  if(!grid||!smallMeshes?.length)throw new TypeError('Cavity mask and small authored meshes required');
  const g=grid,num=g.nx*g.ny*g.nz,mask=g.mask;
  if(num!==mask.length||g.stride!==g.nx*g.ny)throw new RangeError('Invalid cavity grid');
- const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0,truncated:false};
+ const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,penetrationVolume:0,selfOverlapVolume:0,truncated:false};
  for(let i=0;i<num;i++)out.candidateCells+=+!!mask[i];
  if(!out.candidateCells)return out;
- const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
+ const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m)),placements=[];
  const boxFree=(lo,hi)=>{
   for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++)
    if(!inGrid(g,x,y,z)||!mask[offset(g,x,y,z)]||occupied[offset(g,x,y,z)])return false;
@@ -167,14 +167,60 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
   if(!matched.length)continue;
   if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>maxTriangles){out.truncated=true;break;}
   physicalMesh(out,smallMeshes[model],{lo,hi},g.min,g.dimension,rotation,bestFit);
+  placements.push({lo:[...lo],hi:[...hi],field:profiles[model],rotation,fit:bestFit});
   for(const k of matched)occupied[k]=1;
   out.fragments++;out.stoneFilledCells+=matched.length;
  }
  // Mortar renders only exterior faces of the residual voids, not fictitious
  // cubic stones. The residual volume remains unfilled in reported metrics.
  mortarShell(out,g,occupied,maxTriangles);
- out.filledCells=out.stoneFilledCells;
- out.stoneCoverage=out.stoneFilledCells/out.candidateCells;
- out.residualFreeVolume=(out.candidateCells-out.stoneFilledCells)*g.dimension.reduce((a,b)=>a*b,1);
+
+ // Measure occupied physical volume using samples inside the rendered source
+ // meshes, NOT the greedy envelopes or a single center sample per cell.
+ // A sample inside an existing large rock is penetration, never filled space.
+ // Overlapping authored fragments count only once in the occupied union.
+ const sampleAxis=3,perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
+ const samplePoint=(x,y,z,sx,sy,sz)=>[
+  g.min[0]+(x+(sx+.5)/sampleAxis)*g.dimension[0],
+  g.min[1]+(y+(sy+.5)/sampleAxis)*g.dimension[1],
+  g.min[2]+(z+(sz+.5)/sampleAxis)*g.dimension[2],
+ ];
+ for(const placement of placements){
+  const {lo,hi,rotation,fit,field}=placement;
+  const center=lo.map((v,k)=>g.min[k]+(v+hi[k]+1)*.5*g.dimension[k]);
+  const extent=lo.map((v,k)=>(hi[k]-v+1)*g.dimension[k]);
+  for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){
+   const cell=offset(g,x,y,z);if(!mask[cell])continue;
+   for(let sz=0;sz<sampleAxis;sz++)for(let sy=0;sy<sampleAxis;sy++)for(let sx=0;sx<sampleAxis;sx++){
+    const p=samplePoint(x,y,z,sx,sy,sz);
+    const local=rot(p.map((v,k)=>v-center[k]),(4-rotation)%4).map((v,k)=>v/(extent[k]*fit)+.5);
+    if(authoredContains(field,local)){
+     const at=cell*perCell+sx+sampleAxis*sy+sampleAxis*sampleAxis*sz;
+     coverage[at]=Math.min(2,coverage[at]+1);
+    }
+   }
+  }
+ }
+ let freeSamples=0,stoneSamples=0,penetrationSamples=0,overlapSamples=0;
+ for(let z=0;z<g.nz;z++)for(let y=0;y<g.ny;y++)for(let x=0;x<g.nx;x++){
+  const cell=offset(g,x,y,z);if(!mask[cell])continue;
+  for(let sz=0;sz<sampleAxis;sz++)for(let sy=0;sy<sampleAxis;sy++)for(let sx=0;sx<sampleAxis;sx++){
+   const at=cell*perCell+sx+sampleAxis*sy+sampleAxis*sampleAxis*sz;
+   const blocked=Boolean(isSolidAt?.(samplePoint(x,y,z,sx,sy,sz)));
+   if(!blocked)freeSamples++;
+   if(!coverage[at])continue;
+   if(blocked)penetrationSamples++;
+   else{stoneSamples++;if(coverage[at]>1)overlapSamples++;}
+  }
+ }
+ const sampleVolume=g.dimension.reduce((a,b)=>a*b,1)/perCell;
+ out.candidateFreeVolume=freeSamples*sampleVolume;
+ out.stonePhysicalVolume=stoneSamples*sampleVolume;
+ out.penetrationVolume=penetrationSamples*sampleVolume;
+ out.selfOverlapVolume=overlapSamples*sampleVolume;
+ out.mortarPhysicalVolume=0; // mortarShell renders zero-thickness backing faces
+ out.residualFreeVolume=Math.max(0,out.candidateFreeVolume-out.stonePhysicalVolume);
+ out.filledCells=out.stoneFilledCells; // legacy diagnostic, NOT physical coverage
+ out.stoneCoverage=out.candidateFreeVolume?out.stonePhysicalVolume/out.candidateFreeVolume:0;
  return out;
 }
