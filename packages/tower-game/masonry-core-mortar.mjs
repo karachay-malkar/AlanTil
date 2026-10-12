@@ -119,15 +119,19 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
  // A bounded number of actual small-source meshes forms the outer skin of
  // cut-to-fit stone cores. This replaces exposed flat patches without adding
  // fake occupancy credit; their solid cores are already counted in the union.
- const available=Math.max(0,Math.min(210,Math.floor((maxTriangles-(rock.faces+mortar.faces)*2)*.23)));
+ const available=Math.max(0,Math.min(3500,Math.floor(maxTriangles*.07),Math.floor((maxTriangles-(rock.faces+mortar.faces)*2)*.40)));
  let addedTriangles=0,authoredFaces=0;
  if(rockMeshes?.length&&available>30){
-  const sides=rock.quads.sort((a,b)=>b.run*b.ht-a.run*a.ht||a.axis-b.axis);
+  const sides=rock.quads.sort((a,b)=>(a.axis===2?-1:0)-(b.axis===2?-1:0)||b.run*b.ht-a.run*a.ht||a.axis-b.axis);
+  const occupiedFacades=[];
   for(const q of sides){
    const source=rockMeshes[hash(q.x*19+q.y*47+q.slice*101+q.axis*307+q.side*43)%rockMeshes.length];
    if(!source?.indices?.length||!source.positions?.length)continue;
    const count=source.indices.length/3;
    if(addedTriangles+count>available)continue;
+   const anchor=[0,0,0];anchor[q.axis]=q.slice;anchor[q.u]=q.x+q.run/2;anchor[q.v]=q.y+q.ht/2;
+   if(occupiedFacades.some(previous=>previous[3]===q.axis&&previous[4]===q.side&&
+       Math.hypot(...anchor.map((v,k)=>(v-previous[k])*delta[k]))<.20))continue;
    const width=Math.min(.6,q.run*delta[q.u]),height=Math.min(.6,q.ht*delta[q.v]);
    if(Math.min(width,height)<.035)continue;
    const thick=Math.min(.13,Math.min(width,height)*.55);
@@ -155,7 +159,7 @@ export function buildCoreMortar(g,stoneSamples,{isSolidAt=null,maxTriangles=3000
      for(let c=0;c<3;c++)rock.colors.push(linearColor(id*3+c));
     }
    }
-   addedTriangles+=count;authoredFaces++;
+   addedTriangles+=count;authoredFaces++;occupiedFacades.push([...anchor,q.axis,q.side]);
   }
  }
  return {
