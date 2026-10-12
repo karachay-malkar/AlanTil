@@ -92,7 +92,7 @@ end $$;
 
 create or replace function private.tower_v2_collides(a jsonb,b jsonb)
 returns boolean language plpgsql immutable set search_path='' as $$
-declare na jsonb;nb jsonb;edge_a jsonb;edge_b jsonb; ax double precision;ay double precision;az double precision;bx double precision;byv double precision;bz double precision;
+declare axis_count int:=0;na jsonb;nb jsonb;edge_a jsonb;edge_b jsonb; ax double precision;ay double precision;az double precision;bx double precision;byv double precision;bz double precision;
 begin
  -- AABB only for fast rejection, never for acceptance of a position.
  if (a->'hi'->>0)::double precision <= (b->'lo'->>0)::double precision+.00035 or
@@ -111,6 +111,8 @@ begin
  for edge_a in select value from jsonb_array_elements(a->'e') loop
   ax:=(edge_a->>0)::double precision;ay:=(edge_a->>1)::double precision;az:=(edge_a->>2)::double precision;
   for edge_b in select value from jsonb_array_elements(b->'e') loop
+   axis_count:=axis_count+1;
+   if axis_count>2500 then return true;end if; -- fail closed under bounded CPU budget
    bx:=(edge_b->>0)::double precision;byv:=(edge_b->>1)::double precision;bz:=(edge_b->>2)::double precision;
    if private.tower_v2_separating_axis(a,b,jsonb_build_array(ay*bz-az*byv,az*bx-ax*bz,ax*byv-ay*bx)) then return false;end if;
   end loop;
@@ -215,9 +217,13 @@ end $$;
 
 create or replace function private.tower_v2_valid_place(candidate jsonb,items jsonb)
 returns boolean language plpgsql stable set search_path='' as $$
-declare e jsonb;body jsonb:=private.tower_v2_body(candidate);other jsonb;others jsonb:='[]'::jsonb;
+declare e jsonb;body jsonb:=private.tower_v2_body(candidate);other jsonb;others jsonb:='[]'::jsonb; d double precision[]; ex double precision;ez double precision;
 begin
  for e in select value from jsonb_array_elements(items) loop
+  -- Fast *safe* spatial prefilter; no need to build geometry for distant stones.
+  d:=private.tower_v2_dims(e);ex:=(e->>'x')::double precision*.25;ez:=(e->>'z')::double precision*.25;
+  if ex>(body->'hi'->>0)::double precision+.018 or ex+d[1]*.25<(body->'lo'->>0)::double precision-.018 or
+     ez>(body->'hi'->>2)::double precision+.018 or ez+d[3]*.25<(body->'lo'->>2)::double precision-.018 then continue;end if;
   other:=private.tower_v2_body(e);
   if private.tower_v2_collides(body,other) then return false;end if;
   others:=others||jsonb_build_array(other);
