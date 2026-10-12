@@ -14,12 +14,18 @@ for(const count of [2,5,15,50]){
   count,joints:r.joints,fragments:r.fragments,candidateCells:r.candidateCells,
   stoneFilledCells:r.stoneFilledCells,
   stoneCoveragePercent:Number((100*r.stoneCoverage).toFixed(2)),
+  candidateFreeVolume:Number(r.candidateFreeVolume.toFixed(4)),
+  stonePhysicalVolume:Number(r.stonePhysicalVolume.toFixed(4)),
+  penetrationVolume:Number(r.penetrationVolume.toFixed(4)),
+  selfOverlapVolume:Number(r.selfOverlapVolume.toFixed(4)),
+  coverageComplete:r.coverageComplete,
   residualFreeVolume:Number(r.residualFreeVolume.toFixed(4)),
   mortarSurfaceCells:r.mortarSurfaceCells,
   triangles:(r.stonePositions.length+r.mortarPositions.length)/9,
   truncated:r.truncated,elapsedMs:Math.round(performance.now()-t)
  };
- if(r.stoneFilledCells!==r.filledCells)throw Error('False stone volume metric');
+ if(r.stoneFilledCells!==r.filledCells)throw Error('Center-cell mismatch');
+ if(Math.abs(r.stonePhysicalVolume+r.residualFreeVolume-r.candidateFreeVolume)>1e-5)throw Error('Volume conservation failed');
  if(r.stoneFilledCells>r.candidateCells)throw Error('Impossible occupancy');
  if(r.stonePositions.length!==r.stoneColors.length)throw Error('Broken stone vertex colors');
  if(r.mortarPositions.length!==r.mortarColors.length)throw Error('Broken mortar vertex colors');
