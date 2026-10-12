@@ -114,11 +114,37 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  const out={stonePositions:[],stoneColors:[],mortarPositions:[],mortarColors:[],modelsConsidered:smallMeshes.length,fragments:0,stoneFilledCells:0,mortarSurfaceCells:0,candidateCells:0,filledCells:0,stoneCoverage:0,residualFreeVolume:0,candidateFreeVolume:0,stonePhysicalVolume:0,mortarPhysicalVolume:0,penetrationVolume:0,selfOverlapVolume:0,truncated:false};
  for(let i=0;i<num;i++)out.candidateCells+=+!!mask[i];
  if(!out.candidateCells)return out;
- const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m)),placements=[];
+ const occupied=new Uint8Array(num),profiles=smallMeshes.map(m=>buildAuthoredProfiles(m));
+ const sampleAxis=3,perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
+ const samplePoint=(x,y,z,sx,sy,sz)=>[
+  g.min[0]+(x+(sx+.5)/sampleAxis)*g.dimension[0],
+  g.min[1]+(y+(sy+.5)/sampleAxis)*g.dimension[1],
+  g.min[2]+(z+(sz+.5)/sampleAxis)*g.dimension[2],
+ ];
  const boxFree=(lo,hi)=>{
   for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++)
    if(!inGrid(g,x,y,z)||!mask[offset(g,x,y,z)]||occupied[offset(g,x,y,z)])return false;
   return true;
+ };
+
+ // Reserve actual sampled geometry, not just center voxels. Two fillers may
+ // share an enclosing grid cell, but cannot occupy the same physical sample.
+ const physicalFootprint=(field,lo,hi,rotation,fit)=>{
+  const center=lo.map((v,k)=>g.min[k]+(v+hi[k]+1)*.5*g.dimension[k]);
+  const extent=lo.map((v,k)=>(hi[k]-v+1)*g.dimension[k]);
+  const samples=[];
+  for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){
+   const cell=offset(g,x,y,z);if(!mask[cell])return null;
+   for(let sz=0;sz<sampleAxis;sz++)for(let sy=0;sy<sampleAxis;sy++)for(let sx=0;sx<sampleAxis;sx++){
+    const p=samplePoint(x,y,z,sx,sy,sz);
+    const local=rot(p.map((v,k)=>v-center[k]),(4-rotation)%4).map((v,k)=>v/(extent[k]*fit)+.5);
+    if(!authoredContains(field,local))continue;
+    const at=cell*perCell+sx+sampleAxis*sy+sampleAxis*sampleAxis*sz;
+    if(coverage[at]||isSolidAt?.(p))return null;
+    samples.push(at);
+   }
+  }
+  return samples;
  };
  const cells=Array.from({length:num},(_,i)=>i).filter(i=>mask[i]);
  cells.sort((a,b)=>{
@@ -165,9 +191,25 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
    if(matched.length>(hi[0]-lo[0]+1)*(hi[1]-lo[1]+1)*(hi[2]-lo[2]+1)*.48)break;
   }
   if(!matched.length)continue;
+  let physical=null;
+  const chosen=bestFit;
+  for(const fit of [chosen,...[.82,.72,.62,.52,.42,.32].filter(value=>value<chosen-.001)]){
+   if(!candidateClear(smallMeshes[model],lo,hi,g.min,g.dimension,fit,rotation,isSolidAt))continue;
+   const trial=physicalFootprint(profiles[model],lo,hi,rotation,fit);
+   if(trial?.length){physical=trial;bestFit=fit;break;}
+  }
+  if(!physical)continue; // Candidate collides with installed source/infill.
+  if(bestFit!==chosen){
+   matched=[];
+   for(let zz=lo[2];zz<=hi[2];zz++)for(let yy=lo[1];yy<=hi[1];yy++)for(let xx=lo[0];xx<=hi[0];xx++){
+    const p=rot([xx,yy,zz].map((v,k)=>(v+.5-center[k])*g.dimension[k]),(4-rotation)%4).map((v,k)=>v/(extent[k]*bestFit)+.5);
+    if(authoredContains(profiles[model],p))matched.push(offset(g,xx,yy,zz));
+   }
+   if(!matched.length)continue;
+  }
   if(out.stonePositions.length/9+smallMeshes[model].indices.length/3>maxTriangles){out.truncated=true;break;}
   physicalMesh(out,smallMeshes[model],{lo,hi},g.min,g.dimension,rotation,bestFit);
-  placements.push({lo:[...lo],hi:[...hi],field:profiles[model],rotation,fit:bestFit});
+  for(const at of physical)coverage[at]=1;
   for(const k of matched)occupied[k]=1;
   out.fragments++;out.stoneFilledCells+=matched.length;
  }
@@ -179,28 +221,6 @@ export function fillAuthoredCavity(grid,smallMeshes,{maxFragments=240,maxTriangl
  // meshes, NOT the greedy envelopes or a single center sample per cell.
  // A sample inside an existing large rock is penetration, never filled space.
  // Overlapping authored fragments count only once in the occupied union.
- const sampleAxis=3,perCell=sampleAxis**3,coverage=new Uint8Array(num*perCell);
- const samplePoint=(x,y,z,sx,sy,sz)=>[
-  g.min[0]+(x+(sx+.5)/sampleAxis)*g.dimension[0],
-  g.min[1]+(y+(sy+.5)/sampleAxis)*g.dimension[1],
-  g.min[2]+(z+(sz+.5)/sampleAxis)*g.dimension[2],
- ];
- for(const placement of placements){
-  const {lo,hi,rotation,fit,field}=placement;
-  const center=lo.map((v,k)=>g.min[k]+(v+hi[k]+1)*.5*g.dimension[k]);
-  const extent=lo.map((v,k)=>(hi[k]-v+1)*g.dimension[k]);
-  for(let z=lo[2];z<=hi[2];z++)for(let y=lo[1];y<=hi[1];y++)for(let x=lo[0];x<=hi[0];x++){
-   const cell=offset(g,x,y,z);if(!mask[cell])continue;
-   for(let sz=0;sz<sampleAxis;sz++)for(let sy=0;sy<sampleAxis;sy++)for(let sx=0;sx<sampleAxis;sx++){
-    const p=samplePoint(x,y,z,sx,sy,sz);
-    const local=rot(p.map((v,k)=>v-center[k]),(4-rotation)%4).map((v,k)=>v/(extent[k]*fit)+.5);
-    if(authoredContains(field,local)){
-     const at=cell*perCell+sx+sampleAxis*sy+sampleAxis*sampleAxis*sz;
-     coverage[at]=Math.min(2,coverage[at]+1);
-    }
-   }
-  }
- }
  let freeSamples=0,stoneSamples=0,penetrationSamples=0,overlapSamples=0;
  for(let z=0;z<g.nz;z++)for(let y=0;y<g.ny;y++)for(let x=0;x<g.nx;x++){
   const cell=offset(g,x,y,z);if(!mask[cell])continue;
