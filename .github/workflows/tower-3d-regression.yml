@@ -68,3 +68,23 @@ jobs:
       - name: Actual physical masonry QA
         if: always()
         run: node scripts/qa/tower-masonry-metrics.mjs
+
+  source-preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Archive every tracked source file
+        run: |
+          mkdir -p /tmp/tower-pr-source
+          git archive --format=zip -o /tmp/tower-pr-source/AlanTil-17.0-PR60-full.zip HEAD
+          git ls-files -z | xargs -0 -n1 stat -c '%n | %s bytes' > /tmp/tower-pr-source/FILE_SIZES_BYTES.txt
+          unzip -t /tmp/tower-pr-source/AlanTil-17.0-PR60-full.zip >/dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tower-full-source-preview
+          path: /tmp/tower-pr-source/*
+          if-no-files-found: error
