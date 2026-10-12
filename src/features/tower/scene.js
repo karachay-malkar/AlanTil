@@ -174,7 +174,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(b.type==='door'||b.type==='window')scale.z=.25;
    if(b.type==='deck')scale.y=.065;
    for(const [geometry,material,offset,factor] of previewMeshes(b)){
-    const translucent=enableV2Aim&&stone?new THREE.MeshBasicMaterial({color:'#72cf95'}):material.clone();translucent.transparent=true;translucent.depthWrite=false;translucent.side=THREE.DoubleSide;translucent.vertexColors=false;translucent.flatShading=true;previewMaterials.push(translucent);
+    const translucent=enableV2Aim&&CATALOG_STONES.has(b.type)?new THREE.MeshBasicMaterial({color:'#72cf95'}):material.clone();translucent.transparent=true;translucent.depthWrite=false;translucent.side=THREE.DoubleSide;translucent.vertexColors=false;translucent.flatShading=true;previewMaterials.push(translucent);
     const mesh=new THREE.Mesh(geometry,translucent);
     mesh.position.set(...offset).multiply(scale).applyQuaternion(q);
     mesh.quaternion.copy(q);mesh.scale.copy(scale).multiply(new THREE.Vector3(...factor));mesh.renderOrder=6;
