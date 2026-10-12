@@ -92,7 +92,7 @@ end $$;
 
 create or replace function private.tower_v2_collides(a jsonb,b jsonb)
 returns boolean language plpgsql immutable set search_path='' as $$
-declare na jsonb;nb jsonb;edge_a jsonb;edge_b jsonb; ax double precision;ay double precision;az double precision;bx double precision;by double precision;bz double precision;
+declare na jsonb;nb jsonb;edge_a jsonb;edge_b jsonb; ax double precision;ay double precision;az double precision;bx double precision;byv double precision;bz double precision;
 begin
  -- AABB only for fast rejection, never for acceptance of a position.
  if (a->'hi'->>0)::double precision <= (b->'lo'->>0)::double precision+.00035 or
@@ -111,8 +111,8 @@ begin
  for edge_a in select value from jsonb_array_elements(a->'e') loop
   ax:=(edge_a->>0)::double precision;ay:=(edge_a->>1)::double precision;az:=(edge_a->>2)::double precision;
   for edge_b in select value from jsonb_array_elements(b->'e') loop
-   bx:=(edge_b->>0)::double precision;by:=(edge_b->>1)::double precision;bz:=(edge_b->>2)::double precision;
-   if private.tower_v2_separating_axis(a,b,jsonb_build_array(ay*bz-az*by,az*bx-ax*bz,ax*by-ay*bx)) then return false;end if;
+   bx:=(edge_b->>0)::double precision;byv:=(edge_b->>1)::double precision;bz:=(edge_b->>2)::double precision;
+   if private.tower_v2_separating_axis(a,b,jsonb_build_array(ay*bz-az*byv,az*bx-ax*bz,ax*byv-ay*bx)) then return false;end if;
   end loop;
  end loop;
  return true;
