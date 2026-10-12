@@ -9,6 +9,7 @@ on:
       - 'tests/tower-v2-*.test.mjs'
       - 'tests/sql/tower_v2*.sql'
       - 'scripts/qa/generate-tower-v2-shapes.mjs'
+      - 'scripts/qa/browser-tower-v2-play.cjs'
       - '.github/workflows/tower-v2-server.yml'
   workflow_dispatch:
 permissions:
@@ -55,3 +56,23 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180000_tower_v2_authoritative.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261012180100_tower_v2_authored_shapes.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v2_integration.sql
+  browser-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Chromium harness
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Opt-in V2 saved stone and legacy isolation
+        run: node scripts/qa/browser-tower-v2-play.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tower-v2-play-browser
+          path: /tmp/alantil-tower-v2/tower-v2-play*.png
+          if-no-files-found: warn
