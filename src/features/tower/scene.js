@@ -270,11 +270,14 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   for(const block of blocks){
    if(layer!==null&&block.y>layer)continue;
    const stone=CATALOG_STONES.has(block.type);
+   const pieces=stone&&Math.max(block.sx,block.sy,block.sz)>1?sectionStones(block):[block];
    const count=stoneTemplates[stoneCategory(block.type)]?.length||1;
-   const variant=((block.variant||0)%count+count)%count;
-   const key=stone?`stone:${block.type}:${variant}${contactMap.has(block.id)?':contact:'+block.id:''}`:block.type;
-   if(!buckets.has(key))buckets.set(key,[]);
-   buckets.get(key).push(block);
+   for(const piece of pieces){
+    const variant=((piece.variant||0)%count+count)%count;
+    const key=stone?`stone:${block.type}:${variant}`:block.type;
+    if(!buckets.has(key))buckets.set(key,[]);
+    buckets.get(key).push(piece);
+   }
   }
   for(const [key,list] of buckets){
    const stone=key.startsWith('stone:');
@@ -299,7 +302,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    for(const [g,mat,offset,factor] of templates){
     mat.clippingPlanes=layer===null?[]:[clipPlane];mat.clipShadows=true;mat.needsUpdate=true;
     const instances=new THREE.InstancedMesh(g,mat,list.length);
-    instances.castShadow=true;instances.receiveShadow=true;instances.userData.blocks=list;
+    instances.castShadow=true;instances.receiveShadow=true;instances.userData.blocks=list.map(b=>b.parent||b);
     const matrix=new THREE.Matrix4(),quat=new THREE.Quaternion();
     list.forEach((block,i)=>{
      const {d,p}=transform(block);orientation(block,quat);
