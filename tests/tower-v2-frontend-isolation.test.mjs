@@ -1,10 +1,11 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 const root=new URL('../',import.meta.url);
 const source=p=>readFileSync(new URL(p,root),'utf8');
-test('v2 preview is opt-in and the server v1 mutation is never exposed to experimental coordinates',()=>{
+test('17.2 uses the single V2 editor while blocking untrusted legacy mutations',()=>{
  const script=source('src/features/tower/index.js');
- assert.match(script,/tower_v2_preview/);
- assert.match(script,/tower_v2_play/);
+ assert.match(script,/v2Play:true/);
+ assert.match(script,/v2Enabled:true/);
+ assert.doesNotMatch(script,/towerModeSwitch/);
  assert.match(script,/if\(s\.v2Enabled\&\&!s\.v2Play\)return;/);
  assert.match(script,/stone-placement-v2-worker\.js/);
  assert.match(script,/s\.v2CandidateValid/);

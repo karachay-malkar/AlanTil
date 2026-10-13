@@ -13,11 +13,10 @@ test('mode changes preserve a tower deep link and unrelated query state',()=>{
 test('invalid tower mode cannot redirect to another site',()=>{
  assert.throws(()=>towerModeUrl('https://alantil.ru/practice/tower','unknown'),/Invalid/);
 });
-test('the tower UI exposes both modes without auto migrating legacy blocks',()=>{
- assert.match(app,/towerModeSwitch/);
- assert.match(app,/data-tower-mode="free"/);
- assert.match(app,/data-tower-mode="classic"/);
- assert.match(app,/towerModeUrl/);
+test('17.2 exposes one editor and keeps legacy RPC for compatibility',()=>{
+ assert.doesNotMatch(app,/towerModeSwitch|data-tower-mode/);
+ assert.match(app,/v2Play:true/);
+ assert.match(app,/v2Enabled:true/);
  assert.match(app,/loadTowerV2\(params\.userId\|\|null\):loadTower\(params\.userId\|\|null\)/);
  assert.match(app,/s\.v2Play\?mutateTowerV2\(operation\):mutateTower\(operation\)/);
 });
