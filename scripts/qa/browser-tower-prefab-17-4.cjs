@@ -30,12 +30,13 @@ fs.mkdirSync(evidence,{recursive:true});
    <link rel="stylesheet" href="/src/shared/styles/app.css">
    <link rel="stylesheet" href="/src/features/tower/tower.css">
    <div class="appShell" id="app-shell"><div class="appViewport"><div class="appScreenHost"><main id="root"></main></div></div></div>
-   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.4.1';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
+   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.0';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
   await new Promise(done=>setTimeout(done,300));
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabReady==='true',{timeout:45000});
   assert.equal(await page.locator('.towerItem').count(),5,'Five prefab catalog sizes');
+  assert.match(await page.locator('[data-variant]').innerText(),/1\/8/);
   await page.waitForFunction(()=>!document.querySelector('[data-confirm]')?.disabled,{timeout:20000});
   assert.equal(await page.locator('[data-silver]').innerText(),'95');
   const initial=await page.evaluate(()=>JSON.parse(localStorage.getItem('alantil_tower_prefab_draft_17_4_qa-user')||'{}'));
@@ -48,6 +49,8 @@ fs.mkdirSync(evidence,{recursive:true});
    webgl:!!document.querySelector('.towerCanvas canvas')?.getContext('webgl2'),
    error:document.querySelector('.towerCanvas')?.dataset.prefabError||null}));
   assert.equal(info.prefabs,1);assert.equal(info.draft.sections.length,1);assert.equal(info.draft.format,3);
+  assert.ok(info.draft.sections.every(s=>[s.x,s.y,s.z].every(Number.isInteger)),'sections snap to 25-cm grid');
+  assert.equal(info.draft.sections[0].geometryVersion,'17.5.0');
   assert.equal(info.purchases,false);assert.equal(info.silver,'95');assert.equal(info.webgl,true);assert.equal(info.error,null);
   // Keep the isolated paid V2 fixture intact while displaying a fully prepared
   // wall, side seam and upper course (no runtime stone-packing Worker).
@@ -64,6 +67,7 @@ fs.mkdirSync(evidence,{recursive:true});
   await page.locator('[data-tool="select"]').click();
   await page.waitForTimeout(400);
   assert.equal(await page.locator('.towerItem').count(),5);
+  assert.ok(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-tiles')!==null);
   await page.screenshot({path:path.join(evidence,'prefab-desktop.png')});
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(600);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

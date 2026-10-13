@@ -1,4 +1,4 @@
-/* AlanTil 17.4 — the single prefabricated-section editor. No experimental modes. */
+/* AlanTil 17.5 — the single prefabricated-section editor. No experimental modes. */
 .appShell[data-feature="tower"]{
  position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;
  --chrome-top-depth:0px;--chrome-bottom-depth:0px
@@ -76,3 +76,7 @@
 }
 @media(max-height:590px){.towerCatalogContent{max-height:33dvh}.towerSide{max-height:calc(100% - 90px)}.towerActionBar{bottom:calc(var(--tower-dock-height,120px) + 6px)}}
 @media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* The 25-cm surface grid is a WebGL overlay only while placing sections. */
+.towerCanvas[data-grid-visible="true"] canvas{cursor:crosshair}
+.towerCanvas[data-grid-visible="false"] canvas{cursor:grab}
