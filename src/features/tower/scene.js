@@ -307,6 +307,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     geometry.setIndex(new THREE.BufferAttribute(batch.indices,1));
     geometry.computeVertexNormals();geometry.computeBoundingSphere();
     const material=stoneMaterial.clone();
+    // The supplied original FBX/GLB meshes are open; preserve their back-facing facets.
+    material.side=THREE.DoubleSide;
     material.clippingPlanes=layer===null?[]:[clipPlane];material.clipShadows=true;
     const mesh=new THREE.Mesh(geometry,material);
     mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.block=parent;
@@ -346,7 +348,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  if(enableV2Aim&&typeof Worker!=='undefined'){
   try{
-   sectionWorker=new Worker(new URL('./section-masonry-worker.js?v=17.3.0',import.meta.url),{type:'module'});
+   sectionWorker=new Worker(new URL('./section-masonry-worker.js?v=17.3.1',import.meta.url),{type:'module'});
    sectionWorker.onmessage=({data})=>acceptSectionBuild(data);
    sectionWorker.onerror=e=>sectionBuildFailed(e.message||'Section Worker error');
   }catch(error){sectionFailed=true;container.dataset.sectionError=String(error);}
