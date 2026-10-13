@@ -260,6 +260,22 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   }catch(e){console.warn('Masonry worker unavailable',e);}
  }
  let loadedOnce=false,settling=null;
+ // 17.2: keep parent section identity while rendering constituent rock meshes.
+ function sectionStones(parent){
+  const pieces=[],nx=Math.max(1,Math.round(parent.sx)),ny=Math.max(1,Math.round(parent.sy)),nz=Math.max(1,Math.round(parent.sz));
+  for(let iy=0;iy<ny;iy++)for(let iz=0;iz<nz;iz++){
+   let ix=0;
+   while(ix<nx){
+    const remaining=nx-ix;
+    const width=remaining===1?1:(ix===0&&iy%2?1:Math.min(2,remaining));
+    const seed=parent.x*19+parent.y*31+parent.z*43+iy*47+iz*59+ix*71;
+    pieces.push({...parent,x:parent.x+ix,y:parent.y+iy,z:parent.z+iz,sx:width,sy:1,sz:1,variant:Math.floor(hash(seed)*23),parent});
+    ix+=width;
+    if(pieces.length>320)return [parent];
+   }
+  }
+  return pieces;
+ }
  function rebuild(){
   if(settling)settling.parts=[];
   for(const instance of groups){content.remove(instance);instance.dispose?.();}
