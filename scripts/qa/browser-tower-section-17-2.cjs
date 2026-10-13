@@ -35,19 +35,19 @@ fs.mkdirSync(evidence,{recursive:true});
     <style>body{margin:0}#root{width:100%}</style>
     <div class="appShell" id="app-shell"><div class="appViewport"><div class="appScreenHost"><main id="root"></main></div></div></div>
     <script type="module">
-      import {mount} from '/src/features/tower/index.js?v=17.2.3';
+      import {mount} from '/src/features/tower/index.js?v=17.3.0';
       mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});
     </script>
   `}));
   await new Promise(done=>setTimeout(done,450));
   await page.goto('http://127.0.0.1:8772/tower-section-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
-  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.sectionReady==='true'&&document.querySelector('.towerCanvas')?.dataset.sectionCount==='4',
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.sectionReady==='true'&&document.querySelector('.towerCanvas')?.dataset.sectionInfillReady==='true'&&document.querySelector('.towerCanvas')?.dataset.sectionCount==='4',
     null,{timeout:90000});
   const info=await page.evaluate(()=>{
    const canvas=document.querySelector('.towerCanvas'),d=canvas.dataset;
    return {ready:d.sectionReady,error:d.sectionError||null,sections:Number(d.sectionCount),
-    stones:Number(d.sectionStoneCount),joints:Number(d.sectionJointCount),
+    stones:Number(d.sectionStoneCount),joints:Number(d.sectionJointCount),bridges:Number(d.sectionBridgeCount),
     fragments:Number(d.masonryFragments||0),masonry:d.masonryReady,
     contextLost:d.contextLost||null,
     webgl:!!canvas.querySelector('canvas')?.getContext('webgl2')};
@@ -56,6 +56,7 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(info.sections,4);
   assert.ok(info.stones>4,'rendered geometry must have many authored stones');
   assert.ok(info.joints>=3,'wall, corner and upper-section contact must be found');
+  assert.ok(info.bridges>0,'section boundaries must be bridged by authored meshes');
   assert.equal(info.masonry,'true');
   assert.equal(info.contextLost,null);
   assert.equal(info.webgl,true);

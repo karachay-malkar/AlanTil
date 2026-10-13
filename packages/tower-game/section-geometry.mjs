@@ -9,14 +9,14 @@ const finite=a=>a&&a.length>0&&[...a].every(Number.isFinite);
  * physical metres. This is a render batch, not a trusted collision hull.
  * A caller may supply a mesh contact-deformer, which is applied before transform.
  */
-export function buildSectionGeometry(sections,{getModel,counts,deform=null,contacts=new Map(),maxTriangles=250000}={}){
+export function buildSectionGeometry(sections,{getModel,counts,deform=null,contacts=new Map(),stones=null,maxTriangles=250000}={}){
  if(typeof getModel!=='function'||!Array.isArray(sections)||sections.length>250||!Number.isInteger(maxTriangles)||maxTriangles<1)
   throw new TypeError('Invalid section geometry input');
  return sections.map(section=>{
-  const stones=generateSectionStones(section,{rockCounts:counts||undefined});
+  const members=stones===null?generateSectionStones(section,{rockCounts:counts||undefined}):stones.filter(rock=>rock.parent?.id===section.id);
   const positions=[],colors=[],indices=[];
   let vertexCount=0;
-  for(const rock of stones){
+  for(const rock of members){
    const family=rock.type==='stone'?'small':rock.type;
    let source=getModel(family,rock.variant);
    if(deform)source=deform(source,rock,contacts.get(rock.id)||[])||source;
@@ -37,6 +37,6 @@ export function buildSectionGeometry(sections,{getModel,counts,deform=null,conta
    if(indices.length/3>maxTriangles)throw new RangeError('Section exceeds GPU triangle budget');
   }
   return {id:section.id,positions:Float32Array.from(positions),colors:Float32Array.from(colors),
-   indices:Uint32Array.from(indices),triangles:indices.length/3,stones:stones.length};
+   indices:Uint32Array.from(indices),triangles:indices.length/3,stones:members.length};
  });
 }

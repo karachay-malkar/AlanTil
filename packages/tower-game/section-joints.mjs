@@ -31,6 +31,25 @@ export function findSectionJoints(sections,stones,{minArea=.015,maxJoints=5000}=
    }
   }
  }
+ // A rock that crosses a paid section boundary itself interlocks both
+ // sides. It is one immutable authored mesh; do not add an artificial seam.
+ for(let i=0;i<sections.length;i++)for(let j=i+1;j<sections.length;j++){
+  for(const face of facing(sections[i],sections[j])){
+   const {axis,plane,left,right}=face;
+   const parentStone=(bySection.get(left.id)||[]).concat(bySection.get(right.id)||[]);
+   for(const rock of parentStone){
+    const b=bounds(rock);
+    if(b.min[axis]>=plane-EPS||b.max[axis]<=plane+EPS)continue;
+    const other=[0,1,2].filter(k=>k!==axis),A=sectionEnvelope(left),B=sectionEnvelope(right);
+    const ranges=other.map(k=>[Math.max(b.min[k],A.min[k],B.min[k]),Math.min(b.max[k],A.max[k],B.max[k])]);
+    const area=ranges.reduce((n,[lo,hi])=>n*Math.max(0,hi-lo),1);
+    if(area<minArea)continue;
+    const key=rock.id+':bridge:'+axis+':'+plane.toFixed(5);
+    joints.push({axis,plane,leftParent:left.id,rightParent:right.id,leftStone:rock.id,rightStone:rock.id,area,ranges,key,bridged:true});
+    if(joints.length>maxJoints)throw new RangeError('Too many local section contacts');
+   }
+  }
+ }
  return joints.sort((a,b)=>a.key.localeCompare(b.key));
 }
 export function affectedSections(sections,id,{tolerance=.05}={}){

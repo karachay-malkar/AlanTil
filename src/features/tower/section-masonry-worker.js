@@ -2,7 +2,7 @@
  * authoritative section RPC is deployed and explicit prices approved. */
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
-import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/masonry-contact.mjs?v=17.2.3';
+import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/masonry-contact.mjs?v=17.3.0';
 import {buildStoneProfiles} from '../../../packages/tower-game/masonry-geometry.mjs';
 import {packMasonryVolume} from '../../../packages/tower-game/masonry-packing.mjs';
 import {buildSectionMasonry} from '../../../packages/tower-game/section-pipeline.mjs';
@@ -22,18 +22,24 @@ self.onmessage=({data})=>{
   if(!Array.isArray(sections)||sections.length>250)throw new TypeError('Invalid section request');
   const result=buildSectionMasonry(sections,{
    getModel,rockCounts,contactEngine:mapContactJoints,
-   deform:(mesh,rock,joints)=>deformContactMesh(mesh,rock,joints,{maxDisplacement:.12}),
-   maxStones:mobile?360:850,
-   infillEngine:stones=>packMasonryVolume(stones,profiles,{
-    cache,spacing:mobile?.18:.14,maxTriangles:mobile?30000:75000,
-    maxJoints:mobile?300:650,maxFragmentsPerJoint:mobile?60:120
-   })
+   deform:(mesh,rock,joints)=>deformContactMesh(mesh,rock,joints,{maxDisplacement:.12,maxRefinementPasses:1}),
+   maxStones:mobile?360:850
   });
-  const batches=result.sections.map(b=>({...b})),infill=result.infill;
-  const buffers=[...batches.flatMap(b=>[b.positions.buffer,b.colors.buffer,b.indices.buffer]),
-   ...['stonePositions','stoneColors','mortarPositions','mortarColors'].map(k=>infill[k].buffer)];
-  self.postMessage({generation,geometryVersion:result.geometryVersion,sections:batches,
-   sectionCount:sections.length,stoneCount:result.stones.length,
-   jointCount:result.joints.length,timeMs:performance.now()-started,infill},buffers);
+  const batches=result.sections.map(b=>({...b}));
+  self.postMessage({generation,phase:'geometry',geometryVersion:result.geometryVersion,
+   sections:batches,sectionCount:sections.length,stoneCount:result.stones.length,
+   jointCount:result.joints.length,bridgeCount:result.joints.filter(j=>j.bridged).length,
+   timeMs:performance.now()-started},
+   batches.flatMap(b=>[b.positions.buffer,b.colors.buffer,b.indices.buffer]));
+  try{
+   const infill=packMasonryVolume(result.stones,profiles,{
+    cache,spacing:mobile?.25:.19,maxTriangles:mobile?20000:48000,
+    maxJoints:mobile?220:440,maxFragmentsPerJoint:mobile?40:80
+   });
+   self.postMessage({generation,phase:'infill',infill,timeMs:performance.now()-started},
+    ['stonePositions','stoneColors','mortarPositions','mortarColors'].map(k=>infill[k].buffer));
+  }catch(error){
+   self.postMessage({generation,phase:'infill',infillError:String(error?.message||error)});
+  }
  }catch(error){self.postMessage({generation,error:String(error?.message||error)});}
 };

@@ -138,10 +138,11 @@ export function refineContactMesh(mesh,block,joints,{maxPasses=3,maxTriangles=60
  const ArrayType=p.length/3>65535?Uint32Array:Uint16Array;
  return {positions:Float32Array.from(p),colors:Float32Array.from(colors),indices:ArrayType.from(faces)};
 }
-export function deformContactMesh(mesh,block,joints,{maxDisplacement=.70}={}){
+export function deformContactMesh(mesh,block,joints,{maxDisplacement=.70,maxRefinementPasses=3}={}){
  if(!Number.isFinite(maxDisplacement)||maxDisplacement<0||maxDisplacement>.70)throw new RangeError('Invalid contact displacement limit');
+ if(!Number.isInteger(maxRefinementPasses)||maxRefinementPasses<0||maxRefinementPasses>3)throw new RangeError('Invalid refinement budget');
  if(!joints?.length)return {...mesh,positions:mesh.positions.slice(),indices:mesh.indices.slice()};
- const refined=refineContactMesh(mesh,block,joints),base=refined.positions;
+ const refined=refineContactMesh(mesh,block,joints,{maxPasses:maxRefinementPasses}),base=refined.positions;
  const displacement=new Float32Array(base.length);
  let moved=0,maxContactDisplacement=0;
  for(let i=0;i<base.length;i+=3){

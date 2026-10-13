@@ -283,6 +283,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function acceptSectionBuild(data){
   if(disposed||!data||data.generation!==sectionGeneration)return;
   if(data.error){sectionBuildFailed(data.error);return;}
+  if(data.phase==='infill'){
+   if(data.infill){drawMasonry(data.infill);container.dataset.sectionInfillReady='true';}
+   else{container.dataset.sectionInfillError=String(data.infillError||'Infill unavailable');}
+   return;
+  }
   const expected=toMasonrySections(blocks,layer),byId=new Map(blocks.map(b=>[b.id,b]));
   if(data.sections?.length!==expected.length){sectionBuildFailed('Section count mismatch');return;}
   const next=[];
@@ -319,10 +324,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     settling.parts.push({mesh,baseY:0});
    }
   }
-  if(data.infill)drawMasonry(data.infill);
   container.dataset.sectionReady='true';
   container.dataset.sectionStoneCount=String(data.stoneCount||0);
   container.dataset.sectionJointCount=String(data.jointCount||0);
+  container.dataset.sectionBridgeCount=String(data.bridgeCount||0);
   container.dataset.sectionCount=String(data.sections.length);
   container.dataset.sectionDurationMs=String(Math.round(data.timeMs||0));
   delete container.dataset.sectionError;
@@ -330,6 +335,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function requestSections(){
   const generation=++sectionGeneration;
   delete container.dataset.sectionReady;delete container.dataset.sectionError;
+  delete container.dataset.sectionInfillReady;delete container.dataset.sectionInfillError;
   const sections=toMasonrySections(blocks,layer);
   if(!sections.length){
    clearSections();clearMasonry();
@@ -340,7 +346,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  if(enableV2Aim&&typeof Worker!=='undefined'){
   try{
-   sectionWorker=new Worker(new URL('./section-masonry-worker.js?v=17.2.3',import.meta.url),{type:'module'});
+   sectionWorker=new Worker(new URL('./section-masonry-worker.js?v=17.3.0',import.meta.url),{type:'module'});
    sectionWorker.onmessage=({data})=>acceptSectionBuild(data);
    sectionWorker.onerror=e=>sectionBuildFailed(e.message||'Section Worker error');
   }catch(error){sectionFailed=true;container.dataset.sectionError=String(error);}
