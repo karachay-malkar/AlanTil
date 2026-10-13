@@ -1,7 +1,7 @@
-/* Tower layout only. Controls inherit the established AlanTil design system. */
+/* AlanTil 17.4 — the single prefabricated-section editor. No experimental modes. */
 .appShell[data-feature="tower"]{
  position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;
- --chrome-top-depth:0px;--chrome-bottom-depth:0px;
+ --chrome-top-depth:0px;--chrome-bottom-depth:0px
 }
 .appShell[data-feature="tower"] .appHeader{z-index:10;pointer-events:none}
 .appShell[data-feature="tower"] .appHeaderCenter,
@@ -15,228 +15,64 @@
 .appShell[data-feature="tower"] .appViewport::after{display:none}
 .appShell[data-feature="tower"] .appViewport,
 .appShell[data-feature="tower"] .appScreenHost{
- position:absolute;inset:0;min-width:0;width:100%;height:100%;max-width:none;
- overflow:hidden;padding:0
+ position:absolute;inset:0;min-width:0;width:100%;height:100%;max-width:none;overflow:hidden;padding:0
 }
-.appShell[data-feature="tower"] .towerView{
- position:absolute;inset:0;display:block;width:100%;height:100%;
- max-width:none;padding:0;margin:0
-}
-.towerGame{
- position:relative;isolation:isolate;width:100%;height:100dvh;min-height:0;max-height:100dvh;
- color:var(--text-1);font-family:var(--font-body);overflow:hidden
-}
+.appShell[data-feature="tower"] .towerView{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;padding:0;margin:0}
+.towerGame{position:relative;isolation:isolate;width:100%;height:100dvh;min-height:0;max-height:100dvh;color:var(--text-1);font-family:var(--font-body);overflow:hidden}
+.towerGame [hidden]{display:none!important}
+.towerGame button:focus-visible,.towerGame input:focus-visible,.towerGame summary:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
+.towerGame button:disabled{opacity:var(--ui-button-disabled-opacity);cursor:default}
 .towerStage{position:absolute;inset:0;overflow:hidden;background:var(--surface-1)}
 .towerCanvas,.towerCanvas canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 .towerCanvas canvas{cursor:crosshair}
-.towerGame [hidden]{display:none!important}
-.towerGame button:focus-visible,.towerGame input:focus-visible,
-.towerGame summary:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
-.towerGame button:disabled{opacity:var(--ui-button-disabled-opacity);cursor:default}
-.towerHud{
- position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 8px);right:12px;
- display:flex;align-items:center;justify-content:flex-end;pointer-events:none
-}
-.towerPill{
- display:inline-flex;align-items:center;gap:10px;padding:7px 11px;
- border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);
- border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);
- font:750 var(--text-technical)/1.15 var(--font-terminal);
- font-variant-numeric:tabular-nums
-}
-/* Explicit choice between independent V1/V2 structures; the wallet is shared. */
-.towerModeSwitch{position:absolute;z-index:5;left:10px;top:calc(var(--safe-top,0px) + 66px);display:flex;align-items:center;gap:5px;max-width:calc(100% - 80px)}
-.towerModeSwitch .bracketNavigation{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:4px 7px;white-space:nowrap;text-decoration:none;color:var(--text-2);font:700 var(--text-technical)/1.2 var(--font-body);border:1px solid transparent;border-radius:var(--radius-sm);background:var(--surface-0)}
-.towerModeSwitch .bracketNavigation[aria-current="page"]{color:var(--text-1);border-color:var(--line);background:var(--accent-soft)}
-.towerModeSwitch .bracketNavigation:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
-.towerV2Notice{position:absolute;z-index:4;left:12px;top:calc(var(--safe-top,0px) + 109px);max-width:min(380px,calc(100% - 90px));pointer-events:none;white-space:normal;line-height:1.3}
-.towerBalance{gap:14px}
-.towerCoin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.towerCoin i{
- display:inline-block;width:15px;height:15px;flex:0 0 15px;border-radius:50%;
- border:2px solid #90989c;
- background:radial-gradient(circle at 30% 26%,#fff,#bac3c8 64%,#818c94)
-}
-.towerCoin.gold i{
- border-color:#a77b2c;
- background:radial-gradient(circle at 28% 25%,#fff4b9,#dcb149 66%,#a87826)
-}
-.towerCamera{
- position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 68px);right:12px;
- display:flex;flex-direction:column
-}
-.towerCamera .iconBtn{
- width:44px;height:44px;flex-basis:44px;border:1px solid var(--line);
- background:var(--surface-0);color:var(--text-1);border-radius:var(--radius-sm);
- box-shadow:var(--shadow-sm);font-size:24px
-}
-.towerReadOnly{
- position:absolute;top:calc(var(--safe-top,0px) + 66px);left:12px;
- right:74px;max-width:410px;font:600 var(--text-technical)/1.3 var(--font-body)
-}
-.towerSide{
- position:absolute;z-index:5;left:50%;bottom:max(10px,var(--safe-bottom,0px));
- transform:translateX(-50%);width:min(850px,calc(100% - 16px));max-height:calc(100% - 130px);
- display:flex;flex-direction:column;gap:0;min-width:0;padding:6px;
- border:1px solid var(--line);border-radius:var(--radius-lg);
- background:var(--surface-0);box-shadow:var(--shadow-md,var(--shadow-sm))
-}
-.towerSide h2{display:none}
-.towerSide.is-collapsed{
- width:max-content;max-width:calc(100% - 20px);padding:5px
-}
-.towerCatalogToggle{
- display:flex;justify-content:center;align-items:center;gap:6px;
- align-self:center;width:auto;min-width:108px;min-height:29px;white-space:nowrap
-}
-.towerCatalogToggle svg{transition:transform var(--duration-normal)}
-.towerCatalogToggle.is-open svg{transform:rotate(180deg)}
-.towerSide.is-collapsed .towerCatalogToggle{min-width:130px}
-.towerCatalogContent{
- display:flex;flex-direction:column;gap:3px;min-width:0;margin-top:3px;
- max-height:min(29dvh,220px);overflow-x:hidden;overflow-y:auto;scrollbar-width:thin
-}
-.towerCatalogContent[hidden]{display:none!important}
-.towerTabs,.towerStoneKinds{
- flex:0 0 auto;display:flex;gap:5px;align-items:center;min-width:0;
- overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
- scroll-snap-type:x proximity;scrollbar-width:none
-}
-.towerTabs::-webkit-scrollbar,.towerStoneKinds::-webkit-scrollbar{display:none}
-.towerTabs .bracketNavigation,.towerStoneKinds .bracketNavigation{
- flex:0 0 auto;white-space:nowrap;min-height:25px;padding:1px 7px;
- font-family:var(--font-body);font-size:var(--text-button);
- color:var(--text-2);background:transparent;border:0;border-radius:0
-}
-.towerTabs .bracketNavigation.active,.towerStoneKinds .bracketNavigation.active{
- color:var(--text-1);font-weight:900
-}
-.towerCatalog{
- flex:0 0 auto;display:flex;align-items:stretch;gap:4px;width:100%;min-width:0;
- overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
- scroll-snap-type:x proximity;scrollbar-width:thin;padding:2px 1px 3px;touch-action:pan-x
-}
-.towerCatalog .towerItem{
- flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;
- width:68px;min-height:69px;gap:1px;padding:3px 4px;
- text-align:center;scroll-snap-align:start;
- background:var(--surface-0);border:1px solid var(--line);
- color:var(--text-1);box-shadow:none
-}
-.towerCatalog .towerItem[aria-pressed="true"]{
- border-color:var(--accent);background:var(--accent-soft);
- box-shadow:inset 0 0 0 1px var(--accent-strong)
-}
-.towerItemIcon{
- position:relative;flex:0 0 auto;display:grid;place-items:center;
- width:46px;height:46px;touch-action:pan-x
-}
-.towerItemIcon>span{font-size:25px;color:var(--text-2)}
-.towerItemImage{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;opacity:0}
-.towerItem.has-thumbnail .towerItemImage{opacity:1}
-.towerItem.has-thumbnail .towerItemIcon>span{display:none}
-.towerItemName{
- width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
- font:700 var(--text-technical)/1.1 var(--font-body)
-}
-.towerPrice{font:650 var(--text-technical)/1.1 var(--font-terminal);color:var(--text-2)}
-.towerOptions{
- position:absolute;z-index:9;right:8px;top:8px;max-width:calc(100% - 16px);
- min-width:0
-}
-.towerSide.is-collapsed .towerOptions{display:none}
-.towerOptions summary{
- display:inline-flex;align-items:center;justify-content:center;
- list-style:none;cursor:pointer;min-height:32px
-}
-.towerOptions summary::-webkit-details-marker{display:none}
-.towerOptions[open]{
- width:min(340px,calc(100vw - 24px));max-height:min(62dvh,480px);
- overflow-y:auto;overflow-x:hidden;padding:7px;border:1px solid var(--line);
- border-radius:var(--radius-md);background:var(--surface-0);
- box-shadow:var(--shadow-md,var(--shadow-sm))
-}
-.towerOptions[open]>:not(summary){margin-top:9px}
-.towerDimensions,.towerPosition{
- display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px
-}
-.towerDimensions label,.towerPosition label{
- display:grid;gap:4px;font:650 var(--text-technical)/1.15 var(--font-body)
-}
-.towerDimensions input,.towerPosition input{
- width:100%;min-width:0;min-height:44px;
- border:1px solid var(--line);border-radius:var(--radius-sm);
- background:var(--surface-component);color:var(--text-1);
- font:600 var(--text-button)/1.2 var(--font-body);padding:7px
-}
-.towerTool,.towerExchange{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.towerLayer{display:grid;gap:4px;font:650 var(--text-technical)/1.1 var(--font-body)}
-.towerLayer input{width:100%;accent-color:var(--accent)}
-.towerActionBar{
- position:absolute;z-index:6;left:50%;
- bottom:calc(var(--tower-dock-height,165px) + max(15px,var(--safe-bottom,0px)));
- transform:translateX(-50%);width:min(560px,calc(100% - 26px));
- display:none;flex-direction:column;align-items:center;gap:5px;pointer-events:none
-}
-.towerActionBar.is-visible{display:flex}
+.towerHud{position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 8px);right:12px;display:flex;pointer-events:none}
+.towerPill{display:inline-flex;align-items:center;gap:10px;padding:7px 11px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);font:750 var(--text-technical)/1.2 var(--font-terminal);font-variant-numeric:tabular-nums}
+.towerBalance{gap:14px}.towerCoin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.towerCoin i{display:inline-block;width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:2px solid #90989c;background:radial-gradient(circle at 30% 26%,#fff,#bac3c8 64%,#818c94)}
+.towerCoin.gold i{border-color:#a77b2c;background:radial-gradient(circle at 28% 25%,#fff4b9,#dcb149 66%,#a87826)}
+.towerCamera{position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 65px);right:12px}
+.towerCamera .iconBtn{width:44px;height:44px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);font-size:24px}
+.towerReadOnly{position:absolute;top:calc(var(--safe-top,0px) + 64px);left:12px;right:76px;max-width:410px;line-height:1.4;white-space:normal;pointer-events:none}
+.towerSide{position:absolute;z-index:5;left:50%;bottom:max(10px,var(--safe-bottom,0px));transform:translateX(-50%);width:min(850px,calc(100% - 16px));max-height:calc(100% - 160px);display:flex;flex-direction:column;min-width:0;padding:6px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface-0);box-shadow:var(--shadow-md,var(--shadow-sm))}
+.towerCatalogToggle{display:flex;align-items:center;justify-content:center;align-self:center;width:140px;min-height:32px;gap:5px}
+.towerCatalogContent{display:flex;flex-direction:column;gap:7px;min-width:0;margin-top:5px;max-height:min(37dvh,290px);overflow-x:hidden;overflow-y:auto;scrollbar-width:thin}
+.towerCatalog{display:flex;align-items:stretch;gap:6px;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding:3px 2px 5px;touch-action:pan-x}
+.towerCatalog .towerItem{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:104px;min-height:90px;padding:6px 4px;text-align:center;scroll-snap-align:start;background:var(--surface-0);border:1px solid var(--line);color:var(--text-1);box-shadow:none}
+.towerCatalog .towerItem[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent-strong)}
+.towerItemIcon{display:grid;place-items:center;flex:0 0 auto;width:42px;height:30px;font-size:24px;color:var(--text-2)}
+.towerItemName{max-width:100%;font:800 var(--text-technical)/1.2 var(--font-body);white-space:nowrap}
+.towerPrice{max-width:100%;font:600 var(--text-technical)/1.1 var(--font-body);color:var(--text-2);white-space:nowrap}
+.towerTool{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+.towerTool .btn{min-height:38px}
+.towerDimensions{text-align:center;font:650 var(--text-technical)/1.25 var(--font-body);color:var(--text-2)}
+.towerPrefabMore{margin-inline:4px;padding-top:5px;border-top:1px solid var(--line)}
+.towerPrefabMore summary{display:inline-flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;min-height:32px}
+.towerPrefabMore summary::-webkit-details-marker{display:none}
+.towerPrefabMore[open]{max-height:180px;overflow-y:auto}
+.towerPrefabMore[open]>:not(summary){margin-block:7px}
+.towerPrefabHelp{font:600 var(--text-technical)/1.4 var(--font-body);color:var(--text-2)}
+.towerPosition{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.towerPosition label{display:grid;gap:4px;font:650 var(--text-technical)/1.1 var(--font-body)}
+.towerPosition input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-component);color:var(--text-1);font:600 var(--text-button)/1.2 var(--font-body);padding:7px}
+.towerActionBar{position:absolute;z-index:6;left:50%;bottom:calc(var(--tower-dock-height,180px) + max(15px,var(--safe-bottom,0px)));transform:translateX(-50%);width:min(560px,calc(100% - 26px));display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
 .towerActionBar>*{pointer-events:auto}
 .towerQuickTools{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
 .towerQuickTools .btn{min-height:44px;padding:7px 12px;white-space:nowrap}
-.towerCurrency{
- display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
- width:min(290px,100%);font-size:var(--text-button);
- background:var(--surface-0)
-}
-.towerCurrency label{display:block}
-.towerCurrency .settingsChoice span{min-height:34px}
-.towerActionBar .towerActions{
- display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;width:100%
-}
-.towerActionBar .towerAction{
- min-height:44px;flex:0 1 auto;max-width:100%;white-space:normal
-}
-.towerActionBar .towerAction[data-confirm]{min-width:190px}
-.towerActionBar .towerStatus,.towerActionBar .towerSelected{
- max-width:100%;padding:6px 9px;background:var(--surface-0);
- border:1px solid var(--line);border-radius:var(--radius-sm);
- font:650 var(--text-technical)/1.25 var(--font-body);color:var(--text-2)
-}
-.towerActionBar .towerStatus[data-kind="error"]{color:var(--danger)}
-.towerActionBar .towerSaved{display:none}
-.towerFixedDimensions{
- grid-column:1/-1;font:700 var(--text-body)/1.3 var(--font-body);
- color:var(--text-2);padding:7px 0;
-}
-.towerCanvas[data-context-lost="true"]::after{
- content:"3D-контекст потерян. Перезагрузите экран.";
- position:absolute;inset:0;display:grid;place-items:center;
- background:var(--surface-0);color:var(--danger)
-}
+.towerActions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;width:100%}
+.towerActionBar .towerAction{min-height:44px;flex:0 1 auto;max-width:100%;white-space:normal}
+.towerActionBar .towerAction[data-confirm]{min-width:195px}
+.towerStatus,.towerSelected{max-width:100%;padding:6px 9px;background:var(--surface-0);border:1px solid var(--line);border-radius:var(--radius-sm);font:650 var(--text-technical)/1.3 var(--font-body);color:var(--text-2);text-align:center}
+.towerStatus[data-kind="error"]{color:var(--danger)}
 @media(max-width:749px){
  .towerHud{top:calc(var(--safe-top,0px) + 7px);right:9px}
- .towerBalance{gap:9px}
- .towerPill{padding:7px 9px}
- .towerCoin{gap:4px}
+ .towerBalance{gap:9px}.towerPill{padding:7px 9px}
  .towerCoin i{width:13px;height:13px;flex-basis:13px}
- .towerCamera{top:calc(var(--safe-top,0px) + 63px);right:9px}
- .towerSide{width:calc(100% - 12px);max-height:calc(100% - 125px);padding:6px}
- .towerCatalogContent{gap:3px;margin-top:5px}
- .towerCatalog .towerItem{width:64px;min-height:65px}
- .towerItemIcon{width:43px;height:43px}
- .towerActionBar{width:calc(100% - 16px);gap:4px;bottom:calc(var(--tower-dock-height,165px) + max(10px,var(--safe-bottom,0px)))}
- .towerActionBar .towerAction[data-confirm]{min-width:165px}
+ .towerCamera{top:calc(var(--safe-top,0px) + 65px);right:9px}
+ .towerSide{width:calc(100% - 12px);max-height:calc(100% - 145px)}
+ .towerCatalog .towerItem{width:82px;min-height:80px}
+ .towerActionBar{width:calc(100% - 16px);bottom:calc(var(--tower-dock-height,165px) + max(10px,var(--safe-bottom,0px)))}
+ .towerQuickTools .btn{min-height:42px}
+ .towerActionBar .towerAction[data-confirm]{min-width:160px}
 }
-@media(max-width:340px){
- .towerCatalog .towerItem{width:59px;min-height:63px;padding:2px}
- .towerItemIcon{width:40px;height:40px}
- .towerTabs .bracketNavigation,.towerStoneKinds .bracketNavigation{padding-inline:5px}
- .towerActionBar .towerAction{min-height:44px}
-}
-@media(max-height:590px){
- .towerCatalogContent{max-height:33dvh}
- .towerSide{max-height:calc(100% - 90px)}
- .towerActionBar{bottom:calc(var(--tower-dock-height,120px) + 6px)}
-}
-@media(prefers-reduced-motion:reduce){
- .towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
-}
+@media(max-height:590px){.towerCatalogContent{max-height:33dvh}.towerSide{max-height:calc(100% - 90px)}.towerActionBar{bottom:calc(var(--tower-dock-height,120px) + 6px)}}
+@media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

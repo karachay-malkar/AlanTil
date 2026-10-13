@@ -17,8 +17,8 @@ test('V2 RPC scope cannot expose private tables',()=>{
 test('V2 shape seed stores true authored face indices and no generated primitives',()=>{
  const s=get(seed);assert.match(s,/insert into private\.tower_v2_shapes/);assert.match(s,/medium/);assert.match(s,/long/);assert.match(s,/big/);assert.doesNotMatch(s,/cube_geometry|BoxGeometry|procedural_pebble/);
 });
-test('frontend V2 mutates only dedicated RPC and never V1 tower elements',()=>{
+test('frontend preserves V2 read compatibility but no new V1/V2 stone purchases',()=>{
  const s=get('src/features/tower/index.js');const r=get('src/features/tower/repository.js');
  assert.match(r,/mutate_tower_v2/);assert.match(r,/get_tower_v2_snapshot/);
- assert.match(s,/v2Play/);assert.match(s,/mutateTowerV2/);assert.match(s,/loadTowerV2/);
+ assert.match(s,/loadTowerV2/);assert.doesNotMatch(s,/mutateTowerV2|mutateTower\(/);
 });

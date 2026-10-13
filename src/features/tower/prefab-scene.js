@@ -1,0 +1,170 @@
+/** AlanTil 17.4 single-editor scene: static offline-baked authored GLBs only.
+ * No voxel packing, live deformation, gridstone generation, or purchase mutations.
+ */
+import * as THREE from '../../vendor/three/three.module.js';
+import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
+import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
+import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
+import {prefabBounds,touchingPrefabPairs,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-game/prefab-layout.mjs';
+const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
+const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
+const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
+export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
+ const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.4.0').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
+ if(manifest.version!=='17.4.0')throw new Error('Неподдерживаемая версия секций');
+ const specs=new Map(manifest.types.map(t=>[t.id,t]));
+ const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='place',blocks=[],selected=null;
+ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+ renderer.setSize(Math.max(1,container.clientWidth),Math.max(320,container.clientHeight),false);
+ renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';container.append(renderer.domElement);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#b5cabd');scene.fog=new THREE.Fog('#b5cabd',37,105);
+ const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,170);
+ camera.position.set(11.6,5.1,12.2);
+ const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(7.5,.5,7.5);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=52;controls.maxPolarAngle=Math.PI*.48;controls.update();
+ scene.add(new THREE.HemisphereLight('#f0f6ff','#766950',2.0));
+ const sunlight=new THREE.DirectionalLight('#fff3df',3);sunlight.position.set(-10,20,13);scene.add(sunlight);
+ const surface=new THREE.Group();scene.add(surface);
+ // Existing open landscape remains independent of the construction engine.
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(15,15),new THREE.MeshStandardMaterial({color:'#91b277',roughness:1}));
+ floor.rotation.x=-Math.PI/2;floor.position.set(7.5,-.006,7.5);floor.receiveShadow=true;scene.add(floor);
+ for(let ridge=0;ridge<3;ridge++){
+  const vertices=[],faces=[];
+  for(let i=0;i<32;i++){const x=-55+i*4,height=5+hash(i+ridge*71)*11+ridge*4;vertices.push(x,-.3,-22-ridge*14,x,height,-22-ridge*14);if(i<31){const j=i*2;faces.push(j,j+1,j+2,j+1,j+3,j+2);}}
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setIndex(faces);geometry.computeVertexNormals();
+  scene.add(new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:['#718275','#91a497','#a4b8ad'][ridge],roughness:1,side:THREE.DoubleSide})));
+ }
+ const preview=new THREE.Group();scene.add(preview);preview.visible=false;
+ const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
+ const previewContents=new THREE.Group();preview.add(previewContents);
+ const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
+ const meshCache=new Map();let previewGeneration=0,rebuildGeneration=0,rendered=[],disposedMaterials=[],activeGhost=null;
+ function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
+ function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
+ async function getPrefab(block){
+  const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
+  const url=t.variants[block.variant]?.file;if(!url)throw new TypeError('Unknown prefab variant');
+  if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
+  return (await loaded.get(url)).scene;
+ }
+ async function getConnector(axis){
+  const url=manifest.connectors[axis]?.file;if(!url)throw new TypeError('Unknown prebuilt joint');
+  if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
+  return (await loaded.get(url)).scene;
+ }
+ function setPosition(group,block){
+  group.position.copy(center(block));group.rotation.set(0,block.rotation*Math.PI/2,0);
+ }
+ function clearPrevious(){
+  for(const group of rendered)surface.remove(group);
+  rendered=[];targets.length=0;
+ }
+ function prepareMesh(model,block){
+  const group=model.clone(true);group.userData.block=block;
+  group.traverse(child=>{if(child.isMesh){child.material.side=THREE.DoubleSide;child.material.roughness=1;child.userData.block=block;targets.push(child);}});
+  setPosition(group,block);return group;
+ }
+ function historicGeometry(block){
+  const family=block.type==='stone'?'small':block.type;
+  const collection=ROCK_PACK[family];
+  if(!collection){
+   const g=new THREE.BoxGeometry(1,1,1);const m=new THREE.MeshStandardMaterial({color:'#725b43',roughness:.85});
+   return{geometry:g,material:m,owned:true};
+  }
+  const key=family+':'+(block.variant||0)%collection.length;
+  if(!meshCache.has(key)){
+   const m=originalRockMesh(collection[(block.variant||0)%collection.length],block.variant||0);
+   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(m.positions,3));
+   const col=new Float32Array(m.colors.length),tint=new THREE.Color();
+   for(let i=0;i<col.length;i+=3){tint.setRGB(m.colors[i],m.colors[i+1],m.colors[i+2],THREE.SRGBColorSpace);col[i]=tint.r;col[i+1]=tint.g;col[i+2]=tint.b;}
+   g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setIndex(new THREE.BufferAttribute(m.indices,1));g.computeVertexNormals();
+   meshCache.set(key,{geometry:g,material:new THREE.MeshStandardMaterial({vertexColors:true,color:'#ffffff',roughness:1,side:THREE.DoubleSide})});
+  }
+  return{...meshCache.get(key),owned:false};
+ }
+ function historicItem(block){
+  const {geometry,material,owned}=historicGeometry(block),mesh=new THREE.Mesh(geometry,material);
+  const d=[block.sx,block.sy,block.sz];const centre=center({...block,type:'historic'});
+  mesh.position.copy(centre);mesh.scale.set(...d.map(v=>v*CELL));mesh.rotation.y=(block.rotation%4)*Math.PI/2;
+  const group=new THREE.Group();group.add(mesh);group.userData.block=block;mesh.userData.block=block;group.userData.owned=owned;
+  targets.push(mesh);return group;
+ }
+ function cleanGhost(){for(const child of [...previewContents.children]){previewContents.remove(child);child.traverse(node=>{if(node.isMesh&&node.userData.ghostMaterial)node.material.dispose();});}activeGhost=null;}
+ async function setPreview(block,valid=true){
+  const generation=++previewGeneration;cleanGhost();preview.visible=!!block;
+  if(!block)return;
+  try{
+   const model=await getPrefab(block);if(disposed||generation!==previewGeneration)return;
+   const clone=model.clone(true);clone.traverse(node=>{if(!node.isMesh)return;node.material=new THREE.MeshBasicMaterial({color:valid?'#69cf91':'#ed7777',transparent:true,opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide});node.userData.ghostMaterial=true;});
+   previewContents.add(clone);activeGhost=clone;setPosition(preview,block);
+   ghostBounds.scale.copy(footprint(block)).multiplyScalar(1.01);
+  }catch(e){if(generation===previewGeneration){container.dataset.prefabError=String(e?.message||e);console.warn('Prefab preview:',e);}}
+ }
+ async function setBlocks(elements){
+  const generation=++rebuildGeneration;blocks=[...elements];clearPrevious();
+  const next=[],used=blocks.filter(b=>layer===null||b.y<=layer);
+  try{
+   for(const block of used){
+    if(block.type==='masonry_section'){
+     const model=await getPrefab(block);
+     if(disposed||generation!==rebuildGeneration)return;
+     next.push(prepareMesh(model,block));
+    }else next.push(historicItem(block));
+   }
+   // Prepared natural-stone join parts are placed, not generated or deformed.
+   const owned=used.filter(b=>b.type==='masonry_section');
+   for(const joint of touchingPrefabPairs(owned)){
+    const model=await getConnector(joint.axis);
+    if(disposed||generation!==rebuildGeneration)return;
+    const mesh=model.clone(true);mesh.position.set(...joint.point.map(v=>v*CELL));
+    // Prepared unit join scales only with the actual common face extent.
+    mesh.scale.set(...joint.span.map((v,i)=>joint.axis==='xyz'[i]?1:v*CELL));
+    next.push(mesh);
+   }
+   if(disposed||generation!==rebuildGeneration)return;
+   for(const g of next){surface.add(g);rendered.push(g);}
+   container.dataset.prefabReady='true';container.dataset.prefabCount=String(owned.length);
+   container.dataset.prefabJoints=String(touchingPrefabPairs(owned).length);
+  }catch(e){console.warn('Prefab build:',e);container.dataset.prefabError=String(e?.message||e);}
+ }
+ function findHit(clientX,clientY){
+  const r=renderer.domElement.getBoundingClientRect();if(!r.width||!r.height)return null;
+  pointer.set((clientX-r.left)/r.width*2-1,-(clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);
+  const hits=raycaster.intersectObjects([...targets,floor],false);
+  for(const hit of hits){
+   const b=hit.object.userData.block||null;
+   if(layer!==null&&hit.point.y>(layer+1)*CELL+.001)continue;
+   const n=hit.face?.normal?.clone()||new THREE.Vector3(0,1,0);
+   if(b){n.transformDirection(hit.object.matrixWorld);let axis=0;for(let i=1;i<3;i++)if(Math.abs(n.getComponent(i))>Math.abs(n.getComponent(axis)))axis=i;
+    const dir=Math.sign(n.getComponent(axis))||1;n.set(axis===0?dir:0,axis===1?dir:0,axis===2?dir:0);
+   }else n.set(0,1,0);
+   return{block:b,normal:{x:n.x,y:n.y,z:n.z},position:hit.point.toArray()};
+  }
+  return null;
+ }
+ const activePointers=new Set();let pressed=null;
+ function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
+ function pointerUp(e){activePointers.delete(e.pointerId);if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+ function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
+ renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
+ const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();});observer.observe(container);
+ function fit(){if(!blocks.length){controls.target.set(7.5,.5,7.5);camera.position.set(11.6,5.1,12.2);}else{
+  const bounds=new THREE.Box3();for(const b of blocks){const box=prefabBounds(b);bounds.expandByPoint(new THREE.Vector3(...box.min.map(v=>v*CELL)));bounds.expandByPoint(new THREE.Vector3(...box.max.map(v=>v*CELL)));}
+  const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());controls.target.copy(center);
+  const distance=Math.max(2.8,Math.max(size.x,size.y,size.z)*3);camera.position.copy(center).add(new THREE.Vector3(distance*.83,distance*.58,distance));}
+  controls.update();}
+ let frame=0,lastAim=0;function draw(time){if(disposed)return;frame=requestAnimationFrame(draw);controls.update();
+  if(time-lastAim>300){lastAim=time;const forward=new THREE.Vector3();camera.getWorldDirection(forward);raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const point=raycaster.intersectObjects([...targets,floor],false)[0]?.point||controls.target;
+   const hit=findHit(renderer.domElement.getBoundingClientRect().left+renderer.domElement.getBoundingClientRect().width/2,renderer.domElement.getBoundingClientRect().top+renderer.domElement.getBoundingClientRect().height/2);
+   onCameraChange({origin:camera.position.toArray(),forward:forward.toArray(),target:point.toArray(),hit});}
+  renderer.render(scene,camera);}
+ frame=requestAnimationFrame(draw);container.dataset.ready='true';
+ return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length)fit();},setPreview,
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;},home:fit,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();},
+  zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();},
+  pickAt:findHit,
+  dispose(){disposed=true;previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();for(const {geometry,material} of meshCache.values()){geometry.dispose();material.dispose();}scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});renderer.dispose();renderer.domElement.remove();}
+ };
+}

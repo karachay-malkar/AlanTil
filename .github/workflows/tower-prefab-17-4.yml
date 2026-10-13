@@ -1,0 +1,82 @@
+name: AlanTil 17.4 prefab tower QA and full project archive
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'assets/tower/prefabs/**'
+      - 'assets/tower/source-original-36.glb'
+      - 'packages/tower-game/**'
+      - 'src/features/tower/**'
+      - 'src/app/router.js'
+      - 'src/shared/styles/lazy/tower.css'
+      - 'tests/tower-*'
+      - 'scripts/qa/browser-tower-prefab-17-4.cjs'
+      - 'tools/tower/**'
+      - '.github/workflows/tower-prefab-17-4.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prefab-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and all retained tower tests
+        run: |
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --check packages/tower-game/prefab-layout.mjs
+          node --test tests/tower-*.test.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify baked meshes against original authored source
+        run: |
+          python3 -m pip install numpy trimesh
+          python3 - <<'PY'
+          import pathlib, json, trimesh, hashlib
+          root=pathlib.Path('assets/tower/prefabs')
+          m=json.loads((root/'manifest.json').read_text())
+          assert hashlib.sha256(pathlib.Path('assets/tower/source-original-36.glb').read_bytes()).hexdigest()==m['sourceSha256']
+          assert len(m['types'])==5 and sum(len(t['variants']) for t in m['types'])==20
+          files=list(root.glob('*.glb')); assert len(files)==23
+          for file in files:
+              mesh=trimesh.load(file,force='mesh')
+              assert mesh.is_watertight and len(mesh.faces)>0,(file,len(mesh.faces))
+          print('PREFAB_WATERTIGHT_OK',len(files))
+          PY
+      - name: Install headless Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Real prefab editor WebGL and persistence
+        run: node scripts/qa/browser-tower-prefab-17-4.cjs
+      - name: Upload WebGL screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-17.4-prefab-browser
+          path: /tmp/alantil-tower-prefab/*.png
+          if-no-files-found: warn
+  complete-source-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive and verify complete repository
+        run: |
+          git archive --format=zip -o AlanTil-17.4-complete-source.zip HEAD
+          unzip -t AlanTil-17.4-complete-source.zip | tail -1
+          git ls-files -z | xargs -0 -n1 stat -c '%n | %s bytes' > AlanTil-17.4-FILE_SIZES.txt
+          ls -lh AlanTil-17.4-complete-source.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-17.4-complete-project
+          path: |
+            AlanTil-17.4-complete-source.zip
+            AlanTil-17.4-FILE_SIZES.txt
+          if-no-files-found: error
