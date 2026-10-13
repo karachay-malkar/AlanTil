@@ -17,11 +17,42 @@ on:
 permissions:
   contents: read
 jobs:
+  bake-prefabs:
+    # Precomputed immutable assets; generated entirely offline from 36 authored meshes.
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deterministic offline geometry dependencies
+        run: python3 -m pip install numpy scipy trimesh
+      - name: Rebuild all prepared natural-rock prefabs and joints
+        run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-prefab-library.py
+      - name: Commit only generated GLB assets and their manifest
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/prefabs
+          if git diff --cached --quiet; then
+            echo 'Prefabs already match offline compiler.'
+          else
+            git commit -m 'build(tower): bake dense authored-rock prefab library [skip prefab bake]'
+            git push origin HEAD:17.2
+          fi
   prefab-qa:
+    needs: bake-prefabs
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -36,13 +67,21 @@ jobs:
           python-version: '3.11'
       - name: Verify baked meshes against original authored source
         run: |
-          python3 -m pip install numpy trimesh
+          python3 -m pip install numpy scipy trimesh
           python3 - <<'PY'
           import pathlib, json, trimesh, hashlib
           root=pathlib.Path('assets/tower/prefabs')
           m=json.loads((root/'manifest.json').read_text())
           assert hashlib.sha256(pathlib.Path('assets/tower/source-original-36.glb').read_bytes()).hexdigest()==m['sourceSha256']
+          assert m['version']=='17.4.1'
           assert len(m['types'])==5 and sum(len(t['variants']) for t in m['types'])==20
+          for t in m['types']:
+              for v in t['variants']:
+                  q=v['quality']
+                  assert q['mainRocks']>=1,(t['id'],v)
+                  assert q['density']>=.75,(t['id'],v)
+                  assert min(q['surfaceCoverage'])>=.70,(t['id'],v)
+                  assert v['rocks']==q['mainRocks']+q['rubbleRocks']
           files=list(root.glob('*.glb')); assert len(files)==23
           for file in files:
               mesh=trimesh.load(file,force='mesh')
@@ -63,10 +102,13 @@ jobs:
           path: /tmp/alantil-tower-prefab/*.png
           if-no-files-found: warn
   complete-source-archive:
+    needs: bake-prefabs
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
       - name: Archive and verify complete repository
         run: |
           git archive --format=zip -o AlanTil-17.4-complete-source.zip HEAD
