@@ -5,7 +5,7 @@ const root=new URL('../',import.meta.url);
 const manifest=()=>JSON.parse(readFileSync(new URL('assets/tower/prefabs/manifest.json',root),'utf8'));
 test('offline-authored prefab library has five sizes and four sealed variants per size',()=>{
  const m=manifest();
- assert.equal(m.version,'17.4.0');
+ assert.equal(m.version,'17.4.1');
  assert.equal(m.cellMeters,.25);
  assert.deepEqual(m.types.map(e=>e.size),[[1,1,1],[2,2,2],[2,2,3],[2,3,4],[4,4,4]]);
  for(const type of m.types){

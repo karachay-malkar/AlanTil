@@ -2,7 +2,7 @@
  * Until section prices and transactional V3 RPC are approved, the sole editing
  * surface is an explicitly labelled local construction draft. No currency RPC.
  */
-import {createTowerScene} from './prefab-scene.js?v=17.4.0';
+import {createTowerScene} from './prefab-scene.js?v=17.4.1';
 import {PREFAB_TYPES,prefabSize,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {towerUserId,loadTower,loadTowerV2} from './repository.js?v=17.1.5';
 let active=null;
@@ -22,7 +22,7 @@ function restoreDraft(key){
  }catch{return[];}
 }
 function saveDraft(key,sections){
- const payload={format:3,localDraft:true,sections,assetVersion:'17.4.0'};
+ const payload={format:3,localDraft:true,sections,assetVersion:'17.4.1'};
  localStorage.setItem(key,JSON.stringify(payload));
 }
 const isEditable=(params)=>!params?.userId||params.userId===towerUserId();
