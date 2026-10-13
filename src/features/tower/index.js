@@ -2,7 +2,6 @@ import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,GRID_SIZE,HEIGHT_LI
 import {createTowerScene} from './scene.js?v=17.1.5';
 import {suggestCameraPlacement} from '../../../packages/tower-game/camera-placement.mjs';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
-import {towerModeUrl} from '../../../packages/tower-game/tower-mode-url.mjs';
 import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2} from './repository.js?v=17.1.5';
 let active=null;
 const STONE_KIND={stone:'small',medium:'medium',long:'long',big:'big'};
@@ -10,7 +9,7 @@ const icons={stone:'◆',medium:'▰',long:'▬',big:'⬟',beam:'╱',deck:'▤'
 const categories={stone:'Камень',wood:'Дерево',openings:'Проёмы',finish:'Завершение'};
 const escape=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function mount(context,params={}){
- const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false,v2Play:new URLSearchParams(location.search).get('tower_v2_play')==='1',v2Enabled:new URLSearchParams(location.search).get('tower_v2_preview')==='1'||new URLSearchParams(location.search).get('tower_v2_play')==='1',v2Worker:null,v2Camera:null,v2CandidateValid:false,v2DesiredKey:'',v2Queued:null,v2Busy:false,v2RequestId:0};active=s;
+ const controller=new AbortController(),s={controller,context,scene:null,blocks:[],balance:{silver:0,gold:0},revision:0,type:'medium',category:'stone',variant:0,configIndex:0,rotation:0,tool:'place',preview:null,selected:null,busy:false,pending:null,disposed:false,editable:false,v2Play:true,v2Enabled:true,v2Worker:null,v2Camera:null,v2CandidateValid:false,v2DesiredKey:'',v2Queued:null,v2Busy:false,v2RequestId:0};active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  // The route remains practice.tower; the scoped feature identifies its immersive scene.
  context.shell.appShell.dataset.feature='tower';
@@ -21,13 +20,11 @@ export async function mount(context,params={}){
  const stage=context.root.querySelector('.towerStage');
  // Two independent builds; preserve all other route/query state. V2 is
  // explicitly opt-in and never copies or overwrites the classic tower.
- const modeSwitch=document.createElement('nav');
- modeSwitch.className='towerModeSwitch';modeSwitch.setAttribute('aria-label','Режим строительства');
- const classicUrl=towerModeUrl(location.href,'classic'),freeUrl=towerModeUrl(location.href,'free');
- modeSwitch.innerHTML=`<a class="bracketNavigation" data-tower-mode="classic" href="${escape(classicUrl)}" ${!s.v2Enabled?'aria-current="page"':''}>[ Классика ]</a><a class="bracketNavigation" data-tower-mode="free" href="${escape(freeUrl)}" ${s.v2Play?'aria-current="page"':''}>[ Без сетки ]</a>`;
- modeSwitch.addEventListener('click',event=>{if(s.busy||s.pending){event.preventDefault();status('Сначала заверши или повтори сохранение.',true);}}, {signal:controller.signal});
- stage.append(modeSwitch);
- if(s.v2Enabled){const marker=document.createElement('div');marker.className='towerPill towerV2Notice';marker.textContent=s.v2Play?'Свободная башня · отдельное сохранение, общие монеты':'Укладка без сетки · демонстрация без сохранения';stage.append(marker);}
+ // 17.2 uses one construction editor. Legacy route flags are ignored.
+ const marker=document.createElement('div');
+ marker.className='towerPill towerV2Notice';
+ marker.textContent='Башня · свободная укладка';
+ stage.append(marker);
 
  const actionBar=document.createElement('div');
  actionBar.className='towerActionBar';stage.append(actionBar);
