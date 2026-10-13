@@ -1,6 +1,46 @@
 {
-  "version": "17.4.1",
+  "version": "17.5.0",
   "cellMeters": 0.25,
+  "legacyVersion": "17.4.1",
+  "materialSource": "assets/tower/rock_07/textures",
+  "legacyConnectors": {
+    "x": "/assets/tower/prefabs/joint-x.glb",
+    "y": "/assets/tower/prefabs/joint-y.glb",
+    "z": "/assets/tower/prefabs/joint-z.glb"
+  },
+  "legacyVariants": {
+    "1x1x1": [
+      "/assets/tower/prefabs/section-1x1x1-v0.glb",
+      "/assets/tower/prefabs/section-1x1x1-v1.glb",
+      "/assets/tower/prefabs/section-1x1x1-v2.glb",
+      "/assets/tower/prefabs/section-1x1x1-v3.glb"
+    ],
+    "2x2x2": [
+      "/assets/tower/prefabs/section-2x2x2-v0.glb",
+      "/assets/tower/prefabs/section-2x2x2-v1.glb",
+      "/assets/tower/prefabs/section-2x2x2-v2.glb",
+      "/assets/tower/prefabs/section-2x2x2-v3.glb"
+    ],
+    "2x2x3": [
+      "/assets/tower/prefabs/section-2x2x3-v0.glb",
+      "/assets/tower/prefabs/section-2x2x3-v1.glb",
+      "/assets/tower/prefabs/section-2x2x3-v2.glb",
+      "/assets/tower/prefabs/section-2x2x3-v3.glb"
+    ],
+    "2x3x4": [
+      "/assets/tower/prefabs/section-2x3x4-v0.glb",
+      "/assets/tower/prefabs/section-2x3x4-v1.glb",
+      "/assets/tower/prefabs/section-2x3x4-v2.glb",
+      "/assets/tower/prefabs/section-2x3x4-v3.glb"
+    ],
+    "4x4x4": [
+      "/assets/tower/prefabs/section-4x4x4-v0.glb",
+      "/assets/tower/prefabs/section-4x4x4-v1.glb",
+      "/assets/tower/prefabs/section-4x4x4-v2.glb",
+      "/assets/tower/prefabs/section-4x4x4-v3.glb"
+    ]
+  },
+  "jointInterface": "shared-recessed-25cm-v1",
   "sourceSha256": "159471d32f9d9478ff7225f87a3f27f09473e42d4accf71e3cbaec68dda7caa5",
   "authoredModels": 36,
   "qualityGridMeters": 0.0125,
@@ -14,98 +54,238 @@
       ],
       "variants": [
         {
-          "file": "/assets/tower/prefabs/section-1x1x1-v0.glb",
-          "rocks": 1,
+          "file": "/assets/tower/prefabs/section-1x1x1-v0-17_5.glb",
+          "rocks": 34,
           "sourceModels": [
-            5
+            19,
+            25,
+            26,
+            28,
+            35
           ],
-          "faces": 124,
+          "faces": 2014,
           "quality": {
-            "density": 0.9199,
+            "density": 0.6829,
+            "visibleRubbleShare": 0.2657,
             "surfaceCoverage": [
-              0.9275,
-              0.9375,
-              0.975,
-              0.99,
-              0.9425,
-              0.945
+              0.8275,
+              0.8,
+              0.7325,
+              0.815,
+              0.83,
+              0.855
             ],
             "mainRocks": 1,
-            "rubbleRocks": 0,
-            "fillIterations": 1
+            "rubbleRocks": 33,
+            "fillIterations": 34,
+            "faceChinkingRocks": 0
           }
         },
         {
-          "file": "/assets/tower/prefabs/section-1x1x1-v1.glb",
-          "rocks": 21,
+          "file": "/assets/tower/prefabs/section-1x1x1-v1-17_5.glb",
+          "rocks": 35,
           "sourceModels": [
             12,
-            16,
             19,
-            21,
-            26
+            25,
+            26,
+            35
           ],
-          "faces": 1670,
+          "faces": 2254,
           "quality": {
-            "density": 0.7622,
+            "density": 0.6663,
+            "visibleRubbleShare": 0.272,
             "surfaceCoverage": [
-              0.885,
-              0.8975,
-              0.8275,
-              0.82,
-              0.9025,
+              0.825,
+              0.8575,
+              0.755,
+              0.79,
+              0.8525,
+              0.7975
+            ],
+            "mainRocks": 1,
+            "rubbleRocks": 34,
+            "fillIterations": 35,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-1x1x1-v2-17_5.glb",
+          "rocks": 30,
+          "sourceModels": [
+            12,
+            19,
+            25,
+            26,
+            28,
+            30,
+            35
+          ],
+          "faces": 1814,
+          "quality": {
+            "density": 0.6839,
+            "visibleRubbleShare": 0.2359,
+            "surfaceCoverage": [
+              0.825,
+              0.825,
+              0.755,
+              0.78,
+              0.84,
+              0.8625
+            ],
+            "mainRocks": 1,
+            "rubbleRocks": 29,
+            "fillIterations": 30,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-1x1x1-v3-17_5.glb",
+          "rocks": 37,
+          "sourceModels": [
+            12,
+            19,
+            25,
+            26,
+            28,
+            30,
+            35
+          ],
+          "faces": 2276,
+          "quality": {
+            "density": 0.6763,
+            "visibleRubbleShare": 0.2739,
+            "surfaceCoverage": [
+              0.79,
+              0.855,
+              0.7325,
+              0.8075,
+              0.8125,
+              0.865
+            ],
+            "mainRocks": 1,
+            "rubbleRocks": 36,
+            "fillIterations": 37,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-1x1x1-v4-17_5.glb",
+          "rocks": 38,
+          "sourceModels": [
+            12,
+            19,
+            25,
+            26,
+            28,
+            30,
+            35
+          ],
+          "faces": 2276,
+          "quality": {
+            "density": 0.6815,
+            "visibleRubbleShare": 0.2803,
+            "surfaceCoverage": [
+              0.85,
+              0.85,
+              0.77,
+              0.7925,
+              0.8925,
+              0.8725
+            ],
+            "mainRocks": 1,
+            "rubbleRocks": 37,
+            "fillIterations": 38,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-1x1x1-v5-17_5.glb",
+          "rocks": 33,
+          "sourceModels": [
+            19,
+            25,
+            26,
+            28,
+            35
+          ],
+          "faces": 2044,
+          "quality": {
+            "density": 0.6821,
+            "visibleRubbleShare": 0.2348,
+            "surfaceCoverage": [
+              0.8525,
+              0.835,
+              0.77,
+              0.8325,
+              0.86,
+              0.8475
+            ],
+            "mainRocks": 1,
+            "rubbleRocks": 32,
+            "fillIterations": 33,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-1x1x1-v6-17_5.glb",
+          "rocks": 44,
+          "sourceModels": [
+            12,
+            19,
+            25,
+            26,
+            28,
+            35
+          ],
+          "faces": 2712,
+          "quality": {
+            "density": 0.6631,
+            "visibleRubbleShare": 0.3384,
+            "surfaceCoverage": [
+              0.845,
+              0.845,
+              0.76,
+              0.775,
+              0.7475,
               0.89
             ],
             "mainRocks": 1,
-            "rubbleRocks": 20,
-            "fillIterations": 20
+            "rubbleRocks": 43,
+            "fillIterations": 44,
+            "faceChinkingRocks": 0
           }
         },
         {
-          "file": "/assets/tower/prefabs/section-1x1x1-v2.glb",
-          "rocks": 1,
+          "file": "/assets/tower/prefabs/section-1x1x1-v7-17_5.glb",
+          "rocks": 35,
           "sourceModels": [
-            5
+            19,
+            25,
+            26,
+            28,
+            35
           ],
-          "faces": 124,
+          "faces": 2196,
           "quality": {
-            "density": 0.806,
+            "density": 0.6949,
+            "visibleRubbleShare": 0.2643,
             "surfaceCoverage": [
-              0.85,
-              0.8525,
-              0.8525,
-              0.855,
-              0.9,
-              0.9
+              0.8825,
+              0.885,
+              0.7675,
+              0.7925,
+              0.83,
+              0.8625
             ],
             "mainRocks": 1,
-            "rubbleRocks": 0,
-            "fillIterations": 1
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-1x1x1-v3.glb",
-          "rocks": 1,
-          "sourceModels": [
-            5
-          ],
-          "faces": 124,
-          "quality": {
-            "density": 0.9215,
-            "surfaceCoverage": [
-              0.945,
-              0.945,
-              0.97,
-              0.99,
-              0.935,
-              0.925
-            ],
-            "mainRocks": 1,
-            "rubbleRocks": 0,
-            "fillIterations": 1
+            "rubbleRocks": 34,
+            "fillIterations": 35,
+            "faceChinkingRocks": 0
           }
         }
       ],
+      "jointInterface": "shared-recessed-25cm-v1",
       "priceSilver": null
     },
     {
@@ -117,131 +297,272 @@
       ],
       "variants": [
         {
-          "file": "/assets/tower/prefabs/section-2x2x2-v0.glb",
-          "rocks": 42,
+          "file": "/assets/tower/prefabs/section-2x2x2-v0-17_5.glb",
+          "rocks": 58,
           "sourceModels": [
-            5,
+            9,
             12,
+            19,
+            21,
+            23,
+            25,
+            26,
+            28,
+            29,
+            30
+          ],
+          "faces": 3310,
+          "quality": {
+            "density": 0.73,
+            "visibleRubbleShare": 0.1418,
+            "surfaceCoverage": [
+              0.7588,
+              0.7019,
+              0.8131,
+              0.7538,
+              0.7638,
+              0.7675
+            ],
+            "mainRocks": 6,
+            "rubbleRocks": 52,
+            "fillIterations": 50,
+            "faceChinkingRocks": 2
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x2-v1-17_5.glb",
+          "rocks": 56,
+          "sourceModels": [
+            3,
             13,
-            16,
+            18,
+            19,
+            21,
+            23,
+            25,
+            26,
+            28
+          ],
+          "faces": 3342,
+          "quality": {
+            "density": 0.6347,
+            "visibleRubbleShare": 0.2677,
+            "surfaceCoverage": [
+              0.5575,
+              0.6488,
+              0.8481,
+              0.6038,
+              0.5925,
+              0.5581
+            ],
+            "mainRocks": 5,
+            "rubbleRocks": 51,
+            "fillIterations": 50,
+            "faceChinkingRocks": 1
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x2-v2-17_5.glb",
+          "rocks": 56,
+          "sourceModels": [
+            3,
+            11,
+            12,
+            19,
+            23,
+            25,
+            26,
+            28,
+            29,
+            31
+          ],
+          "faces": 3708,
+          "quality": {
+            "density": 0.6755,
+            "visibleRubbleShare": 0.2456,
+            "surfaceCoverage": [
+              0.6412,
+              0.7256,
+              0.8363,
+              0.6206,
+              0.8056,
+              0.6225
+            ],
+            "mainRocks": 5,
+            "rubbleRocks": 51,
+            "fillIterations": 50,
+            "faceChinkingRocks": 1
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x2-v3-17_5.glb",
+          "rocks": 56,
+          "sourceModels": [
+            6,
+            12,
+            19,
+            21,
+            24,
+            25,
+            26,
+            28,
+            31,
+            32
+          ],
+          "faces": 3708,
+          "quality": {
+            "density": 0.7401,
+            "visibleRubbleShare": 0.1974,
+            "surfaceCoverage": [
+              0.8163,
+              0.6381,
+              0.8556,
+              0.7262,
+              0.6975,
+              0.7669
+            ],
+            "mainRocks": 6,
+            "rubbleRocks": 50,
+            "fillIterations": 50,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x2-v4-17_5.glb",
+          "rocks": 56,
+          "sourceModels": [
+            2,
+            4,
+            12,
+            19,
+            25,
+            26,
+            28,
+            31
+          ],
+          "faces": 3598,
+          "quality": {
+            "density": 0.7299,
+            "visibleRubbleShare": 0.2036,
+            "surfaceCoverage": [
+              0.775,
+              0.6506,
+              0.825,
+              0.7,
+              0.74,
+              0.7375
+            ],
+            "mainRocks": 6,
+            "rubbleRocks": 50,
+            "fillIterations": 50,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x2-v5-17_5.glb",
+          "rocks": 58,
+          "sourceModels": [
+            2,
+            3,
+            4,
+            6,
+            12,
             19,
             21,
             25,
             26,
             28,
-            35
+            29,
+            31,
+            33
           ],
-          "faces": 3178,
+          "faces": 3902,
           "quality": {
-            "density": 0.8244,
+            "density": 0.7383,
+            "visibleRubbleShare": 0.17,
             "surfaceCoverage": [
-              0.885,
-              0.8206,
-              0.8625,
-              0.8475,
-              0.9131,
-              0.8331
+              0.6969,
+              0.7544,
+              0.8562,
+              0.6425,
+              0.6969,
+              0.8106
             ],
-            "mainRocks": 10,
-            "rubbleRocks": 32,
-            "fillIterations": 32
+            "mainRocks": 7,
+            "rubbleRocks": 51,
+            "fillIterations": 50,
+            "faceChinkingRocks": 1
           }
         },
         {
-          "file": "/assets/tower/prefabs/section-2x2x2-v1.glb",
-          "rocks": 43,
+          "file": "/assets/tower/prefabs/section-2x2x2-v6-17_5.glb",
+          "rocks": 54,
           "sourceModels": [
-            5,
-            11,
+            9,
             12,
-            16,
-            19,
-            21,
-            25,
-            26,
-            28
-          ],
-          "faces": 3344,
-          "quality": {
-            "density": 0.888,
-            "surfaceCoverage": [
-              0.9219,
-              0.8862,
-              0.9419,
-              0.925,
-              0.9094,
-              0.8931
-            ],
-            "mainRocks": 11,
-            "rubbleRocks": 32,
-            "fillIterations": 32
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x2x2-v2.glb",
-          "rocks": 43,
-          "sourceModels": [
-            5,
-            11,
-            12,
-            13,
-            16,
-            19,
-            21,
-            25,
-            26
-          ],
-          "faces": 3314,
-          "quality": {
-            "density": 0.8518,
-            "surfaceCoverage": [
-              0.8738,
-              0.8888,
-              0.85,
-              0.9206,
-              0.8812,
-              0.875
-            ],
-            "mainRocks": 11,
-            "rubbleRocks": 32,
-            "fillIterations": 32
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x2x2-v3.glb",
-          "rocks": 44,
-          "sourceModels": [
-            5,
-            11,
-            12,
-            13,
-            15,
-            16,
+            18,
             19,
             21,
             25,
             26,
             28,
             30,
-            33
+            32
           ],
-          "faces": 3500,
+          "faces": 3332,
           "quality": {
-            "density": 0.8547,
+            "density": 0.6651,
+            "visibleRubbleShare": 0.2817,
             "surfaceCoverage": [
-              0.8788,
-              0.9337,
-              0.9225,
-              0.9219,
-              0.8762,
-              0.8894
+              0.68,
+              0.6925,
+              0.8456,
+              0.5775,
+              0.7594,
+              0.6769
             ],
-            "mainRocks": 12,
-            "rubbleRocks": 32,
-            "fillIterations": 32
+            "mainRocks": 4,
+            "rubbleRocks": 50,
+            "fillIterations": 50,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x2-v7-17_5.glb",
+          "rocks": 56,
+          "sourceModels": [
+            8,
+            9,
+            12,
+            19,
+            21,
+            23,
+            25,
+            26,
+            28,
+            30,
+            31
+          ],
+          "faces": 3458,
+          "quality": {
+            "density": 0.6715,
+            "visibleRubbleShare": 0.2396,
+            "surfaceCoverage": [
+              0.6356,
+              0.6312,
+              0.8856,
+              0.6381,
+              0.6469,
+              0.7013
+            ],
+            "mainRocks": 6,
+            "rubbleRocks": 50,
+            "fillIterations": 50,
+            "faceChinkingRocks": 0
           }
         }
       ],
+      "jointInterface": "shared-recessed-25cm-v1",
       "priceSilver": null
     },
     {
@@ -253,136 +574,281 @@
       ],
       "variants": [
         {
-          "file": "/assets/tower/prefabs/section-2x2x3-v0.glb",
-          "rocks": 65,
+          "file": "/assets/tower/prefabs/section-2x2x3-v0-17_5.glb",
+          "rocks": 63,
           "sourceModels": [
-            5,
-            8,
-            11,
+            9,
             12,
-            13,
-            16,
-            19,
-            21,
-            25,
-            28,
-            32
-          ],
-          "faces": 5160,
-          "quality": {
-            "density": 0.8591,
-            "surfaceCoverage": [
-              0.9192,
-              0.8263,
-              0.9425,
-              0.8496,
-              0.8938,
-              0.8688
-            ],
-            "mainRocks": 17,
-            "rubbleRocks": 48,
-            "fillIterations": 48
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x2x3-v1.glb",
-          "rocks": 65,
-          "sourceModels": [
-            4,
-            5,
-            12,
-            16,
-            19,
-            21,
-            25,
-            26,
-            28,
-            32,
-            33,
-            35
-          ],
-          "faces": 5466,
-          "quality": {
-            "density": 0.8999,
-            "surfaceCoverage": [
-              0.9263,
-              0.9237,
-              0.95,
-              0.9546,
-              0.9444,
-              0.9019
-            ],
-            "mainRocks": 17,
-            "rubbleRocks": 48,
-            "fillIterations": 48
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x2x3-v2.glb",
-          "rocks": 65,
-          "sourceModels": [
-            5,
-            11,
-            12,
-            13,
-            16,
-            19,
-            20,
-            21,
-            25,
-            28
-          ],
-          "faces": 4948,
-          "quality": {
-            "density": 0.8409,
-            "surfaceCoverage": [
-              0.8696,
-              0.8583,
-              0.8287,
-              0.8862,
-              0.8494,
-              0.9144
-            ],
-            "mainRocks": 17,
-            "rubbleRocks": 48,
-            "fillIterations": 48
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x2x3-v3.glb",
-          "rocks": 66,
-          "sourceModels": [
-            4,
-            5,
-            12,
-            13,
             15,
             16,
+            18,
             19,
             21,
             25,
             26,
             28,
             29,
+            30,
+            32,
+            36
+          ],
+          "faces": 3970,
+          "quality": {
+            "density": 0.6986,
+            "visibleRubbleShare": 0.1925,
+            "surfaceCoverage": [
+              0.67,
+              0.66,
+              0.8304,
+              0.6821,
+              0.6544,
+              0.7525
+            ],
+            "mainRocks": 9,
+            "rubbleRocks": 54,
+            "fillIterations": 50,
+            "faceChinkingRocks": 4
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v1-17_5.glb",
+          "rocks": 61,
+          "sourceModels": [
+            2,
+            11,
+            12,
+            17,
+            18,
+            19,
+            21,
+            23,
+            25,
+            26,
+            28,
+            29,
+            30,
+            35
+          ],
+          "faces": 3798,
+          "quality": {
+            "density": 0.734,
+            "visibleRubbleShare": 0.1709,
+            "surfaceCoverage": [
+              0.6983,
+              0.705,
+              0.8462,
+              0.7075,
+              0.7806,
+              0.7081
+            ],
+            "mainRocks": 9,
+            "rubbleRocks": 52,
+            "fillIterations": 50,
+            "faceChinkingRocks": 2
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v2-17_5.glb",
+          "rocks": 60,
+          "sourceModels": [
+            3,
+            4,
+            12,
+            19,
+            21,
+            25,
+            26,
+            28,
+            29,
+            31,
+            35
+          ],
+          "faces": 3972,
+          "quality": {
+            "density": 0.7251,
+            "visibleRubbleShare": 0.1923,
+            "surfaceCoverage": [
+              0.6517,
+              0.7925,
+              0.8346,
+              0.6983,
+              0.6012,
+              0.8069
+            ],
+            "mainRocks": 8,
+            "rubbleRocks": 52,
+            "fillIterations": 50,
+            "faceChinkingRocks": 2
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v3-17_5.glb",
+          "rocks": 58,
+          "sourceModels": [
+            8,
+            9,
+            11,
+            12,
+            19,
+            25,
+            26,
+            28,
             32
           ],
-          "faces": 5038,
+          "faces": 3716,
           "quality": {
-            "density": 0.8984,
+            "density": 0.7406,
+            "visibleRubbleShare": 0.1672,
             "surfaceCoverage": [
-              0.93,
-              0.9663,
-              0.9354,
-              0.9067,
-              0.9306,
-              0.9331
+              0.7658,
+              0.7442,
+              0.8533,
+              0.7346,
+              0.8631,
+              0.6987
             ],
-            "mainRocks": 18,
-            "rubbleRocks": 48,
-            "fillIterations": 48
+            "mainRocks": 8,
+            "rubbleRocks": 50,
+            "fillIterations": 50,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v4-17_5.glb",
+          "rocks": 61,
+          "sourceModels": [
+            9,
+            12,
+            15,
+            18,
+            19,
+            20,
+            24,
+            25,
+            26,
+            28,
+            29,
+            30
+          ],
+          "faces": 3532,
+          "quality": {
+            "density": 0.6987,
+            "visibleRubbleShare": 0.187,
+            "surfaceCoverage": [
+              0.7808,
+              0.6421,
+              0.8129,
+              0.5454,
+              0.7638,
+              0.5663
+            ],
+            "mainRocks": 7,
+            "rubbleRocks": 54,
+            "fillIterations": 50,
+            "faceChinkingRocks": 4
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v5-17_5.glb",
+          "rocks": 59,
+          "sourceModels": [
+            9,
+            12,
+            19,
+            21,
+            23,
+            25,
+            26,
+            28,
+            29,
+            30,
+            31,
+            35
+          ],
+          "faces": 3690,
+          "quality": {
+            "density": 0.7268,
+            "visibleRubbleShare": 0.1981,
+            "surfaceCoverage": [
+              0.7692,
+              0.7129,
+              0.8962,
+              0.5675,
+              0.6262,
+              0.7137
+            ],
+            "mainRocks": 7,
+            "rubbleRocks": 52,
+            "fillIterations": 50,
+            "faceChinkingRocks": 2
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v6-17_5.glb",
+          "rocks": 57,
+          "sourceModels": [
+            12,
+            14,
+            18,
+            19,
+            21,
+            25,
+            26,
+            28
+          ],
+          "faces": 3466,
+          "quality": {
+            "density": 0.7278,
+            "visibleRubbleShare": 0.1949,
+            "surfaceCoverage": [
+              0.6896,
+              0.8313,
+              0.7883,
+              0.5863,
+              0.7969,
+              0.8363
+            ],
+            "mainRocks": 6,
+            "rubbleRocks": 51,
+            "fillIterations": 50,
+            "faceChinkingRocks": 1
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x2x3-v7-17_5.glb",
+          "rocks": 60,
+          "sourceModels": [
+            12,
+            18,
+            19,
+            21,
+            24,
+            25,
+            26,
+            28,
+            29,
+            32
+          ],
+          "faces": 3622,
+          "quality": {
+            "density": 0.7469,
+            "visibleRubbleShare": 0.1516,
+            "surfaceCoverage": [
+              0.7137,
+              0.8071,
+              0.8233,
+              0.6367,
+              0.7638,
+              0.7769
+            ],
+            "mainRocks": 8,
+            "rubbleRocks": 52,
+            "fillIterations": 50,
+            "faceChinkingRocks": 2
           }
         }
       ],
+      "jointInterface": "shared-recessed-25cm-v1",
       "priceSilver": null
     },
     {
@@ -394,152 +860,331 @@
       ],
       "variants": [
         {
-          "file": "/assets/tower/prefabs/section-2x3x4-v0.glb",
-          "rocks": 128,
+          "file": "/assets/tower/prefabs/section-2x3x4-v0-17_5.glb",
+          "rocks": 119,
           "sourceModels": [
+            3,
             4,
-            5,
+            9,
+            11,
+            12,
+            13,
+            18,
+            19,
+            21,
+            23,
+            25,
+            26,
+            28,
+            29
+          ],
+          "faces": 6966,
+          "quality": {
+            "density": 0.7351,
+            "visibleRubbleShare": 0.1819,
+            "surfaceCoverage": [
+              0.7719,
+              0.6948,
+              0.8556,
+              0.6628,
+              0.7117,
+              0.725
+            ],
+            "mainRocks": 20,
+            "rubbleRocks": 99,
+            "fillIterations": 96,
+            "faceChinkingRocks": 3
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x3x4-v1-17_5.glb",
+          "rocks": 120,
+          "sourceModels": [
+            3,
+            10,
+            11,
+            12,
+            13,
+            14,
+            19,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            30,
+            33,
+            34,
+            35
+          ],
+          "faces": 7656,
+          "quality": {
+            "density": 0.6929,
+            "visibleRubbleShare": 0.1995,
+            "surfaceCoverage": [
+              0.6808,
+              0.7087,
+              0.7666,
+              0.7141,
+              0.7054,
+              0.6446
+            ],
+            "mainRocks": 20,
+            "rubbleRocks": 100,
+            "fillIterations": 96,
+            "faceChinkingRocks": 4
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x3x4-v2-17_5.glb",
+          "rocks": 118,
+          "sourceModels": [
+            2,
+            3,
+            4,
+            8,
+            9,
+            11,
+            12,
+            16,
+            18,
+            19,
+            21,
+            22,
+            23,
+            25,
+            26,
+            28,
+            29,
+            33,
+            35
+          ],
+          "faces": 7194,
+          "quality": {
+            "density": 0.7568,
+            "visibleRubbleShare": 0.1598,
+            "surfaceCoverage": [
+              0.7454,
+              0.7396,
+              0.9044,
+              0.7534,
+              0.6825,
+              0.8067
+            ],
+            "mainRocks": 22,
+            "rubbleRocks": 96,
+            "fillIterations": 96,
+            "faceChinkingRocks": 0
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x3x4-v3-17_5.glb",
+          "rocks": 118,
+          "sourceModels": [
+            1,
+            4,
+            6,
             8,
             11,
             12,
             13,
+            14,
+            15,
+            16,
+            18,
+            19,
+            25,
+            26,
+            28,
+            29,
+            30,
+            32,
+            35
+          ],
+          "faces": 7476,
+          "quality": {
+            "density": 0.7267,
+            "visibleRubbleShare": 0.1741,
+            "surfaceCoverage": [
+              0.6631,
+              0.7556,
+              0.845,
+              0.7338,
+              0.7358,
+              0.7288
+            ],
+            "mainRocks": 20,
+            "rubbleRocks": 98,
+            "fillIterations": 96,
+            "faceChinkingRocks": 2
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x3x4-v4-17_5.glb",
+          "rocks": 122,
+          "sourceModels": [
+            3,
+            4,
+            7,
+            8,
+            9,
+            11,
+            12,
+            14,
+            15,
+            16,
+            18,
+            19,
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            33,
+            35
+          ],
+          "faces": 7766,
+          "quality": {
+            "density": 0.6929,
+            "visibleRubbleShare": 0.1672,
+            "surfaceCoverage": [
+              0.6844,
+              0.6546,
+              0.845,
+              0.7503,
+              0.6262,
+              0.6975
+            ],
+            "mainRocks": 24,
+            "rubbleRocks": 98,
+            "fillIterations": 96,
+            "faceChinkingRocks": 2
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x3x4-v5-17_5.glb",
+          "rocks": 123,
+          "sourceModels": [
+            4,
+            6,
+            8,
+            9,
+            10,
+            12,
+            13,
+            15,
+            19,
+            21,
+            23,
+            24,
+            25,
+            26,
+            28,
+            29
+          ],
+          "faces": 7354,
+          "quality": {
+            "density": 0.7089,
+            "visibleRubbleShare": 0.1802,
+            "surfaceCoverage": [
+              0.6919,
+              0.6629,
+              0.7903,
+              0.6394,
+              0.71,
+              0.6821
+            ],
+            "mainRocks": 21,
+            "rubbleRocks": 102,
+            "fillIterations": 96,
+            "faceChinkingRocks": 6
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-2x3x4-v6-17_5.glb",
+          "rocks": 117,
+          "sourceModels": [
+            4,
+            9,
+            12,
             15,
             16,
             19,
             20,
             21,
+            23,
+            24,
             25,
             26,
             28,
             29,
-            30,
-            32,
-            33
-          ],
-          "faces": 10110,
-          "quality": {
-            "density": 0.8935,
-            "surfaceCoverage": [
-              0.9321,
-              0.9098,
-              0.9134,
-              0.9119,
-              0.9346,
-              0.9213
-            ],
-            "mainRocks": 32,
-            "rubbleRocks": 96,
-            "fillIterations": 96
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x3x4-v1.glb",
-          "rocks": 127,
-          "sourceModels": [
-            1,
-            5,
-            12,
-            13,
-            16,
-            19,
-            20,
-            21,
-            25,
-            26,
-            28,
-            32,
             35
           ],
-          "faces": 10042,
+          "faces": 7198,
           "quality": {
-            "density": 0.8812,
+            "density": 0.7327,
+            "visibleRubbleShare": 0.1913,
             "surfaceCoverage": [
-              0.9177,
-              0.905,
-              0.8912,
-              0.9272,
-              0.8967,
-              0.9263
+              0.7921,
+              0.75,
+              0.8691,
+              0.6469,
+              0.7108,
+              0.7558
             ],
-            "mainRocks": 31,
-            "rubbleRocks": 96,
-            "fillIterations": 96
+            "mainRocks": 19,
+            "rubbleRocks": 98,
+            "fillIterations": 96,
+            "faceChinkingRocks": 2
           }
         },
         {
-          "file": "/assets/tower/prefabs/section-2x3x4-v2.glb",
-          "rocks": 127,
-          "sourceModels": [
-            4,
-            5,
-            8,
-            11,
-            12,
-            13,
-            16,
-            19,
-            21,
-            25,
-            26,
-            28,
-            29,
-            30,
-            32,
-            33,
-            35
-          ],
-          "faces": 10212,
-          "quality": {
-            "density": 0.8839,
-            "surfaceCoverage": [
-              0.8962,
-              0.929,
-              0.8878,
-              0.9147,
-              0.9142,
-              0.9062
-            ],
-            "mainRocks": 31,
-            "rubbleRocks": 96,
-            "fillIterations": 96
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-2x3x4-v3.glb",
+          "file": "/assets/tower/prefabs/section-2x3x4-v7-17_5.glb",
           "rocks": 125,
           "sourceModels": [
-            1,
-            5,
+            4,
+            6,
             11,
             12,
-            13,
             15,
             16,
+            18,
             19,
+            20,
             21,
+            24,
             25,
             26,
+            27,
             28,
+            29,
             33,
             35
           ],
-          "faces": 9650,
+          "faces": 7408,
           "quality": {
-            "density": 0.866,
+            "density": 0.7325,
+            "visibleRubbleShare": 0.1806,
             "surfaceCoverage": [
-              0.9175,
-              0.8983,
-              0.8553,
-              0.8919,
-              0.9167,
-              0.9225
+              0.7527,
+              0.6981,
+              0.7978,
+              0.7159,
+              0.7617,
+              0.6117
             ],
-            "mainRocks": 30,
-            "rubbleRocks": 95,
-            "fillIterations": 96
+            "mainRocks": 24,
+            "rubbleRocks": 101,
+            "fillIterations": 96,
+            "faceChinkingRocks": 5
           }
         }
       ],
+      "jointInterface": "shared-recessed-25cm-v1",
       "priceSilver": null
     },
     {
@@ -551,124 +1196,262 @@
       ],
       "variants": [
         {
-          "file": "/assets/tower/prefabs/section-4x4x4-v0.glb",
-          "rocks": 318,
+          "file": "/assets/tower/prefabs/section-4x4x4-v0-17_5.glb",
+          "rocks": 221,
           "sourceModels": [
+            3,
             4,
-            5,
+            6,
             8,
+            9,
             11,
             12,
             13,
+            14,
             15,
             16,
             19,
+            20,
             21,
+            24,
             25,
             26,
+            27,
             28,
-            32,
+            29,
+            30,
+            31,
             33,
-            35
+            35,
+            36
           ],
-          "faces": 24976,
+          "faces": 13766,
           "quality": {
-            "density": 0.8838,
+            "density": 0.7509,
+            "visibleRubbleShare": 0.1351,
             "surfaceCoverage": [
-              0.8758,
-              0.863,
-              0.9544,
-              0.8906,
-              0.9155,
-              0.9039
+              0.7127,
+              0.7536,
+              0.8966,
+              0.6806,
+              0.6636,
+              0.7541
             ],
-            "mainRocks": 62,
-            "rubbleRocks": 256,
-            "fillIterations": 256
+            "mainRocks": 57,
+            "rubbleRocks": 164,
+            "fillIterations": 150,
+            "faceChinkingRocks": 14
           }
         },
         {
-          "file": "/assets/tower/prefabs/section-4x4x4-v1.glb",
-          "rocks": 319,
-          "sourceModels": [
-            5,
-            8,
-            11,
-            12,
-            13,
-            15,
-            16,
-            19,
-            21,
-            25,
-            26,
-            28,
-            33,
-            35
-          ],
-          "faces": 24656,
-          "quality": {
-            "density": 0.8699,
-            "surfaceCoverage": [
-              0.8653,
-              0.8919,
-              0.8542,
-              0.9064,
-              0.9042,
-              0.9166
-            ],
-            "mainRocks": 63,
-            "rubbleRocks": 256,
-            "fillIterations": 256
-          }
-        },
-        {
-          "file": "/assets/tower/prefabs/section-4x4x4-v2.glb",
-          "rocks": 321,
+          "file": "/assets/tower/prefabs/section-4x4x4-v1-17_5.glb",
+          "rocks": 220,
           "sourceModels": [
             1,
-            5,
+            4,
+            6,
             8,
+            9,
+            10,
             11,
             12,
             13,
             15,
             16,
+            18,
             19,
+            20,
             21,
+            23,
+            24,
             25,
             26,
             28,
             29,
             30,
-            32,
+            31,
             33,
-            35
+            34,
+            35,
+            36
           ],
-          "faces": 25350,
+          "faces": 13902,
           "quality": {
-            "density": 0.8954,
+            "density": 0.7415,
+            "visibleRubbleShare": 0.1533,
             "surfaceCoverage": [
-              0.9325,
-              0.9152,
-              0.9114,
-              0.9461,
-              0.9061,
-              0.9533
+              0.6659,
+              0.7144,
+              0.8087,
+              0.628,
+              0.7125,
+              0.6741
             ],
-            "mainRocks": 65,
-            "rubbleRocks": 256,
-            "fillIterations": 256
+            "mainRocks": 57,
+            "rubbleRocks": 163,
+            "fillIterations": 150,
+            "faceChinkingRocks": 13
           }
         },
         {
-          "file": "/assets/tower/prefabs/section-4x4x4-v3.glb",
-          "rocks": 318,
+          "file": "/assets/tower/prefabs/section-4x4x4-v2-17_5.glb",
+          "rocks": 219,
           "sourceModels": [
             1,
+            3,
             4,
-            5,
+            6,
             8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            15,
+            16,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            33,
+            34,
+            35,
+            36
+          ],
+          "faces": 14696,
+          "quality": {
+            "density": 0.7542,
+            "visibleRubbleShare": 0.1395,
+            "surfaceCoverage": [
+              0.6606,
+              0.7194,
+              0.8267,
+              0.6883,
+              0.6861,
+              0.6919
+            ],
+            "mainRocks": 60,
+            "rubbleRocks": 159,
+            "fillIterations": 150,
+            "faceChinkingRocks": 9
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-4x4x4-v3-17_5.glb",
+          "rocks": 210,
+          "sourceModels": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            8,
+            10,
+            12,
+            13,
+            14,
+            15,
+            18,
+            19,
+            20,
+            21,
+            23,
+            24,
+            25,
+            26,
+            28,
+            29,
+            30,
+            31,
+            32,
+            34,
+            35
+          ],
+          "faces": 13842,
+          "quality": {
+            "density": 0.7572,
+            "visibleRubbleShare": 0.1171,
+            "surfaceCoverage": [
+              0.7733,
+              0.7542,
+              0.8581,
+              0.6064,
+              0.6909,
+              0.7395
+            ],
+            "mainRocks": 56,
+            "rubbleRocks": 154,
+            "fillIterations": 150,
+            "faceChinkingRocks": 4
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-4x4x4-v4-17_5.glb",
+          "rocks": 213,
+          "sourceModels": [
+            1,
+            3,
+            4,
+            6,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            15,
+            16,
+            18,
+            19,
+            21,
+            23,
+            24,
+            25,
+            26,
+            28,
+            29,
+            32,
+            33,
+            35,
+            36
+          ],
+          "faces": 13288,
+          "quality": {
+            "density": 0.7384,
+            "visibleRubbleShare": 0.1129,
+            "surfaceCoverage": [
+              0.7238,
+              0.6852,
+              0.8603,
+              0.7656,
+              0.6897,
+              0.7522
+            ],
+            "mainRocks": 57,
+            "rubbleRocks": 156,
+            "fillIterations": 150,
+            "faceChinkingRocks": 6
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-4x4x4-v5-17_5.glb",
+          "rocks": 220,
+          "sourceModels": [
+            4,
+            6,
+            8,
+            9,
+            10,
             11,
             12,
             13,
@@ -677,43 +1460,162 @@
             19,
             20,
             21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            32,
+            33,
+            34,
+            35,
+            36
+          ],
+          "faces": 14212,
+          "quality": {
+            "density": 0.7296,
+            "visibleRubbleShare": 0.1007,
+            "surfaceCoverage": [
+              0.6891,
+              0.7253,
+              0.8542,
+              0.7253,
+              0.7206,
+              0.7456
+            ],
+            "mainRocks": 60,
+            "rubbleRocks": 160,
+            "fillIterations": 150,
+            "faceChinkingRocks": 10
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-4x4x4-v6-17_5.glb",
+          "rocks": 220,
+          "sourceModels": [
+            1,
+            4,
+            6,
+            9,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            23,
+            24,
             25,
             26,
             28,
+            29,
+            30,
+            32,
+            34,
             35
           ],
-          "faces": 24142,
+          "faces": 13402,
           "quality": {
-            "density": 0.8596,
+            "density": 0.7257,
+            "visibleRubbleShare": 0.1749,
             "surfaceCoverage": [
-              0.8417,
-              0.8477,
-              0.8677,
-              0.8511,
-              0.8741,
-              0.8803
+              0.7212,
+              0.7092,
+              0.8891,
+              0.5836,
+              0.6737,
+              0.6864
+            ],
+            "mainRocks": 53,
+            "rubbleRocks": 167,
+            "fillIterations": 150,
+            "faceChinkingRocks": 17
+          }
+        },
+        {
+          "file": "/assets/tower/prefabs/section-4x4x4-v7-17_5.glb",
+          "rocks": 223,
+          "sourceModels": [
+            1,
+            3,
+            4,
+            6,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            15,
+            16,
+            18,
+            19,
+            20,
+            21,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            35
+          ],
+          "faces": 14672,
+          "quality": {
+            "density": 0.7636,
+            "visibleRubbleShare": 0.0943,
+            "surfaceCoverage": [
+              0.7169,
+              0.7505,
+              0.8733,
+              0.7522,
+              0.8123,
+              0.8259
             ],
             "mainRocks": 62,
-            "rubbleRocks": 256,
-            "fillIterations": 256
+            "rubbleRocks": 161,
+            "fillIterations": 150,
+            "faceChinkingRocks": 11
           }
         }
       ],
+      "jointInterface": "shared-recessed-25cm-v1",
       "priceSilver": null
     }
   ],
   "connectors": {
     "x": {
-      "file": "/assets/tower/prefabs/joint-x.glb",
-      "faces": 432
+      "file": "/assets/tower/prefabs/joint-x-17_5.glb",
+      "faces": 306,
+      "interface": "shared-recessed-25cm-v1"
     },
     "y": {
-      "file": "/assets/tower/prefabs/joint-y.glb",
-      "faces": 408
+      "file": "/assets/tower/prefabs/joint-y-17_5.glb",
+      "faces": 306,
+      "interface": "shared-recessed-25cm-v1"
     },
     "z": {
-      "file": "/assets/tower/prefabs/joint-z.glb",
-      "faces": 402
+      "file": "/assets/tower/prefabs/joint-z-17_5.glb",
+      "faces": 306,
+      "interface": "shared-recessed-25cm-v1"
+    },
+    "corner": {
+      "file": "/assets/tower/prefabs/joint-corner-17_5.glb",
+      "faces": 306,
+      "interface": "shared-recessed-25cm-v1"
     }
   }
 }
