@@ -20,7 +20,7 @@ fs.mkdirSync(evidence,{recursive:true});
    export function towerUserId(){return 'qa-user'}
    export async function loadTower(){return {elements:[],silver:95,gold:10,revision:3}}
    export async function loadTowerV2(){return {format:2,elements:[
-    {id:'paid-original',type:'medium',x:27,y:0,z:27,sx:2,sy:1,sz:1,rotation:0,variant:0,paidCurrency:'silver',paidAmount:4}
+    {id:'paid-original',type:'medium',x:5,y:0,z:5,sx:2,sy:1,sz:1,rotation:0,variant:0,paidCurrency:'silver',paidAmount:4}
    ],silver:95,gold:10,revision:3}}
    export async function mutateTower(){globalThis.__MUTATED=true;throw Error('MUTATION_FORBIDDEN')}
    export async function mutateTowerV2(){globalThis.__MUTATED=true;throw Error('MUTATION_FORBIDDEN')}
