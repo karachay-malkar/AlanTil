@@ -49,10 +49,22 @@ fs.mkdirSync(evidence,{recursive:true});
    error:document.querySelector('.towerCanvas')?.dataset.prefabError||null}));
   assert.equal(info.prefabs,1);assert.equal(info.draft.sections.length,1);assert.equal(info.draft.format,3);
   assert.equal(info.purchases,false);assert.equal(info.silver,'95');assert.equal(info.webgl,true);assert.equal(info.error,null);
-  await page.screenshot({path:path.join(evidence,'prefab-desktop.png')});
+  // Keep the isolated paid V2 fixture intact while displaying a fully prepared
+  // wall, side seam and upper course (no runtime stone-packing Worker).
+  await page.evaluate(()=>{
+   const key='alantil_tower_prefab_draft_17_4_qa-user',saved=JSON.parse(localStorage.getItem(key));
+   const a=saved.sections[0];
+   const side={...a,id:'qa-side',sectionId:'2x2x3',variant:1,x:a.x+2,y:0,z:a.z};
+   const top={...a,id:'qa-top',variant:2,x:a.x,y:2,z:a.z};
+   saved.sections.push(side,top);localStorage.setItem(key,JSON.stringify(saved));
+  });
   await page.reload();
-  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='1',{timeout:45000});
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='3'&&
+    Number(document.querySelector('.towerCanvas')?.dataset.prefabJoints)>=2,{timeout:45000});
+  await page.locator('[data-tool="select"]').click();
+  await page.waitForTimeout(400);
   assert.equal(await page.locator('.towerItem').count(),5);
+  await page.screenshot({path:path.join(evidence,'prefab-desktop.png')});
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(600);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:path.join(evidence,'prefab-mobile.png')});
