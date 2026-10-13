@@ -1,8 +1,8 @@
-/** Authored-rock section solver, not wired to UI or purchases until v3
+/** Authored-rock section solver. Purchase mutations remain on existing V2 RPC until v3
  * authoritative section RPC is deployed and explicit prices approved. */
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
-import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/masonry-contact.mjs';
+import {mapContactJoints,deformContactMesh} from '../../../packages/tower-game/masonry-contact.mjs?v=17.2.3';
 import {buildStoneProfiles} from '../../../packages/tower-game/masonry-geometry.mjs';
 import {packMasonryVolume} from '../../../packages/tower-game/masonry-packing.mjs';
 import {buildSectionMasonry} from '../../../packages/tower-game/section-pipeline.mjs';
@@ -21,7 +21,8 @@ self.onmessage=({data})=>{
  try{
   if(!Array.isArray(sections)||sections.length>250)throw new TypeError('Invalid section request');
   const result=buildSectionMasonry(sections,{
-   getModel,rockCounts,contactEngine:mapContactJoints,deform:deformContactMesh,
+   getModel,rockCounts,contactEngine:mapContactJoints,
+   deform:(mesh,rock,joints)=>deformContactMesh(mesh,rock,joints,{maxDisplacement:.12}),
    maxStones:mobile?360:850,
    infillEngine:stones=>packMasonryVolume(stones,profiles,{
     cache,spacing:mobile?.18:.14,maxTriangles:mobile?30000:75000,

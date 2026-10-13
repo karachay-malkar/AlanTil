@@ -35,7 +35,7 @@ fs.mkdirSync(evidence,{recursive:true});
     <style>body{margin:0}#root{width:100%}</style>
     <div class="appShell" id="app-shell"><div class="appViewport"><div class="appScreenHost"><main id="root"></main></div></div></div>
     <script type="module">
-      import {mount} from '/src/features/tower/index.js?v=17.2.2';
+      import {mount} from '/src/features/tower/index.js?v=17.2.3';
       mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});
     </script>
   `}));

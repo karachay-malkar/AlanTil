@@ -138,14 +138,17 @@ export function refineContactMesh(mesh,block,joints,{maxPasses=3,maxTriangles=60
  const ArrayType=p.length/3>65535?Uint32Array:Uint16Array;
  return {positions:Float32Array.from(p),colors:Float32Array.from(colors),indices:ArrayType.from(faces)};
 }
-export function deformContactMesh(mesh,block,joints){
+export function deformContactMesh(mesh,block,joints,{maxDisplacement=.70}={}){
+ if(!Number.isFinite(maxDisplacement)||maxDisplacement<0||maxDisplacement>.70)throw new RangeError('Invalid contact displacement limit');
  if(!joints?.length)return {...mesh,positions:mesh.positions.slice(),indices:mesh.indices.slice()};
  const refined=refineContactMesh(mesh,block,joints),base=refined.positions;
  const displacement=new Float32Array(base.length);
  let moved=0,maxContactDisplacement=0;
  for(let i=0;i<base.length;i+=3){
   const world=localToWorld(block,[base[i],base[i+1],base[i+2]]);
-  const d=contactDisplacement(world,block.id,joints);
+  const raw=contactDisplacement(world,block.id,joints);
+  const magnitude=Math.hypot(...raw);
+  const d=magnitude>maxDisplacement?raw.map(value=>value*maxDisplacement/magnitude):raw;
   if(Math.hypot(...d)>1e-5)moved++;
   maxContactDisplacement=Math.max(maxContactDisplacement,Math.hypot(...d));
   const corrected=worldToLocal(block,world.map((v,k)=>v+d[k]));

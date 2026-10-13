@@ -1,5 +1,5 @@
 import {CATALOG,STONE_CONFIGURATIONS,PURCHASABLE_STONE_TYPES,GRID_SIZE,HEIGHT_LIMIT,validatePlacement,removalDependents,worldDimensions} from '../../../packages/tower-game/core.mjs';
-import {createTowerScene} from './scene.js?v=17.2.2';
+import {createTowerScene} from './scene.js?v=17.2.3';
 import {suggestCameraPlacement} from '../../../packages/tower-game/camera-placement.mjs';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {towerUserId,loadTower,mutateTower,loadTowerV2,mutateTowerV2} from './repository.js?v=17.1.5';
