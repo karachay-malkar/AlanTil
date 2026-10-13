@@ -5,6 +5,7 @@ import {adaptRockMesh} from '../../../packages/tower-game/rock-adaptation.mjs';
 import * as THREE from '../../vendor/three/three.module.js';
 import { OrbitControls } from '../../vendor/three/addons/controls/OrbitControls.js';
 import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
+import {toMasonrySections,getPickedTowerBlock} from '../../../packages/tower-game/masonry-scene-adapter.mjs';
 
 const CELL=.25;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -198,6 +199,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // Render-only infill is computed from real rock meshes off the UI thread.
  // It is intentionally absent from pickables, tower blocks and server mutations.
  const masonryMeshes=[];
+ const sectionMeshes=[];
+ let sectionWorker=null,sectionGeneration=0,sectionFailed=false;
  const contactGeometries=[];
  let masonryGeneration=0;
  const masonryMobile=matchMedia('(max-width:749px), (max-height:520px)').matches;
@@ -260,33 +263,101 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   }catch(e){console.warn('Masonry worker unavailable',e);}
  }
  let loadedOnce=false,settling=null;
- // 17.2: keep parent section identity while rendering constituent rock meshes.
- function sectionStones(parent){
-  const pieces=[],nx=Math.max(1,Math.round(parent.sx)),ny=Math.max(1,Math.round(parent.sy)),nz=Math.max(1,Math.round(parent.sz));
-  for(let iy=0;iy<ny;iy++)for(let iz=0;iz<nz;iz++){
-   let ix=0;
-   while(ix<nx){
-    const remaining=nx-ix;
-    const width=remaining===1?1:(ix===0&&iy%2?1:Math.min(2,remaining));
-    const seed=parent.x*19+parent.y*31+parent.z*43+iy*47+iz*59+ix*71;
-    pieces.push({...parent,x:parent.x+ix,y:parent.y+iy,z:parent.z+iz,sx:width,sy:1,sz:1,variant:Math.floor(hash(seed)*23),parent});
-    ix+=width;
-    if(pieces.length>320)return [parent];
+ // V2 server elements retain their authoritative identities and purchase data.
+ // The worker maps each stored V2 stone envelope to authored rock geometry only.
+ function clearSections(){
+  for(const mesh of sectionMeshes.splice(0)){
+   const index=pickables.indexOf(mesh);if(index>=0)pickables.splice(index,1);
+   content.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();
+  }
+ }
+ function sectionBuildFailed(error){
+  if(disposed)return;
+  sectionFailed=true;sectionWorker?.terminate();sectionWorker=null;
+  ++sectionGeneration;clearSections();clearMasonry();
+  delete container.dataset.sectionReady;
+  container.dataset.sectionError=String(error||'geometry worker failed');
+  console.warn('Section masonry failed, restoring original authored rocks:',error);
+  rebuild();
+ }
+ function acceptSectionBuild(data){
+  if(disposed||!data||data.generation!==sectionGeneration)return;
+  if(data.error){sectionBuildFailed(data.error);return;}
+  const expected=toMasonrySections(blocks,layer),byId=new Map(blocks.map(b=>[b.id,b]));
+  if(data.sections?.length!==expected.length){sectionBuildFailed('Section count mismatch');return;}
+  const next=[];
+  try{
+   for(const batch of data.sections){
+    const parent=byId.get(batch.id);
+    if(!parent||!batch.positions?.length||batch.positions.length!==batch.colors?.length||
+       !batch.indices?.length||batch.positions.length%3||batch.indices.length%3)
+     throw new Error('Invalid authored section geometry');
+    const geometry=new THREE.BufferGeometry(),linear=new Float32Array(batch.colors.length),tint=new THREE.Color();
+    for(let j=0;j<linear.length;j+=3){
+     tint.setRGB(batch.colors[j],batch.colors[j+1],batch.colors[j+2],THREE.SRGBColorSpace);
+     linear[j]=tint.r;linear[j+1]=tint.g;linear[j+2]=tint.b;
+    }
+    geometry.setAttribute('position',new THREE.BufferAttribute(batch.positions,3));
+    geometry.setAttribute('color',new THREE.BufferAttribute(linear,3));
+    geometry.setIndex(new THREE.BufferAttribute(batch.indices,1));
+    geometry.computeVertexNormals();geometry.computeBoundingSphere();
+    const material=stoneMaterial.clone();
+    material.clippingPlanes=layer===null?[]:[clipPlane];material.clipShadows=true;
+    const mesh=new THREE.Mesh(geometry,material);
+    mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.block=parent;
+    next.push(mesh);
+   }
+  }catch(error){
+   for(const mesh of next){mesh.geometry.dispose();mesh.material.dispose();}
+   sectionBuildFailed(error);return;
+  }
+  clearSections();clearMasonry();
+  for(const mesh of next){
+   content.add(mesh);sectionMeshes.push(mesh);pickables.push(mesh);
+   if(settling&&mesh.userData.block.id===settling.id){
+    settling.started=performance.now();mesh.position.y=reducedMotion?0:.06;
+    settling.parts.push({mesh,baseY:0});
    }
   }
-  return pieces;
+  if(data.infill)drawMasonry(data.infill);
+  container.dataset.sectionReady='true';
+  container.dataset.sectionStoneCount=String(data.stoneCount||0);
+  container.dataset.sectionJointCount=String(data.jointCount||0);
+  container.dataset.sectionCount=String(data.sections.length);
+  container.dataset.sectionDurationMs=String(Math.round(data.timeMs||0));
+  delete container.dataset.sectionError;
+ }
+ function requestSections(){
+  const generation=++sectionGeneration;
+  delete container.dataset.sectionReady;delete container.dataset.sectionError;
+  const sections=toMasonrySections(blocks,layer);
+  if(!sections.length){
+   clearSections();clearMasonry();
+   container.dataset.sectionReady='true';container.dataset.sectionCount='0';return;
+  }
+  if(!sectionWorker){sectionBuildFailed('Section Worker unavailable');return;}
+  sectionWorker.postMessage({generation,sections,mobile:masonryMobile});
+ }
+ if(enableV2Aim&&typeof Worker!=='undefined'){
+  try{
+   sectionWorker=new Worker(new URL('./section-masonry-worker.js?v=17.2.2',import.meta.url),{type:'module'});
+   sectionWorker.onmessage=({data})=>acceptSectionBuild(data);
+   sectionWorker.onerror=e=>sectionBuildFailed(e.message||'Section Worker error');
+  }catch(error){sectionFailed=true;container.dataset.sectionError=String(error);}
  }
  function rebuild(){
   if(settling)settling.parts=[];
   for(const instance of groups){content.remove(instance);instance.dispose?.();}
   groups=[];pickables=[];
   for(const g of contactGeometries.splice(0))g.dispose();
-  const contactMap=mapContactJoints(blocks);
+  const useSections=enableV2Aim&&!sectionFailed&&Boolean(sectionWorker);
+  const contactMap=useSections?new Map():mapContactJoints(blocks);
   const buckets=new Map();
   for(const block of blocks){
    if(layer!==null&&block.y>layer)continue;
    const stone=CATALOG_STONES.has(block.type);
-   const pieces=stone&&Math.max(block.sx,block.sy,block.sz)>1?sectionStones(block):[block];
+   if(useSections&&stone)continue;
+   const pieces=[block];
    const count=stoneTemplates[stoneCategory(block.type)]?.length||1;
    for(const piece of pieces){
     const variant=((piece.variant||0)%count+count)%count;
@@ -338,7 +409,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     content.add(instances);groups.push(instances);pickables.push(instances);
    }
   }
+  pickables.push(...sectionMeshes);
   rebuildMasonry();
+  if(useSections)requestSections();
+  else{++sectionGeneration;clearSections();}
  }
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down=null;const pointers=new Set();
  function pickAt(clientX,clientY){
@@ -347,10 +421,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   mouse.set((clientX-r.left)/r.width*2-1,-(clientY-r.top)/r.height*2+1);ray.setFromCamera(mouse,camera);
   const hit=ray.intersectObjects([...pickables,platform],false).find(h=>layer===null||h.point.y<=(layer+1)*CELL+.0001);
   if(!hit)return null;
-  const b=hit.object.userData.blocks?.[hit.instanceId];
+  const b=getPickedTowerBlock(hit);
   const n=b?hit.face.normal.clone():new THREE.Vector3(0,1,0);
   if(b){
-   const m=new THREE.Matrix4();hit.object.getMatrixAt(hit.instanceId,m);
+   const m=new THREE.Matrix4();
+   if(hit.object.isInstancedMesh)hit.object.getMatrixAt(hit.instanceId,m);
+   else m.copy(hit.object.matrixWorld);
    n.applyMatrix3(new THREE.Matrix3().getNormalMatrix(m)).normalize();
    const values=[Math.abs(n.x),Math.abs(n.y),Math.abs(n.z)],axis=values.indexOf(Math.max(...values));
    n.set(axis===0?Math.sign(n.x):0,axis===1?Math.sign(n.y):0,axis===2?Math.sign(n.z):0);
@@ -413,7 +489,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   }
   if(settling){
    const t=Math.min(1,(time-settling.started)/320),offset=(reducedMotion?0:.06)*Math.pow(1-t,3);
-   for(const part of settling.parts){const m=part.base.clone();m.elements[13]+=offset;part.mesh.setMatrixAt(part.index,m);part.mesh.instanceMatrix.needsUpdate=true;}
+   for(const part of settling.parts){
+    if(part.mesh.isInstancedMesh){const m=part.base.clone();m.elements[13]+=offset;part.mesh.setMatrixAt(part.index,m);part.mesh.instanceMatrix.needsUpdate=true;}
+    else part.mesh.position.y=part.baseY+offset;
+   }
    if(t>=1)settling=null;
   }
   if(flight){
@@ -467,5 +546,5 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const projection=p.project(camera);if(projection.z>1||projection.z< -1)return null;
   return{x:(projection.x+1)*container.clientWidth/2,y:(1-projection.y)*container.clientHeight/2};
  }
- return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {d,p}=transform(added),target=p.clone();const fit=new THREE.Vector3(...d.map(v=>v*CELL));const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(fitDistanceFor(fit));flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;grid.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=fitDistanceFor(size);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;masonryWorker?.terminate();clearMasonry();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
+ return {setBlocks(value){const incoming=value||[];const ids=new Set(blocks.map(b=>b.id));const added=loadedOnce?incoming.find(b=>!ids.has(b.id)):null;settling=added?{id:added.id,started:performance.now(),parts:[]}:null;loadedOnce=true;blocks=incoming;selection.visible=false;rebuild();if(added&&incoming.length===1){const {d,p}=transform(added),target=p.clone();const fit=new THREE.Vector3(...d.map(v=>v*CELL));const offset=new THREE.Vector3(.8,.85,1).normalize().multiplyScalar(fitDistanceFor(fit));flyTo(target,target.clone().add(offset),620);}},setPreview(b,valid=true){preview.visible=!!b;contact.visible=!!b;grid.visible=!!b;if(!b){previewBlock=null;ghostTween=null;return;}updateGhost(b,valid);},thumbnail,screenPosition,pickAt(clientX,clientY){return pickAt(clientX,clientY);},setLayer(y){layer=y;clipPlane.constant=y===null?0:(y+1)*CELL;rebuild();},setTool(t){tool=t;selection.visible=false;},rotateView(delta){const offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(new THREE.Vector3(0,1,0),delta);flyTo(controls.target,controls.target.clone().add(offset),320);},zoom(delta){const offset=camera.position.clone().sub(controls.target).multiplyScalar(delta);offset.clampLength(controls.minDistance,controls.maxDistance);flyTo(controls.target,controls.target.clone().add(offset),260);},home(){if(blocks.length){const box3=new THREE.Box3();for(const b of blocks){const {d,p}=transform(b);box3.expandByPoint(p.clone().sub(new THREE.Vector3(...d.map(v=>v*CELL/2))));box3.expandByPoint(p.clone().add(new THREE.Vector3(...d.map(v=>v*CELL/2))));}const center=box3.getCenter(new THREE.Vector3()),size=box3.getSize(new THREE.Vector3()),distance=fitDistanceFor(size);flyTo(center,center.clone().add(new THREE.Vector3(.8,.7,1).normalize().multiplyScalar(distance)),520);}else{flyTo(new THREE.Vector3(7.5,1,7.5),new THREE.Vector3(17,12,20),520);}},dispose(){disposed=true;masonryGeneration++;sectionGeneration++;masonryWorker?.terminate();sectionWorker?.terminate();clearMasonry();clearSections();cancelAnimationFrame(frame);observer.disconnect();controls.removeEventListener('start',cancelFlight);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);clearPreview();renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);scene.traverse(o=>{if(o.geometry&&!geometries.includes(o.geometry))o.geometry.dispose();if(o.material&&!materials.includes(o.material)){for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.dispose();}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}};
 }

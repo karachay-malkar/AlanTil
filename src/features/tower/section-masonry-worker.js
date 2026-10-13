@@ -17,10 +17,12 @@ function getModel(family,variant){
 }
 self.onmessage=({data})=>{
  const {generation,sections,mobile=false}=data||{};
+ const started=performance.now();
  try{
+  if(!Array.isArray(sections)||sections.length>250)throw new TypeError('Invalid section request');
   const result=buildSectionMasonry(sections,{
    getModel,rockCounts,contactEngine:mapContactJoints,deform:deformContactMesh,
-   maxStones:mobile?180:350,
+   maxStones:mobile?360:850,
    infillEngine:stones=>packMasonryVolume(stones,profiles,{
     cache,spacing:mobile?.18:.14,maxTriangles:mobile?30000:75000,
     maxJoints:mobile?300:650,maxFragmentsPerJoint:mobile?60:120
@@ -31,6 +33,6 @@ self.onmessage=({data})=>{
    ...['stonePositions','stoneColors','mortarPositions','mortarColors'].map(k=>infill[k].buffer)];
   self.postMessage({generation,geometryVersion:result.geometryVersion,sections:batches,
    sectionCount:sections.length,stoneCount:result.stones.length,
-   jointCount:result.joints.length,infill},buffers);
+   jointCount:result.joints.length,timeMs:performance.now()-started,infill},buffers);
  }catch(error){self.postMessage({generation,error:String(error?.message||error)});}
 };
