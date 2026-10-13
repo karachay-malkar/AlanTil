@@ -1,0 +1,48 @@
+name: AlanTil 17.2 section QA and full source archive
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'packages/tower-game/**'
+      - 'src/features/tower/**'
+      - 'tests/tower-*'
+      - 'tests/section-*'
+      - 'docs/tower/**'
+      - '.github/workflows/tower-section-17-2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  section-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and section engine tests
+        run: |
+          for file in packages/tower-game/section-*.mjs packages/tower-game/tower-serialization.mjs src/features/tower/section-masonry-worker.js; do node --check "$file"; done
+          node --test tests/tower-section-engine-17-2.test.mjs tests/tower-section-pipeline-17-2.test.mjs tests/tower-core.test.mjs tests/tower-v2-mesh-adapter.test.mjs
+      - name: Full tower functional regression
+        run: node --test tests/tower-*.test.mjs
+  complete-source-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and validate complete repository source
+        run: |
+          git archive --format=zip --output=AlanTil-17.2-complete-source.zip HEAD
+          unzip -t AlanTil-17.2-complete-source.zip | tail -1
+          git ls-files -z | xargs -0 -n1 stat -c '%n | %s bytes' > AlanTil-17.2-FILE_SIZES.txt
+          ls -lh AlanTil-17.2-complete-source.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlanTil-17.2-complete-source
+          path: |
+            AlanTil-17.2-complete-source.zip
+            AlanTil-17.2-FILE_SIZES.txt
+          retention-days: 14
+          if-no-files-found: error
