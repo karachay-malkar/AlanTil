@@ -2,6 +2,7 @@
 create schema if not exists auth;
 create schema if not exists private;
 do $$begin if not exists(select from pg_roles where rolname='authenticated') then create role authenticated nologin;end if;end$$;
+do $$begin if not exists(select from pg_roles where rolname='anon') then create role anon nologin;end if;end$$;
 grant usage on schema private,public,auth to authenticated;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable set search_path='' as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
