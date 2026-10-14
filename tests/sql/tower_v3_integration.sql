@@ -15,11 +15,11 @@ begin
   raise exception 'SHOULD_FAIL_STALE_REVISION';
  exception when others then if sqlerrm not like '%REVISION_CONFLICT%' then raise;end if;end;
  begin
-  perform public.mutate_tower_v3(1,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2','place',jsonb_set(s,'{x}','1'),null);
+  perform public.mutate_tower_v3(1,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2','place',jsonb_set(jsonb_set(s,'{id}', '"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3"'::jsonb),'{x}','1'),null);
   raise exception 'SHOULD_FAIL_COLLISION';
  exception when others then if sqlerrm not like '%INVALID_V3_PLACEMENT%' then raise;end if;end;
  begin
-  perform public.mutate_tower_v3(1,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2','place',jsonb_set(s,'{x}','1.1'),null);
+  perform public.mutate_tower_v3(1,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2','place',jsonb_set(jsonb_set(s,'{id}', '"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4"'::jsonb),'{x}','1.1'),null);
   raise exception 'SHOULD_FAIL_OFFGRID';
  exception when others then if sqlerrm not like '%GRID_REQUIRED%' then raise;end if;end;
  s:=jsonb_build_object('id','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2','sectionId','2x2x2','variant',0,'rotation',0,'x',0,'y',2,'z',0,'geometryVersion','17.5.0');
