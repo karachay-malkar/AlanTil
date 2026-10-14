@@ -1,4 +1,4 @@
-/** AlanTil 17.5.1 WebGL integration: compact UI, server persistence mock, selection.
+/** AlanTil 17.5.2 WebGL integration: compact UI, server persistence mock, selection.
  * Transaction/isolation assertions run separately against PostgreSQL in CI.
  */
 const assert=require('node:assert/strict');
@@ -38,7 +38,7 @@ fs.mkdirSync(evidence,{recursive:true});
    <link rel="stylesheet" href="/src/shared/styles/app.css">
    <link rel="stylesheet" href="/src/features/tower/tower.css">
    <div class="appShell" id="app-shell"><div class="appViewport"><div class="appScreenHost"><main id="root"></main></div></div></div>
-   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.1';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
+   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.2';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
   await new Promise(resolve=>setTimeout(resolve,300));
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
@@ -50,6 +50,7 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(await page.locator('[data-hammer]').count(),1);
   assert.equal(await page.locator('[data-draft-notice]').count(),0);
   await page.locator('[data-section-id="2x2x2"]').click();
+  assert.equal(await page.locator('[data-variant]').count(),1);
   assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'placing');
   assert.equal(await page.locator('[data-side]').evaluate(x=>x.classList.contains('is-open')),false);
   assert.equal(await page.locator('[data-placement] .towerIconAction').count(),4);
@@ -69,7 +70,7 @@ fs.mkdirSync(evidence,{recursive:true});
   let snapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
   assert.equal(snapshot.revision,1);
   assert.equal(snapshot.elements.length,1);
-  assert.equal(snapshot.elements[0].geometryVersion,'17.5.1');
+  assert.equal(snapshot.elements[0].geometryVersion,'17.5.2');
   assert.ok([snapshot.elements[0].x,snapshot.elements[0].y,snapshot.elements[0].z].every(Number.isInteger));
   assert.equal(await page.evaluate(()=>localStorage.getItem('alantil_tower_prefab_draft_17_4_11111111-1111-4111-8111-111111111111')),null);
   await page.reload();
@@ -88,10 +89,28 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(snapshot.elements.length,0);
   assert.equal(snapshot.revision,2);
   assert.equal(await page.locator('[data-side]').evaluate(x=>x.classList.contains('is-open')),true);
+  // After testing create/reload/select/delete, render a PREPARED natural-rock
+  // wall with corner and upper course as real WebGL visual evidence. This test
+  // mock never writes to a user's Supabase account or their tower draft.
+  await page.evaluate(()=>{
+   const make=(id,x,y,z,variant)=>({id,type:'masonry_section',sectionId:'2x2x2',
+    variant,rotation:0,x,y,z,geometryVersion:'17.5.2'});
+   localStorage.setItem('__QA_REMOTE_V3',JSON.stringify({format:3,revision:3,elements:[
+    make('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',2,0,2,0),
+    make('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',4,0,2,1),
+    make('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',2,0,4,2),
+    make('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',2,2,2,1)
+   ]}));
+  });
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='4'&&
+   Number(document.querySelector('.towerCanvas')?.dataset.prefabJointTiles)>=8,{timeout:45000});
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-errors'),'0');
   await page.screenshot({path:path.join(evidence,'prefab-desktop.png')});
   await page.setViewportSize({width:390,height:844});
   await page.waitForTimeout(400);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-count'),'4');
   await page.screenshot({path:path.join(evidence,'prefab-mobile.png')});
   assert.deepEqual(errors,[]);assert.deepEqual(responses,[]);
   console.log('TOWER_PREFAB_17_5_1_BROWSER_QA',JSON.stringify({revision:snapshot.revision,sections:snapshot.elements.length,webgl:true,selection:true,serverMock:true,noDraft:true}));

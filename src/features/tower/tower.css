@@ -1,4 +1,4 @@
-/* AlanTil 17.5.1 — minimal prefab-only tower HUD, one mobile-safe control row. */
+/* AlanTil 17.5.2 — minimal prefab-only tower HUD, one mobile-safe control row. */
 .appShell[data-feature="tower"]{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;--chrome-top-depth:0px;--chrome-bottom-depth:0px}
 .appShell[data-feature="tower"] .appHeader{z-index:10;pointer-events:none}
 .appShell[data-feature="tower"] .appHeaderCenter,.appShell[data-feature="tower"] .appHeaderTrailing{display:none}

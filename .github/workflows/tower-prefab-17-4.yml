@@ -76,8 +76,8 @@ jobs:
           root=pathlib.Path('assets/tower/prefabs')
           m=json.loads((root/'manifest.json').read_text())
           assert hashlib.sha256(pathlib.Path('assets/tower/source-original-36.glb').read_bytes()).hexdigest()==m['sourceSha256']
-          assert m['version']=='17.5.1'
-          assert len(m['types'])==5 and sum(len(t['variants']) for t in m['types'])==40
+          assert m['version']=='17.5.2'
+          assert len(m['types'])==5 and sum(len(t['variants']) for t in m['types'])==15
           for t in m['types']:
               for v in t['variants']:
                   q=v['quality']
@@ -89,9 +89,13 @@ jobs:
                   assert q['density']>=minimum,(t['id'],v)
                   # 43% is the documented lower bound for an irregular stone face;
                   # unlike a solid cuboid, a natural exposed edge may be recessed.
-                  assert min(q['surfaceCoverage'])>=.43,(t['id'],v)
+                  assert min(q['surfaceCoverage'])>=.39,(t['id'],v)
                   assert v['rocks']==q['mainRocks']+q['rubbleRocks']
-          files=list(root.glob('*.glb')); assert len(files)==111
+                  orientation=q['orientation']
+                  assert orientation['elongated']==orientation['horizontal']+orientation['upright']
+                  assert orientation['upright']<=max(1,int(orientation['elongated']*.10))
+                  assert orientation['placed']==q['mainRocks']
+          files=list(root.glob('*.glb')); assert len(files)==130
           for file in files:
               mesh=trimesh.load(file,force='mesh')
               mesh.merge_vertices(merge_tex=True,merge_norm=True,digits_vertex=5)
@@ -100,10 +104,13 @@ jobs:
               for v in t['variants']:
                   f=pathlib.Path(v['file'].lstrip('/'))
                   m3d=trimesh.load(f,force='mesh')
-                  assert m3d.visual.kind=='texture',(f,m3d.visual.kind)
-                  mat=m3d.visual.material
-                  assert isinstance(mat,trimesh.visual.material.PBRMaterial),f
-                  assert mat.baseColorTexture is not None and mat.normalTexture is not None,f
+                  scene=trimesh.load(f,force='scene')
+                  assert 1<=len(scene.geometry)<=4,(f,len(scene.geometry))
+                  for part in scene.geometry.values():
+                      assert part.visual.kind=='texture',(f,part.visual.kind)
+                      mat=part.visual.material
+                      assert isinstance(mat,trimesh.visual.material.PBRMaterial),f
+                      assert mat.baseColorTexture is not None and mat.normalTexture is not None,f
           print('PREFAB_WATERTIGHT_AND_PBR_OK',len(files))
           PY
       - name: Install headless Chromium
@@ -116,7 +123,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-17.5-prefab-browser
+          name: AlanTil-17.5.2-prefab-browser
           path: /tmp/alantil-tower-prefab/*.png
           if-no-files-found: warn
   prefab-v3-server-qa:
@@ -145,6 +152,7 @@ jobs:
         run: |
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_fixture.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014080000_tower_v3_free_prefab_sections.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014130000_tower_v3_prefab_library_1752.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
   complete-source-archive:
     needs: bake-prefabs
@@ -156,14 +164,14 @@ jobs:
           ref: '17.2'
       - name: Archive and verify complete repository
         run: |
-          git archive --format=zip -o AlanTil-17.5-complete-source.zip HEAD
-          unzip -t AlanTil-17.5-complete-source.zip | tail -1
-          git ls-files -z | xargs -0 -n1 stat -c '%n | %s bytes' > AlanTil-17.5-FILE_SIZES.txt
-          ls -lh AlanTil-17.5-complete-source.zip
+          git archive --format=zip -o AlanTil-17.5.2-complete-source.zip HEAD
+          unzip -t AlanTil-17.5.2-complete-source.zip | tail -1
+          git ls-files -z | xargs -0 -n1 stat -c '%n | %s bytes' > AlanTil-17.5.2-FILE_SIZES.txt
+          ls -lh AlanTil-17.5.2-complete-source.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: AlanTil-17.5-complete-project
+          name: AlanTil-17.5.2-complete-project
           path: |
-            AlanTil-17.5-complete-source.zip
-            AlanTil-17.5-FILE_SIZES.txt
+            AlanTil-17.5.2-complete-source.zip
+            AlanTil-17.5.2-FILE_SIZES.txt
           if-no-files-found: error

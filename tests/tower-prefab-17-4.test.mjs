@@ -3,15 +3,19 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync,statSync} from 'node:fs';
 const root=new URL('../',import.meta.url);
 const manifest=()=>JSON.parse(readFileSync(new URL('assets/tower/prefabs/manifest.json',root),'utf8'));
-test('immutable 17.5 prefab library offers eight variants of five accepted sizes',()=>{
+test('immutable 17.5.2 prefab library offers three new variants of five accepted sizes',()=>{
  const m=manifest();
- assert.equal(m.version,'17.5.1');assert.equal(m.legacyVersion,'17.4.1');
+ assert.equal(m.version,'17.5.2');assert.equal(m.legacyVersion,'17.4.1');
  assert.equal(m.cellMeters,.25);assert.equal(m.authoredModels,36);
  assert.deepEqual(m.types.map(e=>e.size),[[1,1,1],[2,2,2],[2,2,3],[2,3,4],[4,4,4]]);
  for(const type of m.types){
-  assert.equal(type.variants.length,8);
+  assert.equal(type.variants.length,3);
   assert.equal(type.jointInterface,m.jointInterface);
   assert.equal(m.legacyVariants[type.id].length,4);
+  assert.equal(m.previousVariants[type.id].length,8);
+  assert.equal(m.historicVariants['17.5.0'][type.id].length,8);
+  for(const previous of m.previousVariants[type.id])assert.ok(existsSync(new URL(previous.slice(1),root)));
+  for(const older of m.historicVariants['17.5.0'][type.id])assert.ok(existsSync(new URL(older.slice(1),root)));
   for(const legacy of m.legacyVariants[type.id])assert.ok(existsSync(new URL(legacy.slice(1),root)));
   for(const variant of type.variants){
    assert.match(variant.file,/^\/assets\/tower\/prefabs\/[a-z0-9_-]+\.glb$/);

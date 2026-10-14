@@ -5,7 +5,7 @@ const EPS=1e-5;
 export function sectionAssetVersion(s,manifest){return s.geometryVersion??manifest.version;}
 export function sectionJointProfile(s,manifest){
  if(s.type!=='masonry_section')return null;
- if(![manifest.version,manifest.previousVersion].includes(sectionAssetVersion(s,manifest)))return null;
+ if(![manifest.version,manifest.previousVersion,...Object.keys(manifest.historicVariants||{})].includes(sectionAssetVersion(s,manifest)))return null;
  return manifest.types.find(x=>x.id===s.sectionId)?.jointInterface||null;
 }
 export function compatibleSectionFaces(a,b,manifest){
@@ -30,7 +30,12 @@ export function resolvePrefabJoints(sections,manifest){
   if(!compatibleSectionFaces(a,b,manifest)){
    incompatible.push({...pair,reason:'У вариантов нет совместимого подготовленного стыка'});continue;
   }
-  const spec=manifest.connectors?.[pair.axis];
+  // Old saved towers retain their original pre-baked joint geometry. New
+  // neighbours use the latest shared interface, without re-baking old stones.
+  const va=sectionAssetVersion(a,manifest),vb=sectionAssetVersion(b,manifest);
+  const source=va===vb&&va===manifest.previousVersion?manifest.previousConnectors:
+               va===vb&&manifest.historicConnectors?.[va]?manifest.historicConnectors[va]:null;
+  const spec=source?.[pair.axis]?{file:source[pair.axis],interface:JOINT_INTERFACE}:manifest.connectors?.[pair.axis];
   if(!spec||spec.interface!==JOINT_INTERFACE||!spec.file){incompatible.push({...pair,reason:'Нет готового соединения'});continue;}
   const axes={x:[1,2],y:[0,2],z:[0,1]}[pair.axis];
   // Grid coordinates are integral for all newly placed sections.

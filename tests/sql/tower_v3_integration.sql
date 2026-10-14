@@ -46,3 +46,17 @@ do $$begin
  if (select count(*) from private.tower_v3_sections where user_id='11111111-1111-4111-8111-111111111111')<>1 then raise exception 'ROW_COUNT_CHANGED';end if;
 end$$;
 select 'TOWER_V3_SERVER_QA_OK' as result;
+
+-- The new pack offers only three NEW variants; historic 0..7 remain valid.
+do $$declare e jsonb;
+begin
+ e:=jsonb_build_object('id','ffffffff-ffff-4fff-8fff-fffffffffff1','sectionId','2x2x2',
+ 'variant',2,'rotation',0,'x',5,'y',0,'z',5,'geometryVersion','17.5.2');
+ perform private.tower_v3_canonical(e);
+ begin
+  perform private.tower_v3_canonical(jsonb_set(e,'{variant}','3'::jsonb));
+  raise exception 'NEW_VARIANT_OUTSIDE_CATALOG_ACCEPTED';
+ exception when others then if sqlerrm not like '%INVALID_V3_SECTION%' then raise;end if;end;
+ perform private.tower_v3_canonical(jsonb_set(jsonb_set(e,'{variant}','7'::jsonb),'{geometryVersion}','"17.5.1"'::jsonb));
+ perform private.tower_v3_canonical(jsonb_set(jsonb_set(e,'{variant}','7'::jsonb),'{geometryVersion}','"17.5.0"'::jsonb));
+end$$;

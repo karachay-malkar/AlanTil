@@ -4,7 +4,7 @@
 Every visible triangle belongs to an authored source rock.  Coarse course seeds
 are only an initialization: final locations are selected by mesh occupancy,
 then uncovered *real* 3-D pockets are filled with real small authored rocks.
-Outputs are deterministic, immutable GLBs (40 sections and offline joint tiles).
+Outputs are deterministic, immutable GLBs (15 approved new sections and offline joint tiles).
 """
 import argparse
 import hashlib
@@ -14,55 +14,86 @@ import numpy as np
 import scipy.ndimage as ndi
 from scipy.spatial import ConvexHull
 import trimesh
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 SIZES = [(1, 1, 1), (2, 2, 2), (2, 2, 3), (2, 3, 4), (4, 4, 4)]
 CELL = 0.25
 # One voxel is 12.5 mm; this is an offline measurement grid, NOT a visual block.
 VOXEL = 0.0125
-VERSION = '17.5.1'
-ASSET_GENERATION = '17_5_1'
-VARIANTS = 8
-# Warm natural shades distinguish the individual real rocks in deep joints.
-STONE_MATERIAL = None
+VERSION = '17.5.2'
+ASSET_GENERATION = '17_5_2'
+VARIANTS = 3
+# One regional stone family, with restrained weathering variation per authored mesh.
+# Previous source atlas is an unwrap of individual stones: projecting its raw
+# colour pattern produced identical dark "rosettes" on every face. Never reuse
+# the atlas directly as a tiled diffuse texture.
+STONE_MATERIALS = {}
 MATERIAL_SOURCE = Path('assets/tower/rock_07/textures')
-PALETTE = np.array([[161, 151, 132, 255], [172, 158, 141, 255],
-                    [145, 142, 130, 255], [178, 166, 147, 255],
-                    [155, 148, 137, 255], [169, 155, 133, 255]], dtype=np.uint8)
+PALETTE = np.array([[157, 151, 138, 255], [145, 143, 136, 255],
+                    [168, 155, 139, 255], [151, 147, 137, 255]], dtype=np.uint8)
 
 
-def stone_pbr_material():
-    """Embed genuine project-authored rock diffuse/normal/ARM maps in GLBs.
+def stone_pbr_material(colour):
+    """Reprocess existing licensed source texture into quiet mineral detail.
 
-    Source assets already ship with AlanTil (rock_07). Cropping avoids using
-    that model's UV atlas layout on unrelated FBX rock meshes. Mirrored tiling
-    makes the extracted photographic mineral patch repeat without cut seams.
+    Subtract the atlas' low-frequency light/dark spots before tiling, which
+    stops copied photographic motifs masquerading as stains on many stones.
+    Subtle source-derived grain and a limited natural palette remain. This is
+    authored-material processing during the OFFLINE bake, not game generation.
     """
-    global STONE_MATERIAL
-    if STONE_MATERIAL is not None:
-        return STONE_MATERIAL
-    def tile(source):
-        crop = Image.open(MATERIAL_SOURCE / source).convert('RGB').crop((350, 560, 570, 780))
-        a=np.asarray(crop)
-        a=np.concatenate([a,a[:,::-1,:]],axis=1)
-        a=np.concatenate([a,a[::-1,:,:]],axis=0)
-        return Image.fromarray(a.astype(np.uint8),'RGB').resize((256,256),Image.Resampling.LANCZOS)
-    diffuse = tile('rock_07_diff_1k.jpg')
-    # Avoid the orange-brown tint of the source atlas and match Caucasus stone.
-    diffuse = ImageEnhance.Color(diffuse).enhance(.38)
-    diffuse = ImageEnhance.Brightness(diffuse).enhance(1.22)
-    normal = tile('rock_07_nor_gl_1k.jpg')
-    arm = np.asarray(tile('rock_07_arm_1k.jpg')).copy()
-    pbr = np.zeros_like(arm)
+    key = tuple(int(x) for x in colour[:3])
+    if key in STONE_MATERIALS:
+        return STONE_MATERIALS[key]
+    original = Image.open(MATERIAL_SOURCE / 'rock_07_diff_1k.jpg').convert('RGB')
+    original_normal = Image.open(MATERIAL_SOURCE / 'rock_07_nor_gl_1k.jpg').convert('RGB')
+    original_arm = Image.open(MATERIAL_SOURCE / 'rock_07_arm_1k.jpg').convert('RGB')
+    # The source region is already a photographed stone, not a synthetic noise map.
+    crop = (350, 560, 570, 780)
+    def tile(im):
+        a=np.asarray(im.crop(crop).resize((128,128),Image.Resampling.LANCZOS))
+        return Image.fromarray(np.concatenate([
+            np.concatenate([a,a[:,::-1]],axis=1),
+            np.concatenate([a[::-1],a[::-1,::-1]],axis=1)],axis=0).astype(np.uint8),'RGB')
+    sampled=ImageOps.grayscale(tile(original))
+    grain=np.asarray(sampled,dtype=float)-np.asarray(sampled.filter(ImageFilter.GaussianBlur(17)),dtype=float)
+    undertone=np.asarray(sampled.filter(ImageFilter.GaussianBlur(4)),dtype=float)-np.asarray(sampled.filter(ImageFilter.GaussianBlur(30)),dtype=float)
+    mineral=np.clip(grain*.58+undertone*.28,-33,33)
+    base=np.asarray(key,dtype=float)
+    rgb=np.clip(base[None,None,:]+mineral[...,None]*np.array([1.00,.98,.94]),0,255).astype(np.uint8)
+    diffuse=Image.fromarray(rgb,'RGB')
+    normal=tile(original_normal)
+    arm=np.asarray(tile(original_arm)).copy()
+    pbr=np.zeros_like(arm)
     pbr[:,:,0]=arm[:,:,0]
-    pbr[:,:,1]=np.clip(.60*arm[:,:,1]+98,165,248).astype(np.uint8)
+    pbr[:,:,1]=np.clip(.52*arm[:,:,1]+111,175,250).astype(np.uint8)
     pbr[:,:,2]=0
-    STONE_MATERIAL=trimesh.visual.material.PBRMaterial(
-        name='AlanTil authored natural stone PBR',
-        baseColorFactor=[238,235,228,255],baseColorTexture=diffuse,
-        normalTexture=normal,metallicFactor=0.0,roughnessFactor=.96,
+    material=trimesh.visual.material.PBRMaterial(
+        name='AlanTil mountain stone - weathered mineral',
+        baseColorFactor=[255,255,255,255],baseColorTexture=diffuse,
+        normalTexture=normal,metallicFactor=0.0,roughnessFactor=.94,
         metallicRoughnessTexture=Image.fromarray(pbr,'RGB'))
-    return STONE_MATERIAL
+    STONE_MATERIALS[key]=material
+    return material
+
+
+
+def authored_prefab_scene(parts, name):
+    """Merge by mineral shade, preserving THREE draw batching AND PBR variation.
+
+    A single trimesh.concatenate(parts) silently uses the FIRST material for
+    every authored stone. Grouping into four prebuilt meshes preserves all
+    source-derived mineral colours without hundreds of mobile draw calls.
+    """
+    groups={}
+    for item in parts:
+        groups.setdefault(item.metadata['shade'],[]).append(item)
+    scene=trimesh.Scene(base_frame='world')
+    for i,(colour,pieces) in enumerate(sorted(groups.items())):
+        merged=trimesh.util.concatenate(pieces)
+        merged.visual.material=stone_pbr_material(colour)
+        scene.add_geometry(merged,geom_name=f'mineral-shade-{i}',node_name=f'stone-group-{i}')
+    scene.metadata['name']=name
+    return scene
 
 
 def normalized_rocks(source):
@@ -118,8 +149,9 @@ def make_mesh(model, size, center, colour, angles=(0, 0, 0)):
     for face_idx, face in enumerate(result.faces):
         axis=int(np.argmax(np.abs(normals[face_idx])))
         axes=((1,2),(0,2),(0,1))[axis]
-        uv[face]=result.vertices[face][:,axes]*3.6+offset
-    result.visual=trimesh.visual.texture.TextureVisuals(uv=uv,material=stone_pbr_material())
+        uv[face]=result.vertices[face][:,axes]*2.4+offset
+    result.visual=trimesh.visual.texture.TextureVisuals(uv=uv,material=stone_pbr_material(colour))
+    result.metadata['shade']=tuple(int(x) for x in colour[:3])
     return result
 
 
@@ -197,8 +229,8 @@ def coarse_positions(dimensions, rng):
         yield size / 2 - size / 2, size * .96
         return
     dense_pattern = max(dimensions) >= 4
-    layers = max(1, int(np.ceil(size[1] / (.18 if dense_pattern else .21))))
-    heights = rng.uniform(.82, 1.18, layers)
+    layers = max(1, int(np.ceil(size[1] / (.205 if dense_pattern else .22))))
+    heights = rng.uniform(.67, 1.37, layers)
     heights = heights / heights.sum() * size[1]
     ycuts = np.concatenate(([0], heights.cumsum()))
     for row in range(layers):
@@ -208,14 +240,40 @@ def coarse_positions(dimensions, rng):
         dz = (.25 if row % 2 else .28) if dense_pattern else (.27 if row % 2 else .32)
         num_x = max(1, int(np.ceil(size[0] / dx)))
         num_z = max(1, int(np.ceil(size[2] / dz)))
-        xweights = rng.uniform(.74, 1.26, num_x)
-        zweights = rng.uniform(.74, 1.26, num_z)
+        xweights = rng.uniform(.58, 1.48, num_x)
+        zweights = rng.uniform(.58, 1.48, num_z)
         xcuts = np.concatenate(([0], (xweights / xweights.sum() * size[0]).cumsum()))
         zcuts = np.concatenate(([0], (zweights / zweights.sum() * size[2]).cumsum()))
         for x0, x1 in zip(xcuts[:-1], xcuts[1:]):
             for z0, z1 in zip(zcuts[:-1], zcuts[1:]):
-                origin = np.array([(x0 + x1) / 2, (ymin + ymax) / 2, (z0 + z1) / 2]) - size / 2
+                origin = np.array([(x0 + x1) / 2, (ymin + ymax) / 2 + rng.uniform(-.038,.038), (z0 + z1) / 2]) - size / 2
                 yield origin, np.array([x1 - x0, ymax - ymin, z1 - z0])
+
+
+def proposed_orientations(model, rng):
+    """Align the authored long axis horizontally before trying to fit the rock.
+
+    The old baker tested yaw only, thus Rock003/009/010/... were always
+    vertical. These are all RIGID rotations, not deformed/scaled cubes.
+    """
+    aspect=model['aspect']
+    axes=sorted(range(3),key=lambda i:aspect[i],reverse=True)
+    elongated=aspect[axes[0]]>aspect[axes[1]]*1.22
+    candidates=[]
+    if elongated and axes[0]==1:
+        # Source long axis Y -> world horizontal X or Z.
+        for yaw in (0.,np.pi/2):
+            candidates.extend([(np.pi/2,yaw,0.),(-np.pi/2,yaw,0.),
+                               (0.,yaw,np.pi/2),(0.,yaw,-np.pi/2)])
+    else:
+        candidates.extend([(0.,yaw,0.) for yaw in (0.,np.pi/2)])
+        if not elongated and axes[0]==1:
+            candidates.extend([(np.pi/2,0.,0.),(0.,0.,np.pi/2)])
+    # A rare vertically placed stone can act as a key, but it is not selected
+    # systematically, and faces a strong penalty in the packing score.
+    if elongated and rng.random()<.09:
+        candidates.append((0.,0.,0.))
+    return candidates,elongated
 
 
 def add_primary_stones(models, volume, rng, stones, ids):
@@ -227,14 +285,15 @@ def add_primary_stones(models, volume, rng, stones, ids):
     """
     base = list(coarse_positions(volume.count / 20, rng))
     eligible = [i for i, m in enumerate(models) if .24 <= m['fullness'] <= .75]
+    stats={"elongated":0,"horizontal":0,"upright":0,"neutral":0,"placed":0}
     for center, nominal in base:
         candidates = []
         model_ids = (eligible if len(base) == 1 else
                      rng.choice(eligible, size=min(7, len(eligible)), replace=False))
         for model_id in model_ids:
             model = models[int(model_id)]
-            for orientation in range(2):
-                angles = (0., orientation * np.pi / 2, 0.)
+            orientations,elongated = proposed_orientations(model,rng)
+            for angles in orientations:
                 matrix = rotation_matrix(angles)
                 oriented = np.abs(matrix) @ model['aspect']
                 # A SINGLE scale preserves source character. Tiny anisotropy only
@@ -261,16 +320,27 @@ def add_primary_stones(models, volume, rng, stones, ids):
                     continue
                 # Penalise cuboid-like silhouettes and excessive contacts.
                 naturalness = 1. - model['fullness']
-                score = cells * (1. + .95 * naturalness) - overlap * 3.5
+                physical=np.abs(matrix) @ (size*model['aspect'])
+                horizontal=physical[1] <= max(physical[0],physical[2])*.86
+                # Real elongated stones rest on their long side; don't reward
+                # additional voxel fill from a standing vertical column.
+                orientation_penalty = cells*1.1 if elongated and not horizontal else 0
+                score = cells * (1. + .95 * naturalness) - overlap * 3.5 - orientation_penalty
                 score += float(rng.uniform(-.3, .3))
-                candidates.append((score, int(model_id), size, center_try, angles, exam))
+                candidates.append((score, int(model_id), size, center_try, angles, exam,elongated,horizontal))
         if not candidates:
             continue
-        _, model_id, chosen_size, chosen_center, angles, exam = max(candidates, key=lambda c:c[0])
+        _, model_id, chosen_size, chosen_center, angles, exam,elongated,horizontal = max(candidates, key=lambda c:c[0])
+        stats['placed']+=1
+        if elongated:
+            stats['elongated']+=1
+            stats['horizontal' if horizontal else 'upright']+=1
+        else:stats['neutral']+=1
         volume.add(exam)
         stones.append(make_mesh(models[model_id], chosen_size, chosen_center,
                                 PALETTE[int(rng.integers(len(PALETTE)))], angles))
         ids.append(model_id+1)
+    return stats
 
 
 def insert_authored_rubble(models, volume, rng, stones, ids, max_pieces=400,
@@ -408,15 +478,14 @@ def make_section(models, size, variant):
     rng = np.random.default_rng(seed)
     volume = Occupancy(size)
     parts, source_ids = [], []
-    add_primary_stones(models, volume, rng, parts, source_ids)
+    primary_stats=add_primary_stones(models, volume, rng, parts, source_ids)
     base_count = len(parts)
     primary_solid = volume.solid.copy()
     fill_iterations = insert_authored_rubble(models, volume, rng, parts, source_ids,
                                             max_pieces=min(150, max(50, round(np.prod(size) * 4))))
     shell_added=insert_surface_chinking(models,volume,rng,parts,source_ids,
             max_pieces=min(92, max(12, round(np.prod(size)*2))))
-    result = trimesh.util.concatenate(parts)
-    result.metadata['name'] = f'{size[0]}x{size[1]}x{size[2]}-v{variant}'
+    result = authored_prefab_scene(parts, f'{size[0]}x{size[1]}x{size[2]}-v{variant}')
     # Visual fraction from actual outside-looking rays. A pebble recessed
     # behind a front-face hole is visible, even when it misses the first voxel.
     facing_total=facing_rubble=0
@@ -434,7 +503,8 @@ def make_section(models, size, variant):
                'visibleRubbleShare': round(facing_rubble / max(1, facing_total), 4),
                'surfaceCoverage': [round(s, 4) for s in volume.surface_coverage()],
                'mainRocks': base_count, 'rubbleRocks': len(parts) - base_count,
-               'fillIterations': fill_iterations, 'faceChinkingRocks': shell_added}
+               'fillIterations': fill_iterations, 'faceChinkingRocks': shell_added,
+               'orientation':primary_stats}
     return result, source_ids, len(parts), quality
 
 
@@ -460,7 +530,7 @@ def make_seam(models, axis):
         scale = .105 + (j % 3) * .014
         dims = np.full(3, scale)
         rocks.append(make_mesh(model, dims, p, PALETTE[int(rng.integers(0, len(PALETTE)))]))
-    return trimesh.util.concatenate(rocks)
+    return authored_prefab_scene(rocks, 'prepared-joint-'+axis)
 
 
 def main():
@@ -475,10 +545,15 @@ def main():
     models = normalized_rocks(source)
     manifest = {'version': VERSION, 'cellMeters': CELL,
                 'legacyVersion': '17.4.1',
-                'previousVersion': '17.5.0',
-                'previousVariants': {('x'.join(map(str,d))): [
+                'previousVersion': '17.5.1',
+                'historicVariants': {'17.5.0': {('x'.join(map(str,d))): [
                     '/assets/tower/prefabs/section-' + 'x'.join(map(str,d)) + f'-v{i}-17_5.glb'
-                    for i in range(VARIANTS)] for d in SIZES},
+                    for i in range(8)] for d in SIZES}},
+                'previousConnectors': {axis: '/assets/tower/prefabs/joint-'+axis+'-17_5_1.glb' for axis in ('x','y','z','corner')},
+                'historicConnectors': {'17.5.0': {axis: '/assets/tower/prefabs/joint-'+axis+'-17_5.glb' for axis in ('x','y','z','corner')}},
+                'previousVariants': {('x'.join(map(str,d))): [
+                    '/assets/tower/prefabs/section-' + 'x'.join(map(str,d)) + f'-v{i}-17_5_1.glb'
+                    for i in range(8)] for d in SIZES},
                 'materialSource': 'assets/tower/rock_07/textures',
                 'legacyConnectors': {axis: '/assets/tower/prefabs/joint-' + axis + '.glb'
                                      for axis in 'xyz'},
@@ -499,7 +574,7 @@ def main():
             filename = f'section-{key}-v{variant}-{ASSET_GENERATION}.glb'
             mesh.export(output / filename, file_type='glb')
             variants.append({'file': '/assets/tower/prefabs/' + filename, 'rocks': count,
-                             'sourceModels': sorted(set(ids)), 'faces': len(mesh.faces), 'quality': quality})
+                             'sourceModels': sorted(set(ids)), 'faces': sum(len(g.faces) for g in mesh.geometry.values()), 'quality': quality})
             print(key, variant, quality, flush=True)
         manifest['types'].append({'id': key, 'size': list(dims), 'variants': variants,
                                   'jointInterface': 'shared-recessed-25cm-v1', 'priceSilver': None})
@@ -509,7 +584,7 @@ def main():
             seam = make_seam(models, axis)
             seam.export(output / filename, file_type='glb')
             manifest['connectors'][axis] = {'file': '/assets/tower/prefabs/' + filename,
-                                            'faces': len(seam.faces),
+                                            'faces': sum(len(g.faces) for g in seam.geometry.values()),
                                             'interface': 'shared-recessed-25cm-v1'}
         (output / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('Completed pre-baked authored-rock construction assets.', flush=True)

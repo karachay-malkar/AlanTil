@@ -1,10 +1,10 @@
-/** AlanTil 17.5.1 — free, permanent prefabricated masonry, server-authoritative V3.
+/** AlanTil 17.5.2 — free, permanent prefabricated masonry, server-authoritative V3.
  * Old purchased V1/V2 elements remain read only. No local construction drafts.
  */
-import {createTowerScene} from './prefab-scene.js?v=17.5.1';
+import {createTowerScene} from './prefab-scene.js?v=17.5.2';
 import {PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3} from './repository.js?v=17.5.1';
+import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3} from './repository.js?v=17.5.2';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const historicDraftKey=id=>'alantil_tower_prefab_draft_17_4_'+(id||'guest');
@@ -82,7 +82,7 @@ export async function mount(context,params={}){
   const hit=s.previewHit||s.scene?.getAimHit?.();
   if(!hit)return null;
   const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
-   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:'17.5.1'};
+   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:'17.5.2'};
   return positionAgainst(item,hit);
  }
  let previewSequence=0;
@@ -143,7 +143,7 @@ export async function mount(context,params={}){
     variant:original.variant,rotation:original.rotation,x:original.x,y:original.y,z:original.z,
     geometryVersion:original.geometryVersion||'17.4.1'};
    if(s.sections.some(b=>b.id===section.id))continue;
-   if(!['17.5.0','17.5.1'].includes(section.geometryVersion)||!uuid.test(section.id)||
+   if(!['17.5.0','17.5.1','17.5.2'].includes(section.geometryVersion)||!uuid.test(section.id)||
       !validatePrefabPlacement(blocks(),section).ok||
       !validateSectionJoints(s.sections,section,s.scene.manifest).ok){remains.push(original);continue;}
    try{
@@ -153,7 +153,7 @@ export async function mount(context,params={}){
    }catch{remains.push(original);await refreshServer();}
   }
   if(remains.length!==old.length){
-   if(remains.length)localStorage.setItem(key,JSON.stringify({format:3,localDraft:true,assetVersion:'17.5.1',sections:remains}));
+   if(remains.length)localStorage.setItem(key,JSON.stringify({format:3,localDraft:true,assetVersion:'17.5.2',sections:remains}));
    else localStorage.removeItem(key);
    await redraw();
   }
@@ -192,7 +192,7 @@ export async function mount(context,params={}){
  on('[data-cancel]','click',cancel);
  on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;void preview();});
  on('[data-variant]','click',()=>{if(s.mode!=='placing')return;
-  const count=s.scene?.manifest?.types?.find(t=>t.id===s.type)?.variants?.length||8;
+  const count=s.scene?.manifest?.types?.find(t=>t.id===s.type)?.variants?.length||3;
   s.variant=(s.variant+1)%count;void preview();
  });
  on('[data-confirm]','click',()=>{

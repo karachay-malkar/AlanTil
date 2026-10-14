@@ -12,8 +12,8 @@ const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q)
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
- const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
- if(manifest.version!=='17.5.1')throw new Error('Неподдерживаемая версия секций');
+ const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.2').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
+ if(manifest.version!=='17.5.2')throw new Error('Неподдерживаемая версия секций');
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
  const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -55,7 +55,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const v=block.geometryVersion||manifest.version;
   const url=v===manifest.version?t.variants[block.variant]?.file:
     v===manifest.previousVersion?manifest.previousVariants?.[block.sectionId]?.[block.variant]:
-    v===manifest.legacyVersion?manifest.legacyVariants?.[block.sectionId]?.[block.variant]:null;
+    v===manifest.legacyVersion?manifest.legacyVariants?.[block.sectionId]?.[block.variant]:
+    manifest.historicVariants?.[v]?.[block.sectionId]?.[block.variant]||null;
   if(!url)throw new TypeError('Unknown prefab variant/version');
   // Query version changes with every rebuilt prefab pack: stale HTTP/PWA
   // cache must never silently return the earlier porous rock sections.
