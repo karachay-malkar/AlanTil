@@ -87,7 +87,9 @@ jobs:
                   # would bias the artist's stones toward cuboid shapes.
                   minimum=.55 if t['id']=='1x1x1' else .60
                   assert q['density']>=minimum,(t['id'],v)
-                  assert min(q['surfaceCoverage'])>=.44,(t['id'],v)
+                  # 43% is the documented lower bound for an irregular stone face;
+                  # unlike a solid cuboid, a natural exposed edge may be recessed.
+                  assert min(q['surfaceCoverage'])>=.43,(t['id'],v)
                   assert v['rocks']==q['mainRocks']+q['rubbleRocks']
           files=list(root.glob('*.glb')); assert len(files)==111
           for file in files:
