@@ -20,8 +20,8 @@ SIZES = [(1, 1, 1), (2, 2, 2), (2, 2, 3), (2, 3, 4), (4, 4, 4)]
 CELL = 0.25
 # One voxel is 12.5 mm; this is an offline measurement grid, NOT a visual block.
 VOXEL = 0.0125
-VERSION = '17.5.0'
-ASSET_GENERATION = '17_5'
+VERSION = '17.5.1'
+ASSET_GENERATION = '17_5_1'
 VARIANTS = 8
 # Warm natural shades distinguish the individual real rocks in deep joints.
 STONE_MATERIAL = None
@@ -226,7 +226,7 @@ def add_primary_stones(models, volume, rng, stones, ids):
     final rock. No stone is modified inside the game.
     """
     base = list(coarse_positions(volume.count / 20, rng))
-    eligible = [i for i, m in enumerate(models) if .27 <= m['fullness'] <= .80]
+    eligible = [i for i, m in enumerate(models) if .24 <= m['fullness'] <= .75]
     for center, nominal in base:
         candidates = []
         model_ids = (eligible if len(base) == 1 else
@@ -257,11 +257,11 @@ def add_primary_stones(models, volume, rng, stones, ids):
                 if exam is None:
                     continue
                 cells, overlap, *_ = exam
-                if overlap / cells > .18:
+                if overlap / cells > .26:
                     continue
                 # Penalise cuboid-like silhouettes and excessive contacts.
                 naturalness = 1. - model['fullness']
-                score = cells * (1. + .45 * naturalness) - overlap * 3.5
+                score = cells * (1. + .95 * naturalness) - overlap * 3.5
                 score += float(rng.uniform(-.3, .3))
                 candidates.append((score, int(model_id), size, center_try, angles, exam))
         if not candidates:
@@ -274,7 +274,7 @@ def add_primary_stones(models, volume, rng, stones, ids):
 
 
 def insert_authored_rubble(models, volume, rng, stones, ids, max_pieces=400,
-                           model_ids=None, max_diameter=.16, min_void=.021):
+                           model_ids=None, max_diameter=.24, min_void=.034):
     """Fill residual *measured* voids; no preset seam co-ordinates or cubes.
 
     Largest-free-sphere search gives candidate centres; actual authored hulls
@@ -300,7 +300,9 @@ def insert_authored_rubble(models, volume, rng, stones, ids, max_pieces=400,
         selected = peak_voxels[int(rng.integers(len(peak_voxels)))]
         center = (selected + .5) * volume.step - volume.box / 2
         # Very large open pockets can accept more substantial authored stones.
-        diameter = min(max_diameter, max_radius * 1.7)
+        diameter = min(max_diameter, max_radius * 2.3)
+        if diameter < .105:
+            break
         best = None
         for model_id in rng.choice(small_ids, size=5, replace=False):
             model = models[int(model_id)]
@@ -308,14 +310,14 @@ def insert_authored_rubble(models, volume, rng, stones, ids, max_pieces=400,
                 angles = (float(rng.uniform(-.17, .17)),
                           float(angle * np.pi / 2 + rng.uniform(-.4, .4)),
                           float(rng.uniform(-.17, .17)))
-                size = diameter * rng.uniform(.77, 1.08, size=3)
+                size = diameter * rng.uniform(.92, 1.06, size=3)
                 margin = np.minimum(center + volume.box / 2, volume.box / 2 - center) - .001
                 if np.any(margin <= .014):
                     continue
                 rotated_halfsize = np.abs(rotation_matrix(angles)) @ (size * model['aspect'] / 2)
                 fit = min(1., float(np.min(margin / np.maximum(rotated_halfsize, 1e-8))))
                 size *= fit
-                if np.any(size * model['aspect'] < .019):
+                if np.max(size*model['aspect']) < .10 or np.max(size*model['aspect']) > .255:
                     continue
                 exam = volume.evaluate(model, size, center, angles)
                 if exam is None:
@@ -349,19 +351,21 @@ def insert_surface_chinking(models, volume, rng, stones, ids, max_pieces=100):
     All objects are transformed authored 3D rocks. Surface candidates are
     accepted using the same volume intersection test as the core filler.
     """
-    chosen_models = [20, 23, 24, 25, 27, 28, 29]
+    chosen_models = [11, 15, 18, 20, 23, 24, 25, 27, 28, 29]
     occupied_shell = 0
     for it in range(max_pieces):
         face_candidates = []
         for axis in range(3):
             for end in (0, -1):
-                face = np.take(volume.solid, end, axis=axis)
+                depth = min(4, volume.count[axis])
+                indices = range(depth) if end == 0 else range(volume.count[axis]-depth,volume.count[axis])
+                face = np.any(np.take(volume.solid,list(indices),axis=axis),axis=axis)
                 free = np.argwhere(~face)
                 if len(free) < 5:
                     continue
                 # Select coherent exterior voids, not arbitrary empty edge voxels.
                 clear=ndi.distance_transform_edt(np.pad(~face,1,constant_values=False))[1:-1,1:-1]
-                maxima=np.argwhere(clear>=max(1.5,float(clear.max())*.72))
+                maxima=np.argwhere((clear>=1.3)&(clear<=7.5))
                 if len(maxima):face_candidates.append((float(clear.max())**2,axis,end,maxima))
         if not face_candidates:
             break
@@ -374,17 +378,22 @@ def insert_surface_chinking(models, volume, rng, stones, ids, max_pieces=100):
             uv=available[int(rng.integers(len(available)))]
             model_id=int(rng.choice(chosen_models));model=models[model_id]
             angles=(float(rng.uniform(-.14,.14)),float(rng.choice([0, np.pi/2,np.pi,3*np.pi/2])),float(rng.uniform(-.14,.14)))
-            scale=float(rng.uniform(.075,.13))
+            scale=float(rng.uniform(.115,.225))
             size=scale*rng.uniform(.96,1.04,size=3)
             half=np.abs(rotation_matrix(angles)) @ (size*model['aspect']/2)
             center=np.zeros(3)
             for i,k in enumerate(other_axes):center[k]=(uv[i]+.5)*volume.step[k]-volume.box[k]/2
-            center[axis]=(volume.box[axis]/2-half[axis]-.001)*(1 if end==-1 else -1)
+            center[axis]=(volume.box[axis]/2-half[axis]-.014)*(1 if end==-1 else -1)
             center=np.clip(center,-volume.box/2+half+.001,volume.box/2-half-.001)
             exam=volume.evaluate(model,size,center,angles)
             if exam is None:continue
             voxels,collision,*_=exam
             if collision/voxels>.13:continue
+            # A chinking stone must be seated in a real pocket, not glued to a facade.
+            region, mask = exam[2], exam[3]
+            existing = volume.solid[region]
+            contact = ndi.binary_dilation(mask,iterations=2) & existing & ~mask
+            if int(contact.sum()) < max(2,int(voxels*.012)):continue
             volume.add(exam)
             stones.append(make_mesh(model,size,center,PALETTE[int(rng.integers(len(PALETTE)))],angles))
             ids.append(model_id+1);occupied_shell+=1;found=True;break
@@ -405,7 +414,7 @@ def make_section(models, size, variant):
     fill_iterations = insert_authored_rubble(models, volume, rng, parts, source_ids,
                                             max_pieces=min(150, max(50, round(np.prod(size) * 4))))
     shell_added=insert_surface_chinking(models,volume,rng,parts,source_ids,
-            max_pieces=min(145, max(18, round(np.prod(size)*3))))
+            max_pieces=min(92, max(12, round(np.prod(size)*2))))
     result = trimesh.util.concatenate(parts)
     result.metadata['name'] = f'{size[0]}x{size[1]}x{size[2]}-v{variant}'
     # Visual fraction from actual outside-looking rays. A pebble recessed
@@ -448,7 +457,7 @@ def make_seam(models, axis):
         model_id = [20, 23, 25, 27, 28, 29][j]
         model = models[model_id]
         # Preserve natural proportions and limit the joint to a narrow strip.
-        scale = .065 + (j % 3) * .009
+        scale = .105 + (j % 3) * .014
         dims = np.full(3, scale)
         rocks.append(make_mesh(model, dims, p, PALETTE[int(rng.integers(0, len(PALETTE)))]))
     return trimesh.util.concatenate(rocks)
@@ -466,6 +475,10 @@ def main():
     models = normalized_rocks(source)
     manifest = {'version': VERSION, 'cellMeters': CELL,
                 'legacyVersion': '17.4.1',
+                'previousVersion': '17.5.0',
+                'previousVariants': {('x'.join(map(str,d))): [
+                    '/assets/tower/prefabs/section-' + 'x'.join(map(str,d)) + f'-v{i}-17_5.glb'
+                    for i in range(VARIANTS)] for d in SIZES},
                 'materialSource': 'assets/tower/rock_07/textures',
                 'legacyConnectors': {axis: '/assets/tower/prefabs/joint-' + axis + '.glb'
                                      for axis in 'xyz'},

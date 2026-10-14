@@ -1,82 +1,37 @@
-/* AlanTil 17.5 — the single prefabricated-section editor. No experimental modes. */
-.appShell[data-feature="tower"]{
- position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;
- --chrome-top-depth:0px;--chrome-bottom-depth:0px
-}
+/* AlanTil 17.5.1 — minimal prefab-only tower HUD, one mobile-safe control row. */
+.appShell[data-feature="tower"]{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;margin:0;--chrome-top-depth:0px;--chrome-bottom-depth:0px}
 .appShell[data-feature="tower"] .appHeader{z-index:10;pointer-events:none}
-.appShell[data-feature="tower"] .appHeaderCenter,
-.appShell[data-feature="tower"] .appHeaderTrailing{display:none}
+.appShell[data-feature="tower"] .appHeaderCenter,.appShell[data-feature="tower"] .appHeaderTrailing{display:none}
 .appShell[data-feature="tower"] .appHeaderLeading{pointer-events:auto}
-.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{
- min-width:44px;min-height:44px;border:1px solid var(--line);
- background:var(--surface-0);color:var(--text-1);box-shadow:var(--shadow-sm)
-}
-.appShell[data-feature="tower"] .appViewport::before,
-.appShell[data-feature="tower"] .appViewport::after{display:none}
-.appShell[data-feature="tower"] .appViewport,
-.appShell[data-feature="tower"] .appScreenHost{
- position:absolute;inset:0;min-width:0;width:100%;height:100%;max-width:none;overflow:hidden;padding:0
-}
+.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{min-width:44px;min-height:44px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);box-shadow:var(--shadow-sm)}
+.appShell[data-feature="tower"] .appViewport::before,.appShell[data-feature="tower"] .appViewport::after{display:none}
+.appShell[data-feature="tower"] .appViewport,.appShell[data-feature="tower"] .appScreenHost{position:absolute;inset:0;min-width:0;width:100%;height:100%;max-width:none;overflow:hidden;padding:0}
 .appShell[data-feature="tower"] .towerView{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;padding:0;margin:0}
 .towerGame{position:relative;isolation:isolate;width:100%;height:100dvh;min-height:0;max-height:100dvh;color:var(--text-1);font-family:var(--font-body);overflow:hidden}
 .towerGame [hidden]{display:none!important}
-.towerGame button:focus-visible,.towerGame input:focus-visible,.towerGame summary:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
+.towerGame button:focus-visible{outline:2px solid var(--accent-strong);outline-offset:2px}
 .towerGame button:disabled{opacity:var(--ui-button-disabled-opacity);cursor:default}
 .towerStage{position:absolute;inset:0;overflow:hidden;background:var(--surface-1)}
 .towerCanvas,.towerCanvas canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
-.towerCanvas canvas{cursor:crosshair}
-.towerHud{position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 8px);right:12px;display:flex;pointer-events:none}
-.towerPill{display:inline-flex;align-items:center;gap:10px;padding:7px 11px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);font:750 var(--text-technical)/1.2 var(--font-terminal);font-variant-numeric:tabular-nums}
-.towerBalance{gap:14px}.towerCoin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.towerCoin i{display:inline-block;width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:2px solid #90989c;background:radial-gradient(circle at 30% 26%,#fff,#bac3c8 64%,#818c94)}
-.towerCoin.gold i{border-color:#a77b2c;background:radial-gradient(circle at 28% 25%,#fff4b9,#dcb149 66%,#a87826)}
+.towerCanvas canvas{cursor:grab}
 .towerCamera{position:absolute;z-index:3;top:calc(var(--safe-top,0px) + 65px);right:12px}
 .towerCamera .iconBtn{width:44px;height:44px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);font-size:24px}
-.towerReadOnly{position:absolute;top:calc(var(--safe-top,0px) + 64px);left:12px;right:76px;max-width:410px;line-height:1.4;white-space:normal;pointer-events:none}
-.towerSide{position:absolute;z-index:5;left:50%;bottom:max(10px,var(--safe-bottom,0px));transform:translateX(-50%);width:min(850px,calc(100% - 16px));max-height:calc(100% - 160px);display:flex;flex-direction:column;min-width:0;padding:6px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--surface-0);box-shadow:var(--shadow-md,var(--shadow-sm))}
-.towerCatalogToggle{display:flex;align-items:center;justify-content:center;align-self:center;width:140px;min-height:32px;gap:5px}
-.towerCatalogContent{display:flex;flex-direction:column;gap:7px;min-width:0;margin-top:5px;max-height:min(37dvh,290px);overflow-x:hidden;overflow-y:auto;scrollbar-width:thin}
-.towerCatalog{display:flex;align-items:stretch;gap:6px;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding:3px 2px 5px;touch-action:pan-x}
-.towerCatalog .towerItem{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:104px;min-height:90px;padding:6px 4px;text-align:center;scroll-snap-align:start;background:var(--surface-0);border:1px solid var(--line);color:var(--text-1);box-shadow:none}
-.towerCatalog .towerItem[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent-strong)}
-.towerItemIcon{display:grid;place-items:center;flex:0 0 auto;width:42px;height:30px;font-size:24px;color:var(--text-2)}
-.towerItemName{max-width:100%;font:800 var(--text-technical)/1.2 var(--font-body);white-space:nowrap}
-.towerPrice{max-width:100%;font:600 var(--text-technical)/1.1 var(--font-body);color:var(--text-2);white-space:nowrap}
-.towerTool{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
-.towerTool .btn{min-height:38px}
-.towerDimensions{text-align:center;font:650 var(--text-technical)/1.25 var(--font-body);color:var(--text-2)}
-.towerPrefabMore{margin-inline:4px;padding-top:5px;border-top:1px solid var(--line)}
-.towerPrefabMore summary{display:inline-flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;min-height:32px}
-.towerPrefabMore summary::-webkit-details-marker{display:none}
-.towerPrefabMore[open]{max-height:180px;overflow-y:auto}
-.towerPrefabMore[open]>:not(summary){margin-block:7px}
-.towerPrefabHelp{font:600 var(--text-technical)/1.4 var(--font-body);color:var(--text-2)}
-.towerPosition{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.towerPosition label{display:grid;gap:4px;font:650 var(--text-technical)/1.1 var(--font-body)}
-.towerPosition input{width:100%;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface-component);color:var(--text-1);font:600 var(--text-button)/1.2 var(--font-body);padding:7px}
-.towerActionBar{position:absolute;z-index:6;left:50%;bottom:calc(var(--tower-dock-height,180px) + max(15px,var(--safe-bottom,0px)));transform:translateX(-50%);width:min(560px,calc(100% - 26px));display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
-.towerActionBar>*{pointer-events:auto}
-.towerQuickTools{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
-.towerQuickTools .btn{min-height:44px;padding:7px 12px;white-space:nowrap}
-.towerActions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;width:100%}
-.towerActionBar .towerAction{min-height:44px;flex:0 1 auto;max-width:100%;white-space:normal}
-.towerActionBar .towerAction[data-confirm]{min-width:195px}
-.towerStatus,.towerSelected{max-width:100%;padding:6px 9px;background:var(--surface-0);border:1px solid var(--line);border-radius:var(--radius-sm);font:650 var(--text-technical)/1.3 var(--font-body);color:var(--text-2);text-align:center}
-.towerStatus[data-kind="error"]{color:var(--danger)}
-@media(max-width:749px){
- .towerHud{top:calc(var(--safe-top,0px) + 7px);right:9px}
- .towerBalance{gap:9px}.towerPill{padding:7px 9px}
- .towerCoin i{width:13px;height:13px;flex-basis:13px}
- .towerCamera{top:calc(var(--safe-top,0px) + 65px);right:9px}
- .towerSide{width:calc(100% - 12px);max-height:calc(100% - 145px)}
- .towerCatalog .towerItem{width:82px;min-height:80px}
- .towerActionBar{width:calc(100% - 16px);bottom:calc(var(--tower-dock-height,165px) + max(10px,var(--safe-bottom,0px)))}
- .towerQuickTools .btn{min-height:42px}
- .towerActionBar .towerAction[data-confirm]{min-width:160px}
-}
-@media(max-height:590px){.towerCatalogContent{max-height:33dvh}.towerSide{max-height:calc(100% - 90px)}.towerActionBar{bottom:calc(var(--tower-dock-height,120px) + 6px)}}
-@media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-
-/* The 25-cm surface grid is a WebGL overlay only while placing sections. */
+.towerSide{position:absolute;z-index:5;left:12px;right:68px;bottom:calc(max(10px,var(--safe-bottom,0px)));max-width:710px;transform:translateY(calc(100% + 24px));opacity:0;visibility:hidden;pointer-events:none;border-radius:var(--radius-lg);border:1px solid var(--line);background:var(--surface-0);box-shadow:var(--shadow-md,var(--shadow-sm));padding:5px;transition:transform 230ms cubic-bezier(.2,.8,.2,1),opacity 185ms ease,visibility 230ms}
+.towerSide.is-open{transform:translateY(0);opacity:1;visibility:visible;pointer-events:auto}
+.towerCatalogContent{overflow:hidden}
+.towerCatalog{display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin;padding:2px;touch-action:pan-x}
+.towerCatalog .towerItem{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:73px;min-height:55px;padding:5px 9px;text-align:center;scroll-snap-align:start;background:var(--surface-0);border:1px solid var(--line);color:var(--text-1);box-shadow:none}
+.towerItemIcon{font-size:17px;line-height:1;color:var(--text-2)}
+.towerItemName{font:750 var(--text-technical)/1.1 var(--font-body);white-space:nowrap}
+.towerGame .towerIconAction{display:grid;place-items:center;width:46px;height:46px;min-width:46px;min-height:46px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface-0);box-shadow:var(--shadow-sm);font-size:26px;font-weight:700;color:var(--text-1);padding:0}
+.towerGame [data-hammer]{position:absolute;z-index:8;right:12px;bottom:max(12px,var(--safe-bottom,0px));font-size:25px}
+.towerPlacementBar,.towerSelectionBar{position:absolute;z-index:7;bottom:max(13px,var(--safe-bottom,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;max-width:calc(100% - 83px)}
+.towerPlacementBar .towerIconAction:first-child{background:var(--accent-soft);border-color:var(--accent-strong)}
+.towerSelectionBar .towerIconAction{color:var(--danger)}
+.towerToast{position:absolute;z-index:11;left:50%;top:calc(var(--safe-top,0px) + 116px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 30px);background:var(--surface-0);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:var(--shadow-md,var(--shadow-sm));padding:8px 12px;font:600 var(--text-technical)/1.3 var(--font-body);text-align:center}
+.towerGame[data-mode="placing"] .towerSide,.towerGame[data-mode="saving-place"] .towerSide{pointer-events:none}
+.towerGame[data-mode="saving-place"] .towerPlacementBar .towerIconAction,.towerGame[data-mode="saving-remove"] .towerSelectionBar .towerIconAction{opacity:.5;pointer-events:none}
 .towerCanvas[data-grid-visible="true"] canvas{cursor:crosshair}
-.towerCanvas[data-grid-visible="false"] canvas{cursor:grab}
+@media(max-width:749px){.towerCamera{right:9px}.towerSide{left:8px;right:64px}.towerGame [data-hammer]{right:8px}.towerPlacementBar{left:calc((100% - 56px)/2);gap:5px}.towerGame .towerIconAction{width:44px;height:44px;min-width:44px;min-height:44px}.towerCatalog .towerItem{min-width:70px}}
+@media(max-width:350px){.towerPlacementBar{gap:3px}.towerGame .towerIconAction{width:40px;height:44px;min-width:40px}}
+@media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

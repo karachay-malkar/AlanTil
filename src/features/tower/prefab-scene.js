@@ -12,10 +12,10 @@ const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q)
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
- const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.0').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
- if(manifest.version!=='17.5.0')throw new Error('Неподдерживаемая версия секций');
+ const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
+ if(manifest.version!=='17.5.1')throw new Error('Неподдерживаемая версия секций');
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
- const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='place',blocks=[],selected=null;
+ const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -39,10 +39,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
  const grid=new THREE.GridHelper(15,60,'#d9ead7','#879e84');grid.position.set(7.5,.008,7.5);
- grid.material.transparent=true;grid.material.opacity=.28;grid.visible=true;scene.add(grid);
+ grid.material.transparent=true;grid.material.opacity=.28;grid.visible=false;scene.add(grid);
  const faceGrid=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:'#bcefc0',transparent:true,opacity:.67,depthTest:false}));
  scene.add(faceGrid);faceGrid.visible=false;
  const preview=new THREE.Group();scene.add(preview);preview.visible=false;
+ const outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#e1be7b',depthTest:false,transparent:true,opacity:1}));outline.visible=false;outline.renderOrder=999;scene.add(outline);
  const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
  const previewContents=new THREE.Group();preview.add(previewContents);
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
@@ -51,8 +52,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
  async function getPrefab(block){
   const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
-  const legacy=(block.geometryVersion||manifest.legacyVersion)!==manifest.version;
-  const url=legacy?manifest.legacyVariants?.[block.sectionId]?.[block.variant]:t.variants[block.variant]?.file;
+  const v=block.geometryVersion||manifest.version;
+  const url=v===manifest.version?t.variants[block.variant]?.file:
+    v===manifest.previousVersion?manifest.previousVariants?.[block.sectionId]?.[block.variant]:
+    v===manifest.legacyVersion?manifest.legacyVariants?.[block.sectionId]?.[block.variant]:null;
   if(!url)throw new TypeError('Unknown prefab variant/version');
   // Query version changes with every rebuilt prefab pack: stale HTTP/PWA
   // cache must never silently return the earlier porous rock sections.
@@ -72,9 +75,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   group.position.copy(center(block));group.rotation.set(0,block.rotation*Math.PI/2,0);
  }
  function clearPrevious(){for(const group of rendered)surface.remove(group);rendered=[];targets.length=0;}
+ function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected&&x.type==='masonry_section');outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}}
  function prepareMesh(model,block){
   const group=model.clone(true);group.userData.block=block;
-  group.traverse(child=>{if(child.isMesh){child.material.side=THREE.DoubleSide;child.material.roughness=.96;child.material.metalness=0;child.userData.block=block;targets.push(child);}});
+  group.traverse(child=>{if(child.isMesh){child.material.side=THREE.DoubleSide;child.material.roughness=.96;child.material.metalness=0;child.userData.block=block;}});
   setPosition(group,block);return group;
  }
  function historicGeometry(block){
@@ -100,7 +104,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const d=[block.sx,block.sy,block.sz];const centre=center({...block,type:'historic'});
   mesh.position.copy(centre);mesh.scale.set(...d.map(v=>v*CELL));mesh.rotation.y=(block.rotation%4)*Math.PI/2;
   const group=new THREE.Group();group.add(mesh);group.userData.block=block;mesh.userData.block=block;group.userData.owned=owned;
-  targets.push(mesh);return group;
+  return group;
  }
  function cleanGhost(){for(const child of [...previewContents.children]){previewContents.remove(child);child.traverse(node=>{if(node.isMesh&&node.userData.ghostMaterial)node.material.dispose();});}activeGhost=null;}
  async function setPreview(block,valid=true){
@@ -136,11 +140,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     next.push(mesh);
    }
    if(disposed||generation!==rebuildGeneration)return;
-   clearPrevious();for(const g of next){surface.add(g);rendered.push(g);}
+   clearPrevious();for(const g of next){surface.add(g);rendered.push(g);g.traverse(node=>{if(node.isMesh&&node.userData.block)targets.push(node);});}
    container.dataset.prefabReady='true';container.dataset.prefabCount=String(owned.length);
    container.dataset.prefabJoints=String(resolved.pairs.length);
    container.dataset.prefabJointTiles=String(resolved.joints.length);
    container.dataset.prefabJointErrors=String(resolved.incompatible.length);
+   setSelected(selected);
   }catch(e){console.warn('Prefab build:',e);container.dataset.prefabError=String(e?.message||e);}
  }
  function showFaceGrid(hit){
@@ -198,8 +203,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    showFaceGrid(hit);
    onCameraChange({origin:camera.position.toArray(),forward:forward.toArray(),target:point.toArray(),hit});}
   renderer.render(scene,camera);}
- frame=requestAnimationFrame(draw);container.dataset.ready='true';container.dataset.gridVisible='true';
+ frame=requestAnimationFrame(draw);container.dataset.ready='true';container.dataset.gridVisible='false';
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length)fit();},setPreview,
+  setSelected,getAimHit(){const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;},home:fit,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();},
   pickAt:findHit,

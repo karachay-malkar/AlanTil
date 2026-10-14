@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {resolvePrefabJoints,validateSectionJoints,JOINT_INTERFACE} from '../packages/tower-game/prefab-joints.mjs';
-const manifest={version:'17.5.0',types:[{id:'2x2x2',jointInterface:JOINT_INTERFACE}],connectors:{x:{file:'/x.glb',interface:JOINT_INTERFACE},y:{file:'/y.glb',interface:JOINT_INTERFACE},z:{file:'/z.glb',interface:JOINT_INTERFACE},corner:{file:'/corner.glb',interface:JOINT_INTERFACE}}};
+const manifest={version:'17.5.1',previousVersion:'17.5.0',types:[{id:'2x2x2',jointInterface:JOINT_INTERFACE}],connectors:{x:{file:'/x.glb',interface:JOINT_INTERFACE},y:{file:'/y.glb',interface:JOINT_INTERFACE},z:{file:'/z.glb',interface:JOINT_INTERFACE},corner:{file:'/corner.glb',interface:JOINT_INTERFACE}}};
 const make=(id,x=0,y=0,z=0,geometryVersion='17.5.0')=>({id,x,y,z,sectionId:'2x2x2',type:'masonry_section',variant:0,rotation:0,geometryVersion});
 test('interface tiles are prebuilt and never scaled to fit arbitrary spans',()=>{
  const r=resolvePrefabJoints([make('a'),make('b',2,0,0),make('c',0,2,0)],manifest);

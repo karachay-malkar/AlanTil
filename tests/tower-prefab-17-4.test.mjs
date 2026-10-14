@@ -5,7 +5,7 @@ const root=new URL('../',import.meta.url);
 const manifest=()=>JSON.parse(readFileSync(new URL('assets/tower/prefabs/manifest.json',root),'utf8'));
 test('immutable 17.5 prefab library offers eight variants of five accepted sizes',()=>{
  const m=manifest();
- assert.equal(m.version,'17.5.0');assert.equal(m.legacyVersion,'17.4.1');
+ assert.equal(m.version,'17.5.1');assert.equal(m.legacyVersion,'17.4.1');
  assert.equal(m.cellMeters,.25);assert.equal(m.authoredModels,36);
  assert.deepEqual(m.types.map(e=>e.size),[[1,1,1],[2,2,2],[2,2,3],[2,3,4],[4,4,4]]);
  for(const type of m.types){

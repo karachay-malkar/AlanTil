@@ -12,6 +12,8 @@ on:
       - 'tests/tower-*'
       - 'scripts/qa/browser-tower-prefab-17-4.cjs'
       - 'tools/tower/**'
+      - 'supabase/migrations/*tower_v3*.sql'
+      - 'tests/sql/tower_v3*.sql'
       - '.github/workflows/tower-prefab-17-4.yml'
   workflow_dispatch:
 permissions:
@@ -74,7 +76,7 @@ jobs:
           root=pathlib.Path('assets/tower/prefabs')
           m=json.loads((root/'manifest.json').read_text())
           assert hashlib.sha256(pathlib.Path('assets/tower/source-original-36.glb').read_bytes()).hexdigest()==m['sourceSha256']
-          assert m['version']=='17.5.0'
+          assert m['version']=='17.5.1'
           assert len(m['types'])==5 and sum(len(t['variants']) for t in m['types'])==40
           for t in m['types']:
               for v in t['variants']:
@@ -83,7 +85,7 @@ jobs:
                   assert q['density']>=.61,(t['id'],v)
                   assert min(q['surfaceCoverage'])>=.44,(t['id'],v)
                   assert v['rocks']==q['mainRocks']+q['rubbleRocks']
-          files=list(root.glob('*.glb')); assert len(files)==67
+          files=list(root.glob('*.glb')); assert len(files)==111
           for file in files:
               mesh=trimesh.load(file,force='mesh')
               mesh.merge_vertices(merge_tex=True,merge_norm=True,digits_vertex=5)
@@ -111,6 +113,33 @@ jobs:
           name: AlanTil-17.5-prefab-browser
           path: /tmp/alantil-tower-prefab/*.png
           if-no-files-found: warn
+  prefab-v3-server-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: tower_ci_only
+          POSTGRES_DB: tower_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tower_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: tower_ci_only
+      PGDATABASE: tower_ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authoritative free V3 server and wallet-isolation contract
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014080000_tower_v3_free_prefab_sections.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
   complete-source-archive:
     needs: bake-prefabs
     runs-on: ubuntu-latest

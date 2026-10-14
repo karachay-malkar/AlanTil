@@ -1,184 +1,243 @@
-/** AlanTil 17.5: one prefab section editor. Legacy paid masonry is read-only.
- * Until section prices and transactional V3 RPC are approved, the sole editing
- * surface is an explicitly labelled local construction draft. No currency RPC.
+/** AlanTil 17.5.1 — free, permanent prefabricated masonry, server-authoritative V3.
+ * Old purchased V1/V2 elements remain read only. No local construction drafts.
  */
-import {createTowerScene} from './prefab-scene.js?v=17.5.0';
-import {PREFAB_TYPES,prefabSize,positionAgainst,validatePrefabPlacement,snapPrefabPosition,prefabBounds} from '../../../packages/tower-game/prefab-layout.mjs';
+import {createTowerScene} from './prefab-scene.js?v=17.5.1';
+import {PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {towerUserId,loadTower,loadTowerV2} from './repository.js?v=17.1.5';
+import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3} from './repository.js?v=17.5.1';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const memoryKey=id=>'alantil_tower_prefab_draft_17_4_'+(id||'guest');
-function restoreDraft(key){
+const historicDraftKey=id=>'alantil_tower_prefab_draft_17_4_'+(id||'guest');
+const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function historicDrafts(id){
  try{
-  const decoded=JSON.parse(localStorage.getItem(key)||'{}');
-  if(decoded?.format!==3||!Array.isArray(decoded.sections)||decoded.sections.length>250)return[];
-  const accepted=[];
-  for(const s of decoded.sections){
-   const section={id:s.id,type:'masonry_section',sectionId:s.sectionId,variant:s.variant,rotation:s.rotation,x:s.x,y:s.y,z:s.z,geometryVersion:s.geometryVersion||'17.4.1'};
-   if(typeof section.id!=='string'||section.id.length>100||!section.id||accepted.some(b=>b.id===section.id))return[];
-   const valid=validatePrefabPlacement(accepted,section,{allowLegacyOffGrid:true});
-   // Do not silently hide old 17.4 local drafts built under permissive support rules.
-   if(!valid.ok&&section.geometryVersion!=='17.4.1')return[];
-   if(!valid.ok&&section.geometryVersion==='17.4.1')section.legacyReadOnly=true;
-   accepted.push(section);
-  }
-  return accepted;
+  const data=JSON.parse(localStorage.getItem(historicDraftKey(id))||'null');
+  return data?.format===3&&Array.isArray(data.sections)?data.sections.slice(0,250):[];
  }catch{return[];}
 }
-function saveDraft(key,sections){
- const payload={format:3,localDraft:true,sections,assetVersion:'17.5.0'};
- localStorage.setItem(key,JSON.stringify(payload));
-}
-const isEditable=(params)=>!params?.userId||params.userId===towerUserId();
+const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
+const icon=(name,body)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${body}" title="${body}">${{
+ confirm:'✓',cancel:'×',rotate:'⟳',variant:'◇',remove:'⌫',hammer:'⚒'}[name]}</button>`;
 export async function mount(context,params={}){
  const controller=new AbortController();
- const s={controller,context,disposed:false,scene:null,blocks:[],draft:[],legacy:[],variant:0,type:PREFAB_TYPES[1].id,rotation:0,tool:'place',selected:null,preview:null,previewHit:null,locked:false,busy:false,userId:towerUserId(),draftKey:'',revision:0,canLeave:()=>true};active=s;
- s.draftKey=memoryKey(s.userId);
- s.draft=restoreDraft(s.draftKey);
+ const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
+  sections:[],legacy:[],revision:0,selected:null,type:PREFAB_TYPES[1].id,variant:0,rotation:0,
+  preview:null,previewHit:null,locked:false,busy:false,ready:false,canLeave:()=>true};
+ active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  context.shell.appShell.dataset.feature='tower';
  const root=context.root;
- root.innerHTML=`<section class="view towerView"><div class="towerGame">
-  <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Строительство готовыми каменными секциями"></div>
-   <div class="towerHud"><div class="towerPill towerBalance"><span class="towerCoin"><i></i><b data-silver>—</b></span><span class="towerCoin gold"><i></i><b data-gold>—</b></span></div></div>
-   <div class="towerCamera"><button type="button" class="iconBtn" data-camera="home" title="Вся башня" aria-label="Вся башня">⌂</button></div>
-   <div class="towerPill towerReadOnly" data-draft-notice>Готовые секции · локальный черновик без покупки</div>
+ root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
+  <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
+   <div class="towerCamera"><button type="button" class="iconBtn" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">⌂</button></div>
   </div>
-  <div class="towerActionBar is-visible">
-   <div class="towerQuickTools"><button type="button" class="btn actionCompact" data-rotate>Повернуть</button><button type="button" class="btn actionCompact" data-variant>Вариант 1/8</button><button type="button" class="btn actionCompact" data-cancel>Отмена</button></div>
-   <div class="towerSelected" data-selected hidden></div>
-   <div class="towerActions"><button type="button" class="btn actionPrimary towerAction" data-confirm disabled>Добавить в черновик</button><button type="button" class="btn towerAction" data-remove hidden>Убрать из черновика</button></div>
-   <div class="towerStatus" role="status" aria-live="polite" data-status hidden></div>
+  <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
+   ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
   </div>
-  <aside class="towerSide"><button type="button" class="btn actionCompact towerCatalogToggle is-open" data-catalog-toggle aria-expanded="true">Каталог⌄</button>
-   <div class="towerCatalogContent" data-catalog-body>
-    <div class="towerCatalog" role="group" aria-label="Пять размеров готовых каменных секций"></div>
-    <div class="towerTool"><button type="button" class="btn actionCompact" data-tool="place" aria-pressed="true">Строить</button><button type="button" class="btn actionCompact" data-tool="select" aria-pressed="false">Выбрать</button></div>
-    <div class="towerDimensions" data-sizing></div>
-    <details class="towerPrefabMore"><summary class="btn actionCompact">Ещё</summary>
-      <p class="towerPrefabHelp">Постройка в черновике хранится только на этом устройстве. Покупки будут доступны после утверждения стоимости секций и подключения серверного V3.</p>
-      <p class="towerPrefabHelp">Координаты сетки, 1 шаг = 25 см</p><div class="towerPosition">${['x','y','z'].map(a=>`<label>${a.toUpperCase()}<input type="number" data-coordinate="${a}" step="1" min="0" max="80" value="0"></label>`).join('')}</div>
-      <button type="button" class="btn actionCompact" data-refresh>Обновить старую башню</button>
-      <button type="button" class="btn actionCompact" data-clear>Очистить локальный черновик</button>
-      <p class="towerPrefabHelp" data-legacy-status>Ранее приобретённые элементы отображаются без изменений и списаний.</p>
-    </details>
-   </div>
+  <div class="towerSelectionBar" data-selection hidden role="toolbar" aria-label="Выделенная секция">
+   ${icon('remove','Удалить выбранную секцию')}
+  </div>
+  <aside class="towerSide is-open" data-side>
+   <div class="towerCatalogContent" data-catalog-body><div class="towerCatalog" role="group" aria-label="Каталог каменных секций"></div></div>
   </aside>
+  ${icon('hammer','Каталог секций')}
+  <div class="towerToast" data-toast role="status" aria-live="polite" hidden></div>
  </div></section>`;
- const q=x=>root.querySelector(x);
- const on=(sel,event,cb)=>q(sel)?.addEventListener(event,cb,{signal:controller.signal});
- const qStatus=q('[data-status]');
- function status(message='',error=false){if(s.disposed)return;qStatus.textContent=message;qStatus.hidden=!message;qStatus.dataset.kind=error?'error':'info';}
- function all(){return[...s.legacy,...s.draft];}
- function updateCatalog(){
-  q('.towerCatalog').innerHTML=PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-pressed="${String(spec.id===s.type)}"><span class="towerItemIcon" aria-hidden="true">◆</span><span class="towerItemName">${spec.id.replaceAll('x','×')}</span><span class="towerPrice">Готовая секция</span></button>`).join('');
-  q('[data-sizing]').textContent=`${s.type.replaceAll('x',' × ')} · ${prefabSize(s.type).map(v=>Math.round(v*25)).join(' × ')} см`;
-  q('[data-variant]').textContent=`Вариант ${s.variant+1}/${s.scene?.manifest?.types?.find(t=>t.id===s.type)?.variants?.length||8}`;
+ const q=sel=>root.querySelector(sel);
+ const on=(sel,type,cb)=>q(sel)?.addEventListener(type,cb,{signal:controller.signal});
+ const game=q('.towerGame'),side=q('[data-side]');
+ const catalog=q('.towerCatalog');
+ catalog.innerHTML=PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">◈</span><span class="towerItemName">[ ${spec.id.replaceAll('x','×')} ]</span></button>`).join('');
+ let toastTimer=null;
+ function message(text){
+  if(s.disposed)return;
+  const el=q('[data-toast]');el.textContent=text;el.hidden=false;
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{if(!s.disposed)el.hidden=true;},3200);
  }
- function coordinates(){for(const a of ['x','y','z'])q(`[data-coordinate="${a}"]`).value=String(s.preview?.[a]??0);}
- function candidate(){
-  if(s.manualPreview)return {...s.manualPreview,type:'masonry_section',sectionId:s.type,variant:s.variant,rotation:s.rotation,id:'__preview__',geometryVersion:'17.5.0'};
-  if(!s.previewHit)return null;
-  const current={id:'__preview__',type:'masonry_section',sectionId:s.type,variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:'17.5.0'};
-  const next=positionAgainst(current,s.previewHit);
-  // The authoritative old blocks are never changed by preview or placement.
-  return {...next,id:'__preview__'};
+ function blocks(){return[...s.legacy,...s.sections];}
+ function catalogVisible(show){
+  side.classList.toggle('is-open',!!show);
+  q('[data-hammer]').setAttribute('aria-expanded',String(!!show));
  }
- async function renderPreview(){
+ function mode(next){
+  s.mode=next;game.dataset.mode=next;
+  q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place';
+  q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
+  q('[data-confirm]').disabled=next!=='placing';
+  q('[data-remove]').disabled=next!=='selected';
+  if(next==='placing'||next==='saving-place')catalogVisible(false);
+  else if(next==='idle')catalogVisible(true);
+  s.scene?.setTool(next==='placing'||next==='saving-place'?'place':'select');
+  if(next!=='placing'&&next!=='saving-place')void s.scene?.setPreview(null);
+ }
+ function markSelection(id){
+  const chosen=s.sections.find(b=>b.id===id);
+  s.selected=chosen?.id||null;
+  s.scene?.setSelected(s.selected);
+  mode(chosen&&editable(s)?'selected':'idle');
+  if(chosen&&editable(s))catalogVisible(false);
+ }
+ function placement(){
+  if(s.mode!=='placing'&&s.mode!=='saving-place')return null;
+  const hit=s.previewHit||s.scene?.getAimHit?.();
+  if(!hit)return null;
+  const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
+   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:'17.5.1'};
+  return positionAgainst(item,hit);
+ }
+ let previewSequence=0;
+ async function preview(){
+  const generation=++previewSequence;
+  if(s.disposed||s.mode!=='placing'||!s.scene)return;
+  const candidate=placement();s.preview=candidate;
+  const placing=candidate&&validatePrefabPlacement(blocks(),candidate);
+  const joints=placing?.ok?validateSectionJoints(s.sections,candidate,s.scene.manifest):{ok:false};
+  const valid=!!placing?.ok&&joints.ok;
+  q('[data-confirm]').disabled=!valid||!editable(s)||s.busy;
+  await s.scene.setPreview(candidate,valid);
+  if(generation!==previewSequence||s.disposed)return;
+  q('[data-confirm]').dataset.valid=String(valid);
+ }
+ async function redraw(){
   if(s.disposed||!s.scene)return;
-  if(s.tool!=='place'||(!s.previewHit&&!s.manualPreview)){s.preview=null;q('[data-confirm]').disabled=true;await s.scene.setPreview(null);return;}
-  s.preview=candidate();const placement=validatePrefabPlacement(all(),s.preview);
-  const joint=placement.ok?validateSectionJoints(s.draft,s.preview,s.scene.manifest):{ok:false,reason:placement.reason};
-  const valid=placement.ok&&joint.ok;
-  q('[data-confirm]').disabled=!valid||!isEditable(params);
-  coordinates();await s.scene.setPreview(s.preview,valid);
-  if(!valid)status(joint.reason||placement.reason,true);else status('Сетка 25 см · можно добавить в локальный черновик');
+  await s.scene.setBlocks(blocks());
+  s.scene.setSelected(s.selected);
+  if(s.mode==='placing')await preview();
  }
- async function redraw(){if(s.disposed||!s.scene)return;await s.scene.setBlocks(all());await renderPreview();}
- async function choose(type){if(!PREFAB_TYPES.some(t=>t.id===type))return;s.type=type;s.variant%=s.scene?.manifest?.types?.find(t=>t.id===type)?.variants?.length||8;s.manualPreview=null;updateCatalog();await renderPreview();}
- function selectTool(tool){s.tool=tool;s.scene?.setTool(tool);for(const b of root.querySelectorAll('[data-tool]'))b.setAttribute('aria-pressed',String(b.dataset.tool===tool));
-  q('[data-confirm]').hidden=tool!=='place';q('[data-remove]').hidden=tool!=='select'||!s.selected||!s.draft.some(b=>b.id===s.selected);
-  q('[data-selected]').hidden=tool!=='select'||!s.selected;
-  void renderPreview();}
- function selectBlock(id){s.selected=id;const found=all().find(b=>b.id===id);
-  q('[data-selected]').hidden=!found;
-  q('[data-selected]').textContent=found?(found.type==='masonry_section'?`Секция ${found.sectionId} · ${found.geometryVersion==='17.5.0'?'локальный черновик':'сохранённая предыдущая версия'}`:'Ранее оплаченный элемент · только просмотр'):'';
-  q('[data-remove]').hidden=!found||found.type!=='masonry_section'||!s.draft.some(b=>b.id===id)||found.geometryVersion!=='17.5.0'||!isEditable(params);
+ function begin(type){
+  if(!editable(s))return;
+  s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;
+  s.previewHit=s.scene?.getAimHit?.()||null;
+  s.scene?.setSelected(null);
+  mode('placing');void preview();
+ }
+ function cancel(){
+  ++previewSequence;s.preview=null;s.previewHit=null;s.selected=null;s.locked=false;
+  s.scene?.setSelected(null);mode('idle');
  }
  async function loadHistoric(){
   if(!s.userId)return;
   const target=params.userId||null;
-  const [oldV2,oldV1]=await Promise.allSettled([loadTowerV2(target),loadTower(target)]);
-  const values=[];
-  if(oldV2.status==='fulfilled'){
-   values.push(...oldV2.value.elements.map(x=>({...x,id:'historic-v2-'+x.id,legacy:true})));
-   s.revision=oldV2.value.revision;
-   q('[data-silver]').textContent=oldV2.value.silver;
-   q('[data-gold]').textContent=oldV2.value.gold;
-  }
-  if(oldV1.status==='fulfilled')values.push(...oldV1.value.elements.map(x=>({...x,id:'historic-v1-'+x.id,legacy:true})));
-  s.legacy=values;
-  q('[data-legacy-status]').textContent=`Ранее приобретённые элементы: ${values.length}. Данные V1/V2 не изменяются.`;
-  if(oldV1.status==='rejected'&&oldV2.status==='rejected')status('Не удалось получить старые сохранения; они не удалены.',true);
+  const [v2,v1]=await Promise.allSettled([loadTowerV2(target),loadTower(target)]);
+  const next=[];
+  if(v2.status==='fulfilled')next.push(...v2.value.elements.map(b=>({...b,id:'historic-v2-'+b.id,legacy:true})));
+  if(v1.status==='fulfilled')next.push(...v1.value.elements.map(b=>({...b,id:'historic-v1-'+b.id,legacy:true})));
+  s.legacy=next;
+  if(v2.status==='rejected'&&v1.status==='rejected')message('Не удалось загрузить ранее приобретённые элементы');
+ }
+ async function refreshServer(){
+  if(!s.userId){s.sections=[];s.revision=0;await redraw();return;}
+  const snapshot=await loadTowerV3(params.userId||null);
+  s.sections=snapshot.elements;s.revision=snapshot.revision;
   await redraw();
  }
- on('.towerCatalog','click',e=>{const el=e.target.closest('[data-section-id]');if(el)void choose(el.dataset.sectionId);});
- on('[data-catalog-toggle]','click',()=>{const body=q('[data-catalog-body]');body.hidden=!body.hidden;q('[data-catalog-toggle]').setAttribute('aria-expanded',String(!body.hidden));});
- on('[data-tool="place"]','click',()=>{s.selected=null;selectTool('place');});
- on('[data-tool="select"]','click',()=>{s.previewHit=null;selectTool('select');});
- on('[data-rotate]','click',()=>{s.rotation=(s.rotation+1)%4;void renderPreview();});
- on('[data-variant]','click',()=>{s.variant=(s.variant+1)%(s.scene?.manifest?.types?.find(t=>t.id===s.type)?.variants?.length||8);updateCatalog();void renderPreview();});
- on('[data-cancel]','click',()=>{s.previewHit=null;s.manualPreview=null;s.locked=false;status('');void renderPreview();});
- for(const axis of ['x','y','z'])on(`[data-coordinate="${axis}"]`,'change',()=>{
-  const p=s.preview||candidate();if(!p)return;
-  const value=Number(q(`[data-coordinate="${axis}"]`).value);if(!Number.isFinite(value))return;
-  s.manualPreview={...p,...snapPrefabPosition({...p,[axis]:value})};s.preview=s.manualPreview;
-  s.previewHit={position:[0,0,0],normal:{x:0,y:1,z:0}};s.locked=true;
-  void renderPreview();
- });
- on('[data-confirm]','click',async()=>{
-  if(s.busy||!isEditable(params)||!s.preview)return;
-  const section={...s.preview,id:crypto.randomUUID()};
-  const checked=validatePrefabPlacement(all(),section);
-  const joints=checked.ok?validateSectionJoints(s.draft,section,s.scene.manifest):{ok:false,reason:checked.reason};
-  if(!checked.ok||!joints.ok){status(joints.reason||checked.reason,true);return;}
-  s.busy=true;try{
-   const newDraft=[...s.draft,section];saveDraft(s.draftKey,newDraft);s.draft=newDraft;
-   s.locked=false;s.manualPreview=null;await redraw();status('Секция добавлена в локальный черновик. Монеты не списаны.');
-  }catch(error){status('Невозможно сохранить черновик: '+String(error?.message||error),true);}finally{s.busy=false;}
- });
- on('[data-remove]','click',async()=>{
-  if(s.busy||!s.selected||!isEditable(params)||s.draft.find(b=>b.id===s.selected)?.geometryVersion!=='17.5.0')return;
-  const updated=s.draft.filter(b=>b.id!==s.selected);
-  // Do not silently strand any upper sections.
-  if(updated.some((b,i)=>!validatePrefabPlacement([...s.legacy,...updated.filter((_,j)=>j!==i)],b,{allowLegacyOffGrid:true}).ok)){
-   status('Нельзя удалить опору: сначала уберите верхние секции.',true);return;
+ async function importHistoricDrafts(){
+  // One-time recovery only; never write new constructions into localStorage.
+  if(!s.userId||!editable(s))return;
+  const key=historicDraftKey(s.userId),old=historicDrafts(s.userId);
+  if(!old.length)return;
+  const remains=[];
+  const sorted=[...old].sort((a,b)=>(a.y??0)-(b.y??0));
+  for(const original of sorted){
+   const section={id:original.id,type:'masonry_section',sectionId:original.sectionId,
+    variant:original.variant,rotation:original.rotation,x:original.x,y:original.y,z:original.z,
+    geometryVersion:original.geometryVersion||'17.4.1'};
+   if(s.sections.some(b=>b.id===section.id))continue;
+   if(!['17.5.0','17.5.1'].includes(section.geometryVersion)||!uuid.test(section.id)||
+      !validatePrefabPlacement(blocks(),section).ok||
+      !validateSectionJoints(s.sections,section,s.scene.manifest).ok){remains.push(original);continue;}
+   try{
+    // Stable operation ID makes a retry idempotent even after connection loss.
+    const result=await mutateTowerV3({revision:s.revision,id:section.id,action:'place',section});
+    s.sections=result.elements;s.revision=result.revision;
+   }catch{remains.push(original);await refreshServer();}
   }
-  saveDraft(s.draftKey,updated);s.draft=updated;s.selected=null;selectBlock(null);await redraw();
+  if(remains.length!==old.length){
+   if(remains.length)localStorage.setItem(key,JSON.stringify({format:3,localDraft:true,assetVersion:'17.5.1',sections:remains}));
+   else localStorage.removeItem(key);
+   await redraw();
+  }
+ }
+ async function mutate(action,section=null,sectionId=null){
+  if(s.busy||!s.userId||!editable(s))return;
+  s.busy=true;mode(action==='place'?'saving-place':'saving-remove');
+  const operationId=crypto.randomUUID();
+  try{
+   const data=await mutateTowerV3({revision:s.revision,id:operationId,action,section,sectionId});
+   s.sections=data.elements;s.revision=data.revision;
+   s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
+   mode('idle');await redraw();
+  }catch(error){
+   const reason=String(error?.message||error);
+   if(reason.includes('REVISION_CONFLICT')){
+    try{await refreshServer();}catch{ /* server returned a conflict; keep original scene */ }
+   }
+   mode(action==='place'?'placing':'selected');
+   message(reason.includes('AUTH_')?'Необходимо войти в аккаунт':
+    reason.includes('SUPPORT')?'Нельзя удалить несущую секцию':
+    reason.includes('REVISION_CONFLICT')?'Башня изменилась. Выберите место снова.':
+    'Не удалось сохранить башню');
+   if(action==='place')await preview();
+  }finally{s.busy=false;if(s.mode==='placing')await preview();}
+ }
+ on('.towerCatalog','click',event=>{
+  const el=event.target.closest('[data-section-id]');if(el)begin(el.dataset.sectionId);
  });
- on('[data-clear]','click',async()=>{if(!isEditable(params))return;saveDraft(s.draftKey,[]);s.draft=[];s.selected=null;selectBlock(null);await redraw();status('Локальный черновик очищен; купленные элементы сохранены.');});
- on('[data-refresh]','click',()=>{void loadHistoric();});
+ on('[data-hammer]','click',()=>{
+  if(s.mode==='saving-place'||s.mode==='saving-remove')return;
+  if(s.mode==='placing')cancel();
+  if(s.mode==='selected'){markSelection(null);catalogVisible(true);return;}
+  catalogVisible(!side.classList.contains('is-open'));
+ });
+ on('[data-cancel]','click',cancel);
+ on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;void preview();});
+ on('[data-variant]','click',()=>{if(s.mode!=='placing')return;
+  const count=s.scene?.manifest?.types?.find(t=>t.id===s.type)?.variants?.length||8;
+  s.variant=(s.variant+1)%count;void preview();
+ });
+ on('[data-confirm]','click',()=>{
+  if(s.mode!=='placing'||!s.preview||q('[data-confirm]').disabled)return;
+  if(!s.userId){message('Для сохранения башни необходимо войти в аккаунт');return;}
+  const section={...s.preview,id:crypto.randomUUID()};
+  if(!validatePrefabPlacement(blocks(),section).ok||!validateSectionJoints(s.sections,section,s.scene.manifest).ok)return;
+  void mutate('place',section,null);
+ });
+ on('[data-remove]','click',()=>{
+  if(s.mode!=='selected'||!s.selected)return;
+  const id=s.selected,remaining=s.sections.filter(b=>b.id!==id);
+  if(remaining.some((b,i)=>!validatePrefabPlacement([...s.legacy,...remaining.filter((_,j)=>j!==i)],b).ok)){
+   message('Нельзя удалить опору для верхних секций');return;
+  }
+  void mutate('remove',null,id);
+ });
  on('[data-camera]','click',()=>s.scene?.home());
  window.addEventListener('keydown',e=>{
   if(s.disposed||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
-  if(e.key==='Escape'){s.previewHit=null;void renderPreview();}if(e.key.toLowerCase()==='r'){s.rotation=(s.rotation+1)%4;void renderPreview();}
+  if(e.key==='Escape'){cancel();return;}
+  if(e.key.toLowerCase()==='r'&&s.mode==='placing'){s.rotation=(s.rotation+1)%4;void preview();}
  },{signal:controller.signal});
- const game=q('.towerGame'),dock=q('.towerSide');const observeDock=new ResizeObserver(()=>game.style.setProperty('--tower-dock-height',Math.ceil(dock.getBoundingClientRect().height)+'px'));observeDock.observe(dock);controller.signal.addEventListener('abort',()=>observeDock.disconnect(),{once:true});
  try{
   s.scene=await createTowerScene(q('.towerCanvas'),{
-   onPick(hit){s.previewHit=hit;s.manualPreview=null;s.locked=true;selectTool('place');void renderPreview();},
-   onSelection(id){selectBlock(id);},
-   onCameraChange(camera){if(s.disposed||s.locked||s.tool!=='place')return;
-    const nextHit=camera.hit||{position:camera.target,normal:{x:0,y:1,z:0}};
+   onPick(hit){if(s.mode!=='placing')return;s.previewHit=hit;s.locked=true;void preview();},
+   onSelection(id){if(s.mode==='idle'||s.mode==='selected')markSelection(id);},
+   onCameraChange(camera){if(s.mode!=='placing'||s.locked)return;
+    const hit=camera.hit||{position:camera.target,normal:{x:0,y:1,z:0}};
     const last=s.previewHit;
-    if(last&&last.block?.id===nextHit.block?.id&&last.position.every((v,i)=>Math.abs(v-nextHit.position[i])<.04))return;
-    s.previewHit=nextHit;void renderPreview();}
+    if(last&&last.block?.id===hit.block?.id&&last.position.every((v,i)=>Math.abs(v-hit.position[i])<.04))return;
+    s.previewHit=hit;void preview();}
   });
   if(s.disposed){s.scene.dispose();return;}
-  updateCatalog();await redraw();await loadHistoric();
-  if(params.userId&&!isEditable(params)){q('[data-draft-notice]').textContent='Башня другого игрока · только просмотр';q('[data-confirm]').disabled=true;}
- }catch(error){status('Не удалось загрузить библиотеку секций: '+String(error?.message||error),true);}
+  mode('idle');
+  await loadHistoric();
+  try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
+  await importHistoricDrafts();
+  if(params.userId&&!editable(s))catalogVisible(false);
+  s.ready=true;
+ }catch(error){message('Не удалось загрузить 3D-сцену');console.error(error);}
 }
 export function canLeave(){return active?.canLeave?.()??true;}
-export function unmount(){if(!active)return;active.disposed=true;active.controller.abort();active.scene?.dispose();if(active.context.shell.appShell.dataset.feature==='tower')active.context.shell.appShell.dataset.feature='practice';active=null;}
+export function unmount(){
+ if(!active)return;active.disposed=true;active.controller.abort();active.scene?.dispose();
+ if(active.context.shell.appShell.dataset.feature==='tower')active.context.shell.appShell.dataset.feature='practice';
+ active=null;
+}

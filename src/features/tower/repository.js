@@ -23,3 +23,24 @@ export async function mutateTowerV2(operation){return rpcV2('mutate_tower_v2',{
  p_element:operation.element||null,p_element_id:operation.elementId||null,
  p_currency:operation.currency||'silver'
 });}
+
+// V3 is the only writable format for prefabricated sections. It does not touch wallets.
+function normalizeV3(data){
+ if(data?.format!==3||!Array.isArray(data.elements)||!Number.isInteger(Number(data.revision)))
+  throw new Error('INVALID_V3_SNAPSHOT');
+ return {format:3,revision:Number(data.revision),elements:data.elements,replayed:!!data.replayed};
+}
+export async function loadTowerV3(userId=null){
+ const client=await getSupabaseClient();
+ const r=await client.rpc('get_tower_v3_snapshot',{p_user_id:userId});
+ if(r.error)throw r.error;
+ return normalizeV3(r.data);
+}
+export async function mutateTowerV3({revision,id,action,section=null,sectionId=null}){
+ const client=await getSupabaseClient();
+ const r=await client.rpc('mutate_tower_v3',{
+  p_revision:revision,p_operation_id:id,p_action:action,p_section:section,p_section_id:sectionId
+ });
+ if(r.error)throw r.error;
+ return normalizeV3(r.data);
+}

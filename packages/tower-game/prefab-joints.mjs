@@ -5,7 +5,7 @@ const EPS=1e-5;
 export function sectionAssetVersion(s,manifest){return s.geometryVersion??manifest.version;}
 export function sectionJointProfile(s,manifest){
  if(s.type!=='masonry_section')return null;
- if(sectionAssetVersion(s,manifest)!==manifest.version)return null;
+ if(![manifest.version,manifest.previousVersion].includes(sectionAssetVersion(s,manifest)))return null;
  return manifest.types.find(x=>x.id===s.sectionId)?.jointInterface||null;
 }
 export function compatibleSectionFaces(a,b,manifest){
