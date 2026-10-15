@@ -9,7 +9,8 @@ export const PREFAB_TYPES=Object.freeze([
  {id:'2x2x3',size:[2,2,3]},
  {id:'2x3x4',size:[2,3,4]},
  {id:'4x4x4',size:[4,4,4]},
- {id:'window-4x5x2',size:[4,5,2]}
+ {id:'window-4x5x2',size:[4,5,2]},
+ {id:'door-7x9x2',size:[7,9,2]}
 ].map(t=>Object.freeze({...t,size:Object.freeze(t.size)})));
 const byId=new Map(PREFAB_TYPES.map(t=>[t.id,t]));
 const EPS=1e-5;

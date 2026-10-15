@@ -1,5 +1,6 @@
 import {prefabBounds,touchingPrefabPairs} from './prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_JOINT_FILES} from './window-prefab.mjs';
+import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 /** Static 25-cm joint-tile resolver; no runtime mesh generation/deformation. */
 export const JOINT_INTERFACE='shared-recessed-25cm-v1';
 const EPS=1e-5;
@@ -7,6 +8,7 @@ export function sectionAssetVersion(s,manifest){return s.geometryVersion??manife
 export function sectionJointProfile(s,manifest){
  if(s.type!=='masonry_section')return null;
  if(s.sectionId===WINDOW_PREFAB_ID)return sectionAssetVersion(s,manifest)===WINDOW_PREFAB_VERSION?JOINT_INTERFACE:null;
+ if(s.sectionId===DOOR_PREFAB_ID)return sectionAssetVersion(s,manifest)===DOOR_PREFAB_VERSION?JOINT_INTERFACE:null;
  if(![manifest.version,manifest.previousVersion,...Object.keys(manifest.historicVariants||{})].includes(sectionAssetVersion(s,manifest)))return null;
  return manifest.types.find(x=>x.id===s.sectionId)?.jointInterface||null;
 }
@@ -28,6 +30,23 @@ export function windowStoneAtJoint(section,point){
  const localY=point[1]-bounds.min[1];
  return !(localX>1+EPS&&localX<3-EPS&&localY<4-EPS);
 }
+/** The wild stone door has two solid piers and a single stone lintel.
+ * The 3x8-cell central opening MUST NOT receive any joint rubble, including
+ * underneath a rotated or elevated door. Only the mesh of stones participates.
+ */
+export function doorStoneAtJoint(section,point){
+ if(section?.sectionId!==DOOR_PREFAB_ID)return true;
+ const bounds=prefabBounds(section);
+ const theta=(section.rotation||0)*Math.PI/2;
+ const dx=point[0]-(bounds.min[0]+bounds.max[0])/2;
+ const dz=point[2]-(bounds.min[2]+bounds.max[2])/2;
+ const localX=dx*Math.cos(theta)-dz*Math.sin(theta)+3.5;
+ const localY=point[1]-bounds.min[1];
+ return !(localX>2+EPS&&localX<5-EPS&&localY<8-EPS);
+}
+export function stoneAtJoint(section,point){
+ return windowStoneAtJoint(section,point)&&doorStoneAtJoint(section,point);
+}
 /** Contact between two baked 17.5 sections must resolve to pre-baked assets.
  * Legacy read-only stones never have their meshes modified by this resolver.
  */
@@ -38,8 +57,10 @@ export function resolvePrefabJoints(sections,manifest){
  for(const pair of pairs){
   const a=byId.get(pair.a),b=byId.get(pair.b);
   const involvesWindow=a.sectionId===WINDOW_PREFAB_ID||b.sectionId===WINDOW_PREFAB_ID;
+  const involvesDoor=a.sectionId===DOOR_PREFAB_ID||b.sectionId===DOOR_PREFAB_ID;
+  const involvesArchitectural=involvesWindow||involvesDoor;
   // Older 17.4.1 pieces never shared the newer prepared interface.
-  if(involvesWindow&&(sectionAssetVersion(a,manifest)===manifest.legacyVersion||
+  if(involvesArchitectural&&(sectionAssetVersion(a,manifest)===manifest.legacyVersion||
                      sectionAssetVersion(b,manifest)===manifest.legacyVersion))continue;
   if(sectionAssetVersion(a,manifest)===manifest.legacyVersion&&
      sectionAssetVersion(b,manifest)===manifest.legacyVersion){
@@ -55,7 +76,7 @@ export function resolvePrefabJoints(sections,manifest){
   const va=sectionAssetVersion(a,manifest),vb=sectionAssetVersion(b,manifest);
   const source=va===vb&&va===manifest.previousVersion?manifest.previousConnectors:
                va===vb&&manifest.historicConnectors?.[va]?manifest.historicConnectors[va]:null;
-  const spec=involvesWindow?
+  const spec=involvesArchitectural?
    {file:WINDOW_JOINT_FILES[pair.axis],interface:JOINT_INTERFACE}:
    source?.[pair.axis]?{file:source[pair.axis],interface:JOINT_INTERFACE}:manifest.connectors?.[pair.axis];
   if(!spec||spec.interface!==JOINT_INTERFACE||!spec.file){incompatible.push({...pair,reason:'Нет готового соединения'});continue;}
@@ -64,7 +85,7 @@ export function resolvePrefabJoints(sections,manifest){
   for(let u=Math.round(pair.min[axes[0]]);u<pair.max[axes[0]]-EPS;u++)
    for(let v=Math.round(pair.min[axes[1]]);v<pair.max[axes[1]]-EPS;v++){
     const p=[...pair.min];p[axes[0]]=u+.5;p[axes[1]]=v+.5;
-    if(windowStoneAtJoint(a,p)&&windowStoneAtJoint(b,p))
+    if(stoneAtJoint(a,p)&&stoneAtJoint(b,p))
      joints.push({a:pair.a,b:pair.b,axis:pair.axis,point:p,file:spec.file,profile:JOINT_INTERFACE});
    }
  }
@@ -78,12 +99,12 @@ export function resolvePrefabJoints(sections,manifest){
    if(!compatibleSectionFaces(byId.get(px.a),byId.get(px.b),manifest)||
       !compatibleSectionFaces(byId.get(pz.a),byId.get(pz.b),manifest))continue;
    const otherX=byId.get(px.a===middle.id?px.b:px.a),otherZ=byId.get(pz.a===middle.id?pz.b:pz.a);
-   const windowCorner=[middle,otherX,otherZ].some(s=>s.sectionId===WINDOW_PREFAB_ID);
-   const spec=windowCorner?{file:WINDOW_JOINT_FILES.corner,interface:JOINT_INTERFACE}:manifest.connectors?.corner;
+   const architecturalCorner=[middle,otherX,otherZ].some(s=>s.sectionId===WINDOW_PREFAB_ID||s.sectionId===DOOR_PREFAB_ID);
+   const spec=architecturalCorner?{file:WINDOW_JOINT_FILES.corner,interface:JOINT_INTERFACE}:manifest.connectors?.corner;
    if(!spec?.file||spec.interface!==JOINT_INTERFACE)continue;
    for(let y=Math.round(y0);y<y1-EPS;y++){
     const point=[px.min[0],y+.5,pz.min[2]];
-    if(![middle,otherX,otherZ].every(s=>windowStoneAtJoint(s,point)))continue;
+    if(![middle,otherX,otherZ].every(s=>stoneAtJoint(s,point)))continue;
     const key=point.join(':');if(dedupe.has(key))continue;dedupe.add(key);
     joints.push({a:middle.id,b:px.a===middle.id?px.b:px.a,axis:'corner',point,file:spec.file,profile:JOINT_INTERFACE});
    }

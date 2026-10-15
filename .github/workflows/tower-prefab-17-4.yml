@@ -5,14 +5,19 @@ on:
     paths:
       - 'assets/tower/prefabs/**'
       - 'assets/tower/source-original-36.glb'
+      - 'assets/tower/materials/**'
+      - 'assets/tower/source-materials/**'
       - 'packages/tower-game/**'
       - 'src/features/tower/**'
       - 'src/app/router.js'
       - 'src/shared/styles/lazy/tower.css'
       - 'tests/tower-*'
+      - 'tests/door-prefab.test.mjs'
+      - 'tests/window-prefab.test.mjs'
       - 'scripts/qa/browser-tower-prefab-17-4.cjs'
       - 'tools/tower/**'
       - 'supabase/migrations/*tower_v3*.sql'
+      - 'supabase/migrations/*tower_door*.sql'
       - 'tests/sql/tower_v3*.sql'
       - '.github/workflows/tower-prefab-17-4.yml'
   workflow_dispatch:
@@ -76,9 +81,11 @@ jobs:
         run: |
           node --check src/features/tower/index.js
           node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/rock-surface.js
+          node --check packages/tower-game/door-prefab.mjs
           node --check packages/tower-game/prefab-layout.mjs
           node --check packages/tower-game/prefab-joints.mjs
-          node --test tests/tower-*.test.mjs tests/window-prefab.test.mjs
+          node --test tests/tower-*.test.mjs tests/window-prefab.test.mjs tests/door-prefab.test.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -167,7 +174,10 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_fixture.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014080000_tower_v3_free_prefab_sections.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014130000_tower_v3_prefab_library_1752.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261015140000_tower_window_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261015221000_tower_door_prefab_176.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_door_integration.sql
   complete-source-archive:
     needs: bake-prefabs
     runs-on: ubuntu-latest

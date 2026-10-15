@@ -9,6 +9,8 @@ import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
 import {prefabBounds,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
+import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
+import {getRockSurface,applyRockSurface} from './rock-surface.js';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -18,6 +20,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
  // This additional architectural asset does not rewrite historic 17.5.2 entries.
  specs.set(WINDOW_PREFAB_ID,WINDOW_PREFAB_SPEC);
+ specs.set(DOOR_PREFAB_ID,DOOR_PREFAB_SPEC);
+ const stoneMaterial=await getRockSurface();
  const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
@@ -62,12 +66,27 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl));
    const [stone,wood]=await Promise.all([loaded.get(stoneUrl),loaded.get(woodUrl)]);
    const assembled=new THREE.Group();
-   assembled.add(stone.scene.clone(true));
+   const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);assembled.add(masonry);
    const frame=wood.scene.clone(true);
    // Aperture spans y=-.625..+.375; timber spans -0.50..+0.50.
    frame.position.y=-.125;
    assembled.add(frame);
    container.dataset.windowWoodReady='true';
+   return assembled;
+  }
+  if(block.sectionId===DOOR_PREFAB_ID){
+   if(block.geometryVersion!==DOOR_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported door prefab version');
+   const stoneUrl=`${DOOR_STONE_FILE}?v=${encodeURIComponent(DOOR_RENDER_VERSION)}`;
+   const woodUrl=`${DOOR_WOOD_FILE}?v=${encodeURIComponent(DOOR_RENDER_VERSION)}`;
+   if(!loaded.has(stoneUrl))loaded.set(stoneUrl,loader.loadAsync(stoneUrl));
+   if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl));
+   const [stone,wood]=await Promise.all([loaded.get(stoneUrl),loaded.get(woodUrl)]);
+   const assembled=new THREE.Group();
+   const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);assembled.add(masonry);
+   const carpentry=wood.scene.clone(true);
+   carpentry.traverse(node=>{if(node.isMesh)node.userData.alantilNonStone=true;});
+   assembled.add(carpentry);
+   container.dataset.doorWoodReady='true';
    return assembled;
   }
   const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
@@ -81,7 +100,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   // cache must never silently return the earlier porous rock sections.
   const versionedUrl=`${url}?v=${encodeURIComponent(manifest.version)}`;
   if(!loaded.has(versionedUrl))loaded.set(versionedUrl,loader.loadAsync(versionedUrl));
-  return (await loaded.get(versionedUrl)).scene;
+  const assembly=(await loaded.get(versionedUrl)).scene.clone(true);
+  return applyRockSurface(assembly,stoneMaterial);
  }
  async function getConnector(joint){
   const url=joint.file;if(!url)throw new TypeError('Unknown prebuilt joint');
@@ -89,7 +109,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   // cache must never silently return the earlier porous rock sections.
   const versionedUrl=`${url}?v=${encodeURIComponent(manifest.version)}`;
   if(!loaded.has(versionedUrl))loaded.set(versionedUrl,loader.loadAsync(versionedUrl));
-  return (await loaded.get(versionedUrl)).scene;
+  const assembly=(await loaded.get(versionedUrl)).scene.clone(true);
+  return applyRockSurface(assembly,stoneMaterial);
  }
  function setPosition(group,block){
   group.position.copy(center(block));group.rotation.set(0,block.rotation*Math.PI/2,0);
@@ -100,8 +121,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const group=model.clone(true);group.userData.block=block;
   group.traverse(child=>{if(!child.isMesh)return;
    // Never overwrite the wood, glass and forged iron PBR channels.
-   if(block.sectionId!==WINDOW_PREFAB_ID){
-    child.material.side=THREE.DoubleSide;child.material.roughness=.96;child.material.metalness=0;
+   if(block.sectionId!==WINDOW_PREFAB_ID&&block.sectionId!==DOOR_PREFAB_ID){
+    // Shared Rock Face 02 material is immutable across all prefabs.
    }
    child.userData.block=block;
   });
@@ -128,6 +149,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function historicItem(block){
   const {geometry,material,owned}=historicGeometry(block),mesh=new THREE.Mesh(geometry,material);
   const d=[block.sx,block.sy,block.sz];const centre=center({...block,type:'historic'});
+  // Apply the same Rock Face 02 surface to legacy read-only stones.
+  applyRockSurface(mesh,stoneMaterial);
   mesh.position.copy(centre);mesh.scale.set(...d.map(v=>v*CELL));mesh.rotation.y=(block.rotation%4)*Math.PI/2;
   const group=new THREE.Group();group.add(mesh);group.userData.block=block;mesh.userData.block=block;group.userData.owned=owned;
   return group;
@@ -160,7 +183,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    for(const joint of resolved.joints){
     const model=await getConnector(joint);
     if(disposed||generation!==rebuildGeneration)return;
-    const mesh=model.clone(true);mesh.position.set(...joint.point.map(v=>v*CELL));
+    const mesh=applyRockSurface(model.clone(true),stoneMaterial);mesh.position.set(...joint.point.map(v=>v*CELL));
     // Legacy v17.4.1 joins retain their original rendering; new tiles are never scaled.
     if(joint.legacyScale)mesh.scale.set(...joint.span.map((v,i)=>joint.axis==='xyz'[i]?1:v*CELL));
     next.push(mesh);
