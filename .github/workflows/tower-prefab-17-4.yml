@@ -36,7 +36,9 @@ jobs:
         run: python3 -m pip install numpy scipy trimesh pillow
       - name: Rebuild all prepared natural-rock prefabs and joints
         run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-prefab-library.py
-      - name: Bake bonded stone window with matching masonry PBR\n        run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-window-prefab.py\n      - name: Commit only generated GLB assets and their manifest
+      - name: Bake bonded stone window with matching masonry PBR
+        run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-window-prefab.py
+      - name: Commit only generated GLB assets and their manifest
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
