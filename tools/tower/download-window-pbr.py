@@ -12,7 +12,6 @@ import json
 import hashlib
 import re
 
-import cv2
 import numpy as np
 from PIL import Image
 
@@ -55,6 +54,7 @@ def image_map(slug, suffix, normal=False, rough=False):
     name = f'{slug}_{suffix}_1k.jpg'
     dest = OUT / name
     if ext == 'exr':
+        import cv2
         import tempfile
         with tempfile.NamedTemporaryFile(suffix='.exr') as temp:
             temp.write(raw)
