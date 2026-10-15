@@ -146,6 +146,26 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-count'),'4');
   await page.screenshot({path:path.join(evidence,'prefab-mobile.png')});
+  // Simulate a saved tower containing the wooden window with TWO touching wall
+  // sections. Verify the real WebGL renderer actually loads prepared stone
+  // joiners around the opening, not merely that the arithmetic accepts them.
+  await page.evaluate(()=>{
+   const make=(id,sectionId,x,y,z,variant,geometryVersion)=>({
+    id,type:'masonry_section',sectionId,x,y,z,rotation:0,variant,geometryVersion
+   });
+   localStorage.setItem('__QA_REMOTE_V3',JSON.stringify({format:3,revision:5,elements:[
+    make('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1','window-4x5x2',4,0,4,0,'17.6-window.1'),
+    make('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2','4x4x4',8,0,4,0,'17.5.2'),
+    make('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3','4x4x4',4,0,0,1,'17.5.2')
+   ]}));
+  });
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='3'&&
+   Number(document.querySelector('.towerCanvas')?.dataset.prefabJointTiles)>=12&&
+   document.querySelector('.towerCanvas')?.dataset.windowWoodReady==='true',{timeout:60000});
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-errors'),'0');
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-count'),'3');
+  await page.screenshot({path:path.join(evidence,'prefab-window-wall-joined-mobile.png')});
   assert.deepEqual(errors,[]);assert.deepEqual(responses,[]);
   console.log('TOWER_PREFAB_17_5_1_BROWSER_QA',JSON.stringify({revision:snapshot.revision,sections:snapshot.elements.length,webgl:true,selection:true,serverMock:true,noDraft:true}));
  }finally{await browser.close();server.kill();}
