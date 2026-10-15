@@ -40,7 +40,6 @@ jobs:
         run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-window-prefab.py
       - name: Download approved Poly Haven CC0 wood and iron surfaces
         run: |
-          python3 -m pip install opencv-python-headless
           mkdir -p /tmp/alantil-window-wood
           cp tools/tower/build-wooden-window.py /tmp/alantil-window-wood/build.py
           cp tools/tower/download-window-pbr.py /tmp/alantil-window-wood/fetch.py

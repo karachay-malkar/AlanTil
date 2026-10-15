@@ -51,7 +51,7 @@ def asset_map(slug, suffix, formats):
     raise RuntimeError(f'Poly Haven CC0 map unavailable: {slug}/{suffix}, candidates={all_urls[:12]}')
 
 def image_map(slug, suffix, normal=False, rough=False):
-    raw, ext = asset_map(slug, suffix, ('exr', 'png', 'jpg') if (normal or rough) else ('jpg','png'))
+    raw, ext = asset_map(slug, suffix, ('png', 'jpg', 'exr') if (normal or rough) else ('jpg','png'))
     name = f'{slug}_{suffix}_1k.jpg'
     dest = OUT / name
     if ext == 'exr':
