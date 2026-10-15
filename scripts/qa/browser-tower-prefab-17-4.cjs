@@ -43,7 +43,8 @@ fs.mkdirSync(evidence,{recursive:true});
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabReady==='true',{timeout:45000});
-  assert.equal(await page.locator('.towerItem').count(),5);
+  assert.equal(await page.locator('.towerItem').count(),6);
+  assert.equal(await page.locator('[data-section-id="window-4x5x2"]').count(),1);
   assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'idle');
   assert.equal(await page.locator('[data-placement]').isVisible(),false);
   assert.equal(await page.locator('[data-side]').evaluate(x=>x.classList.contains('is-open')),true);
@@ -89,6 +90,37 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(snapshot.elements.length,0);
   assert.equal(snapshot.revision,2);
   assert.equal(await page.locator('[data-side]').evaluate(x=>x.classList.contains('is-open')),true);
+  // Integration regression: the authored vertical window is a first-class
+  // sixteenth-century stone prefab, not a generated masonry cuboid. Its one
+  // variant, 90-degree rotation, GLB preview, V3 save and reload must work.
+  await page.locator('[data-section-id="window-4x5x2"]').click();
+  assert.equal(await page.locator('[data-variant]').isVisible(),false);
+  assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'placing');
+  if(await page.locator('[data-confirm]').isDisabled()){
+   const area=await page.locator('.towerCanvas canvas').boundingBox();
+   for(const [dx,dy] of [[.50,.61],[.50,.53],[.42,.65],[.56,.70],[.60,.56]]){
+    await page.mouse.click(area.x+area.width*dx,area.y+area.height*dy);
+    if(!(await page.locator('[data-confirm]').isDisabled()))break;
+   }
+  }
+  await page.waitForFunction(()=>!document.querySelector('[data-confirm]')?.disabled,{timeout:30000});
+  await page.locator('[data-rotate]').click();
+  await page.waitForFunction(()=>!document.querySelector('[data-confirm]')?.disabled,{timeout:30000});
+  await page.locator('[data-confirm]').click();
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='1' &&
+   document.querySelector('.towerGame')?.dataset.mode==='idle',{timeout:45000});
+  let windowSnapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
+  assert.equal(windowSnapshot.elements.length,1);
+  assert.equal(windowSnapshot.elements[0].sectionId,'window-4x5x2');
+  assert.equal(windowSnapshot.elements[0].geometryVersion,'17.6-window.1');
+  assert.equal(windowSnapshot.elements[0].variant,0);
+  assert.equal(windowSnapshot.elements[0].rotation,1);
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='1', {timeout:45000});
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-errors'),'0');
+  windowSnapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
+  assert.equal(windowSnapshot.elements[0].sectionId,'window-4x5x2');
+  // Next test scene below is independent from user data: server is mocked.
   // After testing create/reload/select/delete, render a PREPARED natural-rock
   // wall with corner and upper course as real WebGL visual evidence. This test
   // mock never writes to a user's Supabase account or their tower draft.
