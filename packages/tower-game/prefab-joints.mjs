@@ -1,4 +1,5 @@
 import {prefabBounds,touchingPrefabPairs} from './prefab-layout.mjs';
+import {WINDOW_PREFAB_ID} from './window-prefab.mjs';
 /** Static 25-cm joint-tile resolver; no runtime mesh generation/deformation. */
 export const JOINT_INTERFACE='shared-recessed-25cm-v1';
 const EPS=1e-5;
@@ -21,6 +22,9 @@ export function resolvePrefabJoints(sections,manifest){
  const joints=[],incompatible=[];
  for(const pair of pairs){
   const a=byId.get(pair.a),b=byId.get(pair.b);
+  // An ordinary seam connector could span the clear window opening.
+  // Its stone-to-stone joints remain authored until a matching corner part exists.
+  if(a.sectionId===WINDOW_PREFAB_ID||b.sectionId===WINDOW_PREFAB_ID)continue;
   if(sectionAssetVersion(a,manifest)===manifest.legacyVersion&&
      sectionAssetVersion(b,manifest)===manifest.legacyVersion){
    const file=manifest.legacyConnectors?.[pair.axis];

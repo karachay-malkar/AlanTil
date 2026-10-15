@@ -8,6 +8,7 @@ import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
 import {prefabBounds,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
+import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC} from '../../../packages/tower-game/window-prefab.mjs';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -15,6 +16,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.2').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
  if(manifest.version!=='17.5.2')throw new Error('Неподдерживаемая версия секций');
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
+ // This additional architectural asset does not rewrite historic 17.5.2 entries.
+ specs.set(WINDOW_PREFAB_ID,WINDOW_PREFAB_SPEC);
  const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
@@ -51,6 +54,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
  async function getPrefab(block){
+  if(block.sectionId===WINDOW_PREFAB_ID){
+   if(block.geometryVersion!==WINDOW_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported window prefab version');
+   const url=`${WINDOW_PREFAB_FILE}?v=${encodeURIComponent(WINDOW_PREFAB_VERSION)}`;
+   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
+   return (await loaded.get(url)).scene;
+  }
   const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
   const v=block.geometryVersion||manifest.version;
   const url=v===manifest.version?t.variants[block.variant]?.file:
