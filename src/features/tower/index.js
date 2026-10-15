@@ -65,6 +65,7 @@ export async function mount(context,params={}){
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place';
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing';
+  q('[data-variant]').hidden=s.type===WINDOW_PREFAB_ID;
   q('[data-remove]').disabled=next!=='selected';
   if(next==='placing'||next==='saving-place')catalogVisible(false);
   else if(next==='idle')catalogVisible(true);
