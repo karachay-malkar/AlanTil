@@ -48,6 +48,8 @@ jobs:
           cp /tmp/alantil-window-wood/AlanTil-wooden-window-preview-v2.glb assets/tower/prefabs/architectural/window-wood-v3.glb
       - name: Bake original-rock stone joiners for window-to-wall interfaces
         run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-window-joints.py
+      - name: Reassemble approved irregular-stone door assets (SHA-256 verified)
+        run: python3 tools/tower/assemble-door-glbs.py
       - name: Commit only generated GLB assets and their manifest
         run: |
           git config user.name 'github-actions[bot]'
