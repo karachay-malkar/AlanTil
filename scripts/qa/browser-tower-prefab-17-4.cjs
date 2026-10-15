@@ -120,6 +120,8 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-errors'),'0');
   windowSnapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
   assert.equal(windowSnapshot.elements[0].sectionId,'window-4x5x2');
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-window-wood-ready'),'true');
+  await page.screenshot({path:path.join(evidence,'prefab-window-wooden.png')});
   // Next test scene below is independent from user data: server is mocked.
   // After testing create/reload/select/delete, render a PREPARED natural-rock
   // wall with corner and upper course as real WebGL visual evidence. This test

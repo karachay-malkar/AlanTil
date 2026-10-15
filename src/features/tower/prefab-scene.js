@@ -8,7 +8,7 @@ import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
 import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
 import {prefabBounds,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC} from '../../../packages/tower-game/window-prefab.mjs';
+import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -56,9 +56,19 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  async function getPrefab(block){
   if(block.sectionId===WINDOW_PREFAB_ID){
    if(block.geometryVersion!==WINDOW_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported window prefab version');
-   const url=`${WINDOW_PREFAB_FILE}?v=${encodeURIComponent(WINDOW_PREFAB_VERSION)}`;
-   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
-   return (await loaded.get(url)).scene;
+   const stoneUrl=`${WINDOW_PREFAB_FILE}?v=${encodeURIComponent(WINDOW_RENDER_VERSION)}`;
+   const woodUrl=`${WINDOW_WOOD_FILE}?v=${encodeURIComponent(WINDOW_RENDER_VERSION)}`;
+   if(!loaded.has(stoneUrl))loaded.set(stoneUrl,loader.loadAsync(stoneUrl));
+   if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl));
+   const [stone,wood]=await Promise.all([loaded.get(stoneUrl),loaded.get(woodUrl)]);
+   const assembled=new THREE.Group();
+   assembled.add(stone.scene.clone(true));
+   const frame=wood.scene.clone(true);
+   // Aperture spans y=-.625..+.375; timber spans -0.50..+0.50.
+   frame.position.y=-.125;
+   assembled.add(frame);
+   container.dataset.windowWoodReady='true';
+   return assembled;
   }
   const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
   const v=block.geometryVersion||manifest.version;
@@ -88,7 +98,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected&&x.type==='masonry_section');outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}}
  function prepareMesh(model,block){
   const group=model.clone(true);group.userData.block=block;
-  group.traverse(child=>{if(child.isMesh){child.material.side=THREE.DoubleSide;child.material.roughness=.96;child.material.metalness=0;child.userData.block=block;}});
+  group.traverse(child=>{if(!child.isMesh)return;
+   // Never overwrite the wood, glass and forged iron PBR channels.
+   if(block.sectionId!==WINDOW_PREFAB_ID){
+    child.material.side=THREE.DoubleSide;child.material.roughness=.96;child.material.metalness=0;
+   }
+   child.userData.block=block;
+  });
   setPosition(group,block);return group;
  }
  function historicGeometry(block){

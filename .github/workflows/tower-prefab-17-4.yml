@@ -46,6 +46,8 @@ jobs:
           python3 /tmp/alantil-window-wood/fetch.py
           OPENBLAS_NUM_THREADS=1 python3 /tmp/alantil-window-wood/build.py
           cp /tmp/alantil-window-wood/AlanTil-wooden-window-preview-v2.glb assets/tower/prefabs/architectural/window-wood-v3.glb
+      - name: Bake original-rock stone joiners for window-to-wall interfaces
+        run: OPENBLAS_NUM_THREADS=1 python3 tools/tower/build-window-joints.py
       - name: Commit only generated GLB assets and their manifest
         run: |
           git config user.name 'github-actions[bot]'
@@ -74,7 +76,7 @@ jobs:
           node --check src/features/tower/prefab-scene.js
           node --check packages/tower-game/prefab-layout.mjs
           node --check packages/tower-game/prefab-joints.mjs
-          node --test tests/tower-*.test.mjs
+          node --test tests/tower-*.test.mjs tests/window-prefab.test.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'

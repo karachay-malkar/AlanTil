@@ -23,3 +23,11 @@ Rejected after inspection: Stone 01 (reddish quartz pebble), Wooden Ladder / Woo
 Derivatives were created with glTF Transform: weld, MeshoptSimplifier, dedup, prune. Stone simplification ratio 0.025, max error 0.05; timber ratio 0.25, max error 0.01. Timber GLB PBR maps resized to 512px JPEG quality 86. GLBs use standard geometry buffers without Draco/Meshopt compression decoder requirements.
 
 Runtime download total of the three GLBs is approximately 3.88 MB; originals are not intended to be eagerly loaded. Shader normals/PBR maps require browser scene validation; triangle counts alone do not establish frame rate on physical phones.
+
+### Approved AlanTil wooden window surface sources
+
+- [Wood Shutter](https://polyhaven.com/a/wood_shutter) — CC0 by Dimitrios Savva.
+- [Rust Coarse 01](https://polyhaven.com/a/rust_coarse_01) — CC0, rugged iron/rust.
+
+These materials are imported in the offline GitHub Actions baker, not by the
+browser at runtime. The Poly Haven API downloader identifies AlanTil-Offline-Baker/17.6.
