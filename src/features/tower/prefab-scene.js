@@ -83,12 +83,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl));
    const [stone,wood]=await Promise.all([loaded.get(stoneUrl),loaded.get(woodUrl)]);
    const assembled=new THREE.Group();
+   // Both authored door GLBs have their lowest point at ~-1.0m, whereas
+   // a 9-cell (2.25m) prefab must reach -1.125m. Seat BOTH assets together
+   // 12.5cm lower; moving only carpentry would break stone/wood contacts.
+   assembled.position.y=-.125;
    const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);assembled.add(masonry);
    const carpentry=wood.scene.clone(true);
-   // The authored wooden door has a bottom around y=-0.997m while the section
-   // is 2.25m high (local floor y=-1.125m). Lower just the carpentry and its
-   // sill to eliminate the floating gap, keeping the source GLB unchanged.
-   carpentry.position.y=-.125;
    carpentry.traverse(node=>{if(node.isMesh)node.userData.alantilNonStone=true;});
    assembled.add(carpentry);
    container.dataset.doorWoodReady='true';

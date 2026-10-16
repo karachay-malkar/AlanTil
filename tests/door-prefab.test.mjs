@@ -64,7 +64,7 @@ test('door models and converted source photographs are complete files',()=>{
  assert.match(sql,/WHEN 'door-7x9x2'/);assert.match(sql,/17\.6-door\.1/);
 });
 
-test('wooden door sill is seated close to the stone foundation',()=>{
+test('entire door section rests on the 2.25m placement grid floor',()=>{
  function meshMinHeight(file){
   const data=readFileSync(new URL(file.slice(1),root));
   assert.equal(data.toString('ascii',0,4),'glTF');
@@ -75,9 +75,17 @@ test('wooden door sill is seated close to the stone foundation',()=>{
  }
  const stoneBottom=meshMinHeight(DOOR_STONE_FILE);
  const woodBottom=meshMinHeight(DOOR_WOOD_FILE);
- const correctedDoorFloor=woodBottom-.125;
- assert.ok(Math.abs(correctedDoorFloor-stoneBottom)<.05,
-  'Door foundation not aligned: wood '+woodBottom+', stone '+stoneBottom+', corrected '+correctedDoorFloor);
+ // The original mesh bounds are both ~-1m, giving a visible 12.5cm air gap
+ // when centered in the 2.25m grid. Their shared parent must move down.
+ const correctedStoneBottom=stoneBottom-.125;
+ const correctedWoodBottom=woodBottom-.125;
+ assert.ok(Math.abs(correctedStoneBottom+1.125)<.025,
+  'Stone door floats: '+correctedStoneBottom);
+ assert.ok(Math.abs(correctedWoodBottom+1.125)<.025,
+  'Wood door floats: '+correctedWoodBottom);
+ assert.ok(Math.abs(correctedWoodBottom-correctedStoneBottom)<.025,
+  'Timber/stone joint separated');
  const code=readFileSync(new URL('src/features/tower/prefab-scene.js',root),'utf8');
- assert.match(code,/carpentry\.position\.y=-\.125/);
+ assert.match(code,/assembled\.position\.y=-\.125/);
+ assert.doesNotMatch(code,/carpentry\.position\.y=-\.125/);
 });
