@@ -1,0 +1,97 @@
+name: BalkariaStone v2.1 GPU texture bake
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/tower-stone-ktx2.yml'
+      - 'assets/tower/materials/balkaria-stone-v2.1/*.png'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: balkaria-stone-ktx2-17-2
+  cancel-in-progress: false
+jobs:
+  bake:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install official Khronos KTX-Software 4.4.2
+        run: |
+          curl --fail --location --retry 3 --output /tmp/ktx.deb \
+            https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Linux-x86_64.deb
+          sudo dpkg -i /tmp/ktx.deb
+          toktx --version
+      - name: Encode three production maps and optional detail normal
+        shell: bash
+        run: |
+          set -euo pipefail
+          P=assets/tower/materials/balkaria-stone-v2.1
+          toktx --t2 --genmipmap --encode uastc --uastc 2 --zcmp 18 --assign_oetf srgb \
+            "$P/BalkariaStone_BaseColor_2K.ktx2" "$P/BalkariaStone_BaseColor_2K.png"
+          for kind in Normal_OpenGL ORM DetailNormal_OpenGL; do
+            toktx --t2 --genmipmap --encode uastc --uastc 2 --zcmp 18 --assign_oetf linear \
+              "$P/BalkariaStone_${kind}_2K.ktx2" "$P/BalkariaStone_${kind}_2K.png"
+          done
+      - name: Install matching addon/transcoder bundle from official Three.js npm release
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix /tmp/alantil-three --no-save --ignore-scripts three@0.178.0
+          T=/tmp/alantil-three/node_modules/three/examples/jsm
+          L=src/vendor/three/addons/loaders
+          U=src/vendor/three/addons/utils
+          B=src/vendor/three/addons/libs/basis
+          mkdir -p "$L" "$U" "$B"
+          cp "$T/loaders/KTX2Loader.js" "$L/"
+          cp "$T/utils/WorkerPool.js" "$U/"
+          sed -i "s@from 'three'@from '../../three.module.js'@g" "$L/KTX2Loader.js"
+          cp "$T/libs/basis/basis_transcoder.js" "$T/libs/basis/basis_transcoder.wasm" "$B/"
+      - name: Verify compressed file headers and runtime dependencies
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          p=Path('assets/tower/materials/balkaria-stone-v2.1')
+          magic=b'\xabKTX 20\xbb\r\n\x1a\n'
+          for name in ('BaseColor','Normal_OpenGL','ORM','DetailNormal_OpenGL'):
+              f=p/f'BalkariaStone_{name}_2K.ktx2'
+              d=f.read_bytes()
+              assert d[:12] == magic, f'KTX2 header missing: {f}'
+              fmt,typ,w,h,depth,layers,faces,levels,supercompression=struct.unpack_from('<9I',d,12)
+              assert (w,h)==(2048,2048),(f,w,h)
+              assert levels>1 and len(d)>100_000,(f,levels,len(d))
+              assert supercompression in (1,2), (f,supercompression)
+              print(f.name, 'size=',len(d),'mipmaps=',levels,'scheme=',supercompression)
+          assert Path('src/vendor/three/addons/loaders/KTX2Loader.js').exists()
+          assert Path('src/vendor/three/addons/utils/WorkerPool.js').exists()
+          assert Path('src/vendor/three/addons/libs/basis/basis_transcoder.wasm').stat().st_size>100_000
+          PY
+          node --check src/vendor/three/addons/loaders/KTX2Loader.js
+          node --check src/vendor/three/addons/utils/WorkerPool.js
+      - name: Commit ONLY compressed textures and self-hosted transcoder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'assets/tower/materials/balkaria-stone-v2.1/*.ktx2' \
+            src/vendor/three/addons/loaders/KTX2Loader.js \
+            src/vendor/three/addons/utils/WorkerPool.js \
+            src/vendor/three/addons/libs/basis/basis_transcoder.js \
+            src/vendor/three/addons/libs/basis/basis_transcoder.wasm
+          if git diff --cached --quiet; then
+            echo 'KTX2 outputs already current'
+          else
+            git commit -m 'build(tower): encode BalkariaStone v2.1 GPU textures [skip prefab bake]'
+            git fetch origin 17.2
+            git rebase origin/17.2
+            git push origin HEAD:17.2
+          fi
