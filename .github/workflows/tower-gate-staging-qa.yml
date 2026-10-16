@@ -2,7 +2,7 @@ name: Approved gate v7 staged integration QA
 on:
   push:
     branches: [agent/gate-v7-install-ready-20261016]
-    paths: [.github/workflows/tower-gate-staging-qa.yml, assets/tower/prefabs/architectural/gate-18x10x2-v7.glb, tests/tower-prefab-placement-17-4.test.mjs]
+    paths: [.github/workflows/tower-gate-staging-qa.yml, assets/tower/prefabs/architectural/gate-18x10x2-v7.glb, tests/tower-prefab-placement-17-4.test.mjs, tests/gate-prefab.test.mjs]
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,6 +36,7 @@ jobs:
           d=p.read_bytes()
           assert len(d)==5753348,('expected approved v7 GLB',len(d))
           assert d[:4]==b'glTF' and struct.unpack('<I',d[8:12])[0]==len(d)
+          assert hashlib.sha256(d).hexdigest()=='37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51'
           print('GATE_V7_BINARY_COMPLETE',hashlib.sha256(d).hexdigest())
           PY
   postgres-migration-qa:
