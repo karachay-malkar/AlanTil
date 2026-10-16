@@ -1,13 +1,14 @@
 /** AlanTil 17.5.2 — free, permanent prefabricated masonry, server-authoritative V3.
  * Old purchased V1/V2 elements remain read only. No local construction drafts.
  */
-import {createTowerScene} from './prefab-scene.js?v=17.5.4-balkaria-stone-ktx2.1';
+import {createTowerScene} from './prefab-scene.js?v=17.5.5-compact-stones.1';
 import {PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
 import {WILD_PREFAB_VERSION,WILD_VARIANTS_PER_SIZE,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
-import {GATE_STONE_VERSION,GATE_STONE_VARIANTS,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
+import {GATE_STONE_VARIANTS,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
+import {COMPACT_STONE_VERSION} from '../../../packages/tower-game/compact-stone-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3} from './repository.js?v=17.5.2';
 let active=null;
@@ -88,7 +89,7 @@ export async function mount(context,params={}){
   const hit=s.previewHit||s.scene?.getAimHit?.();
   if(!hit)return null;
   const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
-   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:isGateStone(s.type)?GATE_STONE_VERSION:isWildPrefab(s.type)?WILD_PREFAB_VERSION:'17.5.2'};
+   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:isGateStone(s.type)?COMPACT_STONE_VERSION:isWildPrefab(s.type)?WILD_PREFAB_VERSION:'17.5.2'};
   return positionAgainst(item,hit);
  }
  let previewSequence=0;

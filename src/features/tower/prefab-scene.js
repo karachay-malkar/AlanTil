@@ -21,7 +21,7 @@ const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q)
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
- const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.4-gatestones.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
+ const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.5-compact-stones.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
  if(manifest.version!=='17.5.2')throw new Error('Неподдерживаемая версия секций');
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
  // This additional architectural asset does not rewrite historic 17.5.2 entries.
@@ -203,13 +203,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const group=new THREE.Group();group.add(mesh);group.userData.block=block;mesh.userData.block=block;group.userData.owned=owned;
   return group;
  }
- function cleanGhost(){for(const child of [...previewContents.children]){previewContents.remove(child);child.traverse(node=>{if(node.isMesh&&node.userData.ghostMaterial)node.material.dispose();});}activeGhost=null;}
+ function cleanGhost(){for(const child of [...previewContents.children]){previewContents.remove(child);child.traverse(node=>{if(node.isMesh&&node.userData.ghostMaterial)node.material.dispose();if(node.isInstancedMesh)node.dispose();});}activeGhost=null;}
  async function setPreview(block,valid=true){
   const generation=++previewGeneration;cleanGhost();preview.visible=!!block;
   if(!block)return;
   try{
    const model=await getPrefab(block);if(disposed||generation!==previewGeneration)return;
-   const clone=model.clone(true);clone.traverse(node=>{if(!node.isMesh)return;node.material=new THREE.MeshBasicMaterial({color:valid?'#69cf91':'#ed7777',transparent:true,opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide});node.userData.ghostMaterial=true;});
+   const clone=model.userData.compactPlacementCount?model:model.clone(true);clone.traverse(node=>{if(!node.isMesh)return;node.material=new THREE.MeshBasicMaterial({color:valid?'#69cf91':'#ed7777',transparent:true,opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide});node.userData.ghostMaterial=true;});
    previewContents.add(clone);activeGhost=clone;setPosition(preview,block);
    ghostBounds.scale.copy(footprint(block)).multiplyScalar(1.01);
   }catch(e){if(generation===previewGeneration){container.dataset.prefabError=String(e?.message||e);console.warn('Prefab preview:',e);}}
