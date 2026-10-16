@@ -12,7 +12,7 @@ jobs:
   bake:
     runs-on: ubuntu-latest
     container:
-      image: python:3.13.5-trixie
+      image: python:3.13-trixie
     steps:
       - name: Install Git in reproducible Debian 13 container
         run: apt-get update -qq && apt-get install -y git
