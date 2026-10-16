@@ -1,0 +1,30 @@
+name: QA BalkariaStone KTX2 WebGL renderer
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/tower-stone-webgl.yml'
+      - 'assets/tower/materials/balkaria-stone-v2.1/*.ktx2'
+      - 'src/features/tower/rock-surface.js'
+      - 'src/features/tower/prefab-scene.js'
+      - 'scripts/qa/browser-tower-prefab-17-4.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  webgl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless Chromium for WebGL E2E
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify KTX2 decoding and full tower editor story
+        run: node scripts/qa/browser-tower-prefab-17-4.cjs
