@@ -3,12 +3,14 @@ import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_JOINT_FILES} from './windo
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
 import {WILD_PREFAB_VERSION,isWildPrefab} from './wild-prefab.mjs';
+import {GATE_STONE_VERSION,isGateStone} from './gate-stone-prefab.mjs';
 /** Static 25-cm joint-tile resolver; no runtime mesh generation/deformation. */
 export const JOINT_INTERFACE='shared-recessed-25cm-v1';
 const EPS=1e-5;
 export function sectionAssetVersion(s,manifest){return s.geometryVersion??manifest.version;}
 export function sectionJointProfile(s,manifest){
  if(s.type!=='masonry_section')return null;
+ if(isGateStone(s.sectionId)&&sectionAssetVersion(s,manifest)===GATE_STONE_VERSION)return JOINT_INTERFACE;
  if(isWildPrefab(s.sectionId)&&sectionAssetVersion(s,manifest)===WILD_PREFAB_VERSION)return JOINT_INTERFACE;
  if(s.sectionId===WINDOW_PREFAB_ID)return sectionAssetVersion(s,manifest)===WINDOW_PREFAB_VERSION?JOINT_INTERFACE:null;
  if(s.sectionId===DOOR_PREFAB_ID)return sectionAssetVersion(s,manifest)===DOOR_PREFAB_VERSION?JOINT_INTERFACE:null;
