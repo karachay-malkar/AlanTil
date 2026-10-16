@@ -1,0 +1,79 @@
+name: QA gate-source masonry 17.5.4
+on:
+  push:
+    branches: [agent/gate-stone-masonry-1754-20261016]
+    paths:
+      - .github/workflows/tower-gate-stones-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  node-and-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/gate-stone-masonry-1754-20261016
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JS syntax and full 3D editor regression
+        run: |
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --check packages/tower-game/gate-stone-prefab.mjs
+          node --check packages/tower-game/prefab-joints.mjs
+          node --test tests/tower-*.test.mjs tests/window-prefab.test.mjs tests/door-prefab.test.mjs tests/gate-prefab.test.mjs
+      - name: Verify source preservation and total assets
+        run: |
+          python - <<'PY'
+          import pathlib,json,hashlib
+          root=pathlib.Path('assets/tower/prefabs')
+          m=json.loads((root/'manifest.json').read_text())
+          assert len(list(root.glob('*.glb')))==166
+          assert m['version']=='17.5.2' and m['wildVersion']=='17.5.3' and m['gateStoneVersion']=='17.5.4'
+          assert len(m['gateStoneVariants'])==5
+          assert all(len(s)==5 for s in m['gateStoneVariants'].values())
+          for sections in m['gateStoneVariants'].values():
+            for v in sections:
+              assert (pathlib.Path(v['file'].lstrip('/'))).is_file()
+          p=pathlib.Path('tools/tower/bake-gate-stones-1754.py')
+          assert hashlib.sha256(p.read_bytes()).hexdigest()=='a84c251802a5cbdecfadaa23fee8f88ffaa275515f6165c87eb8bb49ebe7c1c6'
+          print('GATE_STONE_25_AND_HISTORY_PASS')
+          PY
+  postgres-v3:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: tower_ci_only
+          POSTGRES_DB: tower_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tower_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: tower_ci_only
+      PGDATABASE: tower_ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/gate-stone-masonry-1754-20261016
+      - name: Apply all V3 versions and ensure legacy contract
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014080000_tower_v3_free_prefab_sections.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014130000_tower_v3_prefab_library_1752.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261015140000_tower_window_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261015221000_tower_door_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016135500_tower_wild_prefab_1753.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016181500_tower_gate_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016200000_tower_gate_stones_1754.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_door_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -c "SELECT private.tower_v3_canonical('{\\"id\\":\\"00000000-0000-4000-8000-000000000001\\",\\"sectionId\\":\\"2x2x2\\",\\"geometryVersion\\":\\"17.5.4\\",\\"variant\\":4,\\"rotation\\":0,\\"x\\":0,\\"y\\":0,\\"z\\":0}'::jsonb);"
