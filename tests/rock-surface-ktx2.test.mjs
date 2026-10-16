@@ -33,11 +33,10 @@ test('shared stone material prefers KTX2 and retains PNG fallback with correct P
  const rock=read('src/features/tower/rock-surface.js');
  assert.match(rock,/KTX2Loader/);
  assert.match(rock,/detectSupport\(renderer\)/);
- assert.match(rock,/BalkariaStone_BaseColor_2K/);
- assert.match(rock,/BalkariaStone_Normal_OpenGL_2K/);
- assert.match(rock,/BalkariaStone_ORM_2K/);
- assert.match(rock,/\.ktx2/);
- assert.match(rock,/\.png/);
+ assert.match(rock,/BalkariaStone_/);
+ for(const name of ['BaseColor','Normal_OpenGL','ORM'])assert.ok(rock.includes("'"+name+"'"),name);
+ assert.match(rock,/url\(name,'ktx2'\)/);
+ assert.match(rock,/url\(name,'png'\)/);
  assert.match(rock,/roughnessMap\s*:/);
  assert.match(rock,/metalnessMap\s*:/);
  assert.match(rock,/aoMap\s*:/);
