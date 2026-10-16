@@ -41,18 +41,7 @@ jobs:
                   assert got==h,f'{p}: geometric mismatch vs approved pilot {got} != {h}'
                   assert np.isfinite(m.vertices).all()
           PY
-      - name: Store versioned GLB files in this development branch
+      - name: Commit approved GLB assets through GitHub Git Database API
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ ! -d .git ]; then
-            git init -q
-            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-            git fetch -q --depth=1 origin agent/wild-masonry-5-variants-20261016
-            git reset --mixed -q FETCH_HEAD
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/tower/prefabs/wild-section-*-17_5_3.glb docs/tower/wild-pilot-metrics-17_5_3.json
-          git diff --cached --quiet || git commit -m 'assets(tower): bake ten approved 17.5.3 wild masonry GLBs'
-          git push origin HEAD:agent/wild-masonry-5-variants-20261016
+        run: python tools/tower/commit-wild-glbs.py
