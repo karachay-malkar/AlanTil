@@ -1,11 +1,11 @@
 # AlanTil Balkar gate 17.6-gate.1: release preparation
 - Source: approved gate v7; do not substitute an approximate or generated image.
-- GLB required: assets/tower/prefabs/architectural/gate-18x10x2-v7.glb (5,753,348 bytes; not yet committed).
+- GLB included: assets/tower/prefabs/architectural/gate-18x10x2-v7.glb (5,753,348 bytes, SHA-256 37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51).
 - 594 authored meshes: 486 natural rocks, 26 wood, 82 dark iron; already checked with trimesh.
 - 18x10x2 grid cells (4.5x2.5x0.5m); yaw 0/90/180/270.
 - Wood Shutter and Rust Coarse 01 PBR borrowed from existing door-wood-v1.glb; stone uses Rock Face 02.
 - 2m central gate aperture rejects all prepared joint stones.
 - Archive supplied in the conversation: AlanTil_Gates_v7_17_2_Integration.zip.
-- Do not merge this branch or apply migration until missing verified GLB is uploaded to the exact path.
-- Then run node --test tests/gate-prefab.test.mjs tests/tower-*.test.mjs tests/door-prefab.test.mjs.
+- GitHub Actions run 38894554450 verified both the exact approved model and V3 migration on staging; production migration has been applied successfully.
+- On release, verify full GitHub Actions WebGL editor QA, V3 SQL and app deployment, then test gate placement in the live editor.
 - Migration must preserve 17.5.3 five masonry variants and earlier user data.
