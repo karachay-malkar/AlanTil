@@ -38,12 +38,12 @@ fs.mkdirSync(evidence,{recursive:true});
    <link rel="stylesheet" href="/src/shared/styles/app.css">
    <link rel="stylesheet" href="/src/features/tower/tower.css">
    <div class="appShell" id="app-shell"><div class="appViewport"><div class="appScreenHost"><main id="root"></main></div></div></div>
-   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.2';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
+   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.3-wild.1';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
   await new Promise(resolve=>setTimeout(resolve,300));
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabReady==='true',{timeout:45000});
-  assert.equal(await page.locator('.towerItem').count(),6);
+  assert.equal(await page.locator('.towerItem').count(),7);
   assert.equal(await page.locator('[data-section-id="window-4x5x2"]').count(),1);
   assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'idle');
   assert.equal(await page.locator('[data-placement]').isVisible(),false);
@@ -52,6 +52,8 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(await page.locator('[data-draft-notice]').count(),0);
   await page.locator('[data-section-id="2x2x2"]').click();
   assert.equal(await page.locator('[data-variant]').count(),1);
+  // Fifth variant exercises the newly authorized 0..4 wild masonry selection.
+  for(let i=0;i<4;i++)await page.locator('[data-variant]').click();
   assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'placing');
   assert.equal(await page.locator('[data-side]').evaluate(x=>x.classList.contains('is-open')),false);
   assert.equal(await page.locator('[data-placement] .towerIconAction').count(),4);
@@ -71,7 +73,8 @@ fs.mkdirSync(evidence,{recursive:true});
   let snapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
   assert.equal(snapshot.revision,1);
   assert.equal(snapshot.elements.length,1);
-  assert.equal(snapshot.elements[0].geometryVersion,'17.5.2');
+  assert.equal(snapshot.elements[0].geometryVersion,'17.5.3');
+  assert.equal(snapshot.elements[0].variant,4);
   assert.ok([snapshot.elements[0].x,snapshot.elements[0].y,snapshot.elements[0].z].every(Number.isInteger));
   assert.equal(await page.evaluate(()=>localStorage.getItem('alantil_tower_prefab_draft_17_4_11111111-1111-4111-8111-111111111111')),null);
   await page.reload();
