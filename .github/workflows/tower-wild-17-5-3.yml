@@ -11,14 +11,15 @@ permissions:
 jobs:
   bake:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.13.5-trixie
     steps:
+      - name: Install Git in reproducible Debian 13 container
+        run: apt-get update -qq && apt-get install -y git
       - uses: actions/checkout@v4
         with:
           ref: agent/wild-masonry-5-variants-20261016
           persist-credentials: true
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
       - name: Install offline 3D packer
         run: python -m pip install --disable-pip-version-check numpy==2.3.5 scipy==1.17.0 trimesh==4.11.1 pillow==12.3.0
       - name: Bake ten distinct approved variants
