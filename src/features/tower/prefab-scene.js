@@ -13,12 +13,13 @@ import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_R
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,GATE_PREFAB_SPEC} from '../../../packages/tower-game/gate-prefab.mjs';
 import {applyGateSurfaces} from './gate-surface.js';
 import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
+import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
 import {getRockSurface,applyRockSurface} from './rock-surface.js';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
- const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.3-wild.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
+ const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.4-gatestones.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
  if(manifest.version!=='17.5.2')throw new Error('Неподдерживаемая версия секций');
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
  // This additional architectural asset does not rewrite historic 17.5.2 entries.
@@ -108,6 +109,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    assembled.add(carpentry);
    container.dataset.doorWoodReady='true';
    return assembled;
+  }
+  if(isGateStone(block.sectionId)&&block.geometryVersion===GATE_STONE_VERSION){
+   const asset=manifest.gateStoneVariants?.[block.sectionId]?.[block.variant];
+   if(!asset?.file)throw new TypeError('Unknown approved gate-stone variant');
+   const url=asset.file+'?v='+encodeURIComponent(GATE_STONE_VERSION);
+   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
+   return applyRockSurface((await loaded.get(url)).scene.clone(true),stoneMaterial);
   }
   if(isWildPrefab(block.sectionId)&&block.geometryVersion===WILD_PREFAB_VERSION){
    const asset=manifest.wildVariants?.[block.sectionId]?.[block.variant];
