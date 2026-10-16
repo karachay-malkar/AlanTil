@@ -581,6 +581,13 @@ def main():
             manifest['gateStoneVersion']='17.5.4'
             manifest['gateStoneVariants']=gate_variants
             manifest['gateStoneLibrary']=prior['gateStoneLibrary']
+        if prior.get('compactStoneVersion') == '17.5.5':
+            compact = prior.get('compactStone', {})
+            assert compact.get('version') == '17.5.5'
+            assert compact.get('usedWallModels') == 63
+            assert compact.get('variantsPerSize') == 5
+            manifest['compactStoneVersion'] = '17.5.5'
+            manifest['compactStone'] = compact
     for dims in SIZES:
         key = 'x'.join(map(str, dims))
         if options.only and options.only != key:

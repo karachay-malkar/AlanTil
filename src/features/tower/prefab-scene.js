@@ -14,6 +14,8 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,
 import {applyGateSurfaces} from './gate-surface.js';
 import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
 import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
+import {COMPACT_STONE_VERSION,isCompactStone} from '../../../packages/tower-game/compact-stone-prefab.mjs';
+import {assembleCompactStoneSection} from './compact-stone-scene.js';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-ktx2.1';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
@@ -111,6 +113,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    container.dataset.doorWoodReady='true';
    return assembled;
   }
+  if(isCompactStone(block.sectionId)&&block.geometryVersion===COMPACT_STONE_VERSION){
+   const compact=manifest.compactStone;
+   if(compact?.version!==COMPACT_STONE_VERSION||!compact.library||!compact.placements)throw new TypeError('Compact masonry catalog unavailable');
+   const libUrl=compact.library+'?v='+encodeURIComponent(COMPACT_STONE_VERSION);
+   const layoutsUrl=compact.placements+'?v='+encodeURIComponent(COMPACT_STONE_VERSION);
+   if(!loaded.has(libUrl))loaded.set(libUrl,loader.loadAsync(libUrl));
+   if(!loaded.has(layoutsUrl))loaded.set(layoutsUrl,fetch(layoutsUrl).then(r=>{if(!r.ok)throw new Error('Compact masonry layouts unavailable');return r.json();}));
+   const [source,layouts]=await Promise.all([loaded.get(libUrl),loaded.get(layoutsUrl)]);
+   return assembleCompactStoneSection(source.scene,layouts,block.sectionId,block.variant,stoneMaterial);
+  }
   if(isGateStone(block.sectionId)&&block.geometryVersion===GATE_STONE_VERSION){
    const asset=manifest.gateStoneVariants?.[block.sectionId]?.[block.variant];
    if(!asset?.file)throw new TypeError('Unknown approved gate-stone variant');
@@ -151,7 +163,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function setPosition(group,block){
   group.position.copy(center(block));group.rotation.set(0,block.rotation*Math.PI/2,0);
  }
- function clearPrevious(){for(const group of rendered)surface.remove(group);rendered=[];targets.length=0;}
+ function clearPrevious(){for(const group of rendered){surface.remove(group);group.traverse(node=>{if(node.isInstancedMesh)node.dispose();});}rendered=[];targets.length=0;}
  function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected&&x.type==='masonry_section');outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}}
  function prepareMesh(model,block){
   const group=model.clone(true);group.userData.block=block;
@@ -264,7 +276,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const b=hit.object.userData.block||null;
    if(layer!==null&&hit.point.y>(layer+1)*CELL+.001)continue;
    const n=hit.face?.normal?.clone()||new THREE.Vector3(0,1,0);
-   if(b){n.transformDirection(hit.object.matrixWorld);let axis=0;for(let i=1;i<3;i++)if(Math.abs(n.getComponent(i))>Math.abs(n.getComponent(axis)))axis=i;
+   if(b){
+    if(hit.object.isInstancedMesh&&hit.instanceId!==undefined){
+     const instance=new THREE.Matrix4();hit.object.getMatrixAt(hit.instanceId,instance);
+     const combined=new THREE.Matrix4().multiplyMatrices(hit.object.matrixWorld,instance);
+     n.applyMatrix3(new THREE.Matrix3().getNormalMatrix(combined)).normalize();
+    }else n.transformDirection(hit.object.matrixWorld);
+    let axis=0;for(let i=1;i<3;i++)if(Math.abs(n.getComponent(i))>Math.abs(n.getComponent(axis)))axis=i;
     const dir=Math.sign(n.getComponent(axis))||1;n.set(axis===0?dir:0,axis===1?dir:0,axis===2?dir:0);
    }else n.set(0,1,0);
    return{block:b,normal:{x:n.x,y:n.y,z:n.z},position:hit.point.toArray()};
