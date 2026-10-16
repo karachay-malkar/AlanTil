@@ -1,0 +1,45 @@
+name: Verify five wild masonry variants
+on:
+  push:
+    branches: [agent/wild-masonry-5-variants-20261016]
+    paths: [.github/workflows/tower-wild-qa.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  node-and-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/wild-masonry-5-variants-20261016
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and regression tests
+        run: |
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --check packages/tower-game/prefab-joints.mjs
+          node --check packages/tower-game/wild-prefab.mjs
+          node --test tests/tower-*.test.mjs tests/window-prefab.test.mjs tests/door-prefab.test.mjs
+      - name: Validate immutable 10 asset signatures and manifest
+        run: |
+          python3 - <<'PY'
+          import pathlib, json, hashlib
+          m=json.loads(pathlib.Path('assets/tower/prefabs/manifest.json').read_text())
+          assert m['version']=='17.5.2' and m['wildVersion']=='17.5.3'
+          assert set(m['wildVariants'])=={'2x2x2','4x4x4'}
+          hashes=[]
+          for kind in ('2x2x2','4x4x4'):
+              assert len(m['wildVariants'][kind])==5
+              for i,entry in enumerate(m['wildVariants'][kind]):
+                  f=pathlib.Path(entry['file'].lstrip('/'))
+                  assert f.is_file(),f
+                  data=f.read_bytes()
+                  assert data[:4]==b'glTF' and int.from_bytes(data[8:12],'little')==len(data)
+                  assert len(data)>100000,f
+                  hashes.append(hashlib.sha256(data).hexdigest())
+          assert len(set(hashes))==10
+          print('APPROVED_10_GLB_OK')
+          PY
