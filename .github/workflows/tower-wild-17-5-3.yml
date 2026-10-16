@@ -1,0 +1,49 @@
+name: Bake approved wild masonry 17.5.3
+on:
+  push:
+    branches: [agent/wild-masonry-5-variants-20261016]
+    paths:
+      - tools/tower/bake-approved-wild.py
+      - .github/workflows/tower-wild-17-5-3.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/wild-masonry-5-variants-20261016
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install offline 3D packer
+        run: python -m pip install --disable-pip-version-check numpy==2.3.5 scipy==1.17.0 trimesh==4.11.1 pillow==12.3.0
+      - name: Bake ten distinct approved variants
+        run: python tools/tower/bake-approved-wild.py
+      - name: Verify each GLB geometry against user-approved pilot
+        run: |
+          python - <<'PY'
+          import pathlib, hashlib, trimesh, numpy as np
+          expected={
+          '2x2x2':['6408fdf8bf4d75ee138f4a64a115505374dd342a3e92a2467dcb3e16a5c61482','85005606cdd944fb68cdfd048c4e7047e7972afbb46fceb94e78aff980bc89ce','5536b692cec0b835845eff1a4a6a85b8c8b097e4a0b6a825b18aed00bf4d111e','2a75d9ddd86616fbd3144c459d6c2e0a4aef3f14277d2f60d73d54f37b39efd5','03b66c8d42202ffeb85031267ee5374de67d9bc7f4030dc666cddf326b02f9f0'],
+          '4x4x4':['edfce8ff542d92589b7e69bd2cff4cbdcb4c42df046e144c165c3f9253b523b2','9fb5a7e4e57b78e798cd59a502721fb77984d88e5ac820b0e1c3b15797898ddf','86e907d511138592a66744331f95acb777718730d42d3c72b3e5e4a394c85468','7e468547c06c3a7ecafb088fd83f3cac1ba39dc8b0dd35807ca6a30be951cd85','ceb2a3ce2a0f2a68ae7b9a847f411c5d6bdd1bc2cbba3f72efea0a23226f1110']}
+          for kind,hashes in expected.items():
+              for i,h in enumerate(hashes):
+                  p=pathlib.Path(f'assets/tower/prefabs/wild-section-{kind}-v{i}-17_5_3.glb')
+                  assert p.is_file() and p.stat().st_size>100000,p
+                  m=next(iter(trimesh.load(p,force='scene').geometry.values()))
+                  got=hashlib.sha256(m.vertices.tobytes()).hexdigest()
+                  print(p,got,'faces',len(m.faces),flush=True)
+                  assert got==h,f'{p}: geometric mismatch vs approved pilot {got} != {h}'
+                  assert np.isfinite(m.vertices).all()
+          PY
+      - name: Store versioned GLB files in this development branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/prefabs/wild-section-*-17_5_3.glb docs/tower/wild-pilot-metrics-17_5_3.json
+          git diff --cached --quiet || git commit -m 'assets(tower): bake ten approved 17.5.3 wild masonry GLBs'
+          git push origin HEAD:agent/wild-masonry-5-variants-20261016
