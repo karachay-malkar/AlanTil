@@ -76,4 +76,6 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016200000_tower_gate_stones_1754.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_door_integration.sql
-          psql -X -v ON_ERROR_STOP=1 -c "SELECT private.tower_v3_canonical('{\\"id\\":\\"00000000-0000-4000-8000-000000000001\\",\\"sectionId\\":\\"2x2x2\\",\\"geometryVersion\\":\\"17.5.4\\",\\"variant\\":4,\\"rotation\\":0,\\"x\\":0,\\"y\\":0,\\"z\\":0}'::jsonb);"
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          SELECT private.tower_v3_canonical('{"id":"00000000-0000-4000-8000-000000000001","sectionId":"2x2x2","geometryVersion":"17.5.4","variant":4,"rotation":0,"x":0,"y":0,"z":0}'::jsonb);
+          SQL
