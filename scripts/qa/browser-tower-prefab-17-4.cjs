@@ -43,6 +43,8 @@ fs.mkdirSync(evidence,{recursive:true});
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabReady==='true',{timeout:45000});
+  // Verify the WebGL editor actually decoded UASTC KTX2 rather than using PNG fallback.
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-stone-texture-encoding'),'ktx2');
   assert.equal(await page.locator('.towerItem').count(),8);
   assert.equal(await page.locator('[data-section-id="window-4x5x2"]').count(),1);
   assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'idle');
