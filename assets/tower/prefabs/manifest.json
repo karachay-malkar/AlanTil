@@ -183,7 +183,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6274,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.74,
               0.655,
@@ -214,7 +214,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6505,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.745,
               0.755,
@@ -245,7 +245,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6118,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.715,
               0.655,
@@ -928,5 +928,52 @@
       "faces": 306,
       "interface": "shared-recessed-25cm-v1"
     }
+  },
+  "wildVersion": "17.5.3",
+  "wildVariants": {
+    "2x2x2": [
+      {
+        "file": "/assets/tower/prefabs/wild-section-2x2x2-v0-17_5_3.glb",
+        "name": "Дикая смешанная"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-2x2x2-v1-17_5_3.glb",
+        "name": "Продольные камни"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-2x2x2-v2-17_5_3.glb",
+        "name": "Ломаная рваная"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-2x2x2-v3-17_5_3.glb",
+        "name": "Крупные валуны"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-2x2x2-v4-17_5_3.glb",
+        "name": "Мелкая перевязка"
+      }
+    ],
+    "4x4x4": [
+      {
+        "file": "/assets/tower/prefabs/wild-section-4x4x4-v0-17_5_3.glb",
+        "name": "Дикая смешанная"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-4x4x4-v1-17_5_3.glb",
+        "name": "Продольные камни"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-4x4x4-v2-17_5_3.glb",
+        "name": "Ломаная рваная"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-4x4x4-v3-17_5_3.glb",
+        "name": "Крупные валуны"
+      },
+      {
+        "file": "/assets/tower/prefabs/wild-section-4x4x4-v4-17_5_3.glb",
+        "name": "Мелкая перевязка"
+      }
+    ]
   }
 }

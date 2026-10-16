@@ -10,6 +10,7 @@ import {prefabBounds,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-g
 import {resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
+import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
 import {getRockSurface,applyRockSurface} from './rock-surface.js';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
@@ -88,6 +89,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    assembled.add(carpentry);
    container.dataset.doorWoodReady='true';
    return assembled;
+  }
+  if(isWildPrefab(block.sectionId)&&block.geometryVersion===WILD_PREFAB_VERSION){
+   const asset=manifest.wildVariants?.[block.sectionId]?.[block.variant];
+   if(!asset?.file)throw new TypeError('Unknown wild masonry variant');
+   const url=`${asset.file}?v=${encodeURIComponent(WILD_PREFAB_VERSION)}`;
+   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
+   return applyRockSurface((await loaded.get(url)).scene.clone(true),stoneMaterial);
   }
   const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
   const v=block.geometryVersion||manifest.version;
