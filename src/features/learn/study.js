@@ -156,9 +156,11 @@ export function renderStudy(context, words, signal, params = {}) {
   function resetFlipInstant() {
     const inner = card.querySelector(".cardInner");
     const previous = inner.style.transition;
+    card.classList.add("flip-reset");
     inner.style.transition = "none";
     card.classList.remove("flipped");
     void inner.offsetWidth;
+    card.classList.remove("flip-reset");
     inner.style.transition = previous || "";
   }
 

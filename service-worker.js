@@ -1,4 +1,4 @@
-const VERSION = "16.8.0.16";
+const VERSION = "16.8.0.19";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 const LEGACY_REFRESH_BEFORE_VERSION = "16.8.0.16";
@@ -24,7 +24,7 @@ const CORE_ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
-    await Promise.allSettled(CORE_ASSETS.map((asset) => cache.add(asset)));
+    await Promise.all(CORE_ASSETS.map((asset) => cache.add(new Request(asset, { cache: "reload" }))));
     await self.skipWaiting();
   })());
 });

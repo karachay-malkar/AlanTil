@@ -3,7 +3,7 @@ import { wordFavorites } from "../../shared/state/word-favorites.js?v=16.8.0.3";
 import { renderSetPreparation } from "./set-preparation.js?v=16.8.0.3";
 import { renderResults } from "./results.js?v=16.8.0.3";
 import { clearStudySession, learnState } from "./state.js?v=16.8.0.3";
-import { finalizeLearnSession, initializeStudy, renderStudy } from "./study.js?v=16.8.0.3";
+import { finalizeLearnSession, initializeStudy, renderStudy } from "./study.js?v=16.8.0.19";
 import { msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 
 let controller = null;

@@ -1,0 +1,31 @@
+name: Learn card visibility and safe cache update
+on:
+  push:
+    branches: ["17.2", "agent/16.8.0"]
+    paths:
+      - "src/features/learn/**"
+      - "src/features/path/feature.js"
+      - "src/shared/styles/lazy/learn.css"
+      - "service-worker.js"
+      - "tests/learn-card-flip-visibility.test.mjs"
+      - "tests/asset-versioning.test.mjs"
+      - ".github/workflows/learn-card-update-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check syntax
+        run: |
+          node --check src/features/learn/study.js
+          node --check src/features/learn/feature.js
+          node --check src/features/path/feature.js
+          node --check service-worker.js
+      - name: Learn and release regression tests
+        run: node --test tests/learn-card-flip-visibility.test.mjs tests/asset-versioning.test.mjs

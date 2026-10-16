@@ -15,7 +15,7 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
 import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.3";
 import { renderResults as renderLearnResults } from "../learn/results.js?v=16.8.0.3";
-import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=16.8.0.3";
+import { finalizeLearnSession, renderStudy } from "../learn/study.js?v=16.8.0.19";
 import { createStationTestSession, renderStationTest } from "./station-test.js?v=16.8.0.3";
 import { renderStationView } from "./station-view.js?v=16.8.0.3";
 import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=16.8.0.3";

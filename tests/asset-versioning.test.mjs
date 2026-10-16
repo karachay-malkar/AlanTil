@@ -86,7 +86,7 @@ test("16.8.0.16 refreshes the JS singleton while retaining the independent style
   assert.match(release, /WEB_BUILD_VERSION = "16[.]8[.]0[.]16"/);
   assert.match(analytics, /appVersion = APP_VERSION/);
   assert.match(versionScreen, /APP_VERSION/);
-  assert.match(worker, /const VERSION = "16[.]8[.]0[.]16"/);
+  assert.match(worker, /const VERSION = "16[.]8[.]0[.]19"/);
   assert.match(bootstrap, /ASSET_VERSION = "16[.]8[.]0[.]16"/);
   assert.match(bootstrap, /appVersion: APP_VERSION/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
