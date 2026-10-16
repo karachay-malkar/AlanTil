@@ -1,6 +1,7 @@
 import {prefabBounds,touchingPrefabPairs} from './prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_JOINT_FILES} from './window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
+import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
 import {WILD_PREFAB_VERSION,isWildPrefab} from './wild-prefab.mjs';
 /** Static 25-cm joint-tile resolver; no runtime mesh generation/deformation. */
 export const JOINT_INTERFACE='shared-recessed-25cm-v1';
@@ -11,6 +12,7 @@ export function sectionJointProfile(s,manifest){
  if(isWildPrefab(s.sectionId)&&sectionAssetVersion(s,manifest)===WILD_PREFAB_VERSION)return JOINT_INTERFACE;
  if(s.sectionId===WINDOW_PREFAB_ID)return sectionAssetVersion(s,manifest)===WINDOW_PREFAB_VERSION?JOINT_INTERFACE:null;
  if(s.sectionId===DOOR_PREFAB_ID)return sectionAssetVersion(s,manifest)===DOOR_PREFAB_VERSION?JOINT_INTERFACE:null;
+ if(s.sectionId===GATE_PREFAB_ID)return sectionAssetVersion(s,manifest)===GATE_PREFAB_VERSION?JOINT_INTERFACE:null;
  if(![manifest.version,manifest.previousVersion,...Object.keys(manifest.historicVariants||{})].includes(sectionAssetVersion(s,manifest)))return null;
  return manifest.types.find(x=>x.id===s.sectionId)?.jointInterface||null;
 }
@@ -46,8 +48,18 @@ export function doorStoneAtJoint(section,point){
  const localY=point[1]-bounds.min[1];
  return !(localX>2+EPS&&localX<5-EPS&&localY<8-EPS);
 }
+/** No infill stone is allowed in the 2m gate aperture, including above lintels. */
+export function gateStoneAtJoint(section,point){
+ if(section?.sectionId!==GATE_PREFAB_ID)return true;
+ const b=prefabBounds(section);
+ const theta=(section.rotation||0)*Math.PI/2;
+ const dx=point[0]-(b.min[0]+b.max[0])/2;
+ const dz=point[2]-(b.min[2]+b.max[2])/2;
+ const localX=dx*Math.cos(theta)-dz*Math.sin(theta)+9;
+ return !(localX>5+EPS&&localX<13-EPS);
+}
 export function stoneAtJoint(section,point){
- return windowStoneAtJoint(section,point)&&doorStoneAtJoint(section,point);
+ return windowStoneAtJoint(section,point)&&doorStoneAtJoint(section,point)&&gateStoneAtJoint(section,point);
 }
 /** Contact between two baked 17.5 sections must resolve to pre-baked assets.
  * Legacy read-only stones never have their meshes modified by this resolver.
@@ -60,7 +72,8 @@ export function resolvePrefabJoints(sections,manifest){
   const a=byId.get(pair.a),b=byId.get(pair.b);
   const involvesWindow=a.sectionId===WINDOW_PREFAB_ID||b.sectionId===WINDOW_PREFAB_ID;
   const involvesDoor=a.sectionId===DOOR_PREFAB_ID||b.sectionId===DOOR_PREFAB_ID;
-  const involvesArchitectural=involvesWindow||involvesDoor;
+  const involvesGate=a.sectionId===GATE_PREFAB_ID||b.sectionId===GATE_PREFAB_ID;
+  const involvesArchitectural=involvesWindow||involvesDoor||involvesGate;
   // Older 17.4.1 pieces never shared the newer prepared interface.
   if(involvesArchitectural&&(sectionAssetVersion(a,manifest)===manifest.legacyVersion||
                      sectionAssetVersion(b,manifest)===manifest.legacyVersion))continue;
@@ -101,7 +114,7 @@ export function resolvePrefabJoints(sections,manifest){
    if(!compatibleSectionFaces(byId.get(px.a),byId.get(px.b),manifest)||
       !compatibleSectionFaces(byId.get(pz.a),byId.get(pz.b),manifest))continue;
    const otherX=byId.get(px.a===middle.id?px.b:px.a),otherZ=byId.get(pz.a===middle.id?pz.b:pz.a);
-   const architecturalCorner=[middle,otherX,otherZ].some(s=>s.sectionId===WINDOW_PREFAB_ID||s.sectionId===DOOR_PREFAB_ID);
+   const architecturalCorner=[middle,otherX,otherZ].some(s=>s.sectionId===WINDOW_PREFAB_ID||s.sectionId===DOOR_PREFAB_ID||s.sectionId===GATE_PREFAB_ID);
    const spec=architecturalCorner?{file:WINDOW_JOINT_FILES.corner,interface:JOINT_INTERFACE}:manifest.connectors?.corner;
    if(!spec?.file||spec.interface!==JOINT_INTERFACE)continue;
    for(let y=Math.round(y0);y<y1-EPS;y++){

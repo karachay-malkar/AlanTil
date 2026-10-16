@@ -10,6 +10,8 @@ import {prefabBounds,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-g
 import {resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
+import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,GATE_PREFAB_SPEC} from '../../../packages/tower-game/gate-prefab.mjs';
+import {applyGateSurfaces} from './gate-surface.js';
 import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
 import {getRockSurface,applyRockSurface} from './rock-surface.js';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
@@ -22,6 +24,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // This additional architectural asset does not rewrite historic 17.5.2 entries.
  specs.set(WINDOW_PREFAB_ID,WINDOW_PREFAB_SPEC);
  specs.set(DOOR_PREFAB_ID,DOOR_PREFAB_SPEC);
+ specs.set(GATE_PREFAB_ID,GATE_PREFAB_SPEC);
  const stoneMaterial=await getRockSurface();
  const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -74,6 +77,18 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    assembled.add(frame);
    container.dataset.windowWoodReady='true';
    return assembled;
+  }
+  if(block.sectionId===GATE_PREFAB_ID){
+   if(block.geometryVersion!==GATE_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported gate version');
+   const file=GATE_PREFAB_FILE+'?v='+encodeURIComponent(GATE_RENDER_VERSION);
+   const reference=DOOR_WOOD_FILE+'?v='+encodeURIComponent(DOOR_RENDER_VERSION);
+   if(!loaded.has(file))loaded.set(file,loader.loadAsync(file));
+   if(!loaded.has(reference))loaded.set(reference,loader.loadAsync(reference));
+   const [source,door]=await Promise.all([loaded.get(file),loaded.get(reference)]);
+   const gate=source.scene.clone(true);
+   applyGateSurfaces(gate,door.scene,stoneMaterial);
+   container.dataset.gatePbrReady='true';
+   return gate;
   }
   if(block.sectionId===DOOR_PREFAB_ID){
    if(block.geometryVersion!==DOOR_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported door prefab version');
