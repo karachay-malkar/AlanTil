@@ -14,6 +14,13 @@ jobs:
     container:
       image: python:3.13-trixie
     steps:
+      - name: Require AVX-512 CPU for exact approved geometry
+        run: |
+          if ! grep -qm1 'avx512f' /proc/cpuinfo; then
+            echo 'This runner lacks AVX-512; exact user-approved triangle geometry cannot be reproduced on this CPU.'
+            exit 1
+          fi
+          echo 'AVX512_CPU_VERIFIED'
       - name: Install Git in reproducible Debian 13 container
         run: apt-get update -qq && apt-get install -y git
       - uses: actions/checkout@v4
