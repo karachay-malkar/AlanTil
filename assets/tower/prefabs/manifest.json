@@ -183,7 +183,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6274,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.74,
               0.655,
@@ -214,7 +214,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6505,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.745,
               0.755,
@@ -245,7 +245,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6118,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.715,
               0.655,
@@ -1139,5 +1139,194 @@
       }
     ]
   },
-  "gateStoneLibrary": "/assets/tower/prefabs/gate-stones-library-v1-17_5_4.glb"
+  "gateStoneLibrary": "/assets/tower/prefabs/gate-stones-library-v1-17_5_4.glb",
+  "masonry71Version": "17.5.5",
+  "masonry71Source": "AlanTil_25_Masonry_GLB_Only.zip (71 sculpted stones; 7 lintel types excluded)",
+  "masonry71Variants": {
+    "1x1x1": [
+      {
+        "file": "/assets/tower/prefabs/masonry-71-1x1x1-v0-17_5_5.glb",
+        "label": "Дикая короткая",
+        "originalModel": "sections/masonry-71-1x1x1-v0.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-1x1x1-v1-17_5_5.glb",
+        "label": "Преобладают средние",
+        "originalModel": "sections/masonry-71-1x1x1-v1.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-1x1x1-v2-17_5_5.glb",
+        "label": "Нерегулярная перевязка",
+        "originalModel": "sections/masonry-71-1x1x1-v2.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-1x1x1-v3-17_5_5.glb",
+        "label": "Массивные опорные",
+        "originalModel": "sections/masonry-71-1x1x1-v3.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-1x1x1-v4-17_5_5.glb",
+        "label": "Смешанная плотная",
+        "originalModel": "sections/masonry-71-1x1x1-v4.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      }
+    ],
+    "2x2x2": [
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x2-v0-17_5_5.glb",
+        "label": "Дикая короткая",
+        "originalModel": "sections/masonry-71-2x2x2-v0.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x2-v1-17_5_5.glb",
+        "label": "Преобладают средние",
+        "originalModel": "sections/masonry-71-2x2x2-v1.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x2-v2-17_5_5.glb",
+        "label": "Нерегулярная перевязка",
+        "originalModel": "sections/masonry-71-2x2x2-v2.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x2-v3-17_5_5.glb",
+        "label": "Массивные опорные",
+        "originalModel": "sections/masonry-71-2x2x2-v3.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x2-v4-17_5_5.glb",
+        "label": "Смешанная плотная",
+        "originalModel": "sections/masonry-71-2x2x2-v4.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      }
+    ],
+    "2x2x3": [
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x3-v0-17_5_5.glb",
+        "label": "Дикая короткая",
+        "originalModel": "sections/masonry-71-2x2x3-v0.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x3-v1-17_5_5.glb",
+        "label": "Преобладают средние",
+        "originalModel": "sections/masonry-71-2x2x3-v1.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x3-v2-17_5_5.glb",
+        "label": "Нерегулярная перевязка",
+        "originalModel": "sections/masonry-71-2x2x3-v2.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x3-v3-17_5_5.glb",
+        "label": "Массивные опорные",
+        "originalModel": "sections/masonry-71-2x2x3-v3.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x2x3-v4-17_5_5.glb",
+        "label": "Смешанная плотная",
+        "originalModel": "sections/masonry-71-2x2x3-v4.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      }
+    ],
+    "2x3x4": [
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x3x4-v0-17_5_5.glb",
+        "label": "Дикая короткая",
+        "originalModel": "sections/masonry-71-2x3x4-v0.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x3x4-v1-17_5_5.glb",
+        "label": "Преобладают средние",
+        "originalModel": "sections/masonry-71-2x3x4-v1.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x3x4-v2-17_5_5.glb",
+        "label": "Нерегулярная перевязка",
+        "originalModel": "sections/masonry-71-2x3x4-v2.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x3x4-v3-17_5_5.glb",
+        "label": "Массивные опорные",
+        "originalModel": "sections/masonry-71-2x3x4-v3.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-2x3x4-v4-17_5_5.glb",
+        "label": "Смешанная плотная",
+        "originalModel": "sections/masonry-71-2x3x4-v4.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      }
+    ],
+    "4x4x4": [
+      {
+        "file": "/assets/tower/prefabs/masonry-71-4x4x4-v0-17_5_5.glb",
+        "label": "Дикая короткая",
+        "originalModel": "sections/masonry-71-4x4x4-v0.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-4x4x4-v1-17_5_5.glb",
+        "label": "Преобладают средние",
+        "originalModel": "sections/masonry-71-4x4x4-v1.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-4x4x4-v2-17_5_5.glb",
+        "label": "Нерегулярная перевязка",
+        "originalModel": "sections/masonry-71-4x4x4-v2.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-4x4x4-v3-17_5_5.glb",
+        "label": "Массивные опорные",
+        "originalModel": "sections/masonry-71-4x4x4-v3.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      },
+      {
+        "file": "/assets/tower/prefabs/masonry-71-4x4x4-v4-17_5_5.glb",
+        "label": "Смешанная плотная",
+        "originalModel": "sections/masonry-71-4x4x4-v4.glb",
+        "material": "Rock Face 02",
+        "sourceStoneLibrary": "71 unique Balkar rocks"
+      }
+    ]
+  }
 }

@@ -116,7 +116,10 @@ jobs:
                   assert orientation['elongated']==orientation['horizontal']+orientation['upright']
                   assert orientation['upright']<=max(1,int(orientation['elongated']*.10))
                   assert orientation['placed']==q['mainRocks']
-          files=list(root.glob('*.glb')); assert len(files)==166
+          files=list(root.glob('*.glb')); assert len(files)==191
+          assert m.get('masonry71Version')=='17.5.5'
+          assert len(m['masonry71Variants'])==5
+          assert all(len(v)==5 for v in m['masonry71Variants'].values())
           assert m.get('gateStoneVersion')=='17.5.4'
           assert all(len(v)==5 for v in m['gateStoneVariants'].values())
           assert m.get('wildVersion')=='17.5.3'
@@ -186,6 +189,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016135500_tower_wild_prefab_1753.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016181500_tower_gate_prefab_176.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016200000_tower_gate_stones_1754.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016213700_tower_masonry71_1755.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_door_integration.sql
   complete-source-archive:

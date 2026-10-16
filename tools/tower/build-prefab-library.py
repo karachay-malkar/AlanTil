@@ -581,6 +581,12 @@ def main():
             manifest['gateStoneVersion']='17.5.4'
             manifest['gateStoneVariants']=gate_variants
             manifest['gateStoneLibrary']=prior['gateStoneLibrary']
+        if prior.get('masonry71Version') == '17.5.5':
+            variants=prior.get('masonry71Variants',{})
+            assert set(variants)=={'1x1x1','2x2x2','2x2x3','2x3x4','4x4x4'}
+            assert all(len(v)==5 for v in variants.values())
+            manifest['masonry71Version']='17.5.5'
+            manifest['masonry71Variants']=variants
     for dims in SIZES:
         key = 'x'.join(map(str, dims))
         if options.only and options.only != key:
