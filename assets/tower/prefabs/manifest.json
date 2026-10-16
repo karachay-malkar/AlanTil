@@ -183,7 +183,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6274,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.74,
               0.655,
@@ -214,7 +214,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6505,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.745,
               0.755,
@@ -245,7 +245,7 @@
           "faces": 154,
           "quality": {
             "density": 0.6118,
-            "visibleRubbleShare": 0.0,
+            "visibleRubbleShare": 0,
             "surfaceCoverage": [
               0.715,
               0.655,
@@ -973,6 +973,170 @@
       {
         "file": "/assets/tower/prefabs/wild-section-4x4x4-v4-17_5_3.glb",
         "name": "Мелкая перевязка"
+      }
+    ]
+  },
+  "gateStoneVersion": "17.5.4",
+  "gateStoneLibrary": "/assets/tower/prefabs/gate-stones-library-v1-17_5_4.glb",
+  "gateStoneVariants": {
+    "1x1x1": [
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-1x1x1-v0-17_5_4.glb",
+        "label": "Дикая перевязка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-1x1x1-v1-17_5_4.glb",
+        "label": "Крупный горизонтальный камень",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-1x1x1-v2-17_5_4.glb",
+        "label": "Рваная нерегулярная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-1x1x1-v3-17_5_4.glb",
+        "label": "Валуны с переменной толщиной",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-1x1x1-v4-17_5_4.glb",
+        "label": "Плотная смешанная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      }
+    ],
+    "2x2x2": [
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x2-v0-17_5_4.glb",
+        "label": "Дикая перевязка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x2-v1-17_5_4.glb",
+        "label": "Крупный горизонтальный камень",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x2-v2-17_5_4.glb",
+        "label": "Рваная нерегулярная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x2-v3-17_5_4.glb",
+        "label": "Валуны с переменной толщиной",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x2-v4-17_5_4.glb",
+        "label": "Плотная смешанная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      }
+    ],
+    "2x2x3": [
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x3-v0-17_5_4.glb",
+        "label": "Дикая перевязка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x3-v1-17_5_4.glb",
+        "label": "Крупный горизонтальный камень",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x3-v2-17_5_4.glb",
+        "label": "Рваная нерегулярная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x3-v3-17_5_4.glb",
+        "label": "Валуны с переменной толщиной",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x2x3-v4-17_5_4.glb",
+        "label": "Плотная смешанная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      }
+    ],
+    "2x3x4": [
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x3x4-v0-17_5_4.glb",
+        "label": "Дикая перевязка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x3x4-v1-17_5_4.glb",
+        "label": "Крупный горизонтальный камень",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x3x4-v2-17_5_4.glb",
+        "label": "Рваная нерегулярная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x3x4-v3-17_5_4.glb",
+        "label": "Валуны с переменной толщиной",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-2x3x4-v4-17_5_4.glb",
+        "label": "Плотная смешанная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      }
+    ],
+    "4x4x4": [
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-4x4x4-v0-17_5_4.glb",
+        "label": "Дикая перевязка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-4x4x4-v1-17_5_4.glb",
+        "label": "Крупный горизонтальный камень",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-4x4x4-v2-17_5_4.glb",
+        "label": "Рваная нерегулярная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-4x4x4-v3-17_5_4.glb",
+        "label": "Валуны с переменной толщиной",
+        "source": "approved-gate-v7",
+        "preserveShape": true
+      },
+      {
+        "file": "/assets/tower/prefabs/gate-stone-section-4x4x4-v4-17_5_4.glb",
+        "label": "Плотная смешанная кладка",
+        "source": "approved-gate-v7",
+        "preserveShape": true
       }
     ]
   }
