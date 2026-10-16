@@ -16,7 +16,7 @@ const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q)
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
- const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.2').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
+ const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.3-wild.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
  if(manifest.version!=='17.5.2')throw new Error('Неподдерживаемая версия секций');
  const specs=new Map(manifest.types.map(t=>[t.id,t]));
  // This additional architectural asset does not rewrite historic 17.5.2 entries.
