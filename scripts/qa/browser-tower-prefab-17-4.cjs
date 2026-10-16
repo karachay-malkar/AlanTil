@@ -38,12 +38,12 @@ fs.mkdirSync(evidence,{recursive:true});
    <link rel="stylesheet" href="/src/shared/styles/app.css">
    <link rel="stylesheet" href="/src/features/tower/tower.css">
    <div class="appShell" id="app-shell"><div class="appViewport"><div class="appScreenHost"><main id="root"></main></div></div></div>
-   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.3-wild.1';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
+   <script type="module">import {mount} from '/src/features/tower/index.js?v=17.6-gate.1';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
   await new Promise(resolve=>setTimeout(resolve,300));
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabReady==='true',{timeout:45000});
-  assert.equal(await page.locator('.towerItem').count(),7);
+  assert.equal(await page.locator('.towerItem').count(),8);
   assert.equal(await page.locator('[data-section-id="window-4x5x2"]').count(),1);
   assert.equal(await page.locator('.towerGame').getAttribute('data-mode'),'idle');
   assert.equal(await page.locator('[data-placement]').isVisible(),false);
