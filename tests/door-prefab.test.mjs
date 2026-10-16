@@ -63,3 +63,21 @@ test('door models and converted source photographs are complete files',()=>{
  const sql=readFileSync(new URL('supabase/migrations/20261015221000_tower_door_prefab_176.sql',root),'utf8');
  assert.match(sql,/WHEN 'door-7x9x2'/);assert.match(sql,/17\.6-door\.1/);
 });
+
+test('wooden door sill is seated close to the stone foundation',()=>{
+ function meshMinHeight(file){
+  const data=readFileSync(new URL(file.slice(1),root));
+  assert.equal(data.toString('ascii',0,4),'glTF');
+  const gltf=JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString('utf8'));
+  const heights=gltf.meshes.flatMap(m=>m.primitives.map(p=>gltf.accessors[p.attributes.POSITION].min?.[1]).filter(Number.isFinite));
+  assert.ok(heights.length);
+  return Math.min(...heights);
+ }
+ const stoneBottom=meshMinHeight(DOOR_STONE_FILE);
+ const woodBottom=meshMinHeight(DOOR_WOOD_FILE);
+ const correctedDoorFloor=woodBottom-.125;
+ assert.ok(Math.abs(correctedDoorFloor-stoneBottom)<.05,
+  'Door foundation not aligned: wood '+woodBottom+', stone '+stoneBottom+', corrected '+correctedDoorFloor);
+ const code=readFileSync(new URL('src/features/tower/prefab-scene.js',root),'utf8');
+ assert.match(code,/carpentry\.position\.y=-\.125/);
+});

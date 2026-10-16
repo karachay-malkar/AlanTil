@@ -85,6 +85,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const assembled=new THREE.Group();
    const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);assembled.add(masonry);
    const carpentry=wood.scene.clone(true);
+   // The authored wooden door has a bottom around y=-0.997m while the section
+   // is 2.25m high (local floor y=-1.125m). Lower just the carpentry and its
+   // sill to eliminate the floating gap, keeping the source GLB unchanged.
+   carpentry.position.y=-.125;
    carpentry.traverse(node=>{if(node.isMesh)node.userData.alantilNonStone=true;});
    assembled.add(carpentry);
    container.dataset.doorWoodReady='true';
