@@ -1,0 +1,61 @@
+name: Verify imported 71-stone GLBs
+on:
+  push:
+    branches: [agent/masonry-71-1755-20261016]
+    paths:
+      - 'assets/tower/prefabs/masonry-71-*-17_5_5.glb'
+permissions:
+  contents: read
+jobs:
+  glbs-and-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/masonry-71-1755-20261016
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --test tests/tower-*.test.mjs tests/door-prefab.test.mjs tests/window-prefab.test.mjs tests/gate-prefab.test.mjs
+  postgres-v3:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: tower_ci_only
+          POSTGRES_DB: tower_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tower_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: tower_ci_only
+      PGDATABASE: tower_ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/masonry-71-1755-20261016
+      - name: Apply V3 migrations and preserve old saves
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014080000_tower_v3_free_prefab_sections.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261014130000_tower_v3_prefab_library_1752.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261015140000_tower_window_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261015221000_tower_door_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016135500_tower_wild_prefab_1753.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016181500_tower_gate_prefab_176.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016200000_tower_gate_stones_1754.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016213700_tower_masonry71_1755.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_integration.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_v3_door_integration.sql
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          SELECT private.tower_v3_canonical('{"id":"00000000-0000-4000-8000-000000000001","sectionId":"2x2x2","geometryVersion":"17.5.5","variant":4,"rotation":0,"x":0,"y":0,"z":0}'::jsonb);
+          SQL

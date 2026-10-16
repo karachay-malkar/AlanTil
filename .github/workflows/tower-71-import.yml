@@ -1,0 +1,61 @@
+name: Import latest approved 25 Balkar masonry GLBs
+on:
+  push:
+    branches: [agent/masonry-71-1755-20261016]
+    paths:
+      - '.github/workflows/tower-71-import.yml'
+      - 'assets/tower/imports/AlanTil_25_Masonry_GLB_Only.zip.part*'
+permissions:
+  contents: write
+jobs:
+  import-approved-glbs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/masonry-71-1755-20261016
+          fetch-depth: 2
+      - name: Restore archive only after all three chunks are uploaded
+        id: restore
+        run: |
+          python3 - <<'PY'
+          import pathlib,sys,hashlib,zipfile,json,re
+          root=pathlib.Path('assets/tower')
+          parts=[root/'imports'/f'AlanTil_25_Masonry_GLB_Only.zip.part{i:02d}' for i in range(3)]
+          if not all(x.exists() for x in parts):
+              print('WAITING_FOR_ALL_THREE_PARTS')
+              with open('/tmp/import-staged-status','w') as out:out.write('waiting')
+              sys.exit(0)
+          blob=b''.join(x.read_bytes() for x in parts)
+          assert hashlib.sha256(blob).hexdigest()=='e9499604f4ad15c87aa1a25442a7c18accc0731ec4bf5109d55a33835a08136c','Source ZIP is not approved archive'
+          from io import BytesIO
+          with zipfile.ZipFile(BytesIO(blob)) as z:
+              summary=json.loads(z.read('summary.json'));v=json.loads(z.read('verification.json'))
+              assert summary['total_models']==25 and v['full_glbs']==25 and v['all_unique_hashes']
+              assert v['excluded_lintel_only']==['A','B']
+              assert not any(x.startswith(('A_','B_')) for x in v['used_prototypes'])
+              src=[x for x in z.namelist() if x.startswith('sections/') and x.endswith('.glb')]
+              assert len(src)==25
+              target=root/'prefabs'
+              for name in src:
+                  m=re.fullmatch(r'sections/masonry-71-(1x1x1|2x2x2|2x2x3|2x3x4|4x4x4)-v([0-4])\.glb',name)
+                  assert m is not None,name
+                  data=z.read(name); assert data[:4]==b'glTF' and int.from_bytes(data[8:12],'little')==len(data)
+                  out=target/f'masonry-71-{m[1]}-v{m[2]}-17_5_5.glb'
+                  out.write_bytes(data)
+                  print(out,len(data),hashlib.sha256(data).hexdigest(),flush=True)
+              assert len(list(target.glob('masonry-71-*-17_5_5.glb')))==25
+          with open('/tmp/import-staged-status','w') as out:out.write('ready')
+          print('ALL_25_APPROVED_FULL_GLB_IMPORTED')
+          PY
+      - name: Commit exact binaries and remove temporary ZIP chunks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(cat /tmp/import-staged-status)" != "ready" ]; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/tower/prefabs/masonry-71-*-17_5_5.glb
+          git rm -f assets/tower/imports/AlanTil_25_Masonry_GLB_Only.zip.part*
+          git commit -m 'assets(tower): install 25 full-resolution Balkar 71-stone section GLBs'
+          git push origin HEAD:agent/masonry-71-1755-20261016
