@@ -14,7 +14,7 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,
 import {applyGateSurfaces} from './gate-surface.js';
 import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
 import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
-import {getRockSurface,applyRockSurface} from './rock-surface.js';
+import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-ktx2.1';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -26,12 +26,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  specs.set(WINDOW_PREFAB_ID,WINDOW_PREFAB_SPEC);
  specs.set(DOOR_PREFAB_ID,DOOR_PREFAB_SPEC);
  specs.set(GATE_PREFAB_ID,GATE_PREFAB_SPEC);
- const stoneMaterial=await getRockSurface();
  const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
  renderer.setSize(Math.max(1,container.clientWidth),Math.max(320,container.clientHeight),false);
+ const stoneMaterial=await getRockSurface(renderer);
+ container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
  renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';container.append(renderer.domElement);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#b5cabd');scene.fog=new THREE.Fog('#b5cabd',37,105);
  const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,170);
@@ -157,7 +158,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   group.traverse(child=>{if(!child.isMesh)return;
    // Never overwrite the wood, glass and forged iron PBR channels.
    if(block.sectionId!==WINDOW_PREFAB_ID&&block.sectionId!==DOOR_PREFAB_ID){
-    // Shared Rock Face 02 material is immutable across all prefabs.
+    // Shared BalkariaStone v2.1 material is immutable across all prefabs.
    }
    child.userData.block=block;
   });
@@ -184,7 +185,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function historicItem(block){
   const {geometry,material,owned}=historicGeometry(block),mesh=new THREE.Mesh(geometry,material);
   const d=[block.sx,block.sy,block.sz];const centre=center({...block,type:'historic'});
-  // Apply the same Rock Face 02 surface to legacy read-only stones.
+  // Apply the same BalkariaStone v2.1 surface to legacy read-only stones.
   applyRockSurface(mesh,stoneMaterial);
   mesh.position.copy(centre);mesh.scale.set(...d.map(v=>v*CELL));mesh.rotation.y=(block.rotation%4)*Math.PI/2;
   const group=new THREE.Group();group.add(mesh);group.userData.block=block;mesh.userData.block=block;group.userData.owned=owned;
