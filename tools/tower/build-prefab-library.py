@@ -574,6 +574,13 @@ def main():
             assert all(len(wild_variants[size]) == 5 for size in wild_variants)
             manifest['wildVersion'] = '17.5.3'
             manifest['wildVariants'] = wild_variants
+        if prior.get('gateStoneVersion') == '17.5.4':
+            gate_variants=prior.get('gateStoneVariants',{})
+            assert set(gate_variants)=={'1x1x1','2x2x2','2x2x3','2x3x4','4x4x4'}
+            assert all(len(v)==5 for v in gate_variants.values())
+            manifest['gateStoneVersion']='17.5.4'
+            manifest['gateStoneVariants']=gate_variants
+            manifest['gateStoneLibrary']=prior['gateStoneLibrary']
     for dims in SIZES:
         key = 'x'.join(map(str, dims))
         if options.only and options.only != key:
