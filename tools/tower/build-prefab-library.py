@@ -564,6 +564,16 @@ def main():
                 'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
                 'authoredModels': len(models), 'qualityGridMeters': VOXEL,
                 'types': [], 'connectors': {}}
+    # Keep versioned approved wild GLBs registered when rebuilding older 17.5.2 assets.
+    prior_manifest_path = output / 'manifest.json'
+    if prior_manifest_path.is_file():
+        prior = json.loads(prior_manifest_path.read_text(encoding='utf-8'))
+        if prior.get('wildVersion') == '17.5.3':
+            wild_variants = prior.get('wildVariants', {})
+            assert set(wild_variants) == {'2x2x2', '4x4x4'}
+            assert all(len(wild_variants[size]) == 5 for size in wild_variants)
+            manifest['wildVersion'] = '17.5.3'
+            manifest['wildVariants'] = wild_variants
     for dims in SIZES:
         key = 'x'.join(map(str, dims))
         if options.only and options.only != key:
