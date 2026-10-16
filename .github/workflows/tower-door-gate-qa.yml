@@ -2,7 +2,7 @@ name: Door grounding and gate preparation QA
 on:
   push:
     branches: [agent/door-ground-gate-v7-20261016]
-    paths: [.github/workflows/tower-door-gate-qa.yml]
+    paths: [.github/workflows/tower-door-gate-qa.yml, src/features/tower/prefab-scene.js, tests/door-prefab.test.mjs]
   workflow_dispatch:
 permissions:
   contents: read
