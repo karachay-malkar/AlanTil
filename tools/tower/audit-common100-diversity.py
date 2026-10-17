@@ -23,6 +23,7 @@ def inspect(directory=FOLDER):
     baseline=json.loads((ROOT/"tests/common100-v4-nonlintel-baseline.json").read_text())["models"]
     stable=[n for n,h in baseline.items() if entries[n]["geometrySHA256"]==h]
     print("UNTOUCHED_MODEL_HASHES",len(stable),"OF",len(baseline))
+    print("CHANGED_NONLINTELS",[(n,entries[n]["source"],entries[n]["geometrySHA256"],h) for n,h in baseline.items() if entries[n]["geometrySHA256"]!=h])
     assert len(stable)==94, "The 94 non-lintel models must remain geometrically identical"
     models=[meshes[x] for x in TARGET]
     assert all(entries[n]["source"]=="generated" for n in TARGET)
