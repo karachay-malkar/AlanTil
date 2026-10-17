@@ -48,7 +48,7 @@ a{color:#dccca1;text-decoration:none}a:hover{text-decoration:underline}
 @media(max-width:400px){.catalog{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{max-width:110px}}
 </style></head>
 <body><div class="shell">
-<header><div><p class="eyebrow">AlanTil · 3D geometry review</p><h1>Камни Верхней Балкарии <span style="color:#bca985">/ 100</span></h1></div><div class="stats"><strong>94</strong> из ворот · <strong>6</strong> новых<br>Геометрия · 1:1 · метры</div></header>
+<header><div><p class="eyebrow">AlanTil · 3D geometry review</p><h1>Камни Верхней Балкарии <span style="color:#bca985">/ 100</span></h1></div><div class="stats"><strong id="gateCount">—</strong> из ворот · <strong id="newCount">—</strong> новых<br>Геометрия · 1:1 · метры</div></header>
 <nav class="filters" aria-label="Категории"><button class="chip" data-group="main" aria-pressed="true">Основные · 72</button><button class="chip" data-group="large" aria-pressed="false">Крупные · 10</button><button class="chip" data-group="chinking" aria-pressed="false">Забутовка · 12</button><button class="chip" data-group="lintel" aria-pressed="false">Перемычки · 6</button><button class="chip" data-group="all" aria-pressed="false">Все · 100</button></nav>
 <div class="main">
 <section class="stage" aria-label="Интерактивная 3D-сцена">
@@ -203,17 +203,19 @@ async function injectModel(gltf,meta){
   }
   if(state.models.size!==100)throw new Error('В GLB найдено только '+state.models.size+' из 100 камней. Проверьте модель и версии файлов.');
   state.records=meta.models.slice();
+  $('gateCount').textContent=meta.originCounts.gate;
+  $('newCount').textContent=meta.originCounts.generated;
   $('progress').hidden=true;
   $('status').textContent='Загружено: 100 отдельных мешей · '+meta.originCounts.gate+' из ворот · '+meta.originCounts.generated+' новых · '+meta.version;
   renderStone();
 }
 async function start(){
  try{
- const response=await fetch(BASE+'common-100.json?version=17.7-common100.1',{cache:'no-store'});
+ const response=await fetch(BASE+'common-100.json?version=17.7-common100.2',{cache:'no-store'});
  if(!response.ok)throw new Error('Не удалось загрузить метаданные: HTTP '+response.status);
  const meta=await response.json();if(meta.count!==100)throw new Error('Неподдерживаемая версия библиотеки');
  window.__common100meta=meta;
- const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.1');
+ const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.2');
  await injectModel(gltf,meta);
  }catch(error){$('progress').hidden=false;$('progress').textContent='Ошибка загрузки библиотеки: '+error.message+' — откройте страницу через сайт или выберите локальный GLB справа.';console.error(error);}
 }
