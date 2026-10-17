@@ -17,7 +17,7 @@ fs.mkdirSync(out,{recursive:true});
    await page.goto('http://127.0.0.1:8795/tower-common100-review.html',{waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Загружено: 100'),{timeout:60000});
    if(errors.length||failures.length)throw new Error(JSON.stringify({errors,failures}));
-   if(!(await page.locator('#status').textContent()).includes('17.7-common100.6'))throw Error('Old or cached stone library');
+   if(!(await page.locator('#status').textContent()).includes('17.7-common100.7'))throw Error('Old or cached stone library');
    const count=await page.locator('#catalog button').count();if(count!==12)throw Error('12 stone tiles expected, got '+count);
    const original=await page.locator('#stoneName').textContent();
    await page.locator('#next').click();
@@ -61,6 +61,16 @@ fs.mkdirSync(out,{recursive:true});
    await page.screenshot({path:path.join(out,'common100-new-main-mobile.png'),fullPage:true});
    await page.locator('[data-group="lintel"]').click();
    await page.screenshot({path:path.join(out,'common100-lintel-mobile.png'),fullPage:true});
+   await page.locator('#single').click();
+   for(let i=0;i<6;i++){
+     const name='LINTEL_'+String(i+1).padStart(3,'0');
+     if((await page.locator('#stoneName').textContent())!==name)throw Error('Wrong endcap sample '+name);
+     await page.locator('#endLeft').click();
+     await page.locator('.stage').screenshot({path:path.join(out,'endcap-'+name+'-left.png')});
+     await page.locator('#endRight').click();
+     await page.locator('.stage').screenshot({path:path.join(out,'endcap-'+name+'-right.png')});
+     await page.locator('#next').click();
+   }
    if(errors.length||failures.length)throw new Error(JSON.stringify({errors,failures}));
    console.log('COMMON100_3D_BROWSER_QA_PASS','groups='+groups.length,'meshes=100','canvas=webgl','mobile=390px');
  }finally{await browser.close();server.kill();}
