@@ -1,0 +1,63 @@
+name: Probe 0.90 volumetric packing with Common94
+on:
+  push:
+    branches: [agent/tower-common94-dense-20261017]
+    paths:
+      - 'tools/tower/verify-common94-density.py'
+      - 'tools/tower/bake-common94-candidates.py'
+      - '.github/workflows/tower-common94-density.yml'
+permissions:
+  contents: write
+jobs:
+  offline-density-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/tower-common94-dense-20261017
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deterministic offline geometry dependencies
+        run: pip install 'numpy==2.2.6' 'trimesh==4.11.1' 'scipy==1.15.3' 'rtree==1.4.1'
+      - name: Confirm old baseline fails required physical-density gate
+        run: |
+          if python tools/tower/verify-common94-density.py --recipes assets/tower/prefabs/balkar71/placements-17_5_5.json --report /tmp/common94-old-baseline.json --require-pass; then
+            echo 'ERROR: baseline unexpectedly certified at 0.90' >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          a=json.load(open('/tmp/common94-old-baseline.json'))
+          assert not a['approved'] and a['passes']<a['tested']
+          print('BASELINE_REJECTED_CORRECTLY',a['passes'],'/',a['tested'])
+          PY
+      - name: Bake first two representative section sizes with 94 shared models
+        run: python tools/tower/bake-common94-candidates.py --pilot --max-stones 512
+      - name: Independently inspect the new candidates without trusting claimed metrics
+        run: |
+          python tools/tower/verify-common94-density.py \
+            --recipes assets/tower/prefabs/common94/candidate-placements-17_7.json \
+            --report assets/tower/prefabs/common94/candidate-density-17_7.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('assets/tower/prefabs/common94/candidate-density-17_7.json')
+          d=json.loads(p.read_text())
+          assert d['tested']==2
+          assert d['targetActualDensity']==0.9
+          assert all('convexUpperBound' in r for r in d['rows'])
+          print('COMMON94_PROBE',d['passes'],'/',d['tested'],'physical density compliant')
+          PY
+      - name: Check existing section compatibility
+        run: node --test tests/compact-stones-1755.test.mjs
+      - name: Save pilot assessment (never change active catalog)
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/prefabs/common94/candidate-placements-17_7.json assets/tower/prefabs/common94/candidate-density-17_7.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'test(tower): record independently assessed common94 dense pilot'
+          git push origin HEAD:agent/tower-common94-dense-20261017
