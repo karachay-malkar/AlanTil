@@ -103,7 +103,13 @@ def compute_coverage(kind, recipe, geom, pitch, exact=False):
 
 
 def assess(kind, recipe, geom, min_density=TARGET):
-    upper = compute_coverage(kind, recipe, geom, PROXY_PITCH)
+    try:
+        upper = compute_coverage(kind, recipe, geom, PROXY_PITCH)
+    except (ValueError, np.linalg.LinAlgError) as error:
+        # A section with a malformed or out-of-envelope source is rejected,
+        # but must not prevent audit of all remaining sections.
+        return {'section': kind, 'convexUpperBound': {'density': 0.0, 'overlapFraction': 0.0},
+                'passed': False, 'measuredActual': False, 'reason': str(error)}
     result = {'section': kind, 'convexUpperBound': upper}
     if upper['density'] + 1e-9 < min_density:
         result.update(passed=False, reason='convex upper bound below required real-solid density',
