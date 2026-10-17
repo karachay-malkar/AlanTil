@@ -135,7 +135,7 @@ function renderStone(){
   state.index=Math.min(Math.max(state.index,0),records.length-1);
   const current=records[state.index];const x=dimsOf(current);
   $('stoneName').textContent=current.name;
-  $('stoneOrigin').textContent=(current.source==='gate'?'Исходный камень ворот':'Смоделирован заново')+' · '+infoNames[current.category];
+  $('stoneOrigin').textContent=(current.source==='gate'?'Исходный камень ворот':'Смоделирован заново'+(current.shapeFamily?' · '+({'massive':'Массивный','flat-bed':'Плоский','trapezoid':'Трапециевидный','short-wide':'Короткий широкий','broken-facet':'Рваный многогранник','asymmetric':'Асимметричный'}[current.shapeFamily]||current.shapeFamily):''))+ ' · '+infoNames[current.category];
   ['dx','dy','dz'].forEach((id,i)=>$(id).textContent=x[i]);
   $('position').textContent=(state.index+1)+' / '+records.length;
   $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень для перекрытия оконного или дверного проёма.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
@@ -211,11 +211,11 @@ async function injectModel(gltf,meta){
 }
 async function start(){
  try{
- const response=await fetch(BASE+'common-100.json?version=17.7-common100.2',{cache:'no-store'});
+ const response=await fetch(BASE+'common-100.json?version=17.7-common100.4',{cache:'no-store'});
  if(!response.ok)throw new Error('Не удалось загрузить метаданные: HTTP '+response.status);
  const meta=await response.json();if(meta.count!==100)throw new Error('Неподдерживаемая версия библиотеки');
  window.__common100meta=meta;
- const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.2');
+ const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.4');
  await injectModel(gltf,meta);
  }catch(error){$('progress').hidden=false;$('progress').textContent='Ошибка загрузки библиотеки: '+error.message+' — откройте страницу через сайт или выберите локальный GLB справа.';console.error(error);}
 }
