@@ -8,22 +8,50 @@ on:
       - '.github/workflows/tower-gate-faces-17512.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - run: pip install numpy==2.3.5 scipy==1.17.0 trimesh==4.11.1 pillow==12.3.0
-      - name: Probe natural-stone coverage of large 4x4x4 faces with 1024 instances
-        run: OPENBLAS_NUM_THREADS=1 python tools/tower/improve-gate-faces-17512.py --kind 4x4x4 --variant 0 --out /tmp/face-1024-probe.json
+      - name: Bake 25 independent gate-stone sections with higher candidate cap
+        run: OPENBLAS_NUM_THREADS=1 python tools/tower/improve-gate-faces-17512.py
+      - name: Measure all 25 six-face contacts, true recipe bounds and count
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          p=json.loads(pathlib.Path('assets/tower/prefabs/balkar71/placements-17_5_12.json').read_text())
+          assert p['version']=='17.5.12'
+          assert len(p['shapes'])==486 and len(p['variants'])==5
+          rows=[x for v in p['variants'].values() for x in v]
+          assert len(rows)==25 and all(len(v)==5 for v in p['variants'].values())
+          assert all(1<=x['rocks']<=1024 for x in rows)
+          assert all(len(x['placement'])==x['rocks'] for x in rows)
+          assert p['totalPlacements']==sum(x['rocks'] for x in rows)
+          print('FACE_1024_CANDIDATE_25',p['totalPlacements'])
+          print('LOWEST_FACE',min(x['minFaceCoverage'] for x in rows))
+          print('MEAN_MIN_FACE',sum(x['minFaceCoverage'] for x in rows)/25)
+          print('MEAN_DENSITY',sum(x['occupancy'] for x in rows)/25)
+          print('FACES_ABOVE_90',sum(x['minFaceCoverage']>=.90 for x in rows))
+          PY
+      - name: Publish only versioned 17.5.12 candidate recipes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/prefabs/balkar71/placements-17_5_12.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'assets(tower): candidate 25 extended gate-rock masonry layouts [skip prefab bake]'
+            git pull --rebase origin 17.2
+            git push origin HEAD:17.2
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: alantil-1024-rocks-face-probe
-          path: /tmp/face-1024-probe.json
+          name: alantil-extended-gate-rock-25-candidates
+          path: assets/tower/prefabs/balkar71/placements-17_5_12.json
           if-no-files-found: ignore
