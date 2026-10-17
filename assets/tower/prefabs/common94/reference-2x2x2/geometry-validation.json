@@ -1,0 +1,36 @@
+{
+  "sourceMeshes": 94,
+  "placed": 100,
+  "independentlyValidatedTransforms": 100,
+  "allUniformScale": true,
+  "allWithinBounds": true,
+  "originalTriangleMeshesPreserved": true,
+  "sourceCracksThrough": [
+    {
+      "axis": "x",
+      "silhouetteCoverage": 0.74875,
+      "interiorCoverage": 0.99236,
+      "visibleGapSamples": 8,
+      "largestConnectedGapPixels": 2,
+      "naturalContourAreaSamples": 1047
+    },
+    {
+      "axis": "y",
+      "silhouetteCoverage": 0.81375,
+      "interiorCoverage": 0.99202,
+      "visibleGapSamples": 9,
+      "largestConnectedGapPixels": 4,
+      "naturalContourAreaSamples": 1128
+    },
+    {
+      "axis": "z",
+      "silhouetteCoverage": 0.72625,
+      "interiorCoverage": 0.99699,
+      "visibleGapSamples": 3,
+      "largestConnectedGapPixels": 1,
+      "naturalContourAreaSamples": 997
+    }
+  ],
+  "visualThroughGapVerified": false,
+  "liveReleaseAllowed": false
+}

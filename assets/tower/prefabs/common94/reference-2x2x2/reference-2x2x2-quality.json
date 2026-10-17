@@ -1,0 +1,76 @@
+{
+  "version": "17.7-reference-2x2x2.pilot1",
+  "sectionId": "2x2x2",
+  "variant": 0,
+  "dimensionsMeters": [
+    0.5,
+    0.5,
+    0.5
+  ],
+  "modelsAvailable": 94,
+  "geometry": "original Common94 GLB meshes; rigid+uniform transforms",
+  "criterion": "through-gap silhouette closure excluding ragged outer contour",
+  "samplingPitchMeters": 0.0125,
+  "coarse": 15,
+  "horizontallyElongated": 11,
+  "horizontalShare": 0.73333,
+  "chinking": 85,
+  "placements": 100,
+  "voxelConvexDensityUpperBound": 0.28063,
+  "beforeViews": [
+    {
+      "axis": "x",
+      "silhouetteCoverage": 0.54187,
+      "interiorCoverage": 0.83808,
+      "visibleGapSamples": 142,
+      "largestConnectedGapPixels": 106,
+      "naturalContourAreaSamples": 877
+    },
+    {
+      "axis": "y",
+      "silhouetteCoverage": 0.74187,
+      "interiorCoverage": 0.97351,
+      "visibleGapSamples": 28,
+      "largestConnectedGapPixels": 15,
+      "naturalContourAreaSamples": 1057
+    },
+    {
+      "axis": "z",
+      "silhouetteCoverage": 0.66375,
+      "interiorCoverage": 0.93667,
+      "visibleGapSamples": 62,
+      "largestConnectedGapPixels": 57,
+      "naturalContourAreaSamples": 979
+    }
+  ],
+  "afterViews": [
+    {
+      "axis": "x",
+      "silhouetteCoverage": 0.74875,
+      "interiorCoverage": 0.99236,
+      "visibleGapSamples": 8,
+      "largestConnectedGapPixels": 2,
+      "naturalContourAreaSamples": 1047
+    },
+    {
+      "axis": "y",
+      "silhouetteCoverage": 0.81375,
+      "interiorCoverage": 0.99202,
+      "visibleGapSamples": 9,
+      "largestConnectedGapPixels": 4,
+      "naturalContourAreaSamples": 1128
+    },
+    {
+      "axis": "z",
+      "silhouetteCoverage": 0.72625,
+      "interiorCoverage": 0.99699,
+      "visibleGapSamples": 3,
+      "largestConnectedGapPixels": 1,
+      "naturalContourAreaSamples": 997
+    }
+  ],
+  "visualGapProof": "convex-hull voxel PROXY; cannot certify real triangle geometry",
+  "requiresHumanReview": true,
+  "attempts": 113,
+  "repairedSourceCoarse": 0
+}
