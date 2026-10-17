@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlanTil — Проверка 25 кладок</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color-scheme:dark;background:#18201c;color:#e8eee5}
+*{box-sizing:border-box}body{margin:0}header{padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#222d27}
+strong{font-size:15px}label{font-size:12px;display:flex;flex-direction:column;gap:4px}
+select{font:inherit;font-size:14px;padding:8px;background:#344238;color:#fff;border:1px solid #70806e;border-radius:6px}
+main{height:calc(100dvh - 100px);min-height:400px;position:relative}
+#viewport{width:100%;height:100%;touch-action:none}
+#status{position:absolute;left:12px;bottom:12px;padding:9px 12px;background:#1b251fe8;max-width:min(540px,calc(100vw - 24px));font-size:12px;border-radius:6px;white-space:pre-line}
+#help{font-size:12px;color:#a8b9a7}footer{padding:5px 15px;font-size:11px;color:#a8b9a7}
+@media(max-width:600px){header{gap:8px;padding:8px}main{height:calc(100dvh - 160px)}}
+</style></head><body>
+<header><strong>Алан тил · Контроль кладки</strong>
+<label>Геометрия<select id="release"><option value="17.5.5">Текущая 17.5.5</option><option value="17.5.8">Новая 17.5.8 (кандидат)</option></select></label>
+<label>Размер<select id="kind"><option>1x1x1</option><option>2x2x2</option><option>2x2x3</option><option>2x3x4</option><option>4x4x4</option></select></label>
+<label>Кладка<select id="variant"><option value="0">1 / 5</option><option value="1">2 / 5</option><option value="2">3 / 5</option><option value="3">4 / 5</option><option value="4">5 / 5</option></select></label>
+<span id="help">Вращение — мышь или палец · Масштаб — колесо или жест двумя пальцами</span>
+</header><main><div id="viewport"></div><div id="status" role="status">Загрузка настоящей 3D-библиотеки...</div></main>
+<footer>Отображаются реальные GLB-камни и фиксированные матрицы JSON. Метрики заполнения из рецептов не являются независимым измерением поверхности.</footer>
+<script type="module">
+import * as THREE from '/src/vendor/three/three.module.js';
+import {GLTFLoader} from '/src/vendor/three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from '/src/vendor/three/addons/controls/OrbitControls.js';
+import {getRockSurface,applyRockSurface} from '/src/features/tower/rock-surface.js';
+const $=id=>document.getElementById(id);
+const host=$('viewport'),status=$('status');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.15;
+host.append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#728578');
+const camera=new THREE.PerspectiveCamera(46,1,.02,100);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.minDistance=.25;controls.maxDistance=18;
+scene.add(new THREE.HemisphereLight('#ffffff','#685a48',2.1));
+const light=new THREE.DirectionalLight('#fff2dd',3);light.position.set(-4,8,5);scene.add(light);
+const helper=new THREE.Group();scene.add(helper);
+const visible=new THREE.Group();scene.add(visible);
+const packs={};let shapes=null,material=null,generation=0;
+function resize(){const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(host);resize();
+function clear(){
+ while(visible.children.length){const mesh=visible.children[0];visible.remove(mesh);if(mesh.isInstancedMesh)mesh.dispose();}
+ while(helper.children.length){const object=helper.children[0];helper.remove(object);object.geometry?.dispose();object.material?.dispose();}
+}
+async function getPack(version){
+ if(packs[version])return packs[version];
+ const file=version==='17.5.5'?'placements-17_5_5.json':'placements-17_5_8.json';
+ const url='/assets/tower/prefabs/balkar71/'+file+'?v='+version;
+ const response=await fetch(url,{cache:'no-cache'});
+ if(!response.ok)throw new Error('Рецепты '+version+' ещё не опубликованы (HTTP '+response.status+').');
+ const pack=await response.json();
+ if(pack.version!==version)throw new Error('Неверная версия данных '+pack.version);
+ packs[version]=pack;return pack;
+}
+async function build(){
+ const seq=++generation;
+ try{
+  status.textContent='Загрузка выбранной кладки...';
+  const release=$('release').value,kind=$('kind').value,variant=Number($('variant').value);
+  const pack=await getPack(release);
+  if(!material)material=await getRockSurface(renderer);
+  if(!shapes){
+   const root=(await new GLTFLoader().loadAsync(pack.library+'?v=qa-17.5.8')).scene;
+   applyRockSurface(root,material);shapes=new Map();
+   root.traverse(o=>{if(o.isMesh&&o.geometry)shapes.set(o.name,o.geometry)});
+  }
+  if(seq!==generation)return;
+  const recipe=pack.variants?.[kind]?.[variant];
+  if(!recipe)throw new Error('Отсутствует кладка '+kind+' / '+variant);
+  clear();
+  const batches=new Map();
+  for(const p of recipe.placement){if(!batches.has(p[0]))batches.set(p[0],[]);batches.get(p[0]).push(p);}
+  const matrix=new THREE.Matrix4();
+  for(const [name,rows] of batches){
+   const geometry=shapes.get(name);if(!geometry)throw new Error('Нет камня '+name);
+   const mesh=new THREE.InstancedMesh(geometry,material,rows.length);
+   rows.forEach((r,i)=>{matrix.set(...r.slice(1),0,0,0,1);mesh.setMatrixAt(i,matrix)});
+   mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();visible.add(mesh);
+  }
+  const dims=kind.split('x').map(n=>Number(n)*.25);
+  const bounds=new THREE.BoxGeometry(...dims);
+  const wire=new THREE.LineSegments(new THREE.EdgesGeometry(bounds),new THREE.LineBasicMaterial({color:'#9be9ad',transparent:true,opacity:.45,depthTest:false}));
+  bounds.dispose();helper.add(wire);
+  const extent=Math.max(...dims);
+  camera.position.set(extent*1.75,extent*1.3,extent*1.9);
+  controls.target.set(0,0,0);controls.update();camera.near=Math.max(.008,extent/100);camera.updateProjectionMatrix();
+  const coverage=recipe.minFaceCoverage==null?'не измерено':(100*recipe.minFaceCoverage).toFixed(1)+'%';
+  status.textContent='Размер: '+kind+' (ячейка 25 см)\nКамней: '+recipe.placement.length+
+   '\nЗаписанное объёмное заполнение: '+(100*recipe.occupancy).toFixed(1)+'%'+
+   '\nМинимальное покрытие наружной грани: '+coverage+
+   '\nМатериал: '+material.name;
+ }catch(e){if(seq===generation)status.textContent='Ошибка: '+String(e.message||e);}
+}
+for(const id of ['release','kind','variant'])$(id).addEventListener('change',build);
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+animate();void build();
+</script></body></html>
