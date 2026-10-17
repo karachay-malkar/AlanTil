@@ -80,6 +80,10 @@ def gate_candidates(path):
         transform, geometry_name = scene.graph.get(node)
         mesh = scene.geometry[geometry_name].copy()
         mesh.apply_transform(transform)
+        # Gate-v7 rocks split shared vertices at glTF shading/UV seams. Weld identical
+        # *positions* before computing dihedrals or testing water-tightness.
+        mesh.merge_vertices(merge_tex=True, merge_norm=True)
+        trimesh.repair.fix_normals(mesh)
         if not np.isfinite(mesh.vertices).all() or len(mesh.faces) < 12:
             continue
         align_long_axis_x(mesh)
@@ -174,7 +178,7 @@ def accepted_rock(mesh, source_id, target_long):
         raise ValueError("Scaled rock outside target size")
     if np.any(rock.extents <= 0):
         raise ValueError("Degenerate original rock " + source_id)
-    return make_surface(rock)
+    return make_surface(rock, force_uv=True)
 
 
 def select(candidates, how_many, used, rng, kind):
