@@ -13,7 +13,7 @@ main{height:calc(100dvh - 100px);min-height:400px;position:relative}
 @media(max-width:600px){header{gap:8px;padding:8px}main{height:calc(100dvh - 160px)}}
 </style></head><body>
 <header><strong>Алан тил · Контроль кладки</strong>
-<label>Геометрия<select id="release"><option value="17.5.5">Текущая 17.5.5</option><option value="17.5.8">Новая 17.5.8 (кандидат)</option></select></label>
+<label>Геометрия<select id="release"><option value="17.5.5">Текущая 17.5.5</option><option value="17.5.8">Пробная 17.5.8 (63 модели)</option><option value="17.5.9">Кладка ворот 17.5.9 (486 моделей)</option></select></label>
 <label>Размер<select id="kind"><option>1x1x1</option><option>2x2x2</option><option>2x2x3</option><option>2x3x4</option><option>4x4x4</option></select></label>
 <label>Кладка<select id="variant"><option value="0">1 / 5</option><option value="1">2 / 5</option><option value="2">3 / 5</option><option value="3">4 / 5</option><option value="4">5 / 5</option></select></label>
 <span id="help">Вращение — мышь или палец · Масштаб — колесо или жест двумя пальцами</span>
@@ -41,7 +41,7 @@ scene.add(new THREE.HemisphereLight('#ffffff','#685a48',2.1));
 const light=new THREE.DirectionalLight('#fff2dd',3);light.position.set(-4,8,5);scene.add(light);
 const helper=new THREE.Group();scene.add(helper);
 const visible=new THREE.Group();scene.add(visible);
-const packs={};let shapes=null,material=null,generation=0;
+const packs={},geometryCaches={};let material=null,generation=0;
 function resize(){const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(host);resize();
 function clear(){
@@ -50,7 +50,7 @@ function clear(){
 }
 async function getPack(version){
  if(packs[version])return packs[version];
- const file=version==='17.5.5'?'placements-17_5_5.json':'placements-17_5_8.json';
+ const file='placements-'+version.replaceAll('.','_')+'.json';
  const url='/assets/tower/prefabs/balkar71/'+file+'?v='+version;
  const response=await fetch(url,{cache:'no-cache'});
  if(!response.ok)throw new Error('Рецепты '+version+' ещё не опубликованы (HTTP '+response.status+').');
@@ -65,12 +65,15 @@ async function build(){
   const release=$('release').value,kind=$('kind').value,variant=Number($('variant').value);
   const pack=await getPack(release);
   if(!material)material=await getRockSurface(renderer);
-  if(!shapes){
-   const root=(await new GLTFLoader().loadAsync(pack.library+'?v=qa-17.5.8')).scene;
-   applyRockSurface(root,material);shapes=new Map();
-   root.traverse(o=>{if(o.isMesh&&o.geometry)shapes.set(o.name,o.geometry)});
+  if(!geometryCaches[pack.library]){
+   const root=(await new GLTFLoader().loadAsync(pack.library+'?v=qa-17.5.9')).scene;
+   applyRockSurface(root,material);
+   const map=new Map();
+   root.traverse(o=>{if(o.isMesh&&o.geometry)map.set(o.name,o.geometry)});
+   geometryCaches[pack.library]=map;
   }
   if(seq!==generation)return;
+  const shapes=geometryCaches[pack.library];
   const recipe=pack.variants?.[kind]?.[variant];
   if(!recipe)throw new Error('Отсутствует кладка '+kind+' / '+variant);
   clear();
