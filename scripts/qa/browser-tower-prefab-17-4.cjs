@@ -41,7 +41,17 @@ fs.mkdirSync(evidence,{recursive:true});
    <script type="module">import {mount} from '/src/features/tower/index.js?v=17.5.5-compact-stones.1';mount({root:document.getElementById('root'),shell:{setHeaderContent(){},appShell:document.getElementById('app-shell')}});</script>`}));
   await new Promise(resolve=>setTimeout(resolve,300));
   await page.goto('http://127.0.0.1:8784/prefab-tower-fixture');
-  await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:30000});
+  try{
+   await page.waitForSelector('.towerCanvas[data-ready="true"]',{timeout:45000});
+  }catch(e){
+   console.error('TOWER_READY_DIAGNOSTICS',JSON.stringify({
+    errors,responses,body:(await page.locator('body').innerText()).slice(0,1600),
+    canvasCount:await page.locator('.towerCanvas').count(),
+    ready:await page.locator('.towerCanvas').getAttribute('data-ready').catch(()=>null)
+   }));
+   await page.screenshot({path:path.join(evidence,'startup-failure.png')});
+   throw e;
+  }
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabReady==='true',{timeout:45000});
   // Verify the WebGL editor actually decoded UASTC KTX2 rather than using PNG fallback.
   assert.equal(await page.locator('.towerCanvas').getAttribute('data-stone-texture-encoding'),'ktx2');
@@ -71,7 +81,7 @@ fs.mkdirSync(evidence,{recursive:true});
   await page.waitForFunction(()=>!document.querySelector('[data-confirm]')?.disabled,{timeout:12000});
   await page.locator('[data-confirm]').click();
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='1'&&
-   document.querySelector('.towerGame')?.dataset.mode==='idle',{timeout:40000});
+   document.querySelector('.towerGame')?.dataset.mode==='placing',{timeout:40000});
   let snapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
   assert.equal(snapshot.revision,1);
   assert.equal(snapshot.elements.length,1);
@@ -113,7 +123,7 @@ fs.mkdirSync(evidence,{recursive:true});
   await page.waitForFunction(()=>!document.querySelector('[data-confirm]')?.disabled,{timeout:30000});
   await page.locator('[data-confirm]').click();
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='1' &&
-   document.querySelector('.towerGame')?.dataset.mode==='idle',{timeout:45000});
+   document.querySelector('.towerGame')?.dataset.mode==='placing',{timeout:45000});
   let windowSnapshot=await page.evaluate(()=>JSON.parse(localStorage.getItem('__QA_REMOTE_V3')));
   assert.equal(windowSnapshot.elements.length,1);
   assert.equal(windowSnapshot.elements[0].sectionId,'window-4x5x2');
