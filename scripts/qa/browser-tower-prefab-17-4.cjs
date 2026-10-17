@@ -23,6 +23,12 @@ fs.mkdirSync(evidence,{recursive:true});
    export async function loadTowerV2(){return {format:2,elements:[],silver:95,gold:10,revision:3}}
    function current(){return JSON.parse(localStorage.getItem('__QA_REMOTE_V3')||'{"format":3,"revision":0,"elements":[]}')}
    export async function loadTowerV3(){return current()}
+   export async function clearTowerAll(){
+    const currentState=current();
+    const result={format:3,revision:currentState.revision+1,elements:[]};
+    localStorage.setItem('__QA_REMOTE_V3',JSON.stringify(result));
+    return result;
+   }
    export async function mutateTowerV3(operation){
     const old=current();if(operation.revision!==old.revision)throw Error('REVISION_CONFLICT');
     let next;
