@@ -1,8 +1,9 @@
-"""Six monolithic lintels with restored v5 longitudinal sides and carved end faces.
+"""V5 wall-stable lintels with individual chipped, cracked, asymmetric stone ends.
 
-Endcap-only (both X-axis end faces): asymmetric chips, cracks, softened
-patches, and bevels. No fine triangular noise is applied to the long flanks.
-Native 3D meshes, not an illustration. Units metres; Y up; X along length.
+Two independent longitudinal fracture patterns at each span:
+1.00 m ×2, 1.25 m ×2, 1.50 m ×2. Units are metres.
+Explicit face triangulation, warped longitudinal walls, chipped arrises,
+wide bearing ends and a relatively stable underside (never six smooth prisms).
 """
 from __future__ import annotations
 
@@ -12,103 +13,6 @@ from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 
 STYLES=("quarry-broken","stratified")
-# One deliberately different mixed-damage recipe for each face of six stones.
-ENDCAP_DESIGNS=(
-    ("chip+bevel","crack+soft"),
-    ("crack+bevel","chip+soft"),
-    ("chip+soft","bevel+crack"),
-    ("crack+asymmetric","chip+bevel"),
-    ("large-chip+bevel","crack+soft"),
-    ("chip+crack+bevel","soft+asymmetric"),
-)
-
-
-def _sector_distance(a,b,n):
-    d=abs(a-b)
-    return min(d,n-d)
-
-
-def apply_endcap_damage(vertices,start,n,length,side,design,rng):
-    """Cut corners on the END outline; leave middle-side profile untouched."""
-    inward=1 if side=="left" else -1
-    chip_index=int(rng.integers(0,n))
-    bevel_index=(chip_index+n//3+int(rng.integers(0,3)))%n
-    for j in range(n):
-        point=np.asarray(vertices[start+j],dtype=float).copy()
-        shrink=0.
-        shift=0.
-        if "chip" in design and _sector_distance(j,chip_index,n)<=1:
-            big="large-chip" in design
-            shrink=(.15 if big else .095)*(1. if j==chip_index else .53)
-            shift=(.019 if big else .012)*(1. if j==chip_index else .5)
-        if "bevel" in design and _sector_distance(j,bevel_index,n)<=1:
-            shrink=max(shrink,.082 if j==bevel_index else .042)
-            shift=max(shift,.010 if j==bevel_index else .004)
-        if "soft" in design and _sector_distance(j,bevel_index,n)<=1:
-            shrink=max(shrink,.05 if j==bevel_index else .023)
-            shift=max(shift,.004)
-        if "asymmetric" in design and j==bevel_index:
-            shrink=max(shrink,.105)
-            shift=max(shift,.013)
-        point[1:]*=(1-shrink)
-        point[0]+=inward*(shift+float(rng.uniform(0,.002)))
-        vertices[start+j]=point.tolist()
-
-
-def build_endcap_profile(vertices,faces,start,n,length,side,design,rng):
-    """Watertight broad faceted cap: boundary -> 2 broken rings -> core.
-
-    A crack is a localized recessed V-shaped channel in the cap, not a dark
-    line painted onto a flat polygon. Triangles are restricted to both ends.
-    """
-    inward=1 if side=="left" else -1
-    outer=np.asarray(vertices[start:start+n],dtype=float)
-    yz_center=np.mean(outer[:,1:],axis=0)
-    # Recess cap 1-3 cm: deep enough to catch light, not cross the next course.
-    inset_limit=min(.031,length*.025)
-    crack_sector=int(rng.integers(0,n))
-    chip_sector=(crack_sector+n//2+int(rng.integers(0,3)))%n
-    cap_x=(-float(length)/2 if side=="left" else float(length)/2)
-    inner_starts=[]
-    for layer,radial in enumerate((.72,.32)):
-        inner_starts.append(len(vertices))
-        for j in range(n):
-            p=outer[j].copy()
-            p[1:]=yz_center+(p[1:]-yz_center)*radial
-            step=(.34 if layer==0 else .73)*inset_limit
-            if "crack" in design and _sector_distance(j,crack_sector,n)<=1:
-                step+=(.12 if layer==0 else .27)*inset_limit
-            if "chip" in design and _sector_distance(j,chip_sector,n)<=1:
-                step+=(.15 if layer==0 else .08)*inset_limit
-            if "bevel" in design and _sector_distance(j,chip_sector,n)<=1:
-                step+=.07*inset_limit
-            step=np.clip(step+rng.uniform(-.002,.002),0.,inset_limit)
-            p[0]=cap_x+inward*step
-            # Real directional line fracture: the narrow tip of a recessed V.
-            if "crack" in design and layer==1 and j==crack_sector:
-                p[1:]+=rng.uniform(-.003,.003,size=2)
-            vertices.append(p.tolist())
-    core_idx=len(vertices)
-    vertices.append([
-        cap_x+inward*inset_limit*.9,
-        float(yz_center[0]+rng.uniform(-.011,.011)),
-        float(yz_center[1]+rng.uniform(-.012,.012)),
-    ])
-    for outer_start,inner_start in zip((start,inner_starts[0]),inner_starts):
-        for j in range(n):
-            a=outer_start+j
-            b=outer_start+(j+1)%n
-            c=inner_start+j
-            d=inner_start+(j+1)%n
-            if side=="left":
-                faces.extend(((a,c,d),(a,d,b)))
-            else:
-                faces.extend(((a,b,d),(a,d,c)))
-    for j in range(n):
-        a=inner_starts[-1]+j
-        b=inner_starts[-1]+(j+1)%n
-        faces.append((core_idx,b,a) if side=="left" else (core_idx,a,b))
-
 # Twelve uneven corners on the Y/Z outline; in stratified form two extra
 # offsets make steps rather than a uniformly rounded or cubical contour.
 SECTION=np.array([
@@ -119,6 +23,99 @@ SECTION=np.array([
 MATERIAL=PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR",
                      baseColorFactor=[193,176,146,255],
                      metallicFactor=0,roughnessFactor=.97)
+
+
+
+# Each model gets an individual, asymmetric treatment at EACH end.
+# The broad sidewall triangulation below is exactly the approved v5 generator.
+END_TREATMENTS=(
+    ("large-chip","angled-bevel"),
+    ("crack-groove","chipped-corner"),
+    ("large-chip","softened-edge"),
+    ("fractured-ridge","crack-groove"),
+    ("deep-chip","slanted-facet"),
+    ("mixed-chip-crack","rounded-bevel"),
+)
+
+
+def _cap_sector_gap(j, target, n):
+    dist=abs(int(j)-int(target))
+    return min(dist,n-dist)
+
+
+def _build_endcap(vertices, faces, ids, side, length, ordinal, rng):
+    """Model one sealed broken stone END, not a smooth flat-sawn polygon.
+
+    Outer ring belongs to the original v5 longitudinal surface; only the
+    final 0–8 mm of its rim can be chipped/bevelled. New geometry is confined
+    to the cap: an irregular inner polygon and locally sunken broad facets.
+    The crack is a narrow V-shaped groove in two adjoining cap facets.
+    """
+    n=len(ids)
+    treatment=END_TREATMENTS[ordinal][0 if side==-1 else 1]
+    outer=np.asarray([vertices[i] for i in ids],dtype=float)
+    yz=outer[:,1:]
+    middle=yz.mean(axis=0)
+    tip=int(rng.integers(0,n))
+    # Separate crack / corner / bevel sectors, at different positions.
+    fissure=(tip+int(rng.integers(3,max(4,n-2))))%n
+    bevel=(fissure+int(rng.integers(2,max(3,n-2))))%n
+    inward=-int(side)
+    # Rim damage is subtle and localized. No new teeth along the long sides.
+    for j,idx in enumerate(ids):
+        d=_cap_sector_gap(j,tip,n)
+        b=_cap_sector_gap(j,bevel,n)
+        p=np.asarray(vertices[idx],dtype=float)
+        if d==0 and treatment in ("large-chip","deep-chip","mixed-chip-crack","chipped-corner"):
+            p[0]+=inward*float(rng.uniform(.006,.010))
+            p[1:]=middle+(p[1:]-middle)*float(rng.uniform(.94,.975))
+        elif b==0 and treatment in ("angled-bevel","slanted-facet","rounded-bevel","softened-edge"):
+            p[0]+=inward*float(rng.uniform(.003,.006))
+            p[1:]=middle+(p[1:]-middle)*float(rng.uniform(.967,.988))
+        elif b==1 and treatment in ("softened-edge","rounded-bevel"):
+            p[1:]=middle+(p[1:]-middle)*.988
+        vertices[idx]=p.tolist()
+    # Large chips on ONE sector and a narrow shallow fracture on another.
+    # Other sectors deliberately stay calm: never produce a regular pattern.
+    inner=[]
+    for j,idx in enumerate(ids):
+        p=np.asarray(vertices[idx],dtype=float)
+        radius=float(rng.uniform(.48,.65))
+        inner_yz=middle+(p[1:]-middle)*radius
+        inner_yz+=rng.uniform(-.0035,.0035,size=2)
+        d=_cap_sector_gap(j,tip,n)
+        gap=_cap_sector_gap(j,fissure,n)
+        damage=.013+float(rng.uniform(-.003,.004))
+        if treatment in ("large-chip","deep-chip","mixed-chip-crack","chipped-corner","fractured-ridge"):
+            if d==0: damage+=.018
+            elif d==1: damage+=.008
+        if treatment in ("crack-groove","mixed-chip-crack","fractured-ridge"):
+            if gap==0: damage+=.015
+            elif gap==1: damage+=.003
+        if treatment in ("slanted-facet","angled-bevel") and _cap_sector_gap(j,bevel,n)<2:
+            damage+=.009
+        damage=min(.036,damage)
+        inside=np.array([p[0]+inward*damage,inner_yz[0],inner_yz[1]])
+        inner.append(len(vertices))
+        vertices.append(inside.tolist())
+    # Offset core yields large noncoplanar planes rather than a pizza fan.
+    core_yz=middle+rng.uniform(-.012,.012,size=2)
+    core_depth=float(rng.uniform(.016,.025))
+    if treatment in ("crack-groove","mixed-chip-crack","deep-chip"):
+        core_depth+=.006
+    core=len(vertices)
+    vertices.append([float(np.mean(outer[:,0]))+inward*core_depth,
+                     float(core_yz[0]),float(core_yz[1])])
+    for j in range(n):
+        jp=(j+1)%n
+        a,b=ids[j],ids[jp]
+        c,d=inner[j],inner[jp]
+        if side==-1:
+            faces.extend(((b,a,c),(b,c,d),(core,d,c)))
+        else:
+            faces.extend(((a,b,d),(a,d,c),(core,c,d)))
+    return treatment
+
 
 
 def build_rugged_lintel(rng,length,style,ordinal):
@@ -178,11 +175,8 @@ def build_rugged_lintel(rng,length,style,ordinal):
                 faces.extend(((a,c,d),(a,d,b)))
             else:
                 faces.extend(((a,c,b),(b,c,d)))
-    # Sculpt ONLY these end faces, reusing accepted historical side topology.
-    for side,start in (("left",0),("right",(count-1)*n)):
-        design=ENDCAP_DESIGNS[ordinal][0 if side=="left" else 1]
-        apply_endcap_damage(vertices,start,n,float(length),side,design,rng)
-        build_endcap_profile(vertices,faces,start,n,float(length),side,design,rng)
+    _build_endcap(vertices,faces,list(range(n)),-1,length,ordinal,rng)
+    _build_endcap(vertices,faces,list(range((count-1)*n,count*n)),1,length,ordinal,rng)
     mesh=trimesh.Trimesh(vertices=vertices,faces=faces,process=True)
     trimesh.repair.fix_normals(mesh)
     # Precise span of 100/125/150 cm without forcing broad ends into tips.
