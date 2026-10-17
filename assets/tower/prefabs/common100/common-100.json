@@ -1,5 +1,5 @@
 {
-  "version": "17.7-common100.1",
+  "version": "17.7-common100.2",
   "count": 100,
   "counts": {
     "main": 72,
@@ -10,8 +10,8 @@
   "sourceGate": "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb",
   "sourceGateSHA256": "37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51",
   "originCounts": {
-    "gate": 94,
-    "generated": 6
+    "gate": 56,
+    "generated": 44
   },
   "usage": {
     "main": "face and load-bearing wall",
@@ -19,1331 +19,2628 @@
     "chinking": "gaps only, not exposed standalone courses",
     "lintel": "single-piece bridge over openings"
   },
-  "glbSHA256": "6174320065392c4be25ddb42793c98b822ee7fcc1b8002de7f2fc40fb34c49b0",
+  "glbSHA256": "dd253d2b79ab1347583f1fa923c5b5eca3e2529995434740b55eb136f5fd0cee",
   "models": [
     {
       "name": "LARGE_001",
       "category": "large",
       "sizeMeters": [
         0.56938,
-        0.24459,
-        0.25645
-      ],
-      "triangles": 66,
-      "geometrySHA256": "8173eae46dcc058d30b1f220ce59f47bb8bd4e4d30bcd77153e40f331c4e3424",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_037_Rock022",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "LARGE_002",
-      "category": "large",
-      "sizeMeters": [
-        0.67841,
-        0.36659,
-        0.35421
-      ],
-      "triangles": 88,
-      "geometrySHA256": "a6a4a701e01ecb755af62ec749a71923daafff7ef8219d5bd73fbbfc61d0e6ed",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_054_Rock015",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.75
-    },
-    {
-      "name": "LARGE_003",
-      "category": "large",
-      "sizeMeters": [
-        0.51486,
-        0.38022,
-        0.20791
+        0.34163,
+        0.28447
       ],
       "triangles": 58,
-      "geometrySHA256": "e631164bc61a821d5a781fbc3c5a112e72424f162fe0ec51ed3e10bdd16927d1",
+      "geometrySHA256": "55c92ff01ea7f4695bb7f2e4c841e9da4fc13919d7b6e56ff7640bdf47bdb9a4",
       "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_022_Rock023",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.7241
-    },
-    {
-      "name": "LARGE_004",
-      "category": "large",
-      "sizeMeters": [
-        0.53851,
-        0.24939,
-        0.2408
-      ],
-      "triangles": 84,
-      "geometrySHA256": "ae6dd50ecccc59df7ab6ac1601ebce457368dc47c73b7294c26b0d8e464e5828",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_035_Rock012",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "LARGE_005",
-      "category": "large",
-      "sizeMeters": [
-        0.62979,
-        0.37788,
-        0.31465
-      ],
-      "triangles": 58,
-      "geometrySHA256": "2b838b7d49240b96d952263a1adc6b2b7b91fc5f396dc7aaae07c0d4477a2051",
-      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3738,
+        "shoulder20": 0.5053,
+        "tip06": 0.2194,
+        "roughness": 0.01152,
+        "profile": [
+          1.0539,
+          1.3053,
+          1.315,
+          1.1753,
+          1.0,
+          0.7667,
+          0.5053,
+          0.3738,
+          0.2194
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_069_Rock023",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.7586
     },
     {
-      "name": "LARGE_006",
+      "name": "LARGE_002",
       "category": "large",
       "sizeMeters": [
-        0.60611,
-        0.43553,
-        0.2692
+        0.67841,
+        0.48749,
+        0.30131
       ],
       "triangles": 84,
-      "geometrySHA256": "768182bcb09171c20a18cf452b020538bd2d9599edc9a775ace12317017447ea",
+      "geometrySHA256": "37a3f1f70270354d62ebf195cf9665669bf78b57bca311a2434610a39ae5630c",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6395,
+        "shoulder20": 0.7327,
+        "tip06": 0.3716,
+        "roughness": 0.02809,
+        "profile": [
+          0.5226,
+          0.6421,
+          0.7327,
+          0.8792,
+          1.0,
+          1.0256,
+          0.8787,
+          0.6395,
+          0.3716
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_STONE_045_Rock012",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.7143
     },
     {
-      "name": "LARGE_007",
+      "name": "LARGE_003",
       "category": "large",
       "sizeMeters": [
-        0.55913,
-        0.2308,
-        0.21752
+        0.51486,
+        0.2865,
+        0.2045
       ],
       "triangles": 88,
-      "geometrySHA256": "e7c43eddf9c2ae6d4b01ce79fe15e0a76ab411be5ed1a790c20ee8f0affc0fb5",
+      "geometrySHA256": "48633206deada3255832532739476f349942ad4eaaca98dbc822ea9d859cb8a8",
       "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_055_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6212
-    },
-    {
-      "name": "LARGE_008",
-      "category": "large",
-      "sizeMeters": [
-        0.51045,
-        0.26402,
-        0.28418
-      ],
-      "triangles": 78,
-      "geometrySHA256": "b206de04095bd4cc22ed9f540433f87bddbdca30b69a25cf17efd5a3a6edf43a",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_062_Rock021",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6923
-    },
-    {
-      "name": "LARGE_009",
-      "category": "large",
-      "sizeMeters": [
-        0.64335,
-        0.54411,
-        0.4274
-      ],
-      "triangles": 66,
-      "geometrySHA256": "49a45a1f6035317a1529dd86ee6a2828e33799850255131bfb3b1479468f3077",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_073_Rock018",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.7273
-    },
-    {
-      "name": "LARGE_010",
-      "category": "large",
-      "sizeMeters": [
-        0.61493,
-        0.271,
-        0.26478
-      ],
-      "triangles": 136,
-      "geometrySHA256": "592fc8b7b33bf61c25bb8adaa11bc167f55699e986f0437c3cbb10d87e72dd38",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_077_Rock007",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6324
-    },
-    {
-      "name": "MAIN_001",
-      "category": "main",
-      "sizeMeters": [
-        0.28131,
-        0.10202,
-        0.14603
-      ],
-      "triangles": 66,
-      "geometrySHA256": "2d7ae725dda5b2e9b511d91e2bbefbdf9eff9457cd71b5ae7604ebca236b37aa",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_016_Rock018",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "MAIN_002",
-      "category": "main",
-      "sizeMeters": [
-        0.37806,
-        0.29933,
-        0.17275
-      ],
-      "triangles": 58,
-      "geometrySHA256": "fd3e2919fadcb4d1a1e9b28b2b3a5c07a978c4a8439541730088c0dd03983bf5",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_090_Rock023",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.7126
-    },
-    {
-      "name": "MAIN_003",
-      "category": "main",
-      "sizeMeters": [
-        0.36509,
-        0.20316,
-        0.14501
-      ],
-      "triangles": 88,
-      "geometrySHA256": "987c6ceb164f4cd1df3fb184427fe3af867ba054183af7be6b7e555872a7377a",
-      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7873,
+        "shoulder20": 0.9144,
+        "tip06": 0.4443,
+        "roughness": 0.00682,
+        "profile": [
+          0.5986,
+          0.8439,
+          0.9412,
+          1.0077,
+          1.0,
+          0.9697,
+          0.9144,
+          0.7873,
+          0.4443
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_006_Rock015",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.6818
     },
     {
-      "name": "MAIN_004",
-      "category": "main",
+      "name": "LARGE_004",
+      "category": "large",
       "sizeMeters": [
-        0.38015,
-        0.31678,
-        0.20147
-      ],
-      "triangles": 78,
-      "geometrySHA256": "283f929d2c8c9e884e5c1b9d80122af9b849ba1cb0d9282eb139ea415a49734a",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_052_Rock021",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.7179
-    },
-    {
-      "name": "MAIN_005",
-      "category": "main",
-      "sizeMeters": [
-        0.20482,
-        0.10754,
-        0.07534
+        0.53851,
+        0.45544,
+        0.35775
       ],
       "triangles": 66,
-      "geometrySHA256": "5bb71883361a4e7053462effa65f6db74264d3284884afcb2b51f43bcd791380",
+      "geometrySHA256": "fbf2357423bcd8183738f08e7e166adb8dbe89628095f810be31dea38a9badc5",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3375,
+        "shoulder20": 0.4743,
+        "tip06": 0.2183,
+        "roughness": 0.03248,
+        "profile": [
+          0.996,
+          1.1495,
+          1.2078,
+          1.1014,
+          1.0,
+          0.754,
+          0.4743,
+          0.3375,
+          0.2183
+        ]
+      },
       "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_027_Rock022",
+      "gateNode": "LEFT_PIER_STONE_073_Rock018",
       "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
+      "sharpEdgeRatio": 0.7273
     },
     {
-      "name": "MAIN_006",
-      "category": "main",
+      "name": "LARGE_005",
+      "category": "large",
       "sizeMeters": [
-        0.37108,
-        0.29112,
-        0.27533
-      ],
-      "triangles": 66,
-      "geometrySHA256": "132106b4e1a4d946bfa37154ab3e5e03fe9a855c958aca3d76d61b812106c808",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_021_Rock018",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.697
-    },
-    {
-      "name": "MAIN_007",
-      "category": "main",
-      "sizeMeters": [
-        0.2364,
-        0.14976,
-        0.09159
+        0.62979,
+        0.39897,
+        0.24401
       ],
       "triangles": 78,
-      "geometrySHA256": "f403f254150e1ef02bfff162433a03ac187b479e5d618ef6d7d6962a58c4ccd4",
+      "geometrySHA256": "9ead7dfc977213d368591a521438a26b4f5ec92b8cf8f1cc91692e841201525c",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3025,
+        "shoulder20": 0.7073,
+        "tip06": 0.1217,
+        "roughness": 0.04797,
+        "profile": [
+          0.1453,
+          0.357,
+          0.7073,
+          0.9577,
+          1.0,
+          1.0379,
+          0.71,
+          0.3025,
+          0.1217
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_024_Rock021",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.7094
     },
     {
-      "name": "MAIN_008",
-      "category": "main",
+      "name": "LARGE_006",
+      "category": "large",
       "sizeMeters": [
-        0.30305,
-        0.2306,
-        0.13068
-      ],
-      "triangles": 84,
-      "geometrySHA256": "def400a360917eb1d57d95f170f34ce049b1fc1ab2352675f05854a2c00d6d54",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_004_Rock012",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6905
-    },
-    {
-      "name": "MAIN_009",
-      "category": "main",
-      "sizeMeters": [
-        0.24366,
-        0.12463,
-        0.10687
-      ],
-      "triangles": 66,
-      "geometrySHA256": "a5f382d1bdb7419bfdaf2b51a27a9c2e9902fb7a679b94718ca9f11275017bbe",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_046_Rock022",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6566
-    },
-    {
-      "name": "MAIN_010",
-      "category": "main",
-      "sizeMeters": [
-        0.22986,
-        0.1719,
-        0.08766
+        0.60611,
+        0.45327,
+        0.23116
       ],
       "triangles": 78,
-      "geometrySHA256": "b896c1f17c44fe0402c61c81779b9761771c636ae49b7f1f02b418b4d4a0df7a",
+      "geometrySHA256": "1ce17f6f934176b572667796cc9eb1d14b8d789ee80d555ffcd763354d5ddbc2",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3668,
+        "shoulder20": 0.8788,
+        "tip06": 0.1776,
+        "roughness": 0.01744,
+        "profile": [
+          0.2479,
+          0.522,
+          0.8823,
+          0.9666,
+          1.0,
+          1.0134,
+          0.8788,
+          0.3668,
+          0.1776
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_011_Rock021",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.6838
     },
     {
-      "name": "MAIN_011",
-      "category": "main",
+      "name": "LARGE_007",
+      "category": "large",
       "sizeMeters": [
-        0.38049,
-        0.18188,
-        0.16893
-      ],
-      "triangles": 70,
-      "geometrySHA256": "5c5ff7d84d65a77729dc07892d85478c457ac37e083f1e69910e170e551d1c3b",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_007_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6381
-    },
-    {
-      "name": "MAIN_012",
-      "category": "main",
-      "sizeMeters": [
-        0.32976,
-        0.24285,
-        0.24552
-      ],
-      "triangles": 88,
-      "geometrySHA256": "ed714ede5b1eb95d6553441b2b5fe8f63f1fe8fae97cb897183a16d6ac0f6423",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_084_Rock015",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6818
-    },
-    {
-      "name": "MAIN_013",
-      "category": "main",
-      "sizeMeters": [
-        0.34696,
-        0.15058,
-        0.17646
-      ],
-      "triangles": 88,
-      "geometrySHA256": "78943f323d6235e33692921e5b63e9a508f5a64a6d7ae2dca7d00fec59227535",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_001_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6515
-    },
-    {
-      "name": "MAIN_014",
-      "category": "main",
-      "sizeMeters": [
-        0.25067,
-        0.18691,
-        0.21974
-      ],
-      "triangles": 54,
-      "geometrySHA256": "64426079a55a5b0c0b425248195bb659e9effcdeeb039da3e081c17d6cb31b54",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_078_Rock024",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.7037
-    },
-    {
-      "name": "MAIN_015",
-      "category": "main",
-      "sizeMeters": [
-        0.23569,
-        0.13597,
-        0.09456
+        0.55913,
+        0.32257,
+        0.22433
       ],
       "triangles": 84,
-      "geometrySHA256": "37890d30136bf2b60695b9f32c815d8e694b7cc346a68bd02e7d00853665a81a",
+      "geometrySHA256": "ad3a0f2038903916ca5916d3c4768ace86a2d70502f765caa1d3dd12c7c03c10",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6014,
+        "shoulder20": 0.7696,
+        "tip06": 0.22,
+        "roughness": 0.02964,
+        "profile": [
+          0.22,
+          0.6762,
+          0.7696,
+          0.8939,
+          1.0,
+          1.0644,
+          0.9896,
+          0.6014,
+          0.2831
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_042_Rock012",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.6825
     },
     {
-      "name": "MAIN_016",
-      "category": "main",
+      "name": "LARGE_008",
+      "category": "large",
       "sizeMeters": [
-        0.22504,
-        0.17463,
-        0.09756
+        0.51045,
+        0.37592,
+        0.38004
       ],
-      "triangles": 120,
-      "geometrySHA256": "c538f9ce47e4fdd6225573ed4c1df466c620227e5de84904478e76a91750d472",
+      "triangles": 88,
+      "geometrySHA256": "a79496106e8b0ef349b90b3e801e2aefe865ef293cecd5a81af8a59da729628f",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7656,
+        "shoulder20": 0.861,
+        "tip06": 0.368,
+        "roughness": 0.01104,
+        "profile": [
+          0.368,
+          0.7656,
+          0.919,
+          1.0,
+          1.003,
+          0.9632,
+          0.861,
+          0.7899,
+          0.6346
+        ]
+      },
       "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_074_Rock001",
+      "gateNode": "LEFT_PIER_STONE_084_Rock015",
       "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
+      "sharpEdgeRatio": 0.6818
     },
     {
-      "name": "MAIN_017",
-      "category": "main",
+      "name": "LARGE_009",
+      "category": "large",
       "sizeMeters": [
-        0.38516,
-        0.26665,
-        0.1526
+        0.64335,
+        0.44539,
+        0.2549
       ],
       "triangles": 66,
-      "geometrySHA256": "d69553380d44ab3fee9d6bfb4a41c99d07dfc1f09905ccdeb36393f1bee2d31e",
+      "geometrySHA256": "fa0b2658886639497cbfae60a3e748cceaf7b6bf983f37a4a6ece513abf68ecd",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.349,
+        "shoulder20": 0.4797,
+        "tip06": 0.254,
+        "roughness": 0.00892,
+        "profile": [
+          0.9231,
+          1.1848,
+          1.3373,
+          1.2055,
+          1.0,
+          0.7754,
+          0.4797,
+          0.349,
+          0.254
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_STONE_094_Rock018",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.7172
     },
     {
-      "name": "MAIN_018",
+      "name": "LARGE_010",
+      "category": "large",
+      "sizeMeters": [
+        0.61493,
+        0.45851,
+        0.53905
+      ],
+      "triangles": 54,
+      "geometrySHA256": "76bebb0f24467afb4fd94bd11775a9b8af5d6005f1b3db4848134e585532230d",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4258,
+        "shoulder20": 0.6522,
+        "tip06": 0.1714,
+        "roughness": 0.02393,
+        "profile": [
+          0.2372,
+          0.4387,
+          0.6522,
+          0.8716,
+          1.0,
+          1.0777,
+          0.9002,
+          0.4258,
+          0.1714
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_078_Rock024",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.7037
+    },
+    {
+      "name": "MAIN_001",
       "category": "main",
       "sizeMeters": [
-        0.27138,
-        0.17661,
-        0.20155
+        0.28131,
+        0.15341,
+        0.17959
       ],
       "triangles": 88,
-      "geometrySHA256": "9c0af332c0c4ab1c2fa5d984f981c1a349b840e143f13da169c8d620f3de09c2",
+      "geometrySHA256": "b4da1970985bdb4ddb9c2c0db65f8b129ab043450e06c7d036e8523971ff12d3",
       "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_001_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6591
-    },
-    {
-      "name": "MAIN_019",
-      "category": "main",
-      "sizeMeters": [
-        0.23664,
-        0.14192,
-        0.12985
-      ],
-      "triangles": 70,
-      "geometrySHA256": "d24b4d7049924f2c72634c4085fc968c4e3395436ad8df7e434e2ba9f1df35fc",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_056_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6857
-    },
-    {
-      "name": "MAIN_020",
-      "category": "main",
-      "sizeMeters": [
-        0.26592,
-        0.22148,
-        0.19289
-      ],
-      "triangles": 70,
-      "geometrySHA256": "6037716e82ae3e8ec654b262a1e3db5bb2d185f4faa6f809d57c4e650602de7f",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_061_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6762
-    },
-    {
-      "name": "MAIN_021",
-      "category": "main",
-      "sizeMeters": [
-        0.39156,
-        0.24317,
-        0.18939
-      ],
-      "triangles": 78,
-      "geometrySHA256": "755e4dc96d5828d082f14a11181cd19ed8121216ee6f7fb4e599d82ce59ed99f",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_015_Rock021",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6923
-    },
-    {
-      "name": "MAIN_022",
-      "category": "main",
-      "sizeMeters": [
-        0.27574,
-        0.2266,
-        0.14914
-      ],
-      "triangles": 70,
-      "geometrySHA256": "4628d7e4b422a7c40b7e3bb2b4e883848fd61773ef6a7cc71c1d7200774ef3e0",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_065_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "MAIN_023",
-      "category": "main",
-      "sizeMeters": [
-        0.35449,
-        0.21988,
-        0.17114
-      ],
-      "triangles": 58,
-      "geometrySHA256": "ea41b23f5e96d44b3ab3493a09e04ec2fdc0e4306d0591c92f3b7a52da641270",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_079_Rock023",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6897
-    },
-    {
-      "name": "MAIN_024",
-      "category": "main",
-      "sizeMeters": [
-        0.30159,
-        0.21791,
-        0.11798
-      ],
-      "triangles": 84,
-      "geometrySHA256": "ab812083c8d0ac2f97db7316c6b88e934fc114af682630abf5beb4f6013fec16",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_032_Rock012",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6429
-    },
-    {
-      "name": "MAIN_025",
-      "category": "main",
-      "sizeMeters": [
-        0.28146,
-        0.17018,
-        0.09101
-      ],
-      "triangles": 84,
-      "geometrySHA256": "0c6422e833dc03411475c80b0181dd885203de0c1524e8204b944ab8d518fc0f",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_047_Rock012",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6825
-    },
-    {
-      "name": "MAIN_026",
-      "category": "main",
-      "sizeMeters": [
-        0.21846,
-        0.17378,
-        0.13024
-      ],
-      "triangles": 94,
-      "geometrySHA256": "4151c6c6e5f8b72a98aa4490670a4cbb74db76231d58dc27d706feb2c58fb016",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_002_Rock004",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6596
-    },
-    {
-      "name": "MAIN_027",
-      "category": "main",
-      "sizeMeters": [
-        0.22255,
-        0.12136,
-        0.14208
-      ],
-      "triangles": 88,
-      "geometrySHA256": "5a36edb9b5266e7c6a6e6535948745ac12b36d4116bbab3f5401c0831bac1c47",
-      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6346,
+        "shoulder20": 0.884,
+        "tip06": 0.2623,
+        "roughness": 0.01365,
+        "profile": [
+          0.2623,
+          0.6346,
+          0.884,
+          1.0,
+          0.9959,
+          1.0346,
+          0.9659,
+          0.7674,
+          0.3341
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_079_Rock015",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.6894
     },
     {
-      "name": "MAIN_028",
+      "name": "MAIN_002",
       "category": "main",
       "sizeMeters": [
-        0.22675,
-        0.18687,
-        0.19151
-      ],
-      "triangles": 136,
-      "geometrySHA256": "b3f637924ea6d60fb6242203faf3c3270195bdf759b915494738c19dadbe1277",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_085_Rock007",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "MAIN_029",
-      "category": "main",
-      "sizeMeters": [
-        0.21214,
-        0.1326,
-        0.11031
-      ],
-      "triangles": 136,
-      "geometrySHA256": "5ebc179f871f53b4a1cb747c5f657417cd774031837fda30dc455cebbccab190",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_042_Rock007",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6814
-    },
-    {
-      "name": "MAIN_030",
-      "category": "main",
-      "sizeMeters": [
-        0.2865,
-        0.2417,
-        0.16314
-      ],
-      "triangles": 54,
-      "geometrySHA256": "2890d386f0b6729edfa8859ece0feeed9234925a061861465e0324bc74d7d2ae",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_027_Rock024",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "MAIN_031",
-      "category": "main",
-      "sizeMeters": [
-        0.34494,
-        0.2256,
-        0.19875
-      ],
-      "triangles": 84,
-      "geometrySHA256": "04a68ef73b3f4fd47ce513f4350f2ac039f3d6c6da9d852f42fcbb7c642818d6",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_029_Rock012",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6825
-    },
-    {
-      "name": "MAIN_032",
-      "category": "main",
-      "sizeMeters": [
-        0.32242,
-        0.27964,
-        0.18869
+        0.37806,
+        0.31488,
+        0.27424
       ],
       "triangles": 70,
-      "geometrySHA256": "e42ec43f0426bff718145302d98d1e2ecfd535689fa49c3a1418727f52b3b8f4",
+      "geometrySHA256": "9b4c8e1a98b546688683da71c4a92c746e890882840b6c9e763e1940c7157dbc",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.5157,
+        "shoulder20": 0.7284,
+        "tip06": 0.1266,
+        "roughness": 0.02036,
+        "profile": [
+          0.1266,
+          0.5157,
+          0.8248,
+          1.0227,
+          1.0,
+          0.896,
+          0.7284,
+          0.5808,
+          0.3944
+        ]
+      },
       "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_057_Rock020",
+      "gateNode": "RIGHT_PIER_STONE_061_Rock020",
       "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
+      "sharpEdgeRatio": 0.6762
     },
     {
-      "name": "MAIN_033",
+      "name": "MAIN_003",
       "category": "main",
       "sizeMeters": [
-        0.25971,
-        0.15963,
-        0.15779
-      ],
-      "triangles": 92,
-      "geometrySHA256": "fce6975e4382ee60e22c288857fde4f4049ea7360342d4faed58198b31a876d8",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_031_Rock016",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6667
-    },
-    {
-      "name": "MAIN_034",
-      "category": "main",
-      "sizeMeters": [
-        0.39712,
-        0.33176,
-        0.19022
-      ],
-      "triangles": 88,
-      "geometrySHA256": "9591c7e5eedb264a87971642aa899a3f491c545e79bc81eaca24dcb406cdb97d",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_048_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6591
-    },
-    {
-      "name": "MAIN_035",
-      "category": "main",
-      "sizeMeters": [
-        0.3718,
-        0.24439,
-        0.17848
-      ],
-      "triangles": 66,
-      "geometrySHA256": "d242d7b988a0318be9273258f06e343fd6d911205d8b38f55aa59635f5d119c2",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_090_Rock022",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6768
-    },
-    {
-      "name": "MAIN_036",
-      "category": "main",
-      "sizeMeters": [
-        0.26578,
-        0.19885,
-        0.11012
-      ],
-      "triangles": 94,
-      "geometrySHA256": "40882df5f47a71a0ef6b881f0106f682ddd55930d1b4952d9e0783f30cd260c2",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_024_Rock004",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6383
-    },
-    {
-      "name": "MAIN_037",
-      "category": "main",
-      "sizeMeters": [
-        0.36839,
-        0.24855,
-        0.13996
-      ],
-      "triangles": 92,
-      "geometrySHA256": "61c2f3722c4ea0b77d605ae51479d621fb3f7803465bc9b1fb095025e12ac035",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_013_Rock014",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6812
-    },
-    {
-      "name": "MAIN_038",
-      "category": "main",
-      "sizeMeters": [
-        0.23363,
-        0.19863,
-        0.11038
-      ],
-      "triangles": 92,
-      "geometrySHA256": "ad0498d8abf9e8d7903c02ad37f01877e0cc0aca50667b41d0be515ba0aab9e6",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_092_Rock014",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6594
-    },
-    {
-      "name": "MAIN_039",
-      "category": "main",
-      "sizeMeters": [
-        0.229,
-        0.16159,
-        0.11275
+        0.36509,
+        0.25762,
+        0.17976
       ],
       "triangles": 58,
-      "geometrySHA256": "360856d0299982570c16c9c14a0a8f0b06810896d0d36b573dcd0b4213f8b1b9",
+      "geometrySHA256": "70374a67fae0755d880d7f11fd48b40308a33b907e422d73b767a9e4e8dd4ab6",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3469,
+        "shoulder20": 0.4872,
+        "tip06": 0.2082,
+        "roughness": 0.00705,
+        "profile": [
+          0.9226,
+          1.2565,
+          1.3077,
+          1.1792,
+          1.0,
+          0.7608,
+          0.4872,
+          0.3469,
+          0.2082
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_081_Rock023",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.6897
     },
     {
-      "name": "MAIN_040",
+      "name": "MAIN_004",
       "category": "main",
       "sizeMeters": [
-        0.22188,
-        0.18422,
-        0.11201
-      ],
-      "triangles": 70,
-      "geometrySHA256": "f0059b71379e1c51243f00df2513500daeadad5811df6c5a220f4e4cc3693031",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_091_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6476
-    },
-    {
-      "name": "MAIN_041",
-      "category": "main",
-      "sizeMeters": [
-        0.28732,
-        0.173,
-        0.12292
-      ],
-      "triangles": 66,
-      "geometrySHA256": "5d9858d6f7ca9ea1404d74a5573fd255c8532efa456b825ba96b1a5c0de426e4",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_078_Rock022",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6566
-    },
-    {
-      "name": "MAIN_042",
-      "category": "main",
-      "sizeMeters": [
-        0.38715,
-        0.30264,
-        0.23397
+        0.38015,
+        0.31759,
+        0.18209
       ],
       "triangles": 88,
-      "geometrySHA256": "225b97b187ebf1b5d1da169625189b866a6804f74fa46ac76f58f7e8c5eb65a3",
+      "geometrySHA256": "01ac9a5f2a7aa6c362165d0fb8ea97a5c4d5fb474a049ba6c55ad3e896db5408",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3917,
+        "shoulder20": 0.6958,
+        "tip06": 0.1464,
+        "roughness": 0.02196,
+        "profile": [
+          0.2152,
+          0.5262,
+          0.7343,
+          0.8951,
+          1.0,
+          1.0232,
+          0.6958,
+          0.3917,
+          0.1464
+        ]
+      },
       "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_083_Rock015",
+      "gateNode": "LEFT_PIER_STONE_048_Rock011",
       "gateCategory": "main",
-      "sharpEdgeRatio": 0.6364
+      "sharpEdgeRatio": 0.6591
     },
     {
-      "name": "MAIN_043",
+      "name": "MAIN_005",
       "category": "main",
       "sizeMeters": [
-        0.36349,
-        0.22448,
-        0.18849
-      ],
-      "triangles": 92,
-      "geometrySHA256": "c42fd3a1cad126ccec5499eb127a6447968d907c7e7eb84c42f6e1fab379ee83",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_025_Rock016",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6594
-    },
-    {
-      "name": "MAIN_044",
-      "category": "main",
-      "sizeMeters": [
-        0.38832,
-        0.34195,
-        0.23196
-      ],
-      "triangles": 136,
-      "geometrySHA256": "9f1e2efad53d209c4b2666d8ad0fcd31ca8908516a76980d1ee258f16c20af2f",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_039_Rock007",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.652
-    },
-    {
-      "name": "MAIN_045",
-      "category": "main",
-      "sizeMeters": [
-        0.39559,
-        0.23507,
-        0.20126
+        0.20482,
+        0.14555,
+        0.12247
       ],
       "triangles": 88,
-      "geometrySHA256": "801228f9512d4f10e18fb8d30ffc6fed61f3f34234b73cfd7f7a32e49765bb5c",
+      "geometrySHA256": "d57eba19054b79eab2755745ef8c85afb5531a67ed15bcd8f11767aa864b6ca2",
       "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_017_Rock008",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6439
-    },
-    {
-      "name": "MAIN_046",
-      "category": "main",
-      "sizeMeters": [
-        0.38172,
-        0.30782,
-        0.22196
-      ],
-      "triangles": 88,
-      "geometrySHA256": "c474cbe7dbae192907c245482dd827f315d88bc5d86dea1b4cb5477d25271aa9",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_012_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6364
-    },
-    {
-      "name": "MAIN_047",
-      "category": "main",
-      "sizeMeters": [
-        0.32486,
-        0.21553,
-        0.16719
-      ],
-      "triangles": 70,
-      "geometrySHA256": "6b7a3427ad8c54aad9d9dc3551d21f6393b8e2a62fd4e06c977c2d44810938e2",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_002_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6571
-    },
-    {
-      "name": "MAIN_048",
-      "category": "main",
-      "sizeMeters": [
-        0.32391,
-        0.23912,
-        0.25644
-      ],
-      "triangles": 92,
-      "geometrySHA256": "bb161c5760b77682912a92be95a40d4dddc9851d2e4c04067b26030bd3dbda27",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_057_Rock016",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6304
-    },
-    {
-      "name": "MAIN_049",
-      "category": "main",
-      "sizeMeters": [
-        0.20342,
-        0.11534,
-        0.11643
-      ],
-      "triangles": 92,
-      "geometrySHA256": "27bbc4346c7dbe2d5cdf26c28f2a0463357228b76fa0c5d6859235a3d5717d74",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_082_Rock014",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6232
-    },
-    {
-      "name": "MAIN_050",
-      "category": "main",
-      "sizeMeters": [
-        0.26617,
-        0.23433,
-        0.18914
-      ],
-      "triangles": 94,
-      "geometrySHA256": "3e17112337f65f08565d5495d5734e3054cadb524bc4dbd2cd542ef824db7a55",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_072_Rock004",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6454
-    },
-    {
-      "name": "MAIN_051",
-      "category": "main",
-      "sizeMeters": [
-        0.23645,
-        0.14985,
-        0.10169
-      ],
-      "triangles": 94,
-      "geometrySHA256": "2aec1872451eb8916bdec963d7afdd78c25c6ae13bb46b5e6506bb389b5a3ce0",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_051_Rock004",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6454
-    },
-    {
-      "name": "MAIN_052",
-      "category": "main",
-      "sizeMeters": [
-        0.26946,
-        0.19664,
-        0.11077
-      ],
-      "triangles": 94,
-      "geometrySHA256": "56bc8c818ffba609e3ca6bcc73b214abf3e4c97c73d4a00f30380d64cce12181",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_043_Rock004",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6099
-    },
-    {
-      "name": "MAIN_053",
-      "category": "main",
-      "sizeMeters": [
-        0.3384,
-        0.23033,
-        0.21939
-      ],
-      "triangles": 66,
-      "geometrySHA256": "9856786f2f616c0cf7c2c9f287e584fc2919756f557bf9e506960fa3ba402159",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_085_Rock022",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6566
-    },
-    {
-      "name": "MAIN_054",
-      "category": "main",
-      "sizeMeters": [
-        0.30224,
-        0.24979,
-        0.14741
-      ],
-      "triangles": 88,
-      "geometrySHA256": "0b8d4cf558d8e5454f727a711be592f7a0a5fcef6f15fe88e40c4b562aee1d93",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_009_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6288
-    },
-    {
-      "name": "MAIN_055",
-      "category": "main",
-      "sizeMeters": [
-        0.29886,
-        0.17894,
-        0.1358
-      ],
-      "triangles": 88,
-      "geometrySHA256": "70580e67028550506b3fcc7eca5e44c1f2e37580ddb8a75128de05248944106d",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_020_Rock008",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6288
-    },
-    {
-      "name": "MAIN_056",
-      "category": "main",
-      "sizeMeters": [
-        0.39599,
-        0.35843,
-        0.24744
-      ],
-      "triangles": 88,
-      "geometrySHA256": "2de0b3a15bd1b187cadf20bf8c9f811af7a440aa5c3abfb27a3f92e9d4587220",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_014_Rock015",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6364
-    },
-    {
-      "name": "MAIN_057",
-      "category": "main",
-      "sizeMeters": [
-        0.36003,
-        0.1927,
-        0.13296
-      ],
-      "triangles": 82,
-      "geometrySHA256": "554f77001535d0ceb4d46d2693bab6804a1ace6c2a9f68d1dd3799faf5334523",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_007_Rock013",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6016
-    },
-    {
-      "name": "MAIN_058",
-      "category": "main",
-      "sizeMeters": [
-        0.25038,
-        0.22667,
-        0.15747
-      ],
-      "triangles": 88,
-      "geometrySHA256": "932ba3b99b5d0712eaa694675808fe1f031b305939e0df5f8f4de98a416370ec",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_093_Rock011",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6364
-    },
-    {
-      "name": "MAIN_059",
-      "category": "main",
-      "sizeMeters": [
-        0.37314,
-        0.18199,
-        0.17925
-      ],
-      "triangles": 84,
-      "geometrySHA256": "53d1a2c600f28f145f8de2fe1f7e16d280a024c01175355643b2acb6aace3a56",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_030_Rock006",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.5714
-    },
-    {
-      "name": "MAIN_060",
-      "category": "main",
-      "sizeMeters": [
-        0.29198,
-        0.21889,
-        0.18071
-      ],
-      "triangles": 140,
-      "geometrySHA256": "4c13638a2661d951b6fb37a5a4642c042a5dfeffeb88adc3db8cc6b8c63909c2",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_092_Rock036",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6
-    },
-    {
-      "name": "MAIN_061",
-      "category": "main",
-      "sizeMeters": [
-        0.2072,
-        0.12256,
-        0.11119
-      ],
-      "triangles": 140,
-      "geometrySHA256": "21a94faf54ede1982f1bad1eb260fb797cb6fe7f7dd0b34771037857f976395b",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_064_Rock036",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6143
-    },
-    {
-      "name": "MAIN_062",
-      "category": "main",
-      "sizeMeters": [
-        0.28991,
-        0.24163,
-        0.16724
-      ],
-      "triangles": 94,
-      "geometrySHA256": "8f82b82887bb44b802a5907d10fbb3c83d22a1844f8b5623bfec96ae4c60fc5c",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_056_Rock004",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.617
-    },
-    {
-      "name": "MAIN_063",
-      "category": "main",
-      "sizeMeters": [
-        0.26313,
-        0.18232,
-        0.14161
-      ],
-      "triangles": 70,
-      "geometrySHA256": "bcafe35949ac5133375adf968ca3f8f7f30a4c5fe68e6fadf4f3ab9acd78ff9b",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_060_Rock020",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6476
-    },
-    {
-      "name": "MAIN_064",
-      "category": "main",
-      "sizeMeters": [
-        0.32524,
-        0.28431,
-        0.22545
-      ],
-      "triangles": 124,
-      "geometrySHA256": "5502f85e04b32fd712c7bf019299b3b3b5a58b4e610c538e62e999ae68b2e117",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_063_Rock005",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6237
-    },
-    {
-      "name": "MAIN_065",
-      "category": "main",
-      "sizeMeters": [
-        0.33331,
-        0.22463,
-        0.12788
-      ],
-      "triangles": 54,
-      "geometrySHA256": "16f2e8d7b425dede26668b376760d223bdd12d49524120c36d18264202f2e943",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_076_Rock024",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.642
-    },
-    {
-      "name": "MAIN_066",
-      "category": "main",
-      "sizeMeters": [
-        0.20051,
-        0.16103,
-        0.11345
-      ],
-      "triangles": 124,
-      "geometrySHA256": "624f4f79eccf9c1045c8f606fcc1974a4c187f88f56ee173f18d8086145cbba0",
-      "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_067_Rock005",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6022
-    },
-    {
-      "name": "MAIN_067",
-      "category": "main",
-      "sizeMeters": [
-        0.39103,
-        0.27788,
-        0.23381
-      ],
-      "triangles": 88,
-      "geometrySHA256": "4be77409cfaca1057654c8fb2e2158e42b64d498d0c5a1a38f2d990c38cfe065",
-      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3438,
+        "shoulder20": 0.6382,
+        "tip06": 0.1412,
+        "roughness": 0.01178,
+        "profile": [
+          0.3086,
+          0.5473,
+          0.7536,
+          1.0,
+          1.0887,
+          0.869,
+          0.6382,
+          0.3438,
+          0.1412
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_STONE_018_Rock011",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.6515
     },
     {
-      "name": "MAIN_068",
+      "name": "MAIN_006",
       "category": "main",
       "sizeMeters": [
-        0.38031,
-        0.32491,
-        0.19687
+        0.37108,
+        0.29008,
+        0.22426
       ],
-      "triangles": 84,
-      "geometrySHA256": "e1e8cefaf946baf574dccaeaa043a43bb81e40163490fd91c4810b8746fb4253",
+      "triangles": 88,
+      "geometrySHA256": "7422fa6618ee84bdf7d11e7fd23224df197fd9e761a3c57127bf28d752296327",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3931,
+        "shoulder20": 0.7647,
+        "tip06": 0.1243,
+        "roughness": 0.01909,
+        "profile": [
+          0.1243,
+          0.3931,
+          0.7647,
+          0.9591,
+          1.0,
+          1.005,
+          0.9609,
+          0.8185,
+          0.6259
+        ]
+      },
       "source": "gate",
-      "gateNode": "LEFT_PIER_STONE_038_Rock006",
+      "gateNode": "LEFT_PIER_STONE_083_Rock015",
       "gateCategory": "main",
-      "sharpEdgeRatio": 0.6111
+      "sharpEdgeRatio": 0.6364
     },
     {
-      "name": "MAIN_069",
+      "name": "MAIN_007",
       "category": "main",
       "sizeMeters": [
-        0.22431,
-        0.12313,
-        0.10335
+        0.2364,
+        0.11375,
+        0.09943
       ],
-      "triangles": 140,
-      "geometrySHA256": "7ca66455a14bb314dc69c9034d9278e69c9c407537c83526586f6b6bcd08e1cc",
+      "triangles": 210,
+      "geometrySHA256": "2ca48fea5bb76f22a37f155836471ef1ee3da57657d322386fe97f50db70c780",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4568,
+        "shoulder20": 0.5758,
+        "tip06": 0.1211,
+        "roughness": 0.00675,
+        "profile": [
+          0.1211,
+          0.5654,
+          1.2023,
+          1.2111,
+          1.0,
+          0.7893,
+          0.5758,
+          0.4568,
+          0.2921
+        ]
+      },
       "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_041_Rock036",
+      "gateNode": "LEFT_PIER_STONE_049_Rock032",
       "gateCategory": "main",
-      "sharpEdgeRatio": 0.5952
+      "sharpEdgeRatio": 0.5365
     },
     {
-      "name": "MAIN_070",
+      "name": "MAIN_008",
       "category": "main",
       "sizeMeters": [
-        0.32503,
-        0.23469,
-        0.12781
+        0.30305,
+        0.22372,
+        0.23993
+      ],
+      "triangles": 92,
+      "geometrySHA256": "574df16a53cc31dc4bce53a20d74b87dcfc3272327d9e48764737b8a234d28e2",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.5027,
+        "shoulder20": 0.6961,
+        "tip06": 0.2246,
+        "roughness": 0.01518,
+        "profile": [
+          0.3555,
+          0.5947,
+          0.8146,
+          1.0,
+          1.0445,
+          0.9265,
+          0.6961,
+          0.5027,
+          0.2246
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_057_Rock016",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.6304
+    },
+    {
+      "name": "MAIN_009",
+      "category": "main",
+      "sizeMeters": [
+        0.24366,
+        0.13887,
+        0.09509
       ],
       "triangles": 124,
-      "geometrySHA256": "8bb5fadaa6077eedce4e7700ee882884a0ffb6d0777e20d8edb755dad1504db5",
+      "geometrySHA256": "c1a966c915a39ae037b9b93b4e26d759ad5bb0041b0f5f362af385f72b967c9b",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6287,
+        "shoulder20": 0.792,
+        "tip06": 0.2282,
+        "roughness": 0.00788,
+        "profile": [
+          0.2282,
+          0.6287,
+          0.792,
+          0.9453,
+          1.0294,
+          1.0,
+          0.8335,
+          0.6657,
+          0.4703
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_019_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5806
+    },
+    {
+      "name": "MAIN_010",
+      "category": "main",
+      "sizeMeters": [
+        0.22986,
+        0.20806,
+        0.14363
+      ],
+      "triangles": 88,
+      "geometrySHA256": "82657afb7f5e2ce08e9581bbf7f8177440bb30715d511d068c83f3aff9dc6a9f",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7279,
+        "shoulder20": 0.848,
+        "tip06": 0.2076,
+        "roughness": 0.00271,
+        "profile": [
+          0.2076,
+          0.7279,
+          0.848,
+          0.946,
+          1.0,
+          1.0298,
+          0.9792,
+          0.852,
+          0.5381
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_014_Rock015",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.6364
+    },
+    {
+      "name": "MAIN_011",
+      "category": "main",
+      "sizeMeters": [
+        0.38049,
+        0.23365,
+        0.20659
+      ],
+      "triangles": 124,
+      "geometrySHA256": "e41be75cf9cd949acc0b1dd4d15e6c37d5d0dfc890724941e2311bf0f931c169",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.5333,
+        "shoulder20": 0.8215,
+        "tip06": 0.2034,
+        "roughness": 0.01408,
+        "profile": [
+          0.2034,
+          0.5333,
+          0.8215,
+          0.9305,
+          1.0,
+          1.0002,
+          0.8596,
+          0.6159,
+          0.3977
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_010_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.586
+    },
+    {
+      "name": "MAIN_012",
+      "category": "main",
+      "sizeMeters": [
+        0.32976,
+        0.28826,
+        0.22859
+      ],
+      "triangles": 124,
+      "geometrySHA256": "04bdd2334d13cb60420cd9c322a528ba014e998bc0890df044cc837e2c585eb9",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6483,
+        "shoulder20": 0.8721,
+        "tip06": 0.2493,
+        "roughness": 0.0093,
+        "profile": [
+          0.3933,
+          0.7059,
+          0.8721,
+          0.987,
+          1.059,
+          1.0,
+          0.8769,
+          0.6483,
+          0.2493
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_063_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.6237
+    },
+    {
+      "name": "MAIN_013",
+      "category": "main",
+      "sizeMeters": [
+        0.34696,
+        0.18574,
+        0.18668
+      ],
+      "triangles": 230,
+      "geometrySHA256": "86a13569f3e2b12f164e8de61bcbae36cd34a7dfbb0f5333f8f2aae5e0927172",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4072,
+        "shoulder20": 0.5836,
+        "tip06": 0.1869,
+        "roughness": 0.02354,
+        "profile": [
+          0.3236,
+          0.5282,
+          0.8139,
+          1.0,
+          1.0359,
+          0.8615,
+          0.5836,
+          0.4072,
+          0.1869
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_026_Rock033",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5478
+    },
+    {
+      "name": "MAIN_014",
+      "category": "main",
+      "sizeMeters": [
+        0.25067,
+        0.18099,
+        0.09857
+      ],
+      "triangles": 124,
+      "geometrySHA256": "cedc1ac9c3a841e0357db325454949e1658c61795d981c5ebce36e0803e6afdc",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7071,
+        "shoulder20": 0.8288,
+        "tip06": 0.2736,
+        "roughness": 0.004,
+        "profile": [
+          0.2736,
+          0.7071,
+          0.8288,
+          0.9402,
+          1.0411,
+          1.0,
+          0.8717,
+          0.7741,
+          0.5694
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_STONE_019_Rock005",
       "gateCategory": "main",
       "sharpEdgeRatio": 0.5806
     },
     {
+      "name": "MAIN_015",
+      "category": "main",
+      "sizeMeters": [
+        0.23569,
+        0.15873,
+        0.14843
+      ],
+      "triangles": 230,
+      "geometrySHA256": "3c5cff8c932527fbaab550517f4fe1ca205689edb214fe8edaa68397ad9d51ef",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3694,
+        "shoulder20": 0.5066,
+        "tip06": 0.2428,
+        "roughness": 0.00967,
+        "profile": [
+          0.4709,
+          0.877,
+          0.965,
+          1.0128,
+          1.0,
+          0.7946,
+          0.5066,
+          0.3694,
+          0.2428
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_026_Rock033",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5971
+    },
+    {
+      "name": "MAIN_016",
+      "category": "main",
+      "sizeMeters": [
+        0.22504,
+        0.19043,
+        0.14705
+      ],
+      "triangles": 124,
+      "geometrySHA256": "5652ea382d05388f5208ee08a8f9216c45882da0007abd423bfa0986382c68d4",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.755,
+        "shoulder20": 0.8355,
+        "tip06": 0.4441,
+        "roughness": 0.0084,
+        "profile": [
+          0.4441,
+          0.755,
+          0.8355,
+          1.0,
+          1.0779,
+          0.9966,
+          0.8966,
+          0.7956,
+          0.6254
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_034_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.6022
+    },
+    {
+      "name": "MAIN_017",
+      "category": "main",
+      "sizeMeters": [
+        0.38516,
+        0.2331,
+        0.13646
+      ],
+      "triangles": 88,
+      "geometrySHA256": "d9fe5dac1d7ed577a8051f1e1c2304685b31b3d22eaf63fa6297eb1a02cb9ce0",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7473,
+        "shoulder20": 0.9282,
+        "tip06": 0.5141,
+        "roughness": 0.00767,
+        "profile": [
+          0.5141,
+          0.7473,
+          0.9282,
+          0.9999,
+          1.0,
+          1.0163,
+          0.9376,
+          0.8148,
+          0.5803
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_089_Rock015",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5758
+    },
+    {
+      "name": "MAIN_018",
+      "category": "main",
+      "sizeMeters": [
+        0.27138,
+        0.22511,
+        0.12207
+      ],
+      "triangles": 154,
+      "geometrySHA256": "196b73c07203fef00b5aae7499d5de0dbf95a0a83a6d1161412af6386b226069",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3596,
+        "shoulder20": 0.647,
+        "tip06": 0.1297,
+        "roughness": 0.00511,
+        "profile": [
+          0.1297,
+          0.3596,
+          0.647,
+          0.8762,
+          1.0,
+          1.0909,
+          0.9621,
+          0.7212,
+          0.3429
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_046_Rock035",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5801
+    },
+    {
+      "name": "MAIN_019",
+      "category": "main",
+      "sizeMeters": [
+        0.23664,
+        0.1439,
+        0.13803
+      ],
+      "triangles": 210,
+      "geometrySHA256": "bada74bde2db566bfdf1741d27b1543aa24bce11b2da0561aba7362345d53311",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3737,
+        "shoulder20": 0.5024,
+        "tip06": 0.2772,
+        "roughness": 0.00806,
+        "profile": [
+          0.8106,
+          1.0345,
+          1.0757,
+          1.0648,
+          1.0,
+          0.756,
+          0.5024,
+          0.3737,
+          0.2772
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_032_Rock032",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5714
+    },
+    {
+      "name": "MAIN_020",
+      "category": "main",
+      "sizeMeters": [
+        0.26592,
+        0.23057,
+        0.12948
+      ],
+      "triangles": 92,
+      "geometrySHA256": "28b9e950f8582f33abe7f747714f80d91b2cba1005528fd24a54cab54f3cfa81",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.392,
+        "shoulder20": 0.5667,
+        "tip06": 0.1552,
+        "roughness": 0.01057,
+        "profile": [
+          0.1571,
+          0.6184,
+          0.8619,
+          1.0,
+          1.0182,
+          0.8666,
+          0.5667,
+          0.392,
+          0.1552
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_052_Rock016",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.587
+    },
+    {
+      "name": "MAIN_021",
+      "category": "main",
+      "sizeMeters": [
+        0.39156,
+        0.23,
+        0.13577
+      ],
+      "triangles": 154,
+      "geometrySHA256": "1dfa59bb266e80fe470eabd3300bb5b3f72a89d9457aa5e39f20a92a456f8d41",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4279,
+        "shoulder20": 0.6876,
+        "tip06": 0.1286,
+        "roughness": 0.01295,
+        "profile": [
+          0.1487,
+          0.4357,
+          0.7751,
+          1.0,
+          1.0379,
+          0.9653,
+          0.6876,
+          0.4279,
+          0.1286
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_025_Rock035",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5628
+    },
+    {
+      "name": "MAIN_022",
+      "category": "main",
+      "sizeMeters": [
+        0.27574,
+        0.22914,
+        0.14191
+      ],
+      "triangles": 88,
+      "geometrySHA256": "97fcd310c0aa41e5bf8fdfd3006a2b2242ef8cb3f92f5c1ad61027fe94762c93",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3839,
+        "shoulder20": 0.6268,
+        "tip06": 0.1619,
+        "roughness": 0.01737,
+        "profile": [
+          0.1619,
+          0.3839,
+          0.6268,
+          0.9534,
+          1.0005,
+          1.0,
+          0.8177,
+          0.4523,
+          0.1728
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_023_Rock008",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.553
+    },
+    {
+      "name": "MAIN_023",
+      "category": "main",
+      "sizeMeters": [
+        0.35449,
+        0.16184,
+        0.19744
+      ],
+      "triangles": 210,
+      "geometrySHA256": "b8748a2f09c81ab46438e93ce9f70312e112f1648114e639c2dca69a11e93fdc",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3791,
+        "shoulder20": 0.542,
+        "tip06": 0.213,
+        "roughness": 0.01148,
+        "profile": [
+          0.7084,
+          0.9744,
+          1.1359,
+          1.1368,
+          1.0,
+          0.7811,
+          0.542,
+          0.3791,
+          0.213
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_017_Rock032",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5492
+    },
+    {
+      "name": "MAIN_024",
+      "category": "main",
+      "sizeMeters": [
+        0.30159,
+        0.23179,
+        0.13017
+      ],
+      "triangles": 124,
+      "geometrySHA256": "897bc8a9eff32c93322d37fab2a87f74dff32d1581d58cbee764c367ee0fbcb5",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7357,
+        "shoulder20": 0.8499,
+        "tip06": 0.3845,
+        "roughness": 0.01177,
+        "profile": [
+          0.3845,
+          0.7529,
+          0.8499,
+          1.0,
+          1.0371,
+          0.9742,
+          0.8641,
+          0.7357,
+          0.5431
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_034_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5108
+    },
+    {
+      "name": "MAIN_025",
+      "category": "main",
+      "sizeMeters": [
+        0.28146,
+        0.1904,
+        0.12329
+      ],
+      "triangles": 124,
+      "geometrySHA256": "08c5b0c69958a176b03e6ceff293828d515f2b5ae703d4adee3052b870afb58e",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6262,
+        "shoulder20": 0.8199,
+        "tip06": 0.1715,
+        "roughness": 0.00726,
+        "profile": [
+          0.1715,
+          0.6573,
+          0.8517,
+          1.0,
+          1.0144,
+          0.9825,
+          0.8199,
+          0.6262,
+          0.2279
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_063_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5806
+    },
+    {
+      "name": "MAIN_026",
+      "category": "main",
+      "sizeMeters": [
+        0.21846,
+        0.18761,
+        0.17088
+      ],
+      "triangles": 192,
+      "geometrySHA256": "2c7b8fb387ddc65014f36d7f27524458abd8c320d633e4a5c2c73a0f365bd800",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4815,
+        "shoulder20": 0.7162,
+        "tip06": 0.1751,
+        "roughness": 0.012,
+        "profile": [
+          0.2192,
+          0.4815,
+          0.7162,
+          0.9459,
+          1.0123,
+          1.0,
+          0.8839,
+          0.7097,
+          0.1751
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_071_Rock034",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5139
+    },
+    {
+      "name": "MAIN_027",
+      "category": "main",
+      "sizeMeters": [
+        0.22255,
+        0.12973,
+        0.13659
+      ],
+      "triangles": 210,
+      "geometrySHA256": "a596a50c641c8c2bcb706408f1b8515b9f701cca28b9dcc1dddf1fd50bedcb47",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.382,
+        "shoulder20": 0.4933,
+        "tip06": 0.2043,
+        "roughness": 0.00907,
+        "profile": [
+          0.2043,
+          0.9783,
+          1.0748,
+          1.0713,
+          1.0,
+          0.7159,
+          0.4933,
+          0.382,
+          0.3004
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_030_Rock032",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5587
+    },
+    {
+      "name": "MAIN_028",
+      "category": "main",
+      "sizeMeters": [
+        0.22675,
+        0.15413,
+        0.09516
+      ],
+      "triangles": 84,
+      "geometrySHA256": "8b8c8604bb597319a48814586a07db529106ca392924126a61be52e3fb77b6b8",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3317,
+        "shoulder20": 0.5486,
+        "tip06": 0.1777,
+        "roughness": 0.01408,
+        "profile": [
+          0.1777,
+          0.3317,
+          0.5486,
+          0.9122,
+          1.0113,
+          1.0,
+          0.8621,
+          0.6346,
+          0.2692
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_072_Rock006",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5794
+    },
+    {
+      "name": "MAIN_029",
+      "category": "main",
+      "sizeMeters": [
+        0.21214,
+        0.15004,
+        0.11758
+      ],
+      "triangles": 124,
+      "geometrySHA256": "3dc534b69341c3def1661a480f9427b8d6d7619e28d42e004571b2dc28bae352",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4304,
+        "shoulder20": 0.8207,
+        "tip06": 0.1373,
+        "roughness": 0.00988,
+        "profile": [
+          0.4612,
+          0.7296,
+          0.8983,
+          1.0,
+          1.0398,
+          0.9371,
+          0.8207,
+          0.4304,
+          0.1373
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_009_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5806
+    },
+    {
+      "name": "MAIN_030",
+      "category": "main",
+      "sizeMeters": [
+        0.2865,
+        0.16511,
+        0.13134
+      ],
+      "triangles": 230,
+      "geometrySHA256": "bddc7cee45b59499667369f7010437146712ed5f84a1d7ff380a1796f7db3bf9",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4225,
+        "shoulder20": 0.6588,
+        "tip06": 0.2033,
+        "roughness": 0.01263,
+        "profile": [
+          0.2033,
+          0.4225,
+          0.6588,
+          1.0,
+          1.0292,
+          0.937,
+          0.6672,
+          0.4396,
+          0.2248
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_048_Rock033",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5333
+    },
+    {
+      "name": "MAIN_031",
+      "category": "main",
+      "sizeMeters": [
+        0.34494,
+        0.21425,
+        0.16891
+      ],
+      "triangles": 154,
+      "geometrySHA256": "8d66764656c28b85691f68dbc52e9f64941b2eb74bdd6332e30a9d69d0bd98bd",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.6515,
+        "shoulder20": 0.7868,
+        "tip06": 0.4789,
+        "roughness": 0.0054,
+        "profile": [
+          0.4789,
+          0.6515,
+          0.7868,
+          0.9201,
+          1.0088,
+          1.0,
+          0.8761,
+          0.7189,
+          0.5261
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_029_Rock035",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5498
+    },
+    {
+      "name": "MAIN_032",
+      "category": "main",
+      "sizeMeters": [
+        0.32242,
+        0.21515,
+        0.13096
+      ],
+      "triangles": 92,
+      "geometrySHA256": "63977baf0aee0ea293af956dbd1832ca47f69e9619f32ffaf64883977d232e9a",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.5047,
+        "shoulder20": 0.6924,
+        "tip06": 0.2936,
+        "roughness": 0.00739,
+        "profile": [
+          0.3855,
+          0.5823,
+          0.8045,
+          0.9833,
+          1.0203,
+          1.0,
+          0.6924,
+          0.5047,
+          0.2936
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_053_Rock016",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.558
+    },
+    {
+      "name": "MAIN_033",
+      "category": "main",
+      "sizeMeters": [
+        0.25971,
+        0.15877,
+        0.08153
+      ],
+      "triangles": 210,
+      "geometrySHA256": "282ba1fc34a984eb63c50f175a335ee0bef1442b23b96560534beee408b2c214",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4809,
+        "shoulder20": 0.6385,
+        "tip06": 0.1618,
+        "roughness": 0.011,
+        "profile": [
+          0.1618,
+          0.4922,
+          0.9697,
+          1.2184,
+          1.0,
+          0.8178,
+          0.6385,
+          0.4809,
+          0.2674
+        ]
+      },
+      "source": "gate",
+      "gateNode": "LEFT_PIER_STONE_045_Rock032",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5206
+    },
+    {
+      "name": "MAIN_034",
+      "category": "main",
+      "sizeMeters": [
+        0.39712,
+        0.25755,
+        0.19508
+      ],
+      "triangles": 124,
+      "geometrySHA256": "c110452e005d8ad8424c00ec18ded5bf5b9d479ff05435745efaeea1b62d3265",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7174,
+        "shoulder20": 0.8475,
+        "tip06": 0.3114,
+        "roughness": 0.00955,
+        "profile": [
+          0.3114,
+          0.7346,
+          0.8475,
+          1.0,
+          1.0434,
+          0.9796,
+          0.8596,
+          0.7174,
+          0.4738
+        ]
+      },
+      "source": "gate",
+      "gateNode": "RIGHT_PIER_STONE_008_Rock005",
+      "gateCategory": "main",
+      "sharpEdgeRatio": 0.5323
+    },
+    {
+      "name": "MAIN_035",
+      "category": "main",
+      "sizeMeters": [
+        0.3718,
+        0.19539,
+        0.30779
+      ],
+      "triangles": 162,
+      "geometrySHA256": "163b52e5b5b27c8eec0a1f85d9b34aad4a77aca0455fb355630febf80078d194",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7317,
+        "shoulder20": 0.8124,
+        "tip06": 0.7248,
+        "roughness": 0.0095,
+        "profile": [
+          0.7248,
+          0.7317,
+          0.8124,
+          0.9622,
+          1.0456,
+          1.0,
+          0.8529,
+          0.7691,
+          0.7375
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_036",
+      "category": "main",
+      "sizeMeters": [
+        0.39308,
+        0.25257,
+        0.30659
+      ],
+      "triangles": 162,
+      "geometrySHA256": "4975739f14b8dc6356364f53101520998dea1eb41d28401e0d17d36e932a9d19",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7603,
+        "shoulder20": 0.8422,
+        "tip06": 0.7385,
+        "roughness": 0.01512,
+        "profile": [
+          0.7385,
+          0.7928,
+          0.8709,
+          1.0,
+          1.1043,
+          0.9708,
+          0.8422,
+          0.7603,
+          0.7443
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_037",
+      "category": "main",
+      "sizeMeters": [
+        0.2045,
+        0.13536,
+        0.1301
+      ],
+      "triangles": 162,
+      "geometrySHA256": "b53e12363e791395b432c72b1ab2c737f9931a4fadb8059d71c16e18c22bf2b2",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7852,
+        "shoulder20": 0.8522,
+        "tip06": 0.7239,
+        "roughness": 0.00643,
+        "profile": [
+          0.7629,
+          0.817,
+          0.8829,
+          1.0,
+          1.1091,
+          0.9573,
+          0.8522,
+          0.7852,
+          0.7239
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_038",
+      "category": "main",
+      "sizeMeters": [
+        0.25552,
+        0.11406,
+        0.1748
+      ],
+      "triangles": 162,
+      "geometrySHA256": "c916c1c2926133f6810d5203ed9b216baf1686a753ca619a484559c5080a40a8",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8081,
+        "shoulder20": 0.8785,
+        "tip06": 0.7394,
+        "roughness": 0.00795,
+        "profile": [
+          0.7394,
+          0.8081,
+          0.9176,
+          1.0,
+          1.0991,
+          0.9758,
+          0.8785,
+          0.8479,
+          0.7707
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_039",
+      "category": "main",
+      "sizeMeters": [
+        0.24881,
+        0.16102,
+        0.20934
+      ],
+      "triangles": 162,
+      "geometrySHA256": "cfadc07921d28debb7dbba0753daa1f909da26da9ef3dccd8eb9d9aaa7338c4f",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8188,
+        "shoulder20": 0.8496,
+        "tip06": 0.7621,
+        "roughness": 0.00578,
+        "profile": [
+          0.7621,
+          0.821,
+          0.8726,
+          0.9416,
+          1.157,
+          1.0,
+          0.8496,
+          0.8188,
+          0.765
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_040",
+      "category": "main",
+      "sizeMeters": [
+        0.20452,
+        0.09212,
+        0.11312
+      ],
+      "triangles": 162,
+      "geometrySHA256": "235f8f9b6ea98cd32462f95aec2de54402483ea0a1033c7daf907e18f07739f1",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7309,
+        "shoulder20": 0.8144,
+        "tip06": 0.7089,
+        "roughness": 0.00419,
+        "profile": [
+          0.7272,
+          0.7417,
+          0.8343,
+          1.0,
+          1.1171,
+          0.9764,
+          0.8144,
+          0.7309,
+          0.7089
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_041",
+      "category": "main",
+      "sizeMeters": [
+        0.21787,
+        0.11558,
+        0.14924
+      ],
+      "triangles": 162,
+      "geometrySHA256": "d56eeec0866c2868f62a60d1dead04de3907cc91a3bf8e9f4e9816dfc3a09670",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7421,
+        "shoulder20": 0.8064,
+        "tip06": 0.6843,
+        "roughness": 0.00425,
+        "profile": [
+          0.7226,
+          0.7469,
+          0.8231,
+          1.0,
+          1.0314,
+          0.9247,
+          0.8064,
+          0.7421,
+          0.6843
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_042",
+      "category": "main",
+      "sizeMeters": [
+        0.34619,
+        0.18141,
+        0.2307
+      ],
+      "triangles": 162,
+      "geometrySHA256": "18e3aa12cdf584055425a7f9da2f94433681b8dcd8310319eb0cb93fb04716ef",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.745,
+        "shoulder20": 0.8275,
+        "tip06": 0.7335,
+        "roughness": 0.01182,
+        "profile": [
+          0.7335,
+          0.7731,
+          0.8755,
+          1.0,
+          1.0727,
+          0.9727,
+          0.8275,
+          0.745,
+          0.758
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_043",
+      "category": "main",
+      "sizeMeters": [
+        0.37303,
+        0.20883,
+        0.29627
+      ],
+      "triangles": 162,
+      "geometrySHA256": "02c987f893148079f3851c34c3618284dc7fa52d845f55c712652600b450b9e1",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7271,
+        "shoulder20": 0.8112,
+        "tip06": 0.6952,
+        "roughness": 0.00979,
+        "profile": [
+          0.6952,
+          0.7759,
+          0.8556,
+          0.9638,
+          1.1228,
+          1.0,
+          0.8112,
+          0.7271,
+          0.7217
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_044",
+      "category": "main",
+      "sizeMeters": [
+        0.27746,
+        0.15788,
+        0.19233
+      ],
+      "triangles": 162,
+      "geometrySHA256": "715f8deb5052b12c942191c9e0f5fe0788cb365b0d58e636bf5bbc4e6751ff17",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7401,
+        "shoulder20": 0.7914,
+        "tip06": 0.7131,
+        "roughness": 0.00536,
+        "profile": [
+          0.7131,
+          0.7525,
+          0.8456,
+          1.0,
+          1.031,
+          0.9149,
+          0.7914,
+          0.7401,
+          0.7285
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_045",
+      "category": "main",
+      "sizeMeters": [
+        0.26744,
+        0.12514,
+        0.15332
+      ],
+      "triangles": 162,
+      "geometrySHA256": "2fd883595ca3716cd105f1afd2271dd2b222a5569bc556d3d408f63794419c10",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.798,
+        "shoulder20": 0.8332,
+        "tip06": 0.7452,
+        "roughness": 0.00807,
+        "profile": [
+          0.7452,
+          0.8224,
+          0.8748,
+          0.9661,
+          1.1888,
+          1.0,
+          0.8332,
+          0.798,
+          0.7866
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_046",
+      "category": "main",
+      "sizeMeters": [
+        0.30866,
+        0.16353,
+        0.23481
+      ],
+      "triangles": 162,
+      "geometrySHA256": "768aab83ac853cc035ff2f5a890f40fc6daa92c1d5129355247eb773f072bb29",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7493,
+        "shoulder20": 0.838,
+        "tip06": 0.6999,
+        "roughness": 0.00988,
+        "profile": [
+          0.6999,
+          0.7493,
+          0.838,
+          0.988,
+          1.0809,
+          1.0,
+          0.8469,
+          0.7835,
+          0.7397
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_047",
+      "category": "main",
+      "sizeMeters": [
+        0.39505,
+        0.20284,
+        0.27094
+      ],
+      "triangles": 162,
+      "geometrySHA256": "78de9fc84f3278a2087d5feda269e47ea7db7a113dfe8429aef60e003473ad6e",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8064,
+        "shoulder20": 0.8583,
+        "tip06": 0.7459,
+        "roughness": 0.00702,
+        "profile": [
+          0.7459,
+          0.8064,
+          0.8995,
+          0.9595,
+          1.0704,
+          1.0,
+          0.8583,
+          0.8204,
+          0.7542
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_048",
+      "category": "main",
+      "sizeMeters": [
+        0.25291,
+        0.16087,
+        0.21494
+      ],
+      "triangles": 162,
+      "geometrySHA256": "7a6a4a64f485314b7e839977da292f0a4c8b750268f1ad370d11d2363b87c768",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8012,
+        "shoulder20": 0.8598,
+        "tip06": 0.7467,
+        "roughness": 0.0055,
+        "profile": [
+          0.7467,
+          0.8012,
+          0.8598,
+          0.9709,
+          1.071,
+          1.0,
+          0.8866,
+          0.8375,
+          0.7787
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_049",
+      "category": "main",
+      "sizeMeters": [
+        0.26673,
+        0.16591,
+        0.23452
+      ],
+      "triangles": 162,
+      "geometrySHA256": "8c329f29e5474987d84cdb6d295e7352de2b666aed87285b0d891dc95833e62e",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8107,
+        "shoulder20": 0.8551,
+        "tip06": 0.7508,
+        "roughness": 0.01032,
+        "profile": [
+          0.7508,
+          0.8107,
+          0.8551,
+          0.9097,
+          1.1254,
+          1.0,
+          0.8742,
+          0.8379,
+          0.7627
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_050",
+      "category": "main",
+      "sizeMeters": [
+        0.24033,
+        0.15395,
+        0.15115
+      ],
+      "triangles": 162,
+      "geometrySHA256": "c913b710ae892cf885f38f032b2e7d2657db9873331a97530b0e525dd4b88668",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7882,
+        "shoulder20": 0.8628,
+        "tip06": 0.72,
+        "roughness": 0.00845,
+        "profile": [
+          0.7327,
+          0.7882,
+          0.8628,
+          0.9393,
+          1.1374,
+          1.0,
+          0.8799,
+          0.8031,
+          0.72
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_051",
+      "category": "main",
+      "sizeMeters": [
+        0.23226,
+        0.14366,
+        0.16595
+      ],
+      "triangles": 162,
+      "geometrySHA256": "77cfdb0b8df279e3c3bd4fc25f27f68c33dae93a3be5769012c3553b218425b1",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7759,
+        "shoulder20": 0.8613,
+        "tip06": 0.7325,
+        "roughness": 0.00548,
+        "profile": [
+          0.7325,
+          0.7759,
+          0.8819,
+          1.0,
+          1.0648,
+          0.948,
+          0.8613,
+          0.7946,
+          0.7527
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_052",
+      "category": "main",
+      "sizeMeters": [
+        0.22649,
+        0.14946,
+        0.12772
+      ],
+      "triangles": 162,
+      "geometrySHA256": "0218b64d3fe9b5802948908f34cf85920cbda84a98dd594b14af7e7611cd49bc",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8258,
+        "shoulder20": 0.8529,
+        "tip06": 0.7575,
+        "roughness": 0.00707,
+        "profile": [
+          0.7695,
+          0.8526,
+          0.8828,
+          0.9619,
+          1.1722,
+          1.0,
+          0.8529,
+          0.8258,
+          0.7575
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_053",
+      "category": "main",
+      "sizeMeters": [
+        0.36598,
+        0.17835,
+        0.26988
+      ],
+      "triangles": 162,
+      "geometrySHA256": "1a3089c6a1b25768278867c159a68fa1ef475ad4a81017d44d1a14742bdc3ba9",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7494,
+        "shoulder20": 0.8575,
+        "tip06": 0.7006,
+        "roughness": 0.00991,
+        "profile": [
+          0.7006,
+          0.7494,
+          0.8575,
+          0.9953,
+          1.0819,
+          1.0,
+          0.8938,
+          0.8147,
+          0.7697
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_054",
+      "category": "main",
+      "sizeMeters": [
+        0.35035,
+        0.23479,
+        0.30193
+      ],
+      "triangles": 162,
+      "geometrySHA256": "d8b99e049a1ce15464bd875f5ce7bb68f2871b86d8893c6ef9f5e9866ad99924",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7767,
+        "shoulder20": 0.847,
+        "tip06": 0.7312,
+        "roughness": 0.01415,
+        "profile": [
+          0.7925,
+          0.8377,
+          0.8665,
+          1.0,
+          1.2117,
+          0.968,
+          0.847,
+          0.7767,
+          0.7312
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_055",
+      "category": "main",
+      "sizeMeters": [
+        0.39768,
+        0.24532,
+        0.2316
+      ],
+      "triangles": 162,
+      "geometrySHA256": "cbae6d3a1523279a217570bbd13b2a93f9d7a452f6c03f84b469afb6bdfc3e27",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8041,
+        "shoulder20": 0.8538,
+        "tip06": 0.7447,
+        "roughness": 0.00814,
+        "profile": [
+          0.7508,
+          0.812,
+          0.858,
+          0.9922,
+          1.0663,
+          1.0,
+          0.8538,
+          0.8041,
+          0.7447
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_056",
+      "category": "main",
+      "sizeMeters": [
+        0.36047,
+        0.19128,
+        0.31482
+      ],
+      "triangles": 162,
+      "geometrySHA256": "aae9907535b84fda9794eabd5a52fa9b750fe40d76a3da54ddbafd43f8befed4",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.713,
+        "shoulder20": 0.8202,
+        "tip06": 0.7066,
+        "roughness": 0.0106,
+        "profile": [
+          0.7193,
+          0.713,
+          0.8202,
+          0.9518,
+          1.1596,
+          1.0,
+          0.8409,
+          0.7338,
+          0.7066
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_057",
+      "category": "main",
+      "sizeMeters": [
+        0.20449,
+        0.14082,
+        0.17944
+      ],
+      "triangles": 162,
+      "geometrySHA256": "8a833283ee9d24250f6de3934a6f92e9b104f289b680a4cce9987920b00d614a",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7319,
+        "shoulder20": 0.8229,
+        "tip06": 0.7292,
+        "roughness": 0.00689,
+        "profile": [
+          0.746,
+          0.7319,
+          0.8229,
+          0.9889,
+          1.1518,
+          1.0,
+          0.8333,
+          0.7631,
+          0.7292
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_058",
+      "category": "main",
+      "sizeMeters": [
+        0.26104,
+        0.17372,
+        0.2295
+      ],
+      "triangles": 162,
+      "geometrySHA256": "9408734919525ce707cb040df5ba5f66ff82aed0d6a8e381dbf76f8141b66318",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7735,
+        "shoulder20": 0.8492,
+        "tip06": 0.7491,
+        "roughness": 0.0082,
+        "profile": [
+          0.7586,
+          0.7735,
+          0.884,
+          1.0,
+          1.0796,
+          0.98,
+          0.8492,
+          0.8062,
+          0.7491
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_059",
+      "category": "main",
+      "sizeMeters": [
+        0.34699,
+        0.15541,
+        0.30025
+      ],
+      "triangles": 162,
+      "geometrySHA256": "fdb4e02bed06d74ebfbc7238df7fd63f092cff9d519371b364c57cc545103250",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.8286,
+        "shoulder20": 0.9077,
+        "tip06": 0.7397,
+        "roughness": 0.01002,
+        "profile": [
+          0.7397,
+          0.8477,
+          0.937,
+          1.0,
+          1.1487,
+          0.9868,
+          0.9077,
+          0.8286,
+          0.7603
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_060",
+      "category": "main",
+      "sizeMeters": [
+        0.26848,
+        0.18405,
+        0.19411
+      ],
+      "triangles": 162,
+      "geometrySHA256": "0b31eac8acef7d365e7d60d4b4afd2b87802e6296083c2c255183b35d7755d7c",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7878,
+        "shoulder20": 0.8856,
+        "tip06": 0.7435,
+        "roughness": 0.00513,
+        "profile": [
+          0.7435,
+          0.7878,
+          0.8998,
+          1.0,
+          1.1137,
+          0.9751,
+          0.8856,
+          0.8279,
+          0.7439
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_061",
+      "category": "main",
+      "sizeMeters": [
+        0.22913,
+        0.14397,
+        0.12915
+      ],
+      "triangles": 162,
+      "geometrySHA256": "9e170764cca53303971e2324554d08e73ea892a2e05e349aff148ff6e19ee16c",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7909,
+        "shoulder20": 0.8482,
+        "tip06": 0.7401,
+        "roughness": 0.0061,
+        "profile": [
+          0.7401,
+          0.8144,
+          0.8482,
+          0.9802,
+          1.0,
+          1.0237,
+          0.866,
+          0.7909,
+          0.7571
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_062",
+      "category": "main",
+      "sizeMeters": [
+        0.25035,
+        0.1428,
+        0.20405
+      ],
+      "triangles": 162,
+      "geometrySHA256": "cee871650228d1abc99866ab4e84e05c75af49a6ffb8b2452f5007be93530c44",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7574,
+        "shoulder20": 0.8182,
+        "tip06": 0.7179,
+        "roughness": 0.00631,
+        "profile": [
+          0.7179,
+          0.7581,
+          0.8182,
+          0.9193,
+          1.0548,
+          1.0,
+          0.8397,
+          0.7574,
+          0.7253
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_063",
+      "category": "main",
+      "sizeMeters": [
+        0.20303,
+        0.12351,
+        0.15066
+      ],
+      "triangles": 162,
+      "geometrySHA256": "d54c3d642ff7191b33e6b8a91a61133b28f2ccde98149d534ff407f5b329b670",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7762,
+        "shoulder20": 0.8634,
+        "tip06": 0.7048,
+        "roughness": 0.00658,
+        "profile": [
+          0.7512,
+          0.819,
+          0.8634,
+          0.9432,
+          1.1083,
+          1.0,
+          0.8691,
+          0.7762,
+          0.7048
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_064",
+      "category": "main",
+      "sizeMeters": [
+        0.20761,
+        0.12045,
+        0.12865
+      ],
+      "triangles": 162,
+      "geometrySHA256": "457bb6e93c5dd5d8be77fe3ff40dd6208b363815f9f1db2808ea7f02151bcc89",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7425,
+        "shoulder20": 0.8214,
+        "tip06": 0.6744,
+        "roughness": 0.00448,
+        "profile": [
+          0.6847,
+          0.7425,
+          0.8246,
+          0.952,
+          1.0505,
+          1.0,
+          0.8214,
+          0.7468,
+          0.6744
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_065",
+      "category": "main",
+      "sizeMeters": [
+        0.37833,
+        0.17645,
+        0.32152
+      ],
+      "triangles": 162,
+      "geometrySHA256": "6b962b1962b34d19d168b6b57a46ce1fdd541a367c9de686a5aac0fa8a97fd95",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7683,
+        "shoulder20": 0.822,
+        "tip06": 0.7159,
+        "roughness": 0.01592,
+        "profile": [
+          0.7159,
+          0.8114,
+          0.8617,
+          1.0,
+          1.095,
+          0.917,
+          0.822,
+          0.7683,
+          0.7311
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_066",
+      "category": "main",
+      "sizeMeters": [
+        0.34347,
+        0.17252,
+        0.22086
+      ],
+      "triangles": 162,
+      "geometrySHA256": "90e7105ffcbe8da7d4b24ca9ce758373365528fc05e799acb8d54106144a55d2",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7396,
+        "shoulder20": 0.8017,
+        "tip06": 0.6852,
+        "roughness": 0.00992,
+        "profile": [
+          0.6852,
+          0.7396,
+          0.8044,
+          0.9035,
+          1.1128,
+          1.0,
+          0.8017,
+          0.7627,
+          0.7274
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_067",
+      "category": "main",
+      "sizeMeters": [
+        0.31555,
+        0.17566,
+        0.26297
+      ],
+      "triangles": 162,
+      "geometrySHA256": "03ae746f42b949eb781b5e87a0a345e77d5349a71f527a39d7090ab145cedd08",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7463,
+        "shoulder20": 0.8236,
+        "tip06": 0.7303,
+        "roughness": 0.00954,
+        "profile": [
+          0.7303,
+          0.7535,
+          0.8565,
+          1.0,
+          1.1541,
+          0.9569,
+          0.8236,
+          0.7463,
+          0.7399
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_068",
+      "category": "main",
+      "sizeMeters": [
+        0.28616,
+        0.16624,
+        0.17604
+      ],
+      "triangles": 162,
+      "geometrySHA256": "be79b41e90dd1f3e9f2fb3e83dd6d1699fb15d79c382cab82b2c4e81994cf923",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.782,
+        "shoulder20": 0.8642,
+        "tip06": 0.7288,
+        "roughness": 0.00856,
+        "profile": [
+          0.7528,
+          0.782,
+          0.8642,
+          1.0,
+          1.0993,
+          0.9634,
+          0.8689,
+          0.7875,
+          0.7288
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_069",
+      "category": "main",
+      "sizeMeters": [
+        0.30955,
+        0.14375,
+        0.19873
+      ],
+      "triangles": 162,
+      "geometrySHA256": "f56f58df81e82bcdf5889d4019023d77de390b84610340e9629912e73e6513ca",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.7624,
+        "shoulder20": 0.8266,
+        "tip06": 0.7416,
+        "roughness": 0.00666,
+        "profile": [
+          0.7416,
+          0.7624,
+          0.8402,
+          1.0382,
+          0.9929,
+          1.0,
+          0.8266,
+          0.8003,
+          0.7664
+        ]
+      },
+      "source": "generated"
+    },
+    {
+      "name": "MAIN_070",
+      "category": "main",
+      "sizeMeters": [
+        0.26055,
+        0.12654,
+        0.19951
+      ],
+      "triangles": 162,
+      "geometrySHA256": "4aa274940198e9f94d2f0aff7e87e50dfcbf605cc9c42b934b6a59a4821d3279",
+      "watertight": true,
+      "sectionQuality": {
+        "end12": 0.791,
+        "shoulder20": 0.8517,
+        "tip06": 0.7152,
+        "roughness": 0.0075,
+        "profile": [
+          0.729,
+          0.791,
+          0.8681,
+          1.0,
+          1.0925,
+          0.9581,
+          0.8517,
+          0.8055,
+          0.7152
+        ]
+      },
+      "source": "generated"
+    },
+    {
       "name": "MAIN_071",
       "category": "main",
       "sizeMeters": [
-        0.31176,
-        0.18671,
-        0.12436
+        0.3726,
+        0.19442,
+        0.26193
       ],
-      "triangles": 66,
-      "geometrySHA256": "4b46f3b23e40c7fd8c99455a600507915ca133c8f0ba260187d5befc0d56f91b",
+      "triangles": 162,
+      "geometrySHA256": "e310192029d70ef6412a4fa9615e020cb109d1c5c5a832bf86c44799e466db4a",
       "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_076_Rock022",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.6162
+      "sectionQuality": {
+        "end12": 0.7485,
+        "shoulder20": 0.851,
+        "tip06": 0.696,
+        "roughness": 0.00784,
+        "profile": [
+          0.7276,
+          0.77,
+          0.8825,
+          1.0,
+          1.1014,
+          0.9891,
+          0.851,
+          0.7485,
+          0.696
+        ]
+      },
+      "source": "generated"
     },
     {
       "name": "MAIN_072",
       "category": "main",
       "sizeMeters": [
-        0.25262,
-        0.19981,
-        0.1447
+        0.22071,
+        0.10622,
+        0.17802
       ],
-      "triangles": 84,
-      "geometrySHA256": "139cbced1c4cc6fd270d2f6cdb23ef2e28dfe598133482cc7d83c1424e1e9322",
+      "triangles": 162,
+      "geometrySHA256": "c5af526c6de53fdd33689dc258a9656dedd0d4b335be9897c8290fabefd8e5f1",
       "watertight": true,
-      "source": "gate",
-      "gateNode": "RIGHT_PIER_STONE_003_Rock006",
-      "gateCategory": "main",
-      "sharpEdgeRatio": 0.5952
+      "sectionQuality": {
+        "end12": 0.7734,
+        "shoulder20": 0.8246,
+        "tip06": 0.7091,
+        "roughness": 0.00841,
+        "profile": [
+          0.7623,
+          0.8168,
+          0.8246,
+          0.9115,
+          1.0789,
+          1.0,
+          0.866,
+          0.7734,
+          0.7091
+        ]
+      },
+      "source": "generated"
     },
     {
       "name": "CHINKING_001",
       "category": "chinking",
       "sizeMeters": [
-        0.15306,
-        0.10447,
-        0.10479
+        0.07844,
+        0.05354,
+        0.0537
       ],
       "triangles": 40,
-      "geometrySHA256": "a6b21252fe56138310a7e5fefaa646cf6f17159838ffa002831a1d5520eac9d1",
+      "geometrySHA256": "ed7e27deb9ed0b99e7994dc99b61381d96ed3830762e05779a055b4cdb030962",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.1811,
+        "shoulder20": 0.4767,
+        "tip06": 0.0453,
+        "roughness": 0.00558,
+        "profile": [
+          0.0453,
+          0.1811,
+          0.4767,
+          0.913,
+          1.0343,
+          1.0,
+          0.5954,
+          0.2781,
+          0.0857
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_CHINKING_039_Rock029",
       "gateCategory": "chinking",
@@ -1353,13 +2650,30 @@
       "name": "CHINKING_002",
       "category": "chinking",
       "sizeMeters": [
-        0.09354,
-        0.07414,
-        0.05789
+        0.09875,
+        0.07827,
+        0.06111
       ],
       "triangles": 38,
-      "geometrySHA256": "715f99c7da70996403ea46dcf3381c8ef01f9ee6bc89e7266f9b811b5ccc9abf",
+      "geometrySHA256": "88328bbee31f65bf05b3cfc3f18a7830d0828f60dc485e7d2a8af4d68e36b251",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.2233,
+        "shoulder20": 0.45,
+        "tip06": 0.0607,
+        "roughness": 0.00345,
+        "profile": [
+          0.4017,
+          0.8212,
+          1.0273,
+          1.0469,
+          1.0,
+          0.8165,
+          0.45,
+          0.2233,
+          0.0607
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_CHINKING_051_Rock028",
       "gateCategory": "chinking",
@@ -1369,13 +2683,30 @@
       "name": "CHINKING_003",
       "category": "chinking",
       "sizeMeters": [
-        0.15535,
-        0.10255,
-        0.08879
+        0.10401,
+        0.06866,
+        0.05944
       ],
       "triangles": 38,
-      "geometrySHA256": "c199e2284ab35fba27a8b95bec7a60279e871498ea8ebaa33ca39dc10ae3fcc7",
+      "geometrySHA256": "37fdd1ff46082eb2fa908d3256d94202ba400d9bff44563977eed456a1931b92",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3476,
+        "shoulder20": 0.5773,
+        "tip06": 0.1556,
+        "roughness": 0.00564,
+        "profile": [
+          0.2089,
+          0.5296,
+          0.8518,
+          1.0293,
+          1.0,
+          0.8714,
+          0.5773,
+          0.3476,
+          0.1556
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_023_Rock028",
       "gateCategory": "chinking",
@@ -1385,13 +2716,30 @@
       "name": "CHINKING_004",
       "category": "chinking",
       "sizeMeters": [
-        0.09768,
-        0.07917,
-        0.06731
+        0.17019,
+        0.13794,
+        0.11728
       ],
       "triangles": 38,
-      "geometrySHA256": "d94c20e90154f88d1fae93032fbb71bca795af66df20b5f5f5af4571ac99c1bb",
+      "geometrySHA256": "1527ae1c789e031bb013793b0f0741a97ef3afd9deadbf09d628b06bd054ce2b",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.5302,
+        "shoulder20": 0.7197,
+        "tip06": 0.3023,
+        "roughness": 0.00378,
+        "profile": [
+          0.5814,
+          0.8065,
+          0.9292,
+          1.0037,
+          1.0,
+          0.9679,
+          0.7197,
+          0.5302,
+          0.3023
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_002_Rock028",
       "gateCategory": "chinking",
@@ -1401,13 +2749,30 @@
       "name": "CHINKING_005",
       "category": "chinking",
       "sizeMeters": [
-        0.07788,
-        0.04624,
-        0.04148
+        0.13174,
+        0.07821,
+        0.07017
       ],
       "triangles": 58,
-      "geometrySHA256": "774d496e10fa6a54aa78af34f3bb3fea25e05b76057f0b4213156145db0ee40f",
+      "geometrySHA256": "ee016ecda0b959f4996a5ab36dafefec470eeeaa6a2d17fa7d2d45b8b248a6c7",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.3181,
+        "shoulder20": 0.4515,
+        "tip06": 0.1143,
+        "roughness": 0.01164,
+        "profile": [
+          0.1308,
+          0.408,
+          1.0285,
+          1.1551,
+          1.0,
+          0.7281,
+          0.4515,
+          0.3181,
+          0.1143
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_CHINKING_078_Rock023",
       "gateCategory": "chinking",
@@ -1417,13 +2782,30 @@
       "name": "CHINKING_006",
       "category": "chinking",
       "sizeMeters": [
-        0.09075,
-        0.0829,
-        0.05069
+        0.1639,
+        0.14972,
+        0.09155
       ],
       "triangles": 40,
-      "geometrySHA256": "301d2fb9dc66763e6085b72432bd2dcd58d8cc1a69aedc764d690d870ec2fd46",
+      "geometrySHA256": "cf631abbece51a042f4c8e2926afbb3c1f9a9c6eb9a8affc782b7d85f8bde4e7",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.5892,
+        "shoulder20": 0.7357,
+        "tip06": 0.442,
+        "roughness": 0.01095,
+        "profile": [
+          0.4597,
+          0.6703,
+          0.9054,
+          1.0,
+          1.0127,
+          0.961,
+          0.7357,
+          0.5892,
+          0.442
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_030_Rock029",
       "gateCategory": "chinking",
@@ -1433,13 +2815,30 @@
       "name": "CHINKING_007",
       "category": "chinking",
       "sizeMeters": [
-        0.11177,
-        0.06699,
-        0.06054
+        0.11681,
+        0.07001,
+        0.06327
       ],
       "triangles": 40,
-      "geometrySHA256": "bc431b58ee7cd97a2967b046eb3099c20b747862bb9c7fb93fd79ac50b773157",
+      "geometrySHA256": "b218f461af5f15b4870600335b5b0951dfec3369a661a7be7a41ecaf7a54c1aa",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.1662,
+        "shoulder20": 0.4093,
+        "tip06": 0.0517,
+        "roughness": 0.00679,
+        "profile": [
+          0.0517,
+          0.1662,
+          0.4093,
+          0.9619,
+          1.1972,
+          1.0,
+          0.6566,
+          0.4203,
+          0.193
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_045_Rock029",
       "gateCategory": "chinking",
@@ -1449,13 +2848,30 @@
       "name": "CHINKING_008",
       "category": "chinking",
       "sizeMeters": [
-        0.0875,
-        0.06371,
-        0.04474
+        0.13662,
+        0.09947,
+        0.06985
       ],
       "triangles": 78,
-      "geometrySHA256": "46205cb0c0dfe443e4c70b90cd9abfc45b117b06f19a753c2f7f5e8961ccd4cd",
+      "geometrySHA256": "e6635a6076677eb30170f03837765f742b602943ddcf8f0905bb0d99e169b3b8",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.2432,
+        "shoulder20": 0.6719,
+        "tip06": 0.08,
+        "roughness": 0.00657,
+        "profile": [
+          0.2775,
+          0.4873,
+          0.7951,
+          0.9808,
+          1.012,
+          1.0,
+          0.6719,
+          0.2432,
+          0.08
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_CHINKING_116_Rock021",
       "gateCategory": "chinking",
@@ -1465,13 +2881,30 @@
       "name": "CHINKING_009",
       "category": "chinking",
       "sizeMeters": [
-        0.14616,
-        0.0897,
-        0.09181
+        0.11674,
+        0.07165,
+        0.07333
       ],
       "triangles": 40,
-      "geometrySHA256": "5da0e88fc4c3d0e1760d035a15c5c9fb99954105a0849c388743d9893a21bc6f",
+      "geometrySHA256": "e762fe59fd19bb144a555e71e0eb33473cc496624fc543818792c704c301e4ee",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.1599,
+        "shoulder20": 0.348,
+        "tip06": 0.0611,
+        "roughness": 0.00758,
+        "profile": [
+          0.1052,
+          0.2697,
+          0.5155,
+          1.0,
+          1.3375,
+          0.9319,
+          0.348,
+          0.1599,
+          0.0611
+        ]
+      },
       "source": "gate",
       "gateNode": "LEFT_PIER_CHINKING_142_Rock030",
       "gateCategory": "chinking",
@@ -1481,13 +2914,30 @@
       "name": "CHINKING_010",
       "category": "chinking",
       "sizeMeters": [
-        0.11301,
-        0.09607,
-        0.06583
+        0.06275,
+        0.05334,
+        0.03655
       ],
       "triangles": 40,
-      "geometrySHA256": "022a7d4701905d27895c99f0a4cb4fb7e418aa08fdc532a906f689117e07432b",
+      "geometrySHA256": "d24c4ad495ae001a2c527f2e6410d7b782fa17959f7fcce6b22adbcec508cfdc",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.2325,
+        "shoulder20": 0.4747,
+        "tip06": 0.0664,
+        "roughness": 0.0044,
+        "profile": [
+          0.1593,
+          0.4507,
+          0.841,
+          1.0148,
+          1.0,
+          0.8131,
+          0.4747,
+          0.2325,
+          0.0664
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_082_Rock029",
       "gateCategory": "chinking",
@@ -1497,13 +2947,30 @@
       "name": "CHINKING_011",
       "category": "chinking",
       "sizeMeters": [
-        0.0736,
-        0.0381,
-        0.0332
+        0.11963,
+        0.06192,
+        0.05396
       ],
       "triangles": 66,
-      "geometrySHA256": "4fc78e4456d1b8a40886622323a7128fb1b322b627fa73b72fe656683f42edd4",
+      "geometrySHA256": "6216cfdee3696f81c013f561d5326a27570508da401c01c22770c1a93b98f971",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.1589,
+        "shoulder20": 0.3568,
+        "tip06": 0.0505,
+        "roughness": 0.00856,
+        "profile": [
+          0.1394,
+          0.435,
+          0.8162,
+          1.1872,
+          1.0,
+          0.725,
+          0.3568,
+          0.1589,
+          0.0505
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_078_Rock022",
       "gateCategory": "chinking",
@@ -1513,13 +2980,30 @@
       "name": "CHINKING_012",
       "category": "chinking",
       "sizeMeters": [
-        0.15062,
-        0.11912,
-        0.09968
+        0.15497,
+        0.12256,
+        0.10256
       ],
       "triangles": 40,
-      "geometrySHA256": "9c2b6c72d3ad29370be0500c6c76c25035222c9850ded829b705d1c092639469",
+      "geometrySHA256": "6891677971077e862e270ac27dc938b4bb010f19e8b4f376a99ed9370b43e925",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.4471,
+        "shoulder20": 0.7587,
+        "tip06": 0.1882,
+        "roughness": 0.00574,
+        "profile": [
+          0.2342,
+          0.7984,
+          0.9272,
+          0.9901,
+          1.0002,
+          1.0,
+          0.7587,
+          0.4471,
+          0.1882
+        ]
+      },
       "source": "gate",
       "gateNode": "RIGHT_PIER_CHINKING_017_Rock029",
       "gateCategory": "chinking",
@@ -1530,12 +3014,29 @@
       "category": "lintel",
       "sizeMeters": [
         1.0,
-        0.18547,
-        0.20787
+        0.20181,
+        0.30487
       ],
-      "triangles": 306,
-      "geometrySHA256": "65b4562e0482435829dd315111ffb87b1f55de03e3ca60be89701bc9406bfe03",
+      "triangles": 408,
+      "geometrySHA256": "ab53b5354bcd98d66a9129d08e97e11824d7b7a6061b417c90719a4ecf6b9719",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.9895,
+        "shoulder20": 0.984,
+        "tip06": 1.0021,
+        "roughness": 0.00778,
+        "profile": [
+          1.0021,
+          0.9895,
+          0.984,
+          1.0,
+          1.0264,
+          0.9699,
+          1.0163,
+          1.0289,
+          1.019
+        ]
+      },
       "source": "generated"
     },
     {
@@ -1543,12 +3044,29 @@
       "category": "lintel",
       "sizeMeters": [
         1.1,
-        0.28242,
-        0.23916
+        0.19191,
+        0.34283
       ],
-      "triangles": 306,
-      "geometrySHA256": "3c4900647d16ca158a31da297b2ac00d456ee4d0ce31d18d24e95576573d432b",
+      "triangles": 408,
+      "geometrySHA256": "931396bdb75d6c5ed7367bd4ec3baaec5162902f7835ac043544d9580e1d68bb",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 1.0046,
+        "shoulder20": 0.9844,
+        "tip06": 0.9651,
+        "roughness": 0.005,
+        "profile": [
+          1.0074,
+          1.0279,
+          0.9844,
+          1.0,
+          0.9736,
+          1.0329,
+          1.0544,
+          1.0046,
+          0.9651
+        ]
+      },
       "source": "generated"
     },
     {
@@ -1556,12 +3074,29 @@
       "category": "lintel",
       "sizeMeters": [
         1.2,
-        0.24755,
-        0.25707
+        0.18692,
+        0.33375
       ],
-      "triangles": 306,
-      "geometrySHA256": "0bbc8c2a46d7b3b80a74e97abcb4b669edc2cc34f3e5148356d4f16d6d02e994",
+      "triangles": 408,
+      "geometrySHA256": "ed8e4464b6e31a82e5dbc850c8217645f867b03f4b4b86bc3fdd28b335d44b15",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.992,
+        "shoulder20": 0.9813,
+        "tip06": 0.9699,
+        "roughness": 0.00757,
+        "profile": [
+          0.9699,
+          0.992,
+          0.9813,
+          1.0227,
+          1.0,
+          0.9994,
+          0.9899,
+          1.0012,
+          0.9885
+        ]
+      },
       "source": "generated"
     },
     {
@@ -1569,12 +3104,29 @@
       "category": "lintel",
       "sizeMeters": [
         1.3,
-        0.20403,
-        0.27343
+        0.19787,
+        0.33329
       ],
-      "triangles": 306,
-      "geometrySHA256": "20946181ebf8be4bf2e4ef26b49a275fbc1c41a09d8b1c8c57057da9a62bc35e",
+      "triangles": 408,
+      "geometrySHA256": "930bb2650634cab8ee3c0b67ec31672b4a8366f5129692c5edc85c66dbe795c0",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 1.0077,
+        "shoulder20": 1.0029,
+        "tip06": 1.0278,
+        "roughness": 0.00691,
+        "profile": [
+          1.0278,
+          1.0178,
+          1.0093,
+          0.9962,
+          1.0043,
+          1.0,
+          1.0029,
+          1.0077,
+          1.0513
+        ]
+      },
       "source": "generated"
     },
     {
@@ -1582,12 +3134,29 @@
       "category": "lintel",
       "sizeMeters": [
         1.4,
-        0.23524,
-        0.28732
+        0.18302,
+        0.31108
       ],
-      "triangles": 306,
-      "geometrySHA256": "f8e04d1f8b9c1d21678658af0255f64428cb3d3a4f305a8c36fa6ee7dd5ec109",
+      "triangles": 408,
+      "geometrySHA256": "e43fe70700962259d1f43768206136eab3795af1313a07a6e4fb20239c290a91",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 0.9497,
+        "shoulder20": 0.9719,
+        "tip06": 0.9735,
+        "roughness": 0.00648,
+        "profile": [
+          1.0059,
+          0.9855,
+          0.9719,
+          0.9703,
+          1.0,
+          1.0183,
+          0.9996,
+          0.9497,
+          0.9735
+        ]
+      },
       "source": "generated"
     },
     {
@@ -1595,12 +3164,29 @@
       "category": "lintel",
       "sizeMeters": [
         1.5,
-        0.25802,
-        0.20696
+        0.18633,
+        0.30224
       ],
-      "triangles": 306,
-      "geometrySHA256": "e63b528454a0e1221531423140f52b48d203fd9f2f604035727d3c36988c03f4",
+      "triangles": 408,
+      "geometrySHA256": "5b95b4397bb68bdc49bccaa0386eee2d1d33a47aca96b46fcab3552372acc4fd",
       "watertight": true,
+      "sectionQuality": {
+        "end12": 1.0591,
+        "shoulder20": 1.0131,
+        "tip06": 1.0037,
+        "roughness": 0.00746,
+        "profile": [
+          1.0037,
+          1.0591,
+          1.0635,
+          1.0248,
+          0.9898,
+          1.0,
+          1.0131,
+          1.0652,
+          1.0272
+        ]
+      },
       "source": "generated"
     }
   ]
