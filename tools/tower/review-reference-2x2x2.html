@@ -62,10 +62,11 @@ document.getElementById('filler').onchange=e=>groups.filler.visible=e.target.che
 document.getElementById('edges').onchange=e=>{for(const g of Object.values(groups))g.traverse(n=>{if(n.isInstancedMesh){n.material.wireframe=e.target.checked;n.material.needsUpdate=true;}})};
 const loader=new GLTFLoader();
 try{
- const [source,rp,q]=await Promise.all([
+ const [source,rp,q,actual]=await Promise.all([
    loader.loadAsync('./common-94.glb'),
    fetch('./reference-2x2x2.json').then(r=>{if(!r.ok)throw Error('JSON not found');return r.json()}),
-   fetch('./reference-2x2x2-quality.json').then(r=>{if(!r.ok)throw Error('QA not found');return r.json()})
+   fetch('./reference-2x2x2-quality.json').then(r=>{if(!r.ok)throw Error('QA not found');return r.json()}),
+   fetch('./actual-triangle-visibility.json').then(r=>{if(!r.ok)throw Error('Raycast report not found');return r.json()})
  ]);
  const map=new Map();
  source.scene.traverse(n=>{if(n.isMesh)map.set(n.name,n)});
@@ -82,8 +83,9 @@ try{
    (name.startsWith('CHINK_')?groups.filler:groups.main).add(inst);
    materials.push(mat);
  }
- const views=q.afterViews.map(v=>v.axis+': '+Math.round(100*v.interiorCoverage)+'%').join(' / ');
- info.textContent='Экспериментальная сборка · внутренние проекции: '+views+' (приближённый расчёт)';
+ const views=actual.views.map(v=>v.axis+': '+(100*v.interiorCoverage).toFixed(1)+'%').join(' / ');
+ info.textContent='Лучи по реальным треугольникам · внутренние проекции: '+views+
+   (actual.passesAt99_5PercentAndAtMost3PixelHole?' · численный контроль пройден':' · доработать оставшиеся просветы');
  document.getElementById('count').textContent=q.placements+' камней · '+q.coarse+' основных · '+q.chinking+' забутовка · '+Math.round(q.horizontalShare*100)+'% основных вытянутые горизонтальные';
 }catch(e){console.error(e);info.textContent='Ошибка загрузки: '+e.message+' · запустите папку через локальный HTTP-сервер';}
 function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
