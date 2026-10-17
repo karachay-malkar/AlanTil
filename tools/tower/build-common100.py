@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb"
 EXPECTED_GATE_SHA256 = "37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51"
 OUTPUT = ROOT / "assets/tower/prefabs/common100"
-VERSION = "17.7-common100.3"
+VERSION = "17.7-common100.4"
 TARGETS = {"main": 72, "large": 10, "chinking": 12, "lintel": 6}
 SEED = 170017
 MATERIAL = PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR", baseColorFactor=[193, 176, 146, 255],
@@ -255,6 +255,24 @@ def generate_checked_rock(rng,category,length,family=None):
             return rock
     raise RuntimeError("Unable to produce safe angular "+category+" in 90 candidates")
 
+
+def advance_previous_main_random_stream(rng,length):
+    """Keep the approved 17.7.2 chinking/lintel meshes untouched.
+
+    Old per-model random calls determined the dimensions and fracture patterns
+    of later asset categories. Reproduce that stream while building each new
+    main rock with its *own* RNG. This compatibility step can be replaced with
+    explicit immutable category seeds in a future library-version migration.
+    """
+    for _ in range(90):
+        height=length*rng.uniform(.44,.70)
+        depth=length*rng.uniform(.55,.88)
+        candidate=fractured_rock(rng,(length,height,depth))
+        if not violations("LEGACY", "main", quality(candidate),candidate.extents):
+            return
+    raise RuntimeError("v2 random-stream compatibility exhausted")
+
+
 def accepted_rock(mesh, source_id, target_long):
     rock = mesh.copy()
     align_long_axis_x(rock)
@@ -312,7 +330,14 @@ def build(source, output):
                               "gateCategory": donor, "sharpEdgeRatio": round(item["sharp"], 4)}
             else:
                 family=FAMILIES[(i-len(chosen))%len(FAMILIES)] if category=="main" else None
-                mesh = generate_checked_rock(rng, category, length, family)
+                if category=="main":
+                    # Independent procedural seed: one new stone never changes
+                    # a different stone or a previously approved prefab asset.
+                    model_rng=np.random.default_rng(SEED+1000003+i*1019)
+                    mesh=generate_checked_rock(model_rng, category, length, family)
+                    advance_previous_main_random_stream(rng,length)
+                else:
+                    mesh=generate_checked_rock(rng, category, length, family)
                 provenance = {"source": "generated"}
                 if family:
                     provenance["shapeFamily"]=family
