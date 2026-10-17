@@ -17,7 +17,7 @@ fs.mkdirSync(out,{recursive:true});
    await page.goto('http://127.0.0.1:8795/tower-common100-review.html',{waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Загружено: 100'),{timeout:60000});
    if(errors.length||failures.length)throw new Error(JSON.stringify({errors,failures}));
-   if(!(await page.locator('#status').textContent()).includes('17.7-common100.4'))throw Error('Old or cached stone library');
+   if(!(await page.locator('#status').textContent()).includes('17.7-common100.5'))throw Error('Old or cached stone library');
    const count=await page.locator('#catalog button').count();if(count!==12)throw Error('12 stone tiles expected, got '+count);
    const original=await page.locator('#stoneName').textContent();
    await page.locator('#next').click();
@@ -41,6 +41,18 @@ fs.mkdirSync(out,{recursive:true});
    if(!(await page.locator('#stoneOrigin').textContent()).includes('Массивный'))throw Error('Generated 3D family label missing');
    await page.locator('#gallery').click();
    await page.screenshot({path:path.join(out,'common100-38-redesigned-main-desktop.png')});
+   await page.locator('[data-group="lintel"]').click();
+   await page.locator('#single').click();
+   for (let i=0;i<6;i++){
+     const name='LINTEL_'+String(i+1).padStart(3,'0');
+     const length=[100,100,125,125,150,150][i];
+     if(await page.locator('#stoneName').textContent()!==name)throw Error('Wrong lintel model '+i);
+     if(Number(await page.locator('#dx').textContent())!==length)throw Error('Wrong lintel span '+name);
+     await page.locator('#next').click();
+   }
+   await page.locator('#gallery').click();
+   await page.locator('[data-group="lintel"]').click();
+   await page.screenshot({path:path.join(out,'common100-three-paired-lintel-lengths.png')});
    await page.setViewportSize({width:390,height:844});
    await page.locator('[data-group="large"]').click();
    await page.locator('#single').click();
