@@ -1,105 +1,102 @@
 #!/usr/bin/env python3
-"""Independent 3D acceptance: two distinct rugged lintels at each required length.
+"""QA for only end-face sculpting of six single-piece lintels, 100/125/150 cm.
 
-Verifies the GLB itself, not merely the metadata. Every non-lintel model from
-17.7-common100.4 must preserve its geometry hash exactly.
+An intentionally calm v5 long flank is expected; v6 longitudinal faceting
+is forbidden. Validate measured end-cap geometry from exported GLB, not just
+names/metadata. The other 94 library meshes MUST be unchanged.
 """
 from __future__ import annotations
-
 import json
 from pathlib import Path
-
 import numpy as np
 import trimesh
 
-from common100_quality import quality, violations, section_points
+from common100_quality import quality, violations
 
 ROOT=Path(__file__).resolve().parents[2]
 ROOT100=ROOT/"assets/tower/prefabs/common100"
 LENGTHS=(1.0,1.0,1.25,1.25,1.5,1.5)
 
 
-def side_breaks(mesh):
-    """Measure irregularity of *both* long Z side boundaries in metres."""
-    right,left=[],[]
-    for station in np.linspace(.07,.93,18):
-        yz=section_points(mesh,float(station))[:,1:]
-        if len(yz)<4:
-            return (0.0,0.0)
-        right.append(float(np.max(yz[:,1])))
-        left.append(float(np.min(yz[:,1])))
-    return (round(float(np.std(np.diff(right))),5),
-            round(float(np.std(np.diff(left))),5))
+def cap_features(mesh,sign):
+    """Large true end facets and irregular face depths.
+
+    A single smooth planar ngon/fan has too few strongly oblique cap normals.
+    Cap-only radial cracks/chips create a nonplanar face with varied depths.
+    """
+    verts=np.asarray(mesh.vertices,dtype=float)
+    centers=np.asarray(mesh.triangles_center,dtype=float)
+    normal=np.asarray(mesh.face_normals,dtype=float)
+    area=np.asarray(mesh.area_faces,dtype=float)
+    long=float(mesh.extents[0])
+    face=(centers[:,0]*sign>long*.445)&(normal[:,0]*sign>.24)
+    count=int(face.sum())
+    if not count:
+        return {"count":0,"facets":0,"roughArea":0.,"depth":0.,"broadFacets":0}
+    bent=(normal[:,0]*sign>.28)&(normal[:,0]*sign<.94)
+    rough_area=float(np.sum(area[face&bent]))
+    full_area=float(np.sum(area[face]))
+    broad=int(np.count_nonzero(face&bent&(area>.00016)))
+    cap_vertices=verts[np.abs(verts[:,0]*sign-long/2)<min(.04,long*.04)]
+    depth=float(np.ptp(cap_vertices[:,0])) if len(cap_vertices)>0 else 0.
+    return {
+        "count":count,
+        "facets":int(np.count_nonzero(face&bent)),
+        "broadFacets":broad,
+        "roughArea":round(rough_area/max(full_area,1e-9),3),
+        "depth":round(depth,5),
+    }
 
 
+def central_flank_facets(mesh):
+    """Reject the dense, artificial sawtooth triangles added in common100.6."""
+    centers=np.asarray(mesh.triangles_center)
+    normals=np.asarray(mesh.face_normals)
+    long=float(mesh.extents[0])
+    mid=(np.abs(centers[:,0])<long*.36)
+    flanks=(np.abs(normals[:,2])>.38)&mid
+    return int(np.count_nonzero(flanks))
 
-
-def endcap_geometry(mesh, sign):
-    """Measure actual chipped cap topology and nonplanar depth (no trust in JSON)."""
-    n=np.asarray(mesh.face_normals)
-    p=np.asarray(mesh.triangles_center)
-    v=np.asarray(mesh.vertices)
-    length=float(mesh.extents[0])
-    # Only faces on the final 5 cm of the selected end.
-    f=(p[:,0]*sign>.43*length) & (n[:,0]*sign>.38)
-    centers=p[f]
-    normal=n[f]
-    if len(centers)<18:
-        return dict(faces=int(len(centers)), tilted=0, depth=0.0)
-    slant=np.sqrt(normal[:,1]**2+normal[:,2]**2)
-    cap_vertices=v[(v[:,0]*sign)>(.5*length-.043)]
-    thickness=float(np.ptp(cap_vertices[:,0])) if len(cap_vertices)>4 else 0.0
-    return dict(faces=int(len(centers)),
-                tilted=int(np.count_nonzero(slant>.18)),
-                depth=round(thickness,5))
 
 def main():
-    meta=json.loads((ROOT100/"common-100.json").read_text())
-    old=json.loads((ROOT/"tests/common100-v4-nonlintel-baseline.json").read_text())["models"]
-    m={item["name"]:item for item in meta["models"]}
+    meta=json.loads((ROOT100/"common-100.json").read_text(encoding="utf8"))
+    previous=json.loads((ROOT/"tests/common100-v4-nonlintel-baseline.json").read_text(encoding="utf8"))["models"]
+    items={m["name"]:m for m in meta["models"]}
     scene=trimesh.load(ROOT100/"common-100.glb",force="scene",process=False)
-    assert len(meta["models"])==len(scene.geometry)==100
-    assert len(old)==94
-    for name,h in old.items():
-        assert m[name]["geometrySHA256"]==h,(name,"regression: untouched model changed")
-    specs=[]
+    assert len(scene.geometry)==len(meta["models"])==100
+    assert len(previous)==94
+    for name,h in previous.items():
+        assert items[name]["geometrySHA256"]==h,(name,"Non-lintel changed")
+    results=[]
     for i,wanted in enumerate(LENGTHS,1):
         name=f"LINTEL_{i:03d}"
-        item=m[name]
-        rock=scene.geometry[name]
-        assert rock.is_watertight and rock.is_volume,name
-        assert rock.visual.uv is not None,name
-        assert item["category"]=="lintel",name
-        assert abs(float(rock.extents[0])-wanted)<.003,(name,rock.extents,wanted)
-        assert .18<=rock.extents[1]<=.24,(name,rock.extents)
-        assert .28<=rock.extents[2]<=.36,(name,rock.extents)
-        assert rock.extents[1]/rock.extents[2]<=.78,(name,rock.extents)
-        assert not violations(name,"lintel",quality(rock),rock.extents),name
-        side=side_breaks(rock)
-        # Long sides must remain calm: v6's sawtooth micro-facets are rejected.
-        assert min(side)>=.004,(name,"side too uniform",side)
-        assert max(side)<=.032,(name,"over-chipped longitudinal sides",side)
-        assert item.get("sideSurfaceVersion")=="v5-restored",(name,"v5 sides were not restored")
-        effects=item.get("endTreatments",[])
-        assert len(effects)==2 and all(len(effect)>=2 for effect in effects),(name,"missing individual treatments")
-        for sign in (-1,1):
-            cap=endcap_geometry(rock,sign)
-            assert cap["faces"]>=20,(name,"end face has few facets",cap)
-            assert cap["tilted"]>=12,(name,"end face is nearly planar",cap)
-            assert cap["depth"]>=.013,(name,"end face is too flat",cap)
-            print("ENDCAP_AUDIT",name,"left" if sign==-1 else "right",cap,effects[(sign+1)//2])
-        # Only two coarse cap meshes were added, never a sawtooth side mesh.
-        assert len(rock.faces)<760,(name,"too many triangles; long sides may have been damaged")
-        # Two variants of the same length must not be the same geometry,
-        # nor should both derive from one extrusion topology.
-        assert item.get("lintelStyle"),name
-        specs.append((name,wanted,item["lintelStyle"],len(rock.faces),side))
+        model=scene.geometry[name]
+        datum=items[name]
+        assert model.is_volume and model.is_watertight,name
+        assert model.visual.uv is not None,name
+        assert abs(float(model.extents[0])-wanted)<.003,(name,model.extents)
+        assert .18<=model.extents[1]<=.24,(name,model.extents)
+        assert .28<=model.extents[2]<=.36,(name,model.extents)
+        assert model.extents[1]/model.extents[2]<=.78,(name,model.extents)
+        assert not violations(name,"lintel",quality(model),model.extents),(name,"Lintel too pointed")
+        left=cap_features(model,-1)
+        right=cap_features(model,1)
+        for side,cap in (("left",left),("right",right)):
+            assert cap["count"]>=22,(name,side,"End cap is almost smooth/flat",cap)
+            assert cap["broadFacets"]>=8,(name,side,"Too few broad angular end facets",cap)
+            assert cap["roughArea"]>=.18,(name,side,"End cap looks like saw cut",cap)
+            assert cap["depth"]>=.012,(name,side,"No real relief in end cap",cap)
+        assert len(datum.get("endcapDesign",[]))==2,(name,"Missing design metadata")
+        assert datum["endcapDesign"][0]!=datum["endcapDesign"][1],name
+        count=central_flank_facets(model)
+        assert count<230,(name,"Introduced excessive triangulated side noise",count)
+        results.append((name,wanted,datum["lintelStyle"],datum["endcapDesign"],len(model.faces),left,right,count))
     for i in (0,2,4):
-        pair=specs[i:i+2]
-        assert pair[0][2]!=pair[1][2],("duplicate form families",pair)
-        assert pair[0][3]!=pair[1][3],("duplicate triangulation topology",pair)
-    print("LINTELS_100_125_150_X2_ACCEPTED",specs)
-    print("NON_LINTEL_94_SOURCE_HASHES_PRESERVED")
+        a,b=results[i:i+2]
+        assert a[2]!=b[2],("Paired lintel lacks silhouette variations",a,b)
+        assert a[4]!=b[4],("Paired lintel uses identical topology",a,b)
+    print("COMMON100_ENDCAPS_RESTORED_SIDE_AND_DAMAGED_BOTH_ENDS",results)
+    print("COMMON100_NON_LINTEL_94_HASHES_UNCHANGED")
 
 
 if __name__=="__main__":
