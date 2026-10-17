@@ -1,7 +1,7 @@
 /** AlanTil 17.5.2 — free, permanent prefabricated masonry, server-authoritative V3.
  * Old purchased V1/V2 elements remain read only. No local construction drafts.
  */
-import {createTowerScene} from './prefab-scene.js?v=17.5.5-compact-stones.1';
+import {createTowerScene} from './prefab-scene.js?v=17.2-balkaria-light-ochre.1';
 import {PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';

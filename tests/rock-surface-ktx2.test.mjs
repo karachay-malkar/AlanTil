@@ -55,3 +55,15 @@ test('scene provides renderer to material loader; existing gate and saves untouc
  assert.match(gate,/ALANTIL_GATE_WOOD_FROM_DOOR_PBR/);
  assert.match(gate,/ALANTIL_GATE_IRON_FROM_DOOR_PBR/);
 });
+
+test('Light Ochre texture version is reachable through every lazy import and cache key',()=>{
+ const router=read('src/app/router.js');
+ const feature=read('src/features/tower/index.js');
+ const scene=read('src/features/tower/prefab-scene.js');
+ const rock=read('src/features/tower/rock-surface.js');
+ assert.ok(router.includes('const TOWER_ASSET_VERSION = "17.5.8-balkaria-light-ochre.1";'));
+ assert.ok(feature.includes("prefab-scene.js?v=17.2-balkaria-light-ochre.1"));
+ assert.ok(scene.includes("rock-surface.js?v=balkaria-stone-v2.1-light-ochre.1"));
+ assert.ok(rock.includes("export const ROCK_SURFACE_VERSION='balkaria-stone-v2.1-light-ochre.1';"));
+ assert.ok(rock.includes("const url=(name,extension)=>root+'BalkariaStone_'+name+'_2K.'+extension+'?v='+ROCK_SURFACE_VERSION"));
+});

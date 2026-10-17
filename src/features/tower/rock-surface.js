@@ -5,7 +5,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {KTX2Loader} from '../../vendor/three/addons/loaders/KTX2Loader.js';
 
-export const ROCK_SURFACE_VERSION='balkaria-stone-v2.1-ktx2.3';
+export const ROCK_SURFACE_VERSION='balkaria-stone-v2.1-light-ochre.1';
 const root='/assets/tower/materials/balkaria-stone-v2.1/';
 const cache=new WeakMap();
 const names=['BaseColor','Normal_OpenGL','ORM'];
