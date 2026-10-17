@@ -1,0 +1,30 @@
+name: Probe surface-scored packing from 486 gate rocks
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'tools/tower/improve-gate-faces-17511.py'
+      - '.github/workflows/tower-gate-faces-17511.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install numpy==2.3.5 scipy==1.17.0 trimesh==4.11.1 pillow==12.3.0
+      - name: Independently measure face coverage after orientation-aware placement
+        run: OPENBLAS_NUM_THREADS=1 python tools/tower/improve-gate-faces-17511.py --kind 2x2x2 --variant 0 --out /tmp/face-scored-probe.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alantil-face-scored-probe
+          path: /tmp/face-scored-probe.json
+          if-no-files-found: ignore
