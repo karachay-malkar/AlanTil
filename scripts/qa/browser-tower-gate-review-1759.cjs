@@ -62,6 +62,23 @@ fs.mkdirSync(output,{recursive:true});
   await page.locator('#variant').selectOption('4');
   await page.waitForTimeout(600);
   await page.screenshot({path:path.join(output,'mobile-4x4x4.png')});
+  // Compare the same authored rock under forced PNG fallback on a mobile-sized
+  // canvas. Real device GPU-specific colour failures still require Android QA.
+  const pngPage=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+  try{
+   const pngErrors=[];
+   pngPage.on('pageerror',e=>pngErrors.push(e.message));
+   await pngPage.goto('http://127.0.0.1:8792/tower-compact-review.html?towerTexture=png',{waitUntil:'domcontentloaded'});
+   await pngPage.locator('#release').selectOption('17.5.10');
+   await pngPage.locator('#kind').selectOption('2x2x2');
+   await pngPage.waitForFunction(()=>{
+    const status=document.getElementById('status')?.textContent||'';
+    return status.includes('Размер: 2x2x2')&&status.includes('Материал:')&&status.includes('PNG');
+   },null,{timeout:60000});
+   if(pngErrors.length)throw Error('PNG fallback renderer errors: '+pngErrors.join(' | '));
+   await pngPage.screenshot({path:path.join(output,'mobile-png-stone-reference.png')});
+   console.log('FORCED_PNG_MOBILE_QA_OK');
+  }finally{await pngPage.close();}
   if(failed.length)throw Error('HTTP errors '+failed.join(' | '));
   console.log('AUTHORED_486_WEBGL_SCREENSHOTS_OK',count,'PLUS_MOBILE');
  }finally{await browser.close();server.kill();}
