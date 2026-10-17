@@ -32,6 +32,9 @@ fs.mkdirSync(output,{recursive:true});
     if(errors.length)throw Error('WebGL error: '+errors.join(' | '));
     const st=await page.locator('#status').textContent();
     if(!/Материал:/.test(st))throw Error('Stone material missing: '+st);
+    const groups=Number(st.match(/Отдельных групп геометрии: (\d+)/)?.[1]);
+    if(!Number.isInteger(groups)||groups<1)throw Error('No rock draw-group statistics: '+st);
+    if(variant===0)console.log('ROCK_DRAW_GROUPS',kind,groups);
     await page.screenshot({path:path.join(output,kind+'-variant-'+variant+'.png')});
     count++;
    }

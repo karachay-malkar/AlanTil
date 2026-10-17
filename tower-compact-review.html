@@ -94,7 +94,7 @@ async function build(){
   camera.position.set(extent*1.75,extent*1.3,extent*1.9);
   controls.target.set(0,0,0);controls.update();camera.near=Math.max(.008,extent/100);camera.updateProjectionMatrix();
   const coverage=recipe.minFaceCoverage==null?'не измерено':(100*recipe.minFaceCoverage).toFixed(1)+'%';
-  status.textContent='Размер: '+kind+' (ячейка 25 см)\nКамней: '+recipe.placement.length+
+  status.textContent='Размер: '+kind+' (ячейка 25 см)\nКамней: '+recipe.placement.length+'\nОтдельных групп геометрии: '+batches.size+
    '\nЗаписанное объёмное заполнение: '+(100*recipe.occupancy).toFixed(1)+'%'+
    '\nМинимальное покрытие наружной грани: '+coverage+
    '\nМатериал: '+material.name;
