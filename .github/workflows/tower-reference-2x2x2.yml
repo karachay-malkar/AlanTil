@@ -9,6 +9,9 @@ on:
       - 'tools/tower/fill-reference-visible-gaps.py'
       - 'tools/tower/review-reference-2x2x2.html'
       - '.github/workflows/tower-reference-2x2x2.yml'
+concurrency:
+  group: tower-reference-2x2x2-pilot
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
