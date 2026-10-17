@@ -86,6 +86,7 @@ test('entire door section rests on the 2.25m placement grid floor',()=>{
  assert.ok(Math.abs(correctedWoodBottom-correctedStoneBottom)<.025,
   'Timber/stone joint separated');
  const code=readFileSync(new URL('src/features/tower/prefab-scene.js',root),'utf8');
- assert.match(code,/assembled\.position\.y=-\.125/);
- assert.doesNotMatch(code,/carpentry\.position\.y=-\.125/);
+ assert.match(code,/masonry\.position\.y=-\.125/);
+ assert.match(code,/carpentry\.position\.y=-\.125/);
+ assert.doesNotMatch(code,/assembled\.position\.y=-\.125/);
 });

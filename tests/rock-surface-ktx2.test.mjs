@@ -38,8 +38,8 @@ test('shared stone material prefers KTX2 and retains PNG fallback with correct P
  assert.match(rock,/url\(name,'ktx2'\)/);
  assert.match(rock,/url\(name,'png'\)/);
  assert.match(rock,/roughnessMap\s*:/);
- assert.match(rock,/metalnessMap\s*:/);
- assert.match(rock,/aoMap\s*:/);
+ assert.match(rock,/metalness:0/);
+ assert.doesNotMatch(rock,/\baoMap\s*:/);
  assert.match(rock,/SRGBColorSpace/);
  assert.match(rock,/setAttribute\('uv2'/);
  assert.match(rock,/alantilNonStone/);
