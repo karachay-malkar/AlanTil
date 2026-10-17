@@ -63,9 +63,9 @@ def curated_base(placement, shapes):
         if name not in shapes:
             raise ValueError('Original stone missing from common94: ' + name)
         preferred = is_medium_elongated(name, shapes[name]) and profile_for_instance(shapes[name], row)
-        # Keep every fourth other stone as a tie/binder; do not produce
+        # Keep every ninth other stone as a tie/binder; do not produce
         # one-shape wallpaper or remove all non-elongated support stones.
-        if preferred or idx % 4 == 0:
+        if preferred or idx % 9 == 0:
             retained.append(row)
         else:
             excluded += 1
