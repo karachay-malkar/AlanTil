@@ -30,3 +30,10 @@ test('compact stone geometry is textured before instancing',()=>{
  assert.match(compact,/geometry\.getAttribute\('uv'\)/);
  assert.match(compact,/geometry\.getAttribute\('normal'\)/);
 });
+
+test('mobile texture comparison can force PNG without altering saved sections',()=>{
+ const surface=src('src/features/tower/rock-surface.js');
+ assert.match(surface,/towerTexture/);
+ assert.match(surface,/get\('towerTexture'\)===\x27png\x27/);
+ assert.match(surface,/encoding:\x27PNG\x27/);
+});

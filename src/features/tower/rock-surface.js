@@ -13,6 +13,12 @@ let materialPromise=null;
 const url=(name,extension)=>root+'BalkariaStone_'+name+'_2K.'+extension+'?v='+ROCK_SURFACE_VERSION;
 
 async function loadRockMaps(renderer){
+ // A/B diagnostic for devices that return valid KTX2 textures but render black.
+ // ?towerTexture=png uses the identical UV maps; it never changes saved towers.
+ if(typeof location!=='undefined' && new URLSearchParams(location.search).get('towerTexture')==='png'){
+  const loader=new THREE.TextureLoader();
+  return {maps:await Promise.all(names.map(name=>loader.loadAsync(url(name,'png')))),encoding:'PNG'};
+ }
  let compressed=null;
  try{
   if(!renderer)throw new TypeError('WebGL renderer required to initialize KTX2');
