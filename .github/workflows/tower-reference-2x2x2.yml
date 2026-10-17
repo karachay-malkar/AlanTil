@@ -7,6 +7,7 @@ on:
       - 'tools/tower/verify-reference-2x2x2.py'
       - 'tools/tower/check-reference-triangle-visibility.py'
       - 'tools/tower/fill-reference-visible-gaps.py'
+      - 'tools/tower/pack-reference-html.py'
       - 'tools/tower/review-reference-2x2x2.html'
       - '.github/workflows/tower-reference-2x2x2.yml'
 concurrency:
@@ -28,7 +29,7 @@ jobs:
       - name: Install pinned source mesh tooling
         run: pip install 'numpy==2.2.6' 'scipy==1.15.3' 'trimesh==4.11.1' 'rtree==1.4.1' 'pillow==11.3.0'
       - name: Verify baker parses
-        run: python -m py_compile tools/tower/build-reference-2x2x2.py tools/tower/verify-reference-2x2x2.py tools/tower/check-reference-triangle-visibility.py tools/tower/fill-reference-visible-gaps.py
+        run: python -m py_compile tools/tower/build-reference-2x2x2.py tools/tower/verify-reference-2x2x2.py tools/tower/check-reference-triangle-visibility.py tools/tower/fill-reference-visible-gaps.py tools/tower/pack-reference-html.py
       - name: Produce authentic 2x2x2 stone placements
         run: python -u tools/tower/build-reference-2x2x2.py
       - name: Fill remaining visible gaps using exact triangle-ray checks
@@ -61,6 +62,8 @@ jobs:
           print('PROJECTED_INTERIOR_COVERAGE', [(x['axis'],x['interiorCoverage']) for x in q['afterViews']])
           print('LIVE_EDITOR_UNCHANGED')
           PY
+      - name: Build a standalone offline HTML with embedded source meshes
+        run: python tools/tower/pack-reference-html.py
       - name: Build complete offline WebGL inspection package
         run: |
           mkdir -p /tmp/reference-2x2x2/three/addons/loaders /tmp/reference-2x2x2/three/addons/controls
@@ -70,18 +73,21 @@ jobs:
           cp tools/tower/review-reference-2x2x2.html /tmp/reference-2x2x2/index.html
           cp assets/tower/prefabs/common94/common-94.glb /tmp/reference-2x2x2/common-94.glb
           cp assets/tower/prefabs/common94/reference-2x2x2/*.json /tmp/reference-2x2x2/
+          cp assets/tower/prefabs/common94/reference-2x2x2/AlanTil_reference_2x2x2_OFFLINE.html /tmp/reference-2x2x2/
           cp -a /tmp/reference-2x2x2 ./reference-2x2x2
           zip -qr AlanTil_reference_2x2x2_3D.zip reference-2x2x2
       - uses: actions/upload-artifact@v4
         with:
           name: AlanTil_reference_2x2x2_3D
-          path: AlanTil_reference_2x2x2_3D.zip
+          path: |
+            AlanTil_reference_2x2x2_3D.zip
+            assets/tower/prefabs/common94/reference-2x2x2/AlanTil_reference_2x2x2_OFFLINE.html
           if-no-files-found: error
       - name: Keep checked pilot recipe and QA only on experiment branch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/tower/prefabs/common94/reference-2x2x2/
+          git add assets/tower/prefabs/common94/reference-2x2x2/*.json
           if git diff --cached --quiet; then echo 'NO_CHANGE'; else
             git commit -m 'assets(tower): staged real-stone 2x2x2 reference recipe and QA'
             git push origin HEAD:agent/tower-reference-2x2x2-20261017
