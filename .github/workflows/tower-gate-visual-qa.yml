@@ -19,7 +19,7 @@ permissions:
 jobs:
   screenshots:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,7 +38,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Render all 25 original gate-derived stone variants
+      - name: Render all 75 gate-derived variants and mobile PNG/KTX2 evidence
         run: node scripts/qa/browser-tower-gate-review-1759.cjs
       - uses: actions/upload-artifact@v4
         if: always()
