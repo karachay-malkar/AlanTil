@@ -32,6 +32,33 @@ def side_breaks(mesh):
             round(float(np.std(np.diff(left))),5))
 
 
+
+def flank_facet_score(mesh, sign):
+    """Fraction of long-flank real facets tilted across the bridge axis.
+
+    A visually smooth extruded wall may move a few mm from station to station,
+    yet still offer a single broad side plane. Triangulated 3D stone cuts
+    create numerous locally non-coplanar large surfaces on BOTH long sides.
+    """
+    normals=np.asarray(mesh.face_normals)
+    centers=np.asarray(mesh.triangles_center)
+    length=float(mesh.extents[0])
+    visible=(normals[:,2]*sign>.45) & (np.abs(centers[:,0])<.42*length) & (np.abs(centers[:,1])<.095)
+    count=int(visible.sum())
+    tilted=int(np.count_nonzero(np.abs(normals[visible,0])>.2))
+    return count,tilted,round(tilted/max(1,count),3)
+
+
+def end_break_score(mesh, sign):
+    """Median non-axial orientation of facets on each broken stone end."""
+    normals=np.asarray(mesh.face_normals)
+    centers=np.asarray(mesh.triangles_center)
+    length=float(mesh.extents[0])
+    mask=(normals[:,0]*sign>.65) & (centers[:,0]*sign>.43*length)
+    if not np.any(mask):
+        return 0.0
+    return float(np.median(1.0-np.abs(normals[mask,0])))
+
 def main():
     meta=json.loads((ROOT100/"common-100.json").read_text())
     old=json.loads((ROOT/"tests/common100-v4-nonlintel-baseline.json").read_text())["models"]
@@ -55,7 +82,11 @@ def main():
         assert rock.extents[1]/rock.extents[2]<=.78,(name,rock.extents)
         assert not violations(name,"lintel",quality(rock),rock.extents),name
         side=side_breaks(rock)
-        assert min(side)>=.010,(name,"at least one long flank remains too regular",side)
+        assert min(side)>=.012,(name,"at least one long flank remains too regular",side)
+        for sign in (-1,1):
+            count,tilted,fraction=flank_facet_score(rock,sign)
+            assert count>=95 and tilted>=55 and fraction>=.35,(name,"smooth longitudinal face",sign,count,tilted,fraction)
+            assert end_break_score(rock,sign)>=.002,(name,"end face is too planar",sign,end_break_score(rock,sign))
         # Two variants of the same length must not be the same geometry,
         # nor should both derive from one extrusion topology.
         assert item.get("lintelStyle"),name
