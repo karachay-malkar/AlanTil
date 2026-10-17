@@ -16,6 +16,7 @@ old=module_from_spec(sp);sp.loader.exec_module(old)
 gate=old.gate
 PITCH=gate.PITCH
 OLD_FACE_PASS=old.face_pass
+MAX_FACE_INSTANCES=512
 
 def choose_face_stone(bake,axis,side,target,rad,kind,old_face,tries=50):
     rng=bake.rng
@@ -66,7 +67,7 @@ def choose_face_stone(bake,axis,side,target,rad,kind,old_face,tries=50):
 
 def target_face_pass(bake,max_extra=None):
     starts=len(bake.placed)
-    budget=min(512,len(bake.placed)+(max_extra if max_extra is not None else 512))
+    budget=min(MAX_FACE_INSTANCES,len(bake.placed)+(max_extra if max_extra is not None else MAX_FACE_INSTANCES))
     rejected={(axis,side):np.zeros_like(old.coverage(bake.occupied,axis,side))
               for axis in range(3) for side in range(2)}
     attempts=0
