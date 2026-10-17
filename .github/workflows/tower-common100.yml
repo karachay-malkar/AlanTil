@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/tower/build-common100.py'
       - 'tools/tower/audit-common100-quality.py'
+      - 'tools/tower/audit-common100-diversity.py'
       - 'tools/tower/common100_quality.py'
       - '.github/workflows/tower-common100.yml'
   workflow_dispatch:
@@ -24,6 +25,8 @@ jobs:
           python-version: '3.11'
       - name: Install offline model tooling
         run: pip install 'numpy==2.2.6' 'trimesh==4.11.1' scipy pillow networkx
+      - name: RED TEST - verify current 38 rocks are repetitive
+        run: OPENBLAS_NUM_THREADS=1 python tools/tower/audit-common100-diversity.py
       - name: Extract approved gate stones, select and build 100 distinct meshes
         run: OPENBLAS_NUM_THREADS=1 python tools/tower/build-common100.py
       - name: Validate 100 stone cross sections and reject pointed tips
