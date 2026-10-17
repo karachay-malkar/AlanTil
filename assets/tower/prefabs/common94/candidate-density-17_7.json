@@ -1,0 +1,36 @@
+{
+  "targetActualDensity": 0.9,
+  "tested": 2,
+  "passes": 0,
+  "approved": false,
+  "rows": [
+    {
+      "section": "1x1x1",
+      "convexUpperBound": {
+        "density": 0.586,
+        "overlapFraction": 0.00678,
+        "stones": 11,
+        "samples": 1000,
+        "metric": "convex-upper-bound"
+      },
+      "passed": false,
+      "reason": "convex upper bound below required real-solid density",
+      "measuredActual": false,
+      "variant": 0
+    },
+    {
+      "section": "2x2x2",
+      "convexUpperBound": {
+        "density": 0.67525,
+        "overlapFraction": 0.06621,
+        "stones": 86,
+        "samples": 8000,
+        "metric": "convex-upper-bound"
+      },
+      "passed": false,
+      "reason": "convex upper bound below required real-solid density",
+      "measuredActual": false,
+      "variant": 0
+    }
+  ]
+}
