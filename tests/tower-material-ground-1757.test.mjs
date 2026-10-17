@@ -21,3 +21,12 @@ test('gate is seated against its actual authored geometry bottom',()=>{
  assert.match(s,/gate\.position\.y\+=targetBottom-bounds\.min\.y/);
  assert.match(s,/const group=new THREE\.Group\(\);group\.add\(model\.clone\(true\)\)/);
 });
+
+test('compact stone geometry is textured before instancing',()=>{
+ const scene=src('src/features/tower/prefab-scene.js');
+ const compact=src('src/features/tower/compact-stone-scene.js');
+ assert.match(scene,/applyRockSurface\(source\.scene\.clone\(true\),stoneMaterial\)/);
+ assert.match(scene,/assembleCompactStoneSection\(texturedSource,layouts/);
+ assert.match(compact,/geometry\.getAttribute\('uv'\)/);
+ assert.match(compact,/geometry\.getAttribute\('normal'\)/);
+});

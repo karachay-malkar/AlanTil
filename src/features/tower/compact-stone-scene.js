@@ -10,6 +10,8 @@ export function assembleCompactStoneSection(scene,pack,sectionId,variant,stoneMa
  for(const placement of recipe.placement){
   const name=placement[0];
   if(!shapes.has(name))throw new TypeError('Missing compact masonry source shape: '+name);
+  const geometry=shapes.get(name);
+  if(!geometry.getAttribute('uv')||!geometry.getAttribute('normal'))throw new TypeError('Compact stone geometry missing UVs or normals: '+name);
   if(!batches.has(name))batches.set(name,[]);
   batches.get(name).push(placement);
  }

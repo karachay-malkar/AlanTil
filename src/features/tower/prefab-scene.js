@@ -16,7 +16,7 @@ import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wil
 import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
 import {COMPACT_STONE_VERSION,isCompactStone} from '../../../packages/tower-game/compact-stone-prefab.mjs';
 import {assembleCompactStoneSection} from './compact-stone-scene.js';
-import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-ktx2.2';
+import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-ktx2.3';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -113,8 +113,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    // 12.5cm lower; moving only carpentry would break stone/wood contacts.
    // The offset belongs to the model, not the positioned outer wrapper.
    // Otherwise setPosition() overwrites it when the section is committed.
-   masonry.position.y=-.125;
-   const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);assembled.add(masonry);
+   const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);
+   masonry.position.y=-.125;assembled.add(masonry);
    const carpentry=wood.scene.clone(true);
    carpentry.traverse(node=>{if(node.isMesh)node.userData.alantilNonStone=true;});
    carpentry.position.y=-.125;
@@ -130,7 +130,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(!loaded.has(libUrl))loaded.set(libUrl,loader.loadAsync(libUrl));
    if(!loaded.has(layoutsUrl))loaded.set(layoutsUrl,fetch(layoutsUrl).then(r=>{if(!r.ok)throw new Error('Compact masonry layouts unavailable');return r.json();}));
    const [source,layouts]=await Promise.all([loaded.get(libUrl),loaded.get(layoutsUrl)]);
-   return assembleCompactStoneSection(source.scene,layouts,block.sectionId,block.variant,stoneMaterial);
+   // Compact source meshes must have the same UVs and normals as other rocks.
+   // InstancedMesh does not pass through applyRockSurface during construction.
+   const texturedSource=applyRockSurface(source.scene.clone(true),stoneMaterial);
+   return assembleCompactStoneSection(texturedSource,layouts,block.sectionId,block.variant,stoneMaterial);
   }
   if(isGateStone(block.sectionId)&&block.geometryVersion===GATE_STONE_VERSION){
    const asset=manifest.gateStoneVariants?.[block.sectionId]?.[block.variant];
