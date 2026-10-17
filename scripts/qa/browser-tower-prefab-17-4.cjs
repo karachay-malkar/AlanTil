@@ -187,6 +187,23 @@ fs.mkdirSync(evidence,{recursive:true});
   assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-errors'),'0');
   assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-count'),'3');
   await page.screenshot({path:path.join(evidence,'prefab-window-wall-joined-mobile.png')});
+  // Real GLB smoke test for BOTH ground-seated architectural prefabs.
+  // Their y=0 is the logical ground grid, without modifying server saves.
+  await page.evaluate(()=>{
+   const item=(id,sectionId,x,z,geometryVersion)=>({
+    id,type:'masonry_section',sectionId,x,y:0,z,variant:0,rotation:0,geometryVersion
+   });
+   localStorage.setItem('__QA_REMOTE_V3',JSON.stringify({format:3,revision:6,elements:[
+    item('cccccccc-cccc-4ccc-8ccc-ccccccccccc1','door-7x9x2',5,6,'17.6-door.1'),
+    item('cccccccc-cccc-4ccc-8ccc-ccccccccccc2','gate-18x10x2',20,10,'17.6-gate.1')
+   ]}));
+  });
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='2'&&
+   document.querySelector('.towerCanvas')?.dataset.doorWoodReady==='true'&&
+   document.querySelector('.towerCanvas')?.dataset.gatePbrReady==='true',{timeout:60000});
+  assert.equal(await page.locator('.towerCanvas').getAttribute('data-prefab-joint-errors'),'0');
+  await page.screenshot({path:path.join(evidence,'prefab-gate-door-ground-mobile.png')});
   assert.deepEqual(errors,[]);assert.deepEqual(responses,[]);
   console.log('TOWER_PREFAB_17_5_1_BROWSER_QA',JSON.stringify({revision:snapshot.revision,sections:snapshot.elements.length,webgl:true,selection:true,serverMock:true,noDraft:true}));
  }finally{await browser.close();server.kill();}
