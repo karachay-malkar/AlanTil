@@ -54,7 +54,7 @@ a{color:#dccca1;text-decoration:none}a:hover{text-decoration:underline}
 <section class="stage" aria-label="Интерактивная 3D-сцена">
 <div id="view"></div>
 <div class="toolbar">
-<button id="single" class="tool" aria-pressed="true">Один камень</button><button id="gallery" class="tool" aria-pressed="false">3D-полка · 12</button><button id="edge" class="tool" aria-pressed="false">Рёбра</button><button id="reset" class="tool">Сброс камеры</button>
+<button id="single" class="tool" aria-pressed="true">Один камень</button><button id="gallery" class="tool" aria-pressed="false">3D-полка · 12</button><button id="edge" class="tool" aria-pressed="false">Рёбра</button><button id="endLeft" class="tool">Левый торец</button><button id="endRight" class="tool">Правый торец</button><button id="reset" class="tool">Сброс камеры</button>
 </div>
 <div id="progress" role="status">Загрузка 100 исходных 3D-моделей…</div>
 <div class="canvasNote"><span>Вращение:</span> перетаскивание · <span>Масштаб:</span> колесо или два пальца<br>В режиме полки нажмите на камень, чтобы рассмотреть его</div>
@@ -127,6 +127,19 @@ function frameCamera(){
   controls.maxDistance=Math.max(5,dist*8);
   controls.update();
 }
+function focusEnd(sign){
+  if(state.mode==='gallery'){state.mode='single';renderStone();}
+  if(!state.records.length||active()?.category!=='lintel')return;
+  const bb=new THREE.Box3().setFromObject(shown);
+  if(bb.isEmpty())return;
+  const c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3());
+  const target=new THREE.Vector3(c.x+sign*sz.x*.47,c.y,c.z);
+  const distance=Math.max(1.15,sz.z*4.8);
+  camera.position.set(target.x+sign*distance,target.y+sz.y*.13,target.z+sz.z*.07);
+  controls.target.copy(target);
+  camera.near=.01;camera.far=100;camera.updateProjectionMatrix();
+  controls.update();
+}
 function renderStone(){
   if(!state.records.length)return;
   disposeShow();floorGrid.visible=state.mode==='single';
@@ -138,7 +151,7 @@ function renderStone(){
   $('stoneOrigin').textContent=(current.source==='gate'?'Исходный камень ворот':'Смоделирован заново'+(current.shapeFamily?' · '+({'massive':'Массивный','flat-bed':'Плоский','trapezoid':'Трапециевидный','short-wide':'Короткий широкий','broken-facet':'Рваный многогранник','asymmetric':'Асимметричный'}[current.shapeFamily]||current.shapeFamily):'')+(current.lintelStyle?' · '+({'hewn-facets':'Рубленые фасетки','broken-strata':'Сколы и слои','asymmetric-scar':'Асимметричные сколы','split-slab':'Рваная плита'}[current.lintelStyle]||current.lintelStyle):''))+ ' · '+infoNames[current.category];
   ['dx','dy','dz'].forEach((id,i)=>$(id).textContent=x[i]);
   $('position').textContent=(state.index+1)+' / '+records.length;
-  $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень для перекрытия оконного или дверного проёма.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
+  $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень. Проверь оба торца кнопками «Левый торец» и «Правый торец»: сколы, трещины, скосы.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
   if(state.mode==='single'){
     let mesh=meshFor(current);if(mesh){positionMesh(mesh);shown.add(mesh);state.meshList.push(mesh);}
     state.page=Math.floor(state.index/MAX_PER_PAGE);
@@ -176,6 +189,8 @@ function renderCatalog(records){
 function navigate(delta){const arr=subset();if(!arr.length)return;state.index=(state.index+delta+arr.length)%arr.length;renderStone();}
 $('prev').onclick=()=>navigate(-1);$('next').onclick=()=>navigate(1);
 $('reset').onclick=()=>frameCamera();
+$('endLeft').onclick=()=>focusEnd(-1);
+$('endRight').onclick=()=>focusEnd(1);
 $('edge').onclick=()=>{state.edges=!state.edges;renderStone();};
 $('single').onclick=()=>{state.mode='single';renderStone();};
 $('gallery').onclick=()=>{state.mode='gallery';renderStone();};
@@ -211,11 +226,11 @@ async function injectModel(gltf,meta){
 }
 async function start(){
  try{
- const response=await fetch(BASE+'common-100.json?version=17.7-common100.6',{cache:'no-store'});
+ const response=await fetch(BASE+'common-100.json?version=17.7-common100.7',{cache:'no-store'});
  if(!response.ok)throw new Error('Не удалось загрузить метаданные: HTTP '+response.status);
  const meta=await response.json();if(meta.count!==100)throw new Error('Неподдерживаемая версия библиотеки');
  window.__common100meta=meta;
- const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.6');
+ const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.7');
  await injectModel(gltf,meta);
  }catch(error){$('progress').hidden=false;$('progress').textContent='Ошибка загрузки библиотеки: '+error.message+' — откройте страницу через сайт или выберите локальный GLB справа.';console.error(error);}
 }
