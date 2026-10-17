@@ -1,140 +1,195 @@
-"""Large-facet wild-stone lintels with real chipped edges and rough longitudinal sides.
+"""Six monolithic lintels with restored v5 longitudinal sides and carved end faces.
 
-Mesh authoring, not image synthesis. Y up, X long, Z into masonry.
+Endcap-only (both X-axis end faces): asymmetric chips, cracks, softened
+patches, and bevels. No fine triangular noise is applied to the long flanks.
+Native 3D meshes, not an illustration. Units metres; Y up; X along length.
 """
 from __future__ import annotations
+
 import numpy as np
 import trimesh
 from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 
-STYLES = ('hewn-facets', 'broken-strata', 'asymmetric-scar', 'split-slab')
-MATERIAL = PBRMaterial(name='ALANTIL_COMMON100_ROCK_PBR', baseColorFactor=[193,176,146,255], metallicFactor=0, roughnessFactor=.97)
+STYLES=("quarry-broken","stratified")
+# One deliberately different mixed-damage recipe for each face of six stones.
+ENDCAP_DESIGNS=(
+    ("chip+bevel","crack+soft"),
+    ("crack+bevel","chip+soft"),
+    ("chip+soft","bevel+crack"),
+    ("crack+asymmetric","chip+bevel"),
+    ("large-chip+bevel","crack+soft"),
+    ("chip+crack+bevel","soft+asymmetric"),
+)
 
-BASE_RING = np.array([
-    [-.42,-.34],[-.48,-.21],[-.48,.04],[-.46,.30],[-.38,.44],[-.18,.49],
-    [.17,.49],[.36,.44],[.46,.31],[.49,.12],[.48,-.17],[.44,-.36],
-    [.31,-.47],[.03,-.49],[-.29,-.48],[-.43,-.44],
-], dtype=float)
+
+def _sector_distance(a,b,n):
+    d=abs(a-b)
+    return min(d,n-d)
 
 
-def build_rugged_lintel(rng, length, style, ordinal):
-    if style not in STYLES:
-        raise ValueError(f'Unsupported lintel style: {style}')
-    if float(length) not in (1.0, 1.25, 1.5):
-        raise ValueError(f'Unsupported lintel span: {length}')
-    count = (17, 19, 21, 23)[STYLES.index(style)] + (ordinal//4)*2
-    ring = BASE_RING.copy()
-    if style in ('split-slab', 'broken-strata'):
-        ring = np.insert(ring, [2, 9], [(.5*ring[1]+.5*ring[2]), (.5*ring[8]+.5*ring[9])], axis=0)
-    if style == 'asymmetric-scar':
-        ring = np.insert(ring, [4], [(.45*ring[3]+.55*ring[4])], axis=0)
-    n = len(ring)
-    height = float(rng.uniform(.189, .216))
-    depth = float(rng.uniform(.310, .346))
-    xaxis = np.linspace(-float(length)/2, float(length)/2, count)
+def apply_endcap_damage(vertices,start,n,length,side,design,rng):
+    """Cut corners on the END outline; leave middle-side profile untouched."""
+    inward=1 if side=="left" else -1
+    chip_index=int(rng.integers(0,n))
+    bevel_index=(chip_index+n//3+int(rng.integers(0,3)))%n
+    for j in range(n):
+        point=np.asarray(vertices[start+j],dtype=float).copy()
+        shrink=0.
+        shift=0.
+        if "chip" in design and _sector_distance(j,chip_index,n)<=1:
+            big="large-chip" in design
+            shrink=(.15 if big else .095)*(1. if j==chip_index else .53)
+            shift=(.019 if big else .012)*(1. if j==chip_index else .5)
+        if "bevel" in design and _sector_distance(j,bevel_index,n)<=1:
+            shrink=max(shrink,.082 if j==bevel_index else .042)
+            shift=max(shift,.010 if j==bevel_index else .004)
+        if "soft" in design and _sector_distance(j,bevel_index,n)<=1:
+            shrink=max(shrink,.05 if j==bevel_index else .023)
+            shift=max(shift,.004)
+        if "asymmetric" in design and j==bevel_index:
+            shrink=max(shrink,.105)
+            shift=max(shift,.013)
+        point[1:]*=(1-shrink)
+        point[0]+=inward*(shift+float(rng.uniform(0,.002)))
+        vertices[start+j]=point.tolist()
 
-    # Distinct natural fracture swaths on EACH long side, 10-30 cm wide.
-    scars = np.zeros((2, count), dtype=float)
-    for side in range(2):
-        sites = (4, 5, 6, 4)[STYLES.index(style)]
-        for k in range(sites):
-            center = float(rng.uniform(.09, .91))*(count-1)
-            radius = float(rng.uniform(1.0, 2.9))
-            strength = float(rng.uniform(.018, .046))
-            for i in range(count):
-                fade = max(0., 1.-abs(i-center)/radius)
-                scars[side, i] += strength*fade
 
-    face_chip = np.zeros((count,n),dtype=float)
-    edge_chip = np.zeros((count,n),dtype=float)
-    for k in range(16 if style == 'hewn-facets' else 22):
-        i0 = int(rng.integers(1,count-1))
-        j0 = int(rng.integers(n))
-        direction = np.sign(ring[j0,1])
-        if abs(ring[j0,1]) < .16:
-            continue
-        amplitude = float(rng.uniform(.014,.036))
-        width = int(rng.integers(1,4))
-        for i in range(max(0,i0-width),min(count,i0+width+1)):
-            taper = 1.-abs(i-i0)/(width+.35)
-            for dj in (-1,0,1):
-                j=(j0+dj)%n
-                if np.sign(ring[j,1])!=direction:
-                    continue
-                face_chip[i,j]+=amplitude*taper*(1 if dj==0 else .38)
-                if ring[j,0]>.30:
-                    edge_chip[i,j]+=amplitude*taper*(.24 if dj==0 else .14)
+def build_endcap_profile(vertices,faces,start,n,length,side,design,rng):
+    """Watertight broad faceted cap: boundary -> 2 broken rings -> core.
 
-    vertices = []
-    for i,x in enumerate(xaxis):
-        for j,(ay,az) in enumerate(ring):
-            xx = float(x)
-            if i not in (0,count-1):
-                xx+=float(rng.uniform(-.005,.005))
+    A crack is a localized recessed V-shaped channel in the cap, not a dark
+    line painted onto a flat polygon. Triangles are restricted to both ends.
+    """
+    inward=1 if side=="left" else -1
+    outer=np.asarray(vertices[start:start+n],dtype=float)
+    yz_center=np.mean(outer[:,1:],axis=0)
+    # Recess cap 1-3 cm: deep enough to catch light, not cross the next course.
+    inset_limit=min(.031,length*.025)
+    crack_sector=int(rng.integers(0,n))
+    chip_sector=(crack_sector+n//2+int(rng.integers(0,3)))%n
+    cap_x=(-float(length)/2 if side=="left" else float(length)/2)
+    inner_starts=[]
+    for layer,radial in enumerate((.72,.32)):
+        inner_starts.append(len(vertices))
+        for j in range(n):
+            p=outer[j].copy()
+            p[1:]=yz_center+(p[1:]-yz_center)*radial
+            step=(.34 if layer==0 else .73)*inset_limit
+            if "crack" in design and _sector_distance(j,crack_sector,n)<=1:
+                step+=(.12 if layer==0 else .27)*inset_limit
+            if "chip" in design and _sector_distance(j,chip_sector,n)<=1:
+                step+=(.15 if layer==0 else .08)*inset_limit
+            if "bevel" in design and _sector_distance(j,chip_sector,n)<=1:
+                step+=.07*inset_limit
+            step=np.clip(step+rng.uniform(-.002,.002),0.,inset_limit)
+            p[0]=cap_x+inward*step
+            # Real directional line fracture: the narrow tip of a recessed V.
+            if "crack" in design and layer==1 and j==crack_sector:
+                p[1:]+=rng.uniform(-.003,.003,size=2)
+            vertices.append(p.tolist())
+    core_idx=len(vertices)
+    vertices.append([
+        cap_x+inward*inset_limit*.9,
+        float(yz_center[0]+rng.uniform(-.011,.011)),
+        float(yz_center[1]+rng.uniform(-.012,.012)),
+    ])
+    for outer_start,inner_start in zip((start,inner_starts[0]),inner_starts):
+        for j in range(n):
+            a=outer_start+j
+            b=outer_start+(j+1)%n
+            c=inner_start+j
+            d=inner_start+(j+1)%n
+            if side=="left":
+                faces.extend(((a,c,d),(a,d,b)))
             else:
-                # Ends are rough non-coplanar faces, not smooth saw cuts.
-                xx += (1 if i==0 else -1)*float(rng.uniform(0,.014))
-            yy = float(ay*height+rng.uniform(-.0035,.0035))
-            zz = float(az*depth+rng.uniform(-.004,.004))
-            if az>.12:
-                zz-=scars[0,i]*(.62+.38*min(1.,az*2))
-                zz-=face_chip[i,j]
-            elif az<-.12:
-                zz+=scars[1,i]*(.62+.38*min(1.,-az*2))
-                zz+=face_chip[i,j]
-            if ay>.25:
-                yy -= edge_chip[i,j]
-                yy += float(rng.uniform(-.009,.008))
-            elif ay<-.38:
-                # Stable bedding surface underneath despite side cuts.
-                yy = -height*.46+float(rng.uniform(-.0025,.0035))
-            if style=='broken-strata' and .08<ay<.35:
-                yy+=float(rng.uniform(-.006,.005))
-            if style=='asymmetric-scar' and az>.1:
-                yy+=float(rng.uniform(-.010,.007))
-            vertices.append((xx,yy,zz))
+                faces.extend(((a,b,d),(a,d,c)))
+    for j in range(n):
+        a=inner_starts[-1]+j
+        b=inner_starts[-1]+(j+1)%n
+        faces.append((core_idx,b,a) if side=="left" else (core_idx,a,b))
 
+# Twelve uneven corners on the Y/Z outline; in stratified form two extra
+# offsets make steps rather than a uniformly rounded or cubical contour.
+SECTION=np.array([
+    [-.44,-.34],[-.49,-.21],[-.49,.29],[-.40,.46],
+    [-.15,.49],[.30,.47],[.48,.32],[.50,-.15],
+    [.42,-.43],[.12,-.49],[-.26,-.49],[-.43,-.46],
+],dtype=float)
+MATERIAL=PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR",
+                     baseColorFactor=[193,176,146,255],
+                     metallicFactor=0,roughnessFactor=.97)
+
+
+def build_rugged_lintel(rng,length,style,ordinal):
+    if style not in STYLES:
+        raise ValueError("Unsupported lintel style "+str(style))
+    if float(length) not in (1.0,1.25,1.5):
+        raise ValueError("Unsupported solid lintel span")
+    count=19+int(ordinal)
+    poly=SECTION.copy()
+    if style=="stratified":
+        poly=np.insert(poly,[3,7],[(poly[2]+poly[3])*.5,(poly[6]+poly[7])*.5],axis=0)
+    n=len(poly)
+    height=float(rng.uniform(.186,.222))
+    depth=float(rng.uniform(.30,.348))
+    vertices=[]
+    base=float(rng.uniform(-.012,.012))
+    # Independent high/low ridges for the entire FRONT and BACK faces.
+    # A single extruded YZ profile would leave these walls unrealistically flat.
+    front=rng.uniform(-.023,.023,size=count)
+    back=rng.uniform(-.023,.023,size=count)
+    top=rng.uniform(-.008,.008,size=count)
+    scars=np.zeros((count,n),dtype=float)
+    for _ in range(12 if style=="stratified" else 16):
+        ix=int(rng.integers(1,count-1))
+        j=int(rng.integers(n))
+        depth_of_chip=float(rng.uniform(.008,.022))
+        for shift,weight in ((-1,.36),(0,1),(1,.36)):
+            station=ix+shift
+            if 0<=station<count:
+                scars[station,j]+=depth_of_chip*weight
+    for i in range(count):
+        x=float(length)*(i/(count-1)-.5)
+        for j,(ay,az) in enumerate(poly):
+            y=ay*height+base*.5+top[i]*max(0.,ay*2.)+float(rng.uniform(-.006,.006))
+            z=az*depth
+            if az>.12:
+                z+=front[i]*(.5+min(1.,az*2))
+                z-=scars[i,j] if az>.3 else scars[i,j]*.25
+            elif az<-.12:
+                z+=back[i]*(.5+min(1.,-az*2))
+                z+=scars[i,j] if az<-.3 else scars[i,j]*.25
+            else:
+                z+=float(rng.uniform(-.008,.008))
+            # Maintain continuous, nearly planar bearing contact underneath.
+            if ay<-.42:
+                y=-height*.46+float(rng.uniform(-.003,.004))
+            xx=x if i in (0,count-1) else x+float(rng.uniform(-.0045,.0045))
+            vertices.append([xx,y,z])
     faces=[]
-    # Inward chipped facets with TRUE non-coplanar vertices on long sides;
-    # not texture bumps and not an extrusion through one smooth side profile.
     for i in range(count-1):
         for j in range(n):
-            a=i*n+j; b=i*n+(j+1)%n
-            c=(i+1)*n+j; d=(i+1)*n+(j+1)%n
-            az=(ring[j,1]+ring[(j+1)%n,1])/2
-            ay=(ring[j,0]+ring[(j+1)%n,0])/2
-            choose = abs(az)>.25 and -.40<ay<.44 and (i+j+ordinal)%3!=0
-            if choose:
-                p=(np.array(vertices[a])+np.array(vertices[b])+np.array(vertices[c])+np.array(vertices[d]))/4
-                strength=float(rng.uniform(.009,.032))
-                if style=='split-slab':
-                    strength *= 1.20
-                if style=='asymmetric-scar' and az>0:
-                    strength *= 1.25
-                p[2]-=np.sign(az)*strength
-                p[0]+=float(rng.uniform(-.013,.013))
-                p[1]+=float(rng.uniform(-.007,.007))
-                mid=len(vertices)
-                vertices.append(p)
-                faces.extend(((a,c,mid),(c,d,mid),(d,b,mid),(b,a,mid)))
-            elif (i+j)%2:
+            a=i*n+j
+            b=i*n+(j+1)%n
+            c=(i+1)*n+j
+            d=(i+1)*n+(j+1)%n
+            if (i+j)%2:
                 faces.extend(((a,c,d),(a,d,b)))
             else:
                 faces.extend(((a,c,b),(b,c,d)))
-
-    # Non-planar rough-hewn endcaps, triangulated with offset interior centers.
-    left=len(vertices);vertices.append((xaxis[0]+.012,0,0))
-    right=len(vertices);vertices.append((xaxis[-1]-.012,0,0))
-    for j in range(n):
-        faces.append((left,(j+1)%n,j))
-        faces.append((right,(count-1)*n+j,(count-1)*n+(j+1)%n))
+    # Sculpt ONLY these end faces, reusing accepted historical side topology.
+    for side,start in (("left",0),("right",(count-1)*n)):
+        design=ENDCAP_DESIGNS[ordinal][0 if side=="left" else 1]
+        apply_endcap_damage(vertices,start,n,float(length),side,design,rng)
+        build_endcap_profile(vertices,faces,start,n,float(length),side,design,rng)
     mesh=trimesh.Trimesh(vertices=vertices,faces=faces,process=True)
     trimesh.repair.fix_normals(mesh)
+    # Precise span of 100/125/150 cm without forcing broad ends into tips.
     mesh.apply_scale(np.array([float(length),height,depth])/mesh.extents)
     mesh.apply_translation(-mesh.bounds.mean(axis=0))
-    if not mesh.is_volume or not mesh.is_watertight:
-        raise ValueError('Generated lintel must be one sealed three-dimensional natural stone')
-    uv=(np.asarray(mesh.vertices)[:,[0,2]]*2.8).astype(np.float32)
+    if not mesh.is_watertight or not mesh.is_volume:
+        raise ValueError("Lintel is not a single watertight stone")
+    uv=(np.asarray(mesh.vertices,dtype=float)[:,[0,2]]*2.8).astype(np.float32)
     mesh.visual=TextureVisuals(uv=uv,material=MATERIAL)
     return mesh
