@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
+<title>AlanTil — 3D-аудит common-100</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#141b19;color:#e8e8df;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;min-height:100vh}button,select{font:inherit}button{cursor:pointer}
+.shell{min-height:100vh;display:grid;grid-template-rows:auto auto 1fr auto}
+header{padding:15px clamp(14px,3vw,28px) 12px;display:flex;gap:14px;justify-content:space-between;align-items:center;border-bottom:1px solid #ffffff17;background:#1b2420}
+h1{font-size:clamp(17px,2vw,23px);letter-spacing:-.03em;margin:0;font-weight:620}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#b9af94;margin:0 0 4px}
+.stats{font-size:11px;color:#b5b8ad;text-align:right;line-height:1.55}.stats strong{color:#e1cc9c}
+.filters{display:flex;align-items:center;gap:7px;padding:12px clamp(14px,3vw,28px);overflow-x:auto;white-space:nowrap;background:#171e1b;border-bottom:1px solid #ffffff17;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+button.chip{border:1px solid #3e473e;background:#25302b;padding:8px 12px;border-radius:9px;color:#d4d7ca;font-size:12px}
+button.chip[aria-pressed=true]{background:#b8ad8e;color:#19211b;border-color:#d6c3a0;font-weight:650}
+.main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 275px}
+.stage{min-height:480px;position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 40% 32%,#36423a 0%,#202b26 60%,#141c19 100%)}
+#view{position:absolute;inset:0;touch-action:none}#view canvas{display:block;width:100%;height:100%}
+.toolbar{position:absolute;z-index:2;top:14px;left:14px;right:14px;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none}
+.tool{pointer-events:auto;border:1px solid #bcb99b45;border-radius:9px;background:#202b27e8;color:#eeeede;padding:9px 11px;font-size:12px;backdrop-filter:blur(9px)}
+.tool[aria-pressed=true]{background:#c0ae86;color:#20201b}
+#progress{position:absolute;z-index:1;left:50%;top:44%;transform:translate(-50%,-50%);text-align:center;background:#1a211deb;padding:18px 28px;border-radius:10px;color:#ddd5c3;max-width:90%;box-shadow:0 10px 40px #0004}
+#progress[hidden]{display:none}
+.canvasNote{position:absolute;bottom:18px;left:20px;color:#a5aea6;font-size:11px;pointer-events:none;line-height:1.7}
+.canvasNote span{color:#e7e1cc}
+aside{overflow:auto;background:#1a221e;border-left:1px solid #ffffff20;max-height:calc(100vh - 165px);padding:15px 13px}
+.sidebarTitle{font-size:10px;letter-spacing:.12em;color:#aca997;text-transform:uppercase;margin:1px 0 12px}
+.name{font-size:23px;font-weight:700;letter-spacing:-.025em;margin:3px 0 8px}
+.origin{font-size:12px;color:#b6bbad}
+.dimensions{display:flex;gap:7px;margin:19px 0 10px}
+.metric{flex:1;background:#252f28;border:1px solid #ffffff11;padding:9px 5px;text-align:center;border-radius:8px}
+.metric b{display:block;font-size:16px;font-weight:650;color:#e8dfc8;font-variant-numeric:tabular-nums}
+.metric span{display:block;font-size:10px;color:#aeb1a4;margin-top:3px}
+.note{font-size:12px;color:#adb4a9;line-height:1.55}
+.navig{display:flex;align-items:center;gap:9px;margin:14px 0}
+.navig button{background:#303c33;color:#e7e8d8;border:1px solid #505b4c;border-radius:9px;padding:9px 15px}
+.navig small{flex:1;text-align:center;color:#acb1a5;font-variant-numeric:tabular-nums}
+.catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:13px}
+.catalog button{border:1px solid #38493f;background:#263229;color:#d9ddcf;text-align:left;border-radius:8px;padding:9px 8px;min-width:0}
+.catalog button.active{background:#baa982;color:#20261e;border-color:#dfc79a}
+.catalog button b{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.catalog button small{display:block;color:inherit;opacity:.7;font-size:9px;margin-top:5px}
+footer{border-top:1px solid #ffffff20;background:#161c19;color:#a0aa9e;font-size:11px;display:flex;justify-content:space-between;gap:12px;padding:9px 18px}
+a{color:#dccca1;text-decoration:none}a:hover{text-decoration:underline}
+#pickFile{font-size:11px;max-width:210px}input::file-selector-button{background:#303c33;color:#fff;border:1px solid #657467;border-radius:6px;padding:7px;cursor:pointer}
+@media(max-width:720px){.main{grid-template-columns:1fr;grid-template-rows:minmax(360px,56vh) auto}.stage{min-height:360px}aside{max-height:none;border-left:0;border-top:1px solid #ffffff20;padding:14px}.catalog{grid-template-columns:repeat(4,minmax(0,1fr))}.stats{font-size:10px}header{padding:12px}.filters{padding:10px 12px}.tool{font-size:11px;padding:8px}.canvasNote{bottom:10px;left:12px;font-size:10px}footer{flex-wrap:wrap}}
+@media(max-width:400px){.catalog{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{max-width:110px}}
+</style></head>
+<body><div class="shell">
+<header><div><p class="eyebrow">AlanTil · 3D geometry review</p><h1>Камни Верхней Балкарии <span style="color:#bca985">/ 100</span></h1></div><div class="stats"><strong>94</strong> из ворот · <strong>6</strong> новых<br>Геометрия · 1:1 · метры</div></header>
+<nav class="filters" aria-label="Категории"><button class="chip" data-group="main" aria-pressed="true">Основные · 72</button><button class="chip" data-group="large" aria-pressed="false">Крупные · 10</button><button class="chip" data-group="chinking" aria-pressed="false">Забутовка · 12</button><button class="chip" data-group="lintel" aria-pressed="false">Перемычки · 6</button><button class="chip" data-group="all" aria-pressed="false">Все · 100</button></nav>
+<div class="main">
+<section class="stage" aria-label="Интерактивная 3D-сцена">
+<div id="view"></div>
+<div class="toolbar">
+<button id="single" class="tool" aria-pressed="true">Один камень</button><button id="gallery" class="tool" aria-pressed="false">3D-полка · 12</button><button id="edge" class="tool" aria-pressed="false">Рёбра</button><button id="reset" class="tool">Сброс камеры</button>
+</div>
+<div id="progress" role="status">Загрузка 100 исходных 3D-моделей…</div>
+<div class="canvasNote"><span>Вращение:</span> перетаскивание · <span>Масштаб:</span> колесо или два пальца<br>В режиме полки нажмите на камень, чтобы рассмотреть его</div>
+</section>
+<aside>
+<div class="sidebarTitle">Выбранный образец</div><div class="name" id="stoneName">—</div>
+<div class="origin" id="stoneOrigin">Ожидание библиотеки…</div>
+<div class="dimensions"><div class="metric"><b id="dx">—</b><span>длина, см</span></div><div class="metric"><b id="dy">—</b><span>высота, см</span></div><div class="metric"><b id="dz">—</b><span>глубина, см</span></div></div>
+<p class="note" id="stoneNote">Модель отображается в реальном масштабе. Сетка на полу: шаг 10 см.</p>
+<div class="navig"><button id="prev" aria-label="Предыдущий камень">←</button><small id="position">— / —</small><button id="next" aria-label="Следующий камень">→</button></div>
+<div class="sidebarTitle" id="listTitle">Список моделей</div><div id="catalog" class="catalog"></div>
+<div style="margin-top:18px"><label class="sidebarTitle" for="pickFile">Если сеть блокирует GLB: открыть локальный файл</label><input id="pickFile" type="file" accept=".glb,model/gltf-binary"></div>
+</aside></div>
+<footer><span id="status">Источник: common-100 · ветка 17.2</span><span><a href="https://github.com/karachay-malkar/AlanTil/blob/17.2/assets/tower/prefabs/common100/common-100.glb" target="_blank" rel="noopener">Исходный GLB ↗</a> · <a href="https://github.com/karachay-malkar/AlanTil/blob/17.2/assets/tower/prefabs/common100/common-100.json" target="_blank" rel="noopener">Метаданные ↗</a></span></footer>
+</div>
+<script type="module">
+import * as THREE from './src/vendor/three/three.module.js';
+import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from './src/vendor/three/addons/loaders/GLTFLoader.js';
+const BASE='./assets/tower/prefabs/common100/';
+const MAX_PER_PAGE=12;
+const infoNames={main:'Основной камень',large:'Крупный камень',chinking:'Забутовка',lintel:'Каменная перемычка'};
+const state={group:'main',mode:'single',index:0,page:0,edges:false,records:[],models:new Map(),root:null,meshList:[]};
+const $=id=>document.getElementById(id);
+const host=$('view'),size=()=>({w:Math.max(host.clientWidth,1),h:Math.max(host.clientHeight,1)});
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.75));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.28;
+host.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(38,1,.02,200);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.07;controls.minDistance=.15;controls.maxDistance=55;controls.maxPolarAngle=Math.PI*.78;
+scene.add(new THREE.HemisphereLight(0xfaf9ee,0x434a42,2.4));
+const key=new THREE.DirectionalLight(0xffecd3,3.5);key.position.set(-4,7,5);scene.add(key);
+const fill=new THREE.DirectionalLight(0xdcefff,1.5);fill.position.set(6,3,-5);scene.add(fill);
+const floorGrid=new THREE.GridHelper(3,30,0x9c9b83,0x515c51);floorGrid.material.transparent=true;floorGrid.material.opacity=.37;floorGrid.position.y=-.005;scene.add(floorGrid);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x29352e,roughness:1,transparent:true,opacity:.11,depthWrite:false}));floor.rotation.x=-Math.PI/2;floor.position.y=-.011;scene.add(floor);
+const shown=new THREE.Group();scene.add(shown);
+const stoneMat=new THREE.MeshStandardMaterial({color:0xb7a992,roughness:1,metalness:0,flatShading:true,side:THREE.DoubleSide});
+const guideMat=new THREE.LineBasicMaterial({color:0x332d22,transparent:true,opacity:.5});
+const rc=new THREE.Raycaster(),mouse=new THREE.Vector2();
+const dimsOf=r=>r.sizeMeters.map(v=>Math.round(v*100));
+const subset=()=>state.group==='all'?state.records:state.records.filter(r=>r.category===state.group);
+const active=()=>subset()[Math.min(state.index,Math.max(0,subset().length-1))];
+function disposeShow(){for(const item of [...shown.children]){item.traverse(o=>{if(o.userData.edge===true){o.geometry.dispose();}});shown.remove(item);}state.meshList=[];}
+function meshFor(r){const original=state.models.get(r.name);if(!original)return null;const clone=original.clone();clone.material=stoneMat;clone.userData.record=r;return clone;}
+function positionMesh(mesh,targetX=0,targetZ=0){
+  mesh.updateMatrixWorld(true);const bbox=new THREE.Box3().setFromObject(mesh);
+  mesh.position.x+=targetX-(bbox.min.x+bbox.max.x)/2;
+  mesh.position.z+=targetZ-(bbox.min.z+bbox.max.z)/2;
+  mesh.position.y-=bbox.min.y;
+  mesh.updateMatrixWorld(true);
+  if(state.edges){const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,32),guideMat);edges.userData.edge=true;mesh.add(edges);}
+  return mesh;
+}
+function frameCamera(){
+  const bounds=new THREE.Box3().setFromObject(shown);
+  const c=bounds.getCenter(new THREE.Vector3()),span=bounds.getSize(new THREE.Vector3());
+  if(bounds.isEmpty())return;
+  const main=Math.max(span.x,span.y,span.z,.25);
+  const radius=main/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));
+  const dist=radius*(state.mode==='gallery'?1.55:1.35);
+  const from=new THREE.Vector3(.95,.68,1.35).normalize().multiplyScalar(dist);
+  camera.position.copy(c).add(from);controls.target.copy(c);
+  camera.near=.01;camera.far=100;camera.updateProjectionMatrix();
+  controls.minDistance=Math.min(.12,dist*.2);
+  controls.maxDistance=Math.max(5,dist*8);
+  controls.update();
+}
+function renderStone(){
+  if(!state.records.length)return;
+  disposeShow();floorGrid.visible=state.mode==='single';
+  floor.visible=state.mode==='single';
+  const records=subset();if(!records.length)return;
+  state.index=Math.min(Math.max(state.index,0),records.length-1);
+  const current=records[state.index];const x=dimsOf(current);
+  $('stoneName').textContent=current.name;
+  $('stoneOrigin').textContent=(current.source==='gate'?'Исходный камень ворот':'Смоделирован заново')+' · '+infoNames[current.category];
+  ['dx','dy','dz'].forEach((id,i)=>$(id).textContent=x[i]);
+  $('position').textContent=(state.index+1)+' / '+records.length;
+  $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень для перекрытия оконного или дверного проёма.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
+  if(state.mode==='single'){
+    let mesh=meshFor(current);if(mesh){positionMesh(mesh);shown.add(mesh);state.meshList.push(mesh);}
+    state.page=Math.floor(state.index/MAX_PER_PAGE);
+  }else{
+    state.page=Math.floor(state.index/MAX_PER_PAGE);
+    const page=records.slice(state.page*MAX_PER_PAGE,(state.page+1)*MAX_PER_PAGE);
+    const cols=window.matchMedia('(max-width:720px)').matches?3:4;
+    const rows=Math.ceil(page.length/cols);
+    const pitch=state.group==='lintel'?1.85:state.group==='chinking'?.46:1.25;
+    page.forEach((r,i)=>{const mesh=meshFor(r);if(!mesh)return;
+      positionMesh(mesh,(i%cols-(cols-1)/2)*pitch,(Math.floor(i/cols)-(rows-1)/2)*pitch);
+      shown.add(mesh);state.meshList.push(mesh);
+    });
+  }
+  frameCamera();
+  document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.group===state.group)));
+  $('single').setAttribute('aria-pressed',String(state.mode==='single'));
+  $('gallery').setAttribute('aria-pressed',String(state.mode==='gallery'));
+  $('edge').setAttribute('aria-pressed',String(state.edges));
+  renderCatalog(records);
+}
+function renderCatalog(records){
+  const pageNumber=state.mode==='gallery'?state.page:Math.floor(state.index/MAX_PER_PAGE);
+  const per=MAX_PER_PAGE;
+  const base=pageNumber*per;const page=records.slice(base,base+per);
+  $('listTitle').textContent='Модели '+(base+1)+'–'+Math.min(base+page.length,records.length)+' из '+records.length;
+  const frag=document.createDocumentFragment();
+  page.forEach((r,offset)=>{const idx=base+offset;const btn=document.createElement('button');
+    btn.className=idx===state.index?'active':'';btn.type='button';
+    const b=document.createElement('b');b.textContent=r.name;const s=document.createElement('small');s.textContent=Math.round(r.sizeMeters[0]*100)+' × '+Math.round(r.sizeMeters[1]*100)+' × '+Math.round(r.sizeMeters[2]*100)+' см';
+    btn.append(b,s);btn.addEventListener('click',()=>{state.index=idx;state.mode='single';renderStone();});frag.append(btn);
+  });
+  $('catalog').replaceChildren(frag);
+}
+function navigate(delta){const arr=subset();if(!arr.length)return;state.index=(state.index+delta+arr.length)%arr.length;renderStone();}
+$('prev').onclick=()=>navigate(-1);$('next').onclick=()=>navigate(1);
+$('reset').onclick=()=>frameCamera();
+$('edge').onclick=()=>{state.edges=!state.edges;renderStone();};
+$('single').onclick=()=>{state.mode='single';renderStone();};
+$('gallery').onclick=()=>{state.mode='gallery';renderStone();};
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{state.group=b.dataset.group;state.index=0;state.page=0;renderStone();});
+window.addEventListener('keydown',e=>{if(e.key==='ArrowRight')navigate(1);if(e.key==='ArrowLeft')navigate(-1);});
+let pointer=null;renderer.domElement.addEventListener('pointerdown',e=>{pointer={x:e.clientX,y:e.clientY};});
+renderer.domElement.addEventListener('pointerup',e=>{
+ if(state.mode!=='gallery'||!pointer||Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y)>9)return;
+ const rect=renderer.domElement.getBoundingClientRect();
+ mouse.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
+ rc.setFromCamera(mouse,camera);const hits=rc.intersectObjects(state.meshList,false);
+ if(!hits.length)return;const selected=hits[0].object.userData.record;const found=subset().findIndex(r=>r.name===selected?.name);
+ if(found>=0){state.index=found;state.mode='single';renderStone();}
+});
+function resize(){const {w,h}=size();renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(state.records.length&&state.mode==='gallery')renderStone();}
+new ResizeObserver(resize).observe(host);resize();
+function tick(){requestAnimationFrame(tick);controls.update();renderer.render(scene,camera);}tick();
+const loader=new GLTFLoader();
+async function injectModel(gltf,meta){
+  const map=new Map();gltf.scene.traverse(o=>{if(o.isMesh){map.set(o.name,o);if(o.parent?.name&&!map.has(o.parent.name))map.set(o.parent.name,o);}});
+  state.models.clear();
+  for(const rec of meta.models){
+    const mesh=map.get(rec.name)||[...map.values()].find(o=>o.name===rec.name||o.name.startsWith(rec.name+'_'));
+    if(mesh)state.models.set(rec.name,mesh);
+  }
+  if(state.models.size!==100)throw new Error('В GLB найдено только '+state.models.size+' из 100 камней. Проверьте модель и версии файлов.');
+  state.records=meta.models.slice();
+  $('progress').hidden=true;
+  $('status').textContent='Загружено: 100 отдельных мешей · '+meta.originCounts.gate+' из ворот · '+meta.originCounts.generated+' новых · '+meta.version;
+  renderStone();
+}
+async function start(){
+ try{
+ const response=await fetch(BASE+'common-100.json?version=17.7-common100.1',{cache:'no-store'});
+ if(!response.ok)throw new Error('Не удалось загрузить метаданные: HTTP '+response.status);
+ const meta=await response.json();if(meta.count!==100)throw new Error('Неподдерживаемая версия библиотеки');
+ window.__common100meta=meta;
+ const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.1');
+ await injectModel(gltf,meta);
+ }catch(error){$('progress').hidden=false;$('progress').textContent='Ошибка загрузки библиотеки: '+error.message+' — откройте страницу через сайт или выберите локальный GLB справа.';console.error(error);}
+}
+$('pickFile').onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{const buffer=await file.arrayBuffer();const gltf=await new Promise((resolve,reject)=>loader.parse(buffer,'',resolve,reject));
+ if(!window.__common100meta){const r=await fetch(BASE+'common-100.json');window.__common100meta=await r.json();}
+ await injectModel(gltf,window.__common100meta);}
+ catch(err){$('progress').hidden=false;$('progress').textContent='Ошибка локальной модели: '+err.message;}
+};
+start();
+</script>
+</body></html>
