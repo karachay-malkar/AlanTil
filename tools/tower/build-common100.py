@@ -350,4 +350,6 @@ if __name__ == "__main__":
     parser.add_argument("--gate", type=Path, default=GATE)
     parser.add_argument("--out", type=Path, default=OUTPUT)
     args = parser.parse_args()
-    build(args.gate, args.out)
+    # Endcap-only revision: never regenerate the 94 approved stone shapes.
+    from common100_rebake_lintels import rebake
+    rebake(args.out)
