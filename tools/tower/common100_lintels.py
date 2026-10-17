@@ -28,7 +28,7 @@ MATERIAL=PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR",
 
 # Each model gets an individual, asymmetric treatment at EACH end.
 # The broad sidewall triangulation below is exactly the approved v5 generator.
-END_TREATMENTS=(
+ENDCAP_DESIGNS=END_TREATMENTS=(
     ("large-chip","angled-bevel"),
     ("crack-groove","chipped-corner"),
     ("large-chip","softened-edge"),
