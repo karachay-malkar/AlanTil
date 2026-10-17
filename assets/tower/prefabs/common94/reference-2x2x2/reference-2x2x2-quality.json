@@ -14,8 +14,8 @@
   "coarse": 15,
   "horizontallyElongated": 11,
   "horizontalShare": 0.73333,
-  "chinking": 102,
-  "placements": 117,
+  "chinking": 108,
+  "placements": 123,
   "voxelConvexDensityUpperBound": 0.28063,
   "beforeViews": [
     {
@@ -74,8 +74,8 @@
   "attempts": 113,
   "repairedSourceCoarse": 0,
   "rayFill": {
-    "accepted": 17,
-    "trials": 17,
+    "accepted": 23,
+    "trials": 24,
     "samples": 64,
     "initial": [
       {
@@ -96,9 +96,9 @@
     ],
     "final": [
       {
-        "coverage": 0.997009,
-        "gapPixels": 8,
-        "largestGapPixels": 2
+        "coverage": 0.998609,
+        "gapPixels": 4,
+        "largestGapPixels": 1
       },
       {
         "coverage": 1.0,
@@ -106,9 +106,9 @@
         "largestGapPixels": 0
       },
       {
-        "coverage": 0.994694,
-        "gapPixels": 15,
-        "largestGapPixels": 7
+        "coverage": 0.998621,
+        "gapPixels": 4,
+        "largestGapPixels": 1
       }
     ],
     "method": "actual original GLB triangle ray tests",
