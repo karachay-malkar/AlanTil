@@ -57,7 +57,25 @@ fs.mkdirSync(output,{recursive:true});
     count++;
    }
   }
-  await page.setViewportSize({width:390,height:844});
+  // Final candidate: evaluate all exposed faces while fitting authored stones.
+  await page.locator('#release').selectOption('17.5.11');
+  for(const kind of types){
+   await page.locator('#kind').selectOption(kind);
+   for(let variant=0;variant<5;variant++){
+    await page.locator('#variant').selectOption(String(variant));
+    await page.waitForFunction(([type,index])=>{
+      const text=document.getElementById('status')?.textContent||'';
+      return text.includes('Размер: '+type)&&text.includes('Материал:')&&
+       text.includes('Камней:')&&!text.includes('Ошибка:')&&
+       document.getElementById('variant').value===String(index);
+    },[kind,variant],{timeout:45000});
+    const status=await page.locator('#status').textContent();
+    if(!/Материал:/.test(status))throw Error('Final face candidate failed: '+status);
+    await page.screenshot({path:path.join(output,'face-scored-'+kind+'-variant-'+variant+'.png')});
+    count++;
+   }
+  }
+    await page.setViewportSize({width:390,height:844});
   await page.locator('#kind').selectOption('4x4x4');
   await page.locator('#variant').selectOption('4');
   await page.waitForTimeout(600);
