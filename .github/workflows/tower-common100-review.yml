@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 jobs:
-  3d-gallery:
+  webgl-gallery:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
