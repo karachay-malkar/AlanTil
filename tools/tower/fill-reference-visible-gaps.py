@@ -150,7 +150,16 @@ def main():
     assert len(chinks)==29
     accepted=0;attempted=0;ignored=set()
     for step in range(args.limit):
-        if all(mask_metrics(m,.5/args.samples)[0]['coverage']>=.997 for m in masks):break
+        if all(mask_metrics(m,.5/args.samples)[0]['coverage']>=.997 for m in masks):
+            # Incremental single-rock intersection tests can disagree with the
+            # merged mesh at grazing angles. Never accept a candidate based on
+            # cached masks; reray the WHOLE ORIGINAL triangle assembly first.
+            whole=full_mesh(source,rows)
+            masks=[whole.ray.intersects_any(o,d).reshape(args.samples,args.samples)
+                   for o,d in coords]
+            real=[mask_metrics(m,.5/args.samples)[0] for m in masks]
+            if all(x['coverage']>=.995 and x['largestGapPixels']<=3 for x in real):
+                break
         targets=pick_targets(masks,field,args.samples,rng)
         if not targets:break
         candidates=[x for x in targets if (x[1],x[2]) not in ignored]
