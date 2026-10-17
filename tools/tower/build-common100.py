@@ -241,6 +241,33 @@ def select(candidates, how_many, used, rng, kind):
     return result
 
 
+def lintel_endcaps_accepted(mesh):
+    """Reject flat-sawn endcaps, not the previously accepted long sidewalls.
+
+    Measurement is performed on actual output triangles; the independent QA
+    script repeats it on the exported GLB. The selected candidate is stable
+    and never consumes any main/chinking RNG stream.
+    """
+    normals=np.asarray(mesh.face_normals,dtype=float)
+    centers=np.asarray(mesh.triangles_center,dtype=float)
+    areas=np.asarray(mesh.area_faces,dtype=float)
+    vertices=np.asarray(mesh.vertices,dtype=float)
+    span=float(mesh.extents[0])
+    for sign in (-1,1):
+        select=(centers[:,0]*sign>span*.445)&(normals[:,0]*sign>.24)
+        tilted=select&(normals[:,0]*sign>.28)&(normals[:,0]*sign<.94)
+        count=int(np.count_nonzero(select))
+        broad=int(np.count_nonzero(tilted&(areas>.00016)))
+        denom=max(float(np.sum(areas[select])),1e-9)
+        rough=float(np.sum(areas[tilted]))/denom
+        cap_vertices=vertices[np.abs(vertices[:,0]*sign-span/2)<min(.04,span*.04)]
+        depth=float(np.ptp(cap_vertices[:,0])) if len(cap_vertices)>4 else 0.
+        if count<24 or broad<9 or rough<.195 or depth<.014:
+            return False
+    central=(np.abs(centers[:,0])<span*.36)&(np.abs(normals[:,2])>.38)
+    return int(np.count_nonzero(central))<230
+
+
 def build(source, output):
     rng = np.random.default_rng(SEED)
     options = gate_candidates(source)
@@ -281,11 +308,11 @@ def build(source, output):
         style=LINTEL_STYLES[i%len(LINTEL_STYLES)]
         # Independent deterministic per-lintel seeds and bounded retries.
         # Rejected candidates do not consume the RNG of any other rock.
-        for attempt in range(60):
+        for attempt in range(160):
             lintel_rng=np.random.default_rng(250615+i*1747+attempt*101)
             mesh=build_rugged_lintel(lintel_rng,length,style,i)
             q=quality(mesh)
-            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents) :
+            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents) and lintel_endcaps_accepted(mesh):
                 print("RUGGED_LINTEL_SELECTED",i+1,"attempt",attempt,"style",style)
                 break
         else:
