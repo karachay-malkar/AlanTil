@@ -119,6 +119,8 @@ def lintel(source, size, door=False):
         p[:, 0] -= np.sign(x) * end * (.005 + .007 * np.abs(np.sin(y * 51 + z * 19)))
         m.vertices = p
         m.fix_normals()
+    # Restore exact lintel dimensions after shaping the irregular stone faces.
+    m.apply_scale(np.asarray(size) / m.extents)
     m.apply_translation(-m.bounds.mean(axis=0))
     if m.volume < 0:
         m.invert()
