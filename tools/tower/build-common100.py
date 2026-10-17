@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb"
 EXPECTED_GATE_SHA256 = "37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51"
 OUTPUT = ROOT / "assets/tower/prefabs/common100"
-VERSION = "17.7-common100.5"
+VERSION = "17.7-common100.6"
 TARGETS = {"main": 72, "large": 10, "chinking": 12, "lintel": 6}
 SEED = 170017
 MATERIAL = PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR", baseColorFactor=[193, 176, 146, 255],
@@ -279,8 +279,16 @@ def build(source, output):
     # Independent seeds keep every one of the other 94 stones unchanged.
     for i,length in enumerate((1.0,1.0,1.25,1.25,1.5,1.5)):
         style=LINTEL_STYLES[i%len(LINTEL_STYLES)]
-        lintel_rng=np.random.default_rng(180092+i*1597)
-        mesh=build_rugged_lintel(lintel_rng,length,style,i)
+        # Independent deterministic per-lintel seeds and bounded retries.
+        # Rejected candidates do not consume the RNG of any other rock.
+        for attempt in range(20):
+            lintel_rng=np.random.default_rng(250615+i*1747+attempt*101)
+            mesh=build_rugged_lintel(lintel_rng,length,style,i)
+            q=quality(mesh)
+            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents):
+                break
+        else:
+            raise RuntimeError(f"Cannot build full-ended lintel {i+1}")
         plans.append(("lintel",i+1,mesh,
                       {"source":"generated","lintelStyle":style}))
 
