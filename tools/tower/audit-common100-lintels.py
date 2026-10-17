@@ -33,31 +33,25 @@ def side_breaks(mesh):
 
 
 
-def flank_facet_score(mesh, sign):
-    """Fraction of long-flank real facets tilted across the bridge axis.
 
-    A visually smooth extruded wall may move a few mm from station to station,
-    yet still offer a single broad side plane. Triangulated 3D stone cuts
-    create numerous locally non-coplanar large surfaces on BOTH long sides.
-    """
-    normals=np.asarray(mesh.face_normals)
-    centers=np.asarray(mesh.triangles_center)
+def endcap_geometry(mesh, sign):
+    """Measure actual chipped cap topology and nonplanar depth (no trust in JSON)."""
+    n=np.asarray(mesh.face_normals)
+    p=np.asarray(mesh.triangles_center)
+    v=np.asarray(mesh.vertices)
     length=float(mesh.extents[0])
-    visible=(normals[:,2]*sign>.45) & (np.abs(centers[:,0])<.42*length) & (np.abs(centers[:,1])<.095)
-    count=int(visible.sum())
-    tilted=int(np.count_nonzero(np.abs(normals[visible,0])>.2))
-    return count,tilted,round(tilted/max(1,count),3)
-
-
-def end_break_score(mesh, sign):
-    """Median non-axial orientation of facets on each broken stone end."""
-    normals=np.asarray(mesh.face_normals)
-    centers=np.asarray(mesh.triangles_center)
-    length=float(mesh.extents[0])
-    mask=(normals[:,0]*sign>.65) & (centers[:,0]*sign>.43*length)
-    if not np.any(mask):
-        return 0.0
-    return float(np.median(1.0-np.abs(normals[mask,0])))
+    # Only faces on the final 5 cm of the selected end.
+    f=(p[:,0]*sign>.43*length) & (n[:,0]*sign>.38)
+    centers=p[f]
+    normal=n[f]
+    if len(centers)<18:
+        return dict(faces=int(len(centers)), tilted=0, depth=0.0)
+    slant=np.sqrt(normal[:,1]**2+normal[:,2]**2)
+    cap_vertices=v[(v[:,0]*sign)>(.5*length-.043)]
+    thickness=float(np.ptp(cap_vertices[:,0])) if len(cap_vertices)>4 else 0.0
+    return dict(faces=int(len(centers)),
+                tilted=int(np.count_nonzero(slant>.18)),
+                depth=round(thickness,5))
 
 def main():
     meta=json.loads((ROOT100/"common-100.json").read_text())
@@ -82,11 +76,20 @@ def main():
         assert rock.extents[1]/rock.extents[2]<=.78,(name,rock.extents)
         assert not violations(name,"lintel",quality(rock),rock.extents),name
         side=side_breaks(rock)
-        assert min(side)>=.012,(name,"at least one long flank remains too regular",side)
+        # Long sides must remain calm: v6's sawtooth micro-facets are rejected.
+        assert min(side)>=.004,(name,"side too uniform",side)
+        assert max(side)<=.032,(name,"over-chipped longitudinal sides",side)
+        assert item.get("sideSurfaceVersion")=="v5-restored",(name,"v5 sides were not restored")
+        effects=item.get("endTreatments",[])
+        assert len(effects)==2 and all(len(effect)>=2 for effect in effects),(name,"missing individual treatments")
         for sign in (-1,1):
-            count,tilted,fraction=flank_facet_score(rock,sign)
-            assert count>=95 and tilted>=55 and fraction>=.35,(name,"smooth longitudinal face",sign,count,tilted,fraction)
-            assert end_break_score(rock,sign)>=.002,(name,"end face is too planar",sign,end_break_score(rock,sign))
+            cap=endcap_geometry(rock,sign)
+            assert cap["faces"]>=20,(name,"end face has few facets",cap)
+            assert cap["tilted"]>=12,(name,"end face is nearly planar",cap)
+            assert cap["depth"]>=.013,(name,"end face is too flat",cap)
+            print("ENDCAP_AUDIT",name,"left" if sign==-1 else "right",cap,effects[(sign+1)//2])
+        # Only two coarse cap meshes were added, never a sawtooth side mesh.
+        assert len(rock.faces)<760,(name,"too many triangles; long sides may have been damaged")
         # Two variants of the same length must not be the same geometry,
         # nor should both derive from one extrusion topology.
         assert item.get("lintelStyle"),name
