@@ -266,7 +266,7 @@ export async function mount(context,params={}){
  });
  on('[data-camera]','click',()=>s.scene?.home());
  window.addEventListener('keydown',e=>{
-  if(s.disposed||s.busy||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
+  if(s.disposed||s.busy||document.body.classList.contains('modal-open')||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
   if(e.key==='Escape'){cancel();return;}
   if(e.key.toLowerCase()==='r'&&s.mode==='placing'){s.rotation=(s.rotation+1)%4;void preview();}
  },{signal:controller.signal});
