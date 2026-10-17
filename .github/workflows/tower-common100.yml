@@ -6,6 +6,7 @@ on:
       - 'tools/tower/build-common100.py'
       - 'tools/tower/audit-common100-quality.py'
       - 'tools/tower/audit-common100-lintels.py'
+      - 'tools/tower/common100_lintels.py'
       - 'tools/tower/audit-common100-diversity.py'
       - 'tools/tower/common100_quality.py'
       - 'tools/tower/common100_faceted.py'
@@ -27,12 +28,12 @@ jobs:
           python-version: '3.11'
       - name: Install offline model tooling
         run: pip install 'numpy==2.2.6' 'trimesh==4.11.1' scipy pillow networkx
-      - name: RED - old lintel geometry should fail new acceptance
-        run: OPENBLAS_NUM_THREADS=1 python tools/tower/audit-common100-lintels.py
       - name: Extract approved gate stones, select and build 100 distinct meshes
         run: OPENBLAS_NUM_THREADS=1 python tools/tower/build-common100.py
       - name: Validate all 38 independent 3D rock shapes and silhouettes
         run: OPENBLAS_NUM_THREADS=1 python tools/tower/audit-common100-diversity.py
+      - name: Validate six rugged 100/125/150 cm paired lintels and all 94 preserved meshes
+        run: OPENBLAS_NUM_THREADS=1 python tools/tower/audit-common100-lintels.py
       - name: Validate 100 stone cross sections and reject pointed tips
         run: OPENBLAS_NUM_THREADS=1 python tools/tower/audit-common100-quality.py
       - name: Independent output audit and full source immutability
