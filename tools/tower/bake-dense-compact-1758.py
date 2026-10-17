@@ -104,7 +104,7 @@ def candidates(field,shapes,names,location,radius,rng,phase):
     scored=[]
     # Initial stone set is immutable and acts as load-bearing large stones;
     # fill only measured vacancies with additional small irregular authored rock.
-    for j in range(14):
+    for j in range(22):
         name=names[int(rng.integers(len(names)))]
         shape=shapes[name]
         sides=shape['extents']
@@ -122,18 +122,21 @@ def candidates(field,shapes,names,location,radius,rng,phase):
         scale=diameter/natural_length
         ext=np.abs(R)@sides*scale
         if ext[1]>max(ext[0],ext[2])*1.8:continue
-        margin=field.dims/2-np.abs(location)-.0015
-        if np.any(margin<.007):continue
-        fit=float(min(1.,np.min(2*margin/np.maximum(ext,1e-8))))
-        if fit<.36:continue
-        scale*=fit
-        if scale*natural_length<.042:continue
+        # Shift the real rock INSIDE the section instead of shrinking it at
+        # boundaries. Previous clipping to the available centre margin left
+        # all six exterior faces riddled with small uncovered holes.
+        if np.any(ext>field.dims-.003):
+            scale*=float(np.min((field.dims-.003)/np.maximum(ext,1e-8)))
+        if scale*natural_length<.045:continue
         A=R*scale
-        # Align the authored geometry centroid with the chosen free-space point.
+        vertices=shape['vertices']@A.T
+        lo=-field.dims/2+.001-vertices.min(axis=0)
+        hi=field.dims/2-.001-vertices.max(axis=0)
+        if np.any(lo>hi):continue
         ctr=(shape['vertices'].min(0)+shape['vertices'].max(0))*.5
         M=np.eye(4)
         M[:3,:3]=A
-        M[:3,3]=location-A@ctr+rng.uniform(-.006,.006,3)
+        M[:3,3]=np.clip(location-A@ctr+rng.uniform(-.007,.007,3),lo,hi)
         trial=field.sample(shape,M,shape['planes'])
         if trial is None:continue
         cells,clashes,*_=trial
