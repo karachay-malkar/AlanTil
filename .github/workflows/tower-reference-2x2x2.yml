@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/tower/build-reference-2x2x2.py'
       - 'tools/tower/verify-reference-2x2x2.py'
+      - 'tools/tower/check-reference-triangle-visibility.py'
       - 'tools/tower/review-reference-2x2x2.html'
       - '.github/workflows/tower-reference-2x2x2.yml'
 permissions:
@@ -28,6 +29,8 @@ jobs:
         run: python -u tools/tower/build-reference-2x2x2.py
       - name: Independent full-mesh transforms audit
         run: python tools/tower/verify-reference-2x2x2.py
+      - name: Check actual triangles for through-gap rays on all three axes
+        run: python -u tools/tower/check-reference-triangle-visibility.py --samples 64
       - name: Verify final QA payload and strict non-promotion
         run: |
           python - <<'PY'
@@ -42,6 +45,12 @@ jobs:
           assert q['horizontalShare']>=.50, 'Not dominated by horizontal elongated natural stone'
           assert a['allUniformScale'] and a['allWithinBounds']
           assert a['liveReleaseAllowed'] is False
+          ray=json.loads((p/'actual-triangle-visibility.json').read_text())
+          assert len(ray['views'])==3
+          assert ray['geometry']=='real transformed source triangles'
+          assert ray['liveDeploymentPermitted'] is False
+          print('EXACT_TRIANGLE_COVERAGE',ray['minimumInternalCoverage'])
+          print('EXACT_TRIANGLE_QA_ACCEPTED',ray['passesAt99_5PercentAndAtMost3PixelHole'])
           print('REAL_STONE_REFERENCE_VALIDATED', q['placements'], 'stones')
           print('PROJECTED_INTERIOR_COVERAGE', [(x['axis'],x['interiorCoverage']) for x in q['afterViews']])
           print('LIVE_EDITOR_UNCHANGED')
