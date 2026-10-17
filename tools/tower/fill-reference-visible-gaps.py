@@ -187,9 +187,25 @@ def main():
         for k,ids in enumerate(gaps):
             flat=masks[k].ravel()
             flat[ids]=flat[ids] | hits[k]
+        if accepted%5==0:
+            # A candidate can enlarge the natural silhouette and reveal NEW
+            # surrounded through-holes; never trust incremental ray masks as
+            # final evidence. Periodically rebuild the entire triangle scene.
+            whole=full_mesh(source,rows)
+            masks=[whole.ray.intersects_any(o,d).reshape(args.samples,args.samples)
+                   for o,d in coords]
+            ignored.clear()
+            print('FULL_MESH_RERAY',accepted,
+                  [mask_metrics(m,.5/args.samples)[0]['coverage'] for m in masks],flush=True)
         if accepted%10==0:
             print('RAY_CHINK',accepted,'tries',attempted,'coverage',
                   [mask_metrics(m,.5/args.samples)[0]['coverage'] for m in masks],flush=True)
+    # Always reray the completed triangle assembly even if the accepted count
+    # is not divisible by five. This value, not the incremental ray cache, is
+    # what the acceptance and mobile review display.
+    whole=full_mesh(source,rows)
+    masks=[whole.ray.intersects_any(o,d).reshape(args.samples,args.samples)
+           for o,d in coords]
     new_report=[mask_metrics(m,.5/args.samples)[0] for m in masks]
     pack['version']='17.7-reference-2x2x2.pilot2'
     pack['variants']['2x2x2'][0]['rocks']=len(rows)
@@ -200,7 +216,7 @@ def main():
                     'rayFill':{'accepted':accepted,'trials':attempted,'samples':args.samples,
                                'initial':initial_report,'final':new_report,
                                'method':'actual original GLB triangle ray tests',
-                               'stillNeedsFinalWholeSceneReraycast':True},
+                               'stillNeedsFinalWholeSceneReraycast':False},
                     'requiresHumanReview':True})
     for path,record in [('reference-2x2x2.json',pack),('reference-2x2x2-quality.json',quality)]:
         (DIR/path).write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n')
