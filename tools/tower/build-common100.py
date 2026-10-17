@@ -241,6 +241,36 @@ def select(candidates, how_many, used, rng, kind):
     return result
 
 
+def lintel_rough_surface_ok(mesh):
+    """Enforce both long flanks and both rough-cut ends during selection.
+
+    The final independent artifact audit repeats these checks on the GLB.
+    """
+    from common100_quality import section_points
+    sides=[[],[]]
+    for station in np.linspace(.07,.93,18):
+        pts=section_points(mesh,float(station))[:,1:]
+        if len(pts)<4:
+            return False
+        sides[0].append(float(np.max(pts[:,1])))
+        sides[1].append(float(np.min(pts[:,1])))
+    if min(float(np.std(np.diff(w))) for w in sides)<.012:
+        return False
+    normals=np.asarray(mesh.face_normals)
+    centroids=np.asarray(mesh.triangles_center)
+    span=float(mesh.extents[0])
+    for sign in (-1,1):
+        mask=(normals[:,2]*sign>.45)&(np.abs(centroids[:,0])<.42*span)&(np.abs(centroids[:,1])<.095)
+        count=int(mask.sum())
+        tilted=int(np.sum(np.abs(normals[mask,0])>.2))
+        if count<95 or tilted<55 or tilted/max(count,1)<.35:
+            return False
+        ends=(normals[:,0]*sign>.65)&(centroids[:,0]*sign>.43*span)
+        if not np.any(ends) or float(np.median(1-np.abs(normals[ends,0])))<.002:
+            return False
+    return True
+
+
 def build(source, output):
     rng = np.random.default_rng(SEED)
     options = gate_candidates(source)
@@ -281,11 +311,12 @@ def build(source, output):
         style=LINTEL_STYLES[i%len(LINTEL_STYLES)]
         # Independent deterministic per-lintel seeds and bounded retries.
         # Rejected candidates do not consume the RNG of any other rock.
-        for attempt in range(20):
+        for attempt in range(60):
             lintel_rng=np.random.default_rng(250615+i*1747+attempt*101)
             mesh=build_rugged_lintel(lintel_rng,length,style,i)
             q=quality(mesh)
-            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents):
+            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents) and lintel_rough_surface_ok(mesh):
+                print("RUGGED_LINTEL_SELECTED",i+1,"attempt",attempt,"style",style)
                 break
         else:
             raise RuntimeError(f"Cannot build full-ended lintel {i+1}")
