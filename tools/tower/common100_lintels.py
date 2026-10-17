@@ -80,12 +80,12 @@ def _build_endcap(vertices, faces, ids, side, length, ordinal, rng):
     inner=[]
     for j,idx in enumerate(ids):
         p=np.asarray(vertices[idx],dtype=float)
-        radius=float(rng.uniform(.48,.65))
+        radius=float(rng.uniform(.54,.69))
         inner_yz=middle+(p[1:]-middle)*radius
         inner_yz+=rng.uniform(-.0035,.0035,size=2)
         d=_cap_sector_gap(j,tip,n)
         gap=_cap_sector_gap(j,fissure,n)
-        damage=.013+float(rng.uniform(-.003,.004))
+        damage=.016+float(rng.uniform(-.003,.005))
         if treatment in ("large-chip","deep-chip","mixed-chip-crack","chipped-corner","fractured-ridge"):
             if d==0: damage+=.018
             elif d==1: damage+=.008
@@ -93,8 +93,8 @@ def _build_endcap(vertices, faces, ids, side, length, ordinal, rng):
             if gap==0: damage+=.015
             elif gap==1: damage+=.003
         if treatment in ("slanted-facet","angled-bevel") and _cap_sector_gap(j,bevel,n)<2:
-            damage+=.009
-        damage=min(.036,damage)
+            damage+=.014
+        damage=min(.039,damage)
         inside=np.array([p[0]+inward*damage,inner_yz[0],inner_yz[1]])
         inner.append(len(vertices))
         vertices.append(inside.tolist())
