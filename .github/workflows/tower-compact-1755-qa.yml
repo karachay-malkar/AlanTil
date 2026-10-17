@@ -63,6 +63,8 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016181500_tower_gate_prefab_176.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261016200000_tower_gate_stones_1754.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261017000000_tower_compact_stones_1755.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261017080000_tower_clear_all_1756.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/sql/tower_clear_v123.sql
           psql -X -v ON_ERROR_STOP=1 <<'SQL'
           DO $$
           DECLARE v jsonb;

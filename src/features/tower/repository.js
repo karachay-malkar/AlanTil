@@ -28,7 +28,7 @@ export async function mutateTowerV2(operation){return rpcV2('mutate_tower_v2',{
 function normalizeV3(data){
  if(data?.format!==3||!Array.isArray(data.elements)||!Number.isInteger(Number(data.revision)))
   throw new Error('INVALID_V3_SNAPSHOT');
- return {format:3,revision:Number(data.revision),elements:data.elements,replayed:!!data.replayed};
+ return {format:3,revision:Number(data.revision),elements:data.elements,replayed:!!data.replayed,resetAt:data.resetAt||null};
 }
 export async function loadTowerV3(userId=null){
  const client=await getSupabaseClient();
@@ -43,4 +43,17 @@ export async function mutateTowerV3({revision,id,action,section=null,sectionId=n
  });
  if(r.error)throw r.error;
  return normalizeV3(r.data);
+}
+
+/** Atomically clear V1/V2/V3 geometry without modifying either legacy balance. */
+export async function clearTowerAll({revision,legacyRevision,id}){
+ const client=await getSupabaseClient();
+ const r=await client.rpc('clear_tower_all',{
+  p_legacy_revision:legacyRevision,p_v3_revision:revision,p_operation_id:id
+ });
+ if(r.error)throw r.error;
+ const snapshot=normalizeV3(r.data);
+ const legacy=Number(r.data?.legacyRevision);
+ if(!Number.isSafeInteger(legacy)||legacy<0||!snapshot.resetAt)throw new Error('INVALID_CLEAR_SNAPSHOT');
+ return {...snapshot,legacyRevision:legacy};
 }

@@ -10,7 +10,8 @@ import {WILD_PREFAB_VERSION,WILD_VARIANTS_PER_SIZE,isWildPrefab} from '../../../
 import {GATE_STONE_VARIANTS,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
 import {COMPACT_STONE_VERSION} from '../../../packages/tower-game/compact-stone-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3} from './repository.js?v=17.5.2';
+import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3,clearTowerAll} from './repository.js?v=17.5.6-tower-controls.1';
+import {uiIcon} from '../../shared/ui/icons.js?v=17.5.6-tower-controls.1';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const historicDraftKey=id=>'alantil_tower_prefab_draft_17_4_'+(id||'guest');
@@ -22,12 +23,12 @@ function historicDrafts(id){
  }catch{return[];}
 }
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
-const icon=(name,body)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${body}" title="${body}">${{
- confirm:'✓',cancel:'×',rotate:'⟳',variant:'◇',remove:'⌫',hammer:'⚒'}[name]}</button>`;
+const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',remove:'eraser',hammer:'hammer',clear:'trash2'};
+const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${label}" title="${label}">${uiIcon(TOWER_ICONS[name])}</button>`;
 export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
-  sections:[],legacy:[],revision:0,selected:null,type:PREFAB_TYPES[1].id,variant:0,rotation:0,
+  sections:[],legacy:[],revision:0,legacyRevision:null,resetAt:null,selected:null,type:PREFAB_TYPES[1].id,variant:0,rotation:0,
   preview:null,previewHit:null,locked:false,busy:false,ready:false,canLeave:()=>true};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
@@ -35,7 +36,8 @@ export async function mount(context,params={}){
  const root=context.root;
  root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
-   <div class="towerCamera"><button type="button" class="iconBtn" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">⌂</button></div>
+   <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">${uiIcon('house')}</button>
+   ${icon('clear','Очистить всю башню')}</div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
@@ -53,7 +55,7 @@ export async function mount(context,params={}){
  const on=(sel,type,cb)=>q(sel)?.addEventListener(type,cb,{signal:controller.signal});
  const game=q('.towerGame'),side=q('[data-side]');
  const catalog=q('.towerCatalog');
- catalog.innerHTML=PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">◈</span><span class="towerItemName">[ ${spec.id===WINDOW_PREFAB_ID?'Окно 0,5×1 м':spec.id===DOOR_PREFAB_ID?'Дверь 0,75×2 м':spec.id===GATE_PREFAB_ID?'Ворота 2×2 м':spec.id.replaceAll('x','×')} ]</span></button>`).join('');
+ catalog.innerHTML=PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">${uiIcon('blocks')}</span><span class="towerItemName">[ ${spec.id===WINDOW_PREFAB_ID?'Окно 0,5×1 м':spec.id===DOOR_PREFAB_ID?'Дверь 0,75×2 м':spec.id===GATE_PREFAB_ID?'Ворота 2×2 м':spec.id.replaceAll('x','×')} ]</span></button>`).join('');
  let toastTimer=null;
  function message(text){
   if(s.disposed)return;
@@ -71,7 +73,11 @@ export async function mount(context,params={}){
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing';
   q('[data-variant]').hidden=s.type===WINDOW_PREFAB_ID||s.type===DOOR_PREFAB_ID||s.type===GATE_PREFAB_ID;
-  q('[data-remove]').disabled=next!=='selected';
+  q('[data-remove]').disabled=next!=='selected'||s.busy;
+  for(const name of ['cancel','rotate','variant','hammer','camera']){
+   const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
+  }
+  q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s)||s.legacyRevision===null;
   if(next==='placing'||next==='saving-place')catalogVisible(false);
   else if(next==='idle')catalogVisible(true);
   s.scene?.setTool(next==='placing'||next==='saving-place'?'place':'select');
@@ -112,13 +118,14 @@ export async function mount(context,params={}){
   if(s.mode==='placing')await preview();
  }
  function begin(type){
-  if(!editable(s))return;
+  if(s.busy||!editable(s))return;
   s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
   mode('placing');void preview();
  }
  function cancel(){
+  if(s.busy)return;
   ++previewSequence;s.preview=null;s.previewHit=null;s.selected=null;s.locked=false;
   s.scene?.setSelected(null);mode('idle');
  }
@@ -130,18 +137,23 @@ export async function mount(context,params={}){
   if(v2.status==='fulfilled')next.push(...v2.value.elements.map(b=>({...b,id:'historic-v2-'+b.id,legacy:true})));
   if(v1.status==='fulfilled')next.push(...v1.value.elements.map(b=>({...b,id:'historic-v1-'+b.id,legacy:true})));
   s.legacy=next;
-  if(v2.status==='rejected'&&v1.status==='rejected')message('Не удалось загрузить ранее приобретённые элементы');
+  s.legacyRevision=v2.status==='fulfilled'&&v1.status==='fulfilled'&&
+   v2.value.revision===v1.value.revision?v1.value.revision:null;
+  if(s.legacyRevision===null)message('Не удалось проверить историческую постройку');
  }
  async function refreshServer(){
-  if(!s.userId){s.sections=[];s.revision=0;await redraw();return;}
+  if(!s.userId){s.sections=[];s.revision=0;s.resetAt=null;await redraw();return;}
   const snapshot=await loadTowerV3(params.userId||null);
-  s.sections=snapshot.elements;s.revision=snapshot.revision;
+  s.sections=snapshot.elements;s.revision=snapshot.revision;s.resetAt=snapshot.resetAt;
   await redraw();
  }
  async function importHistoricDrafts(){
   // One-time recovery only; never write new constructions into localStorage.
   if(!s.userId||!editable(s))return;
-  const key=historicDraftKey(s.userId),old=historicDrafts(s.userId);
+  const key=historicDraftKey(s.userId);
+  // A server-side reset permanently invalidates pre-reset device drafts.
+  if(s.resetAt){try{localStorage.removeItem(key);}catch{}return;}
+  const old=historicDrafts(s.userId);
   if(!old.length)return;
   const remains=[];
   const sorted=[...old].sort((a,b)=>(a.y??0)-(b.y??0));
@@ -173,25 +185,60 @@ export async function mount(context,params={}){
    const data=await mutateTowerV3({revision:s.revision,id:operationId,action,section,sectionId});
    s.sections=data.elements;s.revision=data.revision;
    s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
-   mode('idle');await redraw();
+   // A successful place keeps the chosen type, variant and yaw for the next block.
+   mode(action==='place'?'placing':'idle');
+   await redraw();
+   if(action==='place'&&!s.disposed&&s.scene){
+    s.previewHit=s.scene.getAimHit?.()||null;
+    await preview();
+   }
   }catch(error){
    const reason=String(error?.message||error);
-   if(reason.includes('REVISION_CONFLICT')){
-    try{await refreshServer();}catch{ /* server returned a conflict; keep original scene */ }
-   }
+   // Network failures can occur after the server committed. Always reconcile
+   // before another placement, so retries cannot duplicate sections.
+   try{await refreshServer();}catch{ /* retain the original scene while offline */ }
    mode(action==='place'?'placing':'selected');
    message(reason.includes('AUTH_')?'Необходимо войти в аккаунт':
     reason.includes('SUPPORT')?'Нельзя удалить несущую секцию':
     reason.includes('REVISION_CONFLICT')?'Башня изменилась. Выберите место снова.':
     'Не удалось сохранить башню');
    if(action==='place')await preview();
-  }finally{s.busy=false;if(s.mode==='placing')await preview();}
+  }finally{s.busy=false;if(!s.disposed){mode(s.mode);if(s.mode==='placing')await preview();}}
  }
+ async function clearAll(){
+  if(s.busy||!s.ready||!s.userId||!editable(s)||s.legacyRevision===null)return;
+  if(!s.sections.length&&!s.legacy.length)return;
+  const confirmed=await context.modal.confirm({
+   message:'Удалить всю построенную башню?<div class="towerClearWarning">Все установленные элементы будут безвозвратно удалены.</div>'
+  });
+  if(!confirmed||s.disposed||s.busy||!editable(s))return;
+  s.busy=true;mode('saving-clear');
+  try{
+   const result=await clearTowerAll({revision:s.revision,legacyRevision:s.legacyRevision,id:crypto.randomUUID()});
+   if(s.disposed)return;
+   s.sections=result.elements;s.revision=result.revision;
+   s.legacy=[];s.legacyRevision=result.legacyRevision;s.resetAt=result.resetAt;
+   s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
+   try{localStorage.removeItem(historicDraftKey(s.userId));}catch{}
+   s.scene?.setSelected(null);mode('idle');await redraw();
+  }catch(error){
+   if(s.disposed)return;
+   try{await loadHistoric();await refreshServer();}catch{}
+   cancelAfterClear();
+   message(String(error?.message||error).includes('REVISION_CONFLICT')
+    ?'Башня изменилась. Повторите очистку.':'Не удалось очистить башню');
+  }finally{ s.busy=false;if(!s.disposed)mode(s.mode); }
+ }
+ function cancelAfterClear(){
+  ++previewSequence;s.preview=null;s.previewHit=null;s.locked=false;
+  s.selected=null;s.scene?.setSelected(null);mode('idle');
+ }
+ on('[data-clear]','click',()=>{void clearAll();});
  on('.towerCatalog','click',event=>{
   const el=event.target.closest('[data-section-id]');if(el)begin(el.dataset.sectionId);
  });
  on('[data-hammer]','click',()=>{
-  if(s.mode==='saving-place'||s.mode==='saving-remove')return;
+  if(s.busy)return;
   if(s.mode==='placing')cancel();
   if(s.mode==='selected'){markSelection(null);catalogVisible(true);return;}
   catalogVisible(!side.classList.contains('is-open'));
@@ -219,7 +266,7 @@ export async function mount(context,params={}){
  });
  on('[data-camera]','click',()=>s.scene?.home());
  window.addEventListener('keydown',e=>{
-  if(s.disposed||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
+  if(s.disposed||s.busy||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
   if(e.key==='Escape'){cancel();return;}
   if(e.key.toLowerCase()==='r'&&s.mode==='placing'){s.rotation=(s.rotation+1)%4;void preview();}
  },{signal:controller.signal});
@@ -239,7 +286,7 @@ export async function mount(context,params={}){
   try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
   await importHistoricDrafts();
   if(params.userId&&!editable(s))catalogVisible(false);
-  s.ready=true;
+  s.ready=true;mode(s.mode);
  }catch(error){message('Не удалось загрузить 3D-сцену');console.error(error);}
 }
 export function canLeave(){return active?.canLeave?.()??true;}
