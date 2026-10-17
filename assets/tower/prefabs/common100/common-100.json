@@ -1,5 +1,5 @@
 {
-  "version": "17.7-common100.2",
+  "version": "17.7-common100.3",
   "count": 100,
   "counts": {
     "main": 72,
@@ -19,7 +19,7 @@
     "chinking": "gaps only, not exposed standalone courses",
     "lintel": "single-piece bridge over openings"
   },
-  "glbSHA256": "dd253d2b79ab1347583f1fa923c5b5eca3e2529995434740b55eb136f5fd0cee",
+  "glbSHA256": "a141f70cf1922fbd31a610301c7bf8fe83c118006a1f381584fc84011a60f55b",
   "models": [
     {
       "name": "LARGE_001",
@@ -1478,1157 +1478,1195 @@
       "category": "main",
       "sizeMeters": [
         0.3718,
-        0.19539,
-        0.30779
+        0.28166,
+        0.2805
       ],
-      "triangles": 162,
-      "geometrySHA256": "163b52e5b5b27c8eec0a1f85d9b34aad4a77aca0455fb355630febf80078d194",
+      "triangles": 256,
+      "geometrySHA256": "462a680edf9a97bf3b3e52e97925f17084b78dbe0f25fa6ee968b9e021b22ea8",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7317,
-        "shoulder20": 0.8124,
-        "tip06": 0.7248,
-        "roughness": 0.0095,
+        "end12": 0.718,
+        "shoulder20": 0.8239,
+        "tip06": 0.3493,
+        "roughness": 0.00139,
         "profile": [
-          0.7248,
-          0.7317,
-          0.8124,
-          0.9622,
-          1.0456,
+          0.4712,
+          0.7995,
+          0.911,
           1.0,
-          0.8529,
-          0.7691,
-          0.7375
+          1.0066,
+          0.9442,
+          0.8239,
+          0.718,
+          0.3493
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_036",
       "category": "main",
       "sizeMeters": [
-        0.39308,
-        0.25257,
-        0.30659
+        0.30327,
+        0.12373,
+        0.23009
       ],
-      "triangles": 162,
-      "geometrySHA256": "4975739f14b8dc6356364f53101520998dea1eb41d28401e0d17d36e932a9d19",
+      "triangles": 288,
+      "geometrySHA256": "a80d045150f4b62ae2c505f5f80b19a7ecd9c91a2f22b245be408dca0ae78a02",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7603,
-        "shoulder20": 0.8422,
-        "tip06": 0.7385,
-        "roughness": 0.01512,
+        "end12": 0.6186,
+        "shoulder20": 0.8221,
+        "tip06": 0.4544,
+        "roughness": 0.00227,
         "profile": [
-          0.7385,
-          0.7928,
-          0.8709,
+          0.668,
+          0.8022,
+          0.9088,
+          0.9673,
           1.0,
-          1.1043,
-          0.9708,
-          0.8422,
-          0.7603,
-          0.7443
+          1.0069,
+          0.8221,
+          0.6186,
+          0.4544
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "MAIN_037",
       "category": "main",
       "sizeMeters": [
-        0.2045,
-        0.13536,
-        0.1301
+        0.34454,
+        0.21928,
+        0.22189
       ],
-      "triangles": 162,
-      "geometrySHA256": "b53e12363e791395b432c72b1ab2c737f9931a4fadb8059d71c16e18c22bf2b2",
+      "triangles": 192,
+      "geometrySHA256": "c310b8121d7968caf6e351a2f5358a6d8f33b04057294d3dd2a97f30e55e6fd1",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7852,
-        "shoulder20": 0.8522,
-        "tip06": 0.7239,
-        "roughness": 0.00643,
+        "end12": 0.7156,
+        "shoulder20": 0.8029,
+        "tip06": 0.4914,
+        "roughness": 0.00777,
         "profile": [
-          0.7629,
-          0.817,
-          0.8829,
+          0.578,
+          0.7768,
+          0.9817,
+          1.0347,
           1.0,
-          1.1091,
-          0.9573,
-          0.8522,
-          0.7852,
-          0.7239
+          0.9245,
+          0.8029,
+          0.7156,
+          0.4914
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "trapezoid"
     },
     {
       "name": "MAIN_038",
       "category": "main",
       "sizeMeters": [
-        0.25552,
-        0.11406,
-        0.1748
+        0.27042,
+        0.22173,
+        0.24768
       ],
-      "triangles": 162,
-      "geometrySHA256": "c916c1c2926133f6810d5203ed9b216baf1686a753ca619a484559c5080a40a8",
+      "triangles": 384,
+      "geometrySHA256": "7649c28e8c7a5293db33318e063d337ecead3c58a9b348cbb323a24601e0cc42",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8081,
-        "shoulder20": 0.8785,
-        "tip06": 0.7394,
-        "roughness": 0.00795,
+        "end12": 0.6139,
+        "shoulder20": 0.8167,
+        "tip06": 0.4062,
+        "roughness": 0.01171,
         "profile": [
-          0.7394,
-          0.8081,
-          0.9176,
+          0.5638,
+          0.6908,
+          0.8312,
+          0.9798,
+          1.0076,
           1.0,
-          1.0991,
-          0.9758,
-          0.8785,
-          0.8479,
-          0.7707
+          0.8167,
+          0.6139,
+          0.4062
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "short-wide"
     },
     {
       "name": "MAIN_039",
       "category": "main",
       "sizeMeters": [
-        0.24881,
-        0.16102,
-        0.20934
+        0.273,
+        0.16023,
+        0.20951
       ],
-      "triangles": 162,
-      "geometrySHA256": "cfadc07921d28debb7dbba0753daa1f909da26da9ef3dccd8eb9d9aaa7338c4f",
+      "triangles": 368,
+      "geometrySHA256": "9c19db8a05629ae7c79b0efbaa7ad24dbd7156b614a02d2448713ed40d710cf2",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8188,
-        "shoulder20": 0.8496,
-        "tip06": 0.7621,
-        "roughness": 0.00578,
+        "end12": 0.409,
+        "shoulder20": 0.6164,
+        "tip06": 0.2527,
+        "roughness": 0.01435,
         "profile": [
-          0.7621,
-          0.821,
-          0.8726,
-          0.9416,
-          1.157,
+          0.3235,
+          0.6504,
+          0.9173,
+          1.036,
           1.0,
-          0.8496,
-          0.8188,
-          0.765
+          0.8689,
+          0.6164,
+          0.409,
+          0.2527
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "broken-facet"
     },
     {
       "name": "MAIN_040",
       "category": "main",
       "sizeMeters": [
-        0.20452,
-        0.09212,
-        0.11312
+        0.2509,
+        0.14809,
+        0.16159
       ],
-      "triangles": 162,
-      "geometrySHA256": "235f8f9b6ea98cd32462f95aec2de54402483ea0a1033c7daf907e18f07739f1",
+      "triangles": 304,
+      "geometrySHA256": "609f089c8e2b2f58af29b208e3ac3e17776ee07d685bd4826efa9285d982e9be",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7309,
-        "shoulder20": 0.8144,
-        "tip06": 0.7089,
-        "roughness": 0.00419,
+        "end12": 0.6343,
+        "shoulder20": 0.7775,
+        "tip06": 0.4759,
+        "roughness": 0.00727,
         "profile": [
-          0.7272,
-          0.7417,
-          0.8343,
+          0.4953,
+          0.6551,
+          0.7775,
+          0.9681,
+          1.0199,
           1.0,
-          1.1171,
-          0.9764,
-          0.8144,
-          0.7309,
-          0.7089
+          0.8072,
+          0.6343,
+          0.4759
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "asymmetric"
     },
     {
       "name": "MAIN_041",
       "category": "main",
       "sizeMeters": [
-        0.21787,
-        0.11558,
-        0.14924
+        0.36319,
+        0.27536,
+        0.31279
       ],
-      "triangles": 162,
-      "geometrySHA256": "d56eeec0866c2868f62a60d1dead04de3907cc91a3bf8e9f4e9816dfc3a09670",
+      "triangles": 256,
+      "geometrySHA256": "683bdbe7796d21e684ecacf047da9efdaf40b98725ceca52fb0df28dbed4184d",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7421,
-        "shoulder20": 0.8064,
-        "tip06": 0.6843,
-        "roughness": 0.00425,
+        "end12": 0.7329,
+        "shoulder20": 0.8553,
+        "tip06": 0.5385,
+        "roughness": 0.00877,
         "profile": [
-          0.7226,
-          0.7469,
-          0.8231,
+          0.577,
+          0.7774,
+          0.9072,
           1.0,
-          1.0314,
-          0.9247,
-          0.8064,
-          0.7421,
-          0.6843
+          1.0226,
+          0.9785,
+          0.8553,
+          0.7329,
+          0.5385
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_042",
       "category": "main",
       "sizeMeters": [
-        0.34619,
-        0.18141,
-        0.2307
+        0.22203,
+        0.10399,
+        0.1848
       ],
-      "triangles": 162,
-      "geometrySHA256": "18e3aa12cdf584055425a7f9da2f94433681b8dcd8310319eb0cb93fb04716ef",
+      "triangles": 320,
+      "geometrySHA256": "92d83cfa10146103ed809d244e159db0e1526321335e8b138618011569b2deea",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.745,
-        "shoulder20": 0.8275,
-        "tip06": 0.7335,
-        "roughness": 0.01182,
+        "end12": 0.6688,
+        "shoulder20": 0.8031,
+        "tip06": 0.5068,
+        "roughness": 0.00238,
         "profile": [
-          0.7335,
-          0.7731,
-          0.8755,
+          0.5068,
+          0.6688,
+          0.8031,
+          0.9957,
+          1.0515,
           1.0,
-          1.0727,
-          0.9727,
-          0.8275,
-          0.745,
-          0.758
+          0.932,
+          0.8577,
+          0.724
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "MAIN_043",
       "category": "main",
       "sizeMeters": [
-        0.37303,
-        0.20883,
-        0.29627
+        0.37863,
+        0.20391,
+        0.22509
       ],
-      "triangles": 162,
-      "geometrySHA256": "02c987f893148079f3851c34c3618284dc7fa52d845f55c712652600b450b9e1",
+      "triangles": 304,
+      "geometrySHA256": "3becae27759008fa48b5d7853558a429d9fb7debeb5bb56f67304275dbe8f759",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7271,
-        "shoulder20": 0.8112,
-        "tip06": 0.6952,
-        "roughness": 0.00979,
+        "end12": 0.6324,
+        "shoulder20": 0.8068,
+        "tip06": 0.4927,
+        "roughness": 0.0054,
         "profile": [
-          0.6952,
-          0.7759,
-          0.8556,
-          0.9638,
-          1.1228,
+          0.7506,
+          0.883,
+          0.9559,
           1.0,
-          0.8112,
-          0.7271,
-          0.7217
+          1.0045,
+          0.9982,
+          0.8068,
+          0.6324,
+          0.4927
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "trapezoid"
     },
     {
       "name": "MAIN_044",
       "category": "main",
       "sizeMeters": [
-        0.27746,
-        0.15788,
-        0.19233
+        0.34406,
+        0.23874,
+        0.29048
       ],
-      "triangles": 162,
-      "geometrySHA256": "715f8deb5052b12c942191c9e0f5fe0788cb365b0d58e636bf5bbc4e6751ff17",
+      "triangles": 432,
+      "geometrySHA256": "a56ad4861353a7ac544576bbf277f89f21f70ae4c3179d84fd62ae610427dc29",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7401,
-        "shoulder20": 0.7914,
-        "tip06": 0.7131,
-        "roughness": 0.00536,
+        "end12": 0.6246,
+        "shoulder20": 0.8306,
+        "tip06": 0.4352,
+        "roughness": 0.00232,
         "profile": [
-          0.7131,
-          0.7525,
-          0.8456,
+          0.4352,
+          0.6246,
+          0.8306,
           1.0,
-          1.031,
-          0.9149,
-          0.7914,
-          0.7401,
-          0.7285
+          1.0021,
+          0.9703,
+          0.835,
+          0.6867,
+          0.5124
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "short-wide"
     },
     {
       "name": "MAIN_045",
       "category": "main",
       "sizeMeters": [
-        0.26744,
-        0.12514,
-        0.15332
+        0.26053,
+        0.15724,
+        0.22588
       ],
-      "triangles": 162,
-      "geometrySHA256": "2fd883595ca3716cd105f1afd2271dd2b222a5569bc556d3d408f63794419c10",
+      "triangles": 352,
+      "geometrySHA256": "98e1b6611c4ae599e14f40836e4c4bed43fbeb614fc1ba9ff12963b3498fe829",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.798,
-        "shoulder20": 0.8332,
-        "tip06": 0.7452,
-        "roughness": 0.00807,
+        "end12": 0.4949,
+        "shoulder20": 0.7453,
+        "tip06": 0.2932,
+        "roughness": 0.01161,
         "profile": [
-          0.7452,
-          0.8224,
-          0.8748,
-          0.9661,
-          1.1888,
+          0.3165,
+          0.5004,
+          0.7455,
+          0.9629,
+          1.0096,
           1.0,
-          0.8332,
-          0.798,
-          0.7866
+          0.7453,
+          0.4949,
+          0.2932
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "broken-facet"
     },
     {
       "name": "MAIN_046",
       "category": "main",
       "sizeMeters": [
-        0.30866,
-        0.16353,
-        0.23481
+        0.21294,
+        0.12705,
+        0.15003
       ],
-      "triangles": 162,
-      "geometrySHA256": "768aab83ac853cc035ff2f5a890f40fc6daa92c1d5129355247eb773f072bb29",
+      "triangles": 368,
+      "geometrySHA256": "e7022f517a5f0bcc2a6834954384a945264a37a331f909fdfd9136eb7426d4c8",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7493,
-        "shoulder20": 0.838,
-        "tip06": 0.6999,
-        "roughness": 0.00988,
+        "end12": 0.5874,
+        "shoulder20": 0.7854,
+        "tip06": 0.3256,
+        "roughness": 0.00647,
         "profile": [
-          0.6999,
-          0.7493,
-          0.838,
-          0.988,
-          1.0809,
+          0.3256,
+          0.6219,
+          0.8679,
           1.0,
-          0.8469,
-          0.7835,
-          0.7397
+          1.0377,
+          0.9413,
+          0.7854,
+          0.5874,
+          0.3841
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "asymmetric"
     },
     {
       "name": "MAIN_047",
       "category": "main",
       "sizeMeters": [
-        0.39505,
-        0.20284,
-        0.27094
+        0.29277,
+        0.24457,
+        0.25022
       ],
-      "triangles": 162,
-      "geometrySHA256": "78de9fc84f3278a2087d5feda269e47ea7db7a113dfe8429aef60e003473ad6e",
+      "triangles": 256,
+      "geometrySHA256": "ffb0f25ec1e0cc4933a03af3bc5767ca5bcfc5885fa0c7c4ae7a8ddb018a0af0",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8064,
-        "shoulder20": 0.8583,
-        "tip06": 0.7459,
-        "roughness": 0.00702,
+        "end12": 0.6221,
+        "shoulder20": 0.821,
+        "tip06": 0.3961,
+        "roughness": 0.01004,
         "profile": [
-          0.7459,
-          0.8064,
-          0.8995,
-          0.9595,
-          1.0704,
+          0.3961,
+          0.6221,
+          0.821,
+          0.9793,
           1.0,
-          0.8583,
-          0.8204,
-          0.7542
+          1.0258,
+          0.976,
+          0.8337,
+          0.6383
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_048",
       "category": "main",
       "sizeMeters": [
-        0.25291,
-        0.16087,
-        0.21494
+        0.39655,
+        0.1802,
+        0.31458
       ],
-      "triangles": 162,
-      "geometrySHA256": "7a6a4a64f485314b7e839977da292f0a4c8b750268f1ad370d11d2363b87c768",
+      "triangles": 256,
+      "geometrySHA256": "d02a8735567dc26e1c66f8369e14f80ecdf91023e5e940d2bb3c2d4461d6d0e0",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8012,
-        "shoulder20": 0.8598,
-        "tip06": 0.7467,
-        "roughness": 0.0055,
+        "end12": 0.781,
+        "shoulder20": 0.8875,
+        "tip06": 0.6153,
+        "roughness": 0.00164,
         "profile": [
-          0.7467,
-          0.8012,
-          0.8598,
-          0.9709,
-          1.071,
+          0.6153,
+          0.781,
+          0.8875,
+          0.9609,
           1.0,
-          0.8866,
-          0.8375,
-          0.7787
+          1.0052,
+          0.9091,
+          0.7931,
+          0.6868
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "MAIN_049",
       "category": "main",
       "sizeMeters": [
-        0.26673,
-        0.16591,
-        0.23452
+        0.39726,
+        0.24289,
+        0.29521
       ],
-      "triangles": 162,
-      "geometrySHA256": "8c329f29e5474987d84cdb6d295e7352de2b666aed87285b0d891dc95833e62e",
+      "triangles": 304,
+      "geometrySHA256": "6f22cc9cee18c3937bd9a62b51d2d53a84774676bb2d6893ef4cd1a57431ef95",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8107,
-        "shoulder20": 0.8551,
-        "tip06": 0.7508,
-        "roughness": 0.01032,
+        "end12": 0.5563,
+        "shoulder20": 0.7113,
+        "tip06": 0.4458,
+        "roughness": 0.01164,
         "profile": [
-          0.7508,
-          0.8107,
-          0.8551,
-          0.9097,
-          1.1254,
+          0.4458,
+          0.5563,
+          0.7113,
+          0.9731,
+          1.0571,
           1.0,
-          0.8742,
-          0.8379,
-          0.7627
+          0.8792,
+          0.6947,
+          0.4963
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "trapezoid"
     },
     {
       "name": "MAIN_050",
       "category": "main",
       "sizeMeters": [
-        0.24033,
-        0.15395,
-        0.15115
+        0.30906,
+        0.23105,
+        0.26332
       ],
-      "triangles": 162,
-      "geometrySHA256": "c913b710ae892cf885f38f032b2e7d2657db9873331a97530b0e525dd4b88668",
+      "triangles": 432,
+      "geometrySHA256": "987667c6b904362a5295a215cac5fd26a95e8b6e908a9d873632c86ebccfa857",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7882,
-        "shoulder20": 0.8628,
-        "tip06": 0.72,
-        "roughness": 0.00845,
+        "end12": 0.5459,
+        "shoulder20": 0.7701,
+        "tip06": 0.317,
+        "roughness": 0.00677,
         "profile": [
-          0.7327,
-          0.7882,
-          0.8628,
-          0.9393,
-          1.1374,
+          0.5154,
+          0.7642,
+          0.8942,
           1.0,
-          0.8799,
-          0.8031,
-          0.72
+          1.0334,
+          0.9859,
+          0.7701,
+          0.5459,
+          0.317
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "short-wide"
     },
     {
       "name": "MAIN_051",
       "category": "main",
       "sizeMeters": [
-        0.23226,
-        0.14366,
-        0.16595
+        0.33422,
+        0.18337,
+        0.28458
       ],
-      "triangles": 162,
-      "geometrySHA256": "77cfdb0b8df279e3c3bd4fc25f27f68c33dae93a3be5769012c3553b218425b1",
+      "triangles": 416,
+      "geometrySHA256": "2f6287a5ad28cf71b4e306dbf14572aee7e4ff451e52d5e52e572b141a76f39b",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7759,
-        "shoulder20": 0.8613,
-        "tip06": 0.7325,
-        "roughness": 0.00548,
+        "end12": 0.4873,
+        "shoulder20": 0.6621,
+        "tip06": 0.3211,
+        "roughness": 0.00994,
         "profile": [
-          0.7325,
-          0.7759,
-          0.8819,
+          0.3211,
+          0.4873,
+          0.6621,
+          0.8792,
           1.0,
-          1.0648,
-          0.948,
-          0.8613,
-          0.7946,
-          0.7527
+          1.0463,
+          0.869,
+          0.6803,
+          0.4933
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "broken-facet"
     },
     {
       "name": "MAIN_052",
       "category": "main",
       "sizeMeters": [
-        0.22649,
-        0.14946,
-        0.12772
+        0.38248,
+        0.22695,
+        0.2467
       ],
-      "triangles": 162,
-      "geometrySHA256": "0218b64d3fe9b5802948908f34cf85920cbda84a98dd594b14af7e7611cd49bc",
+      "triangles": 304,
+      "geometrySHA256": "c4d4a0ddf6b191edd9391073cff94485047d346da779dec0308697a71c4bc07f",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8258,
-        "shoulder20": 0.8529,
-        "tip06": 0.7575,
-        "roughness": 0.00707,
+        "end12": 0.6014,
+        "shoulder20": 0.7347,
+        "tip06": 0.4742,
+        "roughness": 0.00848,
         "profile": [
-          0.7695,
-          0.8526,
-          0.8828,
-          0.9619,
-          1.1722,
+          0.4742,
+          0.6014,
+          0.7347,
+          0.938,
+          1.0275,
           1.0,
-          0.8529,
-          0.8258,
-          0.7575
+          0.8875,
+          0.7725,
+          0.6835
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "asymmetric"
     },
     {
       "name": "MAIN_053",
       "category": "main",
       "sizeMeters": [
-        0.36598,
-        0.17835,
-        0.26988
+        0.35248,
+        0.29254,
+        0.29463
       ],
-      "triangles": 162,
-      "geometrySHA256": "1a3089c6a1b25768278867c159a68fa1ef475ad4a81017d44d1a14742bdc3ba9",
+      "triangles": 224,
+      "geometrySHA256": "58f74c27706ce2dd698935771e4bd1bd4c9ba8ae00d6a19fca4bdda5d43ffc05",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7494,
-        "shoulder20": 0.8575,
-        "tip06": 0.7006,
-        "roughness": 0.00991,
+        "end12": 0.7107,
+        "shoulder20": 0.8675,
+        "tip06": 0.5246,
+        "roughness": 0.01305,
         "profile": [
-          0.7006,
-          0.7494,
-          0.8575,
-          0.9953,
-          1.0819,
+          0.6456,
+          0.811,
+          0.9142,
+          0.9836,
           1.0,
-          0.8938,
-          0.8147,
-          0.7697
+          1.0009,
+          0.8675,
+          0.7107,
+          0.5246
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_054",
       "category": "main",
       "sizeMeters": [
-        0.35035,
-        0.23479,
-        0.30193
+        0.32991,
+        0.15906,
+        0.23581
       ],
-      "triangles": 162,
-      "geometrySHA256": "d8b99e049a1ce15464bd875f5ce7bb68f2871b86d8893c6ef9f5e9866ad99924",
+      "triangles": 304,
+      "geometrySHA256": "0bb62b053e5a169510d810026d8055664960e168f5f5096bbaac62524a1d2ff8",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7767,
-        "shoulder20": 0.847,
-        "tip06": 0.7312,
-        "roughness": 0.01415,
+        "end12": 0.5597,
+        "shoulder20": 0.8207,
+        "tip06": 0.3142,
+        "roughness": 0.00876,
         "profile": [
-          0.7925,
-          0.8377,
-          0.8665,
+          0.3142,
+          0.5597,
+          0.8207,
+          0.985,
+          1.0194,
           1.0,
-          1.2117,
-          0.968,
-          0.847,
-          0.7767,
-          0.7312
+          0.8899,
+          0.7353,
+          0.5473
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "MAIN_055",
       "category": "main",
       "sizeMeters": [
-        0.39768,
-        0.24532,
-        0.2316
+        0.39626,
+        0.21647,
+        0.25453
       ],
-      "triangles": 162,
-      "geometrySHA256": "cbae6d3a1523279a217570bbd13b2a93f9d7a452f6c03f84b469afb6bdfc3e27",
+      "triangles": 272,
+      "geometrySHA256": "ecbc675663e764e773f5669c7ff50704a0550a69a790009ff34d4e5c0b1028e4",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8041,
-        "shoulder20": 0.8538,
-        "tip06": 0.7447,
-        "roughness": 0.00814,
+        "end12": 0.6445,
+        "shoulder20": 0.751,
+        "tip06": 0.4023,
+        "roughness": 0.00863,
         "profile": [
-          0.7508,
-          0.812,
-          0.858,
-          0.9922,
-          1.0663,
+          0.4023,
+          0.6445,
+          0.9004,
+          1.0236,
           1.0,
-          0.8538,
-          0.8041,
-          0.7447
+          0.9107,
+          0.751,
+          0.673,
+          0.5875
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "trapezoid"
     },
     {
       "name": "MAIN_056",
       "category": "main",
       "sizeMeters": [
-        0.36047,
-        0.19128,
-        0.31482
+        0.39618,
+        0.28559,
+        0.32479
       ],
-      "triangles": 162,
-      "geometrySHA256": "aae9907535b84fda9794eabd5a52fa9b750fe40d76a3da54ddbafd43f8befed4",
+      "triangles": 336,
+      "geometrySHA256": "e61629230af5965bcd2fa44bcc19b338960ebfd0fec2987c5e8f295a98091495",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.713,
-        "shoulder20": 0.8202,
-        "tip06": 0.7066,
-        "roughness": 0.0106,
+        "end12": 0.6289,
+        "shoulder20": 0.8263,
+        "tip06": 0.3383,
+        "roughness": 0.01035,
         "profile": [
-          0.7193,
-          0.713,
-          0.8202,
-          0.9518,
-          1.1596,
+          0.6517,
+          0.8766,
+          0.9534,
           1.0,
-          0.8409,
-          0.7338,
-          0.7066
+          1.0216,
+          0.9811,
+          0.8263,
+          0.6289,
+          0.3383
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "short-wide"
     },
     {
       "name": "MAIN_057",
       "category": "main",
       "sizeMeters": [
-        0.20449,
-        0.14082,
-        0.17944
+        0.25429,
+        0.14404,
+        0.21157
       ],
-      "triangles": 162,
-      "geometrySHA256": "8a833283ee9d24250f6de3934a6f92e9b104f289b680a4cce9987920b00d614a",
+      "triangles": 432,
+      "geometrySHA256": "39d9a328b6c2a42bc04ac94a8155db683c1997cac512c13c8b06501d4244a298",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7319,
-        "shoulder20": 0.8229,
-        "tip06": 0.7292,
-        "roughness": 0.00689,
+        "end12": 0.45,
+        "shoulder20": 0.7231,
+        "tip06": 0.2377,
+        "roughness": 0.00888,
         "profile": [
-          0.746,
-          0.7319,
-          0.8229,
-          0.9889,
-          1.1518,
+          0.2377,
+          0.45,
+          0.7231,
+          0.9689,
+          1.0193,
           1.0,
-          0.8333,
-          0.7631,
-          0.7292
+          0.7768,
+          0.5031,
+          0.2672
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "broken-facet"
     },
     {
       "name": "MAIN_058",
       "category": "main",
       "sizeMeters": [
-        0.26104,
-        0.17372,
-        0.2295
+        0.37048,
+        0.2292,
+        0.28268
       ],
-      "triangles": 162,
-      "geometrySHA256": "9408734919525ce707cb040df5ba5f66ff82aed0d6a8e381dbf76f8141b66318",
+      "triangles": 320,
+      "geometrySHA256": "c2ee5c0d692f4dd339a23ff001cf16cf29824ea0229c1e032701d41e973a3228",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7735,
-        "shoulder20": 0.8492,
-        "tip06": 0.7491,
-        "roughness": 0.0082,
+        "end12": 0.5483,
+        "shoulder20": 0.7615,
+        "tip06": 0.3692,
+        "roughness": 0.00833,
         "profile": [
-          0.7586,
-          0.7735,
-          0.884,
+          0.3692,
+          0.5483,
+          0.7615,
           1.0,
-          1.0796,
-          0.98,
-          0.8492,
-          0.8062,
-          0.7491
+          1.0285,
+          0.952,
+          0.7976,
+          0.6835,
+          0.5909
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "asymmetric"
     },
     {
       "name": "MAIN_059",
       "category": "main",
       "sizeMeters": [
-        0.34699,
-        0.15541,
-        0.30025
+        0.21498,
+        0.17263,
+        0.17464
       ],
-      "triangles": 162,
-      "geometrySHA256": "fdb4e02bed06d74ebfbc7238df7fd63f092cff9d519371b364c57cc545103250",
+      "triangles": 288,
+      "geometrySHA256": "9e6ec55b4b4a10b97fc0a956650d8feef6d638168b10370ce84bad57828eab33",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.8286,
-        "shoulder20": 0.9077,
-        "tip06": 0.7397,
-        "roughness": 0.01002,
+        "end12": 0.7652,
+        "shoulder20": 0.9012,
+        "tip06": 0.494,
+        "roughness": 6e-05,
         "profile": [
-          0.7397,
-          0.8477,
-          0.937,
+          0.7657,
+          0.8975,
+          1.0099,
+          1.0214,
           1.0,
-          1.1487,
-          0.9868,
-          0.9077,
-          0.8286,
-          0.7603
+          0.9784,
+          0.9012,
+          0.7652,
+          0.494
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_060",
       "category": "main",
       "sizeMeters": [
-        0.26848,
-        0.18405,
-        0.19411
+        0.21909,
+        0.10073,
+        0.16776
       ],
-      "triangles": 162,
-      "geometrySHA256": "0b31eac8acef7d365e7d60d4b4afd2b87802e6296083c2c255183b35d7755d7c",
+      "triangles": 320,
+      "geometrySHA256": "8ef6bfbbc240065498bc45f9c3ae26affa86150fa6f4a4919a220f4667c8d12d",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7878,
-        "shoulder20": 0.8856,
-        "tip06": 0.7435,
-        "roughness": 0.00513,
+        "end12": 0.6669,
+        "shoulder20": 0.8369,
+        "tip06": 0.476,
+        "roughness": 0.00243,
         "profile": [
-          0.7435,
-          0.7878,
-          0.8998,
+          0.476,
+          0.6669,
+          0.8369,
+          0.997,
+          1.0125,
           1.0,
-          1.1137,
-          0.9751,
-          0.8856,
-          0.8279,
-          0.7439
+          0.9587,
+          0.9104,
+          0.8627
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "MAIN_061",
       "category": "main",
       "sizeMeters": [
-        0.22913,
-        0.14397,
-        0.12915
+        0.36723,
+        0.24566,
+        0.2695
       ],
-      "triangles": 162,
-      "geometrySHA256": "9e170764cca53303971e2324554d08e73ea892a2e05e349aff148ff6e19ee16c",
+      "triangles": 288,
+      "geometrySHA256": "14e7145d247abb1ebce7a5d1e2d5f5b97e45dc2787c0a45416fb6091efcb9fee",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7909,
-        "shoulder20": 0.8482,
-        "tip06": 0.7401,
-        "roughness": 0.0061,
+        "end12": 0.5555,
+        "shoulder20": 0.8487,
+        "tip06": 0.2539,
+        "roughness": 0.01019,
         "profile": [
-          0.7401,
-          0.8144,
-          0.8482,
-          0.9802,
+          0.2539,
+          0.5555,
+          0.8487,
+          1.0157,
           1.0,
-          1.0237,
-          0.866,
-          0.7909,
-          0.7571
+          0.9604,
+          0.8674,
+          0.6918,
+          0.4641
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "trapezoid"
     },
     {
       "name": "MAIN_062",
       "category": "main",
       "sizeMeters": [
-        0.25035,
-        0.1428,
-        0.20405
+        0.27664,
+        0.18968,
+        0.22525
       ],
-      "triangles": 162,
-      "geometrySHA256": "cee871650228d1abc99866ab4e84e05c75af49a6ffb8b2452f5007be93530c44",
+      "triangles": 384,
+      "geometrySHA256": "9da9a784b4b03119335d1b890516c1ed22b2e0a48087151d67f2fdfc6c0bfd05",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7574,
-        "shoulder20": 0.8182,
-        "tip06": 0.7179,
-        "roughness": 0.00631,
+        "end12": 0.6109,
+        "shoulder20": 0.7681,
+        "tip06": 0.4765,
+        "roughness": 0.00776,
         "profile": [
-          0.7179,
-          0.7581,
-          0.8182,
-          0.9193,
-          1.0548,
+          0.486,
+          0.6786,
+          0.8984,
+          1.0109,
           1.0,
-          0.8397,
-          0.7574,
-          0.7253
+          0.9329,
+          0.7681,
+          0.6109,
+          0.4765
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "short-wide"
     },
     {
       "name": "MAIN_063",
       "category": "main",
       "sizeMeters": [
-        0.20303,
-        0.12351,
-        0.15066
+        0.34852,
+        0.19885,
+        0.29658
       ],
-      "triangles": 162,
-      "geometrySHA256": "d54c3d642ff7191b33e6b8a91a61133b28f2ccde98149d534ff407f5b329b670",
+      "triangles": 384,
+      "geometrySHA256": "d7970308a564ba7bb5f7daf36fb53d12b937fac8513734b94d6b4e2aa68e749c",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7762,
-        "shoulder20": 0.8634,
-        "tip06": 0.7048,
-        "roughness": 0.00658,
+        "end12": 0.5166,
+        "shoulder20": 0.7572,
+        "tip06": 0.3066,
+        "roughness": 0.01069,
         "profile": [
-          0.7512,
-          0.819,
-          0.8634,
-          0.9432,
-          1.1083,
+          0.3066,
+          0.5166,
+          0.7615,
           1.0,
-          0.8691,
-          0.7762,
-          0.7048
+          1.0426,
+          0.9585,
+          0.7572,
+          0.6402,
+          0.4598
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "broken-facet"
     },
     {
       "name": "MAIN_064",
       "category": "main",
       "sizeMeters": [
-        0.20761,
-        0.12045,
-        0.12865
+        0.39489,
+        0.19029,
+        0.27889
       ],
-      "triangles": 162,
-      "geometrySHA256": "457bb6e93c5dd5d8be77fe3ff40dd6208b363815f9f1db2808ea7f02151bcc89",
+      "triangles": 352,
+      "geometrySHA256": "0ba2bb2a94190afdc666f727b6b46a214356d16b6f403652f9ef56e7857e9b68",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7425,
-        "shoulder20": 0.8214,
-        "tip06": 0.6744,
-        "roughness": 0.00448,
+        "end12": 0.5351,
+        "shoulder20": 0.701,
+        "tip06": 0.3306,
+        "roughness": 0.01813,
         "profile": [
-          0.6847,
-          0.7425,
-          0.8246,
-          0.952,
-          1.0505,
+          0.3306,
+          0.5351,
+          0.701,
           1.0,
-          0.8214,
-          0.7468,
-          0.6744
+          1.0777,
+          0.986,
+          0.8371,
+          0.7027,
+          0.5939
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "asymmetric"
     },
     {
       "name": "MAIN_065",
       "category": "main",
       "sizeMeters": [
-        0.37833,
-        0.17645,
-        0.32152
+        0.22492,
+        0.17657,
+        0.17955
       ],
-      "triangles": 162,
-      "geometrySHA256": "6b962b1962b34d19d168b6b57a46ce1fdd541a367c9de686a5aac0fa8a97fd95",
+      "triangles": 224,
+      "geometrySHA256": "bb7e20a9101545744af6c3e229930051005db2ffb350145699f2c3d7e3890b60",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7683,
-        "shoulder20": 0.822,
-        "tip06": 0.7159,
-        "roughness": 0.01592,
+        "end12": 0.7096,
+        "shoulder20": 0.8519,
+        "tip06": 0.5514,
+        "roughness": 0.00033,
         "profile": [
-          0.7159,
-          0.8114,
-          0.8617,
+          0.5514,
+          0.7096,
+          0.8804,
+          0.9899,
+          1.0183,
           1.0,
-          1.095,
-          0.917,
-          0.822,
-          0.7683,
-          0.7311
+          0.8519,
+          0.7385,
+          0.6496
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_066",
       "category": "main",
       "sizeMeters": [
-        0.34347,
-        0.17252,
-        0.22086
+        0.25344,
+        0.12327,
+        0.1982
       ],
-      "triangles": 162,
-      "geometrySHA256": "90e7105ffcbe8da7d4b24ca9ce758373365528fc05e799acb8d54106144a55d2",
+      "triangles": 208,
+      "geometrySHA256": "521ca729ea723bd04f0111a55607d77ace9b8bfe127a6e29457db9025d5fa017",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7396,
-        "shoulder20": 0.8017,
-        "tip06": 0.6852,
-        "roughness": 0.00992,
+        "end12": 0.7429,
+        "shoulder20": 0.8599,
+        "tip06": 0.6056,
+        "roughness": 0.00288,
         "profile": [
-          0.6852,
-          0.7396,
-          0.8044,
-          0.9035,
-          1.1128,
+          0.6056,
+          0.7429,
+          0.8599,
+          0.9585,
+          1.0015,
           1.0,
-          0.8017,
-          0.7627,
-          0.7274
+          0.9851,
+          0.9633,
+          0.9372
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "MAIN_067",
       "category": "main",
       "sizeMeters": [
-        0.31555,
-        0.17566,
-        0.26297
+        0.35217,
+        0.22197,
+        0.22514
       ],
-      "triangles": 162,
-      "geometrySHA256": "03ae746f42b949eb781b5e87a0a345e77d5349a71f527a39d7090ab145cedd08",
+      "triangles": 208,
+      "geometrySHA256": "a410a1c0aa52b778283b99cc2e47f3c8776ad6a52b9fd67c2581ed1f0d2fa7b5",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7463,
-        "shoulder20": 0.8236,
-        "tip06": 0.7303,
-        "roughness": 0.00954,
+        "end12": 0.6999,
+        "shoulder20": 0.7989,
+        "tip06": 0.536,
+        "roughness": 0.00672,
         "profile": [
-          0.7303,
-          0.7535,
-          0.8565,
+          0.536,
+          0.819,
+          1.0296,
+          1.0889,
           1.0,
-          1.1541,
-          0.9569,
-          0.8236,
-          0.7463,
-          0.7399
+          0.9044,
+          0.7989,
+          0.6999,
+          0.5541
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "trapezoid"
     },
     {
       "name": "MAIN_068",
       "category": "main",
       "sizeMeters": [
-        0.28616,
-        0.16624,
-        0.17604
+        0.21535,
+        0.17102,
+        0.19534
       ],
-      "triangles": 162,
-      "geometrySHA256": "be79b41e90dd1f3e9f2fb3e83dd6d1699fb15d79c382cab82b2c4e81994cf923",
+      "triangles": 384,
+      "geometrySHA256": "20c34d368387139bc8f9b49010d074120ff7cdf40f689b98c0557f54509942bf",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.782,
-        "shoulder20": 0.8642,
-        "tip06": 0.7288,
-        "roughness": 0.00856,
+        "end12": 0.6126,
+        "shoulder20": 0.7913,
+        "tip06": 0.4515,
+        "roughness": 0.00609,
         "profile": [
-          0.7528,
-          0.782,
-          0.8642,
+          0.4515,
+          0.6126,
+          0.7913,
+          0.9908,
+          1.0462,
           1.0,
-          1.0993,
-          0.9634,
-          0.8689,
-          0.7875,
-          0.7288
+          0.9126,
+          0.8322,
+          0.7125
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "short-wide"
     },
     {
       "name": "MAIN_069",
       "category": "main",
       "sizeMeters": [
-        0.30955,
-        0.14375,
-        0.19873
+        0.39048,
+        0.28966,
+        0.25884
       ],
-      "triangles": 162,
-      "geometrySHA256": "f56f58df81e82bcdf5889d4019023d77de390b84610340e9629912e73e6513ca",
+      "triangles": 432,
+      "geometrySHA256": "488b1f6fa8175c7d83de5edae6fe6ccff097892f15c7c6db1d78bcd1065960b1",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7624,
-        "shoulder20": 0.8266,
-        "tip06": 0.7416,
-        "roughness": 0.00666,
+        "end12": 0.5479,
+        "shoulder20": 0.6883,
+        "tip06": 0.3887,
+        "roughness": 0.01674,
         "profile": [
-          0.7416,
-          0.7624,
-          0.8402,
-          1.0382,
-          0.9929,
+          0.3887,
+          0.5479,
+          0.6883,
+          0.8795,
           1.0,
-          0.8266,
-          0.8003,
-          0.7664
+          1.0716,
+          0.9242,
+          0.7298,
+          0.5107
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "broken-facet"
     },
     {
       "name": "MAIN_070",
       "category": "main",
       "sizeMeters": [
-        0.26055,
-        0.12654,
-        0.19951
+        0.37588,
+        0.19573,
+        0.23679
       ],
-      "triangles": 162,
-      "geometrySHA256": "4aa274940198e9f94d2f0aff7e87e50dfcbf605cc9c42b934b6a59a4821d3279",
+      "triangles": 336,
+      "geometrySHA256": "f83fc288407bc9676c8483c62194b50337a884082195de42de65f280fe2de18a",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.791,
-        "shoulder20": 0.8517,
-        "tip06": 0.7152,
-        "roughness": 0.0075,
+        "end12": 0.7501,
+        "shoulder20": 0.8604,
+        "tip06": 0.439,
+        "roughness": 0.00096,
         "profile": [
-          0.729,
-          0.791,
-          0.8681,
+          0.439,
+          0.822,
+          0.9641,
+          1.0124,
           1.0,
-          1.0925,
-          0.9581,
-          0.8517,
-          0.8055,
-          0.7152
+          0.9551,
+          0.8604,
+          0.7501,
+          0.5646
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "asymmetric"
     },
     {
       "name": "MAIN_071",
       "category": "main",
       "sizeMeters": [
-        0.3726,
-        0.19442,
-        0.26193
+        0.21504,
+        0.1594,
+        0.18054
       ],
-      "triangles": 162,
-      "geometrySHA256": "e310192029d70ef6412a4fa9615e020cb109d1c5c5a832bf86c44799e466db4a",
+      "triangles": 256,
+      "geometrySHA256": "a0bb3e85771f1f60474a3d0230eda831f8b803754517e365aac8190984bbd6ba",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7485,
-        "shoulder20": 0.851,
-        "tip06": 0.696,
-        "roughness": 0.00784,
+        "end12": 0.7494,
+        "shoulder20": 0.8628,
+        "tip06": 0.5661,
+        "roughness": 0.00119,
         "profile": [
-          0.7276,
-          0.77,
-          0.8825,
+          0.6376,
+          0.7494,
+          0.8628,
+          0.9548,
           1.0,
-          1.1014,
-          0.9891,
-          0.851,
-          0.7485,
-          0.696
+          1.0234,
+          1.0167,
+          0.9421,
+          0.5661
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "massive"
     },
     {
       "name": "MAIN_072",
       "category": "main",
       "sizeMeters": [
-        0.22071,
-        0.10622,
-        0.17802
+        0.30846,
+        0.12492,
+        0.2664
       ],
-      "triangles": 162,
-      "geometrySHA256": "c5af526c6de53fdd33689dc258a9656dedd0d4b335be9897c8290fabefd8e5f1",
+      "triangles": 368,
+      "geometrySHA256": "234296a17957214938662ae5748039a79201a71c2b6062dc979e0fe2c63de581",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7734,
-        "shoulder20": 0.8246,
-        "tip06": 0.7091,
-        "roughness": 0.00841,
+        "end12": 0.61,
+        "shoulder20": 0.7267,
+        "tip06": 0.5011,
+        "roughness": 0.0044,
         "profile": [
-          0.7623,
-          0.8168,
-          0.8246,
-          0.9115,
-          1.0789,
+          0.6386,
+          0.7688,
+          0.9096,
+          1.0082,
           1.0,
-          0.866,
-          0.7734,
-          0.7091
+          0.914,
+          0.7267,
+          0.61,
+          0.5011
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "shapeFamily": "flat-bed"
     },
     {
       "name": "CHINKING_001",
       "category": "chinking",
       "sizeMeters": [
-        0.07844,
-        0.05354,
-        0.0537
+        0.15129,
+        0.10326,
+        0.10358
       ],
       "triangles": 40,
-      "geometrySHA256": "ed7e27deb9ed0b99e7994dc99b61381d96ed3830762e05779a055b4cdb030962",
+      "geometrySHA256": "233ab99585f75d4607ca3a65d8ee82a31ea780b5fe16169b57e3abedad48348d",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1811,
         "shoulder20": 0.4767,
         "tip06": 0.0453,
-        "roughness": 0.00558,
+        "roughness": 0.01077,
         "profile": [
           0.0453,
           0.1811,
@@ -2650,18 +2688,18 @@
       "name": "CHINKING_002",
       "category": "chinking",
       "sizeMeters": [
-        0.09875,
-        0.07827,
-        0.06111
+        0.1622,
+        0.12857,
+        0.10038
       ],
       "triangles": 38,
-      "geometrySHA256": "88328bbee31f65bf05b3cfc3f18a7830d0828f60dc485e7d2a8af4d68e36b251",
+      "geometrySHA256": "93a49a519a80ff88dbeaa2428850feaaaffec7a512debb32cb27fa06d1b8779b",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.2233,
         "shoulder20": 0.45,
         "tip06": 0.0607,
-        "roughness": 0.00345,
+        "roughness": 0.00566,
         "profile": [
           0.4017,
           0.8212,
@@ -2683,18 +2721,18 @@
       "name": "CHINKING_003",
       "category": "chinking",
       "sizeMeters": [
-        0.10401,
-        0.06866,
-        0.05944
+        0.1452,
+        0.09585,
+        0.08299
       ],
       "triangles": 38,
-      "geometrySHA256": "37fdd1ff46082eb2fa908d3256d94202ba400d9bff44563977eed456a1931b92",
+      "geometrySHA256": "a90c09dd6fd47cde1b4300ae6d65682a4e22134a1a32198f6c0b9ba4766b486d",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.3476,
         "shoulder20": 0.5773,
         "tip06": 0.1556,
-        "roughness": 0.00564,
+        "roughness": 0.00788,
         "profile": [
           0.2089,
           0.5296,
@@ -2716,18 +2754,18 @@
       "name": "CHINKING_004",
       "category": "chinking",
       "sizeMeters": [
-        0.17019,
-        0.13794,
-        0.11728
+        0.13331,
+        0.10805,
+        0.09186
       ],
       "triangles": 38,
-      "geometrySHA256": "1527ae1c789e031bb013793b0f0741a97ef3afd9deadbf09d628b06bd054ce2b",
+      "geometrySHA256": "0185f7a63527ade25dff9046e48b4515f052b293ee3b4fd43d0a83f70798ce09",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.5302,
         "shoulder20": 0.7197,
         "tip06": 0.3023,
-        "roughness": 0.00378,
+        "roughness": 0.00296,
         "profile": [
           0.5814,
           0.8065,
@@ -2749,18 +2787,18 @@
       "name": "CHINKING_005",
       "category": "chinking",
       "sizeMeters": [
-        0.13174,
-        0.07821,
-        0.07017
+        0.1271,
+        0.07546,
+        0.0677
       ],
       "triangles": 58,
-      "geometrySHA256": "ee016ecda0b959f4996a5ab36dafefec470eeeaa6a2d17fa7d2d45b8b248a6c7",
+      "geometrySHA256": "c815f2410e1598df816f46d849f5e3521afcdfde4296e4f47a33b82f789a4566",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.3181,
         "shoulder20": 0.4515,
         "tip06": 0.1143,
-        "roughness": 0.01164,
+        "roughness": 0.01123,
         "profile": [
           0.1308,
           0.408,
@@ -2782,18 +2820,18 @@
       "name": "CHINKING_006",
       "category": "chinking",
       "sizeMeters": [
-        0.1639,
-        0.14972,
-        0.09155
+        0.11132,
+        0.10169,
+        0.06218
       ],
       "triangles": 40,
-      "geometrySHA256": "cf631abbece51a042f4c8e2926afbb3c1f9a9c6eb9a8affc782b7d85f8bde4e7",
+      "geometrySHA256": "300dabc6d7d86b8f13358efd6b5741c95f39dd22d7d3c5d2cfc205e91ad03915",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.5892,
         "shoulder20": 0.7357,
         "tip06": 0.442,
-        "roughness": 0.01095,
+        "roughness": 0.00744,
         "profile": [
           0.4597,
           0.6703,
@@ -2815,18 +2853,18 @@
       "name": "CHINKING_007",
       "category": "chinking",
       "sizeMeters": [
-        0.11681,
-        0.07001,
-        0.06327
+        0.06215,
+        0.03725,
+        0.03366
       ],
       "triangles": 40,
-      "geometrySHA256": "b218f461af5f15b4870600335b5b0951dfec3369a661a7be7a41ecaf7a54c1aa",
+      "geometrySHA256": "d2e7846c4d8c3471edd533203fb40f2da1e945d0d40360b69c004468a3854fcb",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1662,
         "shoulder20": 0.4093,
         "tip06": 0.0517,
-        "roughness": 0.00679,
+        "roughness": 0.00361,
         "profile": [
           0.0517,
           0.1662,
@@ -2848,18 +2886,18 @@
       "name": "CHINKING_008",
       "category": "chinking",
       "sizeMeters": [
-        0.13662,
-        0.09947,
-        0.06985
+        0.13977,
+        0.10176,
+        0.07146
       ],
       "triangles": 78,
-      "geometrySHA256": "e6635a6076677eb30170f03837765f742b602943ddcf8f0905bb0d99e169b3b8",
+      "geometrySHA256": "8d0c0cf22597a5662e735455a35f561027e945b6f2cee791b186340d6bc74fc6",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.2432,
         "shoulder20": 0.6719,
         "tip06": 0.08,
-        "roughness": 0.00657,
+        "roughness": 0.00672,
         "profile": [
           0.2775,
           0.4873,
@@ -2881,18 +2919,18 @@
       "name": "CHINKING_009",
       "category": "chinking",
       "sizeMeters": [
-        0.11674,
-        0.07165,
-        0.07333
+        0.09839,
+        0.06038,
+        0.0618
       ],
       "triangles": 40,
-      "geometrySHA256": "e762fe59fd19bb144a555e71e0eb33473cc496624fc543818792c704c301e4ee",
+      "geometrySHA256": "6a63a327b05f52265639dde794e391148aa38890405780bc8729757f3e5b4cb0",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1599,
         "shoulder20": 0.348,
         "tip06": 0.0611,
-        "roughness": 0.00758,
+        "roughness": 0.00639,
         "profile": [
           0.1052,
           0.2697,
@@ -2914,18 +2952,18 @@
       "name": "CHINKING_010",
       "category": "chinking",
       "sizeMeters": [
-        0.06275,
-        0.05334,
-        0.03655
+        0.11758,
+        0.09996,
+        0.06849
       ],
       "triangles": 40,
-      "geometrySHA256": "d24c4ad495ae001a2c527f2e6410d7b782fa17959f7fcce6b22adbcec508cfdc",
+      "geometrySHA256": "bcf1b178ebc1a7d5a7b38314c6a8f2e0cac3ae7dc38702b3972f8b4b87362372",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.2325,
         "shoulder20": 0.4747,
         "tip06": 0.0664,
-        "roughness": 0.0044,
+        "roughness": 0.00824,
         "profile": [
           0.1593,
           0.4507,
@@ -2947,18 +2985,18 @@
       "name": "CHINKING_011",
       "category": "chinking",
       "sizeMeters": [
-        0.11963,
-        0.06192,
-        0.05396
+        0.12172,
+        0.06301,
+        0.05491
       ],
       "triangles": 66,
-      "geometrySHA256": "6216cfdee3696f81c013f561d5326a27570508da401c01c22770c1a93b98f971",
+      "geometrySHA256": "832df3dfbbadd8ffa0733bf35c2d30f762a7206941a1383141e7aae4b07d0452",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1589,
         "shoulder20": 0.3568,
         "tip06": 0.0505,
-        "roughness": 0.00856,
+        "roughness": 0.00871,
         "profile": [
           0.1394,
           0.435,
@@ -2980,18 +3018,18 @@
       "name": "CHINKING_012",
       "category": "chinking",
       "sizeMeters": [
-        0.15497,
-        0.12256,
-        0.10256
+        0.17759,
+        0.14045,
+        0.11753
       ],
       "triangles": 40,
-      "geometrySHA256": "6891677971077e862e270ac27dc938b4bb010f19e8b4f376a99ed9370b43e925",
+      "geometrySHA256": "9c4312f9cb7a81fed36669b66acb8c531f7aca8c3321aad0ebd23f9ecfff494d",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.4471,
         "shoulder20": 0.7587,
         "tip06": 0.1882,
-        "roughness": 0.00574,
+        "roughness": 0.00658,
         "profile": [
           0.2342,
           0.7984,
@@ -3014,27 +3052,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.0,
-        0.20181,
-        0.30487
+        0.18549,
+        0.34741
       ],
       "triangles": 408,
-      "geometrySHA256": "ab53b5354bcd98d66a9129d08e97e11824d7b7a6061b417c90719a4ecf6b9719",
+      "geometrySHA256": "983cdbde349274f634b3b45b729c6fce61e7315cab6f21273bd4006c4ffa0834",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9895,
-        "shoulder20": 0.984,
-        "tip06": 1.0021,
-        "roughness": 0.00778,
+        "end12": 0.9764,
+        "shoulder20": 0.9671,
+        "tip06": 0.9835,
+        "roughness": 0.0053,
         "profile": [
-          1.0021,
-          0.9895,
-          0.984,
+          0.9899,
+          0.9764,
+          0.9888,
           1.0,
-          1.0264,
-          0.9699,
-          1.0163,
-          1.0289,
-          1.019
+          1.0096,
+          0.978,
+          0.9671,
+          0.9959,
+          0.9835
         ]
       },
       "source": "generated"
@@ -3044,27 +3082,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.1,
-        0.19191,
-        0.34283
+        0.20898,
+        0.30207
       ],
       "triangles": 408,
-      "geometrySHA256": "931396bdb75d6c5ed7367bd4ec3baaec5162902f7835ac043544d9580e1d68bb",
+      "geometrySHA256": "f2e2383d827cf1d68eca867051cb70d5155456b8d9547094ed59598fc19c55d3",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0046,
-        "shoulder20": 0.9844,
-        "tip06": 0.9651,
-        "roughness": 0.005,
+        "end12": 0.9481,
+        "shoulder20": 0.9719,
+        "tip06": 0.9911,
+        "roughness": 0.00556,
         "profile": [
-          1.0074,
-          1.0279,
-          0.9844,
+          0.9933,
+          0.9934,
+          0.9792,
           1.0,
-          0.9736,
-          1.0329,
-          1.0544,
-          1.0046,
-          0.9651
+          1.0071,
+          0.9704,
+          0.9719,
+          0.9481,
+          0.9911
         ]
       },
       "source": "generated"
@@ -3074,27 +3112,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.2,
-        0.18692,
-        0.33375
+        0.19458,
+        0.31373
       ],
       "triangles": 408,
-      "geometrySHA256": "ed8e4464b6e31a82e5dbc850c8217645f867b03f4b4b86bc3fdd28b335d44b15",
+      "geometrySHA256": "5a244e2fb75d72eb83a74689ada9ea8f823b4474320c87565a2cfd8c5d76534a",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.992,
-        "shoulder20": 0.9813,
-        "tip06": 0.9699,
-        "roughness": 0.00757,
+        "end12": 0.9962,
+        "shoulder20": 0.9907,
+        "tip06": 0.9718,
+        "roughness": 0.00773,
         "profile": [
-          0.9699,
-          0.992,
-          0.9813,
-          1.0227,
+          0.9957,
+          1.0322,
+          1.0118,
+          0.9949,
           1.0,
-          0.9994,
-          0.9899,
-          1.0012,
-          0.9885
+          1.0289,
+          0.9907,
+          0.9962,
+          0.9718
         ]
       },
       "source": "generated"
@@ -3104,27 +3142,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.3,
-        0.19787,
-        0.33329
+        0.18486,
+        0.34411
       ],
       "triangles": 408,
-      "geometrySHA256": "930bb2650634cab8ee3c0b67ec31672b4a8366f5129692c5edc85c66dbe795c0",
+      "geometrySHA256": "12d9415a0f58f5663296403ff8dc7e47b47f19142c76e70d5ab83af51b702055",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0077,
-        "shoulder20": 1.0029,
-        "tip06": 1.0278,
-        "roughness": 0.00691,
+        "end12": 0.9827,
+        "shoulder20": 0.9984,
+        "tip06": 0.976,
+        "roughness": 0.00714,
         "profile": [
-          1.0278,
-          1.0178,
-          1.0093,
-          0.9962,
-          1.0043,
+          0.986,
+          0.9827,
+          0.9984,
+          1.0268,
+          0.9981,
           1.0,
-          1.0029,
-          1.0077,
-          1.0513
+          1.0178,
+          1.0192,
+          0.976
         ]
       },
       "source": "generated"
@@ -3134,27 +3172,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.4,
-        0.18302,
-        0.31108
+        0.20908,
+        0.33006
       ],
       "triangles": 408,
-      "geometrySHA256": "e43fe70700962259d1f43768206136eab3795af1313a07a6e4fb20239c290a91",
+      "geometrySHA256": "a9e00573fb372806ed51bd5b1dc0759f8ec7d429c4fdd5414470f027d36d2f17",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9497,
-        "shoulder20": 0.9719,
-        "tip06": 0.9735,
-        "roughness": 0.00648,
+        "end12": 0.9971,
+        "shoulder20": 0.997,
+        "tip06": 1.0129,
+        "roughness": 0.00615,
         "profile": [
-          1.0059,
-          0.9855,
-          0.9719,
-          0.9703,
+          1.0308,
+          1.0133,
+          1.028,
+          0.9814,
+          1.0122,
           1.0,
-          1.0183,
-          0.9996,
-          0.9497,
-          0.9735
+          0.997,
+          0.9971,
+          1.0129
         ]
       },
       "source": "generated"
@@ -3164,27 +3202,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.5,
-        0.18633,
-        0.30224
+        0.18996,
+        0.31464
       ],
       "triangles": 408,
-      "geometrySHA256": "5b95b4397bb68bdc49bccaa0386eee2d1d33a47aca96b46fcab3552372acc4fd",
+      "geometrySHA256": "39917758dda6794b017132f57491111351b9fc56975368cd2c7f5d7f035ebe40",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0591,
-        "shoulder20": 1.0131,
-        "tip06": 1.0037,
-        "roughness": 0.00746,
+        "end12": 1.0042,
+        "shoulder20": 0.9853,
+        "tip06": 1.008,
+        "roughness": 0.00538,
         "profile": [
-          1.0037,
-          1.0591,
-          1.0635,
-          1.0248,
-          0.9898,
+          1.008,
+          1.0042,
+          0.9853,
+          1.0042,
           1.0,
-          1.0131,
-          1.0652,
-          1.0272
+          0.988,
+          0.9937,
+          1.0095,
+          1.0418
         ]
       },
       "source": "generated"
