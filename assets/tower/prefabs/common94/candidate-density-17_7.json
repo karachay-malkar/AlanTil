@@ -21,9 +21,9 @@
     {
       "section": "2x2x2",
       "convexUpperBound": {
-        "density": 0.54138,
-        "overlapFraction": 0.02213,
-        "stones": 126,
+        "density": 0.539,
+        "overlapFraction": 0.01237,
+        "stones": 114,
         "samples": 8000,
         "metric": "convex-upper-bound"
       },
