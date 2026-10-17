@@ -1,5 +1,5 @@
 {
-  "version": "17.7-reference-2x2x2.pilot1",
+  "version": "17.7-reference-2x2x2.pilot2",
   "sectionId": "2x2x2",
   "variant": 0,
   "dimensionsMeters": [
@@ -14,8 +14,8 @@
   "coarse": 15,
   "horizontallyElongated": 11,
   "horizontalShare": 0.73333,
-  "chinking": 85,
-  "placements": 100,
+  "chinking": 95,
+  "placements": 110,
   "voxelConvexDensityUpperBound": 0.28063,
   "beforeViews": [
     {
@@ -72,5 +72,46 @@
   "visualGapProof": "convex-hull voxel PROXY; cannot certify real triangle geometry",
   "requiresHumanReview": true,
   "attempts": 113,
-  "repairedSourceCoarse": 0
+  "repairedSourceCoarse": 0,
+  "rayFill": {
+    "accepted": 10,
+    "trials": 11,
+    "samples": 64,
+    "initial": [
+      {
+        "coverage": 0.961829,
+        "gapPixels": 101,
+        "largestGapPixels": 21
+      },
+      {
+        "coverage": 0.987624,
+        "gapPixels": 35,
+        "largestGapPixels": 14
+      },
+      {
+        "coverage": 0.989213,
+        "gapPixels": 27,
+        "largestGapPixels": 7
+      }
+    ],
+    "final": [
+      {
+        "coverage": 0.997354,
+        "gapPixels": 7,
+        "largestGapPixels": 2
+      },
+      {
+        "coverage": 0.997878,
+        "gapPixels": 6,
+        "largestGapPixels": 2
+      },
+      {
+        "coverage": 0.998801,
+        "gapPixels": 3,
+        "largestGapPixels": 1
+      }
+    ],
+    "method": "actual original GLB triangle ray tests",
+    "stillNeedsFinalWholeSceneReraycast": true
+  }
 }
