@@ -195,13 +195,13 @@ def main():
     pack['variants']['2x2x2'][0]['rocks']=len(rows)
     pack['variants']['2x2x2'][0]['sha256']=hashlib.sha256(
         json.dumps(rows,separators=(',',':')).encode()).hexdigest()
-    quality.update(version=pack['version'],placements=len(rows),
-                   chinking=quality['chinking']+accepted,
-                   'rayFill':{'accepted':accepted,'trials':attempted,'samples':args.samples,
-                              'initial':initial_report,'final':new_report,
-                              'method':'actual original GLB triangle ray tests',
-                              'stillNeedsFinalWholeSceneReraycast':True},
-                   'requiresHumanReview':True)
+    quality.update({'version':pack['version'],'placements':len(rows),
+                    'chinking':quality['chinking']+accepted,
+                    'rayFill':{'accepted':accepted,'trials':attempted,'samples':args.samples,
+                               'initial':initial_report,'final':new_report,
+                               'method':'actual original GLB triangle ray tests',
+                               'stillNeedsFinalWholeSceneReraycast':True},
+                    'requiresHumanReview':True})
     for path,record in [('reference-2x2x2.json',pack),('reference-2x2x2-quality.json',quality)]:
         (DIR/path).write_text(json.dumps(record,ensure_ascii=False,indent=2)+'\n')
     print('ACTUAL_THROUGH_GAP_INFILL',json.dumps(quality['rayFill']),flush=True)
