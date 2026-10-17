@@ -5,7 +5,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {KTX2Loader} from '../../vendor/three/addons/loaders/KTX2Loader.js';
 
-export const ROCK_SURFACE_VERSION='balkaria-stone-v2.1-ktx2.1';
+export const ROCK_SURFACE_VERSION='balkaria-stone-v2.1-ktx2.2';
 const root='/assets/tower/materials/balkaria-stone-v2.1/';
 const cache=new WeakMap();
 const names=['BaseColor','Normal_OpenGL','ORM'];
@@ -48,9 +48,12 @@ export function getRockSurface(renderer){
    return new THREE.MeshStandardMaterial({
     name:'AlanTil BalkariaStone v2.1 '+encoding,
     map,normalMap,
-    aoMap:orm,aoMapIntensity:.8,
+    // The ORM R channel is ambient occlusion; its values must not
+    // blacken entire stones on mobile GPUs with compressed textures.
+    // Keep the authored albedo/normal/roughness, but disable AO until
+    // the packed R channel can be validated across Android GPUs.
     roughnessMap:orm,roughness:1,
-    metalnessMap:orm,metalness:0,
+    metalness:0,
     normalScale:new THREE.Vector2(.38,.38),
     side:THREE.DoubleSide
    });

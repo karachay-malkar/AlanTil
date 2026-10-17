@@ -16,7 +16,7 @@ import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wil
 import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
 import {COMPACT_STONE_VERSION,isCompactStone} from '../../../packages/tower-game/compact-stone-prefab.mjs';
 import {assembleCompactStoneSection} from './compact-stone-scene.js';
-import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-ktx2.1';
+import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-ktx2.2';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -91,6 +91,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const [source,door]=await Promise.all([loaded.get(file),loaded.get(reference)]);
    const gate=source.scene.clone(true);
    applyGateSurfaces(gate,door.scene,stoneMaterial);
+   // Center the authored geometry inside its logical 2.5 m-high section.
+   // Use a nested wrapper so setPosition() never destroys the offset.
+   gate.updateMatrixWorld(true);
+   const bounds=new THREE.Box3().setFromObject(gate);
+   const targetBottom=-GATE_PREFAB_SPEC.size[1]*CELL/2;
+   gate.position.y+=targetBottom-bounds.min.y;
    container.dataset.gatePbrReady='true';
    return gate;
   }
@@ -105,10 +111,13 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    // Both authored door GLBs have their lowest point at ~-1.0m, whereas
    // a 9-cell (2.25m) prefab must reach -1.125m. Seat BOTH assets together
    // 12.5cm lower; moving only carpentry would break stone/wood contacts.
-   assembled.position.y=-.125;
+   // The offset belongs to the model, not the positioned outer wrapper.
+   // Otherwise setPosition() overwrites it when the section is committed.
+   masonry.position.y=-.125;
    const masonry=stone.scene.clone(true);applyRockSurface(masonry,stoneMaterial);assembled.add(masonry);
    const carpentry=wood.scene.clone(true);
    carpentry.traverse(node=>{if(node.isMesh)node.userData.alantilNonStone=true;});
+   carpentry.position.y=-.125;
    assembled.add(carpentry);
    container.dataset.doorWoodReady='true';
    return assembled;
@@ -166,7 +175,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function clearPrevious(){for(const group of rendered){surface.remove(group);group.traverse(node=>{if(node.isInstancedMesh)node.dispose();});}rendered=[];targets.length=0;}
  function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected&&x.type==='masonry_section');outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}}
  function prepareMesh(model,block){
-  const group=model.clone(true);group.userData.block=block;
+  const group=new THREE.Group();group.add(model.clone(true));group.userData.block=block;
   group.traverse(child=>{if(!child.isMesh)return;
    // Never overwrite the wood, glass and forged iron PBR channels.
    if(block.sectionId!==WINDOW_PREFAB_ID&&block.sectionId!==DOOR_PREFAB_ID){
