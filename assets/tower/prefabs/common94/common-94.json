@@ -10,7 +10,7 @@
   "sourceWallSHA256": "78c2d8643f9814487b73648604ea6b7f90c42d426e1902dbd61325a840395f50",
   "sourceRock36": "source-original-36.glb",
   "sourceRock36SHA256": "159471d32f9d9478ff7225f87a3f27f09473e42d4accf71e3cbaec68dda7caa5",
-  "glbSHA256": "c320070f5bae46494366cbfd0c3c77079c3c7b7c4be344b3b1269249469463be",
+  "glbSHA256": "aecfad440f49f6fbf26f402de0d327b155cf9e1fadcf52b59f3a219fbe97103b",
   "models": [
     {
       "name": "V_01",
@@ -1039,12 +1039,12 @@
       "name": "LINTEL_DOOR",
       "category": "lintel",
       "sizeMeters": [
-        1.71626,
+        1.738,
         0.245,
         0.489
       ],
       "triangles": 5248,
-      "geometrySHA256": "652ad0200768d15a653467732b8b2e78358dc07c3cd160e14ba4808f30bfe38d"
+      "geometrySHA256": "36e32a8932486001362ea8ab10fa7a4f7fca2524d4e7d9bc6fcf47ce6121e5b5"
     }
   ]
 }
