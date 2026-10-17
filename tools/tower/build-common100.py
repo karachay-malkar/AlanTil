@@ -17,13 +17,13 @@ from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 from common100_quality import quality, violations
 from common100_faceted import build_faceted_stone, FAMILIES
-from common100_lintels import build_rugged_lintel, STYLES as LINTEL_STYLES
+from common100_lintels import build_rugged_lintel, STYLES as LINTEL_STYLES, ENDCAP_DESIGNS
 
 ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb"
 EXPECTED_GATE_SHA256 = "37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51"
 OUTPUT = ROOT / "assets/tower/prefabs/common100"
-VERSION = "17.7-common100.6"
+VERSION = "17.7-common100.7"
 TARGETS = {"main": 72, "large": 10, "chinking": 12, "lintel": 6}
 SEED = 170017
 MATERIAL = PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR", baseColorFactor=[193, 176, 146, 255],
@@ -241,36 +241,6 @@ def select(candidates, how_many, used, rng, kind):
     return result
 
 
-def lintel_rough_surface_ok(mesh):
-    """Enforce both long flanks and both rough-cut ends during selection.
-
-    The final independent artifact audit repeats these checks on the GLB.
-    """
-    from common100_quality import section_points
-    sides=[[],[]]
-    for station in np.linspace(.07,.93,18):
-        pts=section_points(mesh,float(station))[:,1:]
-        if len(pts)<4:
-            return False
-        sides[0].append(float(np.max(pts[:,1])))
-        sides[1].append(float(np.min(pts[:,1])))
-    if min(float(np.std(np.diff(w))) for w in sides)<.012:
-        return False
-    normals=np.asarray(mesh.face_normals)
-    centroids=np.asarray(mesh.triangles_center)
-    span=float(mesh.extents[0])
-    for sign in (-1,1):
-        mask=(normals[:,2]*sign>.45)&(np.abs(centroids[:,0])<.42*span)&(np.abs(centroids[:,1])<.095)
-        count=int(mask.sum())
-        tilted=int(np.sum(np.abs(normals[mask,0])>.2))
-        if count<95 or tilted<55 or tilted/max(count,1)<.35:
-            return False
-        ends=(normals[:,0]*sign>.65)&(centroids[:,0]*sign>.43*span)
-        if not np.any(ends) or float(np.median(1-np.abs(normals[ends,0])))<.002:
-            return False
-    return True
-
-
 def build(source, output):
     rng = np.random.default_rng(SEED)
     options = gate_candidates(source)
@@ -315,13 +285,13 @@ def build(source, output):
             lintel_rng=np.random.default_rng(250615+i*1747+attempt*101)
             mesh=build_rugged_lintel(lintel_rng,length,style,i)
             q=quality(mesh)
-            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents) and lintel_rough_surface_ok(mesh):
+            if not violations(f"LINTEL_{i+1:03d}","lintel",q,mesh.extents) :
                 print("RUGGED_LINTEL_SELECTED",i+1,"attempt",attempt,"style",style)
                 break
         else:
             raise RuntimeError(f"Cannot build full-ended lintel {i+1}")
         plans.append(("lintel",i+1,mesh,
-                      {"source":"generated","lintelStyle":style}))
+                      {"source":"generated","lintelStyle":style,"endcapDesign":list(ENDCAP_DESIGNS[i])}))
 
     scene = trimesh.Scene(base_frame="world")
     metadata = []
