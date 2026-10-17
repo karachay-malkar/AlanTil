@@ -20,6 +20,10 @@ def inspect(directory=FOLDER):
     meshes=trimesh.load(directory/"common-100.glb",force="scene",process=False).geometry
     entries={e["name"]:e for e in meta["models"]}
     assert len(meshes)==100 and len(entries)==100
+    baseline=json.loads((ROOT/"tests/common100-v2-baseline.json").read_text())["untouched"]
+    stable=[n for n,h in baseline.items() if entries[n]["geometrySHA256"]==h]
+    print("UNTOUCHED_MODEL_HASHES",len(stable),"OF",len(baseline))
+    assert len(stable)==62, "Unmodified gate stones, filling and lintels must remain bytewise-geometrically identical"
     models=[meshes[x] for x in TARGET]
     assert all(entries[n]["source"]=="generated" for n in TARGET)
     assert all(x.is_volume and x.is_watertight for x in models)
