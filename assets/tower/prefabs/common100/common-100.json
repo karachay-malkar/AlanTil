@@ -1,5 +1,5 @@
 {
-  "version": "17.7-common100.3",
+  "version": "17.7-common100.4",
   "count": 100,
   "counts": {
     "main": 72,
@@ -19,7 +19,7 @@
     "chinking": "gaps only, not exposed standalone courses",
     "lintel": "single-piece bridge over openings"
   },
-  "glbSHA256": "a141f70cf1922fbd31a610301c7bf8fe83c118006a1f381584fc84011a60f55b",
+  "glbSHA256": "05ae45115c46469be8570bb935d8ce0c467f29e9d17899f7277c810a1d2ed7a0",
   "models": [
     {
       "name": "LARGE_001",
@@ -1478,27 +1478,27 @@
       "category": "main",
       "sizeMeters": [
         0.3718,
-        0.28166,
-        0.2805
+        0.2578,
+        0.30379
       ],
-      "triangles": 256,
-      "geometrySHA256": "462a680edf9a97bf3b3e52e97925f17084b78dbe0f25fa6ee968b9e021b22ea8",
+      "triangles": 288,
+      "geometrySHA256": "377ee7f7f1af028f0e42950354d92941f87ac3782b4052b5312cda5cca0f4ff1",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.718,
-        "shoulder20": 0.8239,
-        "tip06": 0.3493,
-        "roughness": 0.00139,
+        "end12": 0.7349,
+        "shoulder20": 0.8553,
+        "tip06": 0.4435,
+        "roughness": 0.01244,
         "profile": [
-          0.4712,
-          0.7995,
-          0.911,
+          0.4435,
+          0.7349,
+          0.8553,
+          0.9677,
+          1.0148,
           1.0,
-          1.0066,
-          0.9442,
-          0.8239,
-          0.718,
-          0.3493
+          0.8699,
+          0.7402,
+          0.6147
         ]
       },
       "source": "generated",
@@ -1508,28 +1508,28 @@
       "name": "MAIN_036",
       "category": "main",
       "sizeMeters": [
-        0.30327,
-        0.12373,
-        0.23009
+        0.39308,
+        0.17151,
+        0.30666
       ],
-      "triangles": 288,
-      "geometrySHA256": "a80d045150f4b62ae2c505f5f80b19a7ecd9c91a2f22b245be408dca0ae78a02",
+      "triangles": 304,
+      "geometrySHA256": "3b6090ba4132481a3d82285b7b70c37f2fa8f894c539174c972972b07e121285",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6186,
-        "shoulder20": 0.8221,
-        "tip06": 0.4544,
-        "roughness": 0.00227,
+        "end12": 0.565,
+        "shoulder20": 0.7828,
+        "tip06": 0.3844,
+        "roughness": 0.01595,
         "profile": [
-          0.668,
-          0.8022,
-          0.9088,
-          0.9673,
+          0.3844,
+          0.565,
+          0.7828,
+          0.9499,
           1.0,
-          1.0069,
-          0.8221,
-          0.6186,
-          0.4544
+          1.0161,
+          0.8792,
+          0.7161,
+          0.4154
         ]
       },
       "source": "generated",
@@ -1539,28 +1539,28 @@
       "name": "MAIN_037",
       "category": "main",
       "sizeMeters": [
-        0.34454,
-        0.21928,
-        0.22189
+        0.2045,
+        0.13783,
+        0.13574
       ],
-      "triangles": 192,
-      "geometrySHA256": "c310b8121d7968caf6e351a2f5358a6d8f33b04057294d3dd2a97f30e55e6fd1",
+      "triangles": 320,
+      "geometrySHA256": "00fc11426ef40ae3eaf33cc0ee5d75db3dedad3f7f2b0f952a74c42a97cd84eb",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7156,
-        "shoulder20": 0.8029,
-        "tip06": 0.4914,
-        "roughness": 0.00777,
+        "end12": 0.4313,
+        "shoulder20": 0.7164,
+        "tip06": 0.2288,
+        "roughness": 0.005,
         "profile": [
-          0.578,
-          0.7768,
-          0.9817,
-          1.0347,
+          0.7151,
+          0.8028,
+          0.8952,
+          1.0026,
           1.0,
-          0.9245,
-          0.8029,
-          0.7156,
-          0.4914
+          0.9579,
+          0.7164,
+          0.4313,
+          0.2288
         ]
       },
       "source": "generated",
@@ -1570,28 +1570,28 @@
       "name": "MAIN_038",
       "category": "main",
       "sizeMeters": [
-        0.27042,
-        0.22173,
-        0.24768
+        0.25552,
+        0.18401,
+        0.20709
       ],
-      "triangles": 384,
-      "geometrySHA256": "7649c28e8c7a5293db33318e063d337ecead3c58a9b348cbb323a24601e0cc42",
+      "triangles": 304,
+      "geometrySHA256": "d6fbcdf6a6a58fae43c493e5dd395d4500edc5ac061f8a46668de95b662289e6",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6139,
-        "shoulder20": 0.8167,
-        "tip06": 0.4062,
-        "roughness": 0.01171,
+        "end12": 0.5761,
+        "shoulder20": 0.8097,
+        "tip06": 0.3499,
+        "roughness": 0.00978,
         "profile": [
-          0.5638,
-          0.6908,
-          0.8312,
-          0.9798,
-          1.0076,
+          0.5324,
+          0.6585,
+          0.8192,
           1.0,
-          0.8167,
-          0.6139,
-          0.4062
+          1.0127,
+          0.9574,
+          0.8097,
+          0.5761,
+          0.3499
         ]
       },
       "source": "generated",
@@ -1601,28 +1601,28 @@
       "name": "MAIN_039",
       "category": "main",
       "sizeMeters": [
-        0.273,
-        0.16023,
-        0.20951
+        0.24881,
+        0.13332,
+        0.19743
       ],
-      "triangles": 368,
-      "geometrySHA256": "9c19db8a05629ae7c79b0efbaa7ad24dbd7156b614a02d2448713ed40d710cf2",
+      "triangles": 416,
+      "geometrySHA256": "cf4d190e320f0be1bd480c0811f4394c6b25c6f6394bb9fe501e518b228b56b5",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.409,
-        "shoulder20": 0.6164,
-        "tip06": 0.2527,
-        "roughness": 0.01435,
+        "end12": 0.4685,
+        "shoulder20": 0.6855,
+        "tip06": 0.1746,
+        "roughness": 0.01414,
         "profile": [
-          0.3235,
-          0.6504,
-          0.9173,
-          1.036,
+          0.4862,
+          0.6586,
+          0.8493,
+          1.024,
           1.0,
-          0.8689,
-          0.6164,
-          0.409,
-          0.2527
+          0.9034,
+          0.6855,
+          0.4685,
+          0.1746
         ]
       },
       "source": "generated",
@@ -1632,28 +1632,28 @@
       "name": "MAIN_040",
       "category": "main",
       "sizeMeters": [
-        0.2509,
-        0.14809,
-        0.16159
+        0.20452,
+        0.11289,
+        0.14455
       ],
-      "triangles": 304,
-      "geometrySHA256": "609f089c8e2b2f58af29b208e3ac3e17776ee07d685bd4826efa9285d982e9be",
+      "triangles": 272,
+      "geometrySHA256": "670545bf7fa79015f3ce8fd035957a3936dc230b3b27f2090d0cd25fab6c4e6b",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6343,
-        "shoulder20": 0.7775,
-        "tip06": 0.4759,
-        "roughness": 0.00727,
+        "end12": 0.66,
+        "shoulder20": 0.8313,
+        "tip06": 0.4245,
+        "roughness": 0.00336,
         "profile": [
-          0.4953,
-          0.6551,
-          0.7775,
-          0.9681,
-          1.0199,
+          0.6124,
+          0.8891,
+          0.94,
           1.0,
-          0.8072,
-          0.6343,
-          0.4759
+          1.0193,
+          0.9805,
+          0.8313,
+          0.66,
+          0.4245
         ]
       },
       "source": "generated",
@@ -1663,28 +1663,28 @@
       "name": "MAIN_041",
       "category": "main",
       "sizeMeters": [
-        0.36319,
-        0.27536,
-        0.31279
+        0.21787,
+        0.1642,
+        0.19228
       ],
       "triangles": 256,
-      "geometrySHA256": "683bdbe7796d21e684ecacf047da9efdaf40b98725ceca52fb0df28dbed4184d",
+      "geometrySHA256": "06324449d7781d9a14fd3fb1c01ed705e59582bb4579d7c97a20a5367790d7e3",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7329,
-        "shoulder20": 0.8553,
-        "tip06": 0.5385,
-        "roughness": 0.00877,
+        "end12": 0.6723,
+        "shoulder20": 0.8483,
+        "tip06": 0.4098,
+        "roughness": 0.00235,
         "profile": [
-          0.577,
-          0.7774,
-          0.9072,
+          0.5178,
+          0.6723,
+          0.8483,
+          0.9969,
+          1.0191,
           1.0,
-          1.0226,
-          0.9785,
-          0.8553,
-          0.7329,
-          0.5385
+          0.8913,
+          0.7521,
+          0.4098
         ]
       },
       "source": "generated",
@@ -1694,28 +1694,28 @@
       "name": "MAIN_042",
       "category": "main",
       "sizeMeters": [
-        0.22203,
-        0.10399,
-        0.1848
+        0.34619,
+        0.15511,
+        0.29985
       ],
-      "triangles": 320,
-      "geometrySHA256": "92d83cfa10146103ed809d244e159db0e1526321335e8b138618011569b2deea",
+      "triangles": 288,
+      "geometrySHA256": "782bf216bf80e7ba47406de1565ea4d47e40bece9008126402635d5ebf834e5c",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6688,
-        "shoulder20": 0.8031,
-        "tip06": 0.5068,
-        "roughness": 0.00238,
+        "end12": 0.7429,
+        "shoulder20": 0.8357,
+        "tip06": 0.4653,
+        "roughness": 0.00419,
         "profile": [
-          0.5068,
-          0.6688,
-          0.8031,
-          0.9957,
-          1.0515,
+          0.4705,
+          0.7429,
+          0.8357,
+          0.9452,
+          1.0065,
           1.0,
-          0.932,
-          0.8577,
-          0.724
+          0.8924,
+          0.7707,
+          0.4653
         ]
       },
       "source": "generated",
@@ -1725,28 +1725,28 @@
       "name": "MAIN_043",
       "category": "main",
       "sizeMeters": [
-        0.37863,
-        0.20391,
-        0.22509
+        0.37303,
+        0.21435,
+        0.26874
       ],
-      "triangles": 304,
-      "geometrySHA256": "3becae27759008fa48b5d7853558a429d9fb7debeb5bb56f67304275dbe8f759",
+      "triangles": 256,
+      "geometrySHA256": "74709662276391ab6b7faf2b5fe427cd9e9080cd50bf7e4040940991ed556c39",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6324,
-        "shoulder20": 0.8068,
-        "tip06": 0.4927,
-        "roughness": 0.0054,
+        "end12": 0.7245,
+        "shoulder20": 0.847,
+        "tip06": 0.5224,
+        "roughness": 0.00477,
         "profile": [
-          0.7506,
-          0.883,
-          0.9559,
+          0.5224,
+          0.7245,
+          0.847,
+          0.954,
+          1.0061,
           1.0,
-          1.0045,
-          0.9982,
-          0.8068,
-          0.6324,
-          0.4927
+          0.921,
+          0.7752,
+          0.6124
         ]
       },
       "source": "generated",
@@ -1756,28 +1756,28 @@
       "name": "MAIN_044",
       "category": "main",
       "sizeMeters": [
-        0.34406,
-        0.23874,
-        0.29048
+        0.27746,
+        0.23019,
+        0.23309
       ],
-      "triangles": 432,
-      "geometrySHA256": "a56ad4861353a7ac544576bbf277f89f21f70ae4c3179d84fd62ae610427dc29",
+      "triangles": 352,
+      "geometrySHA256": "d270e713a23f4d879c3e9f0030b4fadaf24d1680fa26f0ddacafa414f387440a",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6246,
-        "shoulder20": 0.8306,
-        "tip06": 0.4352,
-        "roughness": 0.00232,
+        "end12": 0.6073,
+        "shoulder20": 0.7566,
+        "tip06": 0.4355,
+        "roughness": 0.00416,
         "profile": [
-          0.4352,
-          0.6246,
-          0.8306,
+          0.4355,
+          0.6073,
+          0.7566,
+          0.9873,
+          1.0469,
           1.0,
-          1.0021,
-          0.9703,
-          0.835,
-          0.6867,
-          0.5124
+          0.9164,
+          0.8346,
+          0.7285
         ]
       },
       "source": "generated",
@@ -1787,28 +1787,28 @@
       "name": "MAIN_045",
       "category": "main",
       "sizeMeters": [
-        0.26053,
-        0.15724,
-        0.22588
+        0.26744,
+        0.16258,
+        0.22677
       ],
-      "triangles": 352,
-      "geometrySHA256": "98e1b6611c4ae599e14f40836e4c4bed43fbeb614fc1ba9ff12963b3498fe829",
+      "triangles": 368,
+      "geometrySHA256": "1717bfd7fca619f0f962fd52d645e9ff274ff27b1e1c20ac57bfacef7f2b6989",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.4949,
-        "shoulder20": 0.7453,
-        "tip06": 0.2932,
-        "roughness": 0.01161,
+        "end12": 0.5107,
+        "shoulder20": 0.6926,
+        "tip06": 0.3711,
+        "roughness": 0.00659,
         "profile": [
-          0.3165,
-          0.5004,
-          0.7455,
-          0.9629,
-          1.0096,
+          0.4653,
+          0.6679,
+          0.8045,
           1.0,
-          0.7453,
-          0.4949,
-          0.2932
+          1.0594,
+          0.9564,
+          0.6926,
+          0.5107,
+          0.3711
         ]
       },
       "source": "generated",
@@ -1818,28 +1818,28 @@
       "name": "MAIN_046",
       "category": "main",
       "sizeMeters": [
-        0.21294,
-        0.12705,
-        0.15003
+        0.30866,
+        0.19123,
+        0.23977
       ],
-      "triangles": 368,
-      "geometrySHA256": "e7022f517a5f0bcc2a6834954384a945264a37a331f909fdfd9136eb7426d4c8",
+      "triangles": 304,
+      "geometrySHA256": "3e00614cab46311f19c4f01bef68f7f35164f0371cfb479d7cda8bea4702e5f9",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5874,
-        "shoulder20": 0.7854,
-        "tip06": 0.3256,
-        "roughness": 0.00647,
+        "end12": 0.6799,
+        "shoulder20": 0.8286,
+        "tip06": 0.3404,
+        "roughness": 0.00377,
         "profile": [
-          0.3256,
-          0.6219,
-          0.8679,
+          0.3404,
+          0.6799,
+          0.8591,
           1.0,
-          1.0377,
-          0.9413,
-          0.7854,
-          0.5874,
-          0.3841
+          1.0282,
+          0.9741,
+          0.8286,
+          0.6883,
+          0.4362
         ]
       },
       "source": "generated",
@@ -1849,28 +1849,28 @@
       "name": "MAIN_047",
       "category": "main",
       "sizeMeters": [
-        0.29277,
-        0.24457,
-        0.25022
+        0.39505,
+        0.27091,
+        0.3419
       ],
-      "triangles": 256,
-      "geometrySHA256": "ffb0f25ec1e0cc4933a03af3bc5767ca5bcfc5885fa0c7c4ae7a8ddb018a0af0",
+      "triangles": 272,
+      "geometrySHA256": "86945c76c3f8ef2cc6c6ca972eb9791c5d7251c321860de20f65d192695af041",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6221,
-        "shoulder20": 0.821,
-        "tip06": 0.3961,
-        "roughness": 0.01004,
+        "end12": 0.7647,
+        "shoulder20": 0.85,
+        "tip06": 0.4296,
+        "roughness": 0.00206,
         "profile": [
-          0.3961,
-          0.6221,
-          0.821,
-          0.9793,
+          0.4296,
+          0.7961,
+          0.9423,
+          1.0401,
           1.0,
-          1.0258,
-          0.976,
-          0.8337,
-          0.6383
+          0.9513,
+          0.85,
+          0.7647,
+          0.6375
         ]
       },
       "source": "generated",
@@ -1880,28 +1880,28 @@
       "name": "MAIN_048",
       "category": "main",
       "sizeMeters": [
-        0.39655,
-        0.1802,
-        0.31458
+        0.25291,
+        0.10464,
+        0.19168
       ],
-      "triangles": 256,
-      "geometrySHA256": "d02a8735567dc26e1c66f8369e14f80ecdf91023e5e940d2bb3c2d4461d6d0e0",
+      "triangles": 304,
+      "geometrySHA256": "240832a5de810bf91256b3322c58c93ad8e9daa668c6fc27ff684d74a993f252",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.781,
-        "shoulder20": 0.8875,
-        "tip06": 0.6153,
-        "roughness": 0.00164,
+        "end12": 0.7024,
+        "shoulder20": 0.849,
+        "tip06": 0.4568,
+        "roughness": 0.00529,
         "profile": [
-          0.6153,
-          0.781,
-          0.8875,
-          0.9609,
+          0.5579,
+          0.7684,
+          0.849,
+          0.9578,
+          1.014,
           1.0,
-          1.0052,
-          0.9091,
-          0.7931,
-          0.6868
+          0.9428,
+          0.7024,
+          0.4568
         ]
       },
       "source": "generated",
@@ -1911,28 +1911,28 @@
       "name": "MAIN_049",
       "category": "main",
       "sizeMeters": [
-        0.39726,
-        0.24289,
-        0.29521
+        0.26673,
+        0.14928,
+        0.16477
       ],
-      "triangles": 304,
-      "geometrySHA256": "6f22cc9cee18c3937bd9a62b51d2d53a84774676bb2d6893ef4cd1a57431ef95",
+      "triangles": 288,
+      "geometrySHA256": "54551c0f71b7eb1228467a56ba5bf1b04c7ef9e07961601ac6578da37f6edbd4",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5563,
-        "shoulder20": 0.7113,
-        "tip06": 0.4458,
-        "roughness": 0.01164,
+        "end12": 0.6042,
+        "shoulder20": 0.807,
+        "tip06": 0.4416,
+        "roughness": 0.00542,
         "profile": [
-          0.4458,
-          0.5563,
-          0.7113,
-          0.9731,
-          1.0571,
+          0.4416,
+          0.6042,
+          0.807,
+          0.9617,
+          1.0096,
           1.0,
-          0.8792,
-          0.6947,
-          0.4963
+          0.9426,
+          0.8793,
+          0.7992
         ]
       },
       "source": "generated",
@@ -1942,28 +1942,28 @@
       "name": "MAIN_050",
       "category": "main",
       "sizeMeters": [
-        0.30906,
-        0.23105,
-        0.26332
+        0.24033,
+        0.1627,
+        0.2007
       ],
-      "triangles": 432,
-      "geometrySHA256": "987667c6b904362a5295a215cac5fd26a95e8b6e908a9d873632c86ebccfa857",
+      "triangles": 368,
+      "geometrySHA256": "57074b0232d211968d129a669f74fed98bb16ecf7f8e5abf234a6df4030b5891",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5459,
-        "shoulder20": 0.7701,
-        "tip06": 0.317,
-        "roughness": 0.00677,
+        "end12": 0.7304,
+        "shoulder20": 0.8558,
+        "tip06": 0.5916,
+        "roughness": 0.0061,
         "profile": [
-          0.5154,
-          0.7642,
-          0.8942,
+          0.6192,
+          0.7652,
+          0.8733,
           1.0,
-          1.0334,
-          0.9859,
-          0.7701,
-          0.5459,
-          0.317
+          1.04,
+          0.978,
+          0.8558,
+          0.7304,
+          0.5916
         ]
       },
       "source": "generated",
@@ -1973,28 +1973,28 @@
       "name": "MAIN_051",
       "category": "main",
       "sizeMeters": [
-        0.33422,
-        0.18337,
-        0.28458
+        0.23226,
+        0.1435,
+        0.16994
       ],
-      "triangles": 416,
-      "geometrySHA256": "2f6287a5ad28cf71b4e306dbf14572aee7e4ff451e52d5e52e572b141a76f39b",
+      "triangles": 368,
+      "geometrySHA256": "69473bfb14cae17ca9495ee39fdc86e5bcbf089a6b39582a81eb0b0e285c1ed6",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.4873,
-        "shoulder20": 0.6621,
-        "tip06": 0.3211,
-        "roughness": 0.00994,
+        "end12": 0.4328,
+        "shoulder20": 0.6099,
+        "tip06": 0.3084,
+        "roughness": 0.00731,
         "profile": [
-          0.3211,
-          0.4873,
-          0.6621,
-          0.8792,
+          0.451,
+          0.6423,
+          0.8502,
           1.0,
-          1.0463,
-          0.869,
-          0.6803,
-          0.4933
+          1.0195,
+          0.88,
+          0.6099,
+          0.4328,
+          0.3084
         ]
       },
       "source": "generated",
@@ -2004,28 +2004,28 @@
       "name": "MAIN_052",
       "category": "main",
       "sizeMeters": [
-        0.38248,
-        0.22695,
-        0.2467
+        0.22649,
+        0.11878,
+        0.13818
       ],
-      "triangles": 304,
-      "geometrySHA256": "c4d4a0ddf6b191edd9391073cff94485047d346da779dec0308697a71c4bc07f",
+      "triangles": 352,
+      "geometrySHA256": "7fe6ec3c19dd1ddd4843b6462a2fb08d3f5931aab93ea09d1429baa0ac6fdbc1",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6014,
-        "shoulder20": 0.7347,
-        "tip06": 0.4742,
-        "roughness": 0.00848,
+        "end12": 0.6094,
+        "shoulder20": 0.7999,
+        "tip06": 0.3861,
+        "roughness": 0.00393,
         "profile": [
-          0.4742,
-          0.6014,
-          0.7347,
-          0.938,
-          1.0275,
+          0.4505,
+          0.699,
+          0.8422,
           1.0,
-          0.8875,
-          0.7725,
-          0.6835
+          1.0307,
+          0.9837,
+          0.7999,
+          0.6094,
+          0.3861
         ]
       },
       "source": "generated",
@@ -2035,28 +2035,28 @@
       "name": "MAIN_053",
       "category": "main",
       "sizeMeters": [
-        0.35248,
-        0.29254,
-        0.29463
+        0.36598,
+        0.28333,
+        0.26589
       ],
       "triangles": 224,
-      "geometrySHA256": "58f74c27706ce2dd698935771e4bd1bd4c9ba8ae00d6a19fca4bdda5d43ffc05",
+      "geometrySHA256": "53cd2c27a39decfd2e81e9038fdecf907ceec6cf0bd9d78c8504a80e6c2a7069",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7107,
-        "shoulder20": 0.8675,
-        "tip06": 0.5246,
-        "roughness": 0.01305,
+        "end12": 0.6817,
+        "shoulder20": 0.8485,
+        "tip06": 0.2546,
+        "roughness": 0.00336,
         "profile": [
-          0.6456,
-          0.811,
-          0.9142,
-          0.9836,
+          0.2546,
+          0.6962,
+          0.8681,
+          1.0159,
           1.0,
-          1.0009,
-          0.8675,
-          0.7107,
-          0.5246
+          0.9836,
+          0.8485,
+          0.6817,
+          0.5299
         ]
       },
       "source": "generated",
@@ -2066,28 +2066,28 @@
       "name": "MAIN_054",
       "category": "main",
       "sizeMeters": [
-        0.32991,
-        0.15906,
-        0.23581
+        0.35035,
+        0.15253,
+        0.24896
       ],
-      "triangles": 304,
-      "geometrySHA256": "0bb62b053e5a169510d810026d8055664960e168f5f5096bbaac62524a1d2ff8",
+      "triangles": 272,
+      "geometrySHA256": "4c640fe3d77dac4a0caed67d03c0de809646bb596bc1a223a55af88919c01535",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5597,
-        "shoulder20": 0.8207,
-        "tip06": 0.3142,
-        "roughness": 0.00876,
+        "end12": 0.6561,
+        "shoulder20": 0.8288,
+        "tip06": 0.5181,
+        "roughness": 0.00485,
         "profile": [
-          0.3142,
-          0.5597,
-          0.8207,
-          0.985,
-          1.0194,
+          0.6016,
+          0.7205,
+          0.8632,
+          1.0048,
           1.0,
-          0.8899,
-          0.7353,
-          0.5473
+          0.9554,
+          0.8288,
+          0.6561,
+          0.5181
         ]
       },
       "source": "generated",
@@ -2097,28 +2097,28 @@
       "name": "MAIN_055",
       "category": "main",
       "sizeMeters": [
-        0.39626,
-        0.21647,
-        0.25453
+        0.39768,
+        0.21453,
+        0.26628
       ],
-      "triangles": 272,
-      "geometrySHA256": "ecbc675663e764e773f5669c7ff50704a0550a69a790009ff34d4e5c0b1028e4",
+      "triangles": 288,
+      "geometrySHA256": "ca32146fc57721e9041ddc06e9a61b5bfb5276118406e02d1b8570bf66ab272e",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6445,
-        "shoulder20": 0.751,
-        "tip06": 0.4023,
-        "roughness": 0.00863,
+        "end12": 0.6267,
+        "shoulder20": 0.8009,
+        "tip06": 0.4568,
+        "roughness": 0.00764,
         "profile": [
-          0.4023,
-          0.6445,
-          0.9004,
-          1.0236,
+          0.6418,
+          0.9144,
+          0.9706,
           1.0,
-          0.9107,
-          0.751,
-          0.673,
-          0.5875
+          1.0036,
+          0.9971,
+          0.8009,
+          0.6267,
+          0.4568
         ]
       },
       "source": "generated",
@@ -2128,28 +2128,28 @@
       "name": "MAIN_056",
       "category": "main",
       "sizeMeters": [
-        0.39618,
-        0.28559,
-        0.32479
+        0.36047,
+        0.24385,
+        0.33688
       ],
-      "triangles": 336,
-      "geometrySHA256": "e61629230af5965bcd2fa44bcc19b338960ebfd0fec2987c5e8f295a98091495",
+      "triangles": 352,
+      "geometrySHA256": "6e400978aa53a7a641ef5364e6d906d4b27e9a0292fc369c4b8d3451b17766b5",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6289,
-        "shoulder20": 0.8263,
-        "tip06": 0.3383,
-        "roughness": 0.01035,
+        "end12": 0.6371,
+        "shoulder20": 0.8172,
+        "tip06": 0.4669,
+        "roughness": 0.00788,
         "profile": [
-          0.6517,
-          0.8766,
-          0.9534,
+          0.4669,
+          0.6371,
+          0.8172,
           1.0,
-          1.0216,
-          0.9811,
-          0.8263,
-          0.6289,
-          0.3383
+          1.0122,
+          0.9638,
+          0.8608,
+          0.7301,
+          0.6069
         ]
       },
       "source": "generated",
@@ -2159,28 +2159,28 @@
       "name": "MAIN_057",
       "category": "main",
       "sizeMeters": [
-        0.25429,
-        0.14404,
-        0.21157
+        0.20449,
+        0.14448,
+        0.14114
       ],
-      "triangles": 432,
-      "geometrySHA256": "39d9a328b6c2a42bc04ac94a8155db683c1997cac512c13c8b06501d4244a298",
+      "triangles": 320,
+      "geometrySHA256": "4343e3e05b0dddb8da12ffee0cf9bf7c3c2dd5f9443cc90e8898bfcb277ad97b",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.45,
-        "shoulder20": 0.7231,
-        "tip06": 0.2377,
-        "roughness": 0.00888,
+        "end12": 0.4308,
+        "shoulder20": 0.6391,
+        "tip06": 0.2483,
+        "roughness": 0.00538,
         "profile": [
-          0.2377,
-          0.45,
-          0.7231,
-          0.9689,
-          1.0193,
+          0.2631,
+          0.4308,
+          0.6391,
+          0.9165,
           1.0,
-          0.7768,
-          0.5031,
-          0.2672
+          1.016,
+          0.8672,
+          0.6123,
+          0.2483
         ]
       },
       "source": "generated",
@@ -2190,28 +2190,28 @@
       "name": "MAIN_058",
       "category": "main",
       "sizeMeters": [
-        0.37048,
-        0.2292,
-        0.28268
+        0.26104,
+        0.1301,
+        0.19972
       ],
-      "triangles": 320,
-      "geometrySHA256": "c2ee5c0d692f4dd339a23ff001cf16cf29824ea0229c1e032701d41e973a3228",
+      "triangles": 336,
+      "geometrySHA256": "7833c147347e6887a650b07fe2b6d512258fb8d7707b2852b1a635bfee6d2a3a",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5483,
-        "shoulder20": 0.7615,
-        "tip06": 0.3692,
-        "roughness": 0.00833,
+        "end12": 0.6581,
+        "shoulder20": 0.8407,
+        "tip06": 0.5092,
+        "roughness": 0.00793,
         "profile": [
-          0.3692,
-          0.5483,
-          0.7615,
+          0.5886,
+          0.7456,
+          0.908,
+          0.9826,
+          1.0032,
           1.0,
-          1.0285,
-          0.952,
-          0.7976,
-          0.6835,
-          0.5909
+          0.8407,
+          0.6581,
+          0.5092
         ]
       },
       "source": "generated",
@@ -2221,28 +2221,28 @@
       "name": "MAIN_059",
       "category": "main",
       "sizeMeters": [
-        0.21498,
-        0.17263,
-        0.17464
+        0.34699,
+        0.26008,
+        0.2821
       ],
-      "triangles": 288,
-      "geometrySHA256": "9e6ec55b4b4a10b97fc0a956650d8feef6d638168b10370ce84bad57828eab33",
+      "triangles": 208,
+      "geometrySHA256": "f86787635712af18f8eb60484e482af1eb098fa5edfb47b8528e8e9605866f27",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7652,
-        "shoulder20": 0.9012,
-        "tip06": 0.494,
-        "roughness": 6e-05,
+        "end12": 0.7736,
+        "shoulder20": 0.8753,
+        "tip06": 0.5636,
+        "roughness": 0.00628,
         "profile": [
-          0.7657,
-          0.8975,
-          1.0099,
-          1.0214,
+          0.5636,
+          0.7736,
+          0.9417,
           1.0,
-          0.9784,
-          0.9012,
-          0.7652,
-          0.494
+          1.0051,
+          0.9885,
+          0.8753,
+          0.789,
+          0.71
         ]
       },
       "source": "generated",
@@ -2252,28 +2252,28 @@
       "name": "MAIN_060",
       "category": "main",
       "sizeMeters": [
-        0.21909,
-        0.10073,
-        0.16776
+        0.26848,
+        0.1055,
+        0.21647
       ],
-      "triangles": 320,
-      "geometrySHA256": "8ef6bfbbc240065498bc45f9c3ae26affa86150fa6f4a4919a220f4667c8d12d",
+      "triangles": 288,
+      "geometrySHA256": "c1c0bed9064630824433d9e922ae3f2c71d47c5836f49ff0ebafb41c5b4e1283",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6669,
-        "shoulder20": 0.8369,
-        "tip06": 0.476,
-        "roughness": 0.00243,
+        "end12": 0.7963,
+        "shoulder20": 0.8878,
+        "tip06": 0.565,
+        "roughness": 0.00199,
         "profile": [
-          0.476,
-          0.6669,
-          0.8369,
-          0.997,
-          1.0125,
+          0.7013,
+          0.7963,
+          0.8878,
+          0.9617,
           1.0,
-          0.9587,
-          0.9104,
-          0.8627
+          1.0018,
+          0.9219,
+          0.815,
+          0.565
         ]
       },
       "source": "generated",
@@ -2283,28 +2283,28 @@
       "name": "MAIN_061",
       "category": "main",
       "sizeMeters": [
-        0.36723,
-        0.24566,
-        0.2695
+        0.22913,
+        0.12862,
+        0.15441
       ],
-      "triangles": 288,
-      "geometrySHA256": "14e7145d247abb1ebce7a5d1e2d5f5b97e45dc2787c0a45416fb6091efcb9fee",
+      "triangles": 192,
+      "geometrySHA256": "dfa01f861f95d8b6512b00ef06a542283370b8a64be4864f717303d8c7e62d22",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5555,
-        "shoulder20": 0.8487,
-        "tip06": 0.2539,
-        "roughness": 0.01019,
+        "end12": 0.7424,
+        "shoulder20": 0.8615,
+        "tip06": 0.3108,
+        "roughness": 0.00055,
         "profile": [
-          0.2539,
-          0.5555,
-          0.8487,
-          1.0157,
+          0.3108,
+          0.7424,
+          0.8615,
+          0.9514,
           1.0,
-          0.9604,
-          0.8674,
-          0.6918,
-          0.4641
+          1.009,
+          0.9338,
+          0.846,
+          0.7106
         ]
       },
       "source": "generated",
@@ -2314,28 +2314,28 @@
       "name": "MAIN_062",
       "category": "main",
       "sizeMeters": [
-        0.27664,
-        0.18968,
-        0.22525
+        0.25035,
+        0.17881,
+        0.20613
       ],
-      "triangles": 384,
-      "geometrySHA256": "9da9a784b4b03119335d1b890516c1ed22b2e0a48087151d67f2fdfc6c0bfd05",
+      "triangles": 400,
+      "geometrySHA256": "e7a76f7c86e17a49c52d0841b6f2ce5d275aa44bbe8e55dbd54264a5778172db",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6109,
-        "shoulder20": 0.7681,
-        "tip06": 0.4765,
-        "roughness": 0.00776,
+        "end12": 0.4626,
+        "shoulder20": 0.6636,
+        "tip06": 0.303,
+        "roughness": 0.01014,
         "profile": [
-          0.486,
-          0.6786,
-          0.8984,
-          1.0109,
+          0.303,
+          0.4626,
+          0.6636,
+          0.9515,
+          1.0619,
           1.0,
-          0.9329,
-          0.7681,
-          0.6109,
-          0.4765
+          0.777,
+          0.5707,
+          0.3961
         ]
       },
       "source": "generated",
@@ -2345,28 +2345,28 @@
       "name": "MAIN_063",
       "category": "main",
       "sizeMeters": [
-        0.34852,
-        0.19885,
-        0.29658
+        0.20303,
+        0.12252,
+        0.15105
       ],
-      "triangles": 384,
-      "geometrySHA256": "d7970308a564ba7bb5f7daf36fb53d12b937fac8513734b94d6b4e2aa68e749c",
+      "triangles": 400,
+      "geometrySHA256": "b31d51eb5ef19d1588ae8d05cdfab382c50314caa8b32705645b03c80b934b41",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5166,
-        "shoulder20": 0.7572,
-        "tip06": 0.3066,
-        "roughness": 0.01069,
+        "end12": 0.5653,
+        "shoulder20": 0.8313,
+        "tip06": 0.251,
+        "roughness": 0.00821,
         "profile": [
-          0.3066,
-          0.5166,
-          0.7615,
+          0.251,
+          0.5653,
+          0.8313,
           1.0,
-          1.0426,
-          0.9585,
-          0.7572,
-          0.6402,
-          0.4598
+          1.0691,
+          0.9959,
+          0.8518,
+          0.677,
+          0.4964
         ]
       },
       "source": "generated",
@@ -2376,28 +2376,28 @@
       "name": "MAIN_064",
       "category": "main",
       "sizeMeters": [
-        0.39489,
-        0.19029,
-        0.27889
+        0.20761,
+        0.09787,
+        0.15693
       ],
-      "triangles": 352,
-      "geometrySHA256": "0ba2bb2a94190afdc666f727b6b46a214356d16b6f403652f9ef56e7857e9b68",
+      "triangles": 288,
+      "geometrySHA256": "8a4ee165244cfdf65e98fccfea5c1af65da5e039dee765949ab319049321e72f",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5351,
-        "shoulder20": 0.701,
-        "tip06": 0.3306,
-        "roughness": 0.01813,
+        "end12": 0.5175,
+        "shoulder20": 0.6755,
+        "tip06": 0.3712,
+        "roughness": 0.00576,
         "profile": [
-          0.3306,
-          0.5351,
-          0.701,
+          0.6237,
+          0.9065,
+          1.0055,
+          1.0312,
           1.0,
-          1.0777,
-          0.986,
-          0.8371,
-          0.7027,
-          0.5939
+          0.8927,
+          0.6755,
+          0.5175,
+          0.3712
         ]
       },
       "source": "generated",
@@ -2407,28 +2407,28 @@
       "name": "MAIN_065",
       "category": "main",
       "sizeMeters": [
-        0.22492,
-        0.17657,
-        0.17955
+        0.37833,
+        0.29226,
+        0.33842
       ],
-      "triangles": 224,
-      "geometrySHA256": "bb7e20a9101545744af6c3e229930051005db2ffb350145699f2c3d7e3890b60",
+      "triangles": 256,
+      "geometrySHA256": "f2bb99c68e24d869c15c8dfb82ae0660310afa29f2fae9b4fbc20fb14bbb59ac",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7096,
-        "shoulder20": 0.8519,
-        "tip06": 0.5514,
-        "roughness": 0.00033,
+        "end12": 0.5663,
+        "shoulder20": 0.8172,
+        "tip06": 0.3764,
+        "roughness": 0.01716,
         "profile": [
-          0.5514,
-          0.7096,
-          0.8804,
-          0.9899,
-          1.0183,
+          0.5746,
+          0.6939,
+          0.8172,
+          0.9562,
           1.0,
-          0.8519,
-          0.7385,
-          0.6496
+          1.0166,
+          0.8342,
+          0.5663,
+          0.3764
         ]
       },
       "source": "generated",
@@ -2438,28 +2438,28 @@
       "name": "MAIN_066",
       "category": "main",
       "sizeMeters": [
-        0.25344,
-        0.12327,
-        0.1982
+        0.34347,
+        0.1638,
+        0.28581
       ],
-      "triangles": 208,
-      "geometrySHA256": "521ca729ea723bd04f0111a55607d77ace9b8bfe127a6e29457db9025d5fa017",
+      "triangles": 272,
+      "geometrySHA256": "50435a33a70f5c6dad95f63b8af71f38c019006401f35eeba346d0143fd75149",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7429,
-        "shoulder20": 0.8599,
-        "tip06": 0.6056,
-        "roughness": 0.00288,
+        "end12": 0.7095,
+        "shoulder20": 0.8362,
+        "tip06": 0.5524,
+        "roughness": 0.00338,
         "profile": [
-          0.6056,
-          0.7429,
-          0.8599,
-          0.9585,
-          1.0015,
+          0.5524,
+          0.7095,
+          0.8362,
+          0.9556,
+          1.0051,
           1.0,
-          0.9851,
-          0.9633,
-          0.9372
+          0.9179,
+          0.8398,
+          0.7188
         ]
       },
       "source": "generated",
@@ -2469,28 +2469,28 @@
       "name": "MAIN_067",
       "category": "main",
       "sizeMeters": [
-        0.35217,
-        0.22197,
-        0.22514
+        0.31555,
+        0.19854,
+        0.20729
       ],
-      "triangles": 208,
-      "geometrySHA256": "a410a1c0aa52b778283b99cc2e47f3c8776ad6a52b9fd67c2581ed1f0d2fa7b5",
+      "triangles": 320,
+      "geometrySHA256": "df2413138b7a49577b3debd15fbf4b4f56770f251948b1fc2f109653d2f141bb",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6999,
-        "shoulder20": 0.7989,
-        "tip06": 0.536,
-        "roughness": 0.00672,
+        "end12": 0.7024,
+        "shoulder20": 0.8485,
+        "tip06": 0.4671,
+        "roughness": 0.00722,
         "profile": [
-          0.536,
-          0.819,
-          1.0296,
-          1.0889,
+          0.5566,
+          0.7279,
+          0.8647,
           1.0,
-          0.9044,
-          0.7989,
-          0.6999,
-          0.5541
+          1.026,
+          0.9839,
+          0.8485,
+          0.7024,
+          0.4671
         ]
       },
       "source": "generated",
@@ -2500,28 +2500,28 @@
       "name": "MAIN_068",
       "category": "main",
       "sizeMeters": [
-        0.21535,
-        0.17102,
-        0.19534
+        0.28616,
+        0.20241,
+        0.24475
       ],
-      "triangles": 384,
-      "geometrySHA256": "20c34d368387139bc8f9b49010d074120ff7cdf40f689b98c0557f54509942bf",
+      "triangles": 352,
+      "geometrySHA256": "ec95ca4b430122888ca5ea4231f6eb9f22056e3fdec4155477b7323d11bb3e5d",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.6126,
-        "shoulder20": 0.7913,
-        "tip06": 0.4515,
-        "roughness": 0.00609,
+        "end12": 0.5489,
+        "shoulder20": 0.7869,
+        "tip06": 0.3336,
+        "roughness": 0.01103,
         "profile": [
-          0.4515,
-          0.6126,
-          0.7913,
-          0.9908,
-          1.0462,
+          0.4735,
+          0.6205,
+          0.7881,
+          0.9872,
+          1.025,
           1.0,
-          0.9126,
-          0.8322,
-          0.7125
+          0.7869,
+          0.5489,
+          0.3336
         ]
       },
       "source": "generated",
@@ -2531,28 +2531,28 @@
       "name": "MAIN_069",
       "category": "main",
       "sizeMeters": [
-        0.39048,
-        0.28966,
-        0.25884
+        0.30955,
+        0.21218,
+        0.19919
       ],
-      "triangles": 432,
-      "geometrySHA256": "488b1f6fa8175c7d83de5edae6fe6ccff097892f15c7c6db1d78bcd1065960b1",
+      "triangles": 320,
+      "geometrySHA256": "25b34ac5a46c41d3e4545437a2d31696baee08a335f13b64d5e4542883780418",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.5479,
-        "shoulder20": 0.6883,
-        "tip06": 0.3887,
-        "roughness": 0.01674,
+        "end12": 0.5733,
+        "shoulder20": 0.7521,
+        "tip06": 0.4265,
+        "roughness": 0.00768,
         "profile": [
-          0.3887,
-          0.5479,
-          0.6883,
-          0.8795,
+          0.4265,
+          0.5733,
+          0.7521,
+          0.9598,
+          1.0724,
           1.0,
-          1.0716,
-          0.9242,
-          0.7298,
-          0.5107
+          0.8232,
+          0.6784,
+          0.4667
         ]
       },
       "source": "generated",
@@ -2562,28 +2562,28 @@
       "name": "MAIN_070",
       "category": "main",
       "sizeMeters": [
-        0.37588,
-        0.19573,
-        0.23679
+        0.26055,
+        0.1693,
+        0.17346
       ],
-      "triangles": 336,
-      "geometrySHA256": "f83fc288407bc9676c8483c62194b50337a884082195de42de65f280fe2de18a",
+      "triangles": 256,
+      "geometrySHA256": "4fc6be8744ee91c0e47fa1b9f585c2157045cd7a1904b3cf60857d156d4aebb7",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7501,
-        "shoulder20": 0.8604,
-        "tip06": 0.439,
-        "roughness": 0.00096,
+        "end12": 0.6166,
+        "shoulder20": 0.7572,
+        "tip06": 0.5123,
+        "roughness": 0.00888,
         "profile": [
-          0.439,
-          0.822,
-          0.9641,
-          1.0124,
+          0.5123,
+          0.6166,
+          0.7572,
+          0.939,
           1.0,
-          0.9551,
-          0.8604,
-          0.7501,
-          0.5646
+          1.0286,
+          0.9597,
+          0.7929,
+          0.5572
         ]
       },
       "source": "generated",
@@ -2593,28 +2593,28 @@
       "name": "MAIN_071",
       "category": "main",
       "sizeMeters": [
-        0.21504,
-        0.1594,
-        0.18054
+        0.3726,
+        0.28228,
+        0.2987
       ],
-      "triangles": 256,
-      "geometrySHA256": "a0bb3e85771f1f60474a3d0230eda831f8b803754517e365aac8190984bbd6ba",
+      "triangles": 208,
+      "geometrySHA256": "29fe149122a13433f599191d1f137ff1421b2cf27bfc3b064dc7cc2cd3584876",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.7494,
-        "shoulder20": 0.8628,
-        "tip06": 0.5661,
-        "roughness": 0.00119,
+        "end12": 0.5938,
+        "shoulder20": 0.7624,
+        "tip06": 0.4481,
+        "roughness": 0.01534,
         "profile": [
-          0.6376,
-          0.7494,
-          0.8628,
-          0.9548,
+          0.4963,
+          0.7501,
+          0.8964,
           1.0,
-          1.0234,
-          1.0167,
-          0.9421,
-          0.5661
+          1.0011,
+          0.9341,
+          0.7624,
+          0.5938,
+          0.4481
         ]
       },
       "source": "generated",
@@ -2624,28 +2624,28 @@
       "name": "MAIN_072",
       "category": "main",
       "sizeMeters": [
-        0.30846,
-        0.12492,
-        0.2664
+        0.22071,
+        0.0913,
+        0.17718
       ],
-      "triangles": 368,
-      "geometrySHA256": "234296a17957214938662ae5748039a79201a71c2b6062dc979e0fe2c63de581",
+      "triangles": 288,
+      "geometrySHA256": "f4d774228c21c199b678fcd9926ca0ab4bef31d9e1bf08bd8a5ee25d209b7226",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.61,
-        "shoulder20": 0.7267,
-        "tip06": 0.5011,
-        "roughness": 0.0044,
+        "end12": 0.7233,
+        "shoulder20": 0.8591,
+        "tip06": 0.4259,
+        "roughness": 0.00387,
         "profile": [
-          0.6386,
-          0.7688,
-          0.9096,
-          1.0082,
+          0.5721,
+          0.7803,
+          0.8591,
+          0.9425,
           1.0,
-          0.914,
-          0.7267,
-          0.61,
-          0.5011
+          1.0394,
+          0.8973,
+          0.7233,
+          0.4259
         ]
       },
       "source": "generated",
@@ -2655,18 +2655,18 @@
       "name": "CHINKING_001",
       "category": "chinking",
       "sizeMeters": [
-        0.15129,
-        0.10326,
-        0.10358
+        0.07844,
+        0.05354,
+        0.0537
       ],
       "triangles": 40,
-      "geometrySHA256": "233ab99585f75d4607ca3a65d8ee82a31ea780b5fe16169b57e3abedad48348d",
+      "geometrySHA256": "ed7e27deb9ed0b99e7994dc99b61381d96ed3830762e05779a055b4cdb030962",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1811,
         "shoulder20": 0.4767,
         "tip06": 0.0453,
-        "roughness": 0.01077,
+        "roughness": 0.00558,
         "profile": [
           0.0453,
           0.1811,
@@ -2688,18 +2688,18 @@
       "name": "CHINKING_002",
       "category": "chinking",
       "sizeMeters": [
-        0.1622,
-        0.12857,
-        0.10038
+        0.09875,
+        0.07827,
+        0.06111
       ],
       "triangles": 38,
-      "geometrySHA256": "93a49a519a80ff88dbeaa2428850feaaaffec7a512debb32cb27fa06d1b8779b",
+      "geometrySHA256": "88328bbee31f65bf05b3cfc3f18a7830d0828f60dc485e7d2a8af4d68e36b251",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.2233,
         "shoulder20": 0.45,
         "tip06": 0.0607,
-        "roughness": 0.00566,
+        "roughness": 0.00345,
         "profile": [
           0.4017,
           0.8212,
@@ -2721,18 +2721,18 @@
       "name": "CHINKING_003",
       "category": "chinking",
       "sizeMeters": [
-        0.1452,
-        0.09585,
-        0.08299
+        0.10401,
+        0.06866,
+        0.05944
       ],
       "triangles": 38,
-      "geometrySHA256": "a90c09dd6fd47cde1b4300ae6d65682a4e22134a1a32198f6c0b9ba4766b486d",
+      "geometrySHA256": "37fdd1ff46082eb2fa908d3256d94202ba400d9bff44563977eed456a1931b92",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.3476,
         "shoulder20": 0.5773,
         "tip06": 0.1556,
-        "roughness": 0.00788,
+        "roughness": 0.00564,
         "profile": [
           0.2089,
           0.5296,
@@ -2754,18 +2754,18 @@
       "name": "CHINKING_004",
       "category": "chinking",
       "sizeMeters": [
-        0.13331,
-        0.10805,
-        0.09186
+        0.17019,
+        0.13794,
+        0.11728
       ],
       "triangles": 38,
-      "geometrySHA256": "0185f7a63527ade25dff9046e48b4515f052b293ee3b4fd43d0a83f70798ce09",
+      "geometrySHA256": "1527ae1c789e031bb013793b0f0741a97ef3afd9deadbf09d628b06bd054ce2b",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.5302,
         "shoulder20": 0.7197,
         "tip06": 0.3023,
-        "roughness": 0.00296,
+        "roughness": 0.00378,
         "profile": [
           0.5814,
           0.8065,
@@ -2787,18 +2787,18 @@
       "name": "CHINKING_005",
       "category": "chinking",
       "sizeMeters": [
-        0.1271,
-        0.07546,
-        0.0677
+        0.13174,
+        0.07821,
+        0.07017
       ],
       "triangles": 58,
-      "geometrySHA256": "c815f2410e1598df816f46d849f5e3521afcdfde4296e4f47a33b82f789a4566",
+      "geometrySHA256": "ee016ecda0b959f4996a5ab36dafefec470eeeaa6a2d17fa7d2d45b8b248a6c7",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.3181,
         "shoulder20": 0.4515,
         "tip06": 0.1143,
-        "roughness": 0.01123,
+        "roughness": 0.01164,
         "profile": [
           0.1308,
           0.408,
@@ -2820,18 +2820,18 @@
       "name": "CHINKING_006",
       "category": "chinking",
       "sizeMeters": [
-        0.11132,
-        0.10169,
-        0.06218
+        0.1639,
+        0.14972,
+        0.09155
       ],
       "triangles": 40,
-      "geometrySHA256": "300dabc6d7d86b8f13358efd6b5741c95f39dd22d7d3c5d2cfc205e91ad03915",
+      "geometrySHA256": "cf631abbece51a042f4c8e2926afbb3c1f9a9c6eb9a8affc782b7d85f8bde4e7",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.5892,
         "shoulder20": 0.7357,
         "tip06": 0.442,
-        "roughness": 0.00744,
+        "roughness": 0.01095,
         "profile": [
           0.4597,
           0.6703,
@@ -2853,18 +2853,18 @@
       "name": "CHINKING_007",
       "category": "chinking",
       "sizeMeters": [
-        0.06215,
-        0.03725,
-        0.03366
+        0.11681,
+        0.07001,
+        0.06327
       ],
       "triangles": 40,
-      "geometrySHA256": "d2e7846c4d8c3471edd533203fb40f2da1e945d0d40360b69c004468a3854fcb",
+      "geometrySHA256": "b218f461af5f15b4870600335b5b0951dfec3369a661a7be7a41ecaf7a54c1aa",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1662,
         "shoulder20": 0.4093,
         "tip06": 0.0517,
-        "roughness": 0.00361,
+        "roughness": 0.00679,
         "profile": [
           0.0517,
           0.1662,
@@ -2886,18 +2886,18 @@
       "name": "CHINKING_008",
       "category": "chinking",
       "sizeMeters": [
-        0.13977,
-        0.10176,
-        0.07146
+        0.13662,
+        0.09947,
+        0.06985
       ],
       "triangles": 78,
-      "geometrySHA256": "8d0c0cf22597a5662e735455a35f561027e945b6f2cee791b186340d6bc74fc6",
+      "geometrySHA256": "e6635a6076677eb30170f03837765f742b602943ddcf8f0905bb0d99e169b3b8",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.2432,
         "shoulder20": 0.6719,
         "tip06": 0.08,
-        "roughness": 0.00672,
+        "roughness": 0.00657,
         "profile": [
           0.2775,
           0.4873,
@@ -2919,18 +2919,18 @@
       "name": "CHINKING_009",
       "category": "chinking",
       "sizeMeters": [
-        0.09839,
-        0.06038,
-        0.0618
+        0.11674,
+        0.07165,
+        0.07333
       ],
       "triangles": 40,
-      "geometrySHA256": "6a63a327b05f52265639dde794e391148aa38890405780bc8729757f3e5b4cb0",
+      "geometrySHA256": "e762fe59fd19bb144a555e71e0eb33473cc496624fc543818792c704c301e4ee",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1599,
         "shoulder20": 0.348,
         "tip06": 0.0611,
-        "roughness": 0.00639,
+        "roughness": 0.00758,
         "profile": [
           0.1052,
           0.2697,
@@ -2952,18 +2952,18 @@
       "name": "CHINKING_010",
       "category": "chinking",
       "sizeMeters": [
-        0.11758,
-        0.09996,
-        0.06849
+        0.06275,
+        0.05334,
+        0.03655
       ],
       "triangles": 40,
-      "geometrySHA256": "bcf1b178ebc1a7d5a7b38314c6a8f2e0cac3ae7dc38702b3972f8b4b87362372",
+      "geometrySHA256": "d24c4ad495ae001a2c527f2e6410d7b782fa17959f7fcce6b22adbcec508cfdc",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.2325,
         "shoulder20": 0.4747,
         "tip06": 0.0664,
-        "roughness": 0.00824,
+        "roughness": 0.0044,
         "profile": [
           0.1593,
           0.4507,
@@ -2985,18 +2985,18 @@
       "name": "CHINKING_011",
       "category": "chinking",
       "sizeMeters": [
-        0.12172,
-        0.06301,
-        0.05491
+        0.11963,
+        0.06192,
+        0.05396
       ],
       "triangles": 66,
-      "geometrySHA256": "832df3dfbbadd8ffa0733bf35c2d30f762a7206941a1383141e7aae4b07d0452",
+      "geometrySHA256": "6216cfdee3696f81c013f561d5326a27570508da401c01c22770c1a93b98f971",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.1589,
         "shoulder20": 0.3568,
         "tip06": 0.0505,
-        "roughness": 0.00871,
+        "roughness": 0.00856,
         "profile": [
           0.1394,
           0.435,
@@ -3018,18 +3018,18 @@
       "name": "CHINKING_012",
       "category": "chinking",
       "sizeMeters": [
-        0.17759,
-        0.14045,
-        0.11753
+        0.15497,
+        0.12256,
+        0.10256
       ],
       "triangles": 40,
-      "geometrySHA256": "9c4312f9cb7a81fed36669b66acb8c531f7aca8c3321aad0ebd23f9ecfff494d",
+      "geometrySHA256": "6891677971077e862e270ac27dc938b4bb010f19e8b4f376a99ed9370b43e925",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.4471,
         "shoulder20": 0.7587,
         "tip06": 0.1882,
-        "roughness": 0.00658,
+        "roughness": 0.00574,
         "profile": [
           0.2342,
           0.7984,
@@ -3052,27 +3052,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.0,
-        0.18549,
-        0.34741
+        0.20181,
+        0.30487
       ],
       "triangles": 408,
-      "geometrySHA256": "983cdbde349274f634b3b45b729c6fce61e7315cab6f21273bd4006c4ffa0834",
+      "geometrySHA256": "ab53b5354bcd98d66a9129d08e97e11824d7b7a6061b417c90719a4ecf6b9719",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9764,
-        "shoulder20": 0.9671,
-        "tip06": 0.9835,
-        "roughness": 0.0053,
+        "end12": 0.9895,
+        "shoulder20": 0.984,
+        "tip06": 1.0021,
+        "roughness": 0.00778,
         "profile": [
-          0.9899,
-          0.9764,
-          0.9888,
+          1.0021,
+          0.9895,
+          0.984,
           1.0,
-          1.0096,
-          0.978,
-          0.9671,
-          0.9959,
-          0.9835
+          1.0264,
+          0.9699,
+          1.0163,
+          1.0289,
+          1.019
         ]
       },
       "source": "generated"
@@ -3082,27 +3082,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.1,
-        0.20898,
-        0.30207
+        0.19191,
+        0.34283
       ],
       "triangles": 408,
-      "geometrySHA256": "f2e2383d827cf1d68eca867051cb70d5155456b8d9547094ed59598fc19c55d3",
+      "geometrySHA256": "931396bdb75d6c5ed7367bd4ec3baaec5162902f7835ac043544d9580e1d68bb",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9481,
-        "shoulder20": 0.9719,
-        "tip06": 0.9911,
-        "roughness": 0.00556,
+        "end12": 1.0046,
+        "shoulder20": 0.9844,
+        "tip06": 0.9651,
+        "roughness": 0.005,
         "profile": [
-          0.9933,
-          0.9934,
-          0.9792,
+          1.0074,
+          1.0279,
+          0.9844,
           1.0,
-          1.0071,
-          0.9704,
-          0.9719,
-          0.9481,
-          0.9911
+          0.9736,
+          1.0329,
+          1.0544,
+          1.0046,
+          0.9651
         ]
       },
       "source": "generated"
@@ -3112,27 +3112,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.2,
-        0.19458,
-        0.31373
+        0.18692,
+        0.33375
       ],
       "triangles": 408,
-      "geometrySHA256": "5a244e2fb75d72eb83a74689ada9ea8f823b4474320c87565a2cfd8c5d76534a",
+      "geometrySHA256": "ed8e4464b6e31a82e5dbc850c8217645f867b03f4b4b86bc3fdd28b335d44b15",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9962,
-        "shoulder20": 0.9907,
-        "tip06": 0.9718,
-        "roughness": 0.00773,
+        "end12": 0.992,
+        "shoulder20": 0.9813,
+        "tip06": 0.9699,
+        "roughness": 0.00757,
         "profile": [
-          0.9957,
-          1.0322,
-          1.0118,
-          0.9949,
+          0.9699,
+          0.992,
+          0.9813,
+          1.0227,
           1.0,
-          1.0289,
-          0.9907,
-          0.9962,
-          0.9718
+          0.9994,
+          0.9899,
+          1.0012,
+          0.9885
         ]
       },
       "source": "generated"
@@ -3142,27 +3142,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.3,
-        0.18486,
-        0.34411
+        0.19787,
+        0.33329
       ],
       "triangles": 408,
-      "geometrySHA256": "12d9415a0f58f5663296403ff8dc7e47b47f19142c76e70d5ab83af51b702055",
+      "geometrySHA256": "930bb2650634cab8ee3c0b67ec31672b4a8366f5129692c5edc85c66dbe795c0",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9827,
-        "shoulder20": 0.9984,
-        "tip06": 0.976,
-        "roughness": 0.00714,
+        "end12": 1.0077,
+        "shoulder20": 1.0029,
+        "tip06": 1.0278,
+        "roughness": 0.00691,
         "profile": [
-          0.986,
-          0.9827,
-          0.9984,
-          1.0268,
-          0.9981,
-          1.0,
+          1.0278,
           1.0178,
-          1.0192,
-          0.976
+          1.0093,
+          0.9962,
+          1.0043,
+          1.0,
+          1.0029,
+          1.0077,
+          1.0513
         ]
       },
       "source": "generated"
@@ -3172,27 +3172,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.4,
-        0.20908,
-        0.33006
+        0.18302,
+        0.31108
       ],
       "triangles": 408,
-      "geometrySHA256": "a9e00573fb372806ed51bd5b1dc0759f8ec7d429c4fdd5414470f027d36d2f17",
+      "geometrySHA256": "e43fe70700962259d1f43768206136eab3795af1313a07a6e4fb20239c290a91",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9971,
-        "shoulder20": 0.997,
-        "tip06": 1.0129,
-        "roughness": 0.00615,
+        "end12": 0.9497,
+        "shoulder20": 0.9719,
+        "tip06": 0.9735,
+        "roughness": 0.00648,
         "profile": [
-          1.0308,
-          1.0133,
-          1.028,
-          0.9814,
-          1.0122,
+          1.0059,
+          0.9855,
+          0.9719,
+          0.9703,
           1.0,
-          0.997,
-          0.9971,
-          1.0129
+          1.0183,
+          0.9996,
+          0.9497,
+          0.9735
         ]
       },
       "source": "generated"
@@ -3202,27 +3202,27 @@
       "category": "lintel",
       "sizeMeters": [
         1.5,
-        0.18996,
-        0.31464
+        0.18633,
+        0.30224
       ],
       "triangles": 408,
-      "geometrySHA256": "39917758dda6794b017132f57491111351b9fc56975368cd2c7f5d7f035ebe40",
+      "geometrySHA256": "5b95b4397bb68bdc49bccaa0386eee2d1d33a47aca96b46fcab3552372acc4fd",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0042,
-        "shoulder20": 0.9853,
-        "tip06": 1.008,
-        "roughness": 0.00538,
+        "end12": 1.0591,
+        "shoulder20": 1.0131,
+        "tip06": 1.0037,
+        "roughness": 0.00746,
         "profile": [
-          1.008,
-          1.0042,
-          0.9853,
-          1.0042,
+          1.0037,
+          1.0591,
+          1.0635,
+          1.0248,
+          0.9898,
           1.0,
-          0.988,
-          0.9937,
-          1.0095,
-          1.0418
+          1.0131,
+          1.0652,
+          1.0272
         ]
       },
       "source": "generated"
