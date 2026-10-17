@@ -1,5 +1,5 @@
 {
-  "version": "17.7-common100.4",
+  "version": "17.7-common100.5",
   "count": 100,
   "counts": {
     "main": 72,
@@ -19,7 +19,7 @@
     "chinking": "gaps only, not exposed standalone courses",
     "lintel": "single-piece bridge over openings"
   },
-  "glbSHA256": "05ae45115c46469be8570bb935d8ce0c467f29e9d17899f7277c810a1d2ed7a0",
+  "glbSHA256": "16f936556734263c61319554d183cd2e100282457c726301296357c5ebeec7a0",
   "models": [
     {
       "name": "LARGE_001",
@@ -3052,180 +3052,186 @@
       "category": "lintel",
       "sizeMeters": [
         1.0,
-        0.20181,
-        0.30487
+        0.19705,
+        0.30449
       ],
-      "triangles": 408,
-      "geometrySHA256": "ab53b5354bcd98d66a9129d08e97e11824d7b7a6061b417c90719a4ecf6b9719",
+      "triangles": 456,
+      "geometrySHA256": "dfad06ca2a5dcf6caafbcca75f632f0a7ab8213f96cbab9dabaa62db7c200467",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9895,
-        "shoulder20": 0.984,
-        "tip06": 1.0021,
-        "roughness": 0.00778,
+        "end12": 1.088,
+        "shoulder20": 0.9639,
+        "tip06": 0.9885,
+        "roughness": 0.01844,
         "profile": [
-          1.0021,
-          0.9895,
-          0.984,
+          0.9885,
+          1.1726,
+          0.9639,
+          0.8841,
+          1.0035,
           1.0,
-          1.0264,
-          0.9699,
-          1.0163,
-          1.0289,
-          1.019
+          1.0201,
+          1.088,
+          1.1085
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "lintelStyle": "quarry-broken"
     },
     {
       "name": "LINTEL_002",
       "category": "lintel",
       "sizeMeters": [
-        1.1,
-        0.19191,
-        0.34283
+        1.0,
+        0.21094,
+        0.31426
       ],
-      "triangles": 408,
-      "geometrySHA256": "931396bdb75d6c5ed7367bd4ec3baaec5162902f7835ac043544d9580e1d68bb",
+      "triangles": 560,
+      "geometrySHA256": "0a34b919dbe482c3bb46c370ad75a3d69d7975b8fb32187858800e68615bcdcd",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0046,
-        "shoulder20": 0.9844,
-        "tip06": 0.9651,
-        "roughness": 0.005,
+        "end12": 0.865,
+        "shoulder20": 0.8752,
+        "tip06": 0.8106,
+        "roughness": 0.01806,
         "profile": [
-          1.0074,
-          1.0279,
-          0.9844,
+          0.9587,
+          0.9256,
+          1.0146,
           1.0,
-          0.9736,
-          1.0329,
-          1.0544,
-          1.0046,
-          0.9651
+          0.9078,
+          1.0231,
+          0.8752,
+          0.865,
+          0.8106
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "lintelStyle": "stratified"
     },
     {
       "name": "LINTEL_003",
       "category": "lintel",
       "sizeMeters": [
-        1.2,
-        0.18692,
-        0.33375
+        1.25,
+        0.21895,
+        0.34369
       ],
-      "triangles": 408,
-      "geometrySHA256": "ed8e4464b6e31a82e5dbc850c8217645f867b03f4b4b86bc3fdd28b335d44b15",
+      "triangles": 504,
+      "geometrySHA256": "52d03b595abfd6eff1d3f0e96e61ed6f8f6aa5d54ee7440a6313fe742fcc346e",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.992,
-        "shoulder20": 0.9813,
-        "tip06": 0.9699,
-        "roughness": 0.00757,
+        "end12": 1.0274,
+        "shoulder20": 0.9365,
+        "tip06": 1.0897,
+        "roughness": 0.01861,
         "profile": [
-          0.9699,
-          0.992,
-          0.9813,
-          1.0227,
+          1.1661,
+          1.0274,
+          1.052,
           1.0,
-          0.9994,
-          0.9899,
-          1.0012,
-          0.9885
+          1.0063,
+          0.9943,
+          0.9365,
+          1.0948,
+          1.0897
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "lintelStyle": "quarry-broken"
     },
     {
       "name": "LINTEL_004",
       "category": "lintel",
       "sizeMeters": [
-        1.3,
-        0.19787,
-        0.33329
+        1.25,
+        0.19465,
+        0.30572
       ],
-      "triangles": 408,
-      "geometrySHA256": "930bb2650634cab8ee3c0b67ec31672b4a8366f5129692c5edc85c66dbe795c0",
+      "triangles": 616,
+      "geometrySHA256": "b2f97cdff697fecbba1447216081f69a80f16db3cdeb2098463afe6c7caf553a",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0077,
-        "shoulder20": 1.0029,
-        "tip06": 1.0278,
-        "roughness": 0.00691,
+        "end12": 1.0294,
+        "shoulder20": 0.8857,
+        "tip06": 1.0113,
+        "roughness": 0.01076,
         "profile": [
-          1.0278,
-          1.0178,
-          1.0093,
-          0.9962,
-          1.0043,
+          1.0841,
+          1.0294,
+          0.8857,
+          0.8898,
+          1.0427,
           1.0,
-          1.0029,
-          1.0077,
-          1.0513
+          0.9536,
+          1.0465,
+          1.0113
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "lintelStyle": "stratified"
     },
     {
       "name": "LINTEL_005",
       "category": "lintel",
       "sizeMeters": [
-        1.4,
-        0.18302,
-        0.31108
+        1.5,
+        0.19169,
+        0.3155
       ],
-      "triangles": 408,
-      "geometrySHA256": "e43fe70700962259d1f43768206136eab3795af1313a07a6e4fb20239c290a91",
+      "triangles": 552,
+      "geometrySHA256": "adfd2d14b862476442a76575e77ded2dfc95e05e4c0f90fd509d571c74b8ae95",
       "watertight": true,
       "sectionQuality": {
-        "end12": 0.9497,
-        "shoulder20": 0.9719,
-        "tip06": 0.9735,
-        "roughness": 0.00648,
+        "end12": 1.1527,
+        "shoulder20": 1.0968,
+        "tip06": 1.0864,
+        "roughness": 0.02372,
         "profile": [
-          1.0059,
-          0.9855,
-          0.9719,
-          0.9703,
+          1.0864,
+          1.1774,
+          1.2447,
           1.0,
-          1.0183,
-          0.9996,
-          0.9497,
-          0.9735
+          1.3214,
+          0.9596,
+          1.0968,
+          1.1527,
+          1.2989
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "lintelStyle": "quarry-broken"
     },
     {
       "name": "LINTEL_006",
       "category": "lintel",
       "sizeMeters": [
         1.5,
-        0.18633,
-        0.30224
+        0.20794,
+        0.33732
       ],
-      "triangles": 408,
-      "geometrySHA256": "5b95b4397bb68bdc49bccaa0386eee2d1d33a47aca96b46fcab3552372acc4fd",
+      "triangles": 672,
+      "geometrySHA256": "3e607d35c14b74745e387f5716080aa11133976f6bb2c9854ae942406d192d6e",
       "watertight": true,
       "sectionQuality": {
-        "end12": 1.0591,
-        "shoulder20": 1.0131,
-        "tip06": 1.0037,
-        "roughness": 0.00746,
+        "end12": 0.8994,
+        "shoulder20": 0.8481,
+        "tip06": 0.8962,
+        "roughness": 0.01569,
         "profile": [
-          1.0037,
-          1.0591,
-          1.0635,
-          1.0248,
-          0.9898,
+          0.9999,
+          0.9956,
+          0.9336,
+          1.0732,
           1.0,
-          1.0131,
-          1.0652,
-          1.0272
+          0.9854,
+          0.8481,
+          0.8994,
+          0.8962
         ]
       },
-      "source": "generated"
+      "source": "generated",
+      "lintelStyle": "stratified"
     }
   ]
 }
