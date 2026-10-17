@@ -15,12 +15,13 @@ import numpy as np
 import trimesh
 from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
+from common100_quality import quality, violations
 
 ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb"
 EXPECTED_GATE_SHA256 = "37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51"
 OUTPUT = ROOT / "assets/tower/prefabs/common100"
-VERSION = "17.7-common100.1"
+VERSION = "17.7-common100.2"
 TARGETS = {"main": 72, "large": 10, "chinking": 12, "lintel": 6}
 SEED = 170017
 MATERIAL = PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR", baseColorFactor=[193, 176, 146, 255],
@@ -93,6 +94,9 @@ def gate_candidates(path):
             continue
         if kind == "main" and (elongation < 1.075 or sharp < .025):
             continue
+        q=quality(mesh)
+        if kind=="main" and violations(node,"main",q,mesh.extents):
+            continue
         if kind == "chinking" and sharp < .012:
             continue
         candidates[kind].append(dict(node=node, mesh=mesh, score=score,
@@ -103,7 +107,7 @@ def gate_candidates(path):
               "minmax_sharp",(min((r[0] for r in rows),default=0), max((r[0] for r in rows),default=0)),
               "fill",(min((r[2] for r in rows),default=0), max((r[2] for r in rows),default=0)),
               "watertight",sum(r[4] for r in rows))
-    print("GATE_INPUT", {kind: len(v) for kind, v in candidates.items()})
+    print("GATE_INPUT_AFTER_SPIKE_SCREEN", {kind: len(v) for kind, v in candidates.items()})
     return candidates
 
 
@@ -168,6 +172,86 @@ def fractured_rock(rng, dimensions, lintel=False):
     return make_surface(mesh, force_uv=True)
 
 
+
+def fractured_lintel(rng, dimensions):
+    """Non-rectilinear single stone slab with chipped, slanted, full-size faces.
+
+    Broad end rings have at least 90% of the middle width/depth: no
+    sharpened tips.  Interior longitudinal stations have small independent
+    knocks and scarred arrises.  Bottom retains an approximately planar seat.
+    """
+    lx,hy,dz=map(float,dimensions)
+    if not (.18<=hy<=.24 and .29<=dz<=.35 and hy/dz<=.78):
+        raise ValueError("Lintel must be wider than its thickness")
+    # YZ ring. Four main faces with small broken corners, unlike a regular
+    # polygon/log.  Off-axis corners make separate beveled bands.
+    outline=np.array([
+        [-.48,-.33],[-.49,.33],[-.42,.47],[-.28,.50],
+        [.24,.49],[.42,.45],[.50,.26],[.49,-.31],
+        [.42,-.48],[.22,-.50],[-.26,-.49],[-.43,-.46]
+    ],dtype=float)
+    n=len(outline)
+    count=17
+    verts=[]
+    # Different long-wavelength runs on front/back wall -> no smooth extrusion.
+    phases=rng.uniform(-np.pi,np.pi,size=n)
+    face_damage=np.zeros((count,n),dtype=float)
+    for k in range(3):
+        i=int(rng.integers(2,count-2))
+        j=int(rng.choice([0,1,2,3,4,5,6,7,8,9,10,11]))
+        face_damage[max(0,i-1):min(count,i+2),j]=rng.uniform(-.008,-.004)
+    for i in range(count):
+        x=(-.5+i/(count-1))*lx
+        for j,(a,b) in enumerate(outline):
+            # End faces remain fully developed, never sharpen into a tongue.
+            station=1 if i not in (0,count-1) else rng.uniform(.96,1.01)
+            wave=np.sin(i*.63+phases[j])*.007
+            yy=a*hy*station+wave*.65+rng.normal(0,.0035)
+            zz=b*dz*station+np.sin(i*.84+phases[j])*.006+rng.normal(0,.004)
+            # Small local chips/notches on edges, but no large voids.
+            yy+=face_damage[i,j]
+            zz+=rng.uniform(-.003,.003)
+            # Broad, usable bearing face for laying across an opening.
+            if a<-.46:
+                yy=-.48*hy+rng.uniform(-.003,.004)
+            xx=x if i in (0,count-1) else x+rng.uniform(-.003,.003)
+            verts.append([xx,yy,zz])
+    faces=[]
+    for i in range(count-1):
+        for j in range(n):
+            a,b=i*n+j,i*n+(j+1)%n
+            c,d=(i+1)*n+j,(i+1)*n+(j+1)%n
+            if (i+j)%2:faces.extend([(a,c,d),(a,d,b)])
+            else:faces.extend([(a,c,b),(b,c,d)])
+    low=len(verts);verts.append([-.5*lx,0,0])
+    high=len(verts);verts.append([.5*lx,0,0])
+    for j in range(n):
+        faces.append((low,(j+1)%n,j))
+        faces.append((high,(count-1)*n+j,(count-1)*n+(j+1)%n))
+    rock=trimesh.Trimesh(vertices=verts,faces=faces,process=True)
+    trimesh.repair.fix_normals(rock)
+    rock.apply_scale(np.asarray(dimensions)/rock.extents)
+    rock.apply_translation(-rock.bounds.mean(axis=0))
+    if not rock.is_watertight or not rock.is_volume:
+        raise ValueError("Generated lintel is not one closed solid")
+    return make_surface(rock,force_uv=True)
+
+
+def generate_checked_rock(rng,category,length):
+    for attempt in range(90):
+        if category=="lintel":
+            h=round(float(rng.uniform(.18,.22)),5)
+            depth=round(float(rng.uniform(.30,.35)),5)
+            rock=fractured_lintel(rng,(length,h,depth))
+        else:
+            h=length*rng.uniform(.44,.70)
+            depth=length*rng.uniform(.55,.88)
+            rock=fractured_rock(rng,(length,h,depth))
+        q=quality(rock)
+        if not violations("GENERATED",category,q,rock.extents):
+            return rock
+    raise RuntimeError("Unable to produce safe angular "+category+" in 90 candidates")
+
 def accepted_rock(mesh, source_id, target_long):
     rock = mesh.copy()
     align_long_axis_x(rock)
@@ -224,17 +308,13 @@ def build(source, output):
                 provenance = {"source": "gate", "gateNode": item["node"],
                               "gateCategory": donor, "sharpEdgeRatio": round(item["sharp"], 4)}
             else:
-                height = length * rng.uniform(.44, .70)
-                depth = length * rng.uniform(.55, .88)
-                mesh = fractured_rock(rng, (length, height, depth))
+                mesh = generate_checked_rock(rng, category, length)
                 provenance = {"source": "generated"}
             plans.append((category, i + 1, mesh, provenance))
     # Real 1.0-1.5 m lintels absent from the v7 source: generate six solid, broken-edge slabs.
     for i in range(TARGETS["lintel"]):
         length = round(float(np.linspace(1.0, 1.5, TARGETS["lintel"])[i]), 5)
-        height = round(float(rng.uniform(.18, .30)), 5)
-        depth = round(float(rng.uniform(.20, .35)), 5)
-        plans.append(("lintel", i + 1, fractured_rock(rng, (length, height, depth), lintel=True),
+        plans.append(("lintel", i + 1, generate_checked_rock(rng, "lintel", length),
                       {"source": "generated"}))
 
     scene = trimesh.Scene(base_frame="world")
@@ -248,6 +328,10 @@ def build(source, output):
         geometry_hashes.add(h)
         if not np.isfinite(mesh.vertices).all() or not np.isfinite(mesh.vertex_normals).all():
             raise ValueError("Nonfinite vertices or normals: " + name)
+        profile=quality(mesh)
+        errors=violations(name,category,profile,mesh.extents)
+        if errors:
+            raise ValueError("Unsafe geometry "+name+": "+"; ".join(errors))
         long = max(mesh.extents)
         lo, hi = {"main": (.20, .40), "large": (.50, .70),
                   "chinking": (.06, .18), "lintel": (1.0, 1.5)}[category]
@@ -257,7 +341,8 @@ def build(source, output):
         metadata.append(dict(name=name, category=category,
                              sizeMeters=[round(float(x), 5) for x in mesh.extents],
                              triangles=int(len(mesh.faces)), geometrySHA256=h,
-                             watertight=bool(mesh.is_watertight), **provenance))
+                             watertight=bool(mesh.is_watertight),
+                             sectionQuality=profile, **provenance))
     if sha256(source.read_bytes()) != old_gate_hash:
         raise ValueError("Source gate changed during build")
     glb = output / "common-100.glb"
