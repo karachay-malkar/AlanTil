@@ -31,6 +31,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.15;
+renderer.domElement.style.cssText='display:block;width:100%;height:100%;touch-action:none';
 host.append(renderer.domElement);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#728578');
 const camera=new THREE.PerspectiveCamera(46,1,.02,100);
