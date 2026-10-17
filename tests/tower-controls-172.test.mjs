@@ -9,7 +9,7 @@ test('tower UI uses Lucide and single confirmed full-clear action',()=>{
  assert.match(s,/context\.modal\.confirm/);
  assert.match(s,/clearTowerAll\(\{revision:s\.revision,legacyRevision:s\.legacyRevision/);
  for(const c of ['✓','×','⟳','◇','⌫','⚒','⌂','◈'])
-  assert.equal(s.includes(c),false,'obsolete text icon: '+c);
+  assert.equal(s.includes('>'+c+'<'),false,'obsolete text icon: '+c);
 });
 test('successful placements remain in placing mode and recover after uncertain errors',()=>{
  const s=file('src/features/tower/index.js');

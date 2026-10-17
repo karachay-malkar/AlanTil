@@ -1,4 +1,6 @@
 \set ON_ERROR_STOP on
+-- CI baseline fixture omits this V1 column, but production has it.
+ALTER TABLE private.tower_accounts ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 -- Isolated transactional exercise against tower_v3_fixture.sql + tower migrations.
 INSERT INTO private.tower_v3_state(user_id) VALUES('11111111-1111-4111-8111-111111111111') ON CONFLICT DO NOTHING;
 UPDATE private.tower_accounts SET elements='[["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","stone",0,0,0,1,1,1,0,0,"silver",1]]'::jsonb
