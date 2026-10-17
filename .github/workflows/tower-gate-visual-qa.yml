@@ -8,6 +8,7 @@ on:
       - 'tower-compact-review.html'
       - 'scripts/qa/browser-tower-gate-review-1759.cjs'
       - 'tests/tower-gate-instances-1759.test.mjs'
+      - 'tests/tower-gate-faces-17510.test.mjs'
       - '.github/workflows/tower-gate-visual-qa.yml'
   workflow_dispatch:
 permissions:
@@ -22,7 +23,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test 486 source transforms and keep old save versions
-        run: node --test tests/tower-gate-instances-1759.test.mjs
+        run: node --test tests/tower-gate-instances-1759.test.mjs tests/tower-gate-faces-17510.test.mjs
       - name: Install Chromium
         run: |
           npm install --no-save playwright@1.55.0

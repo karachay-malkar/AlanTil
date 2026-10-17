@@ -39,6 +39,24 @@ fs.mkdirSync(output,{recursive:true});
     count++;
    }
   }
+  // Second complete visual check: all 25 surface-chinked gate-rock variants.
+  await page.locator('#release').selectOption('17.5.10');
+  for(const kind of types){
+   await page.locator('#kind').selectOption(kind);
+   for(let variant=0;variant<5;variant++){
+    await page.locator('#variant').selectOption(String(variant));
+    await page.waitForFunction(([type,index])=>{
+     const status=document.getElementById('status')?.textContent||'';
+     return status.includes('Размер: '+type)&&status.includes('Камней:')&&
+      status.includes('Материал:')&&!status.includes('Ошибка:')&&
+      document.getElementById('variant').value===String(index);
+    },[kind,variant],{timeout:45000});
+    const state=await page.locator('#status').textContent();
+    if(!/Материал:/.test(state))throw Error('Surface-pack render failed: '+state);
+    await page.screenshot({path:path.join(output,'facepacked-'+kind+'-variant-'+variant+'.png')});
+    count++;
+   }
+  }
   await page.setViewportSize({width:390,height:844});
   await page.locator('#kind').selectOption('4x4x4');
   await page.locator('#variant').selectOption('4');
