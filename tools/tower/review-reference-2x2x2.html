@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AlanTil · Дикая кладка · 2×2×2 · 3D-проверка</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font:14px system-ui,Arial,sans-serif;background:#18201f;color:#eaf1eb}
+#viewer{position:absolute;inset:0}aside{position:absolute;top:12px;left:12px;max-width:min(420px,calc(100vw - 24px));background:#101719e6;backdrop-filter:blur(8px);padding:16px;border:1px solid #40504d;border-radius:12px;z-index:10}
+h1{font-size:17px;margin:0 0 8px}p{margin:0 0 8px;line-height:1.5;color:#c1cdc7}
+button{background:#334640;color:white;border:1px solid #71837b;border-radius:7px;padding:9px;margin:2px;cursor:pointer}
+button:hover{background:#4a635a}
+.controls{margin:10px -3px 8px}small{display:block;margin-top:8px;color:#c1cdc7;line-height:1.45}
+#status{font-variant-numeric:tabular-nums}#count{color:#c6deb2}
+footer{position:absolute;bottom:12px;right:12px;padding:8px 10px;background:#101719de;border-radius:8px;color:#dde6dc}
+</style>
+</head><body><main id="viewer" aria-label="Интерактивная 3D-секция"></main>
+<aside><h1>AlanTil · Эталонная кладка 2×2×2</h1>
+<p>Настоящие нерегулярные камни из общей библиотеки Common94. 0,5 × 0,5 × 0,5 м. Не готово к публикации в игру.</p>
+<div id="status">Загрузка 3D-библиотеки…</div>
+<div class="controls">
+<button data-view="iso">Общий вид</button><button data-view="front">Спереди</button><button data-view="back">Сзади</button>
+<button data-view="left">Слева</button><button data-view="right">Справа</button><button data-view="top">Сверху</button>
+</div>
+<div class="controls">
+<label><input type="checkbox" id="filler" checked> Забутовочные камни</label>
+<label style="margin-left:12px"><input type="checkbox" id="edges"> Рёбра сеток</label>
+</div>
+<p id="count"></p>
+<small>Вращайте модель мышью или пальцем. Масштаб — колесом мыши или двумя пальцами. Натуральные выступы по наружному контуру не считаются отверстиями. Окончательная приёмка требует проверки сквозных просветов по настоящим треугольникам.</small>
+</aside>
+<footer>Офлайн-рецепт · InstancedMesh · 94 исходные формы</footer>
+<script type="module">
+import * as THREE from './three/three.module.js';
+import {OrbitControls} from './three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from './three/addons/loaders/GLTFLoader.js';
+const mount=document.getElementById('viewer'),info=document.getElementById('status');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(1.7,devicePixelRatio||1));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.08;
+renderer.setSize(innerWidth,innerHeight);
+mount.append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#a2ada7');
+const camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.02,55);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.minDistance=.65;controls.maxDistance=6;controls.target.set(0,0,0);
+scene.add(new THREE.HemisphereLight('#ffffff','#596356',2.5));
+const key=new THREE.DirectionalLight('#fffaed',3.5);key.position.set(3,5,4);scene.add(key);
+const rim=new THREE.DirectionalLight('#b8c9e2',1.8);rim.position.set(-3,1,-4);scene.add(rim);
+const slab=new THREE.GridHelper(2,12,'#657770','#657770');slab.position.y=-.275;scene.add(slab);
+const groups={main:new THREE.Group(),filler:new THREE.Group()};
+scene.add(groups.main,groups.filler);
+const setCamera=(name)=>{
+const positions={iso:[1.2,.9,1.3],front:[0,0,1.6],back:[0,0,-1.6],left:[-1.6,0,0],right:[1.6,0,0],top:[0,1.6,0]};
+const p=positions[name]||positions.iso;camera.position.set(...p);camera.up.set(0,1,0);if(name==='top')camera.up.set(0,0,-1);camera.lookAt(0,0,0);controls.update();
+};
+setCamera('iso');
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setCamera(b.dataset.view));
+document.getElementById('filler').onchange=e=>groups.filler.visible=e.target.checked;
+document.getElementById('edges').onchange=e=>{for(const g of Object.values(groups))g.traverse(n=>{if(n.isInstancedMesh){n.material.wireframe=e.target.checked;n.material.needsUpdate=true;}})};
+const loader=new GLTFLoader();
+try{
+ const [source,rp,q]=await Promise.all([
+   loader.loadAsync('./common-94.glb'),
+   fetch('./reference-2x2x2.json').then(r=>{if(!r.ok)throw Error('JSON not found');return r.json()}),
+   fetch('./reference-2x2x2-quality.json').then(r=>{if(!r.ok)throw Error('QA not found');return r.json()})
+ ]);
+ const map=new Map();
+ source.scene.traverse(n=>{if(n.isMesh)map.set(n.name,n)});
+ const recipe=rp.variants['2x2x2'][0].placement,batches=new Map();
+ for(const row of recipe){const k=row[0];if(!map.has(k))throw new Error('Source mesh missing: '+k);if(!batches.has(k))batches.set(k,[]);batches.get(k).push(row)}
+ const M=new THREE.Matrix4(),materials=[];
+ for(const [name,list] of batches){
+   const src=map.get(name),mat=src.material.clone();
+   mat.side=THREE.FrontSide;mat.roughness=1;mat.metalness=0;
+   const inst=new THREE.InstancedMesh(src.geometry,mat,list.length);
+   inst.name=name;
+   for(let i=0;i<list.length;i++){const v=list[i];M.set(v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8],v[9],v[10],v[11],v[12],0,0,0,1);inst.setMatrixAt(i,M)}
+   inst.instanceMatrix.needsUpdate=true;inst.computeBoundingSphere();
+   (name.startsWith('CHINK_')?groups.filler:groups.main).add(inst);
+   materials.push(mat);
+ }
+ const views=q.afterViews.map(v=>v.axis+': '+Math.round(100*v.interiorCoverage)+'%').join(' / ');
+ info.textContent='Экспериментальная сборка · внутренние проекции: '+views+' (приближённый расчёт)';
+ document.getElementById('count').textContent=q.placements+' камней · '+q.coarse+' основных · '+q.chinking+' забутовка · '+Math.round(q.horizontalShare*100)+'% основных вытянутые горизонтальные';
+}catch(e){console.error(e);info.textContent='Ошибка загрузки: '+e.message+' · запустите папку через локальный HTTP-сервер';}
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>
