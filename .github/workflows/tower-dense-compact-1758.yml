@@ -7,11 +7,11 @@ on:
       - '.github/workflows/tower-dense-compact-1758.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   candidate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,11 +19,39 @@ jobs:
           python-version: '3.13'
       - name: Install authored geometry baking libraries
         run: pip install numpy==2.3.5 scipy==1.17.0 trimesh==4.11.1
-      - name: Probe actual glb geometry and offline voxel packing on one section
-        run: python tools/tower/bake-dense-compact-1758.py --kind 1x1x1 --variant 0 --verbose --out /tmp/alantil-dense-probe.json
+      - name: Bake all 25 authored wild-stone placements offline
+        run: python tools/tower/bake-dense-compact-1758.py
+      - name: Verify 25 non-empty deterministic recipes without fabricating quality
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          p=json.loads(pathlib.Path('assets/tower/prefabs/balkar71/placements-17_5_8.json').read_text())
+          assert p['version']=='17.5.8'
+          assert len(p['variants'])==5
+          assert all(len(v)==5 for v in p['variants'].values())
+          recipes=[r for v in p['variants'].values() for r in v]
+          assert len(recipes)==25
+          assert all(1<=len(r['placement'])<=512 for r in recipes)
+          assert p['totalPlacements']==sum(len(r['placement']) for r in recipes)
+          for r in recipes:
+              assert 0 <= r['occupancy'] <= 1
+              assert 0 <= r['minFaceCoverage'] <= 1
+          print('CANDIDATE QUALITY RANGE',min(r['occupancy'] for r in recipes),max(r['occupancy'] for r in recipes))
+          print('TARGET 90% REACHED',sum(r['occupancy']>=.90 for r in recipes),'OF',len(recipes))
+          PY
+      - name: Commit CANDIDATE only; do not activate gameplay without independent QA
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/prefabs/balkar71/placements-17_5_8.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'assets(tower): prepare 25 unapproved 17.5.8 masonry candidates'
+            git pull --rebase origin 17.2
+            git push origin HEAD:17.2
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: alantil-dense-probe
-          path: /tmp/alantil-dense-probe.json
+          name: alantil-dense-25-candidates
+          path: assets/tower/prefabs/balkar71/placements-17_5_8.json
           if-no-files-found: ignore
