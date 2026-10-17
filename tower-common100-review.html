@@ -49,7 +49,7 @@ a{color:#dccca1;text-decoration:none}a:hover{text-decoration:underline}
 </style></head>
 <body><div class="shell">
 <header><div><p class="eyebrow">AlanTil · 3D geometry review</p><h1>Камни Верхней Балкарии <span style="color:#bca985">/ 100</span></h1></div><div class="stats"><strong id="gateCount">—</strong> из ворот · <strong id="newCount">—</strong> новых<br>Геометрия · 1:1 · метры</div></header>
-<nav class="filters" aria-label="Категории"><button class="chip" data-group="main" aria-pressed="true">Основные · 72</button><button class="chip" data-group="large" aria-pressed="false">Крупные · 10</button><button class="chip" data-group="chinking" aria-pressed="false">Забутовка · 12</button><button class="chip" data-group="lintel" aria-pressed="false">Перемычки · 6</button><button class="chip" data-group="all" aria-pressed="false">Все · 100</button></nav>
+<nav class="filters" aria-label="Категории"><button class="chip" data-group="main" aria-pressed="true">Основные · 72</button><button class="chip" data-group="large" aria-pressed="false">Крупные · 10</button><button class="chip" data-group="chinking" aria-pressed="false">Забутовка · 12</button><button class="chip" data-group="lintel" aria-pressed="false">Перемычки · 6</button><button class="chip" data-group="new-main" aria-pressed="false">38 новых</button><button class="chip" data-group="all" aria-pressed="false">Все · 100</button></nav>
 <div class="main">
 <section class="stage" aria-label="Интерактивная 3D-сцена">
 <div id="view"></div>
@@ -100,7 +100,7 @@ const stoneMat=new THREE.MeshStandardMaterial({color:0xb7a992,roughness:1,metaln
 const guideMat=new THREE.LineBasicMaterial({color:0x332d22,transparent:true,opacity:.5});
 const rc=new THREE.Raycaster(),mouse=new THREE.Vector2();
 const dimsOf=r=>r.sizeMeters.map(v=>Math.round(v*100));
-const subset=()=>state.group==='all'?state.records:state.records.filter(r=>r.category===state.group);
+const subset=()=>state.group==='all'?state.records:state.group==='new-main'?state.records.filter(r=>r.category==='main'&&r.source==='generated'):state.records.filter(r=>r.category===state.group);
 const active=()=>subset()[Math.min(state.index,Math.max(0,subset().length-1))];
 function disposeShow(){for(const item of [...shown.children]){item.traverse(o=>{if(o.userData.edge===true){o.geometry.dispose();}});shown.remove(item);}state.meshList=[];}
 function meshFor(r){const original=state.models.get(r.name);if(!original)return null;const clone=original.clone();clone.material=stoneMat;clone.userData.record=r;return clone;}
