@@ -16,12 +16,13 @@ import trimesh
 from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 from common100_quality import quality, violations
+from common100_faceted import build_faceted_stone, FAMILIES
 
 ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb"
 EXPECTED_GATE_SHA256 = "37dc0aee3bead89dba3ed5427af604c09340db0ede15ece139f9016fc920ba51"
 OUTPUT = ROOT / "assets/tower/prefabs/common100"
-VERSION = "17.7-common100.2"
+VERSION = "17.7-common100.3"
 TARGETS = {"main": 72, "large": 10, "chinking": 12, "lintel": 6}
 SEED = 170017
 MATERIAL = PBRMaterial(name="ALANTIL_COMMON100_ROCK_PBR", baseColorFactor=[193, 176, 146, 255],
@@ -237,12 +238,14 @@ def fractured_lintel(rng, dimensions):
     return make_surface(rock,force_uv=True)
 
 
-def generate_checked_rock(rng,category,length):
+def generate_checked_rock(rng,category,length,family=None):
     for attempt in range(90):
         if category=="lintel":
             h=round(float(rng.uniform(.18,.22)),5)
             depth=round(float(rng.uniform(.30,.35)),5)
             rock=fractured_lintel(rng,(length,h,depth))
+        elif category=="main":
+            rock=build_faceted_stone(rng,length,family)
         else:
             h=length*rng.uniform(.44,.70)
             depth=length*rng.uniform(.55,.88)
@@ -308,8 +311,11 @@ def build(source, output):
                 provenance = {"source": "gate", "gateNode": item["node"],
                               "gateCategory": donor, "sharpEdgeRatio": round(item["sharp"], 4)}
             else:
-                mesh = generate_checked_rock(rng, category, length)
+                family=FAMILIES[(i-len(chosen))%len(FAMILIES)] if category=="main" else None
+                mesh = generate_checked_rock(rng, category, length, family)
                 provenance = {"source": "generated"}
+                if family:
+                    provenance["shapeFamily"]=family
             plans.append((category, i + 1, mesh, provenance))
     # Real 1.0-1.5 m lintels absent from the v7 source: generate six solid, broken-edge slabs.
     for i in range(TARGETS["lintel"]):
