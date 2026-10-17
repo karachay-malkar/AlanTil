@@ -9,6 +9,9 @@ on:
       - 'src/app/router.js'
       - 'packages/tower-game/**'
       - 'tests/compact-stones-1755.test.mjs'
+      - 'tests/tower-controls-172.test.mjs'
+      - 'tests/sql/tower_clear_v123.sql'
+      - 'supabase/migrations/20261017080000_tower_clear_all_1756.sql'
       - 'supabase/migrations/20261017000000_tower_compact_stones_1755.sql'
       - '.github/workflows/tower-compact-1755-qa.yml'
   workflow_dispatch:
