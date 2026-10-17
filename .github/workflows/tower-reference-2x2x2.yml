@@ -6,6 +6,7 @@ on:
       - 'tools/tower/build-reference-2x2x2.py'
       - 'tools/tower/verify-reference-2x2x2.py'
       - 'tools/tower/check-reference-triangle-visibility.py'
+      - 'tools/tower/fill-reference-visible-gaps.py'
       - 'tools/tower/review-reference-2x2x2.html'
       - '.github/workflows/tower-reference-2x2x2.yml'
 permissions:
@@ -24,9 +25,11 @@ jobs:
       - name: Install pinned source mesh tooling
         run: pip install 'numpy==2.2.6' 'scipy==1.15.3' 'trimesh==4.11.1' 'rtree==1.4.1' 'pillow==11.3.0'
       - name: Verify baker parses
-        run: python -m py_compile tools/tower/build-reference-2x2x2.py tools/tower/verify-reference-2x2x2.py
+        run: python -m py_compile tools/tower/build-reference-2x2x2.py tools/tower/verify-reference-2x2x2.py tools/tower/check-reference-triangle-visibility.py tools/tower/fill-reference-visible-gaps.py
       - name: Produce authentic 2x2x2 stone placements
         run: python -u tools/tower/build-reference-2x2x2.py
+      - name: Fill remaining visible gaps using exact triangle-ray checks
+        run: python -u tools/tower/fill-reference-visible-gaps.py --samples 64 --limit 70
       - name: Independent full-mesh transforms audit
         run: python tools/tower/verify-reference-2x2x2.py
       - name: Check actual triangles for through-gap rays on all three axes
