@@ -70,6 +70,7 @@ def gate_candidates(path):
         raise ValueError("The approved gate GLB SHA-256 does not match")
     scene = trimesh.load(path, force="scene", process=False)
     candidates = {"main": [], "chinking": []}
+    diagnostics = {"main": [], "chinking": []}
     for node in sorted(scene.graph.nodes_geometry):
         if "_PIER_" not in node:
             continue
@@ -83,6 +84,7 @@ def gate_candidates(path):
             continue
         align_long_axis_x(mesh)
         score, sharp, elongation, fill = angular_score(mesh)
+        diagnostics[kind].append((round(sharp,4),round(elongation,3),round(fill,3),len(mesh.faces),bool(mesh.is_watertight)))
         if min(mesh.extents) < 0.001 or fill < 0.08 or fill > .94:
             continue
         if kind == "main" and (elongation < 1.075 or sharp < .025):
@@ -92,6 +94,11 @@ def gate_candidates(path):
         candidates[kind].append(dict(node=node, mesh=mesh, score=score,
                                      sharp=sharp, elongation=elongation, fill=fill,
                                      signature=normalised_signature(mesh)))
+    for kind, rows in diagnostics.items():
+        print("GATE_RAW_METRICS",kind,"total",len(rows),"sample",rows[:5],
+              "minmax_sharp",(min((r[0] for r in rows),default=0), max((r[0] for r in rows),default=0)),
+              "fill",(min((r[2] for r in rows),default=0), max((r[2] for r in rows),default=0)),
+              "watertight",sum(r[4] for r in rows))
     print("GATE_INPUT", {kind: len(v) for kind, v in candidates.items()})
     return candidates
 
