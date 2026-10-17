@@ -7,9 +7,9 @@
     {
       "section": "1x1x1",
       "convexUpperBound": {
-        "density": 0.458,
+        "density": 0.457,
         "overlapFraction": 0.0,
-        "stones": 14,
+        "stones": 12,
         "samples": 1000,
         "metric": "convex-upper-bound"
       },
@@ -21,9 +21,9 @@
     {
       "section": "2x2x2",
       "convexUpperBound": {
-        "density": 0.59513,
-        "overlapFraction": 0.07229,
-        "stones": 99,
+        "density": 0.54138,
+        "overlapFraction": 0.02213,
+        "stones": 126,
         "samples": 8000,
         "metric": "convex-upper-bound"
       },
