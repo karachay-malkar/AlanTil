@@ -1,0 +1,43 @@
+{
+  "asset": "AlanTil 2x2x2 staged reference",
+  "geometry": "real transformed source triangles",
+  "pointsPerAxis": 4096,
+  "models": 100,
+  "rayDirections": "x/y/z; opposite ray is same through-gap projection",
+  "passesAt99_5PercentAndAtMost3PixelHole": false,
+  "minimumInternalCoverage": 0.961829,
+  "views": [
+    {
+      "samplesPerAxis": 64,
+      "samplingMeters": 0.007812,
+      "silhouetteCoverage": 0.723877,
+      "interiorCoverage": 0.961829,
+      "interiorGapPixels": 101,
+      "largestInternalHolePixels": 21,
+      "referenceContourPixels": 2646,
+      "axis": "x"
+    },
+    {
+      "samplesPerAxis": 64,
+      "samplingMeters": 0.007812,
+      "silhouetteCoverage": 0.804443,
+      "interiorCoverage": 0.987624,
+      "interiorGapPixels": 35,
+      "largestInternalHolePixels": 14,
+      "referenceContourPixels": 2828,
+      "axis": "y"
+    },
+    {
+      "samplesPerAxis": 64,
+      "samplingMeters": 0.007812,
+      "silhouetteCoverage": 0.7146,
+      "interiorCoverage": 0.989213,
+      "interiorGapPixels": 27,
+      "largestInternalHolePixels": 7,
+      "referenceContourPixels": 2503,
+      "axis": "z"
+    }
+  ],
+  "liveDeploymentPermitted": false,
+  "needsVisualApproval": true
+}
