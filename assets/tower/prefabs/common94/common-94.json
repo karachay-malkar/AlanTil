@@ -1,0 +1,1050 @@
+{
+  "version": "17.7-common94.1",
+  "count": 94,
+  "counts": {
+    "wall": 63,
+    "chinking": 29,
+    "lintel": 2
+  },
+  "sourceWall": "library-wall-17_5_5.glb",
+  "sourceWallSHA256": "78c2d8643f9814487b73648604ea6b7f90c42d426e1902dbd61325a840395f50",
+  "sourceRock36": "source-original-36.glb",
+  "sourceRock36SHA256": "159471d32f9d9478ff7225f87a3f27f09473e42d4accf71e3cbaec68dda7caa5",
+  "glbSHA256": "c320070f5bae46494366cbfd0c3c77079c3c7b7c4be344b3b1269249469463be",
+  "models": [
+    {
+      "name": "V_01",
+      "category": "wall",
+      "sizeMeters": [
+        0.45028,
+        0.33336,
+        0.31763
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "0c9a6ce5d49166ba2c71b8cd3e19d6e30bb854c2f4cbe7991c5ef484b65be0c0"
+    },
+    {
+      "name": "V_02",
+      "category": "wall",
+      "sizeMeters": [
+        0.4361,
+        0.31434,
+        0.28938
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "6618f27e3211ff95b13f8d4e0a3eb4ad02452828b31e67746df4fb74da568973"
+    },
+    {
+      "name": "V_03",
+      "category": "wall",
+      "sizeMeters": [
+        0.50637,
+        0.31202,
+        0.39106
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "606e954e9e3ec233d22a351dffb251f32aae3488e87afcbfe0a4996e4cb60fa1"
+    },
+    {
+      "name": "V_04",
+      "category": "wall",
+      "sizeMeters": [
+        0.37076,
+        0.29399,
+        0.38759
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "2f0594362462cac869da0af6f2c37ac6f2c3e2b688f99730e0d379dbb999a1c7"
+    },
+    {
+      "name": "V_05",
+      "category": "wall",
+      "sizeMeters": [
+        0.44386,
+        0.30722,
+        0.3926
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "99eb7812f66bf126c19bdf575a38c589695fd5c87da3f1db6dea0cc83c970c57"
+    },
+    {
+      "name": "V_06",
+      "category": "wall",
+      "sizeMeters": [
+        0.3744,
+        0.27667,
+        0.26236
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "9e0c27b98afcc3eb59dc3c04105cb6bf6d591b05989b77fdcab56e2611d61bcb"
+    },
+    {
+      "name": "V_07",
+      "category": "wall",
+      "sizeMeters": [
+        0.52533,
+        0.31992,
+        0.35227
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "02d202b8db16606750f0f2b227417821fb47c2c472f3170e8355ae7b2c721360"
+    },
+    {
+      "name": "V_08",
+      "category": "wall",
+      "sizeMeters": [
+        0.49316,
+        0.33851,
+        0.41311
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "15e0a472c9c64975d22b4dad9a6229069c2bfd1ead07808fbb53d997d4e955a7"
+    },
+    {
+      "name": "V_09",
+      "category": "wall",
+      "sizeMeters": [
+        0.42396,
+        0.27439,
+        0.35614
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "8859dc5b5990b4ce0cf2ad8fe3c7609c1f519fab5570c15326c501062313a6be"
+    },
+    {
+      "name": "V_10",
+      "category": "wall",
+      "sizeMeters": [
+        0.37158,
+        0.26701,
+        0.39682
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "bde08d096159a5454c139755e6bd0310bf6bce25b85c07de0e55fc41995793f3"
+    },
+    {
+      "name": "V_11",
+      "category": "wall",
+      "sizeMeters": [
+        0.54619,
+        0.32438,
+        0.38443
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "39d554683568193adf23377dae58c5519112675c3c50f682816a27680ee016d3"
+    },
+    {
+      "name": "V_12",
+      "category": "wall",
+      "sizeMeters": [
+        0.51801,
+        0.34129,
+        0.28643
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "1945fca1d517bb286d1054f4afc281746ef7cddb16c1ba5517fc1ec18e29716c"
+    },
+    {
+      "name": "V_13",
+      "category": "wall",
+      "sizeMeters": [
+        0.48011,
+        0.32246,
+        0.38233
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "2622644a0fd9aeddbb19b33a96284e10ed60bc87e4b63ba6165beb44639d7420"
+    },
+    {
+      "name": "V_14",
+      "category": "wall",
+      "sizeMeters": [
+        0.41773,
+        0.32379,
+        0.33499
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "4bf82ac1c1122d8cdd8c81e5a143d013365fd86bbd86c4227217b8760a73e968"
+    },
+    {
+      "name": "V_15",
+      "category": "wall",
+      "sizeMeters": [
+        0.42413,
+        0.27341,
+        0.38839
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "ce2f1437f689b5d08e82fb5f8b84c421cb25b28a0594b7300833dcbe0ca2eaf3"
+    },
+    {
+      "name": "G_01",
+      "category": "wall",
+      "sizeMeters": [
+        0.34483,
+        0.27259,
+        0.29166
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "ed1aabd26bbedeb7851d65a3b2dc99ed15b358033b475507449393d490a3f494"
+    },
+    {
+      "name": "G_02",
+      "category": "wall",
+      "sizeMeters": [
+        0.26325,
+        0.22238,
+        0.36324
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "8c91197edc752ffafc541bf335081b041bd4b8fcec3929a70525584f223a1785"
+    },
+    {
+      "name": "G_03",
+      "category": "wall",
+      "sizeMeters": [
+        0.38181,
+        0.32855,
+        0.36025
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "8ac4325b5c710b7ee15f5297ad8cc0ffd811d43bf7efb937fe1465201aa77231"
+    },
+    {
+      "name": "G_04",
+      "category": "wall",
+      "sizeMeters": [
+        0.31673,
+        0.28379,
+        0.31942
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "689b3eb1c1311a5ee52118258126713487bf0e1f3c0843d6a8dbbfa7d4232ff3"
+    },
+    {
+      "name": "G_05",
+      "category": "wall",
+      "sizeMeters": [
+        0.26477,
+        0.22783,
+        0.37902
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "2f392d40a3e9e16857ba2669f3a640c628809aeda248fb0b5f68f83b166e1e67"
+    },
+    {
+      "name": "G_06",
+      "category": "wall",
+      "sizeMeters": [
+        0.41865,
+        0.3093,
+        0.23935
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "f502a53217ffbaf227ba83eedf92aa1e09c4fad796367c37a56b3ce99eaa10f1"
+    },
+    {
+      "name": "G_07",
+      "category": "wall",
+      "sizeMeters": [
+        0.39767,
+        0.31207,
+        0.23948
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "01872a5fdc930ee9a5018fca5215993ae434af2975b6e0634271ec24a762bfcd"
+    },
+    {
+      "name": "G_08",
+      "category": "wall",
+      "sizeMeters": [
+        0.28143,
+        0.22982,
+        0.24225
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "dc3c19d37ace36ec593828104ea7ec3b9390c5ad77ae28009ff9a83885e6e2dc"
+    },
+    {
+      "name": "G_09",
+      "category": "wall",
+      "sizeMeters": [
+        0.34109,
+        0.32251,
+        0.22783
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "7136cf6222007e55675acd75461487d5677feb199814da6ce83e3eb38c02b862"
+    },
+    {
+      "name": "G_10",
+      "category": "wall",
+      "sizeMeters": [
+        0.32871,
+        0.23295,
+        0.34089
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "8316e419452f2d8e6836a9d1de13b369a44be4a832e7099c4e641111051cd851"
+    },
+    {
+      "name": "G_11",
+      "category": "wall",
+      "sizeMeters": [
+        0.33558,
+        0.2655,
+        0.31842
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "837b151fa2c9e3022dae0458504a230a9c0423918a7e7e25f2fa4af8679f6c5b"
+    },
+    {
+      "name": "G_12",
+      "category": "wall",
+      "sizeMeters": [
+        0.28881,
+        0.24523,
+        0.31614
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "e00a28b3b14b754ef367c9b8d1bf61654fc0e3cb0d0f171304098aa65b5d1171"
+    },
+    {
+      "name": "G_13",
+      "category": "wall",
+      "sizeMeters": [
+        0.29871,
+        0.25662,
+        0.36615
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "422ea942685b3fa02cbc11b0e7bc1a80d9de4593b05679c0b867e727501daad4"
+    },
+    {
+      "name": "G_14",
+      "category": "wall",
+      "sizeMeters": [
+        0.29603,
+        0.22312,
+        0.38379
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "c87f1d02c510934c0c4dfc90fc32dd116f4abeaef140c1816058b432a6ca8e1c"
+    },
+    {
+      "name": "G_15",
+      "category": "wall",
+      "sizeMeters": [
+        0.32067,
+        0.30473,
+        0.27752
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "68541e4546a34844a3345f21ea95dba59227e04eba9403ab2c6d5f25e5feb8fc"
+    },
+    {
+      "name": "G_16",
+      "category": "wall",
+      "sizeMeters": [
+        0.32266,
+        0.29267,
+        0.29367
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "42d73555d4841cf33ae890287ba65d1581b73b439b79075c84d9544804e0725b"
+    },
+    {
+      "name": "G_17",
+      "category": "wall",
+      "sizeMeters": [
+        0.25698,
+        0.22914,
+        0.25897
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "2302746630bf5978eb833b732e3930b216940962b73b42c1b2a46c9a1afc9375"
+    },
+    {
+      "name": "G_18",
+      "category": "wall",
+      "sizeMeters": [
+        0.32271,
+        0.30601,
+        0.27572
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "fd2593cb871dd353f9edda2c46246c27284604028639163f268ae71820cb1597"
+    },
+    {
+      "name": "G_19",
+      "category": "wall",
+      "sizeMeters": [
+        0.26736,
+        0.22682,
+        0.35675
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "51377c401266009a4df5c98f026e96ca7b6ec39810c53ff7bb8484ad0340e718"
+    },
+    {
+      "name": "G_20",
+      "category": "wall",
+      "sizeMeters": [
+        0.30155,
+        0.22565,
+        0.23766
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "3003cd4989f07f71658c3c8a89e8a00cacad494ff0ca5591fafb70e0e16d1ffd"
+    },
+    {
+      "name": "G_21",
+      "category": "wall",
+      "sizeMeters": [
+        0.41389,
+        0.31384,
+        0.35445
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "64da3548d00335d7a1294b8591248c5a6d1bfeded0657009ba4277ae7a7b2e23"
+    },
+    {
+      "name": "G_22",
+      "category": "wall",
+      "sizeMeters": [
+        0.35078,
+        0.3111,
+        0.37315
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "613fa76a2ae40e0837eae6a0fa3ac929fcdfc96d4259b6e046b6bc46015e2515"
+    },
+    {
+      "name": "G_23",
+      "category": "wall",
+      "sizeMeters": [
+        0.26604,
+        0.23829,
+        0.33124
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "a8ae9285b3d249865aba7e7aa9376a28aa9d96ed44c7be097d0fd3f46d10d460"
+    },
+    {
+      "name": "G_24",
+      "category": "wall",
+      "sizeMeters": [
+        0.26628,
+        0.25161,
+        0.24163
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "542c4a364aeca33ecf0c6c8cc7596c76b52b87b4a9cb3e63c1ff9c4a704187e5"
+    },
+    {
+      "name": "G_25",
+      "category": "wall",
+      "sizeMeters": [
+        0.32925,
+        0.30968,
+        0.284
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "62f4e1f3d60b6a263cd3ddf996cbd3e30e55bd518977fb25ccd21cd58c176c38"
+    },
+    {
+      "name": "D_01",
+      "category": "wall",
+      "sizeMeters": [
+        0.55698,
+        0.46153,
+        0.42698
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "69ca9634d5f21c10750cbb4b8ca99c3b47865b463e439ceeaffea8e8f96c4269"
+    },
+    {
+      "name": "D_02",
+      "category": "wall",
+      "sizeMeters": [
+        0.56447,
+        0.48378,
+        0.56856
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "fab54a7c7a5b4ac07c7d3cec7c36935af049df621bb8a02880d9cd873b003dc5"
+    },
+    {
+      "name": "D_03",
+      "category": "wall",
+      "sizeMeters": [
+        0.5265,
+        0.473,
+        0.49202
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "c92273c83760720ce3de718e557063700471926d4648b51bb03387abc9ed371b"
+    },
+    {
+      "name": "D_04",
+      "category": "wall",
+      "sizeMeters": [
+        0.51198,
+        0.38968,
+        0.42664
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "2aeb5dc5b51eebc6ddbd1fa155d4cfac97a53d2bf50f7e3ca250ac043278c5ab"
+    },
+    {
+      "name": "D_05",
+      "category": "wall",
+      "sizeMeters": [
+        0.47771,
+        0.37462,
+        0.46293
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "6aa035ce4d8bd9312294005743127c1339a09b1e9ce6b0b9c1cc7a69d102e78c"
+    },
+    {
+      "name": "D_07",
+      "category": "wall",
+      "sizeMeters": [
+        0.62275,
+        0.41103,
+        0.5502
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "13f93ba2b45f44300229cb8494e38a8975b9c8986c6d59c7abec8af214cdfe91"
+    },
+    {
+      "name": "D_08",
+      "category": "wall",
+      "sizeMeters": [
+        0.65802,
+        0.44984,
+        0.40896
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "de034694342dfb283052f8f34acc5f85e7636f01528149363afeb36dde313ac5"
+    },
+    {
+      "name": "E_01",
+      "category": "wall",
+      "sizeMeters": [
+        0.2998,
+        0.23417,
+        0.26946
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "137c732f977b772a5e2c9ea85b7a801700f9ed5a9c3474c9aaf8a4ff1af43d99"
+    },
+    {
+      "name": "E_02",
+      "category": "wall",
+      "sizeMeters": [
+        0.35662,
+        0.23434,
+        0.34265
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "ca798571e9030cd0a585e5c81d1a54b122f1137922a4e6cd1ce72f70a269d0b7"
+    },
+    {
+      "name": "E_03",
+      "category": "wall",
+      "sizeMeters": [
+        0.30736,
+        0.25384,
+        0.32426
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "3805cc4798dbd53c2c424fd82b37feabf924c132eb81619e994d445fc1f3229b"
+    },
+    {
+      "name": "E_04",
+      "category": "wall",
+      "sizeMeters": [
+        0.33155,
+        0.19953,
+        0.32436
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "f7e412736bf5a7b2173156f930b6c4b1a0eee04da36a07ec49b63ec50660597b"
+    },
+    {
+      "name": "E_05",
+      "category": "wall",
+      "sizeMeters": [
+        0.27654,
+        0.21582,
+        0.35751
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "4aea1d8f4eed538de3b60594a83801651b5c8619e2cabe64b5472f3ef5ab5c58"
+    },
+    {
+      "name": "E_06",
+      "category": "wall",
+      "sizeMeters": [
+        0.26798,
+        0.18706,
+        0.27669
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "7956e476522063c961fe82c381c93c4d28232cd4fcd6202d866e8bcdbf8cfc98"
+    },
+    {
+      "name": "E_07",
+      "category": "wall",
+      "sizeMeters": [
+        0.26384,
+        0.18405,
+        0.366
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "445888488e4b67901cb0535c6590e48f49ddd28dc0532ef811e009f5456b7495"
+    },
+    {
+      "name": "E_08",
+      "category": "wall",
+      "sizeMeters": [
+        0.38761,
+        0.23933,
+        0.24076
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "ce9561c522f23a8ce344060afe0587af58bebe987b71544e68b24b1b4cf88f0d"
+    },
+    {
+      "name": "Zh_01",
+      "category": "wall",
+      "sizeMeters": [
+        0.09879,
+        0.0966,
+        0.07337
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "1e99a9e90279263787e70ac932303fdf274ee1be78591a1f3261c75ffa9a9265"
+    },
+    {
+      "name": "Zh_02",
+      "category": "wall",
+      "sizeMeters": [
+        0.1248,
+        0.07464,
+        0.15309
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "c906dfd0f303278e57be3d756b006755ebb29f4c87c7be602cc55b4b61b9f00c"
+    },
+    {
+      "name": "Zh_03",
+      "category": "wall",
+      "sizeMeters": [
+        0.16504,
+        0.10577,
+        0.11913
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "8129296b99b0bb408e0100772fa43c02c5fad7f52ef027a62e5de24deb0cfce2"
+    },
+    {
+      "name": "Zh_04",
+      "category": "wall",
+      "sizeMeters": [
+        0.10642,
+        0.0685,
+        0.14639
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "d38aae16e9aaf470857f1a09e9d8fd60ff1e82c8652172a57289af10260e1a43"
+    },
+    {
+      "name": "Zh_05",
+      "category": "wall",
+      "sizeMeters": [
+        0.13911,
+        0.11515,
+        0.13103
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "16df381c220ffef670051a1b79cb56e17cb0aed623bb41c77900c75cd2d04d46"
+    },
+    {
+      "name": "Zh_06",
+      "category": "wall",
+      "sizeMeters": [
+        0.07538,
+        0.07781,
+        0.15526
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "bb8d09424439bfd00b558216a943c4c7a9c1d36e4735a8fefe29e0d93bdd8e01"
+    },
+    {
+      "name": "Zh_07",
+      "category": "wall",
+      "sizeMeters": [
+        0.16942,
+        0.12299,
+        0.11651
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "6f460920bb67a073d911cc27eaaf2e3105467aefe8f6ff333b311e35c5022567"
+    },
+    {
+      "name": "Zh_08",
+      "category": "wall",
+      "sizeMeters": [
+        0.10237,
+        0.10067,
+        0.10958
+      ],
+      "triangles": 5120,
+      "geometrySHA256": "34a4a570c51bca96353d2ad2fab1df4b3153f1abe82b5b6d259d2b8670df1edb"
+    },
+    {
+      "name": "CHINK_001",
+      "category": "chinking",
+      "sizeMeters": [
+        0.105,
+        0.09523,
+        0.08701
+      ],
+      "triangles": 440,
+      "geometrySHA256": "3aa0157d1d57ed93a7086540723dc1d2559a4bb01e24ab7a70038ebba47b7354"
+    },
+    {
+      "name": "CHINK_002",
+      "category": "chinking",
+      "sizeMeters": [
+        0.07626,
+        0.07375,
+        0.07675
+      ],
+      "triangles": 552,
+      "geometrySHA256": "6b0d19491f5450292ce5cdc48a6beebefa8148183cca771a67152279d67be401"
+    },
+    {
+      "name": "CHINK_003",
+      "category": "chinking",
+      "sizeMeters": [
+        0.13731,
+        0.0855,
+        0.0763
+      ],
+      "triangles": 1344,
+      "geometrySHA256": "b9182ce1da44080d9e3932d7d256f54609231ca4d426a86b8eca885d3f25847d"
+    },
+    {
+      "name": "CHINK_004",
+      "category": "chinking",
+      "sizeMeters": [
+        0.21467,
+        0.18347,
+        0.09236
+      ],
+      "triangles": 376,
+      "geometrySHA256": "844ce6b8b16b55afb7a9f8cb4270c04b003227f856ea372e810ad00e81a58f95"
+    },
+    {
+      "name": "CHINK_005",
+      "category": "chinking",
+      "sizeMeters": [
+        0.12808,
+        0.10882,
+        0.09501
+      ],
+      "triangles": 1312,
+      "geometrySHA256": "9bc4376ab5137c08e2f72aca3745b1de79fc9256080ff7fa5ecaa0ebd94aac75"
+    },
+    {
+      "name": "CHINK_006",
+      "category": "chinking",
+      "sizeMeters": [
+        0.0825,
+        0.08084,
+        0.06878
+      ],
+      "triangles": 1280,
+      "geometrySHA256": "5ed46c6b6dbba7bafe6d18600939db522dfd24df52de2fc0be8fd290aa60153d"
+    },
+    {
+      "name": "CHINK_007",
+      "category": "chinking",
+      "sizeMeters": [
+        0.23667,
+        0.2247,
+        0.08033
+      ],
+      "triangles": 352,
+      "geometrySHA256": "7e959dfde4968386fe90e3dadfc557a2ac6f678748559fda73f09f9e0f400771"
+    },
+    {
+      "name": "CHINK_008",
+      "category": "chinking",
+      "sizeMeters": [
+        0.19267,
+        0.09463,
+        0.09917
+      ],
+      "triangles": 1248,
+      "geometrySHA256": "7e0b8f6fd5d782bb4bac18f3d3a48e160aa13d4435c87409cdd7ce63df17f8de"
+    },
+    {
+      "name": "CHINK_009",
+      "category": "chinking",
+      "sizeMeters": [
+        0.222,
+        0.07596,
+        0.11675
+      ],
+      "triangles": 928,
+      "geometrySHA256": "bd9b3952c5ff5bdd6efb02bdc962e4459990527feeba4be98f8d5b5d139c8847"
+    },
+    {
+      "name": "CHINK_010",
+      "category": "chinking",
+      "sizeMeters": [
+        0.2,
+        0.16816,
+        0.09451
+      ],
+      "triangles": 1312,
+      "geometrySHA256": "98e6acc835ca7928a6218e380d7f7d3cde24f97506a6a5cf0a7c7a18bd33a61e"
+    },
+    {
+      "name": "CHINK_011",
+      "category": "chinking",
+      "sizeMeters": [
+        0.14654,
+        0.09284,
+        0.08148
+      ],
+      "triangles": 1344,
+      "geometrySHA256": "d2cebd6a7a8501758c8aadc593ff44aa261752b8f5b70fbb16e1fdf5dddc7179"
+    },
+    {
+      "name": "CHINK_012",
+      "category": "chinking",
+      "sizeMeters": [
+        0.244,
+        0.23169,
+        0.07654
+      ],
+      "triangles": 1312,
+      "geometrySHA256": "25c9ff2058c7ef5d33eba2fa02c87b3ba5e8689261e0c82338fefe42b27813d9"
+    },
+    {
+      "name": "CHINK_013",
+      "category": "chinking",
+      "sizeMeters": [
+        0.165,
+        0.08688,
+        0.09955
+      ],
+      "triangles": 1184,
+      "geometrySHA256": "bea8cc797c149a16abfc8fb9c8f43e7551ca4b0e453b55f2bb3c0703dda4dcde"
+    },
+    {
+      "name": "CHINK_014",
+      "category": "chinking",
+      "sizeMeters": [
+        0.13269,
+        0.07135,
+        0.12347
+      ],
+      "triangles": 1376,
+      "geometrySHA256": "c7fe38578cd8347aa54904d32efa834bcd17683c5566d5002b1d856f6991e9eb"
+    },
+    {
+      "name": "CHINK_015",
+      "category": "chinking",
+      "sizeMeters": [
+        0.22933,
+        0.21317,
+        0.08414
+      ],
+      "triangles": 368,
+      "geometrySHA256": "4cb7f98f6b69c0b7be98c60b7dc498e89c5931f0bff8c055ba90cd5decff21ce"
+    },
+    {
+      "name": "CHINK_016",
+      "category": "chinking",
+      "sizeMeters": [
+        0.11423,
+        0.0995,
+        0.09581
+      ],
+      "triangles": 1216,
+      "geometrySHA256": "5de552b41c2f7627b87ed1e1af6ff00420fe505ca93f6d3316e79db6ddcdb69b"
+    },
+    {
+      "name": "CHINK_017",
+      "category": "chinking",
+      "sizeMeters": [
+        0.178,
+        0.11393,
+        0.08573
+      ],
+      "triangles": 992,
+      "geometrySHA256": "48979d85292e33cef932c43433f142fa80628ac29b6163f38d3e2b52ac687a9a"
+    },
+    {
+      "name": "CHINK_018",
+      "category": "chinking",
+      "sizeMeters": [
+        0.12346,
+        0.08469,
+        0.08587
+      ],
+      "triangles": 1152,
+      "geometrySHA256": "ec4a27e148a49783f12bbc961d8b1b9bd5c5531186a2f288abe220e42010392a"
+    },
+    {
+      "name": "CHINK_019",
+      "category": "chinking",
+      "sizeMeters": [
+        0.094,
+        0.0844,
+        0.07631
+      ],
+      "triangles": 1120,
+      "geometrySHA256": "c98e530036c5a4fd8921404c2d2c6c0056c6ab10a13614b7ada46c0fe49913c6"
+    },
+    {
+      "name": "CHINK_020",
+      "category": "chinking",
+      "sizeMeters": [
+        0.20733,
+        0.15423,
+        0.09359
+      ],
+      "triangles": 1248,
+      "geometrySHA256": "a2decb04ea833f729faf0f0e1f692f00fbd6dba375d0829bfa318c4776aeb80a"
+    },
+    {
+      "name": "CHINK_021",
+      "category": "chinking",
+      "sizeMeters": [
+        0.16038,
+        0.07928,
+        0.08154
+      ],
+      "triangles": 992,
+      "geometrySHA256": "83e19b5f308a309447f899088797bb9c2b1866faeb6435b237cea7b06a8da6f0"
+    },
+    {
+      "name": "CHINK_022",
+      "category": "chinking",
+      "sizeMeters": [
+        0.15577,
+        0.08748,
+        0.08382
+      ],
+      "triangles": 928,
+      "geometrySHA256": "8071b673ea4e691340dca2dedc6ee5025b70204944f8f78b2a917179e416566c"
+    },
+    {
+      "name": "CHINK_023",
+      "category": "chinking",
+      "sizeMeters": [
+        0.10565,
+        0.10962,
+        0.08044
+      ],
+      "triangles": 864,
+      "geometrySHA256": "d0bf91e9888caf572b251c025e72f657e0c540c7793a16b2cbd48cac14f50c5b"
+    },
+    {
+      "name": "CHINK_024",
+      "category": "chinking",
+      "sizeMeters": [
+        0.08825,
+        0.07718,
+        0.07107
+      ],
+      "triangles": 832,
+      "geometrySHA256": "d077505b430bcddb7f5dcf8836f4c0cd2133a18d3a7c828f5ca567a3edb6d847"
+    },
+    {
+      "name": "CHINK_025",
+      "category": "chinking",
+      "sizeMeters": [
+        0.071,
+        0.06373,
+        0.07
+      ],
+      "triangles": 896,
+      "geometrySHA256": "820952aca053ecaf58374c54e7b2e722196ec5e64488c979310481178068c931"
+    },
+    {
+      "name": "CHINK_026",
+      "category": "chinking",
+      "sizeMeters": [
+        0.15115,
+        0.14696,
+        0.09077
+      ],
+      "triangles": 672,
+      "geometrySHA256": "1c64a2bcee8e5f68d33d3a8af27ef30bd3f70434575669fe751f73b03b385d54"
+    },
+    {
+      "name": "CHINK_027",
+      "category": "chinking",
+      "sizeMeters": [
+        0.11885,
+        0.11709,
+        0.08879
+      ],
+      "triangles": 608,
+      "geometrySHA256": "0beee2f56fef096cd506dfc6f28f9b0c4a53439ede5e8fe27fec0f8902fbb3f0"
+    },
+    {
+      "name": "CHINK_028",
+      "category": "chinking",
+      "sizeMeters": [
+        0.18533,
+        0.13901,
+        0.08245
+      ],
+      "triangles": 640,
+      "geometrySHA256": "e1302bc9fe709e37ac66f67af557e2a125553165e59bfc9eac8b1d8d6e27b110"
+    },
+    {
+      "name": "CHINK_029",
+      "category": "chinking",
+      "sizeMeters": [
+        0.14192,
+        0.13049,
+        0.08948
+      ],
+      "triangles": 640,
+      "geometrySHA256": "8f325ac072f5bbf3b4ba841830a31cfd67a38a22252bc5f7fe5b392c44040ad0"
+    },
+    {
+      "name": "LINTEL_WINDOW",
+      "category": "lintel",
+      "sizeMeters": [
+        0.984,
+        0.244,
+        0.484
+      ],
+      "triangles": 82,
+      "geometrySHA256": "fb63c01e843ab343e9f6f584c545f8a31f4ce888b374794f0adbf5428fe7d5cf"
+    },
+    {
+      "name": "LINTEL_DOOR",
+      "category": "lintel",
+      "sizeMeters": [
+        1.71626,
+        0.245,
+        0.489
+      ],
+      "triangles": 5248,
+      "geometrySHA256": "652ad0200768d15a653467732b8b2e78358dc07c3cd160e14ba4808f30bfe38d"
+    }
+  ]
+}
