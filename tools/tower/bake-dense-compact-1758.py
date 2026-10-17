@@ -203,6 +203,7 @@ def bake_case(key,variant,pack,shapes,verbose=False):
     field=Field(key)
     placements=[]
     repaired=[]
+    discarded=[]
     for row in recipe['placement']:
         name=row[0]
         if name not in shapes:raise ValueError('Unknown authored shape '+name)
@@ -210,7 +211,11 @@ def bake_case(key,variant,pack,shapes,verbose=False):
         if trial is None:
             fixed=repair_outlying_base(field,shapes[name],row)
             if fixed is None:
-                raise ValueError(f'{key} variant {variant}: unrepairable source geometry {name}')
+                # This authored instance exceeds even the new section envelope;
+                # do not silently clip triangles, corrupt transforms, or enlarge
+                # the logical server bounds. Replace its hole with actual rubble.
+                discarded.append(name)
+                continue
             matrix,trial=fixed
             row=encode(name,matrix)
             repaired.append(name)
@@ -219,7 +224,7 @@ def bake_case(key,variant,pack,shapes,verbose=False):
     before=field.metrics()
     fill(field,shapes,rng,placements,verbose)
     quality=field.metrics()
-    result=dict(rocks=len(placements),baseRepairs=repaired,size=recipe['size'],placement=placements,
+    result=dict(rocks=len(placements),baseRepairs=repaired,discardedBase=discarded,size=recipe['size'],placement=placements,
                 occupancy=quality['occupancy'],faceCoverage=quality['faceCoverage'],
                 minFaceCoverage=quality['minFaceCoverage'],
                 baselineOccupancy=before['occupancy'],
