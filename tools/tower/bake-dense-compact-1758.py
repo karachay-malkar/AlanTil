@@ -149,8 +149,9 @@ def fill(field,shapes,rng,placements,verbose=False):
     names=list(shapes)
     # Avoid over-large material growth by retaining intrinsic source proportions.
     stalls=0
+    excluded=np.zeros_like(field.grid)
     for step in range(MAX_STONES-len(placements)):
-        void=~field.grid
+        void=~(field.grid|excluded)
         if not void.any():break
         dist=ndi.distance_transform_edt(np.pad(void,1,constant_values=False))[1:-1,1:-1,1:-1]*PITCH
         max_rad=float(dist.max())
@@ -164,9 +165,9 @@ def fill(field,shapes,rng,placements,verbose=False):
         phase=0 if max_rad>.063 else 1
         chosen=candidates(field,shapes,names,center,float(dist[tuple(index)]),rng,phase)
         if chosen is None or chosen[0]<2:
-            # Do not repeatedly sample an impossible peak.
-            field_block=tuple(int(i) for i in index)
-            # Mark failed pockets via retry with a different high-distance location.
+            # Skip resistant peaks in SEARCH only; never falsify measured occupancy.
+            lo=np.maximum(0,index-1);hi=np.minimum(field.res,index+2)
+            excluded[tuple(slice(int(a),int(b)) for a,b in zip(lo,hi))]=True
             stalls+=1
             if stalls>=MAX_ATTEMPTS:break
             continue
@@ -232,7 +233,7 @@ def main():
               'minimum outer face',recipe['minFaceCoverage'],flush=True)
     result=dict(version=VERSION,cellMeters=CELL,library=pack['library'],
                 shapes=pack['shapes'],variants={k:[v[i] for i in sorted(v)] for k,v in variants.items()},
-                totalPlacements=sum(r['rocks'] for vs in variants.values() for r in vs),
+                totalPlacements=sum(r['rocks'] for vs in variants.values() for r in vs.values()),
                 generator='tools/tower/bake-dense-compact-1758.py',
                 sourceSha256=hashlib.sha256(SOURCE.read_bytes()).hexdigest())
     out=Path(args.out);out.parent.mkdir(parents=True,exist_ok=True)
