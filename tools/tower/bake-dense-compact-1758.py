@@ -182,29 +182,44 @@ def fill(field,shapes,rng,placements,verbose=False):
             print('FILL',step,'stones',len(placements),'density',round(field.grid.mean(),4),flush=True)
         if field.grid.mean()>=.94:break
 
+def repair_outlying_base(field,shape,row):
+    """Fit an old transform inside the new section without changing source meshes."""
+    original=transform(row)
+    for factor in (1.,.995,.98,.96,.93,.90,.86,.80,.72,.62):
+        A=original[:3,:3]*factor
+        world=shape['vertices']@A.T
+        lo=-field.dims/2+.001-world.min(axis=0)
+        hi=field.dims/2-.001-world.max(axis=0)
+        if np.any(lo>hi):continue
+        candidate=np.eye(4);candidate[:3,:3]=A
+        candidate[:3,3]=np.clip(original[:3,3],lo,hi)
+        trial=field.sample(shape,candidate,shape['planes'])
+        if trial is not None:return candidate,trial
+    return None
+
 def bake_case(key,variant,pack,shapes,verbose=False):
     rng=np.random.default_rng(SEED+variant*991+sum(int(x) for x in key.split('x'))*1009)
     recipe=pack['variants'][key][variant]
     field=Field(key)
     placements=[]
-    bad=[]
+    repaired=[]
     for row in recipe['placement']:
         name=row[0]
         if name not in shapes:raise ValueError('Unknown authored shape '+name)
         trial=field.sample(shapes[name],transform(row),shapes[name]['planes'])
         if trial is None:
-            bad.append(name)
-            # Retain old geometry in the original file, but reject the new bake
-            # if the coordinates do not fit its declared section bounds.
-            continue
+            fixed=repair_outlying_base(field,shapes[name],row)
+            if fixed is None:
+                raise ValueError(f'{key} variant {variant}: unrepairable source geometry {name}')
+            matrix,trial=fixed
+            row=encode(name,matrix)
+            repaired.append(name)
         placements.append(row)
         field.add(trial)
-    if bad:
-        raise ValueError(f'{key} variant {variant}: invalid base transforms: {bad[:5]}')
     before=field.metrics()
     fill(field,shapes,rng,placements,verbose)
     quality=field.metrics()
-    result=dict(rocks=len(placements),size=recipe['size'],placement=placements,
+    result=dict(rocks=len(placements),baseRepairs=repaired,size=recipe['size'],placement=placements,
                 occupancy=quality['occupancy'],faceCoverage=quality['faceCoverage'],
                 minFaceCoverage=quality['minFaceCoverage'],
                 baselineOccupancy=before['occupancy'],
