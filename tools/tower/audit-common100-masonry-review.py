@@ -62,6 +62,11 @@ def main():
             assert np.all(v.max(axis=0)<=size*.5+.003),(name,model,"outside max")
         if name in ("window","door"):
             assert any(row[0].startswith("LINTEL_") for row in case["placement"]),name
+            bearing=quality.get('lintelBearingVoxels')
+            assert isinstance(bearing,list) and len(bearing)==2,(name,'missing bearing audit')
+            assert min(bearing)>=8,(name,'unsupported lintel end',bearing)
+        if name in SECTIONS and SECTIONS[name][1]>=2:
+            assert quality['faceCoverage'][3]>.05,(name,'upper course absent')
         reports.append({"name":name,"variant":case["variant"],
                         "rocks":quality["rocks"],"envelopeFill":quality["estimatedEnvelopeFill"],
                         "minFace":min(quality["faceCoverage"])})
