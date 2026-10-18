@@ -1,0 +1,37 @@
+name: Manual masonry editor QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/masonry/**'
+      - 'src/features/practice/index.js'
+      - 'src/app/router.js'
+      - 'src/app/screen-registry.js'
+      - 'src/app/bootstrap.js'
+      - 'index.html'
+      - 'service-worker.js'
+      - 'supabase/migrations/*masonry_editor*'
+      - 'scripts/qa/manual-masonry.test.mjs'
+      - '.github/workflows/manual-masonry-editor-qa.yml'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Module syntax
+        run: |
+          node --check src/features/masonry/library.js
+          node --check src/features/masonry/store.js
+          node --check src/features/masonry/scene.js
+          node --check src/features/masonry/index.js
+          node --check src/app/router.js
+          node --check src/app/screen-registry.js
+          node --check src/features/practice/index.js
+          node --check src/app/bootstrap.js
+          node --check service-worker.js
+      - name: Recipe format, navigation and RLS tests
+        run: node --test scripts/qa/manual-masonry.test.mjs
