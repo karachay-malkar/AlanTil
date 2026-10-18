@@ -107,6 +107,13 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+  // This independent preview must never be rewritten to AlanTil SPA on 404.
+  // Otherwise a missing deploy misleadingly displays the old tower editor.
+  if (url.origin === self.location.origin
+      && (url.pathname === "/tower-masonry-test" || url.pathname.startsWith("/tower-masonry-test/"))) {
+    event.respondWith(fetch(request, { cache: "no-store" }).catch(() => Response.error()));
+    return;
+  }
   if (request.mode === "navigate") {
     event.respondWith(navigationResponse(request));
     return;
