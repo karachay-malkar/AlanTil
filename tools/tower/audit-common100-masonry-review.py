@@ -60,6 +60,27 @@ def main():
         reports.append({"name":name,"variant":case["variant"],
                         "rocks":quality["rocks"],"envelopeFill":quality["estimatedEnvelopeFill"],
                         "minFace":min(quality["faceCoverage"])})
+    # Every X-adjacent pair has its own OFFLINE chinking bridge recipe.
+    assert len(j.get("seams",[]))==25,"Missing seam recipes"
+    for seam in j["seams"]:
+        name=seam["id"];v=seam["variant"]
+        assert name in SECTIONS and 0<=v<5 and seam["nextVariant"]==(v+1)%5
+        q=seam["quality"]
+        assert q["supportedBridgingStones"]==len(seam["placement"])
+        assert 0<=q["afterOpenInterfaceVoxels"]<=q["beforeOpenInterfaceVoxels"]
+        size=np.asarray(SECTIONS[name],dtype=float)*.25
+        size[0]*=2
+        for row in seam["placement"]:
+            assert len(row)==13 and row[0] in s.geometry
+            M=np.asarray([[*row[1:5]],[*row[5:9]],[*row[9:13]]])
+            A=M[:,:3];t=M[:,3]
+            bounds=s.geometry[row[0]].bounds
+            pts=np.array([[bounds[i,0],bounds[k,1],bounds[m,2]] for i in (0,1) for k in (0,1) for m in (0,1)])
+            out=pts@A.T+t
+            assert np.all(out.min(axis=0)>=-size/2-.004),(name,v,"seam out of bounds")
+            assert np.all(out.max(axis=0)<=size/2+.004),(name,v,"seam out of bounds")
+    print("MASONRY_X_SEAMS_QA",len(j["seams"]),"bridges",
+          sum(len(x["placement"]) for x in j["seams"]))
     # Stone libraries and all original prefab assets remain untouched:
     # This preview does not write into manifest.json, SQL or runtime source.
     print("MASONRY_REVIEW_ISOLATED_PREVIEW_QA_PASS",
