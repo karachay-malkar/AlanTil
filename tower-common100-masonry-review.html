@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AlanTil — кладка Common 100 · предварительное согласование</title>
+<style>
+:root{color-scheme:dark;background:#151a18;color:#ede9dd;font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}body{margin:0}button{font:inherit;color:inherit;cursor:pointer}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:13px 18px;background:#202722;border-bottom:1px solid #ffffff19}
+h1{font-size:19px;letter-spacing:-.025em;margin:0}.eyebrow{font-size:11px;color:#dbc99b;margin-bottom:4px}
+header small{color:#b6bdb5}.shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(255px,320px);height:calc(100dvh - 70px);min-height:580px}
+.stage{position:relative;min-width:0;min-height:450px;background:linear-gradient(#2d3734,#242b26 60%,#1b231e)}
+.stage canvas{width:100%;height:100%;display:block;touch-action:none}
+.toolbar{position:absolute;top:13px;left:13px;right:13px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.toolbar button{pointer-events:auto}
+button{background:#343e37;border:1px solid #ffffff20;border-radius:9px;padding:9px 11px}
+button[aria-pressed=true],button.active{border-color:#d4b374;background:#504737}
+button:focus-visible{outline:2px solid #e3b76d;outline-offset:2px}
+footer{position:absolute;bottom:9px;left:12px;font-size:11px;color:#cbd0c9;background:#202a24cf;border-radius:8px;padding:8px}
+aside{border-left:1px solid #ffffff16;padding:14px 15px 24px;overflow-y:auto;background:#1e2521}
+h2{font-size:15px;margin:0 0 10px}.kicker{color:#dbbf87;font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin:14px 0 7px}
+.groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.groups button{font-size:12px;padding:9px 5px;text-align:left;overflow:hidden}
+.variants{display:flex;gap:4px}.variants button{flex:1;padding:9px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.stat{border:1px solid #ffffff16;padding:11px 9px;border-radius:10px;background:#ffffff04}
+.stat b{font-size:17px;display:block;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:#b2b9ad}
+.note{font-size:12px;line-height:1.55;color:#b7beb5}
+.warning{border:1px solid #89704d78;border-radius:10px;padding:10px 11px;font-size:12px;line-height:1.5;color:#e3cb9b;background:#302b214d;margin-top:12px}
+#loading{position:absolute;top:45%;left:20%;right:20%;text-align:center;padding:18px;border:1px solid #ffffff18;border-radius:12px;background:#1d241fdd}
+#loading[hidden]{display:none}
+@media(max-width:800px){header{padding:11px 13px}.shell{grid-template-columns:1fr;display:flex;flex-direction:column;height:auto}.stage{height:57dvh;min-height:360px}aside{overflow:visible;border-left:0;border-top:1px solid #ffffff18;padding:14px}.groups{grid-template-columns:repeat(3,minmax(0,1fr))}footer{font-size:10px}}
+</style></head>
+<body>
+<header><div><div class="eyebrow">AlanTil 17.2 / Common 100 · staging</div>
+<h1>Новая дикая кладка — просмотр перед утверждением</h1></div>
+<small>Это отдельные образцы. В строительный редактор не внедрено.</small></header>
+<div class="shell">
+<section class="stage" id="stage" aria-label="Интерактивная трёхмерная кладка">
+<div class="toolbar"><button id="single" aria-pressed="true">Одна секция</button>
+<button id="wall" aria-pressed="false">Стыковка трёх</button>
+<button id="edges" aria-pressed="false">Сетка граней</button>
+<button id="reset">Сброс камеры</button></div>
+<div id="loading" role="status">Загрузка проверяемых моделей и размещений…</div>
+<footer>Вращение: перетащи пальцем · масштаб: щипок / колесо · <span id="status">Источник: Common 100</span></footer>
+</section>
+<aside>
+<h2 id="name">Образцы кладки</h2>
+<div class="kicker">Секции (по пять вариантов)</div>
+<div class="groups" id="wallTypes"></div>
+<div class="kicker">Архитектурная кладка</div>
+<div class="groups" id="architecture"></div>
+<div class="kicker">Контактные соединения</div>
+<div class="groups" id="joints"></div>
+<div class="kicker">Вариант кладки</div>
+<div class="variants" id="variants"></div>
+<div class="stats">
+<div class="stat"><b id="dim">—</b><span>габариты (см)</span></div>
+<div class="stat"><b id="stones">—</b><span>камней, экземпляров</span></div>
+<div class="stat"><b id="density">—</b><span>заполнение по огибающим</span></div>
+<div class="stat"><b id="face">—</b><span>минимальное покрытие грани</span></div>
+</div>
+<p class="note">Формы взяты из Common 100. Размещение выполнено офлайн. Плотность рассчитана по выпуклым огибающим с шагом 2,5 см: это не доказательство отсутствия видимых щелей.</p>
+<div class="warning" id="warning">При наличии пробелов этот образец требует доработки и не может быть внедрён без согласования.</div>
+<div class="kicker">Источник / статус</div>
+<div class="note" id="source">Ожидание проверки моделей…</div>
+</aside></div>
+<script type="module">
+import * as THREE from './src/vendor/three/three.module.js';
+import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from './src/vendor/three/addons/loaders/GLTFLoader.js';
+const VERSION='common100-masonry-review.1';
+const BASE='./assets/tower/prefabs/common100/';
+const TYPES=[['1x1x1','1×1×1'],['2x2x2','2×2×2'],['2x2x3','2×2×3'],['2x3x4','2×3×4'],['4x4x4','4×4×4']];
+const ARCH=[['window','Окно'],['door','Дверь'],['gate','Ворота']];
+const JOINTS=[['joint-x','Стык X'],['joint-y','Стык Y'],['joint-z','Стык Z'],['joint-corner','Угол']];
+const $=id=>document.getElementById(id);
+const stage=$('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.34;
+stage.insertBefore(renderer.domElement,stage.firstChild);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#303a36');
+scene.add(new THREE.HemisphereLight('#fff8eb','#4d584e',2.5));
+const direct=new THREE.DirectionalLight('#ffe4b3',3.4);direct.position.set(-4,9,8);scene.add(direct);
+const rim=new THREE.DirectionalLight('#dbebfa',1.5);rim.position.set(6,4,-6);scene.add(rim);
+const camera=new THREE.PerspectiveCamera(40,1,.015,130);camera.position.set(2,2,3);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.08;controls.minDistance=.35;controls.maxDistance=60;
+const floor=new THREE.GridHelper(10,40,0x89867b,0x66695f);floor.position.y=-.015;floor.material.transparent=true;floor.material.opacity=.38;scene.add(floor);
+const display=new THREE.Group();scene.add(display);
+const material=new THREE.MeshStandardMaterial({color:0xbba788,roughness:1,metalness:0,flatShading:true,side:THREE.DoubleSide});
+const wireMaterial=new THREE.LineBasicMaterial({color:0x30291f,transparent:true,opacity:.37});
+const state={data:null,mesh:new Map(),kind:'2x2x2',variant:0,wall:false,edges:false};
+const qp=new URLSearchParams(location.search),requested=qp.get('kind');if([...TYPES,...ARCH,...JOINTS].some(x=>x[0]===requested))state.kind=requested;
+function createGroup(id,entries){const host=$(id);for(const [key,label] of entries){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.kind=key;b.onclick=()=>{state.kind=key;state.variant=0;render()};host.append(b)}}
+createGroup('wallTypes',TYPES);createGroup('architecture',ARCH);createGroup('joints',JOINTS);
+for(let i=0;i<5;i++){const b=document.createElement('button');b.textContent=String(i+1);b.type='button';b.onclick=()=>{state.variant=i;render()};$('variants').append(b)}
+function record(name,variant){return state.data.cases.find(x=>x.id===name&&x.variant===variant)}
+function removeOld(){while(display.children.length){const m=display.children.pop();m.parent=null;m.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.userData.wire&&o.geometry)o.geometry.dispose()})}}
+function addCase(entry,offset){
+ const map=new Map();
+ for(const p of entry.placement){const name=p[0];if(!map.has(name))map.set(name,[]);map.get(name).push(p)}
+ for(const [name,rows] of map){
+  const original=state.mesh.get(name);
+  if(!original)throw Error('Отсутствует камень '+name);
+  const geometry=original.geometry;
+  const inst=new THREE.InstancedMesh(geometry,material,rows.length);
+  inst.name=name;inst.frustumCulled=false;
+  rows.forEach((r,i)=>{const matrix=new THREE.Matrix4();
+   matrix.set(r[1],r[2],r[3],r[4]+offset.x,
+              r[5],r[6],r[7],r[8]+offset.y,
+              r[9],r[10],r[11],r[12]+offset.z,
+              0,0,0,1);
+   inst.setMatrixAt(i,matrix)});
+  inst.instanceMatrix.needsUpdate=true;inst.computeBoundingSphere();display.add(inst);
+  if(state.edges){const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geometry,34),wireMaterial);edges.userData.wire=true;
+   // Overlay only in single-instance mode to avoid thousands of edge objects.
+   if(rows.length===1){const m=new THREE.Matrix4();inst.getMatrixAt(0,m);edges.applyMatrix4(m);display.add(edges)}
+   else edges.geometry.dispose();
+  }
+ }
+}
+function frame(){const bounds=new THREE.Box3().setFromObject(display);if(bounds.isEmpty())return;
+ const c=bounds.getCenter(new THREE.Vector3());const d=bounds.getSize(new THREE.Vector3());
+ const size=Math.max(d.x,d.y,d.z,.25);const rad=size/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));
+ const dist=rad*1.55;camera.position.copy(c).add(new THREE.Vector3(1.2,.85,1.5).normalize().multiplyScalar(dist));
+ controls.target.copy(c);camera.near=.01;camera.far=150;camera.updateProjectionMatrix();controls.update();
+ floor.position.y=bounds.min.y-.016;floor.scale.set(Math.max(.25,d.x/10),1,Math.max(.25,d.z/10));
+}
+function render(){
+ if(!state.data)return;
+ const selected=record(state.kind,state.variant)||record(state.kind,0);
+ if(!selected)return;
+ removeOld();const [a,b,c]=selected.cells.map(x=>x*.25);
+ if(state.wall&&TYPES.some(x=>x[0]===state.kind)){
+  for(let k=0;k<3;k++){
+   const r=record(state.kind,(state.variant+k)%5);
+   addCase(r,new THREE.Vector3((k-1)*a,0,0))
+  }
+ }else addCase(selected,new THREE.Vector3());
+ $('name').textContent=state.kind+' · '+(selected.variant+1);
+ $('dim').textContent=[a,b,c].map(v=>Math.round(v*100)).join(' × ');
+ $('stones').textContent=String(selected.placement.length);
+ $('density').textContent=Math.round(selected.quality.estimatedEnvelopeFill*100)+'%';
+ $('face').textContent=Math.round(Math.min(...selected.quality.faceCoverage)*100)+'%';
+ let warning=selected.quality.estimatedEnvelopeFill<.9?
+  'Измеренная плотность ниже 90%. Образец требует плотной доукладки и визуальной оценки перед утверждением.':
+  'Плотность по огибающим достигла 90%, но ручная проверка контактов и фактур обязательна.';
+ if(state.kind==='gate')warning='Новые каменные простенки показаны отдельно. Непрерывная несущая перемычка ворот из новой библиотеки не создана: нужен самостоятельный конструктивный проект.';
+ $('warning').textContent=warning;
+ $('source').textContent=state.data.sourceVersion+' · '+state.data.version+' · 32 образца · только для согласования';
+ document.querySelectorAll('[data-kind]').forEach(n=>{n.classList.toggle('active',n.dataset.kind===state.kind);n.setAttribute('aria-pressed',String(n.dataset.kind===state.kind))});
+ [...$('variants').children].forEach((el,i)=>{el.disabled=!TYPES.some(t=>t[0]===state.kind)&&i>0;el.setAttribute('aria-pressed',String(i===selected.variant))});
+ $('wall').setAttribute('aria-pressed',String(state.wall));$('single').setAttribute('aria-pressed',String(!state.wall));
+ $('edges').setAttribute('aria-pressed',String(state.edges));
+ const u=new URL(location.href);u.searchParams.set('kind',state.kind);history.replaceState(null,'',u);
+ $('status').textContent='Предварительный просмотр · '+state.data.sourceVersion;
+ frame();
+}
+$('single').onclick=()=>{state.wall=false;render()};
+$('wall').onclick=()=>{state.wall=true;render()};
+$('edges').onclick=()=>{state.edges=!state.edges;render()};
+$('reset').onclick=()=>frame();
+function resize(){const w=Math.max(stage.clientWidth,1),h=Math.max(stage.clientHeight,1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);resize();
+function tick(){requestAnimationFrame(tick);controls.update();renderer.render(scene,camera)}tick();
+try{
+ const res=await fetch(BASE+'masonry-review-v1.json?v='+encodeURIComponent(VERSION),{cache:'no-store'});
+ if(!res.ok)throw Error('Не найден пакет кладки: '+res.status);
+ const data=await res.json();
+ if(data.version!==VERSION||data.cases?.length!==32||data.productionIntegrated)throw Error('Неверная версия предварительной библиотеки');
+ const gltf=await new GLTFLoader().loadAsync(BASE+'common-100.glb?v='+encodeURIComponent(data.sourceVersion));
+ gltf.scene.traverse(o=>{if(o.isMesh){state.mesh.set(o.name,o);if(o.parent?.name&&!state.mesh.has(o.parent.name))state.mesh.set(o.parent.name,o)}});
+ if(data.cases.some(r=>r.placement.some(x=>!state.mesh.has(x[0]))))throw Error('В исходной библиотеке нет камней, указанных в рецептах');
+ state.data=data;$('loading').hidden=true;render();
+}catch(err){$('loading').textContent='Ошибка загрузки: '+err.message;console.error(err)}
+</script>
+</body></html>
