@@ -78,7 +78,8 @@ const BASE='./assets/tower/prefabs/common100/';
 const MAX_PER_PAGE=12;
 const infoNames={main:'Основной камень',large:'Крупный камень',chinking:'Забутовка',lintel:'Каменная перемычка'};
 const endcapNames={'rounded-angular':'Округло-угловатый','massive-blunt-triangle':'Массивный треугольный','blunt-teardrop-wedge':'Тупой каплевидно-клиновидный','asymmetric-chamfer':'Асимметрично-скошенный','natural-irregular-pentagon':'Пятигранно-природный','mixed-soft-blunt-wedge':'Смешанный тупо-заострённый'};
-const state={group:'main',mode:'single',index:0,page:0,edges:false,records:[],models:new Map(),root:null,meshList:[]};
+const initialGroup=new URLSearchParams(window.location.search).get('group');
+const state={group:['main','large','chinking','lintel','new-main','all'].includes(initialGroup)?initialGroup:'main',mode:'single',index:0,page:0,edges:false,records:[],models:new Map(),root:null,meshList:[]};
 const $=id=>document.getElementById(id);
 const host=$('view'),size=()=>({w:Math.max(host.clientWidth,1),h:Math.max(host.clientHeight,1)});
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
@@ -228,11 +229,11 @@ async function injectModel(gltf,meta){
 }
 async function start(){
  try{
- const response=await fetch(BASE+'common-100.json?version=17.7-common100.7',{cache:'no-store'});
+ const response=await fetch(BASE+'common-100.json?version=17.7-common100.9',{cache:'no-store'});
  if(!response.ok)throw new Error('Не удалось загрузить метаданные: HTTP '+response.status);
  const meta=await response.json();if(meta.count!==100)throw new Error('Неподдерживаемая версия библиотеки');
  window.__common100meta=meta;
- const gltf=await loader.loadAsync(BASE+'common-100.glb?version=17.7-common100.7');
+ const gltf=await loader.loadAsync(BASE+'common-100.glb?version='+encodeURIComponent(meta.version));
  await injectModel(gltf,meta);
  }catch(error){$('progress').hidden=false;$('progress').textContent='Ошибка загрузки библиотеки: '+error.message+' — откройте страницу через сайт или выберите локальный GLB справа.';console.error(error);}
 }
