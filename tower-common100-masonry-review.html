@@ -69,7 +69,7 @@ h2{font-size:15px;margin:0 0 10px}.kicker{color:#dbbf87;font-size:10px;letter-sp
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from './src/vendor/three/addons/loaders/GLTFLoader.js';
-const VERSION='common100-masonry-review.2';
+const VERSION='common100-masonry-review.3';
 const BASE='./assets/tower/prefabs/common100/';
 const TYPES=[['1x1x1','1×1×1'],['2x2x2','2×2×2'],['2x2x3','2×2×3'],['2x3x4','2×3×4'],['4x4x4','4×4×4']];
 const ARCH=[['window','Окно'],['door','Дверь'],['gate','Ворота']];
@@ -91,7 +91,7 @@ const floor=new THREE.GridHelper(10,40,0x89867b,0x66695f);floor.position.y=-.015
 const display=new THREE.Group();scene.add(display);
 const material=new THREE.MeshStandardMaterial({color:0xbba788,roughness:1,metalness:0,flatShading:true,side:THREE.DoubleSide});
 const wireMaterial=new THREE.LineBasicMaterial({color:0x30291f,transparent:true,opacity:.37});
-const state={data:null,mesh:new Map(),kind:'2x2x2',variant:0,wall:false,edges:false};
+const state={data:null,mesh:new Map(),kind:'1x1x1',variant:0,wall:false,edges:false};
 const qp=new URLSearchParams(location.search),requested=qp.get('kind');if([...TYPES,...ARCH,...JOINTS].some(x=>x[0]===requested))state.kind=requested;
 function createGroup(id,entries){const host=$(id);for(const [key,label] of entries){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.kind=key;b.onclick=()=>{state.kind=key;state.variant=0;render()};host.append(b)}}
 createGroup('wallTypes',TYPES);createGroup('architecture',ARCH);createGroup('joints',JOINTS);
