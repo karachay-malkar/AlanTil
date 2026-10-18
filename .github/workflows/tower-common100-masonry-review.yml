@@ -1,23 +1,57 @@
-name: QA isolated Common100 masonry 3D viewer
+name: Build and QA isolated Common100 smart masonry
 on:
   push:
     branches: ['17.2']
     paths:
+      - 'tools/tower/bake-common100-masonry-review.py'
+      - 'tools/tower/audit-common100-masonry-review.py'
       - 'tower-common100-masonry-review.html'
       - 'scripts/qa/browser-common100-masonry-review.cjs'
-      - 'assets/tower/prefabs/common100/masonry-review-v1.json'
       - '.github/workflows/tower-common100-masonry-review.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
-  webgl-masonry:
+  smart-masonry:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
           ref: '17.2'
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install 3D packing dependencies
+        run: python -m pip install numpy scipy trimesh
+      - name: Generate 32 supported masonry recipes (no editor changes)
+        run: python tools/tower/bake-common100-masonry-review.py | tee /tmp/masonry-build.log
+      - name: Audit masonry geometry and support
+        run: |
+          python tools/tower/audit-common100-masonry-review.py
+          python - <<'PY'
+          import json
+          p='assets/tower/prefabs/common100/masonry-review-v1.json'
+          d=json.load(open(p))
+          assert len(d['cases'])==32 and d['previewOnly'] and not d['productionIntegrated']
+          assert d['assemblyAlgorithm']=='gravity-supported.2'
+          assert all(c['quality']['minimumSupportVoxels']>0 for c in d['cases'])
+          assert all(c['quality']['contactFaces']>=0 for c in d['cases'])
+          for c in d['cases']:
+              print('SUPPORTED',c['id'],c['variant'],len(c['placement']),
+                    c['quality']['estimatedEnvelopeFill'],
+                    min(c['quality']['faceCoverage']))
+          PY
+      - name: Commit isolated staging recipes only
+        run: |
+          if ! git diff --quiet -- assets/tower/prefabs/common100/masonry-review-v1.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add assets/tower/prefabs/common100/masonry-review-v1.json
+            git commit -m "build(tower): bake physically supported Common100 staging masonry [skip ci]"
+            git push origin HEAD:17.2
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -25,11 +59,11 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Check staging models and mobile viewer
+      - name: Browser visual checks on desktop and mobile
         run: node scripts/qa/browser-common100-masonry-review.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: AlanTil-staging-masonry-browser-screenshots
+          name: AlanTil-common100-supported-masonry-browser-screenshots
           path: /tmp/alantil-common100-masonry/*.png
           if-no-files-found: warn
