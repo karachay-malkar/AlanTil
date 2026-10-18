@@ -138,6 +138,12 @@ function render(){
    const r=record(state.kind,(state.variant+k)%5);
    addCase(r,new THREE.Vector3((k-1)*a,0,0))
   }
+  // Bridge each actual pair with OFFLINE authored chinking recipes.
+  for(let k=0;k<2;k++){
+   const v=(state.variant+k)%5;
+   const seam=state.data.seams?.find(j=>j.id===state.kind&&j.variant===v);
+   if(seam?.placement?.length)addCase(seam,new THREE.Vector3((k-.5)*a,0,0));
+  }
  }else addCase(selected,new THREE.Vector3());
  $('name').textContent=state.kind+' · '+(selected.variant+1);
  $('dim').textContent=[a,b,c].map(v=>Math.round(v*100)).join(' × ');
@@ -147,7 +153,16 @@ function render(){
  let warning=(selected.quality.minimumSupportVoxels||0)>0?
   'Камни получили опору на основание или нижний ряд. Открытые стыки при соседстве секций необходимо проверить отдельно: цифра плотности не является критерием готовности.':
   'Нет подтвержденных данных об опоре камней — эта секция не может быть утверждена.';
- if(state.wall)warning='Три секции установлены вплотную. Внимательно проверь видимые швы: межсекционная добутовка пока не рассчитана, сцена не является утвержденной конструкцией.';
+ if(state.wall){
+  const first=state.data.seams?.find(j=>j.id===state.kind&&j.variant===state.variant);
+  const next=state.data.seams?.find(j=>j.id===state.kind&&j.variant===(state.variant+1)%5);
+  if(first&&next){
+   const count=first.placement.length+next.placement.length;
+   const before=first.quality.beforeOpenInterfaceVoxels+next.quality.beforeOpenInterfaceVoxels;
+   const after=first.quality.afterOpenInterfaceVoxels+next.quality.afterOpenInterfaceVoxels;
+   warning='Между тремя секциями добавлены '+count+' опирающихся мелких камней (стыки X). Остаток пустот на интерфейсах по воксельной оценке: '+after+' из '+before+'. Проверь визуально все стороны и углы.';
+  }else warning='Проверка стыковки: нет рассчитанной межсекционной добутовки. Не утверждено.';
+ }
  if(state.kind==='gate')warning='Новые каменные простенки показаны отдельно. Непрерывная несущая перемычка ворот из новой библиотеки не создана: нужен самостоятельный конструктивный проект.';
  $('warning').textContent=warning;
  $('source').textContent=state.data.sourceVersion+' · '+state.data.version+' · 32 образца · '+(state.data.assemblyAlgorithm||'no-algorithm-id')+' · только для согласования';
@@ -170,6 +185,7 @@ try{
  const res=await fetch(BASE+'masonry-review-v1.json?v='+encodeURIComponent(VERSION),{cache:'no-store'});
  if(!res.ok)throw Error('Не найден пакет кладки: '+res.status);
  const data=await res.json();
+ if(!Array.isArray(data.seams)||data.seams.length!==25)throw Error("Не найдено 25 поддержанных межсекционных швов");
  if(data.version!==VERSION||data.cases?.length!==32||data.productionIntegrated)throw Error('Неверная версия предварительной библиотеки');
  const gltf=await new GLTFLoader().loadAsync(BASE+'common-100.glb?v='+encodeURIComponent(data.sourceVersion));
  gltf.scene.traverse(o=>{if(o.isMesh){state.mesh.set(o.name,o);if(o.parent?.name&&!state.mesh.has(o.parent.name))state.mesh.set(o.parent.name,o)}});
