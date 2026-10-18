@@ -92,8 +92,8 @@ def select_pool(source,meta,dimensions,small=False):
     pool.sort(key=lambda p:p["voxels"],reverse=True)
     return pool
 
-def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False):
-    """Gravity-supported placement. Fronts are packed before core; no floating filler."""
+def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False):
+    """Fit medium stones as connected load-bearing courses; use small stones only for gaps."""
     size=occupancy.shape
     if not pool:return False
     from scipy.ndimage import binary_dilation
@@ -128,6 +128,7 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
                            min(size[1]-n[1],floor+2)]))
         accepted=None
         for yy in levels:
+            if course_top is not None and yy+int(n[1])>course_top:continue
             st=np.array((ox,yy,oz),dtype=int)
             sl=tuple(slice(int(st[i]),int(st[i]+n[i])) for i in range(3))
             mask=item["mask"]
@@ -147,17 +148,35 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
                 support_x.extend(bx[above][below].tolist())
                 support_z.extend(bz[above][below].tolist())
             support=len(support_x)
-            if support<max(1,int(len(bx)*(.065 if small else .105))):continue
+            support_ratio=support/max(1,len(bx))
+            if support<2 or support_ratio<(.15 if small else .23):continue
+            # A lone point cannot carry a medium rock, even when it touches its underside.
+            if not small and n[0]>=4 and max(support_x)-min(support_x)<max(1,int(n[0]*.22)):continue
+            if not small and n[2]>=4 and max(support_z)-min(support_z)<max(1,int(n[2]*.22)):continue
             # The stone's projected centre must stay over its actual support
             # polygon (approximately, using a conservative bounding interval).
             centroid=np.asarray(item["centre_xz"])
-            tolerance=np.maximum(1,n[[0,2]]*.17)
+            tolerance=np.maximum(.35,n[[0,2]]*.07)
             if (centroid[0]<min(support_x)-tolerance[0] or
                 centroid[0]>max(support_x)+tolerance[0] or
                 centroid[1]<min(support_z)-tolerance[1] or
                 centroid[1]>max(support_z)+tolerance[1]):continue
             contact=int(np.count_nonzero(mask&neighbor_grid[sl]&~occupancy[sl]))
-            if yy>0 and contact<2:continue
+            required_contact=max(4,int(np.sqrt(item['voxels'])*.58))
+            independent=not small and metrics.get('mediumStoneCount',0)>0 and contact<required_contact
+            if independent and not (allow_pier_seed and yy==0 and metrics.get('freePierSeeds',0)<1):continue
+            if yy>0 and contact<4:continue
+            if small and owners is not None:
+                # A chink is only allowed into a gap between TWO distinct medium stones.
+                start=[max(0,int(st[i])-1) for i in range(3)]
+                end=[min(size[i],int(st[i]+n[i])+1) for i in range(3)]
+                padded=tuple(slice(start[i],end[i]) for i in range(3))
+                region=owners[padded]
+                local_mask=np.zeros(region.shape,dtype=bool)
+                inner=tuple(slice(int(st[i])-start[i],int(st[i]+n[i])-start[i]) for i in range(3))
+                local_mask[inner]=mask
+                neighboring=np.unique(region[binary_dilation(local_mask,iterations=1)&(region>=0)])
+                if len(neighboring)<2:continue
             border=0
             for a in (0,2):
                 for target in (0,size[a]-1):
@@ -166,19 +185,28 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
                         border+=int(np.take(mask,relative,axis=a).sum())
             # Larger stones form the weight-bearing masonry; smaller supported
             # stones preferentially close exposed perimeter recesses.
-            score=(item["voxels"]-collision)+contact*1.1+border*(3.0 if small else 2.0)
-            score+=support*.35
+            score=(item['voxels']-collision)+contact*(2.5 if small else 7.0)+border*(.2 if small else .65)
+            score+=support*1.5+(size[1]-yy)*1.2
+            if independent:score-=45
             if score>highest:
-                highest=score;accepted=(item,st,sl,collision,support,contact)
+                highest=score;accepted=(item,st,sl,collision,support,contact,support_ratio,independent)
         if accepted is not None:
             best=accepted
     if best is None:return False
-    item,start,sl,collision,support,contact=best
-    occupancy[sl]|=item["mask"]
+    item,start,sl,collision,support,contact,support_ratio,independent=best
+    if small:
+        metrics['gapChinks']=metrics.get('gapChinks',0)+1
+    else:
+        if owners is not None:
+            owners[sl][item['mask']]=metrics.get('mediumStoneCount',0)
+        metrics['mediumStoneCount']=metrics.get('mediumStoneCount',0)+1
+        if independent:metrics['freePierSeeds']=metrics.get('freePierSeeds',0)+1
+    occupancy[sl]|=item['mask']
     placement.append(transform(item,start,world_size))
     metrics["overlapVoxels"]+=collision
     metrics.setdefault("minSupport",support)
     metrics["minSupport"]=min(metrics["minSupport"],support)
+    metrics['minSupportRatio']=min(metrics.get('minSupportRatio',1.0),support_ratio)
     metrics["contactFaces"]=metrics.get("contactFaces",0)+contact
     return True
 
@@ -188,6 +216,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
     shape=tuple(10*x for x in dims)
     eligible=inside_target(shape,kind)
     occupied=np.zeros(shape,dtype=bool)
+    medium_owners=np.full(shape,-1,dtype=np.int32)
     rng=np.random.default_rng(PRESET+variant*1793+sum(ord(c) for c in kind)*59)
     placement=[]
     stats={"overlapVoxels":0}
@@ -219,15 +248,16 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             "joint-x":18,"joint-y":18,"joint-z":18,"joint-corner":12}[kind]
     failures=0
     for i in range(budget):
-        if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.93):
-            break
-        success=place_one(occupied,eligible,main,rng,world_size,placement,stats)
+        # Grow from the foundation upwards. The cap is a construction course,
+        # not an artificial target fill percentage.
+        course_top=min(shape[1],max(7,int(7+max(0,shape[1]-7)*min(1.,(i+1)/(budget*.78)))))
+        success=place_one(occupied,eligible,main,rng,world_size,placement,stats,
+                          owners=medium_owners,course_top=course_top,allow_pier_seed=kind in ARCH)
         failures=0 if success else failures+1
         if failures>65:break
     for i in range(min(512-len(placement),round(budget*.65))):
-        if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.95):
-            break
-        success=place_one(occupied,eligible,small,rng,world_size,placement,stats,True)
+        success=place_one(occupied,eligible,small,rng,world_size,placement,stats,True,
+                          owners=medium_owners)
         failures=0 if success else failures+1
         if failures>90:break
     filled=int(np.count_nonzero(occupied&eligible));total=int(eligible.sum())
@@ -245,6 +275,8 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             "quality":{"voxelPitchMeters":STEP,"estimatedEnvelopeFill":round(filled/total,4),
                        "faceCoverage":coverage,"rocks":len(placement),
                        "overlapVoxels":stats["overlapVoxels"],"minimumSupportVoxels":stats.get("minSupport",0),"contactFaces":stats.get("contactFaces",0),
+                       "mediumStones":stats.get('mediumStoneCount',0),"gapChinks":stats.get('gapChinks',0),
+                       "minSupportRatio":round(stats.get('minSupportRatio',0),3),"isolatedPierSeeds":stats.get('freePierSeeds',0),
                        "note":"Convex proxy occupancy, not proven physical density"}}
 
 def build_seam(kind,variant,source,meta):
@@ -350,8 +382,8 @@ def main():
                   "proxy_fill",case["quality"]["estimatedEnvelopeFill"],
                   "min_face",min(case["quality"]["faceCoverage"]),flush=True)
     seams=[build_seam(name,v,shapes,meta) for name in SIZES for v in range(5)] if not args.only else []
-    result={"version":"common100-masonry-review.2",
-        "sourceVersion":meta["version"],"assemblyAlgorithm":"gravity-supported.2","sourceSHA256":hashlib.sha256(LIB.read_bytes()).hexdigest(),
+    result={"version":"common100-masonry-review.3",
+        "sourceVersion":meta["version"],"assemblyAlgorithm":"course-contact-supported.3","sourceSHA256":hashlib.sha256(LIB.read_bytes()).hexdigest(),
         "cellMeters":.25,"gridPitchMeters":STEP,
         "previewOnly":True,"productionIntegrated":False,
         "architectureNote":"Gate stone piers only; historic spanning header remains separate",
