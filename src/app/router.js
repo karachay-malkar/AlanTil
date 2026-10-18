@@ -3,15 +3,17 @@ import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analyt
 import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.16";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.16";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.16";
-import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.16";
+import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "16.8.0.16";
+const ASSET_VERSION = "16.8.0.17";
 const TOWER_ASSET_VERSION = "17.5.8-balkaria-light-ochre.1";
+const MASONRY_ASSET_VERSION = "17.2-manual-masonry.1";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
   tower: "../features/tower/index.js",
+  masonry: "../features/masonry/index.js",
   friends: "../features/friends/index.js",
   path: "../features/path/feature.js",
   profile: "../features/profile/index.js",
@@ -27,6 +29,7 @@ const STYLE_PATHS = Object.freeze({
   practice: "/src/shared/styles/lazy/practice.css",
   ashyk: "/src/shared/styles/lazy/ashyk.css",
   tower: "/src/shared/styles/lazy/tower.css",
+  masonry: "/src/features/masonry/masonry.css",
   friends: "/src/shared/styles/lazy/friends.css",
   profile: "/src/shared/styles/lazy/profile.css",
   admin: "/src/shared/styles/lazy/admin.css",
@@ -74,6 +77,7 @@ export function parsePathname(pathname) {
   if (first === "practice") {
     if (!second) return { route: "practice.home", params: {} };
     if (second === "tower" && !third) return { route: "practice.tower", params: {} };
+    if (second === "masonry" && !third) return { route: "practice.masonry", params: {} };
     if (second === "tower" && third && !fourth) return { route: "practice.tower", params: {userId:third} };
     if (second === "ashyk" && !third) return { route: "practice.ashyk", params: {} };
   }
@@ -174,6 +178,7 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "path.test") return `${stationBase}/test`;
   if (routeName === "practice.home") return "/practice";
   if (routeName === "practice.tower") return params.userId ? `/practice/tower/${encodeSegment(params.userId)}` : "/practice/tower";
+  if (routeName === "practice.masonry") return "/practice/masonry";
   if (routeName === "practice.ashyk") return "/practice/ashyk";
   if (routeName === "friends.home") return params.mode === "stats" ? "/friends/statistics" : "/friends";
   if (routeName === "profile.home") return "/profile";
@@ -208,7 +213,7 @@ export function buildPath(routeName, params = {}) {
   return `/path/${story}`;
 }
 
-function featureOf(route) { if (route === "practice.tower") return "tower"; if (route === "practice.ashyk") return "ashyk"; return route === "home" ? "path" : String(route || "path.home").split(".")[0]; }
+function featureOf(route) { if (route === "practice.tower") return "tower"; if (route === "practice.masonry") return "masonry"; if (route === "practice.ashyk") return "ashyk"; return route === "home" ? "path" : String(route || "path.home").split(".")[0]; }
 function screenNameOf(route) {
   if (route === "home") return "path";
   if (route === "practice.ashyk") return "ashyk";
@@ -264,7 +269,7 @@ export function createRouter({ shell, modal, context }) {
       const path=STYLE_PATHS[style];
       if(!path)throw new Error(`Unknown route style dependency: ${style}`);
       const standardHref=`${path}?v=${ASSET_VERSION}`;
-      return loadStyle(style==="tower"?`${path}?v=${TOWER_ASSET_VERSION}`:standardHref);
+      return loadStyle(style==="tower"?`${path}?v=${TOWER_ASSET_VERSION}`:style==="masonry"?`${path}?v=${MASONRY_ASSET_VERSION}`:standardHref);
     }));
   }
   let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
@@ -291,7 +296,7 @@ export function createRouter({ shell, modal, context }) {
     const path = FEATURE_PATHS[feature];
     if (!path) throw new Error(`Unknown feature: ${feature}`);
     const suffix = retry ? `&retry=${Date.now()}` : "";
-    return import(`${path}?v=${feature==="tower"?TOWER_ASSET_VERSION:ASSET_VERSION}${suffix}`);
+    return import(`${path}?v=${feature==="tower"?TOWER_ASSET_VERSION:feature==="masonry"?MASONRY_ASSET_VERSION:ASSET_VERSION}${suffix}`);
   }
   async function loadFeatureModule(feature) {
     if (loadedModules.has(feature)) return loadedModules.get(feature);
@@ -370,11 +375,12 @@ export function createRouter({ shell, modal, context }) {
   function setAnalyticsActive(enabled) { discardScreenTimer(); if (!enabled || !started) return false; startScreenTimer(current.route); return sendPageView({ force: true }); }
   async function guardAdminTarget(target) {
     if (target.route === "admin.users") return { route: "friends.home", params: { mode: "stats" }, redirected: true };
-    if (!target.route.startsWith("admin.")) return target;
+    const manualMasonry = target.route === "practice.masonry";
+    if (!manualMasonry && !target.route.startsWith("admin.")) return target;
     const ready = new Promise((resolve) => globalThis.setTimeout(() => resolve(false), 4000));
     await Promise.race([whenActivityAccessReady().then(() => true), ready]);
     if (hasActivityAccess()) return target;
-    return { route: "friends.home", params: {}, redirected: true };
+    return { route: manualMasonry ? "practice.home" : "friends.home", params: {}, redirected: true };
   }
   async function show(rawTarget, { historyMode = "push", force = false, reason = "route_change", skipLeaveCheck = false, initial = false } = {}) {
     const target = await guardAdminTarget(rawTarget);
@@ -414,6 +420,7 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "learn.sections") return { route: "learn.catalog", params: {} };
     if (current.route.startsWith("learn.")) return { route: "path.home", params: { storyType: DEFAULT_STORY } };
     if (current.route === "practice.tower") return { route: "practice.home", params: {} };
+    if (current.route === "practice.masonry") return { route: "practice.home", params: {} };
     if (current.route === "practice.ashyk") return { route: "practice.home", params: {} };
     if (["test.session", "test.results"].includes(current.route)) return { route: "test.menu", params: {} };
     if (current.route === "test.menu") return { route: "practice.home", params: {} };
