@@ -1,0 +1,35 @@
+name: QA isolated Common100 masonry 3D viewer
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'tower-common100-masonry-review.html'
+      - 'scripts/qa/browser-common100-masonry-review.cjs'
+      - 'assets/tower/prefabs/common100/masonry-review-v1.json'
+      - '.github/workflows/tower-common100-masonry-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  webgl-masonry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Check staging models and mobile viewer
+        run: node scripts/qa/browser-common100-masonry-review.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AlanTil-staging-masonry-browser-screenshots
+          path: /tmp/alantil-common100-masonry/*.png
+          if-no-files-found: warn
