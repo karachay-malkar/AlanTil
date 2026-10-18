@@ -92,7 +92,7 @@ def select_pool(source,meta,dimensions,small=False):
     pool.sort(key=lambda p:p["voxels"],reverse=True)
     return pool
 
-def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False):
+def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False,x_focus=None):
     """Fit medium stones as connected load-bearing courses; use small stones only for gaps."""
     size=occupancy.shape
     if not pool:return False
@@ -115,9 +115,12 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
         item=pool[min(len(pool)-1,int(len(pool)*(frac**(1.30 if small else 2.3))))]
         n=item["n"]
         if np.any(n>size):continue
+        if x_focus is not None and n[0]>x_focus[1]-x_focus[0]:continue
         ox=int(np.clip(x-int(rng.integers(n[0])),0,size[0]-n[0]))
         oz=int(np.clip(z-int(rng.integers(n[2])),0,size[2]-n[2]))
-        if rng.random()<.24:
+        if x_focus is not None:
+            ox=int(np.clip(ox,x_focus[0],x_focus[1]-n[0]))
+        elif rng.random()<.24:
             ox=int(rng.choice((0,size[0]-n[0])))
         if rng.random()<.24:
             oz=int(rng.choice((0,size[2]-n[2])))
@@ -251,8 +254,16 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
         # Grow from the foundation upwards. The cap is a construction course,
         # not an artificial target fill percentage.
         course_top=min(shape[1],max(7,int(7+max(0,shape[1]-7)*min(1.,(i+1)/(budget*.78)))))
+        # Architectural piers grow together rather than forming one tall column.
+        # Lintel later must be borne at both ends, not by randomly stacked chinks.
+        pier_x={'window':(10,30),'door':(20,50),'gate':(50,130)}
+        side=None
+        if kind in pier_x and i%3!=2:
+            low,high=pier_x[kind]
+            side=(0,low) if i%2==0 else (high,shape[0])
         success=place_one(occupied,eligible,main,rng,world_size,placement,stats,
-                          owners=medium_owners,course_top=course_top,allow_pier_seed=kind in ARCH)
+                          owners=medium_owners,course_top=course_top,
+                          allow_pier_seed=kind in ARCH,x_focus=side)
         failures=0 if success else failures+1
         if failures>65:break
     for i in range(min(512-len(placement),round(budget*.65))):
