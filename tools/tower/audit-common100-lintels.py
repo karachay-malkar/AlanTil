@@ -34,10 +34,7 @@ def cap_features(mesh,sign):
     count=int(face.sum())
     if not count:
         return {"count":0,"facets":0,"roughArea":0.,"depth":0.,"broadFacets":0}
-    # At 50 cm thickness the same natural end chamfers have shallower
-    # normal angles than on the old 30-34 cm stone. Include genuinely
-    # oblique faces >= 14 degrees from the end normal (cosine < .97).
-    bent=(normal[:,0]*sign>.28)&(normal[:,0]*sign<.97)
+    bent=(normal[:,0]*sign>.28)&(normal[:,0]*sign<.94)
     rough_area=float(np.sum(area[face&bent]))
     full_area=float(np.sum(area[face]))
     broad=int(np.count_nonzero(face&bent&(area>.00016)))

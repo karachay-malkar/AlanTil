@@ -17,6 +17,9 @@ STYLES=("quarry-broken","stratified")
 # The coarse side relief and individual oblique clipped ends are retained.
 TARGET_HEIGHT_M=.25
 TARGET_DEPTH_M=.50
+# The approved corner-cut depths were designed for a 20 x 32.5 cm stone.
+# Keep the same broad, readable cuts when widening to the 25 x 50 cm module.
+CUT_DEPTH_SCALE=((TARGET_HEIGHT_M/.20)*(TARGET_DEPTH_M/.325))**.5
 # Twelve uneven corners on the Y/Z outline; in stratified form two extra
 # offsets make steps rather than a uniformly rounded or cubical contour.
 SECTION=np.array([
@@ -191,7 +194,7 @@ def _cut_marked_corners(mesh,ordinal):
             normal=np.array([side,vertical*slope_y,lateral*slope_z])
             # Support of CURRENT solid rather than imaginary box extrema,
             # so each clipping plane actually removes one coarse corner.
-            plane=float(np.max(mesh.vertices@normal))-depth
+            plane=float(np.max(mesh.vertices@normal))-depth*CUT_DEPTH_SCALE
             mesh=_clip_corner_plane(mesh,normal,plane)
     return mesh
 
