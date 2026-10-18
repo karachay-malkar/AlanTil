@@ -73,6 +73,12 @@ fs.mkdirSync(out,{recursive:true});
      await page.locator('.stage').screenshot({path:path.join(out,'endcap-'+name+'-right.png')});
      await page.locator('#next').click();
    }
+   // A direct link must open the newly-built six lintels, not the old main category.
+   await page.goto('http://127.0.0.1:8795/tower-common100-review.html?group=lintel',{waitUntil:'domcontentloaded'});
+   await page.waitForFunction(()=>document.getElementById('status').textContent.includes('Загружено: 100'),{timeout:60000});
+   if((await page.locator('#stoneName').textContent())!=='LINTEL_001')throw Error('Direct URL did not select lintels');
+   if(await page.locator('[data-group="lintel"]').getAttribute('aria-pressed')!=='true')throw Error('Lintel category button not selected');
+   if(!(await page.locator('#status').textContent()).includes(localMeta.version))throw Error('Viewer loaded stale GLB');
    if(errors.length||failures.length)throw new Error(JSON.stringify({errors,failures}));
    console.log('COMMON100_3D_BROWSER_QA_PASS','groups='+groups.length,'meshes=100','canvas=webgl','mobile=390px');
  }finally{await browser.close();server.kill();}
