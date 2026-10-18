@@ -98,6 +98,14 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
     if not pool:return False
     from scipy.ndimage import binary_dilation
     neighbor_grid=binary_dilation(occupancy,iterations=1)
+    # Select real free contact faces, not only the lowest empty voxel in a
+    # random column. This propagates joined courses across all exposed sides.
+    frontier=neighbor_grid&eligible&~occupancy
+    if course_top is not None:frontier[:,course_top:,:]=False
+    if x_focus is not None:
+        frontier[:x_focus[0],:,:]=False
+        frontier[x_focus[1]:,:,:]=False
+    targets=np.argwhere(frontier)
     best=None;highest=-1e20
     for trial in range(115 if small else 155):
         # Prefer already occupied neighborhoods and unfilled boundary pockets.
@@ -107,10 +115,13 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
             p=int(rng.choice((0,1,size[axis]-2,size[axis]-1)))
         q=int(rng.integers(size[2-axis]))
         x,z=(p,q) if axis==0 else (q,p)
-        free=np.flatnonzero(eligible[x,:,z]&~occupancy[x,:,z])
-        if not len(free):continue
-        # The bottom of the candidate is seated on the floor or occupied stones.
-        h=int(free[0] if rng.random()<.83 else rng.choice(free[:min(6,len(free))]))
+        if len(targets)>0 and rng.random()<(.70 if small else .82):
+            x,h,z=map(int,targets[int(rng.integers(len(targets)))])
+        else:
+            free=np.flatnonzero(eligible[x,:,z]&~occupancy[x,:,z])
+            if not len(free):continue
+            # Reserve floor-first fallback for disconnected architectural piers.
+            h=int(free[0] if rng.random()<.83 else rng.choice(free[:min(6,len(free))]))
         frac=rng.random()
         item=pool[min(len(pool)-1,int(len(pool)*(frac**(1.30 if small else 2.3))))]
         n=item["n"]
@@ -188,8 +199,8 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
                         border+=int(np.take(mask,relative,axis=a).sum())
             # Larger stones form the weight-bearing masonry; smaller supported
             # stones preferentially close exposed perimeter recesses.
-            score=(item['voxels']-collision)+contact*(2.5 if small else 7.0)+border*(.2 if small else .65)
-            score+=support*1.5+(size[1]-yy)*1.2
+            score=(item['voxels']-collision)+contact*(2.0 if small else 3.2)+border*(.35 if small else 2.8)
+            score+=support*1.8+(size[1]-yy)*.65
             if independent:score-=45
             if score>highest:
                 highest=score;accepted=(item,st,sl,collision,support,contact,support_ratio,independent)
@@ -255,7 +266,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
     for i in range(budget):
         # Grow from the foundation upwards. The cap is a construction course,
         # not an artificial target fill percentage.
-        course_top=min(shape[1],max(7,int(7+max(0,shape[1]-7)*min(1.,(i+1)/(budget*.78)))))
+        course_top=min(shape[1],max(7,int(7+max(0,shape[1]-7)*min(1.,(i+1)/(budget*.44)))))
         # Architectural piers grow together rather than forming one tall column.
         # Lintel later must be borne at both ends, not by randomly stacked chinks.
         pier_x={'window':(10,30),'door':(20,50),'gate':(50,130)}
