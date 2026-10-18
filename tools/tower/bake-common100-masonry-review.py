@@ -28,6 +28,7 @@ JOINTS={"joint-x":(2,1,1),"joint-y":(1,1,2),
 PRESET=20261018
 MASONRY_OCCUPANCY={}  # in-memory only, never serialized
 MASONRY_MAIN_OWNERS={}  # medium-stone identity for actual seam contact
+MASONRY_SEAM_POOLS={}   # cache authored original stone masks by combined dimensions
 
 def clean(v):
     return [float(round(float(z),6)) for z in v]
@@ -373,6 +374,72 @@ def build_seam(kind,variant,source,meta):
     small=[q for q in small if q["n"][0]>=2 and q["n"][0]<2*nx]
     seam=[]
     before=int(np.count_nonzero(~occupied[nx-1,:,:]&~occupied[nx,:,:]))
+    # Stage 1: place MAIN stones as load-bearing ties across the prefab boundary.
+    # Chinking alone cannot fill a 10-20 cm cavity while remaining supported.
+    medium_union=left_main|right_main
+    pool_key=tuple(combined)
+    if pool_key not in MASONRY_SEAM_POOLS:
+        MASONRY_SEAM_POOLS[pool_key]=select_pool(source,meta,np.asarray(combined),False)
+    ties=[v for v in MASONRY_SEAM_POOLS[pool_key] if v['n'][0]>=3 and v['n'][0]<=2*nx]
+    tie_count=0
+    for turn in range(42):
+        holes=np.argwhere(~occupied[nx-1,:,:]&~occupied[nx,:,:])
+        if len(holes)<3:break
+        structural_contact=binary_dilation(medium_union,iterations=1)
+        best=None;best_score=-1e20
+        for attempt in range(125):
+            iy,iz=holes[int(rng.integers(len(holes)))]
+            item=ties[int(rng.integers(min(len(ties),max(1,int(len(ties)*.65)))))]
+            sx,sy,sz=map(int,item['n'])
+            ox_min=max(0,nx-sx+1)
+            ox_max=min(nx-1,2*nx-sx)
+            if ox_min>ox_max:continue
+            ox=int(rng.integers(ox_min,ox_max+1))
+            oy=int(np.clip(int(iy)-int(rng.integers(sy)),0,ny-sy))
+            oz=int(np.clip(int(iz)-int(rng.integers(sz)),0,nz-sz))
+            sl=(slice(ox,ox+sx),slice(oy,oy+sy),slice(oz,oz+sz))
+            mask=item['mask']
+            taken=occupied[sl]
+            if int(np.count_nonzero(mask&taken))>max(1,int(item['voxels']*.003)):continue
+            bx,by,bz=item['underside']
+            local_y=oy+by
+            on_floor=local_y==0
+            support_x=bx[on_floor].tolist()
+            support_z=bz[on_floor].tolist()
+            above=~on_floor
+            if np.any(above):
+                below=medium_union[ox+bx[above],local_y[above]-1,oz+bz[above]]
+                support_x.extend(bx[above][below].tolist())
+                support_z.extend(bz[above][below].tolist())
+            if len(support_x)<max(3,int(len(bx)*.23)):continue
+            mid=item['centre_xz']
+            tol=np.maximum(.35,item['n'][[0,2]]*.07)
+            if (mid[0]<min(support_x)-tol[0] or mid[0]>max(support_x)+tol[0] or
+                mid[1]<min(support_z)-tol[1] or mid[1]>max(support_z)+tol[1]):continue
+            structural=int(np.count_nonzero(mask&structural_contact[sl]&~taken))
+            if structural<4:continue
+            split=nx-ox
+            if not np.any(mask[:split]) or not np.any(mask[split:]):continue
+            uncovered=~occupied[nx-1,oy:oy+sy,oz:oz+sz]&~occupied[nx,oy:oy+sy,oz:oz+sz]
+            gain=int(np.count_nonzero((mask[split-1]|mask[split])&uncovered))
+            if gain<2:continue
+            original_left=int(np.count_nonzero(mask&neighbors_left[sl]&~taken))
+            original_right=int(np.count_nonzero(mask&neighbors_right[sl]&~taken))
+            score=gain*15+min(original_left,original_right)*7+structural*2+len(support_x)*.5
+            if score>best_score:
+                best=(item,(ox,oy,oz),sl)
+                best_score=score
+        if best is None:break
+        item,origin,sl=best
+        occupied[sl]|=item['mask']
+        medium_union[sl]|=item['mask']
+        seam.append(transform(item,origin,np.asarray(combined)*STEP))
+        tie_count+=1
+    # Stage 2: only after medium ties, add smaller stones between them.
+    half_left=medium_union.copy();half_left[nx:,:,:]=False
+    half_right=medium_union.copy();half_right[:nx,:,:]=False
+    neighbors_left=binary_dilation(half_left,iterations=1)
+    neighbors_right=binary_dilation(half_right,iterations=1)
     failures=0
     for turn in range(48):
         gaps=np.argwhere(~occupied[nx-1,:,:]&~occupied[nx,:,:])
@@ -435,6 +502,8 @@ def build_seam(kind,variant,source,meta):
             "quality":{"beforeOpenInterfaceVoxels":before,
                        "afterOpenInterfaceVoxels":after,
                        "supportedBridgingStones":len(seam),
+                       "mainTieStones":tie_count,
+                       "gapChinks":len(seam)-tie_count,
                        "note":"Convex-voxel seam estimate; visual approval required"}}
 
 
