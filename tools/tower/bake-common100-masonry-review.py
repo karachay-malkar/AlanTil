@@ -224,6 +224,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
     placement=[]
     stats={"overlapVoxels":0}
     world_size=np.asarray(shape)*STEP
+    lintel=None
     if kind in ("window","door"):
         # The single self-supporting large stone lintel spans the opening.
         name="LINTEL_001" if kind=="window" else "LINTEL_003"
@@ -237,6 +238,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             raise RuntimeError("Lintel obstructs required opening "+kind)
         occupied[sl]|=item["mask"]
         placement.append(transform(item,origin,world_size))
+        lintel=(item,origin)
     if kind=="gate":
         # Gate uses its already-approved long spanning header in the current
         # architectural GLB. No unsafe fictitious 2m stone lintel is inserted.
@@ -266,6 +268,31 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
                           allow_pier_seed=kind in ARCH,x_focus=side)
         failures=0 if success else failures+1
         if failures>65:break
+    lintel_support=None
+    if lintel is not None:
+        stone,origin=lintel
+        ux,uy,uz=stone['underside']
+        ox,oy,oz=origin
+        opening_left,opening_right={'window':(10,30),'door':(20,50)}[kind]
+        def bearing():
+            xs=ox+ux;ys=oy+uy;zs=oz+uz
+            valid=ys>0
+            material=np.zeros(len(xs),dtype=bool)
+            material[valid]=medium_owners[xs[valid],ys[valid]-1,zs[valid]]>=0
+            return [int(np.count_nonzero(material&(xs<opening_left))),
+                    int(np.count_nonzero(material&(xs>=opening_right)))]
+        goal=max(8,int(len(ux)*.025))
+        # Support each end with ordinary main stones. Small chinks MUST NOT carry a lintel.
+        for flank,range_x in enumerate(((0,opening_left),(opening_right,shape[0]))):
+            missed=0
+            for attempt in range(75):
+                if bearing()[flank]>=goal or len(placement)>=470:break
+                success=place_one(occupied,eligible,main,rng,world_size,placement,stats,
+                                  owners=medium_owners,course_top=oy,
+                                  allow_pier_seed=True,x_focus=range_x)
+                missed=0 if success else missed+1
+                if missed>18:break
+        lintel_support=bearing()
     for i in range(min(512-len(placement),round(budget*.65))):
         success=place_one(occupied,eligible,small,rng,world_size,placement,stats,True,
                           owners=medium_owners)
@@ -288,6 +315,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
                        "overlapVoxels":stats["overlapVoxels"],"minimumSupportVoxels":stats.get("minSupport",0),"contactFaces":stats.get("contactFaces",0),
                        "mediumStones":stats.get('mediumStoneCount',0),"gapChinks":stats.get('gapChinks',0),
                        "minSupportRatio":round(stats.get('minSupportRatio',0),3),"isolatedPierSeeds":stats.get('freePierSeeds',0),
+                       "lintelBearingVoxels":lintel_support,
                        "note":"Convex proxy occupancy, not proven physical density"}}
 
 def build_seam(kind,variant,source,meta):
