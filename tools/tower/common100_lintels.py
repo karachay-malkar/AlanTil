@@ -1,4 +1,4 @@
-"""V5 wall-stable lintels with individual chipped, cracked, asymmetric stone ends.
+"""V5 wall-stable lintels with physically clipped blunt stone ends.
 
 Two independent longitudinal fracture patterns at each span:
 1.00 m ×2, 1.25 m ×2, 1.50 m ×2. Units are metres.
@@ -37,23 +37,32 @@ PROFILE_NAMES=(
     "natural-irregular-pentagon",
     "mixed-soft-blunt-wedge",
 )
-PROFILE_RADII=(
-    (.95,.96,.91,.98,.94,.97,.93),
-    (.96,.90,.88,.95,.98,.96),
-    (.96,.98,.92,.89,.91,.97,.96),
-    (.98,.97,.86,.89,.95,.98),
-    (.96,.87,.98,.90,.95),
-    (.95,.93,.89,.96,.99,.94,.90),
+# Each pair defines *real* clipped corners on left and right ends.
+# (vertical corner, lateral corner, removed depth in metres,
+#  vertical plane slope, lateral plane slope).
+# The wide end face itself is NOT inset: there is no sunken center or rim.
+END_CUTS=(
+    (((1,1,.060,.66,.45),(-1,-1,.036,.58,.46)),
+     ((1,-1,.054,.69,.42),(-1,1,.031,.53,.54))),
+    (((1,1,.083,.63,.57),(-1,1,.029,.43,.75)),
+     ((-1,-1,.074,.67,.49),(1,-1,.033,.55,.50))),
+    (((1,-1,.076,.75,.46),(-1,-1,.039,.49,.70)),
+     ((1,1,.070,.65,.60),(-1,1,.033,.54,.61))),
+    (((1,1,.090,.70,.45),(-1,-1,.030,.47,.61)),
+     ((1,-1,.045,.63,.57),(-1,-1,.062,.64,.52))),
+    (((1,1,.060,.63,.48),(-1,-1,.046,.50,.52),(1,-1,.031,.52,.68)),
+     ((-1,1,.065,.60,.53),(1,-1,.050,.67,.54),(1,1,.026,.49,.61))),
+    (((1,-1,.086,.65,.50),(-1,1,.034,.49,.67)),
+     ((1,1,.063,.68,.54),(-1,-1,.051,.61,.55))),
 )
 ENDCAP_DESIGNS=(
-    ("rounded-corner-chip","rounded-asymmetric-bevel"),
-    ("offset-blunt-triangle","blunt-triangle-broken-corner"),
-    ("blunt-teardrop","blunt-wedge-soft-side"),
-    ("upper-chamfer","lateral-chamfer-chip"),
-    ("irregular-pentagon","offset-pentagon-break"),
-    ("broad-soft-point","mixed-rounded-and-chipped"),
+    ("two-soft-corner-cuts","offset-soft-corner-cuts"),
+    ("large-diagonal-cut","offset-large-cut-and-small-chip"),
+    ("paired-lateral-bevels","offset-teardrop-bevels"),
+    ("upper-angled-cut","side-chamfer-and-notch"),
+    ("three-irregular-corner-cuts","three-staggered-cuts"),
+    ("blunt-wide-angled-cut","rounded-wide-end-with-scars"),
 )
-
 
 def _area(a,b,c):
     return float(np.cross(b-a,c-a))
@@ -90,52 +99,97 @@ def _triangulate_boundary(points):
     return triangles
 
 
-def _build_endcap(vertices,faces,ids,side,length,ordinal,rng):
-    """Shape one short convex stone end; no crater, sharp needle or flat cut.
+def _finish_blunt_end(vertices,faces,ids,side,length):
+    """Close the wide end with a few outward macro facets, NEVER an inset ring.
 
-    A 19-27 mm local bevel terminates the sidewall and is joined by 16-18
-    large cap facets. Three spatially distributed junctions form a broad,
-    shallow, blunt face; none is a narrow terminal spike. Interior long-side
-    stations and their triangulation are never touched.
+    Local raised core is at most 4 mm and will be clipped at specific corners.
+    A cup could occur only if the central faces were sunk relative to the rim;
+    this operation deliberately makes that impossible.
     """
-    n=len(ids)
-    yz=np.asarray([vertices[i][1:3] for i in ids],dtype=float)
-    center=yz.mean(axis=0)
-    controls=np.asarray(PROFILE_RADII[ordinal],dtype=float)
-    if side==1:
-        controls=np.roll(controls[::-1],2)
-    u=np.arange(n)/n*len(controls)
-    fractions=np.interp(u,np.arange(len(controls)+1),np.r_[controls,controls[0]])
-    for j,idx in enumerate(ids):
-        shape=fractions[j]
-        p=np.asarray(vertices[idx],dtype=float)
-        p[1:]=center+(p[1:]-center)*shape
-        inset=.020+.005*(1-shape)/.14+float(rng.uniform(-.001,.001))
-        p[0]-=side*inset
-        vertices[idx]=p.tolist()
     yz=np.asarray([vertices[i][1:3] for i in ids],dtype=float)
     triangles=_triangulate_boundary(yz)
-    sizes=np.array([abs(_area(*yz[list(t)]))/2 for t in triangles])
-    selected=np.argsort(sizes)[-3:]
-    extra=[]
-    for index,tri in enumerate(triangles):
-        if index not in selected:
-            extra.append(tri)
+    areas=np.array([abs(_area(*yz[list(t)])) for t in triangles])
+    big=set(np.argsort(areas)[-3:])
+    for index,(a,b,c) in enumerate(triangles):
+        if index not in big:
+            faces.append((ids[c],ids[b],ids[a]) if side==-1 else
+                         (ids[a],ids[b],ids[c]))
             continue
-        corners=yz[list(tri)]
-        target=corners.mean(axis=0)
-        new_id=len(vertices)
-        junction= list(selected).index(index)
-        gap=(0.,.004,.006)[junction]
-        vertices.append([float(side*(length/2-gap)),float(target[0]),float(target[1])])
-        a,b,c=tri
-        extra.extend(((a,b,new_id),(b,c,new_id),(c,a,new_id)))
-    for a,b,c in extra:
-        A=ids[a] if a<n else a
-        B=ids[b] if b<n else b
-        C=ids[c] if c<n else c
-        faces.append((C,B,A) if side==-1 else (A,B,C))
-    return PROFILE_NAMES[ordinal]
+        centroid=yz[[a,b,c]].mean(axis=0)
+        level=sum(int(j<index) for j in big)
+        outward=(.0035,.004,.002)[level]
+        peak=len(vertices)
+        vertices.append([side*(length/2+outward),
+                         float(centroid[0]),float(centroid[1])])
+        for p,q in ((a,b),(b,c),(c,a)):
+            faces.append((peak,ids[q],ids[p]) if side==-1 else
+                         (ids[p],ids[q],peak))
+
+
+def _clip_corner_plane(mesh,normal,limit):
+    """Physically remove material beyond a 3D plane; seal its macro face.
+
+    A single bevel trims a local corner, not the full perimeter.
+    Long sidewalls away from this plane are not remeshed or rescaled.
+    """
+    normal=np.asarray(normal,dtype=float)
+    origin=normal*float(limit)/float(normal@normal)
+    cut=mesh.slice_plane(plane_origin=origin,plane_normal=-normal,cap=False)
+    cut.merge_vertices(digits_vertex=9)
+    # Boundary edges inherit winding from the original surface.
+    oriented={}
+    for av,bv in np.asarray(cut.edges,dtype=int):
+        aa,bb=int(av),int(bv)
+        key=(min(aa,bb),max(aa,bb))
+        if key in oriented:
+            oriented[key]=None
+        else:
+            oriented[key]=(aa,bb)
+    border=[e for e in oriented.values()
+            if e is not None and
+            all(abs(float(normal@cut.vertices[v]-limit))<1e-6 for v in e)]
+    if not border:
+        raise ValueError("No intersection with corner for clip plane")
+    outgoing={a:b for a,b in border}
+    if len(outgoing)!=len(border):
+        raise ValueError("Clip created a branched boundary")
+    verts=list(np.asarray(cut.vertices,dtype=float))
+    faces=list(np.asarray(cut.faces,dtype=int))
+    open_starts=set(outgoing)
+    while open_starts:
+        first=next(iter(open_starts));current=first;loop=[]
+        while current in open_starts:
+            open_starts.remove(current)
+            loop.append(current)
+            current=outgoing[current]
+        if current!=first or len(loop)<3:
+            raise ValueError("Open loop on clipped face")
+        # This planar face has no recessed outline or secondary inset ring.
+        center=np.mean(np.asarray([verts[k] for k in loop]),axis=0)
+        center+=normal*(limit-float(normal@center))/float(normal@normal)
+        middle=len(verts);verts.append(center)
+        for x,y in zip(loop,loop[1:]+loop[:1]):
+            faces.append((y,x,middle))
+    result=trimesh.Trimesh(vertices=verts,faces=faces,process=False)
+    result.remove_unreferenced_vertices()
+    if not result.is_watertight:
+        raise ValueError("Clipped face is not watertight")
+    trimesh.repair.fix_normals(result)
+    if not result.is_volume:
+        raise ValueError("Clipped end is not a solid volume")
+    return result
+
+
+def _cut_marked_corners(mesh,ordinal):
+    for side in (-1,1):
+        end=END_CUTS[ordinal][0 if side==-1 else 1]
+        for vertical,lateral,depth,slope_y,slope_z in end:
+            normal=np.array([side,vertical*slope_y,lateral*slope_z])
+            # Support of CURRENT solid rather than imaginary box extrema,
+            # so each clipping plane actually removes one coarse corner.
+            plane=float(np.max(mesh.vertices@normal))-depth
+            mesh=_clip_corner_plane(mesh,normal,plane)
+    return mesh
 
 
 def build_rugged_lintel(rng,length,style,ordinal):
@@ -195,17 +249,28 @@ def build_rugged_lintel(rng,length,style,ordinal):
                 faces.extend(((a,c,d),(a,d,b)))
             else:
                 faces.extend(((a,c,b),(b,c,d)))
-    # Strictly preserve all interior longitudinal geometry when modelling tips.
+    # Preserve all interior longitudinal geometry while remodelling tips.
     long_wall=np.asarray(vertices[n:(count-1)*n],dtype=float).copy()
-    _build_endcap(vertices,faces,list(range(n)),-1,length,ordinal,rng)
-    _build_endcap(vertices,faces,list(range((count-1)*n,count*n)),1,length,ordinal,rng)
+    _finish_blunt_end(vertices,faces,list(range(n)),-1,length)
+    _finish_blunt_end(vertices,faces,list(range((count-1)*n,count*n)),1,length)
     if not np.array_equal(np.asarray(vertices[n:(count-1)*n],dtype=float),long_wall):
         raise ValueError("Lintel central sidewall geometry was modified")
     mesh=trimesh.Trimesh(vertices=vertices,faces=faces,process=True)
     trimesh.repair.fix_normals(mesh)
-    # Precise span of 100/125/150 cm without forcing broad ends into tips.
+    # Normalize the untouched body BEFORE clipping. Never globally rescale
+    # after cutting ends; it would also warp the approved long-side geometry.
     mesh.apply_scale(np.array([float(length),height,depth])/mesh.extents)
     mesh.apply_translation(-mesh.bounds.mean(axis=0))
+    safe=float(length)*.37
+    central_before={
+        tuple(np.round(v,7)) for v in mesh.vertices if abs(v[0])<safe
+    }
+    mesh=_cut_marked_corners(mesh,ordinal)
+    central_after={
+        tuple(np.round(v,7)) for v in mesh.vertices if abs(v[0])<safe
+    }
+    if central_before!=central_after:
+        raise ValueError("Central flank regression after corner cuts")
     if not mesh.is_watertight or not mesh.is_volume:
         raise ValueError("Lintel is not a single watertight stone")
     uv=(np.asarray(mesh.vertices,dtype=float)[:,[0,2]]*2.8).astype(np.float32)

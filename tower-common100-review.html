@@ -153,7 +153,7 @@ function renderStone(){
   if(current.endcapProfile)$('stoneOrigin').textContent+=' · Торцы: '+(endcapNames[current.endcapProfile]||current.endcapProfile);
   ['dx','dy','dz'].forEach((id,i)=>$(id).textContent=x[i]);
   $('position').textContent=(state.index+1)+' / '+records.length;
-  $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень. Проверь оба торца кнопками «Левый торец» и «Правый торец»: сколы, трещины, скосы.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
+  $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень. Осмотри оба торца: широкая поверхность без чаши, углы отсечены диагональными плоскостями.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
   if(state.mode==='single'){
     let mesh=meshFor(current);if(mesh){positionMesh(mesh);shown.add(mesh);state.meshList.push(mesh);}
     state.page=Math.floor(state.index/MAX_PER_PAGE);

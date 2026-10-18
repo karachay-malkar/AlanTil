@@ -22,8 +22,8 @@ LENGTHS=(1.0,1.0,1.25,1.25,1.5,1.5)
 def cap_features(mesh,sign):
     """Large true end facets and irregular face depths.
 
-    A single smooth planar ngon/fan has too few strongly oblique cap normals.
-    Cap-only radial cracks/chips create a nonplanar face with varied depths.
+    Separate shallow oblique corner cuts yield large faces. No concentric
+    inset ring or centrally sunken polygon may exist.
     """
     verts=np.asarray(mesh.vertices,dtype=float)
     centers=np.asarray(mesh.triangles_center,dtype=float)
@@ -96,6 +96,23 @@ def main():
             assert cap["tipVertices"]>=3,(name,side,"Sharp isolated apex",cap)
             assert cap["tipHeight"]>=.035,(name,side,"Tip narrows into a needle",cap)
             assert cap["tipWidth"]>=.05,(name,side,"Tip narrows into a blade",cap)
+        # The new rule rejects a dished end: its broad inner face must be
+        # at least as far out as the remaining perimeter after corner cuts.
+        verts=np.asarray(model.vertices,dtype=float)
+        for sign in (-1,1):
+            exposed=sign*verts[:,0]
+            near=exposed>=float(np.max(exposed))-.030
+            tips=verts[near]
+            radial=np.sqrt(
+                (tips[:,1]/max(float(model.extents[1])*.5,1e-8))**2+
+                (tips[:,2]/max(float(model.extents[2])*.5,1e-8))**2
+            )
+            middle=exposed[near][radial<.55]
+            rim=exposed[near][radial>.70]
+            assert len(middle)>=2 and len(rim)>=3,(name,sign,"End not broad")
+            bowl=float(np.quantile(rim,.65)-np.quantile(middle,.50))
+            assert bowl<.002,(name,sign,"Concave endcap bowl",bowl)
+        assert datum.get("endcapTechnique")=="local-oblique-corner-cuts-no-recess",name
         assert datum.get("endcapProfile")==PROFILE_NAMES[i-1],(name,"Wrong end profile")
         assert len(datum.get("endcapDesign",[]))==2,(name,"Missing design metadata")
         assert datum["endcapDesign"][0]!=datum["endcapDesign"][1],name

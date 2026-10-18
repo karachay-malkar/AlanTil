@@ -17,7 +17,7 @@ from common100_quality import quality, violations
 
 ROOT=Path(__file__).resolve().parents[2]
 DIR=ROOT/"assets/tower/prefabs/common100"
-VERSION="17.7-common100.8"
+VERSION="17.7-common100.9"
 LENGTHS=(1.0,1.0,1.25,1.25,1.5,1.5)
 
 
@@ -69,6 +69,7 @@ def rebake(output=DIR):
                 "lintelStyle":style,
                 "endcapDesign":list(ENDCAP_DESIGNS[index]),
                 "endcapProfile":PROFILE_NAMES[index],
+                "endcapTechnique":"local-oblique-corner-cuts-no-recess",
                 "sizeMeters":[round(float(x),5) for x in mesh.extents],
                 "triangles":int(len(mesh.faces)),
                 "geometrySHA256":geometry_sha(mesh),
