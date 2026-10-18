@@ -37,6 +37,11 @@ def main():
         assert case["cells"]==list(allowed[name]),name
         quality=case["quality"]
         assert quality["rocks"]==len(case["placement"])>0,name
+        assert quality['mediumStones']>0,(name,'missing medium-stone skeleton')
+        assert quality['gapChinks']==sum(row[0].startswith('CHINKING_') for row in case['placement']),(name,'incorrect chink count')
+        assert quality['mediumStones']==sum(row[0].startswith(('MAIN_','LARGE_')) for row in case['placement']),(name,'invalid load-bearing count')
+        assert quality['minSupportRatio']>=.15,(name,'unsafe footing')
+        if name not in ARCH:assert quality['isolatedPierSeeds']==0,(name,'disconnected island')
         assert len(case["placement"])<=512,name
         assert quality["overlapVoxels"]<=len(case["placement"])*4,(name,quality)
         assert 0.<quality["estimatedEnvelopeFill"]<=1,(name,quality)
