@@ -27,6 +27,7 @@ JOINTS={"joint-x":(2,1,1),"joint-y":(1,1,2),
         "joint-z":(1,2,1),"joint-corner":(1,1,1)}
 PRESET=20261018
 MASONRY_OCCUPANCY={}  # in-memory only, never serialized
+MASONRY_MAIN_OWNERS={}  # medium-stone identity for actual seam contact
 
 def clean(v):
     return [float(round(float(z),6)) for z in v]
@@ -318,7 +319,9 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             sl=np.any(np.take(occupied,band,axis=ax),axis=ax)
             allowed=np.any(np.take(eligible,band,axis=ax),axis=ax)
             coverage.append(round(float((sl&allowed).sum()/max(1,allowed.sum())),3))
-    if kind in SIZES:MASONRY_OCCUPANCY[(kind,variant)]=occupied.copy()
+    if kind in SIZES:
+        MASONRY_OCCUPANCY[(kind,variant)]=occupied.copy()
+        MASONRY_MAIN_OWNERS[(kind,variant)]=medium_owners.copy()
     return {"id":kind,"variant":variant,"cells":list(dims),
             "placement":placement,
             "quality":{"voxelPitchMeters":STEP,"estimatedEnvelopeFill":round(filled/total,4),
@@ -336,6 +339,14 @@ def build_seam(kind,variant,source,meta):
     nx,ny,nz=left.shape
     occupied=np.concatenate((left,right),axis=0).copy()
     combined=occupied.shape
+    # A bridging chink must contact original MAIN/LARGE stones on both sides,
+    # not merely stick to other chinking or float inside a voxel gap.
+    left_main=np.zeros(combined,dtype=bool)
+    right_main=np.zeros(combined,dtype=bool)
+    left_main[:nx,:,:]=MASONRY_MAIN_OWNERS[(kind,variant)]>=0
+    right_main[nx:,:,:]=MASONRY_MAIN_OWNERS[(kind,(variant+1)%5)]>=0
+    neighbors_left=binary_dilation(left_main,iterations=1)
+    neighbors_right=binary_dilation(right_main,iterations=1)
     rng=np.random.default_rng(PRESET+12131+variant*311+sum(map(ord,kind))*13)
     small=select_pool(source,meta,np.asarray(combined),True)
     # Chinking stones must actually straddle the interface.
@@ -370,23 +381,26 @@ def build_seam(kind,variant,source,meta):
                 underside=occupied[ox+bx[elevated],yy[elevated]-1,oz+bz[elevated]]
                 support_x.extend(bx[elevated][underside].tolist())
                 support_z.extend(bz[elevated][underside].tolist())
-            if len(support_x)<max(1,int(len(bx)*.075)):continue
+            if len(support_x)<max(2,int(len(bx)*.15)):continue
             midpoint=item["centre_xz"]
-            tol=np.maximum(1,item["n"][[0,2]]*.17)
+            tol=np.maximum(.35,item["n"][[0,2]]*.07)
             if (midpoint[0]<min(support_x)-tol[0] or midpoint[0]>max(support_x)+tol[0] or
                 midpoint[1]<min(support_z)-tol[1] or midpoint[1]>max(support_z)+tol[1]):continue
             contact=(mask&dilated[sl]&~taken)
             split=nx-ox
             left_contact=int(np.count_nonzero(contact[:split,:,:]))
             right_contact=int(np.count_nonzero(contact[split:,:,:]))
-            if left_contact<1 or right_contact<1:continue
+            medium_left=int(np.count_nonzero(mask&neighbors_left[sl]&~taken))
+            medium_right=int(np.count_nonzero(mask&neighbors_right[sl]&~taken))
+            if medium_left<2 or medium_right<2:continue
+            if left_contact<2 or right_contact<2:continue
             seam_left=mask[nx-1-ox,:,:]
             seam_right=mask[nx-ox,:,:]
             # Reward only previously open interface patches.
             exposed=~occupied[nx-1,oy:oy+sy,oz:oz+sz]&~occupied[nx,oy:oy+sy,oz:oz+sz]
             gain=int(np.count_nonzero((seam_left|seam_right)&exposed))
             if gain==0:continue
-            score=gain*6+len(support_x)*.6+(left_contact+right_contact)*.7+item["voxels"]*.04
+            score=gain*6+len(support_x)*1.1+(medium_left+medium_right)*1.4+item["voxels"]*.04
             if score>top:top=score;best=(item,(ox,oy,oz),sl)
         if best is None:
             failures+=1
