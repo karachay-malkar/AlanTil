@@ -93,7 +93,7 @@ def select_pool(source,meta,dimensions,small=False):
     pool.sort(key=lambda p:p["voxels"],reverse=True)
     return pool
 
-def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False,x_focus=None,prefer_high=False):
+def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False,x_focus=None,prefer_high=False,bearing_target=None):
     """Fit medium stones as connected load-bearing courses; use small stones only for gaps."""
     size=occupancy.shape
     if not pool:return False
@@ -111,6 +111,9 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
     if prefer_high and len(targets):
         highest_course=int(targets[:,1].max())
         targets=targets[targets[:,1]>=max(0,highest_course-5)]
+    desired=np.argwhere(bearing_target&eligible&~occupancy) if prefer_high and bearing_target is not None else np.empty((0,3),dtype=int)
+    if x_focus is not None and len(desired):
+        desired=desired[(desired[:,0]>=x_focus[0])&(desired[:,0]<x_focus[1])]
     best=None;highest=-1e20
     for trial in range(115 if small else 155):
         # Prefer already occupied neighborhoods and unfilled boundary pockets.
@@ -120,7 +123,9 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
             p=int(rng.choice((0,1,size[axis]-2,size[axis]-1)))
         q=int(rng.integers(size[2-axis]))
         x,z=(p,q) if axis==0 else (q,p)
-        if len(targets)>0 and rng.random()<(.70 if small else .82):
+        if len(desired)>0 and rng.random()<.46:
+            x,h,z=map(int,desired[int(rng.integers(len(desired)))])
+        elif len(targets)>0 and rng.random()<(.70 if small else .82):
             x,h,z=map(int,targets[int(rng.integers(len(targets)))])
         else:
             free=np.flatnonzero(eligible[x,:,z]&~occupancy[x,:,z])
@@ -208,7 +213,10 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
             # stones preferentially close exposed perimeter recesses.
             score=(item['voxels']-collision)+contact*(2.0 if small else 3.2)+border*(.35 if small else 2.8)
             score+=support*1.8+(size[1]-yy)*.65
-            if prefer_high:score+=(yy+int(n[1]))*18.0
+            if prefer_high:
+                score+=(yy+int(n[1]))*18.0
+                if bearing_target is not None:
+                    score+=int(np.count_nonzero(mask&bearing_target[sl]))*48.0
             if independent:score-=45
             if score>highest:
                 highest=score;accepted=(item,st,sl,collision,support,contact,support_ratio,independent)
@@ -258,6 +266,10 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
         occupied[sl]|=item["mask"]
         placement.append(transform(item,origin,world_size))
         lintel=(item,origin)
+        beam_bearing=np.zeros(shape,dtype=bool)
+        ux,uy,uz=item['underside']
+        valid=origin[1]+uy>0
+        beam_bearing[origin[0]+ux[valid],origin[1]+uy[valid]-1,origin[2]+uz[valid]]=True
     if kind=="gate":
         # Gate uses its already-approved long spanning header in the current
         # architectural GLB. No unsafe fictitious 2m stone lintel is inserted.
@@ -308,7 +320,8 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
                 if bearing()[flank]>=goal or len(placement)>=470:break
                 success=place_one(occupied,eligible,main,rng,world_size,placement,stats,
                                   owners=medium_owners,course_top=oy,
-                                  allow_pier_seed=True,x_focus=range_x,prefer_high=True)
+                                  allow_pier_seed=True,x_focus=range_x,prefer_high=True,
+                                  bearing_target=beam_bearing)
                 missed=0 if success else missed+1
                 if missed>18:break
         lintel_support=bearing()
