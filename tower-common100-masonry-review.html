@@ -160,8 +160,14 @@ function render(){
    const count=first.placement.length+next.placement.length;
    const before=first.quality.beforeOpenInterfaceVoxels+next.quality.beforeOpenInterfaceVoxels;
    const after=first.quality.afterOpenInterfaceVoxels+next.quality.afterOpenInterfaceVoxels;
-   warning='Между тремя секциями добавлены '+count+' опирающихся мелких камней (стыки X). Остаток пустот на интерфейсах по воксельной оценке: '+after+' из '+before+'. Проверь визуально все стороны и углы.';
+   warning='Между тремя секциями добавлены '+count+' камней сопряжения: средние перевязочные камни устанавливаются первыми, затем мелкая забутовка. Остаток открытого стыка по воксельной оценке: '+after+' из '+before+'. Не утверждено до визуальной проверки.';
   }else warning='Проверка стыковки: нет рассчитанной межсекционной добутовки. Не утверждено.';
+ }
+ if(state.kind==='window'||state.kind==='door'){
+  const b=selected.quality.lintelBearingVoxels;
+  if(!Array.isArray(b)||b.length!==2||Math.min(...b)<8){
+   warning='НЕ УТВЕРЖДЕНО: перемычка не имеет достаточного контакта с обоими каменными простенками. Опоры (оценка): '+(b?b.join(' / '):'не проверены')+'.';
+  }else warning='Перемычка опирается на средние камни с обеих сторон (воксельные контакты: '+b.join(' / ')+'). Необходима визуальная проверка.';
  }
  if(state.kind==='gate')warning='Новые каменные простенки показаны отдельно. Непрерывная несущая перемычка ворот из новой библиотеки не создана: нужен самостоятельный конструктивный проект.';
  $('warning').textContent=warning;
