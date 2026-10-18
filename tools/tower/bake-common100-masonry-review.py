@@ -89,47 +89,66 @@ def select_pool(source,meta,dimensions,small=False):
 def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False):
     size=occupancy.shape
     if not pool:return False
-    # Coarse front-facing and staggered stones are preferred to hidden infill.
-    # Trial spots are chosen at the lowest free height of random X/Z columns.
-    for _ in range(90 if small else 125):
-        x=int(rng.integers(size[0]));z=int(rng.integers(size[2]))
+    # Score ALL valid trials instead of inserting the first tiny stone that
+    # happens to fit. This prevents hundreds of pebble-sized empty-looking
+    # inserts taking the available 512-instance budget.
+    best=None;highest=-1e20
+    for _ in range(38 if small else 64):
+        if rng.random()<.36:
+            x=int(rng.choice([0,1,size[0]-2,size[0]-1]))
+            z=int(rng.integers(size[2]))
+        elif rng.random()<.36:
+            x=int(rng.integers(size[0]))
+            z=int(rng.choice([0,1,size[2]-2,size[2]-1]))
+        else:
+            x=int(rng.integers(size[0]))
+            z=int(rng.integers(size[2]))
         free=np.flatnonzero(eligible[x,:,z]&~occupancy[x,:,z])
         if not len(free):continue
-        h=int(free[0] if rng.random()<.88 else rng.choice(free[:min(5,len(free))]))
+        h=int(free[0] if rng.random()<.9 else rng.choice(free[:min(6,len(free))]))
         if small:
-            item=pool[int(rng.integers(len(pool)))]
+            item=pool[int(len(pool)*(rng.random()**1.5))]
         else:
-            # Large stones start low; small rocks fill late remaining pockets.
-            k=int(len(pool)*(rng.random()**1.7))
-            item=pool[min(len(pool)-1,k)]
+            # Larger source stones should form courses first; do not consume
+            # section capacity on small stones until the final chinking pass.
+            item=pool[min(len(pool)-1,int(len(pool)*(rng.random()**2.8)))]
         n=item["n"]
         if np.any(n>size):continue
-        start=np.array([
-            np.clip(x-int(rng.integers(n[0])),0,size[0]-n[0]),
+        ox=np.clip(x-int(rng.integers(n[0])),0,size[0]-n[0])
+        oz=np.clip(z-int(rng.integers(n[2])),0,size[2]-n[2])
+        # Occasionally seat the rock directly at an exposed outer boundary.
+        if rng.random()<.15:ox=int(rng.choice([0,size[0]-n[0]]))
+        if rng.random()<.15:oz=int(rng.choice([0,size[2]-n[2]]))
+        start=np.array([ox,
             np.clip(h-int(rng.integers(min(n[1],4))),0,size[1]-n[1]),
-            np.clip(z-int(rng.integers(n[2])),0,size[2]-n[2])],dtype=int)
-        # Source bbox should not cross the invisible structural aperture.
+            oz],dtype=int)
         sl=tuple(slice(int(start[i]),int(start[i]+n[i])) for i in range(3))
         allowed=eligible[sl]; taken=occupancy[sl]; mask=item["mask"]
         if np.any(mask&~allowed):continue
         count=item["voxels"]
         collision=int(np.count_nonzero(mask&taken))
-        if collision>max(1,int(count*.008)):continue
+        if collision>max(1,int(count*.009)):continue
         if start[1]>0:
-            # A supported stone must contact the existing course from beneath,
-            # not simply float near an unrelated neighboring stone.
-            bottom=np.zeros(mask.shape[::2],dtype=bool)
-            for y in range(mask.shape[1]):
-                bottom|=mask[:,y,:]
+            bottom=np.any(mask,axis=1)
             under=occupancy[sl[0],slice(max(0,start[1]-1),start[1]),sl[2]]
-            contact=0 if not under.size else np.count_nonzero(bottom&under[:,0,:])
-            if contact<max(2,int(np.count_nonzero(bottom)*.045)):continue
+            contact=0 if not under.size else int(np.count_nonzero(bottom&under[:,0,:]))
+            if contact<max(2,int(bottom.sum()*.04)):continue
         if not small and count<15:continue
-        occupancy[sl]|=mask
-        placement.append(transform(item,start,world_size))
-        metrics["overlapVoxels"]+=collision
-        return True
-    return False
+        border=0
+        for axis in (0,2):
+            if start[axis]<=1:border+=int(np.take(mask,0,axis=axis).sum())
+            if start[axis]+n[axis]>=size[axis]-1:border+=int(np.take(mask,-1,axis=axis).sum())
+        # Measured voxel gain strongly outweighs random first-fit bias.
+        score=(count-collision)+border*1.2
+        if score>highest:
+            highest=score;best=(item,start,sl,collision)
+    if best is None:return False
+    item,start,sl,collision=best
+    occupancy[sl]|=item["mask"]
+    placement.append(transform(item,start,world_size))
+    metrics["overlapVoxels"]+=collision
+    return True
+
 
 def build_case(kind,variant,source,meta,main_cache,chink_cache):
     dims=tuple(SIZES.get(kind,ARCH.get(kind,JOINTS.get(kind))))
@@ -162,9 +181,9 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
         main_cache[key]=select_pool(source,meta,np.array(shape),False)
         chink_cache[key]=select_pool(source,meta,np.array(shape),True)
     main=main_cache[key];small=chink_cache[key]
-    budget={"1x1x1":12,"2x2x2":75,"2x2x3":110,"2x3x4":150,
-            "4x4x4":270,"window":95,"door":230,"gate":470,
-            "joint-x":12,"joint-y":12,"joint-z":12,"joint-corner":8}[kind]
+    budget={"1x1x1":18,"2x2x2":145,"2x2x3":190,"2x3x4":245,
+            "4x4x4":385,"window":190,"door":330,"gate":420,
+            "joint-x":18,"joint-y":18,"joint-z":18,"joint-corner":12}[kind]
     failures=0
     for i in range(budget):
         if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.82):
@@ -172,7 +191,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
         success=place_one(occupied,eligible,main,rng,world_size,placement,stats)
         failures=0 if success else failures+1
         if failures>20:break
-    for i in range(min(250,round(budget*1.35))):
+    for i in range(min(512-len(placement),round(budget*.65))):
         if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.91):
             break
         success=place_one(occupied,eligible,small,rng,world_size,placement,stats,True)
@@ -183,8 +202,9 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
     for ax in (0,1,2):
         for at in (0,-1):
             at_idx=0 if at==0 else shape[ax]-1
-            sl=np.take(occupied,at_idx,axis=ax)
-            allowed=np.take(eligible,at_idx,axis=ax)
+            band=[0,1] if at==0 else [shape[ax]-2,shape[ax]-1]
+            sl=np.any(np.take(occupied,band,axis=ax),axis=ax)
+            allowed=np.any(np.take(eligible,band,axis=ax),axis=ax)
             coverage.append(round(float((sl&allowed).sum()/max(1,allowed.sum())),3))
     return {"id":kind,"variant":variant,"cells":list(dims),
             "placement":placement,
