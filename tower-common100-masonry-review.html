@@ -57,8 +57,8 @@ h2{font-size:15px;margin:0 0 10px}.kicker{color:#dbbf87;font-size:10px;letter-sp
 <div class="stats">
 <div class="stat"><b id="dim">—</b><span>габариты (см)</span></div>
 <div class="stat"><b id="stones">—</b><span>камней, экземпляров</span></div>
-<div class="stat"><b id="density">—</b><span>заполнение по огибающим</span></div>
-<div class="stat"><b id="face">—</b><span>минимальное покрытие грани</span></div>
+<div class="stat"><b id="density">—</b><span>заполнение по огибающим (справочно)</span></div>
+<div class="stat"><b id="face">—</b><span>покрытие слабейшей грани (стык)</span></div>
 </div>
 <p class="note">Формы взяты из Common 100. Размещение выполнено офлайн. Плотность рассчитана по выпуклым огибающим с шагом 2,5 см: это не доказательство отсутствия видимых щелей.</p>
 <div class="warning" id="warning">При наличии пробелов этот образец требует доработки и не может быть внедрён без согласования.</div>
@@ -69,7 +69,7 @@ h2{font-size:15px;margin:0 0 10px}.kicker{color:#dbbf87;font-size:10px;letter-sp
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from './src/vendor/three/addons/loaders/GLTFLoader.js';
-const VERSION='common100-masonry-review.1';
+const VERSION='common100-masonry-review.2';
 const BASE='./assets/tower/prefabs/common100/';
 const TYPES=[['1x1x1','1×1×1'],['2x2x2','2×2×2'],['2x2x3','2×2×3'],['2x3x4','2×3×4'],['4x4x4','4×4×4']];
 const ARCH=[['window','Окно'],['door','Дверь'],['gate','Ворота']];
@@ -144,12 +144,13 @@ function render(){
  $('stones').textContent=String(selected.placement.length);
  $('density').textContent=Math.round(selected.quality.estimatedEnvelopeFill*100)+'%';
  $('face').textContent=Math.round(Math.min(...selected.quality.faceCoverage)*100)+'%';
- let warning=selected.quality.estimatedEnvelopeFill<.9?
-  'Измеренная плотность ниже 90%. Образец требует плотной доукладки и визуальной оценки перед утверждением.':
-  'Плотность по огибающим достигла 90%, но ручная проверка контактов и фактур обязательна.';
+ let warning=(selected.quality.minimumSupportVoxels||0)>0?
+  'Камни получили опору на основание или нижний ряд. Открытые стыки при соседстве секций необходимо проверить отдельно: цифра плотности не является критерием готовности.':
+  'Нет подтвержденных данных об опоре камней — эта секция не может быть утверждена.';
+ if(state.wall)warning='Три секции установлены вплотную. Внимательно проверь видимые швы: межсекционная добутовка пока не рассчитана, сцена не является утвержденной конструкцией.';
  if(state.kind==='gate')warning='Новые каменные простенки показаны отдельно. Непрерывная несущая перемычка ворот из новой библиотеки не создана: нужен самостоятельный конструктивный проект.';
  $('warning').textContent=warning;
- $('source').textContent=state.data.sourceVersion+' · '+state.data.version+' · 32 образца · только для согласования';
+ $('source').textContent=state.data.sourceVersion+' · '+state.data.version+' · 32 образца · '+(state.data.assemblyAlgorithm||'no-algorithm-id')+' · только для согласования';
  document.querySelectorAll('[data-kind]').forEach(n=>{n.classList.toggle('active',n.dataset.kind===state.kind);n.setAttribute('aria-pressed',String(n.dataset.kind===state.kind))});
  [...$('variants').children].forEach((el,i)=>{el.disabled=!TYPES.some(t=>t[0]===state.kind)&&i>0;el.setAttribute('aria-pressed',String(i===selected.variant))});
  $('wall').setAttribute('aria-pressed',String(state.wall));$('single').setAttribute('aria-pressed',String(!state.wall));

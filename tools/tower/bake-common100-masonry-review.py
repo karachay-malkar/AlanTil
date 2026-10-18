@@ -271,7 +271,7 @@ def main():
             print("REVIEW_CASE",name,v,"stones",case["quality"]["rocks"],
                   "proxy_fill",case["quality"]["estimatedEnvelopeFill"],
                   "min_face",min(case["quality"]["faceCoverage"]),flush=True)
-    result={"version":"common100-masonry-review.1",
+    result={"version":"common100-masonry-review.2",
         "sourceVersion":meta["version"],"assemblyAlgorithm":"gravity-supported.2","sourceSHA256":hashlib.sha256(LIB.read_bytes()).hexdigest(),
         "cellMeters":.25,"gridPitchMeters":STEP,
         "previewOnly":True,"productionIntegrated":False,
