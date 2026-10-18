@@ -26,6 +26,7 @@ ARCH={"window":(4,5,2),"door":(7,9,2),"gate":(18,10,2)}
 JOINTS={"joint-x":(2,1,1),"joint-y":(1,1,2),
         "joint-z":(1,2,1),"joint-corner":(1,1,1)}
 PRESET=20261018
+MASONRY_OCCUPANCY={}  # in-memory only, never serialized
 
 def clean(v):
     return [float(round(float(z),6)) for z in v]
@@ -238,12 +239,89 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             sl=np.any(np.take(occupied,band,axis=ax),axis=ax)
             allowed=np.any(np.take(eligible,band,axis=ax),axis=ax)
             coverage.append(round(float((sl&allowed).sum()/max(1,allowed.sum())),3))
+    if kind in SIZES:MASONRY_OCCUPANCY[(kind,variant)]=occupied.copy()
     return {"id":kind,"variant":variant,"cells":list(dims),
             "placement":placement,
             "quality":{"voxelPitchMeters":STEP,"estimatedEnvelopeFill":round(filled/total,4),
                        "faceCoverage":coverage,"rocks":len(placement),
                        "overlapVoxels":stats["overlapVoxels"],"minimumSupportVoxels":stats.get("minSupport",0),"contactFaces":stats.get("contactFaces",0),
                        "note":"Convex proxy occupancy, not proven physical density"}}
+
+def build_seam(kind,variant,source,meta):
+    """Offline fit one supported seam between variant v and v+1 along X."""
+    left=MASONRY_OCCUPANCY[(kind,variant)]
+    right=MASONRY_OCCUPANCY[(kind,(variant+1)%5)]
+    nx,ny,nz=left.shape
+    occupied=np.concatenate((left,right),axis=0).copy()
+    combined=occupied.shape
+    rng=np.random.default_rng(PRESET+12131+variant*311+sum(map(ord,kind))*13)
+    small=select_pool(source,meta,np.asarray(combined),True)
+    # Chinking stones must actually straddle the interface.
+    small=[q for q in small if q["n"][0]>=2 and q["n"][0]<2*nx]
+    seam=[]
+    before=int(np.count_nonzero(~occupied[nx-1,:,:]&~occupied[nx,:,:]))
+    failures=0
+    from scipy.ndimage import binary_dilation
+    for turn in range(48):
+        gaps=np.argwhere(~occupied[nx-1,:,:]&~occupied[nx,:,:])
+        if not len(gaps):break
+        dilated=binary_dilation(occupied,iterations=1)
+        best=None;top=-1e20
+        for attempt in range(115):
+            iy,iz=gaps[int(rng.integers(len(gaps)))]
+            item=small[int(rng.integers(len(small)))]
+            sx,sy,sz=map(int,item["n"])
+            ox=int(rng.integers(max(0,nx-sx+1),min(nx-1,2*nx-sx)+1))
+            oy=int(np.clip(int(iy)-int(rng.integers(sy)),0,ny-sy))
+            oz=int(np.clip(int(iz)-int(rng.integers(sz)),0,nz-sz))
+            sl=(slice(ox,ox+sx),slice(oy,oy+sy),slice(oz,oz+sz))
+            mask=item["mask"];taken=occupied[sl]
+            collision=int(np.count_nonzero(mask&taken))
+            if collision>max(1,int(item["voxels"]*.002)):continue
+            bx,by,bz=item["underside"]
+            yy=oy+by
+            ground=yy==0
+            support_x=bx[ground].tolist()
+            support_z=bz[ground].tolist()
+            elevated=~ground
+            if np.any(elevated):
+                underside=occupied[ox+bx[elevated],yy[elevated]-1,oz+bz[elevated]]
+                support_x.extend(bx[elevated][underside].tolist())
+                support_z.extend(bz[elevated][underside].tolist())
+            if len(support_x)<max(1,int(len(bx)*.075)):continue
+            midpoint=item["centre_xz"]
+            tol=np.maximum(1,item["n"][[0,2]]*.17)
+            if (midpoint[0]<min(support_x)-tol[0] or midpoint[0]>max(support_x)+tol[0] or
+                midpoint[1]<min(support_z)-tol[1] or midpoint[1]>max(support_z)+tol[1]):continue
+            contact=(mask&dilated[sl]&~taken)
+            split=nx-ox
+            left_contact=int(np.count_nonzero(contact[:split,:,:]))
+            right_contact=int(np.count_nonzero(contact[split:,:,:]))
+            if left_contact<1 or right_contact<1:continue
+            seam_left=mask[nx-1-ox,:,:]
+            seam_right=mask[nx-ox,:,:]
+            # Reward only previously open interface patches.
+            exposed=~occupied[nx-1,oy:oy+sy,oz:oz+sz]&~occupied[nx,oy:oy+sy,oz:oz+sz]
+            gain=int(np.count_nonzero((seam_left|seam_right)&exposed))
+            if gain==0:continue
+            score=gain*6+len(support_x)*.6+(left_contact+right_contact)*.7+item["voxels"]*.04
+            if score>top:top=score;best=(item,(ox,oy,oz),sl)
+        if best is None:
+            failures+=1
+            if failures>=3:break
+            continue
+        failures=0
+        item,origin,sl=best
+        occupied[sl]|=item["mask"]
+        seam.append(transform(item,origin,np.asarray(combined)*STEP))
+    after=int(np.count_nonzero(~occupied[nx-1,:,:]&~occupied[nx,:,:]))
+    return {"id":kind,"variant":variant,"nextVariant":(variant+1)%5,
+            "placement":seam,
+            "quality":{"beforeOpenInterfaceVoxels":before,
+                       "afterOpenInterfaceVoxels":after,
+                       "supportedBridgingStones":len(seam),
+                       "note":"Convex-voxel seam estimate; visual approval required"}}
+
 
 def main():
     parser=argparse.ArgumentParser()
@@ -271,13 +349,14 @@ def main():
             print("REVIEW_CASE",name,v,"stones",case["quality"]["rocks"],
                   "proxy_fill",case["quality"]["estimatedEnvelopeFill"],
                   "min_face",min(case["quality"]["faceCoverage"]),flush=True)
+    seams=[build_seam(name,v,shapes,meta) for name in SIZES for v in range(5)] if not args.only else []
     result={"version":"common100-masonry-review.2",
         "sourceVersion":meta["version"],"assemblyAlgorithm":"gravity-supported.2","sourceSHA256":hashlib.sha256(LIB.read_bytes()).hexdigest(),
         "cellMeters":.25,"gridPitchMeters":STEP,
         "previewOnly":True,"productionIntegrated":False,
         "architectureNote":"Gate stone piers only; historic spanning header remains separate",
-        "cases":output}
+        "cases":output,"seams":seams}
     if not args.only:
         OUT.write_text(json.dumps(result,separators=(",",":"),ensure_ascii=False)+"\n")
-    print("MASONRY_REVIEW_PREVIEW_GENERATED",len(output),"cases",flush=True)
+    print("MASONRY_REVIEW_PREVIEW_GENERATED",len(output),"cases",len(seams),"supported seam recipes",flush=True)
 if __name__=="__main__":main()
