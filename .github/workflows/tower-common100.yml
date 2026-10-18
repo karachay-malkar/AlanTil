@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install offline model tooling
-        run: pip install 'numpy==2.2.6' 'trimesh==4.11.1' scipy pillow networkx
+        run: pip install 'numpy==2.2.6' 'trimesh==4.11.1' 'shapely>=2,<3' scipy pillow networkx
       - name: Preserve 94 approved meshes and rebuild only endcap surfaces
         run: OPENBLAS_NUM_THREADS=1 python tools/tower/common100_rebake_lintels.py
       - name: Validate all 38 independent 3D rock shapes and silhouettes
