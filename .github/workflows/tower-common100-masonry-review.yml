@@ -9,6 +9,9 @@ on:
       - 'scripts/qa/browser-common100-masonry-review.cjs'
       - '.github/workflows/tower-common100-masonry-review.yml'
   workflow_dispatch:
+concurrency:
+  group: common100-smart-masonry-qa-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
