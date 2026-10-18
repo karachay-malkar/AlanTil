@@ -46,9 +46,14 @@ def candidate(source,name,scale,yaw):
     inside=(mesh@hull.equations[:,:3].T+hull.equations[:,3]<=.002).all(axis=1)
     mask=inside.reshape(tuple(length))
     if mask.sum()<4: return None
+    underside=mask.copy()
+    underside[:,1:,:] &= ~mask[:,:-1,:]
+    bx,by,bz=np.where(underside)
+    mid=np.argwhere(mask).mean(axis=0)
+
     return {"name":name,"scale":float(scale),"yaw":angle,
             "mask":mask,"n":length,"low":low,"voxels":int(mask.sum()),
-            "bounds":(high-low)}
+            "bounds":(high-low),"underside":(bx,by,bz),"centre_xz":(mid[0],mid[2])}
 
 def transform(item,origin,world_size):
     # Authored geometry stays untouched, only a uniform instance transform.
@@ -87,66 +92,93 @@ def select_pool(source,meta,dimensions,small=False):
     return pool
 
 def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False):
+    """Gravity-supported placement. Fronts are packed before core; no floating filler."""
     size=occupancy.shape
     if not pool:return False
-    # Score ALL valid trials instead of inserting the first tiny stone that
-    # happens to fit. This prevents hundreds of pebble-sized empty-looking
-    # inserts taking the available 512-instance budget.
+    from scipy.ndimage import binary_dilation
+    neighbor_grid=binary_dilation(occupancy,iterations=1)
     best=None;highest=-1e20
-    for _ in range(38 if small else 64):
-        if rng.random()<.36:
-            x=int(rng.choice([0,1,size[0]-2,size[0]-1]))
-            z=int(rng.integers(size[2]))
-        elif rng.random()<.36:
-            x=int(rng.integers(size[0]))
-            z=int(rng.choice([0,1,size[2]-2,size[2]-1]))
-        else:
-            x=int(rng.integers(size[0]))
-            z=int(rng.integers(size[2]))
+    for trial in range(115 if small else 155):
+        # Prefer already occupied neighborhoods and unfilled boundary pockets.
+        axis=int(rng.choice((0,2)))
+        p=int(rng.integers(size[axis]))
+        if rng.random()<(.72 if small else .50):
+            p=int(rng.choice((0,1,size[axis]-2,size[axis]-1)))
+        q=int(rng.integers(size[2-axis]))
+        x,z=(p,q) if axis==0 else (q,p)
         free=np.flatnonzero(eligible[x,:,z]&~occupancy[x,:,z])
         if not len(free):continue
-        h=int(free[0] if rng.random()<.9 else rng.choice(free[:min(6,len(free))]))
-        if small:
-            item=pool[int(len(pool)*(rng.random()**1.5))]
-        else:
-            # Larger source stones should form courses first; do not consume
-            # section capacity on small stones until the final chinking pass.
-            item=pool[min(len(pool)-1,int(len(pool)*(rng.random()**2.8)))]
+        # The bottom of the candidate is seated on the floor or occupied stones.
+        h=int(free[0] if rng.random()<.83 else rng.choice(free[:min(6,len(free))]))
+        frac=rng.random()
+        item=pool[min(len(pool)-1,int(len(pool)*(frac**(1.30 if small else 2.3))))]
         n=item["n"]
         if np.any(n>size):continue
-        ox=np.clip(x-int(rng.integers(n[0])),0,size[0]-n[0])
-        oz=np.clip(z-int(rng.integers(n[2])),0,size[2]-n[2])
-        # Occasionally seat the rock directly at an exposed outer boundary.
-        if rng.random()<.15:ox=int(rng.choice([0,size[0]-n[0]]))
-        if rng.random()<.15:oz=int(rng.choice([0,size[2]-n[2]]))
-        start=np.array([ox,
-            np.clip(h-int(rng.integers(min(n[1],4))),0,size[1]-n[1]),
-            oz],dtype=int)
-        sl=tuple(slice(int(start[i]),int(start[i]+n[i])) for i in range(3))
-        allowed=eligible[sl]; taken=occupancy[sl]; mask=item["mask"]
-        if np.any(mask&~allowed):continue
-        count=item["voxels"]
-        collision=int(np.count_nonzero(mask&taken))
-        if collision>max(1,int(count*.009)):continue
-        if start[1]>0:
-            bottom=np.any(mask,axis=1)
-            under=occupancy[sl[0],slice(max(0,start[1]-1),start[1]),sl[2]]
-            contact=0 if not under.size else int(np.count_nonzero(bottom&under[:,0,:]))
-            if contact<max(2,int(bottom.sum()*.04)):continue
-        if not small and count<15:continue
-        border=0
-        for axis in (0,2):
-            if start[axis]<=1:border+=int(np.take(mask,0,axis=axis).sum())
-            if start[axis]+n[axis]>=size[axis]-1:border+=int(np.take(mask,-1,axis=axis).sum())
-        # Measured voxel gain strongly outweighs random first-fit bias.
-        score=(count-collision)+border*1.2
-        if score>highest:
-            highest=score;best=(item,start,sl,collision)
+        ox=int(np.clip(x-int(rng.integers(n[0])),0,size[0]-n[0]))
+        oz=int(np.clip(z-int(rng.integers(n[2])),0,size[2]-n[2]))
+        if rng.random()<.24:
+            ox=int(rng.choice((0,size[0]-n[0])))
+        if rng.random()<.24:
+            oz=int(rng.choice((0,size[2]-n[2])))
+        floor=int(np.clip(h-int(rng.integers(max(1,min(n[1],5)))),0,size[1]-n[1]))
+        # Test nearby elevations, then move upwards only when necessary.
+        levels=sorted(set([floor, max(0,floor-2), max(0,floor-1),
+                           min(size[1]-n[1],floor+1),
+                           min(size[1]-n[1],floor+2)]))
+        accepted=None
+        for yy in levels:
+            st=np.array((ox,yy,oz),dtype=int)
+            sl=tuple(slice(int(st[i]),int(st[i]+n[i])) for i in range(3))
+            mask=item["mask"]
+            if np.any(mask&~eligible[sl]):continue
+            collision=int(np.count_nonzero(mask&occupancy[sl]))
+            if collision>max(1,int(item["voxels"]*.003)):continue
+            # Bottom contact is evaluated on the actual exposed downward-facing
+            # voxel surface, NOT on the projection of the entire stone.
+            bx,by,bz=item["underside"]
+            global_y=yy+by
+            on_floor=global_y==0
+            support_x=bx[on_floor].tolist()
+            support_z=bz[on_floor].tolist()
+            above=~on_floor
+            if np.any(above):
+                below=occupancy[ox+bx[above],global_y[above]-1,oz+bz[above]]
+                support_x.extend(bx[above][below].tolist())
+                support_z.extend(bz[above][below].tolist())
+            support=len(support_x)
+            if support<max(1,int(len(bx)*(.065 if small else .105))):continue
+            # The stone's projected centre must stay over its actual support
+            # polygon (approximately, using a conservative bounding interval).
+            centroid=np.asarray(item["centre_xz"])
+            tolerance=np.maximum(1,n[[0,2]]*.17)
+            if (centroid[0]<min(support_x)-tolerance[0] or
+                centroid[0]>max(support_x)+tolerance[0] or
+                centroid[1]<min(support_z)-tolerance[1] or
+                centroid[1]>max(support_z)+tolerance[1]):continue
+            contact=int(np.count_nonzero(mask&neighbor_grid[sl]&~occupancy[sl]))
+            if yy>0 and contact<2:continue
+            border=0
+            for a in (0,2):
+                for target in (0,size[a]-1):
+                    relative=target-int(st[a])
+                    if 0<=relative<n[a]:
+                        border+=int(np.take(mask,relative,axis=a).sum())
+            # Larger stones form the weight-bearing masonry; smaller supported
+            # stones preferentially close exposed perimeter recesses.
+            score=(item["voxels"]-collision)+contact*1.1+border*(3.0 if small else 2.0)
+            score+=support*.35
+            if score>highest:
+                highest=score;accepted=(item,st,sl,collision,support,contact)
+        if accepted is not None:
+            best=accepted
     if best is None:return False
-    item,start,sl,collision=best
+    item,start,sl,collision,support,contact=best
     occupancy[sl]|=item["mask"]
     placement.append(transform(item,start,world_size))
     metrics["overlapVoxels"]+=collision
+    metrics.setdefault("minSupport",support)
+    metrics["minSupport"]=min(metrics["minSupport"],support)
+    metrics["contactFaces"]=metrics.get("contactFaces",0)+contact
     return True
 
 
@@ -186,17 +218,17 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             "joint-x":18,"joint-y":18,"joint-z":18,"joint-corner":12}[kind]
     failures=0
     for i in range(budget):
-        if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.82):
+        if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.93):
             break
         success=place_one(occupied,eligible,main,rng,world_size,placement,stats)
         failures=0 if success else failures+1
-        if failures>20:break
+        if failures>65:break
     for i in range(min(512-len(placement),round(budget*.65))):
-        if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.91):
+        if int(np.count_nonzero(occupied&eligible))>=int(np.count_nonzero(eligible)*.95):
             break
         success=place_one(occupied,eligible,small,rng,world_size,placement,stats,True)
         failures=0 if success else failures+1
-        if failures>45:break
+        if failures>90:break
     filled=int(np.count_nonzero(occupied&eligible));total=int(eligible.sum())
     coverage=[]
     for ax in (0,1,2):
@@ -210,7 +242,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
             "placement":placement,
             "quality":{"voxelPitchMeters":STEP,"estimatedEnvelopeFill":round(filled/total,4),
                        "faceCoverage":coverage,"rocks":len(placement),
-                       "overlapVoxels":stats["overlapVoxels"],
+                       "overlapVoxels":stats["overlapVoxels"],"minimumSupportVoxels":stats.get("minSupport",0),"contactFaces":stats.get("contactFaces",0),
                        "note":"Convex proxy occupancy, not proven physical density"}}
 
 def main():
@@ -239,7 +271,7 @@ def main():
             print("REVIEW_CASE",name,v,"stones",case["quality"]["rocks"],
                   "proxy_fill",case["quality"]["estimatedEnvelopeFill"],
                   "min_face",min(case["quality"]["faceCoverage"]),flush=True)
-    result={"version":"common100-masonry-review.1",
+    result={"version":"common100-masonry-review.2",
         "sourceVersion":meta["version"],"sourceSHA256":hashlib.sha256(LIB.read_bytes()).hexdigest(),
         "cellMeters":.25,"gridPitchMeters":STEP,
         "previewOnly":True,"productionIntegrated":False,
