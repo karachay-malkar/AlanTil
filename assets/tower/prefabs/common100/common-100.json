@@ -1,5 +1,5 @@
 {
-  "version": "17.7-common100.9",
+  "version": "17.7-common100.10",
   "count": 100,
   "counts": {
     "main": 72,
@@ -19,7 +19,7 @@
     "chinking": "gaps only, not exposed standalone courses",
     "lintel": "single-piece bridge over openings"
   },
-  "glbSHA256": "81f838f069ee02e6fa016a10e0dd84e08051888f2a464d4066682e5cc5875e1d",
+  "glbSHA256": "e6edab64c426ca532d20d94d6416e12cbdb8ab651ead1636058ba18a81242a56",
   "models": [
     {
       "name": "LARGE_001",
@@ -3052,19 +3052,19 @@
       "category": "lintel",
       "sizeMeters": [
         1.0,
-        0.19696,
-        0.31513
+        0.25,
+        0.5
       ],
-      "triangles": 588,
-      "geometrySHA256": "f3ead2b85fb706dc6d3f54d24ac5a8a94c5f4854a8c36ce85cd3a096d10fa542",
+      "triangles": 578,
+      "geometrySHA256": "db079184bee78a568c71735e792df66af6b36cd501ac9a23b8cfe113657e1e11",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.9781,
         "shoulder20": 0.9966,
-        "tip06": 0.8647,
-        "roughness": 0.01543,
+        "tip06": 0.8287,
+        "roughness": 0.02448,
         "profile": [
-          0.8647,
+          0.8287,
           0.9781,
           1.0974,
           1.0264,
@@ -3072,7 +3072,7 @@
           0.9597,
           0.9966,
           1.0593,
-          1.0869
+          1.0641
         ]
       },
       "source": "generated",
@@ -3082,26 +3082,30 @@
         "offset-soft-corner-cuts"
       ],
       "endcapProfile": "rounded-angular",
-      "endcapTechnique": "local-oblique-corner-cuts-no-recess"
+      "endcapTechnique": "local-oblique-corner-cuts-no-recess",
+      "targetSectionMeters": [
+        0.25,
+        0.5
+      ]
     },
     {
       "name": "LINTEL_002",
       "category": "lintel",
       "sizeMeters": [
         1.0,
-        0.21603,
-        0.33157
+        0.25,
+        0.5
       ],
-      "triangles": 688,
-      "geometrySHA256": "b866dfab6f5e6b99daeb08c5003c54caeee0252c5838c15ae229ca9fa350b3e7",
+      "triangles": 684,
+      "geometrySHA256": "b9c70fb9ec410920dd5c8964caf7dfa4894285d14e53e7cef5879d5ca5721e99",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.9785,
         "shoulder20": 1.0202,
-        "tip06": 0.8336,
-        "roughness": 0.02385,
+        "tip06": 0.8056,
+        "roughness": 0.03597,
         "profile": [
-          0.8336,
+          0.8056,
           0.9785,
           1.0202,
           1.0307,
@@ -3109,7 +3113,7 @@
           1.0,
           1.0528,
           0.9915,
-          1.0349
+          0.993
         ]
       },
       "source": "generated",
@@ -3119,26 +3123,30 @@
         "offset-large-cut-and-small-chip"
       ],
       "endcapProfile": "massive-blunt-triangle",
-      "endcapTechnique": "local-oblique-corner-cuts-no-recess"
+      "endcapTechnique": "local-oblique-corner-cuts-no-recess",
+      "targetSectionMeters": [
+        0.25,
+        0.5
+      ]
     },
     {
       "name": "LINTEL_003",
       "category": "lintel",
       "sizeMeters": [
         1.25,
-        0.18763,
-        0.30577
+        0.25,
+        0.5
       ],
-      "triangles": 616,
-      "geometrySHA256": "13daf80c45110bb2f15945242189bc7399d22337907f769c9a1e02b74099af58",
+      "triangles": 620,
+      "geometrySHA256": "cff3f575cbb866ccd316427a40835b865e6bca8717734604e3e3f1a662771a9a",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.9227,
         "shoulder20": 0.9999,
         "tip06": 0.9286,
-        "roughness": 0.02207,
+        "roughness": 0.03608,
         "profile": [
-          0.9606,
+          0.9572,
           0.9512,
           0.9999,
           0.9073,
@@ -3156,26 +3164,30 @@
         "offset-teardrop-bevels"
       ],
       "endcapProfile": "blunt-teardrop-wedge",
-      "endcapTechnique": "local-oblique-corner-cuts-no-recess"
+      "endcapTechnique": "local-oblique-corner-cuts-no-recess",
+      "targetSectionMeters": [
+        0.25,
+        0.5
+      ]
     },
     {
       "name": "LINTEL_004",
       "category": "lintel",
       "sizeMeters": [
         1.24974,
-        0.19403,
-        0.33707
+        0.25,
+        0.5
       ],
       "triangles": 762,
-      "geometrySHA256": "9ffb0402529b5a64464ea597e217040d816ef78d4daea2c44d4a6af997665179",
+      "geometrySHA256": "ce54aa647a850e7e46e0ab7fe2316042cc41b94f5d35bcd47e4a75ea7a87e4e5",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.9729,
         "shoulder20": 1.0068,
-        "tip06": 1.0393,
-        "roughness": 0.01664,
+        "tip06": 0.9709,
+        "roughness": 0.02468,
         "profile": [
-          1.0393,
+          0.9709,
           1.0498,
           1.036,
           0.9243,
@@ -3183,7 +3195,7 @@
           1.0704,
           1.0068,
           0.9729,
-          1.2
+          1.1931
         ]
       },
       "source": "generated",
@@ -3193,24 +3205,28 @@
         "side-chamfer-and-notch"
       ],
       "endcapProfile": "asymmetric-chamfer",
-      "endcapTechnique": "local-oblique-corner-cuts-no-recess"
+      "endcapTechnique": "local-oblique-corner-cuts-no-recess",
+      "targetSectionMeters": [
+        0.25,
+        0.5
+      ]
     },
     {
       "name": "LINTEL_005",
       "category": "lintel",
       "sizeMeters": [
         1.5,
-        0.18761,
-        0.33212
+        0.25,
+        0.5
       ],
-      "triangles": 714,
-      "geometrySHA256": "b7448662c0dd1b02ff6418da0dad8fd0e7db8ce1aaac5c15c56e2ca1c4803add",
+      "triangles": 728,
+      "geometrySHA256": "735a677380c1c539833365e7750abcf6c7ca4f3d0e3b2cb779d087f2ba85a05a",
       "watertight": true,
       "sectionQuality": {
         "end12": 0.9365,
         "shoulder20": 1.0014,
-        "tip06": 1.0139,
-        "roughness": 0.0236,
+        "tip06": 0.9841,
+        "roughness": 0.03553,
         "profile": [
           1.0459,
           0.9689,
@@ -3220,7 +3236,7 @@
           1.0,
           1.0033,
           0.9365,
-          1.0139
+          0.9841
         ]
       },
       "source": "generated",
@@ -3230,26 +3246,30 @@
         "three-staggered-cuts"
       ],
       "endcapProfile": "natural-irregular-pentagon",
-      "endcapTechnique": "local-oblique-corner-cuts-no-recess"
+      "endcapTechnique": "local-oblique-corner-cuts-no-recess",
+      "targetSectionMeters": [
+        0.25,
+        0.5
+      ]
     },
     {
       "name": "LINTEL_006",
       "category": "lintel",
       "sizeMeters": [
         1.5,
-        0.20505,
-        0.30187
+        0.25,
+        0.49646
       ],
-      "triangles": 812,
-      "geometrySHA256": "d4e85e0b6858562824b0ec347b137695a5d61d15826b8f2b1d86c718497aac54",
+      "triangles": 810,
+      "geometrySHA256": "e68d579e6892f8e8c9676ad87af33df4bf07d028fe194ada6c8b8da2ab02cdce",
       "watertight": true,
       "sectionQuality": {
         "end12": 1.0517,
         "shoulder20": 0.9921,
-        "tip06": 1.0329,
-        "roughness": 0.0247,
+        "tip06": 1.0256,
+        "roughness": 0.04068,
         "profile": [
-          1.0329,
+          1.0256,
           1.0517,
           1.0486,
           1.2138,
@@ -3267,7 +3287,11 @@
         "rounded-wide-end-with-scars"
       ],
       "endcapProfile": "mixed-soft-blunt-wedge",
-      "endcapTechnique": "local-oblique-corner-cuts-no-recess"
+      "endcapTechnique": "local-oblique-corner-cuts-no-recess",
+      "targetSectionMeters": [
+        0.25,
+        0.5
+      ]
     }
   ]
 }
