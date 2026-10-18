@@ -77,6 +77,8 @@ def main():
         assert name in SECTIONS and 0<=v<5 and seam["nextVariant"]==(v+1)%5
         q=seam["quality"]
         assert q["supportedBridgingStones"]==len(seam["placement"])
+        assert q.get('mainTieStones')==sum(row[0].startswith(('MAIN_','LARGE_')) for row in seam['placement']),(name,v,'missing main ties')
+        assert q.get('gapChinks')==sum(row[0].startswith('CHINKING_') for row in seam['placement']),(name,v,'incorrect seam filler')
         assert 0<=q["afterOpenInterfaceVoxels"]<=q["beforeOpenInterfaceVoxels"]
         size=np.asarray(SECTIONS[name],dtype=float)*.25
         size[0]*=2
