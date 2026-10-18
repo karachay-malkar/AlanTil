@@ -361,7 +361,6 @@ def build_seam(kind,variant,source,meta):
     seam=[]
     before=int(np.count_nonzero(~occupied[nx-1,:,:]&~occupied[nx,:,:]))
     failures=0
-    from scipy.ndimage import binary_dilation
     for turn in range(48):
         gaps=np.argwhere(~occupied[nx-1,:,:]&~occupied[nx,:,:])
         if not len(gaps):break
