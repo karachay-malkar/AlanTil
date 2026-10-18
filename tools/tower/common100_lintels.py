@@ -13,6 +13,10 @@ from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 
 STYLES=("quarry-broken","stratified")
+# Nominal stone module: 25 cm high and 50 cm through the wall.
+# The coarse side relief and individual oblique clipped ends are retained.
+TARGET_HEIGHT_M=.25
+TARGET_DEPTH_M=.50
 # Twelve uneven corners on the Y/Z outline; in stratified form two extra
 # offsets make steps rather than a uniformly rounded or cubical contour.
 SECTION=np.array([
@@ -257,9 +261,10 @@ def build_rugged_lintel(rng,length,style,ordinal):
         raise ValueError("Lintel central sidewall geometry was modified")
     mesh=trimesh.Trimesh(vertices=vertices,faces=faces,process=True)
     trimesh.repair.fix_normals(mesh)
-    # Normalize the untouched body BEFORE clipping. Never globally rescale
-    # after cutting ends; it would also warp the approved long-side geometry.
-    mesh.apply_scale(np.array([float(length),height,depth])/mesh.extents)
+    # Fit the real 25 x 50 cm wall course while preserving the previous
+    # irregular side silhouette and the six independently clipped end types.
+    # Scale before the corner cuts: do not stretch the completed beveled tips.
+    mesh.apply_scale(np.array([float(length),TARGET_HEIGHT_M,TARGET_DEPTH_M])/mesh.extents)
     mesh.apply_translation(-mesh.bounds.mean(axis=0))
     safe=float(length)*.37
     central_before={

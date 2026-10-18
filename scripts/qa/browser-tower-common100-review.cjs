@@ -49,6 +49,8 @@ fs.mkdirSync(out,{recursive:true});
      const length=[100,100,125,125,150,150][i];
      if(await page.locator('#stoneName').textContent()!==name)throw Error('Wrong lintel model '+i);
      if(Number(await page.locator('#dx').textContent())!==length)throw Error('Wrong lintel span '+name);
+     if(Number(await page.locator('#dy').textContent())!==25)throw Error('Lintel must fill the 25 cm course '+name);
+     if(Number(await page.locator('#dz').textContent())!==50)throw Error('Lintel must fill the 50 cm wall '+name);
      if(!(await page.locator('#stoneOrigin').textContent()).includes('Торцы:'))throw Error('Missing endcap profile label '+name);
      await page.locator('#next').click();
    }

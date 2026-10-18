@@ -12,12 +12,12 @@ import json
 import numpy as np
 import trimesh
 
-from common100_lintels import build_rugged_lintel, STYLES, ENDCAP_DESIGNS, PROFILE_NAMES
+from common100_lintels import build_rugged_lintel, STYLES, ENDCAP_DESIGNS, PROFILE_NAMES, TARGET_HEIGHT_M, TARGET_DEPTH_M
 from common100_quality import quality, violations
 
 ROOT=Path(__file__).resolve().parents[2]
 DIR=ROOT/"assets/tower/prefabs/common100"
-VERSION="17.7-common100.9"
+VERSION="17.7-common100.10"
 LENGTHS=(1.0,1.0,1.25,1.25,1.5,1.5)
 
 
@@ -60,7 +60,9 @@ def rebake(output=DIR):
                     mesh=build_rugged_lintel(local_rng,wanted,style,index)
                 except ValueError:
                     continue
-                if not violations(name,"lintel",quality(mesh),mesh.extents):
+                if (not violations(name,"lintel",quality(mesh),mesh.extents)
+                        and abs(float(mesh.extents[1])-TARGET_HEIGHT_M)<=.002
+                        and abs(float(mesh.extents[2])-TARGET_DEPTH_M)<=.005):
                     break
             else:
                 raise RuntimeError("Cannot make structurally solid lintel "+name)
@@ -70,6 +72,7 @@ def rebake(output=DIR):
                 "endcapDesign":list(ENDCAP_DESIGNS[index]),
                 "endcapProfile":PROFILE_NAMES[index],
                 "endcapTechnique":"local-oblique-corner-cuts-no-recess",
+                "targetSectionMeters":[TARGET_HEIGHT_M,TARGET_DEPTH_M],
                 "sizeMeters":[round(float(x),5) for x in mesh.extents],
                 "triangles":int(len(mesh.faces)),
                 "geometrySHA256":geometry_sha(mesh),
@@ -97,6 +100,10 @@ def rebake(output=DIR):
             mesh=after.geometry[name]
             if abs(float(mesh.extents[0])-LENGTHS[i])>.003:
                 raise ValueError("Wrong lintel length "+name)
+            if abs(float(mesh.extents[1])-TARGET_HEIGHT_M)>.002:
+                raise ValueError("Wrong lintel height "+name)
+            if abs(float(mesh.extents[2])-TARGET_DEPTH_M)>.005:
+                raise ValueError("Wrong lintel wall depth "+name)
             if not mesh.is_watertight or mesh.visual.uv is None:
                 raise ValueError("Broken lintel "+name)
         data["glbSHA256"]=hashlib.sha256(candidate.read_bytes()).hexdigest()

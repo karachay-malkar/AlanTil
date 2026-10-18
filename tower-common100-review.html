@@ -229,7 +229,7 @@ async function injectModel(gltf,meta){
 }
 async function start(){
  try{
- const response=await fetch(BASE+'common-100.json?version=17.7-common100.9',{cache:'no-store'});
+ const response=await fetch(BASE+'common-100.json?version=17.7-common100.10',{cache:'no-store'});
  if(!response.ok)throw new Error('Не удалось загрузить метаданные: HTTP '+response.status);
  const meta=await response.json();if(meta.count!==100)throw new Error('Неподдерживаемая версия библиотеки');
  window.__common100meta=meta;

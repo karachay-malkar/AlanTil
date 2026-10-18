@@ -12,7 +12,7 @@ import numpy as np
 import trimesh
 
 from common100_quality import quality, violations
-from common100_lintels import PROFILE_NAMES
+from common100_lintels import PROFILE_NAMES, TARGET_HEIGHT_M, TARGET_DEPTH_M
 
 ROOT=Path(__file__).resolve().parents[2]
 ROOT100=ROOT/"assets/tower/prefabs/common100"
@@ -82,8 +82,10 @@ def main():
         assert model.is_volume and model.is_watertight,name
         assert model.visual.uv is not None,name
         assert abs(float(model.extents[0])-wanted)<.003,(name,model.extents)
-        assert .18<=model.extents[1]<=.24,(name,model.extents)
-        assert .28<=model.extents[2]<=.36,(name,model.extents)
+        assert abs(float(model.extents[1])-TARGET_HEIGHT_M)<=.002,(name,"Height must fill 25 cm course",model.extents)
+        assert abs(float(model.extents[2])-TARGET_DEPTH_M)<=.005,(name,"Depth must fill 50 cm wall",model.extents)
+        assert datum.get("targetSectionMeters")==[TARGET_HEIGHT_M,TARGET_DEPTH_M],name
+        assert np.allclose(np.asarray(datum["sizeMeters"]),model.extents,atol=.00002),(name,"Metadata disagrees with real mesh")
         assert model.extents[1]/model.extents[2]<=.78,(name,model.extents)
         assert not violations(name,"lintel",quality(model),model.extents),(name,"Lintel too pointed")
         left=cap_features(model,-1)
