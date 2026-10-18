@@ -15,6 +15,7 @@ const SCREENS = Object.freeze({
 
   "practice.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "practice.ashyk": { layout: "detail", header: "standard", bottomNav: false, titleKey: "practice.ashyk" },
+  "practice.masonry": { layout: "detail", header: "standard", bottomNav: false, title: "Редактор кладки" },
   "friends.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "profile.home": { layout: "root", header: "minimal", bottomNav: true, title: "" },
   "profile.statistics": { layout: "root", header: "minimal", bottomNav: true, title: "" },

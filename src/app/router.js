@@ -5,9 +5,10 @@ import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.7.0";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.0";
+const RELEASE_VERSION = "16.7.1";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
+  masonry: "../features/masonry/index.js",
   ashyk: "../features/ashyk/index.js",
   friends: "../features/friends/index.js",
   path: "../features/path/feature.js",
@@ -56,6 +57,7 @@ export function parsePathname(pathname) {
   const [first, second, third, fourth, fifth, sixth] = segments;
   if (first === "practice") {
     if (!second) return { route: "practice.home", params: {} };
+    if (second === "masonry" && !third) return { route: "practice.masonry", params: {} };
     if (second === "ashyk" && !third) return { route: "practice.ashyk", params: {} };
   }
   if (first === "friends" && !second) return { route: "friends.home", params: {} };
@@ -146,6 +148,7 @@ export function buildPath(routeName, params = {}) {
   if (routeName === "path.study") return `${stationBase}/study`;
   if (routeName === "path.test") return `${stationBase}/test`;
   if (routeName === "practice.home") return "/practice";
+  if (routeName === "practice.masonry") return "/practice/masonry";
   if (routeName === "practice.ashyk") return "/practice/ashyk";
   if (routeName === "friends.home") return "/friends";
   if (routeName === "profile.home") return "/profile";
@@ -180,7 +183,7 @@ export function buildPath(routeName, params = {}) {
   return `/path/${story}`;
 }
 
-function featureOf(route) { if (route === "practice.ashyk") return "ashyk"; return route === "home" ? "path" : String(route || "path.home").split(".")[0]; }
+function featureOf(route) { if (route === "practice.masonry") return "masonry"; if (route === "practice.ashyk") return "ashyk"; return route === "home" ? "path" : String(route || "path.home").split(".")[0]; }
 function screenNameOf(route) {
   if (route === "home") return "path";
   if (route === "practice.ashyk") return "ashyk";
@@ -293,11 +296,12 @@ export function createRouter({ shell, modal, context }) {
   function discardScreenTimer() { currentScreen = ""; screenPagePath = "/"; screenOpenedAt = 0; activeDuration = 0; activeStartedAt = 0; }
   function setAnalyticsActive(enabled) { discardScreenTimer(); if (!enabled || !started) return false; startScreenTimer(current.route); return sendPageView({ force: true }); }
   async function guardAdminTarget(target) {
-    if (!target.route.startsWith("admin.")) return target;
+    const manualMasonry = target.route === "practice.masonry";
+    if (!manualMasonry && !target.route.startsWith("admin.")) return target;
     const ready = new Promise((resolve) => globalThis.setTimeout(() => resolve(false), 4000));
     await Promise.race([whenActivityAccessReady().then(() => true), ready]);
     if (hasActivityAccess()) return target;
-    return { route: "profile.home", params: {}, redirected: true };
+    return { route: manualMasonry ? "practice.home" : "profile.home", params: {}, redirected: true };
   }
   async function show(rawTarget, { historyMode = "push", force = false, reason = "route_change", skipLeaveCheck = false, initial = false } = {}) {
     const target = await guardAdminTarget(rawTarget);
@@ -337,6 +341,7 @@ export function createRouter({ shell, modal, context }) {
     if (current.route === "learn.sections") return { route: "learn.catalog", params: {} };
     if (current.route.startsWith("learn.")) return { route: "path.home", params: { storyType: DEFAULT_STORY } };
     if (current.route === "practice.ashyk") return { route: "practice.home", params: {} };
+    if (current.route === "practice.masonry") return { route: "practice.home", params: {} };
     if (["test.session", "test.results"].includes(current.route)) return { route: "test.menu", params: {} };
     if (current.route === "test.menu") return { route: "practice.home", params: {} };
     if (["match.game", "match.results"].includes(current.route)) return { route: "match.menu", params: {} };
