@@ -12,12 +12,12 @@ import json
 import numpy as np
 import trimesh
 
-from common100_lintels import build_rugged_lintel, STYLES, ENDCAP_DESIGNS
+from common100_lintels import build_rugged_lintel, STYLES, ENDCAP_DESIGNS, PROFILE_NAMES
 from common100_quality import quality, violations
 
 ROOT=Path(__file__).resolve().parents[2]
 DIR=ROOT/"assets/tower/prefabs/common100"
-VERSION="17.7-common100.7"
+VERSION="17.7-common100.8"
 LENGTHS=(1.0,1.0,1.25,1.25,1.5,1.5)
 
 
@@ -68,6 +68,7 @@ def rebake(output=DIR):
                 "source":"generated",
                 "lintelStyle":style,
                 "endcapDesign":list(ENDCAP_DESIGNS[index]),
+                "endcapProfile":PROFILE_NAMES[index],
                 "sizeMeters":[round(float(x),5) for x in mesh.extents],
                 "triangles":int(len(mesh.faces)),
                 "geometrySHA256":geometry_sha(mesh),
