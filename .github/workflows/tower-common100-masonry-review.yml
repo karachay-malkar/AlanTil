@@ -38,7 +38,11 @@ jobs:
           p='assets/tower/prefabs/common100/masonry-review-v1.json'
           d=json.load(open(p))
           assert len(d['cases'])==32 and d['previewOnly'] and not d['productionIntegrated']
-          assert d['assemblyAlgorithm']=='gravity-supported.2'
+          assert d['assemblyAlgorithm']=='course-contact-supported.3'
+          assert d['version']=='common100-masonry-review.3'
+          assert all(c['quality']['mediumStones']>0 for c in d['cases'])
+          assert all(c['quality']['minSupportRatio']>=0.15 for c in d['cases'])
+          assert all(c['quality']['isolatedPierSeeds']==0 for c in d['cases'] if c['id'] not in ('window','door','gate'))
           assert all(c['quality']['minimumSupportVoxels']>0 for c in d['cases'])
           assert all(c['quality']['contactFaces']>=0 for c in d['cases'])
           for c in d['cases']:
