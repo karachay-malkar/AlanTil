@@ -300,6 +300,17 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
                           allow_pier_seed=kind in ARCH,x_focus=side)
         failures=0 if success else failures+1
         if failures>65:break
+    if kind in SIZES:
+        # Close the upper load-bearing course with medium stones BEFORE adding
+        # chinking. This targets a continuous structural surface, not 90% fill.
+        missed=0
+        for attempt in range(min(100,round(budget*.42))):
+            exposed_top=np.any(occupied[:,-2:,:],axis=1)
+            if float(np.count_nonzero(exposed_top))/max(1,exposed_top.size)>=.62:break
+            success=place_one(occupied,eligible,main,rng,world_size,placement,stats,
+                              owners=medium_owners,course_top=shape[1],prefer_high=True)
+            missed=0 if success else missed+1
+            if missed>18:break
     lintel_support=None
     if lintel is not None:
         stone,origin=lintel
