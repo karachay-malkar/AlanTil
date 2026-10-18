@@ -77,6 +77,7 @@ import {GLTFLoader} from './src/vendor/three/addons/loaders/GLTFLoader.js';
 const BASE='./assets/tower/prefabs/common100/';
 const MAX_PER_PAGE=12;
 const infoNames={main:'Основной камень',large:'Крупный камень',chinking:'Забутовка',lintel:'Каменная перемычка'};
+const endcapNames={'rounded-angular':'Округло-угловатый','massive-blunt-triangle':'Массивный треугольный','blunt-teardrop-wedge':'Тупой каплевидно-клиновидный','asymmetric-chamfer':'Асимметрично-скошенный','natural-irregular-pentagon':'Пятигранно-природный','mixed-soft-blunt-wedge':'Смешанный тупо-заострённый'};
 const state={group:'main',mode:'single',index:0,page:0,edges:false,records:[],models:new Map(),root:null,meshList:[]};
 const $=id=>document.getElementById(id);
 const host=$('view'),size=()=>({w:Math.max(host.clientWidth,1),h:Math.max(host.clientHeight,1)});
@@ -149,6 +150,7 @@ function renderStone(){
   const current=records[state.index];const x=dimsOf(current);
   $('stoneName').textContent=current.name;
   $('stoneOrigin').textContent=(current.source==='gate'?'Исходный камень ворот':'Смоделирован заново'+(current.shapeFamily?' · '+({'massive':'Массивный','flat-bed':'Плоский','trapezoid':'Трапециевидный','short-wide':'Короткий широкий','broken-facet':'Рваный многогранник','asymmetric':'Асимметричный'}[current.shapeFamily]||current.shapeFamily):'')+(current.lintelStyle?' · '+({'hewn-facets':'Рубленые фасетки','broken-strata':'Сколы и слои','asymmetric-scar':'Асимметричные сколы','split-slab':'Рваная плита'}[current.lintelStyle]||current.lintelStyle):''))+ ' · '+infoNames[current.category];
+  if(current.endcapProfile)$('stoneOrigin').textContent+=' · Торцы: '+(endcapNames[current.endcapProfile]||current.endcapProfile);
   ['dx','dy','dz'].forEach((id,i)=>$(id).textContent=x[i]);
   $('position').textContent=(state.index+1)+' / '+records.length;
   $('stoneNote').textContent=current.category==='chinking'?'Только для локальной забутовки щелей. Не использовать как основной камень.':current.category==='lintel'?'Цельный камень. Проверь оба торца кнопками «Левый торец» и «Правый торец»: сколы, трещины, скосы.':'Размеры реальные; проверь угловатость, посадочные плоскости и силуэт.';
