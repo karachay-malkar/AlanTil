@@ -93,7 +93,7 @@ def select_pool(source,meta,dimensions,small=False):
     pool.sort(key=lambda p:p["voxels"],reverse=True)
     return pool
 
-def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False,x_focus=None):
+def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=False,owners=None,course_top=None,allow_pier_seed=False,x_focus=None,prefer_high=False):
     """Fit medium stones as connected load-bearing courses; use small stones only for gaps."""
     size=occupancy.shape
     if not pool:return False
@@ -101,12 +101,16 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
     neighbor_grid=binary_dilation(occupancy,iterations=1)
     # Select real free contact faces, not only the lowest empty voxel in a
     # random column. This propagates joined courses across all exposed sides.
-    frontier=neighbor_grid&eligible&~occupancy
+    propagation=binary_dilation(owners>=0,iterations=1) if prefer_high and owners is not None else neighbor_grid
+    frontier=propagation&eligible&~occupancy
     if course_top is not None:frontier[:,course_top:,:]=False
     if x_focus is not None:
         frontier[:x_focus[0],:,:]=False
         frontier[x_focus[1]:,:,:]=False
     targets=np.argwhere(frontier)
+    if prefer_high and len(targets):
+        highest_course=int(targets[:,1].max())
+        targets=targets[targets[:,1]>=max(0,highest_course-5)]
     best=None;highest=-1e20
     for trial in range(115 if small else 155):
         # Prefer already occupied neighborhoods and unfilled boundary pockets.
@@ -179,7 +183,9 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
             contact=int(np.count_nonzero(mask&neighbor_grid[sl]&~occupancy[sl]))
             required_contact=max(4,int(np.sqrt(item['voxels'])*.58))
             independent=not small and metrics.get('mediumStoneCount',0)>0 and contact<required_contact
-            if independent and not (allow_pier_seed and yy==0 and metrics.get('freePierSeeds',0)<1):continue
+            free_flank=(allow_pier_seed and x_focus is not None and owners is not None and
+                        yy==0 and not np.any(owners[x_focus[0]:x_focus[1],:,:]>=0))
+            if independent and not free_flank:continue
             if yy>0 and contact<4:continue
             if small and owners is not None:
                 # A chink is only allowed into a gap between TWO distinct medium stones.
@@ -202,6 +208,7 @@ def place_one(occupancy,eligible,pool,rng,world_size,placement,metrics,small=Fal
             # stones preferentially close exposed perimeter recesses.
             score=(item['voxels']-collision)+contact*(2.0 if small else 3.2)+border*(.35 if small else 2.8)
             score+=support*1.8+(size[1]-yy)*.65
+            if prefer_high:score+=(yy+int(n[1]))*18.0
             if independent:score-=45
             if score>highest:
                 highest=score;accepted=(item,st,sl,collision,support,contact,support_ratio,independent)
@@ -301,7 +308,7 @@ def build_case(kind,variant,source,meta,main_cache,chink_cache):
                 if bearing()[flank]>=goal or len(placement)>=470:break
                 success=place_one(occupied,eligible,main,rng,world_size,placement,stats,
                                   owners=medium_owners,course_top=oy,
-                                  allow_pier_seed=True,x_focus=range_x)
+                                  allow_pier_seed=True,x_focus=range_x,prefer_high=True)
                 missed=0 if success else missed+1
                 if missed>18:break
         lintel_support=bearing()
