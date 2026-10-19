@@ -1,7 +1,7 @@
 import { msg } from "../../shared/i18n/index.js?v=16.6.11";
 import { panel } from "../../shared/ui/panel.js?v=13.9.0";
 import { uiIcon } from "../../shared/ui/icons.js?v=13.9.0";
-import { hasActivityAccess } from "../../shared/admin/admin-access.js?v=16.7.1";
+import { hasActivityAccess } from "../../shared/admin/admin-access.js?v=13.15.9";
 
 let controller=null;
 

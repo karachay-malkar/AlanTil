@@ -2,10 +2,10 @@ import { msg } from "../shared/i18n/index.js?v=13.10.12";
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=13.9.0";
 import { EVENTS } from "../shared/analytics/events.js?v=13.9.0";
 import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
-import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.7.0";
+import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=13.15.9";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.1";
+const RELEASE_VERSION = "16.7.2";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   masonry: "../features/masonry/index.js",

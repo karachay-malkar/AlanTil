@@ -1,6 +1,6 @@
 /** Practice > Masonry. Admin-only, exact freeform transforms over original Common 100 meshes. */
 import * as THREE from '../../vendor/three/three.module.js';
-import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.7.1';
+import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=13.15.9';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.7.1';
 import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
 import {createMasonryScene} from './scene.js';
