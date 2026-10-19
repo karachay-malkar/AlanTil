@@ -4,6 +4,7 @@ import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16'
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
 import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
 import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.2';
+import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.1';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js';
 
 let active=null;
@@ -17,7 +18,7 @@ const titleFor=cells=>`Секция ${cells.join('×')}`;
 
 export async function mount(context){
  const controller=new AbortController(),signal=controller.signal;
- const state={context,controller,scene:null,library:null,recipe:makeRecipe(),id:null,title:titleFor([3,3,3]),
+ const state={context,controller,scene:null,library:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
   status:'draft',selected:null,category:'large',search:'',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
  active=state;
  if(!hasActivityAccess()||!getCurrentAuthState()?.user?.id){
@@ -86,7 +87,7 @@ export async function mount(context){
  const scheduleScratch=()=>{
   state.dirty=true;state.mutationRevision+=1;refreshCount();
   clearTimeout(state.timer);
-  state.timer=setTimeout(()=>saveLocalScratch({id:state.id,title:state.title,status:state.status,recipe:state.recipe}),650);
+  state.timer=setTimeout(()=>saveLocalScratch({id:state.id,sourceId:state.sourceId,title:state.title,status:state.status,recipe:state.recipe}),650);
  };
  const syncScene=()=>{state.scene?.sync(state.recipe.stones);state.scene?.select(state.selected);refreshCount();renderSelected();};
  const updateStone=(id,transform,final=false)=>{
@@ -160,10 +161,10 @@ export async function mount(context){
   cells.forEach((v,i)=>{const input=$(`[data-cell="${i}"]`);if(input)input.value=v;});
   scheduleScratch();toast('Габариты изменены; камни остались на своих местах');
  }
- function setRecipe(recipe,{id=null,title=null,status='draft',dirty=false}={}){
+ function setRecipe(recipe,{id=null,sourceId=null,title=null,status='draft',dirty=false}={}){
   if(!state.library)return;
   validateRecipe(recipe,state.library.manifest);
-  state.recipe=copy(recipe);state.id=id;state.title=title||titleFor(recipe.cells);state.status=status;
+  state.recipe=copy(recipe);state.id=id;state.sourceId=sourceId;state.title=title||titleFor(recipe.cells);state.status=status;
   state.selected=null;state.history=[];state.future=[];state.dirty=dirty;state.mutationRevision+=1;
   $('[data-title]').value=state.title;
   const key=recipe.cells.join(',');
@@ -174,11 +175,23 @@ export async function mount(context){
  }
  function confirmDiscard(){return !state.dirty||window.confirm('Есть изменения без серверного сохранения. Продолжить? Авточерновик останется в этом браузере.');}
  async function refreshList(){
-  try{
-   const all=await listSections();
-   const select=$('[data-sections]');select.innerHTML='<option value="">Новая секция</option>'+all.map(row=>`<option value="${escapeHTML(row.id)}">${escapeHTML(row.title)} · ${escapeHTML(row.status)}</option>`).join('');
-   select.value=state.id||'';
-  }catch(error){toast('Список секций недоступен: '+error.message,true);}
+  // The committed user-authored catalog is independent of Supabase drafts.
+  const [sourceResult,savedResult]=await Promise.allSettled([listManualSections({signal}),listSections()]);
+  if(state.disposed)return;
+  const sources=sourceResult.status==='fulfilled'?sourceResult.value:[];
+  const saved=savedResult.status==='fulfilled'?savedResult.value:[];
+  const sourceOptions=sources.length?'<optgroup label="Ручные секции проекта">'+sources.map(item=>`<option value="manual:${escapeHTML(item.id)}">${escapeHTML(item.title)} · ${item.stoneCount} камней</option>`).join('')+'</optgroup>':'';
+  const savedOptions=saved.length?'<optgroup label="Мои сохранённые секции">'+saved.map(row=>`<option value="${escapeHTML(row.id)}">${escapeHTML(row.title)} · ${escapeHTML(row.status)}</option>`).join('')+'</optgroup>':'';
+  const select=$('[data-sections]');
+  select.innerHTML='<option value="">Новая секция</option>'+sourceOptions+savedOptions;
+  select.value=state.id||(state.sourceId?'manual:'+state.sourceId:'');
+  if(sourceResult.status==='rejected'){
+   console.warn('Manual masonry source catalog unavailable',sourceResult.reason);
+   toast('Каталог ручных секций недоступен: '+sourceResult.reason.message,true);
+  }else if(savedResult.status==='rejected'){
+   console.warn('Personal masonry sections unavailable',savedResult.reason);
+   toast('Мои сохранённые секции недоступны: '+savedResult.reason.message,true);
+  }
  }
  async function save(status){
   if(state.busy||!state.library)return;
@@ -187,7 +200,7 @@ export async function mount(context){
   const savingRevision=state.mutationRevision;
   try{
    const saved=await saveSection({id:state.id,title:state.title,status,cells:record.cells,recipe:record},state.library.manifest);
-   state.id=saved.id;state.status=status;
+   state.id=saved.id;state.sourceId=null;state.status=status;
    if(savingRevision===state.mutationRevision){state.recipe=record;state.dirty=false;clearLocalScratch();
     toast(status==='ready'?'Секция готова к согласованию. Координаты сохранены.':'Черновик сохранён в Supabase.');}
    else {toast('Сохранена предыдущая версия; есть новые изменения — сохраните ещё раз.');}
@@ -286,13 +299,28 @@ export async function mount(context){
   }
   if(t.matches('[data-sections]')){
    if(!t.value)return;
-   if(!confirmDiscard()){t.value=state.id||'';return;}
+   const previous=state.id||(state.sourceId?'manual:'+state.sourceId:'');
+   if(!confirmDiscard()){t.value=previous;return;}
    try{
-    toast('Открываем сохранённую секцию…');
-    const row=await loadSection(t.value);
-    setRecipe(row.recipe,{id:row.id,title:row.title,status:row.status});
-    clearLocalScratch();toast('Загружено: '+row.title);
-   }catch(error){toast('Ошибка загрузки: '+error.message,true);}return;
+    toast('Открываем секцию…');
+    if(t.value.startsWith('manual:')){
+     // Source-controlled recipes are immutable: saving creates a personal copy.
+     const source=await loadManualSection(t.value.slice(7),state.library.manifest,{signal});
+     if(state.disposed)return;
+     setRecipe(source.recipe,{id:null,sourceId:source.id,title:source.title,status:'draft',dirty:true});
+     scheduleScratch();
+     toast('Исходная секция загружена: '+source.recipe.stones.length+' камней. Изменения сохраняются в отдельную копию.');
+    }else{
+     const row=await loadSection(t.value);
+     if(state.disposed)return;
+     setRecipe(row.recipe,{id:row.id,title:row.title,status:row.status});
+     clearLocalScratch();toast('Загружено: '+row.title);
+    }
+   }catch(error){
+    t.value=previous;
+    toast('Ошибка загрузки секции: '+error.message,true);
+   }
+   return;
   }
  },{signal});
  root.addEventListener('input',e=>{
@@ -329,7 +357,7 @@ export async function mount(context){
   state.scene.setBounds(state.recipe.cells);state.scene.resetCamera(state.recipe.cells);
   const backup=readLocalScratch();
   if(backup?.recipe){
-   try{setRecipe(backup.recipe,{id:backup.id,title:backup.title,status:backup.status,dirty:true});toast('Авточерновик восстановлен на этом устройстве');}
+   try{setRecipe(backup.recipe,{id:backup.id,sourceId:backup.sourceId||null,title:backup.title,status:backup.status,dirty:true});toast('Авточерновик восстановлен на этом устройстве');}
    catch(error){console.warn('Masonry scratch incompatible',error);}
   }
   renderCatalog();renderSelected();refreshCount();
@@ -348,7 +376,7 @@ export function getLeaveMessage(){return 'Вы хотите выйти из ре
 export function unmount(){
  if(!active)return;
  const state=active;active=null;state.disposed=true;clearTimeout(state.timer);
- if(state.dirty)saveLocalScratch({id:state.id,title:state.title,status:state.status,recipe:state.recipe});
+ if(state.dirty)saveLocalScratch({id:state.id,sourceId:state.sourceId,title:state.title,status:state.status,recipe:state.recipe});
  state.controller.abort();state.unsubscribe?.();state.scene?.dispose();
  state.context.shell.appShell.dataset.feature='';
 }

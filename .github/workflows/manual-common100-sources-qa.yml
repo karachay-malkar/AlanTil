@@ -1,0 +1,27 @@
+name: Manual Common100 source sections QA
+on:
+  push:
+    branches: [main, '17.2']
+    paths:
+      - 'assets/tower/sections/manual-common100/**'
+      - 'src/features/masonry/manual-sections/**'
+      - 'src/features/masonry/index.js'
+      - 'scripts/qa/manual-common100-sources.test.mjs'
+      - '.github/workflows/manual-common100-sources-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate pure source registry syntax
+        run: node --check src/features/masonry/manual-sections/registry.mjs
+      - name: Verify source section fingerprint, transforms and isolation
+        run: node --test scripts/qa/manual-common100-sources.test.mjs

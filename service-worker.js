@@ -1,4 +1,4 @@
-const VERSION = "16.8.0.22";
+const VERSION = "16.8.0.23";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 const LEGACY_REFRESH_BEFORE_VERSION = "16.8.0.16";
@@ -6,8 +6,8 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.8.0.19",
-  "/src/app/router.js?v=16.8.0.19",
+  "/src/app/bootstrap.js?v=16.8.0.20",
+  "/src/app/router.js?v=16.8.0.20",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",

@@ -1,0 +1,30 @@
+{
+  "schema": "alantil.manual-common100.catalog.1",
+  "library": {
+    "version": "17.7-common100.10",
+    "sha256": "e6edab64c426ca532d20d94d6416e12cbdb8ab651ead1636058ba18a81242a56",
+    "cellMeters": 0.25
+  },
+  "sections": [
+    {
+      "id": "manual-3x3x3-v1",
+      "title": "Секция 3×3×3",
+      "file": "section-3x3x3-v1.json",
+      "cells": [
+        3,
+        3,
+        3
+      ],
+      "stoneCount": 86,
+      "counts": {
+        "large": 3,
+        "main": 55,
+        "chinking": 28,
+        "lintel": 0
+      },
+      "sha256": "3d57b58e0cb1262eeb02158952495e301d8d8afabd5eccc76b3d401ce140e48d",
+      "status": "source",
+      "origin": "manual-authoring"
+    }
+  ]
+}
