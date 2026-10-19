@@ -6,7 +6,7 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "16.8.0.17";
+const ASSET_VERSION = "16.8.0.18";
 const TOWER_ASSET_VERSION = "17.5.8-balkaria-light-ochre.1";
 const MASONRY_ASSET_VERSION = "17.2-manual-masonry.1";
 const FEATURE_PATHS = Object.freeze({
