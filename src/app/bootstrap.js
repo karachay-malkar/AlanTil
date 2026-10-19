@@ -19,10 +19,10 @@ import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.16";
 import { createModalService } from "../shared/ui/modal.js?v=16.8.0.16";
 import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.16";
-import { createRouter } from "./router.js?v=16.8.0.18";
+import { createRouter } from "./router.js?v=16.8.0.19";
 import { createShell } from "./shell.js?v=16.8.0.16";
 
-const ASSET_VERSION = "16.8.0.18";
+const ASSET_VERSION = "16.8.0.19";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 

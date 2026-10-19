@@ -3,7 +3,7 @@ import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
 import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
-import {createMasonryScene} from './scene.js';
+import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.2';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js';
 
 let active=null;
@@ -339,8 +339,8 @@ export async function mount(context){
  }catch(error){
   if(state.disposed)return;
   console.error('Manual masonry editor failed',error);
-  $('[data-loading]').textContent='Не удалось загрузить оригинальные 100 камней: '+error.message;
-  toast('Ошибка загрузки библиотеки Common 100',true);
+  $('[data-loading]').textContent=(state.library?'Не удалось запустить 3D-редактор: ':'Не удалось загрузить оригинальные 100 камней: ')+error.message;
+  toast(state.library?'Ошибка запуска 3D-редактора':'Ошибка загрузки библиотеки Common 100',true);
  }
 }
 export function canLeave(){return !active?.dirty;}

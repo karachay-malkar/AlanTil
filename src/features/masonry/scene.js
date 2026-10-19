@@ -24,7 +24,7 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
  const stoneGroup=new THREE.Group();scene.add(stoneGroup);
  const ghost=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),
   new THREE.LineDashedMaterial({color:'#358c72',dashSize:.055,gapSize:.028,depthTest:false,transparent:true,opacity:.85}));
- ghost.geometry.computeLineDistances();ghost.renderOrder=100;scene.add(ghost);
+ ghost.computeLineDistances();ghost.renderOrder=100;scene.add(ghost);
  const selector=new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(1,1,1)),0xffd07a);
  selector.material.depthTest=false;selector.renderOrder=200;selector.visible=false;scene.add(selector);
  const objects=new Map();
