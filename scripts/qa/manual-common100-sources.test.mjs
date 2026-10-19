@@ -18,6 +18,10 @@ const entry=index.sections.find(x=>x.id==='manual-3x3x3-v1');
 const raw=read('assets/tower/sections/manual-common100/section-3x3x3-v1.json');
 const original=JSON.parse(raw);
 const exactSHA=createHash('sha256').update(raw).digest('hex');
+const smallEntry=index.sections.find(x=>x.id==='manual-1x1x1-v1');
+const smallRaw=read('assets/tower/sections/manual-common100/section-1x1x1-v1.json');
+const smallOriginal=JSON.parse(smallRaw);
+const smallSHA=createHash('sha256').update(smallRaw).digest('hex');
 
 test('hand-authored recipe is stored independently of legacy tower prefabs',()=>{
  assert.equal(MANUAL_SECTION_SCHEMA,'alantil.manual-common100.catalog.1');
@@ -52,6 +56,39 @@ test('all 86 original stones are unique placements referencing only Common 100',
   acc[k]=(acc[k]||0)+1;return acc;
  },{});
  assert.deepEqual(counts,{large:3,main:55,chinking:28});
+});
+test('hand-authored 1x1x1 section is preserved byte for byte',()=>{
+ assert.ok(smallEntry);
+ assert.equal(smallEntry.id,'manual-1x1x1-v1');
+ assert.equal(smallEntry.file,'section-1x1x1-v1.json');
+ assert.deepEqual(smallEntry.cells,[1,1,1]);
+ assert.equal(smallEntry.stoneCount,6);
+ assert.deepEqual(smallEntry.counts,{large:0,main:6,chinking:0,lintel:0});
+ assert.equal(smallEntry.status,'source');
+ assert.equal(smallEntry.origin,'manual-authoring');
+ assert.equal(smallRaw.length,2576);
+ assert.equal(smallSHA,'63a835e7f8b036733c0898e97e39a50b3a10e192a0903696716e2ca474593c42');
+ assert.equal(smallSHA,smallEntry.sha256);
+ assert.equal(smallOriginal.title,'Секция 1×1×1');
+ assert.equal(smallOriginal.recipe.version,'common100-manual-1');
+ assert.equal(smallOriginal.recipe.libraryVersion,manifest.version);
+ assert.equal(smallOriginal.recipe.librarySha256,manifest.glbSHA256);
+ assert.equal(smallOriginal.recipe.cellMeters,.25);
+ assert.equal(validateManualSection(smallOriginal,smallEntry,manifest),smallOriginal);
+ assert.equal(new Set(smallOriginal.recipe.stones.map(s=>s.id)).size,6);
+ assert.deepEqual(smallOriginal.recipe.stones.map(s=>s.name),[
+  'MAIN_001','MAIN_010','MAIN_028','MAIN_030','MAIN_048','MAIN_033'
+ ]);
+ assert.deepEqual(smallOriginal.recipe.stones[4].scale,[1,1,.6]);
+ assert.deepEqual(smallOriginal.recipe.stones[5].scale,[1,1,2]);
+});
+test('every registered manual section matches its original file and checksum',()=>{
+ validateManualCatalog(index,manifest);
+ for(const entry of index.sections){
+  const originalBytes=read('assets/tower/sections/manual-common100/'+entry.file);
+  assert.equal(createHash('sha256').update(originalBytes).digest('hex'),entry.sha256);
+  assert.equal(validateManualSection(JSON.parse(originalBytes),entry,manifest).recipe.stones.length,entry.stoneCount);
+ }
 });
 test('catalog rejects identity collision and path traversal',()=>{
  const catalog=structuredClone(index);
