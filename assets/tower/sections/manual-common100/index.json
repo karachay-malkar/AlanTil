@@ -85,6 +85,46 @@
       "sha256": "0418a441fe08ad1316744d68fd1a66841b489cba46e55ca3b0d82047f12bd6fe",
       "status": "source",
       "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x2x2-v2",
+      "title": "Секция 2×2×2",
+      "file": "section-2x2x2-v2.json",
+      "cells": [
+        2,
+        2,
+        2
+      ],
+      "stoneCount": 19,
+      "counts": {
+        "large": 2,
+        "main": 9,
+        "chinking": 8,
+        "lintel": 0
+      },
+      "sha256": "5af66fb4be45c51f5461e31a27d55062c0fcd1026595c12112b1738f054e1a3a",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x3x4-v1",
+      "title": "Секция 2×3×4",
+      "file": "section-2x3x4-v1.json",
+      "cells": [
+        2,
+        3,
+        4
+      ],
+      "stoneCount": 40,
+      "counts": {
+        "large": 0,
+        "main": 37,
+        "chinking": 3,
+        "lintel": 0
+      },
+      "sha256": "5d4c788b1264fedf1ecc78e83b56a7685fd43d6488919299c2544d680f3b7d06",
+      "status": "source",
+      "origin": "manual-authoring"
     }
   ]
 }

@@ -7,7 +7,7 @@ import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.2-arc
 import {buildGateWings} from './gate-wings.mjs';
 import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.4';
 import {stagingPosition} from './staging-position.mjs';
-import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.3';
+import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.4';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.2-architecture.1';
 
 let active=null;
