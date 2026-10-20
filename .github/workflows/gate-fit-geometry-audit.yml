@@ -1,0 +1,39 @@
+name: Gate v8 geometry audit (editor and game bounds)
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/qa/gate-fit-geometry-audit.py'
+      - '.github/workflows/gate-fit-geometry-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit-original-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 17.2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install geometry math
+        run: python -m pip install numpy==2.3.5
+      - name: Measure actual gate geometry in all axes
+        run: python scripts/qa/gate-fit-geometry-audit.py
+      - name: Store original unmodified geometric audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add gate-fit-review/audit-v8.json
+          if git diff --cached --quiet; then
+            echo 'Audit report already current'
+          else
+            git commit -m 'test(gate): record measured gate v8 boundary geometry'
+            git fetch origin 17.2
+            git rebase origin/17.2
+            git push origin HEAD:17.2
+          fi
