@@ -81,6 +81,29 @@ test('top panel contains editing actions; lower panel remains compact; no search
  assert.match(editor,/stagedPosition\(cloned\.name,cloned\.quaternion,cloned\.scale\)/);
  assert.match(editor,/cameraFitOnStones\(state\.recipe\.cells\)/);
 });
+test('selected stone controls dock at top right, remain compact and mobile safe',()=>{
+ const editor=source('src/features/masonry/index.js');
+ const css=source('src/features/masonry/masonry.css');
+ const markup=editor.slice(editor.indexOf('root.innerHTML=`'),editor.indexOf('const $=sel=>root.querySelector(sel);'));
+ const top=markup.split('<div class="masonryTop">')[1].split('<div class="masonryFloating">')[0];
+ const bottom=markup.split('<div class="masonryEditorPanel">')[1];
+ assert.equal((markup.match(/data-selected/g)||[]).length,1);
+ assert.match(top,/<aside class="masonrySelected" data-selected[^>]*hidden><\/aside>/);
+ assert.doesNotMatch(bottom,/data-selected/);
+ assert.match(editor,/area\.hidden=!stone/);
+ assert.match(editor,/state\.toolsOpen=!state\.toolsOpen/);
+ assert.match(editor,/classList\.toggle\('masonryEditor--toolsOpen'/);
+ assert.match(editor,/area\.querySelector\('\[data-step\]'\)\.value=state\.stepChoice/);
+ assert.match(editor,/area\.querySelector\('\[data-axis\]'\)\.value=state\.axisChoice/);
+ for(const element of ['data-pos','data-nudge','data-rotate','data-scale','data-step','data-axis']){
+  assert.ok(editor.includes(element),element+' missing');
+ }
+ assert.match(css,/\.masonrySelected\{position:fixed;top:calc\(58px/);
+ assert.match(css,/@media\(max-width:900px\)\{[\s\S]*?\.masonrySelected\{position:relative;top:auto;right:auto;align-self:flex-end/);
+ assert.match(css,/\.masonryCompactScale\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.masonryEditor--toolsOpen \.masonryEditorPanel\{max-height:30dvh\}/);
+});
+
 test('scene camera fits wide staging and original saved recipe path is intact',()=>{
  const scene=source('src/features/masonry/scene.js');
  const editor=source('src/features/masonry/index.js');

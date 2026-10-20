@@ -56,6 +56,7 @@ export async function mount(context){
     ${['X','Y','Z'].map((a,i)=>`<label>${a}<input data-cell="${i}" type="number" min="1" max="32" step="1" value="3"></label>`).join('')}
     <button type="button" data-action="apply-size">OK</button>
    </div>
+   <aside class="masonrySelected" data-selected aria-label="Настройки выбранного камня" hidden></aside>
   </div>
   <div class="masonryFloating">
    <div data-status role="status">Загрузка…</div>
@@ -63,7 +64,6 @@ export async function mount(context){
   </div>
  </div>
  <div class="masonryEditorPanel">
-  <div class="masonrySelected" data-selected hidden></div>
   <div class="masonryActions">
    <button type="button" data-action="duplicate" data-requires-selection title="Дублировать выбранный камень" aria-label="Дублировать камень" hidden>⧉</button>
    <button type="button" data-action="delete" data-requires-selection title="Удалить выбранный камень" aria-label="Удалить камень" hidden>⌫</button>
@@ -124,22 +124,32 @@ export async function mount(context){
   const area=$('[data-selected]');if(!area)return;
   const stone=state.recipe.stones.find(x=>x.id===state.selected);
   area.hidden=!stone;
+  root.querySelector('.masonryEditor')?.classList.toggle('masonryEditor--toolsOpen',Boolean(stone&&state.toolsOpen));
   root.querySelectorAll('[data-requires-selection]').forEach(button=>{button.hidden=!stone;});
   if(!stone){area.replaceChildren();return;}
-  const model=state.library?.manifest.models.find(m=>m.name===stone.name);
-  area.innerHTML=`<button type="button" class="masonryToolsToggle" data-action="tools" aria-expanded="${state.toolsOpen}">
-   <b>${escapeHTML(stone.name)}</b><small>${escapeHTML(model?.category||'')}</small>
-   <strong>${state.toolsOpen?'Свернуть ▴':'Настроить ▾'}</strong></button>
-   <div class="masonryStoneControls" ${state.toolsOpen?'':'hidden'}><div class="masonrySelectionRow"><b>${escapeHTML(stone.name)}</b><small>${escapeHTML(model?.category||'')}</small>
-   <label>Шаг <select data-step><option value=".005">5 мм</option><option value=".01" selected>1 см</option>
-     <option value=".025">2,5 см</option><option value=".05">5 см</option></select></label></div>
-   <div class="masonryAxisRow"><label>Ось перемещения <select data-axis><option value="free">Свободно</option>
-    <option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select></label>
-    <span>Тяните выбранный камень пальцем или задайте координаты</span></div>
-   <div class="masonryXYZ">${['X','Y','Z'].map((a,i)=>`<label>${a}, м<input data-pos="${i}" type="number" step=".005" value="${fmt(stone.position[i])}"></label>`).join('')}</div>
-   <div class="masonryNudges">${['X','Y','Z'].map(a=>`<span>${a} <button type="button" data-nudge="${a.toLowerCase()}:-1">−</button><button type="button" data-nudge="${a.toLowerCase()}:1">＋</button></span>`).join('')}</div>
-   <div class="masonryRotate"><span>Поворот 15°</span>${['X','Y','Z'].map(a=>`<span>${a} <button type="button" data-rotate="${a.toLowerCase()}:-1">↶</button><button type="button" data-rotate="${a.toLowerCase()}:1">↷</button></span>`).join('')}</div>
-   <div class="masonryXYZ masonryScale">${['X','Y','Z'].map((a,i)=>`<label>Масштаб ${a}<input data-scale="${i}" type="number" min=".011" max="20" step=".05" value="${fmt(stone.scale[i])}"></label>`).join('')}</div></div>`;
+  area.innerHTML=`<button type="button" class="masonryToolsToggle" data-action="tools" aria-expanded="${state.toolsOpen}" title="Координаты, поворот и масштаб">
+    <span class="masonryToolsIcon" aria-hidden="true">⚙</span><b>${escapeHTML(stone.name)}</b>
+    <span class="masonryToolsChevron" aria-hidden="true">${state.toolsOpen?'▴':'▾'}</span></button>
+   <div class="masonryStoneControls" ${state.toolsOpen?'':'hidden'}>
+    <div class="masonryCompactOptions">
+     <label>Шаг<select data-step aria-label="Шаг перемещения"><option value=".005">5 мм</option><option value=".01">1 см</option>
+      <option value=".025">2,5 см</option><option value=".05">5 см</option></select></label>
+     <label>Ось<select data-axis aria-label="Ось перемещения"><option value="free">Свободно</option>
+      <option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select></label>
+    </div>
+    <div class="masonryCompactHeading">Положение, м</div>
+    <div class="masonryCompactAxes">${['X','Y','Z'].map((axis,i)=>`<div class="masonryCompactAxisRow">
+      <label><span>${axis}</span><input data-pos="${i}" aria-label="Координата ${axis}" type="number" step=".005" value="${fmt(stone.position[i])}"></label>
+      <button type="button" data-nudge="${axis.toLowerCase()}:-1" aria-label="Переместить по ${axis} назад">−</button>
+      <button type="button" data-nudge="${axis.toLowerCase()}:1" aria-label="Переместить по ${axis} вперёд">＋</button></div>`).join('')}</div>
+    <div class="masonryCompactHeading">Поворот · 15°</div>
+    <div class="masonryCompactAxes">${['X','Y','Z'].map(axis=>`<div class="masonryCompactAxisRow masonryCompactRotation">
+      <span>${axis}</span><button type="button" data-rotate="${axis.toLowerCase()}:-1" aria-label="Повернуть вокруг ${axis} назад">↶</button>
+      <button type="button" data-rotate="${axis.toLowerCase()}:1" aria-label="Повернуть вокруг ${axis} вперёд">↷</button></div>`).join('')}</div>
+    <div class="masonryCompactHeading">Масштаб</div>
+    <div class="masonryCompactScale">${['X','Y','Z'].map((axis,i)=>`<label><span>${axis}</span>
+     <input data-scale="${i}" aria-label="Масштаб ${axis}" type="number" min=".011" max="20" step=".05" value="${fmt(stone.scale[i])}"></label>`).join('')}</div>
+   </div>`;
   area.querySelector('[data-step]').value=state.stepChoice;
   area.querySelector('[data-axis]').value=state.axisChoice;
  }
