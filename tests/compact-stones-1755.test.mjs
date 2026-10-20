@@ -61,7 +61,10 @@ test('old model versions and server validation preserved',()=>{
  const migration=readFileSync(fromRoot('supabase/migrations/20261017000000_tower_compact_stones_1755.sql'),'utf8');
  assert.ok(scene.includes("if(isGateStone(block.sectionId)&&block.geometryVersion===GATE_STONE_VERSION)"));
  assert.ok(scene.includes("if(isCompactStone(block.sectionId)&&block.geometryVersion===COMPACT_STONE_VERSION)"));
- assert.ok(editor.includes('isGateStone(s.type)?COMPACT_STONE_VERSION'));
+ // Archived compact meshes stay loadable in prefab-scene, but are no longer buildable.
+ assert.ok(editor.includes('APPROVED_PREFAB_VERSION'));
+ assert.ok(editor.includes('catalog.innerHTML=BUILDABLE_PREFAB_TYPES.map'));
+ assert.ok(!editor.includes('isGateStone(s.type)?COMPACT_STONE_VERSION'));
  for(const version of ['17.5.0','17.5.1','17.5.2','17.5.3','17.5.4','17.5.5','17.6-window.1','17.6-door.1','17.6-gate.1'])
   assert.ok(migration.includes(version),version);
 });
