@@ -24,11 +24,11 @@ button[aria-pressed=true]{background:#d3d9bc;color:#263125;border-color:#e4eccc;
 <canvas id="viewport" aria-label="Интерактивная трёхмерная сцена ворот"></canvas>
 <div class="panel">
  <header>AlanTil · Ворота — геометрия кладки</header>
- <p class="sub">Сравнение действующих ворот и новой тестовой модели. Двигая мышью или пальцем, поворачивайте сцену; колёсиком или жестом масштабируйте.</p>
+ <p class="sub">Сравнение прежней версии v8 и установленной в игре модели v9. Двигая мышью или пальцем, поворачивайте сцену; колёсиком или жестом масштабируйте.</p>
  <div class="controls">
   <button type="button" data-view="compare" aria-pressed="true">Сравнить</button>
-  <button type="button" data-view="old" aria-pressed="false">Текущие</button>
-  <button type="button" data-view="new" aria-pressed="false">Новые v9</button>
+  <button type="button" data-view="old" aria-pressed="false">Предыдущие v8</button>
+  <button type="button" data-view="new" aria-pressed="false">Игровые v9</button>
  </div>
  <div class="toggles">
   <label><input id="bounds" type="checkbox" checked> Границы 18×10×2</label>
@@ -36,8 +36,8 @@ button[aria-pressed=true]{background:#d3d9bc;color:#263125;border-color:#e4eccc;
  </div>
  <div class="status" id="status" role="status">Загрузка настоящих GLB-моделей…</div>
 </div>
-<div class="labels"><span><span class="dot"></span>Текущая кладка</span><span><span class="dot new"></span>Новая тестовая v9</span></div>
-<div class="info" id="info">Размер игровой зоны: <strong>4,5 × 2,5 × 0,5 м</strong><div class="warning">Это согласовательный просмотр, игра ещё не изменена.</div></div>
+<div class="labels"><span><span class="dot"></span>Предыдущая версия v8</span><span><span class="dot new"></span>Актуальная игровая v9</span></div>
+<div class="info" id="info">Размер игровой зоны: <strong>4,5 × 2,5 × 0,5 м</strong><div class="warning">Сравнение предыдущей v8 и действующей игровой версии v9.</div></div>
 <script type="module">
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
@@ -141,7 +141,7 @@ async function attachNeighbor(root){
   info.innerHTML='<strong>Новая кладка:</strong> '+metrics.stones.totalRockMeshes+' камней ('+
    metrics.stones.originalRockMeshes+' исходных + '+metrics.stones.edgeRubbleInstances+
    ' камней для боковых стыков).<p>Границы камней: ±2,25 м по X, ±0,25 м по Z; высота 2,5 м.</p>'+
-   '<span class="warning">Предпросмотр для утверждения. Игровой конструктор не изменён.</span>';
+   '<span class="warning">Версия v9 утверждена и подключена к игровому конструктору.</span>';
   document.body.dataset.gateReview='ready';
  }catch(error){
   status.textContent='Ошибка загрузки 3D-модели: '+(error?.message||error);

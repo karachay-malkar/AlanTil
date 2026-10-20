@@ -41,14 +41,14 @@ test('v9 candidate is separately selectable and persists independently of old ga
  r.architectures.push({id:'v9',asset:'gate-v9',...transform()});
  assert.equal(validateRecipe(r,manifest),r);
  const assets=source('src/features/masonry/architecture-assets.js');
- assert.match(assets,/gate-v9.*gate-18x10x2-v9-candidate\.glb/);
+ assert.match(assets,/gate-v9.*gate-18x10x2-v9\.glb/);
  assert.match(assets,/id==='gate'\|\|id==='gate-v9'/);
  const editor=source('src/features/masonry/index.js');
  assert.match(editor,/case 'gate-v9'/);
  assert.match(editor,/async function gateV9Template\(/);
  assert.match(editor,/stones:\[\],architectures:\[gate\]/);
  assert.match(editor,/cells=\[18,10,2\]/);
- assert.ok(!source('src/features/tower/prefab-scene.js').includes('gate-18x10x2-v9-candidate.glb'));
+ assert.ok(!source('src/features/tower/prefab-scene.js').includes('gate-editor-stretch.mjs'));
 });
 test('all architectural variants reference existing original repo GLB files',()=>{
  const assets=source('src/features/masonry/architecture-assets.js');

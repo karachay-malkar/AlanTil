@@ -28,7 +28,7 @@ test('gate joins adjacent masonry',()=>{
  const res=resolvePrefabJoints([gate(),neighbor],manifest);
  assert.equal(res.ok,true);assert.ok(res.joints.length>0);
 });
-test('approved full v7 GLB is present and binary complete',{skip:!existsSync(new URL(GATE_PREFAB_FILE.slice(1),root))},()=>{
+test('approved full v9 GLB is present and binary complete',{skip:!existsSync(new URL(GATE_PREFAB_FILE.slice(1),root))},()=>{
  const file=new URL(GATE_PREFAB_FILE.slice(1),root);
  assert.ok(existsSync(file),'Gate model missing: approved GLB must be uploaded before release');
  const glb=readFileSync(file);

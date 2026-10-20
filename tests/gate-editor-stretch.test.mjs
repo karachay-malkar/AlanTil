@@ -70,7 +70,7 @@ test('mismatched GLB mesh ordering is rejected before accidental part editing',(
 test('legacy and new placements remain the same section and grid footprint',()=>{
  assert.equal(GATE_PREFAB_ID,'gate-18x10x2');
  assert.equal(GATE_PREFAB_VERSION,'17.6-gate.1');
- assert.equal(GATE_PREFAB_FILE,'/assets/tower/prefabs/architectural/gate-18x10x2-v7.glb');
+ assert.equal(GATE_PREFAB_FILE,'/assets/tower/prefabs/architectural/gate-18x10x2-v9.glb');
  assert.deepEqual(GATE_PREFAB_SPEC.size,[18,10,2]);
  assert.deepEqual(PREFAB_TYPES.find(x=>x.id===GATE_PREFAB_ID).size,[18,10,2]);
  const block={id:'gate-test',type:'masonry_section',sectionId:GATE_PREFAB_ID,variant:0,rotation:0,x:0,y:0,z:0,geometryVersion:GATE_PREFAB_VERSION};
@@ -79,21 +79,22 @@ test('legacy and new placements remain the same section and grid footprint',()=>
  assert.equal(validatePrefabPlacement([],{...block,rotation:1}).ok,true);
 });
 
-test('tower rendering applies the adjustment to both previews and persisted gates',()=>{
+test('tower rendering loads pre-fitted v9 without applying archived v8 stretch',()=>{
  const scene=read('src/features/tower/prefab-scene.js').toString();
  const mount=read('src/features/tower/index.js').toString();
  const router=read('src/app/router.js').toString();
  const gateBlock=scene.slice(scene.indexOf('if(block.sectionId===GATE_PREFAB_ID)'),scene.indexOf('if(block.sectionId===DOOR_PREFAB_ID)'));
  assert.match(gateBlock,/applyGateSurfaces\(gate,door.scene,stoneMaterial\)/);
- assert.match(gateBlock,/applyGateEditorStretch\(gate\)/);
+ assert.doesNotMatch(gateBlock,/applyGateEditorStretch\(gate\)/);
+ assert.match(gateBlock,/already contains the rock-edge fitting/);
  assert.match(gateBlock,/gate.position.y\+=targetBottom-bounds.min.y/);
  assert.doesNotMatch(gateBlock,/gate.position.x|gate.position.z/);
  assert.match(scene,/const model=await getPrefab\(block\)/);
  assert.match(mount,/GATE_PREFAB_VERSION/);
- assert.match(router,/TOWER_ASSET_VERSION = "17\.5\.8-gate-editor-stretch\.v8\.1"/);
+ assert.match(router,/TOWER_ASSET_VERSION = "17\.5\.8-gate-v9-rockfit\.1"/);
 });
 
-test('original gate GLB still exists and can address all exported mesh indices',()=>{
+test('current gate v9 GLB is complete and contains the historic mesh index range',()=>{
  const glb=read(GATE_PREFAB_FILE.slice(1));
  assert.equal(glb.subarray(0,4).toString('ascii'),'glTF');
  assert.equal(glb.readUInt32LE(8),glb.length);

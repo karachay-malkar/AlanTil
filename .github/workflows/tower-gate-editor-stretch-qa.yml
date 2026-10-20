@@ -6,6 +6,10 @@ on:
       - 'assets/tower/prefabs/architectural/gate-18x10x2-editor-stretch-v8.json'
       - 'src/features/tower/gate-editor-stretch.mjs'
       - 'src/features/tower/prefab-scene.js'
+      - 'packages/tower-game/gate-prefab.mjs'
+      - 'assets/tower/prefabs/architectural/gate-18x10x2-v9.glb'
+      - 'src/features/masonry/architecture-assets.js'
+      - 'tests/gate-v9-integration.test.mjs'
       - 'src/features/tower/index.js'
       - 'src/app/router.js'
       - 'tests/gate-editor-stretch.test.mjs'
@@ -25,9 +29,11 @@ jobs:
       - name: Module syntax
         run: |
           node --check src/features/tower/gate-editor-stretch.mjs
+          node --check packages/tower-game/gate-prefab.mjs
+          node --check src/features/masonry/architecture-assets.js
           node --check src/features/tower/prefab-scene.js
           node --check src/features/tower/index.js
           node --check src/app/router.js
       - name: Authored export, GLB hierarchy, game placement and historical saves
         run: |
-          node --test tests/gate-editor-stretch.test.mjs tests/gate-prefab.test.mjs tests/tower-prefab-placement-17-4.test.mjs
+          node --test tests/gate-editor-stretch.test.mjs tests/gate-prefab.test.mjs tests/gate-v9-integration.test.mjs tests/tower-prefab-placement-17-4.test.mjs tests/rock-surface-ktx2.test.mjs

@@ -12,7 +12,6 @@ import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,GATE_PREFAB_SPEC} from '../../../packages/tower-game/gate-prefab.mjs';
 import {applyGateSurfaces} from './gate-surface.js';
-import {applyGateEditorStretch} from './gate-editor-stretch.mjs?v=gate-editor-stretch-v8.1';
 import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
 import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
 import {COMPACT_STONE_VERSION,isCompactStone} from '../../../packages/tower-game/compact-stone-prefab.mjs';
@@ -92,9 +91,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const [source,door]=await Promise.all([loaded.get(file),loaded.get(reference)]);
    const gate=source.scene.clone(true);
    applyGateSurfaces(gate,door.scene,stoneMaterial);
-   // Reproduce the approved editor X-axis stretch on this cloned GLB.
-   // Do not transfer the editor staging position into tower world space.
-   applyGateEditorStretch(gate);
+   // The approved v9 GLB already contains the rock-edge fitting.
+   // Do not reapply the old editor stretch or modify wooden leaves.
    // Center the authored geometry inside its logical 2.5 m-high section.
    // Use a nested wrapper so setPosition() never destroys the offset.
    gate.updateMatrixWorld(true);
