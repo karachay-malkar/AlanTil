@@ -5,7 +5,9 @@ import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 export const LIBRARY_URL='/assets/tower/prefabs/common100/common-100.glb';
 export const MANIFEST_URL='/assets/tower/prefabs/common100/common-100.json';
 export const CELL_METERS=.25;
-export const RECIPE_VERSION='common100-manual-1';
+export const RECIPE_VERSION='common100-mixed-2';
+export const LEGACY_RECIPE_VERSION='common100-manual-1';
+export const ARCHITECTURE_IDS=Object.freeze(['gate','door','window','timber']);
 export const CATEGORIES=Object.freeze([
  {key:'large',label:'Крупные',count:10},
  {key:'main',label:'Основные',count:72},
@@ -16,21 +18,44 @@ const finite=(v)=>typeof v==='number'&&Number.isFinite(v);
 const validVec=(v,n)=>Array.isArray(v)&&v.length===n&&v.every(finite);
 export const defaultCells=()=>[3,3,3];
 export function makeRecipe(cells=defaultCells()){
- return {version:RECIPE_VERSION,libraryVersion:'17.7-common100.10',librarySha256:'',cellMeters:CELL_METERS,cells:[...cells],stones:[]};
+ return {version:RECIPE_VERSION,libraryVersion:'17.7-common100.10',librarySha256:'',cellMeters:CELL_METERS,cells:[...cells],stones:[],architectures:[]};
 }
 export function validateRecipe(recipe,manifest){
- if(!recipe||recipe.version!==RECIPE_VERSION||recipe.cellMeters!==CELL_METERS)throw new Error('Несовместимый формат рецепта');
+ if(!recipe||![RECIPE_VERSION,LEGACY_RECIPE_VERSION].includes(recipe.version)||recipe.cellMeters!==CELL_METERS)throw new Error('Несовместимый формат рецепта');
  if(!validVec(recipe.cells,3)||recipe.cells.some(v=>!Number.isInteger(v)||v<1||v>32))throw new Error('Неверные габариты секции');
  if(recipe.libraryVersion!==manifest.version||recipe.librarySha256!==manifest.glbSHA256)throw new Error('Версия библиотеки Common 100 не совпадает');
  if(!Array.isArray(recipe.stones)||recipe.stones.length>1500)throw new Error('Недопустимое количество камней');
  const allowed=new Set(manifest.models.map(m=>m.name));
  const ids=new Set();
+ const validTransform=(item)=>validVec(item.position,3)&&item.position.every(v=>Math.abs(v)<=200)&&
+  validVec(item.quaternion,4)&&item.quaternion.reduce((s,v)=>s+v*v,0)>.001&&
+  validVec(item.scale,3)&&item.scale.every(v=>v>.01&&v<=20);
  for(const stone of recipe.stones){
   if(!stone||!allowed.has(stone.name)||typeof stone.id!=='string'||!stone.id||ids.has(stone.id))throw new Error('Неизвестная модель либо повтор ID');
   ids.add(stone.id);
   if(!validVec(stone.position,3)||stone.position.some(x=>Math.abs(x)>200))throw new Error('Неверные координаты камня');
   if(!validVec(stone.quaternion,4)||stone.quaternion.reduce((s,x)=>s+x*x,0)<.001)throw new Error('Неверный поворот камня');
   if(!validVec(stone.scale,3)||stone.scale.some(x=>x<=.01||x>20))throw new Error('Неверный масштаб камня');
+ }
+ if(recipe.version===LEGACY_RECIPE_VERSION){
+  if(recipe.architectures?.length)throw new Error('Старый формат не поддерживает архитектурные детали');
+  return recipe;
+ }
+ if(!Array.isArray(recipe.architectures)||recipe.architectures.length>40)throw new Error('Недопустимое количество архитектурных элементов');
+ for(const item of recipe.architectures){
+  if(!item||typeof item.id!=='string'||!item.id||ids.has(item.id)||!ARCHITECTURE_IDS.includes(item.asset))throw new Error('Неизвестный архитектурный элемент или повтор ID');
+  ids.add(item.id);
+  if(!validTransform(item))throw new Error('Неверная трансформация архитектурного элемента');
+  if(item.component!==undefined&&item.component!==null&&(!Number.isInteger(item.component)||item.component<0||item.component>2000))throw new Error('Неверная деталь GLB');
+  if(item.hiddenParts!==undefined){
+   if(!Array.isArray(item.hiddenParts)||item.hiddenParts.length>2000||item.hiddenParts.some(v=>!Number.isInteger(v)||v<0||v>2000)||new Set(item.hiddenParts).size!==item.hiddenParts.length)throw new Error('Некорректный список скрытых деталей');
+  }
+  if(item.parts!==undefined){
+   if(!item.parts||typeof item.parts!=='object'||Array.isArray(item.parts)||Object.keys(item.parts).length>2000)throw new Error('Неверный набор изменений деталей');
+   for(const [key,part] of Object.entries(item.parts)){
+    if(!/^(0|[1-9]\d*)$/.test(key)||Number(key)>2000||!validTransform(part))throw new Error('Некорректная трансформация детали '+key);
+   }
+  }
  }
  return recipe;
 }

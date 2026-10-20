@@ -1,7 +1,7 @@
 /** Server-backed drafts; no edits to tower_game gameplay tables. */
 import {getSupabaseClient} from '../../shared/auth/supabase-client.js?v=16.8.0.3';
 import {getCurrentAuthState} from '../../shared/auth/auth-service.js?v=16.8.0.3';
-import {validateRecipe} from './library.js';
+import {validateRecipe} from './library.js?v=17.2-architecture.1';
 
 const TABLE='masonry_editor_sections';
 const userId=()=>{

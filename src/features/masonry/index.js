@@ -2,11 +2,13 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
-import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
-import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.3';
+import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.2-architecture.1';
+import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.2-architecture.1';
+import {buildGateWings} from './gate-wings.mjs';
+import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.4';
 import {stagingPosition} from './staging-position.mjs';
 import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.3';
-import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js';
+import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.2-architecture.1';
 
 let active=null;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -20,7 +22,7 @@ const titleFor=cells=>`Секция ${cells.join('×')}`;
 export async function mount(context){
  const controller=new AbortController(),signal=controller.signal;
  const state={context,controller,scene:null,library:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
-  status:'draft',selected:null,axisChoice:'free',category:'large',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
+  status:'draft',selected:null,partsMode:false,axisChoice:'free',category:'large',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
  active=state;
  if(!hasActivityAccess()||!getCurrentAuthState()?.user?.id){
   context.router.replace('practice.home');return;
@@ -65,6 +67,8 @@ export async function mount(context){
  </div>
  <div class="masonryEditorPanel">
   <div class="masonryActions">
+    <button type="button" data-action="gate-template" title="Открыть редактируемую кладку ворот">Ворота + кладка</button>
+    <button type="button" data-action="wings" title="Добавить боковую кладку к воротам" hidden>Дополнить по бокам</button>
    <button type="button" data-action="duplicate" data-requires-selection title="Дублировать выбранный камень" aria-label="Дублировать камень" hidden>⧉</button>
    <button type="button" data-action="delete" data-requires-selection title="Удалить выбранный камень" aria-label="Удалить камень" hidden>⌫</button>
    <button type="button" data-action="catalog">Каталог ▾</button>
@@ -78,7 +82,7 @@ export async function mount(context){
  </div></div></section>`;
  const $=sel=>root.querySelector(sel);
  const toast=(value,isError=false)=>{const el=$('[data-status]');if(el){el.textContent=value;el.dataset.error=String(isError);}};
- const refreshCount=()=>{const el=$('[data-count]');if(el)el.textContent=`${state.recipe.stones.length} камней · ${state.recipe.cells.join('×')} ячеек · ${state.dirty?'Черновик изменён':'Сохранено'}`;};
+ const refreshCount=()=>{const el=$('[data-count]');if(el)el.textContent=`${state.recipe.stones.length} камней · ${(state.recipe.architectures||[]).length} конструкций · ${state.recipe.cells.join('×')} ячеек · ${state.dirty?'Черновик изменён':'Сохранено'}`;};
  const commitBefore=()=>{
   state.history.push(copy(state.recipe));if(state.history.length>80)state.history.shift();
   state.future=[];
@@ -88,10 +92,28 @@ export async function mount(context){
   clearTimeout(state.timer);
   state.timer=setTimeout(()=>saveLocalScratch({id:state.id,sourceId:state.sourceId,title:state.title,status:state.status,recipe:state.recipe}),650);
  };
- const syncScene=()=>{state.scene?.sync(state.recipe.stones);state.scene?.select(state.selected);refreshCount();renderSelected();};
+ const syncScene=()=>{state.scene?.sync(state.recipe.stones,state.recipe.architectures||[]);state.scene?.select(state.selected);refreshCount();renderSelected();};
+ const upgradeRecipe=()=>{if(state.recipe.version!==RECIPE_VERSION){state.recipe.version=RECIPE_VERSION;state.recipe.architectures=[];}};
+ const selection=()=>{
+  const stone=state.recipe.stones.find(x=>x.id===state.selected);
+  if(stone)return {record:stone,transform:stone,name:stone.name,kind:'stone'};
+  const [id,part]=String(state.selected||'').split('::');
+  const record=state.recipe.architectures?.find(a=>a.id===id);
+  if(!record)return null;
+  const partName=part===undefined?'':state.scene?.getSelectionName(state.selected)||'Деталь';
+  const transform=part===undefined?record:state.scene?.getTransform(state.selected);
+  return transform?{record,part,transform,name:(architectureById(record.asset)?.title||record.asset)+(partName?' / '+partName:''),kind:'architecture'}:null;
+ };
+ function updateRecord(id,transform){
+  const stone=state.recipe.stones.find(s=>s.id===id);
+  if(stone){Object.assign(stone,transform);return;}
+  const [parent,index]=String(id).split('::');
+  const item=state.recipe.architectures?.find(a=>a.id===parent);if(!item)return;
+  if(index!==undefined){item.parts||={};item.parts[index]=copy(transform);}
+  else Object.assign(item,transform);
+ }
  const updateStone=(id,transform,final=false)=>{
-  const stone=state.recipe.stones.find(x=>x.id===id);if(!stone)return;
-  stone.position=[...transform.position];stone.quaternion=[...transform.quaternion];stone.scale=[...transform.scale];
+  updateRecord(id,transform);
   scheduleScratch();if(final)renderSelected();else renderInputs();
  };
  const putStone=(stone)=>{
@@ -114,45 +136,55 @@ export async function mount(context){
   toast(name+' добавлен справа от куба — переместите его в кладку');
  }
  function renderInputs(){
-  const stone=state.recipe.stones.find(x=>x.id===state.selected);if(!stone)return;
+  const active=selection();if(!active)return;
   for(let i=0;i<3;i++){
-   const s=$(`[data-scale="${i}"]`);if(s&&document.activeElement!==s)s.value=fmt(stone.scale[i]);
+   const el=$(`[data-scale="${i}"]`);if(el&&document.activeElement!==el)el.value=fmt(active.transform.scale[i]);
   }
  }
-
  function renderSelected(){
   const area=$('[data-selected]');if(!area)return;
-  const stone=state.recipe.stones.find(x=>x.id===state.selected);
-  area.hidden=!stone;
-  root.querySelectorAll('[data-requires-selection]').forEach(button=>{button.hidden=!stone;});
-  if(!stone){area.replaceChildren();return;}
-  area.innerHTML=`<div class="masonryInspectorHeader"><span class="masonryToolsIcon" aria-hidden="true">⚙</span><b>${escapeHTML(stone.name)}</b></div>
+  const active=selection();
+  area.hidden=!active;
+  root.querySelectorAll('[data-requires-selection]').forEach(b=>{b.hidden=!active;});
+  const gate=state.recipe.architectures?.some(a=>a.asset==='gate');
+  const wings=$('[data-action="wings"]');
+  if(wings)wings.hidden=!gate||state.recipe.stones.some(st=>st.source==='gate-wing');
+  if(!active){area.replaceChildren();return;}
+  const transform=active.transform;
+  const isArch=active.kind==='architecture';
+  area.innerHTML=`<div class="masonryInspectorHeader"><span class="masonryToolsIcon" aria-hidden="true">⚙</span><b>${escapeHTML(active.name)}</b></div>
    <div class="masonryStoneControls">
     <label class="masonryAxisChoice"><span>Ось перемещения</span>
      <select data-axis aria-label="Ось перемещения"><option value="free">Свободно</option>
       <option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select></label>
     <div class="masonryCompactHeading"><span>Масштаб</span><span>Поворот · 15°</span></div>
     <div class="masonryCompactAxes">${['X','Y','Z'].map((axis,i)=>`<div class="masonryCompactAxisRow">
-      <label><span>${axis}</span><input data-scale="${i}" aria-label="Масштаб ${axis}" type="number" min=".011" max="20" step=".05" value="${fmt(stone.scale[i])}"></label>
+      <label><span>${axis}</span><input data-scale="${i}" aria-label="Масштаб ${axis}" type="number" min=".011" max="20" step=".05" value="${fmt(transform.scale[i])}"></label>
       <button type="button" data-rotate="${axis.toLowerCase()}:-1" aria-label="Повернуть вокруг ${axis} назад">↶</button>
       <button type="button" data-rotate="${axis.toLowerCase()}:1" aria-label="Повернуть вокруг ${axis} вперёд">↷</button></div>`).join('')}</div>
+    ${isArch?`<div class="masonryPartActions">
+       <button type="button" data-action="parts" aria-pressed="${state.partsMode}">${state.partsMode?'Детали: выбор включён':'Выбрать детали'}</button>
+       ${active.part!==undefined?'<button type="button" data-action="parent">Вся конструкция</button>':''}
+       </div>`:''}
    </div>`;
   area.querySelector('[data-axis]').value=state.axisChoice;
  }
  function editSelected(type,index,value){
-  const stone=state.recipe.stones.find(x=>x.id===state.selected);
-  if(!stone||!Number.isFinite(value))return false;
+  const active=selection();if(!active||!Number.isFinite(value))return false;
   if(type==='position'&&Math.abs(value)>200)return false;
   if(type==='scale'&&(value<=.01||value>20))return false;
-  commitBefore();stone[type][index]=num(value);syncScene();scheduleScratch();return true;
+  commitBefore();const next=copy(active.transform);next[type][index]=num(value);
+  updateRecord(state.selected,next);syncScene();scheduleScratch();return true;
  }
  function rotate(axis,direction){
-  const stone=state.recipe.stones.find(x=>x.id===state.selected);if(!stone)return;
+  const active=selection();if(!active)return;
   commitBefore();
   const v=new THREE.Vector3(axis==='x'?1:0,axis==='y'?1:0,axis==='z'?1:0);
-  const q=new THREE.Quaternion().fromArray(stone.quaternion);
+  const q=new THREE.Quaternion().fromArray(active.transform.quaternion);
   q.premultiply(new THREE.Quaternion().setFromAxisAngle(v,direction*Math.PI/12));
-  stone.quaternion=q.normalize().toArray().map(x=>+x.toFixed(8));
+  const transform=copy(active.transform);
+  transform.quaternion=q.normalize().toArray().map(x=>+x.toFixed(8));
+  updateRecord(state.selected,transform);
   syncScene();scheduleScratch();
  }
  const presetControl=$('[data-preset]');
@@ -164,18 +196,20 @@ export async function mount(context){
   const key=cells.join(',');presetControl.value=PRESETS.some(p=>p.join(',')===key)?key:'custom';
   const controls=$('[data-custom]');controls.hidden=presetControl.value!=='custom';
   cells.forEach((v,i)=>{const input=$(`[data-cell="${i}"]`);if(input)input.value=v;});
-  scheduleScratch();toast('Габариты изменены; камни остались на своих местах');
+  scheduleScratch();toast('Габариты изменены; элементы остались на своих местах');
  }
- function setRecipe(recipe,{id=null,sourceId=null,title=null,status='draft',dirty=false}={}){
+ async function setRecipe(recipe,{id=null,sourceId=null,title=null,status='draft',dirty=false}={}){
   if(!state.library)return;
   validateRecipe(recipe,state.library.manifest);
+  await state.scene?.ensureAssets(recipe.architectures||[]);
+  if(state.disposed)return;
   state.recipe=copy(recipe);state.id=id;state.sourceId=sourceId;state.title=title||titleFor(recipe.cells);state.status=status;
-  state.selected=null;state.history=[];state.future=[];state.dirty=dirty;state.mutationRevision+=1;
+  state.selected=null;state.partsMode=false;state.scene?.setPartMode(false);state.history=[];state.future=[];state.dirty=dirty;state.mutationRevision+=1;
   $('[data-title]').value=state.title;
   const key=recipe.cells.join(',');
   presetControl.value=PRESETS.some(c=>c.join(',')===key)?key:'custom';$('[data-custom]').hidden=presetControl.value!=='custom';
   recipe.cells.forEach((v,i)=>{$(`[data-cell="${i}"]`).value=v;});
-  state.scene?.setBounds(recipe.cells);state.scene?.sync(recipe.stones);state.scene?.resetCamera(recipe.cells);
+  state.scene?.setBounds(recipe.cells);state.scene?.sync(recipe.stones,recipe.architectures||[]);state.scene?.resetCamera(recipe.cells);
   renderSelected();refreshCount();
  }
  function confirmDiscard(){return !state.dirty||window.confirm('Есть изменения без серверного сохранения. Продолжить? Авточерновик останется в этом браузере.');}
@@ -216,7 +250,8 @@ export async function mount(context){
  function undo(){
   if(!state.history.length)return;
   state.future.push(copy(state.recipe));state.recipe=state.history.pop();
-  if(state.selected&&!state.recipe.stones.some(s=>s.id===state.selected))state.selected=null;
+  if(state.selected&&!state.recipe.stones.some(s=>s.id===state.selected)&&
+   !(state.recipe.architectures||[]).some(s=>state.selected===s.id||state.selected.startsWith(s.id+'::')))state.selected=null;
   syncScene();scheduleScratch();
  }
  function redo(){
@@ -225,18 +260,17 @@ export async function mount(context){
   syncScene();scheduleScratch();
  }
  function renderCategories(){
-  $('[data-categories]').innerHTML=CATEGORIES.map(c=>`<button type="button" data-category="${c.key}" aria-pressed="${c.key===state.category}">${c.label} · ${c.count}</button>`).join('');
+  $('[data-categories]').innerHTML=[...CATEGORIES,{key:'architecture',label:'Архитектура',count:ARCHITECTURE.length}].map(c=>`<button type="button" data-category="${c.key}" aria-pressed="${c.key===state.category}">${c.label} · ${c.count}</button>`).join('');
  }
  function renderCatalog(){
   if(!state.library)return;
   renderCategories();
-  const items=state.library.manifest.models.filter(m=>m.category===state.category);
+  const items=state.category==='architecture'?ARCHITECTURE:state.library.manifest.models.filter(m=>m.category===state.category);
   const PAGE=16,pages=Math.max(1,Math.ceil(items.length/PAGE));state.page=Math.min(state.page,pages-1);
   const visible=items.slice(state.page*PAGE,(state.page+1)*PAGE);
-  $('[data-stones]').innerHTML=visible.map(m=>`<button type="button" class="masonryStone" data-add-stone="${escapeHTML(m.name)}" aria-label="Добавить ${escapeHTML(m.name)}">
-   <img loading="lazy" data-thumb="${escapeHTML(m.name)}" alt="" width="76" height="57">
-   <span>${escapeHTML(m.name)}<small>${Array.isArray(m.sizeMeters)?m.sizeMeters.map(v=>Math.round(v*100)).join('×')+' см':''}</small></span>
-   <span class="masonryPlus">＋</span></button>`).join('');
+  $('[data-stones]').innerHTML=visible.map(m=>m.id?
+    `<button type="button" class="masonryStone" data-add-architecture="${escapeHTML(m.id)}" aria-label="Добавить ${escapeHTML(m.title)}"><span class="masonryArchPreview">3D</span><span>${escapeHTML(m.title)}<small>${m.cells.map(x=>x*.25).join('×')} м · исходный GLB</small></span><span class="masonryPlus">＋</span></button>`:
+    `<button type="button" class="masonryStone" data-add-stone="${escapeHTML(m.name)}" aria-label="Добавить ${escapeHTML(m.name)}"><img loading="lazy" data-thumb="${escapeHTML(m.name)}" alt="" width="76" height="57"><span>${escapeHTML(m.name)}<small>${Array.isArray(m.sizeMeters)?m.sizeMeters.map(v=>Math.round(v*100)).join('×')+' см':''}</small></span><span class="masonryPlus">＋</span></button>`).join('');
   $('[data-pages]').textContent=`${state.page+1} / ${pages}`;
   for(const img of root.querySelectorAll('[data-thumb]')){
    // Render real GLB geometry, never an invented icon in place of a rock.
@@ -244,29 +278,93 @@ export async function mount(context){
    if(url)img.src=url;
   }
  }
+ function makeArchitecture(asset,position=[0,0,0]){
+  return {id:uuid(),asset,position:[...position],quaternion:[0,0,0,1],scale:[1,1,1],parts:{}};
+ }
+ async function addArchitecture(asset){
+  if(!architectureById(asset))return;
+  await state.scene.ensureAssets([{asset}]);
+  if(state.disposed)return;
+  const entry=makeArchitecture(asset,[state.recipe.cells[0]*CELL_METERS*.5+2.5,0,0]);
+  commitBefore();upgradeRecipe();
+  state.recipe.architectures.push(entry);state.selected=entry.id;state.partsMode=false;state.scene.setPartMode(false);
+  syncScene();scheduleScratch();state.scene.cameraFitOnStones(state.recipe.cells);
+  toast(architectureById(asset).title+' добавлен справа от секции');
+ }
+ async function gateTemplate(){
+  if(!confirmDiscard())return;
+  await state.scene.ensureAssets([{asset:'gate'}]);
+  if(state.disposed)return;
+  const gate=makeArchitecture('gate');
+  const width=state.scene.getAssetSize('gate')?.[0]||4.5;
+  const filling=buildGateWings({manifest:state.library.manifest,dimensionsFor,gateWidth:width});
+  const cells=[Math.min(32,Math.max(18,Math.ceil(filling.fullWidth/CELL_METERS))),10,2];
+  const recipe={...makeRecipe(cells),libraryVersion:state.library.manifest.version,librarySha256:state.library.manifest.glbSHA256,
+   stones:filling.stones,architectures:[gate]};
+  await setRecipe(recipe,{title:'Ворота — боковая кладка',dirty:true});
+  state.selected=gate.id;syncScene();scheduleScratch();
+  state.scene.cameraFitOnStones(cells);
+  await refreshList();
+  toast('Ворота загружены · боковые участки добавлены, кладку можно доработать вручную');
+ }
+ function addWings(){
+  const gate=state.recipe.architectures?.find(item=>item.asset==='gate');
+  if(!gate)return;
+  try{
+   const width=(state.scene.getAssetSize('gate')?.[0]||4.5)*gate.scale[0];
+   const result=buildGateWings({manifest:state.library.manifest,dimensionsFor,gateWidth:width,centerX:gate.position[0],existing:state.recipe.stones});
+   commitBefore();state.recipe.stones.push(...result.stones);
+   const widthCells=Math.min(32,Math.ceil(result.fullWidth/CELL_METERS));
+   if(widthCells>state.recipe.cells[0]){state.recipe.cells[0]=widthCells;
+    state.scene.setBounds(state.recipe.cells);$('[data-preset]').value='custom';$('[data-custom]').hidden=false;
+    state.recipe.cells.forEach((n,i)=>{$(`[data-cell="${i}"]`).value=n;});}
+   syncScene();scheduleScratch();state.scene.cameraFitOnStones(state.recipe.cells);
+   toast('Добавлены камни по обеим сторонам ворот; проверьте сопряжения');
+  }catch(error){toast(error.message,true);}
+ }
+
  const handleClick=async e=>{
   if(state.disposed||!state.library)return;
   const category=e.target.closest('[data-category]');
   if(category){state.category=category.dataset.category;state.page=0;renderCatalog();return;}
   const add=e.target.closest('[data-add-stone]');if(add){addStone(add.dataset.addStone);return;}
+  const arch=e.target.closest('[data-add-architecture]');if(arch){try{await addArchitecture(arch.dataset.addArchitecture);}catch(error){toast(error.message,true);}return;}
   const rotateButton=e.target.closest('[data-rotate]');if(rotateButton){const [a,d]=rotateButton.dataset.rotate.split(':');rotate(a,Number(d));return;}
   const action=e.target.closest('[data-action]')?.dataset.action;
   if(!action)return;
   switch(action){
    case 'new':{
     if(!confirmDiscard())return;
-    clearLocalScratch();setRecipe({...makeRecipe(state.recipe.cells),libraryVersion:state.library.manifest.version,librarySha256:state.library.manifest.glbSHA256});
+    clearLocalScratch();await setRecipe({...makeRecipe(state.recipe.cells),libraryVersion:state.library.manifest.version,librarySha256:state.library.manifest.glbSHA256});
     await refreshList();toast('Новая секция');break;
    }
    case 'save':await save('draft');break;
    case 'ready':await save('ready');break;
    case 'undo':undo();break;
+   case 'gate-template':try{await gateTemplate();}catch(error){toast('Ошибка ворот: '+error.message,true);}break;
+   case 'wings':addWings();break;
+   case 'parts':state.partsMode=!state.partsMode;state.scene.setPartMode(state.partsMode);renderSelected();break;
+   case 'parent':state.selected=state.selected.split('::')[0];state.scene.select(state.selected);renderSelected();break;
    case 'redo':redo();break;
    case 'duplicate':{
-    const s=state.recipe.stones.find(x=>x.id===state.selected);if(s){const cloned=copy(s);cloned.id=uuid();cloned.position=stagedPosition(cloned.name,cloned.quaternion,cloned.scale);putStone(cloned);}break;
+    const stone=state.recipe.stones.find(x=>x.id===state.selected);
+    if(stone){const cloned=copy(stone);cloned.id=uuid();cloned.position=stagedPosition(cloned.name,cloned.quaternion,cloned.scale);putStone(cloned);}
+    else{const item=selection();if(item?.kind==='architecture'){
+     const cloned=copy(item.record);cloned.id=uuid();cloned.position[0]+=3;
+     if(item.part!==undefined){cloned.component=Number(item.part);cloned.parts={};}
+     commitBefore();upgradeRecipe();state.recipe.architectures.push(cloned);state.selected=cloned.id;
+     syncScene();scheduleScratch();state.scene.cameraFitOnStones(state.recipe.cells);
+    }}break;
    }
    case 'delete':{
-    if(state.selected){commitBefore();state.recipe.stones=state.recipe.stones.filter(s=>s.id!==state.selected);state.selected=null;syncScene();scheduleScratch();}break;
+    if(state.selected){commitBefore();
+     const [id,index]=String(state.selected).split('::');
+     if(index!==undefined){const entry=state.recipe.architectures?.find(a=>a.id===id);
+      if(entry){entry.hiddenParts||=[];if(!entry.hiddenParts.includes(Number(index)))entry.hiddenParts.push(Number(index));}}
+     else{state.recipe.stones=state.recipe.stones.filter(st=>st.id!==id);
+      if(state.recipe.architectures)state.recipe.architectures=state.recipe.architectures.filter(a=>a.id!==id);}
+     state.selected=null;syncScene();scheduleScratch();
+    }break;
    }
    case 'catalog':{
     const el=$('[data-catalog]');el.hidden=!el.hidden;
@@ -307,13 +405,13 @@ export async function mount(context){
      // Source-controlled recipes are immutable: saving creates a personal copy.
      const source=await loadManualSection(t.value.slice(7),state.library.manifest,{signal});
      if(state.disposed)return;
-     setRecipe(source.recipe,{id:null,sourceId:source.id,title:source.title,status:'draft',dirty:true});
+     await setRecipe(source.recipe,{id:null,sourceId:source.id,title:source.title,status:'draft',dirty:true});
      scheduleScratch();
      toast('Исходная секция загружена: '+source.recipe.stones.length+' камней. Изменения сохраняются в отдельную копию.');
     }else{
      const row=await loadSection(t.value);
      if(state.disposed)return;
-     setRecipe(row.recipe,{id:row.id,title:row.title,status:row.status});
+     await setRecipe(row.recipe,{id:row.id,title:row.title,status:row.status});
      clearLocalScratch();toast('Загружено: '+row.title);
     }
    }catch(error){
@@ -356,7 +454,7 @@ export async function mount(context){
   state.scene.setBounds(state.recipe.cells);state.scene.resetCamera(state.recipe.cells);
   const backup=readLocalScratch();
   if(backup?.recipe){
-   try{setRecipe(backup.recipe,{id:backup.id,sourceId:backup.sourceId||null,title:backup.title,status:backup.status,dirty:true});toast('Авточерновик восстановлен на этом устройстве');}
+   try{await setRecipe(backup.recipe,{id:backup.id,sourceId:backup.sourceId||null,title:backup.title,status:backup.status,dirty:true});toast('Авточерновик восстановлен на этом устройстве');}
    catch(error){console.warn('Masonry scratch incompatible',error);}
   }
   renderCatalog();renderSelected();refreshCount();

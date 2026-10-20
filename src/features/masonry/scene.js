@@ -1,7 +1,8 @@
 /** Three.js manual authoring canvas, independent of the tower game's snapped placement engine. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
-import {CELL_METERS,stoneColor,serializeTransform} from './library.js';
+import {CELL_METERS,stoneColor,serializeTransform} from './library.js?v=17.2-architecture.1';
+import {createArchitectureLoader} from './architecture-assets.js?v=17.2-architecture.1';
 
 export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,onTransform}){
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -28,6 +29,12 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
  const selector=new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(1,1,1)),0xffd07a);
  selector.material.depthTest=false;selector.renderOrder=200;selector.visible=false;scene.add(selector);
  const objects=new Map();
+ const archParts=new Map();
+ const architectureLoader=createArchitectureLoader(renderer);
+ let partMode=false;
+ async function ensureAssets(items=[]){await Promise.all([...new Set(items.map(x=>x.asset))].map(id=>architectureLoader.load(id)));}
+ const getAssetSize=id=>architectureLoader.cached(id)?.size||null;
+ const setPartMode=value=>{partMode=Boolean(value);};
  const modelByName=new Map(models.map(m=>[m.name,m]));
  const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
  const tmp=new THREE.Vector3();
@@ -43,9 +50,20 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   camera.position.copy(controls.target).add(new THREE.Vector3(d*1.7,d*1.2,d*1.8));
   camera.near=Math.max(.005,d/100);camera.far=300;camera.updateProjectionMatrix();controls.update();
  }
- function get(id){return objects.get(id)||null;}
+ function get(id){
+  if(!id)return null;
+  const [parent,part]=String(id).split('::');
+  if(part===undefined)return objects.get(parent)||null;
+  return archParts.get(parent)?.nodes[Number(part)]||null;
+ }
+ const getTransform=id=>{const node=get(id);return node?serializeTransform(node):null;};
+ function getSelectionName(id){
+  const [parent,index]=String(id||'').split('::');
+  if(index===undefined)return '';
+  return archParts.get(parent)?.names[Number(index)]||'Деталь';
+ }
  function select(id){
-  selectedId=objects.has(id)?id:null;
+  selectedId=get(id)?id:null;
   refreshSelection();
  }
  function refreshSelection(){
@@ -53,10 +71,10 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   selector.visible=Boolean(m);
   if(m)selector.setFromObject(m);
  }
- function sync(stones){
-  const valid=new Set(stones.map(s=>s.id));
+ function sync(stones,architectures=[]){
+  const valid=new Set([...stones,...architectures].map(s=>s.id));
   for(const [id,m] of objects)if(!valid.has(id)){
-   stoneGroup.remove(m);m.material.dispose();objects.delete(id);
+   stoneGroup.remove(m);if(m.isMesh)m.material.dispose();objects.delete(id);archParts.delete(id);
   }
   for(const stone of stones){
    let m=get(stone.id);
@@ -69,7 +87,31 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
    m.position.fromArray(stone.position);m.quaternion.fromArray(stone.quaternion);m.scale.fromArray(stone.scale);
    m.updateMatrixWorld(true);
   }
-  if(selectedId&&!objects.has(selectedId))selectedId=null;
+  for(const item of architectures){
+   const template=architectureLoader.cached(item.asset);
+   if(!template)continue;
+   let m=objects.get(item.id);
+   if(!m){
+    m=template.root.clone(true);
+    const nodes=[],names=[],base=[];
+    m.traverse(node=>{if(node.isMesh){
+     const idx=nodes.length;nodes.push(node);names.push(node.name||node.parent?.name||'Деталь');
+     base.push(serializeTransform(node));
+     node.userData.masonryId=item.id;node.userData.masonryPart=idx;
+    }});
+    archParts.set(item.id,{nodes,names,base});
+    stoneGroup.add(m);objects.set(item.id,m);
+   }
+   m.position.fromArray(item.position);m.quaternion.fromArray(item.quaternion);m.scale.fromArray(item.scale);
+   const parts=archParts.get(item.id);
+   parts.nodes.forEach((node,i)=>{
+    node.visible=(item.component===undefined||item.component===null||item.component===i)&&!item.hiddenParts?.includes(i);
+    const t=item.parts?.[String(i)]||parts.base[i];
+    node.position.fromArray(t.position);node.quaternion.fromArray(t.quaternion);node.scale.fromArray(t.scale);
+   });
+   m.updateMatrixWorld(true);
+  }
+  if(selectedId&&!get(selectedId))selectedId=null;
   refreshSelection();
  }
  function setGhostVisible(show){ghost.visible=Boolean(show);}
@@ -87,7 +129,15 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
  }
  function pick(e){
   toRay(e);
-  return raycaster.intersectObjects([...objects.values()],false)[0]?.object?.userData?.stoneId||null;
+  for(const hit of raycaster.intersectObjects(stoneGroup.children,true)){
+   const mesh=hit.object;
+   if(!mesh.isMesh)continue;
+   if(mesh.userData.masonryId){
+    return partMode?mesh.userData.masonryId+'::'+mesh.userData.masonryPart:mesh.userData.masonryId;
+   }
+   if(mesh.userData.stoneId)return mesh.userData.stoneId;
+  }
+  return null;
  }
  function intersection(e,plane){
   toRay(e);const pt=new THREE.Vector3();return raycaster.ray.intersectPlane(plane,pt)?pt:null;
@@ -96,16 +146,17 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   if(e.button!==0||!e.isPrimary)return;
   const id=pick(e);
   if(id!==selectedId){select(id);onSelect(id);}
-  if(!id||!objects.has(id))return;
+  if(!id||!get(id))return;
   const m=get(id);
   // Second touch on a selected stone moves it; the first touch may select it.
   // Desktop dragging starts immediately after selection.
   if(e.pointerType==='touch'&&id!==drag?.id&&id!==previousTapId){previousTapId=id;return;}
   onDragStart?.();
   const normal=camera.getWorldDirection(new THREE.Vector3());
-  const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,m.position);
+  const worldPosition=m.getWorldPosition(new THREE.Vector3());
+  const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(normal,worldPosition);
   const start=intersection(e,plane);if(!start)return;
-  drag={id,pointerId:e.pointerId,start:start.clone(),position:m.position.clone(),plane};
+  drag={id,pointerId:e.pointerId,start:start.clone(),position:m.position.clone(),worldPosition,plane};
   controls.enabled=false;
   renderer.domElement.setPointerCapture(e.pointerId);
  }
@@ -119,7 +170,9 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
    for(let i=0;i<3;i++)if(i!==component)delta.setComponent(i,0);
   }
   const m=get(drag.id);if(!m)return;
-  m.position.copy(drag.position).add(delta);m.updateMatrixWorld(true);
+  const point=drag.worldPosition.clone().add(delta);
+  if(m.parent)m.parent.worldToLocal(point);
+  m.position.copy(point);m.updateMatrixWorld(true);
   refreshSelection();onTransform(drag.id,serializeTransform(m),false);
  }
  function pointerUp(e){
@@ -186,5 +239,5 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   ghost.geometry.dispose();ghost.material.dispose();floor.geometry.dispose();floor.material.dispose();
   renderer.domElement.remove();
  }
- return {sync,select,get,setAxis,setBounds,setGhostVisible,resetCamera,cameraFitOnStones,thumbnail,dispose};
+ return {sync,select,get,getTransform,getSelectionName,ensureAssets,getAssetSize,setPartMode,setAxis,setBounds,setGhostVisible,resetCamera,cameraFitOnStones,thumbnail,dispose};
 }

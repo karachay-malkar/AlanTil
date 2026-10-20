@@ -77,6 +77,12 @@
 .masonryStone span{font-size:10px;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .masonryStone small{display:block;color:#69746c;font-size:9px;white-space:normal}
 .masonryStone .masonryPlus{margin-left:auto;font-size:16px}
+.masonryStone .masonryArchPreview{width:55px;height:51px;flex:0 0 55px;display:grid;place-items:center;border-radius:6px;background:#d5e0d6;color:#315a43;font-weight:700;font-size:15px}
+.masonryPartActions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.masonryPartActions button{flex:1;min-width:100px;font-size:10px}
+.masonryPartActions button[aria-pressed="true"]{background:#315a43;color:white;border-color:#315a43}
+.masonryActions [data-action="gate-template"]{background:#dbe7db;color:#234a32;font-weight:650}
+.masonryActions [data-action="wings"]{background:#e8dabb;color:#634a28}
 .masonryCatalogPaging{display:flex;gap:10px;align-items:center;justify-content:center;padding-top:6px}
 .masonryCatalogPaging button{min-height:30px;padding:4px 12px}
 .masonryCatalogPaging span{font-variant-numeric:tabular-nums;color:#6b786e}

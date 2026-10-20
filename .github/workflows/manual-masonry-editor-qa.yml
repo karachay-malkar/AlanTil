@@ -12,6 +12,7 @@ on:
       - 'service-worker.js'
       - 'supabase/migrations/*masonry_editor*'
       - 'scripts/qa/manual-masonry.test.mjs'
+      - 'scripts/qa/masonry-architecture.test.mjs'
       - '.github/workflows/manual-masonry-editor-qa.yml'
   workflow_dispatch:
 jobs:
@@ -26,6 +27,8 @@ jobs:
         run: |
           node --check src/features/masonry/library.js
           node --check src/features/masonry/store.js
+          node --check src/features/masonry/architecture-assets.js
+          node --check src/features/masonry/gate-wings.mjs
           node --check src/features/masonry/scene.js
           node --check src/features/masonry/index.js
           node --check src/app/router.js
@@ -34,4 +37,6 @@ jobs:
           node --check src/app/bootstrap.js
           node --check service-worker.js
       - name: Recipe format, navigation and RLS tests
-        run: node --test scripts/qa/manual-masonry.test.mjs
+        run: |
+          node --test scripts/qa/manual-masonry.test.mjs
+          node --test scripts/qa/masonry-architecture.test.mjs
