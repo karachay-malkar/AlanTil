@@ -74,3 +74,11 @@ test('scene supports part selection, transforms and persisting disabled parts',(
  assert.match(editor,/state\.scene\.cameraFitOnStones\(cells\)/);
  assert.match(editor,/buildGateWings/);
 });
+
+test('database migration accepts mixed and legacy recipes without changing tower state',()=>{
+ const sql=source('supabase/migrations/20261020084813_masonry_editor_architecture_v2.sql');
+ assert.match(sql,/common100-manual-1/);
+ assert.match(sql,/common100-mixed-2/);
+ assert.match(sql,/jsonb_typeof\(recipe->'architectures'\)='array'/);
+ assert.doesNotMatch(sql,/drop table|alter table public\\.tower/i);
+});
