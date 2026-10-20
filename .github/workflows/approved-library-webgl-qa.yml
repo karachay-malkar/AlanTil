@@ -1,0 +1,30 @@
+name: Approved Common100 — browser 3D validation
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'assets/tower/approved-library/**'
+      - 'src/features/tower/approved-section-scene.js'
+      - 'src/features/masonry/library.js'
+      - 'src/features/masonry/manual-sections/registry.mjs'
+      - 'packages/tower-game/approved-prefab.mjs'
+      - 'scripts/qa/browser-approved-library.cjs'
+      - '.github/workflows/approved-library-webgl-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium renderer
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Load 10 original GLB recipes and render at all rotations
+        run: node scripts/qa/browser-approved-library.cjs
