@@ -4,7 +4,7 @@ import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16'
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
 import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
 import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.2';
-import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.1';
+import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.2';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js';
 
 let active=null;
@@ -180,7 +180,7 @@ export async function mount(context){
   if(state.disposed)return;
   const sources=sourceResult.status==='fulfilled'?sourceResult.value:[];
   const saved=savedResult.status==='fulfilled'?savedResult.value:[];
-  const sourceOptions=sources.length?'<optgroup label="Ручные секции проекта">'+sources.map(item=>`<option value="manual:${escapeHTML(item.id)}">${escapeHTML(item.title)} · ${item.stoneCount} камней</option>`).join('')+'</optgroup>':'';
+  const sourceOptions=sources.length?'<optgroup label="Ручные секции проекта">'+sources.map(item=>`<option value="manual:${escapeHTML(item.id)}">${escapeHTML(item.title)} · ${escapeHTML(item.id.slice(item.id.lastIndexOf("-")+1))} · ${item.stoneCount} камней</option>`).join('')+'</optgroup>':'';
   const savedOptions=saved.length?'<optgroup label="Мои сохранённые секции">'+saved.map(row=>`<option value="${escapeHTML(row.id)}">${escapeHTML(row.title)} · ${escapeHTML(row.status)}</option>`).join('')+'</optgroup>':'';
   const select=$('[data-sections]');
   select.innerHTML='<option value="">Новая секция</option>'+sourceOptions+savedOptions;

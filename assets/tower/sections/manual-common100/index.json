@@ -45,6 +45,26 @@
       "sha256": "63a835e7f8b036733c0898e97e39a50b3a10e192a0903696716e2ca474593c42",
       "status": "source",
       "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-1x1x1-v2",
+      "title": "Секция 1×1×1",
+      "file": "section-1x1x1-v2.json",
+      "cells": [
+        1,
+        1,
+        1
+      ],
+      "stoneCount": 8,
+      "counts": {
+        "large": 0,
+        "main": 5,
+        "chinking": 3,
+        "lintel": 0
+      },
+      "sha256": "057f24d2e310c0092ff202538fb9ff33376df4c9f2e0b14f0f42c86fe559cce1",
+      "status": "source",
+      "origin": "manual-authoring"
     }
   ]
 }
