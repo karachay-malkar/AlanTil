@@ -23,14 +23,23 @@
 .masonryTopRow [data-title]{flex:1;max-width:260px}
 .masonryTopRow [data-preset]{max-width:125px}
 .masonryTopRow button{background:#f5f6efea;min-width:36px;font-weight:700}
+.masonryTopActions{max-width:100%;width:max-content;overflow-x:auto;scrollbar-width:none;gap:5px;touch-action:pan-x}
+.masonryTopActions button{white-space:nowrap;flex-shrink:0;min-height:34px;padding:5px 8px;font-size:12px}
+.masonryTopActions .masonrySave{background:#dce6dc;color:#16482d;font-weight:700}
+.masonryTopActions .masonryReady{background:#315a43;color:#fff;border-color:#315a43;font-weight:700}
 .masonrySizes{background:#f8f7eeea;border-radius:9px;padding:6px;width:max-content;max-width:100%}
 .masonrySizes label{display:flex;align-items:center;gap:4px}
 .masonrySizes input{width:54px;min-height:30px}
 .masonryFloating{position:absolute;z-index:3;bottom:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;pointer-events:none}
 .masonryFloating div{background:#e8eee6e6;color:#24432c;padding:6px 9px;border-radius:7px;font-size:11px}
 .masonryFloating [data-error="true"]{background:#ffe1ce;color:#9a3013}
-.masonryEditorPanel{flex:0 0 auto;max-height:55dvh;overflow-y:auto;background:#f4f4ef;border-top:1px solid #ced3cc;box-shadow:0 -4px 22px #0002;z-index:7;overscroll-behavior:contain}
-.masonrySelected{padding:7px 10px;border-bottom:1px solid #dce2da}
+.masonryEditorPanel{flex:0 0 auto;max-height:43dvh;overflow-y:auto;background:#f4f4ef;border-top:1px solid #ced3cc;box-shadow:0 -4px 22px #0002;z-index:7;overscroll-behavior:contain}
+.masonrySelected{padding:5px 10px;border-bottom:1px solid #dce2da}
+.masonryToolsToggle{display:flex;align-items:center;width:100%;text-align:left;gap:7px;min-height:32px;padding:4px 9px;background:#e8ebe5}
+.masonryToolsToggle b{font-size:12px}
+.masonryToolsToggle small{font-size:10px;color:#6b756d}
+.masonryToolsToggle strong{margin-left:auto;font-size:11px}
+.masonryStoneControls{padding-top:7px}
 .masonryNoSelection{color:#627265;font-size:12px}
 .masonrySelectionRow,.masonryAxisRow,.masonryRotate,.masonryNudges{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px}
 .masonrySelectionRow b{font-size:13px}
@@ -46,17 +55,12 @@
 .masonryNudges button,.masonryRotate button{min-width:32px;min-height:30px;padding:3px 9px;font-size:16px}
 .masonryRotate>span:first-child{font-size:11px;color:#5d655f}
 .masonryScale{margin-bottom:0}
-.masonryActions{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:7px 10px;scrollbar-width:thin}
+.masonryActions{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:5px 10px;scrollbar-width:thin}
 .masonryActions button{flex-shrink:0}
-.masonryActions .masonrySave{background:#dce6dc;color:#16482d;font-weight:700}
-.masonryActions .masonryReady{background:#315a43;color:#fff;border-color:#315a43;font-weight:700}
-.masonryCatalog{padding:0 10px 9px}
+.masonryCatalog{padding:0 10px 6px}
 .masonryCategories{display:flex;gap:5px;overflow-x:auto;padding:5px 0}
 .masonryCategories button{white-space:nowrap;min-height:32px;padding:6px 9px;font-size:11px}
 .masonryCategories button[aria-pressed="true"]{background:#436b56;color:#fff;border-color:#436b56}
-.masonryCatalogTools{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0}
-.masonryCatalogTools input{flex:1;max-width:380px;min-height:30px;font-size:12px}
-.masonryCatalogTools span{font-size:11px;color:#67756b;white-space:nowrap}
 .masonryStoneList{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;max-height:158px;overflow:auto}
 .masonryStoneList .masonryStone{display:flex;min-width:0;align-items:center;gap:5px;text-align:left;padding:3px;min-height:62px;background:#e8ebe5}
 .masonryStone img{object-fit:contain;width:55px;height:51px;flex-shrink:0;border-radius:5px;background:#dadfd7}
@@ -67,5 +71,5 @@
 .masonryCatalogPaging button{min-height:30px;padding:4px 12px}
 .masonryCatalogPaging span{font-variant-numeric:tabular-nums;color:#6b786e}
 @media(max-width:800px){.masonryStoneList{grid-template-columns:repeat(2,minmax(0,1fr));max-height:140px}}
-@media(max-height:660px){.masonryTop{top:calc(48px + var(--safe-top,0px))}.masonryEditorPanel{max-height:62dvh}.masonryStoneList{max-height:100px}}
-@media(max-width:440px){.masonryTop{left:7px;right:7px}.masonryStoneList{grid-template-columns:repeat(2,minmax(0,1fr))}.masonryStone img{width:49px;height:45px}.masonryStoneList .masonryStone{min-height:50px}}
+@media(max-height:660px){.masonryTop{top:calc(48px + var(--safe-top,0px))}.masonryEditorPanel{max-height:48dvh}.masonryStoneList{max-height:100px}.masonryTopActions button{min-height:31px;padding:4px 7px}}
+@media(max-width:440px){.masonryTop{left:7px;right:7px}.masonryTopActions{width:100%}.masonryTopActions button{font-size:11px;padding:5px 7px}.masonryStoneList{grid-template-columns:repeat(2,minmax(0,1fr))}.masonryStone img{width:49px;height:45px}.masonryStoneList .masonryStone{min-height:50px}}
