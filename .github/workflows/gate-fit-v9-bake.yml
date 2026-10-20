@@ -1,0 +1,58 @@
+name: Gate v9 test GLB — bake and preserve source PBR
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/qa/build-gate-fit-v9.py'
+      - '.github/workflows/gate-fit-v9-bake.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bake-preview-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 17.2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install math runtime
+        run: python -m pip install numpy==2.3.5
+      - name: Build gate v9 from authored rock meshes, preserve original wood and iron
+        run: python scripts/qa/build-gate-fit-v9.py
+      - name: Validate distinct candidate GLB is fully formed
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import struct,json
+          p=Path('gate-fit-review/gate-18x10x2-v9-candidate.glb')
+          data=p.read_bytes()
+          assert data[:4]==b'glTF' and struct.unpack_from('<I',data,8)[0]==len(data)
+          n=struct.unpack_from('<I',data,12)[0]
+          doc=json.loads(data[20:20+n])
+          assert len(doc['meshes'])>=594
+          assert len(doc['nodes'])>650
+          assert doc['asset']['extras']['gameIntegration'] is False
+          m=json.loads(Path('gate-fit-review/candidate-v9-metrics.json').read_text())
+          assert m['edgeProxy']['coveredFraction']>.96
+          assert m['fit']['existingWoodIronExactlyAsV8']
+          assert len(data)>5_000_000
+          print('GATE_V9_REVIEW_GLB_PASS',len(data),'nodes:',len(doc['nodes']))
+          PY
+      - name: Commit preview-only asset and its boundary report
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add gate-fit-review/gate-18x10x2-v9-candidate.glb gate-fit-review/candidate-v9-metrics.json
+          if git diff --cached --quiet; then
+            echo 'Gate v9 asset is current'
+          else
+            git commit -m 'build(gate): staged v9 rock-only fitted GLB for visual review'
+            git fetch origin 17.2
+            git rebase origin/17.2
+            git push origin HEAD:17.2
+          fi

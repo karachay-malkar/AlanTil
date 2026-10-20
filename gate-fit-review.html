@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AlanTil — ворота: проверка кладки v9</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e5e9df;background:#212823}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}
+#viewport{width:100%;height:100%;display:block;touch-action:none}
+.panel{position:absolute;left:16px;top:16px;z-index:3;max-width:min(450px,calc(100vw - 32px));padding:14px 16px;background:#1a251de8;border:1px solid #526450;border-radius:12px;box-shadow:0 8px 40px #0006;backdrop-filter:blur(12px)}
+header{font-size:16px;font-weight:750;line-height:1.5}.sub{font-size:12px;line-height:1.45;color:#b8c5b4;margin:5px 0 10px}.controls{display:flex;gap:6px;flex-wrap:wrap}
+button{appearance:none;border:1px solid #667761;color:#e8eee5;background:#354238;padding:8px 11px;border-radius:7px;font:inherit;font-size:12px;cursor:pointer}
+button[aria-pressed=true]{background:#d3d9bc;color:#263125;border-color:#e4eccc;font-weight:700}
+.toggles{display:flex;gap:13px;flex-wrap:wrap;margin-top:11px;font-size:12px;color:#d7dfd5}
+.toggles label{display:flex;gap:7px;align-items:center;cursor:pointer}
+.status{margin-top:10px;font-size:12px;color:#c6d6bd;line-height:1.5}
+.info{position:absolute;right:16px;bottom:16px;background:#1a251de8;color:#e1e9dc;border-radius:9px;border:1px solid #526450;padding:12px;max-width:360px;font-size:12px;line-height:1.55}
+.warning{color:#ffd78f}.labels{position:absolute;bottom:16px;left:16px;display:flex;gap:13px;font-size:12px;color:#e2e7d9;background:#1a251de8;border:1px solid #526450;border-radius:9px;padding:9px 12px}
+.dot{width:10px;height:10px;border-radius:50%;background:#b7c9ae;display:inline-block;margin-right:4px}.dot.new{background:#f2d379}
+@media(max-width:680px){.panel{top:8px;left:8px;max-width:calc(100vw - 16px);padding:10px}.info{right:8px;bottom:60px;padding:7px 9px;max-width:55vw}.labels{left:8px;bottom:8px}.controls{gap:4px}button{padding:7px}}
+</style>
+</head>
+<body>
+<canvas id="viewport" aria-label="Интерактивная трёхмерная сцена ворот"></canvas>
+<div class="panel">
+ <header>AlanTil · Ворота — геометрия кладки</header>
+ <p class="sub">Сравнение действующих ворот и новой тестовой модели. Двигая мышью или пальцем, поворачивайте сцену; колёсиком или жестом масштабируйте.</p>
+ <div class="controls">
+  <button type="button" data-view="compare" aria-pressed="true">Сравнить</button>
+  <button type="button" data-view="old" aria-pressed="false">Текущие</button>
+  <button type="button" data-view="new" aria-pressed="false">Новые v9</button>
+ </div>
+ <div class="toggles">
+  <label><input id="bounds" type="checkbox" checked> Границы 18×10×2</label>
+  <label><input id="neighbors" type="checkbox" checked> Соседние секции</label>
+ </div>
+ <div class="status" id="status" role="status">Загрузка настоящих GLB-моделей…</div>
+</div>
+<div class="labels"><span><span class="dot"></span>Текущая кладка</span><span><span class="dot new"></span>Новая тестовая v9</span></div>
+<div class="info" id="info">Размер игровой зоны: <strong>4,5 × 2,5 × 0,5 м</strong><div class="warning">Это согласовательный просмотр, игра ещё не изменена.</div></div>
+<script type="module">
+import * as THREE from './src/vendor/three/three.module.js';
+import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from './src/vendor/three/addons/loaders/GLTFLoader.js';
+import {getRockSurface,applyRockSurface} from './src/features/tower/rock-surface.js';
+import {applyGateSurfaces} from './src/features/tower/gate-surface.js';
+import {applyGateEditorStretch} from './src/features/tower/gate-editor-stretch.mjs';
+const canvas=document.getElementById('viewport'),status=document.getElementById('status'),info=document.getElementById('info');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.12;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#768879');
+scene.add(new THREE.HemisphereLight('#fff9ea','#415341',2.25));
+const light=new THREE.DirectionalLight('#fff6d8',3);light.position.set(-4,8,7);scene.add(light);
+const side=new THREE.DirectionalLight('#d6e6f2',1.4);side.position.set(5,3,-6);scene.add(side);
+const camera=new THREE.PerspectiveCamera(43,1,.02,200);camera.position.set(10,5,13);
+const orbit=new OrbitControls(camera,canvas);orbit.enableDamping=true;orbit.dampingFactor=.09;
+orbit.target.set(0,0,0);orbit.minDistance=2.7;orbit.maxDistance=35;
+const loader=new GLTFLoader(),groups={old:new THREE.Group(),new:new THREE.Group()},boxes=[],neighbors=[];
+scene.add(groups.old,groups.new);
+const makeBounds=group=>{
+ const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(4.5,2.5,.5)),
+   new THREE.LineBasicMaterial({color:'#f5dc78',opacity:.92,transparent:true,depthTest:false}));
+ edges.renderOrder=40;group.add(edges);boxes.push(edges);
+};
+const grid=new THREE.GridHelper(25,50,'#728365','#637960');grid.position.y=-1.255;scene.add(grid);
+function ground(){
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(90,90),new THREE.MeshStandardMaterial({color:'#b7c7ae',roughness:1}));
+ floor.rotation.x=-Math.PI/2;floor.position.y=-1.273;scene.add(floor);
+}
+ground();
+function setBottom(model){
+ model.updateMatrixWorld(true);
+ const b=new THREE.Box3().setFromObject(model);
+ model.position.y+=-1.25-b.min.y;
+ return model;
+}
+function addToView(model,name){
+ groups[name].add(setBottom(model));
+ makeBounds(groups[name]);
+}
+function fitView(view){
+ const compare=view==='compare';
+ groups.old.visible=compare||view==='old';
+ groups.new.visible=compare||view==='new';
+ groups.old.position.x=compare?-3.35:0;
+ groups.new.position.x=compare?3.35:0;
+ orbit.target.set(0,0,0);
+ camera.position.set(compare?11:6,compare?5.2:3.4,compare?16:8.5);
+ camera.updateProjectionMatrix();orbit.update();
+ neighbors.forEach(n=>n.visible=document.getElementById('neighbors').checked);
+}
+let active='compare';
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
+ active=button.dataset.view;
+ document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+ fitView(active);
+}));
+document.getElementById('bounds').addEventListener('change',e=>boxes.forEach(b=>b.visible=e.target.checked));
+document.getElementById('neighbors').addEventListener('change',e=>neighbors.forEach(n=>n.visible=e.target.checked));
+function resize(){
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ renderer.setSize(w,h,false);camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize);resize();
+function frame(){requestAnimationFrame(frame);orbit.update();renderer.render(scene,camera);}frame();
+async function attachNeighbor(root){
+ const manifest=await (await fetch('./assets/tower/prefabs/manifest.json')).json();
+ const type=manifest.types.find(t=>t.id==='2x2x2');
+ const file=type?.variants?.[0]?.file;if(!file)return;
+ const [glb,rock]=await Promise.all([loader.loadAsync(file),getRockSurface(renderer)]);
+ for(const group of [groups.old,groups.new]){
+  for(const side of [-1,1]){
+   const object=applyRockSurface(glb.scene.clone(true),rock);
+   const bounds=new THREE.Box3().setFromObject(object);
+   // Adjacent 2×2×2 block, 0.5m wide × 0.5m high.
+   object.position.set(side*2.5,-1.0-bounds.getCenter(new THREE.Vector3()).y,
+     -bounds.getCenter(new THREE.Vector3()).z);
+   group.add(object);neighbors.push(object);
+  }
+ }
+}
+(async()=>{
+ try{
+  const [current,candidate,reference,rock,metrics]=await Promise.all([
+    loader.loadAsync('./assets/tower/prefabs/architectural/gate-18x10x2-v7.glb?v=gate-v8.1'),
+    loader.loadAsync('./gate-fit-review/gate-18x10x2-v9-candidate.glb?v=v9-fit-1'),
+    loader.loadAsync('./assets/tower/prefabs/architectural/door-wood-v1.glb'),
+    getRockSurface(renderer),
+    fetch('./gate-fit-review/candidate-v9-metrics.json?v=1').then(r=>{if(!r.ok)throw Error('Metrics HTTP '+r.status);return r.json();})
+  ]);
+  const old=applyGateSurfaces(current.scene.clone(true),reference.scene,rock);
+  applyGateEditorStretch(old);
+  const latest=applyGateSurfaces(candidate.scene.clone(true),reference.scene,rock);
+  addToView(old,'old');addToView(latest,'new');
+  try{await attachNeighbor(scene);}catch(error){console.warn('Neighbor unavailable',error);}
+  fitView('compare');
+  status.textContent='Готово: две настоящие GLB-модели, сравнение боковых граней и проверка поворота.';
+  info.innerHTML='<strong>Новая кладка:</strong> '+metrics.stones.totalRockMeshes+' камней ('+
+   metrics.stones.originalRockMeshes+' исходных + '+metrics.stones.edgeRubbleInstances+
+   ' камней для боковых стыков).<p>Границы камней: ±2,25 м по X, ±0,25 м по Z; высота 2,5 м.</p>'+
+   '<span class="warning">Предпросмотр для утверждения. Игровой конструктор не изменён.</span>';
+  document.body.dataset.gateReview='ready';
+ }catch(error){
+  status.textContent='Ошибка загрузки 3D-модели: '+(error?.message||error);
+  status.style.color='#ffaba8';console.error(error);
+  document.body.dataset.gateReview='failed';
+ }
+})();
+</script>
+</body>
+</html>
