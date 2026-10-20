@@ -106,7 +106,7 @@ test('selected stone inspector stays expanded and combines scale with 15 degree 
  assert.match(css,/@media\(max-width:900px\)\{[\s\S]*?\.masonrySelected\{position:relative;top:auto;right:auto;align-self:flex-end/);
  assert.match(css,/\.masonryCompactAxisRow\{display:grid;grid-template-columns:minmax\(0,1fr\) 29px 29px/);
  assert.doesNotMatch(css,/\.masonryToolsToggle|\.masonryCompactScale|\.masonryEditor--toolsOpen/);
- assert.match(router,/MASONRY_ASSET_VERSION = "17\.2-manual-masonry\.10"/);
+ assert.match(router,/MASONRY_ASSET_VERSION = "17\.2-manual-masonry\.11"/);
 });
 
 test('scene camera fits wide staging and original saved recipe path is intact',()=>{

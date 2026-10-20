@@ -5,7 +5,7 @@
  */
 export const MANUAL_SECTION_ROOT='/assets/tower/sections/manual-common100';
 export const MANUAL_SECTION_SCHEMA='alantil.manual-common100.catalog.1';
-export const MANUAL_SECTION_CATALOG_URL=MANUAL_SECTION_ROOT+'/index.json?v=manual-common100.4';
+export const MANUAL_SECTION_CATALOG_URL=MANUAL_SECTION_ROOT+'/index.json?v=manual-common100.5';
 
 const validId=/^[a-z][a-z0-9-]*$/;
 const validFile=/^section-[a-z0-9-]+\.json$/;
@@ -52,7 +52,8 @@ export function validateManualSection(document,entry,manifest){
  assert(document&&typeof document==='object','не удалось прочитать экспорт');
  const recipe=document.recipe;
  assert(document.title===entry.title,'название экспорта отличается от каталога');
- assert(recipe?.version==='common100-manual-1','неподдерживаемый формат расстановки');
+ assert(['common100-manual-1','common100-mixed-2'].includes(recipe?.version),'неподдерживаемый формат расстановки');
+ if(recipe.version==='common100-mixed-2')assert(Array.isArray(recipe.architectures)&&recipe.architectures.length===0,'ручные секции не должны включать архитектурные объекты');
  assert(recipe.libraryVersion===manifest.version&&recipe.librarySha256===manifest.glbSHA256,'расстановка ссылается на другую библиотеку');
  assert(recipe.cellMeters===0.25&&matchesCells(recipe.cells,entry.cells),'размеры расстановки отличаются');
  assert(Array.isArray(recipe.stones)&&recipe.stones.length===entry.stoneCount,'количество камней изменилось');
