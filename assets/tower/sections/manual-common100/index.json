@@ -65,6 +65,26 @@
       "sha256": "057f24d2e310c0092ff202538fb9ff33376df4c9f2e0b14f0f42c86fe559cce1",
       "status": "source",
       "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x2x2-v1",
+      "title": "Секция 2×2×2",
+      "file": "section-2x2x2-v1.json",
+      "cells": [
+        2,
+        2,
+        2
+      ],
+      "stoneCount": 11,
+      "counts": {
+        "large": 0,
+        "main": 9,
+        "chinking": 2,
+        "lintel": 0
+      },
+      "sha256": "0418a441fe08ad1316744d68fd1a66841b489cba46e55ca3b0d82047f12bd6fe",
+      "status": "source",
+      "origin": "manual-authoring"
     }
   ]
 }

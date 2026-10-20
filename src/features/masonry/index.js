@@ -4,7 +4,7 @@ import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16'
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
 import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
 import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.2';
-import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.2';
+import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.3';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js';
 
 let active=null;
