@@ -1,0 +1,58 @@
+{
+  "variant": "gate-18x10x2-v9-candidate",
+  "status": "preview-only; not integrated in tower game",
+  "sourceGLB": "assets/tower/prefabs/architectural/gate-18x10x2-v7.glb",
+  "renderGLB": "gate-fit-review/gate-18x10x2-v9-candidate.glb",
+  "dimensionsMeters": [
+    4.5,
+    2.5,
+    0.5
+  ],
+  "stoneBoundsSourceLocal": {
+    "min": [
+      -2.25,
+      -1.235746,
+      -0.25
+    ],
+    "max": [
+      2.25,
+      1.264254,
+      0.25
+    ]
+  },
+  "gameBottomShift": -0.014254,
+  "rockTargetGameBounds": {
+    "min": [
+      -2.25,
+      -1.25,
+      -0.25
+    ],
+    "max": [
+      2.25,
+      1.25,
+      0.25
+    ]
+  },
+  "fit": {
+    "leftPierScale": 1.062239,
+    "rightPierScale": 1.062218,
+    "verticalScale": 1.013504,
+    "depthScale": 1.029696,
+    "openingWidthMeters": 2,
+    "existingWoodIronExactlyAsV8": true
+  },
+  "stones": {
+    "originalRockMeshes": 486,
+    "edgeRubbleInstances": 86,
+    "totalRockMeshes": 572,
+    "sourceStoneKind": "source GLB wild CHINKING"
+  },
+  "edgeProxy": {
+    "tiles": 112,
+    "originalTilesWithin29mm": 36,
+    "filledTiles": 76,
+    "unbackedTiles": 0,
+    "coveredFraction": 1.0
+  },
+  "outputBytes": 5846220
+}
