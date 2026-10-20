@@ -1,0 +1,52 @@
+name: Approved masonry — unified library and historical tower QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'assets/tower/approved-library/**'
+      - 'packages/tower-game/approved-prefab.mjs'
+      - 'packages/tower-game/prefab-layout.mjs'
+      - 'packages/tower-game/prefab-joints.mjs'
+      - 'packages/tower-game/gate-prefab.mjs'
+      - 'packages/tower-game/door-prefab.mjs'
+      - 'packages/tower-game/window-prefab.mjs'
+      - 'src/features/tower/**'
+      - 'src/features/masonry/**'
+      - 'src/app/router.js'
+      - 'supabase/migrations/*approved_manual_masonry*.sql'
+      - 'tests/tower-approved-manual.test.mjs'
+      - 'scripts/qa/approved-library.test.mjs'
+      - '.github/workflows/approved-masonry-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-approved-library:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check complete modules, not snippets
+        run: |
+          node --check packages/tower-game/approved-prefab.mjs
+          node --check packages/tower-game/prefab-layout.mjs
+          node --check packages/tower-game/prefab-joints.mjs
+          node --check src/features/tower/approved-section-scene.js
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/index.js
+          node --check src/features/masonry/manual-sections/registry.mjs
+          node --check src/features/masonry/library.js
+          node --check src/features/masonry/architecture-assets.js
+          node --check src/app/router.js
+      - name: Exact ten JSONs and architecture GLB integrity
+        run: node --test scripts/qa/approved-library.test.mjs scripts/qa/manual-common100-sources.test.mjs
+      - name: Approved variant placement, rotations, old saves and architecture preservation
+        run: |
+          node --test tests/tower-approved-manual.test.mjs tests/tower-prefab-placement-17-4.test.mjs
+          node --test tests/gate-v9-integration.test.mjs tests/gate-prefab.test.mjs tests/gate-editor-stretch.test.mjs
+          node --test tests/window-prefab.test.mjs tests/door-prefab.test.mjs
+      - name: Manual editor compatibility
+        run: node --test scripts/qa/manual-masonry.test.mjs scripts/qa/manual-masonry-stage.test.mjs scripts/qa/masonry-architecture.test.mjs

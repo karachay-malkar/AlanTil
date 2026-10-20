@@ -15,6 +15,8 @@ import {applyGateSurfaces} from './gate-surface.js';
 import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
 import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
 import {COMPACT_STONE_VERSION,isCompactStone} from '../../../packages/tower-game/compact-stone-prefab.mjs';
+import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
+import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
 import {assembleCompactStoneSection} from './compact-stone-scene.js';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.1';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
@@ -28,7 +30,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  specs.set(WINDOW_PREFAB_ID,WINDOW_PREFAB_SPEC);
  specs.set(DOOR_PREFAB_ID,DOOR_PREFAB_SPEC);
  specs.set(GATE_PREFAB_ID,GATE_PREFAB_SPEC);
- const loader=new GLTFLoader(),loaded=new Map();let disposed=false,layer=null,tool='select',blocks=[],selected=null;
+ const loader=new GLTFLoader(),loaded=new Map();
+ const approvedSections=createApprovedSectionLoader();
+ let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -66,6 +70,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
  async function getPrefab(block){
+  if(block.geometryVersion===APPROVED_PREFAB_VERSION){
+   if(!isApprovedMasonryType(block.sectionId))throw new TypeError('Not an approved author-built section');
+   return approvedSections.make(block.sectionId,block.variant,stoneMaterial);
+  }
   if(block.sectionId===WINDOW_PREFAB_ID){
    if(block.geometryVersion!==WINDOW_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported window prefab version');
    const stoneUrl=`${WINDOW_PREFAB_FILE}?v=${encodeURIComponent(WINDOW_RENDER_VERSION)}`;

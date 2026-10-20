@@ -36,7 +36,7 @@ function sceneParts(doc){
 }
 
 test('production game gate points at the byte-exact approved v9 geometry',()=>{
- assert.equal(GATE_PREFAB_FILE,'/assets/tower/prefabs/architectural/gate-18x10x2-v9.glb');
+ assert.equal(GATE_PREFAB_FILE,'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb');
  assert.equal(GATE_RENDER_VERSION,'17.6-gate.1-v9-rockfit.1');
  const production=read(GATE_PREFAB_FILE.slice(1));
  const approved=read('gate-fit-review/gate-18x10x2-v9-candidate.glb');
@@ -76,9 +76,9 @@ test('tower scene loads v9 directly, with PBR, without double-applying the v8 st
  assert.doesNotMatch(text,/gate\.scale\.x/);
  assert.match(scene,/setPosition\(group,block\)/);
  const router=read('src/app/router.js').toString();
- assert.match(router,/TOWER_ASSET_VERSION = "17\.5\.8-gate-v9-rockfit\.1"/);
+ assert.match(router,/TOWER_ASSET_VERSION = "17\.7-approved-masonry\.1"/);
  const tower=read('src/features/tower/index.js').toString();
- assert.match(tower,/prefab-scene\.js\?v=gate-v9-rockfit\.1/);
+ assert.match(tower,/prefab-scene\.js\?v=17\.7-approved-masonry\.1/);
 });
 
 test('old saved gates still resolve, all rotations retain 25cm placement and opening',()=>{

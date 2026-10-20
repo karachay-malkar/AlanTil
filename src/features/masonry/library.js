@@ -2,8 +2,8 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 
-export const LIBRARY_URL='/assets/tower/prefabs/common100/common-100.glb';
-export const MANIFEST_URL='/assets/tower/prefabs/common100/common-100.json';
+export const LIBRARY_URL='/assets/tower/approved-library/common100/common-100.glb';
+export const MANIFEST_URL='/assets/tower/approved-library/common100/common-100.json';
 export const CELL_METERS=.25;
 export const RECIPE_VERSION='common100-mixed-2';
 export const LEGACY_RECIPE_VERSION='common100-manual-1';

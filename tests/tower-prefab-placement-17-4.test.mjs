@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {PREFAB_TYPES,validatePrefabPlacement,prefabBounds,positionAgainst,touchingPrefabPairs,worldToGrid,gridToWorld,snapPrefabPosition,hasPrefabSupport} from '../packages/tower-game/prefab-layout.mjs';
 const make=(id,x=0,y=0,z=0,sectionId='2x2x2')=>({id,type:'masonry_section',sectionId,x,y,z,rotation:0,variant:0});
 test('eight catalog sizes, integer 25cm placement and all quarter turns',()=>{
- assert.equal(PREFAB_TYPES.length,8);
+ assert.equal(PREFAB_TYPES.length,9);
  for(const t of PREFAB_TYPES)for(let rotation=0;rotation<4;rotation++){
   const dims=prefabBounds({...make('a',0,0,0,t.id),rotation}).size;
   assert.deepEqual(dims,rotation%2?[t.size[2],t.size[1],t.size[0]]:t.size);

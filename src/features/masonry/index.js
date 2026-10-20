@@ -2,13 +2,13 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
-import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.2-architecture.2';
-import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.2-architecture.3';
+import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.7-approved-masonry.1';
+import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.7-approved-masonry.1';
 import {buildGateWings} from './gate-wings.mjs';
-import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.6';
+import {createMasonryScene} from './scene.js?v=17.7-approved-masonry.1';
 import {stagingPosition} from './staging-position.mjs';
-import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.6';
-import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.2-architecture.2';
+import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=17.7-approved-masonry.1';
+import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.7-approved-masonry.1';
 
 let active=null;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -67,7 +67,7 @@ export async function mount(context){
  </div>
  <div class="masonryEditorPanel">
   <div class="masonryActions">
-    <button type="button" data-action="gate-template" title="Открыть старую кладку ворот с боковыми участками">Ворота v7 + кладка</button>
+    <button type="button" data-action="gate-template" hidden title="Архивная кладка ворот v7">Ворота v7 + кладка</button>
     <button type="button" data-action="gate-v9" title="Открыть утверждённые игровые ворота v9 в редакторе">Ворота v9 · игровые</button>
     <button type="button" data-action="wings" title="Добавить боковую кладку к воротам" hidden>Дополнить по бокам</button>
    <button type="button" data-action="duplicate" data-requires-selection title="Дублировать выбранный камень" aria-label="Дублировать камень" hidden>⧉</button>
@@ -261,12 +261,12 @@ export async function mount(context){
   syncScene();scheduleScratch();
  }
  function renderCategories(){
-  $('[data-categories]').innerHTML=[...CATEGORIES,{key:'architecture',label:'Архитектура',count:ARCHITECTURE.length}].map(c=>`<button type="button" data-category="${c.key}" aria-pressed="${c.key===state.category}">${c.label} · ${c.count}</button>`).join('');
+  $('[data-categories]').innerHTML=[...CATEGORIES,{key:'architecture',label:'Архитектура',count:ARCHITECTURE.filter(item=>item.id!=='gate').length}].map(c=>`<button type="button" data-category="${c.key}" aria-pressed="${c.key===state.category}">${c.label} · ${c.count}</button>`).join('');
  }
  function renderCatalog(){
   if(!state.library)return;
   renderCategories();
-  const items=state.category==='architecture'?ARCHITECTURE:state.library.manifest.models.filter(m=>m.category===state.category);
+  const items=state.category==='architecture'?ARCHITECTURE.filter(item=>item.id!=='gate'):state.library.manifest.models.filter(m=>m.category===state.category);
   const PAGE=16,pages=Math.max(1,Math.ceil(items.length/PAGE));state.page=Math.min(state.page,pages-1);
   const visible=items.slice(state.page*PAGE,(state.page+1)*PAGE);
   $('[data-stones]').innerHTML=visible.map(m=>m.id?

@@ -3,9 +3,9 @@
  * Do not add these to the legacy prefab manifest or the tower placement RPC.
  * Only references source GLB meshes; never generates substitute stone geometry.
  */
-export const MANUAL_SECTION_ROOT='/assets/tower/sections/manual-common100';
+export const MANUAL_SECTION_ROOT='/assets/tower/approved-library/sections';
 export const MANUAL_SECTION_SCHEMA='alantil.manual-common100.catalog.1';
-export const MANUAL_SECTION_CATALOG_URL=MANUAL_SECTION_ROOT+'/index.json?v=manual-common100.6';
+export const MANUAL_SECTION_CATALOG_URL='/assets/tower/approved-library/index.json?v=17.7-approved-masonry.1';
 
 const validId=/^[a-z][a-z0-9-]*$/;
 const validFile=/^section-[a-z0-9-]+\.json$/;

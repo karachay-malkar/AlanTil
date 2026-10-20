@@ -1,14 +1,12 @@
 /** AlanTil 17.5.2 — free, permanent prefabricated masonry, server-authoritative V3.
  * Old purchased V1/V2 elements remain read only. No local construction drafts.
  */
-import {createTowerScene} from './prefab-scene.js?v=gate-v9-rockfit.1';
-import {PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
+import {createTowerScene} from './prefab-scene.js?v=17.7-approved-masonry.1';
+import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
-import {WILD_PREFAB_VERSION,WILD_VARIANTS_PER_SIZE,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
-import {GATE_STONE_VARIANTS,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
-import {COMPACT_STONE_VERSION} from '../../../packages/tower-game/compact-stone-prefab.mjs';
+import {APPROVED_PREFAB_VERSION,approvedVariantCount} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3,clearTowerAll} from './repository.js?v=17.5.6-tower-controls.1';
 import {uiIcon} from '../../shared/ui/icons.js?v=17.5.6-tower-controls.1';
@@ -28,7 +26,7 @@ const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data
 export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
-  sections:[],legacy:[],revision:0,legacyRevision:null,resetAt:null,selected:null,type:PREFAB_TYPES[1].id,variant:0,rotation:0,
+  sections:[],legacy:[],revision:0,legacyRevision:null,resetAt:null,selected:null,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
   preview:null,previewHit:null,locked:false,busy:false,ready:false,canLeave:()=>true};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
@@ -55,7 +53,7 @@ export async function mount(context,params={}){
  const on=(sel,type,cb)=>q(sel)?.addEventListener(type,cb,{signal:controller.signal});
  const game=q('.towerGame'),side=q('[data-side]');
  const catalog=q('.towerCatalog');
- catalog.innerHTML=PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">${uiIcon('blocks')}</span><span class="towerItemName">[ ${spec.id===WINDOW_PREFAB_ID?'Окно 0,5×1 м':spec.id===DOOR_PREFAB_ID?'Дверь 0,75×2 м':spec.id===GATE_PREFAB_ID?'Ворота 2×2 м':spec.id.replaceAll('x','×')} ]</span></button>`).join('');
+ catalog.innerHTML=BUILDABLE_PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">${uiIcon('blocks')}</span><span class="towerItemName">[ ${spec.id===WINDOW_PREFAB_ID?'Окно 0,5×1 м':spec.id===DOOR_PREFAB_ID?'Дверь 0,75×2 м':spec.id===GATE_PREFAB_ID?'Ворота 2×2 м':spec.id.replaceAll('x','×')} ]</span></button>`).join('');
  let toastTimer=null;
  function message(text){
   if(s.disposed)return;
@@ -72,7 +70,7 @@ export async function mount(context,params={}){
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place';
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing';
-  q('[data-variant]').hidden=s.type===WINDOW_PREFAB_ID||s.type===DOOR_PREFAB_ID||s.type===GATE_PREFAB_ID;
+  q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
   q('[data-remove]').disabled=next!=='selected'||s.busy;
   for(const name of ['cancel','rotate','variant','hammer','camera']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
@@ -95,7 +93,7 @@ export async function mount(context,params={}){
   const hit=s.previewHit||s.scene?.getAimHit?.();
   if(!hit)return null;
   const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
-   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:isGateStone(s.type)?COMPACT_STONE_VERSION:isWildPrefab(s.type)?WILD_PREFAB_VERSION:'17.5.2'};
+   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:APPROVED_PREFAB_VERSION};
   return positionAgainst(item,hit);
  }
  let previewSequence=0;
@@ -118,7 +116,7 @@ export async function mount(context,params={}){
   if(s.mode==='placing')await preview();
  }
  function begin(type){
-  if(s.busy||!editable(s))return;
+  if(s.busy||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type))return;
   s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
@@ -246,7 +244,7 @@ export async function mount(context,params={}){
  on('[data-cancel]','click',cancel);
  on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;void preview();});
  on('[data-variant]','click',()=>{if(s.mode!=='placing')return;
-  const count=s.type===WINDOW_PREFAB_ID||s.type===DOOR_PREFAB_ID||s.type===GATE_PREFAB_ID?1:isGateStone(s.type)?GATE_STONE_VARIANTS:isWildPrefab(s.type)?WILD_VARIANTS_PER_SIZE:(s.scene?.manifest?.types?.find(t=>t.id===s.type)?.variants?.length||3);
+  const count=approvedVariantCount(s.type)||1;
   s.variant=(s.variant+1)%count;void preview();
  });
  on('[data-confirm]','click',()=>{

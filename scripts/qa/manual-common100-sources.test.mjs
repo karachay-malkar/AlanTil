@@ -33,7 +33,7 @@ const section222SHA=createHash('sha256').update(section222Raw).digest('hex');
 
 test('hand-authored recipe is stored independently of legacy tower prefabs',()=>{
  assert.equal(MANUAL_SECTION_SCHEMA,'alantil.manual-common100.catalog.1');
- assert.equal(MANUAL_SECTION_ROOT,'/assets/tower/sections/manual-common100');
+ assert.equal(MANUAL_SECTION_ROOT,'/assets/tower/approved-library/sections');
  assert.ok(entry);
  assert.equal(entry.file,'section-3x3x3-v1.json');
  assert.equal(entry.status,'source');
@@ -238,15 +238,18 @@ test('recipe validation rejects new geometry, invalid orientation or altered lib
  modified.recipe.librarySha256='0'.repeat(64);
  assert.throws(()=>validateManualSection(modified,entry,manifest),/другую библиотеку/);
 });
-test('manual source is imported only in the authoring editor, not live gameplay',()=>{
+test('original manual source archive remains available alongside approved-gameplay loader',()=>{
  const editor=read('src/features/masonry/index.js').toString('utf8');
- assert.match(editor,/from '\.\/manual-sections\/registry\.mjs\?v=manual-common100\.6'/);
+ assert.match(editor,/from '\.\/manual-sections\/registry\.mjs\?v=17\.7-approved-masonry\.1'/);
  assert.match(editor,/listManualSections\(\{signal\}\)/);
  assert.match(editor,/loadManualSection\(t\.value\.slice\(7\),state\.library\.manifest,\{signal\}\)/);
  assert.match(editor,/status:'draft',dirty:true/);
- const towerFiles=['src/features/tower/prefab-scene.js','src/features/tower/index.js'];
- for(const f of towerFiles){
-  try{const source=read(f).toString('utf8');assert.doesNotMatch(source,/manual-common100|manual-3x3x3-v1/);}
-  catch(error){if(error.code!=='ENOENT')throw error;}
- }
+ const game=read('src/features/tower/prefab-scene.js').toString('utf8');
+ const tower=read('src/features/tower/index.js').toString('utf8');
+ const loader=read('src/features/tower/approved-section-scene.js').toString('utf8');
+ assert.match(game,/approvedSections\.make\(/);
+ assert.match(tower,/BUILDABLE_PREFAB_TYPES/);
+ assert.match(loader,/loadManualSection\(id,manifest\)/);
+ assert.equal(index.sections.length,8,'historic manual source index stays immutable');
+ assert.equal(JSON.parse(read('assets/tower/approved-library/index.json')).sections.length,10);
 });
