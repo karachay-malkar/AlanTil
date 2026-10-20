@@ -46,7 +46,7 @@ test('shared stone material prefers KTX2 and retains PNG fallback with correct P
  assert.match(rock,/WeakMap/);
 });
 
-test('scene provides renderer to material loader; existing gate and saves untouched',()=>{
+test('scene provides renderer to material loader; gate PBR and saved identity remain intact',()=>{
  const scene=read('src/features/tower/prefab-scene.js');
  const gate=read('src/features/tower/gate-surface.js');
  assert.match(scene,/getRockSurface\(renderer\)/);
@@ -61,8 +61,8 @@ test('Light Ochre texture version is reachable through every lazy import and cac
  const feature=read('src/features/tower/index.js');
  const scene=read('src/features/tower/prefab-scene.js');
  const rock=read('src/features/tower/rock-surface.js');
- assert.ok(router.includes('const TOWER_ASSET_VERSION = "17.5.8-balkaria-light-ochre.1";'));
- assert.ok(feature.includes("prefab-scene.js?v=17.2-balkaria-light-ochre.1"));
+ assert.ok(router.includes('const TOWER_ASSET_VERSION = "17.5.8-gate-editor-stretch.v8.1";'));
+ assert.ok(feature.includes("prefab-scene.js?v=gate-editor-stretch-v8.1"));
  assert.ok(scene.includes("rock-surface.js?v=balkaria-stone-v2.1-light-ochre.1"));
  assert.ok(rock.includes("export const ROCK_SURFACE_VERSION='balkaria-stone-v2.1-light-ochre.1';"));
  assert.ok(rock.includes("const url=(name,extension)=>root+'BalkariaStone_'+name+'_2K.'+extension+'?v='+ROCK_SURFACE_VERSION"));
