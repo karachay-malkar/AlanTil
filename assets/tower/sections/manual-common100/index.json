@@ -145,6 +145,26 @@
       "sha256": "f6933236359525f27137510f3693cf06ab581c9692ecc6d4093968c9047199f6",
       "status": "source",
       "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x3x4-v3",
+      "title": "Секция 2×3×4",
+      "file": "section-2x3x4-v3.json",
+      "cells": [
+        2,
+        3,
+        4
+      ],
+      "stoneCount": 28,
+      "counts": {
+        "large": 0,
+        "main": 28,
+        "chinking": 0,
+        "lintel": 0
+      },
+      "sha256": "418424db7bcd05668609e4ef78724d71525937e3d480d0813f6c7cbca12e3e1a",
+      "status": "source",
+      "origin": "manual-authoring"
     }
   ]
 }

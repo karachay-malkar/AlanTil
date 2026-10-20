@@ -92,7 +92,7 @@ test('hand-authored 1x1x1 section is preserved byte for byte',()=>{
 });
 test('1x1x1 v2 is independent of v1, byte exact and references genuine Common100 geometry',()=>{
  assert.ok(secondEntry);
- assert.equal(index.sections.length,7);
+ assert.equal(index.sections.length,8);
  assert.equal(secondEntry.file,'section-1x1x1-v2.json');
  assert.equal(secondEntry.status,'source');
  assert.equal(secondEntry.origin,'manual-authoring');
@@ -154,7 +154,10 @@ test('additional 2x2x2 v2 and 2x3x4 v1 exports are separate byte-exact recipes',
    sha:'5d4c788b1264fedf1ecc78e83b56a7685fd43d6488919299c2544d680f3b7d06'},
   {id:'manual-2x3x4-v2',file:'section-2x3x4-v2.json',cells:[2,3,4],stones:40,
    counts:{large:0,main:35,chinking:5,lintel:0},bytes:14811,
-   sha:'f6933236359525f27137510f3693cf06ab581c9692ecc6d4093968c9047199f6',version:'common100-mixed-2'}
+   sha:'f6933236359525f27137510f3693cf06ab581c9692ecc6d4093968c9047199f6',version:'common100-mixed-2'},
+  {id:'manual-2x3x4-v3',file:'section-2x3x4-v3.json',cells:[2,3,4],stones:28,
+   counts:{large:0,main:28,chinking:0,lintel:0},bytes:10569,
+   sha:'418424db7bcd05668609e4ef78724d71525937e3d480d0813f6c7cbca12e3e1a',version:'common100-mixed-2'}
  ];
  for(const expected of newlyApproved){
   const entry=index.sections.find(x=>x.id===expected.id);
@@ -174,12 +177,26 @@ test('additional 2x2x2 v2 and 2x3x4 v1 exports are separate byte-exact recipes',
   assert.equal(doc.recipe.librarySha256,manifest.glbSHA256);
   assert.equal(validateManualSection(doc,entry,manifest),doc);
  }
- assert.equal(index.sections.length,7);
+ assert.equal(index.sections.length,8);
  assert.equal(section222Entry.stoneCount,11);
  assert.equal(section222Entry.sha256,section222SHA);
  assert.deepEqual(index.sections.slice(0,4).map(x=>x.id),[
   'manual-3x3x3-v1','manual-1x1x1-v1','manual-1x1x1-v2','manual-2x2x2-v1'
  ]);
+});
+test('2x3x4 v3 is an independent complete set of 28 MAIN stones',()=>{
+ const entry=index.sections.find(x=>x.id==='manual-2x3x4-v3');
+ assert.ok(entry,'new variant v3 must be registered');
+ const bytes=read('assets/tower/sections/manual-common100/'+entry.file);
+ const source=JSON.parse(bytes);
+ assert.equal(source.recipe.stones.length,28);
+ assert.deepEqual(source.recipe.architectures,[]);
+ assert.ok(source.recipe.stones.every(x=>x.name.startsWith('MAIN_')));
+ assert.equal(new Set(source.recipe.stones.map(s=>s.id)).size,28);
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);
+ assert.equal(validateManualSection(source,entry,manifest),source);
+ assert.deepEqual(index.sections.filter(x=>x.id.startsWith('manual-2x3x4-')).map(x=>x.id),
+ ['manual-2x3x4-v1','manual-2x3x4-v2','manual-2x3x4-v3']);
 });
 test('new mixed-2 manual source may only contain independent Common100 stones',()=>{
  const added=index.sections.find(entry=>entry.id==='manual-2x3x4-v2');
@@ -223,7 +240,7 @@ test('recipe validation rejects new geometry, invalid orientation or altered lib
 });
 test('manual source is imported only in the authoring editor, not live gameplay',()=>{
  const editor=read('src/features/masonry/index.js').toString('utf8');
- assert.match(editor,/from '\.\/manual-sections\/registry\.mjs\?v=manual-common100\.5'/);
+ assert.match(editor,/from '\.\/manual-sections\/registry\.mjs\?v=manual-common100\.6'/);
  assert.match(editor,/listManualSections\(\{signal\}\)/);
  assert.match(editor,/loadManualSection\(t\.value\.slice\(7\),state\.library\.manifest,\{signal\}\)/);
  assert.match(editor,/status:'draft',dirty:true/);
