@@ -1,0 +1,268 @@
+{
+  "schema": "alantil.manual-common100.catalog.1",
+  "version": "17.7-approved-masonry.1",
+  "library": {
+    "version": "17.7-common100.10",
+    "sha256": "e6edab64c426ca532d20d94d6416e12cbdb8ab651ead1636058ba18a81242a56",
+    "cellMeters": 0.25,
+    "glb": "/assets/tower/approved-library/common100/common-100.glb",
+    "file": "/assets/tower/approved-library/common100/common-100.json"
+  },
+  "sections": [
+    {
+      "id": "manual-1x1x1-v1",
+      "title": "Секция 1×1×1",
+      "file": "section-1x1x1-v1.json",
+      "cells": [
+        1,
+        1,
+        1
+      ],
+      "stoneCount": 6,
+      "counts": {
+        "large": 0,
+        "main": 6,
+        "chinking": 0,
+        "lintel": 0
+      },
+      "sha256": "63a835e7f8b036733c0898e97e39a50b3a10e192a0903696716e2ca474593c42",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-1x1x1-v2",
+      "title": "Секция 1×1×1",
+      "file": "section-1x1x1-v2.json",
+      "cells": [
+        1,
+        1,
+        1
+      ],
+      "stoneCount": 8,
+      "counts": {
+        "large": 0,
+        "main": 5,
+        "chinking": 3,
+        "lintel": 0
+      },
+      "sha256": "057f24d2e310c0092ff202538fb9ff33376df4c9f2e0b14f0f42c86fe559cce1",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x2x2-v1",
+      "title": "Секция 2×2×2",
+      "file": "section-2x2x2-v1.json",
+      "cells": [
+        2,
+        2,
+        2
+      ],
+      "stoneCount": 11,
+      "counts": {
+        "large": 0,
+        "main": 9,
+        "chinking": 2,
+        "lintel": 0
+      },
+      "sha256": "0418a441fe08ad1316744d68fd1a66841b489cba46e55ca3b0d82047f12bd6fe",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x2x2-v2",
+      "title": "Секция 2×2×2",
+      "file": "section-2x2x2-v2.json",
+      "cells": [
+        2,
+        2,
+        2
+      ],
+      "stoneCount": 19,
+      "counts": {
+        "large": 2,
+        "main": 9,
+        "chinking": 8,
+        "lintel": 0
+      },
+      "sha256": "5af66fb4be45c51f5461e31a27d55062c0fcd1026595c12112b1738f054e1a3a",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x2x2-v3",
+      "title": "Секция 2×2×2",
+      "file": "section-2x2x2-v3.json",
+      "cells": [
+        2,
+        2,
+        2
+      ],
+      "stoneCount": 15,
+      "counts": {
+        "large": 0,
+        "main": 11,
+        "chinking": 4,
+        "lintel": 0
+      },
+      "sha256": "6da1beee761559d49a29683c9deb76a8bddd96807bbc118b5da1572a28b0c5fe",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x3x4-v1",
+      "title": "Секция 2×3×4",
+      "file": "section-2x3x4-v1.json",
+      "cells": [
+        2,
+        3,
+        4
+      ],
+      "stoneCount": 40,
+      "counts": {
+        "large": 0,
+        "main": 37,
+        "chinking": 3,
+        "lintel": 0
+      },
+      "sha256": "5d4c788b1264fedf1ecc78e83b56a7685fd43d6488919299c2544d680f3b7d06",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x3x4-v2",
+      "title": "Секция 2×3×4",
+      "file": "section-2x3x4-v2.json",
+      "cells": [
+        2,
+        3,
+        4
+      ],
+      "stoneCount": 40,
+      "counts": {
+        "large": 0,
+        "main": 35,
+        "chinking": 5,
+        "lintel": 0
+      },
+      "sha256": "f6933236359525f27137510f3693cf06ab581c9692ecc6d4093968c9047199f6",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-2x3x4-v3",
+      "title": "Секция 2×3×4",
+      "file": "section-2x3x4-v3.json",
+      "cells": [
+        2,
+        3,
+        4
+      ],
+      "stoneCount": 28,
+      "counts": {
+        "large": 0,
+        "main": 28,
+        "chinking": 0,
+        "lintel": 0
+      },
+      "sha256": "418424db7bcd05668609e4ef78724d71525937e3d480d0813f6c7cbca12e3e1a",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-3x3x3-v1",
+      "title": "Секция 3×3×3",
+      "file": "section-3x3x3-v1.json",
+      "cells": [
+        3,
+        3,
+        3
+      ],
+      "stoneCount": 86,
+      "counts": {
+        "large": 3,
+        "main": 55,
+        "chinking": 28,
+        "lintel": 0
+      },
+      "sha256": "3d57b58e0cb1262eeb02158952495e301d8d8afabd5eccc76b3d401ce140e48d",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
+      "id": "manual-3x3x3-v2",
+      "title": "Секция 3×3×3",
+      "file": "section-3x3x3-v2.json",
+      "cells": [
+        3,
+        3,
+        3
+      ],
+      "stoneCount": 23,
+      "counts": {
+        "large": 7,
+        "main": 16,
+        "chinking": 0,
+        "lintel": 0
+      },
+      "sha256": "677dab4484c375e1f600963568661e68dca3cb5d7039527b14d3cfda75e49bc6",
+      "status": "source",
+      "origin": "manual-authoring"
+    }
+  ],
+  "architecture": {
+    "gate": {
+      "id": "gate-18x10x2",
+      "version": "17.6-gate.1",
+      "cells": [
+        18,
+        10,
+        2
+      ],
+      "glb": "/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb",
+      "materialsFrom": "/assets/tower/approved-library/architecture/door-wood-v1.glb"
+    },
+    "door": {
+      "id": "door-7x9x2",
+      "version": "17.6-door.1",
+      "cells": [
+        7,
+        9,
+        2
+      ],
+      "stone": "/assets/tower/approved-library/architecture/door-7x9x2-stone-v1.glb",
+      "wood": "/assets/tower/approved-library/architecture/door-wood-v1.glb"
+    },
+    "window": {
+      "id": "window-4x5x2",
+      "version": "17.6-window.1",
+      "cells": [
+        4,
+        5,
+        2
+      ],
+      "stone": "/assets/tower/approved-library/architecture/window-4x5x2-v2.glb",
+      "wood": "/assets/tower/approved-library/architecture/window-wood-v3.glb",
+      "joints": {
+        "x": "/assets/tower/approved-library/architecture/window-joint-x-v1.glb",
+        "y": "/assets/tower/approved-library/architecture/window-joint-y-v1.glb",
+        "z": "/assets/tower/approved-library/architecture/window-joint-z-v1.glb",
+        "corner": "/assets/tower/approved-library/architecture/window-joint-corner-v1.glb"
+      }
+    }
+  },
+  "currentConstruction": {
+    "masonryTypes": [
+      "1x1x1",
+      "2x2x2",
+      "2x3x4",
+      "3x3x3"
+    ],
+    "legacyMasonryHidden": true
+  },
+  "archivedSources": {
+    "legacyPrefabs": "/assets/tower/prefabs/manifest.json",
+    "legacyRecipes": "/assets/tower/sections/manual-common100/index.json",
+    "preserveHistoricTowerGeometryVersions": true
+  }
+}
