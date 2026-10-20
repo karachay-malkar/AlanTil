@@ -1,0 +1,33 @@
+name: Tower gate editor-stretch regression
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'assets/tower/prefabs/architectural/gate-18x10x2-editor-stretch-v8.json'
+      - 'src/features/tower/gate-editor-stretch.mjs'
+      - 'src/features/tower/prefab-scene.js'
+      - 'src/features/tower/index.js'
+      - 'src/app/router.js'
+      - 'tests/gate-editor-stretch.test.mjs'
+      - '.github/workflows/tower-gate-editor-stretch-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Module syntax
+        run: |
+          node --check src/features/tower/gate-editor-stretch.mjs
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/index.js
+          node --check src/app/router.js
+      - name: Authored export, GLB hierarchy, game placement and historical saves
+        run: |
+          node --test tests/gate-editor-stretch.test.mjs tests/gate-prefab.test.mjs tests/tower-prefab-placement-17-4.test.mjs
