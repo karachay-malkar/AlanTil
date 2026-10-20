@@ -133,13 +133,25 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
  renderer.domElement.addEventListener('pointerup',pointerUp);
  renderer.domElement.addEventListener('pointercancel',pointerUp);
  function cameraFitOnStones(cells){
-  const b=new THREE.Box3().setFromObject(stoneGroup);
-  const d=Math.max(...cells)*CELL_METERS;
-  if(b.isEmpty()){resetCamera(cells);return;}
-  const box=new THREE.Box3(new THREE.Vector3(-d/2,0,-d/2),new THREE.Vector3(d/2,d,d/2)).union(b);
-  const c=box.getCenter(new THREE.Vector3()),radius=box.getSize(new THREE.Vector3()).length()*.7;
-  controls.target.copy(c);camera.position.copy(c).addScaledVector(new THREE.Vector3(1,.7,1.2).normalize(),Math.max(.8,radius*2.6));
-  controls.update();
+  const [width,height,depth]=cells.map(n=>n*CELL_METERS);
+  const box=new THREE.Box3(
+   new THREE.Vector3(-width/2,0,-depth/2),
+   new THREE.Vector3(width/2,height,depth/2)
+  );
+  // Newly staged rocks lie beyond +X. Frame both the cube and all visible
+  // stones, accounting for the narrower horizontal field of view on phones.
+  if(objects.size)box.union(new THREE.Box3().setFromObject(stoneGroup));
+  const center=box.getCenter(new THREE.Vector3());
+  const radius=Math.max(.12,box.getSize(new THREE.Vector3()).length()*.5);
+  const halfVertical=THREE.MathUtils.degToRad(camera.fov*.5);
+  const halfHorizontal=Math.atan(Math.tan(halfVertical)*camera.aspect);
+  const limit=Math.max(.05,Math.min(halfVertical,halfHorizontal));
+  const distance=Math.max(.8,radius/Math.sin(limit)*1.12);
+  controls.target.copy(center);
+  camera.position.copy(center).addScaledVector(new THREE.Vector3(1,.7,1.2).normalize(),distance);
+  camera.near=Math.max(.005,distance/1000);
+  camera.far=Math.max(300,distance+radius*5);
+  camera.updateProjectionMatrix();controls.update();
  }
  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
  // Single shared offscreen renderer: thumbnails depict the same mesh as the editor.
