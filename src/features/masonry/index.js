@@ -20,7 +20,7 @@ const titleFor=cells=>`Секция ${cells.join('×')}`;
 export async function mount(context){
  const controller=new AbortController(),signal=controller.signal;
  const state={context,controller,scene:null,library:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
-  status:'draft',selected:null,toolsOpen:false,stepChoice:'.01',axisChoice:'free',category:'large',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
+  status:'draft',selected:null,axisChoice:'free',category:'large',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
  active=state;
  if(!hasActivityAccess()||!getCurrentAuthState()?.user?.id){
   context.router.replace('practice.home');return;
@@ -95,7 +95,7 @@ export async function mount(context){
   scheduleScratch();if(final)renderSelected();else renderInputs();
  };
  const putStone=(stone)=>{
-  commitBefore();state.recipe.stones.push(stone);state.selected=stone.id;state.toolsOpen=false;
+  commitBefore();state.recipe.stones.push(stone);state.selected=stone.id;
   syncScene();scheduleScratch();state.scene?.cameraFitOnStones(state.recipe.cells);
  };
  // Common100 geometries are centred by library.js; use their true bounds.
@@ -116,41 +116,27 @@ export async function mount(context){
  function renderInputs(){
   const stone=state.recipe.stones.find(x=>x.id===state.selected);if(!stone)return;
   for(let i=0;i<3;i++){
-   const p=$(`[data-pos="${i}"]`);if(p&&document.activeElement!==p)p.value=fmt(stone.position[i]);
    const s=$(`[data-scale="${i}"]`);if(s&&document.activeElement!==s)s.value=fmt(stone.scale[i]);
   }
  }
+
  function renderSelected(){
   const area=$('[data-selected]');if(!area)return;
   const stone=state.recipe.stones.find(x=>x.id===state.selected);
   area.hidden=!stone;
-  root.querySelector('.masonryEditor')?.classList.toggle('masonryEditor--toolsOpen',Boolean(stone&&state.toolsOpen));
   root.querySelectorAll('[data-requires-selection]').forEach(button=>{button.hidden=!stone;});
   if(!stone){area.replaceChildren();return;}
-  area.innerHTML=`<button type="button" class="masonryToolsToggle" data-action="tools" aria-expanded="${state.toolsOpen}" title="Координаты, поворот и масштаб">
-    <span class="masonryToolsIcon" aria-hidden="true">⚙</span><b>${escapeHTML(stone.name)}</b>
-    <span class="masonryToolsChevron" aria-hidden="true">${state.toolsOpen?'▴':'▾'}</span></button>
-   <div class="masonryStoneControls" ${state.toolsOpen?'':'hidden'}>
-    <div class="masonryCompactOptions">
-     <label>Шаг<select data-step aria-label="Шаг перемещения"><option value=".005">5 мм</option><option value=".01">1 см</option>
-      <option value=".025">2,5 см</option><option value=".05">5 см</option></select></label>
-     <label>Ось<select data-axis aria-label="Ось перемещения"><option value="free">Свободно</option>
+  area.innerHTML=`<div class="masonryInspectorHeader"><span class="masonryToolsIcon" aria-hidden="true">⚙</span><b>${escapeHTML(stone.name)}</b></div>
+   <div class="masonryStoneControls">
+    <label class="masonryAxisChoice"><span>Ось перемещения</span>
+     <select data-axis aria-label="Ось перемещения"><option value="free">Свободно</option>
       <option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select></label>
-    </div>
-    <div class="masonryCompactHeading">Положение, м</div>
+    <div class="masonryCompactHeading"><span>Масштаб</span><span>Поворот · 15°</span></div>
     <div class="masonryCompactAxes">${['X','Y','Z'].map((axis,i)=>`<div class="masonryCompactAxisRow">
-      <label><span>${axis}</span><input data-pos="${i}" aria-label="Координата ${axis}" type="number" step=".005" value="${fmt(stone.position[i])}"></label>
-      <button type="button" data-nudge="${axis.toLowerCase()}:-1" aria-label="Переместить по ${axis} назад">−</button>
-      <button type="button" data-nudge="${axis.toLowerCase()}:1" aria-label="Переместить по ${axis} вперёд">＋</button></div>`).join('')}</div>
-    <div class="masonryCompactHeading">Поворот · 15°</div>
-    <div class="masonryCompactAxes">${['X','Y','Z'].map(axis=>`<div class="masonryCompactAxisRow masonryCompactRotation">
-      <span>${axis}</span><button type="button" data-rotate="${axis.toLowerCase()}:-1" aria-label="Повернуть вокруг ${axis} назад">↶</button>
+      <label><span>${axis}</span><input data-scale="${i}" aria-label="Масштаб ${axis}" type="number" min=".011" max="20" step=".05" value="${fmt(stone.scale[i])}"></label>
+      <button type="button" data-rotate="${axis.toLowerCase()}:-1" aria-label="Повернуть вокруг ${axis} назад">↶</button>
       <button type="button" data-rotate="${axis.toLowerCase()}:1" aria-label="Повернуть вокруг ${axis} вперёд">↷</button></div>`).join('')}</div>
-    <div class="masonryCompactHeading">Масштаб</div>
-    <div class="masonryCompactScale">${['X','Y','Z'].map((axis,i)=>`<label><span>${axis}</span>
-     <input data-scale="${i}" aria-label="Масштаб ${axis}" type="number" min=".011" max="20" step=".05" value="${fmt(stone.scale[i])}"></label>`).join('')}</div>
    </div>`;
-  area.querySelector('[data-step]').value=state.stepChoice;
   area.querySelector('[data-axis]').value=state.axisChoice;
  }
  function editSelected(type,index,value){
@@ -159,11 +145,6 @@ export async function mount(context){
   if(type==='position'&&Math.abs(value)>200)return false;
   if(type==='scale'&&(value<=.01||value>20))return false;
   commitBefore();stone[type][index]=num(value);syncScene();scheduleScratch();return true;
- }
- function nudge(axis,direction){
-  const idx={x:0,y:1,z:2}[axis];const stone=state.recipe.stones.find(x=>x.id===state.selected);if(!stone)return;
-  const step=Number($('[data-step]')?.value)||.01;
-  editSelected('position',idx,stone.position[idx]+direction*step);
  }
  function rotate(axis,direction){
   const stone=state.recipe.stones.find(x=>x.id===state.selected);if(!stone)return;
@@ -189,7 +170,7 @@ export async function mount(context){
   if(!state.library)return;
   validateRecipe(recipe,state.library.manifest);
   state.recipe=copy(recipe);state.id=id;state.sourceId=sourceId;state.title=title||titleFor(recipe.cells);state.status=status;
-  state.selected=null;state.toolsOpen=false;state.history=[];state.future=[];state.dirty=dirty;state.mutationRevision+=1;
+  state.selected=null;state.history=[];state.future=[];state.dirty=dirty;state.mutationRevision+=1;
   $('[data-title]').value=state.title;
   const key=recipe.cells.join(',');
   presetControl.value=PRESETS.some(c=>c.join(',')===key)?key:'custom';$('[data-custom]').hidden=presetControl.value!=='custom';
@@ -268,7 +249,6 @@ export async function mount(context){
   const category=e.target.closest('[data-category]');
   if(category){state.category=category.dataset.category;state.page=0;renderCatalog();return;}
   const add=e.target.closest('[data-add-stone]');if(add){addStone(add.dataset.addStone);return;}
-  const move=e.target.closest('[data-nudge]');if(move){const [a,d]=move.dataset.nudge.split(':');nudge(a,Number(d));return;}
   const rotateButton=e.target.closest('[data-rotate]');if(rotateButton){const [a,d]=rotateButton.dataset.rotate.split(':');rotate(a,Number(d));return;}
   const action=e.target.closest('[data-action]')?.dataset.action;
   if(!action)return;
@@ -281,7 +261,6 @@ export async function mount(context){
    case 'save':await save('draft');break;
    case 'ready':await save('ready');break;
    case 'undo':undo();break;
-   case 'tools':state.toolsOpen=!state.toolsOpen;renderSelected();break;
    case 'redo':redo();break;
    case 'duplicate':{
     const s=state.recipe.stones.find(x=>x.id===state.selected);if(s){const cloned=copy(s);cloned.id=uuid();cloned.position=stagedPosition(cloned.name,cloned.quaternion,cloned.scale);putStone(cloned);}break;
@@ -310,14 +289,10 @@ export async function mount(context){
  root.addEventListener('click',handleClick,{signal});
  root.addEventListener('change',async e=>{
   const t=e.target;if(!state.library)return;
-  if(t.matches('[data-pos]')){
-   const idx=Number(t.dataset.pos);if(!editSelected('position',idx,Number(t.value)))toast('Недопустимая координата',true);return;
-  }
   if(t.matches('[data-scale]')){
    const idx=Number(t.dataset.scale);if(!editSelected('scale',idx,Number(t.value)))toast('Масштаб: от 0,01 до 20',true);return;
   }
   if(t.matches('[data-axis]')){state.axisChoice=t.value;state.scene.setAxis(t.value);return;}
-  if(t.matches('[data-step]')){state.stepChoice=t.value;return;}
   if(t.matches('[data-preset]')){
    if(t.value==='custom'){$('[data-custom]').hidden=false;return;}
    updateSize(t.value.split(',').map(Number));return;
@@ -374,7 +349,7 @@ export async function mount(context){
   state.recipe.libraryVersion=library.manifest.version;state.recipe.librarySha256=library.manifest.glbSHA256;
   state.scene=createMasonryScene($('[data-canvas]'),{
    models:library.manifest.models,geometries:library.geometries,
-   onSelect:id=>{if(state.selected!==id)state.toolsOpen=false;state.selected=id;renderSelected();},
+   onSelect:id=>{state.selected=id;renderSelected();},
    onDragStart:()=>commitBefore(),
    onTransform:updateStone,
   });
