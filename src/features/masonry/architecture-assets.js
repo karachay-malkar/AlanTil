@@ -5,7 +5,8 @@ import {getRockSurface,applyRockSurface} from '../tower/rock-surface.js';
 import {applyGateSurfaces} from '../tower/gate-surface.js';
 
 export const ARCHITECTURE=Object.freeze([
- {id:'gate',title:'Ворота с кладкой',file:'/assets/tower/prefabs/architectural/gate-18x10x2-v7.glb',cells:[18,10,2]},
+ {id:'gate',title:'Ворота v7 · исходные',file:'/assets/tower/prefabs/architectural/gate-18x10x2-v7.glb',cells:[18,10,2]},
+ {id:'gate-v9',title:'Ворота v9 · тест стыков',file:'/gate-fit-review/gate-18x10x2-v9-candidate.glb',cells:[18,10,2]},
  {id:'door',title:'Дверь с кладкой',file:'/assets/tower/prefabs/architectural/door-7x9x2-stone-v1.glb',cells:[7,9,2]},
  {id:'window',title:'Окно с кладкой',file:'/assets/tower/prefabs/architectural/window-4x5x2-v2.glb',cells:[4,5,2]},
  {id:'timber',title:'Деревянные балки и столбы',file:'/assets/tower/modular_wooden_pier/timber-parts.glb',cells:[8,8,8]}
@@ -13,7 +14,7 @@ export const ARCHITECTURE=Object.freeze([
 export const ARCHITECTURE_IDS=new Set(ARCHITECTURE.map(a=>a.id));
 const DOOR_WOOD='/assets/tower/prefabs/architectural/door-wood-v1.glb';
 const WINDOW_WOOD='/assets/tower/prefabs/architectural/window-wood-v3.glb';
-const VERSION='17.2-architectural-editor.1';
+const VERSION='17.2-architectural-editor.2';
 export const architectureById=id=>ARCHITECTURE.find(item=>item.id===id)||null;
 
 /** Preserve original materials and mesh hierarchy; flatten only the addressing of editable parts. */
@@ -28,7 +29,7 @@ export function createArchitectureLoader(renderer){
   if(!assets.has(id))assets.set(id,(async()=>{
    const spec=architectureById(id);
    const root=new THREE.Group();root.name='Architecture '+id;
-   if(id==='gate'){
+   if(id==='gate'||id==='gate-v9'){
     const [gate,door,rock]=await Promise.all([glb(spec.file),glb(DOOR_WOOD),getRockSurface(renderer)]);
     const scene=gate.scene.clone(true);
     applyGateSurfaces(scene,door.scene,rock);

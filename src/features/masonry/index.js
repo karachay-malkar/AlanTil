@@ -2,13 +2,13 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
-import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.2-architecture.1';
-import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.2-architecture.1';
+import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.2-architecture.2';
+import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.2-architecture.2';
 import {buildGateWings} from './gate-wings.mjs';
-import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.4';
+import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.5';
 import {stagingPosition} from './staging-position.mjs';
 import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.6';
-import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.2-architecture.1';
+import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.2-architecture.2';
 
 let active=null;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -67,7 +67,8 @@ export async function mount(context){
  </div>
  <div class="masonryEditorPanel">
   <div class="masonryActions">
-    <button type="button" data-action="gate-template" title="Открыть редактируемую кладку ворот">Ворота + кладка</button>
+    <button type="button" data-action="gate-template" title="Открыть старую кладку ворот с боковыми участками">Ворота v7 + кладка</button>
+    <button type="button" data-action="gate-v9" title="Открыть тестовые ворота v9 с боковой подгонкой, не меняя игру">Ворота v9 · тест</button>
     <button type="button" data-action="wings" title="Добавить боковую кладку к воротам" hidden>Дополнить по бокам</button>
    <button type="button" data-action="duplicate" data-requires-selection title="Дублировать выбранный камень" aria-label="Дублировать камень" hidden>⧉</button>
    <button type="button" data-action="delete" data-requires-selection title="Удалить выбранный камень" aria-label="Удалить камень" hidden>⌫</button>
@@ -307,6 +308,19 @@ export async function mount(context){
   await refreshList();
   toast('Ворота загружены · боковые участки добавлены, кладку можно доработать вручную');
  }
+ async function gateV9Template(){
+  if(!confirmDiscard())return;
+  await state.scene.ensureAssets([{asset:'gate-v9'}]);
+  if(state.disposed)return;
+  const gate=makeArchitecture('gate-v9'),cells=[18,10,2];
+  const recipe={...makeRecipe(cells),libraryVersion:state.library.manifest.version,
+   librarySha256:state.library.manifest.glbSHA256,stones:[],architectures:[gate]};
+  await setRecipe(recipe,{title:'Ворота v9 — тест боковых стыков',dirty:true});
+  state.selected=gate.id;syncScene();scheduleScratch();
+  state.scene.cameraFitOnStones(cells);
+  await refreshList();
+  toast('Тестовые ворота v9 загружены · игра не изменена');
+ }
  function addWings(){
   const gate=state.recipe.architectures?.find(item=>item.asset==='gate');
   if(!gate)return;
@@ -342,6 +356,7 @@ export async function mount(context){
    case 'ready':await save('ready');break;
    case 'undo':undo();break;
    case 'gate-template':try{await gateTemplate();}catch(error){toast('Ошибка ворот: '+error.message,true);}break;
+   case 'gate-v9':try{await gateV9Template();}catch(error){toast('Ошибка ворот v9: '+error.message,true);}break;
    case 'wings':addWings();break;
    case 'parts':state.partsMode=!state.partsMode;state.scene.setPartMode(state.partsMode);renderSelected();break;
    case 'parent':state.selected=state.selected.split('::')[0];state.scene.select(state.selected);renderSelected();break;
