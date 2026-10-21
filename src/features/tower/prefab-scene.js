@@ -1,35 +1,22 @@
-/** AlanTil 17.4 single-editor scene: static offline-baked authored GLBs only.
- * No voxel packing, live deformation, gridstone generation, or purchase mutations.
- */
+/** Single approved authored masonry scene; no legacy mesh generation or manifest. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
-import {ROCK_PACK} from '../../../assets/tower/processed-rocks.mjs';
-import {originalRockMesh} from '../../../packages/tower-game/rock-shapes.mjs';
-import {prefabBounds,PREFAB_CELL_METERS as CELL} from '../../../packages/tower-game/prefab-layout.mjs';
-import {resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
+import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
+import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
+import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION,WINDOW_JOINT_FILES} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,GATE_PREFAB_SPEC} from '../../../packages/tower-game/gate-prefab.mjs';
 import {applyGateSurfaces} from './gate-surface.js';
-import {WILD_PREFAB_VERSION,isWildPrefab} from '../../../packages/tower-game/wild-prefab.mjs';
-import {GATE_STONE_VERSION,isGateStone} from '../../../packages/tower-game/gate-stone-prefab.mjs';
-import {COMPACT_STONE_VERSION,isCompactStone} from '../../../packages/tower-game/compact-stone-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
-import {assembleCompactStoneSection} from './compact-stone-scene.js';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.1';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
- const manifest=await fetch('/assets/tower/prefabs/manifest.json?v=17.5.5-compact-stones.1').then(r=>{if(!r.ok)throw new Error('Библиотека секций недоступна');return r.json();});
- if(manifest.version!=='17.5.2')throw new Error('Неподдерживаемая версия секций');
- const specs=new Map(manifest.types.map(t=>[t.id,t]));
- // This additional architectural asset does not rewrite historic 17.5.2 entries.
- specs.set(WINDOW_PREFAB_ID,WINDOW_PREFAB_SPEC);
- specs.set(DOOR_PREFAB_ID,DOOR_PREFAB_SPEC);
- specs.set(GATE_PREFAB_ID,GATE_PREFAB_SPEC);
+ const manifest={version:APPROVED_PREFAB_VERSION,types:BUILDABLE_PREFAB_TYPES,
+  connectors:Object.fromEntries(Object.entries(WINDOW_JOINT_FILES).map(([axis,file])=>[axis,{file,interface:JOINT_INTERFACE}]))};
  const loader=new GLTFLoader(),loaded=new Map();
  const approvedSections=createApprovedSectionLoader();
  let disposed=false,layer=null,tool='select',blocks=[],selected=null;
@@ -66,7 +53,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
  const previewContents=new THREE.Group();preview.add(previewContents);
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
- const meshCache=new Map();let previewGeneration=0,rebuildGeneration=0,rendered=[],disposedMaterials=[],activeGhost=null;
+ let previewGeneration=0,rebuildGeneration=0,rendered=[],activeGhost=null;
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
  async function getPrefab(block){
@@ -132,46 +119,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    container.dataset.doorWoodReady='true';
    return assembled;
   }
-  if(isCompactStone(block.sectionId)&&block.geometryVersion===COMPACT_STONE_VERSION){
-   const compact=manifest.compactStone;
-   if(compact?.version!==COMPACT_STONE_VERSION||!compact.library||!compact.placements)throw new TypeError('Compact masonry catalog unavailable');
-   const libUrl=compact.library+'?v='+encodeURIComponent(COMPACT_STONE_VERSION);
-   const layoutsUrl=compact.placements+'?v='+encodeURIComponent(COMPACT_STONE_VERSION);
-   if(!loaded.has(libUrl))loaded.set(libUrl,loader.loadAsync(libUrl));
-   if(!loaded.has(layoutsUrl))loaded.set(layoutsUrl,fetch(layoutsUrl).then(r=>{if(!r.ok)throw new Error('Compact masonry layouts unavailable');return r.json();}));
-   const [source,layouts]=await Promise.all([loaded.get(libUrl),loaded.get(layoutsUrl)]);
-   // Compact source meshes must have the same UVs and normals as other rocks.
-   // InstancedMesh does not pass through applyRockSurface during construction.
-   const texturedSource=applyRockSurface(source.scene.clone(true),stoneMaterial);
-   return assembleCompactStoneSection(texturedSource,layouts,block.sectionId,block.variant,stoneMaterial);
-  }
-  if(isGateStone(block.sectionId)&&block.geometryVersion===GATE_STONE_VERSION){
-   const asset=manifest.gateStoneVariants?.[block.sectionId]?.[block.variant];
-   if(!asset?.file)throw new TypeError('Unknown approved gate-stone variant');
-   const url=asset.file+'?v='+encodeURIComponent(GATE_STONE_VERSION);
-   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
-   return applyRockSurface((await loaded.get(url)).scene.clone(true),stoneMaterial);
-  }
-  if(isWildPrefab(block.sectionId)&&block.geometryVersion===WILD_PREFAB_VERSION){
-   const asset=manifest.wildVariants?.[block.sectionId]?.[block.variant];
-   if(!asset?.file)throw new TypeError('Unknown wild masonry variant');
-   const url=`${asset.file}?v=${encodeURIComponent(WILD_PREFAB_VERSION)}`;
-   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
-   return applyRockSurface((await loaded.get(url)).scene.clone(true),stoneMaterial);
-  }
-  const t=specs.get(block.sectionId);if(!t)throw new TypeError('Unknown prefab '+block.sectionId);
-  const v=block.geometryVersion||manifest.version;
-  const url=v===manifest.version?t.variants[block.variant]?.file:
-    v===manifest.previousVersion?manifest.previousVariants?.[block.sectionId]?.[block.variant]:
-    v===manifest.legacyVersion?manifest.legacyVariants?.[block.sectionId]?.[block.variant]:
-    manifest.historicVariants?.[v]?.[block.sectionId]?.[block.variant]||null;
-  if(!url)throw new TypeError('Unknown prefab variant/version');
-  // Query version changes with every rebuilt prefab pack: stale HTTP/PWA
-  // cache must never silently return the earlier porous rock sections.
-  const versionedUrl=`${url}?v=${encodeURIComponent(manifest.version)}`;
-  if(!loaded.has(versionedUrl))loaded.set(versionedUrl,loader.loadAsync(versionedUrl));
-  const assembly=(await loaded.get(versionedUrl)).scene.clone(true);
-  return applyRockSurface(assembly,stoneMaterial);
+  throw new TypeError('Unknown current prefab '+block.sectionId);
  }
  async function getConnector(joint){
   const url=joint.file;if(!url)throw new TypeError('Unknown prebuilt joint');
@@ -190,40 +138,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function prepareMesh(model,block){
   const group=new THREE.Group();group.add(model.clone(true));group.userData.block=block;
   group.traverse(child=>{if(!child.isMesh)return;
-   // Never overwrite the wood, glass and forged iron PBR channels.
-   if(block.sectionId!==WINDOW_PREFAB_ID&&block.sectionId!==DOOR_PREFAB_ID){
-    // Shared BalkariaStone v2.1 material is immutable across all prefabs.
-   }
    child.userData.block=block;
   });
   setPosition(group,block);return group;
- }
- function historicGeometry(block){
-  const family=block.type==='stone'?'small':block.type;
-  const collection=ROCK_PACK[family];
-  if(!collection){
-   const g=new THREE.BoxGeometry(1,1,1);const m=new THREE.MeshStandardMaterial({color:'#725b43',roughness:.85});
-   return{geometry:g,material:m,owned:true};
-  }
-  const key=family+':'+(block.variant||0)%collection.length;
-  if(!meshCache.has(key)){
-   const m=originalRockMesh(collection[(block.variant||0)%collection.length],block.variant||0);
-   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(m.positions,3));
-   const col=new Float32Array(m.colors.length),tint=new THREE.Color();
-   for(let i=0;i<col.length;i+=3){tint.setRGB(m.colors[i],m.colors[i+1],m.colors[i+2],THREE.SRGBColorSpace);col[i]=tint.r;col[i+1]=tint.g;col[i+2]=tint.b;}
-   g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setIndex(new THREE.BufferAttribute(m.indices,1));g.computeVertexNormals();
-   meshCache.set(key,{geometry:g,material:new THREE.MeshStandardMaterial({vertexColors:true,color:'#ffffff',roughness:1,side:THREE.DoubleSide})});
-  }
-  return{...meshCache.get(key),owned:false};
- }
- function historicItem(block){
-  const {geometry,material,owned}=historicGeometry(block),mesh=new THREE.Mesh(geometry,material);
-  const d=[block.sx,block.sy,block.sz];const centre=center({...block,type:'historic'});
-  // Apply the same BalkariaStone v2.1 surface to legacy read-only stones.
-  applyRockSurface(mesh,stoneMaterial);
-  mesh.position.copy(centre);mesh.scale.set(...d.map(v=>v*CELL));mesh.rotation.y=(block.rotation%4)*Math.PI/2;
-  const group=new THREE.Group();group.add(mesh);group.userData.block=block;mesh.userData.block=block;group.userData.owned=owned;
-  return group;
  }
  function cleanGhost(){for(const child of [...previewContents.children]){previewContents.remove(child);child.traverse(node=>{if(node.isMesh&&node.userData.ghostMaterial)node.material.dispose();if(node.isInstancedMesh)node.dispose();});}activeGhost=null;}
  async function setPreview(block,valid=true){
@@ -231,7 +148,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(!block)return;
   try{
    const model=await getPrefab(block);if(disposed||generation!==previewGeneration)return;
-   const clone=model.userData.compactPlacementCount?model:model.clone(true);clone.traverse(node=>{if(!node.isMesh)return;node.material=new THREE.MeshBasicMaterial({color:valid?'#69cf91':'#ed7777',transparent:true,opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide});node.userData.ghostMaterial=true;});
+   const clone=model.clone(true);clone.traverse(node=>{if(!node.isMesh)return;node.material=new THREE.MeshBasicMaterial({color:valid?'#69cf91':'#ed7777',transparent:true,opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide});node.userData.ghostMaterial=true;});
    previewContents.add(clone);activeGhost=clone;setPosition(preview,block);
    ghostBounds.scale.copy(footprint(block)).multiplyScalar(1.01);
   }catch(e){if(generation===previewGeneration){container.dataset.prefabError=String(e?.message||e);console.warn('Prefab preview:',e);}}
@@ -241,12 +158,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const next=[],used=blocks.filter(b=>layer===null||b.y<=layer);
   try{
    for(const block of used){
-    if(block.type==='masonry_section'){
+     if(block.type!=='masonry_section')throw new TypeError('Unsupported tower block');
      const model=await getPrefab(block);
      if(disposed||generation!==rebuildGeneration)return;
      next.push(prepareMesh(model,block));
-    }else next.push(historicItem(block));
-   }
+    }
    // Prepared natural-stone join parts are placed, not generated or deformed.
    const owned=used.filter(b=>b.type==='masonry_section');
    const resolved=resolvePrefabJoints(owned,manifest);
@@ -254,8 +170,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     const model=await getConnector(joint);
     if(disposed||generation!==rebuildGeneration)return;
     const mesh=applyRockSurface(model.clone(true),stoneMaterial);mesh.position.set(...joint.point.map(v=>v*CELL));
-    // Legacy v17.4.1 joins retain their original rendering; new tiles are never scaled.
-    if(joint.legacyScale)mesh.scale.set(...joint.span.map((v,i)=>joint.axis==='xyz'[i]?1:v*CELL));
     next.push(mesh);
    }
    if(disposed||generation!==rebuildGeneration)return;
@@ -334,6 +248,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;},home:fit,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();},
   pickAt:findHit,
-  dispose(){disposed=true;previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();for(const {geometry,material} of meshCache.values()){geometry.dispose();material.dispose();}scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});renderer.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});renderer.dispose();renderer.domElement.remove();}
  };
 }
