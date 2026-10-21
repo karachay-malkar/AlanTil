@@ -14,7 +14,7 @@ import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
 import { createRouter } from "./router.js?v=16.7.8";
 import { createShell } from "./shell.js?v=16.7.0";
 
-const RELEASE_VERSION = "16.7.9";
+const RELEASE_VERSION = "16.7.10";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {

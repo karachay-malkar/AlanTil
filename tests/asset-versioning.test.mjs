@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "16.7.9";
+const SINGLETON_URL_VERSION = "16.7.10";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,7 +71,7 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.7.9 is the published Web app and cache release", async () => {
+test("16.7.10 is the published Web app and cache release", async () => {
   const index = await read("index.html");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
@@ -79,11 +79,11 @@ test("16.7.9 is the published Web app and cache release", async () => {
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
   assert.match(index, /app\.css\?v=16\.7\.9/);
-  assert.match(index, /bootstrap\.js\?v=16\.7\.9/);
+  assert.match(index, /bootstrap\.js\?v=16\.7\.10/);
   assert.match(analytics, /appVersion = "13\.15\.9"/);
   assert.match(versionScreen, /<dd>16\.7\.9<\/dd>/);
-  assert.match(worker, /const VERSION = "16\.7\.9-performance"/);
-  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.9"/);
+  assert.match(worker, /const VERSION = "16\.7\.10-masonry-idle-render"/);
+  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.10"/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
 });
@@ -125,7 +125,7 @@ test("profile is independent of removed avatar files", async () => {
   await assert.rejects(readFile(new URL("../assets/images/profile/avatar_female.png", import.meta.url)));
 });
 
-test("historical singleton URLs canonicalize to one 16.7.9 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one 16.7.10 in-memory instance", async () => {
   const index = await read("index.html");
   const generated = generatedImportMapFrom(index);
   const importMap = generated.imports;

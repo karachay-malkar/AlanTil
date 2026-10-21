@@ -31,22 +31,26 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
  const modelByName=new Map(models.map(m=>[m.name,m]));
  const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
  const tmp=new THREE.Vector3();
- let selectedId=null,axis='free',drag=null,disposed=false;
+ let selectedId=null,axis='free',drag=null,disposed=false,needsRender=true;
+ const invalidate=()=>{needsRender=true;};
+ controls.addEventListener('change',invalidate);
+ const onVisibilityChange=()=>{if(!document.hidden)invalidate();};
+ document.addEventListener('visibilitychange',onVisibilityChange);
  function material(model){return new THREE.MeshStandardMaterial({color:stoneColor(model),roughness:.98,metalness:0,flatShading:false});}
  function setBounds(cells){
   const [x,y,z]=cells.map(n=>n*CELL_METERS);
-  ghost.scale.set(x,y,z);ghost.position.set(0,y/2,0);
+  ghost.scale.set(x,y,z);ghost.position.set(0,y/2,0);invalidate();
  }
  function resetCamera(cells=[3,3,3]){
   const d=Math.max(...cells)*CELL_METERS;
   controls.target.set(0,cells[1]*CELL_METERS*.5,0);
   camera.position.copy(controls.target).add(new THREE.Vector3(d*1.7,d*1.2,d*1.8));
-  camera.near=Math.max(.005,d/100);camera.far=300;camera.updateProjectionMatrix();controls.update();
+  camera.near=Math.max(.005,d/100);camera.far=300;camera.updateProjectionMatrix();controls.update();invalidate();
  }
  function get(id){return objects.get(id)||null;}
  function select(id){
   selectedId=objects.has(id)?id:null;
-  refreshSelection();
+  refreshSelection();invalidate();
  }
  function refreshSelection(){
   const m=get(selectedId);
@@ -70,14 +74,14 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
    m.updateMatrixWorld(true);
   }
   if(selectedId&&!objects.has(selectedId))selectedId=null;
-  refreshSelection();
+  refreshSelection();invalidate();
  }
- function setGhostVisible(show){ghost.visible=Boolean(show);}
+ function setGhostVisible(show){ghost.visible=Boolean(show);invalidate();}
  function setAxis(value){axis=['free','x','y','z'].includes(value)?value:'free';}
  function resize(){
   if(disposed)return;
   const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);
-  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();invalidate();
  }
  const observer=new ResizeObserver(resize);observer.observe(host);resize();
  function toRay(e){
@@ -120,7 +124,7 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   }
   const m=get(drag.id);if(!m)return;
   m.position.copy(drag.position).add(delta);m.updateMatrixWorld(true);
-  refreshSelection();onTransform(drag.id,serializeTransform(m),false);
+  refreshSelection();invalidate();onTransform(drag.id,serializeTransform(m),false);
  }
  function pointerUp(e){
   if(!drag||e.pointerId!==drag.pointerId)return;
@@ -151,9 +155,9 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   camera.position.copy(center).addScaledVector(new THREE.Vector3(1,.7,1.2).normalize(),distance);
   camera.near=Math.max(.005,distance/1000);
   camera.far=Math.max(300,distance+radius*5);
-  camera.updateProjectionMatrix();controls.update();
+  camera.updateProjectionMatrix();controls.update();invalidate();
  }
- renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
+ renderer.setAnimationLoop(()=>{if(disposed||document.hidden)return;controls.update();if(needsRender){needsRender=false;renderer.render(scene,camera);}});
  // Single shared offscreen renderer: thumbnails depict the same mesh as the editor.
  const thumbnails=new Map();
  let previewRenderer=null;
@@ -179,6 +183,7 @@ export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,
   renderer.domElement.removeEventListener('pointermove',pointerMove);
   renderer.domElement.removeEventListener('pointerup',pointerUp);
   renderer.domElement.removeEventListener('pointercancel',pointerUp);
+  controls.removeEventListener('change',invalidate);document.removeEventListener('visibilitychange',onVisibilityChange);
   controls.dispose();
   for(const m of objects.values())m.material.dispose();
   previewRenderer?.dispose();renderer.dispose();

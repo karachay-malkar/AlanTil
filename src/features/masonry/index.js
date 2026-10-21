@@ -3,7 +3,7 @@ import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=13.15.9';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.7.1';
 import {CELL_METERS,CATEGORIES,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js';
-import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.3';
+import {createMasonryScene} from './scene.js?v=17.2-manual-masonry.4';
 import {stagingPosition} from './staging-position.mjs';
 import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=manual-common100.3';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js';
@@ -19,7 +19,7 @@ const titleFor=cells=>`Секция ${cells.join('×')}`;
 
 export async function mount(context){
  const controller=new AbortController(),signal=controller.signal;
- const state={context,controller,scene:null,library:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
+ const state={context,controller,scene:null,library:null,thumbnailObserver:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
   status:'draft',selected:null,toolsOpen:false,stepChoice:'.01',axisChoice:'free',category:'large',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
  active=state;
  if(!hasActivityAccess()||!getCurrentAuthState()?.user?.id){
@@ -246,9 +246,36 @@ export async function mount(context){
  function renderCategories(){
   $('[data-categories]').innerHTML=CATEGORIES.map(c=>`<button type="button" data-category="${c.key}" aria-pressed="${c.key===state.category}">${c.label} · ${c.count}</button>`).join('');
  }
+ const thumbQueue=[];
+ let thumbFrame=0,thumbnailGeneration=0;
+ function pumpThumbnails(){
+  thumbFrame=0;
+  const next=thumbQueue.shift();
+  if(next){
+   const {img,generation}=next;
+   if(!state.disposed&&generation===thumbnailGeneration&&img.isConnected){
+    const url=state.scene?.thumbnail(img.dataset.thumb);
+    if(url)img.src=url;
+   }
+  }
+  if(thumbQueue.length)thumbFrame=requestAnimationFrame(pumpThumbnails);
+ }
+ function queueThumbnail(img,generation){
+  thumbQueue.push({img,generation});
+  if(!thumbFrame)thumbFrame=requestAnimationFrame(pumpThumbnails);
+ }
+ state.stopThumbnailWork=()=>{
+  thumbnailGeneration+=1;
+  thumbQueue.length=0;
+  if(thumbFrame)cancelAnimationFrame(thumbFrame);
+  thumbFrame=0;
+ };
  function renderCatalog(){
   if(!state.library)return;
   renderCategories();
+  thumbnailGeneration+=1;
+  thumbQueue.length=0;
+  state.thumbnailObserver?.disconnect();
   const items=state.library.manifest.models.filter(m=>m.category===state.category);
   const PAGE=16,pages=Math.max(1,Math.ceil(items.length/PAGE));state.page=Math.min(state.page,pages-1);
   const visible=items.slice(state.page*PAGE,(state.page+1)*PAGE);
@@ -257,10 +284,20 @@ export async function mount(context){
    <span>${escapeHTML(m.name)}<small>${Array.isArray(m.sizeMeters)?m.sizeMeters.map(v=>Math.round(v*100)).join('×')+' см':''}</small></span>
    <span class="masonryPlus">＋</span></button>`).join('');
   $('[data-pages]').textContent=`${state.page+1} / ${pages}`;
-  for(const img of root.querySelectorAll('[data-thumb]')){
-   // Render real GLB geometry, never an invented icon in place of a rock.
-   const url=state.scene?.thumbnail(img.dataset.thumb);
-   if(url)img.src=url;
+  const images=[...root.querySelectorAll('[data-thumb]')];
+  const generation=thumbnailGeneration;
+  if(typeof IntersectionObserver==='function'){
+   const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+     if(!entry.isIntersecting)continue;
+     observer.unobserve(entry.target);
+     queueThumbnail(entry.target,generation);
+    }
+   },{rootMargin:'120px'});
+   state.thumbnailObserver=observer;
+   images.forEach(img=>observer.observe(img));
+  }else{
+   images.forEach(img=>queueThumbnail(img,generation));
   }
  }
  const handleClick=async e=>{
@@ -401,6 +438,6 @@ export function unmount(){
  if(!active)return;
  const state=active;active=null;state.disposed=true;clearTimeout(state.timer);
  if(state.dirty)saveLocalScratch({id:state.id,sourceId:state.sourceId,title:state.title,status:state.status,recipe:state.recipe});
- state.controller.abort();state.unsubscribe?.();state.scene?.dispose();
+ state.controller.abort();state.unsubscribe?.();state.stopThumbnailWork?.();state.thumbnailObserver?.disconnect();state.scene?.dispose();
  state.context.shell.appShell.dataset.feature='';
 }

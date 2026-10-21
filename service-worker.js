@@ -1,10 +1,10 @@
-const VERSION = "16.7.9-performance";
+const VERSION = "16.7.10-masonry-idle-render";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.7.9",
+  "/src/app/bootstrap.js?v=16.7.10",
   "/src/shared/styles/app.css?v=16.7.9",
   "/src/features/onboarding/index.js?v=16.7.9",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
