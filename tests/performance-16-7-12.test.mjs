@@ -37,3 +37,10 @@ test("progress scope initializes before router navigation; feature styles stay r
   assert.match(css, /features\/path\/path\.css/);
   assert.doesNotMatch(css, /features\/(?:profile|admin|masonry|ashyk)\//);
 });
+
+test("HTML defines a local favicon to prevent automatic /favicon.ico 404s", async () => {
+  const html = await read("index.html");
+  const icon = await read("assets/icons/ui/path.svg");
+  assert.match(html, /rel="icon" type="image\/svg\+xml" href="\/assets\/icons\/ui\/path\.svg\?v=16\.7\.12"/);
+  assert.match(icon, /<svg/);
+});
