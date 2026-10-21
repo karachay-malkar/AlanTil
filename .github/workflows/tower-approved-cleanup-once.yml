@@ -47,4 +47,6 @@ jobs:
           git diff --cached --stat
           git diff --cached --quiet && exit 0
           git commit -m "chore(17.2): remove obsolete tower code and GLBs; approved library only"
+          git fetch origin 17.2
+          git rebase origin/17.2
           git push origin HEAD:17.2
