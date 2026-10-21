@@ -7,7 +7,7 @@ const source=(path)=>readFileSync(new URL('../../'+path,import.meta.url),'utf8')
 const withoutImports=s=>s.replace(/^import[\s\S]*?;\s*$/gm,'').replace(/\bexport (?=(?:async )?(?:function|const|let|class))/g,'');
 
 test('Common 100 source has exactly 100 known authored models',()=>{
- const m=JSON.parse(source('assets/tower/prefabs/common100/common-100.json'));
+ const m=JSON.parse(source('assets/tower/approved-library/common100/common-100.json'));
  assert.equal(m.count,100);assert.equal(m.models.length,100);
  assert.deepEqual(m.counts,{main:72,large:10,chinking:12,lintel:6});
  assert.equal(new Set(m.models.map(x=>x.name)).size,100);
@@ -16,7 +16,7 @@ test('Common 100 source has exactly 100 known authored models',()=>{
 test('Manual authoring format preserves free coordinates and precise quaternion',()=>{
  const lib=withoutImports(source('src/features/masonry/library.js'));
  const {makeRecipe,validateRecipe}=new Function(lib+'\nreturn {makeRecipe,validateRecipe};')();
- const manifest=JSON.parse(source('assets/tower/prefabs/common100/common-100.json'));
+ const manifest=JSON.parse(source('assets/tower/approved-library/common100/common-100.json'));
  const section=makeRecipe([3,3,3]);
  section.libraryVersion=manifest.version;section.librarySha256=manifest.glbSHA256;
  section.stones.push({id:'unique-stone',name:manifest.models[0].name,
