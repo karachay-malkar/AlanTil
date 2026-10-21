@@ -80,7 +80,11 @@ async function restoreMapPosition(viewport) {
   const previousBehavior = viewport.style.scrollBehavior;
   viewport.style.scrollBehavior = "auto";
   try {
-    await Promise.resolve(document.fonts?.ready).catch(() => {});
+    // Do not hide the route map indefinitely when web fonts are slow.
+    await Promise.race([
+      Promise.resolve(document.fonts?.ready).catch(() => {}),
+      new Promise((resolve) => globalThis.setTimeout(resolve, 400)),
+    ]);
     await nextLayoutFrame();
     const position = () => {
       const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);

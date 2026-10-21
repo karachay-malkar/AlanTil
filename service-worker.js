@@ -1,18 +1,15 @@
-const VERSION = "16.7.8-masonry-top-right-tools";
+const VERSION = "16.7.9-performance";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
-  "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.7.8",
-  "/src/shared/styles/app.css?v=13.15.12.7",
-  "/src/features/onboarding/index.js?v=13.15.12",
+  "/src/app/bootstrap.js?v=16.7.9",
+  "/src/shared/styles/app.css?v=16.7.9",
+  "/src/features/onboarding/index.js?v=16.7.9",
   "/src/features/onboarding/onboarding.css?v=13.10.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
-  "/assets/icons/auth/google.svg",
   "/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1",
-  "/assets/path/story-stele.webp?v=13.15.6",
 ];
 
 const NETWORK_FIRST_PATHS = new Set([
@@ -79,8 +76,13 @@ async function navigationResponse(request) {
 }
 
 async function networkFirstStaticResponse(request) {
+  const versioned = new URL(request.url).searchParams.has("v");
+  if (versioned) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+  }
   try {
-    const response = await fetch(request, { cache: "no-store" });
+    const response = await fetch(request);
     if (response.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
       await cache.put(request, response.clone());
@@ -93,14 +95,17 @@ async function networkFirstStaticResponse(request) {
 
 async function staticResponse(request) {
   const cached = await caches.match(request);
-  const network = fetch(request).then(async (response) => {
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
     if (response.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
       await cache.put(request, response.clone());
     }
     return response;
-  }).catch(() => null);
-  return cached || (await network) || Response.error();
+  } catch {
+    return Response.error();
+  }
 }
 
 self.addEventListener("fetch", (event) => {

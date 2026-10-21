@@ -5,7 +5,7 @@ import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=13.15.9";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.8";
+const RELEASE_VERSION = "16.7.9";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   masonry: "../features/masonry/index.js",
@@ -20,6 +20,21 @@ const FEATURE_PATHS = Object.freeze({
   songs: "../features/songs/index.js",
   account: "../features/account/index.js",
   settings: "../features/settings/feature.js",
+});
+
+const FEATURE_STYLE_PATHS = Object.freeze({
+  practice: "/src/shared/styles/feature/practice.css?v=16.7.9",
+  masonry: "/src/shared/styles/feature/masonry.css?v=16.7.9",
+  ashyk: "/src/shared/styles/feature/ashyk.css?v=16.7.9",
+  friends: "/src/shared/styles/feature/friends.css?v=16.7.9",
+  profile: "/src/shared/styles/feature/profile.css?v=16.7.9",
+  admin: "/src/shared/styles/feature/admin.css?v=16.7.9",
+  learn: "/src/shared/styles/feature/learn.css?v=16.7.9",
+  test: "/src/shared/styles/feature/test.css?v=16.7.9",
+  match: "/src/shared/styles/feature/match.css?v=16.7.9",
+  songs: "/src/shared/styles/feature/songs.css?v=16.7.9",
+  account: "/src/shared/styles/feature/account.css?v=16.7.9",
+  settings: "/src/shared/styles/feature/settings.css?v=16.7.9",
 });
 
 const ROUTER_STATE_KEY = "__alanTilRouter";
@@ -201,6 +216,30 @@ function safeReferrer(value) { if (!value) return ""; try { const url = new URL(
 export function createRouter({ shell, modal, context }) {
   const entries = [];
   const loadedModules = new Map();
+  const loadedStyles = new Map();
+
+  function ensureFeatureStyle(feature) {
+    const href = FEATURE_STYLE_PATHS[feature];
+    if (!href) return Promise.resolve();
+    if (loadedStyles.has(feature)) return loadedStyles.get(feature);
+    const pending = new Promise((resolve, reject) => {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      link.dataset.featureStylesheet = feature;
+      link.onload = () => resolve();
+      link.onerror = () => {
+        link.remove();
+        reject(new Error(`Failed to load styles for ${feature}`));
+      };
+      document.head.appendChild(link);
+    }).catch(error => {
+      loadedStyles.delete(feature);
+      throw error;
+    });
+    loadedStyles.set(feature, pending);
+    return pending;
+  }
   let current = { route: "path.home", params: { storyType: DEFAULT_STORY } };
   let currentModule = null;
   let navigating = false;
@@ -239,13 +278,6 @@ export function createRouter({ shell, modal, context }) {
     if (queuedNavigation) { const request = queuedNavigation; queuedNavigation = null; void show(request.target, request.options).then(request.resolve); return; }
     if (queuedRefresh) { const options = queuedRefresh; queuedRefresh = null; void refresh(options); }
   }
-  function scheduleFeatureWarmup(route) {
-    const currentFeature = featureOf(route);
-    const features = currentFeature === "path" ? ["practice", "friends", "profile"] : currentFeature === "practice" ? ["path", "friends", "test", "match", "ashyk"] : currentFeature === "friends" ? ["practice", "profile"] : currentFeature === "ashyk" ? ["practice", "friends"] : [];
-    if (!features.length) return;
-    const warm = () => features.forEach((feature) => void loadModule(feature).catch(() => {}));
-    if (typeof requestIdleCallback === "function") requestIdleCallback(warm, { timeout: 1800 }); else globalThis.setTimeout(warm, 250);
-  }
   function targetWithInheritedParams(route, params = {}) {
     const sameFeature = featureOf(route) === featureOf(current.route) && route !== "home" && !String(route).endsWith(".home");
     return { route, params: compactParams({ ...(sameFeature ? current.params : {}), ...params }) };
@@ -282,7 +314,7 @@ export function createRouter({ shell, modal, context }) {
   function canonicalize(route = current.route, params = current.params) { current = { route, params: compactParams(params) }; entries[historyIndex] = current; const path = `${buildPath(current.route, current.params)}${navigationSuffix()}`; window.history.replaceState(historyState(current, historyIndex), "", path); return getCurrent(); }
   async function mountCurrentRoute(preloadedModule = null) {
     shell.setCounter(""); shell.clearMode(); shell.beginNavigation(current.route, msg("common.otkryvaem")); syncBackControls();
-    const feature = featureOf(current.route); currentModule = preloadedModule || await loadModule(feature);
+    const feature = featureOf(current.route); await ensureFeatureStyle(feature); currentModule = preloadedModule || await loadModule(feature);
     await currentModule.mount({ ...context, router: api }, { ...current.params, screen: current.route.split(".")[1] || "home" });
     shell.setActiveNav(current.route); setDocumentTitle(current.route);
   }
@@ -311,10 +343,11 @@ export function createRouter({ shell, modal, context }) {
     navigating = true;
     try {
       if (!skipLeaveCheck && !(await mayLeave(force))) return false;
-      const nextModule = await loadModule(featureOf(target.route)); if (queuedNavigation && !initial) return false;
+      const feature = featureOf(target.route);
+      const [nextModule] = await Promise.all([loadModule(feature), ensureFeatureStyle(feature)]); if (queuedNavigation && !initial) return false;
       finishScreenTimer(); await currentModule?.onLeave?.(reason); currentModule?.unmount?.(); currentModule = null; current = { route: target.route, params: compactParams(target.params) };
       if (historyMode !== "none") syncBrowserHistory(current, historyMode);
-      await mountCurrentRoute(nextModule); startScreenTimer(current.route); sendPageView({ initial }); scheduleFeatureWarmup(current.route); return true;
+      await mountCurrentRoute(nextModule); startScreenTimer(current.route); sendPageView({ initial }); return true;
     } catch (error) {
       console.error("Router mount failed", error); context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`; syncBackControls(); return false;
     } finally { navigating = false; if (!queuedNavigation) shell.setNavigationPending?.(current.route, false); drainPendingWork(); }

@@ -7,51 +7,6 @@ function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
 }
 
-function avatarSilhouette() {
-  return `<svg viewBox="0 0 64 76" aria-hidden="true" focusable="false"><circle cx="32" cy="22" r="15"/><path d="M9 70c1-20 10-31 23-31s22 11 23 31z"/></svg>`;
-}
-
-export function renderAvatarGenderSelection(context, { error = "" } = {}) {
-  context.shell.setHeaderContent?.({ title: msg("account.obraz_avatara") });
-  context.root.innerHTML = panel({
-    title: msg("account.obraz_avatara"),
-    classes: "accountPanel",
-    viewClasses: "accountView",
-    body: `
-      <div class="accountStack accountGenderOnboarding">
-        ${error ? `<div class="accountMessage accountMessageError" role="alert">${escapeHtml(error)}</div>` : ""}
-        <div class="accountGenderIntro">
-          <strong>${msg("account.vyberite_pol_avatara")}</strong>
-          <span>${msg("account.eto_okonchatelnyy_vybor_pozzhe_izmenit_ego_budet")}</span>
-        </div>
-        <div class="accountGenderChoices" role="group" aria-label="${msg("account.pol_avatara")}">
-          <button class="accountGenderChoice choiceControl" type="button" data-avatar-gender="male">
-            <span class="accountGenderFigure">${avatarSilhouette()}</span>
-            <span>${msg("account.muzhskoy_2")}</span>
-          </button>
-          <button class="accountGenderChoice choiceControl" type="button" data-avatar-gender="female">
-            <span class="accountGenderFigure">${avatarSilhouette()}</span>
-            <span>${msg("account.zhenskiy_2")}</span>
-          </button>
-        </div>
-      </div>`,
-  });
-}
-
-export function bindAvatarGenderSelection(context, signal, { onSelect } = {}) {
-  context.root.querySelectorAll("[data-avatar-gender]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const buttons = Array.from(context.root.querySelectorAll("[data-avatar-gender]"));
-      buttons.forEach((item) => { item.disabled = true; });
-      try {
-        await onSelect?.(button.dataset.avatarGender);
-      } finally {
-        buttons.forEach((item) => { if (item.isConnected) item.disabled = false; });
-      }
-    }, { signal });
-  });
-}
-
 export function renderProfileCreation(context, user, {
   nickname = "",
   nicknameMessage = "",
@@ -151,7 +106,6 @@ export function renderProfile(context, { user, profile, provider, error = "" }) 
           ${renderAccountFact(msg("account.nikneym"), profile?.nickname || "")}
           ${renderAccountFact("Email", user?.email || "")}
           ${renderAccountFact(msg("account.sposob_vhoda"), provider || "")}
-          ${renderAccountFact(msg("account.obraz_avatara"), profile?.avatar_gender === "female" ? msg("account.zhenskiy_2") : msg("account.muzhskoy_2"))}
         </dl>
         <button id="accountSignOut" class="btn actionText accountAction" type="button">${msg("account.vyyti")}</button>
       </div>`,

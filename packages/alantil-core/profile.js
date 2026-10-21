@@ -1,6 +1,5 @@
 const NICKNAME_PATTERN = /^[A-Za-z0-9_]{3,15}$/;
 const LATIN_LETTER_PATTERN = /[A-Za-z]/g;
-const AVATAR_GENDERS = new Set(['male', 'female']);
 
 export function normalizeNickname(value) {
   return String(value || '').trim();
@@ -19,10 +18,6 @@ export function validateNicknameRule(value) {
   return { valid: true, nickname, reason: null };
 }
 
-export function normalizeAvatarGender(value) {
-  const gender = String(value || '').trim().toLowerCase();
-  return AVATAR_GENDERS.has(gender) ? gender : '';
-}
 
 export function providerLabel(provider) {
   const value = String(provider || '').trim().toLowerCase();

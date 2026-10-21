@@ -104,7 +104,7 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
   trigger.setAttribute("aria-haspopup", "dialog");
   trigger.setAttribute("aria-label", storyName || storyId);
   trigger.title = storyName || storyId;
-  trigger.innerHTML = `<span class="storySteleTriggerGlyph" aria-hidden="true"><img src="${ASSET_URL}" alt=""><span>✦</span></span>`;
+  trigger.innerHTML = `<span class="storySteleTriggerGlyph" aria-hidden="true"><span>✦</span></span>`;
   pathView.appendChild(trigger);
 
   const overlay = document.createElement("div");
@@ -114,7 +114,7 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
     <div class="storySteleBackdrop" aria-hidden="true"></div>
     <section class="storySteleDialog" role="dialog" aria-modal="true" aria-labelledby="storySteleTitle-${escapeHtml(storyId)}" tabindex="-1">
       <div class="storySteleCard">
-        <img class="storySteleArtwork" src="${ASSET_URL}" alt="" aria-hidden="true">
+        <img class="storySteleArtwork" data-src="${ASSET_URL}" alt="" aria-hidden="true">
         <div class="storySteleContent" data-stele-content>
           <h2 class="storySteleTitle" id="storySteleTitle-${escapeHtml(storyId)}">${escapeHtml(storyName)}</h2>
           <div class="storySteleBody" data-stele-scroll>${renderParagraphs(storyIntro)}</div>
@@ -218,6 +218,8 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
     clearCloseTimer();
     clearAutoScroll();
     open = true;
+    const artwork = overlay.querySelector(".storySteleArtwork");
+    if (artwork && !artwork.hasAttribute("src")) artwork.src = artwork.dataset.src;
     overlay.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     trigger.classList.add("isHiddenWhileOpen");

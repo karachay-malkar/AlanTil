@@ -14,7 +14,7 @@
   .stationProblemHead,.storyProgress .pathProgressCount,
   .learnCardAction>span,.sessionDecision,.learnResultSummary span,
   .settingsSmallAction,.settingsUpdateBadge,.settingsLinkEnd small,
-  .searchModeItem span,.mediaTimeline,.profileAvatarFrame::before,.problemWord small,
+  .searchModeItem span,.mediaTimeline,.problemWord small,
   .adminUsersTable thead th,.adminRankLabel,.adminTestDate,.adminInlineAction,
   .adminProblemCounts,.adminTestTitle>span,.adminTestFacts dt,.adminResultWordMain span,
   .adminResultWordStatus strong,.adminResultWordStatus small,
@@ -54,7 +54,7 @@
   .accountIntro,.analyticsPreferenceRow,.guestProfilePrompt p,
   .routeSectionHeading,.stationStatsHeading,.stationProblemWord,.storyIntro,
   .learnCard .trans,.optionBtn,.songTranslatedLine,.profileStoryHead,
-  .profileLockedState>span,.profileGenderSetup>span,.settingsSectionTitle,.settingsDocument,
+  .profileLockedState>span,.settingsSectionTitle,.settingsDocument,
   .adminTestFacts dd
 ){font-size:var(--text-body)}
 
@@ -72,7 +72,7 @@
 
 /* Titles — screen/document headings, primary metrics and prominent names. */
 :where(
-  h1,.panelTitle,.typo-title,.profileNickname,.profileGenderSetup>strong,
+  h1,.panelTitle,.typo-title,.profileNickname,
   .settingsPageHead h1,.settingsDocument h1,.wordCardWord,.instagramArrow,.modalClose,
   .stationMasteryBlock strong,.stationAttempt strong,.stationResultMark,
   .learnResultSummary strong,.accountGenderIntro strong,.profileLockedState>strong,

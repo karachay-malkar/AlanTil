@@ -5,7 +5,7 @@ import{formatRating}from'../../packages/alantil-core/social.js';
 import{socialMessage}from'../../packages/alantil-core/social-i18n.js';
 import{createAshykOnlineAdapter}from'../../packages/ashyk-game/online.js';
 import{Button,HeaderCircleButton,Screen,ScreenState}from'../ui/components.js';
-import{BlockIcon,CorrectIcon,GenderIcon,PendingIcon,SearchIcon,UserMinusIcon,UserPlusIcon,WrongIcon}from'../ui/icons.js';
+import{BlockIcon,CorrectIcon,PendingIcon,SearchIcon,UserMinusIcon,UserPlusIcon,WrongIcon}from'../ui/icons.js';
 import{ProfileTabs}from'../ui/profile-tabs.js';
 import{useSemanticTypography}from'../ui/runtime-settings.js';
 import{theme}from'../ui/theme.js';
@@ -15,8 +15,6 @@ import{AdminUsersPane}from'./admin-users.js';
 import{acceptNativeFriendRequest,blockNativeUser,declineNativeFriendRequest,loadNativeFriendsSnapshot,loadNativeLeaderboard,removeNativeFriend,searchNativeUsers,sendNativeFriendRequest,unblockNativeUser}from'../platform/social.js';
 const C=theme.colors;
 const EMPTY={friends:[],incoming:[],outgoing:[],blocked:[],ashyk_invites:[],ashyk_sent:[]};
-const GENDER_COLOR={male:'#3f7fd1',female:'#d0679f'};
-function genderColor(gender){return GENDER_COLOR[gender==='female'?'female':'male'];}
 function MedalOrRank({rank}){if(rank>=1&&rank<=3){const color=rank===1?'#c9971f':rank===2?'#9aa1ab':'#b0713b';return <Text style={[s.rank,{color}]}>●</Text>;}return <Text style={s.rank}>#{rank}</Text>;}
 function IconBtn({onPress,disabled,active,children,label}){return <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={disabled} onPress={onPress} style={({pressed})=>[s.iconBtn,active&&s.iconBtnActive,disabled&&s.iconBtnDisabled,pressed&&!disabled&&s.iconBtnPressed]}>{children}</Pressable>}
 function RelationActions({user,t,onAdd,onAccept}){
@@ -25,11 +23,11 @@ function RelationActions({user,t,onAdd,onAccept}){
   if(user.relation==='incoming'){const id=user.friendship_id;return id?<View style={s.actionsRow}><IconBtn label={t('accept')} active onPress={()=>onAccept(id)}><CorrectIcon size={16} color={C.successStrong}/></IconBtn></View>:null;}
   return <IconBtn label={t('add')} active onPress={()=>onAdd(user.user_id)}><UserPlusIcon size={16} color={C.accentStrong}/></IconBtn>;
 }
-function Row({rank=0,nickname,gender,rightValue,secondary,actions}){
+function Row({rank=0,nickname,rightValue,secondary,actions}){
   return <View style={s.row}>
     {rank?<View style={s.rankWrap}><MedalOrRank rank={rank}/></View>:null}
     <View style={s.rowBody}>
-      <View style={s.rowName}><GenderIcon size={14} color={genderColor(gender)}/><Text numberOfLines={1} style={s.rowNickname}>{nickname||'—'}</Text></View>
+      <View style={s.rowName}><Text numberOfLines={1} style={s.rowNickname}>{nickname||'—'}</Text></View>
       {secondary?<Text style={s.rowMeta}>{secondary}</Text>:null}
     </View>
     {rightValue?<Text style={s.rowValue}>{rightValue}</Text>:null}
@@ -66,15 +64,15 @@ export function FriendsScreen({settings={},userId='',onSignIn,onOpenAshyk,onBott
   let content=null;
   if(mode==='friends'){
     content=<>
-      {snapshot.ashyk_invites.length?<Section title={t('invites')}>{snapshot.ashyk_invites.map((invite)=><Row key={invite.invite_id} nickname={invite.nickname} gender={invite.avatar_gender} actions={<View style={s.actionsRow}><IconBtn label={t('accept')} active onPress={()=>acceptInvite(invite)}><CorrectIcon size={16} color={C.successStrong}/></IconBtn><IconBtn label={t('decline')} onPress={()=>declineInvite(invite)}><WrongIcon size={16} color={C.dangerStrong}/></IconBtn></View>}/>)}</Section>:null}
-      {snapshot.incoming.length?<Section title={t('requests')}>{snapshot.incoming.map((user)=><Row key={user.friendship_id} nickname={user.nickname} gender={user.avatar_gender} actions={<View style={s.actionsRow}><IconBtn label={t('accept')} active onPress={()=>onAccept(user.friendship_id)}><CorrectIcon size={16} color={C.successStrong}/></IconBtn><IconBtn label={t('decline')} onPress={()=>void mutate(`decline:${user.friendship_id}`,()=>declineNativeFriendRequest(user.friendship_id))}><WrongIcon size={16} color={C.dangerStrong}/></IconBtn></View>}/>)}</Section>:null}
-      <Section title={t('friends')}>{snapshot.friends.length?snapshot.friends.map((user)=><Row key={user.user_id} nickname={user.nickname} gender={user.avatar_gender} secondary={t('streak',{count:Number(user.streak_days)||0})} actions={<View style={s.actionsRow}><IconBtn label={t('remove')} onPress={()=>void mutate(`remove:${user.user_id}`,()=>removeNativeFriend(user.user_id))}><UserMinusIcon size={16} color={C.text2}/></IconBtn><IconBtn label={t('block')} onPress={()=>void mutate(`block:${user.user_id}`,()=>blockNativeUser(user.user_id))}><BlockIcon size={16} color={C.dangerStrong}/></IconBtn></View>}/>):<Text style={s.empty}>{t('emptyFriends')}</Text>}</Section>
-      {snapshot.blocked.length?<Section title={t('blocked')}>{snapshot.blocked.map((user)=><Row key={user.user_id} nickname={user.nickname} gender={user.avatar_gender} actions={<IconBtn label={t('unblock')} active onPress={()=>void mutate(`unblock:${user.user_id}`,()=>unblockNativeUser(user.user_id))}><CorrectIcon size={16} color={C.successStrong}/></IconBtn>}/>)}</Section>:null}
+      {snapshot.ashyk_invites.length?<Section title={t('invites')}>{snapshot.ashyk_invites.map((invite)=><Row key={invite.invite_id} nickname={invite.nickname} actions={<View style={s.actionsRow}><IconBtn label={t('accept')} active onPress={()=>acceptInvite(invite)}><CorrectIcon size={16} color={C.successStrong}/></IconBtn><IconBtn label={t('decline')} onPress={()=>declineInvite(invite)}><WrongIcon size={16} color={C.dangerStrong}/></IconBtn></View>}/>)}</Section>:null}
+      {snapshot.incoming.length?<Section title={t('requests')}>{snapshot.incoming.map((user)=><Row key={user.friendship_id} nickname={user.nickname} actions={<View style={s.actionsRow}><IconBtn label={t('accept')} active onPress={()=>onAccept(user.friendship_id)}><CorrectIcon size={16} color={C.successStrong}/></IconBtn><IconBtn label={t('decline')} onPress={()=>void mutate(`decline:${user.friendship_id}`,()=>declineNativeFriendRequest(user.friendship_id))}><WrongIcon size={16} color={C.dangerStrong}/></IconBtn></View>}/>)}</Section>:null}
+      <Section title={t('friends')}>{snapshot.friends.length?snapshot.friends.map((user)=><Row key={user.user_id} nickname={user.nickname} secondary={t('streak',{count:Number(user.streak_days)||0})} actions={<View style={s.actionsRow}><IconBtn label={t('remove')} onPress={()=>void mutate(`remove:${user.user_id}`,()=>removeNativeFriend(user.user_id))}><UserMinusIcon size={16} color={C.text2}/></IconBtn><IconBtn label={t('block')} onPress={()=>void mutate(`block:${user.user_id}`,()=>blockNativeUser(user.user_id))}><BlockIcon size={16} color={C.dangerStrong}/></IconBtn></View>}/>):<Text style={s.empty}>{t('emptyFriends')}</Text>}</Section>
+      {snapshot.blocked.length?<Section title={t('blocked')}>{snapshot.blocked.map((user)=><Row key={user.user_id} nickname={user.nickname} actions={<IconBtn label={t('unblock')} active onPress={()=>void mutate(`unblock:${user.user_id}`,()=>unblockNativeUser(user.user_id))}><CorrectIcon size={16} color={C.successStrong}/></IconBtn>}/>)}</Section>:null}
     </>;
   }else{
     const rows=query.trim()?searchResults:leaderboard;
     content=<Section title={t('rating')}>
-      {busy&&!rows?.length?<ScreenState>{t('loading')}</ScreenState>:(rows||[]).length?(rows||[]).map((user,index)=><Row key={user.user_id} rank={query.trim()?0:(Number(user.rank)||index+1)} nickname={user.nickname} gender={user.avatar_gender} rightValue={formatRating(user.rating_score)} actions={user.user_id===userId?null:<RelationActions user={user} t={t} onAdd={onAdd} onAccept={onAccept}/>}/>):<Text style={s.empty}>{t(query.trim()?'emptySearch':'emptyFriends')}</Text>}
+      {busy&&!rows?.length?<ScreenState>{t('loading')}</ScreenState>:(rows||[]).length?(rows||[]).map((user,index)=><Row key={user.user_id} rank={query.trim()?0:(Number(user.rank)||index+1)} nickname={user.nickname} rightValue={formatRating(user.rating_score)} actions={user.user_id===userId?null:<RelationActions user={user} t={t} onAdd={onAdd} onAccept={onAccept}/>}/>):<Text style={s.empty}>{t(query.trim()?'emptySearch':'emptyFriends')}</Text>}
     </Section>;
   }
 

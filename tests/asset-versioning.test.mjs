@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "13.15.12";
+const SINGLETON_URL_VERSION = "16.7.9";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,19 +71,19 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("13.15.12 is the published app and cache release", async () => {
+test("16.7.9 is the published Web app and cache release", async () => {
   const index = await read("index.html");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
-  assert.match(index, /app\.css\?v=13\.15\.12/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.12/);
+  assert.match(index, /app\.css\?v=16\.7\.9/);
+  assert.match(index, /bootstrap\.js\?v=16\.7\.9/);
   assert.match(analytics, /appVersion = "13\.15\.9"/);
-  assert.match(versionScreen, /<dd>13\.15\.12<\/dd>/);
-  assert.match(worker, /const VERSION = "13\.15\.12"/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.12"/);
+  assert.match(versionScreen, /<dd>16\.7\.9<\/dd>/);
+  assert.match(worker, /const VERSION = "16\.7\.9-performance"/);
+  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.9"/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
 });
@@ -112,23 +112,20 @@ test("Settings dependencies resolve through the 13.15.12 singleton identity", as
   assert.match(worker, /"\/src\/shared\/progress\/progress-sync\.js"/);
 });
 
-test("profile keeps character assets but they are lazy and not part of the service-worker shell", async () => {
+test("profile is independent of removed avatar files", async () => {
   const profile = await read("src/features/profile/index.js");
-  const profileStyles = await read("src/features/profile/profile.css");
-  const worker = await read("service-worker.js");
-  const male = await readFile(new URL("../assets/images/profile/avatar_male.png", import.meta.url));
-  const female = await readFile(new URL("../assets/images/profile/avatar_female.png", import.meta.url));
-  assert.match(profile, /avatar_male\.png\?v=13\.11/);
-  assert.match(profile, /avatar_female\.png\?v=13\.11/);
-  const coreAssets = worker.match(/const CORE_ASSETS = \[([\s\S]*?)\];/)?.[1] || "";
-  assert.doesNotMatch(coreAssets, /avatar_male|avatar_female/);
-  assert.match(profile, /profileAvatarSvg/);
-  assert.match(profileStyles, /\.profileAvatarImage/);
-  assert.equal(male.subarray(1, 4).toString("ascii"), "PNG");
-  assert.equal(female.subarray(1, 4).toString("ascii"), "PNG");
+  const account = await read("src/features/account/index.js");
+  const styles = await read("src/features/profile/profile.css");
+  assert.equal(profile.includes("avatar_male.png"), false);
+  assert.equal(profile.includes("avatar_female.png"), false);
+  assert.equal(profile.includes("avatar_gender"), false);
+  assert.equal(account.includes("setAvatarGender"), false);
+  assert.equal(styles.includes(".profileAvatar"), false);
+  await assert.rejects(readFile(new URL("../assets/images/profile/avatar_male.png", import.meta.url)));
+  await assert.rejects(readFile(new URL("../assets/images/profile/avatar_female.png", import.meta.url)));
 });
 
-test("historical singleton URLs canonicalize to one 13.15.12 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one 16.7.9 in-memory instance", async () => {
   const index = await read("index.html");
   const generated = generatedImportMapFrom(index);
   const importMap = generated.imports;

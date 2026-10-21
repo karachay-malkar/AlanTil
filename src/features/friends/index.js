@@ -24,7 +24,6 @@ const ICON={
   unblock:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
   search:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
 };
-function genderIcon(gender){const cls=gender==='female'?'female':'male';return `<span class="genderIcon ${cls}" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M6 20a6 6 0 0 1 12 0"/></svg></span>`;}
 function medalIcon(rank){if(rank<1||rank>3)return '';return `<svg class="rankMedal medal${rank}" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h4l1 5-4.4 3.1L4 2h3Z"/><path d="M13 2h4l3 8.1L15.6 7 13 2Z"/><circle cx="12" cy="15" r="5.2"/></svg>`;}
 
 function relationActions(user){
@@ -33,8 +32,8 @@ function relationActions(user){
   if(user.relation==='incoming')return user.friendship_id?`${iconButton(t('accept'),'primary',{'friend-accept':user.friendship_id},ICON.accept)}${iconButton(t('decline'),'ghost',{'friend-decline':user.friendship_id},ICON.decline)}`:'';
   return iconButton(t('add'),'primary',{'social-add':user.user_id},ICON.add);
 }
-function compactRow({rank=0,nickname,gender,rightValue='',secondary='',actions=''}){
-  return `<div class="socialRow">${rank?`<span class="socialRank">${medalIcon(rank)||`#${rank}`}</span>`:''}<div class="socialRowBody"><div class="socialRowName">${genderIcon(gender)}<strong>${esc(nickname||'—')}</strong></div>${secondary?`<span class="socialRowMeta">${secondary}</span>`:''}</div>${rightValue?`<span class="socialRowValue">${rightValue}</span>`:''}<div class="socialRowActions">${actions}</div></div>`;
+function compactRow({rank=0,nickname,rightValue='',secondary='',actions=''}){
+  return `<div class="socialRow">${rank?`<span class="socialRank">${medalIcon(rank)||`#${rank}`}</span>`:''}<div class="socialRowBody"><div class="socialRowName"><strong>${esc(nickname||'—')}</strong></div>${secondary?`<span class="socialRowMeta">${secondary}</span>`:''}</div>${rightValue?`<span class="socialRowValue">${rightValue}</span>`:''}<div class="socialRowActions">${actions}</div></div>`;
 }
 function section(title,body){return body?`<section class="socialSection"><h2>${esc(title)}</h2>${body}</section>`:'';}
 function searchToggleHtml(){return `<button class="iconAction ghost socialSearchToggle" type="button" data-social-search-toggle aria-label="${esc(t('search'))}" title="${esc(t('search'))}">${ICON.search}</button>`;}
@@ -53,10 +52,10 @@ async function renderFriends(context){
   setBody(context,`<div class="screenState">${esc(t('loading'))}</div>`);
   const snapshot=await fetchFriendsSnapshot();
   let html='';
-  if(snapshot.ashyk_invites.length)html+=section(t('invites'),snapshot.ashyk_invites.map((u)=>compactRow({nickname:u.nickname,gender:u.avatar_gender,actions:`${iconButton(t('accept'),'primary',{'ashyk-accept':u.invite_id},ICON.accept)}${iconButton(t('decline'),'ghost',{'ashyk-decline':u.invite_id},ICON.decline)}`})).join(''));
-  if(snapshot.incoming.length)html+=section(t('requests'),snapshot.incoming.map((u)=>compactRow({nickname:u.nickname,gender:u.avatar_gender,actions:`${iconButton(t('accept'),'primary',{'friend-accept':u.friendship_id},ICON.accept)}${iconButton(t('decline'),'ghost',{'friend-decline':u.friendship_id},ICON.decline)}`})).join(''));
-  html+=section(t('friends'),snapshot.friends.length?snapshot.friends.map((u)=>compactRow({nickname:u.nickname,gender:u.avatar_gender,secondary:esc(t('streak',{count:Number(u.streak_days)||0})),actions:`${iconButton(t('remove'),'ghost',{'friend-remove':u.user_id},ICON.remove)}${iconButton(t('block'),'ghost',{'friend-block':u.user_id},ICON.block)}`})).join(''):`<p class="socialEmpty">${esc(t('emptyFriends'))}</p>`);
-  if(snapshot.blocked.length)html+=section(t('blocked'),snapshot.blocked.map((u)=>compactRow({nickname:u.nickname,gender:u.avatar_gender,actions:iconButton(t('unblock'),'ghost',{'friend-unblock':u.user_id},ICON.unblock)})).join(''));
+  if(snapshot.ashyk_invites.length)html+=section(t('invites'),snapshot.ashyk_invites.map((u)=>compactRow({nickname:u.nickname,actions:`${iconButton(t('accept'),'primary',{'ashyk-accept':u.invite_id},ICON.accept)}${iconButton(t('decline'),'ghost',{'ashyk-decline':u.invite_id},ICON.decline)}`})).join(''));
+  if(snapshot.incoming.length)html+=section(t('requests'),snapshot.incoming.map((u)=>compactRow({nickname:u.nickname,actions:`${iconButton(t('accept'),'primary',{'friend-accept':u.friendship_id},ICON.accept)}${iconButton(t('decline'),'ghost',{'friend-decline':u.friendship_id},ICON.decline)}`})).join(''));
+  html+=section(t('friends'),snapshot.friends.length?snapshot.friends.map((u)=>compactRow({nickname:u.nickname,secondary:esc(t('streak',{count:Number(u.streak_days)||0})),actions:`${iconButton(t('remove'),'ghost',{'friend-remove':u.user_id},ICON.remove)}${iconButton(t('block'),'ghost',{'friend-block':u.user_id},ICON.block)}`})).join(''):`<p class="socialEmpty">${esc(t('emptyFriends'))}</p>`);
+  if(snapshot.blocked.length)html+=section(t('blocked'),snapshot.blocked.map((u)=>compactRow({nickname:u.nickname,actions:iconButton(t('unblock'),'ghost',{'friend-unblock':u.user_id},ICON.unblock)})).join(''));
   setBody(context,html);
 }
 function bindSearchInput(context){
@@ -79,11 +78,11 @@ async function renderRating(context,query=''){
   const target=()=>context.root.querySelector('[data-social-rating-body]');
   if(activeQuery){
     const rows=await searchSocialUsers(activeQuery);
-    if(target())target().innerHTML=section(t('rating'),rows.length?rows.map((u)=>compactRow({nickname:u.nickname,gender:u.avatar_gender,rightValue:esc(formatRating(u.rating_score)),actions:u.user_id===context.selfId?'':relationActions(u)})).join(''):`<p class="socialEmpty">${esc(t('emptySearch'))}</p>`);
+    if(target())target().innerHTML=section(t('rating'),rows.length?rows.map((u)=>compactRow({nickname:u.nickname,rightValue:esc(formatRating(u.rating_score)),actions:u.user_id===context.selfId?'':relationActions(u)})).join(''):`<p class="socialEmpty">${esc(t('emptySearch'))}</p>`);
     return;
   }
   const rows=await fetchSocialLeaderboard();
-  if(target())target().innerHTML=section(t('rating'),rows.map((u,index)=>compactRow({rank:Number(u.rank)||index+1,nickname:u.nickname,gender:u.avatar_gender,rightValue:esc(formatRating(u.rating_score)),actions:u.user_id===context.selfId?'':relationActions(u)})).join(''));
+  if(target())target().innerHTML=section(t('rating'),rows.map((u,index)=>compactRow({rank:Number(u.rank)||index+1,nickname:u.nickname,rightValue:esc(formatRating(u.rating_score)),actions:u.user_id===context.selfId?'':relationActions(u)})).join(''));
 }
 async function renderStats(context){
   await context.router.navigate('admin.users');

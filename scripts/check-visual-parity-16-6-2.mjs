@@ -23,12 +23,12 @@ requireRegex('mobile/ui/parity.js',[/segmentItem:\s*\{[^}]*minHeight:\s*28/s]);
 requireRegex('mobile/screens/path.js',[/pathControls:\{[^}]*top:0[^}]*height:theme\.path\.rootControlsHeight/s,/pathViewport:\{[^}]*top:0/s,/pathContent:\{[^}]*paddingTop:theme\.path\.mapTop[^}]*paddingLeft:20[^}]*paddingRight:50/s,/stationNode:\{[^}]*width:theme\.path\.stationSize[^}]*height:theme\.path\.stationSize/s,/routeScale:\{[^}]*right:theme\.path\.scaleRight[^}]*top:'20%'[^}]*bottom:'20%'[^}]*width:theme\.path\.scaleWidth/s]);
 requireRegex('mobile/screens/station.js',[/tabs:\{[^}]*top:theme\.control\.header-4[^}]*height:28/s,/toolbar:\{[^}]*top:theme\.control\.header\+24[^}]*height:28/s,/wordList:\{[^}]*paddingTop:theme\.control\.header\+56[^}]*paddingBottom:108/s,/launchPanel:\{[^}]*bottom:theme\.chrome\.actionEdgeGap/s]);
 requireRegex('mobile/screens/practice.js',[/menuRow:\{[^}]*minHeight:68[^}]*paddingHorizontal:2[^}]*paddingVertical:10/s,/menuLeading:\{width:36,height:36\}/,/menuSubtitle:\{[^}]*fontSize:11[^}]*lineHeight:14\.3/s]);
-requireRegex('mobile/screens/profile-main.js',[/tabs:\{[^}]*top:2[^}]*height:30/s,/body:\{[^}]*paddingTop:42[^}]*paddingHorizontal:14/s,/avatarFrame:\{[^}]*maxWidth:286[^}]*aspectRatio:\.8[^}]*borderRadius:2/s,/accountCircle:\{[^}]*width:42[^}]*height:42/s,/profileStat:\{[^}]*width:'50%'[^}]*minHeight:72/s]);
+requireText('mobile/screens/profile-main.js',['ProfileSetup','accountCircle','profileStat']);
 requireRegex('mobile/screens/favorites.js',[/toolbar:\{[^}]*top:theme\.control\.header\+4[^}]*left:14[^}]*right:14[^}]*height:34/s,/list:\{[^}]*paddingTop:theme\.control\.header\+54[^}]*paddingHorizontal:14[^}]*paddingBottom:154/s,/row:\{height:52,minHeight:52/s,/footer:\{[^}]*bottom:theme\.chrome\.actionEdgeGap/s]);
 if(/<SurfaceCard>/.test(read('mobile/screens/favorites.js')))throw new Error('Favorites must stay flat without a card wrapper');
 requireRegex('mobile/screens/story-word-list.js',[/HeaderCircleButton/,/SearchIcon/,/searchWidth=Math\.min\(width\*\.72,300\)/,/list:\{paddingTop:theme\.control\.header\+8/,/row:\{height:52,minHeight:52/]);
 if(/searchWrap:/.test(read('mobile/screens/story-word-list.js')))throw new Error('Story Word List search must remain in the Header');
-requireRegex('mobile/screens/profile.js',[/PROFILE_AVATAR_MALE=require\('\.\.\/\.\.\/assets\/images\/profile\/avatar_male\.png'\)/,/PROFILE_AVATAR_FEMALE=require\('\.\.\/\.\.\/assets\/images\/profile\/avatar_female\.png'\)/,/accountPanel:\{[^}]*margin:0[^}]*borderWidth:0[^}]*borderRadius:0[^}]*backgroundColor:'transparent'/s,/accountGenderChoice:\{[^}]*minHeight:170/s]);
+requireText('mobile/screens/profile.js',['accountPanel:{','accountStack:{']);
 if(/avatarHead:|avatarBody:/.test(read('mobile/screens/profile.js')))throw new Error('Account must not reintroduce synthetic avatar geometry');
 requireRegex('mobile/screens/onboarding.js',[/paddingTop: theme\.control\.header \+ theme\.chrome\.contentRestGap/,/maxWidth: 560/]);
 if(/fullButton:\s*\{[^}]*minHeight:\s*44/s.test(read('mobile/screens/onboarding.js')))throw new Error('Onboarding continue button must inherit Web button height');
@@ -42,8 +42,8 @@ for(const required of [
   'Favorites uses Web set-preparation',
   'Story Word List moves search into header',
   'Onboarding uses Web setup insets',
-  'Account uses canonical avatar assets',
-  'Profile root replaces brand header',
+  'Account preserves flat panel without avatar setup',
+  'Profile root preserves tabs and progress without avatars',
   'Path geometry uses final Web chrome',
   'Station uses final Web chrome offsets',
 ])if(!regression.includes(required))throw new Error(`Missing executable 16.6.2 regression: ${required}`);
