@@ -2,25 +2,19 @@ import {prefabBounds,touchingPrefabPairs} from './prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_JOINT_FILES} from './window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
-import {WILD_PREFAB_VERSION,isWildPrefab} from './wild-prefab.mjs';
-import {GATE_STONE_VERSION,isGateStone} from './gate-stone-prefab.mjs';
-import {COMPACT_STONE_VERSION,isCompactStone} from './compact-stone-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from './approved-prefab.mjs';
 /** Static 25-cm joint-tile resolver; no runtime mesh generation/deformation. */
 export const JOINT_INTERFACE='shared-recessed-25cm-v1';
 const EPS=1e-5;
 export function sectionAssetVersion(s,manifest){return s.geometryVersion??manifest.version;}
 export function sectionJointProfile(s,manifest){
- if(s.type!=='masonry_section')return null;
- if(isApprovedMasonryType(s.sectionId)&&sectionAssetVersion(s,manifest)===APPROVED_PREFAB_VERSION)return JOINT_INTERFACE;
- if(isCompactStone(s.sectionId)&&sectionAssetVersion(s,manifest)===COMPACT_STONE_VERSION)return JOINT_INTERFACE;
- if(isGateStone(s.sectionId)&&sectionAssetVersion(s,manifest)===GATE_STONE_VERSION)return JOINT_INTERFACE;
- if(isWildPrefab(s.sectionId)&&sectionAssetVersion(s,manifest)===WILD_PREFAB_VERSION)return JOINT_INTERFACE;
- if(s.sectionId===WINDOW_PREFAB_ID)return sectionAssetVersion(s,manifest)===WINDOW_PREFAB_VERSION?JOINT_INTERFACE:null;
- if(s.sectionId===DOOR_PREFAB_ID)return sectionAssetVersion(s,manifest)===DOOR_PREFAB_VERSION?JOINT_INTERFACE:null;
- if(s.sectionId===GATE_PREFAB_ID)return sectionAssetVersion(s,manifest)===GATE_PREFAB_VERSION?JOINT_INTERFACE:null;
- if(![manifest.version,manifest.previousVersion,...Object.keys(manifest.historicVariants||{})].includes(sectionAssetVersion(s,manifest)))return null;
- return manifest.types.find(x=>x.id===s.sectionId)?.jointInterface||null;
+ if(s?.type!=='masonry_section')return null;
+ const version=sectionAssetVersion(s,manifest);
+ if(isApprovedMasonryType(s.sectionId))return version===APPROVED_PREFAB_VERSION?JOINT_INTERFACE:null;
+ if(s.sectionId===WINDOW_PREFAB_ID)return version===WINDOW_PREFAB_VERSION?JOINT_INTERFACE:null;
+ if(s.sectionId===DOOR_PREFAB_ID)return version===DOOR_PREFAB_VERSION?JOINT_INTERFACE:null;
+ if(s.sectionId===GATE_PREFAB_ID)return version===GATE_PREFAB_VERSION?JOINT_INTERFACE:null;
+ return null;
 }
 export function compatibleSectionFaces(a,b,manifest){
  const pa=sectionJointProfile(a,manifest),pb=sectionJointProfile(b,manifest);
@@ -67,39 +61,17 @@ export function gateStoneAtJoint(section,point){
 export function stoneAtJoint(section,point){
  return windowStoneAtJoint(section,point)&&doorStoneAtJoint(section,point)&&gateStoneAtJoint(section,point);
 }
-/** Contact between two baked 17.5 sections must resolve to pre-baked assets.
- * Legacy read-only stones never have their meshes modified by this resolver.
- */
+/** Every compatible contact uses authored, immutable approved joint assets. */
 export function resolvePrefabJoints(sections,manifest){
  const byId=new Map(sections.map(s=>[s.id,s]));
  const pairs=touchingPrefabPairs(sections.filter(s=>s.type==='masonry_section'));
  const joints=[],incompatible=[];
  for(const pair of pairs){
   const a=byId.get(pair.a),b=byId.get(pair.b);
-  const involvesWindow=a.sectionId===WINDOW_PREFAB_ID||b.sectionId===WINDOW_PREFAB_ID;
-  const involvesDoor=a.sectionId===DOOR_PREFAB_ID||b.sectionId===DOOR_PREFAB_ID;
-  const involvesGate=a.sectionId===GATE_PREFAB_ID||b.sectionId===GATE_PREFAB_ID;
-  const involvesArchitectural=involvesWindow||involvesDoor||involvesGate;
-  // Older 17.4.1 pieces never shared the newer prepared interface.
-  if(involvesArchitectural&&(sectionAssetVersion(a,manifest)===manifest.legacyVersion||
-                     sectionAssetVersion(b,manifest)===manifest.legacyVersion))continue;
-  if(sectionAssetVersion(a,manifest)===manifest.legacyVersion&&
-     sectionAssetVersion(b,manifest)===manifest.legacyVersion){
-   const file=manifest.legacyConnectors?.[pair.axis];
-   if(file)joints.push({...pair,file,legacyScale:true});
-   continue;
-  }
   if(!compatibleSectionFaces(a,b,manifest)){
    incompatible.push({...pair,reason:'У вариантов нет совместимого подготовленного стыка'});continue;
   }
-  // Old saved towers retain their original pre-baked joint geometry. New
-  // neighbours use the latest shared interface, without re-baking old stones.
-  const va=sectionAssetVersion(a,manifest),vb=sectionAssetVersion(b,manifest);
-  const source=va===vb&&va===manifest.previousVersion?manifest.previousConnectors:
-               va===vb&&manifest.historicConnectors?.[va]?manifest.historicConnectors[va]:null;
-  const spec=involvesArchitectural?
-   {file:WINDOW_JOINT_FILES[pair.axis],interface:JOINT_INTERFACE}:
-   source?.[pair.axis]?{file:source[pair.axis],interface:JOINT_INTERFACE}:manifest.connectors?.[pair.axis];
+  const spec={file:WINDOW_JOINT_FILES[pair.axis],interface:JOINT_INTERFACE};
   if(!spec||spec.interface!==JOINT_INTERFACE||!spec.file){incompatible.push({...pair,reason:'Нет готового соединения'});continue;}
   const axes={x:[1,2],y:[0,2],z:[0,1]}[pair.axis];
   // Grid coordinates are integral for all newly placed sections.
@@ -120,8 +92,7 @@ export function resolvePrefabJoints(sections,manifest){
    if(!compatibleSectionFaces(byId.get(px.a),byId.get(px.b),manifest)||
       !compatibleSectionFaces(byId.get(pz.a),byId.get(pz.b),manifest))continue;
    const otherX=byId.get(px.a===middle.id?px.b:px.a),otherZ=byId.get(pz.a===middle.id?pz.b:pz.a);
-   const architecturalCorner=[middle,otherX,otherZ].some(s=>s.sectionId===WINDOW_PREFAB_ID||s.sectionId===DOOR_PREFAB_ID||s.sectionId===GATE_PREFAB_ID);
-   const spec=architecturalCorner?{file:WINDOW_JOINT_FILES.corner,interface:JOINT_INTERFACE}:manifest.connectors?.corner;
+   const spec={file:WINDOW_JOINT_FILES.corner,interface:JOINT_INTERFACE};
    if(!spec?.file||spec.interface!==JOINT_INTERFACE)continue;
    for(let y=Math.round(y0);y<y1-EPS;y++){
     const point=[px.min[0],y+.5,pz.min[2]];
