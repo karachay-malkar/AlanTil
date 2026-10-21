@@ -84,8 +84,8 @@ test("16.7.10 is the published Web app and cache release", async () => {
   assert.match(versionScreen, /<dd>16\.7\.10<\/dd>/);
   assert.match(worker, /const VERSION = "16\.7\.10-masonry-idle-render"/);
   assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.10"/);
-  assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
-  assert.match(wordsConfig, /alantil_dictionary_cache_v4/);
+  assert.match(wordsConfig, /DICTIONARY_CACHE_KEY/);
+  assert.match(wordsConfig, /LEGACY_DICTIONARY_CACHE_KEYS/);
 });
 
 test("13.15 feature modules are loaded explicitly and the service worker does not rewrite JavaScript modules", async () => {
