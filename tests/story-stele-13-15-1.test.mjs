@@ -82,19 +82,17 @@ test("study action uses the normal light button without changing its handler", a
   assert.match(source, /\[data-station-study\][\s\S]*onStartStudy\?\.\(studyMode, activeWords\(\)\)/);
 });
 
-test("cache busting points the app and service worker to 13.15.7", async () => {
+test("current release preserves lazy story stele artwork and cache coherence", async () => {
   const index = await read("index.html");
   const bootstrap = await read("src/app/bootstrap.js");
   const appCss = await read("src/shared/styles/app.css");
-  const sw = await read("service-worker.js");
-  assert.match(index, /targetVersion = "13\.15\.7"/);
-  assert.match(index, /\/src\/features\/path\/story-stele\.js/);
-  assert.match(index, /app\.css\?v=13\.15\.7/);
-  assert.match(index, /bootstrap\.js\?v=13\.15\.7/);
-  assert.match(bootstrap, /RELEASE_VERSION = "13\.15\.7"/);
-  assert.match(bootstrap, /router\.js\?v=13\.15\.7/);
-  assert.match(appCss, /story-stele\.css\?v=13\.15\.7/);
-  assert.doesNotMatch(appCss, /story-intro\.css/);
-  assert.match(sw, /VERSION = "13\.15\.7"/);
-  assert.match(sw, /story-stele\.webp\?v=13\.15\.6/);
+  const worker = await read("service-worker.js");
+  const stele = await read("src/features/path/story-stele.js");
+  assert.match(index, /targetVersion = "16\.7\.10"/);
+  assert.match(index, /bootstrap\.js\?v=16\.7\.10/);
+  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.10"/);
+  assert.match(appCss, /story-stele\.css/);
+  assert.match(worker, /VERSION = "16\.7\.10-masonry-idle-render"/);
+  assert.doesNotMatch(worker, /story-stele\.webp\?v=13\.15\.6/);
+  assert.match(stele, /artwork\.src = artwork\.dataset\.src/);
 });

@@ -81,7 +81,7 @@ test("16.7.10 is the published Web app and cache release", async () => {
   assert.match(index, /app\.css\?v=16\.7\.9/);
   assert.match(index, /bootstrap\.js\?v=16\.7\.10/);
   assert.match(analytics, /appVersion = "13\.15\.9"/);
-  assert.match(versionScreen, /<dd>16\.7\.9<\/dd>/);
+  assert.match(versionScreen, /<dd>16\.7\.10<\/dd>/);
   assert.match(worker, /const VERSION = "16\.7\.10-masonry-idle-render"/);
   assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.10"/);
   assert.match(wordsConfig, /alantil_dictionary_cache_v5/);
@@ -174,7 +174,7 @@ test("shared display helpers keep their required dependencies", async () => {
   const wordRenderers = await read("src/shared/ui/word-renderers.js");
   const stationView = await read("src/features/path/station-view.js");
   const testView = await read("src/features/test/view.js");
-  assert.match(alanDisplay, /example-groups\.js\?v=13\.10\.12/);
+  assert.match(alanDisplay, /packages\/alantil-core\/alan-display\.js/);
   assert.match(wordRenderers, /example-groups\.js\?v=13\.10\.12/);
   assert.match(stationView, /overflow-marquee\.js\?v=13\.10\.12/);
   assert.match(testView, /result-list\.js\?v=13\.10\.12/);
