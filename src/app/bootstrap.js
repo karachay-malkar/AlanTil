@@ -10,7 +10,6 @@ import { hasCompleteProfile } from "../../packages/alantil-core/profile.js?v=16.
 import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=16.8.0.16";
 import { getSocialClient, startSocialInboxController } from "../shared/social/social-service.js?v=16.8.0.16";
 import { socialMessage } from "../../packages/alantil-core/social-i18n.js?v=16.8.0.16";
-import { createAshykOnlineAdapter } from "../../packages/ashyk-game/online.js?v=16.8.0.16";
 import { beginAshykEntry, finishAshykEntry, isAshykEntryPending } from "../../packages/ashyk-game/entry-state.js?v=16.8.0.16";
 import { ensureCurrentAshykBuild, setPendingAshykInvite } from "../shared/social/ashyk-handoff.js?v=16.8.0.16";
 import { isAshykModeAllowed } from "../../packages/alantil-core/ashyk-access.js?v=16.8.0.16";
@@ -18,11 +17,10 @@ import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.16"
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.16";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.16";
 import { createModalService } from "../shared/ui/modal.js?v=16.8.0.16";
-import { runLearningSetup } from "../features/onboarding/index.js?v=16.8.0.16";
 import { createRouter } from "./router.js?v=16.8.0.29";
 import { createShell } from "./shell.js?v=16.8.0.16";
 
-const ASSET_VERSION = "16.8.0.29";
+const ASSET_VERSION = "16.8.0.30";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
@@ -111,6 +109,7 @@ async function bootstrap() {
     window.history.replaceState(null, "", "/profile/account");
   }
   if (!callbackVisit && !persistedAuth && !authMigrationRequired) {
+    const { runLearningSetup } = await import("../features/onboarding/index.js?v=16.8.0.30");
     const setupWasShown = await runLearningSetup({ shell });
     if (setupWasShown) window.history.replaceState(null, "", "/profile/account");
   }
@@ -140,6 +139,10 @@ async function bootstrap() {
   registerServiceWorker();
   await router.start();
   try { globalThis.performance?.mark?.("alantil:route:ready"); } catch {}
+  // Install automatic Guided Help only after the first route has rendered.
+  const installGuide=()=>{ void import("../features/onboarding/guide.js?v=16.8.0.30").catch(error=>console.warn("Guided Help could not load",error)); };
+  if(typeof requestIdleCallback==="function") requestIdleCallback(installGuide,{timeout:1400});
+  else globalThis.setTimeout(installGuide,200);
 
   let ashykNoticeKey='';
   const showGlobalAshykState=({snapshot,activeRoom}={})=>{
@@ -185,7 +188,11 @@ async function bootstrap() {
         beginAshykEntry();
         entering=true;
         if(invite){
-          const client=await getSocialClient(),online=createAshykOnlineAdapter(client),result=await online.acceptInvite(invite.invite_id);
+          const [{createAshykOnlineAdapter},client]=await Promise.all([
+            import("../../packages/ashyk-game/online.js?v=16.8.0.30"),
+            getSocialClient()
+          ]);
+          const online=createAshykOnlineAdapter(client),result=await online.acceptInvite(invite.invite_id);
           if(!result?.room)throw new Error('room unavailable');
           setPendingAshykInvite(result);
         }else setPendingAshykInvite({room:resumable,invite:null});
@@ -203,7 +210,11 @@ async function bootstrap() {
     decline?.addEventListener('click',async()=>{
       decline.disabled=true;
       try{
-        const client=await getSocialClient(),online=createAshykOnlineAdapter(client);
+        const [{createAshykOnlineAdapter},client]=await Promise.all([
+          import("../../packages/ashyk-game/online.js?v=16.8.0.30"),
+          getSocialClient()
+        ]);
+        const online=createAshykOnlineAdapter(client);
         await online.declineInvite(invite.invite_id);
         ashykNoticeKey='';
         panel.close();

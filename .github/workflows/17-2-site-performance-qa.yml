@@ -39,10 +39,12 @@ jobs:
           node --check src/shared/profile/profile-service.js
           node --check service-worker.js
           node --check scripts/static-preview-server.mjs
+          node --check scripts/qa/seed-lighthouse-profile.mjs
       - name: Profile, session, 3D and performance regressions
         run: |
           node --test \
             tests/performance-17-2.test.mjs \
+            tests/site-speed-17-2.test.mjs \
             tests/profile-avatar-removal-16-7.test.mjs \
             tests/storage-profile-analytics-16-8.test.mjs \
             mobile/tests/architecture.test.mjs
@@ -66,16 +68,27 @@ jobs:
           done
           cat perf-results/server.log
           exit 1
-      - name: Measure Lighthouse mobile
+      - name: Measure clean first-run onboarding
+        run: |
+          set -euo pipefail
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/path/oblivion" \
+            --only-categories=performance \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --output=json --output-path="perf-results/first-run.report.json" --quiet
+      - name: Measure target routes after completed setup
         run: |
           set -euo pipefail
           export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
           for page in path/oblivion practice profile friends; do
             key="${page//\//-}"
+            profile="$(mktemp -d /tmp/alantil-lh-profile-XXXXXX)"
+            node scripts/qa/seed-lighthouse-profile.mjs "$profile"
             npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/$page" \
-              --only-categories=performance \
-              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --only-categories=performance --disable-storage-reset \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --user-data-dir=$profile" \
               --output=json --output-path="perf-results/$key.report.json" --quiet
+            rm -rf "$profile"
           done
       - name: Report metrics and deployed version
         if: always()

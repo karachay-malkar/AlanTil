@@ -26,6 +26,7 @@ const FEATURE_PATHS = Object.freeze({
   settings: "../features/settings/feature.js",
 });
 const STYLE_PATHS = Object.freeze({
+  path: "/src/shared/styles/lazy/path.css",
   practice: "/src/shared/styles/lazy/practice.css",
   ashyk: "/src/shared/styles/lazy/ashyk.css",
   tower: "/src/shared/styles/lazy/tower.css",

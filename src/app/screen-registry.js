@@ -7,11 +7,11 @@ const DEFAULT_SCREEN = Object.freeze({
 });
 
 const SCREENS = Object.freeze({
-  "path.home": { layout: "map", header: "minimal", bottomNav: true, title: "", styles: [] },
-  "path.story-words": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.spisok_slov", styles: [] },
-  "path.station": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.etap", styles: [] },
-  "path.study": { layout: "session", header: "session", bottomNav: false, titleKey: "common.uchit_slova", styles: ["learn"] },
-  "path.test": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya", styles: ["test"] },
+  "path.home": { layout: "map", header: "minimal", bottomNav: true, title: "", styles: ["path"] },
+  "path.story-words": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.spisok_slov", styles: ["path"] },
+  "path.station": { layout: "detail", header: "standard", bottomNav: false, titleKey: "common.etap", styles: ["path"] },
+  "path.study": { layout: "session", header: "session", bottomNav: false, titleKey: "common.uchit_slova", styles: ["path","learn"] },
+  "path.test": { layout: "session", header: "session", bottomNav: false, titleKey: "common.prover_znaniya", styles: ["path","test"] },
 
   "practice.home": { layout: "root", header: "minimal", bottomNav: true, title: "", styles: ["practice"] },
   "practice.tower": { layout: "detail", header: "standard", bottomNav: false, title: "Къала · Башня", styles: ["tower"] },

@@ -1,4 +1,4 @@
-const VERSION = "16.8.0.29";
+const VERSION = "16.8.0.30";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 const LEGACY_REFRESH_BEFORE_VERSION = "16.8.0.16";
@@ -6,13 +6,13 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.8.0.29",
-  "/src/app/router.js?v=16.8.0.29",
+  "/src/app/bootstrap.js?v=16.8.0.30",
+  "/src/app/router.js?v=16.8.0.30",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",
   "/src/shared/styles/bracket-tabs.css?v=16.8.0.16",
-  "/src/shared/styles/app.css?v=16.8.0.18",
+  "/src/shared/styles/app.css?v=16.8.0.30",
   "/src/shared/styles/learning-preview.css?v=16.8.0.16",
   "/src/features/path/feature.js?v=16.8.0.16",
   "/src/shared/data/word-repository.js?v=16.8.0.16",

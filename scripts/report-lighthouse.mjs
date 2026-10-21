@@ -1,10 +1,11 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
-const routes=['path-oblivion','practice','profile','friends'];
+const routes=['first-run','path-oblivion','practice','profile','friends'];
 const fmtMs=value=>Number.isFinite(value)?(value/1000).toFixed(2)+' s':'—';
 const fmtKb=value=>Number.isFinite(value)?(value/1024).toFixed(0)+' KB':'—';
 const cell=value=>String(value??'—');
 const rows=[];
 const details=[];
+let invalidRouteCount=0;
 for(const route of routes){
  const path='perf-results/'+route+'.report.json';
  let lhr;
@@ -12,6 +13,11 @@ for(const route of routes){
   rows.push('| '+route+' | FAILED | — | — | — | — | — | — | — |');
   details.push(route+': no valid Lighthouse report: '+error.message);
   continue;
+ }
+ const lcpNode=lhr.audits?.['largest-contentful-paint-element']?.details?.items?.[0]?.items?.[0]?.node;
+ if(route!=='first-run' && String(lcpNode?.selector||'').includes('learningSetup')){
+   details.push(route+': INVALID MEASUREMENT: setup shown instead of target route');
+   invalidRouteCount++;
  }
  const requests=lhr.audits?.['network-requests']?.details?.items||[];
  const size=requests.reduce((sum,x)=>sum+(Number(x.transferSize)||0),0);
@@ -42,3 +48,5 @@ const report=[
 await mkdir('perf-results',{recursive:true});
 await writeFile('perf-results/SUMMARY.md',report,'utf8');
 console.log(report);
+
+if(invalidRouteCount){console.error(invalidRouteCount+' Lighthouse routes still show onboarding');process.exitCode=1;}

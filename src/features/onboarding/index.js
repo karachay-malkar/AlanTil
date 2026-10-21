@@ -1,4 +1,3 @@
-import "./guide.js?v=16.8.0.3";
 import { setInterfaceLanguage } from "../../shared/i18n/index.js?v=16.8.0.3";
 import {
   completeLearningSetup,
