@@ -27,5 +27,5 @@ test("Service Worker does not prefetch onboarding for returning users", async ()
 
 test("SPA navigation excludes file-like paths, preserving standalone assets", async () => {
   const worker = await read("service-worker.js");
-  assert.match(worker, /!\/\\\.[a-z0-9]+\$\/i\.test\(url\.pathname\)/);
+  assert.ok(worker.includes("!/\\.[a-z0-9]+$/i.test(url.pathname)"));
 });
