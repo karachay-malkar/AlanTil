@@ -8,7 +8,7 @@ const source=path=>readFileSync(new URL('../../'+path,import.meta.url),'utf8');
 const pure=code=>new Function(code.replace(/^import .+?;\s*$/gm,'').replace(/^export /gm,'')+
  ';return {makeRecipe,validateRecipe,RECIPE_VERSION,LEGACY_RECIPE_VERSION};')();
 const {makeRecipe,validateRecipe,RECIPE_VERSION,LEGACY_RECIPE_VERSION}=pure(source('src/features/masonry/library.js'));
-const manifest=JSON.parse(source('assets/tower/prefabs/common100/common-100.json'));
+const manifest=JSON.parse(source('assets/tower/approved-library/common100/common-100.json'));
 const transform=()=>({position:[0,0,0],quaternion:[0,0,0,1],scale:[1,1,1]});
 function recipe(){const r=makeRecipe([24,10,2]);r.libraryVersion=manifest.version;r.librarySha256=manifest.glbSHA256;return r;}
 
@@ -36,7 +36,7 @@ test('mixed recipe blocks unknown asset, duplicated ID and corrupt part transfor
  r.architectures[0].parts={};r.architectures[0].hiddenParts=[1,1];
  assert.throws(()=>validateRecipe(r,manifest),/деталей/);
 });
-test('v9 candidate is separately selectable and persists independently of old gate',()=>{
+test('current v9 gate can be selected from the authoring templates',()=>{
  const r=recipe();
  r.architectures.push({id:'v9',asset:'gate-v9',...transform()});
  assert.equal(validateRecipe(r,manifest),r);
@@ -52,7 +52,7 @@ test('v9 candidate is separately selectable and persists independently of old ga
 });
 test('all architectural variants reference existing original repo GLB files',()=>{
  const assets=source('src/features/masonry/architecture-assets.js');
- for(const name of ['gate-18x10x2-v7.glb','door-7x9x2-stone-v1.glb','door-wood-v1.glb','window-4x5x2-v2.glb','window-wood-v3.glb','timber-parts.glb']){
+ for(const name of ['gate-18x10x2-v9.glb','door-7x9x2-stone-v1.glb','door-wood-v1.glb','window-4x5x2-v2.glb','window-wood-v3.glb']){
   assert.match(assets,new RegExp(name.replaceAll('.','\\.')));
  }
  assert.match(assets,/applyGateSurfaces/);
