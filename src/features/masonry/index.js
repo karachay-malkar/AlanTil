@@ -3,7 +3,7 @@ import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
 import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.7-approved-masonry.1';
-import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.7-approved-masonry.1';
+import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.7-approved-only.1';
 import {buildGateWings} from './gate-wings.mjs';
 import {createMasonryScene} from './scene.js?v=17.7-approved-masonry.1';
 import {stagingPosition} from './staging-position.mjs';
