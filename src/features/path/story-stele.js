@@ -114,7 +114,7 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
     <div class="storySteleBackdrop" aria-hidden="true"></div>
     <section class="storySteleDialog" role="dialog" aria-modal="true" aria-labelledby="storySteleTitle-${escapeHtml(storyId)}" tabindex="-1">
       <div class="storySteleCard">
-        <img class="storySteleArtwork" data-src="${ASSET_URL}" alt="" aria-hidden="true">
+        <img class="storySteleArtwork" data-src="${ASSET_URL}" width="932" height="1688" decoding="async" alt="" aria-hidden="true">
         <div class="storySteleContent" data-stele-content>
           <h2 class="storySteleTitle" id="storySteleTitle-${escapeHtml(storyId)}">${escapeHtml(storyName)}</h2>
           <div class="storySteleBody" data-stele-scroll>${renderParagraphs(storyIntro)}</div>

@@ -96,3 +96,9 @@ test("current release preserves lazy story stele artwork and cache coherence", a
   assert.doesNotMatch(worker, /story-stele\.webp\?v=13\.15\.6/);
   assert.match(stele, /artwork\.src = artwork\.dataset\.src/);
 });
+
+test("stele image reserves approved dimensions and decodes off the rendering path", async () => {
+  const source = await read("src/features/path/story-stele.js");
+  assert.match(source, /class="storySteleArtwork" data-src="\$\{ASSET_URL\}" width="932" height="1688" decoding="async"/);
+  assert.match(source, /artwork\.src = artwork\.dataset\.src/);
+});
