@@ -63,7 +63,7 @@ async function freshIndexResponse() {
 async function navigationResponse(request) {
   const url = new URL(request.url);
   const rootSegment = url.pathname.split("/")[1];
-  const isSpaRoute = SPA_ROUTE_PREFIXES.has(rootSegment) && !/\\.[a-z0-9]+$/i.test(url.pathname);
+  const isSpaRoute = SPA_ROUTE_PREFIXES.has(rootSegment) && !/\.[a-z0-9]+$/i.test(url.pathname);
   // GitHub Pages answers deep SPA links with 404.html. Resolve known routes
   // directly to index.html without a redundant 404 -> index.html round trip.
   const networkTarget = isSpaRoute ? "/index.html" : request;

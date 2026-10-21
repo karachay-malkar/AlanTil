@@ -24,3 +24,8 @@ test("Service Worker does not prefetch onboarding for returning users", async ()
   assert.match(worker, /cacheTarget = isSpaRoute \? "\/index\.html" : request/);
   assert.match(worker, /url\.pathname === "\/tower-masonry-test"/);
 });
+
+test("SPA navigation excludes file-like paths, preserving standalone assets", async () => {
+  const worker = await read("service-worker.js");
+  assert.match(worker, /!\/\\\.[a-z0-9]+\$\/i\.test\(url\.pathname\)/);
+});

@@ -45,6 +45,7 @@ jobs:
             tests/performance-16-7-9.test.mjs \
             tests/performance-16-7-12.test.mjs \
             tests/performance-16-7-13.test.mjs \
+            tests/service-worker-16-7-13.test.mjs \
             tests/asset-versioning.test.mjs \
             tests/story-stele-13-15-1.test.mjs
 
