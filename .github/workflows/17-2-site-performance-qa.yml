@@ -11,6 +11,8 @@ on:
       - 'service-worker.js'
       - 'tests/**'
       - 'scripts/static-preview-server.mjs'
+      - 'scripts/report-lighthouse.mjs'
+      - 'scripts/qa/seed-lighthouse-profile.mjs'
       - '.github/workflows/17-2-site-performance-qa.yml'
   workflow_dispatch:
 
