@@ -50,6 +50,26 @@
       "origin": "manual-authoring"
     },
     {
+      "id": "manual-1x1x1-v3",
+      "title": "Секция 1×1×1",
+      "file": "section-1x1x1-v3.json",
+      "cells": [
+        1,
+        1,
+        1
+      ],
+      "stoneCount": 11,
+      "counts": {
+        "large": 0,
+        "main": 4,
+        "chinking": 7,
+        "lintel": 0
+      },
+      "sha256": "acefbd7a3ce464ed8c4aed4111d69c63333f8d6d44d2ad1b558b1440776573f8",
+      "status": "source",
+      "origin": "manual-authoring"
+    },
+    {
       "id": "manual-2x2x2-v1",
       "title": "Секция 2×2×2",
       "file": "section-2x2x2-v1.json",
