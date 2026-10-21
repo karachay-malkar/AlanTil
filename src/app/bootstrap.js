@@ -8,12 +8,40 @@ import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.
 import { socialMessage } from "../../packages/alantil-core/social-i18n.js";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
-import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
+import { hasCompletedLearningSetup } from "../shared/settings/user-settings-store.js?v=13.10.8";
 import { createRouter } from "./router.js?v=16.7.8";
 import { createShell } from "./shell.js?v=16.7.0";
 
-const RELEASE_VERSION = "16.7.11";
+const RELEASE_VERSION = "16.7.12";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
+
+function ensureOnboardingStyle() {
+  return new Promise((resolve) => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "/src/shared/styles/feature/onboarding.css?v=16.7.12";
+    link.dataset.featureStylesheet = "onboarding";
+    link.onload = resolve;
+    // A missing optional stylesheet must not prevent first-time registration.
+    link.onerror = () => {
+      console.warn("Onboarding stylesheet failed to load");
+      resolve();
+    };
+    document.head.appendChild(link);
+  });
+}
+
+function installGuideAfterFirstPaint() {
+  const load = () => {
+    void import("../features/onboarding/guide.js?v=13.15.10.12")
+      .catch((error) => console.warn("Guided help failed to load", error));
+  };
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(load, { timeout: 1200 });
+  } else {
+    window.requestAnimationFrame(() => window.setTimeout(load, 0));
+  }
+}
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
@@ -71,7 +99,11 @@ async function bootstrap() {
 
   if (callbackVisit) await authInitialization;
   await initializeProgressSystem();
-  if (!callbackVisit && !persistedAuth) {
+  if (!callbackVisit && !persistedAuth && !hasCompletedLearningSetup()) {
+    const [{ runLearningSetup }] = await Promise.all([
+      import("../features/onboarding/index.js?v=13.10.12"),
+      ensureOnboardingStyle(),
+    ]);
     const setupWasShown = await runLearningSetup({ shell });
     if (setupWasShown) window.history.replaceState(null, "", "/profile/account");
   }
@@ -92,6 +124,7 @@ async function bootstrap() {
   window.addEventListener("alantil:dictionary-updated", refreshDictionaryScreen);
   window.addEventListener("alantil:scope-ready", () => { void router.refresh({ background: true, reason: "storage_scope" }); });
   await router.start();
+  installGuideAfterFirstPaint();
 
   // Optional social features must not hold up post-route initialization.
   let stopSocial = () => {};
