@@ -39,6 +39,8 @@ try{
   const expression=`(() => {
     localStorage.setItem('alantil_scope_v1:guest:settings', ${JSON.stringify(JSON.stringify(settings))});
     localStorage.setItem('alantil_scope_v1:guest:guide.state','{"general_completed":true,"learning_completed":true}');
+    // A returning visitor has already dismissed story introductions.
+    localStorage.setItem('alantil_scope_v1:guest:route.story-intro-seen',JSON.stringify({oblivion:true,understanding:true,roots:true,ascent:true,pathways:true}));
     return localStorage.getItem('alantil_scope_v1:guest:settings');
   })()`;
   const requestId=42;

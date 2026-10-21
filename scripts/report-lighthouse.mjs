@@ -38,7 +38,7 @@ for(const route of routes){
 const report=[
  '# AlanTil current-source mobile Lighthouse',
  '',
- 'Measured from GitHub Actions Chrome against the current main source on localhost with Lighthouse mobile emulation. This is not a production-origin speed measurement.',
+ 'Measured from GitHub Actions Chrome against the checked-out source on localhost with Lighthouse mobile emulation. This is not a production-origin speed measurement.',
  'INP requires real user monitoring; Lighthouse TBT is only a lab proxy, not INP.',
  '',
  '| Route | Score /100 | FCP | LCP | TBT | CLS | Requests | Transfer | Errors |',
