@@ -16,9 +16,9 @@ function glb(path){
  assert.equal(bytes.readUInt32LE(8),bytes.length,path);
  assert.ok(bytes.length>1000,path);
 }
-test('only one approved Common100 catalog with ten authored section recipes',()=>{
- assert.equal(index.sections.length,10);
- assert.equal(new Set(index.sections.map(s=>s.id)).size,10);
+test('only one approved Common100 catalog with eleven authored section recipes',()=>{
+ assert.equal(index.sections.length,11);
+ assert.equal(new Set(index.sections.map(s=>s.id)).size,11);
  assert.deepEqual(index.currentConstruction.masonryTypes,['1x1x1','2x2x2','2x3x4','3x3x3']);
  assert.deepEqual(Object.keys(index.architecture),['gate','door','window']);
  assert.equal(index.archivedSources,undefined);
@@ -27,7 +27,7 @@ test('only one approved Common100 catalog with ten authored section recipes',()=
  assert.equal(source.models.length,100);
  glb(root+'common100/common-100.glb');
 });
-test('all ten JSONs match SHA-256, original Common100 model names and counts',()=>{
+test('all eleven JSONs match SHA-256, original Common100 model names and counts',()=>{
  for(const entry of index.sections){
   const bytes=read(root+'sections/'+entry.file);
   assert.equal(sha(bytes),entry.sha256,entry.id);
