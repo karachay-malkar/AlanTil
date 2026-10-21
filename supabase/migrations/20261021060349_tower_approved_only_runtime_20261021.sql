@@ -1,0 +1,183 @@
+-- Current approved-tower runtime schema. Earlier migrations remain as historical schema steps.
+CREATE OR REPLACE FUNCTION private.clear_tower_v3(p_revision bigint, p_operation_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE uid uuid:=auth.uid(); state private.tower_v3_state; receipt private.tower_v3_receipts;
+ req jsonb; result jsonb;watermark timestamptz;
+BEGIN
+ IF uid IS NULL THEN RAISE EXCEPTION 'AUTH_REQUIRED'; END IF;
+ IF p_revision IS NULL OR p_revision<0 OR p_operation_id IS NULL THEN RAISE EXCEPTION 'INVALID_CLEAR_REQUEST'; END IF;
+ req:=jsonb_build_array('tower_v3_clear',p_revision);
+ INSERT INTO private.tower_v3_state(user_id) VALUES(uid) ON CONFLICT DO NOTHING;
+ SELECT * INTO state FROM private.tower_v3_state WHERE user_id=uid FOR UPDATE;
+ SELECT * INTO receipt FROM private.tower_v3_receipts WHERE user_id=uid AND operation_id=p_operation_id;
+ IF FOUND THEN
+  IF receipt.request<>req THEN RAISE EXCEPTION 'OPERATION_ID_REUSED'; END IF;
+  RETURN receipt.response||jsonb_build_object('replayed',true);
+ END IF;
+ IF state.revision<>p_revision THEN RAISE EXCEPTION 'REVISION_CONFLICT'; END IF;
+ DELETE FROM private.tower_v3_sections WHERE user_id=uid;
+ watermark:=clock_timestamp();
+ UPDATE private.tower_v3_state SET revision=revision+1,updated_at=now(),reset_at=watermark WHERE user_id=uid;
+ result:=jsonb_build_object('format',3,'revision',state.revision+1,'resetAt',watermark,'elements','[]'::jsonb);
+ INSERT INTO private.tower_v3_receipts(user_id,operation_id,request,response) VALUES(uid,p_operation_id,req,result);
+ RETURN result;
+END $function$
+
+
+CREATE OR REPLACE FUNCTION private.mutate_tower_v3(p_revision bigint, p_operation_id uuid, p_action text, p_section jsonb DEFAULT NULL::jsonb, p_section_id uuid DEFAULT NULL::uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare uid uuid:=auth.uid();state private.tower_v3_state; receipt private.tower_v3_receipts;
+ req jsonb;current_sections jsonb;candidate jsonb;new_sections jsonb;result jsonb;eid uuid;
+begin
+ if uid is null then raise exception 'AUTH_REQUIRED';end if;
+ if p_revision is null or p_revision<0 or p_operation_id is null or p_action not in ('place','remove') then raise exception 'INVALID_V3_REQUEST';end if;
+ req:=jsonb_build_array('tower_v3',p_revision,p_action,p_section,p_section_id);
+ insert into private.tower_v3_state(user_id) values(uid) on conflict do nothing;
+ 
+ select * into state from private.tower_v3_state where user_id=uid for update;
+ select * into receipt from private.tower_v3_receipts where user_id=uid and operation_id=p_operation_id;
+ if found then
+  if receipt.request<>req then raise exception 'OPERATION_ID_REUSED';end if;
+  return receipt.response||jsonb_build_object('replayed',true);
+ end if;
+ if state.revision<>p_revision then raise exception 'REVISION_CONFLICT';end if;
+ current_sections:=private.tower_v3_snapshot_rows(uid);
+ if p_action='place' then
+  if p_section_id is not null then raise exception 'INVALID_V3_REQUEST';end if;
+  candidate:=private.tower_v3_canonical(p_section);eid:=(candidate->>'id')::uuid;
+  if exists(select 1 from private.tower_v3_sections where user_id=uid and id=eid) then raise exception 'DUPLICATE_SECTION';end if;
+  new_sections:=current_sections||jsonb_build_array(candidate);
+  if not private.tower_v3_valid_layout(uid,new_sections) then raise exception 'INVALID_V3_PLACEMENT';end if;
+  insert into private.tower_v3_sections(user_id,id,section_id,variant_id,geometry_version,grid_x,grid_y,grid_z,rotation)
+   values(uid,eid,candidate->>'sectionId',(candidate->>'variant')::smallint,candidate->>'geometryVersion',
+   (candidate->>'x')::integer,(candidate->>'y')::integer,(candidate->>'z')::integer,(candidate->>'rotation')::smallint);
+ elsif p_action='remove' then
+  if p_section is not null or p_section_id is null then raise exception 'INVALID_V3_REQUEST';end if;
+  if not exists(select 1 from private.tower_v3_sections where user_id=uid and id=p_section_id) then raise exception 'UNKNOWN_V3_SECTION';end if;
+  select coalesce(jsonb_agg(value),'[]'::jsonb) into new_sections from jsonb_array_elements(current_sections) x where x.value->>'id'<>p_section_id::text;
+  if not private.tower_v3_valid_layout(uid,new_sections) then raise exception 'SUPPORT_REQUIRED';end if;
+  delete from private.tower_v3_sections where user_id=uid and id=p_section_id;
+ end if;
+ update private.tower_v3_state set revision=revision+1,updated_at=now() where user_id=uid;
+ result:=jsonb_build_object('format',3,'revision',state.revision+1,'elements',private.tower_v3_snapshot_rows(uid));
+ insert into private.tower_v3_receipts(user_id,operation_id,request,response) values(uid,p_operation_id,req,result);
+ return result;
+end $function$
+
+
+CREATE OR REPLACE FUNCTION private.tower_v3_canonical(e jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO ''
+AS $function$
+DECLARE typ text;v int;r int;px int;py int;pz int;dims int[];uid uuid;version text;valid boolean;
+BEGIN
+ IF e IS NULL OR jsonb_typeof(e)<>'object' OR
+ (e->>'id') IS NULL OR (e->>'sectionId') IS NULL OR (e->>'geometryVersion') IS NULL OR
+ (e->>'variant') IS NULL OR (e->>'rotation') IS NULL OR
+ (e->>'x') IS NULL OR (e->>'y') IS NULL OR (e->>'z') IS NULL THEN RAISE EXCEPTION 'INVALID_V3_SECTION'; END IF;
+ IF (e->>'variant') !~ '^[0-9]+$' OR (e->>'rotation') !~ '^[0-9]+$' OR
+ (e->>'x') !~ '^[0-9]+$' OR (e->>'y') !~ '^[0-9]+$' OR (e->>'z') !~ '^[0-9]+$' THEN RAISE EXCEPTION 'GRID_REQUIRED'; END IF;
+ uid:=(e->>'id')::uuid;typ:=e->>'sectionId';version:=e->>'geometryVersion';
+ v:=(e->>'variant')::int;r:=(e->>'rotation')::int;
+ px:=(e->>'x')::int;py:=(e->>'y')::int;pz:=(e->>'z')::int;
+ dims:=private.tower_v3_size(typ,r);
+ valid:=CASE
+ WHEN typ='1x1x1' THEN version='17.7-approved-manual.1' AND v BETWEEN 0 AND 1
+ WHEN typ='2x2x2' THEN version='17.7-approved-manual.1' AND v BETWEEN 0 AND 2
+ WHEN typ='2x3x4' THEN version='17.7-approved-manual.1' AND v BETWEEN 0 AND 2
+ WHEN typ='3x3x3' THEN version='17.7-approved-manual.1' AND v BETWEEN 0 AND 1
+ WHEN typ='window-4x5x2' THEN version='17.6-window.1' AND v=0
+ WHEN typ='door-7x9x2' THEN version='17.6-door.1' AND v=0
+ WHEN typ='gate-18x10x2' THEN version='17.6-gate.1' AND v=0
+ ELSE false END;
+ IF uid IS NULL OR dims IS NULL OR NOT COALESCE(valid,false) OR r NOT BETWEEN 0 AND 3 OR
+ px+dims[1]>60 OR py+dims[2]>80 OR pz+dims[3]>60 THEN RAISE EXCEPTION 'INVALID_V3_SECTION'; END IF;
+ RETURN jsonb_build_object('id',uid,'type','masonry_section','sectionId',typ,
+ 'variant',v,'rotation',r,'x',px,'y',py,'z',pz,'geometryVersion',version);
+EXCEPTION WHEN invalid_text_representation OR numeric_value_out_of_range
+ THEN RAISE EXCEPTION 'INVALID_V3_SECTION';
+END $function$
+
+
+CREATE OR REPLACE FUNCTION private.tower_v3_size(p_type text, p_rotation integer)
+ RETURNS integer[]
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO ''
+AS $function$
+SELECT CASE p_type
+WHEN '1x1x1' THEN ARRAY[1,1,1]
+WHEN '2x2x2' THEN ARRAY[2,2,2]
+WHEN '2x3x4' THEN CASE WHEN p_rotation%2=1 THEN ARRAY[4,3,2] ELSE ARRAY[2,3,4] END
+WHEN '3x3x3' THEN ARRAY[3,3,3]
+WHEN 'window-4x5x2' THEN CASE WHEN p_rotation%2=1 THEN ARRAY[2,5,4] ELSE ARRAY[4,5,2] END
+WHEN 'door-7x9x2' THEN CASE WHEN p_rotation%2=1 THEN ARRAY[2,9,7] ELSE ARRAY[7,9,2] END
+WHEN 'gate-18x10x2' THEN CASE WHEN p_rotation%2=1 THEN ARRAY[2,10,18] ELSE ARRAY[18,10,2] END
+ELSE NULL::integer[] END
+$function$
+
+
+CREATE OR REPLACE FUNCTION private.tower_v3_valid_layout(p_uid uuid, p_sections jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ STABLE
+ SET search_path TO ''
+AS $function$
+declare e jsonb;others jsonb:='[]'::jsonb;all_boxes jsonb;box jsonb;other jsonb;dims int[];
+ px numeric;py numeric;pz numeric;sx numeric;sy numeric;sz numeric;
+ x int;y int;z int;supported boolean;seen_ids uuid[]:=array[]::uuid[];
+begin
+ if p_sections is null or jsonb_typeof(p_sections)<>'array' or jsonb_array_length(p_sections)>250 then return false;end if;
+ for e in select value from jsonb_array_elements(p_sections) loop
+  begin e:=private.tower_v3_canonical(e);exception when others then return false;end;
+  if (e->>'id')::uuid=any(seen_ids) then return false;end if;
+  seen_ids:=array_append(seen_ids,(e->>'id')::uuid);
+  dims:=private.tower_v3_size(e->>'sectionId',(e->>'rotation')::int);
+  others:=others||jsonb_build_array(jsonb_build_object('id',e->>'id','x',e->'x','y',e->'y','z',e->'z',
+     'sx',dims[1],'sy',dims[2],'sz',dims[3],'support',true));
+ end loop;
+ all_boxes:=others;
+ for box in select value from jsonb_array_elements(others) loop
+  px:=(box->>'x')::numeric;py:=(box->>'y')::numeric;pz:=(box->>'z')::numeric;
+  sx:=(box->>'sx')::numeric;sy:=(box->>'sy')::numeric;sz:=(box->>'sz')::numeric;
+  for other in select value from jsonb_array_elements(all_boxes) loop
+   if other->>'id'=box->>'id' and other ? 'id' then continue;end if;
+   if px<(other->>'x')::numeric+(other->>'sx')::numeric and px+sx>(other->>'x')::numeric and
+      py<(other->>'y')::numeric+(other->>'sy')::numeric and py+sy>(other->>'y')::numeric and
+      pz<(other->>'z')::numeric+(other->>'sz')::numeric and pz+sz>(other->>'z')::numeric then return false;end if;
+  end loop;
+  if py=0 then continue;end if;
+  for x in px::int..(px+sx)::int-1 loop for z in pz::int..(pz+sz)::int-1 loop
+   supported:=false;
+   for other in select value from jsonb_array_elements(all_boxes) loop
+    if not coalesce((other->>'support')::boolean,false) then continue;end if;
+    if abs((other->>'y')::numeric+(other->>'sy')::numeric-py)<.00001 and
+       x+.5>=(other->>'x')::numeric and x+.5<=(other->>'x')::numeric+(other->>'sx')::numeric and
+       z+.5>=(other->>'z')::numeric and z+.5<=(other->>'z')::numeric+(other->>'sz')::numeric then supported:=true;exit;end if;
+   end loop;
+   if not supported then return false;end if;
+  end loop;end loop;
+ end loop;
+ return true;
+end $function$
+
+
+CREATE OR REPLACE FUNCTION public.clear_tower_v3(p_revision bigint, p_operation_id uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ SET search_path TO ''
+AS $function$ SELECT private.clear_tower_v3(p_revision,p_operation_id) $function$
+
+
+REVOKE ALL ON FUNCTION public.clear_tower_v3(bigint,uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.clear_tower_v3(bigint,uuid) TO authenticated;
