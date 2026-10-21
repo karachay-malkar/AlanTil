@@ -6,9 +6,6 @@ import { filterNickname } from "../../../packages/alantil-core/profile.js?v=16.8
 function renderAccountFact(label, value) {
   return `<div class="accountFact"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "—")}</dd></div>`;
 }
-  return `<fieldset class="accountGenderField"><legend>${msg("account.pol_avatara")}</legend><div class="segmentControl settingsSegments accountGenderOptions" role="radiogroup"><label class="settingsChoice accountGenderOption"><input type="radio" name="avatarGender" value="male" ${gender==="male"?"checked":""}/><span class="settingsChoiceBody">${msg("account.muzhskoy_2")}</span></label><label class="settingsChoice accountGenderOption"><input type="radio" name="avatarGender" value="female" ${gender==="female"?"checked":""}/><span class="settingsChoiceBody">${msg("account.zhenskiy_2")}</span></label></div><p class="accountPrivacyNote">${msg("profile.vybor_vypolnyaetsya_odin_raz_i_pozzhe_ne")}</p></fieldset>`;
-}
-
 export function renderProfileCreation(context, user, {
   nickname = "",
   nicknameMessage = "",
