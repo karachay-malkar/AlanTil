@@ -1,4 +1,4 @@
-const VERSION = "16.8.0.28";
+const VERSION = "16.8.0.29";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 const LEGACY_REFRESH_BEFORE_VERSION = "16.8.0.16";
@@ -6,8 +6,8 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.8.0.28",
-  "/src/app/router.js?v=16.8.0.28",
+  "/src/app/bootstrap.js?v=16.8.0.29",
+  "/src/app/router.js?v=16.8.0.29",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",
@@ -128,6 +128,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (["script", "style", "worker"].includes(request.destination) || url.pathname.startsWith("/src/data/dictionary-snapshot.json")) {
-    event.respondWith(networkFirst(request, RUNTIME_CACHE, { noStore: true }));
+    // Cache-busted immutable code: a new ?v= URL changes when the application is released.
+    // Keep configuration and unversioned resources network-first.
+    const versionedCode=["script","style"].includes(request.destination)
+      && url.searchParams.has("v")
+      && !url.pathname.startsWith("/src/config/");
+    event.respondWith(versionedCode ? cacheFirst(request) : networkFirst(request, RUNTIME_CACHE, { noStore: true }));
   }
 });

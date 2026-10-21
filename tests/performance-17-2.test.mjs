@@ -24,3 +24,13 @@ test('17.2 skips unrelated JS warmups and lazy-loads the stele',async()=>{
  assert.match(stele,/artwork\.src=artwork\.dataset\.src/);
  assert.doesNotMatch(sw,/\/assets\/path\/story-stele\.webp\?v=16\.8\.0\.16/);
 });
+
+test('17.2 favicon and versioned static resources load without repeat network fetch',async()=>{
+ const index=await read('index.html');
+ const worker=await read('service-worker.js');
+ assert.match(index,/rel="icon" type="image\/png"/);
+ assert.match(index,/targetVersion = "16\.8\.0\.29"/);
+ assert.match(worker,/VERSION = "16\.8\.0\.29"/);
+ assert.match(worker,/url\.searchParams\.has\("v"\)/);
+ assert.match(worker,/versionedCode \? cacheFirst\(request\) : networkFirst\(request/);
+});
