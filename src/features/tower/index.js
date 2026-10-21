@@ -1,6 +1,4 @@
-/** AlanTil 17.5.2 — free, permanent prefabricated masonry, server-authoritative V3.
- * Old purchased V1/V2 elements remain read only. No local construction drafts.
- */
+/** AlanTil tower: server-authoritative approved prefab construction only. */
 import {createTowerScene} from './prefab-scene.js?v=17.7-approved-masonry.1';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
@@ -8,25 +6,17 @@ import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/d
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {towerUserId,loadTower,loadTowerV2,loadTowerV3,mutateTowerV3,clearTowerAll} from './repository.js?v=17.5.6-tower-controls.1';
+import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3} from './repository.js?v=17.5.6-tower-controls.1';
 import {uiIcon} from '../../shared/ui/icons.js?v=17.5.6-tower-controls.1';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const historicDraftKey=id=>'alantil_tower_prefab_draft_17_4_'+(id||'guest');
-const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-function historicDrafts(id){
- try{
-  const data=JSON.parse(localStorage.getItem(historicDraftKey(id))||'null');
-  return data?.format===3&&Array.isArray(data.sections)?data.sections.slice(0,250):[];
- }catch{return[];}
-}
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
 const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',remove:'eraser',hammer:'hammer',clear:'trash2'};
 const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${label}" title="${label}">${uiIcon(TOWER_ICONS[name])}</button>`;
 export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
-  sections:[],legacy:[],revision:0,legacyRevision:null,resetAt:null,selected:null,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
+  sections:[],revision:0,resetAt:null,selected:null,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
   preview:null,previewHit:null,locked:false,busy:false,ready:false,canLeave:()=>true};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
@@ -60,7 +50,7 @@ export async function mount(context,params={}){
   const el=q('[data-toast]');el.textContent=text;el.hidden=false;
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{if(!s.disposed)el.hidden=true;},3200);
  }
- function blocks(){return[...s.legacy,...s.sections];}
+ function blocks(){return s.sections;}
  function catalogVisible(show){
   side.classList.toggle('is-open',!!show);
   q('[data-hammer]').setAttribute('aria-expanded',String(!!show));
@@ -75,7 +65,7 @@ export async function mount(context,params={}){
   for(const name of ['cancel','rotate','variant','hammer','camera']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
   }
-  q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s)||s.legacyRevision===null;
+  q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
   if(next==='placing'||next==='saving-place')catalogVisible(false);
   else if(next==='idle')catalogVisible(true);
   s.scene?.setTool(next==='placing'||next==='saving-place'?'place':'select');
@@ -127,53 +117,11 @@ export async function mount(context,params={}){
   ++previewSequence;s.preview=null;s.previewHit=null;s.selected=null;s.locked=false;
   s.scene?.setSelected(null);mode('idle');
  }
- async function loadHistoric(){
-  if(!s.userId)return;
-  const target=params.userId||null;
-  const [v2,v1]=await Promise.allSettled([loadTowerV2(target),loadTower(target)]);
-  const next=[];
-  if(v2.status==='fulfilled')next.push(...v2.value.elements.map(b=>({...b,id:'historic-v2-'+b.id,legacy:true})));
-  if(v1.status==='fulfilled')next.push(...v1.value.elements.map(b=>({...b,id:'historic-v1-'+b.id,legacy:true})));
-  s.legacy=next;
-  s.legacyRevision=v2.status==='fulfilled'&&v1.status==='fulfilled'&&
-   v2.value.revision===v1.value.revision?v1.value.revision:null;
-  if(s.legacyRevision===null)message('Не удалось проверить историческую постройку');
- }
  async function refreshServer(){
   if(!s.userId){s.sections=[];s.revision=0;s.resetAt=null;await redraw();return;}
   const snapshot=await loadTowerV3(params.userId||null);
   s.sections=snapshot.elements;s.revision=snapshot.revision;s.resetAt=snapshot.resetAt;
   await redraw();
- }
- async function importHistoricDrafts(){
-  // One-time recovery only; never write new constructions into localStorage.
-  if(!s.userId||!editable(s))return;
-  const key=historicDraftKey(s.userId);
-  // A server-side reset permanently invalidates pre-reset device drafts.
-  if(s.resetAt){try{localStorage.removeItem(key);}catch{}return;}
-  const old=historicDrafts(s.userId);
-  if(!old.length)return;
-  const remains=[];
-  const sorted=[...old].sort((a,b)=>(a.y??0)-(b.y??0));
-  for(const original of sorted){
-   const section={id:original.id,type:'masonry_section',sectionId:original.sectionId,
-    variant:original.variant,rotation:original.rotation,x:original.x,y:original.y,z:original.z,
-    geometryVersion:original.geometryVersion||'17.4.1'};
-   if(s.sections.some(b=>b.id===section.id))continue;
-   if(!['17.5.0','17.5.1','17.5.2'].includes(section.geometryVersion)||!uuid.test(section.id)||
-      !validatePrefabPlacement(blocks(),section).ok||
-      !validateSectionJoints(s.sections,section,s.scene.manifest).ok){remains.push(original);continue;}
-   try{
-    // Stable operation ID makes a retry idempotent even after connection loss.
-    const result=await mutateTowerV3({revision:s.revision,id:section.id,action:'place',section});
-    s.sections=result.elements;s.revision=result.revision;
-   }catch{remains.push(original);await refreshServer();}
-  }
-  if(remains.length!==old.length){
-   if(remains.length)localStorage.setItem(key,JSON.stringify({format:3,localDraft:true,assetVersion:'17.5.2',sections:remains}));
-   else localStorage.removeItem(key);
-   await redraw();
-  }
  }
  async function mutate(action,section=null,sectionId=null){
   if(s.busy||!s.userId||!editable(s))return;
@@ -204,24 +152,23 @@ export async function mount(context,params={}){
   }finally{s.busy=false;if(!s.disposed){mode(s.mode);if(s.mode==='placing')await preview();}}
  }
  async function clearAll(){
-  if(s.busy||!s.ready||!s.userId||!editable(s)||s.legacyRevision===null)return;
-  if(!s.sections.length&&!s.legacy.length)return;
+  if(s.busy||!s.ready||!s.userId||!editable(s))return;
+  if(!s.sections.length)return;
   const confirmed=await context.modal.confirm({
    message:'Удалить всю построенную башню?<div class="towerClearWarning">Все установленные элементы будут безвозвратно удалены.</div>'
   });
   if(!confirmed||s.disposed||s.busy||!editable(s))return;
   s.busy=true;mode('saving-clear');
   try{
-   const result=await clearTowerAll({revision:s.revision,legacyRevision:s.legacyRevision,id:crypto.randomUUID()});
+   const result=await clearTowerV3({revision:s.revision,id:crypto.randomUUID()});
    if(s.disposed)return;
    s.sections=result.elements;s.revision=result.revision;
-   s.legacy=[];s.legacyRevision=result.legacyRevision;s.resetAt=result.resetAt;
+   s.resetAt=result.resetAt;
    s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
-   try{localStorage.removeItem(historicDraftKey(s.userId));}catch{}
    s.scene?.setSelected(null);mode('idle');await redraw();
   }catch(error){
    if(s.disposed)return;
-   try{await loadHistoric();await refreshServer();}catch{}
+   try{await refreshServer();}catch{}
    cancelAfterClear();
    message(String(error?.message||error).includes('REVISION_CONFLICT')
     ?'Башня изменилась. Повторите очистку.':'Не удалось очистить башню');
@@ -257,7 +204,7 @@ export async function mount(context,params={}){
  on('[data-remove]','click',()=>{
   if(s.mode!=='selected'||!s.selected)return;
   const id=s.selected,remaining=s.sections.filter(b=>b.id!==id);
-  if(remaining.some((b,i)=>!validatePrefabPlacement([...s.legacy,...remaining.filter((_,j)=>j!==i)],b).ok)){
+  if(remaining.some((b,i)=>!validatePrefabPlacement(remaining.filter((_,j)=>j!==i),b).ok)){
    message('Нельзя удалить опору для верхних секций');return;
   }
   void mutate('remove',null,id);
@@ -280,9 +227,7 @@ export async function mount(context,params={}){
   });
   if(s.disposed){s.scene.dispose();return;}
   mode('idle');
-  await loadHistoric();
   try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
-  await importHistoricDrafts();
   if(params.userId&&!editable(s))catalogVisible(false);
   s.ready=true;mode(s.mode);
  }catch(error){message('Не удалось загрузить 3D-сцену');console.error(error);}
