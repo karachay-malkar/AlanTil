@@ -1,5 +1,7 @@
-import {worldDimensions} from './core.mjs';
-import {isApprovedMasonryType} from './approved-prefab.mjs';
+import {isApprovedMasonryType,approvedVariantCount,APPROVED_PREFAB_VERSION} from './approved-prefab.mjs';
+import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from './window-prefab.mjs';
+import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
+import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
 /** One section = one immutable prefabricated masonry asset. Positions are integer 25-cm cells. */
 export const PREFAB_CELL_METERS=.25;
 export const PREFAB_WORLD_CELLS=60;
@@ -7,19 +9,14 @@ export const PREFAB_HEIGHT_CELLS=80;
 export const PREFAB_TYPES=Object.freeze([
  {id:'1x1x1',size:[1,1,1]},
  {id:'2x2x2',size:[2,2,2]},
- {id:'2x2x3',size:[2,2,3]},
  {id:'2x3x4',size:[2,3,4]},
- {id:'4x4x4',size:[4,4,4]},
  {id:'3x3x3',size:[3,3,3]},
  {id:'window-4x5x2',size:[4,5,2]},
  {id:'door-7x9x2',size:[7,9,2]},
  {id:'gate-18x10x2',size:[18,10,2]}
 ].map(t=>Object.freeze({...t,size:Object.freeze(t.size)})));
-/** Only author-approved manual recipes and the current door/window/gate are buildable.
- * Historic 2x2x3/4x4x4 and other old versions remain in PREFAB_TYPES for saved towers.
- */
-export const BUILDABLE_PREFAB_TYPES=Object.freeze(PREFAB_TYPES.filter(t=>
- isApprovedMasonryType(t.id)||['window-4x5x2','door-7x9x2','gate-18x10x2'].includes(t.id)));
+/** Only approved masonry and current architectural modules are buildable. */
+export const BUILDABLE_PREFAB_TYPES=PREFAB_TYPES;
 const byId=new Map(PREFAB_TYPES.map(t=>[t.id,t]));
 const EPS=1e-5;
 export function prefabSize(type){const s=byId.get(type)?.size;if(!s)throw new TypeError('Unknown prefabricated section');return [...s];}
@@ -27,9 +24,10 @@ export function worldToGrid(meters){if(!Number.isFinite(meters))throw new TypeEr
 export function gridToWorld(cells){if(!Number.isFinite(cells))throw new TypeError('Invalid grid coordinate');return cells*PREFAB_CELL_METERS;}
 export function snapPrefabPosition(coords){return Object.fromEntries(['x','y','z'].map(k=>[k,Math.round(Number(coords[k]))]));}
 export function prefabBounds(b){
- const s=b?.type==='masonry_section'?prefabSize(b.sectionId):worldDimensions(b);
+ if(b?.type!=='masonry_section')throw new TypeError('Unsupported tower block');
+ const s=prefabSize(b.sectionId);
  const r=b.rotation||0;
- const d=b?.type==='masonry_section'&&r%2?[s[2],s[1],s[0]]:s;
+ const d=r%2?[s[2],s[1],s[0]]:s;
  return {min:[b.x,b.y,b.z],max:[b.x+d[0],b.y+d[1],b.z+d[2]],size:d};
 }
 const overlap=(a,b,k)=>Math.min(a.max[k],b.max[k])-Math.max(a.min[k],b.min[k]);
@@ -52,11 +50,15 @@ export function hasPrefabSupport(blocks,proposed){
  return true;
 }
 export function validatePrefabPlacement(blocks,section,options={}){
- const maxVariants=options.maxVariants??8;
- if(!section||section.type!=='masonry_section'||!byId.has(section.sectionId)||!Number.isInteger(section.variant)||section.variant<0||section.variant>=maxVariants||!Number.isInteger(section.rotation)||section.rotation<0||section.rotation>3)
+ const versions={
+  [WINDOW_PREFAB_ID]:WINDOW_PREFAB_VERSION,[DOOR_PREFAB_ID]:DOOR_PREFAB_VERSION,[GATE_PREFAB_ID]:GATE_PREFAB_VERSION
+ };
+ const allowed=section?.sectionId in versions?1:approvedVariantCount(section?.sectionId);
+ const version=versions[section?.sectionId]||APPROVED_PREFAB_VERSION;
+ if(!section||section.type!=='masonry_section'||!byId.has(section.sectionId)||!allowed||section.geometryVersion!==version||!Number.isInteger(section.variant)||section.variant<0||section.variant>=allowed||!Number.isInteger(section.rotation)||section.rotation<0||section.rotation>3)
   return {ok:false,reason:'Недопустимая готовая секция'};
  if(![section.x,section.y,section.z].every(v=>Number.isFinite(v)))return{ok:false,reason:'Некорректная позиция'};
- if(![section.x,section.y,section.z].every(v=>Number.isInteger(v))&&!(options.allowLegacyOffGrid&&section.geometryVersion==='17.4.1'))return{ok:false,reason:'Секция должна быть привязана к сетке 25 см'};
+ if(![section.x,section.y,section.z].every(v=>Number.isInteger(v)))return{ok:false,reason:'Секция должна быть привязана к сетке 25 см'};
  const a=prefabBounds(section);
  if(a.min.some(v=>v<0)||a.max[0]>PREFAB_WORLD_CELLS||a.max[1]>PREFAB_HEIGHT_CELLS||a.max[2]>PREFAB_WORLD_CELLS)
   return{ok:false,reason:'Секция выходит за границы участка'};
