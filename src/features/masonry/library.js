@@ -7,7 +7,7 @@ export const MANIFEST_URL='/assets/tower/approved-library/common100/common-100.j
 export const CELL_METERS=.25;
 export const RECIPE_VERSION='common100-mixed-2';
 export const LEGACY_RECIPE_VERSION='common100-manual-1';
-export const ARCHITECTURE_IDS=Object.freeze(['gate','gate-v9','door','window','timber']);
+export const ARCHITECTURE_IDS=Object.freeze(['gate','gate-v9','door','window']);
 export const CATEGORIES=Object.freeze([
  {key:'large',label:'Крупные',count:10},
  {key:'main',label:'Основные',count:72},
