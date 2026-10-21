@@ -5,16 +5,14 @@ import { initGuestProfilePrompt } from "../shared/auth/guest-profile-prompt.js?v
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=13.15.9";
 import { initializeProgressSystem } from "../shared/progress/progress-sync.js?v=13.15.12";
 import { getInterfaceLanguage, initializeI18n, msg } from "../shared/i18n/index.js?v=13.15.12";
-import { startSocialInboxController } from "../shared/social/social-service.js?v=16.7.0";
 import { socialMessage } from "../../packages/alantil-core/social-i18n.js";
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=13.9.0";
-import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=13.9.0";
 import { createModalService } from "../shared/ui/modal.js?v=13.15.10";
 import { runLearningSetup } from "../features/onboarding/index.js?v=13.10.12";
 import { createRouter } from "./router.js?v=16.7.8";
 import { createShell } from "./shell.js?v=16.7.0";
 
-const RELEASE_VERSION = "16.7.10";
+const RELEASE_VERSION = "16.7.11";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function registerServiceWorker() {
@@ -95,14 +93,20 @@ async function bootstrap() {
   window.addEventListener("alantil:scope-ready", () => { void router.refresh({ background: true, reason: "storage_scope" }); });
   await router.start();
 
-  let stopSocial=()=>{};
-  try { stopSocial=await startSocialInboxController(renderFriendsBadge); } catch { renderFriendsBadge({total:0}); }
-  window.addEventListener('pagehide',()=>stopSocial(),{once:true});
+  // Optional social features must not hold up post-route initialization.
+  let stopSocial = () => {};
+  window.addEventListener("pagehide", () => stopSocial(), { once: true });
+  void import("../shared/social/social-service.js?v=16.7.0")
+    .then(({ startSocialInboxController }) => startSocialInboxController(renderFriendsBadge))
+    .then((stop) => { stopSocial = typeof stop === "function" ? stop : () => {}; })
+    .catch(() => renderFriendsBadge({ total: 0 }));
 
   if (persistedAuth && !callbackVisit) {
     void authInitialization.then(async () => { await linkRestoredAccountVisit(); await router.refresh({ background: true, reason: "auth_ready" }); });
   }
-  void initPrivacyController({ appRouter: router });
+  void import("../shared/privacy/privacy-controller.js?v=13.9.0")
+    .then(({ initPrivacyController }) => initPrivacyController({ appRouter: router }))
+    .catch((error) => console.warn("Privacy controller initialization failed", error));
   if (!callbackVisit) initGuestProfilePrompt({ modal, router });
   void initTelegram({ adapter: telegram, onReady(webApp) { router.attachTelegram(webApp); } }).catch((error) => {
     router.releaseTelegramLaunchUrl();
