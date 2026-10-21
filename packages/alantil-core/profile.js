@@ -25,7 +25,7 @@ export function normalizeProfileGender(value) {
 }
 
 export function hasCompleteProfile(profile) {
-  return Boolean(normalizeNickname(profile?.nickname) && normalizeProfileGender(profile?.avatar_gender));
+  return Boolean(normalizeNickname(profile?.nickname));
 }
 
 export function providerLabel(provider) {

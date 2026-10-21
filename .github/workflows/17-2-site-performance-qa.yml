@@ -1,0 +1,95 @@
+name: AlanTil 17.2 live-source performance QA
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/**'
+      - 'mobile/**'
+      - 'packages/**'
+      - 'index.html'
+      - 'service-worker.js'
+      - 'tests/**'
+      - 'scripts/static-preview-server.mjs'
+      - '.github/workflows/17-2-site-performance-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check production source JavaScript
+        run: |
+          set -euo pipefail
+          node --check src/features/masonry/library.js
+          node --check src/features/masonry/scene.js
+          node --check src/features/masonry/index.js
+          node --check src/app/router.js
+          node --check src/app/bootstrap.js
+          node --check src/features/account/index.js
+          node --check src/features/account/profile.js
+          node --check src/shared/profile/profile-service.js
+          node --check service-worker.js
+          node --check scripts/static-preview-server.mjs
+      - name: Profile, session, 3D and performance regressions
+        run: |
+          node --test \
+            tests/performance-17-2.test.mjs \
+            tests/profile-avatar-removal-16-7.test.mjs \
+            tests/storage-profile-analytics-16-8.test.mjs \
+            mobile/tests/architecture.test.mjs
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Serve exact source from branch 17.2
+        run: |
+          set -euo pipefail
+          mkdir -p perf-results
+          node scripts/static-preview-server.mjs > perf-results/server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat perf-results/server.log
+          exit 1
+      - name: Measure Lighthouse mobile
+        run: |
+          set -euo pipefail
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          for page in path/oblivion practice profile friends; do
+            key="${page//\//-}"
+            npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/$page" \
+              --only-categories=performance \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --output=json --output-path="perf-results/$key.report.json" --quiet
+          done
+      - name: Report metrics and deployed version
+        if: always()
+        run: |
+          node scripts/report-lighthouse.mjs
+          cat perf-results/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+          version="$(curl -fsSL --max-time 20 https://alantil.ru/ | grep -o 'targetVersion = "[^"]*"' | head -1 || true)"
+          echo "Production version: ${version:-unknown}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production version: ${version:-unknown}"
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-lighthouse
+          path: perf-results/
+          retention-days: 21
+          if-no-files-found: warn

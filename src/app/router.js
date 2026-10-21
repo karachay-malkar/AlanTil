@@ -6,9 +6,9 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "16.8.0.24";
+const ASSET_VERSION = "16.8.0.28";
 const TOWER_ASSET_VERSION = "17.7-approved-only.1";
-const MASONRY_ASSET_VERSION = "17.7-approved-only.1";
+const MASONRY_ASSET_VERSION = "17.7-approved-only.2";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -314,13 +314,6 @@ export function createRouter({ shell, modal, context }) {
     if (queuedNavigation) { const request = queuedNavigation; queuedNavigation = null; void show(request.target, request.options).then(request.resolve); return; }
     if (queuedRefresh) { const options = queuedRefresh; queuedRefresh = null; void refresh(options); }
   }
-  function scheduleFeatureWarmup(route) {
-    const currentFeature = featureOf(route);
-    const features = currentFeature === "path" ? ["practice", "friends", "profile"] : currentFeature === "practice" ? ["path", "friends", "test", "match", "ashyk"] : currentFeature === "friends" ? ["practice", "profile"] : currentFeature === "ashyk" ? ["practice", "friends"] : [];
-    if (!features.length) return;
-    const warm = () => features.forEach((feature) => void loadFeatureModule(feature).catch(() => {}));
-    if (typeof requestIdleCallback === "function") requestIdleCallback(warm, { timeout: 1800 }); else globalThis.setTimeout(warm, 250);
-  }
   function targetWithInheritedParams(route, params = {}) {
     const sameFeature = featureOf(route) === featureOf(current.route) && route !== "home" && !String(route).endsWith(".home");
     const nextParams = compactParams({ ...(sameFeature ? current.params : {}), ...params });
@@ -393,7 +386,7 @@ export function createRouter({ shell, modal, context }) {
       const nextModule = await prepareRoute(target.route); if (queuedNavigation && !initial) return false;
       finishScreenTimer(); await currentModule?.onLeave?.(reason); currentModule?.unmount?.(); currentModule = null; current = { route: target.route, params: compactParams(target.params) };
       if (historyMode !== "none") syncBrowserHistory(current, historyMode);
-      await mountCurrentRoute(nextModule); startScreenTimer(current.route); sendPageView({ initial }); scheduleFeatureWarmup(current.route); return true;
+      await mountCurrentRoute(nextModule); startScreenTimer(current.route); sendPageView({ initial }); return true;
     } catch (error) {
       console.error("Router mount failed", error); context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`; syncBackControls(); return false;
     } finally { navigating = false; if (!queuedNavigation) shell.setNavigationPending?.(current.route, false); drainPendingWork(); }

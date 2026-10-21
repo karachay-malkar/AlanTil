@@ -6,7 +6,6 @@ import {
 } from "../errors/supabase-error.js?v=16.8.0.7";
 import {
   normalizeNickname,
-  normalizeProfileGender,
   validateNicknameRule,
 } from "../../../packages/alantil-core/profile.js?v=16.8.0.7";
 
@@ -73,16 +72,14 @@ export async function isNicknameAvailable(value) {
   };
 }
 
-export async function createProfile(userId, value, avatarGender) {
+export async function createProfile(userId, value) {
   const validation = validateNickname(value);
-  const gender = normalizeProfileGender(avatarGender);
   if (!validation.valid) throw new Error(validation.message);
-  if (!gender) throw new Error(msg("account.vyberite_pol_avatara"));
   if (!userId) throw new Error(msg("service.polzovatel_ne_avtorizovan"));
   const client = await getSupabaseClient();
   let result = await withProfileTimeout(client
     .from("profiles")
-    .update({ nickname: validation.nickname, avatar_gender: gender })
+    .update({ nickname: validation.nickname })
     .eq("user_id", userId)
     .select(PROFILE_COLUMNS)
     .maybeSingle(), "Profile save");
@@ -90,7 +87,7 @@ export async function createProfile(userId, value, avatarGender) {
   if (result?.data) return result.data;
   result = await withProfileTimeout(client
     .from("profiles")
-    .insert({ user_id: userId, nickname: validation.nickname, avatar_gender: gender })
+    .insert({ user_id: userId, nickname: validation.nickname })
     .select(PROFILE_COLUMNS)
     .single(), "Profile create");
   if (result?.error) throwProfileError("create_profile", result.error, "create_profile");

@@ -59,9 +59,11 @@ export function validateRecipe(recipe,manifest){
  }
  return recipe;
 }
-export async function loadCommon100({signal}={}){
+let common100Promise=null;
+
+async function readCommon100(){
  const [response,model]=await Promise.all([
-  fetch(MANIFEST_URL,{signal,cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('Не удалось загрузить описание библиотеки');return r.json();}),
+  fetch(MANIFEST_URL,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('Не удалось загрузить описание библиотеки');return r.json();}),
   new GLTFLoader().loadAsync(LIBRARY_URL+'?v=17.7-common100.10'),
  ]);
  if(response.count!==100||!Array.isArray(response.models)||response.models.length!==100)throw new Error('Библиотека должна содержать ровно 100 моделей');
@@ -84,6 +86,24 @@ export async function loadCommon100({signal}={}){
  if(missing.length)throw new Error('Нет оригинальных мешей GLB: '+missing.join(', '));
  return {manifest:response,geometries};
 }
+
+export function loadCommon100({signal}={}){
+ if(signal?.aborted)return Promise.reject(signal.reason||new DOMException('Aborted','AbortError'));
+ if(!common100Promise)common100Promise=readCommon100().catch(error=>{common100Promise=null;throw error;});
+ if(!signal)return common100Promise;
+ return new Promise((resolve,reject)=>{
+  const finish=(value,error)=>{
+   signal.removeEventListener('abort',onAbort);
+   if(signal.aborted)reject(signal.reason||new DOMException('Aborted','AbortError'));
+   else if(error)reject(error);
+   else resolve(value);
+  };
+  const onAbort=()=>finish(null,signal.reason||new DOMException('Aborted','AbortError'));
+  signal.addEventListener('abort',onAbort,{once:true});
+  common100Promise.then(value=>finish(value,null),error=>finish(null,error));
+ });
+}
+
 export function stoneColor(model){
  const categories={large:'#b4a48d',main:'#b6a58c',chinking:'#c0b397',lintel:'#a89b88'};
  const hash=[...model.name].reduce((h,c)=>(Math.imul(h^c.charCodeAt(0),16777619)>>>0),2166136261);

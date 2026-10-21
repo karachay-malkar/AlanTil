@@ -1,49 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import {access,readFile} from "node:fs/promises";
+const fileUrl=(path)=>new URL("../"+path,import.meta.url);
+const read=(path)=>readFile(fileUrl(path),"utf8");
 
-const fileUrl = (path) => new URL(`../${path}`, import.meta.url);
-const read = (path) => readFile(fileUrl(path), "utf8");
-
-test("profile keeps avatar images removed while restoring explicit gender metadata", async () => {
-  const sources = await Promise.all([
-    "src/features/profile/index.js",
-    "src/features/profile/profile.css",
-    "src/features/account/index.js",
-    "src/features/account/profile.js",
-    "src/features/account/account.css",
-    "src/shared/profile/profile-service.js",
-    "packages/alantil-core/profile.js",
-    "mobile/platform/profile-api.js",
-    "mobile/screens/profile-main.js",
-    "mobile/screens/profile.js",
-  ].map(read));
-
-  const runtime = sources.join("\n");
-  assert.doesNotMatch(runtime, /avatar_male[.]png|avatar_female[.]png/);
-  assert.doesNotMatch(runtime, /AvatarFigure|LockedAvatarFigure/);
-  assert.match(runtime, /avatar_gender/);
-  assert.match(runtime, /normalizeProfileGender/);
-  assert.match(sources[8], /!profile[?][.]avatar_gender/);
-
-  await assert.rejects(access(fileUrl("assets/images/profile/avatar_male.png")));
-  await assert.rejects(access(fileUrl("assets/images/profile/avatar_female.png")));
+test("avatars do not exist in 17.2 Web and mobile runtime",async()=>{
+ const paths=["src/features/profile/index.js","src/features/account/index.js","src/features/account/profile.js","src/shared/profile/profile-service.js","packages/alantil-core/profile.js","mobile/platform/profile-api.js","mobile/screens/profile-main.js","mobile/screens/profile.js"];
+ const files=await Promise.all(paths.map(read));
+ for(let i=0;i<files.length;i++){
+  assert.doesNotMatch(files[i],/avatar_male[.]png|avatar_female[.]png|AvatarFigure|LockedAvatarFigure/,paths[i]);
+ }
+ for(const asset of ["assets/images/profile/avatar_male.png","assets/images/profile/avatar_female.png"]){
+  await assert.rejects(access(fileUrl(asset)));
+ }
 });
 
-test("profile account flow requires nickname and one-time gender and supports nickname changes", async () => {
-  const webAccount = await read("src/features/account/index.js");
-  const webProfileService = await read("src/shared/profile/profile-service.js");
-  const mobileAccount = await read("mobile/screens/profile.js");
-  const mobileApi = await read("mobile/platform/profile-api.js");
-
-  assert.match(webAccount, /profileIncomplete = !profile[?][.]nickname \|\| !profile[?][.]avatar_gender/);
-  assert.match(webAccount, /updateProfileNickname/);
-  assert.match(webAccount, /hasCompleteProfile/);
-  assert.match(webAccount, /profile_completed/);
-  assert.match(webProfileService, /PROFILE_COLUMNS = "user_id,nickname,avatar_gender,created_at,updated_at"/);
-  assert.match(webProfileService, /updateProfileNickname/);
-  assert.match(mobileAccount, /updateNativeNickname/);
-  assert.match(mobileAccount, /onProfileCompleted/);
-  assert.match(mobileAccount, /profile[?][.]avatar_gender/);
-  assert.match(mobileApi, /PROFILE_SELECT='user_id,nickname,avatar_gender,created_at,updated_at'/);
+test("profile completion depends only on nickname and preserves old gender data",async()=>{
+ const [core,account,form,service,nativeApi,mobileAccount,mobileProfile]=await Promise.all(["packages/alantil-core/profile.js","src/features/account/index.js","src/features/account/profile.js","src/shared/profile/profile-service.js","mobile/platform/profile-api.js","mobile/screens/profile.js","mobile/screens/profile-main.js"].map(read));
+ assert.match(core,/return Boolean\(normalizeNickname\(profile\?\.nickname\)\)/);
+ assert.doesNotMatch(core,/normalizeNickname\(profile\?\.nickname\) && normalizeProfileGender/);
+ assert.match(account,/const profileIncomplete = !hasCompleteProfile\(profile\)/);
+ assert.doesNotMatch(account,/genderValue|onGenderChange|createProfile\(authState.user.id, nickname, gender\)/);
+ assert.doesNotMatch(form,/genderPicker|input\[name="avatarGender"\]|accountGenderOptions/);
+ assert.doesNotMatch(form,/renderAccountFact\(msg\("account.pol_avatara"/);
+ assert.match(service,/PROFILE_COLUMNS = "user_id,nickname,avatar_gender,created_at,updated_at"/);
+ assert.doesNotMatch(service,/if \(!gender\)|avatar_gender: gender/);
+ assert.doesNotMatch(nativeApi,/gender_required|avatar_gender:gender/);
+ assert.doesNotMatch(mobileAccount,/setGender|SegmentedControl|!profile\?\.avatar_gender/);
+ assert.doesNotMatch(mobileProfile,/setGender|!profile\?\.avatar_gender/);
 });

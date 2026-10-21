@@ -2,10 +2,10 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
-import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.7-approved-masonry.1';
+import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.7-approved-masonry.2';
 import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.7-approved-only.1';
 import {buildGateWings} from './gate-wings.mjs';
-import {createMasonryScene} from './scene.js?v=17.7-approved-masonry.1';
+import {createMasonryScene} from './scene.js?v=17.7-approved-masonry.2';
 import {stagingPosition} from './staging-position.mjs';
 import {listManualSections,loadManualSection} from './manual-sections/registry.mjs?v=17.7-approved-masonry.1';
 import {listSections,loadSection,saveSection,readLocalScratch,saveLocalScratch,clearLocalScratch,downloadRecipe} from './store.js?v=17.7-approved-masonry.1';
@@ -21,7 +21,7 @@ const titleFor=cells=>`Секция ${cells.join('×')}`;
 
 export async function mount(context){
  const controller=new AbortController(),signal=controller.signal;
- const state={context,controller,scene:null,library:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
+ const state={context,controller,scene:null,library:null,thumbnailObserver:null,recipe:makeRecipe(),id:null,sourceId:null,title:titleFor([3,3,3]),
   status:'draft',selected:null,partsMode:false,axisChoice:'free',category:'large',page:0,dirty:false,busy:false,history:[],future:[],mutationRevision:0,disposed:false,timer:0};
  active=state;
  if(!hasActivityAccess()||!getCurrentAuthState()?.user?.id){
@@ -263,9 +263,36 @@ export async function mount(context){
  function renderCategories(){
   $('[data-categories]').innerHTML=[...CATEGORIES,{key:'architecture',label:'Архитектура',count:ARCHITECTURE.filter(item=>item.id!=='gate').length}].map(c=>`<button type="button" data-category="${c.key}" aria-pressed="${c.key===state.category}">${c.label} · ${c.count}</button>`).join('');
  }
+ const thumbQueue=[];
+ let thumbFrame=0,thumbnailGeneration=0;
+ function pumpThumbnails(){
+  thumbFrame=0;
+  const next=thumbQueue.shift();
+  if(next){
+   const {img,generation}=next;
+   if(!state.disposed&&generation===thumbnailGeneration&&img.isConnected){
+    const url=state.scene?.thumbnail(img.dataset.thumb);
+    if(url)img.src=url;
+   }
+  }
+  if(thumbQueue.length)thumbFrame=requestAnimationFrame(pumpThumbnails);
+ }
+ function queueThumbnail(img,generation){
+  thumbQueue.push({img,generation});
+  if(!thumbFrame)thumbFrame=requestAnimationFrame(pumpThumbnails);
+ }
+ state.stopThumbnailWork=()=>{
+  thumbnailGeneration++;
+  thumbQueue.length=0;
+  if(thumbFrame)cancelAnimationFrame(thumbFrame);
+  thumbFrame=0;
+ };
  function renderCatalog(){
   if(!state.library)return;
   renderCategories();
+  thumbnailGeneration++;
+  thumbQueue.length=0;
+  state.thumbnailObserver?.disconnect();
   const items=state.category==='architecture'?ARCHITECTURE.filter(item=>item.id!=='gate'):state.library.manifest.models.filter(m=>m.category===state.category);
   const PAGE=16,pages=Math.max(1,Math.ceil(items.length/PAGE));state.page=Math.min(state.page,pages-1);
   const visible=items.slice(state.page*PAGE,(state.page+1)*PAGE);
@@ -273,11 +300,19 @@ export async function mount(context){
     `<button type="button" class="masonryStone" data-add-architecture="${escapeHTML(m.id)}" aria-label="Добавить ${escapeHTML(m.title)}"><span class="masonryArchPreview">3D</span><span>${escapeHTML(m.title)}<small>${m.cells.map(x=>x*.25).join('×')} м · исходный GLB</small></span><span class="masonryPlus">＋</span></button>`:
     `<button type="button" class="masonryStone" data-add-stone="${escapeHTML(m.name)}" aria-label="Добавить ${escapeHTML(m.name)}"><img loading="lazy" data-thumb="${escapeHTML(m.name)}" alt="" width="76" height="57"><span>${escapeHTML(m.name)}<small>${Array.isArray(m.sizeMeters)?m.sizeMeters.map(v=>Math.round(v*100)).join('×')+' см':''}</small></span><span class="masonryPlus">＋</span></button>`).join('');
   $('[data-pages]').textContent=`${state.page+1} / ${pages}`;
-  for(const img of root.querySelectorAll('[data-thumb]')){
-   // Render real GLB geometry, never an invented icon in place of a rock.
-   const url=state.scene?.thumbnail(img.dataset.thumb);
-   if(url)img.src=url;
-  }
+  const images=[...root.querySelectorAll('[data-thumb]')];
+  const generation=thumbnailGeneration;
+  if(typeof IntersectionObserver==='function'){
+   const observer=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+     if(!entry.isIntersecting)continue;
+     observer.unobserve(entry.target);
+     queueThumbnail(entry.target,generation);
+    }
+   },{rootMargin:'120px'});
+   state.thumbnailObserver=observer;
+   images.forEach(img=>observer.observe(img));
+  }else images.forEach(img=>queueThumbnail(img,generation));
  }
  function makeArchitecture(asset,position=[0,0,0]){
   return {id:uuid(),asset,position:[...position],quaternion:[0,0,0,1],scale:[1,1,1],parts:{}};
@@ -489,6 +524,6 @@ export function unmount(){
  if(!active)return;
  const state=active;active=null;state.disposed=true;clearTimeout(state.timer);
  if(state.dirty)saveLocalScratch({id:state.id,sourceId:state.sourceId,title:state.title,status:state.status,recipe:state.recipe});
- state.controller.abort();state.unsubscribe?.();state.scene?.dispose();
+ state.controller.abort();state.unsubscribe?.();state.stopThumbnailWork?.();state.thumbnailObserver?.disconnect();state.scene?.dispose();
  state.context.shell.appShell.dataset.feature='';
 }

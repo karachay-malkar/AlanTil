@@ -58,11 +58,12 @@ test('profile gender accepts only supported explicit values',()=>{
   assert.equal(normalizeProfileGender('unknown'),'');
 });
 
-test('profile completion requires nickname and an explicit avatar gender',()=>{
-  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:null}),false);
-  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:''}),false);
+test('profile completion requires nickname only',()=>{
+  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:null}),true);
+  assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:''}),true);
   assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:'male'}),true);
   assert.equal(hasCompleteProfile({nickname:'alan_user',avatar_gender:'female'}),true);
+  assert.equal(hasCompleteProfile({nickname:'',avatar_gender:'male'}),false);
 });
 
 test('authenticated incomplete profile is a blocking gate before the learning path',()=>{
@@ -92,9 +93,7 @@ test('authenticated incomplete profile is a blocking gate before the learning pa
   assert.ok(router.indexOf('currentModule?.requestLeave')<router.indexOf('modal.confirm'));
   assert.doesNotMatch(account,/getProfile\(nextUserId\)/);
   assert.match(account,/reason: "profile_completed"/);
-  assert.match(accountView,/segmentControl settingsSegments accountGenderOptions/);
-  assert.match(accountView,/settingsChoice accountGenderOption/);
-  assert.match(accountView,/settingsChoiceBody/);
+  assert.doesNotMatch(accountView,/accountGenderOptions|accountGenderOption|avatarGender/);
   assert.doesNotMatch(accountStyles,/accountGenderOption\.active/);
   assert.match(mobile,/profileCompletionRequired&&authUserKey/);
   assert.match(mobile,/nativeProfileCompletionRequired/);
