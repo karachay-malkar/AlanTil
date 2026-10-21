@@ -1,4 +1,4 @@
-name: AlanTil 16.7.12 Performance QA
+name: AlanTil 16.7.13 Performance QA
 
 on:
   push:
@@ -44,6 +44,7 @@ jobs:
             tests/masonry-performance-16-7-10.test.mjs \
             tests/performance-16-7-9.test.mjs \
             tests/performance-16-7-12.test.mjs \
+            tests/performance-16-7-13.test.mjs \
             tests/asset-versioning.test.mjs \
             tests/story-stele-13-15-1.test.mjs
 
@@ -98,14 +99,14 @@ jobs:
           served="$(grep -oE 'targetVersion = "[^"]+"' perf-results/production.html 2>/dev/null | head -1 || true)"
           echo "Published site HTTP: $code; detected release: ${served:-unknown}"
           echo "Production alantil.ru: HTTP $code; release ${served:-unknown}" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$served" != 'targetVersion = "16.7.12"' ]]; then
-            echo "::warning::Production site is not serving the current GitHub main release (16.7.12)"
+          if [[ "$served" != 'targetVersion = "16.7.13"' ]]; then
+            echo "::warning::Production site is not serving the current GitHub main release (16.7.13)"
           fi
       - name: Upload reports and production diagnostic
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: alantil-source-lighthouse-16-7-12
+          name: alantil-source-lighthouse-16-7-13
           path: perf-results/
           if-no-files-found: warn
           retention-days: 21

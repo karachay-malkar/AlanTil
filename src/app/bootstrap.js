@@ -12,7 +12,7 @@ import { hasCompletedLearningSetup } from "../shared/settings/user-settings-stor
 import { createRouter } from "./router.js?v=16.7.8";
 import { createShell } from "./shell.js?v=16.7.0";
 
-const RELEASE_VERSION = "16.7.12";
+const RELEASE_VERSION = "16.7.13";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 
 function ensureOnboardingStyle() {

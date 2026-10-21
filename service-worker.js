@@ -1,16 +1,16 @@
-const VERSION = "16.7.12-lazy-onboarding-guide";
+const VERSION = "16.7.13-on-demand-path";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.7.12",
+  "/src/app/bootstrap.js?v=16.7.13",
   "/src/shared/styles/app.css?v=16.7.12",
-  "/src/features/onboarding/index.js?v=16.7.12",
-  "/src/shared/styles/feature/onboarding.css?v=16.7.12",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1",
 ];
+
+const SPA_ROUTE_PREFIXES = new Set(["path", "practice", "friends", "profile", "learn", "test", "match", "songs", "song", "account", "settings", "auth"]);
 
 const NETWORK_FIRST_PATHS = new Set([
   "/src/config/analytics.js",
@@ -61,17 +61,24 @@ async function freshIndexResponse() {
 }
 
 async function navigationResponse(request) {
+  const url = new URL(request.url);
+  const rootSegment = url.pathname.split("/")[1];
+  const isSpaRoute = SPA_ROUTE_PREFIXES.has(rootSegment) && !/\\.[a-z0-9]+$/i.test(url.pathname);
+  // GitHub Pages answers deep SPA links with 404.html. Resolve known routes
+  // directly to index.html without a redundant 404 -> index.html round trip.
+  const networkTarget = isSpaRoute ? "/index.html" : request;
+  const cacheTarget = isSpaRoute ? "/index.html" : request;
   try {
-    const response = await fetch(request, { cache: "no-store" });
+    const response = await fetch(networkTarget, { cache: "no-store" });
     if (response.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
-      await cache.put(request, response.clone());
+      await cache.put(cacheTarget, response.clone());
       return response;
     }
     if (response.status === 404) return freshIndexResponse();
     return response;
   } catch {
-    return (await caches.match(request)) || freshIndexResponse();
+    return (await caches.match(cacheTarget)) || freshIndexResponse();
   }
 }
 
