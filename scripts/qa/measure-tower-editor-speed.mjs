@@ -51,7 +51,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   ws=new WebSocket(tab.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{ws.addEventListener("open",resolve,{once:true});ws.addEventListener("error",reject,{once:true})});
   let id=0;const pending=new Map(),requestMap=new Map(),completed=[];
-  const exceptions=[];
+  const exceptions=[],browserConsole=[];
   ws.addEventListener("message",ev=>{
    const m=JSON.parse(ev.data);
    if(m.id){const p=pending.get(m.id);if(!p)return;clearTimeout(p.timer);pending.delete(m.id);if(m.error)p.reject(Error(JSON.stringify(m.error)));else p.resolve(m.result||{});return}
@@ -59,13 +59,15 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
    else if(m.method==="Network.responseReceived"){const x=requestMap.get(m.params.requestId);if(x){x.status=m.params.response.status;x.fromSW=!!m.params.response.fromServiceWorker;x.cache=!!m.params.response.fromDiskCache}}
    else if(m.method==="Network.loadingFinished"){const x=requestMap.get(m.params.requestId);if(x){x.bytes=m.params.encodedDataLength||0;completed.push({...x})}}
    else if(m.method==="Runtime.exceptionThrown")exceptions.push(m.params?.exceptionDetails?.text||"exception");
+   else if(m.method==="Runtime.consoleAPICalled")browserConsole.push({type:m.params.type,text:(m.params.args||[]).map(x=>x.value||x.description||"").join(" ").slice(0,1200)});
+   else if(m.method==="Log.entryAdded")browserConsole.push({type:"browserLog",text:m.params.entry?.text});
   });
   const call=(method,params={})=>new Promise((resolve,reject)=>{const key=++id,timer=setTimeout(()=>{pending.delete(key);reject(Error("Timeout "+method))},18000);pending.set(key,{resolve,reject,timer});ws.send(JSON.stringify({id:key,method,params}))});
   const evalJS=async expression=>{const r=await call("Runtime.evaluate",{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)throw Error("Browser:"+r.exceptionDetails.text);return r.result?.value};
   const wait=async(expr,label,timeout=90000)=>{const since=Date.now();while(Date.now()-since<timeout){try{const v=await evalJS(expr);if(v)return v}catch{}await sleep(250)}throw Error("Timed out "+label)};
   const metrics=async()=>Object.fromEntries((await call("Performance.getMetrics")).metrics.map(x=>[x.name,x.value]));
   const traffic=start=>{const all=completed.slice(start),tower=all.filter(x=>x.url.includes("/assets/tower/"));return {requests:all.length,bytes:all.reduce((a,b)=>a+b.bytes,0),towerRequests:tower.length,towerBytes:tower.reduce((a,b)=>a+b.bytes,0),large:tower.sort((a,b)=>b.bytes-a.bytes).slice(0,8).map(x=>({asset:new URL(x.url).pathname,bytes:x.bytes,fromSW:x.fromSW,cache:x.cache}))}};
-  await Promise.all([call("Page.enable"),call("Runtime.enable"),call("Network.enable"),call("Performance.enable")]);
+  await Promise.all([call("Page.enable"),call("Runtime.enable"),call("Network.enable"),call("Performance.enable"),call("Log.enable")]);
   await call("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:dpr,mobile:width<600});
   if(cpu>1)await call("Emulation.setCPUThrottlingRate",{rate:cpu});
   if(slowNetwork)await call("Network.emulateNetworkConditions",{offline:false,latency:60,downloadThroughput:1900000,uploadThroughput:450000});
@@ -73,11 +75,12 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   for(const phase of ["cold","warm"]){
    const from=completed.length,started=Date.now();
    await call("Page.navigate",{url:ROOT+"/practice/tower"});
-   try { await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true"',"3D canvas first ready",30000); }
+   try { await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true" || Boolean(document.querySelector(".errorState"))',"3D canvas first ready or route error",16000); if(await evalJS('Boolean(document.querySelector(".errorState"))'))throw Error("Route error screen"); }
    catch(error) {
     const debug=await evalJS('({url:location.href,title:document.title,canvas:Boolean(document.querySelector(".towerCanvas")),root:document.querySelector("#appRoot")?.innerText?.slice(0,750),webgl2:Boolean(document.createElement("canvas").getContext("webgl2")),body:document.body?.innerText?.slice(0,600),readyState:document.readyState})').catch(e=>({error:String(e)}));
     const traffic=completed.slice(from).slice(-25).map(x=>({url:x.url.slice(0,160),bytes:x.bytes,status:x.status}));
-    errors.push({scenario:name,phase,debug,uncaught:exceptions,network:traffic});
+    errors.push({scenario:name,phase,debug,uncaught:exceptions,console:browserConsole,network:traffic});
+    console.error("TOWER_DIAGNOSTIC",JSON.stringify({scenario:name,phase,debug,uncaught:exceptions,console:browserConsole.slice(-15),network:traffic.slice(-12)}));
     throw new Error("3D browser debug "+JSON.stringify(debug));
    }
    const readyMs=Date.now()-started;
