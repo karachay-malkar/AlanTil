@@ -1,7 +1,7 @@
 /** Single approved authored masonry scene; no legacy mesh generation or manifest. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
-import {createKunlumEnvironment} from './kunlum-environment.js?v=17.2.6';
+import {createKunlumEnvironment} from './kunlum-environment.js?v=17.2.7';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
@@ -28,15 +28,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const stoneMaterial=await getRockSurface(renderer);
  container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
  renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';container.append(renderer.domElement);
- const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',120,355);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',150,395);
  const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,450);
- camera.position.set(16.8,7,17.2);
- const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(10,.5,10);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=72;controls.maxPolarAngle=Math.PI*.48;controls.update();
+ camera.position.set(32,15,-23);
+ const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(10,.5,10);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.update();
  scene.add(new THREE.HemisphereLight('#f0f6ff','#766950',2.0));
  const sunlight=new THREE.DirectionalLight('#fff3df',3);sunlight.position.set(-10,20,13);scene.add(sunlight);
  const surface=new THREE.Group();scene.add(surface);
  // Existing open landscape remains independent of the construction engine.
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:'#91b277',roughness:1}));
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:'#929673',roughness:1}));
  floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);floor.receiveShadow=true;scene.add(floor);
  // Kunlum landscape stays independent from prefab placement and saved state.
  let kunlum=null;
@@ -230,7 +230,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();});observer.observe(container);
- function fit(){if(!blocks.length){controls.target.set(10,.5,10);camera.position.set(16.8,7,17.2);}else{
+ function fit(){if(!blocks.length){controls.target.set(10,.5,10);camera.position.set(32,15,-23);}else{
   const bounds=new THREE.Box3();for(const b of blocks){const box=prefabBounds(b);bounds.expandByPoint(new THREE.Vector3(...box.min.map(v=>v*CELL)));bounds.expandByPoint(new THREE.Vector3(...box.max.map(v=>v*CELL)));}
   const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());controls.target.copy(center);
   const distance=Math.max(2.8,Math.max(size.x,size.y,size.z)*3);camera.position.copy(center).add(new THREE.Vector3(distance*.83,distance*.58,distance));}
