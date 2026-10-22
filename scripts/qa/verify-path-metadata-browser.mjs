@@ -100,12 +100,18 @@ try {
   const worker = await evaluate('(async () => { const ready=await Promise.race([navigator.serviceWorker.ready,new Promise(resolve=>setTimeout(()=>resolve(null),8000))]); if(!ready)return {active:false}; await ready.update(); return {active:Boolean(ready.active),scriptURL:ready.active?.scriptURL||"",cacheKeys:await caches.keys()}; })()');
   assert.ok(worker?.active, "Service Worker did not activate");
   assert.match(worker.scriptURL, /service-worker\.js/);
+  await cmd("Page.enable");
   await cmd("Tracing.start", {
     categories: "devtools.timeline,blink.user_timing,v8,disabled-by-default-devtools.timeline",
     transferMode: "ReturnAsStream"
   });
   await cmd("Page.reload", { ignoreCache: false });
-  await until(async () => (await evaluate(statsExpr))?.loaded >= 26, "warm Service Worker reload");
+  await until(async () => {
+    try {
+      const reloaded=await evaluate('performance.getEntriesByType("navigation").at(-1)?.type === "reload"');
+      return reloaded && (await evaluate(statsExpr))?.loaded >= 26;
+    } catch { return false; }
+  }, "completed warm Service Worker reload");
   await cmd("Tracing.end");
   const stream = await Promise.race([tracePromise, sleep(25000).then(() => null)]);
   assert.ok(stream, "Performance trace was not produced");
