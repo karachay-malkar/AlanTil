@@ -51,7 +51,8 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
   const side=Math.max(0,Math.abs(x-10)-20);
   const fromPlot=Math.max(downhill,uphill,side);
   const terrainFade=smooth(fromPlot/18);
-  const slope=-.119*downhill*smooth(downhill/13)+.145*uphill;
+  const shallowDrop=Math.min(downhill,100);
+  const slope=-.119*shallowDrop*smooth(shallowDrop/13)+.145*uphill;
   const riverDistance=(z-riverCenter(x))/9.5;
   const lowChannel=-.72*Math.exp(-riverDistance*riverDistance);
   const farPlain=1.0*smooth((-115-z)/24);
