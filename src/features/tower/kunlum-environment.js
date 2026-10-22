@@ -43,28 +43,29 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
   // Batches cover distant separate objects; a coarse merged bounding sphere is adequate.
   group.add(mesh);ownedGeometries.push(geo);
  }
+ // Playable terrace and its full reserve remain level. Cherek lies gently downhill.
+ // The 1 km plain opposite is visual: nearby 3D land to ~350 m, then a panoramic image.
+ const riverCenter=x=>-91+4.7*Math.sin((x+16)*.028);
  function groundY(x,z) {
-  // Central 20 x 20 m playable plot remains flat and aligned with the invisible game grid.
-  // The rest of the 40 x 50 m reserved site is a terrace, still free of permanent buildings.
-  // The far bank flattens into the broad Cherek valley instead of descending forever.
-  const down=Math.min(0,Math.max(z,-103)),up=Math.max(0,z-20);
-  const side=Math.max(0,Math.abs(x-10)-10);
-  const amplitude=smooth(Math.max(Math.abs(down),up,side)/13);
-  const naturalSlope=down*.29+up*.30;
-  // An approximately level gravel channel prevents the river ribbon being buried.
-  const riverShoulder=1-smooth((Math.abs(z+91)-5)/10);
-  const slope=naturalSlope*(1-riverShoulder)+(-91*.29)*riverShoulder;
-  const rough=amplitude*(1.45*Math.sin(x*.105+z*.037)+.9*Math.sin(z*.14-x*.048));
-  const channel=-7.2*Math.exp(-Math.pow(Math.max(0,Math.abs(z+91)-5)/8,2));
-  const opposite=z<-103?Math.pow(smooth((-103-z)/35),1.45)*(4+(-103-z)*.19):0;
-  return -.085+slope+rough+channel+opposite;
+  const downhill=Math.max(0,-15-z),uphill=Math.max(0,z-35);
+  const side=Math.max(0,Math.abs(x-10)-20);
+  const fromPlot=Math.max(downhill,uphill,side);
+  const terrainFade=smooth(fromPlot/18);
+  const slope=-.119*downhill*smooth(downhill/13)+.145*uphill;
+  const riverDistance=(z-riverCenter(x))/9.5;
+  const lowChannel=-.72*Math.exp(-riverDistance*riverDistance);
+  const farPlain=1.0*smooth((-115-z)/24);
+  const slowNatural=terrainFade*(.32*Math.sin(x*.041+z*.024)+.24*Math.cos(z*.038-x*.013));
+  // A riverbank has no gorge-sized steps; heights vary smoothly through the floodplain.
+  return -.085+slope+lowChannel+farPlain+slowNatural;
  }
- const groundGeo=new THREE.PlaneGeometry(340,360,mobile?58:112,mobile?58:112);
- groundGeo.rotateX(-Math.PI/2);groundGeo.translate(10,0,10);
+ const groundGeo=new THREE.PlaneGeometry(470,630,mobile?74:120,mobile?106:176);
+ groundGeo.rotateX(-Math.PI/2);groundGeo.translate(10,0,-30);
  const p=groundGeo.getAttribute('position'),groundColors=[];
  for(let i=0;i<p.count;i++){
   const x=p.getX(i),z=p.getZ(i);p.setY(i,groundY(x,z));
-  const grass=rgba(colors.grass[Math.floor(rnd()*colors.grass.length)]);
+  const across=z<-116?['#909b69','#a9a679','#8c976d','#a4a37a','#b0a77d']:Math.abs(z-riverCenter(x))<17?['#9b9c83','#b0ae93','#908e78','#8f9e82']:colors.grass;
+  const grass=rgba(across[Math.floor(rnd()*across.length)]);
   groundColors.push(grass.r,grass.g,grass.b);
  }
  groundGeo.setAttribute('color',new THREE.Float32BufferAttribute(groundColors,3));groundGeo.computeVertexNormals();
@@ -87,8 +88,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
    undefined,()=>{/* Outdoor building must work offline without background image. */});
  }catch{/* Leave neutral fallback on restricted/offline browsers. */}
 
- // A real 3D low-poly Cherek water ribbon, visible downslope, not a flat blue wallpaper.
- const riverCenter=x=>-91+4.7*Math.sin((x+16)*.028);
+ // A shallow Cherek ribbon flows along gently sloping banks.
  for(let i=0;i<84;i++){
   const x0=-155+i*3.8,x1=x0+3.8;
   const z0=riverCenter(x0),z1=riverCenter(x1);
