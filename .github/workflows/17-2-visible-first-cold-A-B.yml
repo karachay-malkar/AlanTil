@@ -5,6 +5,8 @@ on:
     branches: ['17.2']
     paths:
       - '.github/workflows/17-2-visible-first-cold-A-B.yml'
+      - 'scripts/qa/compare-visible-first-icons-browser.mjs'
+      - 'scripts/qa/prepare-visible-first-icons.mjs'
   workflow_dispatch:
 
 permissions:
