@@ -54,10 +54,11 @@ try{
   }
   await send("Page.enable");
   await send("Network.enable");
+  await send("Page.addScriptToEvaluateOnNewDocument",{source:'(() => { try {const s={interface_language_code:"ru",translation_language_code:"ru",alan_script_code:"cyrillic",alan_dialect_code:"canonical",text_size_code:"medium",learning_setup_completed_at:"2026-10-21T00:00:00.000Z"};localStorage.setItem("alantil_scope_v1:guest:settings",JSON.stringify(s));localStorage.setItem("alantil_scope_v1:guest:guide.state",JSON.stringify({general_completed:true,learning_completed:true}));}catch(e){} })()'});
   await send("Page.navigate",{url:"http://127.0.0.1:4173/path/oblivion"});
-  const check='(async()=>{const reg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),5000))]);const cache=await caches.open("alantil-shell-17.2.1");const cached=await cache.match("/src/features/path/feature.js?v=17.2.1");return {ready:!!reg,controlled:!!navigator.serviceWorker.controller,cacheExists:!!cached,cachedText:cached?await cached.text():"",keys:await caches.keys()}})()';
+  const check='(async()=>{const reg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),900))]);const cache=await caches.open("alantil-shell-17.2.1");const cached=await cache.match("/src/features/path/feature.js?v=17.2.1");return {ready:!!reg,controlled:!!navigator.serviceWorker.controller,cacheExists:!!cached,cachedText:cached?await cached.text():"",keys:await caches.keys()}})()';
   let before=null;
-  for(let n=0;n<80;n++){
+  for(let n=0;n<27;n++){
     try{
       const now=await evalJs(check);
       if(now?.cacheExists && now?.controlled){before=now;break;}
