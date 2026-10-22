@@ -39,7 +39,7 @@ test('Only the route map uses compact path data; stations and tests load complet
  assert.equal(index.version,snapshot.version);
  assert.equal(index.word_count,snapshot.words.length);
  assert.equal(index.words.length,snapshot.words.length);
- assert.match(source,/screen==="home"\?getHomeRouteWords\(controller\.signal\):getCompleteDictionaryWords/);
+ assert.match(source,/screen==="home"\?getHomeRouteWords\((?:controller\.signal|signal)\):getCompleteDictionaryWords/);
  assert.match(source,/getPersistedDictionaryVersion\(\)/);
  assert.match(source,/getDisplayedWordCollection\(index\.words\)/);
  assert.match(repo,/export function getPersistedDictionaryVersion/);
