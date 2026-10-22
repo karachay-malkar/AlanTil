@@ -4,7 +4,7 @@
  * Local +Z is uphill toward Abaev Kala; -Z descends to Cherek and the opposite bank.
  * Decorative meshes are deliberately not registered in the tower's placement raycaster.
  */
-import {createKunlumRuins} from './kunlum-ruins.js?v=17.2.9';
+import {createKunlumRuins} from './kunlum-ruins.js?v=17.2.10';
 
 export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const group=new THREE.Group();group.name='Кюнлюм · склон, руины и Черек';
@@ -47,18 +47,36 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  // The 1 km plain opposite is visual: nearby 3D land to ~350 m, then a panoramic image.
  const riverCenter=x=>-91+4.7*Math.sin((x+16)*.028);
  function groundY(x,z) {
-  const downhill=Math.max(0,-15-z),uphill=Math.max(0,z-35);
+  // Preserve the flat 40x50m reserve and the 20x20m build area.
+  // Beyond the reserve, restore 17.2.8's pronounced upper village hillside.
+  const uphill=Math.max(0,z-35);
+  const downhill=Math.max(0,-15-z);
   const side=Math.max(0,Math.abs(x-10)-20);
-  const fromPlot=Math.max(downhill,uphill,side);
-  const terrainFade=smooth(fromPlot/18);
-  const shallowDrop=Math.min(downhill,76);
-  const slope=-.119*shallowDrop*smooth(shallowDrop/13)+.145*uphill;
-  const riverDistance=(z-riverCenter(x))/9.5;
-  const lowChannel=-.72*Math.exp(-riverDistance*riverDistance);
-  const farPlain=1.0*smooth((-115-z)/24);
-  const slowNatural=terrainFade*(.32*Math.sin(x*.041+z*.024)+.24*Math.cos(z*.038-x*.013));
-  // A riverbank has no gorge-sized steps; heights vary smoothly through the floodplain.
-  return -.085+slope+lowChannel+farPlain+slowNatural;
+  // Rises gently out of the construction terrace then returns to the older
+  // hillside gradient and original-scale rocky relief under Abaev Kala.
+  const villageRise=.47*(uphill-3*(1-Math.exp(-uphill/3)));
+  const amplitude=smooth(Math.max(uphill,downhill,side)/13);
+  const originalRelief=amplitude*(1.45*Math.sin(x*.105+z*.037)
+    +.9*Math.sin(z*.14-x*.048));
+  // First downhill portion remains a clear village slope. Only the last
+  // ~25 metres by Cherek lose their steep gradient.
+  const firstLeg=Math.min(downhill,50);
+  const firstDrop=-.29*(firstLeg-4*(1-Math.exp(-firstLeg/4)));
+  const tail=Math.max(0,downhill-50);
+  // Soft cap: continuous height/derivative, level when the river is reached.
+  const softenedTail=tail<=11?tail:tail>=26?18.5:
+    11+(tail-11)-(tail-11)*(tail-11)/(2*15);
+  const bankDrop=-.06*softenedTail-.23*20*(1-Math.exp(-softenedTail/20));
+  // A shallow riverbed; the old deep channel must not return.
+  const riverBend=-.55*Math.exp(-Math.pow((z-riverCenter(x))/7,2));
+  const oppositePlain=2.2*smooth((-109-z)/27);
+  // Keep the original bumpy hill and irregular ruin terraces above Cherek.
+  // Near water the rock noise fades to avoid implausible bank cliffs.
+  const profile=uphill>0?smooth(uphill/8):
+    downhill>0?.55+.45*Math.min(downhill,35)/35:smooth(side/13)*.7;
+  const riverFade=1-smooth((downhill-53)/34);
+  return -.085+villageRise+firstDrop+bankDrop+riverBend+oppositePlain
+    +originalRelief*profile*riverFade;
  }
  const groundGeo=new THREE.PlaneGeometry(470,630,mobile?74:120,mobile?106:176);
  groundGeo.rotateX(-Math.PI/2);groundGeo.translate(10,0,-30);
@@ -82,7 +100,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  backdrop.position.set(10,30,10);backdrop.name='Distant landscape · 360° panoramic image';
  backdrop.renderOrder=-100;group.add(backdrop);
  try {
-  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.9',
+  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.10',
    texture=>{if(disposed){texture.dispose();return;}
     texture.colorSpace=THREE.SRGBColorSpace;backdropTexture=texture;
     backdropMat.map=texture;backdropMat.color.set('#ffffff');backdropMat.needsUpdate=true;},
