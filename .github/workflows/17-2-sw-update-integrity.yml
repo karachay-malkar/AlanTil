@@ -1,0 +1,48 @@
+name: AlanTil 17.2 Service Worker update integrity test
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/qa/verify-same-version-sw.mjs'
+      - '.github/workflows/17-2-sw-update-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare disposable application copy
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/app-probe" HEAD
+          node --check scripts/qa/verify-same-version-sw.mjs
+      - name: Serve disposable application
+        run: |
+          cd "$RUNNER_TEMP/app-probe"
+          nohup node scripts/static-preview-server.mjs > "$RUNNER_TEMP/sw-qa-server.log" 2>&1 &
+          for i in {1..35}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/sw-qa-server.log"
+          exit 1
+      - name: Verify stale code despite same nominal release version
+        run: |
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          cd "$RUNNER_TEMP/app-probe"
+          node "$GITHUB_WORKSPACE/scripts/qa/verify-same-version-sw.mjs" "$GITHUB_WORKSPACE/sw-evidence"
+      - name: Upload reproducible proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-sw-version-consistency
+          path: sw-evidence/
+          retention-days: 21
