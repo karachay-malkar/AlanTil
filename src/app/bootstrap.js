@@ -1,5 +1,5 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.16";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=16.8.0.16";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.1";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.16";
 import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.16";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.16";
@@ -20,7 +20,7 @@ import { createModalService } from "../shared/ui/modal.js?v=16.8.0.16";
 import { createRouter } from "./router.js?v=16.8.0.29";
 import { createShell } from "./shell.js?v=16.8.0.16";
 
-const ASSET_VERSION = "16.8.0.30";
+const ASSET_VERSION = "17.2.1";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
