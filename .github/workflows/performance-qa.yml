@@ -1,4 +1,4 @@
-name: AlanTil 16.7.13 Performance QA
+name: AlanTil 16.7.14 Performance QA
 
 on:
   push:
@@ -38,6 +38,7 @@ jobs:
           node --check service-worker.js
           node --check scripts/report-lighthouse.mjs
           node --check scripts/static-preview-server.mjs
+          node --check scripts/report-lighthouse.mjs
       - name: Regression suite
         run: |
           node --test \
@@ -46,6 +47,8 @@ jobs:
             tests/performance-16-7-12.test.mjs \
             tests/performance-16-7-13.test.mjs \
             tests/service-worker-16-7-13.test.mjs \
+            tests/performance-16-7-14.test.mjs \
+            tests/lighthouse-scenarios-16-7-14.test.mjs \
             tests/asset-versioning.test.mjs \
             tests/story-stele-13-15-1.test.mjs
 
@@ -62,7 +65,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p perf-results
-          node scripts/static-preview-server.mjs > perf-results/server.log 2>&1 &
+          ALANTIL_PERF_QA=1 node scripts/static-preview-server.mjs > perf-results/server.log 2>&1 &
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
               echo "Current main serves successfully."
@@ -72,19 +75,35 @@ jobs:
           done
           cat perf-results/server.log
           exit 1
-      - name: Lighthouse mobile on current main source
+      - name: Lighthouse mobile for new and returning guests
         shell: bash
         run: |
           set -euo pipefail
           export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
           npx --yes lighthouse@12.8.2 --version
-          for page in path/oblivion practice profile friends; do
-            name="${page//\//-}"
-            npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/$page" \
-              --only-categories=performance \
-              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
-              --output=json --output-path="perf-results/$name.report.json" --quiet
+          origin="http://127.0.0.1:4173"
+          options=(--only-categories=performance --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --quiet)
+          npx --yes lighthouse@12.8.2 "$origin/path/oblivion" "${options[@]}" --output-path="perf-results/guest-onboarding.report.json"
+          for page in practice profile friends; do
+            npx --yes lighthouse@12.8.2 "$origin/$page?__qa=returning" "${options[@]}" --output-path="perf-results/returning-$page-cold.report.json"
           done
+          # Keep Chrome alive between two path runs to measure browser/SW cache reuse.
+          "$CHROME_PATH" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu \
+            --remote-debugging-port=9222 --remote-allow-origins='*' \
+            --user-data-dir="$RUNNER_TEMP/alantil-lighthouse-warm" about:blank > perf-results/warm-chrome.log 2>&1 &
+          chrome_pid=$!
+          trap 'kill "$chrome_pid" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:9222/json/version >/dev/null 2>&1; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:9222/json/version >/dev/null
+          npx --yes lighthouse@12.8.2 "$origin/path/oblivion?__qa=returning" \
+            --only-categories=performance --port=9222 --disable-storage-reset \
+            --output=json --output-path="perf-results/returning-path-oblivion-cold.report.json" --quiet
+          npx --yes lighthouse@12.8.2 "$origin/path/oblivion?__qa=returning" \
+            --only-categories=performance --port=9222 --disable-storage-reset \
+            --output=json --output-path="perf-results/returning-path-oblivion-warm.report.json" --quiet
       - name: Report source performance
         if: always()
         shell: bash
@@ -100,14 +119,14 @@ jobs:
           served="$(grep -oE 'targetVersion = "[^"]+"' perf-results/production.html 2>/dev/null | head -1 || true)"
           echo "Published site HTTP: $code; detected release: ${served:-unknown}"
           echo "Production alantil.ru: HTTP $code; release ${served:-unknown}" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$served" != 'targetVersion = "16.7.13"' ]]; then
-            echo "::warning::Production site is not serving the current GitHub main release (16.7.13)"
+          if [[ "$served" != 'targetVersion = "16.7.14"' ]]; then
+            echo "::warning::Production site is not serving the current GitHub main release (16.7.14)"
           fi
       - name: Upload reports and production diagnostic
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: alantil-source-lighthouse-16-7-13
+          name: alantil-source-lighthouse-16-7-14
           path: perf-results/
           if-no-files-found: warn
           retention-days: 21

@@ -4,10 +4,17 @@ import {resolve,extname,sep,join} from 'node:path';
 
 const root=resolve(process.cwd());
 const port=Number(process.env.PORT||4173);
+// Test-only fixture: a returning guest has completed onboarding in scoped local storage.
+const returningGuestScript = '<script data-perf-fixture="returning">' +
+  'try{localStorage.setItem("alantil_scope_v1:guest:alantil_user_settings_v1",' +
+  'JSON.stringify({interface_language_code:"ru",translation_language_code:"ru",' +
+  'alan_script_code:"cyrillic",alan_dialect_code:"canonical",text_size_code:"medium",' +
+  'learning_setup_completed_at:"2026-10-21T00:00:00.000Z"}));}catch{}' +
+  '</script>';
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.jpg':'image/jpeg','.jpeg':'image/jpeg','.ico':'image/x-icon','.woff':'font/woff','.woff2':'font/woff2','.glb':'model/gltf-binary','.ktx2':'image/ktx2','.wasm':'application/wasm'};
 http.createServer(async(req,res)=>{
- let pathname;
- try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);}catch{res.writeHead(400).end();return;}
+ let pathname,requestUrl;
+ try{requestUrl=new URL(req.url,'http://localhost');pathname=decodeURIComponent(requestUrl.pathname);}catch{res.writeHead(400).end();return;}
  if(pathname.includes('\0')){res.writeHead(400).end();return;}
  let file=resolve(root,'.'+pathname);
  if(file!==root&&!file.startsWith(root+sep)){res.writeHead(403).end();return;}
@@ -19,7 +26,14 @@ http.createServer(async(req,res)=>{
    file=join(root,'index.html');
   }
   const data=await readFile(file);
+  const returningGuest = process.env.ALANTIL_PERF_QA === '1'
+    && requestUrl.searchParams.get('__qa') === 'returning'
+    && file === join(root,'index.html');
+  // Inject before all app scripts, only in the localhost performance lab.
+  const served = returningGuest
+    ? Buffer.from(data.toString('utf8').replace('<head>', '<head>'+returningGuestScript))
+    : data;
   res.writeHead(200,{'Content-Type':mime[extname(file).toLowerCase()]||'application/octet-stream','Cache-Control':'no-store'});
-  res.end(data);
+  res.end(served);
  }catch(error){res.writeHead(500).end(error.message);}
 }).listen(port,'127.0.0.1',()=>console.log('AlanTil test server on 127.0.0.1:'+port));
