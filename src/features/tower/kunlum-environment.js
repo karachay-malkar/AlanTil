@@ -46,10 +46,12 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
   const down=Math.min(0,Math.max(z,-103)),up=Math.max(0,z-20);
   const side=Math.max(0,Math.abs(x-10)-10);
   const amplitude=smooth(Math.max(Math.abs(down),up,side)/13);
-  const slope=(down*.29+up*.30);
+  const naturalSlope=down*.29+up*.30;
+  // An approximately level gravel channel prevents the river ribbon being buried.
+  const riverShoulder=1-smooth((Math.abs(z+91)-5)/10);
+  const slope=naturalSlope*(1-riverShoulder)+(-91*.29)*riverShoulder;
   const rough=amplitude*(1.45*Math.sin(x*.105+z*.037)+.9*Math.sin(z*.14-x*.048));
-  // At the foot of the hillside Cherek cuts a low river channel.
-  const channel=-7.2*Math.exp(-Math.pow((z+91)/10,2));
+  const channel=-7.2*Math.exp(-Math.pow(Math.max(0,Math.abs(z+91)-5)/8,2));
   const opposite=z<-103?Math.pow(smooth((-103-z)/35),1.45)*(4+(-103-z)*.19):0;
   return -.085+slope+rough+channel+opposite;
  }
