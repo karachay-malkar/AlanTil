@@ -4,6 +4,8 @@
  * Local +Z is uphill toward Abaev Kala; -Z descends to Cherek and the opposite bank.
  * Decorative meshes are deliberately not registered in the tower's placement raycaster.
  */
+import {createKunlumRuins} from './kunlum-ruins.js?v=17.2.8';
+
 export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const group=new THREE.Group();group.name='Кюнлюм · склон, руины и Черек';
  scene.add(group);
@@ -117,54 +119,8 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
 
  // Historic-looking dry-stone terrace retaining walls. Courses overlap and have broken tops.
  const stone=()=>colors.wall[Math.floor(rnd()*colors.wall.length)];
- function wallLine(ax,az,bx,bz,{height=1.5,thickness=.5,gaps=[],course=.3}={}){
-  const dx=bx-ax,dz=bz-az,length=Math.hypot(dx,dz),N=Math.max(3,Math.ceil(length/.88));
-  const normal=[-dz/length*thickness*.5,dx/length*thickness*.5];
-  for(let c=0;c<Math.ceil(height/course);c++){
-   const n=Math.ceil(N*(c%2?.97:1)),v0=(c%2?.36:0);
-   for(let j=0;j<n;j++){
-    const t0=clamp((j+v0)/n,0,1),t1=clamp((j+1+v0)/n,0,1);
-    if(t1-t0<.02||gaps.some(([lo,hi])=>(t0+t1)/2>lo&&(t0+t1)/2<hi))continue;
-    const x=ax+dx*t0,z=az+dz*t0,xx=ax+dx*t1,zz=az+dz*t1;
-    const topBreak=c>=Math.floor(height/course)-2&&(rnd()>.78||Math.sin((j+3)*3.8+c)>.92);
-    if(topBreak)continue;
-    const foot=Math.min(groundY(x,z),groundY(xx,zz))-.24;
-    const yy=foot+c*course;
-    prism('stone',x+normal[0],yy,z+normal[1],
-     xx-normal[0],yy+course+.014,zz-normal[1],stone());
-   }
-  }
- }
- // Tangible village quarters hug the slope; none obstruct the reserved 40×50 m site.
- const terraces=[
-  [[-58,40],[-15,43],1.1,[[.25,.34],[.78,.84]]],
-  [[31,42],[79,44],1.5,[[.38,.45]]],
-  [[-57,58],[-14,58],1.9,[[.42,.53]]],
-  [[3,56],[52,57],1.1,[[.14,.24],[.8,.89]]],
-  [[-57,77],[-15,77],2.3,[[.2,.28]]],
-  [[10,77],[63,77],1.75,[[.53,.64]]],
-  [[-40,-38],[-15,-36],.85,[[.5,.7]]],
-  [[37,-26],[73,-28],1.15,[[.18,.3]]]
- ];
- for(const [a,b,h,gaps] of terraces)wallLine(...a,...b,{height:h,gaps});
- // Roofless ruined residences and fragmented courtyard walls (no invented intact village).
- const ruins=[
-  [-25,23,7.5,5.8,1.4],[-24,44,6.8,6,1.75],[39,19,7.5,6.5,1.5],
-  [43,37,6.8,7,1.45],[-21,61,7.1,5.9,2.1],[20,57,7,5.7,1.65],
-  [53,57,6.5,7.5,1.2],[-37,77,7.1,6.2,1.3],[55,77,5.5,7.5,1.25],
-  [-28,-36,7.5,5.2,1.0],[42,-41,6.2,6.1,1.1],[-23,-58,6.5,5.5,.85]
- ];
- for(const [x,z,w,d,h] of ruins){
-  const a=[x-w/2,z-d/2],b=[x+w/2,z-d/2],c=[x+w/2,z+d/2],dd=[x-w/2,z+d/2];
-  const corners=[a,b,c,dd];
-  for(let j=0;j<4;j++)wallLine(...corners[j],...corners[(j+1)%4],{height:h*(.68+rnd()*.6),
-    gaps:j===1?[[.34,.57]]:rnd()>.4?[[.27,.35]]:[]});
-  for(let j=0;j<7;j++){
-   const xx=x+(rnd()-.5)*(w+2),zz=z+(rnd()-.5)*(d+2),yy=groundY(xx,zz);
-   prism('stone',xx-.24,yy-.15,zz-.18,xx+.3,yy+.08+rnd()*.20,zz+.31,stone());
-  }
- }
-
+ // New dense quarters use watertight wild-stone courses and preserve the reserve.
+ const {wallLine,stats:ruinStats}=createKunlumRuins({quad,tri,groundY,rnd,stone,mobile});
  // Abaev Kala above the building terrace, with taper and authentic narrow openings.
  // A model approximation, pending access to measured drawings and exact plan coordinates.
  function tower(cx,cz,rotation=-.15){
@@ -258,7 +214,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  emit('path','Paths, gravel banks and reserved plot marker');
  group.userData.kunlum={
   plot:[40,50],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
-  gridStep:.25,monument:'Абай-къала',abaevModelPosition:abayKala,riverAxisZ:-91,
+  gridStep:.25,ruins:{...ruinStats},monument:'Абай-къала',abaevModelPosition:abayKala,riverAxisZ:-91,
   orientation:'positive z is uphill, negative z is downstream toward Cherek',
   accuracy:'interpretative; pending site map georeferencing'
  };
