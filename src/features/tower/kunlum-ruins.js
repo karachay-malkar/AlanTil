@@ -14,43 +14,51 @@ export function createKunlumRuins({quad,tri,groundY,rnd,stone,mobile=false}) {
   const nx=-dz/dist,nz=dx/dist;
   const midpoint=[(ax+bx)*.5,(az+bz)*.5];
   const viewDist=Math.hypot(midpoint[0]-10,midpoint[1]-10);
-  const near=viewDist<75;
+  const near=viewDist<(mobile?43:72);
   const rowH=course??(mobile?(near?.36:.45):(near?.29:.38));
   const rows=Math.ceil(height/rowH);
   const half=thickness*.5;
   const cube=(u,y,n)=>[ax+dx*u+nx*n,y,az+dz*u+nz*n];
   const foot=(u)=>groundY(ax+dx*u,az+dz*u)-.21;
   function surface(u0,u1,c,h,tone) {
-   // Connected rectangular support volumes: visible façade facets can vary,
-   // but stones remain contiguous and the wall never becomes transparent.
-   const start=foot(u0)+c*rowH,end=foot(u1)+c*rowH;
-   const h0=Math.max(.13,Math.min(rowH,h)),h1=h0;
-   const a=cube(u0,start,half),b=cube(u1,end,half),
-     cc=cube(u1,end+h1,half),d=cube(u0,start+h0,half);
-   const e=cube(u0,start,-half),f=cube(u1,end,-half),
-     g=cube(u1,end+h1,-half),hh=cube(u0,start+h0,-half);
-   const tint=stone();
-   // Near desktop stones keep 3D faceting; distant/mobile stones use only
-   // two shaded front triangles, reducing GPU upload and startup blocking.
-   if(mobile||!near){
+   // The core is closed masonry, while the outer faceted silhouette is angular
+   // and chipped like actual dry-laid Balkarian rock. No through-gaps.
+   const y0=foot(u0)+c*rowH,y1=foot(u1)+c*rowH;
+   const hh=Math.max(.13,Math.min(rowH,h));
+   const a=cube(u0,y0,half),b=cube(u1,y1,half),
+     cc=cube(u1,y1+hh,half),d=cube(u0,y0+hh,half);
+   const e=cube(u0,y0,-half),f=cube(u1,y1,-half),
+     g=cube(u1,y1+hh,-half),backD=cube(u0,y0+hh,-half);
+   const shadow='#777265',tint=stone();
+   if(near){
+    // Backing ensures even a heavily chipped edge stays opaque.
+    quad('stone',a,b,cc,d,shadow);
+    const uSpan=u1-u0;
+    const inset=clamp(spread(.035,.105)*uSpan,.002,uSpan*.18);
+    const outer=half+spread(.018,.065);
+    const front=(u,baseY,yOffset)=>cube(u,baseY+yOffset,outer);
+    const p0=front(u0+inset,y0,hh*.18);
+    const p1=front(u0+uSpan*.36,y0,hh*.035);
+    const p2=front(u1-inset,y1,hh*.12);
+    const p3=front(u1-inset*.6,y1,hh*.78);
+    const p4=front(u0+uSpan*.60,y0,hh*.95);
+    const p5=front(u0+inset*.5,y0,hh*.84);
+    const center=front((u0+u1)*.5,(y0+y1)*.5,hh*.52);
+    const shade=[tone,tint,tone,stone(),tint,tone];
+    const rim=[p0,p1,p2,p3,p4,p5];
+    for(let i=0;i<rim.length;i++)tri('stone',rim[i],rim[(i+1)%rim.length],center,shade[i]);
+    // A small chipped bevel catches light without creating a detached stone.
+    if(!mobile && rnd()>.65)tri('stone',p0,p1,a,stone());
+   }else{
     tri('stone',a,b,cc,tone);
     tri('stone',a,cc,d,tint);
-   }else{
-    const bump=spread(.015,.060);
-    const m=cube((u0+u1)*.5,(start+end+h0)*.5,half+bump);
-    tri('stone',a,b,m,tone);
-    tri('stone',b,cc,m,tint);
-    tri('stone',cc,d,m,tone);
-    tri('stone',d,a,m,tone);
    }
-   // Back, top, ends: real closed masonry. Bottom is hidden except nearby desktop.
-   quad('stone',f,e,hh,g,tone);
+   quad('stone',f,e,backD,g,tone);
    if(!mobile&&near)quad('stone',a,e,f,b,tint);
-   quad('stone',d,cc,g,hh,tone);
-   quad('stone',e,a,d,hh,tone);
+   quad('stone',d,cc,g,backD,tone);
+   quad('stone',e,a,d,backD,tone);
    quad('stone',b,f,g,cc,tint);
   }
-  const slots=[];
   const gapAt=u=>gaps.some(([a,b])=>u>=a&&u<=b);
   for(let c=0;c<rows;c++){
    let u=0;
