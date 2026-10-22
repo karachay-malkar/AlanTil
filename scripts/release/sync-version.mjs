@@ -32,6 +32,10 @@ await set('index.html',original=>{
   s=replaceOne(s,/(const targetVersion = ")[^"]+/,'$1'+version,'index.html');
   s=replaceOne(s,/(href="\/src\/shared\/styles\/app\.css\?v=)[^"]+/,'$1'+version,'index.html');
   s=replaceOne(s,/(src="\/src\/app\/bootstrap\.js\?v=)[^"]+/,'$1'+version,'index.html');
+  for(const size of [32,192,512]){
+    const favicon=new RegExp('(\/assets\/icons\/ui\/favicon-'+size+'\\.png\\?v=)[0-9.]+','g');
+    s=s.replace(favicon,'$1'+version);
+  }
   s=replaceOne(s,/const versions = (\[[^\n;]*\]);/,(whole,arraySource)=>{
     const versions=JSON.parse(arraySource);
     if(versions.includes(version)) return whole;
@@ -49,12 +53,13 @@ await set('packages/alantil-core/release.js',()=>[
 await set('src/app/bootstrap.js',original=>{
   let s=replaceOne(original,/(const ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/bootstrap.js');
   s=replaceOne(s,/(alantil-core\/release\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
-  return replaceOne(s,/(from "\.\/router\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
+  s=replaceOne(s,/(from "\.\/router\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
+  return replaceOne(s,/(onboarding\/guide\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
 });
 await set('src/app/router.js',s=>replaceOne(s,/(const ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js'));
 await set('service-worker.js',original=>{
   let s=replaceOne(original,/(const VERSION = ")[^"]+/,'$1'+version,'service-worker.js');
-  for(const path of ['/src/app/bootstrap.js','/src/app/router.js','/src/shared/styles/app.css','/src/features/path/feature.js','/src/data/path-set-metadata.js','/src/features/path/story-stele.js']){
+  for(const path of ['/src/app/bootstrap.js','/src/app/router.js','/src/shared/styles/app.css','/src/features/path/feature.js','/src/data/path-set-metadata.js','/src/features/path/story-stele.js','/assets/icons/ui/favicon-32.png','/assets/icons/ui/favicon-192.png','/assets/icons/ui/favicon-512.png']){
     const pattern=new RegExp('("'+path.replaceAll('.','\\.').replaceAll('/','\\/')+'\\?v=)[^"]+');
     s=replaceOne(s,pattern,'$1'+version,'service-worker.js');
   }

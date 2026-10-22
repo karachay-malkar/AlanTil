@@ -93,6 +93,35 @@ try {
     assert.ok(item, "Missing station "+i);
     await until(async () => await evaluate('(() => { const b=document.querySelectorAll(".pathView button[data-station-key]")['+i+'];const img=b?.querySelector("img[data-beginner-diorama-image]");return Boolean(img?.complete && img?.naturalWidth>0); })()'), "station image "+i, 25000);
   }
+  // Reproduce the exact guide animation class stack in Chrome (not just CSS inspection).
+  await until(async () => Boolean(await evaluate('document.getElementById("alantil-guided-help-style")')), "guide stylesheet");
+  const guideGeometry = await evaluate(`(() => {
+    const station=document.querySelector(".beginnerDioramaNode");
+    const frame=station?.querySelector(".beginnerDioramaFrame");
+    const imgs=frame?[...frame.querySelectorAll(":scope > .beginnerDioramaImage")]:[];
+    if(imgs.length!==2)return {images:imgs.length};
+    const priorHeight=station.getBoundingClientRect().height;
+    const priorLabelY=station.querySelector(".stationLabel")?.getBoundingClientRect().top;
+    const priorFrameHeight=frame.getBoundingClientRect().height;
+    document.body.classList.add("alantilGuideProgressDemo");
+    frame.classList.add("alantilGuideSparkHost");
+    try {
+      const a=imgs[0].getBoundingClientRect(),b=imgs[1].getBoundingClientRect();
+      return { images:imgs.length, positions:imgs.map(i=>getComputedStyle(i).position),
+        sameX:Math.abs(a.left-b.left)<1,sameY:Math.abs(a.top-b.top)<1,
+        unchangedHeight:Math.abs(priorHeight-station.getBoundingClientRect().height)<1,
+        unchangedFrame:Math.abs(priorFrameHeight-frame.getBoundingClientRect().height)<1,
+        unchangedLabel:Math.abs(priorLabelY-station.querySelector(".stationLabel").getBoundingClientRect().top)<1
+      };
+    } finally {
+      frame.classList.remove("alantilGuideSparkHost");
+      document.body.classList.remove("alantilGuideProgressDemo");
+    }
+  })()`);
+  assert.deepEqual(guideGeometry.positions, ["absolute","absolute"], "Guide must keep diorama layers absolute");
+  for(const key of ["sameX","sameY","unchangedHeight","unchangedFrame","unchangedLabel"])
+    assert.equal(guideGeometry[key],true,"Guide shifted duplicate images or labels: "+key);
+  console.log("Guide diorama geometry OK:", JSON.stringify(guideGeometry));
   const hydrated = await evaluate(statsExpr);
   assert.equal(hydrated.loaded, 26, "Every stage image must load after visiting it");
   assert.equal(hydrated.missing, 0);

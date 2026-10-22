@@ -43,7 +43,9 @@ body.alantilGuideProgressDemo .stationMilestones{opacity:0}
 .alantilGuideDemoConnectorBase{stroke:color-mix(in srgb,var(--text-2) 38%,transparent);stroke-width:1;opacity:.72}
 .alantilGuideDemoConnectorProgress{stroke:#D09A43;stroke-width:1.65;opacity:.96;filter:drop-shadow(0 0 3px rgb(208 154 67 / .28))}
 .alantilGuideSparkHost{isolation:isolate}
-.alantilGuideSparkHost>.beginnerDioramaImage,.alantilGuideSparkHost>.millstoneFace{position:relative;z-index:1}
+/* The diorama uses two superimposed images; keep absolute positioning. */
+.alantilGuideSparkHost>.beginnerDioramaImage{position:absolute;z-index:1}
+.alantilGuideSparkHost>.millstoneFace{position:relative;z-index:1}
 .alantilGuideSparkBurst{--guide-spark-duration:${GUIDE_PROGRESS_BURST_MS}ms;position:absolute;z-index:0;inset:-14px;pointer-events:none;overflow:visible}
 .beginnerDioramaFrame.alantilGuideSparkHost>.alantilGuideSparkBurst{inset:-8px}
 .alantilGuideSparkBurst::before{content:"";position:absolute;inset:7%;border-radius:50%;background:radial-gradient(circle,rgba(208,154,67,.30) 0,rgba(208,154,67,.14) 38%,rgba(208,154,67,0) 72%);opacity:0;transform:scale(.68);animation:alantilGuideAuraPulse var(--guide-spark-duration) linear both}
