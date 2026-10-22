@@ -1,0 +1,50 @@
+name: AlanTil 17.2 path root cause laboratory
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/qa/path-root-cause-lab.mjs'
+      - '.github/workflows/17-2-path-root-cause-lab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  laboratory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate instrumentation and current application sources
+        run: |
+          node --check scripts/qa/path-root-cause-lab.mjs
+          node --check src/features/path/feature.js
+          git status --short
+      - name: Serve unmodified 17.2 application
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/alantil-diagnostic-server.log 2>&1 &
+          for i in {1..35}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/alantil-diagnostic-server.log
+          exit 1
+      - name: Run instrumented controlled browser experiments
+        run: |
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/path-root-cause-lab.mjs diagnostic-results
+          node -e 'const a=require("./diagnostic-results/summary.json");if(a.length!==13)process.exit(1); if(a.some(x=>x.errors.length))process.exit(2);'
+      - name: Upload individual timings, screenshots and fixture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-root-cause-laboratory
+          path: |
+            diagnostic-results/
+            /tmp/alantil-diagnostic-server.log
+          retention-days: 21
