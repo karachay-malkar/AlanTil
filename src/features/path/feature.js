@@ -510,7 +510,7 @@ function refreshSetMetadataInPlace(context,route,activeStory,signal) {
       }
     }
     const label=button.querySelector(".stationLabel");
-    if(label)label.textContent=station.name;
+    if(label && label.textContent !== station.name)label.textContent=station.name;
     const count=button.querySelector(".stationWordCount");
     const progress=count?.textContent?.split("/")||["0","0"];
     button.setAttribute("aria-label",msg("path.osvoeno_iz_slov",{label:station.name,mastered:Number(progress[0])||0,total:Number(progress[1])||0}));
