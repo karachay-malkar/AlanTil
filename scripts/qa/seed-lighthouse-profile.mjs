@@ -8,7 +8,9 @@ await mkdir(profile,{recursive:true});
 const chrome=spawn(process.env.CHROME_PATH||'google-chrome',[
   '--headless=new','--no-sandbox','--disable-dev-shm-usage','--no-first-run',
   '--no-default-browser-check','--remote-debugging-port=0',`--user-data-dir=${profile}`,
-  'http://127.0.0.1:4173/'
+  process.env.ALANTIL_SEED_STORAGE_ONLY === '1'
+    ? 'http://127.0.0.1:4173/src/data/path-route-index.json'
+    : 'http://127.0.0.1:4173/'
 ],{stdio:'ignore'});
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let socket=null;
