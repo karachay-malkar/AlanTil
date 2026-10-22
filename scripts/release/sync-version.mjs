@@ -54,7 +54,7 @@ await set('src/app/bootstrap.js',original=>{
 await set('src/app/router.js',s=>replaceOne(s,/(const ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js'));
 await set('service-worker.js',original=>{
   let s=replaceOne(original,/(const VERSION = ")[^"]+/,'$1'+version,'service-worker.js');
-  for(const path of ['/src/app/bootstrap.js','/src/app/router.js','/src/shared/styles/app.css','/src/features/path/feature.js']){
+  for(const path of ['/src/app/bootstrap.js','/src/app/router.js','/src/shared/styles/app.css','/src/features/path/feature.js','/src/data/path-set-metadata.js','/src/features/path/story-stele.js']){
     const pattern=new RegExp('("'+path.replaceAll('.','\\.').replaceAll('/','\\/')+'\\?v=)[^"]+');
     s=replaceOne(s,pattern,'$1'+version,'service-worker.js');
   }

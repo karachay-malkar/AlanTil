@@ -86,8 +86,15 @@ try {
   const statsExpr = '(() => { const buttons=[...document.querySelectorAll(".pathView button[data-station-key]")]; const pictures=buttons.filter(b=>b.classList.contains("beginnerDioramaNode")); const loaded=pictures.filter(b=>b.querySelector("img[data-beginner-diorama-image]")?.naturalWidth>0); const labeled=pictures.filter(b=>b.querySelector(".stationLabel")?.textContent.trim()); return { total:buttons.length, illustrated:pictures.length, loaded:loaded.length, labeled:labeled.length, missing:pictures.filter(b=>!b.querySelector("img.beginnerDioramaImage")).length }; })()';
   await until(async () => (await evaluate(statsExpr))?.total >= 20, "Path map");
   const initial = await evaluate(statsExpr);
-  await until(async () => { const s=await evaluate(statsExpr); return s?.loaded >= 26 && s?.labeled >= 26; }, "26 illustrated, labeled stations");
+  // Native lazy icons are loaded as their stations enter the scroll viewport.
+  await until(async () => { const s=await evaluate(statsExpr); return s?.illustrated === 26 && s?.labeled === 26 && s?.loaded >= 1; }, "illustrated labeled map");
+  for (let i=0;i<26;i++){
+    const item = await evaluate('(() => { const b=document.querySelectorAll(".pathView button[data-station-key]")['+i+']; if(!b)return false; b.scrollIntoView({block:"center",behavior:"instant"}); return true; })()');
+    assert.ok(item, "Missing station "+i);
+    await until(async () => await evaluate('(() => { const b=document.querySelectorAll(".pathView button[data-station-key]")['+i+'];const img=b?.querySelector("img[data-beginner-diorama-image]");return Boolean(img?.complete && img?.naturalWidth>0); })()'), "station image "+i, 25000);
+  }
   const hydrated = await evaluate(statsExpr);
+  assert.equal(hydrated.loaded, 26, "Every stage image must load after visiting it");
   assert.equal(hydrated.missing, 0);
   await evaluate('document.querySelector(".beginnerDioramaNode")?.focus()');
   const focused = await evaluate('document.activeElement?.getAttribute("data-station-key")');
@@ -95,7 +102,7 @@ try {
   await evaluate("document.activeElement.click()");
   await until(async () => await evaluate('Boolean(document.querySelector(".stationView"))'), "station navigation");
   await evaluate("history.back()");
-  await until(async () => (await evaluate(statsExpr))?.loaded >= 26, "return from station to map");
+  await until(async () => {const s=await evaluate(statsExpr);return s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;}, "return from station to map");
   const afterNavigation = await evaluate(statsExpr);
   const worker = await evaluate('(async () => { const ready=await Promise.race([navigator.serviceWorker.ready,new Promise(resolve=>setTimeout(()=>resolve(null),8000))]); if(!ready)return {active:false}; await ready.update(); return {active:Boolean(ready.active),scriptURL:ready.active?.scriptURL||"",cacheKeys:await caches.keys()}; })()');
   assert.ok(worker?.active, "Service Worker did not activate");
@@ -109,7 +116,7 @@ try {
   await until(async () => {
     try {
       const reloaded=await evaluate('performance.getEntriesByType("navigation").at(-1)?.type === "reload"');
-      return reloaded && (await evaluate(statsExpr))?.loaded >= 26;
+      const s=await evaluate(statsExpr);return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;
     } catch { return false; }
   }, "completed warm Service Worker reload");
   await cmd("Tracing.end");

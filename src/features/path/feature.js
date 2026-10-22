@@ -1,4 +1,4 @@
-import { BEGINNER_SET_METADATA, INTERMEDIATE_SET_METADATA } from "../../data/path-set-metadata.js?v=17.2.2";
+import { BEGINNER_SET_METADATA, INTERMEDIATE_SET_METADATA } from "../../data/path-set-metadata.js?v=17.2.3";
 import { getInterfaceLanguage, msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { getDisplayedSetName, getDisplayedWordCollection } from "../../shared/domain/alan-display.js?v=16.8.0.3";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.3";
@@ -16,7 +16,7 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
 import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.3";
 import { renderStationView } from "./station-view.js?v=16.8.0.3";
-import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=17.2.2";
+import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=17.2.3";
 import { readScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
 import { renderStoryWordList } from "./story-word-list.js?v=16.8.0.3";
 
@@ -24,8 +24,8 @@ let controller = null;
 let activeStudy = false;
 const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
-const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.2";
-const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.2";
+const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.3";
+const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.3";
 let pathIndexCache = null;
 
 async function getHomeRouteWords(signal) {
@@ -419,7 +419,10 @@ function stationButton(station, index, progressSnapshot) {
   if (iconName) {
     const iconSrc = `/assets/icons/sets/${encodeURIComponent(iconName)}?v=${SET_ICON_ASSET_VERSION}`;
     const achievementLevel = masteryLevelForPercent(progress.percent);
-    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-station-progress-percent="${progress.percent}" data-achievement-level="${achievementLevel}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block">${achievementLevel > 0 ? stationStarField(station.key) : ""}<img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image src="${iconSrc}" alt="" loading="eager" decoding="async" fetchpriority="high"><img class="beginnerDioramaImage beginnerDioramaImageProgress" src="${iconSrc}" alt="" aria-hidden="true" loading="eager" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
+    // First four (lower-route) stations load eagerly; others when scrolled into view.
+    const loading = index < 4 ? "eager" : "lazy";
+    const priority = index < 4 ? "high" : "low";
+    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-station-progress-percent="${progress.percent}" data-achievement-level="${achievementLevel}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block">${achievementLevel > 0 ? stationStarField(station.key) : ""}<img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image src="${iconSrc}" alt="" loading="${loading}" decoding="async" fetchpriority="${priority}"><img class="beginnerDioramaImage beginnerDioramaImageProgress" src="${iconSrc}" alt="" aria-hidden="true" loading="${loading}" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
   }
   const dictionaryId = String(station.dictionaryId || "");
   const label = dictionaryId === "beginner" || !LEVEL_DICTIONARIES.has(dictionaryId)

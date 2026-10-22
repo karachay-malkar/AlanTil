@@ -1,4 +1,4 @@
-const VERSION = "17.2.2";
+const VERSION = "17.2.3";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 const LEGACY_REFRESH_BEFORE_VERSION = "16.8.0.16";
@@ -6,17 +6,17 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=17.2.2",
-  "/src/app/router.js?v=17.2.2",
+  "/src/app/bootstrap.js?v=17.2.3",
+  "/src/app/router.js?v=17.2.3",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",
   "/src/shared/styles/bracket-tabs.css?v=16.8.0.16",
-  "/src/shared/styles/app.css?v=17.2.2",
+  "/src/shared/styles/app.css?v=17.2.3",
   "/src/shared/styles/learning-preview.css?v=16.8.0.16",
-  "/src/features/path/feature.js?v=17.2.2",
-  "/src/data/path-set-metadata.js?v=17.2.2",
-  "/src/features/path/story-stele.js?v=17.2.2",
+  "/src/features/path/feature.js?v=17.2.3",
+  "/src/data/path-set-metadata.js?v=17.2.3",
+  "/src/features/path/story-stele.js?v=17.2.3",
   "/src/shared/data/word-repository.js?v=16.8.0.16",
   "/src/shared/data/dictionary-store.js?v=16.8.0.16",
   "/assets/icons/ui/path-elbrus-white.png?v=16.8.0.16"

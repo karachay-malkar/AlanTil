@@ -1,5 +1,5 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.16";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.2";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.3";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.16";
 import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.16";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.16";
@@ -17,10 +17,10 @@ import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.16"
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.16";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.16";
 import { createModalService } from "../shared/ui/modal.js?v=16.8.0.16";
-import { createRouter } from "./router.js?v=17.2.2";
+import { createRouter } from "./router.js?v=17.2.3";
 import { createShell } from "./shell.js?v=16.8.0.16";
 
-const ASSET_VERSION = "17.2.2";
+const ASSET_VERSION = "17.2.3";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
