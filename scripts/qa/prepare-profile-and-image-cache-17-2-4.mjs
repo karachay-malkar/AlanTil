@@ -67,7 +67,7 @@ await edit("src/features/profile/index.js",source=>{
  s=once(s,'let controller = null;','let controller = null;\nlet progressGeneration = 0;');
  s=once(s,'async function renderProfileHome(context, auth, profile) {','function renderProfileHome(context, auth, profile) {');
  s=once(s,'    const progress = await loadStoryProgress();\n','');
- s=once(s,'        \${progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}',
+ s=once(s,'        '+String.fromCharCode(36)+'{progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}',
  '        <div data-profile-progress></div>');
  const anchor='function renderProfileLoading(context) {';
  const inserted=[
@@ -229,6 +229,52 @@ await edit("scripts/release/sync-version.mjs",s=>{
  const addition="await set('src/shared/styles/lazy/path.css',s=>replaceOne(s,/(features\\/path\\/path\\.css\\?v=)[0-9.]+/,'$1'+version,'src/shared/styles/lazy/path.css'));\n";
  return once(s,needle,addition+needle);
 });
+
+
+await edit("scripts/qa/verify-path-metadata-browser.mjs",source=>{
+ let s=source;
+ const marker='  const afterNavigation = await evaluate(statsExpr);';
+ const probe=[
+'  await until(async () => await evaluate(\'Object.keys(localStorage).some(key=>key.startsWith("alantil_route_images_ready_v1:"))\'), "persistent station icon cache", 30000);',
+'  const afterNavigation = await evaluate(statsExpr);'
+].join("\n");
+ s=once(s,marker,probe);
+ const snippet='      return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;';
+ const extra='      return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;';
+ if(!s.includes(snippet))throw Error("Expected previous E2E loading logic");
+ s=once(s,snippet,extra);
+ const warm='  await cmd("Tracing.end");';
+ s=once(s,warm,'  const warmMode = await evaluate(\'[...document.querySelectorAll(".pathView img[data-beginner-diorama-image]")].every(img => img.loading === "eager")\');\n  assert.equal(warmMode,true,"Fully cached stations must load eagerly on repeat visit");\n'+warm);
+ return s;
+});
+
+const testLines=[
+'import test from "node:test";',
+'import assert from "node:assert/strict";',
+'import {readFile} from "node:fs/promises";',
+'const read=async path=>readFile(new URL("../"+path,import.meta.url),"utf8");',
+'test("background profile refresh preserves mounted DOM",async()=>{',
+' const boot=await read("src/app/bootstrap.js"); const router=await read("src/app/router.js"); const profile=await read("src/features/profile/index.js");',
+' assert.doesNotMatch(boot,/router\\.refresh\\(\\{ background: true, reason: "auth_ready"/);',
+' assert.doesNotMatch(boot,/window\\.location\\.reload\\(\\)/);',
+' assert.match(router,/typeof currentModule\\?\\.refreshData === "function"/);',
+' assert.match(profile,/export async function refreshData/);',
+' assert.match(profile,/getCachedProfile\\(auth\\.user\\.id\\)/);',
+' assert.match(profile,/data-profile-progress/);',
+'});',
+'test("station images persist across SW upgrades and cached routes start eager",async()=>{',
+' const sw=await read("service-worker.js");const path=await read("src/features/path/feature.js");const css=await read("src/features/path/path.css");',
+' assert.match(sw,/const IMAGE_CACHE = "alantil-path-images-v1"/);',
+' assert.match(sw,/sharedImages\\.put/);',
+' assert.match(sw,/cacheFirst\\(request, IMAGE_CACHE\\)/);',
+' assert.match(path,/eagerCachedRouteImages \\|\\| index < 4/);',
+' assert.match(path,/warmRouteImages\\(route\\.stories\\[activeStory\\]/);',
+' assert.match(css,/data-path-image-batch="pending"/);',
+'});',
+''
+].join("\n");
+await writeFile("tests/profile-image-cache-17-2-4.test.mjs",testLines);
+console.log("Prepared smoke regression and warm cache E2E assertions.");
 
 const releasePath="release.json";
 const rel=JSON.parse(await readFile(releasePath,"utf8"));
