@@ -103,6 +103,7 @@ try {
   await until(async () => await evaluate('Boolean(document.querySelector(".stationView"))'), "station navigation");
   await evaluate("history.back()");
   await until(async () => {const s=await evaluate(statsExpr);return s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;}, "return from station to map");
+  await until(async () => await evaluate('Object.keys(localStorage).some(key=>key.startsWith("alantil_route_images_ready_v1:"))'), "persistent station icon cache", 30000);
   const afterNavigation = await evaluate(statsExpr);
   const worker = await evaluate('(async () => { const ready=await Promise.race([navigator.serviceWorker.ready,new Promise(resolve=>setTimeout(()=>resolve(null),8000))]); if(!ready)return {active:false}; await ready.update(); return {active:Boolean(ready.active),scriptURL:ready.active?.scriptURL||"",cacheKeys:await caches.keys()}; })()');
   assert.ok(worker?.active, "Service Worker did not activate");
@@ -119,6 +120,8 @@ try {
       const s=await evaluate(statsExpr);return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;
     } catch { return false; }
   }, "completed warm Service Worker reload");
+  const warmMode = await evaluate('[...document.querySelectorAll(".pathView img[data-beginner-diorama-image]")].every(img => img.loading === "eager")');
+  assert.equal(warmMode,true,"Fully cached stations must load eagerly on repeat visit");
   await cmd("Tracing.end");
   const stream = await Promise.race([tracePromise, sleep(25000).then(() => null)]);
   assert.ok(stream, "Performance trace was not produced");

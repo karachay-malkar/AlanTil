@@ -6,7 +6,7 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "17.2.3";
+const ASSET_VERSION = "17.2.4";
 const TOWER_ASSET_VERSION = "17.7-approved-only.1";
 const MASONRY_ASSET_VERSION = "17.7-approved-only.2";
 const FEATURE_PATHS = Object.freeze({
@@ -399,7 +399,16 @@ export function createRouter({ shell, modal, context }) {
     if (navigating) { queuedRefresh = { ...queuedRefresh, ...options, target: refreshTarget }; return true; }
     if (options.background && !targetsEqual(refreshTarget, current)) return false;
     navigating = true;
-    try { if (queuedNavigation) return false; currentModule?.unmount?.(); currentModule = null; const module = await prepareRoute(current.route); await mountCurrentRoute(module); return true; }
+    try {
+      if (queuedNavigation) return false;
+      if (options.background && targetsEqual(refreshTarget,current) && typeof currentModule?.refreshData === "function") {
+        void currentModule.refreshData({ ...context, router: api }, options).catch(error => console.warn("Background profile refresh failed", error));
+        return true;
+      }
+      currentModule?.unmount?.(); currentModule = null;
+      const module = await prepareRoute(current.route); await mountCurrentRoute(module);
+      return true;
+    }
     catch (error) { console.error("Router refresh failed", error); context.root.innerHTML = `<section class="view screen"><div class="panel"><div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div></div></section>`; return false; }
     finally { navigating = false; drainPendingWork(); }
   }

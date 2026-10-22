@@ -70,6 +70,7 @@ await set('src/features/path/feature.js',source=>{
   s=replaceOne(s,/(path-set-metadata\.js\?v=)[0-9.]+/,'$1'+version,'src/features/path/feature.js');
   return s;
 });
+await set('src/shared/styles/lazy/path.css',s=>replaceOne(s,/(features\/path\/path\.css\?v=)[0-9.]+/,'$1'+version,'src/shared/styles/lazy/path.css'));
 await set('src/features/path/story-stele.js',s=>{
   s=replaceOne(s,/(story-stele-640\.webp\?v=)[0-9.]+/,'$1'+version,'src/features/path/story-stele.js');
   s=replaceOne(s,/(story-stele-932\.webp\?v=)[0-9.]+/,'$1'+version,'src/features/path/story-stele.js');

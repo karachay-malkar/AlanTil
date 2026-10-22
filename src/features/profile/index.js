@@ -3,7 +3,7 @@ import { getCurrentAuthState } from "../../shared/auth/auth-service.js?v=16.8.0.
 import { getWords } from "../../shared/data/word-repository.js?v=16.8.0.3";
 import { buildLearningRoute } from "../../shared/domain/learning-route.js?v=16.8.0.3";
 import { dictionaryPathProgress } from "../../shared/domain/route-progress.js?v=16.8.0.3";
-import { getProfile } from "../../shared/profile/profile-service.js?v=16.8.0.3";
+import { getProfile, getCachedProfile } from "../../shared/profile/profile-service.js?v=16.8.0.3";
 import { activitySummary } from "../../shared/progress/activity-history-store.js?v=16.8.0.3";
 import { allWordMasterySummary, problemWordRows } from "../../shared/progress/word-progress-store.js?v=16.8.0.3";
 import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
@@ -12,6 +12,7 @@ import { bindProfileNavigation, renderProfileNavigation } from "../../shared/ui/
 import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v=16.8.0.3";
 
 let controller = null;
+let progressGeneration = 0;
 
 function profileNavigation(active = "profile") {
   return renderProfileNavigation(active);
@@ -73,7 +74,7 @@ function lockedProfile() {
   </div>`;
 }
 
-async function renderProfileHome(context, auth, profile) {
+function renderProfileHome(context, auth, profile) {
   const primaryNavigation = profileNavigation("profile");
   let body = "";
   if (!auth.user) {
@@ -81,7 +82,6 @@ async function renderProfileHome(context, auth, profile) {
   } else if (!profile) {
     body = `<div class="profileLockedState"><strong>${msg("profile.zavershite_nastroyku_akkaunta")}</strong><span>${msg("profile.sozdayte_nikneym_chtoby_otkryt_profil")}</span><button class="btn actionPrimary profileLoginButton" type="button" data-profile-account>${msg("profile.prodolzhit")}</button></div>`;
   } else {
-    const progress = await loadStoryProgress();
     body = `<div class="profileStatusContent">
       <div class="profileIdentityBar">
         <div class="profileIdentityCopy">
@@ -92,7 +92,7 @@ async function renderProfileHome(context, auth, profile) {
       </div>
       <section class="profileStatusSection profileStorySection">
         <h2 class="profileSectionTitle">${msg("profile.progress_po_istoriyam")}</h2>
-        ${progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress()}
+        <div data-profile-progress></div>
       </section>
       <section class="profileStatusSection profileFutureSection">
         <h2 class="profileSectionTitle">${msg("profile.artefakty")}</h2>
@@ -161,6 +161,21 @@ async function loadProfile(auth) {
   }
 }
 
+export async function refreshData(context) {
+  const signal = controller?.signal;
+  const slot = context.root.querySelector("[data-profile-progress]");
+  if (!slot || !signal || signal.aborted) return false;
+  const generation = ++progressGeneration;
+  const progress = await loadStoryProgress();
+  if (signal.aborted || generation !== progressGeneration || !slot.isConnected) return false;
+  const html = progress ? storyProgressRows(progress.route, progress.path) : unavailableStoryProgress();
+  if (slot.innerHTML === html) return true;
+  slot.innerHTML = html;
+  slot.querySelectorAll("[data-profile-story]").forEach(button => {
+    button.addEventListener("click", () => context.router.navigate("path.home", { storyType: button.dataset.profileStory }), { signal });
+  });
+  return true;
+}
 function renderProfileLoading(context) {
   context.root.innerHTML = `<section class="view screen profileView">
     ${profileNavigation("profile")}
@@ -200,18 +215,28 @@ export async function mount(context, params = {}) {
     return;
   }
 
-  renderProfileLoading(context);
-  bindProfileNavigation(context, signal);
-  bindAccountNavigation(context, signal);
-  void loadProfile(auth).then(async (profile) => {
-    if (signal.aborted) return;
-    await renderProfileHome(context, auth, profile);
-    if (signal.aborted) return;
+  // The display-only nickname cache never substitutes for account-completion checks.
+  const cached = getCachedProfile(auth.user.id);
+  if (cached) {
+    renderProfileHome(context, auth, cached);
     bindProfileActions(context, auth, signal);
+    void refreshData(context);
+  } else {
+    renderProfileLoading(context);
+    bindProfileNavigation(context, signal);
+    bindAccountNavigation(context, signal);
+  }
+  void loadProfile(auth).then(profile => {
+    if (signal.aborted) return;
+    if (cached && (!profile || cached.nickname === profile.nickname)) return;
+    renderProfileHome(context, auth, profile);
+    bindProfileActions(context, auth, signal);
+    if (profile) void refreshData(context);
   });
 }
 
 export function unmount() {
   controller?.abort();
+  progressGeneration++;
   controller = null;
 }

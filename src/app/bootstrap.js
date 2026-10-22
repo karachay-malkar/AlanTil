@@ -1,5 +1,5 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.16";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.3";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.4";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.16";
 import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.16";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.16";
@@ -17,27 +17,16 @@ import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.16"
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.16";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.16";
 import { createModalService } from "../shared/ui/modal.js?v=16.8.0.16";
-import { createRouter } from "./router.js?v=17.2.3";
+import { createRouter } from "./router.js?v=17.2.4";
 import { createShell } from "./shell.js?v=16.8.0.16";
 
-const ASSET_VERSION = "17.2.3";
+const ASSET_VERSION = "17.2.4";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
-  const hadController = Boolean(navigator.serviceWorker.controller);
-  let controllerHandled = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!hadController || controllerHandled) return;
-    controllerHandled = true;
-    const key = "alantil_sw_controller_reload_v1";
-    try {
-      if (sessionStorage.getItem(key) === ASSET_VERSION) return;
-      sessionStorage.setItem(key, ASSET_VERSION);
-    } catch {}
-    window.location.reload();
-  }, { once: true });
+  // A new worker controls subsequent navigations; do not tear down a visible session.
   void navigator.serviceWorker.register(`/service-worker.js?v=${ASSET_VERSION}`, {
     scope: "/",
     updateViaCache: "none",
@@ -133,7 +122,9 @@ async function bootstrap() {
   };
   window.addEventListener("alantil:dictionary-updated", refreshDictionaryScreen);
   window.addEventListener("alantil:scope-ready", () => {
-    if (router.getCurrent().route === "path.home") return;
+    const route = router.getCurrent().route;
+    // Account handles auth changes itself; the path patches progress in-place.
+    if (route === "path.home" || route === "account.home") return;
     void router.refresh({ background: true, reason: "storage_scope" });
   });
   registerServiceWorker();
@@ -230,7 +221,8 @@ async function bootstrap() {
   window.addEventListener('pagehide',()=>stopSocial(),{once:true});
 
   if (persistedAuth && !callbackVisit) {
-    void authInitialization.then(async () => { await linkRestoredAccountVisit(); await router.refresh({ background: true, reason: "auth_ready" }); });
+    // Auth initialization was awaited before router.start(); no second screen mount.
+    void authInitialization.then(linkRestoredAccountVisit);
   }
   void initPrivacyController({ appRouter: router });
   void initTelegram({ adapter: telegram, onReady(webApp) { router.attachTelegram(webApp); } }).catch((error) => {

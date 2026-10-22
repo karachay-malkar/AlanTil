@@ -11,6 +11,25 @@ import {
 
 const PROFILE_REQUEST_TIMEOUT_MS = 12000;
 const PROFILE_COLUMNS = "user_id,nickname,avatar_gender,created_at,updated_at";
+const PROFILE_VIEW_CACHE_PREFIX = "alantil_profile_display_v1:";
+const PROFILE_VIEW_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function getCachedProfile(userId) {
+  if (!userId) return null;
+  try {
+    const value = JSON.parse(localStorage.getItem(PROFILE_VIEW_CACHE_PREFIX + userId) || "null");
+    if (value?.user_id !== userId || !value.nickname || Date.now() - Number(value.saved_at) > PROFILE_VIEW_CACHE_MAX_AGE_MS) return null;
+    return { user_id: userId, nickname: value.nickname };
+  } catch { return null; }
+}
+function rememberProfile(profile) {
+  if (!profile?.user_id || !profile?.nickname) return;
+  try {
+    localStorage.setItem(PROFILE_VIEW_CACHE_PREFIX + profile.user_id, JSON.stringify({
+      user_id: profile.user_id, nickname: profile.nickname, saved_at: Date.now(),
+    }));
+  } catch { /* Storage may be unavailable or full. */ }
+}
 
 function throwProfileError(scope, error, operation) {
   logSupabaseError(scope, error);
@@ -54,6 +73,7 @@ export async function getProfile(userId) {
     .eq("user_id", userId)
     .maybeSingle(), "Profile load");
   if (error) throwProfileError("get_profile", error, "get_profile");
+  rememberProfile(data);
   return data || null;
 }
 
@@ -84,13 +104,14 @@ export async function createProfile(userId, value) {
     .select(PROFILE_COLUMNS)
     .maybeSingle(), "Profile save");
   if (result?.error) throwProfileError("create_profile", result.error, "create_profile");
-  if (result?.data) return result.data;
+  if (result?.data) { rememberProfile(result.data); return result.data; }
   result = await withProfileTimeout(client
     .from("profiles")
     .insert({ user_id: userId, nickname: validation.nickname })
     .select(PROFILE_COLUMNS)
     .single(), "Profile create");
   if (result?.error) throwProfileError("create_profile", result.error, "create_profile");
+  rememberProfile(result.data);
   return result.data;
 }
 
@@ -106,5 +127,6 @@ export async function updateProfileNickname(userId, value) {
     .select(PROFILE_COLUMNS)
     .single(), "Profile nickname update");
   if (error) throwProfileError("update_profile", error, "update_profile");
+  rememberProfile(data);
   return data;
 }

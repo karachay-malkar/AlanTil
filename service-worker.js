@@ -1,22 +1,24 @@
-const VERSION = "17.2.3";
+const VERSION = "17.2.4";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
+// Images are content-addressed by their ?v= URL, not by the application release.
+const IMAGE_CACHE = "alantil-path-images-v1";
 const LEGACY_REFRESH_BEFORE_VERSION = "16.8.0.16";
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=17.2.3",
-  "/src/app/router.js?v=17.2.3",
+  "/src/app/bootstrap.js?v=17.2.4",
+  "/src/app/router.js?v=17.2.4",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",
   "/src/shared/styles/bracket-tabs.css?v=16.8.0.16",
-  "/src/shared/styles/app.css?v=17.2.3",
+  "/src/shared/styles/app.css?v=17.2.4",
   "/src/shared/styles/learning-preview.css?v=16.8.0.16",
-  "/src/features/path/feature.js?v=17.2.3",
-  "/src/data/path-set-metadata.js?v=17.2.3",
-  "/src/features/path/story-stele.js?v=17.2.3",
+  "/src/features/path/feature.js?v=17.2.4",
+  "/src/data/path-set-metadata.js?v=17.2.4",
+  "/src/features/path/story-stele.js?v=17.2.4",
   "/src/shared/data/word-repository.js?v=16.8.0.16",
   "/src/shared/data/dictionary-store.js?v=16.8.0.16",
   "/assets/icons/ui/path-elbrus-white.png?v=16.8.0.16"
@@ -64,7 +66,18 @@ self.addEventListener("activate", (event) => {
       const version=cacheVersion(name);
       return version && compareVersions(version,LEGACY_REFRESH_BEFORE_VERSION)<0;
     });
-    const stale = names.filter((name) => name.startsWith("alantil-") && ![SHELL_CACHE, RUNTIME_CACHE].includes(name));
+    // Carry previously loaded station images over from old versioned runtime caches.
+    const sharedImages = await caches.open(IMAGE_CACHE);
+    for (const name of names.filter(name => name.startsWith("alantil-runtime-") && name !== RUNTIME_CACHE)) {
+      const oldCache = await caches.open(name);
+      for (const request of await oldCache.keys()) {
+        if (!new URL(request.url).pathname.startsWith("/assets/icons/sets/")) continue;
+        if (await sharedImages.match(request)) continue;
+        const response = await oldCache.match(request);
+        if (response) { try { await sharedImages.put(request, response); } catch {} }
+      }
+    }
+    const stale = names.filter((name) => name.startsWith("alantil-") && ![SHELL_CACHE, RUNTIME_CACHE, IMAGE_CACHE].includes(name));
     await Promise.all(stale.map((name) => caches.delete(name)));
     await self.clients.claim();
     if (!legacyUpgrade) return;
@@ -124,6 +137,10 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
+  if (url.pathname.startsWith("/assets/icons/sets/")) {
+    event.respondWith(cacheFirst(request, IMAGE_CACHE));
+    return;
+  }
   if (["image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {
     event.respondWith(cacheFirst(request));
     return;

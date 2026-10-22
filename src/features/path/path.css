@@ -89,3 +89,5 @@
 @media(max-width:420px){.routeMap{padding-inline:12px 36px}.stationNode{--station-shift:-50px}.stationNode:nth-child(even){--station-shift:50px}.stationLabel{width:120px}.stationProblemHead,.stationProblemRow{grid-template-columns:minmax(0,1fr) 84px 84px}.stationHistoryHead,.stationHistoryRow{grid-template-columns:minmax(96px,1fr) 72px 82px}}
 @media(max-width:340px){.pathStickyControls{padding-left:6px;padding-right:6px}.routeMap{padding-right:28px}.stationNode{--station-shift:-42px}.stationNode:nth-child(even){--station-shift:42px}.stationProblemHead{display:none}.stationProblemRow{grid-template-columns:minmax(0,1fr) 70px 70px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){.pathMapViewport{scroll-behavior:auto}.stationNode,.routeScaleDot,.routeScaleSection{transition:none}.stationMarquee{max-width:100%;overflow:hidden;text-overflow:ellipsis;animation:none!important}.stationOrbitStar{animation:none!important;opacity:var(--star-opacity,.42)}.beginnerDioramaImage{transition:none}}
+/* On a warm visit, reveal cached thumbnails together instead of one at a time. */
+[data-path-image-batch="pending"] .beginnerDioramaImage{visibility:hidden}
