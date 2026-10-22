@@ -76,6 +76,7 @@ function scenario({ icon = "01_sample.webp", hasLabel = false } = {}) {
   const root = {
     isConnected: true,
     querySelector(selector) {
+      if (selector === ".pathMapViewport") return null;
       assert.match(selector, /data-station-key/);
       return button;
     }
