@@ -1,0 +1,78 @@
+name: AlanTil 17.2.5 guide and favicon vetted release
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/17-2-guide-favicon-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate untouched-aspect-ratio favicon assets and staged code
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check Pillow
+          node --check scripts/qa/prepare-guide-favicon-17-2-5.mjs
+          node scripts/qa/prepare-guide-favicon-17-2-5.mjs
+          python scripts/assets/build-favicons.py
+          node scripts/release/sync-version.mjs
+          node scripts/release/sync-version.mjs --check
+          for file in src/features/onboarding/guide.js src/app/bootstrap.js src/app/router.js             service-worker.js scripts/release/sync-version.mjs             scripts/qa/verify-path-metadata-browser.mjs; do node --check "$file"; done
+          node --test tests/guide-favicon-17-2-5.test.mjs
+          git diff --check
+      - name: Regression tests and dictionary integrity
+        run: |
+          set -euo pipefail
+          node scripts/assets/build-path-index.mjs
+          git diff --exit-code -- src/data/path-route-index.json src/data/path-route-index.json.gz
+          node --test             tests/performance-17-2.test.mjs             tests/site-speed-17-2.test.mjs             tests/release-version-17-2.test.mjs             tests/path-lazy-17-2.test.mjs             tests/path-metadata-hydration-17-2.test.mjs             tests/path-bundled-set-metadata-17-2.test.mjs             tests/path-visible-first-17-2.test.mjs             tests/path-index-preload-17-2.test.mjs             tests/profile-avatar-removal-16-7.test.mjs             tests/storage-profile-analytics-16-8.test.mjs             tests/profile-image-cache-17-2-4.test.mjs             tests/first-run-guide-stella-16-7-0.test.mjs             tests/guide-progress-demo-16-8.test.mjs             tests/guide-favicon-17-2-5.test.mjs             mobile/tests/architecture.test.mjs
+      - name: Verify actual browser diorama geometry, all images and cache
+        run: |
+          set -euo pipefail
+          mkdir -p perf-results
+          node scripts/static-preview-server.mjs > perf-results/server.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          for size in 32 192 512; do
+            curl --fail --silent --show-error "http://127.0.0.1:4173/assets/icons/ui/favicon-$size.png?v=17.2.5" -o "/tmp/favicon-$size.png"
+            file "/tmp/favicon-$size.png"
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/verify-path-metadata-browser.mjs
+      - name: Commit all verified complete changes
+        run: |
+          set -euo pipefail
+          git add index.html release.json src/app/bootstrap.js src/app/router.js             src/features/onboarding/guide.js service-worker.js scripts/release/sync-version.mjs             packages/alantil-core/release.js src/config/analytics.js src/features/settings/version.js             mobile/app.json mobile/package.json             assets/icons/ui/favicon-32.png assets/icons/ui/favicon-192.png assets/icons/ui/favicon-512.png             tests/guide-favicon-17-2-5.test.mjs             scripts/qa/verify-path-metadata-browser.mjs
+          git diff --cached --check
+          git diff --cached --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix(guide,icons): preserve stage image overlay and square favicon in 17.2.5"
+          git push origin HEAD:17.2
+      - name: Archive browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-5-guide-favicon-qa
+          path: perf-results/
+          if-no-files-found: ignore
+          retention-days: 14
