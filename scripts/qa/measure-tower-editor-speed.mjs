@@ -70,7 +70,13 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   for(const phase of ["cold","warm"]){
    const from=completed.length,started=Date.now();
    await call("Page.navigate",{url:ROOT+"/practice/tower"});
-   await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true"',"3D canvas first ready");
+   try { await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true"',"3D canvas first ready",30000); }
+   catch(error) {
+    const debug=await evalJS('({url:location.href,title:document.title,canvas:Boolean(document.querySelector(".towerCanvas")),root:document.querySelector("#appRoot")?.innerText?.slice(0,750),webgl2:Boolean(document.createElement("canvas").getContext("webgl2")),body:document.body?.innerText?.slice(0,600),readyState:document.readyState})').catch(e=>({error:String(e)}));
+    const traffic=completed.slice(from).slice(-25).map(x=>({url:x.url.slice(0,160),bytes:x.bytes,status:x.status}));
+    errors.push({scenario:name,phase,debug,uncaught:exceptions,network:traffic});
+    throw new Error("3D browser debug "+JSON.stringify(debug));
+   }
    const readyMs=Date.now()-started;
    await wait('document.querySelector(".towerCanvas")?.dataset.prefabReady==="true"',"empty tower set ready",35000);
    const openMs=Date.now()-started,texture=await evalJS('document.querySelector(".towerCanvas")?.dataset.stoneTextureEncoding');
