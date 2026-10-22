@@ -48,7 +48,8 @@ await set('packages/alantil-core/release.js',()=>[
 ].join('\n'));
 await set('src/app/bootstrap.js',original=>{
   let s=replaceOne(original,/(const ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/bootstrap.js');
-  return replaceOne(s,/(alantil-core\/release\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
+  s=replaceOne(s,/(alantil-core\/release\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
+  return replaceOne(s,/(from "\.\/router\.js\?v=)[0-9.]+/,'$1'+version,'src/app/bootstrap.js');
 });
 await set('src/app/router.js',s=>replaceOne(s,/(const ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js'));
 await set('service-worker.js',original=>{
@@ -65,6 +66,8 @@ for(const p of ['src/config/analytics.js','src/features/settings/version.js']){
 await set('src/features/path/feature.js',source=>{
   let s=replaceOne(source,/(path-route-index\.json\.gz\?v=)[0-9.]+/,'$1'+version,'src/features/path/feature.js');
   s=replaceOne(s,/(path-route-index\.json\?v=)[0-9.]+/,'$1'+version,'src/features/path/feature.js');
+  s=replaceOne(s,/(story-stele\.js\?v=)[0-9.]+/,'$1'+version,'src/features/path/feature.js');
+  s=replaceOne(s,/(path-set-metadata\.js\?v=)[0-9.]+/,'$1'+version,'src/features/path/feature.js');
   return s;
 });
 await set('src/features/path/story-stele.js',s=>{
