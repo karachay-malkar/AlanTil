@@ -8,6 +8,10 @@ on:
       - 'mobile/**'
       - 'packages/**'
       - 'index.html'
+      - 'release.json'
+      - 'assets/path/story-stele-*.webp'
+      - 'scripts/release/**'
+      - 'scripts/assets/**'
       - 'service-worker.js'
       - 'tests/**'
       - 'scripts/static-preview-server.mjs'
@@ -42,11 +46,17 @@ jobs:
           node --check service-worker.js
           node --check scripts/static-preview-server.mjs
           node --check scripts/qa/seed-lighthouse-profile.mjs
+          node --check scripts/release/sync-version.mjs
+          node --check src/features/path/feature.js
+          node --check src/features/path/story-stele.js
+          node scripts/release/sync-version.mjs --check
       - name: Profile, session, 3D and performance regressions
         run: |
           node --test \
             tests/performance-17-2.test.mjs \
             tests/site-speed-17-2.test.mjs \
+            tests/release-version-17-2.test.mjs \
+            tests/path-lazy-17-2.test.mjs \
             tests/profile-avatar-removal-16-7.test.mjs \
             tests/storage-profile-analytics-16-8.test.mjs \
             mobile/tests/architecture.test.mjs
