@@ -3,13 +3,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
-test('Path-only preload starts gzip index early without preloading it on practice or profile',async()=>{
+test('No speculative path preloading on guest onboarding or unrelated features',async()=>{
  const index=await read('index.html');
- assert.match(index,/location\.pathname === "\/"/);
- assert.match(index,/location\.pathname\.startsWith\("\/path\/"\)/);
- assert.match(index,/indexPreload\.rel = "preload"/);
- assert.match(index,/indexPreload\.as = "fetch"/);
- assert.match(index,/indexPreload\.href = "\/src\/data\/path-route-index\.json\.gz\?v=" \+ targetVersion/);
- const sw=await read('service-worker.js');
- assert.match(sw,/src\/data\/path-route-index\.json\.gz/);
+ const source=await read('src/features/path/feature.js');
+ const worker=await read('service-worker.js');
+ assert.doesNotMatch(index,/indexPreload|rel="preload"[^>]*path-route-index/);
+ assert.match(source,/PATH_ROUTE_INDEX_URL = "\/src\/data\/path-route-index\.json\.gz\?v=/);
+ assert.match(worker,/path-route-index\.json\.gz/);
 });
