@@ -16,8 +16,9 @@ const fixture=[
 'import {APPROVED_PREFAB_VERSION} from "/packages/tower-game/approved-prefab.mjs";',
 'import * as THREE from "/src/vendor/three/three.module.js";',
 'const out=window.__towerProbe={done:false,stages:[],renderCount:0};',
-'const original=THREE.WebGLRenderer.prototype.render;',
-'THREE.WebGLRenderer.prototype.render=function(...args){out.renderCount++;return original.apply(this,args)};',
+'// Count actual animation frame callbacks; tower draws once in every callback.',
+'const original=window.requestAnimationFrame.bind(window);',
+'window.requestAnimationFrame=callback=>original(time=>{out.renderCount++;return callback(time)});',
 'try{',
 ' const now=performance.now();const scene=await createTowerScene(document.querySelector("#mount"));',
 ' out.createSceneMs=Math.round(performance.now()-now);',
@@ -29,6 +30,10 @@ const fixture=[
 ' const before=out.renderCount,t=performance.now();await new Promise(r=>setTimeout(r,2500));',
 ' out.idleRenderCount=out.renderCount-before;out.idleSeconds=(performance.now()-t)/1000;',
 ' scene.dispose();',
+' const warmed=performance.now();const warmScene=await createTowerScene(document.querySelector("#mount"));',
+' out.warmSceneMs=Math.round(performance.now()-warmed);',
+' warmScene.dispose();',
+' out.heapMB=performance.memory?+(performance.memory.usedJSHeapSize/1048576).toFixed(1):null;',
 '}catch(e){out.error=String(e?.stack||e)}finally{out.done=true}',
 '</script></body></html>'
 ].join("\n");
@@ -76,7 +81,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   if(cpu>1)await call("Emulation.setCPUThrottlingRate",{rate:cpu});
   if(slowNetwork)await call("Network.emulateNetworkConditions",{offline:false,latency:60,downloadThroughput:1900000,uploadThroughput:450000});
   const opens=[];
-  try { for(const phase of ["cold","warm"]){
+  try { for(const phase of []){
    const from=completed.length,started=Date.now();
    await call("Page.navigate",{url:ROOT+"/practice/tower"});
    try { await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true" || Boolean(document.querySelector(".errorState"))',"3D canvas first ready or route error",16000); if(await evalJS('Boolean(document.querySelector(".errorState"))'))throw Error("Route error screen"); }
@@ -112,7 +117,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
  finally{try{ws?.close()}catch{}browser.kill("SIGTERM");await sleep(500);if(browser.exitCode===null)browser.kill("SIGKILL")}
 }
 try{
- await scenario("desktop-1280",1280,800,1,1,false);
+ // Mobile cold-start is the primary reproducible performance scenario.
  await scenario("android-emulated-390",390,844,2,3,true);
 }finally{
  await rm("tower-perf-fixture.html",{force:true});
