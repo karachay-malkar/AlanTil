@@ -45,7 +45,7 @@ await edit("src/app/bootstrap.js",source=>{
 
 await edit("src/app/router.js",s=>once(s,
 '    navigating = true;\n    try { if (queuedNavigation) return false; currentModule?.unmount?.(); currentModule = null; const module = await prepareRoute(current.route); await mountCurrentRoute(module); return true; }',
-'    navigating = true;\n    try {\n      if (queuedNavigation) return false;\n      if (options.background && targetsEqual(refreshTarget,current) && typeof currentModule?.refreshData === "function") {\n        await currentModule.refreshData({ ...context, router: api }, options);\n        return true;\n      }\n      currentModule?.unmount?.(); currentModule = null;\n      const module = await prepareRoute(current.route); await mountCurrentRoute(module);\n      return true;\n    }'
+'    navigating = true;\n    try {\n      if (queuedNavigation) return false;\n      if (options.background && targetsEqual(refreshTarget,current) && typeof currentModule?.refreshData === "function") {\n        void currentModule.refreshData({ ...context, router: api }, options).catch(error => console.warn("Background profile refresh failed", error));\n        return true;\n      }\n      currentModule?.unmount?.(); currentModule = null;\n      const module = await prepareRoute(current.route); await mountCurrentRoute(module);\n      return true;\n    }'
 ));
 
 await edit("src/shared/profile/profile-service.js",source=>{
