@@ -8,6 +8,7 @@
 export function createKunlumRuins({quad,tri,groundY,rnd,stone,mobile=false}) {
  const stats={courtyards:0,terraces:0,wallSegments:0,stoneBlocks:0,paths:0};
  const spread=(a,b)=>a+(b-a)*rnd();
+ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
  const wallLine=(ax,az,bx,bz,{height=1.5,thickness=.57,gaps=[],course,damage=.18}={})=>{
   const dx=bx-ax,dz=bz-az,dist=Math.hypot(dx,dz);
   if(dist<.3)return;
