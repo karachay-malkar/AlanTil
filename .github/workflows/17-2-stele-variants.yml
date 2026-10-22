@@ -4,6 +4,7 @@ on:
   push:
     branches: ['17.2']
     paths:
+      - 'assets/path/story-stele.webp'
       - 'scripts/assets/optimize-stele.py'
       - '.github/workflows/17-2-stele-variants.yml'
   workflow_dispatch:

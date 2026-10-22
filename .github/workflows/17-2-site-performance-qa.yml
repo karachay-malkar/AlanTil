@@ -52,6 +52,8 @@ jobs:
           node --check src/features/path/story-stele.js
           node --check scripts/assets/build-path-index.mjs
           node scripts/release/sync-version.mjs --check
+          node scripts/assets/build-path-index.mjs
+          git diff --exit-code -- src/data/path-route-index.json src/data/path-route-index.json.gz
       - name: Profile, session, 3D and performance regressions
         run: |
           node --test \

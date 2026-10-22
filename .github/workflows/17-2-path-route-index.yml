@@ -4,6 +4,10 @@ on:
   push:
     branches: ['17.2']
     paths:
+      - 'src/data/dictionary-snapshot.json'
+      - 'src/shared/domain/word-structure-compat.js'
+      - 'packages/alantil-core/learning-route.js'
+      - 'packages/alantil-core/alan-display.js'
       - 'scripts/assets/build-path-index.mjs'
       - '.github/workflows/17-2-path-route-index.yml'
   workflow_dispatch:
