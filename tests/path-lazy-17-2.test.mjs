@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 const read = path => readFile(new URL('../'+path,import.meta.url),'utf8');
+const release=JSON.parse(await read('release.json'));
 
 test('Path home does not load study/result/test JS before a session',async()=>{
  const source=await read('src/features/path/feature.js');
@@ -19,8 +20,8 @@ test('Path home does not load study/result/test JS before a session',async()=>{
 
 test('Approved stele keeps original artwork but transfers a lightweight responsive derivative',async()=>{
  const source=await read('src/features/path/story-stele.js');
- assert.match(source,/story-stele-640\.webp\?v=17\.2\.1/);
- assert.match(source,/story-stele-932\.webp\?v=17\.2\.1/);
+ assert.ok(source.includes('story-stele-640.webp?v='+release.version));
+ assert.ok(source.includes('story-stele-932.webp?v='+release.version));
  assert.match(source,/artwork\.srcset=artwork\.dataset\.srcset/);
  const [original,mobile,full]=await Promise.all(
   ['assets/path/story-stele.webp','assets/path/story-stele-640.webp','assets/path/story-stele-932.webp'].map(p=>stat(new URL('../'+p,import.meta.url))));
@@ -56,7 +57,7 @@ test('Path route index transfers as a compact gzip, with uncompressed fallback',
  const raw=await read('src/data/path-route-index.json');
  assert.ok(compressed.byteLength<100*1024,'compressed route index too large');
  assert.equal(gunzipSync(compressed).toString('utf8'),raw);
- assert.match(source,/path-route-index\.json\.gz\?v=17\.2\.1/);
+ assert.ok(source.includes('path-route-index.json.gz?v='+release.version));
  assert.match(source,/PATH_ROUTE_INDEX_FALLBACK_URL/);
  assert.match(source,/DecompressionStream/);
  assert.match(worker,/path-route-index\.json\.gz/);

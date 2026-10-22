@@ -5,26 +5,33 @@ import {execFileSync} from 'node:child_process';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const release=JSON.parse(await read('release.json'));
 
-test('17.2 release metadata matches Web, SW, Android and analytics',async()=>{
- assert.equal(release.branch,'17.2');assert.equal(release.version,'17.2.1');
+test('Release version follows branch and matches Web, SW, Android and analytics',async()=>{
+ const branch=release.branch,version=release.version;
+ assert.equal(branch,'17.2');
+ assert.ok(version.startsWith(branch+'.'),'version must start with branch name');
  const [index,boot,router,worker,core,analytics]=await Promise.all(
  ['index.html','src/app/bootstrap.js','src/app/router.js','service-worker.js','packages/alantil-core/release.js','src/config/analytics.js'].map(read));
- assert.match(index,/targetVersion = "17\.2\.1"/);
- assert.match(boot,/ASSET_VERSION = "17\.2\.1"/);
- assert.match(router,/ASSET_VERSION = "17\.2\.1"/);
- assert.match(worker,/VERSION = "17\.2\.1"/);
- assert.match(core,/APP_VERSION = "17\.2\.1"/);
- assert.match(core,/WEB_DEPLOY_BRANCH = "17\.2"/);
+ for(const [source,marker] of [
+  [index,'targetVersion = "'+version+'"'],
+  [boot,'ASSET_VERSION = "'+version+'"'],
+  [router,'ASSET_VERSION = "'+version+'"'],
+  [worker,'VERSION = "'+version+'"'],
+  [core,'APP_VERSION = "'+version+'"'],
+  [core,'WEB_DEPLOY_BRANCH = "'+branch+'"'],
+ ])assert.ok(source.includes(marker),'missing '+marker);
  assert.match(analytics,/appVersion = APP_VERSION/);
  const app=JSON.parse(await read('mobile/app.json'));
  const pkg=JSON.parse(await read('mobile/package.json'));
- assert.equal(app.expo.version,'17.2.1');
- assert.equal(app.expo.android.versionCode,44);
- assert.equal(app.expo.extra.releaseVersion,'17.2.1');
- assert.equal(pkg.version,'17.2.1');
+ assert.equal(app.expo.version,version);
+ assert.equal(app.expo.android.versionCode,release.android_version_code);
+ assert.equal(app.expo.ios.buildNumber,String(release.android_version_code));
+ assert.equal(app.expo.extra.releaseVersion,version);
+ assert.equal(pkg.version,version);
 });
-test('release generator detects drift and reports one source of truth',()=>{
+test('Release generator verifies checked-in files and the active numbered branch',()=>{
  const script=new URL('../scripts/release/sync-version.mjs',import.meta.url);
- const text=execFileSync(process.execPath,[script.pathname,'--check'],{encoding:'utf8',env:{...process.env,GITHUB_REF_NAME:'17.2'}});
- assert.match(text,/17\.2\.1 branch 17\.2 — verified/);
+ const text=execFileSync(process.execPath,[script.pathname,'--check'],{
+  encoding:'utf8',env:{...process.env,GITHUB_REF_NAME:release.branch}
+ });
+ assert.ok(text.includes('AlanTil '+release.version+' branch '+release.branch+' — verified'));
 });

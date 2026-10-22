@@ -29,8 +29,8 @@ test('17.2 favicon and versioned static resources load without repeat network fe
  const index=await read('index.html');
  const worker=await read('service-worker.js');
  assert.match(index,/rel="icon" type="image\/png"/);
- assert.match(index,/targetVersion = "17\.2\.1"/);
- assert.match(worker,/VERSION = "17\.2\.1"/);
+ assert.ok(index.includes('targetVersion = "' + JSON.parse(await read('release.json')).version + '"'));
+ assert.ok(worker.includes('VERSION = "' + JSON.parse(await read('release.json')).version + '"'));
  assert.match(worker,/url\.searchParams\.has\("v"\)/);
  assert.match(worker,/versionedCode \? cacheFirst\(request\) : networkFirst\(request/);
 });
