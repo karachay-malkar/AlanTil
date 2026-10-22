@@ -479,25 +479,54 @@ function renderRoute(context,route,activeStory,progressSnapshot,storyIntro){
   context.root.querySelectorAll("[data-station-key]").forEach((button)=>{button.addEventListener("click",()=>{const station=route.byKey.get(button.dataset.stationKey);if(!station)return;const viewport=context.root.querySelector(".pathMapViewport");updateRouteSettings({[routeScrollKey(activeStory)]:viewport?.scrollTop||0},{queue:false});context.router.navigate("path.station",routeParams(station,route));},{signal:controller.signal});});
   const viewport=context.root.querySelector(".pathMapViewport");createRouteScale({root:context.root,viewport,catalogs:reversedCatalogs,signal:controller.signal});window.addEventListener("alantil:scope-ready",()=>refreshRouteProgressInPlace(context,route,activeStory),{signal:controller.signal});let mapPositionReady=false;void restoreMapPosition(viewport).then(()=>{mapPositionReady=true;});let saveFrame=0;viewport?.addEventListener("scroll",()=>{if(viewport?.dataset?.guideDemoScroll==="true"||!mapPositionReady||saveFrame)return;saveFrame=requestAnimationFrame(()=>{saveFrame=0;updateRouteSettings({[routeScrollKey(activeStory)]:viewport.scrollTop},{queue:false});});},{signal:controller.signal,passive:true});
 }
-function refreshSetMetadataInPlace(context,route,activeStory) {
-  const story=route.stories[activeStory];if(!story||!context.root?.isConnected)return;
-  for(const station of story.stations){
+function refreshSetMetadataInPlace(context,route,activeStory,signal) {
+  const story=route.stories[activeStory];
+  if(!story||!context.root?.isConnected||signal?.aborted)return;
+  const viewport=context.root.querySelector(".pathMapViewport");
+  const bottomGap=viewport?Math.max(0,viewport.scrollHeight-viewport.clientHeight-viewport.scrollTop):null;
+  let progressSnapshot=null;
+  let didUpgrade=false;
+  for(const [index,station] of story.stations.entries()){
     const button=context.root.querySelector('[data-station-key="'+CSS.escape(station.key)+'"]');
     if(!button)continue;
+    const icon=beginnerSetIconName(station)||intermediateSetIconName(station);
+    // Preserve the original button node (including focus and route click listeners).
+    // Metadata can arrive after the fallback button was initially rendered without images.
+    if(icon&&!button.classList.contains("beginnerDioramaNode")){
+      progressSnapshot??=createRouteProgressSnapshot();
+      const template=document.createElement("template");
+      template.innerHTML=stationButton(station,index,progressSnapshot);
+      const upgraded=template.content.firstElementChild;
+      if(upgraded){
+        button.className=upgraded.className;
+        button.style.cssText=upgraded.style.cssText;
+        button.innerHTML=upgraded.innerHTML;
+        button.removeAttribute("data-adaptive-station-meta");
+        for(const name of ["data-station-progress-percent","data-achievement-level"]){
+          const value=upgraded.getAttribute(name);
+          if(value!==null)button.setAttribute(name,value);
+        }
+        bindBeginnerDioramaFallbacks(button,signal);
+        didUpgrade=true;
+      }
+    }
     const label=button.querySelector(".stationLabel");
     if(label)label.textContent=station.name;
     const count=button.querySelector(".stationWordCount");
     const progress=count?.textContent?.split("/")||["0","0"];
     button.setAttribute("aria-label",msg("path.osvoeno_iz_slov",{label:station.name,mastered:Number(progress[0])||0,total:Number(progress[1])||0}));
-    const icon=beginnerSetIconName(station)||intermediateSetIconName(station);
     if(icon){
       const src="/assets/icons/sets/"+encodeURIComponent(icon)+"?v="+SET_ICON_ASSET_VERSION;
       button.querySelectorAll(".beginnerDioramaImage").forEach((image)=>{if(image.getAttribute("src")!==src)image.setAttribute("src",src);});
     }
   }
+  // Keep the player's position near the route's bottom when placeholders gain height.
+  if(didUpgrade&&viewport&&bottomGap!==null&&bottomGap<40&&!viewport.classList.contains("isPositioning")){
+    viewport.scrollTop=Math.max(0,viewport.scrollHeight-viewport.clientHeight-bottomGap);
+  }
 }
 function refreshSetMetadataAsync(context,route,activeStory,signal) {
-  const update=()=>{if(signal.aborted)return;applyBeginnerSetMetadataToRoute(route);applyIntermediateSetMetadataToRoute(route);refreshSetMetadataInPlace(context,route,activeStory);};
+  const update=()=>{if(signal.aborted)return;applyBeginnerSetMetadataToRoute(route);applyIntermediateSetMetadataToRoute(route);refreshSetMetadataInPlace(context,route,activeStory,signal);};
   void Promise.allSettled([
     fetchBeginnerSetMetadata({signal}).then(map=>{if(!signal.aborted){beginnerSetMetadata=map;update();}}),
     fetchIntermediateSetMetadata({signal}).then(map=>{if(!signal.aborted){intermediateSetMetadata=map;update();}})
