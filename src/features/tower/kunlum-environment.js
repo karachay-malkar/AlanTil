@@ -142,15 +142,34 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
     if(y>13.1&&y<14.6&&Math.abs(u-.5)<.045)return true;
    }return side===1&&y>10.3&&y<11.6&&Math.abs(u-.49)<.035;
   };
-  const rows=mobile?21:29,columns=mobile?10:13;
+  const lime=['#cfc9b9','#d8ceba','#b8b4a5','#ded5c5','#a6a59b','#c4bcae','#bbb4a3','#d5ccbb'];
+  const towerStone=()=>lime[Math.floor(rnd()*lime.length)];
+  const rows=mobile?25:37,columns=mobile?11:16;
   for(let side=0;side<4;side++)for(let row=0;row<rows;row++){
    const y0=row*H/rows,y1=(row+1)*H/rows;
    for(let k=0;k<columns;k++){
-    const offset=row%2?.35:0,u0=clamp((k-offset)/columns,0,1),
-      u1=clamp((k+1-offset)/columns,0,1),mid=(u0+u1)/2;
-    if(u1<=u0||opening(side,mid,(y0+y1)/2))continue;
-    quad('stone',surface(side,u0,y0),surface(side,u1,y0),
-      surface(side,u1,y1),surface(side,u0,y1),stone());
+    const offset=row%2?.33:0;
+    const u0=clamp((k-offset)/columns,0,1),u1=clamp((k+1-offset)/columns,0,1);
+    if(u1-u0<.012||opening(side,(u0+u1)/2,(y0+y1)/2))continue;
+    const a=surface(side,u0,y0),b=surface(side,u1,y0),
+      cc=surface(side,u1,y1),d=surface(side,u0,y1);
+    const stoneColor=towerStone();
+    const another=towerStone();
+    if(!mobile){
+     // Raised chalky limestone facets: a dense, solid limewashed wall rather
+     // than large coloured rectangular tiles.
+     const cent=[(a[0]+b[0]+cc[0]+d[0])*.25,
+       (y0+y1)*.5+baseY,(a[2]+b[2]+cc[2]+d[2])*.25];
+     const vx=cent[0]-cx,vz=cent[2]-cz,len=Math.hypot(vx,vz)||1;
+     const bulge=.012+rnd()*.074;cent[0]+=vx/len*bulge;cent[2]+=vz/len*bulge;
+     tri('stone',a,b,cent,stoneColor);
+     tri('stone',b,cc,cent,another);
+     tri('stone',cc,d,cent,stoneColor);
+     tri('stone',d,a,cent,rnd()>.82?'#a9a493':stoneColor);
+    }else{
+     tri('stone',a,b,cc,stoneColor);
+     tri('stone',a,cc,d,another);
+    }
    }
   }
   // Dark interiors of apertures, below the front plane.
@@ -159,7 +178,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
    for(const p of [a,b1,cc,d]){p[0]+=(cx-p[0])*.046;p[2]+=(cz-p[2])*.046;}
    quad('stone',a,b1,cc,d,'#343732');
   }
-  // Flat, low-pitched weathered cap; not a sharp fairy-tale spire.
+  // Damaged low-slope lime-and-stone coping (no fantasy conical roof).
   const cap=top*.5+.17;
   quad('stone',world(-cap,H,-cap),world(cap,H,-cap),
     world(cap,H+.18,0),world(-cap,H+.18,0),'#51534c');
