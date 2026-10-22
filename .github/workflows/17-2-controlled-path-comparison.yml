@@ -1,0 +1,78 @@
+name: AlanTil 17.2 controlled five-run path comparison
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/qa/summarize-path-performance.mjs'
+      - '.github/workflows/17-2-controlled-path-comparison.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare both exact repository revisions
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin 184788115dc4750649698144550d7363eeacec80
+          git worktree add --detach "$RUNNER_TEMP/alantil-before" 184788115dc4750649698144550d7363eeacec80
+          node --check scripts/qa/summarize-path-performance.mjs
+      - name: Measure five mobile Lighthouse runs per revision
+        run: |
+          set -euo pipefail
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          mkdir -p compare-results/{before,after}
+          for rev in before after; do
+            if [ "$rev" = before ]; then dir="$RUNNER_TEMP/alantil-before"; else dir="$GITHUB_WORKSPACE"; fi
+            pushd "$dir"
+            node scripts/static-preview-server.mjs > "$GITHUB_WORKSPACE/compare-results/$rev/server.log" 2>&1 &
+            server_pid=$!
+            popd
+            ready=0
+            for a in {1..40}; do
+              if curl -fsSL http://127.0.0.1:4173/ >/dev/null 2>&1; then ready=1; break; fi
+              sleep 1
+            done
+            if [ "$ready" -ne 1 ]; then cat "compare-results/$rev/server.log"; exit 1; fi
+            for i in 1 2 3 4 5; do
+              suffix="$(printf '%02d' "$i")"
+              success=0
+              for attempt in 1 2 3; do
+                profile="$(mktemp -d /tmp/alantil-lh-comparison-XXXXXX)"
+                node "$dir/scripts/qa/seed-lighthouse-profile.mjs" "$profile"
+                if npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/path/oblivion" \
+                  --only-categories=performance --disable-storage-reset \
+                  --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --user-data-dir=$profile" \
+                  --output=json --output-path="$GITHUB_WORKSPACE/compare-results/$rev/$suffix.json" --quiet; then
+                  success=1
+                  rm -rf "$profile"
+                  break
+                fi
+                rm -rf "$profile"
+                sleep 2
+              done
+              if [ "$success" -ne 1 ]; then echo "Lighthouse failed: $rev run $i"; exit 1; fi
+            done
+            kill "$server_pid" || true
+            sleep 2
+          done
+      - name: Validate images and compare medians
+        run: |
+          node scripts/qa/summarize-path-performance.mjs compare-results
+          cat compare-results/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-path-controlled-comparison
+          path: compare-results/
+          retention-days: 21
