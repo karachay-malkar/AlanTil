@@ -16,7 +16,7 @@ function replaceExactly(source,before,after,label) {
 
 await update("src/features/onboarding/guide.js",text=>replaceExactly(text,
   ".alantilGuideSparkHost>.beginnerDioramaImage,.alantilGuideSparkHost>.millstoneFace{position:relative;z-index:1}",
-  "// The diorama uses two precisely superimposed images; never move them into normal flow.\n.alantilGuideSparkHost>.beginnerDioramaImage{position:absolute;z-index:1}\n.alantilGuideSparkHost>.millstoneFace{position:relative;z-index:1}",
+  "/* The diorama uses two superimposed images; keep absolute positioning. */\n.alantilGuideSparkHost>.beginnerDioramaImage{position:absolute;z-index:1}\n.alantilGuideSparkHost>.millstoneFace{position:relative;z-index:1}",
   "guided diorama layering"
 ));
 
