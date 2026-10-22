@@ -239,10 +239,6 @@ await edit("scripts/qa/verify-path-metadata-browser.mjs",source=>{
 '  const afterNavigation = await evaluate(statsExpr);'
 ].join("\n");
  s=once(s,marker,probe);
- const snippet='      return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;';
- const extra='      return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;';
- if(!s.includes(snippet))throw Error("Expected previous E2E loading logic");
- s=once(s,snippet,extra);
  const warm='  await cmd("Tracing.end");';
  s=once(s,warm,'  const warmMode = await evaluate(\'[...document.querySelectorAll(".pathView img[data-beginner-diorama-image]")].every(img => img.loading === "eager")\');\n  assert.equal(warmMode,true,"Fully cached stations must load eagerly on repeat visit");\n'+warm);
  return s;
