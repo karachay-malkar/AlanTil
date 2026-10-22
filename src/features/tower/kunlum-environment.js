@@ -83,7 +83,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false} = {}) {
  // Main monument: tapered walls, deliberately open door and slit apertures.
  function tower(cx,cz,rot=0){
   const base=6,top=4.75,H=15.5,c=Math.cos(rot),s=Math.sin(rot);
-  function transform(v){const [x,y,z]=v;return [cx+x*c-z*s,y+height(cx,cz),cz+x*s+z*c].map((n,i)=>i===1?n+v[1]:n);}
+  function transform(v){const [x,y,z]=v;return [cx+x*c-z*s,y+height(cx,cz),cz+x*s+z*c];}
   function wall(side,u,y) {
    const w=base+(top-base)*y/H, x=(u-.5)*w;
    if(side===0)return transform([x,y,w/2]);
@@ -152,7 +152,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false} = {}) {
    rect(x-.23,height(x,z),z-.2,x+.31,height(x,z)+.20+rng()*.23,z+.28,stone());
   }
  }
- tower(-27,44,-.18);
+ tower(-27,44,2.3);
  // Abaev second tower site / ruins - deliberately incomplete, not an invented full tower.
  function ruin(cx,cz,sx,sz,h){
   const y=height(cx,cz);
