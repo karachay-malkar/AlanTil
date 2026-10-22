@@ -34,8 +34,8 @@ await set('index.html',original=>{
   s=replaceOne(s,/(src="\/src\/app\/bootstrap\.js\?v=)[^"]+/,'$1'+version,'index.html');
   s=replaceOne(s,/const versions = (\[[^\n;]*\]);/,(whole,arraySource)=>{
     const versions=JSON.parse(arraySource);
-    if(!versions.includes(version)) versions.push(version);
-    return 'const versions = '+JSON.stringify(versions)+';';
+    if(versions.includes(version)) return whole;
+    return 'const versions = '+arraySource.slice(0,-1)+',"'+version+'"];';
   },'index.html');
   return s;
 });
@@ -62,6 +62,11 @@ await set('service-worker.js',original=>{
 for(const p of ['src/config/analytics.js','src/features/settings/version.js']){
  await set(p,s=>replaceOne(s,/(alantil-core\/release\.js\?v=)[0-9.]+/,'$1'+version,p));
 }
+await set('src/features/path/story-stele.js',s=>{
+  s=replaceOne(s,/(story-stele-640\.webp\?v=)[0-9.]+/,'$1'+version,'src/features/path/story-stele.js');
+  s=replaceOne(s,/(story-stele-932\.webp\?v=)[0-9.]+/,'$1'+version,'src/features/path/story-stele.js');
+  return s;
+});
 await set('mobile/app.json',s=>{
  const app=JSON.parse(s);
  app.expo.version=version; app.expo.android.versionCode=versionCode;

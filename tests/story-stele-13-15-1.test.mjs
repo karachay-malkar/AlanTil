@@ -10,7 +10,9 @@ test("story stele keeps scoped seen state and uses the approved WebP artwork", a
   assert.match(source, /alantil_story_intro_seen_v1/);
   assert.match(source, /readScopedJson/);
   assert.match(source, /writeScopedJson/);
-  assert.match(source, /story-stele\.webp\?v=13\.15\.6/);
+  assert.match(source, /story-stele-640\.webp\?v=17\.2\.1/);
+  assert.match(source, /story-stele-932\.webp\?v=17\.2\.1/);
+  assert.match(source, /data-srcset/);
   assert.match(source, /✦/);
   assert.match(source, /autoOpen && !hasSeenStoryStele\(storyId\)/);
   assert.equal(artwork.subarray(0, 4).toString("ascii"), "RIFF");

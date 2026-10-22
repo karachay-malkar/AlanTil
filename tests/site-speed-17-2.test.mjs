@@ -29,8 +29,8 @@ test('Path styles are lazy and still available on every path route',async()=>{
 });
 test('service worker and HTML refer to same code generation',async()=>{
  const index=await read('index.html'),bootstrap=await read('src/app/bootstrap.js'),sw=await read('service-worker.js');
- assert.match(index,/targetVersion = "16\.8\.0\.30"/);
- assert.match(index,/bootstrap\.js\?v=16\.8\.0\.30/);
- assert.match(bootstrap,/ASSET_VERSION = "16\.8\.0\.30"/);
- assert.match(sw,/VERSION = "16\.8\.0\.30"/);
+ assert.match(index,/targetVersion = "17\.2\.1"/);
+ assert.match(index,/bootstrap\.js\?v=17\.2\.1/);
+ assert.match(bootstrap,/ASSET_VERSION = "17\.2\.1"/);
+ assert.match(sw,/VERSION = "17\.2\.1"/);
 });

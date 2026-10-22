@@ -2,7 +2,8 @@ import { readScopedJson, writeScopedJson } from "../../shared/progress/storage-s
 import { escapeHtml } from "../../shared/ui/html.js?v=16.8.0.3";
 
 export const STORY_STELE_SEEN_KEY = "alantil_story_intro_seen_v1";
-const ASSET_URL = "/assets/path/story-stele.webp?v=16.8.0.3";
+const ASSET_URL = "/assets/path/story-stele-640.webp?v=17.2.1";
+const ASSET_2X_URL = "/assets/path/story-stele-932.webp?v=17.2.1";
 const STYLE_CLASSES = ["storySteleStyleBronze"];
 const CLOSE_DELAY_MS = 220;
 const AUTO_SCROLL_START_DELAY_MS = 1600;
@@ -114,7 +115,7 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
     <div class="storySteleBackdrop" aria-hidden="true"></div>
     <section class="storySteleDialog" role="dialog" aria-modal="true" aria-labelledby="storySteleTitle-${escapeHtml(storyId)}" tabindex="-1">
       <div class="storySteleCard">
-        <img class="storySteleArtwork" data-src="${ASSET_URL}" alt="" aria-hidden="true">
+        <img class="storySteleArtwork" data-src="${ASSET_URL}" data-srcset="${ASSET_URL} 640w, ${ASSET_2X_URL} 932w" sizes="(max-width:640px) 100vw, 53dvh" width="932" height="1688" decoding="async" alt="" aria-hidden="true">
         <div class="storySteleContent" data-stele-content>
           <h2 class="storySteleTitle" id="storySteleTitle-${escapeHtml(storyId)}">${escapeHtml(storyName)}</h2>
           <div class="storySteleBody" data-stele-scroll>${renderParagraphs(storyIntro)}</div>
@@ -219,7 +220,7 @@ export function mountStoryStele({ root, modalRoot, story, autoOpen = false, sign
     clearAutoScroll();
     open = true;
     const artwork = overlay.querySelector(".storySteleArtwork");
-    if(artwork && !artwork.hasAttribute("src")) artwork.src=artwork.dataset.src;
+    if(artwork && !artwork.hasAttribute("src")) { if(artwork.dataset.srcset) artwork.srcset=artwork.dataset.srcset; artwork.src=artwork.dataset.src; }
     overlay.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
     trigger.classList.add("isHiddenWhileOpen");
