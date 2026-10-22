@@ -60,34 +60,19 @@ function fitTypography(card, title, body) {
   if (!card || !title || !body) return false;
   const width = card.getBoundingClientRect().width;
   if (!width) return false;
-
-  let titleSize = Math.min(44, Math.max(19, width * 0.068));
-  title.style.fontSize = `${titleSize}px`;
-  for (let index = 0; index < 48 && title.scrollWidth > title.clientWidth + 1; index += 1) {
-    if (titleSize <= 18) break;
-    titleSize -= 0.5;
-    title.style.fontSize = `${titleSize}px`;
+  // Avoid iterative write/read layout thrashing on first opening.
+  const titleSize = Math.min(44, Math.max(18, width * 0.068));
+  title.style.fontSize = titleSize + "px";
+  const baseSize = Math.min(21, Math.max(13.5, width * 0.038));
+  body.style.fontSize = baseSize + "px";
+  body.style.lineHeight = "1.42";
+  body.style.gap = Math.min(12, Math.max(6, width * 0.018)) + "px";
+  // One width check and a single adjustment, rather than 48 forced measurements.
+  if (title.scrollWidth > title.clientWidth + 1) {
+    title.style.fontSize = Math.max(18, titleSize * title.clientWidth / Math.max(1, title.scrollWidth) * 0.97) + "px";
   }
-
-  let fontSize = Math.min(21, Math.max(13.5, width * 0.038));
-  let lineHeight = 1.42;
-  let gap = Math.min(12, Math.max(6, width * 0.018));
-  body.style.fontSize = `${fontSize}px`;
-  body.style.lineHeight = String(lineHeight);
-  body.style.gap = `${gap}px`;
-  body.scrollTop = 0;
-
-  for (let index = 0; index < 140 && bodyOverflows(body); index += 1) {
-    if (fontSize > MIN_BODY_FONT_SIZE_PX) fontSize = Math.max(MIN_BODY_FONT_SIZE_PX, fontSize - 0.2);
-    else if (gap > MIN_BODY_GAP_PX) gap = Math.max(MIN_BODY_GAP_PX, gap - 0.25);
-    else if (lineHeight > MIN_BODY_LINE_HEIGHT) lineHeight = Math.max(MIN_BODY_LINE_HEIGHT, lineHeight - 0.01);
-    else break;
-    body.style.fontSize = `${fontSize}px`;
-    body.style.lineHeight = String(lineHeight);
-    body.style.gap = `${gap}px`;
-  }
-
-  body.scrollTop = 0;
+  // Overflow is intentional and supported by auto/manual scrolling. Do not shrink
+  // paragraphs through 140 synchronous layout passes merely to eliminate scrolling.
   return bodyOverflows(body);
 }
 
