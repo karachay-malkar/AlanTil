@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Кюнлюм — обзор 3D-сцены AlanTil 17.2.8</title>
+<title>Кюнлюм — обзор 3D-сцены AlanTil 17.2.9</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:#a9becd;color:#fff}
 #view{width:100%;height:100%;touch-action:none}
@@ -12,27 +12,27 @@ button{border:1px solid #ffffff55;border-radius:7px;background:#3d564a;color:#ff
 </style></head><body><div id="view" aria-label="3D-сцена исторического Кюнлюма"></div>
 <div class="panel">
 <strong>Кюнлюм · Абай-къала</strong>
-<p>Вращайте сцену пальцем или мышью. Стройка 20×20 м на террасе внутри села; запас 40×50 м. Выше — Абай-къала и плотные кварталы руин, ниже — Черек; дальние горы — панорамная картинка. Схема дворов приблизительная, не обмерный план.</p>
+<p>Вращайте сцену пальцем или мышью. Стройка 20×20 м на террасе внутри села; запас 40×50 м. Выше — Абай-къала и плотные кварталы руин с неровными камнями. Спуск к Череку теперь пологий. За рекой — широкая равнина, затем панорамное изображение гор. Схема местности приблизительная.</p>
 <button id="home">Общий вид</button> <button id="tower">Абай-къала</button> <button id="river">Черек</button> <button id="ruins">Руины</button> <button id="grid">Сетка</button>
 <div id="stats">Загрузка сцены...</div>
 </div>
 <script type="module">
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
-import {createKunlumEnvironment} from './src/features/tower/kunlum-environment.js?v=17.2.8';
+import {createKunlumEnvironment} from './src/features/tower/kunlum-environment.js?v=17.2.9';
 const host=document.getElementById('view');
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
 host.append(renderer.domElement);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');
-scene.fog=new THREE.Fog('#b3c9d9',150,395);
+scene.fog=new THREE.Fog('#b3c9d9',180,680);
 scene.add(new THREE.HemisphereLight('#fff8eb','#726b52',2));
 const sun=new THREE.DirectionalLight('#fff2dd',2.7);sun.position.set(-24,40,35);scene.add(sun);
-const camera=new THREE.PerspectiveCamera(51,innerWidth/innerHeight,.15,450);
+const camera=new THREE.PerspectiveCamera(51,innerWidth/innerHeight,.15,850);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.09;
-controls.target.set(10,2,10);controls.minDistance=7;controls.maxDistance=140;controls.maxPolarAngle=Math.PI*.495;
+controls.target.set(10,2,10);controls.minDistance=7;controls.maxDistance=160;controls.maxPolarAngle=Math.PI*.495;
 function home(){camera.position.set(48,34,-51);controls.target.set(10,1,23);controls.update();}
 home();
 const started=performance.now();
