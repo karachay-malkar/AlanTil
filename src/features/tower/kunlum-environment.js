@@ -187,6 +187,14 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false} = {}) {
   rect(x,y,z,x+w,y+h,z+.4,stone());
   rect(x,y,z,x+.4,y+h*.82,z+d,stone());
  }
+ // The 40x50m reserve is marked by a quiet soil-and-stone border, not a buildable collider.
+ const xMin=-10,xMax=30,zMin=-15,zMax=35,edge=.13;
+ for(const [a,b,c,d] of [[xMin,zMin,xMax,zMin],[xMax,zMin,xMax,zMax],[xMax,zMax,xMin,zMax],[xMin,zMax,xMin,zMin]]){
+  const alongX=Math.abs(c-a)>Math.abs(d-b);
+  const padX=alongX?0:edge,padZ=alongX?edge:0;
+  quad(pathPos,pathCols,[a-padX,-.042,b-padZ],[c-padX,-.042,d-padZ],
+   [c+padX,-.042,d+padZ],[a+padX,-.042,b+padZ],'#c1b395');
+ }
  // Stone and dirt track: gently follows ground level around the buildings.
  for(const [ax,az,bx,bz] of [[-18,10,-27,43],[-18,23,4,43],[33,31,10,36]]){
   const pa=[ax,height(ax,az)+.017,az],pb=[bx,height(bx,bz)+.017,bz];
@@ -226,7 +234,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false} = {}) {
  group.userData.kunlum={plot:[40,50],buildable:[20,20],gridStep:.25,
   monument:'Abay-Kala',monumentApproximate:[6,6,16],historicalAccuracy:'interpretative'};
  return {group,dispose(){
-  group.traverse(o=>{if(o.geometry)o.geometry.dispose();});
+  group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.geometry)o.geometry.dispose();});
   for(const m of made)m.dispose();
   scene.remove(group);
  }};
