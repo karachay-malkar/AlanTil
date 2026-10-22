@@ -36,25 +36,41 @@ try{
     socket.addEventListener('error',()=>reject(new Error('CDP connection failed')),{once:true});
   });
   const settings={interface_language_code:'ru',translation_language_code:'ru',alan_script_code:'cyrillic',alan_dialect_code:'canonical',text_size_code:'medium',learning_setup_completed_at:'2026-10-21T00:00:00.000Z'};
+  // A tab can transiently navigate through about:blank while Chrome applies
+  // the service worker. Only seed once the document has a valid app origin.
   const expression=`(() => {
-    localStorage.setItem('alantil_scope_v1:guest:settings', ${JSON.stringify(JSON.stringify(settings))});
-    localStorage.setItem('alantil_scope_v1:guest:guide.state','{"general_completed":true,"learning_completed":true}');
-    // A returning visitor has already dismissed story introductions.
-    localStorage.setItem('alantil_scope_v1:guest:route.story-intro-seen',JSON.stringify({oblivion:true,understanding:true,roots:true,ascent:true,pathways:true}));
-    return localStorage.getItem('alantil_scope_v1:guest:settings');
+    try {
+      if(location.origin!=='http://127.0.0.1:4173')return 'pending-origin';
+      localStorage.setItem('alantil_scope_v1:guest:settings', ${JSON.stringify(JSON.stringify(settings))});
+      localStorage.setItem('alantil_scope_v1:guest:guide.state','{"general_completed":true,"learning_completed":true}');
+      localStorage.setItem('alantil_scope_v1:guest:route.story-intro-seen',JSON.stringify({oblivion:true,understanding:true,roots:true,ascent:true,pathways:true}));
+      return localStorage.getItem('alantil_scope_v1:guest:settings');
+    } catch(error) {
+      return 'pending-storage-'+String(error?.name||'unknown');
+    }
   })()`;
-  const requestId=42;
-  const result=new Promise((resolve,reject)=>{
-    socket.addEventListener('message',event=>{
-      let reply;try{reply=JSON.parse(event.data);}catch{return;}
-      if(reply.id!==requestId)return;
-      if(reply.error||reply.result?.exceptionDetails)reject(new Error(JSON.stringify(reply.error||reply.result.exceptionDetails)));
-      else resolve(reply.result?.result?.value);
+  async function evaluate(id) {
+    return await new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>{socket.removeEventListener('message',onMessage);reject(new Error('CDP response timeout'));},1200);
+      function onMessage(event){
+        let reply;try{reply=JSON.parse(event.data);}catch{return;}
+        if(reply.id!==id)return;
+        socket.removeEventListener('message',onMessage);
+        clearTimeout(timer);
+        if(reply.error||reply.result?.exceptionDetails)reject(new Error(JSON.stringify(reply.error||reply.result.exceptionDetails)));
+        else resolve(reply.result?.result?.value);
+      }
+      socket.addEventListener('message',onMessage);
+      socket.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression,returnByValue:true}}));
     });
-  });
-  socket.send(JSON.stringify({id:requestId,method:'Runtime.evaluate',params:{expression,returnByValue:true}}));
-  const value=await Promise.race([result,new Promise((_,reject)=>setTimeout(()=>reject(new Error('CDP seeding timeout')),6000))]);
-  if(!String(value||'').includes('learning_setup_completed_at'))throw new Error('Storage fixture did not persist');
+  }
+  let value='';
+  for(let attempt=0;attempt<80;attempt++){
+    try{value=await evaluate(42+attempt);}catch{value='pending-runtime';}
+    if(String(value).includes('learning_setup_completed_at'))break;
+    await sleep(150);
+  }
+  if(!String(value).includes('learning_setup_completed_at'))throw new Error('Storage fixture did not persist: '+String(value));
   console.log('Prepared isolated completed-setup profile');
 }finally{
   try{socket?.close();}catch{}
