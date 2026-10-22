@@ -1,0 +1,86 @@
+name: AlanTil 17.2.3 vetted visible-first release
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/17-2-vetted-visible-first-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verified-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare tested image loading change and coherent 17.2.3 version
+        run: |
+          set -euo pipefail
+          node --check scripts/qa/prepare-visible-first-release.mjs
+          node scripts/qa/prepare-visible-first-release.mjs
+          node scripts/release/sync-version.mjs
+          node scripts/release/sync-version.mjs --check
+          for file in src/features/path/feature.js scripts/qa/verify-path-metadata-browser.mjs \
+                      src/data/path-set-metadata.js src/app/bootstrap.js src/app/router.js \
+                      service-worker.js scripts/release/sync-version.mjs; do node --check "$file"; done
+          node --test tests/path-visible-first-17-2.test.mjs tests/path-bundled-set-metadata-17-2.test.mjs
+      - name: Verify dictionary parity, routes, sessions, favorites and core regressions
+        run: |
+          set -euo pipefail
+          node scripts/assets/build-path-index.mjs
+          git diff --exit-code -- src/data/path-route-index.json src/data/path-route-index.json.gz
+          node --test \
+            tests/performance-17-2.test.mjs \
+            tests/site-speed-17-2.test.mjs \
+            tests/release-version-17-2.test.mjs \
+            tests/path-lazy-17-2.test.mjs \
+            tests/path-metadata-hydration-17-2.test.mjs \
+            tests/path-bundled-set-metadata-17-2.test.mjs \
+            tests/path-visible-first-17-2.test.mjs \
+            tests/path-index-preload-17-2.test.mjs \
+            tests/profile-avatar-removal-16-7.test.mjs \
+            tests/storage-profile-analytics-16-8.test.mjs \
+            mobile/tests/architecture.test.mjs
+          git diff --check
+      - name: Real Chrome visible icons, all 26 scrolled stages, navigation and Service Worker
+        run: |
+          set -euo pipefail
+          mkdir -p perf-results
+          node scripts/static-preview-server.mjs > perf-results/17-2-3-preview-server.log 2>&1 &
+          for attempt in {1..45}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/verify-path-metadata-browser.mjs
+      - name: Commit only complete tested code to 17.2
+        run: |
+          set -euo pipefail
+          git add index.html release.json mobile/app.json mobile/package.json \
+            packages/alantil-core/release.js src/app/bootstrap.js src/app/router.js \
+            src/config/analytics.js src/features/settings/version.js \
+            src/features/path/feature.js src/features/path/story-stele.js \
+            src/data/path-set-metadata.js service-worker.js \
+            scripts/release/sync-version.mjs scripts/qa/verify-path-metadata-browser.mjs \
+            tests/path-visible-first-17-2.test.mjs
+          git diff --cached --check
+          git diff --cached --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "perf(path): load visible stage icons first with cache-safe AlanTil 17.2.3"
+          git push origin HEAD:17.2
+      - name: Archive release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-3-vetted-visible-first
+          path: perf-results/
+          retention-days: 21
