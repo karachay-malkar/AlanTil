@@ -1,6 +1,7 @@
 /** Single approved authored masonry scene; no legacy mesh generation or manifest. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
+import {createKunlumEnvironment} from './kunlum-environment.js?v=17.2.6';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
@@ -27,24 +28,22 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const stoneMaterial=await getRockSurface(renderer);
  container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
  renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';container.append(renderer.domElement);
- const scene=new THREE.Scene();scene.background=new THREE.Color('#b5cabd');scene.fog=new THREE.Fog('#b5cabd',37,105);
- const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,170);
- camera.position.set(11.6,5.1,12.2);
- const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(7.5,.5,7.5);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=52;controls.maxPolarAngle=Math.PI*.48;controls.update();
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',120,355);
+ const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,450);
+ camera.position.set(16.8,7,17.2);
+ const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(10,.5,10);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=72;controls.maxPolarAngle=Math.PI*.48;controls.update();
  scene.add(new THREE.HemisphereLight('#f0f6ff','#766950',2.0));
  const sunlight=new THREE.DirectionalLight('#fff3df',3);sunlight.position.set(-10,20,13);scene.add(sunlight);
  const surface=new THREE.Group();scene.add(surface);
  // Existing open landscape remains independent of the construction engine.
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(15,15),new THREE.MeshStandardMaterial({color:'#91b277',roughness:1}));
- floor.rotation.x=-Math.PI/2;floor.position.set(7.5,-.006,7.5);floor.receiveShadow=true;scene.add(floor);
- for(let ridge=0;ridge<3;ridge++){
-  const vertices=[],faces=[];
-  for(let i=0;i<32;i++){const x=-55+i*4,height=5+hash(i+ridge*71)*11+ridge*4;vertices.push(x,-.3,-22-ridge*14,x,height,-22-ridge*14);if(i<31){const j=i*2;faces.push(j,j+1,j+2,j+1,j+3,j+2);}}
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setIndex(faces);geometry.computeVertexNormals();
-  scene.add(new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:['#718275','#91a497','#a4b8ad'][ridge],roughness:1,side:THREE.DoubleSide})));
- }
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:'#91b277',roughness:1}));
+ floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);floor.receiveShadow=true;scene.add(floor);
+ // Kunlum landscape stays independent from prefab placement and saved state.
+ let kunlum=null;
+ try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches}); }
+ catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
- const grid=new THREE.GridHelper(15,60,'#d9ead7','#879e84');grid.position.set(7.5,.008,7.5);
+ const grid=new THREE.GridHelper(20,80,'#d9ead7','#879e84');grid.position.set(7.5,.008,7.5);
  grid.material.transparent=true;grid.material.opacity=.28;grid.visible=false;scene.add(grid);
  const faceGrid=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:'#bcefc0',transparent:true,opacity:.67,depthTest:false}));
  scene.add(faceGrid);faceGrid.visible=false;
@@ -231,7 +230,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();});observer.observe(container);
- function fit(){if(!blocks.length){controls.target.set(7.5,.5,7.5);camera.position.set(11.6,5.1,12.2);}else{
+ function fit(){if(!blocks.length){controls.target.set(10,.5,10);camera.position.set(16.8,7,17.2);}else{
   const bounds=new THREE.Box3();for(const b of blocks){const box=prefabBounds(b);bounds.expandByPoint(new THREE.Vector3(...box.min.map(v=>v*CELL)));bounds.expandByPoint(new THREE.Vector3(...box.max.map(v=>v*CELL)));}
   const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());controls.target.copy(center);
   const distance=Math.max(2.8,Math.max(size.x,size.y,size.z)*3);camera.position.copy(center).add(new THREE.Vector3(distance*.83,distance*.58,distance));}
@@ -248,6 +247,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;},home:fit,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();},
   pickAt:findHit,
-  dispose(){disposed=true;previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});renderer.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}
  };
 }
