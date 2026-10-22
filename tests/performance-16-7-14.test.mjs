@@ -12,6 +12,7 @@ test("global CSS declares cascade order and excludes route-specific path and pro
  const path=await read("src/shared/styles/feature/path.css");
  for(const part of ["path.css","story-stele.css","story-word-list.css","path-navigation.css"])assert.ok(path.includes("/"+part+"?"),part);
  for(const selector of [".pathStickyControls",".storyTabs",".stationNode",".stationMeta",".pathView"])assert.ok(path.includes(selector),selector);
+ assert.match(path, /@import url\("\.\.\/\.\.\/\.\.\/features\/path\/path\.css/);
  assert.match(path, /@import url\("\.\/learning-guide\.css\?v=16\.7\.14"\);/);
 });
 test("shared profile navigation and learning guide styles load for all consumers",async()=>{

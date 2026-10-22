@@ -11,7 +11,7 @@ const scenarios=[
 const fmtMs=value=>Number.isFinite(value)?(value/1000).toFixed(2)+' s':'—';
 const fmtKb=value=>Number.isFinite(value)?(value/1024).toFixed(0)+' KB':'—';
 const rows=[],details=[];
-let missing=0,routeMismatch=0;
+let missing=0,routeMismatch=0,httpErrors=0;
 for(const scenario of scenarios){
  let lhr;
  try{lhr=JSON.parse(await readFile('perf-results/'+scenario.file+'.report.json','utf8'));}
@@ -25,6 +25,7 @@ for(const scenario of scenarios){
  const transfer=requests.reduce((total,item)=>total+(Number(item.transferSize)||0),0);
  const failed=requests.filter(item=>Number(item.statusCode)>=400);
  const errors=lhr.audits?.['errors-in-console']?.details?.items||[];
+ httpErrors+=failed.length+errors.length;
  const observed=requests.some(item=>String(item.url||'').includes(scenario.expect));
  if(!observed){
   routeMismatch++;
@@ -57,4 +58,4 @@ const report=[
 await mkdir('perf-results',{recursive:true});
 await writeFile('perf-results/SUMMARY.md',report,'utf8');
 console.log(report);
-if(missing||routeMismatch)process.exitCode=1;
+if(missing||routeMismatch||httpErrors)process.exitCode=1;
