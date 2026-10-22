@@ -26,24 +26,24 @@ jobs:
           git fetch --no-tags --depth=1 origin 184788115dc4750649698144550d7363eeacec80
           git worktree add --detach "$RUNNER_TEMP/alantil-before" 184788115dc4750649698144550d7363eeacec80
           node --check scripts/qa/summarize-path-performance.mjs
-      - name: Measure five mobile Lighthouse runs per revision
+      - name: Measure five interleaved mobile Lighthouse pairs
         run: |
           set -euo pipefail
           export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
           mkdir -p compare-results/{before,after}
-          for rev in before after; do
-            if [ "$rev" = before ]; then dir="$RUNNER_TEMP/alantil-before"; else dir="$GITHUB_WORKSPACE"; fi
-            pushd "$dir"
-            node scripts/static-preview-server.mjs > "$GITHUB_WORKSPACE/compare-results/$rev/server.log" 2>&1 &
-            server_pid=$!
-            popd
-            ready=0
-            for a in {1..40}; do
-              if curl -fsSL http://127.0.0.1:4173/ >/dev/null 2>&1; then ready=1; break; fi
-              sleep 1
-            done
-            if [ "$ready" -ne 1 ]; then cat "compare-results/$rev/server.log"; exit 1; fi
-            for i in 1 2 3 4 5; do
+          for i in 1 2 3 4 5; do
+            if [ "$((i % 2))" -eq 0 ]; then revisions=(after before); else revisions=(before after); fi
+            for rev in "${revisions[@]}"; do
+              if [ "$rev" = before ]; then dir="$RUNNER_TEMP/alantil-before"; else dir="$GITHUB_WORKSPACE"; fi
+              (cd "$dir" && exec node scripts/static-preview-server.mjs) > "compare-results/$rev/server.log" 2>&1 &
+              server_pid=$!
+              ready=0
+              for attempt in {1..40}; do
+                if ! kill -0 "$server_pid" 2>/dev/null; then break; fi
+                if curl -fsSL http://127.0.0.1:4173/ > /dev/null 2>&1; then ready=1; break; fi
+                sleep 1
+              done
+              if [ "$ready" -ne 1 ]; then cat "compare-results/$rev/server.log"; exit 1; fi
               suffix="$(printf '%02d' "$i")"
               success=0
               for attempt in 1 2 3; do
@@ -60,10 +60,14 @@ jobs:
                 rm -rf "$profile"
                 sleep 2
               done
+              kill "$server_pid" 2>/dev/null || true
+              wait "$server_pid" 2>/dev/null || true
+              for attempt in {1..20}; do
+                if ! curl -fsSL http://127.0.0.1:4173/ > /dev/null 2>&1; then break; fi
+                sleep 0.2
+              done
               if [ "$success" -ne 1 ]; then echo "Lighthouse failed: $rev run $i"; exit 1; fi
             done
-            kill "$server_pid" || true
-            sleep 2
           done
       - name: Validate images and compare medians
         run: |
