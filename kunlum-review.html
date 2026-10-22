@@ -37,6 +37,7 @@ function home(){camera.position.set(38,29,66);controls.target.set(10,2,10);contr
 home();
 const started=performance.now();
 const env=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches});
+const buildDuration=Math.round(performance.now()-started);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshLambertMaterial({color:'#9a9b77'}));
 floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);scene.add(floor);
 const grid=new THREE.GridHelper(20,80,0xd4cab0,0xd1c2a0);grid.position.set(10,.007,10);grid.visible=false;scene.add(grid);
@@ -46,7 +47,7 @@ const stats=document.getElementById('stats');
 let frames=0,t=performance.now();
 function draw(now){
  requestAnimationFrame(draw);controls.update();renderer.render(scene,camera);frames++;
- if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Сцена создана за '+Math.round(performance.now()-started)+' мс (включая работу страницы)';frames=0;t=now;}
+ if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Сцена создана за '+buildDuration+' мс (без загрузки модулей)';frames=0;t=now;}
 }
 requestAnimationFrame(draw);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
