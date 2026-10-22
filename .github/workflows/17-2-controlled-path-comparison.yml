@@ -48,7 +48,7 @@ jobs:
               success=0
               for attempt in 1 2 3; do
                 profile="$(mktemp -d /tmp/alantil-lh-comparison-XXXXXX)"
-                node "$dir/scripts/qa/seed-lighthouse-profile.mjs" "$profile"
+                ALANTIL_SEED_STORAGE_ONLY=1 node "$GITHUB_WORKSPACE/scripts/qa/seed-lighthouse-profile.mjs" "$profile"
                 if npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/path/oblivion" \
                   --only-categories=performance --disable-storage-reset \
                   --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --user-data-dir=$profile" \
@@ -69,8 +69,21 @@ jobs:
               if [ "$success" -ne 1 ]; then echo "Lighthouse failed: $rev run $i"; exit 1; fi
             done
           done
-      - name: Validate images and compare medians
+      - name: Validate equal cold image transfer and compare medians
         run: |
+          node - <<'NODE'
+          const {readFileSync}=require('node:fs');
+          for(const revision of ['before','after']){
+            for(let i=1;i<=5;i++){
+              const path='compare-results/'+revision+'/'+String(i).padStart(2,'0')+'.json';
+              const json=JSON.parse(readFileSync(path,'utf8'));
+              const images=(json.audits['network-requests'].details.items||[]).filter(x=>x.url.includes('/assets/icons/sets/'));
+              const bytes=images.reduce((sum,x)=>sum+(x.transferSize||0),0);
+              console.log('COLD CACHE:',revision,i,'image transfers:',images.length,'bytes:',bytes);
+              if(images.length!==26||bytes<2500000)throw Error('Benchmark cache state was not cold: '+path);
+            }
+          }
+          NODE
           node scripts/qa/summarize-path-performance.mjs compare-results
           cat compare-results/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
       - name: Upload evidence
