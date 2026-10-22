@@ -61,6 +61,7 @@ jobs:
             tests/site-speed-17-2.test.mjs \
             tests/release-version-17-2.test.mjs \
             tests/path-lazy-17-2.test.mjs \
+            tests/path-metadata-hydration-17-2.test.mjs \
             tests/path-index-preload-17-2.test.mjs \
             tests/profile-avatar-removal-16-7.test.mjs \
             tests/storage-profile-analytics-16-8.test.mjs \
