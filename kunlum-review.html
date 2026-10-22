@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Кюнлюм — обзор 3D-сцены AlanTil 17.2.6</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:#a9becd;color:#fff}
+#view{width:100%;height:100%;touch-action:none}
+.panel{position:absolute;top:12px;left:12px;max-width:340px;background:#182526d9;border:1px solid #ffffff30;border-radius:12px;padding:12px 15px;z-index:4}
+.panel strong{display:block;font-size:17px;line-height:1.3}.panel p{font-size:12px;line-height:1.5;margin:6px 0;color:#e2e8dc}
+button{border:1px solid #ffffff55;border-radius:7px;background:#3d564a;color:#fff;padding:8px 11px;cursor:pointer}
+#stats{font-size:11px;opacity:.9;margin-top:6px}
+@media(max-width:500px){.panel{top:8px;left:8px;right:8px;max-width:none;padding:8px 12px}.panel strong{font-size:14px}.panel p{margin:3px 0}.panel button{padding:6px 10px}}
+</style></head><body><div id="view" aria-label="3D-сцена исторического Кюнлюма"></div>
+<div class="panel">
+<strong>Кюнлюм · Абай-къала</strong>
+<p>Вращайте сцену пальцем или мышью. Поле 20×20 м находится внутри общего резерва 40×50 м. Постройки и горы — декоративные 3D-модели.</p>
+<button id="home">Общий вид</button> <button id="grid">Показать сетку</button>
+<div id="stats">Загрузка сцены...</div>
+</div>
+<script type="module">
+import * as THREE from './src/vendor/three/three.module.js';
+import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
+import {createKunlumEnvironment} from './src/features/tower/kunlum-environment.js?v=17.2.6';
+const host=document.getElementById('view');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+host.append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');
+scene.fog=new THREE.Fog('#b3c9d9',120,355);
+scene.add(new THREE.HemisphereLight('#fff8eb','#726b52',2));
+const sun=new THREE.DirectionalLight('#fff2dd',2.7);sun.position.set(-24,40,35);scene.add(sun);
+const camera=new THREE.PerspectiveCamera(51,innerWidth/innerHeight,.15,450);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.09;
+controls.target.set(10,2,10);controls.minDistance=7;controls.maxDistance=140;controls.maxPolarAngle=Math.PI*.495;
+function home(){camera.position.set(38,29,66);controls.target.set(10,2,10);controls.update();}
+home();
+const started=performance.now();
+const env=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshLambertMaterial({color:'#9a9b77'}));
+floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);scene.add(floor);
+const grid=new THREE.GridHelper(20,80,0xd4cab0,0xd1c2a0);grid.position.set(10,.007,10);grid.visible=false;scene.add(grid);
+document.getElementById('home').onclick=home;
+document.getElementById('grid').onclick=()=>{grid.visible=!grid.visible;document.getElementById('grid').textContent=grid.visible?'Скрыть сетку':'Показать сетку';};
+const stats=document.getElementById('stats');
+let frames=0,t=performance.now();
+function draw(now){
+ requestAnimationFrame(draw);controls.update();renderer.render(scene,camera);frames++;
+ if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Сцена создана за '+Math.round(performance.now()-started)+' мс (включая работу страницы)';frames=0;t=now;}
+}
+requestAnimationFrame(draw);
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script></body></html>
