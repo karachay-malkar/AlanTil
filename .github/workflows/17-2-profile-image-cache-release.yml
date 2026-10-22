@@ -5,6 +5,7 @@ on:
     branches: ['17.2']
     paths:
       - '.github/workflows/17-2-profile-image-cache-release.yml'
+      - 'scripts/qa/prepare-profile-and-image-cache-17-2-4.mjs'
   workflow_dispatch:
 
 permissions:
