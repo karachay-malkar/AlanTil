@@ -1,3 +1,5 @@
+@layer reset, theme, base, shell, components, features, utilities, typography;
+
 @import url("./reset.css?v=13.9.0") layer(reset);
 @import url("./shared-visual-tokens.css?v=16.6.6") layer(theme);
 @import url("./theme.css?v=13.15.12") layer(theme);
@@ -7,52 +9,8 @@
 @import url("./segmented-control.css?v=13.10.9") layer(components);
 @import url("./guest-profile-prompt.css?v=13.10.2") layer(components);
 @import url("./privacy.css?v=13.9.0") layer(components);
-@import url("../../features/path/path.css?v=13.15.11") layer(features);
-@import url("../../features/path/story-word-list.css?v=13.15.12.1") layer(features);
-@import url("../../features/path/story-stele.css?v=13.15.7") layer(features);
-@import url("../../features/path/path-navigation.css?v=13.15") layer(features);
 @import url("./paper-components.css?v=13.10.12") layer(utilities);
 @import url("./chrome.css?v=13.15.10.3") layer(utilities);
 @import url("./utilities.css?v=13.9.0") layer(utilities);
 @import url("./table-system.css?v=13.15.12.6") layer(utilities);
 @import url("./typography.css?v=13.15.12") layer(typography);
-
-@layer features {
-  .pathStickyControls{padding:0 0 2px!important}
-  .storyTabs{width:100%;min-width:0;padding:0;scroll-padding-inline:8px}
-  .storyTab:first-child{margin-left:8px}
-  .storyTab:last-child{margin-right:8px}
-}
-
-.pathView{--route-wave-amplitude:clamp(64px,22vw,90px)}
-html[data-text-size="small"] .pathView{--route-station-gap:58px;--route-station-meta-reserve:48px}
-html[data-text-size="medium"] .pathView{--route-station-gap:58px;--route-station-meta-reserve:52px}
-html[data-text-size="large"] .pathView{--route-station-gap:72px;--route-station-meta-reserve:66px}
-.pathView .routeCatalogGroups{padding-bottom:64px}
-.pathView .routeSectionStations{padding-bottom:var(--route-station-meta-reserve,52px)}
-.stationWordCount{top:84px}
-
-.stationMeta{position:absolute;left:50%;top:65px;transform:translateX(-50%);width:150px;display:grid;justify-items:center;gap:3px;text-align:center;pointer-events:none}
-.stationMeta .stationLabel{position:static;left:auto;top:auto;transform:none;width:100%;max-height:none;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;overflow-wrap:anywhere;line-height:1.15}
-.stationMeta .stationWordCount{position:static;left:auto;top:auto;transform:none;white-space:nowrap;line-height:1}
-
-.stationNode[data-route-step="1"]{--station-shift:calc(0px - var(--route-wave-amplitude))}
-.stationNode[data-route-step="2"]{--station-shift:0px}
-.stationNode[data-route-step="3"]{--station-shift:var(--route-wave-amplitude)}
-.stationNode[data-route-step="4"]{--station-shift:0px}
-
-/* Profile sections use the same horizontal overflow contract as story tabs. */
-.profilePrimaryNav{
-  width:auto;min-width:0;display:grid;grid-template-columns:none;
-  grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);align-items:center;gap:3px;
-  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
-  scrollbar-width:none;-webkit-overflow-scrolling:touch;
-}
-.profilePrimaryNav::-webkit-scrollbar{display:none}
-.profilePrimaryTab{min-width:0;padding:1px 4px;white-space:nowrap;scroll-snap-align:center}
-
-.appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger{
-  position:fixed;z-index:calc(var(--z-header) + 2);left:auto;right:10px;top:auto;
-  bottom:max(12px,calc(var(--safe-bottom) + 10px));transform:none;
-}
-.appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger:active{transform:translateY(1px) scale(.97)}

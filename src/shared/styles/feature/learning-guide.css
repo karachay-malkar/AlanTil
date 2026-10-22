@@ -1,0 +1,5 @@
+.appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger{
+  position:fixed;z-index:calc(var(--z-header) + 2);left:auto;right:10px;top:auto;
+  bottom:max(12px,calc(var(--safe-bottom) + 10px));transform:none;
+}
+.appShell .learnSession .alantilGuideTrigger.isLearningGuideTrigger:active{transform:translateY(1px) scale(.97)}

@@ -33,7 +33,7 @@ test("16.7.12 keeps heavy feature CSS off the initial stylesheet", async () => {
 test("16.7.12 uses versioned cache-first static responses and lazy stele art", async () => {
   const worker = await read("service-worker.js");
   const stele = await read("src/features/path/story-stele.js");
-  assert.match(worker, /16\.7\.13-on-demand-path/);
+  assert.match(worker, /16\.7\.14-route-css-cache/);
   assert.match(worker, /if \(cached\) return cached/);
   assert.doesNotMatch(worker, /\/assets\/path\/story-stele\.webp\?v=13\.15\.6/);
   assert.match(stele, /data-src="\$\{ASSET_URL\}"/);

@@ -34,7 +34,9 @@ test("progress scope initializes before router navigation; feature styles stay r
   assert.ok(bootstrap.indexOf("await initializeProgressSystem();") < bootstrap.indexOf("await router.start();"));
   assert.match(router, /ensureFeatureStyle\(feature\)/);
   assert.match(router, /FEATURE_STYLE_PATHS/);
-  assert.match(css, /features\/path\/path\.css/);
+  assert.doesNotMatch(css, /features\/path\/path\.css/);
+  const pathStyles = await read("src/shared/styles/feature/path.css");
+  assert.match(pathStyles, /features\/path\/path\.css/);
   assert.doesNotMatch(css, /features\/(?:profile|admin|masonry|ashyk)\//);
 });
 

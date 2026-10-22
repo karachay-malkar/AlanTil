@@ -88,11 +88,11 @@ test("current release preserves lazy story stele artwork and cache coherence", a
   const appCss = await read("src/shared/styles/app.css");
   const worker = await read("service-worker.js");
   const stele = await read("src/features/path/story-stele.js");
-  assert.match(index, /targetVersion = "16\.7\.13"/);
-  assert.match(index, /bootstrap\.js\?v=16\.7\.13/);
-  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.13"/);
+  assert.match(index, /targetVersion = "16\.7\.14"/);
+  assert.match(index, /bootstrap\.js\?v=16\.7\.14/);
+  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.14"/);
   assert.match(appCss, /story-stele\.css/);
-  assert.match(worker, /VERSION = "16\.7\.13-on-demand-path"/);
+  assert.match(worker, /VERSION = "16\.7\.14-route-css-cache"/);
   assert.doesNotMatch(worker, /story-stele\.webp\?v=13\.15\.6/);
   assert.match(stele, /artwork\.src = artwork\.dataset\.src/);
 });

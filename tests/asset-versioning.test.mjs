@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
-const SINGLETON_URL_VERSION = "16.7.13";
+const SINGLETON_URL_VERSION = "16.7.14";
 
 async function javascriptFiles(directory) {
   const output = [];
@@ -71,19 +71,19 @@ function generatedImportMapFrom(index) {
   return { imports, paths, versions, targetVersion };
 }
 
-test("16.7.13 is the published Web app and cache release", async () => {
+test("16.7.14 is the published Web app and cache release", async () => {
   const index = await read("index.html");
   const analytics = await read("src/config/analytics.js");
   const versionScreen = await read("src/features/settings/version.js");
   const bootstrap = await read("src/app/bootstrap.js");
   const worker = await read("service-worker.js");
   const wordsConfig = await read("src/config/words.js");
-  assert.match(index, /app\.css\?v=16\.7\.12/);
-  assert.match(index, /bootstrap\.js\?v=16\.7\.13/);
+  assert.match(index, /app\.css\?v=16\.7\.14/);
+  assert.match(index, /bootstrap\.js\?v=16\.7\.14/);
   assert.match(analytics, /appVersion = "13\.15\.9"/);
-  assert.match(versionScreen, /<dd>16\.7\.13<\/dd>/);
-  assert.match(worker, /const VERSION = "16\.7\.13-on-demand-path"/);
-  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.13"/);
+  assert.match(versionScreen, /<dd>16\.7\.14<\/dd>/);
+  assert.match(worker, /const VERSION = "16\.7\.14-route-css-cache"/);
+  assert.match(bootstrap, /RELEASE_VERSION = "16\.7\.14"/);
   assert.match(wordsConfig, /DICTIONARY_CACHE_KEY/);
   assert.match(wordsConfig, /LEGACY_DICTIONARY_CACHE_KEYS/);
 });
@@ -125,7 +125,7 @@ test("profile is independent of removed avatar files", async () => {
   await assert.rejects(readFile(new URL("../assets/images/profile/avatar_female.png", import.meta.url)));
 });
 
-test("historical singleton URLs canonicalize to one 16.7.13 in-memory instance", async () => {
+test("historical singleton URLs canonicalize to one 16.7.14 in-memory instance", async () => {
   const index = await read("index.html");
   const generated = generatedImportMapFrom(index);
   const importMap = generated.imports;

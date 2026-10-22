@@ -7,8 +7,8 @@ export function renderVersion(context) {
     title: msg("about.versiya_prilozheniya"),
     body: `
       <dl class="settingsFacts">
-        <div><dt>${msg("about.versiya")}</dt><dd>16.7.13</dd></div>
-        <div><dt>${msg("about.poslednee_obnovlenie")}</dt><dd>21.10.2026</dd></div>
+        <div><dt>${msg("about.versiya")}</dt><dd>16.7.14</dd></div>
+        <div><dt>${msg("about.poslednee_obnovlenie")}</dt><dd>22.10.2026</dd></div>
       </dl>`,
   });
 }

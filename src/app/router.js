@@ -5,7 +5,7 @@ import { initializeAuth } from "../shared/auth/auth-service.js?v=13.10.12";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=13.15.9";
 
 const DEFAULT_STORY = "oblivion";
-const RELEASE_VERSION = "16.7.13";
+const RELEASE_VERSION = "16.7.14";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   masonry: "../features/masonry/index.js",
@@ -23,6 +23,7 @@ const FEATURE_PATHS = Object.freeze({
 });
 
 const FEATURE_STYLE_PATHS = Object.freeze({
+  path: "/src/shared/styles/feature/path.css?v=16.7.14",
   practice: "/src/shared/styles/feature/practice.css?v=16.7.9",
   masonry: "/src/shared/styles/feature/masonry.css?v=16.7.9",
   ashyk: "/src/shared/styles/feature/ashyk.css?v=16.7.9",

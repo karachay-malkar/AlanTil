@@ -1,11 +1,11 @@
-const VERSION = "16.7.13-on-demand-path";
+const VERSION = "16.7.14-route-css-cache";
 const SHELL_CACHE = `alantil-shell-${VERSION}`;
 const RUNTIME_CACHE = `alantil-runtime-${VERSION}`;
 const CORE_ASSETS = [
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=16.7.13",
-  "/src/shared/styles/app.css?v=16.7.12",
+  "/src/app/bootstrap.js?v=16.7.14",
+  "/src/shared/styles/app.css?v=16.7.14",
   "/src/data/starter-dictionary.js?v=13.10.2",
   "/assets/icons/ui/path-elbrus-white.png?v=13.15.10.1",
 ];

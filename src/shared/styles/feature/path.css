@@ -1,0 +1,29 @@
+@import url("../../features/path/path.css?v=13.15.11") layer(features);
+@import url("../../features/path/story-word-list.css?v=13.15.12.1") layer(features);
+@import url("../../features/path/story-stele.css?v=13.15.7") layer(features);
+@import url("../../features/path/path-navigation.css?v=13.15") layer(features);
+@import url("./learning-guide.css?v=16.7.14");
+
+@layer features {
+  .pathStickyControls{padding:0 0 2px!important}
+  .storyTabs{width:100%;min-width:0;padding:0;scroll-padding-inline:8px}
+  .storyTab:first-child{margin-left:8px}
+  .storyTab:last-child{margin-right:8px}
+}
+
+.pathView{--route-wave-amplitude:clamp(64px,22vw,90px)}
+html[data-text-size="small"] .pathView{--route-station-gap:58px;--route-station-meta-reserve:48px}
+html[data-text-size="medium"] .pathView{--route-station-gap:58px;--route-station-meta-reserve:52px}
+html[data-text-size="large"] .pathView{--route-station-gap:72px;--route-station-meta-reserve:66px}
+.pathView .routeCatalogGroups{padding-bottom:64px}
+.pathView .routeSectionStations{padding-bottom:var(--route-station-meta-reserve,52px)}
+.stationWordCount{top:84px}
+
+.stationMeta{position:absolute;left:50%;top:65px;transform:translateX(-50%);width:150px;display:grid;justify-items:center;gap:3px;text-align:center;pointer-events:none}
+.stationMeta .stationLabel{position:static;left:auto;top:auto;transform:none;width:100%;max-height:none;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;overflow-wrap:anywhere;line-height:1.15}
+.stationMeta .stationWordCount{position:static;left:auto;top:auto;transform:none;white-space:nowrap;line-height:1}
+
+.stationNode[data-route-step="1"]{--station-shift:calc(0px - var(--route-wave-amplitude))}
+.stationNode[data-route-step="2"]{--station-shift:0px}
+.stationNode[data-route-step="3"]{--station-shift:var(--route-wave-amplitude)}
+.stationNode[data-route-step="4"]{--station-shift:0px}
