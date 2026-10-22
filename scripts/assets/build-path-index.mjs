@@ -1,6 +1,7 @@
 // Rebuild a compact, read-only path map from the exact shipped dictionary.
 // The full dictionary remains authoritative for study, tests and word lists.
 import {readFile,writeFile} from 'node:fs/promises';
+import {gzipSync,constants as zlibConstants} from 'node:zlib';
 import {normalizeSupabaseWordEntry} from '../../src/shared/domain/word-structure-compat.js';
 import {getDisplayedWordCollection} from '../../packages/alantil-core/alan-display.js';
 import {buildLearningRoute} from '../../packages/alantil-core/learning-route.js';
@@ -56,4 +57,7 @@ for(const language of ['ru','en','tr']){
 const json=JSON.stringify({version:snapshot.version,word_count:minimal.length,words:minimal})+'\n';
 if(json.length>= (await readFile(source,'utf8')).length)throw new Error('Route index did not reduce the dictionary transfer size');
 await writeFile(destination,json);
-console.log('Route index: '+minimal.length+' words / '+stationKeys.size+' stations / '+Buffer.byteLength(json)+' bytes; all language parity checks passed');
+const gzipped=gzipSync(Buffer.from(json),{level:9,strategy:zlibConstants.Z_DEFAULT_STRATEGY});
+if(gzipped.length >= Buffer.byteLength(json)*0.6)throw new Error('Compressed route index unexpectedly large');
+await writeFile(new URL('../../src/data/path-route-index.json.gz',import.meta.url),gzipped);
+console.log('Route index: '+minimal.length+' words / '+stationKeys.size+' stations / '+Buffer.byteLength(json)+' bytes, gzip '+gzipped.length+' bytes; all language parity checks passed');
