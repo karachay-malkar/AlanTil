@@ -48,7 +48,11 @@ jobs:
               success=0
               for attempt in 1 2 3; do
                 profile="$(mktemp -d /tmp/alantil-lh-comparison-XXXXXX)"
-                ALANTIL_SEED_STORAGE_ONLY=1 node "$GITHUB_WORKSPACE/scripts/qa/seed-lighthouse-profile.mjs" "$profile"
+                if ! ALANTIL_SEED_STORAGE_ONLY=1 node "$GITHUB_WORKSPACE/scripts/qa/seed-lighthouse-profile.mjs" "$profile"; then
+                  rm -rf "$profile"
+                  sleep 2
+                  continue
+                fi
                 if npx --yes lighthouse@12.8.2 "http://127.0.0.1:4173/path/oblivion" \
                   --only-categories=performance --disable-storage-reset \
                   --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --user-data-dir=$profile" \
