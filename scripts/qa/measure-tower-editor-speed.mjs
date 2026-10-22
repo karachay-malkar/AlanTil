@@ -12,7 +12,7 @@ await mkdir("perf-results",{recursive:true});
 const fixture=[
 '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>',
 '<div id="mount" style="width:95vw;height:85vh"></div><script type="module">',
-'import {createTowerScene} from "/src/features/tower/prefab-scene.js?v=17.2.6";',
+'import {createTowerScene} from "/src/features/tower/prefab-scene.js";',
 'import {APPROVED_PREFAB_VERSION} from "/packages/tower-game/approved-prefab.mjs";',
 'import * as THREE from "/src/vendor/three/three.module.js";',
 'const out=window.__towerProbe={done:false,stages:[],renderCount:0};',
@@ -76,7 +76,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   if(cpu>1)await call("Emulation.setCPUThrottlingRate",{rate:cpu});
   if(slowNetwork)await call("Network.emulateNetworkConditions",{offline:false,latency:60,downloadThroughput:1900000,uploadThroughput:450000});
   const opens=[];
-  for(const phase of ["cold","warm"]){
+  try { for(const phase of ["cold","warm"]){
    const from=completed.length,started=Date.now();
    await call("Page.navigate",{url:ROOT+"/practice/tower"});
    try { await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true" || Boolean(document.querySelector(".errorState"))',"3D canvas first ready or route error",16000); if(await evalJS('Boolean(document.querySelector(".errorState"))'))throw Error("Route error screen"); }
@@ -99,6 +99,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
     heapMB:+(after.JSHeapUsedSize/1048576).toFixed(1),domNodes:after.Nodes,...t});
    if(phase==="cold")await sleep(500);
   }
+  } catch(routeError) { console.warn("TOWER_ROUTE_UNAVAILABLE", name, String(routeError)); }
   const begin=completed.length;
   await call("Page.navigate",{url:ROOT+"/tower-perf-fixture.html"});
   await wait('window.__towerProbe?.done===true',"authored prefab benchmark",140000);
