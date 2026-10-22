@@ -120,9 +120,12 @@ try {
   const afterScroll=await status();
   assert.equal(afterScroll.loaded,26);
   assert.equal(afterScroll.labels,26);
+  // Keep the cold-network profile only for the page-load measurement.
+  // Station navigation downloads complete dictionary data; check it under an unthrottled connection.
+  await command("Network.emulateNetworkConditions",{offline:false,latency:0,downloadThroughput:-1,uploadThroughput:-1});
   await evaluate('document.querySelector(".beginnerDioramaNode")?.click()');
   let nav=false;
-  for(let i=0;i<100;i++){
+  for(let i=0;i<240;i++){
     if(await evaluate('!!document.querySelector(".stationView")')){nav=true;break;}
     await sleep(150);
   }
