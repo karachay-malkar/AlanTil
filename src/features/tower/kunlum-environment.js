@@ -1,241 +1,270 @@
 /**
- * Kunlum lightweight, stylised THREE.js environment.
- * Historic reference: Abaev tower (approximately 6x6x16m), Kunlum, Upper Balkaria.
- * Scene is an interpretation, not a survey-based digital twin.
- * All decorative geometry is excluded from the tower raycast/save/prefab state.
+ * Kunlum hillside environment for AlanTil tower editor.
+ * Historical landmark arrangement is illustrative until a surveyed site-plan is available.
+ * Local +Z is uphill toward Abaev Kala; -Z descends to Cherek and the opposite bank.
+ * Decorative meshes are deliberately not registered in the tower's placement raycaster.
  */
-export function createKunlumEnvironment(THREE, scene, {mobile=false} = {}) {
- const group = new THREE.Group();
- group.name = 'Kunlum / decorative landscape';
+export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
+ const group=new THREE.Group();group.name='Кюнлюм · склон, руины и Черек';
  scene.add(group);
- const made = [];
- const material = (color, vertexColors=false) => {
-  const m = new THREE.MeshLambertMaterial({color,vertexColors,side:THREE.DoubleSide});
-  made.push(m);return m;
- };
- const rng = (()=>{let s=477812;return()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);})();
- const rgb=(a)=>new THREE.Color(a);
- const pos=[],cols=[],roofPos=[],roofColors=[],pathPos=[],pathCols=[];
- function tri(dst,colors,a,b,c,color) {
-  const co=rgb(color);
-  for(const p of [a,b,c]) {dst.push(...p);colors.push(co.r,co.g,co.b);}
+ const ownedMaterials=[], ownedGeometries=[];
+ let disposed=false,backdropTexture=null;
+ const rnd=(()=>{let n=0x4b1a27;return()=>((n=(Math.imul(n,1664525)+1013904223)>>>0)/4294967296);})();
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+ const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+ const rgba=c=>new THREE.Color(c);
+ const colors={wall:['#a89f8a','#b9ad96','#928b7c','#c0b39c','#9c9486','#aba18d'],
+   grass:['#758961','#84916a','#8d9a70','#a1a277','#788766','#b2ac78'],soil:'#968872'};
+ function mat(color,vertexColors=false,other={}) {
+  const m=new THREE.MeshLambertMaterial({color,vertexColors,side:THREE.DoubleSide,...other});
+  ownedMaterials.push(m);return m;
  }
- function quad(dst,colors,a,b,c,d,color) {
-  tri(dst,colors,a,b,c,color);tri(dst,colors,a,c,d,color);
+ const batch={stone:{v:[],c:[]},earth:{v:[],c:[]},water:{v:[],c:[]},path:{v:[],c:[]}};
+ function tri(kind,a,b,c,color){
+  const dst=batch[kind],col=rgba(color);
+  for(const p of [a,b,c]){dst.v.push(...p);dst.c.push(col.r,col.g,col.b);}
  }
- function rect(x0,y0,z0,x1,y1,z1,color) {
+ function quad(kind,a,b,c,d,color){tri(kind,a,b,c,color);tri(kind,a,c,d,color);}
+ function prism(kind,x0,y0,z0,x1,y1,z1,color){
   const a=[x0,y0,z0],b=[x1,y0,z0],c=[x1,y1,z0],d=[x0,y1,z0],
    e=[x0,y0,z1],f=[x1,y0,z1],g=[x1,y1,z1],h=[x0,y1,z1];
-  for(const v of [[a,b,c,d],[f,e,h,g],[e,a,d,h],[b,f,g,c],[d,c,g,h],[e,f,b,a]])
-   quad(pos,cols,...v,color);
+  for(const q of [[a,b,c,d],[f,e,h,g],[e,a,d,h],[b,f,g,c],[d,c,g,h],[e,f,b,a]])quad(kind,...q,color);
  }
- function fillMesh(dst,colors,mat,name){
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(dst,3));
-  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  geo.computeVertexNormals();
-  const mesh=new THREE.Mesh(geo,mat);mesh.name=name;mesh.frustumCulled=true;group.add(mesh);
-  return mesh;
+ function emit(kind,name){
+  const data=batch[kind];if(!data.v.length)return;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(data.v,3));
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(data.c,3));geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo,mat('#ffffff',true));mesh.name=name;
+  // Batches cover distant separate objects; a coarse merged bounding sphere is adequate.
+  group.add(mesh);ownedGeometries.push(geo);
  }
- const stoneTones=['#b4aa91','#a69c87','#c0b59f','#968f81','#c8bba5','#bcb29b','#9c9687'];
- const roofTones=['#464c48','#52544a','#616058'];
- function stone(){return stoneTones[Math.floor(rng()*stoneTones.length)];}
- function height(x,z) {
-  const reserve=Math.max(Math.abs(x-10)-20,Math.abs(z-10)-25,0);
-  const taper=Math.min(1,reserve/38);
-  return -.07 + Math.pow(taper,1.65)*(1.8*Math.sin(x*.077)+1.7*Math.cos(z*.061)+.9*Math.sin((x+z)*.08));
+ function groundY(x,z) {
+  // Central 20 x 20 m playable plot remains flat and aligned with the invisible game grid.
+  // The rest of the 40 x 50 m reserved site is a terrace, still free of permanent buildings.
+  const down=Math.min(0,z),up=Math.max(0,z-20);
+  const side=Math.max(0,Math.abs(x-10)-10);
+  const amplitude=smooth(Math.max(Math.abs(down),up,side)/13);
+  const slope=(down*.29+up*.30);
+  const rough=amplitude*(1.45*Math.sin(x*.105+z*.037)+.9*Math.sin(z*.14-x*.048));
+  // At the foot of the hillside Cherek cuts a low river channel.
+  const channel=-7.2*Math.exp(-Math.pow((z+91)/10,2));
+  const opposite=z<-103?Math.pow(smooth((-103-z)/35),1.45)*(4+(-103-z)*.19):0;
+  return -.085+slope+rough+channel+opposite;
  }
- // Smooth ground covering build area + enough land for surrounding houses.
- const groundGeo = new THREE.PlaneGeometry(320,320,mobile?36:72,mobile?36:72);
+ const groundGeo=new THREE.PlaneGeometry(340,360,mobile?58:112,mobile?58:112);
  groundGeo.rotateX(-Math.PI/2);groundGeo.translate(10,0,10);
- const gp=groundGeo.attributes.position,groundColors=[];
- const grasses=['#899565','#919b69','#a6ab76','#88966c','#b3aa79','#9b9d70'];
- for(let i=0;i<gp.count;i++){
-  const x=gp.getX(i),z=gp.getZ(i);
-  gp.setY(i,height(x,z));
-  const grass=rgb(grasses[Math.floor(rng()*grasses.length)]);
+ const p=groundGeo.getAttribute('position'),groundColors=[];
+ for(let i=0;i<p.count;i++){
+  const x=p.getX(i),z=p.getZ(i);p.setY(i,groundY(x,z));
+  const grass=rgba(colors.grass[Math.floor(rnd()*colors.grass.length)]);
   groundColors.push(grass.r,grass.g,grass.b);
  }
  groundGeo.setAttribute('color',new THREE.Float32BufferAttribute(groundColors,3));groundGeo.computeVertexNormals();
- const ground=new THREE.Mesh(groundGeo,material('#ffffff',true));
- ground.name='Landscape outside buildable 20x20 area';group.add(ground);
- // 360-degree overlapping alpine silhouettes. All are real geometry but very inexpensive.
- for(let tier=0;tier<3;tier++){
-  const g=new THREE.BufferGeometry(),v=[],c=[],segments=120;
-  const radius=160+tier*95,base=-4+tier*8,color=['#6f806e','#819397','#9fb0b5'][tier];
-  const previous=(angle)=> {
-   const a=angle*3.0 + tier*1.7;
-   return base+24+tier*17+11*Math.sin(a*2.1)+8*Math.cos(a*4.3)+4*Math.sin(a*11.7);
-  };
-  for(let j=0;j<segments;j++){
-   const a=j/segments*Math.PI*2,b=(j+1)/segments*Math.PI*2,
-   p=[10+Math.cos(a)*radius,-16,10+Math.sin(a)*radius],
-   q=[10+Math.cos(b)*radius,-16,10+Math.sin(b)*radius],
-   r=[10+Math.cos(a)*radius,previous(a),10+Math.sin(a)*radius],
-   s=[10+Math.cos(b)*radius,previous(b),10+Math.sin(b)*radius];
-   quad(v,c,p,q,s,r,color);
+ ownedGeometries.push(groundGeo);
+ const land=new THREE.Mesh(groundGeo,mat('#ffffff',true));land.name='Terraformed natural hillside';group.add(land);
+
+ // One *image*, not hundreds of high-poly distant mountains. A 21KB original SVG.
+ const backdropGeo=new THREE.CylinderGeometry(230,230,260,40,1,true);
+ ownedGeometries.push(backdropGeo);
+ const backdropMat=new THREE.MeshBasicMaterial({color:'#adc4ca',side:THREE.BackSide,depthWrite:false,fog:false});
+ ownedMaterials.push(backdropMat);
+ const backdrop=new THREE.Mesh(backdropGeo,backdropMat);
+ backdrop.position.set(10,15,10);backdrop.name='Distant landscape · 360° panoramic image';
+ backdrop.renderOrder=-100;group.add(backdrop);
+ try {
+  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.7',
+   texture=>{if(disposed){texture.dispose();return;}
+    texture.colorSpace=THREE.SRGBColorSpace;backdropTexture=texture;
+    backdropMat.map=texture;backdropMat.color.set('#ffffff');backdropMat.needsUpdate=true;},
+   undefined,()=>{/* Outdoor building must work offline without background image. */});
+ }catch{/* Leave neutral fallback on restricted/offline browsers. */}
+
+ // A real 3D low-poly Cherek water ribbon, visible downslope, not a flat blue wallpaper.
+ const riverCenter=x=>-91+4.7*Math.sin((x+16)*.028);
+ for(let i=0;i<84;i++){
+  const x0=-155+i*3.8,x1=x0+3.8;
+  const z0=riverCenter(x0),z1=riverCenter(x1);
+  const y0=groundY(x0,z0)+.16,y1=groundY(x1,z1)+.16;
+  const bank=mobile?4.9:5.3;
+  quad('water',[x0,y0,z0-bank],[x1,y1,z1-bank],[x1,y1,z1+bank],[x0,y0,z0+bank],
+   i%4===0?'#749c99':i%3===0?'#87b2af':'#67918f');
+  // Small pale gravel lines at either bank; no reflections or animated shaders.
+  for(const side of [-1,1]){
+   const b0=z0+side*(bank+1.3),b1=z1+side*(bank+1.3);
+   quad('path',[x0,groundY(x0,b0)+.09,b0],[x1,groundY(x1,b1)+.09,b1],
+    [x1,groundY(x1,b1+side*.5)+.09,b1+side*.5],
+    [x0,groundY(x0,b0+side*.5)+.09,b0+side*.5],'#b8af95');
   }
-  g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
-  g.computeVertexNormals();const m=new THREE.Mesh(g,material('#ffffff',true));
-  m.name='Distant mountain ring '+tier;group.add(m);
  }
- // Main monument: tapered walls, deliberately open door and slit apertures.
- function tower(cx,cz,rot=0){
-  const base=6,top=4.75,H=15.5,c=Math.cos(rot),s=Math.sin(rot);
-  function transform(v){const [x,y,z]=v;return [cx+x*c-z*s,y+height(cx,cz),cz+x*s+z*c];}
-  function wall(side,u,y) {
-   const w=base+(top-base)*y/H, x=(u-.5)*w;
-   if(side===0)return transform([x,y,w/2]);
-   if(side===1)return transform([-x,y,-w/2]);
-   if(side===2)return transform([w/2,y,-x]);
-   return transform([-w/2,y,x]);
+
+ // Future expandable plot perimeter [-10,30] x [-15,35]. Active [0,20] x [0,20].
+ const reserve=[[-10,-15],[30,-15],[30,35],[-10,35]];
+ for(let i=0;i<4;i++){
+  const [a,b]=reserve[i],[c,d]=reserve[(i+1)%4],steps=20;
+  for(let j=0;j<steps;j++){
+   const u=j/steps,v=(j+1)/steps;
+   const x=a+(c-a)*u,z=b+(d-b)*u,xx=a+(c-a)*v,zz=b+(d-b)*v;
+   const y=groundY(x,z)+.052,yy=groundY(xx,zz)+.052;
+   const horiz=Math.abs(a-c)>Math.abs(b-d),n=horiz?[0,.1]:[.1,0];
+   quad('path',[x-n[0],y,z-n[1]],[xx-n[0],yy,zz-n[1]],
+    [xx+n[0],yy,zz+n[1]],[x+n[0],y,z+n[1]],'#c3b697');
   }
-  const hole=(side,u,y)=>{
-   if(side===0 && y<2.2 && Math.abs(u-.5)<.085)return true;
-   if(side===0 && y>6.1 && y<8.1 && Math.abs(u-.5)<.026)return true;
-   if(side===0 && y>9.0 && y<10.35 && Math.abs(u-.5)<.024)return true;
-   if(side===0 && y>13.35 && y<14.7 && (Math.abs(u-.38)<.075 || Math.abs(u-.64)<.06))return true;
-   if(side===1 && y>11 && y<11.9 && Math.abs(u-.53)<.042)return true;
-   if(side===2 && y>8.5 && y<9.75 && Math.abs(u-.45)<.035)return true;
-   if(side===3 && y>12.7 && y<14 && Math.abs(u-.5)<.06)return true;
-   return false;
-  };
-  const courses=mobile?22:36,segments=mobile?11:15;
-  for(let side=0;side<4;side++){
-   for(let i=0;i<courses;i++){
-    const y0=i*H/courses,y1=(i+1)*H/courses;
-    for(let k=0;k<segments;k++){
-     const shift=i%2?0.48:0;
-     const u0=Math.max(0,(k-shift)/segments),u1=Math.min(1,(k+1-shift)/segments);
-     if(u1<=u0)continue;
-     const um=(u0+u1)/2,ym=(y0+y1)/2;
-     if(hole(side,um,ym))continue;
-     const a=wall(side,u0,y0),b=wall(side,u1,y0),
-           cc=wall(side,u1,y1),d=wall(side,u0,y1);
-     const rough=.006+.015*rng();
-     const normal=new THREE.Vector3(...wall(side,.52,ym)).sub(new THREE.Vector3(...wall(side,.5,ym))).normalize();
-     const color=stone();
-     // Closed, flush-faced courses: no visual holes between large stones.
-     quad(pos,cols,a,b,cc,d,color);
-     // Small shallow offset facet for irregular masonry relief, never a floating cube.
-     if(!mobile && rng()>.68){
-      const center=wall(side,um,ym),offset=[center[0],center[1],center[2]];
-      offset[0]+=normal.x*rough;offset[2]+=normal.z*rough;
-      tri(pos,cols,a,offset,d,color);
-     }
-    }
+ }
+
+ // Historic-looking dry-stone terrace retaining walls. Courses overlap and have broken tops.
+ const stone=()=>colors.wall[Math.floor(rnd()*colors.wall.length)];
+ function wallLine(ax,az,bx,bz,{height=1.5,thickness=.5,gaps=[],course=.3}={}){
+  const dx=bx-ax,dz=bz-az,length=Math.hypot(dx,dz),N=Math.max(3,Math.ceil(length/.88));
+  const normal=[-dz/length*thickness*.5,dx/length*thickness*.5];
+  for(let c=0;c<Math.ceil(height/course);c++){
+   const n=Math.ceil(N*(c%2?.97:1)),v0=(c%2?.36:0);
+   for(let j=0;j<n;j++){
+    const t0=clamp((j+v0)/n,0,1),t1=clamp((j+1+v0)/n,0,1);
+    if(t1-t0<.02||gaps.some(([lo,hi])=>(t0+t1)/2>lo&&(t0+t1)/2<hi))continue;
+    const x=ax+dx*t0,z=az+dz*t0,xx=ax+dx*t1,zz=az+dz*t1;
+    const topBreak=c>=Math.floor(height/course)-2&&(rnd()>.78||Math.sin((j+3)*3.8+c)>.92);
+    if(topBreak)continue;
+    const foot=Math.min(groundY(x,z),groundY(xx,zz))-.24;
+    const yy=foot+c*course;
+    prism('stone',x+normal[0],yy,z+normal[1],
+     xx-normal[0],yy+course+.014,zz-normal[1],stone());
    }
   }
-  // Dark recesses: actual missing front-facing masonry faces, not painted door graphics.
-  const black='#302e2a';
-  function opening(side,u0,u1,y0,y1) {
-   const a=wall(side,u0,y0),b=wall(side,u1,y0),
-         cc=wall(side,u1,y1),d=wall(side,u0,y1);
-   const inward=new THREE.Vector3(cx-(a[0]+b[0])/2,0,cz-(a[2]+b[2])/2).normalize().multiplyScalar(.15);
-   for(const q of [a,b,cc,d]){q[0]+=inward.x;q[2]+=inward.z;}
-   quad(pos,cols,a,b,cc,d,black);
-  }
-  opening(0,.425,.575,.10,2.15);
-  opening(0,.476,.524,6.1,8.1);
-  opening(0,.477,.523,9.0,10.35);
-  opening(0,.31,.45,13.35,14.7);opening(0,.59,.69,13.35,14.7);
-  opening(1,.49,.57,11,11.9);opening(2,.41,.49,8.5,9.75);
-  opening(3,.44,.56,12.7,14);
-  // Four hipped roof faces, slight eaves and dark slate cap.
-  const corners=[[-2.58,H,2.58],[2.58,H,2.58],[2.58,H,-2.58],[-2.58,H,-2.58]];
-  const peak=transform([0,16.05,0]);
-  for(let j=0;j<4;j++)tri(roofPos,roofColors,transform(corners[j]),transform(corners[(j+1)%4]),peak,roofTones[j%3]);
-  // Foundation stones around the hill.
-  for(let i=0;i<22;i++){
-   const a=rng()*Math.PI*2,d=3.3+rng()*3.1,x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d;
-   rect(x-.23,height(x,z),z-.2,x+.31,height(x,z)+.20+rng()*.23,z+.28,stone());
-  }
  }
- tower(-27,44,2.3);
- // Abaev second tower site / ruins - deliberately incomplete, not an invented full tower.
- function ruin(cx,cz,sx,sz,h){
-  const y=height(cx,cz);
-  rect(cx-sx/2,y,cz-sz/2,cx+sx/2,y+h,cz-sz/2+.55,stone());
-  rect(cx-sx/2,y,cz-sz/2,cx-sx/2+.53,y+h*.72,cz+sz/2,stone());
-  rect(cx+sx/2-.5,y,cz-sz/2,cx+sx/2,y+h*.42,cz+sz/2,stone());
-  for(let i=0;i<18;i++){
-   const x=cx+(rng()-.5)*(sx+3),z=cz+(rng()-.5)*(sz+3);
-   rect(x-.3,height(x,z),z-.3,x+.35,height(x,z)+.18+rng()*.28,z+.34,stone());
+ // Tangible village quarters hug the slope; none obstruct the reserved 40×50 m site.
+ const terraces=[
+  [[-58,40],[-15,43],1.1,[[.25,.34],[.78,.84]]],
+  [[31,42],[79,44],1.5,[[.38,.45]]],
+  [[-57,58],[-14,58],1.9,[[.42,.53]]],
+  [[3,56],[52,57],1.1,[[.14,.24],[.8,.89]]],
+  [[-57,77],[-15,77],2.3,[[.2,.28]]],
+  [[10,77],[63,77],1.75,[[.53,.64]]],
+  [[-40,-38],[-15,-36],.85,[[.5,.7]]],
+  [[37,-26],[73,-28],1.15,[[.18,.3]]]
+ ];
+ for(const [a,b,h,gaps] of terraces)wallLine(...a,...b,{height:h,gaps});
+ // Roofless ruined residences and fragmented courtyard walls (no invented intact village).
+ const ruins=[
+  [-25,23,7.5,5.8,1.4],[-24,44,6.8,6,1.75],[39,19,7.5,6.5,1.5],
+  [43,37,6.8,7,1.45],[-21,61,7.1,5.9,2.1],[20,57,7,5.7,1.65],
+  [53,57,6.5,7.5,1.2],[-37,77,7.1,6.2,1.3],[55,77,5.5,7.5,1.25]
+ ];
+ for(const [x,z,w,d,h] of ruins){
+  const a=[x-w/2,z-d/2],b=[x+w/2,z-d/2],c=[x+w/2,z+d/2],dd=[x-w/2,z+d/2];
+  const corners=[a,b,c,dd];
+  for(let j=0;j<4;j++)wallLine(...corners[j],...corners[(j+1)%4],{height:h*(.68+rnd()*.6),
+    gaps:j===1?[[.34,.57]]:rnd()>.4?[[.27,.35]]:[]});
+  for(let j=0;j<7;j++){
+   const xx=x+(rnd()-.5)*(w+2),zz=z+(rnd()-.5)*(d+2),yy=groundY(xx,zz);
+   prism('stone',xx-.24,yy-.15,zz-.18,xx+.3,yy+.08+rnd()*.20,zz+.31,stone());
   }
  }
- ruin(-105,105,5.8,5.9,5.2);
- // Repeated stone houses are static decor, outside even the future 40x50m buildable reserve.
- const houses=[[-18,23,6,7,3.1],[-19,10,5.5,6,2.7],[35,31,6,8,3.5],
- [39,16,5,6,2.9],[37,-14,7,6,3.3],[4,43,5.4,7,2.5],[22,44,7,5,3.0]];
- for(let idx=0;idx<houses.length;idx++){
-  const [x,z,w,d,h]=houses[idx],y=height(x,z);
-  rect(x-w/2,y,z-d/2,x+w/2,y+h,z+d/2,stone());
-  const rh=.35;
-  quad(roofPos,roofColors,[x-w/2-.22,y+h,z-d/2-.22],[x+w/2+.22,y+h,z-d/2-.22],
-   [x+w/2+.22,y+h+rh,z],[x-w/2-.22,y+h+rh,z],roofTones[idx%3]);
-  quad(roofPos,roofColors,[x-w/2-.22,y+h+rh,z],[x+w/2+.22,y+h+rh,z],
-   [x+w/2+.22,y+h,z+d/2+.22],[x-w/2-.22,y+h,z+d/2+.22],roofTones[idx%3]);
-  // Dark inset doorway and tiny window blocks, independent from the game raycast.
-  const f=z+d/2+.005;
-  quad(pos,cols,[x-.5,y+.03,f],[x+.5,y+.03,f],[x+.5,y+1.7,f],[x-.5,y+1.7,f],'#403c35');
-  quad(pos,cols,[x+w*.26,y+1.7,f],[x+w*.43,y+1.7,f],[x+w*.43,y+2.1,f],[x+w*.26,y+2.1,f],'#4b483e');
+
+ // Abaev Kala above the building terrace, with taper and authentic narrow openings.
+ // A model approximation, pending access to measured drawings and exact plan coordinates.
+ function tower(cx,cz,rotation=-.15){
+  const H=15.8,b=6.0,top=4.65,c=Math.cos(rotation),s=Math.sin(rotation),baseY=groundY(cx,cz);
+  function world(x,y,z){return [cx+x*c-z*s,baseY+y,cz+x*s+z*c];}
+  function surface(side,u,y) {
+   const width=b+(top-b)*y/H,q=(u-.5)*width,depth=width*.5;
+   return side===0?world(q,y,depth):side===1?world(-q,y,-depth):
+          side===2?world(depth,y,-q):world(-depth,y,q);
+  }
+  const opening=(side,u,y)=>{
+   if(side===0){
+    if(y<2.5&&Math.abs(u-.5)<.10)return true;
+    if(y>5.3&&y<6.9&&Math.abs(u-.5)<.035)return true;
+    if(y>9.6&&y<11&&Math.abs(u-.5)<.036)return true;
+    if(y>13.1&&y<14.6&&Math.abs(u-.5)<.045)return true;
+   }return side===1&&y>10.3&&y<11.6&&Math.abs(u-.49)<.035;
+  };
+  const rows=mobile?21:29,columns=mobile?10:13;
+  for(let side=0;side<4;side++)for(let row=0;row<rows;row++){
+   const y0=row*H/rows,y1=(row+1)*H/rows;
+   for(let k=0;k<columns;k++){
+    const offset=row%2?.35:0,u0=clamp((k-offset)/columns,0,1),
+      u1=clamp((k+1-offset)/columns,0,1),mid=(u0+u1)/2;
+    if(u1<=u0||opening(side,mid,(y0+y1)/2))continue;
+    quad('stone',surface(side,u0,y0),surface(side,u1,y0),
+      surface(side,u1,y1),surface(side,u0,y1),stone());
+   }
+  }
+  // Dark interiors of apertures, below the front plane.
+  for(const [y0,y1,u0,u1] of [[.06,2.5,.41,.59],[5.3,6.9,.47,.53],[9.6,11,.47,.53],[13.1,14.6,.46,.54]]){
+   const a=surface(0,u0,y0),b1=surface(0,u1,y0),cc=surface(0,u1,y1),d=surface(0,u0,y1);
+   for(const p of [a,b1,cc,d]){p[0]+=(cx-p[0])*.046;p[2]+=(cz-p[2])*.046;}
+   quad('stone',a,b1,cc,d,'#343732');
+  }
+  // Flat, low-pitched weathered cap; not a sharp fairy-tale spire.
+  const cap=top*.5+.17;
+  quad('stone',world(-cap,H,-cap),world(cap,H,-cap),
+    world(cap,H+.18,0),world(-cap,H+.18,0),'#51534c');
+  quad('stone',world(-cap,H+.18,0),world(cap,H+.18,0),
+    world(cap,H,cap),world(-cap,H,cap),'#55554b');
+  // Irregular foundation fragments around the tower.
+  for(let i=0;i<25;i++){
+   const angle=rnd()*Math.PI*2,d=3.4+rnd()*3.6,
+     x=cx+Math.cos(angle)*d,z=cz+Math.sin(angle)*d,y=groundY(x,z);
+   prism('stone',x-.23,y-.2,z-.26,x+.37,y+.1+rnd()*.32,z+.28,stone());
+  }
  }
- // Broken stone enclosures and terraced walls.
- for(const [x,z,w,d,h] of [[-14,35,8,4,1.35],[31,39,10,3,1.2],[-29,11,7,3,1.1]]){
-  const y=height(x,z);
-  rect(x,y,z,x+w,y+h,z+.4,stone());
-  rect(x,y,z,x+.4,y+h*.82,z+d,stone());
+ const abayKala=[-12,68];tower(...abayKala);
+ // Second Abaev tower has surviving fragments only, ~100m away in concept scene.
+ wallLine(-109,85,-103,84,{height:4,gaps:[[.5,.65]],course:.45});
+ wallLine(-109,85,-110,91,{height:2.7,course:.45});
+
+ // A winding footpath rising past ruined courtyards to the Abaev tower.
+ function trail(points,width=1.45){
+  for(let i=0;i<points.length-1;i++){
+   const [x,z]=points[i],[xx,zz]=points[i+1],dx=xx-x,dz=zz-z,l=Math.hypot(dx,dz);
+   const nx=dz/l*width*.5,nz=-dx/l*width*.5;
+   const A=[x+nx,groundY(x+nx,z+nz)+.10,z+nz],B=[xx+nx,groundY(xx+nx,zz+nz)+.10,zz+nz];
+   const C=[xx-nx,groundY(xx-nx,zz-nz)+.10,zz-nz],D=[x-nx,groundY(x-nx,z-nz)+.10,z-nz];
+   quad('path',A,B,C,D,colors.soil);
+  }
  }
- // The 40x50m reserve is marked by a quiet soil-and-stone border, not a buildable collider.
- const xMin=-10,xMax=30,zMin=-15,zMax=35,edge=.13;
- for(const [a,b,c,d] of [[xMin,zMin,xMax,zMin],[xMax,zMin,xMax,zMax],[xMax,zMax,xMin,zMax],[xMin,zMax,xMin,zMin]]){
-  const alongX=Math.abs(c-a)>Math.abs(d-b);
-  const padX=alongX?0:edge,padZ=alongX?edge:0;
-  quad(pathPos,pathCols,[a-padX,-.042,b-padZ],[c-padX,-.042,d-padZ],
-   [c+padX,-.042,d+padZ],[a+padX,-.042,b+padZ],'#c1b395');
- }
- // Stone and dirt track: gently follows ground level around the buildings.
- for(const [ax,az,bx,bz] of [[-18,10,-27,43],[-18,23,4,43],[33,31,10,36]]){
-  const pa=[ax,height(ax,az)+.017,az],pb=[bx,height(bx,bz)+.017,bz];
-  const dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz);
-  const nx=dz/len*.65,nz=-dx/len*.65;
-  quad(pathPos,pathCols,[pa[0]+nx,pa[1],pa[2]+nz],[pb[0]+nx,pb[1],pb[2]+nz],
-   [pb[0]-nx,pb[1],pb[2]-nz],[pa[0]-nx,pa[1],pa[2]-nz],'#998c72');
- }
- const stoneMat=material('#ffffff',true);
- fillMesh(pos,cols,stoneMat,'Abaev towers and stone houses');
- fillMesh(roofPos,roofColors,stoneMat,'Stone slate roofs');
- fillMesh(pathPos,pathCols,stoneMat,'Village paths');
- // Low-overhead instanced rough boulders, reserve buildable plot kept clean.
- const rocks=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.4,0),material('#817f72'),mobile?45:100);
- const dummy=new THREE.Object3D();
- const rockColors=['#939287','#847e73','#a5a08d'];
+ trail([[30,-12],[38,-23],[41,-41],[33,-63],[18,-79]],1.8);
+ trail([[29,34],[35,42],[25,48],[11,54],[-4,60],[-12,68]],1.25);
+ trail([[-12,34],[-22,42],[-38,54],[-47,69]],1.1);
+
+ // Scattered ground stones and grass, all using the same GPU instance batches.
+ const rockGeo=new THREE.DodecahedronGeometry(.43,0),rockMat=mat('#9a9387');
+ ownedGeometries.push(rockGeo);
+ const rocks=new THREE.InstancedMesh(rockGeo,rockMat,mobile?65:175);
+ const proxy=new THREE.Object3D();
  for(let i=0;i<rocks.count;i++){
-  const x=-72+rng()*160,z=-70+rng()*170;
-  dummy.position.set(x,height(x,z)+.13,z);dummy.rotation.set(rng()*3,rng()*3,rng()*3);
-  dummy.scale.set(.3+rng()*1.2,.25+rng()*.65,.45+rng()*1.4);dummy.updateMatrix();
-  rocks.setMatrixAt(i,dummy.matrix);rocks.setColorAt(i,rgb(rockColors[i%3]));
+  let x,z,n=0;do{x=-70+rnd()*165;z=-84+rnd()*200;n++;}while(n<30&&x>-11&&x<31&&z>-16&&z<36);
+  const y=groundY(x,z),scale=.38+rnd()*.95;
+  proxy.position.set(x,y+.12*scale,z);proxy.rotation.set(rnd(),rnd()*6.28,rnd());
+  proxy.scale.set(scale,.6*scale,1.25*scale);proxy.updateMatrix();rocks.setMatrixAt(i,proxy.matrix);
  }
- rocks.instanceMatrix.needsUpdate=true;rocks.instanceColor.needsUpdate=true;
- rocks.computeBoundingSphere();rocks.name='Boulders / instanced';group.add(rocks);
- const grassesGeo=new THREE.ConeGeometry(.10,.46,3,1);
- const grassesMat=material('#788d57');
- const grassesMesh=new THREE.InstancedMesh(grassesGeo,grassesMat,mobile?100:240);
- for(let i=0;i<grassesMesh.count;i++){
-  let x,z;
-  do{x=-36+rng()*99;z=-23+rng()*90;}while(x>=0&&x<=20&&z>=0&&z<=20);
-  dummy.position.set(x,height(x,z)+.17,z);dummy.rotation.set(0,rng()*6.28,0);
-  const k=.65+rng()*.8;dummy.scale.set(k,k,k);dummy.updateMatrix();
-  grassesMesh.setMatrixAt(i,dummy.matrix);
+ rocks.instanceMatrix.needsUpdate=true;rocks.computeBoundingSphere();rocks.name='Scattered stones';group.add(rocks);
+ const grassGeo=new THREE.ConeGeometry(.085,.34,3),grassMat=mat('#78915b');
+ ownedGeometries.push(grassGeo);
+ const grass=new THREE.InstancedMesh(grassGeo,grassMat,mobile?120:320);
+ for(let i=0;i<grass.count;i++){
+  let x,z,n=0;do{x=-70+rnd()*170;z=-80+rnd()*190;n++;}while(n<25&&x>0&&x<20&&z>0&&z<20);
+  proxy.position.set(x,groundY(x,z)+.08,z);proxy.rotation.set(0,rnd()*6.28,0);
+  const k=.58+rnd()*.88;proxy.scale.set(k,k,k);proxy.updateMatrix();grass.setMatrixAt(i,proxy.matrix);
  }
- grassesMesh.instanceMatrix.needsUpdate=true;grassesMesh.computeBoundingSphere();
- grassesMesh.name='Grass / instanced';group.add(grassesMesh);
- group.userData.kunlum={plot:[40,50],buildable:[20,20],gridStep:.25,
-  monument:'Abay-Kala',monumentApproximate:[6,6,16],historicalAccuracy:'interpretative'};
- return {group,dispose(){
-  group.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.geometry)o.geometry.dispose();});
-  for(const m of made)m.dispose();
+ grass.instanceMatrix.needsUpdate=true;grass.computeBoundingSphere();grass.name='Sparse hillside grass';group.add(grass);
+ emit('stone','Roofless courtyard ruins, retaining walls and Abaev tower');
+ emit('water','Cherек · Cherek river');
+ emit('path','Paths, gravel banks and reserved plot marker');
+ group.userData.kunlum={
+  plot:[40,50],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
+  gridStep:.25,monument:'Абай-къала',abaevModelPosition:abayKala,riverAxisZ:-91,
+  orientation:'positive z is uphill, negative z is downstream toward Cherek',
+  accuracy:'interpretative; pending site map georeferencing'
+ };
+ return {group,heightAt:groundY,dispose(){
+  if(disposed)return;disposed=true;
+  for(const geo of ownedGeometries)geo.dispose();
+  for(const material of ownedMaterials)material.dispose();
+  if(backdropTexture)backdropTexture.dispose();
+  // InstancedMesh owns a small per-instance GPU attribute, too.
+  rocks.dispose();grass.dispose();
   scene.remove(group);
  }};
 }
