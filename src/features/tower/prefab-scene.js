@@ -43,7 +43,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches}); }
  catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
- const grid=new THREE.GridHelper(20,80,'#d9ead7','#879e84');grid.position.set(7.5,.008,7.5);
+ const grid=new THREE.GridHelper(20,80,'#d9ead7','#879e84');grid.position.set(10,.008,10);
  grid.material.transparent=true;grid.material.opacity=.28;grid.visible=false;scene.add(grid);
  const faceGrid=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:'#bcefc0',transparent:true,opacity:.67,depthTest:false}));
  scene.add(faceGrid);faceGrid.visible=false;
