@@ -39,11 +39,11 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
  const seed=spawnSync(process.execPath,["scripts/qa/seed-lighthouse-profile.mjs",dir],{encoding:"utf8",timeout:35000,env:{...process.env,CHROME_PATH:CHROME,ALANTIL_SEED_STORAGE_ONLY:"1"}});
  if(seed.status!==0)throw Error("Could not seed authenticated-like learning setup: "+seed.stderr+" "+seed.stdout);
  await rm(join(dir,"DevToolsActivePort"),{force:true});
- const process=spawn(CHROME,["--headless=new","--no-sandbox","--disable-dev-shm-usage","--use-angle=swiftshader","--enable-unsafe-swiftshader","--enable-webgl","--remote-debugging-port=0","--user-data-dir="+dir,"about:blank"],{stdio:"ignore"});
+ const browser=spawn(CHROME,["--headless=new","--no-sandbox","--disable-dev-shm-usage","--use-angle=swiftshader","--enable-unsafe-swiftshader","--enable-webgl","--remote-debugging-port=0","--user-data-dir="+dir,"about:blank"],{stdio:"ignore"});
  let ws;
  try{
   let port=0;
-  for(let i=0;i<150;i++){if(process.exitCode!==null)throw Error("Chrome exited");try{port=+((await readFile(join(dir,"DevToolsActivePort"),"utf8")).split("\n")[0]);if(port)break}catch{}await sleep(100)}
+  for(let i=0;i<150;i++){if(browser.exitCode!==null)throw Error("Chrome exited");try{port=+((await readFile(join(dir,"DevToolsActivePort"),"utf8")).split("\n")[0]);if(port)break}catch{}await sleep(100)}
   if(!port)throw Error("No debugging port");
   let tab;
   for(let i=0;i<100;i++){const tabs=await(await fetch("http://127.0.0.1:"+port+"/json/list")).json();tab=tabs.find(x=>x.type==="page"&&x.webSocketDebuggerUrl);if(tab)break;await sleep(100)}
@@ -101,7 +101,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   results.push(item);console.log("TOWER_BENCH_RESULT",JSON.stringify(item));
   if(fixtureResult.error)errors.push(name+": "+fixtureResult.error);
  }catch(e){errors.push(name+": "+String(e));console.error("TOWER_BENCH_FAILURE",name,e);}
- finally{try{ws?.close()}catch{}process.kill("SIGTERM");await sleep(500);if(process.exitCode===null)process.kill("SIGKILL")}
+ finally{try{ws?.close()}catch{}browser.kill("SIGTERM");await sleep(500);if(browser.exitCode===null)browser.kill("SIGKILL")}
 }
 try{
  await scenario("desktop-1280",1280,800,1,1,false);
