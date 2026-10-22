@@ -1,0 +1,98 @@
+name: AlanTil 17.2 visible-first image cold-network A-B
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/17-2-visible-first-cold-A-B.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cold-real-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build two disposable variants from same commit
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$RUNNER_TEMP/visible-base" HEAD
+          git worktree add --detach "$RUNNER_TEMP/visible-candidate" HEAD
+          cd "$RUNNER_TEMP/visible-candidate"
+          node "$GITHUB_WORKSPACE/scripts/qa/prepare-visible-first-icons.mjs"
+          node --check src/features/path/feature.js
+          node --check "$GITHUB_WORKSPACE/scripts/qa/compare-visible-first-icons-browser.mjs"
+          git diff --check
+          git diff -- src/features/path/feature.js > "$GITHUB_WORKSPACE/visible-first-results.patch"
+      - name: Cold-network A-B in alternating order
+        run: |
+          set -euo pipefail
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          mkdir -p visible-first-results
+          for i in 1 2 3; do
+            if [ "$((i % 2))" -eq 0 ]; then revs=(visible-first baseline); else revs=(baseline visible-first); fi
+            for rev in "${revs[@]}"; do
+              if [ "$rev" = baseline ]; then dir="$RUNNER_TEMP/visible-base"; else dir="$RUNNER_TEMP/visible-candidate"; fi
+              (cd "$dir" && exec node scripts/static-preview-server.mjs) > "visible-first-results/$rev-$i-server.log" 2>&1 &
+              server_pid=$!
+              ready=0
+              for attempt in {1..50}; do
+                if curl -fsS http://127.0.0.1:4173/ >/dev/null 2>&1; then ready=1; break; fi
+                sleep 1
+              done
+              if [ "$ready" -ne 1 ]; then cat "visible-first-results/$rev-$i-server.log"; exit 1; fi
+              success=0
+              for attempt in 1 2 3; do
+                if node "$GITHUB_WORKSPACE/scripts/qa/compare-visible-first-icons-browser.mjs" "$rev" "$GITHUB_WORKSPACE/visible-first-results" "$i"; then success=1; break; fi
+                sleep 2
+              done
+              kill "$server_pid" 2>/dev/null || true
+              wait "$server_pid" 2>/dev/null || true
+              for attempt in {1..20}; do
+                if ! curl -fsS http://127.0.0.1:4173/ >/dev/null 2>&1; then break; fi
+                sleep 0.2
+              done
+              if [ "$success" -ne 1 ]; then echo "Browser trial failed: $rev #$i"; exit 1; fi
+            done
+          done
+      - name: Compare verified cold-network outcomes
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const data={};
+          for(const variant of ["baseline","visible-first"]){
+            data[variant]=[1,2,3].map(i=>JSON.parse(readFileSync("visible-first-results/"+variant+"-"+String(i).padStart(2,"0")+".json")));
+          }
+          const median=(name,field)=>data[name].map(x=>field(x)).sort((a,b)=>a-b)[1];
+          const metrics={};
+          for(const v of ["baseline","visible-first"]){
+            metrics[v]={
+              visibleMs:median(v,x=>x.firstVisibleMs),
+              preScrollRequests:median(v,x=>x.beforeScroll.iconRequests),
+              preScrollBytes:median(v,x=>x.beforeScroll.bytes),
+              fullBytes:median(v,x=>x.network.encodedBytes),
+              fullImagesLoaded:data[v].every(x=>x.afterScroll.loaded===26),
+              navigation:data[v].every(x=>x.navigation),
+              errors:data[v].flatMap(x=>x.errors)
+            };
+          }
+          const report={metrics,visibleDeltaMs:metrics.baseline.visibleMs-metrics["visible-first"].visibleMs};
+          console.log("COLD VISIBLE-FIRST A-B:",JSON.stringify(report,null,2));
+          writeFileSync("visible-first-results/CONCLUSION.json",JSON.stringify(report,null,2));
+          if(metrics.baseline.fullImagesLoaded!==true||metrics["visible-first"].fullImagesLoaded!==true||!metrics["visible-first"].navigation||metrics["visible-first"].errors.length)process.exit(1);
+        NODE
+      - name: Upload individual Chrome traces and code diff
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-visible-first-cold-network-A-B
+          path: |
+            visible-first-results/
+            visible-first-results.patch
+          retention-days: 21
