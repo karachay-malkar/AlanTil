@@ -29,16 +29,23 @@ export function createKunlumRuins({quad,tri,groundY,rnd,stone,mobile=false}) {
      cc=cube(u1,end+h1,half),d=cube(u0,start+h0,half);
    const e=cube(u0,start,-half),f=cube(u1,end,-half),
      g=cube(u1,end+h1,-half),hh=cube(u0,start+h0,-half);
-   const bump=spread(.015,.060), tint=stone();
-   // A gently broken exposed stone face: 4 facets meeting at one point.
-   const m=cube((u0+u1)*.5,(start+end+h0)*.5,half+bump);
-   tri('stone',a,b,m,tone);
-   tri('stone',b,cc,m,tint);
-   tri('stone',cc,d,m,tone);
-   tri('stone',d,a,m,tone);
-   // Rear face and narrow sides are solid; no see-through cracks.
+   const tint=stone();
+   // Near desktop stones keep 3D faceting; distant/mobile stones use only
+   // two shaded front triangles, reducing GPU upload and startup blocking.
+   if(mobile||!near){
+    tri('stone',a,b,cc,tone);
+    tri('stone',a,cc,d,tint);
+   }else{
+    const bump=spread(.015,.060);
+    const m=cube((u0+u1)*.5,(start+end+h0)*.5,half+bump);
+    tri('stone',a,b,m,tone);
+    tri('stone',b,cc,m,tint);
+    tri('stone',cc,d,m,tone);
+    tri('stone',d,a,m,tone);
+   }
+   // Back, top, ends: real closed masonry. Bottom is hidden except nearby desktop.
    quad('stone',f,e,hh,g,tone);
-   quad('stone',a,e,f,b,tint);
+   if(!mobile&&near)quad('stone',a,e,f,b,tint);
    quad('stone',d,cc,g,hh,tone);
    quad('stone',e,a,d,hh,tone);
    quad('stone',b,f,g,cc,tint);
