@@ -74,7 +74,7 @@ jobs:
             src/features/path/feature.js src/features/path/story-stele.js \
             src/features/path/path.css src/shared/styles/lazy/path.css \
             src/data/path-set-metadata.js service-worker.js scripts/release/sync-version.mjs \
-            scripts/qa/verify-path-metadata-browser.mjs tests/profile-image-cache-17-2-4.test.mjs
+            scripts/qa/verify-path-metadata-browser.mjs tests/profile-image-cache-17-2-4.test.mjs tests/path-visible-first-17-2.test.mjs
           git diff --cached --check
           git diff --cached --stat
           git config user.name "github-actions[bot]"
