@@ -1,0 +1,55 @@
+name: AlanTil Tower Editor Speed Audit
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/tower-editor-speed-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webgl-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify browser benchmark source and actual tower code
+        run: |
+          set -euo pipefail
+          node --check scripts/qa/measure-tower-editor-speed.mjs
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/masonry/index.js
+          node --check src/features/masonry/scene.js
+          node --test tests/tower-approved-manual.test.mjs tests/tower-controls-172.test.mjs
+      - name: Serve current branch without modifying code
+        run: |
+          mkdir -p perf-results
+          node scripts/static-preview-server.mjs > perf-results/server.log 2>&1 &
+          for attempt in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/practice/tower > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Cold and warm 3D boot, WebGL frame tests and section-build benchmarks
+        run: |
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          echo "Chrome: $CHROME_PATH"
+          node scripts/qa/measure-tower-editor-speed.mjs
+          cat perf-results/tower-editor-speed.json
+      - name: Keep raw audit data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tower-editor-webgl-speed-17-2
+          path: perf-results/
+          retention-days: 14
+          if-no-files-found: warn
