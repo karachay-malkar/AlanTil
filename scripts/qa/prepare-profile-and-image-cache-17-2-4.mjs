@@ -276,6 +276,11 @@ const testLines=[
 await writeFile("tests/profile-image-cache-17-2-4.test.mjs",testLines);
 console.log("Prepared smoke regression and warm cache E2E assertions.");
 
+await edit("tests/path-visible-first-17-2.test.mjs",s=>once(s,
+  'assert.match(s,/const loading = index < 4 \\? "eager" : "lazy"/);',
+  'assert.match(s,/const loading = eagerCachedRouteImages \\|\\| index < 4 \\? "eager" : "lazy"/);'
+));
+
 const releasePath="release.json";
 const rel=JSON.parse(await readFile(releasePath,"utf8"));
 assert.equal(rel.branch,"17.2");
