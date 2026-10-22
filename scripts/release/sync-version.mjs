@@ -62,6 +62,7 @@ await set('service-worker.js',original=>{
 for(const p of ['src/config/analytics.js','src/features/settings/version.js']){
  await set(p,s=>replaceOne(s,/(alantil-core\/release\.js\?v=)[0-9.]+/,'$1'+version,p));
 }
+await set('src/features/path/feature.js',s=>replaceOne(s,/(path-route-index\.json\?v=)[0-9.]+/,'$1'+version,'src/features/path/feature.js'));
 await set('src/features/path/story-stele.js',s=>{
   s=replaceOne(s,/(story-stele-640\.webp\?v=)[0-9.]+/,'$1'+version,'src/features/path/story-stele.js');
   s=replaceOne(s,/(story-stele-932\.webp\?v=)[0-9.]+/,'$1'+version,'src/features/path/story-stele.js');

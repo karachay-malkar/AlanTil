@@ -407,6 +407,10 @@ export function getInstalledDictionaryVersion() {
   return installedVersion || readDictionaryMeta()?.version || readLegacyDictionaryCache()?.version || STARTER_DICTIONARY_VERSION;
 }
 
+export function getPersistedDictionaryVersion() {
+  return readDictionaryMeta()?.version || "";
+}
+
 export async function getDictionaryVersionStatus({ signal, retry: shouldRetry = false } = {}) {
   const currentVersion = getInstalledDictionaryVersion();
   const operation = () => signal ? fetchLatestVersion({ signal }) : sharedLatestVersion();

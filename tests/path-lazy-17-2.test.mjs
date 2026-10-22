@@ -27,3 +27,23 @@ test('Approved stele keeps original artwork but transfers a lightweight responsi
  assert.ok(mobile.size<=500*1024);
  assert.ok(full.size<original.size);
 });
+
+test('Only the route map uses compact path data; stations and tests load complete words',async()=>{
+ const source=await read('src/features/path/feature.js');
+ const repo=await read('src/shared/data/word-repository.js');
+ const index=JSON.parse(await read('src/data/path-route-index.json'));
+ const snapshot=JSON.parse(await read('src/data/dictionary-snapshot.json'));
+ const worker=await read('service-worker.js');
+ assert.equal(index.version,snapshot.version);
+ assert.equal(index.word_count,snapshot.words.length);
+ assert.equal(index.words.length,snapshot.words.length);
+ assert.match(source,/screen==="home"\?getHomeRouteWords\(controller\.signal\):getCompleteDictionaryWords/);
+ assert.match(source,/getPersistedDictionaryVersion\(\)/);
+ assert.match(source,/getDisplayedWordCollection\(index\.words\)/);
+ assert.match(repo,/export function getPersistedDictionaryVersion/);
+ assert.match(worker,/src\/data\/path-route-index\.json/);
+ assert.match(worker,/src\/data\/dictionary-snapshot\.json/);
+ assert.match(worker,/versionedCode \? cacheFirst\(request\) : networkFirst\(request/);
+ const ids=new Set(index.words.map(row=>String(row.id)));
+ assert.equal(ids.size,index.words.length);
+});

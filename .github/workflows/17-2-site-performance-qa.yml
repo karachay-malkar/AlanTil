@@ -12,6 +12,7 @@ on:
       - 'assets/path/story-stele-*.webp'
       - 'scripts/release/**'
       - 'scripts/assets/**'
+      - 'src/data/path-route-index.json'
       - 'service-worker.js'
       - 'tests/**'
       - 'scripts/static-preview-server.mjs'
@@ -49,6 +50,7 @@ jobs:
           node --check scripts/release/sync-version.mjs
           node --check src/features/path/feature.js
           node --check src/features/path/story-stele.js
+          node --check scripts/assets/build-path-index.mjs
           node scripts/release/sync-version.mjs --check
       - name: Profile, session, 3D and performance regressions
         run: |
