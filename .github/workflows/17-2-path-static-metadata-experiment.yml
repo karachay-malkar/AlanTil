@@ -1,0 +1,80 @@
+name: AlanTil 17.2 isolated static metadata A-B experiment
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/qa/prepare-static-metadata-test.mjs'
+      - '.github/workflows/17-2-path-static-metadata-experiment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  controlled-trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Create disposable copy
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$RUNNER_TEMP/path-static-lab" HEAD
+          node --check scripts/qa/prepare-static-metadata-test.mjs
+          node --check scripts/qa/path-root-cause-lab.mjs
+      - name: Serve disposable copy
+        run: |
+          cd "$RUNNER_TEMP/path-static-lab"
+          nohup node scripts/static-preview-server.mjs > "$RUNNER_TEMP/path-static-server.log" 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null 2>&1; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/path-static-server.log"
+          exit 1
+      - name: A - Existing application with remote metadata
+        run: |
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          cd "$RUNNER_TEMP/path-static-lab"
+          node "$GITHUB_WORKSPACE/scripts/qa/path-root-cause-lab.mjs" "$GITHUB_WORKSPACE/path-static-experiment/before"
+      - name: Build proposed static metadata fallback only in test copy
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/path-static-lab"
+          node "$GITHUB_WORKSPACE/scripts/qa/prepare-static-metadata-test.mjs" "$GITHUB_WORKSPACE/path-static-experiment/before/metadata-fixture.json"
+          node --check src/features/path/feature.js
+          node --check src/data/path-set-metadata.js
+          node --test tests/path-lazy-17-2.test.mjs tests/path-metadata-hydration-17-2.test.mjs
+          mkdir -p "$GITHUB_WORKSPACE/path-static-experiment/generated"
+          cp src/features/path/feature.js "$GITHUB_WORKSPACE/path-static-experiment/generated/feature.js"
+          cp src/data/path-set-metadata.js "$GITHUB_WORKSPACE/path-static-experiment/generated/path-set-metadata.js"
+          git diff -- src/features/path/feature.js > "$GITHUB_WORKSPACE/path-static-experiment/generated/change.patch"
+      - name: B - Exact same app with bundled metadata fallback
+        run: |
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          cd "$RUNNER_TEMP/path-static-lab"
+          node "$GITHUB_WORKSPACE/scripts/qa/path-root-cause-lab.mjs" "$GITHUB_WORKSPACE/path-static-experiment/after"
+      - name: Verify causal improvement
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const a=JSON.parse(fs.readFileSync("path-static-experiment/before/summary.json"));
+            const b=JSON.parse(fs.readFileSync("path-static-experiment/after/summary.json"));
+            const pick=(runs,mode)=>runs.filter(r=>r.mode===mode).map(r=>r.imagesLoaded).sort((x,y)=>x-y)[1];
+            const before=pick(a,"fixture-late"),after=pick(b,"fixture-late");
+            const result={baselineLateImagesMs:before,staticLateImagesMs:after,improvementMs:before-after};
+            fs.writeFileSync("path-static-experiment/CONCLUSION.json",JSON.stringify(result,null,2));
+            console.log("CAUSAL A-B RESULT",JSON.stringify(result));
+            if(!(before-after>1500))process.exit(1);
+          '
+      - name: Upload browser traces and full proposed source files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-static-metadata-A-B
+          path: path-static-experiment/
+          retention-days: 21
