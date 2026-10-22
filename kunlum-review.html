@@ -12,8 +12,8 @@ button{border:1px solid #ffffff55;border-radius:7px;background:#3d564a;color:#ff
 </style></head><body><div id="view" aria-label="3D-сцена исторического Кюнлюма"></div>
 <div class="panel">
 <strong>Кюнлюм · Абай-къала</strong>
-<p>Вращайте сцену пальцем или мышью. Стройка 20×20 м на террасе внутри села; запас 40×50 м. Выше — Абай-къала и руины, ниже — Черек; дальние горы — панорамная картинка. Размещение пока ориентировочное.</p>
-<button id="home">Общий вид</button> <button id="tower">Абай-къала</button> <button id="river">Черек</button> <button id="grid">Сетка</button>
+<p>Вращайте сцену пальцем или мышью. Стройка 20×20 м на террасе внутри села; запас 40×50 м. Выше — Абай-къала и плотные кварталы руин, ниже — Черек; дальние горы — панорамная картинка. Схема дворов приблизительная, не обмерный план.</p>
+<button id="home">Общий вид</button> <button id="tower">Абай-къала</button> <button id="river">Черек</button> <button id="ruins">Руины</button> <button id="grid">Сетка</button>
 <div id="stats">Загрузка сцены...</div>
 </div>
 <script type="module">
@@ -44,12 +44,13 @@ const grid=new THREE.GridHelper(20,80,0xd4cab0,0xd1c2a0);grid.position.set(10,.0
 document.getElementById('home').onclick=home;
 document.getElementById('tower').onclick=()=>{camera.position.set(33,28,19);controls.target.set(-12,20,68);controls.update();};
 document.getElementById('river').onclick=()=>{camera.position.set(48,8,-30);controls.target.set(11,-30,-91);controls.update();};
+document.getElementById('ruins').onclick=()=>{camera.position.set(-11,24,-12);controls.target.set(-37,9,53);controls.update();};
 document.getElementById('grid').onclick=()=>{grid.visible=!grid.visible;document.getElementById('grid').textContent=grid.visible?'Скрыть сетку':'Показать сетку';};
 const stats=document.getElementById('stats');
 let frames=0,t=performance.now();
 function draw(now){
  requestAnimationFrame(draw);controls.update();renderer.render(scene,camera);frames++;
- if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Сцена создана за '+buildDuration+' мс (без загрузки модулей)';frames=0;t=now;}
+ if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Дворов: '+env.group.userData.kunlum.ruins.courtyards+' · Террас: '+env.group.userData.kunlum.ruins.terraces+' · Сцена создана за '+buildDuration+' мс (без загрузки модулей)';frames=0;t=now;}
 }
 requestAnimationFrame(draw);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
