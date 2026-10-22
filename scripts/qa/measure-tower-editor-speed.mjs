@@ -1,4 +1,4 @@
-import {spawn,spawnSync} from "node:child_process";
+import {spawn} from "node:child_process";
 import {readFile,writeFile,rm,mkdtemp,mkdir} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -36,9 +36,6 @@ await writeFile("tower-perf-fixture.html",fixture);
 
 async function scenario(name,width,height,dpr,cpu,slowNetwork){
  const dir=join(tmp,name);await mkdir(dir);
- const seed=spawnSync(process.execPath,["scripts/qa/seed-lighthouse-profile.mjs",dir],{encoding:"utf8",timeout:35000,env:{...process.env,CHROME_PATH:CHROME,ALANTIL_SEED_STORAGE_ONLY:"1"}});
- if(seed.status!==0)throw Error("Could not seed authenticated-like learning setup: "+seed.stderr+" "+seed.stdout);
- await rm(join(dir,"DevToolsActivePort"),{force:true});
  const browser=spawn(CHROME,["--headless=new","--no-sandbox","--disable-dev-shm-usage","--use-angle=swiftshader","--enable-unsafe-swiftshader","--enable-webgl","--remote-debugging-port=0","--user-data-dir="+dir,"about:blank"],{stdio:"ignore"});
  let ws;
  try{
@@ -68,6 +65,13 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   const metrics=async()=>Object.fromEntries((await call("Performance.getMetrics")).metrics.map(x=>[x.name,x.value]));
   const traffic=start=>{const all=completed.slice(start),tower=all.filter(x=>x.url.includes("/assets/tower/"));return {requests:all.length,bytes:all.reduce((a,b)=>a+b.bytes,0),towerRequests:tower.length,towerBytes:tower.reduce((a,b)=>a+b.bytes,0),large:tower.sort((a,b)=>b.bytes-a.bytes).slice(0,8).map(x=>({asset:new URL(x.url).pathname,bytes:x.bytes,fromSW:x.fromSW,cache:x.cache}))}};
   await Promise.all([call("Page.enable"),call("Runtime.enable"),call("Network.enable"),call("Performance.enable"),call("Log.enable")]);
+  // Set only learning-setup completion in the same Chrome profile, without fetching app scripts.
+  await call("Page.navigate",{url:ROOT+"/src/data/path-route-index.json"});
+  await wait('location.origin==="http://127.0.0.1:4173" && document.readyState==="complete"',"seed origin",12000);
+  const setup={interface_language_code:"ru",translation_language_code:"ru",alan_script_code:"cyrillic",alan_dialect_code:"canonical",text_size_code:"medium",learning_setup_completed_at:"2026-10-21T00:00:00.000Z"};
+  const seeded=await evalJS("(() => {localStorage.setItem(\"alantil_scope_v1:guest:settings\", "+JSON.stringify(JSON.stringify(setup))+");return Boolean(localStorage.getItem(\"alantil_scope_v1:guest:settings\"))})()");
+  if(!seeded)throw Error("Learning setup fixture was not stored");
+  // No application JavaScript was loaded during seeding. Cold route remains cold.
   await call("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:dpr,mobile:width<600});
   if(cpu>1)await call("Emulation.setCPUThrottlingRate",{rate:cpu});
   if(slowNetwork)await call("Network.emulateNetworkConditions",{offline:false,latency:60,downloadThroughput:1900000,uploadThroughput:450000});
