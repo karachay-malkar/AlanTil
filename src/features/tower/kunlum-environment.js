@@ -74,15 +74,15 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const land=new THREE.Mesh(groundGeo,mat('#ffffff',true));land.name='Terraformed natural hillside';group.add(land);
 
  // One *image*, not hundreds of high-poly distant mountains. A 21KB original SVG.
- const backdropGeo=new THREE.CylinderGeometry(230,230,260,40,1,true);
+ const backdropGeo=new THREE.CylinderGeometry(440,440,360,48,1,true);
  ownedGeometries.push(backdropGeo);
  const backdropMat=new THREE.MeshBasicMaterial({color:'#adc4ca',side:THREE.BackSide,depthWrite:false,fog:false});
  ownedMaterials.push(backdropMat);
  const backdrop=new THREE.Mesh(backdropGeo,backdropMat);
- backdrop.position.set(10,15,10);backdrop.name='Distant landscape · 360° panoramic image';
+ backdrop.position.set(10,30,10);backdrop.name='Distant landscape · 360° panoramic image';
  backdrop.renderOrder=-100;group.add(backdrop);
  try {
-  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.7',
+  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.9',
    texture=>{if(disposed){texture.dispose();return;}
     texture.colorSpace=THREE.SRGBColorSpace;backdropTexture=texture;
     backdropMat.map=texture;backdropMat.color.set('#ffffff');backdropMat.needsUpdate=true;},
@@ -93,7 +93,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  for(let i=0;i<84;i++){
   const x0=-155+i*3.8,x1=x0+3.8;
   const z0=riverCenter(x0),z1=riverCenter(x1);
-  const y0=groundY(x0,z0)+.16,y1=groundY(x1,z1)+.16;
+  const y0=groundY(x0,z0)+.12,y1=groundY(x1,z1)+.12;
   const bank=mobile?4.9:5.3;
   quad('water',[x0,y0,z0-bank],[x1,y1,z1-bank],[x1,y1,z1+bank],[x0,y0,z0+bank],
    i%4===0?'#749c99':i%3===0?'#87b2af':'#67918f');
