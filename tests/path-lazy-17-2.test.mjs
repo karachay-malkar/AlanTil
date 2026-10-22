@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
+import {gunzipSync} from 'node:zlib';
 const read = path => readFile(new URL('../'+path,import.meta.url),'utf8');
 
 test('Path home does not load study/result/test JS before a session',async()=>{
@@ -46,4 +47,17 @@ test('Only the route map uses compact path data; stations and tests load complet
  assert.match(worker,/versionedCode \? cacheFirst\(request\) : networkFirst\(request/);
  const ids=new Set(index.words.map(row=>String(row.id)));
  assert.equal(ids.size,index.words.length);
+});
+
+test('Path route index transfers as a compact gzip, with uncompressed fallback',async()=>{
+ const source=await read('src/features/path/feature.js');
+ const worker=await read('service-worker.js');
+ const compressed=await readFile(new URL('../src/data/path-route-index.json.gz',import.meta.url));
+ const raw=await read('src/data/path-route-index.json');
+ assert.ok(compressed.byteLength<100*1024,'compressed route index too large');
+ assert.equal(gunzipSync(compressed).toString('utf8'),raw);
+ assert.match(source,/path-route-index\.json\.gz\?v=17\.2\.1/);
+ assert.match(source,/PATH_ROUTE_INDEX_FALLBACK_URL/);
+ assert.match(source,/DecompressionStream/);
+ assert.match(worker,/path-route-index\.json\.gz/);
 });

@@ -23,7 +23,8 @@ let controller = null;
 let activeStudy = false;
 const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
-const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json?v=17.2.1";
+const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.1";
+const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.1";
 let pathIndexCache = null;
 
 async function getHomeRouteWords(signal) {
@@ -35,9 +36,20 @@ async function getHomeRouteWords(signal) {
   try {
     let index = pathIndexCache;
     if (!index) {
-      const response = await fetch(PATH_ROUTE_INDEX_URL, { cache: "force-cache", signal });
+      const useGzip = typeof DecompressionStream === "function";
+      const response = await fetch(useGzip ? PATH_ROUTE_INDEX_URL : PATH_ROUTE_INDEX_FALLBACK_URL, { cache: "force-cache", signal });
       if (!response.ok) throw new Error("Route index HTTP " + response.status);
-      index = await response.json();
+      if (useGzip) {
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        // Some hosts transparently decompress .gz responses; accept either form.
+        const gzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
+        const content = gzipped
+          ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text()
+          : new TextDecoder().decode(bytes);
+        index = JSON.parse(content);
+      } else {
+        index = await response.json();
+      }
       if (!index?.version || !Array.isArray(index.words) || !index.words.length
           || index.word_count !== index.words.length) throw new Error("Invalid route index");
       pathIndexCache = index;

@@ -127,13 +127,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (["script", "style", "worker"].includes(request.destination) || ["/src/data/dictionary-snapshot.json", "/src/data/path-route-index.json"].includes(url.pathname)) {
+  if (["script", "style", "worker"].includes(request.destination) || ["/src/data/dictionary-snapshot.json", "/src/data/path-route-index.json", "/src/data/path-route-index.json.gz"].includes(url.pathname)) {
     // Cache-busted immutable code: a new ?v= URL changes when the application is released.
     // Keep configuration and unversioned resources network-first.
     const versionedCode=(["script","style"].includes(request.destination)
       && url.searchParams.has("v")
       && !url.pathname.startsWith("/src/config/"))
-      || (["/src/data/dictionary-snapshot.json", "/src/data/path-route-index.json"].includes(url.pathname)
+      || (["/src/data/dictionary-snapshot.json", "/src/data/path-route-index.json", "/src/data/path-route-index.json.gz"].includes(url.pathname)
         && url.searchParams.has("v"));
     event.respondWith(versionedCode ? cacheFirst(request) : networkFirst(request, RUNTIME_CACHE, { noStore: true }));
   }
