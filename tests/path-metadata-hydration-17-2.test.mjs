@@ -8,8 +8,13 @@ const start = source.indexOf("function refreshSetMetadataInPlace(");
 const end = source.indexOf("\nfunction refreshSetMetadataAsync(", start);
 assert.ok(start !== -1 && end > start, "metadata refresh function must exist");
 
-function scenario({ icon = "01_sample.webp", hasLabel = false } = {}) {
-  const label = { textContent: "Old label" };
+function scenario({ icon = "01_sample.webp", hasLabel = false, labelText = "Old label" } = {}) {
+  let labelValue = labelText;
+  let labelWrites = 0;
+  const label = {
+    get textContent() { return labelValue; },
+    set textContent(value) { labelValue = String(value); labelWrites++; }
+  };
   const count = { textContent: "3/10" };
   const attrs = new Map([["data-adaptive-station-meta", ""]]);
   let rendered = "";
@@ -82,7 +87,7 @@ function scenario({ icon = "01_sample.webp", hasLabel = false } = {}) {
     }
   };
   run({ root }, route, "oblivion", { aborted: false });
-  return { button, attrs, count, get bindingCalls() { return bindingCalls; }, get templateCalls() { return templateCalls; } };
+  return { button, attrs, count, get labelWrites() { return labelWrites; }, get labelValue() { return labelValue; }, get bindingCalls() { return bindingCalls; }, get templateCalls() { return templateCalls; } };
 }
 
 test("late metadata upgrades intermediate placeholder to a diorama without replacing button", () => {
@@ -102,4 +107,10 @@ test("missing remote icon leaves existing station and progress accessible", () =
   assert.equal(s.count.textContent, "3/10");
   assert.equal(s.button.getAttribute("aria-label"), "Updated label:3:10");
   assert.equal(s.bindingCalls, 0);
+});
+
+test("unchanged set name is not rewritten after background metadata refresh", () => {
+  const s = scenario({ icon: "", hasLabel: true, labelText: "Updated label" });
+  assert.equal(s.labelValue, "Updated label");
+  assert.equal(s.labelWrites, 0, "redundant text replacement creates a late paint and skews LCP");
 });
