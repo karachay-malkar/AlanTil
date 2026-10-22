@@ -4,7 +4,7 @@ import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
 /** One section = one immutable prefabricated masonry asset. Positions are integer 25-cm cells. */
 export const PREFAB_CELL_METERS=.25;
-export const PREFAB_WORLD_CELLS=60;
+export const PREFAB_WORLD_CELLS=80;
 export const PREFAB_HEIGHT_CELLS=80;
 export const PREFAB_TYPES=Object.freeze([
  {id:'1x1x1',size:[1,1,1]},
@@ -71,7 +71,7 @@ export function validatePrefabPlacement(blocks,section,options={}){
  */
 export function positionAgainst(section,hit){
  const n=hit?.normal||{x:0,y:1,z:0};const d=prefabBounds({...section,x:0,y:0,z:0}).size;
- const p=hit?.position||[7.5,0,7.5];
+ const p=hit?.position||[10,0,10];
  const origin={x:worldToGrid(p[0])-Math.floor(d[0]/2),y:worldToGrid(p[1]),z:worldToGrid(p[2])-Math.floor(d[2]/2)};
  if(hit?.block){
   const b=prefabBounds(hit.block);
