@@ -140,7 +140,14 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
     if(y>5.3&&y<6.9&&Math.abs(u-.5)<.035)return true;
     if(y>9.6&&y<11&&Math.abs(u-.5)<.036)return true;
     if(y>13.1&&y<14.6&&Math.abs(u-.5)<.045)return true;
-   }return side===1&&y>10.3&&y<11.6&&Math.abs(u-.49)<.035;
+   }
+   // Small upper cross-shaped through openings are documented for Abaev Kala.
+   // Their placement is approximate until a surveyed facade plan is available.
+   if((side===0||side===2)&&y>14.25&&y<15.5){
+    if(Math.abs(u-.5)<.037)return true;
+    if(y>14.70&&y<15.08&&Math.abs(u-.5)<.115)return true;
+   }
+   return side===1&&y>10.3&&y<11.6&&Math.abs(u-.49)<.035;
   };
   const lime=['#cfc9b9','#d8ceba','#b8b4a5','#ded5c5','#a6a59b','#c4bcae','#bbb4a3','#d5ccbb'];
   const towerStone=()=>lime[Math.floor(rnd()*lime.length)];
