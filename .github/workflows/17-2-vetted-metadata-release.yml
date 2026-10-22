@@ -1,0 +1,93 @@
+name: AlanTil 17.2 vetted metadata release
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/17-2-vetted-metadata-release.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  apply-tested-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retrieve complete files that passed the controlled A-B test
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 39783189024
+          name: alantil-17-2-static-metadata-A-B
+          github-token: ${{ github.token }}
+          path: vetted
+      - name: Prepare coherent source and patch-version propagation
+        run: |
+          set -euo pipefail
+          node scripts/qa/prepare-path-metadata-release.mjs vetted
+          node scripts/release/sync-version.mjs
+          node scripts/release/sync-version.mjs --check
+          node --check src/features/path/feature.js
+          node --check src/data/path-set-metadata.js
+          node --check src/app/bootstrap.js
+          node --check src/app/router.js
+          node --check service-worker.js
+          node --check scripts/release/sync-version.mjs
+          node --test tests/path-bundled-set-metadata-17-2.test.mjs
+      - name: Test dictionary parity, navigation, study, favorite and version regressions
+        run: |
+          set -euo pipefail
+          node scripts/assets/build-path-index.mjs
+          git diff --exit-code -- src/data/path-route-index.json src/data/path-route-index.json.gz
+          node --test \
+            tests/performance-17-2.test.mjs \
+            tests/site-speed-17-2.test.mjs \
+            tests/release-version-17-2.test.mjs \
+            tests/path-lazy-17-2.test.mjs \
+            tests/path-metadata-hydration-17-2.test.mjs \
+            tests/path-bundled-set-metadata-17-2.test.mjs \
+            tests/path-index-preload-17-2.test.mjs \
+            tests/profile-avatar-removal-16-7.test.mjs \
+            tests/storage-profile-analytics-16-8.test.mjs \
+            mobile/tests/architecture.test.mjs
+          git diff --check
+      - name: Run real Chrome station navigation and Service Worker smoke test
+        run: |
+          set -euo pipefail
+          node scripts/static-preview-server.mjs > /tmp/alantil-vetted-preview.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/verify-path-metadata-browser.mjs
+      - name: Commit only the tested production release
+        run: |
+          set -euo pipefail
+          git add index.html release.json mobile/app.json mobile/package.json \
+            packages/alantil-core/release.js src/app/bootstrap.js src/app/router.js \
+            src/config/analytics.js src/features/settings/version.js \
+            src/features/path/feature.js src/features/path/story-stele.js \
+            src/data/path-set-metadata.js service-worker.js \
+            scripts/release/sync-version.mjs tests/path-bundled-set-metadata-17-2.test.mjs
+          git diff --cached --check
+          git diff --cached --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix(path): bundle set metadata and release cache-safe AlanTil 17.2.2"
+          git push origin HEAD:17.2
+      - name: Retain actual browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-17-2-2-vetted-release
+          path: perf-results/
+          retention-days: 21
