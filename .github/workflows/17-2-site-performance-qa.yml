@@ -18,6 +18,7 @@ on:
       - 'scripts/static-preview-server.mjs'
       - 'scripts/report-lighthouse.mjs'
       - 'scripts/qa/seed-lighthouse-profile.mjs'
+      - 'scripts/qa/verify-path-metadata-browser.mjs'
       - '.github/workflows/17-2-site-performance-qa.yml'
   workflow_dispatch:
 
@@ -47,6 +48,7 @@ jobs:
           node --check service-worker.js
           node --check scripts/static-preview-server.mjs
           node --check scripts/qa/seed-lighthouse-profile.mjs
+          node --check scripts/qa/verify-path-metadata-browser.mjs
           node --check scripts/release/sync-version.mjs
           node --check src/features/path/feature.js
           node --check src/features/path/story-stele.js
@@ -86,6 +88,10 @@ jobs:
           done
           cat perf-results/server.log
           exit 1
+      - name: Browser verify path metadata, navigation, Service Worker and save trace
+        run: |
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/verify-path-metadata-browser.mjs
       - name: Measure clean first-run onboarding
         run: |
           set -euo pipefail
