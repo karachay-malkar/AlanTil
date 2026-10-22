@@ -74,7 +74,7 @@ await update("scripts/qa/verify-path-metadata-browser.mjs",text=>{
   const browserCheck=[
 '  // Reproduce the exact guide animation class stack in Chrome (not just CSS inspection).',
 '  await until(async () => Boolean(await evaluate(\'document.getElementById("alantil-guided-help-style")\')), "guide stylesheet");',
-'  const guideGeometry = await evaluate(\`(() => {',
+'  const guideGeometry = await evaluate(`(() => {',
 '    const station=document.querySelector(".beginnerDioramaNode");',
 '    const frame=station?.querySelector(".beginnerDioramaFrame");',
 '    const imgs=frame?[...frame.querySelectorAll(":scope > .beginnerDioramaImage")]:[];',
@@ -96,7 +96,7 @@ await update("scripts/qa/verify-path-metadata-browser.mjs",text=>{
 '      frame.classList.remove("alantilGuideSparkHost");',
 '      document.body.classList.remove("alantilGuideProgressDemo");',
 '    }',
-'  })()\`);',
+'  })()`);',
 '  assert.deepEqual(guideGeometry.positions, ["absolute","absolute"], "Guide must keep diorama layers absolute");',
 '  for(const key of ["sameX","sameY","unchangedHeight","unchangedFrame","unchangedLabel"])',
 '    assert.equal(guideGeometry[key],true,"Guide shifted duplicate images or labels: "+key);',
@@ -106,17 +106,17 @@ await update("scripts/qa/verify-path-metadata-browser.mjs",text=>{
   return replaceExactly(text,needle,browserCheck,"browser guide geometry");
 });
 
-const tests=String.raw\`import test from "node:test";
+const tests=String.raw`import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 const read=(path)=>readFile(new URL("../"+path,import.meta.url));
 test("guide spark animation preserves overlapping diorama image positioning",async()=>{
   const guide=(await read("src/features/onboarding/guide.js")).toString();
   const path=(await read("src/features/path/path.css")).toString();
-  assert.match(guide,/\\.alantilGuideSparkHost>\\.beginnerDioramaImage\\{position:absolute;z-index:1\\}/);
-  assert.match(guide,/\\.alantilGuideSparkHost>\\.millstoneFace\\{position:relative;z-index:1\\}/);
-  assert.doesNotMatch(guide,/\\.alantilGuideSparkHost>\\.beginnerDioramaImage,\\.alantilGuideSparkHost>\\.millstoneFace\\{position:relative/);
-  assert.match(path,/\\.beginnerDioramaImage\\{position:absolute/);
+  assert.match(guide,/\.alantilGuideSparkHost>\.beginnerDioramaImage\{position:absolute;z-index:1\}/);
+  assert.match(guide,/\.alantilGuideSparkHost>\.millstoneFace\{position:relative;z-index:1\}/);
+  assert.doesNotMatch(guide,/\.alantilGuideSparkHost>\.beginnerDioramaImage,\.alantilGuideSparkHost>\.millstoneFace\{position:relative/);
+  assert.match(path,/\.beginnerDioramaImage\{position:absolute/);
 });
 test("browser favicon sizes, version keys, original icon and Service Worker",async()=>{
   const html=(await read("index.html")).toString();
@@ -134,10 +134,10 @@ test("browser favicon sizes, version keys, original icon and Service Worker",asy
     assert.ok(html.includes('sizes="'+size+'x'+size+'" href="/'+filename+'?v=17.2.5"'));
     assert.ok(sw.includes('"/'+filename+'?v=17.2.5"'));
   }
-  assert.match(boot,/onboarding\\/guide\\.js\\?v=17\\.2\\.5/);
+  assert.match(boot,/onboarding\/guide\.js\?v=17\.2\.5/);
   assert.ok((await read("assets/icons/ui/path-elbrus-white.png")).length>4000,"Original path nav icon remains untouched");
 });
-\`;
+`;
 await writeFile("tests/guide-favicon-17-2-5.test.mjs",tests,"utf8");
 console.log("Prepared standalone regression suite.");
 
