@@ -42,7 +42,8 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  function groundY(x,z) {
   // Central 20 x 20 m playable plot remains flat and aligned with the invisible game grid.
   // The rest of the 40 x 50 m reserved site is a terrace, still free of permanent buildings.
-  const down=Math.min(0,z),up=Math.max(0,z-20);
+  // The far bank flattens into the broad Cherek valley instead of descending forever.
+  const down=Math.min(0,Math.max(z,-103)),up=Math.max(0,z-20);
   const side=Math.max(0,Math.abs(x-10)-10);
   const amplitude=smooth(Math.max(Math.abs(down),up,side)/13);
   const slope=(down*.29+up*.30);
