@@ -88,7 +88,7 @@ jobs:
           console.log("COLD VISIBLE-FIRST A-B:",JSON.stringify(report,null,2));
           writeFileSync("visible-first-results/CONCLUSION.json",JSON.stringify(report,null,2));
           if(metrics.baseline.fullImagesLoaded!==true||metrics["visible-first"].fullImagesLoaded!==true||!metrics["visible-first"].navigation||metrics["visible-first"].errors.length)process.exit(1);
-        NODE
+          NODE
       - name: Upload individual Chrome traces and code diff
         if: always()
         uses: actions/upload-artifact@v4
