@@ -1,4 +1,4 @@
-import {spawn} from "node:child_process";
+import {spawn,spawnSync} from "node:child_process";
 import {readFile,writeFile,rm,mkdtemp,mkdir} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -36,6 +36,9 @@ await writeFile("tower-perf-fixture.html",fixture);
 
 async function scenario(name,width,height,dpr,cpu,slowNetwork){
  const dir=join(tmp,name);await mkdir(dir);
+ const seed=spawnSync(process.execPath,["scripts/qa/seed-lighthouse-profile.mjs",dir],{encoding:"utf8",timeout:35000,env:{...process.env,CHROME_PATH:CHROME,ALANTIL_SEED_STORAGE_ONLY:"1"}});
+ if(seed.status!==0)throw Error("Could not seed authenticated-like learning setup: "+seed.stderr+" "+seed.stdout);
+ await rm(join(dir,"DevToolsActivePort"),{force:true});
  const process=spawn(CHROME,["--headless=new","--no-sandbox","--disable-dev-shm-usage","--use-angle=swiftshader","--enable-unsafe-swiftshader","--enable-webgl","--remote-debugging-port=0","--user-data-dir="+dir,"about:blank"],{stdio:"ignore"});
  let ws;
  try{
