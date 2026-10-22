@@ -4,7 +4,7 @@
  * Local +Z is uphill toward Abaev Kala; -Z descends to Cherek and the opposite bank.
  * Decorative meshes are deliberately not registered in the tower's placement raycaster.
  */
-import {createKunlumRuins} from './kunlum-ruins.js?v=17.2.8';
+import {createKunlumRuins} from './kunlum-ruins.js?v=17.2.9';
 
 export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const group=new THREE.Group();group.name='Кюнлюм · склон, руины и Черек';
