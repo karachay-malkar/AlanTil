@@ -14,7 +14,9 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const rnd=(()=>{let n=0x4b1a27;return()=>((n=(Math.imul(n,1664525)+1013904223)>>>0)/4294967296);})();
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
- const rgba=c=>new THREE.Color(c);
+ // Reuse RGB objects for the many triangular facets of the wild-stone walls.
+ const colorCache=new Map();
+ const rgba=c=>{let value=colorCache.get(c);if(!value){value=new THREE.Color(c);colorCache.set(c,value);}return value;};
  const colors={wall:['#a89f8a','#b9ad96','#928b7c','#c0b39c','#9c9486','#aba18d'],
    grass:['#758961','#84916a','#8d9a70','#a1a277','#788766','#b2ac78'],soil:'#968872'};
  function mat(color,vertexColors=false,other={}) {
