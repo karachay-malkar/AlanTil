@@ -1,0 +1,39 @@
+{
+  "schema": "alantil.kunlum.georegistration.v1",
+  "status": "approximate_one_point_unverified_on_map",
+  "anchorName": "Abay-Kala 1 (geo coordinate verified, map pixel candidate unverified)",
+  "anchorWgs84": {
+    "lat": 43.10611388888889,
+    "lon": 43.42876944444444
+  },
+  "anchorUTM38N": {
+    "easting": 372151.107,
+    "northing": 4773796.751
+  },
+  "anchorPixel": {
+    "x": 908,
+    "y": 460
+  },
+  "pixelsPerMetre": 3.7,
+  "mirrorWallsX": true,
+  "angleDeg": 70,
+  "eastOffsetM": 0,
+  "northOffsetM": 0,
+  "controlPointsVerified": 0,
+  "caution": "Never use for historical-accuracy claims or publishing mapped coordinates",
+  "source": "kunlum-plan-edited.json",
+  "dem": "Copernicus GLO-30 EPSG:32638",
+  "plot": {
+    "id": "BUILD-01",
+    "x": 1060.6697998046875,
+    "y": 892.3427734375,
+    "widthM": 30,
+    "heightM": 15,
+    "ppm": 3.6,
+    "angleDeg": -7,
+    "status": "draft_location_not_georeferenced"
+  },
+  "verification": "UNVERIFIED one point; not survey-grade",
+  "sourceWidthPx": 1843,
+  "sourceHeightPx": 1252
+}
