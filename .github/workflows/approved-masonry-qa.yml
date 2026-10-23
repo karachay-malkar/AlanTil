@@ -29,10 +29,13 @@ jobs:
           node --check packages/tower-game/prefab-joints.mjs
           node --check src/features/tower/approved-section-scene.js
           node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/kunlum-terrain-lod.js
+          node --check src/features/tower/kunlum-vector-settlement.js
+          node --check src/features/tower/kunlum-real-environment.js
           node --check src/features/tower/index.js
           node --check src/features/tower/repository.js
           node --check src/features/masonry/architecture-assets.js
           node --check src/features/masonry/library.js
           node --check src/features/masonry/index.js
       - name: Approved assets, placement, rendering dependencies and editor
-        run: node --test scripts/qa/approved-library.test.mjs tests/tower-approved-manual.test.mjs scripts/qa/manual-masonry.test.mjs
+        run: node --test scripts/qa/approved-library.test.mjs tests/tower-approved-manual.test.mjs scripts/qa/manual-masonry.test.mjs tests/kunlum-real-terrain.test.mjs
