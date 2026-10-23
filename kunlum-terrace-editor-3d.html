@@ -102,7 +102,7 @@ let source=null,heights=null,terrain=null,patchedTerrain=null,bounds=null;
 let contourGroup=new THREE.Group(),confirmedGroup=new THREE.Group(),candidateGroup=new THREE.Group(),passageGroup=new THREE.Group();
 let terraceGroup=new THREE.Group(),handleGroup=new THREE.Group(),draftGroup=new THREE.Group();
 for(const g of [contourGroup,confirmedGroup,candidateGroup,passageGroup,terraceGroup,handleGroup,draftGroup])scene.add(g);
-let mode='view',selected=null,drawing=[],dragVertex=null,changed=false,nextId=1,contourCache=new Map();
+let mode='view',selected=null,drawing=[],dragVertex=null,changed=false,nextId=1,contourCache=new Map(),unverifiedCount=0;
 const heightAt=(x,z)=>sampleDemLocal(heights,x,z);
 const world=p=>pixelToLocalWorld(p,alignment);
 const pixel=p=>localWorldToPixel(p,alignment);
@@ -521,7 +521,7 @@ function loadPlan(plan){
  if(!Array.isArray(source.openings))source.openings=[];
  if(!Array.isArray(source.auto_candidates))source.auto_candidates=[];
  selected=null;drawing=[];dragVertex=null;nextId=1+source.confirmed_features.reduce((m,f)=>Math.max(m,Number(String(f.id).slice(1))||0),0);
- setupBounds();contourCache.clear();buildTerrain();buildWalls();updateContours();refreshTerraces();
+ setupBounds();contourCache.clear();buildTerrain();unverifiedCount=buildWalls();updateContours();refreshTerraces();
  changed=false;setMode('view');focus();
  $('status').textContent='План загружен. Рельеф оригинальный, террасы доступны для ручного редактирования.';
 }
@@ -608,7 +608,7 @@ async function start(){
  try{loadPlan(draft||original)}
  catch(e){console.warn('Черновик не подошёл, загружен исходный план',e);loadPlan(original)}
  $('hud').textContent='ИСХОДНЫЙ РЕЛЬЕФ. Кликни «Вращать», «Рисовать» или «Править».\n'+
- source.confirmed_features.length+' подтверждённых объектов · '+(source.openings||[]).length+' проходов · '+(source.auto_candidates||[]).length+' автокандидатов.';
+ source.confirmed_features.length+' подтверждённых объектов · '+(source.openings||[]).length+' проходов · '+unverifiedCount+' дополнительных непроверенных контуров ('+(source.auto_candidates||[]).length+' всего).';
 }
 function resize(){
  const width=Math.max(1,host.clientWidth),height=Math.max(1,host.clientHeight);
