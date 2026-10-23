@@ -20,6 +20,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   connectors:Object.fromEntries(Object.entries(WINDOW_JOINT_FILES).map(([axis,file])=>[axis,{file,interface:JOINT_INTERFACE}]))};
  const loader=new GLTFLoader(),loaded=new Map();
  const approvedSections=createApprovedSectionLoader();
+ const approvedModelPromises=new Map();
  let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
@@ -52,13 +53,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
  const previewContents=new THREE.Group();preview.add(previewContents);
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
- let previewGeneration=0,rebuildGeneration=0,rendered=[],activeGhost=null;
+ let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
+ let renderedById=new Map(),renderedJoints=new Map();
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
  async function getPrefab(block){
   if(block.geometryVersion===APPROVED_PREFAB_VERSION){
    if(!isApprovedMasonryType(block.sectionId))throw new TypeError('Not an approved author-built section');
-   return approvedSections.make(block.sectionId,block.variant,stoneMaterial);
+   const key=block.sectionId+':'+block.variant;
+   if(!approvedModelPromises.has(key))approvedModelPromises.set(key,approvedSections.make(block.sectionId,block.variant,stoneMaterial).catch(error=>{approvedModelPromises.delete(key);throw error;}));
+   return approvedModelPromises.get(key);
   }
   if(block.sectionId===WINDOW_PREFAB_ID){
    if(block.geometryVersion!==WINDOW_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported window prefab version');
@@ -132,7 +136,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function setPosition(group,block){
   group.position.copy(center(block));group.rotation.set(0,block.rotation*Math.PI/2,0);
  }
- function clearPrevious(){for(const group of rendered){surface.remove(group);group.traverse(node=>{if(node.isInstancedMesh)node.dispose();});}rendered=[];targets.length=0;}
+ function release(group){surface.remove(group);group.traverse(node=>{if(node.isInstancedMesh)node.dispose();});}
+ function blockKey(block){return JSON.stringify([block.id,block.type,block.sectionId,block.variant,block.rotation,block.x,block.y,block.z,block.geometryVersion]);}
+ function jointKey(joint){return joint.file+':'+joint.point.join(',');}
+ function rebindGroup(group,block){group.userData.block=block;group.traverse(node=>{if(node.isMesh)node.userData.block=block;});}
  function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected&&x.type==='masonry_section');outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}}
  function prepareMesh(model,block){
   const group=new THREE.Group();group.add(model.clone(true));group.userData.block=block;
@@ -153,32 +160,53 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   }catch(e){if(generation===previewGeneration){container.dataset.prefabError=String(e?.message||e);console.warn('Prefab preview:',e);}}
  }
  async function setBlocks(elements){
-  const generation=++rebuildGeneration;blocks=[...elements];
-  const next=[],used=blocks.filter(b=>layer===null||b.y<=layer);
+  const generation=++rebuildGeneration;
+  const nextBlocks=[...elements],visible=nextBlocks.filter(b=>layer===null||b.y<=layer);
+  const nextSections=new Map(),nextJoints=new Map();
   try{
-   for(const block of used){
-     if(block.type!=='masonry_section')throw new TypeError('Unsupported tower block');
+   for(const block of visible){
+    if(block.type!=='masonry_section')throw new TypeError('Unsupported tower block');
+    const signature=blockKey(block);
+    let entry=renderedById.get(block.id);
+    if(!entry||entry.signature!==signature){
      const model=await getPrefab(block);
      if(disposed||generation!==rebuildGeneration)return;
-     next.push(prepareMesh(model,block));
+     entry={signature,group:prepareMesh(model,block)};
     }
-   // Prepared natural-stone join parts are placed, not generated or deformed.
-   const owned=used.filter(b=>b.type==='masonry_section');
-   const resolved=resolvePrefabJoints(owned,manifest);
+    nextSections.set(block.id,entry);
+   }
+   const resolved=resolvePrefabJoints(visible,manifest);
    for(const joint of resolved.joints){
-    const model=await getConnector(joint);
-    if(disposed||generation!==rebuildGeneration)return;
-    const mesh=applyRockSurface(model.clone(true),stoneMaterial);mesh.position.set(...joint.point.map(v=>v*CELL));
-    next.push(mesh);
+    const key=jointKey(joint);
+    let group=renderedJoints.get(key);
+    if(!group){
+     const model=await getConnector(joint);
+     if(disposed||generation!==rebuildGeneration)return;
+     group=applyRockSurface(model.clone(true),stoneMaterial);
+     group.position.set(...joint.point.map(v=>v*CELL));
+    }
+    nextJoints.set(key,group);
    }
    if(disposed||generation!==rebuildGeneration)return;
-   clearPrevious();for(const g of next){surface.add(g);rendered.push(g);g.traverse(node=>{if(node.isMesh&&node.userData.block)targets.push(node);});}
-   container.dataset.prefabReady='true';container.dataset.prefabCount=String(owned.length);
+   for(const [id,entry] of renderedById)if(nextSections.get(id)?.group!==entry.group)release(entry.group);
+   for(const [key,group] of renderedJoints)if(nextJoints.get(key)!==group)release(group);
+   for(const block of visible){
+    const entry=nextSections.get(block.id);
+    rebindGroup(entry.group,block);
+    if(entry.group.parent!==surface)surface.add(entry.group);
+   }
+   for(const group of nextJoints.values())if(group.parent!==surface)surface.add(group);
+   renderedById=nextSections;renderedJoints=nextJoints;blocks=nextBlocks;
+   targets.length=0;
+   for(const entry of renderedById.values())entry.group.traverse(node=>{if(node.isMesh&&node.userData.block)targets.push(node);});
+   container.dataset.prefabReady='true';
+   container.dataset.prefabCount=String(visible.length);
    container.dataset.prefabJoints=String(resolved.pairs.length);
    container.dataset.prefabJointTiles=String(resolved.joints.length);
    container.dataset.prefabJointErrors=String(resolved.incompatible.length);
    setSelected(selected);
-  }catch(e){console.warn('Prefab build:',e);container.dataset.prefabError=String(e?.message||e);}
+   scheduleDraw();
+  }catch(error){console.warn('Prefab build:',error);container.dataset.prefabError=String(error?.message||error);}
  }
  function showFaceGrid(hit){
   const geometry=faceGrid.geometry;
