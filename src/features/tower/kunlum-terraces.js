@@ -81,3 +81,6 @@ export function edgeDistance(poly,p){
  let distanceMin=Infinity;for(let i=0;i<poly.length;i++){const q=project(p,poly[i],poly[(i+1)%poly.length]);distanceMin=Math.min(distanceMin,distance(q,p))}
  return distanceMin;
 }
+
+/** Convex outer platform when nearby houses share one draft level; never alters their outlines. */
+export function terraceFootprint(polygons){return polygons.length===1?polygons[0].map(p=>[...p]):convexHull(polygons.flatMap(p=>p));}
