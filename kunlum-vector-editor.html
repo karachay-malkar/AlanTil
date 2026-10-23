@@ -78,7 +78,7 @@ function draw(){for(const id of groupIds)$(id).replaceChildren();
  if(drawing.length){const coords=[...drawing];el('path',{d:path(coords),'fill':'none','stroke':palette[$('featureType').value],'stroke-width':'3','stroke-dasharray':'5 4'},$('draft'));
  for(const xy of coords)el('circle',{cx:xy[0],cy:xy[1],r:4,fill:palette[$('featureType').value]},$('draft'));}
  const width=30*plot.ppm,height=15*plot.ppm,centerX=plot.x+width/2,centerY=plot.y+height/2;
- const g=el('g',{transform:22rotate('+plot.angleDeg+' '+centerX+' '+centerY+')'},$('site'));
+ const g=el('g',{transform:'rotate('+plot.angleDeg+' '+centerX+' '+centerY+')'},$('site'));
  const box=el('rect',{x:plot.x,y:plot.y,width,height,fill:'rgba(215,61,55,.20)',stroke:'#dc3929','stroke-width':4,'stroke-dasharray':'11 5'},g);
  box.addEventListener('pointerdown',evt=>{if(mode!=='plot')return;evt.stopPropagation();draggingPlot={point:point(evt),x:plot.x,y:plot.y};svg.setPointerCapture(evt.pointerId);});
  const text=el('text',{x:centerX,y:centerY,'text-anchor':'middle','font-size':16,'font-weight':'bold',fill:'#af1f1b',stroke:'#fff','stroke-width':4,'paint-order':'stroke'},g);text.textContent='30 × 15 м';
