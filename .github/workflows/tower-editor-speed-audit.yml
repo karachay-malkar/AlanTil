@@ -30,7 +30,7 @@ jobs:
           node --check src/features/tower/prefab-scene.js
           node --check src/features/masonry/index.js
           node --check src/features/masonry/scene.js
-          node --test tests/tower-approved-manual.test.mjs
+          node --test tests/tower-approved-manual.test.mjs tests/tower-performance-17-2-11.test.mjs
       - name: Serve current branch without modifying code
         run: |
           mkdir -p perf-results
