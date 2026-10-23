@@ -61,7 +61,7 @@ await set('src/app/router.js',original=>{
  return replaceOne(s,/(const TOWER_ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js');
 });
 await set('src/features/tower/index.js',s=>replaceOne(s,/(prefab-scene\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js'));
-await set('src/features/tower/prefab-scene.js',s=>replaceOne(s,/(kunlum-environment\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/prefab-scene.js'));
+await set('src/features/tower/prefab-scene.js',s=>replaceOne(s,/(kunlum-(?:real-)?environment\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/prefab-scene.js'));
 await set('src/shared/styles/lazy/tower.css',s=>replaceOne(s,/(features\/tower\/tower\.css\?v=)[0-9.]+/,'$1'+version,'src/shared/styles/lazy/tower.css'));
 await set('service-worker.js',original=>{
   let s=replaceOne(original,/(const VERSION = ")[^"]+/,'$1'+version,'service-worker.js');
