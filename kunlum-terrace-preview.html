@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кюнлюм — предварительные 3D-террасы из контуров домов</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;font:13px/1.4 system-ui,Arial,sans-serif;background:#1a2928;color:#f5f1e8}
+main{display:grid;grid-template-columns:minmax(310px,365px) minmax(0,1fr);height:100%}
+aside{overflow:auto;padding:16px;background:#203432;border-right:1px solid #536e62}
+#view{position:relative;min-width:0;min-height:0;background:#a2b8bd}
+canvas{display:block;touch-action:none}
+h1{font-size:19px;margin:0 0 7px;line-height:1.2}h2{font-size:13px;margin:0 0 8px}
+p{margin:6px 0 12px;color:#d7dfd6}small{font-size:11px;color:#b9c9c3}
+.box{border:1px solid #647c6a;border-radius:9px;padding:11px;margin:11px 0}
+.note{background:#4b3925;padding:9px;border-radius:7px;color:#fbe0a3}
+label{display:block;margin:10px 0 5px}input[type=range]{width:100%;accent-color:#daa65b}
+input[type=number],select{max-width:100%;border:1px solid #739085;background:#243e3a;color:#fff;border-radius:5px;padding:5px}
+button{border:1px solid #708e80;border-radius:6px;padding:7px 9px;background:#385b50;color:#fff;cursor:pointer;margin:3px 4px 3px 0}
+button:hover{background:#527b6e}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #f6d383}
+#plan{display:block;width:100%;max-height:225px;background:#dfdbc9;border-radius:6px}
+#groups .group{border-top:1px solid #50665a;padding:10px 0}
+#groups .group:first-child{border-top:none}
+.group strong{display:flex;gap:5px;align-items:center;justify-content:space-between;font-size:12px}
+.group input[type=number]{width:90px}
+.house{display:flex;gap:5px;align-items:center;justify-content:space-between;margin:4px 0;font-size:11px}
+.house select{width:116px}
+#legend{font-size:11px}
+#status{white-space:pre-line;font-size:12px;color:#e5d9b0}
+#note{position:absolute;bottom:12px;left:12px;max-width:455px;border:1px solid #59736b;border-radius:8px;padding:9px 11px;background:#1a2d2be8;font-size:11px;pointer-events:none}
+#loadError{color:#ffb0a4;font-size:12px;white-space:pre-wrap}
+@media(max-width:850px){main{display:flex;flex-direction:column;overflow:auto;height:auto;min-height:100vh}aside{order:2;overflow:visible}#view{order:1;height:55vh;min-height:350px}#note{font-size:10px}}
+</style></head><body><main>
+<aside>
+<h1>Кюнлюм · террасы домов</h1>
+<p class="note"><b>Черновая 3D-реконструкция.</b> Группы рассчитаны по последним контурам и Copernicus DEM (шаг 30 м). Единственная географическая опорная точка и высоты конкретных террас не проверены. Не использовать как точные исторические отметки.</p>
+<div class="box"><h2>План расположения</h2><svg id="plan" viewBox="360 425 900 535" xmlns="http://www.w3.org/2000/svg"></svg>
+<small>Цвет показывает предполагаемую общую террасу. Внутренние стены и проходы остаются в исходном JSON.</small></div>
+<div class="box"><h2>Автоматическое объединение</h2>
+<label for="gap">Максимальный промежуток между домами: <b id="gapText">7 м</b></label><input id="gap" type="range" min="1" max="20" step=".5" value="7">
+<label for="rise">Разница высот по DEM: <b id="riseText">3 м</b></label><input id="rise" type="range" min=".5" max="15" step=".5" value="3">
+<p><small>Группы соединяются только через соседние дома при сходной оценке высоты. Подпорные стены учитываются как возможный барьер. Перестройка сбросит ручную группировку.</small></p>
+<button id="rebuild">Пересчитать группы</button><button id="reset">Сбросить правки</button></div>
+<div class="box"><h2>Редактировать уровни террас</h2>
+<p><small>Изменяй высоту группы или переноси дом в соседнюю группу. Общая площадка между домами перестроится в 3D. Все высоты пока ориентировочные.</small></p>
+<div id="groups"></div></div>
+<div class="box"><h2>Просмотр и экспорт</h2>
+<button id="overview">Обзор домов</button><button id="above">Вид сверху</button>
+<button id="toggle">Скрыть плоские площадки</button>
+<button id="export">Скачать схему террас JSON</button>
+<p id="status">Загрузка данных…</p><div id="loadError"></div>
+<small>Исходные 120 объектов, 42 прохода и 702 автокандидата сохранены отдельно без изменений.</small></div>
+</aside>
+<section id="view"><div id="note">Реальный Copernicus DEM GLO-30 · локально изменённый 3D-рельеф с горизонтальными площадками. Перетаскивание — поворот, колесо — масштаб. Площадки и отметки требуют проверки.</div></section>
+</main>
+<script type="module">
+import * as THREE from './src/vendor/three/three.module.js';
+import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
+import {KUNLUM_DEM} from './src/features/tower/kunlum-dem-data.js';
+import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,sampleDemLocal} from './src/features/tower/kunlum-georeference.js';
+import {makeKunlumTerracePlan,terraceFootprint,insidePolygon,edgeDistance} from './src/features/tower/kunlum-terraces.js';
+const $=id=>document.getElementById(id);
+const host=$('view'),scene=new THREE.Scene();
+scene.background=new THREE.Color('#aac0c9');scene.fog=new THREE.Fog('#aac0c9',850,3800);
+scene.add(new THREE.HemisphereLight('#f1f8ff','#77654d',2.5));
+const light=new THREE.DirectionalLight('#ffe4bb',2.35);light.position.set(-350,860,550);scene.add(light);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;host.appendChild(renderer.domElement);
+const camera=new THREE.PerspectiveCamera(48,1,.5,7500);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.maxDistance=2200;controls.minDistance=9;
+const alignment=structuredClone(DEFAULT_KUNLUM_ALIGNMENT),geo=p=>pixelToLocalWorld(p,alignment);
+let source=null,heights=null,basePlan=null,baseAssignments={},assignments={},editedHeights={};
+let terraceGroups=[],terrainMeshes=[],overlayMeshes=[],patchBounds=null,visible=true,patchStep=3;
+const colors=['#eac179','#67b6a1','#d487a0','#94b9d8','#c4a3ed','#a9c36a','#db9c6c','#7bc9cc','#d3c9a3'];
+function colorOf(i){return colors[i%colors.length]}
+function terrainHeight(x,z){return sampleDemLocal(heights,x,z)}
+function destroy(meshes){for(const mesh of meshes){scene.remove(mesh);mesh.geometry?.dispose();mesh.material?.dispose()};meshes.length=0}
+function median(values){const s=[...values].sort((a,b)=>a-b);return s[Math.floor(s.length/2)]}
+function currentGroups(){
+ const map=new Map();
+ for(const house of basePlan.houses){
+  const id=assignments[house.id]||baseAssignments[house.id];
+  if(!map.has(id))map.set(id,[]);
+  map.get(id).push(house);
+ }
+ return [...map.entries()].map(([id,houses],i)=>{
+  const polygon=terraceFootprint(houses.map(h=>h.poly));
+  const h=Object.hasOwn(editedHeights,id)?editedHeights[id]:median(houses.map(h=>h.estimatedHeight));
+  return {id,houseIds:houses.map(h=>h.id),polygon,height:h,color:colorOf(i),center:houses.reduce((a,v)=>[a[0]+v.center[0]/houses.length,a[1]+v.center[1]/houses.length],[0,0])};
+ }).sort((a,b)=>b.height-a.height);
+}
+function calculate(){
+ const gap=Number($('gap').value),rise=Number($('rise').value);
+ $('gapText').textContent=gap+' м';$('riseText').textContent=rise+' м';
+ basePlan=makeKunlumTerracePlan(source.confirmed_features,geo,terrainHeight,{maxGapM:gap,maxRiseM:rise});
+ baseAssignments=Object.fromEntries(basePlan.groups.flatMap(g=>g.houseIds.map(id=>[id,g.id])));
+ assignments={};editedHeights={};update();
+}
+function update(){terraceGroups=currentGroups();drawPlan();renderGroups();renderTerrain();report()}
+function addSvg(tag,attrs,parent){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+ for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,v);parent.append(e);return e;}
+function drawPlan(){
+ const svg=$('plan');svg.replaceChildren();
+ for(const [i,g] of terraceGroups.entries()){
+  const px=g.houseIds.map(id=>source.confirmed_features.find(f=>f.id===id).points);
+  // Convex patch outline in map XY is only a preview; 3D geometry uses metres.
+  const all=px.flat(),xs=all.map(p=>p[0]),ys=all.map(p=>p[1]);
+  const bg=addSvg('rect',{x:Math.min(...xs),y:Math.min(...ys),width:Math.max(...xs)-Math.min(...xs),height:Math.max(...ys)-Math.min(...ys),fill:g.color,'fill-opacity':.08,stroke:g.color,'stroke-width':1,'stroke-dasharray':'7 4'},svg);
+  bg.setAttribute('pointer-events','none');
+  for(const id of g.houseIds){
+   const house=source.confirmed_features.find(f=>f.id===id);
+   addSvg('polygon',{points:house.points.map(p=>p.join(',')).join(' '),fill:g.color,'fill-opacity':.5,stroke:'#243b34','stroke-width':2},svg);
+  }
+  addSvg('text',{x:Math.min(...xs),y:Math.min(...ys)-6,fill:'#17332a','font-size':14,'font-weight':'bold'},svg).textContent=g.id;
+ }
+ for(const f of source.confirmed_features.filter(f=>f.type==='retaining')){
+  addSvg('polyline',{points:f.points.map(p=>p.join(',')).join(' '),stroke:'#795747','stroke-width':2.4,fill:'none','stroke-dasharray':'4 3'},svg);
+ }
+}
+function renderGroups(){
+ const parent=$('groups');parent.replaceChildren();
+ for(const group of terraceGroups){
+  const box=document.createElement('div');box.className='group';
+  const title=document.createElement('strong');const name=document.createElement('span');name.textContent=group.id+' · '+group.houseIds.length+' дом(ов)';
+  name.style.color=group.color;title.append(name);
+  const height=document.createElement('input');height.type='number';height.step='.5';height.title='Высота над уровнем моря (предварительная)';
+  height.value=(group.height+KUNLUM_DEM.centerHeightASL).toFixed(1);
+  height.onchange=()=>{const entered=Number(height.value);if(Number.isFinite(entered)&&entered>500&&entered<5000){editedHeights[group.id]=entered-KUNLUM_DEM.centerHeightASL;update()}};
+  title.append(height);box.append(title);
+  for(const id of group.houseIds){
+   const row=document.createElement('div');row.className='house';
+   const label=document.createElement('span');label.textContent=id;row.append(label);
+   const select=document.createElement('select');select.setAttribute('aria-label','Терраса для '+id);
+   for(const possible of terraceGroups){
+    const opt=document.createElement('option');opt.value=possible.id;opt.textContent=possible.id+' ('+possible.houseIds.length+')';select.append(opt);
+   }
+   const distinct=document.createElement('option');distinct.value='NEW';distinct.textContent='Отдельная терраса';select.append(distinct);select.value=group.id;
+   select.onchange=()=>{
+    const to=select.value==='NEW'?'T-'+id:select.value;
+    assignments[id]=to;
+    if(!Object.hasOwn(editedHeights,to)){const h=basePlan.houses.find(h=>h.id===id);editedHeights[to]=h.estimatedHeight}
+    update();
+   };
+   row.append(select);box.append(row);
+  }
+  parent.append(box);
+ }
+}
+function patchRegion(){
+ const points=basePlan.houses.flatMap(h=>h.poly);
+ const x0=Math.min(...points.map(p=>p[0])),x1=Math.max(...points.map(p=>p[0]));
+ const z0=Math.min(...points.map(p=>p[1])),z1=Math.max(...points.map(p=>p[1]));
+ const snapDown=n=>Math.max(-1800,Math.floor((n-180)/30)*30+180);
+ const snapUp=n=>Math.min(1800,Math.ceil((n-180)/30)*30+180);
+ return {x0:snapDown(x0-30),x1:snapUp(x1+30),z0:snapDown(z0-30),z1:snapUp(z1+30)};
+}
+function patchedHeight(x,z){
+ const native=terrainHeight(x,z);if(!visible)return native;
+ let closest=null,dist=Infinity;
+ for(const g of terraceGroups){
+  if(insidePolygon(g.polygon,x,z))return g.height;
+  const d=edgeDistance(g.polygon,[x,z]);if(d<dist){closest=g;dist=d}
+ }
+ if(!closest||dist>=5)return native;
+ const t=(5-dist)/5,s=t*t*(3-2*t);
+ return native+(closest.height-native)*s;
+}
+function heightColor(y){
+ const h=y+KUNLUM_DEM.centerHeightASL;
+ const stops=[[1070,'#6f8052'],[1190,'#9a986d'],[1250,'#ab9b72'],[1350,'#8b866f'],[1500,'#e0dad0'],[1700,'#f5f3f0']];
+ let col=new THREE.Color(stops[0][1]);
+ for(let i=1;i<stops.length;i++)if(h<=stops[i][0]){
+  const t=Math.max(0,Math.min(1,(h-stops[i-1][0])/(stops[i][0]-stops[i-1][0])));
+  return col.lerp(new THREE.Color(stops[i][1]),t);
+ }
+ return new THREE.Color(stops.at(-1)[1]);
+}
+function terrainGrid(x0,x1,z0,z1,nx,nz,patch=false){
+ const pos=[],cols=[],index=[];
+ for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){
+  const x=x0+(x1-x0)*i/nx,z=z0+(z1-z0)*j/nz;
+  const y=patch?patchedHeight(x,z):terrainHeight(x,z);
+  pos.push(x,y,z);const c=heightColor(y);cols.push(c.r,c.g,c.b);
+ }
+ const row=nx+1;
+ for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){
+  const cx=x0+(x1-x0)*(i+.5)/nx,cz=z0+(z1-z0)*(j+.5)/nz;
+  if(!patch&&cx>patchBounds.x0&&cx<patchBounds.x1&&cz>patchBounds.z0&&cz<patchBounds.z1)continue;
+  const a=j*row+i,b=a+1,c=a+row,d=c+1;
+  index.push(a,c,b,b,c,d);
+ }
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));geo.setIndex(index);geo.computeVertexNormals();
+ const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
+ const mesh=new THREE.Mesh(geo,material);mesh.name=patch?'Deformed high-resolution terrace DEM patch':'Unmodified Copernicus DEM outside terrace patch';
+ scene.add(mesh);terrainMeshes.push(mesh);
+}
+function platformMesh(g){
+ // Real horizontal 3D mesh; each vertex receives exactly the same elevation.
+ const shape=new THREE.Shape();
+ for(let i=0;i<g.polygon.length;i++){const p=g.polygon[i];if(!i)shape.moveTo(p[0],p[1]);else shape.lineTo(p[0],p[1])}
+ shape.closePath();const geom=new THREE.ShapeGeometry(shape);
+ const pos=geom.attributes.position;
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getY(i);pos.setXYZ(i,x,g.height+.16,z)}
+ pos.needsUpdate=true;geom.computeVertexNormals();
+ const material=new THREE.MeshStandardMaterial({color:g.color,transparent:true,opacity:.74,roughness:1,side:THREE.DoubleSide,depthWrite:false});
+ const mesh=new THREE.Mesh(geom,material);mesh.name='Terrace '+g.id+' flat horizontal platform';mesh.visible=visible;
+ scene.add(mesh);overlayMeshes.push(mesh);
+ // Stone-coloured perimeter highlights cut/fill boundaries, without pretending historic wall height.
+ const verts=[];
+ for(let i=0;i<g.polygon.length;i++){
+  const a=g.polygon[i],b=g.polygon[(i+1)%g.polygon.length],N=Math.max(1,Math.ceil(Math.hypot(a[0]-b[0],a[1]-b[1])/2));
+  for(let j=0;j<N;j++){
+   const t=j/N,u=(j+1)/N,x=a[0]+(b[0]-a[0])*t,z=a[1]+(b[1]-a[1])*t,xx=a[0]+(b[0]-a[0])*u,zz=a[1]+(b[1]-a[1])*u;
+   verts.push(x,g.height+.26,z,xx,g.height+.26,zz);
+  }
+ }
+ const lineGeo=new THREE.BufferGeometry();lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+ const lines=new THREE.LineSegments(lineGeo,new THREE.LineBasicMaterial({color:'#231e15',depthTest:false,transparent:true,opacity:.75}));
+ lines.visible=visible;scene.add(lines);overlayMeshes.push(lines);
+}
+function drawHistoricEdges(){
+ // Low-profile lines show walls, openings are not projected as solid walls in this preliminary view.
+ const segments=[];
+ for(const f of source.confirmed_features.filter(f=>['wall','retaining'].includes(f.type))){
+  for(let i=1;i<f.points.length;i++){
+   const a=geo(f.points[i-1]),b=geo(f.points[i]);
+   segments.push(a[0],patchedHeight(...a)+.6,a[1],b[0],patchedHeight(...b)+.6,b[1]);
+  }
+ }
+ const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(segments,3));
+ const mesh=new THREE.LineSegments(geom,new THREE.LineBasicMaterial({color:'#665546',depthTest:true}));
+ scene.add(mesh);overlayMeshes.push(mesh);
+}
+function renderTerrain(){
+ if(!basePlan.houses.length)return;
+ destroy(terrainMeshes);destroy(overlayMeshes);
+ patchBounds=patchRegion();
+ terrainGrid(-1800,1800,-1800,1800,120,120,false);
+ const nx=Math.min(300,Math.ceil((patchBounds.x1-patchBounds.x0)/patchStep));
+ const nz=Math.min(300,Math.ceil((patchBounds.z1-patchBounds.z0)/patchStep));
+ terrainGrid(patchBounds.x0,patchBounds.x1,patchBounds.z0,patchBounds.z1,nx,nz,true);
+ if(visible)terraceGroups.forEach(platformMesh);
+ drawHistoricEdges();
+}
+function report(){
+ $('status').textContent='Исходные объекты: '+source.confirmed_features.length+' · проходы: '+source.openings.length+
+  '\nЗамкнутых площадок: '+basePlan.houses.length+' · пробных террас: '+terraceGroups.length+
+  '\nБез площадки: '+basePlan.skipped.join(', ')+
+  '\nИсточник высот: Copernicus DEM, 30 м; привязка непроверена.';
+}
+function focus(top=false){
+ if(!basePlan)return;
+ const center=basePlan.houses.reduce((v,h)=>[v[0]+h.center[0]/basePlan.houses.length,v[1]+h.center[1]/basePlan.houses.length],[0,0]);
+ const y=terrainHeight(...center);
+ controls.target.set(center[0],y,center[1]);
+ camera.position.set(center[0]+(top?1:185),y+(top?265:148),center[1]+(top?0:160));
+ camera.lookAt(controls.target);controls.update();
+}
+function exportData(){
+ const out={format:'alantil.kunlum.terraces.draft.v1',status:'UNVERIFIED_DEM_30M_ONE_POINT',source:'assets/tower/environment/kunlum-vector-plan-2026-10-23.json',
+  alignment:{...alignment},dem:{source:KUNLUM_DEM.source,stepM:KUNLUM_DEM.stepM,centerHeightASL:KUNLUM_DEM.centerHeightASL},
+  parameters:basePlan.parameters,skipped_house_lines:basePlan.skipped,
+  terraces:terraceGroups.map(g=>({id:g.id,houseIds:g.houseIds,heightASL:g.height+KUNLUM_DEM.centerHeightASL,polygon_local_metres_EN:g.polygon}))};
+ const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kunlum-terraces-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+async function start(){
+ const response=await fetch('./assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
+ if(!response.ok)throw Error('JSON: HTTP '+response.status);
+ source=await response.json();
+ if(source.confirmed_features.length!==120||source.openings.length!==42||source.auto_candidates.length!==702)throw Error('Несовпадение исходной пользовательской разметки');
+ const raw=atob(KUNLUM_DEM.heightsBase64);if(raw.length!==121*121*2)throw Error('DEM: повреждённые высоты');
+ heights=new Float32Array(121*121);
+ for(let i=0;i<heights.length;i++){let n=raw.charCodeAt(i*2)|(raw.charCodeAt(i*2+1)<<8);if(n&32768)n-=65536;heights[i]=n/10}
+ calculate();focus();
+ $('rebuild').onclick=calculate;$('reset').onclick=()=>{$('gap').value='7';$('rise').value='3';calculate()};
+ $('overview').onclick=()=>focus(false);$('above').onclick=()=>focus(true);
+ $('toggle').onclick=()=>{visible=!visible;$('toggle').textContent=visible?'Скрыть плоские площадки':'Показать плоские площадки';renderTerrain()};
+ $('export').onclick=exportData;
+}
+function resize(){const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}requestAnimationFrame(animate);
+start().catch(e=>{$('loadError').textContent='Ошибка: '+e.message;console.error('Kunlum terraces',e)});
+</script></body></html>
