@@ -156,5 +156,6 @@ export function createKunlumSettlement({quad,tri,groundY,rnd,stone,mobile=false,
    quad('path',a,b,c,d,'#aa9b7b');
   }
  }
- return {stats,heightAt,layout,wallLine:(ax,az,bx,bz,opts={})=>\n  wall(ax,az,bx,bz,groundY(ax,az),opts.height??1.5,opts)};
+ return {stats,heightAt,layout,wallLine:(ax,az,bx,bz,opts={})=>
+  wall(ax,az,bx,bz,groundY(ax,az),opts.height??1.5,opts)};
 }
