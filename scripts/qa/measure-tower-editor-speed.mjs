@@ -81,7 +81,7 @@ async function scenario(name,width,height,dpr,cpu,slowNetwork){
   if(cpu>1)await call("Emulation.setCPUThrottlingRate",{rate:cpu});
   if(slowNetwork)await call("Network.emulateNetworkConditions",{offline:false,latency:60,downloadThroughput:1900000,uploadThroughput:450000});
   const opens=[];
-  try { for(const phase of []){
+  try { for(const phase of ["cold","warm"]){
    const from=completed.length,started=Date.now();
    await call("Page.navigate",{url:ROOT+"/practice/tower"});
    try { await wait('document.querySelector(".towerCanvas")?.dataset.ready==="true" || Boolean(document.querySelector(".errorState"))',"3D canvas first ready or route error",16000); if(await evalJS('Boolean(document.querySelector(".errorState"))'))throw Error("Route error screen"); }
