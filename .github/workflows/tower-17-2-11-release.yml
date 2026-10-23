@@ -79,7 +79,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "release(tower): vetted 17.2.11 scene performance and restored editor stylesheet"
-          git push origin HEAD:17.2
+          for attempt in 1 2 3 4; do
+            git fetch origin 17.2
+            if ! git rebase origin/17.2; then
+              git rebase --abort
+              echo "Concurrent conflicting changes: not overwriting branch"
+              exit 1
+            fi
+            if git push origin HEAD:17.2; then exit 0; fi
+            sleep 2
+          done
+          echo "Concurrent updates prevented release; no force push performed."
+          exit 1
       - name: Archive performance evidence
         if: always()
         uses: actions/upload-artifact@v4
