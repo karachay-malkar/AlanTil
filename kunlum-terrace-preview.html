@@ -151,7 +151,7 @@ function drawPlan(){
    const feature=source.confirmed_features.find(f=>f.id===g.id);
    const ring=feature.points,px=ring.map(p=>p.join(',')).join(' ');
    addSvg('polygon',{points:px,fill:g.color,'fill-opacity':.48,stroke:g.color,'stroke-width':3},svg);
-   const center=ring.slice(0,ring.length>3&&ring[0][0]===ring.at(-1)[0]&&ring[0][1]===ring.at(-1)[1]? -1:undefined)
+   const center=ring.slice(0,ring.length>3&&ring[0][0]===ring.at(-1)[0]&&ring[0][1]===ring.at(-1)[1]? -1:ring.length)
     .reduce((sum,p,_,a)=>[sum[0]+p[0]/a.length,sum[1]+p[1]/a.length],[0,0]);
    addSvg('text',{x:center[0],y:center[1],fill:g.color,stroke:'#fff','stroke-width':2.4,'paint-order':'stroke',
     'font-size':17,'font-weight':700,'text-anchor':'middle'},svg).textContent=(g.height+KUNLUM_DEM.centerHeightASL)+' м';
@@ -179,7 +179,7 @@ function renderGroups(){
   const title=document.createElement('strong'),name=document.createElement('span');
   name.textContent=group.id+' · '+group.houseIds.length+' дом(ов)';name.style.color=group.color;title.append(name);
   const height=document.createElement('input');height.type='number';height.step=group.manual?'1':'.5';
-  height.title='Абсолютная высота над уровнем моря';height.value=(group.height+KUNLUM_DEM.centerHeightASL).toFixed(group.manual?0:1);
+  height.title='Абсолютная высота над уровнем моря';height.value=String(Number((group.height+KUNLUM_DEM.centerHeightASL).toFixed(2)));
   height.onchange=()=>{
    const entered=Number(height.value);
    if(!Number.isFinite(entered)||entered<500||entered>5000)return;
@@ -414,13 +414,14 @@ function exportData(){
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kunlum-terraces-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 function validateSource(val){
- return val&&val.format==='alantil.kunlum.vectorplan.v1'&&Array.isArray(val.confirmed_features)&&Array.isArray(val.openings)&&
+ return val&&val.format==='alantil.kunlum.vectorplan.v1'&&Array.isArray(val.confirmed_features)&&(val.openings===undefined||Array.isArray(val.openings))&&
  val.confirmed_features.every(f=>f&&typeof f.id==='string'&&Array.isArray(f.points))&&
- val.confirmed_features.filter(f=>f.type==='terrace').every(f=>Number.isFinite(f.elevationASL)&&validTerraceFeature(f));
+ true;
 }
 function loadSource(val){
  if(!validateSource(val))throw Error('План должен содержать подтверждённые объекты, проходы и террасы с корректной высотой.');
- source=val;contourCache.clear();calculate();focus();
+ source=structuredClone(val);if(!Array.isArray(source.openings))source.openings=[];
+ contourCache.clear();calculate();focus();
  if(source.terraceSettings?.contourIntervalM===3)$('demLineStep').value='3';
  else $('demLineStep').value='5';
  if(typeof source.terraceSettings?.contoursVisible==='boolean')$('demLinesVisible').checked=source.terraceSettings.contoursVisible;
