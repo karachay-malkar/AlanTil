@@ -137,7 +137,7 @@ function renderGroups(){
    select.onchange=()=>{
     const to=select.value==='NEW'?'T-'+id:select.value;
     assignments[id]=to;
-    if(!Object.hasOwn(editedHeights,to)){const h=basePlan.houses.find(h=>h.id===id);editedHeights[to]=h.estimatedHeight}
+    if(select.value==='NEW'&&!Object.hasOwn(editedHeights,to)){const h=basePlan.houses.find(h=>h.id===id);editedHeights[to]=h.estimatedHeight}
     update();
    };
    row.append(select);box.append(row);
@@ -219,17 +219,55 @@ function platformMesh(g){
  lines.visible=visible;scene.add(lines);overlayMeshes.push(lines);
 }
 function drawHistoricEdges(){
- // Low-profile lines show walls, openings are not projected as solid walls in this preliminary view.
- const segments=[];
- for(const f of source.confirmed_features.filter(f=>['wall','retaining'].includes(f.type))){
-  for(let i=1;i<f.points.length;i++){
-   const a=geo(f.points[i-1]),b=geo(f.points[i]);
-   segments.push(a[0],patchedHeight(...a)+.6,a[1],b[0],patchedHeight(...b)+.6,b[1]);
+ // Non-destructive 3D line preview. All linked passages visibly cut the perimeter lines.
+ const lines={wall:[],retaining:[],passage:[]};
+ const push=(type,a,b)=>lines[type].push(a[0],patchedHeight(...a)+.65,a[1],b[0],patchedHeight(...b)+.65,b[1]);
+ for(const f of source.confirmed_features){
+  if(f.type==='passage'&&f.points.length>=2){
+   for(let i=1;i<f.points.length;i++)push('passage',geo(f.points[i-1]),geo(f.points[i]));
+   continue;
+  }
+  if(!['wall','retaining','house'].includes(f.type)||f.points.length<2)continue;
+  const p=f.points.map(geo);
+  if(f.type==='house'&&p.length>=3&&Math.hypot(p[0][0]-p[p.length-1][0],p[0][1]-p[p.length-1][1])>.001)p.push([...p[0]]);
+  const len=p.slice(1).map((q,i)=>Math.hypot(q[0]-p[i][0],q[1]-p[i][1]));
+  const pref=[0];for(const n of len)pref.push(pref[pref.length-1]+n);
+  const ranges=source.openings.filter(o=>o.wallId===f.id).flatMap(o=>{
+   const location=at=>at&&Number.isInteger(at.segment)&&at.segment>=0&&at.segment<len.length?
+      pref[at.segment]+len[at.segment]*Math.max(0,Math.min(1,Number(at.t)||0)):null;
+   const v=location(o.start),w=location(o.end);
+   return v===null||w===null?[]:[[Math.min(v,w),Math.max(v,w)]];
+  });
+  for(let i=0;i<len.length;i++){
+   if(len[i]<.001)continue;
+   let allowed=[[0,1]];
+   for(const [low,high] of ranges){
+    const cutA=Math.max(0,(low-pref[i])/len[i]),cutB=Math.min(1,(high-pref[i])/len[i]);
+    if(cutB-cutA<=.00001)continue;
+    allowed=allowed.flatMap(([s,e])=>{
+     if(cutA>=e||cutB<=s)return [[s,e]];
+     const pieces=[];
+     if(cutA>s+.00001)pieces.push([s,Math.min(e,cutA)]);
+     if(cutB<e-.00001)pieces.push([Math.max(s,cutB),e]);
+     return pieces;
+    });
+    push('passage',[p[i][0]+(p[i+1][0]-p[i][0])*cutA,p[i][1]+(p[i+1][1]-p[i][1])*cutA],
+        [p[i][0]+(p[i+1][0]-p[i][0])*cutB,p[i][1]+(p[i+1][1]-p[i][1])*cutB]);
+   }
+   for(const [s,e] of allowed){
+    const a=[p[i][0]+(p[i+1][0]-p[i][0])*s,p[i][1]+(p[i+1][1]-p[i][1])*s];
+    const b=[p[i][0]+(p[i+1][0]-p[i][0])*e,p[i][1]+(p[i+1][1]-p[i][1])*e];
+    push(f.type==='retaining'?'retaining':'wall',a,b);
+   }
   }
  }
- const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(segments,3));
- const mesh=new THREE.LineSegments(geom,new THREE.LineBasicMaterial({color:'#665546',depthTest:true}));
- scene.add(mesh);overlayMeshes.push(mesh);
+ for(const [kind,points] of Object.entries(lines)){
+  if(!points.length)continue;
+  const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+  const color=kind==='passage'?'#29dfac':kind==='retaining'?'#b48e65':'#524536';
+  const mesh=new THREE.LineSegments(geom,new THREE.LineBasicMaterial({color,depthTest:kind!=='passage'}));
+  mesh.name='Historic traced '+kind;scene.add(mesh);overlayMeshes.push(mesh);
+ }
 }
 function renderTerrain(){
  if(!basePlan.houses.length)return;
