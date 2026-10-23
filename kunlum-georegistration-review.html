@@ -9,7 +9,7 @@ h1{font-size:18px;margin:0 0 4px}h2{font-size:13px;font-weight:700;margin:14px 0
 a{color:#b1e4ca}.box{border:1px solid #51665f;border-radius:9px;padding:10px;margin-top:10px}
 button,select,input{font:inherit}button{border:1px solid #7b9c8d;background:#35544a;color:#fff;border-radius:6px;padding:7px 9px;cursor:pointer}button:hover{background:#456e5e}
 button.active{background:#976f33}.actions{display:flex;gap:5px;flex-wrap:wrap}label{display:block;font-size:11px;color:#e2e6df;margin-top:8px}
-input[type=range]{width:100%;accent-color:#dab56f}input[type=number]{background:#243c3a;border:1px solid #708c80;padding:4px 6px;border-radius:5px;color:#fff;width:80px}
+input[type=range]{width:100%;accent-color:#dab56f}input[type=checkbox]{accent-color:#dab56f;vertical-align:middle;width:16px;height:16px;margin-right:6px}.choice{cursor:pointer;color:#f2e5cf;font-size:12px}#compass{position:absolute;top:14px;right:14px;background:#152723ce;border:1px solid #557867;border-radius:8px;padding:8px 10px;font-size:11px;pointer-events:none}input[type=number]{background:#243c3a;border:1px solid #708c80;padding:4px 6px;border-radius:5px;color:#fff;width:80px}
 .labelrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 #mapClip{height:min(31vh,330px);overflow:auto;background:#dcded5;position:relative;border:1px solid #647e72;border-radius:7px;margin-top:8px}
 #mapInner{position:relative;width:100%;aspect-ratio:1843 / 1252}
@@ -34,6 +34,8 @@ small{color:#ceceb4}.warn{color:#ffda9d}.mono{font:11px ui-monospace,Consolas,mo
 <input id="ppm" type="range" min="1" max="10" step="0.1" value="3.6">
 <label class="labelrow">Поворот плана относительно севера <span id="angleText" class="mono">0°</span></label>
 <input id="angle" type="range" min="-180" max="180" step="1" value="0">
+<label class="choice"><input id="mirrorWalls" type="checkbox" checked>Отразить только 3D-стены и площадку (зеркально по X)</label>
+<label class="choice"><input id="showExtras" type="checkbox" checked>Дополнительные фрагменты стен (665, требуют проверки)</label>
 <div class="actions"><button id="home">Обзор кварталов</button><button id="top">Вид сверху</button><button id="valley">Вся долина</button></div>
 <div id="state"></div>
 </div>
@@ -43,7 +45,7 @@ small{color:#ceceb4}.warn{color:#ffda9d}.mono{font:11px ui-monospace,Consolas,mo
 </div><div id="loadFail"></div>
 <p><a href="https://kunlum.ru/" target="_blank" rel="noopener">План на сайте фонда «Кюнлюм Эль»</a> · <a href="/kunlum-terrain-review.html">Исходный рельеф без стен</a></p>
 </aside>
-<section id="view"><div id="caption">Реальный рельеф Copernicus GLO-30 + 69 цифровых объектов.<br>Вращение мышью или пальцем, колесо — масштаб. Позиции стен на склоне предварительные.</div></section></main>
+<section id="view"><div id="compass"><span style="color:#65d2ed">● Север: голубая стрелка</span> · <span style="color:#ffbd70">● Восток: оранжевая стрелка</span></div><div id="caption">Copernicus GLO-30 · 69 подтверждённых объектов + 665 дополнительных фрагментов.<br>3D-геометрия отражена относительно башни. 2D-план и DEM неизменны. Привязка предварительная.</div></section></main>
 <script type="module">
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
@@ -51,8 +53,9 @@ import {KUNLUM_DEM} from './src/features/tower/kunlum-dem-data.js';
 import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,plotCorners,sampleDemLocal} from './src/features/tower/kunlum-georeference.js';
 const host=document.getElementById('view'),state=document.getElementById('state');
 const input=document.getElementById('ppmNum'),slider=document.getElementById('ppm'),angleSlider=document.getElementById('angle');
+const mirrorControl=document.getElementById('mirrorWalls'),extraControl=document.getElementById('showExtras');
 const map=document.getElementById('mapOverlay'),mapInner=document.getElementById('mapInner');
-let alignment=structuredClone(DEFAULT_KUNLUM_ALIGNMENT),vectorData=null,terrain=null,viewHalf=33,walls=null,plotPreview=null,tower=null,marks=[],mapZoom=1,markTower=false,scene=null,renderer=null,camera=null,controls=null,heights=null,viewHeight=1;
+let alignment=structuredClone(DEFAULT_KUNLUM_ALIGNMENT),vectorData=null,extraData=null,terrain=null,viewHalf=33,walls=null,plotPreview=null,tower=null,marks=[],mapZoom=1,markTower=false,scene=null,renderer=null,camera=null,controls=null,heights=null,viewHeight=1;
 const NS='http://www.w3.org/2000/svg';
 function svg(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);map.appendChild(e);return e;}
 function describeMap(){
@@ -66,6 +69,10 @@ function describeMap(){
   const q=svg('polyline',{points:pointString,stroke:colors[f.type]||'#777',
    'stroke-width':f.type==='passage'?3:2.8,'stroke-linejoin':'round','stroke-linecap':'round',fill:'none'});
   q.appendChild(document.createElementNS(NS,'title')).textContent=f.id+' · '+f.type;
+ }
+ if(extraData&&extraControl.checked)for(const f of extraData.auto_candidates){
+  if(f.promoted||!Array.isArray(f.points)||f.points.length<2)continue;
+  svg('polyline',{points:f.points.map(p=>p.join(',')).join(' '),stroke:'#678681','stroke-width':1.4,'stroke-opacity':.38,'stroke-linecap':'round',fill:'none'});
  }
  const corners=plotCorners(vectorData.plot);
  svg('polygon',{points:corners.map(p=>p.join(',')).join(' '),stroke:'#e2222b','stroke-width':5,fill:'#f5333344'});
@@ -90,8 +97,8 @@ function addSegment(buf,kind,A,B,height=1.5,width=.45){
 }
 function addWalls(){
  if(walls){scene.remove(walls);for(const m of walls.children){m.geometry.dispose();m.material.dispose()}}
- walls=new THREE.Group();walls.name='Confirmed hand-digitised vector walls';scene.add(walls);
- const arrays={wall:[],retaining:[],house:[],passage:[]},colors={wall:'#d5c4a4',retaining:'#bb9673',house:'#e4b980'};
+ walls=new THREE.Group();walls.name='Digitised confirmed and optional candidate walls';scene.add(walls);
+ const arrays={wall:[],retaining:[],house:[],passage:[],candidate:[]},colors={wall:'#d5c4a4',retaining:'#bb9673',house:'#e4b980',candidate:'#e9e4d4'};
  for(const feat of vectorData.confirmed_features){
   const points=feat.points;if(!Array.isArray(points)||points.length<2)continue;
   for(let i=1;i<points.length;i++){
@@ -101,10 +108,22 @@ function addWalls(){
    }else addSegment(arrays[feat.type]||arrays.wall,feat.type,a,b,feat.type==='retaining'?1.9:feat.type==='house'?1.12:1.4,feat.type==='retaining'?.65:.48);
   }
  }
- for(const key of ['wall','retaining','house']){
+ let extraRendered=0;
+ if(extraControl.checked&&extraData) {
+  const promotedOrigins=new Set(vectorData.confirmed_features.map(f=>f.origin));
+  for(const feat of extraData.auto_candidates){
+   if(feat.promoted||promotedOrigins.has(feat.id)||!Array.isArray(feat.points)||feat.points.length<2)continue;
+   extraRendered++;
+   for(let i=1;i<feat.points.length;i++){
+    const a=pixelToLocalWorld(feat.points[i-1],alignment),b=pixelToLocalWorld(feat.points[i],alignment);
+    addSegment(arrays.candidate,'candidate',a,b,.72,.28);
+   }
+  }
+ }
+ for(const key of ['wall','retaining','house','candidate']){
   if(!arrays[key].length)continue;
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(arrays[key],3));geo.computeVertexNormals();
-  const mat=new THREE.MeshStandardMaterial({color:colors[key],side:THREE.DoubleSide,roughness:1});
+  const mat=new THREE.MeshStandardMaterial({color:colors[key],side:THREE.DoubleSide,roughness:1,transparent:key==='candidate',opacity:key==='candidate'?.65:1,depthWrite:key!=='candidate'});
   const mesh=new THREE.Mesh(geo,mat);mesh.name=key+' digitised';walls.add(mesh);
  }
  if(arrays.passage.length){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(arrays.passage,3));
@@ -116,13 +135,13 @@ function addWalls(){
  const plotGeo=new THREE.BufferGeometry();plotGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
  walls.add(new THREE.LineSegments(plotGeo,new THREE.LineBasicMaterial({color:'#ff3737',linewidth:3,depthTest:false})));
  const at=pts.map(p=>terrainSample(p[0],p[1])),lo=Math.min(...at),hi=Math.max(...at);
- state.textContent='Стены: '+vectorData.confirmed_features.length+' объектов · DEM: 30 м\n'+
+ state.textContent='Подтверждено: '+vectorData.confirmed_features.length+' объектов (53 контура стен, 16 проходов) · дополнительно: '+extraRendered+' из 665 · DEM: 30 м\n'+
   'Площадка: 30×15 м · центр ≈'+Math.round(terrainSample(pts.reduce((a,p)=>a+p[0],0)/4,pts.reduce((a,p)=>a+p[1],0)/4)+KUNLUM_DEM.centerHeightASL)+' м над у.м.\n'+
   'Высоты углов (без выравнивания): разница '+(hi-lo).toFixed(1)+' м\n'+
-  'Пикселей/м: '+alignment.pixelsPerMetre.toFixed(2)+' · угол: '+alignment.angleDeg+'°\n'+
+  'Пикселей/м: '+alignment.pixelsPerMetre.toFixed(2)+' · угол: '+alignment.angleDeg+'° · зеркало 3D: '+(alignment.mirrorWallsX?'да':'нет')+'\n'+
   'ГЕОПРИВЯЗКА: ПРЕДВАРИТЕЛЬНАЯ, контрольные точки не подтверждены';
 }
-function updateAlignment(){alignment.pixelsPerMetre=Number(slider.value);alignment.angleDeg=Number(angleSlider.value);
+function updateAlignment(){alignment.pixelsPerMetre=Number(slider.value);alignment.angleDeg=Number(angleSlider.value);alignment.mirrorWallsX=mirrorControl.checked;
  document.getElementById('angleText').textContent=alignment.angleDeg+'°';input.value=alignment.pixelsPerMetre;
  describeMap();if(scene&&vectorData)addWalls();}
 function setupScene(){
@@ -138,6 +157,9 @@ function setupScene(){
  tower.add(new THREE.Mesh(new THREE.SphereGeometry(8,12,8),new THREE.MeshBasicMaterial({color:'#f8d255'})));
  const stem=new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.3,30,7),new THREE.MeshBasicMaterial({color:'#f8d255'}));stem.position.y=16;tower.add(stem);
  scene.add(tower);
+ const compassOrigin=new THREE.Vector3(0,heights[60*121+60]+35,0);
+ scene.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1),compassOrigin,88,0x65d2ed,21,10));
+ scene.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0),compassOrigin,88,0xffbd70,21,10));
  viewTerrain(33);zoomToWalls();
  const resize=()=>{const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
  new ResizeObserver(resize).observe(host);resize();
@@ -165,9 +187,12 @@ function zoomToWalls(){const plot=plotCorners(vectorData.plot),p=pixelToLocalWor
  controls.target.set(p[0],y+12,p[1]);camera.position.set(p[0]+300,y+210,p[1]+290);controls.update();}
 function lookAbove(){const p=controls.target;camera.position.set(p.x+1,p.y+750,p.z+1);controls.update()}
 async function start(){
- const resp=await fetch('./assets/tower/environment/kunlum-vector-confirmed.json');
+ const [resp,extraResp]=await Promise.all([fetch('./assets/tower/environment/kunlum-vector-confirmed.json'),fetch('./assets/tower/environment/kunlum-vector-candidates.json')]);
  if(!resp.ok)throw new Error('Ошибка загрузки цифровых линий, HTTP '+resp.status);
- vectorData=await resp.json();if(vectorData.confirmed_features.length!==69)throw new Error('Неожиданный набор линий');
+ if(!extraResp.ok)throw new Error('Ошибка загрузки дополнительных линий, HTTP '+extraResp.status);
+ [vectorData,extraData]=await Promise.all([resp.json(),extraResp.json()]);
+ if(vectorData.confirmed_features.length!==69||extraData.auto_candidates.length!==702)throw new Error('Несовпадение наборов цифровых линий');
+ mirrorControl.checked=!!alignment.mirrorWallsX;
  const raw=atob(KUNLUM_DEM.heightsBase64),arr=new Float32Array(121*121);
  if(raw.length!==arr.length*2)throw new Error('Повреждена цифровая модель рельефа');
  for(let i=0;i<arr.length;i++){let v=raw.charCodeAt(i*2)|raw.charCodeAt(i*2+1)<<8;
@@ -176,6 +201,8 @@ async function start(){
  describeMap();setupScene();addWalls();
  document.getElementById('mapPicture').onerror=()=>{document.getElementById('mapHelp').textContent='Не удалось загрузить подложку kunlum.ru. Линии доступны, но для поиска башни нужна исходная карта.';};
 }
+mirrorControl.onchange=()=>{updateAlignment();if(scene)zoomToWalls();};
+extraControl.onchange=()=>{describeMap();if(scene)addWalls();};
 slider.oninput=updateAlignment;input.onchange=()=>{slider.value=Math.max(1,Math.min(10,Number(input.value)||3.6));updateAlignment();};angleSlider.oninput=updateAlignment;
 document.getElementById('setTower').onclick=()=>{markTower=true;document.getElementById('setTower').classList.add('active');
  document.getElementById('mapHelp').textContent='Нажми на саму башню Абай-къала на карте. Эта точка пока будет помечена как требующая проверки.';};
@@ -189,7 +216,7 @@ document.getElementById('zoomOut').onclick=()=>{mapZoom=Math.max(mapZoom/1.5,1);
 document.getElementById('home').onclick=zoomToWalls;
 document.getElementById('top').onclick=lookAbove;
 document.getElementById('valley').onclick=()=>{viewTerrain(viewHalf===33?60:33);if(walls)addWalls();camera.position.set(1700,1100,1600);controls.target.set(0,0,0);controls.update();};
-document.getElementById('reset').onclick=()=>{alignment=structuredClone(DEFAULT_KUNLUM_ALIGNMENT);slider.value=alignment.pixelsPerMetre;angleSlider.value=alignment.angleDeg;updateAlignment();zoomToWalls();};
+document.getElementById('reset').onclick=()=>{alignment=structuredClone(DEFAULT_KUNLUM_ALIGNMENT);slider.value=alignment.pixelsPerMetre;angleSlider.value=alignment.angleDeg;mirrorControl.checked=!!alignment.mirrorWallsX;extraControl.checked=true;updateAlignment();zoomToWalls();};
 document.getElementById('save').onclick=()=>{
  const out={...alignment,source:'kunlum-plan-edited.json',dem:'Copernicus GLO-30 EPSG:32638',plot:vectorData.plot,
   verification:'UNVERIFIED one point; not survey-grade',sourceWidthPx:1843,sourceHeightPx:1252};
