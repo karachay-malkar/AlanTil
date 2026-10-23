@@ -23,23 +23,23 @@ small{color:#ceceb4}.warn{color:#ffda9d}.mono{font:11px ui-monospace,Consolas,mo
 </style></head><body>
 <main><aside>
 <h1>Кюнлюм · привязка стен к рельефу</h1>
-<p class="warn">Проверочный 3D-макет. Реальные высоты — Copernicus. Расположение стен на DEM — предварительное: точка башни на иллюстрированном плане ещё не подтверждена.</p>
+<p class="warn">Проверочный 3D-макет. Применена твоя калибровка: башня (908,460), 3,7 пикс./м, угол 70°, зеркало 3D. Геопривязка всё ещё предварительная: нет второй независимо проверенной опорной точки.</p>
 <div class="box"><b>1. План фонда и цифровые линии</b>
 <div id="mapClip"><div id="mapInner"><img id="mapPicture" alt="Исходный план Кюнлюма" src="https://kunlum.ru/images/kunlum-map.jpg"><svg id="mapOverlay" viewBox="0 0 1843 1252" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
 <div class="actions" style="margin-top:7px"><button id="setTower">Указать башню на плане</button><button id="zoomIn">Увеличить</button><button id="zoomOut">Уменьшить</button></div>
 <div id="mapHelp" style="font-size:11px;margin-top:5px;color:#ebd5a9">Голубой — стены; охра — подпорные; зелёный — проходы; красный — площадка 30×15 м; жёлтый — предполагаемая башня.</div>
 </div>
 <div class="box"><b>2. Совмещение со спутниковым рельефом</b>
-<label class="labelrow">Масштаб плана, пикселей/м <input id="ppmNum" type="number" step="0.1" min="0.7" max="20" value="3.6"></label>
-<input id="ppm" type="range" min="1" max="10" step="0.1" value="3.6">
-<label class="labelrow">Поворот плана относительно севера <span id="angleText" class="mono">0°</span></label>
-<input id="angle" type="range" min="-180" max="180" step="1" value="0">
+<label class="labelrow">Масштаб плана, пикселей/м <input id="ppmNum" type="number" step="0.1" min="0.7" max="20" value="3.7"></label>
+<input id="ppm" type="range" min="1" max="10" step="0.1" value="3.7">
+<label class="labelrow">Поворот плана относительно севера <span id="angleText" class="mono">70°</span></label>
+<input id="angle" type="range" min="-180" max="180" step="1" value="70">
 <label class="choice"><input id="mirrorWalls" type="checkbox" checked>Отразить только 3D-стены и площадку (зеркально по X)</label>
 <label class="choice"><input id="showExtras" type="checkbox" checked>Дополнительные фрагменты стен (665, требуют проверки)</label>
 <div class="actions"><button id="home">Обзор кварталов</button><button id="top">Вид сверху</button><button id="valley">Вся долина</button></div>
 <div id="state"></div>
 </div>
-<div class="box"><b>3. Сохранить результат</b><p>После проверки башни, масштаба и поворота экспортируй параметры привязки. Исходный файл стен остаётся без изменений.</p>
+<div class="box"><b>3. Сохранить результат</b><p>Твоя присланная калибровка сохранена в проекте и подставлена по умолчанию. Изменения на этой странице можно снова экспортировать. Исходный план стен не изменён.</p>
 <div class="actions"><button id="save">Скачать привязку JSON</button><button id="reset">Сбросить</button></div>
 <small>Для исторически точного расположения стен нужны минимум две независимые подтверждённые точки; одна предполагаемая башня и масштаб из черновика точность не обеспечивают.</small>
 </div><div id="loadFail"></div>
@@ -50,7 +50,7 @@ small{color:#ceceb4}.warn{color:#ffda9d}.mono{font:11px ui-monospace,Consolas,mo
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
 import {KUNLUM_DEM} from './src/features/tower/kunlum-dem-data.js';
-import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,plotCorners,sampleDemLocal} from './src/features/tower/kunlum-georeference.js';
+import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,plotCorners,sampleDemLocal} from './src/features/tower/kunlum-georeference.js?calibration=2026-10-23';
 const host=document.getElementById('view'),state=document.getElementById('state');
 const input=document.getElementById('ppmNum'),slider=document.getElementById('ppm'),angleSlider=document.getElementById('angle');
 const mirrorControl=document.getElementById('mirrorWalls'),extraControl=document.getElementById('showExtras');
@@ -74,7 +74,7 @@ function describeMap(){
   if(f.promoted||!Array.isArray(f.points)||f.points.length<2)continue;
   svg('polyline',{points:f.points.map(p=>p.join(',')).join(' '),stroke:'#678681','stroke-width':1.4,'stroke-opacity':.38,'stroke-linecap':'round',fill:'none'});
  }
- const corners=plotCorners(vectorData.plot);
+ const corners=plotCorners(vectorData.plot,alignment.pixelsPerMetre);
  svg('polygon',{points:corners.map(p=>p.join(',')).join(' '),stroke:'#e2222b','stroke-width':5,fill:'#f5333344'});
  svg('text',{x:corners[0][0],y:corners[0][1]-10,fill:'#ab171b','font-size':29,'font-weight':800}).textContent='30×15 м';
  svg('circle',{cx:alignment.anchorPixel.x,cy:alignment.anchorPixel.y,r:14,
@@ -128,7 +128,7 @@ function addWalls(){
  }
  if(arrays.passage.length){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(arrays.passage,3));
   walls.add(new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:'#4affbd',depthTest:false})))}
- const pts=plotCorners(vectorData.plot).map(p=>pixelToLocalWorld(p,alignment));
+ const pts=plotCorners(vectorData.plot,alignment.pixelsPerMetre).map(p=>pixelToLocalWorld(p,alignment));
  const verts=[];
  for(let i=0;i<4;i++){const a=pts[i],b=pts[(i+1)%4];
   verts.push(a[0],terrainSample(a[0],a[1])+2,a[1],b[0],terrainSample(b[0],b[1])+2,b[1]);}
@@ -183,7 +183,7 @@ function viewTerrain(half){
  geo.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));geo.setIndex(indices);geo.computeVertexNormals();
  terrain=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}));terrain.name='Copernicus 30 m REAL terrain';scene.add(terrain);
 }
-function zoomToWalls(){const plot=plotCorners(vectorData.plot),p=pixelToLocalWorld([(plot[0][0]+plot[2][0])/2,(plot[0][1]+plot[2][1])/2],alignment),y=terrainSample(p[0],p[1]);
+function zoomToWalls(){const plot=plotCorners(vectorData.plot,alignment.pixelsPerMetre),p=pixelToLocalWorld([(plot[0][0]+plot[2][0])/2,(plot[0][1]+plot[2][1])/2],alignment),y=terrainSample(p[0],p[1]);
  controls.target.set(p[0],y+12,p[1]);camera.position.set(p[0]+300,y+210,p[1]+290);controls.update();}
 function lookAbove(){const p=controls.target;camera.position.set(p.x+1,p.y+750,p.z+1);controls.update()}
 async function start(){
@@ -193,6 +193,8 @@ async function start(){
  [vectorData,extraData]=await Promise.all([resp.json(),extraResp.json()]);
  if(vectorData.confirmed_features.length!==69||extraData.auto_candidates.length!==702)throw new Error('Несовпадение наборов цифровых линий');
  mirrorControl.checked=!!alignment.mirrorWallsX;
+ input.value=alignment.pixelsPerMetre;slider.value=alignment.pixelsPerMetre;angleSlider.value=alignment.angleDeg;
+ document.getElementById('angleText').textContent=alignment.angleDeg+'°';
  const raw=atob(KUNLUM_DEM.heightsBase64),arr=new Float32Array(121*121);
  if(raw.length!==arr.length*2)throw new Error('Повреждена цифровая модель рельефа');
  for(let i=0;i<arr.length;i++){let v=raw.charCodeAt(i*2)|raw.charCodeAt(i*2+1)<<8;
