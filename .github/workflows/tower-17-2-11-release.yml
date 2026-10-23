@@ -28,7 +28,7 @@ jobs:
           node --input-type=module <<'NODE'
           import {readFileSync,writeFileSync} from 'node:fs';
           const f='release.json',r=JSON.parse(readFileSync(f,'utf8'));
-          if(r.branch!=='17.2'||r.version!=='17.2.10')throw Error('Unexpected release version: '+r.version);
+          if(r.branch!=='17.2'||!['17.2.10','17.2.11'].includes(r.version))throw Error('Unexpected release version: '+r.version);
           r.version='17.2.11';
           r.released_at='2026-10-23';
           r.android_version_code=49;
