@@ -3,7 +3,9 @@
  * Run: node scripts/qa-kunlum-siteplan.mjs
  */
 import assert from "node:assert/strict";
-import {getKunlumSiteLayout} from "../src/features/tower/kunlum-site-plan.js";
+import {readFile} from "node:fs/promises";
+const siteModule=await readFile(new URL("../src/features/tower/kunlum-site-plan.js",import.meta.url),"utf8");
+const {getKunlumSiteLayout}=await import("data:text/javascript;charset=utf-8,"+encodeURIComponent(siteModule));
 const {plan,parcels,paths,terraces,pairs}=getKunlumSiteLayout();
 const r=plan.reserve;
 assert.ok(parcels.length>=250,"Expected dense stepped quarter topology");
