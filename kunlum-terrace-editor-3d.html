@@ -152,7 +152,7 @@ function setupBounds(){
  const m=rectangleOf(all),pad=45,roundLo=v=>Math.max(-1770,Math.floor(v/30)*30),roundHi=v=>Math.min(1770,Math.ceil(v/30)*30);
  bounds={x0:roundLo(m.x0-pad),x1:roundHi(m.x1+pad),z0:roundLo(m.z0-pad),z1:roundHi(m.z1+pad)};
 }
-function terrainColor(y){const m=y+KUNLUM_DEM.centerHeightASL,c=new THREE.Color();
+function terrainSurfaceColor(y){const m=y+KUNLUM_DEM.centerHeightASL,c=new THREE.Color();
  const stops=[[1070,'#6e8b5b'],[1190,'#a3a17b'],[1250,'#a99574'],[1350,'#9b8977'],[1500,'#d4d1c8'],[1700,'#f4f1e9']];
  if(m<=stops[0][0])return c.set(stops[0][1]);
  for(let i=1;i<stops.length;i++)if(m<=stops[i][0]){
@@ -184,7 +184,7 @@ function buildTerrain(){
  const vertices=[],colors=[],index=[],N=121;
  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
   const x=(i-60)*30,z=(60-j)*30,y=heights[j*N+i];
-  vertices.push(x,y,z);const c=terrainColor(y);colors.push(c.r,c.g,c.b);
+  vertices.push(x,y,z);const c=terrainSurfaceColor(y);colors.push(c.r,c.g,c.b);
  }
  for(let j=0;j<N-1;j++)for(let i=0;i<N-1;i++){
   const cx=(i-59.5)*30,cz=(59.5-j)*30;
@@ -207,7 +207,7 @@ function buildLocalTerrain(){
  const vertices=[],colors=[],ids=[];
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){
   const x=bounds.x0+i*dx,z=bounds.z0+j*dz;
-  const y=patchHeight(x,z);vertices.push(x,y,z);const c=terrainColor(y);colors.push(c.r,c.g,c.b);
+  const y=patchHeight(x,z);vertices.push(x,y,z);const c=terrainSurfaceColor(y);colors.push(c.r,c.g,c.b);
  }
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){
   const a=j*(nx+1)+i,b=a+1,c=a+nx+1,d=c+1;ids.push(a,c,b,b,c,d);
