@@ -71,8 +71,14 @@ export function getKunlumSiteLayout(){
    let x=xmin,ordinal=0;
    while(x<xmax-4.2){
     const width=w[(ordinal+bi*2+ri)%w.length];
-    const x1=Math.min(xmax,x+width);
-    if(x1-x<4.1)break;
+    let x1=Math.min(xmax,x+width);
+    // Real alley gaps separate the continuous stone-house rows.
+    const lane=plan.laneXs.find(v=>v>x+.3&&v<x1+.65);
+    if(lane!==undefined){
+     if(lane-x<4.1){x=lane+plan.laneWidth*.5;ordinal++;continue;}
+     x1=Math.min(x1,lane-plan.laneWidth*.5);
+    }
+    if(x1-x<4.1){if(lane!==undefined){x=lane+plan.laneWidth*.5;ordinal++;continue;}break;}
     const house={id:band.id+'-'+ri+'-'+ordinal,band:band.id,row:bi,
       x0:x,x1,z0,z1,centerX:(x+x1)/2,centerZ:(z0+z1)/2,
       ruinType:(ordinal*5+bi*3+ri)%7,
@@ -81,7 +87,7 @@ export function getKunlumSiteLayout(){
     // Clear the entire expansion envelope, not merely the present building cells.
     if(!intersects(house,{x:[reserve.x[0]-.8,reserve.x[1]+.8],
       z:[reserve.z[0]-.8,reserve.z[1]+.8]}))parcels.push(house);
-    x=x1;
+    x=lane!==undefined?lane+plan.laneWidth*.5:x1;
     ordinal++;
    }
    terraces.push({id:band.id+'-'+ri,x0:xmin,x1:xmax,z0,z1});
