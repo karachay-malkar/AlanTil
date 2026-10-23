@@ -124,4 +124,11 @@ try{
  await rm(tmp,{recursive:true,force:true,maxRetries:3});
  await writeFile("perf-results/tower-editor-speed.json",JSON.stringify({results,errors},null,2));
 }
-if(!results.length)process.exitCode=1;
+for(const item of results){
+ if(item.opens.length!==2){errors.push(item.scenario+": both cold and warm tower routes must open");continue;}
+ if(!item.prefab.done||item.prefab.error||item.prefab.stages.length!==4||item.prefab.stages.some(x=>x.error||Number(x.rendered)!==x.count))
+   errors.push(item.scenario+": approved prefab assembly incomplete");
+ if(item.prefab.idleRenderCount>5)
+   errors.push(item.scenario+": WebGL continued rendering at idle ("+item.prefab.idleRenderCount+" frames)");
+}
+if(!results.length||errors.length){console.error("TOWER_QA_FAILED",JSON.stringify(errors));process.exitCode=1;}
