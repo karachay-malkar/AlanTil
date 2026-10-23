@@ -364,12 +364,29 @@ function updateContours(){
 function makeTerraceMesh(feature){
  const poly=asPolygon(feature.points.map(world)),color=terrainColor(feature.elevationASL);
  if(poly.length<3)return;
- // Always show unmodified terrain while editing: perimeter follows DEM, not a forced plane.
  const ring=[...poly,poly[0]];
- floatLine(ring,color,terraceGroup,1);
+ if($('preview').checked){
+  // This geometry is created only for the visual reconstruction. It never
+  // mutates the original DEM or the source polygon coordinates.
+  const shape=new THREE.Shape();
+  poly.forEach((p,i)=>i?shape.lineTo(p[0],p[1]):shape.moveTo(p[0],p[1]));
+  shape.closePath();
+  const geometry=new THREE.ShapeGeometry(shape),position=geometry.attributes.position;
+  const y=feature.elevationASL-KUNLUM_DEM.centerHeightASL+.24;
+  for(let i=0;i<position.count;i++)position.setXYZ(i,position.getX(i),y,position.getY(i));
+  position.needsUpdate=true;geometry.computeVertexNormals();
+  const surface=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({
+   color,transparent:true,opacity:.68,roughness:1,side:THREE.DoubleSide,depthWrite:false
+  }));
+  surface.name='Preview horizontal terrace '+feature.id;surface.renderOrder=6;
+  terraceGroup.add(surface);
+  const stroke=[];
+  for(let i=1;i<ring.length;i++)stroke.push(ring[i-1][0],y+.08,ring[i-1][1],ring[i][0],y+.08,ring[i][1]);
+  meshLine(stroke,color,terraceGroup,{depthTest:false});
+ }else floatLine(ring,color,terraceGroup,1);
  const c=centre(poly);
  const badge=contourLabel(feature.id+' · '+feature.elevationASL+' м',c[0],c[1]);
- if(badge){badge.position.y=heightAt(c[0],c[1])+4;terraceGroup.add(badge)}
+ if(badge){badge.position.y=($('preview').checked?feature.elevationASL-KUNLUM_DEM.centerHeightASL:heightAt(c[0],c[1]))+4;terraceGroup.add(badge)}
 }
 function refreshTerraces(){
  eachMeshDisposed(terraceGroup);eachMeshDisposed(handleGroup);eachMeshDisposed(draftGroup);
@@ -557,7 +574,7 @@ $('candidatesVisible').onchange=()=>{candidateGroup.visible=$('candidatesVisible
 $('passageVisible').onchange=()=>{passageGroup.visible=$('passageVisible').checked};
 $('preview').onchange=()=>{
  if($('preview').checked&&mode==='draw')setMode('view');
- buildLocalTerrain();
+ buildLocalTerrain();refreshTerraces();
  $('hud').textContent=$('preview').checked?'ПРЕДПРОСМОТР: временное выравнивание только внутри твоих контуров.':'ИСХОДНЫЙ DEM: никакие террасы не изменяют рельеф.';
 };
 $('focus').onclick=()=>focus();
