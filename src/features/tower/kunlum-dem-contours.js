@@ -82,7 +82,7 @@ export function terrainColor(elevationASL){
  // Deterministic: separate terraces at an equal absolute elevation have equal colour.
  const n=Math.round(elevationASL*10);
  const hue=((n*137.508/10)%360+360)%360;
- return 'hsl('+hue.toFixed(2)+' 62% 46%)';
+ return 'hsl('+hue.toFixed(2)+', 62%, 46%)';
 }
 export function validTerraceFeature(feature){
  if(!feature||feature.type!=='terrace'||!Array.isArray(feature.points)||feature.points.length<3)return false;
