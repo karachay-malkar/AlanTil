@@ -36,7 +36,7 @@ button:hover{background:#527b6e}button:focus-visible,select:focus-visible,input:
 <div class="box"><h2>Автоматическое объединение</h2>
 <label for="gap">Максимальный промежуток между домами: <b id="gapText">7 м</b></label><input id="gap" type="range" min="1" max="20" step=".5" value="7">
 <label for="rise">Разница высот по DEM: <b id="riseText">3 м</b></label><input id="rise" type="range" min=".5" max="15" step=".5" value="3">
-<p><small>Группы соединяются только через соседние дома при сходной оценке высоты. Подпорные стены учитываются как возможный барьер. Перестройка сбросит ручную группировку.</small></p>
+<p><small>Группы соединяются через соседние дома при сходной оценке высоты. Площадки покрывают контуры с небольшим запасом, а не выпуклые оболочки кварталов. Подпорные стены учитываются как возможный барьер. Перестройка сбросит ручную группировку.</small></p>
 <button id="rebuild">Пересчитать группы</button><button id="reset">Сбросить правки</button></div>
 <div class="box"><h2>Редактировать уровни террас</h2>
 <p><small>Изменяй высоту группы или переноси дом в соседнюю группу. Общая площадка между домами перестроится в 3D. Все высоты пока ориентировочные.</small></p>
@@ -55,7 +55,7 @@ import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
 import {KUNLUM_DEM} from './src/features/tower/kunlum-dem-data.js';
 import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,sampleDemLocal} from './src/features/tower/kunlum-georeference.js';
-import {makeKunlumTerracePlan,terraceFootprint,insidePolygon,edgeDistance} from './src/features/tower/kunlum-terraces.js';
+import {makeKunlumTerracePlan,insidePolygon,edgeDistance} from './src/features/tower/kunlum-terraces.js';
 const $=id=>document.getElementById(id);
 const host=$('view'),scene=new THREE.Scene();
 scene.background=new THREE.Color('#aac0c9');scene.fog=new THREE.Fog('#aac0c9',850,3800);
@@ -83,9 +83,9 @@ function currentGroups(){
   map.get(id).push(house);
  }
  return [...map.entries()].map(([id,houses],i)=>{
-  const polygon=terraceFootprint(houses.map(h=>h.poly));
+  const polygons=houses.map(h=>h.poly);
   const h=Object.hasOwn(editedHeights,id)?editedHeights[id]:median(houses.map(h=>h.estimatedHeight));
-  return {id,houseIds:houses.map(h=>h.id),polygon,height:h,color:colorOf(i),center:houses.reduce((a,v)=>[a[0]+v.center[0]/houses.length,a[1]+v.center[1]/houses.length],[0,0])};
+  return {id,houseIds:houses.map(h=>h.id),polygons,height:h,color:colorOf(i),center:houses.reduce((a,v)=>[a[0]+v.center[0]/houses.length,a[1]+v.center[1]/houses.length],[0,0])};
  }).sort((a,b)=>b.height-a.height);
 }
 function calculate(){
@@ -104,8 +104,6 @@ function drawPlan(){
   const px=g.houseIds.map(id=>source.confirmed_features.find(f=>f.id===id).points);
   // Convex patch outline in map XY is only a preview; 3D geometry uses metres.
   const all=px.flat(),xs=all.map(p=>p[0]),ys=all.map(p=>p[1]);
-  const bg=addSvg('rect',{x:Math.min(...xs),y:Math.min(...ys),width:Math.max(...xs)-Math.min(...xs),height:Math.max(...ys)-Math.min(...ys),fill:g.color,'fill-opacity':.08,stroke:g.color,'stroke-width':1,'stroke-dasharray':'7 4'},svg);
-  bg.setAttribute('pointer-events','none');
   for(const id of g.houseIds){
    const house=source.confirmed_features.find(f=>f.id===id);
    addSvg('polygon',{points:house.points.map(p=>p.join(',')).join(' '),fill:g.color,'fill-opacity':.5,stroke:'#243b34','stroke-width':2},svg);
@@ -153,16 +151,27 @@ function patchRegion(){
  const snapUp=n=>Math.min(1800,Math.ceil((n-180)/30)*30+180);
  return {x0:snapDown(x0-30),x1:snapUp(x1+30),z0:snapDown(z0-30),z1:snapUp(z1+30)};
 }
+function platformRadius(){return Math.max(.75,Math.min(4.0,Number($('gap').value)*.5+.2))}
+function groupAt(x,z){
+ let best=null;
+ for(const g of terraceGroups){
+  let nearest=Infinity;
+  for(const poly of g.polygons){
+   const d=insidePolygon(poly,x,z)?0:edgeDistance(poly,[x,z]);
+   nearest=Math.min(nearest,d);if(nearest===0)break;
+  }
+  if(!best||nearest<best.dist-.001||(Math.abs(nearest-best.dist)<.001&&Math.abs(g.height-terrainHeight(x,z))<Math.abs(best.group.height-terrainHeight(x,z))))best={group:g,dist:nearest};
+ }
+ return best;
+}
 function patchedHeight(x,z){
  const native=terrainHeight(x,z);if(!visible)return native;
- let closest=null,dist=Infinity;
- for(const g of terraceGroups){
-  if(insidePolygon(g.polygon,x,z))return g.height;
-  const d=edgeDistance(g.polygon,[x,z]);if(d<dist){closest=g;dist=d}
- }
- if(!closest||dist>=5)return native;
- const t=(5-dist)/5,s=t*t*(3-2*t);
- return native+(closest.height-native)*s;
+ const match=groupAt(x,z);if(!match)return native;
+ const radius=platformRadius(),transition=4;
+ if(match.dist<=radius)return match.group.height;
+ if(match.dist>=radius+transition)return native;
+ const t=(radius+transition-match.dist)/transition,s=t*t*(3-2*t);
+ return native+(match.group.height-native)*s;
 }
 function heightColor(y){
  const h=y+KUNLUM_DEM.centerHeightASL;
@@ -194,29 +203,36 @@ function terrainGrid(x0,x1,z0,z1,nx,nz,patch=false){
  const mesh=new THREE.Mesh(geo,material);mesh.name=patch?'Deformed high-resolution terrace DEM patch':'Unmodified Copernicus DEM outside terrace patch';
  scene.add(mesh);terrainMeshes.push(mesh);
 }
-function platformMesh(g){
- // Real horizontal 3D mesh; each vertex receives exactly the same elevation.
- const shape=new THREE.Shape();
- for(let i=0;i<g.polygon.length;i++){const p=g.polygon[i];if(!i)shape.moveTo(p[0],p[1]);else shape.lineTo(p[0],p[1])}
- shape.closePath();const geom=new THREE.ShapeGeometry(shape);
- const pos=geom.attributes.position;
- for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getY(i);pos.setXYZ(i,x,g.height+.16,z)}
- pos.needsUpdate=true;geom.computeVertexNormals();
- const material=new THREE.MeshStandardMaterial({color:g.color,transparent:true,opacity:.74,roughness:1,side:THREE.DoubleSide,depthWrite:false});
- const mesh=new THREE.Mesh(geom,material);mesh.name='Terrace '+g.id+' flat horizontal platform';mesh.visible=visible;
- scene.add(mesh);overlayMeshes.push(mesh);
- // Stone-coloured perimeter highlights cut/fill boundaries, without pretending historic wall height.
- const verts=[];
- for(let i=0;i<g.polygon.length;i++){
-  const a=g.polygon[i],b=g.polygon[(i+1)%g.polygon.length],N=Math.max(1,Math.ceil(Math.hypot(a[0]-b[0],a[1]-b[1])/2));
-  for(let j=0;j<N;j++){
-   const t=j/N,u=(j+1)/N,x=a[0]+(b[0]-a[0])*t,z=a[1]+(b[1]-a[1])*t,xx=a[0]+(b[0]-a[0])*u,zz=a[1]+(b[1]-a[1])*u;
-   verts.push(x,g.height+.26,z,xx,g.height+.26,zz);
-  }
+function platformMeshes(){
+ // A buffered union of original house polygons, sampled as actual flat 3D surface cells.
+ const step=2,cols=Math.ceil((patchBounds.x1-patchBounds.x0)/step),rows=Math.ceil((patchBounds.z1-patchBounds.z0)/step);
+ const dx=(patchBounds.x1-patchBounds.x0)/cols,dz=(patchBounds.z1-patchBounds.z0)/rows;
+ const cells=new Map(terraceGroups.map(g=>[g.id,[]])),borders=new Map(terraceGroups.map(g=>[g.id,[]]));
+ const owners=new Array(cols*rows).fill(null),groupIndex=new Map(terraceGroups.map(g=>[g.id,g]));
+ for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+  const x=patchBounds.x0+(i+.5)*dx,z=patchBounds.z0+(j+.5)*dz,match=groupAt(x,z);
+  if(match&&match.dist<=platformRadius())owners[j*cols+i]=match.group.id;
  }
- const lineGeo=new THREE.BufferGeometry();lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
- const lines=new THREE.LineSegments(lineGeo,new THREE.LineBasicMaterial({color:'#231e15',depthTest:false,transparent:true,opacity:.75}));
- lines.visible=visible;scene.add(lines);overlayMeshes.push(lines);
+ for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+  const id=owners[j*cols+i];if(!id)continue;
+  const g=groupIndex.get(id);
+  const a=patchBounds.x0+i*dx,b=a+dx,c=patchBounds.z0+j*dz,d=c+dz,y=g.height+.16;
+  cells.get(id).push(a,y,c,b,y,c,b,y,d,a,y,c,b,y,d,a,y,d);
+  const edge=(condition,x1,z1,x2,z2)=>{if(condition)borders.get(id).push(x1,y+.06,z1,x2,y+.06,z2)};
+  edge(i===0||owners[j*cols+i-1]!==id,a,c,a,d);
+  edge(i===cols-1||owners[j*cols+i+1]!==id,b,c,b,d);
+  edge(j===0||owners[(j-1)*cols+i]!==id,a,c,b,c);
+  edge(j===rows-1||owners[(j+1)*cols+i]!==id,a,d,b,d);
+ }
+ for(const g of terraceGroups){
+  const points=cells.get(g.id);if(!points?.length)continue;
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geometry.computeVertexNormals();
+  const surface=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:g.color,transparent:true,opacity:.72,roughness:1,side:THREE.DoubleSide,depthWrite:false}));
+  surface.name='Terrace '+g.id+' flat raster-union surface';scene.add(surface);overlayMeshes.push(surface);
+  const borderGeo=new THREE.BufferGeometry();borderGeo.setAttribute('position',new THREE.Float32BufferAttribute(borders.get(g.id),3));
+  const border=new THREE.LineSegments(borderGeo,new THREE.LineBasicMaterial({color:'#2e231a',depthTest:false}));
+  scene.add(border);overlayMeshes.push(border);
+ }
 }
 function drawHistoricEdges(){
  // Non-destructive 3D line preview. All linked passages visibly cut the perimeter lines.
@@ -277,7 +293,7 @@ function renderTerrain(){
  const nx=Math.min(300,Math.ceil((patchBounds.x1-patchBounds.x0)/patchStep));
  const nz=Math.min(300,Math.ceil((patchBounds.z1-patchBounds.z0)/patchStep));
  terrainGrid(patchBounds.x0,patchBounds.x1,patchBounds.z0,patchBounds.z1,nx,nz,true);
- if(visible)terraceGroups.forEach(platformMesh);
+ if(visible)platformMeshes();
  drawHistoricEdges();
 }
 function report(){
@@ -298,7 +314,8 @@ function exportData(){
  const out={format:'alantil.kunlum.terraces.draft.v1',status:'UNVERIFIED_DEM_30M_ONE_POINT',source:'assets/tower/environment/kunlum-vector-plan-2026-10-23.json',
   alignment:{...alignment},dem:{source:KUNLUM_DEM.source,stepM:KUNLUM_DEM.stepM,centerHeightASL:KUNLUM_DEM.centerHeightASL},
   parameters:basePlan.parameters,skipped_house_lines:basePlan.skipped,
-  terraces:terraceGroups.map(g=>({id:g.id,houseIds:g.houseIds,heightASL:g.height+KUNLUM_DEM.centerHeightASL,polygon_local_metres_EN:g.polygon}))};
+  footprint:{method:'raster_union_of_house_outlines_with_buffer',bufferRadiusM:platformRadius(),detailStepM:2,verified:false},
+  terraces:terraceGroups.map(g=>({id:g.id,houseIds:g.houseIds,heightASL:g.height+KUNLUM_DEM.centerHeightASL,house_polygons_local_metres_EN:g.polygons}))};
  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='kunlum-terraces-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
