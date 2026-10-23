@@ -1,7 +1,7 @@
 /** Single approved authored masonry scene; no legacy mesh generation or manifest. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
-import {createKunlumEnvironment} from './kunlum-environment.js?v=17.2.11';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.12';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
@@ -28,8 +28,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  renderer.setSize(Math.max(1,container.clientWidth),Math.max(320,container.clientHeight),false);
  const stoneMaterialPromise=getRockSurface(renderer);
  renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';container.append(renderer.domElement);
- const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',180,680);
- const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,850);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',750,4200);
+ const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,5000);
  camera.position.set(32,15,-23);
  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(10,.5,10);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.update();
  scene.add(new THREE.HemisphereLight('#f0f6ff','#766950',2.0));
@@ -40,7 +40,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);floor.receiveShadow=true;scene.add(floor);
  // Kunlum landscape stays independent from prefab placement and saved state.
  let kunlum=null;
- try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches}); }
+ try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches,onReady:scheduleDraw}); }
  catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
  const grid=new THREE.GridHelper(20,80,'#d9ead7','#879e84');grid.position.set(10,.008,10);
