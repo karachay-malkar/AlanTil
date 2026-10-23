@@ -98,7 +98,7 @@ export function createKunlumSettlement({quad,tri,groundY,rnd,stone,mobile=false,
   const link=pairMap.get(p.id);
   const upper=link?byId.get(link.upper):null;
   // Slope determines storey height; the roof coincides with upper floor.
-  const future=upper?groundY(p.centerX,p.z1+.2):null;
+  const future=upper?floorLevel.get(upper.id):null;
   const difference=future===null?0:future-floor;
   const canSupport=difference>1.85&&difference<5.25;
   const roofed=p.hasRoof&&canSupport;
@@ -156,5 +156,5 @@ export function createKunlumSettlement({quad,tri,groundY,rnd,stone,mobile=false,
    quad('path',a,b,c,d,'#aa9b7b');
   }
  }
- return {stats,heightAt,layout};
+ return {stats,heightAt,layout,wallLine:(ax,az,bx,bz,opts={})=>\n  wall(ax,az,bx,bz,groundY(ax,az),opts.height??1.5,opts)};
 }
