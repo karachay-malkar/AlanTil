@@ -88,7 +88,7 @@ const view={x:0,y:0,w:WIDTH,h:HEIGHT};
 let demHeights=null,demData=null,demTools=null,demAlignment=null,demContoursCache=new Map(),newTerraceHeight=null;
 function terraceColor(elevation){
  const n=Math.round(elevation*10),hue=((n*137.508/10)%360+360)%360;
- return 'hsl('+hue.toFixed(2)+' 62% 46%)';
+ return 'hsl('+hue.toFixed(2)+', 62%, 46%)';
 }
 function isTerrace(f){return f?.type==='terrace'}
 function setTerracePanel(){
@@ -382,9 +382,11 @@ $('terraceMode').onclick=()=>{$('featureType').value='terrace';selected=null;sel
 $('featureType').onchange=()=>{selected=null;draw()};
 $('terraceElevation').onchange=()=>{if($('terraceElevation').value.trim()==='')return;setSelectedElevation(Number($('terraceElevation').value))};
 $('terraceUp').onclick=()=>{const f=features.find(x=>x.id===selected);const current=isTerrace(f)?f.elevationASL:newTerraceHeight;
- setSelectedElevation((Number.isFinite(current)?current:calculateSuggestedHeight(drawing.length?drawing:[[908,460]])) +1)};
+ const base=Number.isFinite(current)?current:calculateSuggestedHeight(drawing.length?drawing:[[908,460]]);
+ if(Number.isFinite(base))setSelectedElevation(base+1)};
 $('terraceDown').onclick=()=>{const f=features.find(x=>x.id===selected);const current=isTerrace(f)?f.elevationASL:newTerraceHeight;
- setSelectedElevation((Number.isFinite(current)?current:calculateSuggestedHeight(drawing.length?drawing:[[908,460]])) -1)};
+ const base=Number.isFinite(current)?current:calculateSuggestedHeight(drawing.length?drawing:[[908,460]]);
+ if(Number.isFinite(base))setSelectedElevation(base-1)};
 $('demInterval').onchange=renderDemContours;
 $('showDemContours').onchange=renderDemContours;
 $('demOpacity').oninput=()=>{$('demContours').setAttribute('opacity',$('demOpacity').value)};
