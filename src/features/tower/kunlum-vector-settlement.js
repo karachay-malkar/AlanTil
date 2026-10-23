@@ -55,7 +55,7 @@ export async function populateKunlumVectorSettlement(THREE,group,{
   if(high<.9999)result.push([at(high),B]);
   return result;
  }
- let faces=0,confirmedSegments=0,candidateSegments=0,excised=0;
+ let faces=0,confirmedSegments=0,candidateSegments=0,excised=0,terraceStrips=0;
  function wallSegment(A,B,kind,seed){
   if(!A||!B)return;
   const dx=B[0]-A[0],dz=B[1]-A[1],length=Math.hypot(dx,dz);
@@ -80,6 +80,24 @@ export async function populateKunlumVectorSettlement(THREE,group,{
    quad(data,s1,e1,[e1[0],e1[1]+H,e1[2]],[s1[0],s1[1]+H,s1[2]],pick(seed+j+6));
    quad(data,[s0[0],s0[1]+H,s0[2]],[s1[0],s1[1]+H,s1[2]],
     [e1[0],e1[1]+H,e1[2]],[e0[0],e0[1]+H,e0[2]],pick(seed+j+7));
+   // Where a surveyed-looking retaining trace exists, make a narrow
+   // interpretative flat strip on the uphill side of it. Never fabricate a
+   // complete building footprint from an open or unverified polyline.
+   if(kind==='retaining'){
+    const c0=[(x0+x1)*.5,(z0+z1)*.5],d=2.1;
+    const ha=terrain.heightAt(c0[0]+nx/thick*d,c0[1]+nz/thick*d);
+    const hb=terrain.heightAt(c0[0]-nx/thick*d,c0[1]-nz/thick*d);
+    const direction=ha>=hb?1:-1;
+    const sx=nx/thick*d*direction,sz=nz/thick*d*direction;
+    const y=Math.max(
+     terrain.heightAt(x0+sx,z0+sz),
+     terrain.heightAt(x1+sx,z1+sz),y0,y1)+.035;
+    quad(earth,[x0,y,z0],[x1,y,z1],
+      [x1+sx,y,z1+sz],[x0+sx,y,z0+sz],'#9c937e');
+    quad(earth,[x0,y0-.08,z0],[x1,y1-.08,z1],
+      [x1,y,z1],[x0,y,z0],'#827b68');
+    terraceStrips++;
+   }
    // One or several tightly joined wild-stone courses on the visible face.
    const rows=isGuess?1:mobile?2:4;
    for(let row=0;row<rows;row++){
@@ -158,7 +176,7 @@ export async function populateKunlumVectorSettlement(THREE,group,{
  emit(paths,'Kunlum recorded passages','#ffffff');
  return {confirmedFeatures:source.confirmed_features.length,
   confirmedSegments,candidateFeatures:autoCount,candidateSegments,
-  roughStoneFacets:faces,roofCourtyards:courtyards,
+  roughStoneFacets:faces,roofCourtyards:courtyards,terraceStrips,
   houseContours:source.confirmed_features.filter(f=>f.type==='house').length,
   sourceAccuracy:'69 user digitized features; 665 automatic suggestions are unverified; 1-point map registration'};
 }
