@@ -168,11 +168,11 @@ function terraceRings(){
   return {feature:f,poly,color:terrainColor(f.elevationASL),height:f.elevationASL-KUNLUM_DEM.centerHeightASL,index};
  });
 }
-function patchHeight(x,z){
+function patchHeight(x,z,rings=terraceRings()){
  const base=heightAt(x,z);
  if(!$('preview').checked)return base;
  let match=null;
- for(const f of terraceRings()){
+ for(const f of rings){
   if(insidePolygon(f.poly,x,z)){match=f;break}
  }
  return match?match.height:base;
@@ -204,10 +204,10 @@ function buildLocalTerrain(){
  // 3m tessellation improves raycasting and terrace preview, but DOES NOT
  // invent source elevations. All undeformed values sample the original DEM.
  const nx=Math.ceil((bounds.x1-bounds.x0)/3),nz=Math.ceil((bounds.z1-bounds.z0)/3),dx=(bounds.x1-bounds.x0)/nx,dz=(bounds.z1-bounds.z0)/nz;
- const vertices=[],colors=[],ids=[];
+ const vertices=[],colors=[],ids=[],rings=$('preview').checked?terraceRings():[];
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){
   const x=bounds.x0+i*dx,z=bounds.z0+j*dz;
-  const y=patchHeight(x,z);vertices.push(x,y,z);const c=terrainSurfaceColor(y);colors.push(c.r,c.g,c.b);
+  const y=patchHeight(x,z,rings);vertices.push(x,y,z);const c=terrainSurfaceColor(y);colors.push(c.r,c.g,c.b);
  }
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){
   const a=j*(nx+1)+i,b=a+1,c=a+nx+1,d=c+1;ids.push(a,c,b,b,c,d);
@@ -442,19 +442,19 @@ function finish(){
  const id='V'+nextId++;
  source.confirmed_features.push({id,type:'terrace',points:[...points,[...points[0]]],origin:'manual_3d',level:null,
   certainty:'user-drawn',elevationASL:height});
- drawing=[];selected=id;changed=true;refreshTerraces();redrawSelection();
+ drawing=[];selected=id;changed=true;refreshTerraces();redrawSelection();storeDraft();
  $('hud').textContent='Создана '+id+' · начальная высота DEM '+height+' м. Выдели и исправь её при необходимости.';
 }
 function changeHeight(value){
  const f=terraceList().find(x=>x.id===selected);
  if(!f||!Number.isFinite(value)||value<500||value>5000)return;
- f.elevationASL=value;changed=true;refreshTerraces();redrawSelection();
+ f.elevationASL=value;changed=true;refreshTerraces();redrawSelection();storeDraft();
  if($('preview').checked)buildLocalTerrain();
 }
 function deleteSelected(){
  if(!selected)return;
  source.confirmed_features=source.confirmed_features.filter(f=>f.id!==selected);
- selected=null;changed=true;refreshTerraces();redrawSelection();
+ selected=null;changed=true;refreshTerraces();redrawSelection();storeDraft();
  if($('preview').checked)buildLocalTerrain();
 }
 function updateList(){
@@ -533,7 +533,7 @@ renderer.domElement.addEventListener('pointermove',evt=>{
  if($('preview').checked)buildLocalTerrain();
 });
 const stopDragging=()=>{dragVertex=null};
-renderer.domElement.addEventListener('pointerup',stopDragging);
+renderer.domElement.addEventListener('pointerup',()=>{if(dragVertex)storeDraft();stopDragging()});
 renderer.domElement.addEventListener('pointercancel',stopDragging);
 renderer.domElement.addEventListener('dblclick',evt=>{if(mode==='draw'){evt.preventDefault();evt.stopPropagation();finish()}});
 document.addEventListener('keydown',evt=>{
@@ -590,7 +590,7 @@ async function start(){
  }catch(e){console.warn('Черновик не прочитан',e)}
  try{loadPlan(draft||original)}
  catch(e){console.warn('Черновик не подошёл, загружен исходный план',e);loadPlan(original)}
- $('hud').textContent='ИСХОДНЫЙ РЕЛЬЕФ. Кликни «Вращать», «Рисовать» или «Править».\\n'+
+ $('hud').textContent='ИСХОДНЫЙ РЕЛЬЕФ. Кликни «Вращать», «Рисовать» или «Править».\n'+
  source.confirmed_features.length+' подтверждённых объектов · '+(source.openings||[]).length+' проходов · '+(source.auto_candidates||[]).length+' автокандидатов.';
 }
 function resize(){
