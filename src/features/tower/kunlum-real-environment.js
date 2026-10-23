@@ -86,10 +86,24 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   group.add(new THREE.LineSegments(g,m));register(g,m);
  }
  addPerimeter();
+ // Separate the historic-plan 30×15m rectangle from the existing playable
+ // 20×20m cell grid. They have different purposes; neither changes saved builds.
+ const planned=plotCorners(PLOT,calibration.pixelsPerMetre).map(P);
+ const footprint=[];
+ for(let i=0;i<4;i++){
+  const a=planned[i],b=planned[(i+1)%4];
+  footprint.push(a[0],terrain.heightAt(...a)+.14,a[1],
+   b[0],terrain.heightAt(...b)+.14,b[1]);
+ }
+ const footprintGeometry=new THREE.BufferGeometry();
+ footprintGeometry.setAttribute('position',new THREE.Float32BufferAttribute(footprint,3));
+ const footprintMaterial=new THREE.LineBasicMaterial({color:'#f0a75c',depthTest:false});
+ group.add(new THREE.LineSegments(footprintGeometry,footprintMaterial));
+ register(footprintGeometry,footprintMaterial);
  const currentStats={houseContours:0,roofCourtyards:0,courtyards:0,
   confirmedFeatures:0,candidateFeatures:0,sourceAccuracy:'Loading vector plan'};
  group.userData.kunlum={
-  plot:[40,50],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
+  plot:[PLOT.widthM,PLOT.heightM],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
   gridStep:.25,ruins:currentStats,sitePlan:'user-calibrated kunlum-plan-edited.json',
   monument:'Абай-къала',abaevModelPosition:towerBase,
   terrain:'Copernicus DEM GLO-30, 30m',terrainResolutionNearM:mobile?20:10,
