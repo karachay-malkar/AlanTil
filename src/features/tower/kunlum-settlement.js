@@ -52,6 +52,23 @@ export function createKunlumSettlement({quad,tri,groundY,rnd,stone,mobile=false,
   const rows=Math.max(1,Math.ceil(height/rowH));
   const blockLength=near?(mobile?.90:.73):(mobile?1.95:1.35);
   const at=(u,y,depth)=>[ax+dx*u+nx*depth,y,az+dz*u+nz*depth];
+  // Opaque structural back and end faces. Roof parapets share this shell.
+  // Door has an actual opening below 1.68m instead of an opaque graphic.
+  const hWall=height;
+  const rear=(a,b,y0,y1)=>{
+   if(y1<=y0)return;
+   quad('stone',at(a,y0,-thick),at(b,y0,-thick),at(b,y1,-thick),at(a,y1,-thick),stone());
+  };
+  if(door&&hWall>0){
+   const clear=Math.min(hWall,1.68);
+   rear(0,.43,baseY,baseY+clear);
+   rear(.57,1,baseY,baseY+clear);
+   if(hWall>clear)rear(0,1,baseY+clear,baseY+hWall);
+  }else rear(0,1,baseY,baseY+hWall);
+  quad('stone',at(0,baseY,-thick),at(0,baseY,thick),
+    at(0,baseY+hWall,thick),at(0,baseY+hWall,-thick),stone());
+  quad('stone',at(1,baseY,thick),at(1,baseY,-thick),
+    at(1,baseY+hWall,-thick),at(1,baseY+hWall,thick),stone());
   const gapLo=.43,gapHi=.57;
   for(let row=0;row<rows;row++){
    const lower=baseY+row*rowH,upper=Math.min(baseY+height,lower+rowH);
@@ -76,12 +93,9 @@ export function createKunlumSettlement({quad,tri,groundY,rnd,stone,mobile=false,
      tri('stone',a,b,m,tone);tri('stone',b,c,m,stone());
      tri('stone',c,d,m,tone);tri('stone',d,a,m,stone());
     }else{quad('stone',a,b,c,d,tone);}
-    quad('stone',f,e,j,g,stone());
-    quad('stone',d,c,g,j,tone);
-    if(row===0||retain)quad('stone',a,e,f,b,stone());
-    // End faces remain closed even when a wall has a broken top.
-    quad('stone',e,a,d,j,tone);
-    quad('stone',b,f,g,c,tone);
+    // Only exposed facets are drawn. A continuous core shell below handles
+    // the back and ends of the wall, replacing hidden per-stone inner faces.
+    if(row===rows-1||rnd()<.07)quad('stone',d,c,g,j,tone);
     stats.stones++;
    }
   }
