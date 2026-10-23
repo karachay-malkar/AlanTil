@@ -6,14 +6,14 @@
  */
 export const DEFAULT_KUNLUM_ALIGNMENT=Object.freeze({
  schema:"alantil.kunlum.georegistration.v1",
- status:"approximate_one_point_unverified_on_map",
- anchorName:"Abay-Kala 1 (geo coordinate verified, map pixel candidate unverified)",
+ status:"USER_CALIBRATED_ONE_POINT_UNVERIFIED",
+ anchorName:"Abay-Kala — pixel manually selected by user on 2026-10-23 (not independently verified)",
  anchorWgs84:{lat:43.10611388888889,lon:43.42876944444444},
  anchorUTM38N:{easting:372151.107,northing:4773796.751},
- anchorPixel:{x:220,y:839}, // candidate brown symbol on illustrated map; NOT verified
- pixelsPerMetre:3.6, // from user's plot draft; not independently calibrated
+ anchorPixel:{x:908,y:460}, // user-selected; NOT independently verified
+ pixelsPerMetre:3.7, // user-calibrated; not independently checked
  mirrorWallsX:true, // Only project mapped features mirrored E-W; never reflect 2D map or DEM
- angleDeg:0,
+ angleDeg:70, // user-calibrated on the 3D preview; not independently checked
  eastOffsetM:0,
  northOffsetM:0,
  controlPointsVerified:0,
@@ -31,8 +31,9 @@ export function localWorldToPixel(world,a=DEFAULT_KUNLUM_ALIGNMENT){
  const u=(x*c+z*s)*(a.mirrorWallsX?-1:1),v=-x*s+z*c;
  return [a.anchorPixel.x+u*a.pixelsPerMetre,a.anchorPixel.y-v*a.pixelsPerMetre];
 }
-export function plotCorners(plot){
- const width=plot.widthM*plot.ppm,height=plot.heightM*plot.ppm;
+export function plotCorners(plot,pixelsPerMetre=plot.ppm){
+ // Preserve physical dimensions when the map calibration differs from the draft ppm.
+ const width=plot.widthM*pixelsPerMetre,height=plot.heightM*pixelsPerMetre;
  const cx=plot.x+width/2,cy=plot.y+height/2,a=plot.angleDeg*Math.PI/180;
  const c=Math.cos(a),s=Math.sin(a);
  return [[-width/2,-height/2],[width/2,-height/2],[width/2,height/2],[-width/2,height/2]]
