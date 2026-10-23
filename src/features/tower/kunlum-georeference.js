@@ -12,6 +12,7 @@ export const DEFAULT_KUNLUM_ALIGNMENT=Object.freeze({
  anchorUTM38N:{easting:372151.107,northing:4773796.751},
  anchorPixel:{x:220,y:839}, // candidate brown symbol on illustrated map; NOT verified
  pixelsPerMetre:3.6, // from user's plot draft; not independently calibrated
+ mirrorWallsX:true, // Only project mapped features mirrored E-W; never reflect 2D map or DEM
  angleDeg:0,
  eastOffsetM:0,
  northOffsetM:0,
@@ -19,7 +20,7 @@ export const DEFAULT_KUNLUM_ALIGNMENT=Object.freeze({
  caution:"Never use for historical-accuracy claims or publishing mapped coordinates"
 });
 export function pixelToLocalWorld(point,a=DEFAULT_KUNLUM_ALIGNMENT){
- const u=(point[0]-a.anchorPixel.x)/a.pixelsPerMetre;
+ const u=(point[0]-a.anchorPixel.x)/a.pixelsPerMetre*(a.mirrorWallsX?-1:1);
  const v=(a.anchorPixel.y-point[1])/a.pixelsPerMetre;
  const t=a.angleDeg*Math.PI/180,c=Math.cos(t),s=Math.sin(t);
  return [u*c-v*s+a.eastOffsetM,u*s+v*c+a.northOffsetM];
@@ -27,7 +28,7 @@ export function pixelToLocalWorld(point,a=DEFAULT_KUNLUM_ALIGNMENT){
 export function localWorldToPixel(world,a=DEFAULT_KUNLUM_ALIGNMENT){
  const x=world[0]-a.eastOffsetM,z=world[1]-a.northOffsetM;
  const t=a.angleDeg*Math.PI/180,c=Math.cos(t),s=Math.sin(t);
- const u=x*c+z*s,v=-x*s+z*c;
+ const u=(x*c+z*s)*(a.mirrorWallsX?-1:1),v=-x*s+z*c;
  return [a.anchorPixel.x+u*a.pixelsPerMetre,a.anchorPixel.y-v*a.pixelsPerMetre];
 }
 export function plotCorners(plot){
