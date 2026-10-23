@@ -1,0 +1,92 @@
+name: Tower 17.2.11 vetted fix and performance release
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/tower-17-2-11-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tower-final-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synchronize all AlanTil 17.2.11 version keys
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const f='release.json',r=JSON.parse(readFileSync(f,'utf8'));
+          if(r.branch!=='17.2'||r.version!=='17.2.10')throw Error('Unexpected release version: '+r.version);
+          r.version='17.2.11';
+          r.released_at='2026-10-23';
+          r.android_version_code=49;
+          writeFileSync(f,JSON.stringify(r,null,2)+'\n');
+          NODE
+          node scripts/release/sync-version.mjs
+          node scripts/release/sync-version.mjs --check
+      - name: Validate tower app, storage contracts, profile, routing, and release source
+        run: |
+          set -euo pipefail
+          for f in src/features/tower/index.js src/features/tower/prefab-scene.js \
+            src/features/tower/approved-section-scene.js src/features/tower/kunlum-environment.js \
+            src/features/tower/rock-surface.js src/features/masonry/library.js \
+            src/features/masonry/scene.js src/features/masonry/index.js \
+            src/app/router.js src/app/bootstrap.js service-worker.js \
+            scripts/release/sync-version.mjs; do node --check "$f"; done
+          test -s src/features/tower/tower.css
+          node --test \
+            tests/tower-performance-17-2-11.test.mjs \
+            tests/tower-approved-manual.test.mjs \
+            tests/tower-core.test.mjs \
+            tests/tower-prefab-joints-17-5.test.mjs \
+            tests/release-version-17-2.test.mjs \
+            tests/storage-profile-analytics-16-8.test.mjs
+          git diff --check
+      - name: Verify cold and warm mobile WebGL, idle rendering and 20 real sections
+        run: |
+          set -euo pipefail
+          mkdir -p perf-results
+          node scripts/static-preview-server.mjs > perf-results/server.log 2>&1 &
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/practice/tower > /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/measure-tower-editor-speed.mjs
+      - name: Commit only synchronized release metadata after successful QA
+        run: |
+          set -euo pipefail
+          git add release.json index.html packages/alantil-core/release.js \
+            src/app/bootstrap.js src/app/router.js service-worker.js \
+            src/config/analytics.js src/features/settings/version.js \
+            src/features/path/feature.js src/features/path/story-stele.js \
+            src/shared/styles/lazy/path.css \
+            src/features/tower/index.js src/features/tower/prefab-scene.js \
+            src/shared/styles/lazy/tower.css \
+            mobile/app.json mobile/package.json
+          git diff --cached --check
+          git diff --cached --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "release(tower): vetted 17.2.11 scene performance and restored editor stylesheet"
+          git push origin HEAD:17.2
+      - name: Archive performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alantil-tower-17-2-11-qa
+          path: perf-results/
+          if-no-files-found: ignore
+          retention-days: 21
