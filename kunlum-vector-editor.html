@@ -37,7 +37,8 @@ small{display:block;font-size:10px;line-height:1.4;color:#687b7a;margin:3px 0}
 <aside>
 <h1>Кюнлюм · цифровой план</h1><p>Исходная карта фонда. Линии — редактируемые объекты, не фотографическая иллюстрация.</p>
 <div class="pill">Координаты в пикселях изображения. Масштаб 3,6–3,7 пикс/м — предварительная оценка.</div>
-<p><a id="preview3d" href="./kunlum-terrace-preview.html">Смотреть предварительные 3D-террасы</a></p>
+<p><a id="preview3d" href="./kunlum-terrace-editor-3d.html"><b>Новый 3D-редактор: исходный рельеф, горизонтали, стены, террасы</b></a></p>
+<p><a href="./kunlum-terrace-preview.html">Старый предварительный 3D-просмотр</a></p>
 <h2>Инструмент</h2>
 <div class="actions"><button id="selectMode" class="active">Выделение</button><button id="drawMode">Рисовать</button><button id="plotMode">Площадка</button><button id="panMode">Двигать карту</button></div>
 <div class="actions"><button id="openingMode">Проход в стене</button><button id="terraceMode">Контур террасы</button></div>
@@ -56,7 +57,7 @@ small{display:block;font-size:10px;line-height:1.4;color:#687b7a;margin:3px 0}
 <label for="demOpacity">Прозрачность</label><input id="demOpacity" type="range" min=".15" max="1" value=".68" step=".05"/></div>
 <small id="demStatus">Загрузка высот Copernicus GLO-30 (шаг DEM 30 м) …</small>
 </div>
-<div class="actions"><button id="openTerraces3d" type="button" style="grid-column:1/-1">Смотреть мои террасы в 3D</button></div>
+<div class="actions"><button id="openTerraces3d" type="button" style="grid-column:1/-1">Открыть 3D-редактор на исходном рельефе</button></div>
 <label><input id="autoVisible" type="checkbox" checked/> Автообводка (не проверена)</label>
 <label><input id="mapVisible" type="checkbox" checked/> Исходная карта</label>
 <h2>Площадка 30 × 15 м</h2>
@@ -392,7 +393,7 @@ $('showDemContours').onchange=renderDemContours;
 $('demOpacity').oninput=()=>{$('demContours').setAttribute('opacity',$('demOpacity').value)};
 $('openTerraces3d').onclick=()=>{try{sessionStorage.setItem('alantil_kunlum_draft_3d',JSON.stringify(snapshot()))}
  catch(e){editorMessage='Не удалось передать данные автоматически: '+e.message+'; скачай JSON и открой в 3D-просмотре.';draw();return}
- window.location.href='./kunlum-terrace-preview.html'}
+ window.location.href='./kunlum-terrace-editor-3d.html'}
 $('finish').onclick=finish;$('undo').onclick=()=>{drawing.pop();draw()};$('delete').onclick=erase;$('clearSelection').onclick=()=>{selected=null;draw()};
 $('autoVisible').onchange=draw;$('mapVisible').onchange=draw;
 $('ppm').oninput=()=>{plot.ppm=Math.max(.2,Math.min(30,Number($('ppm').value)||4));draw();};
