@@ -1,7 +1,7 @@
 /** Single approved authored masonry scene; no legacy mesh generation or manifest. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
-import {createKunlumEnvironment} from './kunlum-environment.js?v=17.2.10';
+import {createKunlumEnvironment} from './kunlum-environment.js?v=17.2.11';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
