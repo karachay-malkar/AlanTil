@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Кюнлюм — обзор 3D-сцены AlanTil 17.2.10</title>
+<title>Кюнлюм — обзор 3D-сцены AlanTil 17.2.11</title>
 <style>
 html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:#a9becd;color:#fff}
 #view{width:100%;height:100%;touch-action:none}
@@ -12,14 +12,14 @@ button{border:1px solid #ffffff55;border-radius:7px;background:#3d564a;color:#ff
 </style></head><body><div id="view" aria-label="3D-сцена исторического Кюнлюма"></div>
 <div class="panel">
 <strong>Кюнлюм · Абай-къала</strong>
-<p>Вращайте сцену пальцем или мышью. Стройка 20×20 м на террасе внутри села; запас 40×50 м. Выше — Абай-къала и плотные кварталы руин с неровными камнями. Спуск к Череку теперь пологий. За рекой — широкая равнина, затем панорамное изображение гор. Схема местности приблизительная.</p>
-<button id="home">Общий вид</button> <button id="tower">Абай-къала</button> <button id="river">Черек</button> <button id="ruins">Руины</button> <button id="grid">Сетка</button>
+<p>Вращайте сцену пальцем или мышью. Стройка 20×20 м на свободной террасе; резерв 40×50 м. Вокруг — плотные ряды домов, плоские дворы и крыши нижних домов как площадки верхних. Выше — Абай-къала; ниже — Черек. Это условная реконструкция по плану фонда, не точный обмер.</p>
+<button id="home">Общий вид</button> <button id="tower">Абай-къала</button> <button id="river">Черек</button> <button id="ruins">Руины</button> <button id="terraces">Сверху</button> <button id="grid">Сетка</button>
 <div id="stats">Загрузка сцены...</div>
 </div>
 <script type="module">
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
-import {createKunlumEnvironment} from './src/features/tower/kunlum-environment.js?v=17.2.10';
+import {createKunlumEnvironment} from './src/features/tower/kunlum-environment.js?v=17.2.11';
 const host=document.getElementById('view');
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);
@@ -45,12 +45,13 @@ document.getElementById('home').onclick=home;
 document.getElementById('tower').onclick=()=>{camera.position.set(33,28,19);controls.target.set(-12,20,68);controls.update();};
 document.getElementById('river').onclick=()=>{camera.position.set(48,8,-30);controls.target.set(11,-30,-91);controls.update();};
 document.getElementById('ruins').onclick=()=>{camera.position.set(-11,24,-12);controls.target.set(-37,9,53);controls.update();};
+document.getElementById('terraces').onclick=()=>{camera.position.set(9,148,11);controls.target.set(9,0,11);controls.update();};
 document.getElementById('grid').onclick=()=>{grid.visible=!grid.visible;document.getElementById('grid').textContent=grid.visible?'Скрыть сетку':'Показать сетку';};
 const stats=document.getElementById('stats');
 let frames=0,t=performance.now();
 function draw(now){
  requestAnimationFrame(draw);controls.update();renderer.render(scene,camera);frames++;
- if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Дворов: '+env.group.userData.kunlum.ruins.courtyards+' · Террас: '+env.group.userData.kunlum.ruins.terraces+' · Сцена создана за '+buildDuration+' мс (без загрузки модулей)';frames=0;t=now;}
+ if(now-t>1400){stats.textContent='FPS: '+Math.round(frames*1000/(now-t))+' · Draw calls: '+renderer.info.render.calls+' · Треугольники: '+renderer.info.render.triangles.toLocaleString('ru')+' · Дворов: '+env.group.userData.kunlum.ruins.courtyards+' · Крыш-дворов: '+env.group.userData.kunlum.ruins.roofCourtyards+' · Сцена создана за '+buildDuration+' мс (без загрузки модулей)';frames=0;t=now;}
 }
 requestAnimationFrame(draw);
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
