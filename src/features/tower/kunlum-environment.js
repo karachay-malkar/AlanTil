@@ -4,7 +4,7 @@
  * Local +Z is uphill toward Abaev Kala; -Z descends to Cherek and the opposite bank.
  * Decorative meshes are deliberately not registered in the tower's placement raycaster.
  */
-import {createKunlumRuins} from './kunlum-ruins.js?v=17.2.10';
+import {createKunlumSettlement} from './kunlum-settlement.js?v=17.2.11';
 
 export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const group=new THREE.Group();group.name='Кюнлюм · склон, руины и Черек';
@@ -78,11 +78,16 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
   return -.085+villageRise+firstDrop+bankDrop+riverBend+oppositePlain
     +originalRelief*profile*riverFade;
  }
- const groundGeo=new THREE.PlaneGeometry(470,630,mobile?74:120,mobile?106:176);
+ // The site-plan, not a seeded scatter, owns the dense historic quarters.
+ // The construction reserve is deliberately never overwritten by terraces.
+ const stone=()=>colors.wall[Math.floor(rnd()*colors.wall.length)];
+ const {wallLine,stats:settlementStats,heightAt:terracedY,layout:siteLayout}=
+   createKunlumSettlement({quad,tri,groundY,rnd,stone,mobile});
+ const groundGeo=new THREE.PlaneGeometry(470,630,mobile?90:160,mobile?144:216);
  groundGeo.rotateX(-Math.PI/2);groundGeo.translate(10,0,-30);
  const p=groundGeo.getAttribute('position'),groundColors=[];
  for(let i=0;i<p.count;i++){
-  const x=p.getX(i),z=p.getZ(i);p.setY(i,groundY(x,z));
+  const x=p.getX(i),z=p.getZ(i);p.setY(i,terracedY(x,z));
   const across=z<-116?['#909b69','#a9a679','#8c976d','#a4a37a','#b0a77d']:Math.abs(z-riverCenter(x))<17?['#9b9c83','#b0ae93','#908e78','#8f9e82']:colors.grass;
   const grass=rgba(across[Math.floor(rnd()*across.length)]);
   groundColors.push(grass.r,grass.g,grass.b);
@@ -100,7 +105,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  backdrop.position.set(10,30,10);backdrop.name='Distant landscape · 360° panoramic image';
  backdrop.renderOrder=-100;group.add(backdrop);
  try {
-  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.10',
+  new THREE.TextureLoader().load('/assets/tower/environment/kunlum-distant-panorama.svg?v=17.2.11',
    texture=>{if(disposed){texture.dispose();return;}
     texture.colorSpace=THREE.SRGBColorSpace;backdropTexture=texture;
     backdropMat.map=texture;backdropMat.color.set('#ffffff');backdropMat.needsUpdate=true;},
@@ -138,10 +143,8 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
   }
  }
 
- // Historic-looking dry-stone terrace retaining walls. Courses overlap and have broken tops.
- const stone=()=>colors.wall[Math.floor(rnd()*colors.wall.length)];
- // New dense quarters use watertight wild-stone courses and preserve the reserve.
- const {wallLine,stats:ruinStats}=createKunlumRuins({quad,tri,groundY,rnd,stone,mobile});
+ // Dense contiguous house quarters and shared roofs were generated above.
+ // The same free wall function is retained for the surviving second tower.
  // Abaev Kala above the building terrace, with taper and authentic narrow openings.
  // A model approximation, pending access to measured drawings and exact plan coordinates.
  function tower(cx,cz,rotation=-.15){
@@ -242,7 +245,7 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const proxy=new THREE.Object3D();
  for(let i=0;i<rocks.count;i++){
   let x,z,n=0;do{x=-70+rnd()*165;z=-84+rnd()*200;n++;}while(n<30&&x>-11&&x<31&&z>-16&&z<36);
-  const y=groundY(x,z),scale=.38+rnd()*.95;
+  const y=terracedY(x,z),scale=.38+rnd()*.95;
   proxy.position.set(x,y+.12*scale,z);proxy.rotation.set(rnd(),rnd()*6.28,rnd());
   proxy.scale.set(scale,.6*scale,1.25*scale);proxy.updateMatrix();rocks.setMatrixAt(i,proxy.matrix);
  }
@@ -252,20 +255,21 @@ export function createKunlumEnvironment(THREE, scene, {mobile=false}={}) {
  const grass=new THREE.InstancedMesh(grassGeo,grassMat,mobile?120:320);
  for(let i=0;i<grass.count;i++){
   let x,z,n=0;do{x=-70+rnd()*170;z=-80+rnd()*190;n++;}while(n<25&&x>0&&x<20&&z>0&&z<20);
-  proxy.position.set(x,groundY(x,z)+.08,z);proxy.rotation.set(0,rnd()*6.28,0);
+  proxy.position.set(x,terracedY(x,z)+.08,z);proxy.rotation.set(0,rnd()*6.28,0);
   const k=.58+rnd()*.88;proxy.scale.set(k,k,k);proxy.updateMatrix();grass.setMatrixAt(i,proxy.matrix);
  }
  grass.instanceMatrix.needsUpdate=true;grass.computeBoundingSphere();grass.name='Sparse hillside grass';group.add(grass);
- emit('stone','Roofless courtyard ruins, retaining walls and Abaev tower');
+ emit('stone','Stone-walled Kunlum stepped houses, courtyards and Abaev Kala');
+ emit('earth','Level house-floor terraces');
  emit('water','Cherек · Cherek river');
  emit('path','Paths, gravel banks and reserved plot marker');
  group.userData.kunlum={
   plot:[40,50],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
-  gridStep:.25,ruins:{...ruinStats},monument:'Абай-къала',abaevModelPosition:abayKala,riverAxisZ:-91,
+  gridStep:.25,ruins:{courtyards:settlementStats.houseContours,...settlementStats},sitePlan:siteLayout.plan.source,monument:'Абай-къала',abaevModelPosition:abayKala,riverAxisZ:-91,
   orientation:'positive z is uphill, negative z is downstream toward Cherek',
   accuracy:'interpretative; pending site map georeferencing'
  };
- return {group,heightAt:groundY,dispose(){
+ return {group,heightAt:terracedY,dispose(){
   if(disposed)return;disposed=true;
   for(const geo of ownedGeometries)geo.dispose();
   for(const material of ownedMaterials)material.dispose();
