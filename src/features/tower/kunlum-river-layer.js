@@ -67,74 +67,189 @@ export function densifyKunlumRiverPolyline(line,heightAt,{step=24}={}){
  }
  return out;
 }
+
+/** Immutable OSM snapshot, with strict source, coordinate and continuity checks. */
+export async function loadKunlumCherekLocal({
+ fetchImpl=fetch,url='./assets/tower/environment/kunlum-cherek-balkarsky-osm.json'
+}={}){
+ const response=await fetchImpl(url);
+ if(!response.ok)throw Error('Локальная линия реки недоступна (HTTP '+response.status+')');
+ const data=await response.json();
+ if(data?.schema!==1||data.license!=='ODbL'||
+   data.projection!=='UTM38 local metres relative to tower control'||
+   Math.abs(data.origin?.easting-372151.107)>.001||
+   Math.abs(data.origin?.northing-4773796.751)>.001||
+   !Array.isArray(data.points)||data.points.length<12)
+  throw Error('Некорректная лицензия или формат локальной линии русла');
+ const line=data.points.map(p=>{
+  if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite))
+   throw Error('Некорректные координаты русла');
+  return {x:p[0],z:p[1]};
+ });
+ let length=0;
+ for(let i=1;i<line.length;i++){
+  const gap=Math.hypot(line[i].x-line[i-1].x,line[i].z-line[i-1].z);
+  if(gap>200||gap<.00001)throw Error('Недопустимый разрыв локального русла');
+  length+=gap;
+ }
+ if(length<800)throw Error('Неполная линия русла');
+ return {line,source:'local OpenStreetMap ODbL snapshot',acquiredAt:data.acquiredAt};
+}
+function nearestKunlumSegment(points,x,z,margin=Infinity){
+ if(!Array.isArray(points)||points.length<2)return null;
+ let best=null,dist2=Infinity;
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i];
+  if(x<Math.min(a.x,b.x)-margin||x>Math.max(a.x,b.x)+margin||
+     z<Math.min(a.z,b.z)-margin||z>Math.max(a.z,b.z)+margin)continue;
+  const dx=b.x-a.x,dz=b.z-a.z,len2=dx*dx+dz*dz;
+  if(len2<1e-8)continue;
+  const t=limit(((x-a.x)*dx+(z-a.z)*dz)/len2,0,1);
+  const px=a.x+t*dx,pz=a.z+t*dz,d2=(x-px)**2+(z-pz)**2;
+  if(d2<dist2){dist2=d2;best={x:px,z:pz,d:Math.sqrt(d2)}}
+ }
+ return best;
+}
+export function riverDistanceAt(points,x,z){
+ return nearestKunlumSegment(points,x,z,140)?.d??Infinity;
+}
+/** Render-only incision. Does not write into Copernicus/Mapzen DEM heights. */
+export function carveKunlumRiverHeight(x,z,heightAt,points){
+ const base=heightAt(x,z);
+ if(!Number.isFinite(base)||!points?.length)return base;
+ const near=nearestKunlumSegment(points,x,z,32);
+ if(!near||near.d>=15)return base;
+ const center=heightAt(near.x,near.z);
+ if(!Number.isFinite(center))return base;
+ const d=near.d,inner=6.5;
+ if(d<=inner)return center-2.8+1.08*(d/inner)**2;
+ const t=(d-inner)/(15-inner),smooth=t*t*(3-2*t);
+ return lerp(center-1.72,base,smooth);
+}
+
 export function createKunlumRiverLayer(THREE,heightAt,{
- quality='interactive',mobile=false,minZ=-1350,maxZ=1350,minX=45,maxX=990,
- centerline=null
+ quality='interactive',mobile=false,centerline=null
 }={}){
  const root=new THREE.Group();
- root.name=centerline?'Cherek Balkarsky OSM centreline (not hydrologically surveyed)':
-  'Approximate DEM-trough river (NOT SURVEYED)';
- const points=centerline?densifyKunlumRiverPolyline(centerline,heightAt):
-  traceKunlumRiver(heightAt,{minZ,maxZ,minX,maxX});
- const main=[],uv=[],indices=[],bank=[],bankIndices=[],foam=[];
- const samplesPerSpan=quality==='beautiful'?(mobile?3:5):2;
- for(let s=0;s<=(points.length-1)*samplesPerSpan;s++){
-  const i=Math.min(points.length-2,Math.floor(s/samplesPerSpan)),t=limit(s/samplesPerSpan-i,0,1);
-  const a=points[i],b=points[i+1],x=lerp(a.x,b.x,t),z=lerp(a.z,b.z,t);
-  const tangentX=(b.x-a.x)/Math.max(1,b.z-a.z),norm=Math.sqrt(1+tangentX*tangentX);
-  const nx=1/norm,nz=-tangentX/norm,width=lerp(a.width,b.width,t);
-  const levels=[],edges=[];
-  for(const scale of [-1,-.56,0,.56,1]){
-   const px=x+nx*width*.5*scale,pz=z+nz*width*.5*scale;
-   levels.push(heightAt(px,pz));
+ root.name='Cherek Balkarsky river — mapped OSM centreline, reconstructed banks';
+ const empty={points:0,waterTriangles:0,bedTriangles:0,slopeTriangles:0,shoreTriangles:0,foamTriangles:0};
+ if(!centerline||centerline.length<2)
+  return {root,points:[],stats:empty,update(){},dispose(){}};
+ const points=densifyKunlumRiverPolyline(centerline,heightAt,{
+  step:mobile?18:quality==='beautiful'?7:13
+ });
+ const owned=[],own=o=>(owned.push(o),o);
+ const geo=(v,idx,uv=null,rgb=null)=>{
+  const g=own(new THREE.BufferGeometry());
+  g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+  if(uv)g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  if(rgb)g.setAttribute('color',new THREE.Float32BufferAttribute(rgb,3));
+  g.setIndex(idx);g.computeVertexNormals();return g;
+ };
+ const bed=[],bi=[],slope=[],si=[],shore=[],shi=[],water=[],wi=[],uv=[],rgb=[],foam=[],fi=[];
+ let along=0;const centers=[];
+ const quads=(indices,s,cols)=>{
+  const p=(s-1)*cols,b=s*cols;
+  for(let i=0;i<cols-1;i++)indices.push(p+i,b+i,p+i+1,b+i,b+i+1,p+i+1);
+ };
+ for(let s=0;s<points.length;s++){
+  const p=points[s],a=points[Math.max(0,s-1)],b=points[Math.min(points.length-1,s+1)];
+  const distance=Math.hypot(b.x-a.x,b.z-a.z)||1;
+  const nx=-(b.z-a.z)/distance,nz=(b.x-a.x)/distance;
+  const half=(12.5+2*Math.sin(s*.105)+Math.sin(s*.037))*.5;
+  const y=heightAt(p.x,p.z)-1.22;
+  if(s)along+=Math.hypot(p.x-points[s-1].x,p.z-points[s-1].z);
+  centers.push({x:p.x,z:p.z,y,nx,nz,half});
+  // Bed reaches undisturbed terrain beyond the incised banks.
+  for(let j=0;j<9;j++){
+   const f=(j-4)/4,dx=nx*half*f*1.8,dz=nz*half*f*1.8;
+   bed.push(p.x+dx,carveKunlumRiverHeight(p.x+dx,p.z+dz,heightAt,centerline)-.07,p.z+dz);
   }
-  const level=Math.max(...levels)+.62;
-  for(let lane=0;lane<5;lane++){
-   const side=(lane-2)/2;
-   main.push(x+nx*width*.5*side,level+.035*Math.cos(s*.8+lane*.75),z+nz*width*.5*side);
-   uv.push(s*.17,lane*.25);
-  }
-  if(s>0)for(let lane=0;lane<4;lane++){
-   const base=s*5,p=(s-1)*5;
-   indices.push(p+lane,base+lane,p+lane+1,base+lane,base+lane+1,p+lane+1);
+  for(let j=0;j<7;j++){
+   const f=(j-3)/3,dx=nx*half*f,dz=nz*half*f;
+   water.push(p.x+dx,y+.035*Math.sin(s*.71+j),p.z+dz);
+   uv.push(along*.085,f);
+   const variation=.5+.5*Math.sin(s*.23+j*1.73),edge=Math.abs(f);
+   rgb.push(.29+variation*.08,.57+variation*.10-edge*.055,.63+variation*.08-edge*.08);
   }
   for(const side of [-1,1]){
-   const ed=side*width*.85,px=x+nx*ed,pz=z+nz*ed;
-   const py=heightAt(px,pz)+.18;
-   bank.push(px,py,pz);
+   for(const f of [1,1.3,1.65]){
+    const x=p.x+nx*half*f*side,z=p.z+nz*half*f*side;
+    slope.push(x,carveKunlumRiverHeight(x,z,heightAt,centerline)+.04,z);
+   }
+   for(const f of [1.25,1.82]){
+    const x=p.x+nx*half*f*side,z=p.z+nz*half*f*side;
+    shore.push(x,carveKunlumRiverHeight(x,z,heightAt,centerline)+.11,z);
+   }
   }
-  if(s>0){const t0=(s-1)*2,t1=s*2;bankIndices.push(t0,t1,t0+1,t1,t1+1,t0+1)}
-  if(s>0&&s%3===0){
-   const p=(s*.6180339887%1)*1.3-.65;
-   const xx=x+nx*width*.5*p,zz=z+nz*width*.5*p;
-   foam.push(xx-.6,level+.13,zz,xx+.8,level+.13,zz+.4);
+  if(s){
+   quads(bi,s,9);quads(wi,s,7);
+   for(let side=0;side<2;side++){
+    for(let j=0;j<2;j++){
+     const p=(s-1)*6+side*3+j,n=s*6+side*3+j;
+     si.push(p,n,p+1,n,n+1,p+1);
+    }
+    const p=(s-1)*4+side*2,n=s*4+side*2;
+    shi.push(p,n,p+1,n,n+1,p+1);
+   }
   }
  }
- const owned=[];
- function geometry(vertices,inds,uvs){
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
-  if(uvs)g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-  if(inds)g.setIndex(inds);
-  g.computeVertexNormals();owned.push(g);return g;
+ for(let s=2;s<points.length-1;s+=(mobile?6:3)){
+  const p=centers[s],prev=centers[s-1],next=centers[s+1];
+  const gradient=Math.abs(next.y-prev.y)/(Math.hypot(next.x-prev.x,next.z-prev.z)||1);
+  const turbulence=.5+.5*Math.sin(s*1.921);
+  if(gradient<.05&&turbulence<.7)continue;
+  const shift=Math.sin(s*3.13)*p.half*.52,span=p.half*(mobile?.26:.4);
+  const x=p.x+p.nx*shift,z=p.z+p.nz*shift,y=p.y+.12,k=foam.length/3;
+  foam.push(x-p.nx*span,y,z-p.nz*span,x+p.nx*span,y,z+p.nz*span,
+    x-p.nz*(mobile?1.8:3.2),y+.04,z+p.nx*(mobile?1.8:3.2));
+  fi.push(k,k+1,k+2);
  }
- const riverMat=new THREE.MeshPhysicalMaterial({
-  color:0x6bafb2,metalness:.18,roughness:quality==='beautiful'?.19:.33,
-  clearcoat:quality==='beautiful'?.75:.25,clearcoatRoughness:.12,transparent:true,opacity:.91,
-  side:THREE.DoubleSide,depthWrite:true
- });
- const bedMat=new THREE.MeshStandardMaterial({color:0x8b8371,roughness:.92,side:THREE.DoubleSide});
- const shimmerMat=new THREE.LineBasicMaterial({color:0xccece7,transparent:true,opacity:.68,depthWrite:false});
- owned.push(riverMat,bedMat,shimmerMat);
- // Gravel shoulder is a separate layer; never deletes DEM faces.
- const bed=new THREE.Mesh(geometry(bank,bankIndices),bedMat);bed.name='Approximate gravel banks';root.add(bed);
- const water=new THREE.Mesh(geometry(main,indices,uv),riverMat);
- water.name='Cherek Balkarsky approximate flowing surface';
- water.renderOrder=1;root.add(water);
- const lineGeometry=new THREE.BufferGeometry();
- lineGeometry.setAttribute('position',new THREE.Float32BufferAttribute(foam,3));owned.push(lineGeometry);
- const highlights=new THREE.LineSegments(lineGeometry,shimmerMat);
- highlights.name='Water glints';highlights.renderOrder=2;root.add(highlights);
- const dispose=()=>{for(const o of owned)o.dispose()};
- return {root,points,dispose,stats:{points:points.length,waterTriangles:indices.length/3,bankTriangles:bankIndices.length/3}};
+ const standard=(color,roughness)=>own(new THREE.MeshStandardMaterial({
+  color,roughness,side:THREE.DoubleSide
+ }));
+ const waterMat=own(new THREE.MeshPhysicalMaterial({
+  color:0xffffff,vertexColors:true,metalness:.08,roughness:mobile?.31:quality==='beautiful'?.17:.28,
+  clearcoat:mobile?.24:.72,clearcoatRoughness:.19,
+  transparent:true,opacity:mobile?.96:.91,depthWrite:true,side:THREE.DoubleSide
+ }));
+ const flowTime={value:0};
+ waterMat.onBeforeCompile=shader=>{
+  shader.uniforms.uCherekFlowTime=flowTime;
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\nvarying vec2 vCherekFlowUV;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\nvCherekFlowUV=uv;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+   '#include <common>\nvarying vec2 vCherekFlowUV;\nuniform float uCherekFlowTime;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
+   [
+    '#include <color_fragment>',
+    'float c1=sin(vCherekFlowUV.x*17.-uCherekFlowTime*5.1+vCherekFlowUV.y*8.);',
+    'float c2=sin(vCherekFlowUV.x*41.-uCherekFlowTime*8.3-vCherekFlowUV.y*13.);',
+    'float wave=.5+.5*(.67*c1+.33*c2);',
+    'float flash=pow(max(0.,sin(vCherekFlowUV.x*27.-uCherekFlowTime*6.+vCherekFlowUV.y*19.)),12.);',
+    'diffuseColor.rgb*=.82+.25*wave;',
+    'diffuseColor.rgb+=vec3(.16,.22,.21)*flash*.35;'
+   ].join('\n'));
+ };
+ waterMat.customProgramCacheKey=()=> 'kunlum-cherek-flow-v2';
+ const foamMat=own(new THREE.MeshBasicMaterial({
+  color:0xe4f6ec,transparent:true,opacity:mobile?.46:.59,depthWrite:false,side:THREE.DoubleSide
+ }));
+ const mesh=(name,v,index,mat,tex=null,color=null,order=0)=>{
+  const m=new THREE.Mesh(geo(v,index,tex,color),mat);
+  m.name=name;m.renderOrder=order;root.add(m);return m;
+ };
+ mesh('Cherek channel gravel bed',bed,bi,standard(0x5c5a52,.99));
+ mesh('Cherek eroded bank slopes',slope,si,standard(0x59594e,.95));
+ mesh('Cherek rocky shore strips',shore,shi,standard(0x8f8975,1),null,null,1);
+ mesh('Cherek flowing water',water,wi,waterMat,uv,rgb,2);
+ mesh('Cherek rapids foam',foam,fi,foamMat,null,null,3);
+ return {root,points,stats:{points:points.length,waterTriangles:wi.length/3,
+  bedTriangles:bi.length/3,slopeTriangles:si.length/3,
+  shoreTriangles:shi.length/3,foamTriangles:fi.length/3},
+  update(timeSeconds){flowTime.value=timeSeconds},
+  dispose(){for(const o of owned)o.dispose?.()}
+ };
 }
