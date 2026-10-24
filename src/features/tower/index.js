@@ -25,6 +25,7 @@ export async function mount(context,params={}){
  root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
    <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">${uiIcon('house')}</button>
+   <button type="button" class="btn towerWorldAction" data-world aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}<span>Обзор Кюнлюма</span></button>
    ${icon('clear','Очистить всю башню')}</div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
@@ -209,7 +210,12 @@ export async function mount(context,params={}){
   }
   void mutate('remove',null,id);
  });
- on('[data-camera]','click',()=>s.scene?.home());
+ on('[data-camera]','click',()=>{s.scene?.home();q('[data-world]')?.setAttribute('aria-pressed','false');});
+ on('[data-world]','click',()=>{
+  const active=s.scene?.worldView();
+  q('[data-world]')?.setAttribute('aria-pressed',String(!!active));
+  const span=q('[data-world] span');if(span)span.textContent=active?'К строительству':'Обзор Кюнлюма';
+ });
  window.addEventListener('keydown',e=>{
   if(s.disposed||s.busy||document.body.classList.contains('modal-open')||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
   if(e.key==='Escape'){cancel();return;}
