@@ -22,6 +22,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const approvedSections=createApprovedSectionLoader();
  const approvedModelPromises=new Map();
  let disposed=false,layer=null,tool='select',blocks=[],selected=null;
+ let frame=0,needsRender=true,needsAim=true,worldMode=false,lastWorldFrame=0;
+ function scheduleDraw(){needsRender=true;if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(draw);}
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -40,7 +42,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);floor.receiveShadow=true;scene.add(floor);
  // Kunlum landscape stays independent from prefab placement and saved state.
  let kunlum=null;
- try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches,onReady:scheduleDraw}); }
+ try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches,onReady:scheduleDraw});
+  void kunlum.ready.then(()=>{if(!disposed){container.dataset.kunlumWorldReady='true';scheduleDraw();}});
+ }
  catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
  const grid=new THREE.GridHelper(20,80,'#d9ead7','#879e84');grid.position.set(10,.008,10);
@@ -56,8 +60,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
  let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
  let renderedById=new Map(),renderedJoints=new Map();
- let frame=0,needsRender=true,needsAim=true;
- function scheduleDraw(){needsRender=true;if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(draw);}
  function cameraChanged(){needsAim=true;scheduleDraw();}
  controls.addEventListener('change',cameraChanged);
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
@@ -268,7 +270,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());controls.target.copy(center);
   const distance=Math.max(2.8,Math.max(size.x,size.y,size.z)*3);camera.position.copy(center).add(new THREE.Vector3(distance*.83,distance*.58,distance));}
   controls.update();scheduleDraw();}
- function draw(){
+ function draw(now=0){
   frame=0;
   if(disposed||document.hidden)return;
   controls.update();
@@ -280,14 +282,32 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    showFaceGrid(hit);
    onCameraChange({origin:camera.position.toArray(),forward:forward.toArray(),target:hit?.position||controls.target.toArray(),hit});
   }
+  if(worldMode&&now-lastWorldFrame>=(matchMedia('(max-width:749px)').matches?50:33)){
+   lastWorldFrame=now;kunlum?.update?.(now*.001);needsRender=true;
+  }
   if(needsRender){needsRender=false;renderer.render(scene,camera);}
+  if(worldMode)scheduleDraw();
+ }
+ function worldView(){
+  worldMode=!worldMode;
+  if(worldMode){
+   controls.maxDistance=2500;
+   controls.target.set(10,35,10);
+   camera.position.set(430,315,500);
+   controls.update();scheduleDraw();
+  }else{
+   controls.maxDistance=85;
+   fit();
+  }
+  container.dataset.worldView=String(worldMode);
+  return worldMode;
  }
  function onVisibility(){if(!document.hidden)scheduleDraw();}
  document.addEventListener('visibilitychange',onVisibility);
  scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length)fit();},setPreview,
   setSelected,getAimHit(){const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:fit,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home(){worldMode=false;controls.maxDistance=85;container.dataset.worldView='false';fit();},worldView,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
   pickAt:findHit,
   dispose(){disposed=true;kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}
