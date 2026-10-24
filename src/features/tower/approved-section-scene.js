@@ -4,6 +4,7 @@ import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {loadManualSection} from '../masonry/manual-sections/registry.mjs?v=approved-manual.1';
 import {approvedSectionId,APPROVED_PREFAB_VERSION} from '../../../packages/tower-game/approved-prefab.mjs';
 import {PREFAB_CELL_METERS} from '../../../packages/tower-game/prefab-layout.mjs';
+import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 
 /**
  * Each stone is a real authored GLB mesh, centered using the exact same
@@ -35,7 +36,7 @@ export function createApprovedSectionLoader(){
   for(const entry of recipe.stones){
    const original=geometries.get(entry.name);
    if(!original)throw new Error('Missing authored mesh '+entry.name);
-   const mesh=new THREE.Mesh(original,material);
+   const mesh=new THREE.Mesh(getApprovedStoneSurfaceGeometry(original,entry.scale),material);
    mesh.name=entry.name;
    mesh.position.fromArray(entry.position);
    mesh.quaternion.fromArray(entry.quaternion);
