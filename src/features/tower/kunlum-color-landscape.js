@@ -26,11 +26,14 @@ export function webMercatorTile(lon,lat,z){
  const n=2**z,rad=Math.max(-85,Math.min(85,lat))*Math.PI/180;
  return [(lon+180)/360*n,(1-Math.log(Math.tan(Math.PI/4+rad/2))/Math.PI)/2*n];
 }
-export function buildKunlumSatelliteTilePlan(centerEasting,centerNorthing,{zoom=13,halfSizeM=1800,maxTiles=16}={}){
+export function buildKunlumSatelliteTilePlan(centerEasting,centerNorthing,{zoom=13,halfSizeM=1800,bounds=null,maxTiles=16}={}){
  if(!Number.isFinite(centerEasting)||!Number.isFinite(centerNorthing)||halfSizeM<=0||!Number.isInteger(zoom)||zoom<0||zoom>14)
   throw new Error('Invalid Sentinel mosaic extent');
  const coords=[];
- for(const dx of [-halfSizeM,halfSizeM])for(const dz of [-halfSizeM,halfSizeM]){
+ const xs=bounds?[bounds.minX,bounds.maxX]:[-halfSizeM,halfSizeM];
+ const zs=bounds?[bounds.minZ,bounds.maxZ]:[-halfSizeM,halfSizeM];
+ if(xs.some(x=>!Number.isFinite(x))||zs.some(z=>!Number.isFinite(z)))throw Error('Invalid satellite bounds');
+ for(const dx of xs)for(const dz of zs){
   coords.push(webMercatorTile(...utm38ToWgs84(centerEasting+dx,centerNorthing+dz),zoom));
  }
  const x0=Math.floor(Math.min(...coords.map(p=>p[0]))),x1=Math.floor(Math.max(...coords.map(p=>p[0])));
@@ -55,9 +58,9 @@ export function landscapeColor(heightASL,slope,x,z){
 }
 export function createKunlumSatelliteTexture(THREE,{
  centerEasting=372151.107,centerNorthing=4773796.751,zoom=13,
- maxTiles=16,timeoutMs=10000,onStatus=()=>{}
+ maxTiles=16,bounds=null,timeoutMs=10000,onStatus=()=>{}
 }={}){
- const plan=buildKunlumSatelliteTilePlan(centerEasting,centerNorthing,{zoom,maxTiles});
+ const plan=buildKunlumSatelliteTilePlan(centerEasting,centerNorthing,{zoom,maxTiles,bounds});
  let texture=null,stopped=false;
  const uvForWorld=(x,z)=>{
   const [lon,lat]=utm38ToWgs84(centerEasting+x,centerNorthing+z);
