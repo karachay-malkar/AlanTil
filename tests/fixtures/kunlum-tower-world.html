@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kunlum tower construction world QA</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#b3c9d9}#stage{width:100vw;height:100dvh}#controls{position:fixed;top:4px;right:4px;z-index:2;display:flex;gap:4px}button{padding:8px}</style>
+<div id="stage"></div><div id="controls"><button id="wide">Обзор Кюнлюма</button><button id="home">Башня</button></div>
+<script type="module">
+import {createTowerScene} from '../../src/features/tower/prefab-scene.js';
+const stage=document.getElementById('stage');
+try{
+ const tower=await createTowerScene(stage,{});
+ tower.setTool('select');
+ window.qaTower=tower;
+ document.getElementById('wide').onclick=()=>tower.worldView();
+ document.getElementById('home').onclick=()=>tower.home();
+ stage.dataset.mount='success';
+}catch(error){
+ stage.dataset.mount='error';stage.dataset.mountError=String(error.stack||error);
+ console.error('Tower world QA',error);
+}
+</script></html>
