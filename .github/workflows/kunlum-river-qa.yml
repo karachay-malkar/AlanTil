@@ -6,6 +6,14 @@ on:
       - 'src/features/tower/kunlum-osm-river.js'
       - 'src/features/tower/kunlum-river-layer.js'
       - 'src/features/tower/kunlum-terrain-scatter.js'
+      - 'src/features/tower/kunlum-real-environment.js'
+      - 'src/features/tower/kunlum-terrain-lod.js'
+      - 'src/features/tower/prefab-scene.js'
+      - 'src/features/tower/index.js'
+      - 'src/features/tower/tower.css'
+      - 'tests/kunlum-real-terrain.test.mjs'
+      - 'tests/fixtures/kunlum-tower-world.html'
+      - 'scripts/qa/browser-tower-kunlum-world.cjs'
       - 'assets/tower/environment/kunlum-cherek-balkarsky-osm.json'
       - 'kunlum-terrain-review.html'
       - 'tests/kunlum-river-realism.test.mjs'
@@ -22,12 +30,16 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Cherek geometry and snapshot validation
-        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs
+        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs tests/kunlum-real-terrain.test.mjs
       - name: Module and embedded viewer syntax
         run: |
           node --check src/features/tower/kunlum-osm-river.js
           node --check src/features/tower/kunlum-river-layer.js
           node --check src/features/tower/kunlum-terrain-scatter.js
+          node --check src/features/tower/kunlum-terrain-lod.js
+          node --check src/features/tower/kunlum-real-environment.js
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/index.js
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -61,5 +73,31 @@ jobs:
         with:
           name: kunlum-cherek-desktop-mobile
           path: river-browser-qa/
+          retention-days: 14
+          if-no-files-found: warn
+
+  tower-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright
+      - name: Verify real tower construction and mapped 3D world in desktop and mobile
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/tower-world-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/tests/fixtures/kunlum-tower-world.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/browser-tower-kunlum-world.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tower-kunlum-world-desktop-mobile
+          path: tower-world-browser-qa/
           retention-days: 14
           if-no-files-found: warn
