@@ -27,7 +27,7 @@ export function createKunlumAvoidance(features=[],toWorld=p=>p,{cell=12}={}){
  };
 }
 export function createKunlumTerrainScatter(THREE,heightAt,{
- mobile=false,features=[],toWorld=p=>p,riverXAt=()=>Infinity,riverDistanceAt=null,range=1000,seed=87131
+ mobile=false,features=[],toWorld=p=>p,riverXAt=()=>Infinity,riverDistanceAt=null,range=1000,seed=87131,excludedBounds=null
 }={}){
  const root=new THREE.Group();root.name='Kunlum artistic 3D boulders / grass / shrubland';
  const rng=kunlumRng(seed),avoid=createKunlumAvoidance(features,toWorld);
@@ -60,7 +60,9 @@ export function createKunlumTerrainScatter(THREE,heightAt,{
    // Put about 60% of detail into walkable vicinity of the ruins.
    const cluster=rng()<.68?Math.min(range,type==='rock'?560:470):range;
    const x=(rng()*2-1)*cluster,z=(rng()*2-1)*cluster;
-   if(x*x+z*z<750||nearWater(x,z)||avoid(x,z))continue;
+   if(x*x+z*z<750||nearWater(x,z)||avoid(x,z)||
+    (excludedBounds&&x>=excludedBounds.minX&&x<=excludedBounds.maxX&&
+     z>=excludedBounds.minZ&&z<=excludedBounds.maxZ))continue;
    const y=heightAt(x,z);
    const dx=(heightAt(x+4,z)-heightAt(x-4,z))/8,dz=(heightAt(x,z+4)-heightAt(x,z-4))/8;
    const slope=Math.hypot(dx,dz);
