@@ -119,3 +119,41 @@ export function sampleBilinear(pixels,width,height,x,y){
  const a=pixels[iy*width+ix],b=pixels[iy*width+nx],c=pixels[ny*width+ix],d=pixels[ny*width+nx];
  return (a*(1-fx)+b*fx)*(1-fy)+(c*(1-fx)+d*fx)*fy;
 }
+
+/** Soft atmospheric edge fade. Leaves the DEM geometry completely unchanged. */
+export function installKunlumEdgeHaze(materials,bounds=KUNLUM_WIDE_BOUNDS){
+ const settings={active:0};
+ for(const material of materials){
+  const previous=material.onBeforeCompile;
+  const priorCache=material.customProgramCacheKey?.bind(material);
+  material.onBeforeCompile=shader=>{
+   if(typeof previous==='function')previous(shader);
+   shader.uniforms.uKunlumHazeActive={value:settings.active};
+   shader.uniforms.uKunlumHazeBounds={value:[
+    bounds.minX,bounds.maxX,bounds.minZ,bounds.maxZ
+   ]};
+   shader.vertexShader=shader.vertexShader.replace('#include <common>',
+    '#include <common>\nvarying vec2 vKunlumEdgeCoords;');
+   shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>',
+    '#include <worldpos_vertex>\nvKunlumEdgeCoords=(modelMatrix*vec4(transformed,1.0)).xz;');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+    '#include <common>\nvarying vec2 vKunlumEdgeCoords;\nuniform float uKunlumHazeActive;\nuniform vec4 uKunlumHazeBounds;');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <dithering_fragment>',`
+float kunlumEdgeDist=min(min(vKunlumEdgeCoords.x-uKunlumHazeBounds.x,
+uKunlumHazeBounds.y-vKunlumEdgeCoords.x),
+min(vKunlumEdgeCoords.y-uKunlumHazeBounds.z,
+uKunlumHazeBounds.w-vKunlumEdgeCoords.y));
+float kunlumHaze=uKunlumHazeActive*(1.0-smoothstep(65.0,740.0,kunlumEdgeDist));
+gl_FragColor.rgb=mix(gl_FragColor.rgb,vec3(.70,.79,.82),clamp(kunlumHaze*.98,0.,.98));
+#include <dithering_fragment>`);
+   settings._uniforms=settings._uniforms||[];
+   settings._uniforms.push(shader.uniforms.uKunlumHazeActive);
+  };
+  material.customProgramCacheKey=()=> (priorCache?priorCache():'terrain')+'-wide-haze-v1';
+  material.needsUpdate=true;
+ }
+ return {setActive(value){
+  settings.active=value?1:0;
+  for(const uniform of settings._uniforms||[])uniform.value=settings.active;
+ }};
+}
