@@ -31,7 +31,8 @@ button:hover,button.active{background:#607e64}
 .layers label{font-size:11px;color:#c6f1e4;cursor:pointer}
 .layers input{accent-color:#5bbaa6;vertical-align:middle}
 #towerLabel{position:absolute;pointer-events:none;top:0;left:0;z-index:2;background:#1f3330cc;border-radius:4px;padding:4px 7px;font-size:11px;white-space:nowrap}
-#north{position:absolute;bottom:18px;right:18px;color:#fff;text-shadow:0 1px 4px #000;font-size:13px;pointer-events:none}
+#north{position:absolute;bottom:18px;right:18px;color:#fff;text-shadow:0 1px 4px #000;font-size:13px;pointer-events:none;display:flex;align-items:center;gap:5px}
+#northArrow{font-size:22px;line-height:1;display:inline-block;transform-origin:50% 50%;will-change:transform}
 .note{position:absolute;bottom:14px;left:14px;color:#d9e8e5;background:#12282bbb;padding:7px 10px;border-radius:7px;font-size:10px;pointer-events:none;max-width:70%}
 #failure{display:none;margin-top:8px;color:#ffbba8;font-size:12px}
 .photoTools{border-top:1px solid #ffffff40;margin-top:12px;padding-top:10px}
@@ -107,7 +108,7 @@ button:hover,button.active{background:#607e64}
 <div id="status">Подготовка 3D-рельефа...</div><div id="failure"></div></section>
 <div id="towerLabel">▲ Абай-къала · ≈1251 м</div>
 <div class="note">Исходный DEM без искусственных террас. Стены нанесены по исторической разметке с предварительной геопривязкой, требующей проверки. Источник рельефа: Copernicus DEM GLO-30.</div>
-<div id="north">С ↑</div>
+<div id="north" title="Географический север; направление обновляется при повороте камеры"><span id="northArrow">↑</span><span>С</span></div>
 <dialog id="fundTour" aria-label="Официальная 360-градусная экскурсия фонда Кюнлюм Эль">
  <div class="tourBar"><strong>Экскурсия фонда «Кюнлюм Эль» · официальный источник</strong><button id="closeFundTour" type="button">Закрыть</button></div>
  <iframe id="fundTourFrame" title="3D-экскурсия фонда Кюнлюм Эль" allow="fullscreen; accelerometer; gyroscope" loading="lazy" allowfullscreen></iframe>
@@ -120,7 +121,7 @@ import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld} from "./src/features/tower/k
 import {createKunlumMapOverlay} from "./src/features/tower/kunlum-map-overlay.js";
 import {createKunlumPhotoBackdrop} from "./src/features/tower/kunlum-photo-panorama.js";
 import {createKunlumSatelliteTexture,landscapeColor} from "./src/features/tower/kunlum-color-landscape.js";
-import {installKunlumDetailShader,kunlumDetailSubdivision,getKunlumTerrainMeshStats} from "./src/features/tower/kunlum-terrain-detail.js";
+import {installKunlumDetailShader,installKunlumSlopeGrade,kunlumDetailSubdivision,getKunlumTerrainMeshStats} from "./src/features/tower/kunlum-terrain-detail.js";
 import {createKunlumRiverLayer,riverXAt} from "./src/features/tower/kunlum-river-layer.js";
 import {createKunlumTerrainScatter} from "./src/features/tower/kunlum-terrain-scatter.js";
 import {createKunlumBeautySky} from "./src/features/tower/kunlum-beauty-view.js";
@@ -205,6 +206,8 @@ const terrainMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughnes
 const beautifulMaterial=installKunlumDetailShader(
  new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,metalness:0,side:THREE.DoubleSide})
 );
+// Only actual greenery is lightened; unmodified DEM and rocks preserve their source colours.
+const greenGrade=installKunlumSlopeGrade([terrainMaterial,beautifulMaterial],{vegetationLift:.22});
 const wideHaze=installKunlumEdgeHaze([terrainMaterial,beautifulMaterial],KUNLUM_WIDE_BOUNDS);
 let terrain=null,half=60,scaleY=1,previous={},overlay=null,wideMode=false;
 let landscapeMode='coloredWalls',satelliteTexture=null,highResolutionTexture=null;
@@ -311,6 +314,7 @@ function loadSatelliteColours(){
   satelliteTexture=tex;
   document.getElementById('landscapeCredits').hidden=landscapeMode==='bare';
   if(terrain)createTerrain();
+  if(qualityMode==='beautiful'&&landscapeMode!=='bare')ensureHighSatellite();
  }).catch(error=>{
   satelliteTexture=null;
   landscapeStatus.textContent='Спутниковая мозаика недоступна ('+error.message+'). Показана условная окраска склонов по высоте и крутизне, не спутниковое изображение.';
@@ -418,6 +422,7 @@ for(let i=1;i<stops.length;i++){if(h<=stops[i][0]){let t=(h-stops[i-1][0])/(stop
 return col.set("#e9f0f4");
 }
 function createTerrain(){
+ greenGrade.setActive(landscapeMode!=='bare');
  if(wideMode&&wideDem.loaded){createWideTerrain();return}
  wideHaze.setActive(false);
  const divisions=kunlumDetailSubdivision({half,quality:qualityMode,mobile:isMobile});
@@ -522,7 +527,9 @@ function focus(mode){
  wideMode=mode==='wide';
  if(mode==='wide'){
   half=60;createTerrain();
-  camera.position.set(-3200,2350,3900);
+  // Keep the same east/north viewing side as the original full-valley camera.
+  // The previous west-side panorama made left and right look mirrored.
+  camera.position.set(4250,2450,3950);
   orbit.target.set(350,220,100);
  }
  else if(mode==="full"){half=60;createTerrain();camera.position.set(1900,1300,2150);orbit.target.set(0,155,0);}
@@ -585,9 +592,17 @@ focus("full");applyQualityLighting();refreshQualityLabel();
 loadMappedWalls();loadSatelliteColours();loadWideData();
 updateEnvironmentVisibility();
 const label=document.getElementById("towerLabel"),world=new THREE.Vector3();
-let frames=0,started=performance.now();
+const northArrow=document.getElementById('northArrow');
+const northAxis=new THREE.Vector3(0,0,350),northPoint=new THREE.Vector3(),centerPoint=new THREE.Vector3();
+function updateNorthCompass(){
+ // X is UTM easting, +Z is UTM northing. Project geographic north onto the screen.
+ centerPoint.copy(orbit.target).project(camera);
+ northPoint.copy(orbit.target).add(northAxis).project(camera);
+ const x=northPoint.x-centerPoint.x,y=northPoint.y-centerPoint.y;
+ if(x*x+y*y>1e-8)northArrow.style.transform='rotate('+(Math.atan2(x,y)*180/Math.PI).toFixed(1)+'deg)';
+}
 function draw(now){
-requestAnimationFrame(draw);orbit.update();photoBackdrop.update();beautySky.update();
+requestAnimationFrame(draw);orbit.update();updateNorthCompass();photoBackdrop.update();beautySky.update();
 beautySky.setVisible(qualityMode==='beautiful'&&landscapeMode!=='bare'&&
  (!photoBackdrop.loaded||!photoBackdrop.visible));
 renderer.render(scene,camera);
