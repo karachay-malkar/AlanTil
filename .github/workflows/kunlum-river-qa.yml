@@ -9,6 +9,7 @@ on:
       - 'assets/tower/environment/kunlum-cherek-balkarsky-osm.json'
       - 'kunlum-terrain-review.html'
       - 'tests/kunlum-river-realism.test.mjs'
+      - 'tests/kunlum-tower-world-17-2.test.mjs'
       - 'scripts/qa/browser-kunlum-river.cjs'
       - '.github/workflows/kunlum-river-qa.yml'
   workflow_dispatch:
@@ -21,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Cherek geometry and snapshot validation
-        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs
+        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs
       - name: Module and embedded viewer syntax
         run: |
           node --check src/features/tower/kunlum-osm-river.js
