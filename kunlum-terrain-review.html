@@ -314,7 +314,79 @@ window.addEventListener('pagehide',()=>{
  wideDem.dispose();gameMaterials.dispose();beautifulMaterial.dispose();terrainMaterial.dispose();
  overlay?.dispose();riverScene.dispose();decorativeScatter?.dispose();beautySky.dispose()
 },{once:true});
-const pointToWorld=p=>pixelToLocalWorld(p,DEFAULT_KUNLUM_ALIGNMENT);
+const SETTLEMENT_ROTATION_KEY='alantil.kunlum.preview.rotation.v1';
+function readSettlementAngle(){
+ try{
+  const v=Number(localStorage.getItem(SETTLEMENT_ROTATION_KEY));
+  return Number.isFinite(v)?Math.max(-180,Math.min(180,Math.round(v))):0;
+ }catch{return 0}
+}
+let settlementAngle=readSettlementAngle();
+const pointToWorld=p=>rotateKunlumPlanPoint(
+ pixelToLocalWorld(p,DEFAULT_KUNLUM_ALIGNMENT),settlementAngle
+);
+function writeSettlementAngle(){
+ try{localStorage.setItem(SETTLEMENT_ROTATION_KEY,String(settlementAngle))}catch{}
+}
+function updateSettlementLabels(){
+ document.getElementById('settlementAngle').value=String(settlementAngle);
+ document.getElementById('settlementAngleLabel').textContent=(settlementAngle>0?'+':'')+settlementAngle+'°';
+ document.getElementById('settlementStatus').textContent=
+  'Угол коррекции: '+settlementAngle+'°. Башня зафиксирована. Историческая геометрия не изменяется.';
+}
+function rebuildSettlement({rebuildNature=false}={}){
+ if(!mappedPlan)return;
+ const next=createKunlumMapOverlay(THREE,mappedPlan,{
+  toWorld:pointToWorld,heightAt:sampleDisplayedTerrain
+ });
+ next.setVerticalScale(scaleY);
+ const prior=overlay;
+ scene.add(next.root);overlay=next;
+ updateVisibleLayers();
+ applyQualityLighting();
+ if(prior){scene.remove(prior.root);prior.dispose()}
+ // The old scatter avoids the old wall footprints, so hide while dragging.
+ if(decorativeScatter)decorativeScatter.root.visible=false;
+ if(rebuildNature){
+  if(decorativeScatter){
+   scene.remove(decorativeScatter.root);decorativeScatter.dispose();decorativeScatter=null;
+  }
+  if(qualityMode==='beautiful')ensureDecorativeScatter();
+ }
+}
+let rotationFrame=0;
+function setSettlementAngle(value,finalize=false){
+ if(!Number.isFinite(Number(value)))return;
+ settlementAngle=Math.max(-180,Math.min(180,Math.round(Number(value))));
+ updateSettlementLabels();writeSettlementAngle();
+ if(rotationFrame){cancelAnimationFrame(rotationFrame);rotationFrame=0}
+ if(finalize)rebuildSettlement({rebuildNature:true});
+ else rotationFrame=requestAnimationFrame(()=>{
+  rotationFrame=0;rebuildSettlement();
+ });
+}
+function setupSettlementControls(){
+ updateSettlementLabels();
+ const slider=document.getElementById('settlementAngle');
+ slider.oninput=()=>setSettlementAngle(slider.value);
+ slider.onchange=()=>setSettlementAngle(slider.value,true);
+ document.getElementById('settlementCCW').onclick=()=>setSettlementAngle(settlementAngle-1,true);
+ document.getElementById('settlementCW').onclick=()=>setSettlementAngle(settlementAngle+1,true);
+ document.getElementById('settlementReset').onclick=()=>setSettlementAngle(0,true);
+ document.getElementById('settlementExport').onclick=()=>{
+  const data={schema:'alantil.kunlum.preview.rotation.v1',
+   anchor:'Abay-Kala',anchorPixel:DEFAULT_KUNLUM_ALIGNMENT.anchorPixel,
+   baseAngleDeg:DEFAULT_KUNLUM_ALIGNMENT.angleDeg,
+   additionalRotationDeg:settlementAngle,
+   resultingAngleDeg:DEFAULT_KUNLUM_ALIGNMENT.angleDeg+settlementAngle,
+   sourceDataModified:false,georeferenceStatus:'UNVERIFIED_SINGLE_CONTROL_POINT'};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='kunlum-settlement-rotation.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+}
+setupSettlementControls();
 function sampleOriginalTerrain(x,z){
  // Exact piecewise planar interpolation of the original grid triangles.
  const gx=Math.max(0,Math.min(120,x/30+60)),gz=Math.max(0,Math.min(120,60-z/30));
@@ -390,9 +462,7 @@ async function loadMappedWalls(){
   if(data.confirmed_features?.length!==120||data.openings?.length!==42||data.auto_candidates?.length!==702)
    throw Error('Неожиданный состав актуальной разметки');
   mappedPlan=data;
-  overlay=createKunlumMapOverlay(THREE,data,{toWorld:pointToWorld,heightAt:sampleDisplayedTerrain});
-  overlay.setVerticalScale(scaleY);scene.add(overlay.root);updateVisibleLayers();applyQualityLighting();
-  if(qualityMode==='beautiful')ensureDecorativeScatter();
+  rebuildSettlement({rebuildNature:true});
   const n=overlay.counters;
   document.getElementById('objectsStatus').textContent=
    'Подтверждено: '+n.confirmed+' (стены '+n.walls+', дома '+n.houses+', подпорные '+n.retaining+', проходы '+n.passages+
@@ -424,7 +494,6 @@ function createTerrain(){
  wideHaze.setActive(false);
  const divisions=kunlumDetailSubdivision({half,quality:qualityMode,mobile:isMobile});
  const side=half*2*divisions+1,coords=[],colors=[],uvs=[],indices=[];
- const useSatellite=false;
  const useBeautiful=qualityMode==='beautiful'&&landscapeMode!=='bare';
  for(let j=-half*divisions;j<=half*divisions;j++)for(let i=-half*divisions;i<=half*divisions;i++){
   const originalI=i/divisions,originalJ=j/divisions;
