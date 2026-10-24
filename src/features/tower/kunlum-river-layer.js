@@ -47,9 +47,9 @@ export function riverXAt(points,z){
  const a=points[i],b=points[i+1],t=limit((z-a.z)/(b.z-a.z||1),0,1);
  return lerp(a.x,b.x,t);
 }
-export function createKunlumRiverLayer(THREE,heightAt,{quality='interactive',mobile=false}={}){
+export function createKunlumRiverLayer(THREE,heightAt,{quality='interactive',mobile=false,minZ=-1350,maxZ=1350,minX=45,maxX=990}={}){
  const root=new THREE.Group();root.name='Approximate Cherek Balkarsky DEM-trough river (NOT SURVEYED)';
- const points=traceKunlumRiver(heightAt);
+ const points=traceKunlumRiver(heightAt,{minZ,maxZ,minX,maxX});
  const main=[],uv=[],indices=[],bank=[],bankIndices=[],foam=[];
  const samplesPerSpan=quality==='beautiful'?(mobile?3:5):2;
  for(let s=0;s<=(points.length-1)*samplesPerSpan;s++){
