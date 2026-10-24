@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../src/vendor/three/three.module.js';
+import {readFileSync} from 'node:fs';
 import {getApprovedStoneSurfaceGeometry} from '../src/features/tower/rock-surface.js';
 
 function sample(geometry){
@@ -39,7 +40,7 @@ test('projection separates shared GLB vertices by triangle and preserves all tri
  const u=projected.getAttribute('uv');
  for(let i=0;i<u.count;i++)assert.ok(Number.isFinite(u.getX(i))&&Number.isFinite(u.getY(i)));
  // The face on X must not inherit the UV projection from the Y-facing triangle.
- assert.notDeepEqual([u.getX(0),u.getY(0)],[u.getX(3),u.getY(3)]);
+ assert.notDeepEqual([u.getX(2),u.getY(2)],[u.getX(4),u.getY(4)]);
 });
 test('PBR UVs remain metric under non-uniform stone scaling; originals are not modified',()=>{
  const g=new THREE.BufferGeometry();
@@ -57,7 +58,6 @@ test('PBR UVs remain metric under non-uniform stone scaling; originals are not m
  assert.strictEqual(b,getApprovedStoneSurfaceGeometry(g,[1,1,1]),'uniform cache reused');
 });
 test('new approved sections use corrected UVs but preserve original recipe transforms',()=>{
- const {readFileSync}=await import('node:fs');
  const src=readFileSync(new URL('../src/features/tower/approved-section-scene.js',import.meta.url),'utf8');
  assert.match(src,/getApprovedStoneSurfaceGeometry\(original,entry\.scale\)/);
  assert.match(src,/mesh\.position\.fromArray\(entry\.position\)/);
