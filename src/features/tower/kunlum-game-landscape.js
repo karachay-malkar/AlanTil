@@ -23,20 +23,24 @@ export function kunlumTileNoise(x,y,frequency,seed=1){
  return blend(blend(aa,ab,fx),blend(ba,bb,fx),fy);
 }
 export function kunlumTerrainMasks(elevation,slope,patch){
- const p=clamp(patch),s=clamp(slope);
- const rock=clamp((s-.16)*2.1+(elevation-1900)/1700+(p-.5)*.26);
- const scree=clamp((s-.10)*1.05+(elevation-1550)/2300+(p-.55)*.7)*(1-rock*.64);
- const soil=clamp(.15+p*.42+(s-.30)*.18)*(1-rock*.74);
+ const p=clamp(patch),s=Math.max(0,slope);
+ // The DEM gradient is a rise/run ratio, not an angle. Earlier dividing it by
+ // 1+slope suppressed gray-rock coverage and made the hills uniformly green.
+ const sharp=s+(elevation-1550)*.00024+(p-.5)*.18;
+ const smooth=(a,b,v)=>{const t=clamp((v-a)/(b-a));return t*t*(3-2*t)};
+ const rock=smooth(.23,.88,sharp);
+ const scree=smooth(.13,.65,s+(p-.5)*.26)*(1-rock*.64);
+ const soil=clamp(.22+p*.48+(s-.3)*.10)*(1-rock*.72);
  return {rock,scree,soil};
 }
 export function createKunlumTerrainTiles(THREE,{resolution=256}={}){
  if(!THREE||!Number.isInteger(resolution)||resolution<32||resolution>512)
   throw Error('Invalid game-landscape texture settings');
  const palettes={
-  grass:{lo:[103,125,75],hi:[168,170,98],seed:37,contrast:26},
-  soil:{lo:[117,91,67],hi:[168,138,99],seed:83,contrast:22},
-  scree:{lo:[135,129,117],hi:[202,184,159],seed:173,contrast:35},
-  rock:{lo:[113,113,107],hi:[184,181,167],seed:271,contrast:28}
+  grass:{lo:[112,135,78],hi:[174,180,112],seed:37,contrast:30},
+  soil:{lo:[132,99,65],hi:[189,155,110],seed:83,contrast:28},
+  scree:{lo:[150,139,118],hi:[213,197,164],seed:173,contrast:34},
+  rock:{lo:[139,140,130],hi:[218,211,191],seed:271,contrast:34}
  };
  // Compute periodic fractal texture grain once; each material uses a different
  // wrapped phase offset, avoiding four expensive rounds of noise generation.
@@ -185,7 +189,7 @@ export function kunlumNativeTerrainColor(elevation,slope,x,z,tiles){
  const grass=data('grass',.092),soil=data('soil',.073),
   scree=data('scree',.087),rock=data('rock',.106);
  const patch=data('soil',.0073)[3];
- const masks=kunlumTerrainMasks(elevation,clamp(slope/(1+slope)),patch);
+ const masks=kunlumTerrainMasks(elevation,slope,patch);
  const rgb=[0,1,2].map(c=>{
   const base=blend(grass[c],soil[c],masks.soil);
   const gravel=blend(base,scree[c],masks.scree);
