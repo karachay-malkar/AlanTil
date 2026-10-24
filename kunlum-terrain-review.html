@@ -90,14 +90,14 @@ button:hover,button.active{background:#607e64}
 </section>
 <section class="settlementControls" aria-label="Поворот селения относительно башни">
 <h2>Повернуть селение вокруг Абай-къала</h2>
-<label for="settlementAngle">Дополнительный угол: <output id="settlementAngleLabel" for="settlementAngle">0°</output></label>
-<input id="settlementAngle" type="range" min="-180" max="180" step="1" value="0" aria-label="Поворот селения">
+<label for="settlementAngle">Дополнительный угол: <output id="settlementAngleLabel" for="settlementAngle">−134°</output></label>
+<input id="settlementAngle" type="range" min="-180" max="180" step="1" value="-134" aria-label="Поворот селения">
 <div class="actions">
  <button id="settlementCCW" type="button">−1°</button><button id="settlementCW" type="button">+1°</button>
  <button id="settlementReset" type="button">Сбросить</button>
  <button id="settlementExport" type="button">Экспорт JSON</button>
 </div>
-<div id="settlementStatus" role="status" aria-live="polite">Башня неподвижна. Угол сохраняется в браузере; исходный план не изменяется.</div>
+<div id="settlementStatus" role="status" aria-live="polite">Утверждённое положение −134°. Башня неподвижна. Исходный план сохранён.</div>
 </section>
 <div class="layers">
 <label><input id="wallsVisible" type="checkbox" checked> Стены и дома (подтверждённые)</label>
@@ -316,12 +316,18 @@ window.addEventListener('pagehide',()=>{
  wideDem.dispose();gameTerrain.dispose();
  overlay?.dispose();riverScene.dispose();decorativeScatter?.dispose();beautySky.dispose()
 },{once:true});
-const SETTLEMENT_ROTATION_KEY='alantil.kunlum.preview.rotation.v1';
+// Approved rotation from assets/tower/environment/kunlum-settlement-rotation.json.
+ // The old v1 key stored angles relative to the PREVIOUS default (0°); ignore
+ // it rather than applying it twice. Only v2 holds overrides to -134°.
+const APPROVED_SETTLEMENT_ANGLE=-134;
+const SETTLEMENT_ROTATION_KEY='alantil.kunlum.preview.rotation.v2';
 function readSettlementAngle(){
  try{
-  const v=Number(localStorage.getItem(SETTLEMENT_ROTATION_KEY));
-  return Number.isFinite(v)?Math.max(-180,Math.min(180,Math.round(v))):0;
- }catch{return 0}
+  const stored=localStorage.getItem(SETTLEMENT_ROTATION_KEY);
+  if(stored===null)return APPROVED_SETTLEMENT_ANGLE;
+  const value=Number(stored);
+  return Number.isFinite(value)?Math.max(-180,Math.min(180,Math.round(value))):APPROVED_SETTLEMENT_ANGLE;
+ }catch{return APPROVED_SETTLEMENT_ANGLE}
 }
 let settlementAngle=readSettlementAngle();
 const pointToWorld=p=>rotateKunlumPlanPoint(
@@ -334,7 +340,7 @@ function updateSettlementLabels(){
  document.getElementById('settlementAngle').value=String(settlementAngle);
  document.getElementById('settlementAngleLabel').textContent=(settlementAngle>0?'+':'')+settlementAngle+'°';
  document.getElementById('settlementStatus').textContent=
-  'Угол коррекции: '+settlementAngle+'°. Башня зафиксирована. Историческая геометрия не изменяется.';
+  'Угол: '+settlementAngle+'° (утверждённый −134°). Башня зафиксирована; исходный план не изменяется.';
 }
 function rebuildSettlement({rebuildNature=false}={}){
  if(!mappedPlan)return;
@@ -374,7 +380,7 @@ function setupSettlementControls(){
  slider.onchange=()=>setSettlementAngle(slider.value,true);
  document.getElementById('settlementCCW').onclick=()=>setSettlementAngle(settlementAngle-1,true);
  document.getElementById('settlementCW').onclick=()=>setSettlementAngle(settlementAngle+1,true);
- document.getElementById('settlementReset').onclick=()=>setSettlementAngle(0,true);
+ document.getElementById('settlementReset').onclick=()=>setSettlementAngle(APPROVED_SETTLEMENT_ANGLE,true);
  document.getElementById('settlementExport').onclick=()=>{
   const data={schema:'alantil.kunlum.preview.rotation.v1',
    anchor:'Abay-Kala',anchorPixel:DEFAULT_KUNLUM_ALIGNMENT.anchorPixel,
