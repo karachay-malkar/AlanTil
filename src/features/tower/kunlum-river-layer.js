@@ -156,29 +156,30 @@ export function createKunlumRiverLayer(THREE,heightAt,{
   const p=points[s],a=points[Math.max(0,s-1)],b=points[Math.min(points.length-1,s+1)];
   const distance=Math.hypot(b.x-a.x,b.z-a.z)||1;
   const nx=-(b.z-a.z)/distance,nz=(b.x-a.x)/distance;
-  const half=(12.5+2*Math.sin(s*.105)+Math.sin(s*.037))*.5;
+  const half=(11.9+2.1*Math.sin(s*.105)+1.3*Math.sin(s*.037)+.45*Math.sin(s*.9))*.5;
+  const bankScale=side=>1+.095*Math.sin(s*.39+side*1.1);
   const y=heightAt(p.x,p.z)-1.22;
   if(s)along+=Math.hypot(p.x-points[s-1].x,p.z-points[s-1].z);
   centers.push({x:p.x,z:p.z,y,nx,nz,half});
   // Bed reaches undisturbed terrain beyond the incised banks.
   for(let j=0;j<9;j++){
-   const f=(j-4)/4,dx=nx*half*f*1.8,dz=nz*half*f*1.8;
+   const f=(j-4)/4,edge=half*f*1.8*bankScale(Math.sign(f)),dx=nx*edge,dz=nz*edge;
    bed.push(p.x+dx,carveKunlumRiverHeight(p.x+dx,p.z+dz,heightAt,centerline)-.07,p.z+dz);
   }
   for(let j=0;j<7;j++){
-   const f=(j-3)/3,dx=nx*half*f,dz=nz*half*f;
+   const f=(j-3)/3,edge=half*f*bankScale(Math.sign(f)),dx=nx*edge,dz=nz*edge;
    water.push(p.x+dx,y+.035*Math.sin(s*.71+j),p.z+dz);
    uv.push(along*.085,f);
    const variation=.5+.5*Math.sin(s*.23+j*1.73),edge=Math.abs(f);
-   rgb.push(.29+variation*.08,.57+variation*.10-edge*.055,.63+variation*.08-edge*.08);
+   rgb.push(.24+variation*.065,.41+variation*.082-edge*.045,.46+variation*.075-edge*.057);
   }
   for(const side of [-1,1]){
    for(const f of [1,1.3,1.65]){
-    const x=p.x+nx*half*f*side,z=p.z+nz*half*f*side;
+    const x=p.x+nx*half*f*side*bankScale(side),z=p.z+nz*half*f*side*bankScale(side);
     slope.push(x,carveKunlumRiverHeight(x,z,heightAt,centerline)+.04,z);
    }
    for(const f of [1.25,1.82]){
-    const x=p.x+nx*half*f*side,z=p.z+nz*half*f*side;
+    const x=p.x+nx*half*f*side*bankScale(side),z=p.z+nz*half*f*side*bankScale(side);
     shore.push(x,carveKunlumRiverHeight(x,z,heightAt,centerline)+.11,z);
    }
   }
@@ -209,9 +210,9 @@ export function createKunlumRiverLayer(THREE,heightAt,{
   color,roughness,side:THREE.DoubleSide
  }));
  const waterMat=own(new THREE.MeshPhysicalMaterial({
-  color:0xffffff,vertexColors:true,metalness:.08,roughness:mobile?.31:quality==='beautiful'?.17:.28,
+  color:0xe5f1ed,vertexColors:true,metalness:.04,roughness:mobile?.42:quality==='beautiful'?.28:.36,
   clearcoat:mobile?.24:.72,clearcoatRoughness:.19,
-  transparent:true,opacity:mobile?.96:.91,depthWrite:true,side:THREE.DoubleSide
+  transparent:true,opacity:mobile?.97:.95,depthWrite:true,side:THREE.DoubleSide
  }));
  const flowTime={value:0};
  waterMat.onBeforeCompile=shader=>{
@@ -227,10 +228,10 @@ export function createKunlumRiverLayer(THREE,heightAt,{
     '#include <color_fragment>',
     'float c1=sin(vCherekFlowUV.x*17.-uCherekFlowTime*5.1+vCherekFlowUV.y*8.);',
     'float c2=sin(vCherekFlowUV.x*41.-uCherekFlowTime*8.3-vCherekFlowUV.y*13.);',
-    'float wave=.5+.5*(.67*c1+.33*c2);',
+    'float wake=sin(vCherekFlowUV.x*6.1-uCherekFlowTime*1.8+sin(vCherekFlowUV.y*7.0)*2.2);\x27,\n     \x27float wave=.5+.5*(.51*c1+.29*c2+.20*wake);',
     'float flash=pow(max(0.,sin(vCherekFlowUV.x*27.-uCherekFlowTime*6.+vCherekFlowUV.y*19.)),12.);',
-    'diffuseColor.rgb*=.82+.25*wave;',
-    'diffuseColor.rgb+=vec3(.16,.22,.21)*flash*.35;'
+    'float uneven=.08*sin(vCherekFlowUV.x*2.3+vCherekFlowUV.y*8.1)*sin(vCherekFlowUV.x*3.4-uCherekFlowTime);\x27,\n     \x27diffuseColor.rgb*=.76+.34*wave+uneven;',
+    'diffuseColor.rgb+=vec3(.16,.22,.21)*flash*.33;'
    ].join('\n'));
  };
  waterMat.customProgramCacheKey=()=> 'kunlum-cherek-flow-v2';
