@@ -25,7 +25,7 @@ export async function mount(context,params={}){
  root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
    <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">${uiIcon('house')}</button>
-   <button type="button" class="btn towerWorldAction" data-world aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}<span>Обзор Кюнлюма</span></button>
+   <button type="button" class="btn towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}<span>Обзор Кюнлюма</span></button>
    ${icon('clear','Очистить всю башню')}</div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
@@ -232,6 +232,7 @@ export async function mount(context,params={}){
     s.previewHit=hit;void preview();}
   });
   if(s.disposed){s.scene.dispose();return;}
+  q('[data-world]').disabled=false;
   mode('idle');
   try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
   if(params.userId&&!editable(s))catalogVisible(false);
