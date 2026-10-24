@@ -22,7 +22,7 @@ const url='http://127.0.0.1:4173/kunlum-terrain-review.html';
      shaderErrors.push(m.text().slice(0,1200));
    });
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
-   await page.waitForFunction(()=>document.getElementById('riverStatus')?.textContent.includes('точек OSM из репозитория'),{timeout:90000});
+   await page.waitForFunction(()=>document.getElementById('riverStatus')?.textContent.includes('точек OSM из репозитория'),null,{timeout:90000});
    if(name==='mobile'){
     if(await page.locator('.panel').isVisible())throw Error('mobile: settings panel obscures 3D scene');
     await page.locator('#mobileSettings').click();
