@@ -137,7 +137,7 @@ import {OrbitControls} from "./src/vendor/three/addons/controls/OrbitControls.js
 import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,rotateKunlumPlanPoint} from "./src/features/tower/kunlum-georeference.js";
 import {createKunlumMapOverlay} from "./src/features/tower/kunlum-map-overlay.js";
 import {createKunlumPhotoBackdrop} from "./src/features/tower/kunlum-photo-panorama.js";
-import {landscapeColor} from "./src/features/tower/kunlum-color-landscape.js";
+
 import {kunlumDetailSubdivision,getKunlumTerrainMeshStats} from "./src/features/tower/kunlum-terrain-detail.js";
 import {createKunlumNativeTerrainPBR} from "./src/features/tower/kunlum-game-landscape.js";
 import {createKunlumRiverLayer,riverXAt} from "./src/features/tower/kunlum-river-layer.js";
@@ -522,7 +522,7 @@ function createTerrain(){
  geometry.setAttribute("uv",new THREE.Float32BufferAttribute(uvs,2));
  geometry.setIndex(indices);geometry.computeVertexNormals();
  const material=landscapeMode==='bare'?terrainMaterial:beautifulMaterial;
- if(material.map){material.map=null;material.needsUpdate=true}
+ // Preserve the procedural albedo and normal maps on native PBR material.
  if(terrain){scene.remove(terrain);terrain.geometry.dispose()}
  terrain=new THREE.Mesh(geometry,material);terrain.name="Copernicus DEM GLO-30";
  terrain.castShadow=qualityMode==='beautiful';
@@ -563,7 +563,7 @@ function createWideTerrain(){
  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
  geo.setIndex(indices);geo.computeVertexNormals();
  const material=landscapeMode==='bare'?terrainMaterial:beautifulMaterial;
- if(material.map){material.map=null;material.needsUpdate=true}
+ // Preserve the procedural albedo and normal maps on native PBR material.
  if(terrain){scene.remove(terrain);terrain.geometry.dispose()}
  terrain=new THREE.Mesh(geo,material);
  terrain.name='Original Copernicus 3.6km core plus Mapzen outer DEM';
