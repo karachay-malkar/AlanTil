@@ -34,6 +34,8 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    }));
    if(details.count!==120||!details.river.includes('186 points')||!details.node||errors.length)
     throw Error(type+' incorrect world data: '+JSON.stringify({details,errors}));
+   await page.waitForFunction(()=>document.getElementById('qa-root')?.dataset.mount==='success'&&
+    document.querySelector('[data-world]')?.disabled===false,null,{timeout:60000});
    if(!(await page.locator('[data-world]').isVisible()))
     throw Error(type+' no overview control in actual construction UI');
    await page.locator('[data-world]').click();
