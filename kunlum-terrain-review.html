@@ -249,8 +249,8 @@ function applyQualityLighting(){
  skyLight.intensity=high?1.85:2.7;
  sun.intensity=high?2.65:2.9;
  renderer.toneMappingExposure=high?1.04:1.18;
- scene.fog.near=high?1550:2000;
- scene.fog.far=high?7700:9200;
+ scene.fog.near=wideMode?4200:(high?1550:2000);
+ scene.fog.far=wideMode?15600:(high?7700:9200);
  if(terrain){terrain.castShadow=high;terrain.receiveShadow=high}
  if(typeof marker!=='undefined')marker.visible=!high||landscapeMode==='bare';
  updateEnvironmentVisibility();
@@ -544,8 +544,10 @@ else if(mode==="cinematic"){
 else if(mode==="detail"){half=20;createTerrain();camera.position.set(760,470,690);orbit.target.set(0,45,0);}
 else if(mode==="above"){camera.position.set(5,half===60?2800:1300,8);orbit.target.set(0,0,0);}
 orbit.update();
+scene.fog.near=wideMode?4200:(qualityMode==='beautiful'?1550:2000);
+scene.fog.far=wideMode?15600:(qualityMode==='beautiful'?7700:9200);
 refreshQualityLabel();
-document.getElementById("full").classList.toggle("active",half===60);
+document.getElementById("full").classList.toggle("active",half===60&&!wideMode);
 document.getElementById("detail").classList.toggle("active",half===20&&!wideMode);
 document.getElementById("wide").classList.toggle("active",wideMode);
 }
