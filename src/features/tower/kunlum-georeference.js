@@ -19,6 +19,17 @@ export const DEFAULT_KUNLUM_ALIGNMENT=Object.freeze({
  controlPointsVerified:0,
  caution:"Never use for historical-accuracy claims or publishing mapped coordinates"
 });
+/**
+ * User preview rotation about Abay-Kala local origin (0,0), without modifying
+ * the historic plan's baseline alignment, scale, or pixel coordinates.
+ * Positive angles follow East/North mathematical rotation.
+ */
+export function rotateKunlumPlanPoint(point,degrees=0){
+ if(!Array.isArray(point)||point.length!==2||!point.every(Number.isFinite)
+  ||!Number.isFinite(degrees))throw Error('Invalid settlement rotation');
+ const t=degrees*Math.PI/180,c=Math.cos(t),s=Math.sin(t);
+ return [point[0]*c-point[1]*s,point[0]*s+point[1]*c];
+}
 export function pixelToLocalWorld(point,a=DEFAULT_KUNLUM_ALIGNMENT){
  const u=(point[0]-a.anchorPixel.x)/a.pixelsPerMetre*(a.mirrorWallsX?-1:1);
  const v=(a.anchorPixel.y-point[1])/a.pixelsPerMetre;
