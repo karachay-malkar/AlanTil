@@ -5,15 +5,18 @@
  * Does not register landscape as a placement target.
  */
 import {makeKunlumTerrain,makeKunlumPanorama} from './kunlum-terrain-lod.js';
-import {populateKunlumVectorSettlement} from './kunlum-vector-settlement.js';
-import {pixelToLocalWorld,plotCorners,DEFAULT_KUNLUM_ALIGNMENT}
+import {createKunlumMapOverlay} from './kunlum-map-overlay.js';
+import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js';
+import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './kunlum-river-layer.js';
+import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
+import {pixelToLocalWorld,plotCorners,rotateKunlumPlanPoint,DEFAULT_KUNLUM_ALIGNMENT}
  from './kunlum-georeference.js';
 
 const PLOT={x:1060.6697998046875,y:892.3427734375,
  widthM:30,heightM:15,ppm:3.6,angleDeg:-7};
 export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()=>{}}={}){
  const group=new THREE.Group();
- group.name='Кюнлюм · DEM 30 м + цифровые стены + панорама';
+ group.name='Кюнлюм · актуальный DEM PBR, план 120, Черек OSM';
  scene.add(group);
  const materials=[],geometries=[],textures=[];
  let disposed=false;
@@ -23,9 +26,19 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   if(texture)textures.push(texture);
  };
  const calibration=DEFAULT_KUNLUM_ALIGNMENT;
- const terrain=makeKunlumTerrain(THREE,group,{mobile,plot:PLOT,calibration,register});
+ // The tower engine keeps its own untouched 20x20m plane and grid.
+ // Only scenic geometry uses the same east/west mirroring as the latest review.
+ const pbr=createKunlumNativeTerrainPBR(THREE,{mobile});
+ const terrain=makeKunlumTerrain(THREE,group,{
+  mobile,plot:PLOT,calibration,register,mirrorDemX:true,pbr
+ });
  makeKunlumPanorama(THREE,group,terrain,{mobile,register});
- const P=p=>{const [e,n]=pixelToLocalWorld(p,calibration);return terrain.demToScene(e,n)};
+ // Approved -134 degree settlement rotation is visual-only; source coordinates
+ // and the playable plot have NOT been moved.
+ const P=p=>{
+  const [e,n]=rotateKunlumPlanPoint(pixelToLocalWorld(p,calibration),-134);
+  return terrain.demToScene(e,n);
+ };
  const towerBase=P([calibration.anchorPixel.x,calibration.anchorPixel.y]);
  function createMonument(){
   // Monument is an interpretative geometry only; exact elevation follows DEM.
@@ -104,30 +117,88 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   confirmedFeatures:0,candidateFeatures:0,sourceAccuracy:'Loading vector plan'};
  group.userData.kunlum={
   plot:[PLOT.widthM,PLOT.heightM],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
-  gridStep:.25,ruins:currentStats,sitePlan:'user-calibrated kunlum-plan-edited.json',
+  gridStep:.25,ruins:currentStats,sitePlan:'kunlum-vector-plan-2026-10-23.json',
   monument:'Абай-къала',abaevModelPosition:towerBase,
-  terrain:'Copernicus DEM GLO-30, 30m',terrainResolutionNearM:mobile?20:10,
+  terrain:'Copernicus DEM GLO-30 + PBR, 30m source',terrainResolutionNearM:mobile?12:8,
   terrainTriangles:terrain.triangles,panorama:'procedural DEM-border based: not a surveyed skyline',
-  accuracy:'UNVERIFIED: one-point user calibration; terraces approximated from DEM; 665 auto traces require review'
+  accuracy:'UNVERIFIED: one-point user calibration; rendered scenery does not modify DEM or saved builds'
  };
- const ready=populateKunlumVectorSettlement(THREE,group,{
-  calibration,plot:PLOT,terrain,register,mobile,isDisposed:()=>disposed
- }).then(stats=>{
-  if(disposed||!stats)return;
-  Object.assign(currentStats,{...stats,courtyards:stats.houseContours});
-  onReady();
- }).catch(error=>{
+
+ // Both datasets are versioned and bundled with the same published tower branch.
+ // No live OSM request, no dynamically generated fake substitute river.
+ let river=null,riverbank=null,scatter=null,outcrops=null,overlay=null;
+ let localLine=[],planData=null;
+ async function loadApprovedMap(){
+  const response=await fetch('./assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
+  if(!response.ok)throw Error('Approved Kunlum plan: HTTP '+response.status);
+  const source=await response.json();
+  if(source.confirmed_features?.length!==120||source.openings?.length!==42||
+     source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;
-  currentStats.sourceAccuracy='Failed to load vector plan: '+String(error.message||error);
-  console.error('Kunlum vector terrain:',error);
+  planData=source;
+  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt});
+  overlay.setVisibility({confirmedVisible:true,candidatesVisible:false,passagesVisible:true});
+  group.add(overlay.root);
+  Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,
+   sourceAccuracy:'Approved user-drawn vector plan (one-point registration)'});
+  if(localLine.length)installScenery();
+  onReady();
+ }
+ async function loadMappedRiver(){
+  const source=await loadKunlumCherekLocal();
+  if(disposed)return;
+  localLine=source.line.filter(p=>Math.abs(p.x)<=1750&&Math.abs(p.z)<=1750)
+   .map(({x,z})=>{const [sx,sz]=terrain.demToScene(x,z);return {x:sx,z:sz}});
+  if(localLine.length<2)throw Error('Mapped Cherek reach outside Copernicus DEM');
+  terrain.setRiverLine(localLine); // visible vertices only, immutable source DEM
+  // Existing tower raycasting still checks ONLY construction prefabs and floor.
+  river=createKunlumRiverLayer(THREE,terrain.surfaceAt,{
+   quality:mobile?'interactive':'beautiful',mobile,centerline:localLine
+  });
+  group.add(river.root);
+  riverbank=createKunlumRiverbankScatter(THREE,terrain.surfaceAt,{
+   points:river.points,mobile,features:planData?.confirmed_features||[],
+   toWorld:p=>{const [x,z]=P(p);return [-x,z]}
+  });
+  group.add(riverbank.root);
+  group.userData.kunlum.river='Local OpenStreetMap ODbL, '+source.line.length+' points';
+  if(planData)installScenery();
+  onReady();
+ }
+ function installScenery(){
+  if(disposed||!planData||!localLine.length||scatter)return;
+  const options={
+   mobile,features:planData.confirmed_features,toWorld:P,
+   riverDistanceAt:(x,z)=>riverDistanceAt(localLine,x,z)
+  };
+  scatter=createKunlumTerrainScatter(THREE,terrain.heightAt,{
+   ...options,range:mobile?450:580,
+   excludedBounds:{minX:-10,maxX:30,minZ:-15,maxZ:35}
+  });
+  outcrops=createKunlumRockOutcrops(THREE,terrain.heightAt,{
+   ...options,bounds:{minX:-1600,maxX:1600,minZ:-1600,maxZ:1600}
+  });
+  group.add(scatter.root,outcrops.root);
+  onReady();
+ }
+ const ready=Promise.allSettled([loadApprovedMap(),loadMappedRiver()]).then(results=>{
+  if(disposed)return;
+  const failed=results.filter(x=>x.status==='rejected');
+  if(failed.length){
+   currentStats.sourceAccuracy='Incomplete landscape: '+failed.map(x=>String(x.reason?.message||x.reason)).join('; ');
+   console.warn('Kunlum tower world:',currentStats.sourceAccuracy);
+  }
   onReady();
  });
- // Game preserves synchronous contract: the terrain exists before first render,
- // walls load independently without changing placement or save state.
- return {group,heightAt:terrain.heightAt,ready,dispose(){
-  if(disposed)return;disposed=true;scene.remove(group);
-  for(const o of geometries)o.dispose();
-  for(const m of materials)m.dispose();
-  for(const t of textures)t.dispose();
- }};
+ // Environment remains independent of tower placement and server state.
+ return {group,heightAt:terrain.heightAt,ready,update(seconds){river?.update(seconds)},
+  dispose(){
+   if(disposed)return;disposed=true;scene.remove(group);
+   overlay?.dispose();river?.dispose();riverbank?.dispose();scatter?.dispose();outcrops?.dispose();
+   for(const o of geometries)o.dispose();
+   for(const m of materials)m.dispose();
+   for(const t of textures)t.dispose();
+   pbr.dispose();
+  }};
+
 }
