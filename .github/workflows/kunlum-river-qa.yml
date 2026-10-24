@@ -10,6 +10,13 @@ on:
       - 'src/features/tower/kunlum-terrain-lod.js'
       - 'src/features/tower/prefab-scene.js'
       - 'src/features/tower/index.js'
+      - 'src/app/bootstrap.js'
+      - 'src/app/router.js'
+      - 'src/shared/styles/lazy/tower.css'
+      - 'service-worker.js'
+      - 'release.json'
+      - 'index.html'
+      - 'tests/tower-release-cache-17-2.test.mjs'
       - 'src/features/tower/tower.css'
       - 'tests/kunlum-real-terrain.test.mjs'
       - 'tests/fixtures/kunlum-tower-world.html'
@@ -30,7 +37,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Cherek geometry and snapshot validation
-        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs tests/kunlum-real-terrain.test.mjs
+        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs tests/kunlum-real-terrain.test.mjs tests/tower-release-cache-17-2.test.mjs
       - name: Module and embedded viewer syntax
         run: |
           node --check src/features/tower/kunlum-osm-river.js
