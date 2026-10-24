@@ -32,7 +32,8 @@ button:hover,button.active{background:#607e64}
 #wideStatus{font-size:11px;line-height:1.4;color:#cbded1;margin:8px 0}
 #wideCredits{font-size:10px;line-height:1.4;color:#cadcd7;margin:5px 0}
 #wideCredits a{color:#b7ebd4}
-#natureStatus,#riverStatus{font-size:10px;line-height:1.4;color:#b7d9cb;margin:7px 0}
+#natureStatus,#riverStatus,.mapAttribution{font-size:10px;line-height:1.4;color:#b7d9cb;margin:7px 0}
+.mapAttribution a{color:#b8edcd}
 .layers{display:flex;gap:4px 12px;flex-wrap:wrap;margin:10px 0 4px}
 .layers label{font-size:11px;color:#c6f1e4;cursor:pointer}
 .layers input{accent-color:#5bbaa6;vertical-align:middle}
@@ -85,6 +86,7 @@ button:hover,button.active{background:#607e64}
 <div class="layers"><label><input id="riverVisible" type="checkbox" disabled> Река Черек Балкарский (OSM)</label>
 <label><input id="natureVisible" type="checkbox" checked> 3D-камни, трава и кустарники</label></div>
 <div id="riverStatus" role="status" aria-live="polite">Русло: запрашивается картографическая линия OpenStreetMap. При отсутствии данных неверная реконструкция не показывается.</div>
+<div class="mapAttribution">Речная геометрия при доступности: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">участники OpenStreetMap</a> (ODbL).</div>
 <div id="natureStatus">Скальные выходы и растительность — художественная реконструкция. Данные рельефа DEM не изменены.</div>
 <div id="landscapeStatus" role="status" aria-live="polite">Локальные игровые материалы: трава, почва, осыпь и скала. Спутниковые изображения не загружаются.</div>
 <div id="landscapeCredits" hidden>Спутниковая окраска отключена: применяются процедурные материалы.</div>
@@ -509,7 +511,7 @@ function ensureDecorativeScatter(){
  document.getElementById('natureStatus').textContent=
   '3D-декорации: камни '+counts.rock+', кустарники '+counts.shrub+
   ', пучки травы '+counts.grass+', дополнительные скальные выходы до '+
-  (isMobile?155:420)+'. Все объекты художественные, русло реки приблизительное.';
+  (isMobile?155:420)+'. Эти объекты — художественная реконструкция; русло загружается отдельно по OSM.';
 }
 function updateEnvironmentVisibility(){
  const colored=landscapeMode!=='bare';
