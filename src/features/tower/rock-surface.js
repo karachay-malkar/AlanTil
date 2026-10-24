@@ -68,6 +68,52 @@ export function getRockSurface(renderer){
  return materialPromise;
 }
 
+const approvedUvCache=new WeakMap();
+/**
+ * Physical, per-triangle planar projection for authored Common 100 stones.
+ * GLB triangles often share vertices across differently sloped faces, so
+ * the original single UV at a shared vertex smears the PBR texture sideways.
+ * Keep all positions, normals, indices and transforms of the ORIGINAL GLB
+ * untouched; only this disposable render geometry receives new texture UVs.
+ *
+ * Per-stone non-uniform scales must be included in UV coordinates so a 2x
+ * stretched stone has the same rock grain size in world metres, not 2x blur.
+ */
+export function getApprovedStoneSurfaceGeometry(source,stoneScale=[1,1,1]){
+ const key=stoneScale.map(n=>Number(n).toFixed(6)).join(',');
+ let variants=approvedUvCache.get(source);
+ if(!variants){variants=new Map();approvedUvCache.set(source,variants);}
+ if(variants.has(key))return variants.get(key);
+ const geometry=source.getIndex()?source.toNonIndexed():source.clone();
+ const p=geometry.getAttribute('position');
+ if(!p||p.count%3!==0)throw new TypeError('Common 100 source must contain triangles');
+ const uv=new Float32Array(p.count*2);
+ const scale=3.15; // one texture repeat per ~32 cm, matching architecture rocks
+ const [sx,sy,sz]=stoneScale;
+ for(let i=0;i<p.count;i+=3){
+  const ax=p.getX(i)*sx,ay=p.getY(i)*sy,az=p.getZ(i)*sz;
+  const bx=p.getX(i+1)*sx,by=p.getY(i+1)*sy,bz=p.getZ(i+1)*sz;
+  const cx=p.getX(i+2)*sx,cy=p.getY(i+2)*sy,cz=p.getZ(i+2)*sz;
+  const ux=bx-ax,uy=by-ay,uz=bz-az;
+  const vx=cx-ax,vy=cy-ay,vz=cz-az;
+  const nx=Math.abs(uy*vz-uz*vy);
+  const ny=Math.abs(uz*vx-ux*vz);
+  const nz=Math.abs(ux*vy-uy*vx);
+  const axis=nx>=ny&&nx>=nz?0:ny>=nz?1:2;
+  for(let j=i;j<i+3;j++){
+   const x=p.getX(j)*sx,y=p.getY(j)*sy,z=p.getZ(j)*sz;
+   uv[j*2]=(axis===0?z:x)*scale;
+   uv[j*2+1]=(axis===1?z:y)*scale;
+  }
+ }
+ geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+ geometry.setAttribute('uv2',new THREE.BufferAttribute(uv.slice(),2));
+ // Original GLB tangents, if present, refer to the old UV layout.
+ geometry.deleteAttribute('tangent');
+ variants.set(key,geometry);
+ return geometry;
+}
+
 export function applyRockSurface(group,material){
  group.traverse(node=>{
   if(!node.isMesh||node.userData.alantilNonStone)return;
