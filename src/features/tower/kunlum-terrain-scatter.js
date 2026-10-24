@@ -57,7 +57,7 @@ export function createKunlumTerrainScatter(THREE,heightAt,{
   while(placed<target&&tries<target*10){
    tries++;
    // Put about 60% of detail into walkable vicinity of the ruins.
-   const cluster=rng()<.68?(type==='rock'?660:470):range;
+   const cluster=rng()<.68?Math.min(range,type==='rock'?560:470):range;
    const x=(rng()*2-1)*cluster,z=(rng()*2-1)*cluster;
    if(x*x+z*z<750||nearWater(x,z)||avoid(x,z))continue;
    const y=heightAt(x,z);
