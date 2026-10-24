@@ -38,16 +38,25 @@ export function createKunlumTerrainTiles(THREE,{resolution=256}={}){
   scree:{lo:[135,129,117],hi:[202,184,159],seed:173,contrast:35},
   rock:{lo:[113,113,107],hi:[184,181,167],seed:271,contrast:28}
  };
+ // Compute periodic fractal texture grain once; each material uses a different
+ // wrapped phase offset, avoiding four expensive rounds of noise generation.
+ const grainBase=new Float32Array(resolution*resolution);
+ const fineBase=new Float32Array(resolution*resolution);
+ for(let y=0;y<resolution;y++)for(let x=0;x<resolution;x++){
+  const nx=x/resolution,ny=y/resolution,p=y*resolution+x;
+  const coarse=kunlumTileNoise(nx*8,ny*8,8,37);
+  const mid=kunlumTileNoise(nx*32,ny*32,32,42);
+  const fine=kunlumTileNoise(nx*64,ny*64,64,46);
+  grainBase[p]=clamp(.55*coarse+.31*mid+.14*fine);
+  fineBase[p]=fine;
+ }
  const textures={};
  for(const [name,type] of Object.entries(palettes)){
   const arr=new Uint8Array(resolution*resolution*4);
+  const phaseX=(type.seed*37)%resolution,phaseY=(type.seed*19)%resolution;
   for(let y=0;y<resolution;y++)for(let x=0;x<resolution;x++){
-   const nx=x/resolution,ny=y/resolution;
-   const coarse=kunlumTileNoise(nx*8,ny*8,8,type.seed);
-   const mid=kunlumTileNoise(nx*32,ny*32,32,type.seed+5);
-   const fine=kunlumTileNoise(nx*64,ny*64,64,type.seed+9);
-   const grain=clamp(.55*coarse+.31*mid+.14*fine);
-   const p=(y*resolution+x)*4;
+   const at=((y+phaseY)%resolution)*resolution+(x+phaseX)%resolution;
+   const grain=grainBase[at],fine=fineBase[at],p=(y*resolution+x)*4;
    for(let c=0;c<3;c++){
     const shade=blend(type.lo[c],type.hi[c],grain);
     arr[p+c]=Math.round(clamp((shade+(fine-.5)*type.contrast)/255)*255);
