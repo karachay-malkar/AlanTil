@@ -23,6 +23,11 @@ const url='http://127.0.0.1:4173/kunlum-terrain-review.html';
    });
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
    await page.locator('#riverStatus').filter({hasText:'точек OSM из репозитория'}).waitFor({timeout:90000});
+   if(name==='mobile'){
+    if(await page.locator('.panel').isVisible())throw Error('mobile: settings panel obscures 3D scene');
+    await page.locator('#mobileSettings').click();
+    if(!(await page.locator('.panel').isVisible()))throw Error('mobile: settings button fails to open panel');
+   }
    if(!(await page.locator('#riverVisible').isChecked()))throw Error(name+': missing local river');
    if(!(await page.locator('#riverView').isEnabled()))throw Error(name+': river focus is disabled');
    await page.locator('#riverView').click();
@@ -33,11 +38,14 @@ const url='http://127.0.0.1:4173/kunlum-terrain-review.html';
     return {width:c.width,height:c.height,webgl:!!gl};
    });
    if(!pixels.webgl||pixels.width<300||pixels.height<300)throw Error(name+': WebGL canvas missing '+JSON.stringify(pixels));
+   if(name==='mobile')await page.locator('#mobileSettings').click();
    await page.screenshot({path:path.join(out,'cherek-'+name+'-beautiful.png')});
+   if(name==='mobile')await page.locator('#mobileSettings').click();
    await page.locator('#qualityInteractive').click();
    await page.waitForTimeout(750);
    if(errors.length||shaderErrors.length)throw Error(name+': interactive failed '+JSON.stringify({errors,shaderErrors}));
    if(!(await page.locator('#riverVisible').isChecked()))throw Error(name+': quality switch lost river');
+   if(name==='mobile')await page.locator('#mobileSettings').click();
    await page.screenshot({path:path.join(out,'cherek-'+name+'-interactive.png')});
    summary.push({device:name,qualityModes:2,webgl:true,errors:0,river:'local OSM'});
    await context.close();
