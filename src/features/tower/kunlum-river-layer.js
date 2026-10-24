@@ -41,15 +41,41 @@ export function traceKunlumRiver(heightAt,{minZ=-1350,maxZ=1350,step=30,minX=45,
  return points;
 }
 export function riverXAt(points,z){
- if(!points.length)return Infinity;
- if(z<points[0].z||z>points.at(-1).z)return Infinity;
- const i=limit(Math.floor((z-points[0].z)/(points[1]?.z-points[0].z||1)),0,points.length-2);
- const a=points[i],b=points[i+1],t=limit((z-a.z)/(b.z-a.z||1),0,1);
- return lerp(a.x,b.x,t);
+ if(points.length<2||!Number.isFinite(z))return Infinity;
+ let best=Infinity,x=Infinity;
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],dz=b.z-a.z;
+  const t=limit(Math.abs(dz)<1e-8?.5:(z-a.z)/dz,0,1);
+  const distance=Math.abs(lerp(a.z,b.z,t)-z);
+  if(distance<best){best=distance;x=lerp(a.x,b.x,t)}
+ }
+ // Do not continue a river hundreds of metres outside the actual mapped reach.
+ return best<45?x:Infinity;
 }
-export function createKunlumRiverLayer(THREE,heightAt,{quality='interactive',mobile=false,minZ=-1350,maxZ=1350,minX=45,maxX=990}={}){
- const root=new THREE.Group();root.name='Approximate Cherek Balkarsky DEM-trough river (NOT SURVEYED)';
- const points=traceKunlumRiver(heightAt,{minZ,maxZ,minX,maxX});
+export function densifyKunlumRiverPolyline(line,heightAt,{step=24}={}){
+ if(!Array.isArray(line)||line.length<2)throw Error('Verified river requires 2 or more OSM nodes');
+ const out=[];
+ for(let i=1;i<line.length;i++){
+  const a=line[i-1],b=line[i];
+  if(![a.x,a.z,b.x,b.z].every(Number.isFinite))throw Error('Non-finite OSM river node');
+  const length=Math.hypot(b.x-a.x,b.z-a.z),count=Math.max(1,Math.ceil(length/step));
+  if(i===1)out.push({x:a.x,z:a.z,y:heightAt(a.x,a.z),width:11});
+  for(let k=1;k<=count;k++){
+   const t=k/count,x=lerp(a.x,b.x,t),z=lerp(a.z,b.z,t);
+   out.push({x,z,y:heightAt(x,z),width:11});
+  }
+ }
+ return out;
+}
+export function createKunlumRiverLayer(THREE,heightAt,{
+ quality='interactive',mobile=false,minZ=-1350,maxZ=1350,minX=45,maxX=990,
+ centerline=null
+}={}){
+ const root=new THREE.Group();
+ root.name=centerline?'Cherek Balkarsky OSM centreline (not hydrologically surveyed)':
+  'Approximate DEM-trough river (NOT SURVEYED)';
+ const points=centerline?densifyKunlumRiverPolyline(centerline,heightAt):
+  traceKunlumRiver(heightAt,{minZ,maxZ,minX,maxX});
  const main=[],uv=[],indices=[],bank=[],bankIndices=[],foam=[];
  const samplesPerSpan=quality==='beautiful'?(mobile?3:5):2;
  for(let s=0;s<=(points.length-1)*samplesPerSpan;s++){
