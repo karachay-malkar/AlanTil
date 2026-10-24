@@ -37,7 +37,17 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    if(!(await page.locator('[data-world]').isVisible()))
     throw Error(type+' no overview control in actual construction UI');
    await page.locator('[data-world]').click();
-   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='true');
+   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='true',
+    null,{polling:200,timeout:25000}).catch(async error=>{
+     await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview-error.png')});
+     const state=await page.evaluate(()=>({
+      canvas:document.querySelector('.towerCanvas')?.dataset,
+      pressed:document.querySelector('[data-world]')?.getAttribute('aria-pressed'),
+      title:document.querySelector('[data-world]')?.textContent
+     }));
+     throw Error(type+' view toggle failed '+JSON.stringify(state)+', page errors='+
+      JSON.stringify(errors)+'; '+error.message);
+    });
    await page.waitForTimeout(1500);
    if(errors.length)throw Error(type+': errors after wide camera: '+JSON.stringify(errors));
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview.png')});
