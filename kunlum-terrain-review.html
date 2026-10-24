@@ -318,7 +318,7 @@ function loadSatelliteColours(){
   if(terrain)createTerrain();
  });
 }
-window.addEventListener('pagehide',()=>{satellite.dispose();highSatellite.dispose();beautifulMaterial.dispose();terrainMaterial.dispose();riverScene.dispose();decorativeScatter?.dispose();beautySky.dispose()},{once:true});
+window.addEventListener('pagehide',()=>{satellite.dispose();highSatellite.dispose();wideDem.dispose();beautifulMaterial.dispose();terrainMaterial.dispose();riverScene.dispose();decorativeScatter?.dispose();beautySky.dispose()},{once:true});
 const pointToWorld=p=>pixelToLocalWorld(p,DEFAULT_KUNLUM_ALIGNMENT);
 function sampleOriginalTerrain(x,z){
  // Exact piecewise planar interpolation of the original grid triangles.
@@ -466,6 +466,50 @@ function createTerrain(){
  marker.position.y=ctr+15;
  ensureRiverExtent();
 }
+function createWideTerrain(){
+ const bounds=KUNLUM_WIDE_BOUNDS,outerStep=qualityMode==='beautiful'?(isMobile?60:45):90;
+ const xs=buildWideAxis(bounds.minX,bounds.maxX,{innerStep:30,outerStep});
+ const zs=buildWideAxis(bounds.minZ,bounds.maxZ,{innerStep:30,outerStep}).reverse();
+ const high=qualityMode==='beautiful'&&!!highResolutionTexture;
+ const texture=landscapeMode==='bare'?null:(high?highResolutionTexture:satelliteTexture);
+ const imageSource=high?highSatellite:satellite;
+ const coords=[],colors=[],uvs=[],indices=[];
+ for(const z of zs)for(const x of xs){
+  const y=wideDem.sample(x,z),dx=Math.min(20,bounds.maxX-x,x-bounds.minX),
+   dz=Math.min(20,bounds.maxZ-z,z-bounds.minZ);
+  const slope=Math.hypot(
+   (wideDem.sample(x+dx,z)-wideDem.sample(x-dx,z))/Math.max(1,2*dx),
+   (wideDem.sample(x,z+dz)-wideDem.sample(x,z-dz))/Math.max(1,2*dz));
+  coords.push(x,y*scaleY,z);
+  if(landscapeMode==='bare'){
+   const c=tone(y);colors.push(c.r,c.g,c.b);
+  }else if(texture){
+   const shade=Math.max(.85,1-Math.min(slope,2)*.06);
+   colors.push(shade,shade,shade);
+  }else colors.push(...landscapeColor(y+1251.24,slope,x,z));
+  uvs.push(...imageSource.uvForWorld(x,z));
+ }
+ for(let j=0;j<zs.length-1;j++)for(let i=0;i<xs.length-1;i++){
+  const a=j*xs.length+i,b=a+1,c=a+xs.length,d=c+1;
+  indices.push(a,b,c,b,d,c);
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));
+ geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+ geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+ geo.setIndex(indices);geo.computeVertexNormals();
+ const material=qualityMode==='beautiful'&&landscapeMode!=='bare'?beautifulMaterial:terrainMaterial;
+ if(material.map!==texture){material.map=texture;material.needsUpdate=true}
+ if(terrain){scene.remove(terrain);terrain.geometry.dispose()}
+ terrain=new THREE.Mesh(geo,material);
+ terrain.name='Original Copernicus 3.6km core plus Mapzen outer DEM';
+ terrain.castShadow=qualityMode==='beautiful';
+ terrain.receiveShadow=qualityMode==='beautiful';
+ scene.add(terrain);wideHaze.setActive(true);
+ status.textContent='7,6 × 6,1 км · '+(geo.index.count/3).toLocaleString('ru')+
+  ' треугольников. Центральный DEM не изменён.';
+ marker.position.y=heights[60*121+60]/10*scaleY+15;
+}
 const marker=new THREE.Group();
 const pin=new THREE.Mesh(new THREE.SphereGeometry(18,16,12),
 new THREE.MeshStandardMaterial({color:0xffd35e,emissive:0xa35c04,emissiveIntensity:.5}));
@@ -473,7 +517,15 @@ marker.add(pin);
 const pole=new THREE.Mesh(new THREE.CylinderGeometry(2.8,2.8,65,8),new THREE.MeshStandardMaterial({color:0xffffff}));
 pole.position.y=35;marker.add(pole);scene.add(marker);
 function focus(mode){
-if(mode==="full"){half=60;createTerrain();camera.position.set(1900,1300,2150);orbit.target.set(0,155,0);}
+ if(mode==='wide'&&!wideDem.loaded)return;
+ lastFocus=mode;
+ wideMode=mode==='wide';
+ if(mode==='wide'){
+  half=60;createTerrain();
+  camera.position.set(-3200,2350,3900);
+  orbit.target.set(350,220,100);
+ }
+ else if(mode==="full"){half=60;createTerrain();camera.position.set(1900,1300,2150);orbit.target.set(0,155,0);}
 else if(mode==="village"){
  half=20;createTerrain();
  const p=overlay?.center||[0,0],y=sampleOriginalTerrain(...p)*scaleY;
@@ -494,9 +546,11 @@ else if(mode==="above"){camera.position.set(5,half===60?2800:1300,8);orbit.targe
 orbit.update();
 refreshQualityLabel();
 document.getElementById("full").classList.toggle("active",half===60);
-document.getElementById("detail").classList.toggle("active",half===20);
+document.getElementById("detail").classList.toggle("active",half===20&&!wideMode);
+document.getElementById("wide").classList.toggle("active",wideMode);
 }
-document.getElementById("full").onclick=()=>focus("full");
+document.getElementById("full").onclick=()=>{autoWide=false;focus("full")};
+document.getElementById("wide").onclick=()=>{autoWide=false;focus("wide")};
 document.getElementById("detail").onclick=()=>focus("detail");
 document.getElementById("village").onclick=()=>focus("village");
 document.getElementById("riverView").onclick=()=>focus("river");
@@ -525,7 +579,8 @@ scaleY=scaleY===1?2:1;createTerrain();if(overlay)overlay.setVerticalScale(scaleY
 riverScene.root.scale.y=scaleY;if(decorativeScatter)decorativeScatter.root.scale.y=scaleY;
 document.getElementById("exag").textContent=scaleY===2?"Высоты ×1":"Высоты ×2";
 };
-focus("cinematic");applyQualityLighting();refreshQualityLabel();loadMappedWalls();loadSatelliteColours();
+focus("full");applyQualityLighting();refreshQualityLabel();
+loadMappedWalls();loadSatelliteColours();loadWideData();
 updateEnvironmentVisibility();
 const label=document.getElementById("towerLabel"),world=new THREE.Vector3();
 let frames=0,started=performance.now();
