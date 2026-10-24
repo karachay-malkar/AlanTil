@@ -5,7 +5,6 @@ import {readFileSync} from 'node:fs';
 const file=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const release=JSON.parse(file('release.json'));
 const version=release.version;
-const escaped=version.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\$&');
 
 test('tower environment patch is a new release, not cached 17.2.11 code',()=>{
  assert.equal(release.branch,'17.2');
