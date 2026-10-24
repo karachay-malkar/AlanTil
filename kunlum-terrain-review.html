@@ -317,8 +317,20 @@ function sampleOriginalTerrain(x,z){
  return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz);
 }
 // River route is an explicit DEM-valley approximation, not an OSM or surveyed polyline.
-const riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{quality:'beautiful',mobile:isMobile});
-scene.add(riverScene.root);
+let riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{quality:'beautiful',mobile:isMobile});
+let riverExtent=60;scene.add(riverScene.root);
+function ensureRiverExtent(){
+ if(riverExtent===half)return;
+ scene.remove(riverScene.root);riverScene.dispose();
+ const extent=Math.min(1350,half*30-20);
+ riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{
+  quality:'beautiful',mobile:isMobile,minZ:-extent,maxZ:extent,
+  minX:30,maxX:Math.min(990,half*30-30)
+ });
+ riverExtent=half;
+ riverScene.root.scale.y=scaleY;scene.add(riverScene.root);
+ updateEnvironmentVisibility();
+}
 let decorativeScatter=null,mappedPlan=null;
 function ensureDecorativeScatter(){
  if(decorativeScatter||!mappedPlan)return;
@@ -327,7 +339,7 @@ function ensureDecorativeScatter(){
   features:mappedPlan.confirmed_features,
   toWorld:pointToWorld,
   riverXAt:z=>riverXAt(riverScene.points,z),
-  range:1000
+  range:580
  });
  scene.add(decorativeScatter.root);
  updateEnvironmentVisibility();
@@ -422,6 +434,7 @@ function createTerrain(){
   count.toLocaleString("ru")+" треугольников";
  const ctr=heights[60*121+60]/10*scaleY;
  marker.position.y=ctr+15;
+ ensureRiverExtent();
 }
 const marker=new THREE.Group();
 const pin=new THREE.Mesh(new THREE.SphereGeometry(18,16,12),
