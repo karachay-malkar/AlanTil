@@ -99,7 +99,8 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   group.add(mesh);terrainMeshes.push(mesh);register(geometry,pbr?null:material);return index.length/3;
  }
  const centreX=10,centreZ=10,near=mobile?450:600,step=mobile?12:8;
- const west=-1800-centerEast+10,east=1800-centerEast+10;
+ const west=(mirrorDemX?centerEast-1800:-1800-centerEast)+10,
+  east=(mirrorDemX?centerEast+1800:1800-centerEast)+10;
  const south=-1800-centerNorth+10,north=1800-centerNorth+10;
  // Rectangular tiles share the same bilinear sampler, so LOD edges are watertight.
  let triangles=addTerrainTile(centreX-near,centreX+near,centreZ-near,centreZ+near,step,'Copernicus · near 3D terrain');
