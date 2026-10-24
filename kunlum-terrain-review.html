@@ -69,6 +69,7 @@ button:hover,button.active{background:#607e64}
 <button id="qualityInteractive" type="button" class="active" aria-pressed="true">Интерактивный</button>
 <button id="qualityBeautiful" type="button" aria-pressed="false">Красивый</button>
 </div>
+<button id="saveViewPng" type="button">Сохранить кадр PNG</button>
 <div id="qualityStatus">Быстрый режим: исходная сетка DEM, минимум нагрузки на телефон.</div>
 <div id="landscapeStatus" role="status" aria-live="polite">Подготовка спутниковой окраски...</div>
 <div id="landscapeCredits" hidden>Спутниковый цвет: <a href="https://cloudless.eox.at/" target="_blank" rel="noopener noreferrer">EOxCloudless</a>, Sentinel-2 cloudless 2016, EOX IT Services GmbH (modified Copernicus Sentinel data 2016), CC BY 4.0. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Лицензия</a>.</div>
@@ -221,7 +222,11 @@ function applyQualityLighting(){
   sun.shadow.camera.top=1550;sun.shadow.camera.bottom=-1550;
   sun.shadow.camera.near=100;sun.shadow.camera.far=6500;
   sun.shadow.bias=-.00014;sun.shadow.normalBias=.12;
+  sun.shadow.camera.updateProjectionMatrix();
  }
+ sun.shadow.needsUpdate=true;
+ terrainMaterial.needsUpdate=true;
+ beautifulMaterial.needsUpdate=true;
  skyLight.intensity=high?1.85:2.7;
  sun.intensity=high?2.65:2.9;
  renderer.toneMappingExposure=high?1.04:1.18;
@@ -229,7 +234,10 @@ function applyQualityLighting(){
  scene.fog.far=high?7700:9200;
  if(terrain){terrain.castShadow=high;terrain.receiveShadow=high}
  if(overlay?.confirmed)overlay.confirmed.traverse(object=>{
-  if(object.isMesh){object.castShadow=high;object.receiveShadow=high}
+  if(object.isMesh){
+   object.castShadow=high;object.receiveShadow=high;
+   if(object.material)object.material.needsUpdate=true;
+  }
  });
 }
 function refreshQualityLabel(){
@@ -401,6 +409,17 @@ for(const id of ['wallsVisible','candidatesVisible','passagesVisible'])
 document.getElementById('landscapeMode').onchange=e=>switchLandscapeMode(e.target.value);
 document.getElementById('qualityInteractive').onclick=()=>setQuality('interactive');
 document.getElementById('qualityBeautiful').onclick=()=>setQuality('beautiful');
+document.getElementById('saveViewPng').onclick=()=>{
+ try{
+  renderer.render(scene,camera);
+  const png=renderer.domElement.toDataURL('image/png');
+  if(!png.startsWith('data:image/png'))throw new Error('Браузер не создал PNG');
+  const a=document.createElement('a');
+  a.href=png;a.download='kunlum-landscape-'+qualityMode+'.png';a.click();
+ }catch(error){
+  document.getElementById('qualityStatus').textContent='Не удалось сохранить кадр: '+error.message;
+ }
+};
 document.getElementById("above").onclick=()=>focus("above");
 document.getElementById("exag").onclick=()=>{
 scaleY=scaleY===1?2:1;createTerrain();if(overlay)overlay.setVerticalScale(scaleY);
