@@ -1,0 +1,51 @@
+name: Freeze verified Cherek Balkarsky OSM centreline (once)
+on:
+  push:
+    branches: ['17.2']
+    paths: ['.github/workflows/freeze-kunlum-cherek-once.yml']
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '17.2'
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download and validate named Cherek OSM ways
+        run: |
+          node --experimental-default-type=module --input-type=module <<'NODE'
+          import {writeFileSync,mkdirSync,existsSync} from 'node:fs';
+          import {loadKunlumCherekOSM} from './src/features/tower/kunlum-osm-river.js';
+          const path='assets/tower/environment/kunlum-cherek-balkarsky-osm.json';
+          if(existsSync(path)){ console.log('Verified river file already exists');process.exit(0); }
+          const result=await loadKunlumCherekOSM({timeoutMs:35000});
+          const line=result.line.map(({x,z})=>[Math.round(x*100)/100,Math.round(z*100)/100]);
+          const length=line.slice(1).reduce((s,p,i)=>s+Math.hypot(p[0]-line[i][0],p[1]-line[i][1]),0);
+          const gaps=line.slice(1).map((p,i)=>Math.hypot(p[0]-line[i][0],p[1]-line[i][1]));
+          if(line.length<12||length<800||gaps.some(d=>d>200)||
+             !line.some(([x,z])=>Math.abs(x)<2000&&Math.abs(z)<1800)) {
+            throw Error('OSM Cherek validation rejected: points='+line.length+', metres='+length+', maxGap='+Math.max(...gaps));
+          }
+          mkdirSync('assets/tower/environment',{recursive:true});
+          writeFileSync(path,JSON.stringify({
+            schema:1,name:'Черек Балкарский',projection:'UTM38 local metres relative to tower control',
+            origin:{easting:372151.107,northing:4773796.751},
+            source:result.source,license:'ODbL',acquiredAt:new Date().toISOString(),
+            points:line
+          },null,2)+'\n');
+          console.log('Frozen OSM line: '+line.length+' vertices, '+Math.round(length)+' m, max gap '+Math.round(Math.max(...gaps))+' m');
+          NODE
+      - name: Commit immutable snapshot to 17.2
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/environment/kunlum-cherek-balkarsky-osm.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'data(kunlum): freeze confirmed OSM Cherek Balkarsky centreline'
+          git push origin HEAD:17.2
