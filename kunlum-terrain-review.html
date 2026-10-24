@@ -32,7 +32,7 @@ button:hover,button.active{background:#607e64}
 #wideStatus{font-size:11px;line-height:1.4;color:#cbded1;margin:8px 0}
 #wideCredits{font-size:10px;line-height:1.4;color:#cadcd7;margin:5px 0}
 #wideCredits a{color:#b7ebd4}
-#natureStatus{font-size:10px;line-height:1.4;color:#b7d9cb;margin:7px 0}
+#natureStatus,#riverStatus{font-size:10px;line-height:1.4;color:#b7d9cb;margin:7px 0}
 .layers{display:flex;gap:4px 12px;flex-wrap:wrap;margin:10px 0 4px}
 .layers label{font-size:11px;color:#c6f1e4;cursor:pointer}
 .layers input{accent-color:#5bbaa6;vertical-align:middle}
@@ -66,7 +66,7 @@ button:hover,button.active{background:#607e64}
 <p>Copernicus DEM GLO-30. Вращайте мышью или пальцем, колесом изменяйте масштаб. Абай-къала отмечена на склоне. Шаг исходной модели — 30 м. Поверх оригинального склона нанесены подтверждённые стены, дома и проходы; непроверенные обводки показаны отдельно. Террасирование отключено.</p>
 <div class="actions"><button id="full" class="active">Вся долина · 3,6 км</button>
 <button id="detail">Около села · 1,2 км</button><button id="village">К стенам</button><button id="above">Сверху</button>
-<button id="exag">Высоты ×2</button><button id="wide" disabled>Панорама · 7,6 × 6,1 км</button><button id="riverView">К реке</button><button id="cinematicView">Красивый ракурс</button></div>
+<button id="exag">Высоты ×2</button><button id="wide" disabled>Панорама · 7,6 × 6,1 км</button><button id="riverView" disabled>К реке</button><button id="cinematicView">Красивый ракурс</button></div>
 <section class="landscapeControls" aria-label="Окраска 3D-рельефа">
 <h2>Игровой 3D-ландшафт</h2>
 <label for="landscapeMode">Режим просмотра</label>
@@ -82,9 +82,10 @@ button:hover,button.active{background:#607e64}
 </div>
 <button id="saveViewPng" type="button">Сохранить кадр PNG</button>
 <div id="qualityStatus">Красивый режим: вода, природные материалы, 3D-камни, растительность и атмосферное небо.</div>
-<div class="layers"><label><input id="riverVisible" type="checkbox" checked> Река и каменистые берега</label>
+<div class="layers"><label><input id="riverVisible" type="checkbox" disabled> Река Черек Балкарский (OSM)</label>
 <label><input id="natureVisible" type="checkbox" checked> 3D-камни, трава и кустарники</label></div>
-<div id="natureStatus">Русло реки пока восстановлено по низинам DEM, его точные координаты не подтверждены. Отдельные камни и растительность — художественная реконструкция.</div>
+<div id="riverStatus" role="status" aria-live="polite">Русло: запрашивается картографическая линия OpenStreetMap. При отсутствии данных неверная реконструкция не показывается.</div>
+<div id="natureStatus">Скальные выходы и растительность — художественная реконструкция. Данные рельефа DEM не изменены.</div>
 <div id="landscapeStatus" role="status" aria-live="polite">Локальные игровые материалы: трава, почва, осыпь и скала. Спутниковые изображения не загружаются.</div>
 <div id="landscapeCredits" hidden>Спутниковая окраска отключена: применяются процедурные материалы.</div>
 </section>
@@ -141,6 +142,7 @@ import {createKunlumPhotoBackdrop} from "./src/features/tower/kunlum-photo-panor
 import {kunlumDetailSubdivision,getKunlumTerrainMeshStats} from "./src/features/tower/kunlum-terrain-detail.js";
 import {createKunlumNativeTerrainPBR} from "./src/features/tower/kunlum-game-landscape.js";
 import {createKunlumRiverLayer,riverXAt} from "./src/features/tower/kunlum-river-layer.js";
+import {loadKunlumCherekOSM} from "./src/features/tower/kunlum-osm-river.js";
 import {createKunlumTerrainScatter,createKunlumRockOutcrops} from "./src/features/tower/kunlum-terrain-scatter.js";
 import {createKunlumBeautySky} from "./src/features/tower/kunlum-beauty-view.js";
 import {createKunlumWideDem,KUNLUM_WIDE_BOUNDS,buildWideAxis} from "./src/features/tower/kunlum-wide-dem.js";
@@ -417,6 +419,7 @@ async function loadWideData(){
   document.getElementById('wide').disabled=false;
   document.getElementById('wideCredits').hidden=false;
   if(autoWide&&lastFocus==='full')focus('wide');
+  if(osmRiverLine)ensureRiverExtent();
   if(qualityMode==='beautiful'&&mappedPlan)refreshRockOutcrops();
  }catch(error){
   document.getElementById('wideStatus').textContent='Внешние высоты не загрузились: '+
@@ -425,20 +428,51 @@ async function loadWideData(){
  }
 }
 // River route is an explicit DEM-valley approximation, not an OSM or surveyed polyline.
-let riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{quality:'beautiful',mobile:isMobile});
-riverScene.root.scale.x=-1; // visual river follows the mirrored background
-let riverExtent=60;scene.add(riverScene.root);
+// No visual river until a named OSM centreline has been retrieved.
+let osmRiverLine=null;
+let riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{quality:'interactive',mobile:isMobile});
+riverScene.root.scale.x=-1;riverScene.root.visible=false;
+scene.add(riverScene.root);
 function ensureRiverExtent(){
- if(riverExtent===half)return;
+ if(!osmRiverLine)return;
+ // Clip to the actual current DEM viewport; do not draw water into empty space.
+ const limitX=wideMode&&wideDem.loaded?3850:half*30-15;
+ const limitZ=wideMode&&wideDem.loaded?3800:half*30-15;
+ const points=osmRiverLine.filter(p=>Math.abs(p.x)<limitX&&Math.abs(p.z)<limitZ);
  scene.remove(riverScene.root);riverScene.dispose();
- const extent=Math.min(1350,half*30-20);
- riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{
-  quality:'beautiful',mobile:isMobile,minZ:-extent,maxZ:extent,
-  minX:30,maxX:Math.min(990,half*30-30)
+ if(points.length<2){
+  riverScene={root:new THREE.Group(),points:[],dispose(){}};
+  scene.add(riverScene.root);updateEnvironmentVisibility();return;
+ }
+ const heightAt=wideMode&&wideDem.loaded?
+  (x,z)=>wideDem.sample(x,z):sampleOriginalTerrain;
+ riverScene=createKunlumRiverLayer(THREE,heightAt,{
+  quality:qualityMode,mobile:isMobile,centerline:points
  });
- riverExtent=half;
  riverScene.root.scale.x=-1;riverScene.root.scale.y=scaleY;scene.add(riverScene.root);
  updateEnvironmentVisibility();
+}
+async function loadRealRiver(){
+ const status=document.getElementById('riverStatus');
+ try{
+  const result=await loadKunlumCherekOSM();
+  osmRiverLine=result.line;
+  ensureRiverExtent();
+  document.getElementById('riverVisible').disabled=false;
+  document.getElementById('riverVisible').checked=true;
+  document.getElementById('riverView').disabled=false;
+  status.textContent='Река по OpenStreetMap ('+result.line.length+
+   ' опорных точек, ODbL). Длина и ширина воды условны; расположение требует проверки по снимкам.';
+  if(decorativeScatter){
+   scene.remove(decorativeScatter.root);decorativeScatter.dispose();decorativeScatter=null;
+  }
+  if(qualityMode==='beautiful'){ensureDecorativeScatter();refreshRockOutcrops()}
+  updateEnvironmentVisibility();
+ }catch(error){
+  status.textContent='Точная линия реки не загружена: '+error.message+
+   '. Нет подмены неподтверждённым руслом.';
+  console.warn('Kunlum OSM waterway:',error);
+ }
 }
 let decorativeScatter=null,rockOutcrops=null,mappedPlan=null;
 function ensureRockOutcrops(){
@@ -479,7 +513,8 @@ function ensureDecorativeScatter(){
 }
 function updateEnvironmentVisibility(){
  const colored=landscapeMode!=='bare';
- riverScene.root.visible=colored&&document.getElementById('riverVisible').checked;
+ riverScene.root.visible=!!osmRiverLine&&riverScene.points.length>1&&
+  colored&&document.getElementById('riverVisible').checked;
  if(decorativeScatter)decorativeScatter.root.visible=
   colored&&qualityMode==='beautiful'&&document.getElementById('natureVisible').checked;
  if(rockOutcrops)rockOutcrops.root.visible=
@@ -558,6 +593,7 @@ function createTerrain(){
  terrain.receiveShadow=qualityMode==='beautiful';
  scene.add(terrain);
  const count=geometry.index.count/3;
+ ensureRiverExtent();
  status.textContent="Высоты: 1121–2348 м · DEM 30 м · "+
   count.toLocaleString("ru")+" треугольников";
  const ctr=heights[60*121+60]/10*scaleY;
@@ -599,6 +635,7 @@ function createWideTerrain(){
  terrain.castShadow=qualityMode==='beautiful';
  terrain.receiveShadow=qualityMode==='beautiful';
  scene.add(terrain);wideHaze.setActive(true);
+ ensureRiverExtent();
  status.textContent='7,6 × 6,1 км · '+(geo.index.count/3).toLocaleString('ru')+
   ' треугольников. Центральный DEM не изменён.';
  marker.position.y=heights[60*121+60]/10*scaleY+15;
@@ -628,12 +665,18 @@ else if(mode==="village"){
 }
 else if(mode==="river"){
  half=20;createTerrain();
- const x=-riverXAt(riverScene.points,0),z=0,y=sampleDisplayedTerrain(x,z)*scaleY;
+ const near=riverScene.points.reduce((a,b)=>
+   Math.abs(b.z)<Math.abs(a.z)?b:a,riverScene.points[0]);
+ if(!near){focus('village');return}
+ const x=-near.x,z=near.z,y=sampleDisplayedTerrain(x,z)*scaleY;
  camera.position.set(x-175,y+128,z-205);orbit.target.set(x,y+9,z+95);
 }
 else if(mode==="cinematic"){
  half=20;createTerrain();
- const x=-riverXAt(riverScene.points,150),z=150,y=sampleDisplayedTerrain(x,z)*scaleY;
+ const p=riverScene.points.length?
+  riverScene.points.reduce((a,b)=>Math.abs(b.z-150)<Math.abs(a.z-150)?b:a):
+  {x:-150,z:150};
+ const x=-p.x,z=p.z,y=sampleDisplayedTerrain(x,z)*scaleY;
  camera.position.set(x-310,y+205,z+100);orbit.target.set(x-95,y+58,z-140);
 }
 else if(mode==="detail"){half=20;createTerrain();camera.position.set(760,470,690);orbit.target.set(0,45,0);}
@@ -677,7 +720,7 @@ riverScene.root.scale.y=scaleY;if(decorativeScatter)decorativeScatter.root.scale
 document.getElementById("exag").textContent=scaleY===2?"Высоты ×1":"Высоты ×2";
 };
 focus("full");applyQualityLighting();refreshQualityLabel();
-loadMappedWalls();loadWideData();
+loadMappedWalls();loadWideData();loadRealRiver();
 updateEnvironmentVisibility();
 const label=document.getElementById("towerLabel"),world=new THREE.Vector3();
 const northArrow=document.getElementById('northArrow');
