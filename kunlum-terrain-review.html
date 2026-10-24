@@ -28,6 +28,8 @@ button:hover,button.active{background:#607e64}
 .note{position:absolute;bottom:14px;left:14px;color:#d9e8e5;background:#12282bbb;padding:7px 10px;border-radius:7px;font-size:10px;pointer-events:none;max-width:70%}
 #failure{display:none;margin-top:8px;color:#ffbba8;font-size:12px}
 .photoTools{border-top:1px solid #ffffff40;margin-top:12px;padding-top:10px}
+.photoTools summary{cursor:pointer;list-style:revert;font-size:12px;font-weight:600;color:#d5e5db;padding:4px 2px}
+.photoTools[open] summary{margin-bottom:8px}
 .photoTools h2{font-size:14px;margin:0 0 5px;color:#e8e4cf}
 .photoTools p{margin:4px 0 7px}
 .photoTools label{font-size:11px;display:block;margin:7px 0 3px}
@@ -68,8 +70,8 @@ button:hover,button.active{background:#607e64}
 <label><input id="passagesVisible" type="checkbox" checked> Проходы</label>
 </div>
 <div id="objectsStatus">Загрузка разметки домов и стен…</div>
-<section class="photoTools" aria-label="Фотопанорама 360 градусов">
-<h2>Фотопанорама 360° · пробный режим</h2>
+<details class="photoTools" aria-label="Фотопанорама 360 градусов">
+<summary>Фотопанорама 360° (дополнительно)</summary>
 <div class="actions"><button id="foundationTour" type="button">Смотреть панорамы фонда</button></div>
 <p>Экскурсия фонда открывается из официального источника; фотографии не копируются в AlanTil.</p>
 <label for="photoFile">Есть исходное сферическое фото? Загрузи его для фона 3D:</label>
@@ -82,7 +84,7 @@ button:hover,button.active{background:#607e64}
 <input id="photoOpacity" type="range" min=".25" max="1" value="1" step=".05">
 <div id="photoStatus" role="status" aria-live="polite">Принимаются только сферические фотографии 2:1. Они обрабатываются локально в браузере.</div>
 <p>Совмещение фото с рельефом пока визуальное: точка съёмки и направление на север не подтверждены.</p>
-</section>
+</details>
 <div id="status">Подготовка 3D-рельефа...</div><div id="failure"></div></section>
 <div id="towerLabel">▲ Абай-къала · ≈1251 м</div>
 <div class="note">Исходный DEM без искусственных террас. Стены нанесены по исторической разметке с предварительной геопривязкой, требующей проверки. Источник рельефа: Copernicus DEM GLO-30.</div>
