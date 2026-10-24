@@ -50,9 +50,9 @@ export function landscapeColor(heightASL,slope,x,z){
  let rgb;
  if(heightASL>2000||s>1.15)rgb=[151,145,130];  // exposed stone
  else if(s>.68||heightASL>1780)rgb=[164,150,121]; // scree / bare slopes
- else if(heightASL>1560)rgb=[121,127,96];          // thin alpine cover
- else if(heightASL>1320)rgb=[102,128,79];          // grass + sparse scrub
- else rgb=[111,143,83];                            // lower green slopes
+ else if(heightASL>1560)rgb=[133,140,108];          // thin alpine cover
+ else if(heightASL>1320)rgb=[114,143,94];          // grass + sparse scrub
+ else rgb=[122,154,99];                            // lower green slopes
  const d=rough*12+Math.min(1,s)*-8;
  return rgb.map(v=>Math.max(0,Math.min(1,(v+d)/255)));
 }
