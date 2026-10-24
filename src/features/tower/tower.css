@@ -16,6 +16,11 @@
 .towerCanvas canvas{cursor:grab}
 .towerCamera{position:absolute;z-index:9;top:calc(var(--safe-top,0px) + 65px);right:12px;display:flex;flex-direction:column;gap:8px}
 .towerCamera .towerIconAction{width:44px;height:44px;min-width:44px;min-height:44px}
+.towerGame .towerWorldAction{display:flex;align-items:center;justify-content:center;gap:6px;width:132px;min-height:42px;padding:6px 8px;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(--surface-0);box-shadow:var(--shadow-sm);color:var(--text-1);font:600 11px/1.15 var(--font-body);cursor:pointer}
+.towerGame .towerWorldAction .uiIcon{width:18px;height:18px;flex:0 0 18px}
+.towerGame .towerWorldAction[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-strong)}
+@media(max-width:749px){.towerGame .towerWorldAction{width:46px;height:46px;min-height:46px;padding:4px}.towerGame .towerWorldAction span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}}
+
 .towerSide{position:absolute;z-index:5;left:12px;right:68px;bottom:calc(max(10px,var(--safe-bottom,0px)));max-width:710px;transform:translateY(calc(100% + 24px));opacity:0;visibility:hidden;pointer-events:none;border-radius:var(--radius-lg);border:1px solid var(--line);background:var(--surface-0);box-shadow:var(--shadow-md,var(--shadow-sm));padding:5px;transition:transform 230ms cubic-bezier(.2,.8,.2,1),opacity 185ms ease,visibility 230ms}
 .towerSide.is-open{transform:translateY(0);opacity:1;visibility:visible;pointer-events:auto}
 .towerCatalogContent{overflow:hidden}
