@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {getKunlumHeights} from '../src/features/tower/kunlum-terrain-lod.js';
 import {sampleDemLocal} from '../src/features/tower/kunlum-georeference.js';
+import {clipKunlumOutsideReserve} from '../src/features/tower/kunlum-map-overlay.js';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const scene=read('src/features/tower/prefab-scene.js');
@@ -48,4 +49,15 @@ test('tower building controls remain and new wide-view action is independently a
  assert.match(scene,/getRockSurface\(renderer\)/);
  assert.match(scene,/function scheduleDraw\(\)/);
  assert.match(scene,/kunlum\?\.update\?\./);
+});
+
+test('render-only historic contours cannot occupy or cross build reserve',()=>{
+ const b={minX:-10,maxX:30,minZ:-15,maxZ:35};
+ const left=clipKunlumOutsideReserve([-20,10],[40,10],b);
+ assert.equal(left.length,2);
+ assert.ok(left.every(([a,z])=>![...a,...z].some(x=>!Number.isFinite(x))));
+ assert.ok(left[0][1][0]<=-10+.001);
+ assert.ok(left[1][0][0]>=30-.001);
+ assert.deepEqual(clipKunlumOutsideReserve([0,0],[20,20],b),[]);
+ assert.deepEqual(clipKunlumOutsideReserve([0,45],[20,45],b),[[[0,45],[20,45]]]);
 });
