@@ -1,0 +1,58 @@
+name: Tower 17.2 Common100 UV fidelity QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/approved-section-scene.js'
+      - 'src/features/tower/rock-surface.js'
+      - 'src/features/tower/prefab-scene.js'
+      - 'tests/tower-common100-stone-uv.test.mjs'
+      - 'tests/fixtures/tower-common100-uv.html'
+      - 'scripts/qa/browser-tower-common100-uv.cjs'
+      - 'release.json'
+      - '.github/workflows/tower-common100-uv-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Validate source modules and UV projections without changing GLB
+        run: |
+          node --check src/features/tower/rock-surface.js
+          node --check src/features/tower/approved-section-scene.js
+          node --check src/features/tower/prefab-scene.js
+          node --check tests/tower-common100-stone-uv.test.mjs
+          node --test tests/tower-common100-stone-uv.test.mjs tests/tower-approved-manual.test.mjs
+      - name: Ensure site assets are version-synchronized
+        run: node scripts/release/sync-version.mjs --check
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright
+      - name: Inspect actual 40-stone section before and after UV remapping
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/stone-uv-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/tests/fixtures/tower-common100-uv.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/browser-tower-common100-uv.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tower-common100-uv-before-after-ktx2-png
+          path: stone-uv-browser-qa/
+          retention-days: 14
+          if-no-files-found: warn
