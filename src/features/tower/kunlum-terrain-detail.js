@@ -47,7 +47,7 @@ float kunlumFbm(vec2 p){
   float steep=clamp(vKunlumSlope*3.5,0.,1.);
   float rock=clamp(steep*.72+gravel*.30,0.,.9);
   float soil=clamp((large-.38)*.8,0.,.35);
-  vec3 grassTint=mix(vec3(.82,1.03,.76),vec3(1.08,.99,.83),soil);
+  vec3 grassTint=mix(vec3(.93,1.06,.88),vec3(1.10,1.03,.91),soil);
   vec3 rockTint=mix(vec3(.98,.98,.94),vec3(1.10,1.04,.96),large);
   vec3 tint=mix(grassTint,rockTint,rock);
   tint*=.82+.33*small+.10*(micro-.5);
@@ -67,4 +67,46 @@ export function kunlumDetailSubdivision({half,quality='interactive',mobile=false
 export function getKunlumTerrainMeshStats(half,divisions){
  const cells=2*half*divisions;
  return {vertices:(cells+1)*(cells+1),triangles:2*cells*cells};
+}
+
+/**
+ * Selective satellite-green colour grade; keeps rock, water and stone walls alone.
+ * Uses source pixel colour instead of tinting the entire scene. No new textures.
+ * Shared by fast and beautiful terrain shaders. Bare DEM remains ungraded.
+ */
+export function installKunlumSlopeGrade(materials,{vegetationLift=.22}={}){
+ if(!Array.isArray(materials)||!materials.length)throw Error('Terrain materials required');
+ if(!(vegetationLift>=0&&vegetationLift<=.5))throw Error('Bad vegetation lift');
+ const state={active:1,uniforms:[]};
+ for(const material of materials){
+  const prior=material.onBeforeCompile;
+  const key=material.customProgramCacheKey?.bind(material);
+  material.onBeforeCompile=shader=>{
+   if(typeof prior==='function')prior(shader);
+   const uniform={value:state.active};
+   state.uniforms.push(uniform);
+   shader.uniforms.uKunlumGreenGrade=uniform;
+   shader.fragmentShader=shader.fragmentShader.replace(
+    '#include <common>',
+    '#include <common>\nuniform float uKunlumGreenGrade;'
+   );
+   shader.fragmentShader=shader.fragmentShader.replace(
+    '#include <color_fragment>',
+    `#include <color_fragment>
+    // Warm, gently desaturate and lift only genuinely green satellite pixels.
+    float greenDominance=(diffuseColor.g-max(diffuseColor.r,diffuseColor.b))
+      /max(diffuseColor.g,.05);
+    float plantMask=smoothstep(.12,.40,greenDominance)*uKunlumGreenGrade;
+    vec3 sunlitGreen=diffuseColor.rgb*vec3(1.30,1.21,1.14)
+      +vec3(.012,.008,.005);
+    diffuseColor.rgb=mix(diffuseColor.rgb,sunlitGreen,plantMask);`
+   );
+  };
+  material.customProgramCacheKey=()=> (key?key():'standard')+'-kunlum-green-v1';
+  material.needsUpdate=true;
+ }
+ return {setActive(value){
+  state.active=value?vegetationLift/.22:0;
+  for(const uniform of state.uniforms)uniform.value=state.active;
+ },get active(){return state.active}};
 }
