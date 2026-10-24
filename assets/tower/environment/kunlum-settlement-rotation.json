@@ -1,0 +1,13 @@
+{
+  "schema": "alantil.kunlum.preview.rotation.v1",
+  "anchor": "Abay-Kala",
+  "anchorPixel": {
+    "x": 908,
+    "y": 460
+  },
+  "baseAngleDeg": 70,
+  "additionalRotationDeg": -134,
+  "resultingAngleDeg": -64,
+  "sourceDataModified": false,
+  "georeferenceStatus": "UNVERIFIED_SINGLE_CONTROL_POINT"
+}
