@@ -9,6 +9,7 @@ on:
       - 'assets/tower/environment/kunlum-cherek-balkarsky-osm.json'
       - 'kunlum-terrain-review.html'
       - 'tests/kunlum-river-realism.test.mjs'
+      - 'scripts/qa/browser-kunlum-river.cjs'
       - '.github/workflows/kunlum-river-qa.yml'
   workflow_dispatch:
 jobs:
@@ -21,8 +22,43 @@ jobs:
         with: {node-version: '22'}
       - name: Cherek geometry and snapshot validation
         run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs
-      - name: Module syntax
+      - name: Module and embedded viewer syntax
         run: |
           node --check src/features/tower/kunlum-osm-river.js
           node --check src/features/tower/kunlum-river-layer.js
           node --check src/features/tower/kunlum-terrain-scatter.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('kunlum-terrain-review.html').read_text()
+          code=re.search(r'<script type="module">([\s\S]*?)</script>',s)
+          assert code, 'Missing terrain preview module'
+          Path('/tmp/kunlum-preview.mjs').write_text(code.group(1))
+          PY
+          node --check /tmp/kunlum-preview.mjs
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright
+      - name: Serve exact branch and open WebGL on desktop and mobile
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/kunlum-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/kunlum-terrain-review.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/browser-kunlum-river.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kunlum-cherek-desktop-mobile
+          path: river-browser-qa/
+          retention-days: 14
+          if-no-files-found: warn
