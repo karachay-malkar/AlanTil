@@ -124,7 +124,7 @@ button:hover,button.active{background:#607e64}
 <div id="wideCredits" hidden>Внешние высоты: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener noreferrer">Mapzen / AWS Terrain Tiles</a> (Terrarium). Внутри 3,6 × 3,6 км: оригинальный Copernicus GLO-30.</div>
 <div id="status">Подготовка 3D-рельефа...</div><div id="failure"></div></section>
 <div id="towerLabel">▲ Абай-къала · ≈1251 м</div>
-<div class="note">Подложка (рельеф и спутниковый цвет) зеркально отражена слева направо относительно башни Абай-къала. Точка башни и исторический план не отражены. Это визуальная коррекция для сопоставления, не точная географическая карта. Исходные данные высот сохранены.</div>
+<div class="note">Рельеф отображается зеркально относительно неподвижной башни Абай-къала. Исторический план поворачивается отдельно регулятором. Цвет поверхности создаётся игровыми материалами, а не спутниковой подложкой. Географическая точность совмещения ещё не подтверждена.</div>
 <div id="north" title="Географический север; направление обновляется при повороте камеры"><span id="northArrow">↑</span><span>С</span></div>
 <dialog id="fundTour" aria-label="Официальная 360-градусная экскурсия фонда Кюнлюм Эль">
  <div class="tourBar"><strong>Экскурсия фонда «Кюнлюм Эль» · официальный источник</strong><button id="closeFundTour" type="button">Закрыть</button></div>
@@ -235,7 +235,6 @@ const wideHaze=installKunlumEdgeHaze([terrainMaterial,beautifulMaterial],mirrore
 let terrain=null,half=60,scaleY=1,previous={},overlay=null,wideMode=false;
 let landscapeMode='coloredWalls';
 let qualityMode='beautiful';
-const landscapeStatus=document.getElementById('landscapeStatus');
 function heightAtGrid(i,j){
  const ix=Math.max(-60,Math.min(60,i))+60,iz=Math.max(-60,Math.min(60,j))+60;
  return heights[iz*121+ix]/10;
@@ -490,6 +489,7 @@ return col.set("#e9f0f4");
 function createTerrain(){
  gameMaterials.setEnabled(landscapeMode!=='bare');
  gameMaterials.setVerticalScale(scaleY);
+ gameMaterials.setDetail(qualityMode==='beautiful');
  if(wideMode&&wideDem.loaded){createWideTerrain();return}
  wideHaze.setActive(false);
  const divisions=kunlumDetailSubdivision({half,quality:qualityMode,mobile:isMobile});
@@ -536,7 +536,6 @@ function createWideTerrain(){
  const bounds=mirroredBounds,outerStep=qualityMode==='beautiful'?(isMobile?60:45):90;
  const xs=buildWideAxis(bounds.minX,bounds.maxX,{innerStep:30,outerStep});
  const zs=buildWideAxis(bounds.minZ,bounds.maxZ,{innerStep:30,outerStep}).reverse();
- const texture=null;
  const coords=[],colors=[],uvs=[],indices=[];
  for(const z of zs)for(const x of xs){
   const sourceX=sourceXForDisplay(x);
