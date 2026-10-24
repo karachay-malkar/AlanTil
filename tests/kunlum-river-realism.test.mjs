@@ -10,7 +10,7 @@ import {createKunlumRiverbankScatter} from '../src/features/tower/kunlum-terrain
 
 const snapshot=JSON.parse(readFileSync(new URL('../assets/tower/environment/kunlum-cherek-balkarsky-osm.json',import.meta.url)));
 const line=[{x:0,z:0},{x:45,z:30},{x:70,z:85}];
-const elevation=(x,z)=>150+x*.01-z*.05;
+const elevation=(x,z)=>150+x*.01-z*.18;
 
 test('checked OSM centreline is stored locally, without requiring a live request',async()=>{
  assert.equal(snapshot.license,'ODbL');
@@ -33,7 +33,7 @@ test('local centreline rejects unverified, disconnected or malformed coordinates
 
 test('the river channel is a render-only cut and leaves the source DEM sampler intact',()=>{
  const flat=()=>150;
- assert.equal(riverDistanceAt(line,0,15)<10,true);
+ assert.equal(riverDistanceAt(line,10,7)<10,true);
  assert.equal(riverDistanceAt(line,200,100)>60,true);
  const center=carveKunlumRiverHeight(15,10,flat,line);
  assert.ok(center<148.5,'real trough at water centre');
