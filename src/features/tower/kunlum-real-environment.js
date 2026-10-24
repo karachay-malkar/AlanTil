@@ -36,8 +36,11 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  // Approved -134 degree settlement rotation is visual-only; source coordinates
  // and the playable plot have NOT been moved.
  const P=p=>{
-  const [e,n]=rotateKunlumPlanPoint(pixelToLocalWorld(p,calibration),-134);
-  return terrain.demToScene(e,n);
+  const [displayEast,north]=rotateKunlumPlanPoint(pixelToLocalWorld(p,calibration),-134);
+  // The approved historical plan is already mirrored in its own calibration.
+  // Only the DEM needs an X mirror; mirroring these wall coordinates again
+  // would move the village away from the validated 3D preview.
+  return [displayEast+terrain.centerEast+10,north-terrain.centerNorth+10];
  };
  const towerBase=P([calibration.anchorPixel.x,calibration.anchorPixel.y]);
  function createMonument(){
@@ -136,7 +139,8 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
      source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;
   planData=source;
-  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt});
+  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt,
+   excludeBounds:{minX:-10.75,maxX:30.75,minZ:-15.75,maxZ:35.75}});
   overlay.setVisibility({confirmedVisible:true,candidatesVisible:false,passagesVisible:true});
   group.add(overlay.root);
   Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,
