@@ -170,8 +170,8 @@ export function createKunlumRiverLayer(THREE,heightAt,{
    const f=(j-3)/3,edge=half*f*bankScale(Math.sign(f)),dx=nx*edge,dz=nz*edge;
    water.push(p.x+dx,y+.035*Math.sin(s*.71+j),p.z+dz);
    uv.push(along*.085,f);
-   const variation=.5+.5*Math.sin(s*.23+j*1.73),edge=Math.abs(f);
-   rgb.push(.24+variation*.065,.41+variation*.082-edge*.045,.46+variation*.075-edge*.057);
+   const variation=.5+.5*Math.sin(s*.23+j*1.73),bankEdge=Math.abs(f);
+   rgb.push(.24+variation*.065,.41+variation*.082-bankEdge*.045,.46+variation*.075-bankEdge*.057);
   }
   for(const side of [-1,1]){
    for(const f of [1,1.3,1.65]){
@@ -228,9 +228,11 @@ export function createKunlumRiverLayer(THREE,heightAt,{
     '#include <color_fragment>',
     'float c1=sin(vCherekFlowUV.x*17.-uCherekFlowTime*5.1+vCherekFlowUV.y*8.);',
     'float c2=sin(vCherekFlowUV.x*41.-uCherekFlowTime*8.3-vCherekFlowUV.y*13.);',
-    'float wake=sin(vCherekFlowUV.x*6.1-uCherekFlowTime*1.8+sin(vCherekFlowUV.y*7.0)*2.2);\x27,\n     \x27float wave=.5+.5*(.51*c1+.29*c2+.20*wake);',
+    'float wake=sin(vCherekFlowUV.x*6.1-uCherekFlowTime*1.8+sin(vCherekFlowUV.y*7.0)*2.2);',
+    'float wave=.5+.5*(.51*c1+.29*c2+.20*wake);',
     'float flash=pow(max(0.,sin(vCherekFlowUV.x*27.-uCherekFlowTime*6.+vCherekFlowUV.y*19.)),12.);',
-    'float uneven=.08*sin(vCherekFlowUV.x*2.3+vCherekFlowUV.y*8.1)*sin(vCherekFlowUV.x*3.4-uCherekFlowTime);\x27,\n     \x27diffuseColor.rgb*=.76+.34*wave+uneven;',
+    'float uneven=.08*sin(vCherekFlowUV.x*2.3+vCherekFlowUV.y*8.1)*sin(vCherekFlowUV.x*3.4-uCherekFlowTime);',
+    'diffuseColor.rgb*=.76+.34*wave+uneven;',
     'diffuseColor.rgb+=vec3(.16,.22,.21)*flash*.33;'
    ].join('\n'));
  };
