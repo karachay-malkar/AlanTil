@@ -159,3 +159,85 @@ if(uKunlumGameEnabled > 0.5 && uKunlumGameDetail > 0.5){
   get enabled(){return !!state.enabled}
  };
 }
+
+
+/**
+ * Compatible PBR renderer that uses only native MeshStandardMaterial shaders.
+ * Four PBR biome textures are composited at DEM vertices and an additional
+ * neutral tiling albedo + tangent-space normal map supplies fragment detail.
+ * This is a reliable fallback for mobile GPUs that reject custom GLSL programs.
+ * It has no extra vertex varyings or onBeforeCompile injections.
+ */
+const srgbToLinear=c=>{
+ c=clamp(c/255);return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);
+};
+export function kunlumNativeTerrainColor(elevation,slope,x,z,tiles){
+ if(!Number.isFinite(elevation)||!Number.isFinite(slope)||!Number.isFinite(x)||!Number.isFinite(z))
+  throw Error('Terrain colour coordinates must be finite');
+ const data=(name,frequency)=>{
+  const t=tiles[name],src=t?.image?.data;
+  if(!src)throw Error('Missing native PBR texture '+name);
+  const w=t.image.width,h=t.image.height;
+  const u=((x*frequency%1)+1)%1,v=((z*frequency%1)+1)%1;
+  const index=(Math.floor(v*h)*w+Math.floor(u*w))*4;
+  return [src[index],src[index+1],src[index+2],src[index+3]/255];
+ };
+ const grass=data('grass',.092),soil=data('soil',.073),
+  scree=data('scree',.087),rock=data('rock',.106);
+ const patch=data('soil',.0073)[3];
+ const masks=kunlumTerrainMasks(elevation,clamp(slope/(1+slope)),patch);
+ const rgb=[0,1,2].map(c=>{
+  const base=blend(grass[c],soil[c],masks.soil);
+  const gravel=blend(base,scree[c],masks.scree);
+  return srgbToLinear(blend(gravel,rock[c],masks.rock));
+ });
+ return rgb;
+}
+export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
+ const size=mobile?128:256;
+ const tiles=createKunlumTerrainTiles(THREE,{resolution:size});
+ const neutral=new Uint8Array(size*size*4),normals=new Uint8Array(size*size*4);
+ const grain=tiles.rock.image.data;
+ const sample=(x,y)=>grain[((((y+size)%size)*size)+((x+size)%size))*4+3];
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const p=(y*size+x)*4,detail=sample(x,y)/255;
+  // Neutral (almost white) albedo maintains distinct terrain biomes from vertices.
+  const factor=clamp(.89+(detail-.5)*.23,.73,1);
+  neutral[p]=Math.round(255*factor);
+  neutral[p+1]=Math.round(255*factor);
+  neutral[p+2]=Math.round(255*factor);neutral[p+3]=255;
+  const gx=(sample(x+1,y)-sample(x-1,y))/255;
+  const gy=(sample(x,y+1)-sample(x,y-1))/255;
+  const nz=1/Math.sqrt(1+gx*gx*.3+gy*gy*.3);
+  normals[p]=Math.round(127.5*(1-gx*.5*nz));
+  normals[p+1]=Math.round(127.5*(1-gy*.5*nz));
+  normals[p+2]=Math.round(127.5*(1+nz));
+  normals[p+3]=255;
+ }
+ const map=new THREE.DataTexture(neutral,size,size,THREE.RGBAFormat);
+ const normalMap=new THREE.DataTexture(normals,size,size,THREE.RGBAFormat);
+ for(const t of [map,normalMap]){
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.minFilter=THREE.LinearMipmapLinearFilter;
+  t.magFilter=THREE.LinearFilter;
+  t.generateMipmaps=true;t.needsUpdate=true;
+ }
+ map.colorSpace=THREE.SRGBColorSpace;
+ const material=new THREE.MeshStandardMaterial({
+  vertexColors:true,map,normalMap,
+  normalScale:new THREE.Vector2(.24,.24),
+  side:THREE.DoubleSide,metalness:0,roughness:.95
+ });
+ const bareMaterial=new THREE.MeshStandardMaterial({
+  vertexColors:true,side:THREE.DoubleSide,roughness:1,metalness:0
+ });
+ return {
+  material,bareMaterial,
+  terrainColor:(height,slope,x,z)=>kunlumNativeTerrainColor(height,slope,x,z,tiles),
+  texScale:.1,
+  dispose(){
+   material.dispose();bareMaterial.dispose();map.dispose();normalMap.dispose();
+   Object.values(tiles).forEach(t=>t.dispose());
+  }
+ };
+}
