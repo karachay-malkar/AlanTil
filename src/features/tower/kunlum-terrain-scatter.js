@@ -97,3 +97,74 @@ export function createKunlumTerrainScatter(THREE,heightAt,{
  for(const type of ['rock','shrub','grass'])take(type,budgets[type]);
  return {root,counts:placementCounts,dispose(){for(const o of owned)o.dispose?.()}};
 }
+
+/**
+ * Angular rock outcrops formed from actual instanced 3D meshes, not an image.
+ * Decorative, not historically surveyed. Sample all footprint edges to bury
+ * the rock into the DEM rather than levitating above the downhill face.
+ * Culled from a bounded region for mobile browser performance.
+ */
+export function createKunlumRockOutcrops(THREE,heightAt,{
+ mobile=false,features=[],toWorld=p=>p,riverXAt=()=>Infinity,
+ bounds={minX:-1600,maxX:1600,minZ:-1600,maxZ:1600},
+ seed=285199
+}={}){
+ if(typeof heightAt!=='function')throw Error('Height sampler is required');
+ const root=new THREE.Group();
+ root.name='Unsourced sculptural cliff outcrops (3D, artistic)';
+ const rng=kunlumRng(seed);
+ const avoid=createKunlumAvoidance(features,toWorld,{cell:24});
+ const geometry=new THREE.DodecahedronGeometry(1,0);
+ const material=new THREE.MeshStandardMaterial({
+  color:0xffffff,roughness:.93,metalness:0,flatShading:true
+ });
+ const target=mobile?155:420;
+ const mesh=new THREE.InstancedMesh(geometry,material,target);
+ mesh.name='Irregular angular mountain outcrops';
+ mesh.castShadow=!mobile;
+ mesh.receiveShadow=true;
+ // Shared instanced cloud spans kilometres; disabling single-bounds culling
+ // avoids erroneous disappearance when orbiting around the tower.
+ mesh.frustumCulled=false;
+ const dummy=new THREE.Object3D(),color=new THREE.Color();
+ let placed=0,trials=0;
+ const within=(x,z)=>x>bounds.minX+65&&x<bounds.maxX-65
+  &&z>bounds.minZ+65&&z<bounds.maxZ-65;
+ while(placed<target&&trials<target*70){
+  trials++;
+  // Half the rocks form visible near-field crags, others punctuate ridgelines.
+  const near=rng()<.48,spread=near?800:3200;
+  const x=(rng()*2-1)*spread,z=(rng()*2-1)*spread;
+  if(!within(x,z)||x*x+z*z<110*110||avoid(x,z)||Math.abs(x-riverXAt(z))<48)continue;
+  const y=heightAt(x,z);
+  const east=heightAt(x+12,z)-heightAt(x-12,z);
+  const north=heightAt(x,z+12)-heightAt(x,z-12);
+  const slope=Math.hypot(east,north)/24;
+  if(!Number.isFinite(y)||!Number.isFinite(slope)||slope<.24||slope>2.7)continue;
+  const span=3.5+Math.pow(rng(),1.4)*(near?10:21);
+  const w=span*(.72+rng()*.67),d=span*(.55+rng()*.6);
+  const height=span*(.5+rng()*.8);
+  const foot=Math.min(
+   y,heightAt(x+w*.5,z),heightAt(x-w*.5,z),
+   heightAt(x,z+d*.5),heightAt(x,z-d*.5)
+  );
+  if(!Number.isFinite(foot))continue;
+  // A positive part of the mesh always intersects actual terrain samples.
+  // No artificial plateau is added; terrain remains physically unchanged.
+  dummy.position.set(x,foot-height*.30,z);
+  dummy.scale.set(w,height,d);
+  dummy.rotation.set((rng()-.5)*.25,rng()*Math.PI*2,(rng()-.5)*.3);
+  dummy.updateMatrix();
+  mesh.setMatrixAt(placed,dummy.matrix);
+  const t=rng();
+  color.setRGB(.39+.22*t,.38+.20*t,.33+.18*t);
+  mesh.setColorAt(placed,color);
+  placed++;
+ }
+ mesh.count=placed;mesh.instanceMatrix.needsUpdate=true;
+ if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+ root.add(mesh);
+ return {root,count:placed,dispose(){
+  geometry.dispose();material.dispose();mesh.dispose?.();
+ }};
+}
