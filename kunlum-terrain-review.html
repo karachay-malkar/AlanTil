@@ -23,6 +23,12 @@ button:hover,button.active{background:#607e64}
 #qualityControls{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 4px}
 #qualityControls button{padding:6px 10px}
 #qualityStatus{font-size:11px;color:#cbded1;margin-top:6px;line-height:1.35}
+.settlementControls{margin-top:11px;padding-top:10px;border-top:1px solid #ffffff40}
+.settlementControls h2{font-size:14px;margin:0 0 9px;color:#e8e4cf}
+.settlementControls label{font-size:12px;display:flex;justify-content:space-between;color:#cfddd6}
+#settlementAngle{display:block;width:100%;margin:11px 0;accent-color:#b1c4a1}
+#settlementStatus{font-size:11px;color:#d5e5cc;line-height:1.45;margin:7px 0}
+.settlementControls .actions button{padding:6px 8px}
 #wideStatus{font-size:11px;line-height:1.4;color:#cbded1;margin:8px 0}
 #wideCredits{font-size:10px;line-height:1.4;color:#cadcd7;margin:5px 0}
 #wideCredits a{color:#b7ebd4}
@@ -62,12 +68,12 @@ button:hover,button.active{background:#607e64}
 <button id="detail">Около села · 1,2 км</button><button id="village">К стенам</button><button id="above">Сверху</button>
 <button id="exag">Высоты ×2</button><button id="wide" disabled>Панорама · 7,6 × 6,1 км</button><button id="riverView">К реке</button><button id="cinematicView">Красивый ракурс</button></div>
 <section class="landscapeControls" aria-label="Окраска 3D-рельефа">
-<h2>Цветной ландшафт</h2>
+<h2>Игровой 3D-ландшафт</h2>
 <label for="landscapeMode">Режим просмотра</label>
 <select id="landscapeMode">
 <option value="bare">Голый DEM (исходная окраска)</option>
-<option value="colored">Цветной ландшафт без стен</option>
-<option value="coloredWalls" selected>Цветной ландшафт + стены</option>
+<option value="colored">Игровая природа без стен</option>
+<option value="coloredWalls" selected>Игровая природа + селение</option>
 </select>
 <label>Качество визуализации</label>
 <div id="qualityControls" role="group" aria-label="Режим качества">
@@ -79,8 +85,19 @@ button:hover,button.active{background:#607e64}
 <div class="layers"><label><input id="riverVisible" type="checkbox" checked> Река и каменистые берега</label>
 <label><input id="natureVisible" type="checkbox" checked> 3D-камни, трава и кустарники</label></div>
 <div id="natureStatus">Русло реки пока восстановлено по низинам DEM, его точные координаты не подтверждены. Отдельные камни и растительность — художественная реконструкция.</div>
-<div id="landscapeStatus" role="status" aria-live="polite">Подготовка спутниковой окраски...</div>
-<div id="landscapeCredits" hidden>Спутниковый цвет: <a href="https://cloudless.eox.at/" target="_blank" rel="noopener noreferrer">EOxCloudless</a>, Sentinel-2 cloudless 2016, EOX IT Services GmbH (modified Copernicus Sentinel data 2016), CC BY 4.0. <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">Лицензия</a>.</div>
+<div id="landscapeStatus" role="status" aria-live="polite">Локальные игровые материалы: трава, почва, осыпь и скала. Спутниковые изображения не загружаются.</div>
+<div id="landscapeCredits" hidden>Спутниковая окраска отключена: применяются процедурные материалы.</div>
+</section>
+<section class="settlementControls" aria-label="Поворот селения относительно башни">
+<h2>Повернуть селение вокруг Абай-къала</h2>
+<label for="settlementAngle">Дополнительный угол: <output id="settlementAngleLabel" for="settlementAngle">0°</output></label>
+<input id="settlementAngle" type="range" min="-180" max="180" step="1" value="0" aria-label="Поворот селения">
+<div class="actions">
+ <button id="settlementCCW" type="button">−1°</button><button id="settlementCW" type="button">+1°</button>
+ <button id="settlementReset" type="button">Сбросить</button>
+ <button id="settlementExport" type="button">Экспорт JSON</button>
+</div>
+<div id="settlementStatus" role="status" aria-live="polite">Башня неподвижна. Угол сохраняется в браузере; исходный план не изменяется.</div>
 </section>
 <div class="layers">
 <label><input id="wallsVisible" type="checkbox" checked> Стены и дома (подтверждённые)</label>
@@ -117,11 +134,12 @@ button:hover,button.active{background:#607e64}
 <script type="module">
 import * as THREE from "./src/vendor/three/three.module.js";
 import {OrbitControls} from "./src/vendor/three/addons/controls/OrbitControls.js";
-import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld} from "./src/features/tower/kunlum-georeference.js";
+import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,rotateKunlumPlanPoint} from "./src/features/tower/kunlum-georeference.js";
 import {createKunlumMapOverlay} from "./src/features/tower/kunlum-map-overlay.js";
 import {createKunlumPhotoBackdrop} from "./src/features/tower/kunlum-photo-panorama.js";
-import {createKunlumSatelliteTexture,landscapeColor} from "./src/features/tower/kunlum-color-landscape.js";
-import {installKunlumDetailShader,installKunlumSlopeGrade,kunlumDetailSubdivision,getKunlumTerrainMeshStats} from "./src/features/tower/kunlum-terrain-detail.js";
+import {landscapeColor} from "./src/features/tower/kunlum-color-landscape.js";
+import {kunlumDetailSubdivision,getKunlumTerrainMeshStats} from "./src/features/tower/kunlum-terrain-detail.js";
+import {installKunlumGameMaterials} from "./src/features/tower/kunlum-game-landscape.js";
 import {createKunlumRiverLayer,riverXAt} from "./src/features/tower/kunlum-river-layer.js";
 import {createKunlumTerrainScatter} from "./src/features/tower/kunlum-terrain-scatter.js";
 import {createKunlumBeautySky} from "./src/features/tower/kunlum-beauty-view.js";
@@ -203,11 +221,9 @@ let autoWide=true,lastFocus='full';
 orbit.addEventListener('start',()=>{autoWide=false});
 const col=new THREE.Color();
 const terrainMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0,side:THREE.DoubleSide});
-const beautifulMaterial=installKunlumDetailShader(
- new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,metalness:0,side:THREE.DoubleSide})
-);
-// Only actual greenery is lightened; unmodified DEM and rocks preserve their source colours.
-const greenGrade=installKunlumSlopeGrade([terrainMaterial,beautifulMaterial],{vegetationLift:.22});
+const beautifulMaterial=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,metalness:0,side:THREE.DoubleSide});
+const isMobile=matchMedia('(max-width:749px)').matches;
+const gameMaterials=installKunlumGameMaterials(THREE,[terrainMaterial,beautifulMaterial],{mobile:isMobile});
 // Display correction approved for the historic-plan overlay:
  // mirrored substrate only, around the fixed tower at local (0,0).
  // Historic vector coordinates and the marker remain unchanged.
@@ -217,18 +233,9 @@ const mirroredBounds=Object.freeze({
 });
 const wideHaze=installKunlumEdgeHaze([terrainMaterial,beautifulMaterial],mirroredBounds);
 let terrain=null,half=60,scaleY=1,previous={},overlay=null,wideMode=false;
-let landscapeMode='coloredWalls',satelliteTexture=null,highResolutionTexture=null;
-let qualityMode='beautiful',highResolutionLoading=null;
-const isMobile=matchMedia('(max-width:749px)').matches;
-const highSatellite=createKunlumSatelliteTexture(THREE,{
- zoom:14,maxTiles:24,bounds:KUNLUM_WIDE_BOUNDS,timeoutMs:12000,
- onStatus:message=>{if(qualityMode==='beautiful')landscapeStatus.textContent=message}
-});
+let landscapeMode='coloredWalls';
+let qualityMode='beautiful';
 const landscapeStatus=document.getElementById('landscapeStatus');
-const satellite=createKunlumSatelliteTexture(THREE,{
- bounds:KUNLUM_WIDE_BOUNDS,
- onStatus:message=>{landscapeStatus.textContent=message}
-});
 function heightAtGrid(i,j){
  const ix=Math.max(-60,Math.min(60,i))+60,iz=Math.max(-60,Math.min(60,j))+60;
  return heights[iz*121+ix]/10;
@@ -280,17 +287,9 @@ function refreshQualityLabel(){
  const divisions=kunlumDetailSubdivision({half,quality:qualityMode,mobile:isMobile});
  const {triangles}=wideMode&&wideDem.loaded?{triangles:terrain?.geometry?.index?.count/3||0}:getKunlumTerrainMeshStats(half,divisions);
  document.getElementById('qualityStatus').textContent=high?
-  'Детальная фактура травы, камня и осыпи, сглаженная сетка исходного DEM и мягкие тени. '+
+  'Игровые PBR-материалы: трава, скала, осыпь и почва, 3D-камни и тени. '+
   triangles.toLocaleString('ru')+' треугольников. Фактура художественная, не новые геодезические данные.':
-  'Быстрый режим: без дополнительного шейдера и теней, '+triangles.toLocaleString('ru')+' треугольников.';
-}
-function ensureHighSatellite(){
- if(highResolutionTexture||highResolutionLoading)return;
- highResolutionLoading=highSatellite.load().then(texture=>{
-  if(texture){highResolutionTexture=texture;if(qualityMode==='beautiful'&&landscapeMode!=='bare'&&terrain)createTerrain()}
- }).catch(e=>{
-  if(qualityMode==='beautiful')landscapeStatus.textContent='Детальная спутниковая мозаика недоступна ('+e.message+'). Сохраняется обычная подложка.';
- }).finally(()=>{highResolutionLoading=null});
+  'Быстрый режим: игровые текстуры без дополнительных теней, '+triangles.toLocaleString('ru')+' треугольников.';
 }
 function setQuality(mode){
  if(!['interactive','beautiful'].includes(mode)||qualityMode===mode)return;
@@ -299,37 +298,22 @@ function setQuality(mode){
  if(terrain)createTerrain();
  refreshQualityLabel();
  updateEnvironmentVisibility();
- if(mode==='beautiful'){
-  if(landscapeMode!=='bare')ensureHighSatellite();
-  ensureDecorativeScatter();
- }
+ if(mode==='beautiful')ensureDecorativeScatter();
 }
 function switchLandscapeMode(mode){
  if(!['bare','colored','coloredWalls'].includes(mode))return;
  landscapeMode=mode;
  document.getElementById('landscapeMode').value=mode;
- document.getElementById('landscapeCredits').hidden=mode==='bare'||!satelliteTexture;
+ document.getElementById('landscapeCredits').hidden=true;
  if(terrain)createTerrain();
  updateVisibleLayers();
  updateEnvironmentVisibility();
  beautySky.setVisible(qualityMode==='beautiful'&&mode!=='bare');
- if(qualityMode==='beautiful'&&mode!=='bare')ensureHighSatellite();
 }
-function loadSatelliteColours(){
- satellite.load().then(tex=>{
-  if(!tex)return;
-  satelliteTexture=tex;
-  document.getElementById('landscapeCredits').hidden=landscapeMode==='bare';
-  if(terrain)createTerrain();
-  if(qualityMode==='beautiful'&&landscapeMode!=='bare')ensureHighSatellite();
- }).catch(error=>{
-  satelliteTexture=null;
-  landscapeStatus.textContent='Спутниковая мозаика недоступна ('+error.message+'). Показана условная окраска склонов по высоте и крутизне, не спутниковое изображение.';
-  document.getElementById('landscapeCredits').hidden=true;
-  if(terrain)createTerrain();
- });
-}
-window.addEventListener('pagehide',()=>{satellite.dispose();highSatellite.dispose();wideDem.dispose();beautifulMaterial.dispose();terrainMaterial.dispose();riverScene.dispose();decorativeScatter?.dispose();beautySky.dispose()},{once:true});
+window.addEventListener('pagehide',()=>{
+ wideDem.dispose();gameMaterials.dispose();beautifulMaterial.dispose();terrainMaterial.dispose();
+ overlay?.dispose();riverScene.dispose();decorativeScatter?.dispose();beautySky.dispose()
+},{once:true});
 const pointToWorld=p=>pixelToLocalWorld(p,DEFAULT_KUNLUM_ALIGNMENT);
 function sampleOriginalTerrain(x,z){
  // Exact piecewise planar interpolation of the original grid triangles.
@@ -434,15 +418,13 @@ for(let i=1;i<stops.length;i++){if(h<=stops[i][0]){let t=(h-stops[i-1][0])/(stop
 return col.set("#e9f0f4");
 }
 function createTerrain(){
- greenGrade.setActive(landscapeMode!=='bare');
+ gameMaterials.setEnabled(landscapeMode!=='bare');
+ gameMaterials.setVerticalScale(scaleY);
  if(wideMode&&wideDem.loaded){createWideTerrain();return}
  wideHaze.setActive(false);
  const divisions=kunlumDetailSubdivision({half,quality:qualityMode,mobile:isMobile});
  const side=half*2*divisions+1,coords=[],colors=[],uvs=[],indices=[];
- const high=qualityMode==='beautiful'&&!!highResolutionTexture;
- const activeTexture=landscapeMode==='bare'?null:(high?highResolutionTexture:satelliteTexture);
- const activeSatellite=high?highSatellite:satellite;
- const useSatellite=!!activeTexture;
+ const useSatellite=false;
  const useBeautiful=qualityMode==='beautiful'&&landscapeMode!=='bare';
  for(let j=-half*divisions;j<=half*divisions;j++)for(let i=-half*divisions;i<=half*divisions;i++){
   const originalI=i/divisions,originalJ=j/divisions;
@@ -453,13 +435,10 @@ function createTerrain(){
   coords.push(x,elev*scaleY,z);
   if(landscapeMode==='bare'){
    const c=tone(elev);colors.push(c.r,c.g,c.b);
-  }else if(useSatellite){
-   const shade=Math.max(.85,1-Math.min(slope,2)*.06);
-   colors.push(shade,shade,shade);
   }else{
    colors.push(...landscapeColor(elev+1251.24,slope,sourceX,z));
   }
-  uvs.push(...activeSatellite.uvForWorld(sourceX,z));
+  uvs.push(0,0);
  }
  for(let row=0;row<side-1;row++)for(let column=0;column<side-1;column++){
   const a=row*side+column,b=a+1,c=a+side,d=c+1;
@@ -471,7 +450,7 @@ function createTerrain(){
  geometry.setAttribute("uv",new THREE.Float32BufferAttribute(uvs,2));
  geometry.setIndex(indices);geometry.computeVertexNormals();
  const material=useBeautiful?beautifulMaterial:terrainMaterial;
- if(material.map!==activeTexture){material.map=activeTexture;material.needsUpdate=true}
+ if(material.map){material.map=null;material.needsUpdate=true}
  if(terrain){scene.remove(terrain);terrain.geometry.dispose()}
  terrain=new THREE.Mesh(geometry,material);terrain.name="Copernicus DEM GLO-30";
  terrain.castShadow=qualityMode==='beautiful';
@@ -488,9 +467,7 @@ function createWideTerrain(){
  const bounds=mirroredBounds,outerStep=qualityMode==='beautiful'?(isMobile?60:45):90;
  const xs=buildWideAxis(bounds.minX,bounds.maxX,{innerStep:30,outerStep});
  const zs=buildWideAxis(bounds.minZ,bounds.maxZ,{innerStep:30,outerStep}).reverse();
- const high=qualityMode==='beautiful'&&!!highResolutionTexture;
- const texture=landscapeMode==='bare'?null:(high?highResolutionTexture:satelliteTexture);
- const imageSource=high?highSatellite:satellite;
+ const texture=null;
  const coords=[],colors=[],uvs=[],indices=[];
  for(const z of zs)for(const x of xs){
   const sourceX=sourceXForDisplay(x);
@@ -502,11 +479,8 @@ function createWideTerrain(){
   coords.push(x,y*scaleY,z);
   if(landscapeMode==='bare'){
    const c=tone(y);colors.push(c.r,c.g,c.b);
-  }else if(texture){
-   const shade=Math.max(.85,1-Math.min(slope,2)*.06);
-   colors.push(shade,shade,shade);
   }else colors.push(...landscapeColor(y+1251.24,slope,sourceX,z));
-  uvs.push(...imageSource.uvForWorld(sourceX,z));
+  uvs.push(0,0);
  }
  for(let j=0;j<zs.length-1;j++)for(let i=0;i<xs.length-1;i++){
   const a=j*xs.length+i,b=a+1,c=a+xs.length,d=c+1;
@@ -518,7 +492,7 @@ function createWideTerrain(){
  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
  geo.setIndex(indices);geo.computeVertexNormals();
  const material=qualityMode==='beautiful'&&landscapeMode!=='bare'?beautifulMaterial:terrainMaterial;
- if(material.map!==texture){material.map=texture;material.needsUpdate=true}
+ if(material.map){material.map=null;material.needsUpdate=true}
  if(terrain){scene.remove(terrain);terrain.geometry.dispose()}
  terrain=new THREE.Mesh(geo,material);
  terrain.name='Original Copernicus 3.6km core plus Mapzen outer DEM';
@@ -603,7 +577,7 @@ riverScene.root.scale.y=scaleY;if(decorativeScatter)decorativeScatter.root.scale
 document.getElementById("exag").textContent=scaleY===2?"Высоты ×1":"Высоты ×2";
 };
 focus("full");applyQualityLighting();refreshQualityLabel();
-loadMappedWalls();loadSatelliteColours();loadWideData();
+loadMappedWalls();loadWideData();
 updateEnvironmentVisibility();
 const label=document.getElementById("towerLabel"),world=new THREE.Vector3();
 const northArrow=document.getElementById('northArrow');
