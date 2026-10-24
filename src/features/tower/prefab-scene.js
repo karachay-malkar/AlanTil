@@ -289,7 +289,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    showFaceGrid(hit);
    onCameraChange({origin:camera.position.toArray(),forward:forward.toArray(),target:hit?.position||controls.target.toArray(),hit});
   }
-  if(worldMode&&now-lastWorldFrame>=(matchMedia('(max-width:749px)').matches?50:33)){
+  if(worldMode&&now-lastWorldFrame>=(matchMedia('(max-width:749px)').matches?150:75)){
    lastWorldFrame=now;kunlum?.update?.(now*.001);needsRender=true;
   }
   if(needsRender){needsRender=false;renderer.render(scene,camera);}
@@ -298,12 +298,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function worldView(){
   worldMode=!worldMode;
   if(worldMode){
-   controls.maxDistance=2500;
-   controls.target.set(10,35,10);
-   camera.position.set(430,315,500);
+   controls.maxDistance=3500;
+   camera.far=9000;camera.updateProjectionMatrix();
+   // The hillside rises hundreds of metres: panorama camera must stay ABOVE
+   // terrain, not under the 3D mountain (previous 315m eye was underground).
+   controls.target.set(10,40,10);
+   camera.position.set(700,1480,1630);
    controls.update();scheduleDraw();
   }else{
-   controls.maxDistance=85;
+   controls.maxDistance=85;camera.far=5000;camera.updateProjectionMatrix();
    fit();
   }
   container.dataset.worldView=String(worldMode);
@@ -314,7 +317,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length)fit();},setPreview,
   setSelected,getAimHit(){const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home(){worldMode=false;controls.maxDistance=85;container.dataset.worldView='false';fit();},worldView,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home(){worldMode=false;controls.maxDistance=85;camera.far=5000;camera.updateProjectionMatrix();container.dataset.worldView='false';fit();},worldView,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
   pickAt:findHit,
   getEnvironmentInfo(){const info=kunlum?.group?.userData.kunlum;return {
