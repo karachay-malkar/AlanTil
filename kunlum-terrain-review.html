@@ -208,7 +208,14 @@ const beautifulMaterial=installKunlumDetailShader(
 );
 // Only actual greenery is lightened; unmodified DEM and rocks preserve their source colours.
 const greenGrade=installKunlumSlopeGrade([terrainMaterial,beautifulMaterial],{vegetationLift:.22});
-const wideHaze=installKunlumEdgeHaze([terrainMaterial,beautifulMaterial],KUNLUM_WIDE_BOUNDS);
+// Display correction approved for the historic-plan overlay:
+ // mirrored substrate only, around the fixed tower at local (0,0).
+ // Historic vector coordinates and the marker remain unchanged.
+const mirroredBounds=Object.freeze({
+ minX:-KUNLUM_WIDE_BOUNDS.maxX,maxX:-KUNLUM_WIDE_BOUNDS.minX,
+ minZ:KUNLUM_WIDE_BOUNDS.minZ,maxZ:KUNLUM_WIDE_BOUNDS.maxZ
+});
+const wideHaze=installKunlumEdgeHaze([terrainMaterial,beautifulMaterial],mirroredBounds);
 let terrain=null,half=60,scaleY=1,previous={},overlay=null,wideMode=false;
 let landscapeMode='coloredWalls',satelliteTexture=null,highResolutionTexture=null;
 let qualityMode='beautiful',highResolutionLoading=null;
@@ -333,6 +340,10 @@ function sampleOriginalTerrain(x,z){
  const c=heights[(j+1)*121+i]/10,d=heights[(j+1)*121+i+1]/10;
  return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz);
 }
+// Only the background is reflected east-west (X); Abay-Kala remains at (0,0).
+// Do not alter DEFAULT_KUNLUM_ALIGNMENT or any source DEM data.
+const sourceXForDisplay=x=>-x;
+const sampleDisplayedTerrain=(x,z)=>sampleOriginalTerrain(sourceXForDisplay(x),z);
 const wideDem=createKunlumWideDem(sampleOriginalTerrain,{
  onStatus:msg=>{document.getElementById('wideStatus').textContent=msg}
 });
@@ -350,6 +361,7 @@ async function loadWideData(){
 }
 // River route is an explicit DEM-valley approximation, not an OSM or surveyed polyline.
 let riverScene=createKunlumRiverLayer(THREE,sampleOriginalTerrain,{quality:'beautiful',mobile:isMobile});
+riverScene.root.scale.x=-1; // visual river follows the mirrored background
 let riverExtent=60;scene.add(riverScene.root);
 function ensureRiverExtent(){
  if(riverExtent===half)return;
@@ -360,17 +372,17 @@ function ensureRiverExtent(){
   minX:30,maxX:Math.min(990,half*30-30)
  });
  riverExtent=half;
- riverScene.root.scale.y=scaleY;scene.add(riverScene.root);
+ riverScene.root.scale.x=-1;riverScene.root.scale.y=scaleY;scene.add(riverScene.root);
  updateEnvironmentVisibility();
 }
 let decorativeScatter=null,mappedPlan=null;
 function ensureDecorativeScatter(){
  if(decorativeScatter||!mappedPlan)return;
- decorativeScatter=createKunlumTerrainScatter(THREE,sampleOriginalTerrain,{
+ decorativeScatter=createKunlumTerrainScatter(THREE,sampleDisplayedTerrain,{
   mobile:isMobile,
   features:mappedPlan.confirmed_features,
   toWorld:pointToWorld,
-  riverXAt:z=>riverXAt(riverScene.points,z),
+  riverXAt:z=>-riverXAt(riverScene.points,z),
   range:580
  });
  scene.add(decorativeScatter.root);
@@ -394,7 +406,7 @@ async function loadMappedWalls(){
   if(data.confirmed_features?.length!==120||data.openings?.length!==42||data.auto_candidates?.length!==702)
    throw Error('Неожиданный состав актуальной разметки');
   mappedPlan=data;
-  overlay=createKunlumMapOverlay(THREE,data,{toWorld:pointToWorld,heightAt:sampleOriginalTerrain});
+  overlay=createKunlumMapOverlay(THREE,data,{toWorld:pointToWorld,heightAt:sampleDisplayedTerrain});
   overlay.setVerticalScale(scaleY);scene.add(overlay.root);updateVisibleLayers();applyQualityLighting();
   if(qualityMode==='beautiful')ensureDecorativeScatter();
   const n=overlay.counters;
@@ -435,8 +447,9 @@ function createTerrain(){
  for(let j=-half*divisions;j<=half*divisions;j++)for(let i=-half*divisions;i<=half*divisions;i++){
   const originalI=i/divisions,originalJ=j/divisions;
   const x=originalI*30,z=-originalJ*30;
-  const elev=divisions===1?heightAtGrid(originalI,originalJ):sampleOriginalTerrain(x,z);
-  const slope=terrainSlope(Math.round(originalI),Math.round(originalJ));
+  const sourceX=sourceXForDisplay(x);
+  const elev=divisions===1?heightAtGrid(-originalI,originalJ):sampleOriginalTerrain(sourceX,z);
+  const slope=terrainSlope(Math.round(-originalI),Math.round(originalJ));
   coords.push(x,elev*scaleY,z);
   if(landscapeMode==='bare'){
    const c=tone(elev);colors.push(c.r,c.g,c.b);
@@ -444,9 +457,9 @@ function createTerrain(){
    const shade=Math.max(.85,1-Math.min(slope,2)*.06);
    colors.push(shade,shade,shade);
   }else{
-   colors.push(...landscapeColor(elev+1251.24,slope,x,z));
+   colors.push(...landscapeColor(elev+1251.24,slope,sourceX,z));
   }
-  uvs.push(...activeSatellite.uvForWorld(x,z));
+  uvs.push(...activeSatellite.uvForWorld(sourceX,z));
  }
  for(let row=0;row<side-1;row++)for(let column=0;column<side-1;column++){
   const a=row*side+column,b=a+1,c=a+side,d=c+1;
@@ -472,7 +485,7 @@ function createTerrain(){
  ensureRiverExtent();
 }
 function createWideTerrain(){
- const bounds=KUNLUM_WIDE_BOUNDS,outerStep=qualityMode==='beautiful'?(isMobile?60:45):90;
+ const bounds=mirroredBounds,outerStep=qualityMode==='beautiful'?(isMobile?60:45):90;
  const xs=buildWideAxis(bounds.minX,bounds.maxX,{innerStep:30,outerStep});
  const zs=buildWideAxis(bounds.minZ,bounds.maxZ,{innerStep:30,outerStep}).reverse();
  const high=qualityMode==='beautiful'&&!!highResolutionTexture;
@@ -480,19 +493,20 @@ function createWideTerrain(){
  const imageSource=high?highSatellite:satellite;
  const coords=[],colors=[],uvs=[],indices=[];
  for(const z of zs)for(const x of xs){
-  const y=wideDem.sample(x,z),dx=Math.min(20,bounds.maxX-x,x-bounds.minX),
+  const sourceX=sourceXForDisplay(x);
+  const y=wideDem.sample(sourceX,z),dx=Math.min(20,bounds.maxX-x,x-bounds.minX),
    dz=Math.min(20,bounds.maxZ-z,z-bounds.minZ);
   const slope=Math.hypot(
-   (wideDem.sample(x+dx,z)-wideDem.sample(x-dx,z))/Math.max(1,2*dx),
-   (wideDem.sample(x,z+dz)-wideDem.sample(x,z-dz))/Math.max(1,2*dz));
+   (wideDem.sample(sourceX-dx,z)-wideDem.sample(sourceX+dx,z))/Math.max(1,2*dx),
+   (wideDem.sample(sourceX,z+dz)-wideDem.sample(sourceX,z-dz))/Math.max(1,2*dz));
   coords.push(x,y*scaleY,z);
   if(landscapeMode==='bare'){
    const c=tone(y);colors.push(c.r,c.g,c.b);
   }else if(texture){
    const shade=Math.max(.85,1-Math.min(slope,2)*.06);
    colors.push(shade,shade,shade);
-  }else colors.push(...landscapeColor(y+1251.24,slope,x,z));
-  uvs.push(...imageSource.uvForWorld(x,z));
+  }else colors.push(...landscapeColor(y+1251.24,slope,sourceX,z));
+  uvs.push(...imageSource.uvForWorld(sourceX,z));
  }
  for(let j=0;j<zs.length-1;j++)for(let i=0;i<xs.length-1;i++){
   const a=j*xs.length+i,b=a+1,c=a+xs.length,d=c+1;
@@ -535,17 +549,17 @@ function focus(mode){
  else if(mode==="full"){half=60;createTerrain();camera.position.set(1900,1300,2150);orbit.target.set(0,155,0);}
 else if(mode==="village"){
  half=20;createTerrain();
- const p=overlay?.center||[0,0],y=sampleOriginalTerrain(...p)*scaleY;
+ const p=overlay?.center||[0,0],y=sampleDisplayedTerrain(...p)*scaleY;
  camera.position.set(p[0]+245,y+155,p[1]+235);orbit.target.set(p[0],y+5,p[1]);
 }
 else if(mode==="river"){
  half=20;createTerrain();
- const x=riverXAt(riverScene.points,0),z=0,y=sampleOriginalTerrain(x,z)*scaleY;
+ const x=-riverXAt(riverScene.points,0),z=0,y=sampleDisplayedTerrain(x,z)*scaleY;
  camera.position.set(x-175,y+128,z-205);orbit.target.set(x,y+9,z+95);
 }
 else if(mode==="cinematic"){
  half=20;createTerrain();
- const x=riverXAt(riverScene.points,150),z=150,y=sampleOriginalTerrain(x,z)*scaleY;
+ const x=-riverXAt(riverScene.points,150),z=150,y=sampleDisplayedTerrain(x,z)*scaleY;
  camera.position.set(x-310,y+205,z+100);orbit.target.set(x-95,y+58,z-140);
 }
 else if(mode==="detail"){half=20;createTerrain();camera.position.set(760,470,690);orbit.target.set(0,45,0);}
