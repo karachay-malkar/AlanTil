@@ -69,19 +69,19 @@ export function createKunlumTerrainTiles(THREE,{resolution=256}={}){
  */
 export function installKunlumGameMaterials(THREE,materials,{mobile=false}={}){
  const tiles=createKunlumTerrainTiles(THREE,{resolution:mobile?128:256});
- const state={enabled:1,verticalScale:1,uniforms:[]};
+ const state={enabled:1,verticalScale:1,detail:1,uniforms:[]};
  for(const material of materials){
   if(!material)throw Error('Missing terrain material');
   const previous=material.onBeforeCompile;
   const key=material.customProgramCacheKey?.bind(material);
   material.onBeforeCompile=shader=>{
    if(previous)previous(shader);
-   const on={value:state.enabled},height={value:state.verticalScale};
-   const u={uKunlumGameEnabled:on,uKunlumVerticalScale:height,
+   const on={value:state.enabled},height={value:state.verticalScale},detail={value:state.detail};
+   const u={uKunlumGameEnabled:on,uKunlumVerticalScale:height,uKunlumGameDetail:detail,
     uKunlumGrass:{value:tiles.grass},uKunlumRock:{value:tiles.rock},
     uKunlumScree:{value:tiles.scree},uKunlumSoil:{value:tiles.soil}};
    Object.assign(shader.uniforms,u);
-   state.uniforms.push({on,height});
+   state.uniforms.push({on,height,detail});
    shader.vertexShader=shader.vertexShader.replace('#include <common>',
     '#include <common>\nvarying vec3 vKunlumGameWorld;\nvarying vec3 vKunlumGameNormal;');
    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
@@ -96,7 +96,7 @@ uniform sampler2D uKunlumScree;
 uniform sampler2D uKunlumSoil;
 uniform float uKunlumGameEnabled;
 uniform float uKunlumVerticalScale;
-float kunlumSmooth(float a,float b,float x){return smoothstep(a,b,x);}
+uniform float uKunlumGameDetail;
 `);
    shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
     `#include <color_fragment>
@@ -124,16 +124,27 @@ if(uKunlumGameEnabled > 0.5){
     `#include <roughnessmap_fragment>
 if(uKunlumGameEnabled > 0.5){
  float highRock=clamp((1.0-abs(normalize(vKunlumGameNormal).y))*2.3,0.,1.);
- roughnessFactor=mix(.96,.83,highRock);
+ float mineralGrain=texture2D(uKunlumRock,vKunlumGameWorld.xz*.106).a;
+ roughnessFactor=clamp(mix(.97,.82,highRock)+(mineralGrain-.5)*.08,.65,1.);
+}
+`);
+   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
+    `#include <normal_fragment_maps>
+if(uKunlumGameEnabled > 0.5 && uKunlumGameDetail > 0.5){
+ // Fine bump comes from the same generated height/grain map.
+ // Keep PBR world surface and vertex normals intact; only shade microdetail.
+ float microHeight=texture2D(uKunlumRock,vKunlumGameWorld.xz*.106).a;
+ normal=normalize(normal+vec3(-dFdx(microHeight),-dFdy(microHeight),0.)*.10);
 }
 `);
   };
   material.customProgramCacheKey=()=> (key?key():'standard')+'-kunlum-game-four-mats-v1';
   material.needsUpdate=true;
  }
- const update=()=>{for(const t of state.uniforms){t.on.value=state.enabled;t.height.value=state.verticalScale}};
+ const update=()=>{for(const t of state.uniforms){t.on.value=state.enabled;t.height.value=state.verticalScale;t.detail.value=state.detail}};
  return {textures:tiles,
   setEnabled(value){state.enabled=value?1:0;update()},
+  setDetail(value){state.detail=value?1:0;update()},
   setVerticalScale(value){if(!Number.isFinite(value)||value<=0)throw Error('Invalid DEM vertical scale');state.verticalScale=value;update()},
   dispose(){for(const t of Object.values(tiles))t.dispose()},
   get enabled(){return !!state.enabled}
