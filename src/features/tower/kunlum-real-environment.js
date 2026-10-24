@@ -132,7 +132,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  let river=null,riverbank=null,scatter=null,outcrops=null,overlay=null;
  let localLine=[],planData=null;
  async function loadApprovedMap(){
-  const response=await fetch('./assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
+  const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
   if(!response.ok)throw Error('Approved Kunlum plan: HTTP '+response.status);
   const source=await response.json();
   if(source.confirmed_features?.length!==120||source.openings?.length!==42||
@@ -149,7 +149,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   onReady();
  }
  async function loadMappedRiver(){
-  const source=await loadKunlumCherekLocal();
+  const source=await loadKunlumCherekLocal({url:'/assets/tower/environment/kunlum-cherek-balkarsky-osm.json'});
   if(disposed)return;
   localLine=source.line.filter(p=>Math.abs(p.x)<=1750&&Math.abs(p.z)<=1750)
    .map(({x,z})=>{const [sx,sz]=terrain.demToScene(x,z);return {x:sx,z:sz}});
