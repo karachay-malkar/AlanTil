@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Common100 rock surface UV — original versus fixed</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c9d0d1}
+#stage{width:100%;height:100%}
+#label{position:fixed;top:16px;left:16px;background:#f5f1e8dd;color:#1e2a32;font:700 16px system-ui;padding:10px;border-radius:5px}
+</style></head><body>
+<div id="stage"></div><div id="label">Common100 — исходная UV</div>
+<script type="module">
+import * as THREE from '../../src/vendor/three/three.module.js';
+import {loadCommon100} from '../../src/features/masonry/library.js';
+import {loadManualSection} from '../../src/features/masonry/manual-sections/registry.mjs';
+import {getRockSurface,getApprovedStoneSurfaceGeometry} from '../../src/features/tower/rock-surface.js';
+const host=document.getElementById('stage');
+let renderer;
+try{
+ renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+ renderer.setSize(innerWidth,innerHeight);
+ host.append(renderer.domElement);
+ const [library,material]=await Promise.all([loadCommon100(),getRockSurface(renderer)]);
+ const doc=await loadManualSection('manual-2x3x4-v1',library.manifest);
+ const scenes={};
+ for(const mode of ['before','after']){
+  const scene=new THREE.Scene();scene.background=new THREE.Color('#b9c4cc');
+  scene.add(new THREE.HemisphereLight('#f0f6ff','#766950',2.0));
+  const sun=new THREE.DirectionalLight('#fff3df',3);sun.position.set(-10,20,13);scene.add(sun);
+  const root=new THREE.Group();
+  root.position.y=-doc.recipe.cells[1]*.25/2;
+  for(const entry of doc.recipe.stones){
+   const original=library.geometries.get(entry.name);
+   const geo=mode==='after'?getApprovedStoneSurfaceGeometry(original,entry.scale):original;
+   const mesh=new THREE.Mesh(geo,material);
+   mesh.position.fromArray(entry.position);
+   mesh.quaternion.fromArray(entry.quaternion);
+   mesh.scale.fromArray(entry.scale);
+   root.add(mesh);
+  }
+  scene.add(root);
+  scenes[mode]=scene;
+ }
+ const box=new THREE.Box3().setFromObject(scenes.after.children.at(-1));
+ const centre=box.getCenter(new THREE.Vector3());
+ const dims=box.getSize(new THREE.Vector3());
+ const camera=new THREE.PerspectiveCamera(35,innerWidth/innerHeight,.005,40);
+ const direction=new THREE.Vector3(1.1,.65,2).normalize();
+ function positionCamera(){
+  const aspect=innerWidth/innerHeight;
+  const hfov=Math.atan(Math.tan(camera.fov*Math.PI/360)*aspect);
+  const rad=Math.max(.5,dims.length()/2);
+  const distance=rad/Math.sin(Math.max(.05,Math.min(camera.fov*Math.PI/360,hfov)))*1.35;
+  camera.position.copy(centre).addScaledVector(direction,distance);
+  camera.lookAt(centre);
+  camera.aspect=aspect;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+ }
+ let mode='before';
+ function setMode(value){
+  if(!scenes[value])throw new Error('Unknown preview mode: '+value);
+  mode=value;
+  document.getElementById('label').textContent='Common100 — '+(value==='before'?'исходная UV':'исправленная UV');
+  renderer.render(scenes[mode],camera);
+ }
+ addEventListener('resize',()=>{positionCamera();setMode(mode)});
+ positionCamera();
+ window.qaSetRockMode=setMode;
+ window.qaRockReady={
+  encoding:material.name,stones:doc.recipe.stones.length,
+  hasSourceUV:[...library.geometries.values()].filter(g=>g.getAttribute('uv')).length,
+  sourceCount:library.geometries.size,
+  corrected:doc.recipe.stones.every(entry=>
+   getApprovedStoneSurfaceGeometry(library.geometries.get(entry.name),entry.scale)
+    .getAttribute('uv').count>0)
+ };
+ host.dataset.ready='true';
+ setMode(mode);
+}catch(error){
+ console.error('Common100 UV side-by-side:',error);
+ host.dataset.ready='error';host.dataset.error=String(error.stack||error);
+}
+</script></body></html>
