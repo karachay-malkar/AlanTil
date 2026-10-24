@@ -279,7 +279,10 @@ function setQuality(mode){
  if(terrain)createTerrain();
  refreshQualityLabel();
  updateEnvironmentVisibility();
- if(mode==='beautiful'&&landscapeMode!=='bare')ensureHighSatellite();
+ if(mode==='beautiful'){
+  if(landscapeMode!=='bare')ensureHighSatellite();
+  ensureDecorativeScatter();
+ }
 }
 function switchLandscapeMode(mode){
  if(!['bare','colored','coloredWalls'].includes(mode))return;
