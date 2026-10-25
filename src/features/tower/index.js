@@ -23,25 +23,29 @@ export async function mount(context,params={}){
  context.shell.appShell.dataset.feature='tower';
  const root=context.root;
  root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
-  <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
-   <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Строительство от первого лица" title="Строительство от первого лица">${uiIcon('userRound')}</button>
-   <button type="button" class="btn towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}<span>Обзор Кюнлюма</span></button>
-
-   ${icon('clear','Очистить всю башню')}</div>
-   <button type="button" class="towerOrientationAction" data-landscape hidden>Горизонтальный экран</button>
+  <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div></div>
+  <div class="towerCamera" role="group" aria-label="Камера">
+   <button type="button" class="btn towerIconAction towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}</button>
+  </div>
+  <div class="towerQuickActions" role="group" aria-label="Экран и настройки">
+   <button type="button" class="btn towerIconAction towerOrientationAction" data-orientation aria-label="Горизонтальный экран" title="Горизонтальный экран">${uiIcon('deviceLandscape')}</button>
+   <button type="button" class="btn towerIconAction" data-settings aria-expanded="false" aria-controls="tower-settings-panel" aria-label="Настройки башни" title="Настройки башни">${uiIcon('settings')}</button>
+  </div>
+  <div class="towerSettingsMenu" id="tower-settings-panel" data-settings-panel hidden>
+   <button type="button" class="btn towerIconAction" data-clear aria-label="Очистить всю башню" title="Очистить всю башню">${uiIcon('trash2')}</button><span>Очистить башню</span>
   </div>
   <div class="towerExploreControls" role="group" aria-label="Перемещение от первого лица">
    <div class="towerExploreHint">Проведи пальцем справа, чтобы осмотреться</div>
    <div class="towerJoystick" data-joystick role="application" aria-label="Джойстик движения">
     <div class="towerJoystickPuck" data-joystick-puck></div>
    </div>
-   <div class="towerFlightPanel">
-    <button type="button" class="btn towerFlySwitch" data-fly aria-pressed="false">Полёт</button>
+   <div class="towerFlightPanel" role="group" aria-label="Управление полётом">
+    <button type="button" class="btn towerIconAction towerFlySwitch" data-fly aria-pressed="false" aria-label="Включить полёт" title="Включить полёт">${uiIcon('plane')}</button>
     <div class="towerAltitude">
-     <button type="button" class="btn" data-rise aria-label="Подняться">↑</button>
-     <button type="button" class="btn" data-fall aria-label="Спуститься">↓</button>
+     <button type="button" class="btn towerIconAction" data-rise aria-label="Подняться" title="Подняться">${uiIcon('arrowUp')}</button>
+     <button type="button" class="btn towerIconAction" data-fall aria-label="Спуститься" title="Спуститься">${uiIcon('arrowDown')}</button>
+     <button type="button" class="btn towerIconAction towerGround" data-ground aria-label="Приземлиться" title="Приземлиться">${uiIcon('footprints')}</button>
     </div>
-    <button type="button" class="btn towerGround" data-ground>На землю</button>
    </div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
@@ -50,7 +54,8 @@ export async function mount(context,params={}){
   <div class="towerSelectionBar" data-selection hidden role="toolbar" aria-label="Выделенная секция">
    ${icon('remove','Удалить выбранную секцию')}
   </div>
-  <aside class="towerSide is-open" data-side>
+  <aside class="towerSide" data-side aria-label="Каталог секций">
+   <div class="towerCatalogHeading">Каталог секций <button type="button" class="btn towerCatalogClose" data-catalog-close aria-label="Закрыть каталог" title="Закрыть каталог">${uiIcon('x')}</button></div>
    <div class="towerCatalogContent" data-catalog-body><div class="towerCatalog" role="group" aria-label="Каталог каменных секций"></div></div>
   </aside>
   ${icon('hammer','Каталог секций')}
@@ -60,29 +65,58 @@ export async function mount(context,params={}){
  const on=(sel,type,cb)=>q(sel)?.addEventListener(type,cb,{signal:controller.signal});
  const game=q('.towerGame'),side=q('[data-side]');
  let fullscreenByTower=false,orientationLocked=false;
- const landscapeButton=q('[data-landscape]');
  const isPortrait=()=>matchMedia('(orientation:portrait)').matches;
- async function requestTowerLandscape({gesture=false}={}){
-  if(s.disposed)return;
+ function syncOrientationButton(){
+  const portrait=isPortrait(),button=q('[data-orientation]');
+  const target=portrait?'Горизонтальный экран':'Вертикальный экран';
+  button.setAttribute('aria-label',target);button.title=target;
+  button.innerHTML=uiIcon(portrait?'deviceLandscape':'devicePortrait');
+  button.dataset.target=portrait?'landscape':'portrait';
+ }
+ async function requestTowerOrientation(target,{gesture=false}={}){
+  if(s.disposed)return false;
   try{
+   // Android often requires fullscreen entered from a real button press.
    if(gesture&&!document.fullscreenElement&&game.requestFullscreen){
     await game.requestFullscreen();fullscreenByTower=true;
    }
-   if(screen.orientation?.lock){await screen.orientation.lock('landscape');orientationLocked=true;}
-  }catch(error){console.info('Landscape rotation requires device permission or user gesture:',error?.message||error);}
-  landscapeButton.hidden=!isPortrait();
+   if(!screen.orientation?.lock)throw Error('Screen Orientation API unavailable');
+   await screen.orientation.lock(target);orientationLocked=true;
+   syncOrientationButton();return true;
+  }catch(error){
+   console.info('Screen orientation lock was denied:',error?.message||error);
+   if(gesture)message('Браузер не разрешил поворот. Включи автоповорот экрана в настройках телефона.');
+   syncOrientationButton();return false;
+  }
  }
- on('[data-landscape]','click',()=>{void requestTowerLandscape({gesture:true});});
- window.addEventListener('orientationchange',()=>{landscapeButton.hidden=!isPortrait();},{signal:controller.signal});
- // Fullscreen and orientation APIs can reject automatic requests on mobile browsers.
+ on('[data-orientation]','click',()=>{void requestTowerOrientation(isPortrait()?'landscape':'portrait',{gesture:true});});
+ window.addEventListener('orientationchange',syncOrientationButton,{signal:controller.signal});
+ window.addEventListener('resize',syncOrientationButton,{signal:controller.signal});
  s.cleanupOrientation=()=>{
   if(orientationLocked)try{screen.orientation.unlock?.();}catch{}
   if(fullscreenByTower&&document.fullscreenElement)void document.exitFullscreen?.().catch(()=>{});
  };
- void requestTowerLandscape();
+ syncOrientationButton();
+ void requestTowerOrientation('landscape');
  const catalog=q('.towerCatalog');
- catalog.innerHTML=BUILDABLE_PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">${uiIcon('blocks')}</span><span class="towerItemName">[ ${spec.id===WINDOW_PREFAB_ID?'Окно 0,5×1 м':spec.id===DOOR_PREFAB_ID?'Дверь 0,75×2 м':spec.id===GATE_PREFAB_ID?'Ворота 2×2 м':spec.id.replaceAll('x','×')} ]</span></button>`).join('');
- let toastTimer=null;
+ catalog.innerHTML=BUILDABLE_PREFAB_TYPES.map(spec=>{
+  const opening=spec.id===WINDOW_PREFAB_ID?'Окно':spec.id===DOOR_PREFAB_ID?'Дверь':spec.id===GATE_PREFAB_ID?'Ворота':null;
+  const label=opening||spec.id.replaceAll('x','×');
+  const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':'blocks';
+  return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${opening||'Секция '+label}" title="${opening||'Секция '+label}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${label}</span></button>`;
+ }).join('');
+ let toastTimer=null,hintTimer=null;
+ const hint=q('.towerExploreHint');
+ try{
+  if(sessionStorage.getItem('alantil:tower-hint-shown'))hint.hidden=true;
+  else {
+   sessionStorage.setItem('alantil:tower-hint-shown','1');
+   hintTimer=setTimeout(()=>{if(!s.disposed)hint.hidden=true;},3800);
+  }
+ }catch{
+  hintTimer=setTimeout(()=>{if(!s.disposed)hint.hidden=true;},3800);
+ }
+ s.cleanupHint=()=>clearTimeout(hintTimer);
  function message(text){
   if(s.disposed)return;
   const el=q('[data-toast]');el.textContent=text;el.hidden=false;
@@ -91,6 +125,7 @@ export async function mount(context,params={}){
  function blocks(){return s.sections;}
  function catalogVisible(show){
   side.classList.toggle('is-open',!!show);
+  game.dataset.catalogOpen=String(!!show);
   q('[data-hammer]').setAttribute('aria-expanded',String(!!show));
  }
  function mode(next){
@@ -100,12 +135,11 @@ export async function mount(context,params={}){
   q('[data-confirm]').disabled=next!=='placing';
   q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
   q('[data-remove]').disabled=next!=='selected'||s.busy;
-  for(const name of ['cancel','rotate','variant','hammer','camera','world']){
+  for(const name of ['cancel','rotate','variant','hammer','world','settings']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
   }
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
   if(next==='placing'||next==='saving-place')catalogVisible(false);
-  else if(next==='idle')catalogVisible(true);
   s.scene?.setTool(next==='placing'||next==='saving-place'?'place':'select');
   if(next!=='placing'&&next!=='saving-place')void s.scene?.setPreview(null);
  }
@@ -216,7 +250,17 @@ export async function mount(context,params={}){
   ++previewSequence;s.preview=null;s.previewHit=null;s.locked=false;
   s.selected=null;s.scene?.setSelected(null);mode('idle');
  }
- on('[data-clear]','click',()=>{void clearAll();});
+ on('[data-settings]','click',()=>{
+  const panel=q('[data-settings-panel]'),open=panel.hidden;
+  panel.hidden=!open;q('[data-settings]').setAttribute('aria-expanded',String(open));
+  if(open)catalogVisible(false);
+ });
+ function closeSettings(){
+  q('[data-settings-panel]').hidden=true;
+  q('[data-settings]').setAttribute('aria-expanded','false');
+ }
+ on('[data-clear]','click',()=>{closeSettings();void clearAll();});
+ on('[data-catalog-close]','click',()=>catalogVisible(false));
  on('.towerCatalog','click',event=>{
   const el=event.target.closest('[data-section-id]');if(el&&game.dataset.explore==='true')begin(el.dataset.sectionId);
  });
@@ -224,6 +268,7 @@ export async function mount(context,params={}){
   if(s.busy)return;
   if(s.mode==='placing')cancel();
   if(s.mode==='selected'){markSelection(null);catalogVisible(true);return;}
+  closeSettings();
   catalogVisible(!side.classList.contains('is-open'));
  });
  on('[data-cancel]','click',cancel);
@@ -254,29 +299,29 @@ export async function mount(context,params={}){
   const b=q('button[data-explore]');b?.setAttribute('aria-pressed',String(active));
   const span=b?.querySelector('span');if(span)span.textContent=active?'К строительству':'Прогулка';
   game.dataset.flying='false';q('[data-fly]')?.setAttribute('aria-pressed','false');
-  q('[data-fly]').textContent='Полёт';
+  q('[data-fly]').setAttribute('aria-label','Включить полёт');
+  q('[data-fly]').title='Включить полёт';
   joystick={forward:0,strafe:0};altitude=0;sendMotion();
-  if(s.mode==='idle')catalogVisible(true);
+  catalogVisible(false);closeSettings();
  }
- on('[data-camera]','click',()=>{
-  s.scene?.home();walkUi(true);
-  q('[data-world]')?.setAttribute('aria-pressed','false');
-  q('[data-world] span').textContent='Обзор Кюнлюма';
- });
  on('[data-world]','click',()=>{
   if(s.busy||!s.scene)return;
   if(s.mode==='placing')cancel();
   else if(s.mode==='selected')markSelection(null);
   const wide=s.scene.worldView();
   walkUi(!wide);
-  q('[data-world]')?.setAttribute('aria-pressed',String(!!wide));
-  const span=q('[data-world] span');if(span)span.textContent=wide?'К строительству':'Обзор Кюнлюма';
+  const button=q('[data-world]');
+  button.setAttribute('aria-pressed',String(!!wide));
+  button.setAttribute('aria-label',wide?'К строительству от первого лица':'Обзор Кюнлюма');
+  button.title=wide?'К строительству от первого лица':'Обзор Кюнлюма';
+  button.innerHTML=uiIcon(wide?'userRound':'route');
  });
  on('[data-fly]','click',()=>{
   if(game.dataset.explore!=='true')return;
   const active=s.scene?.setFly(q('[data-fly]').getAttribute('aria-pressed')!=='true');
   q('[data-fly]').setAttribute('aria-pressed',String(!!active));
-  q('[data-fly]').textContent=active?'Полёт: вкл.':'Полёт';
+  q('[data-fly]').setAttribute('aria-label',active?'Выключить полёт':'Включить полёт');
+  q('[data-fly]').title=active?'Выключить полёт':'Включить полёт';
   game.dataset.flying=String(!!active);
  });
  on('[data-ground]','click',()=>{
@@ -284,7 +329,8 @@ export async function mount(context,params={}){
   const stillFlying=s.scene?.setFly(false);
   altitude=0;sendMotion();
   q('[data-fly]').setAttribute('aria-pressed',String(!!stillFlying));
-  q('[data-fly]').textContent=stillFlying?'Полёт: вкл.':'Полёт';
+  q('[data-fly]').setAttribute('aria-label',stillFlying?'Выключить полёт':'Включить полёт');
+  q('[data-fly]').title=stillFlying?'Выключить полёт':'Включить полёт';
   game.dataset.flying=String(!!stillFlying);
   if(stillFlying)message('Освободи место под собой, чтобы приземлиться');
  });
@@ -325,7 +371,7 @@ export async function mount(context,params={}){
  }
  window.addEventListener('keydown',e=>{
   if(s.disposed||s.busy||document.body.classList.contains('modal-open')||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
-  if(e.key==='Escape'){cancel();return;}
+  if(e.key==='Escape'){closeSettings();catalogVisible(false);cancel();return;}
   if(e.key.toLowerCase()==='r'&&s.mode==='placing'){s.rotation=(s.rotation+1)%4;void preview();}
  },{signal:controller.signal});
  try{
@@ -349,7 +395,7 @@ export async function mount(context,params={}){
 }
 export function canLeave(){return active?.canLeave?.()??true;}
 export function unmount(){
- if(!active)return;active.disposed=true;active.controller.abort();active.cleanupOrientation?.();active.scene?.dispose();
+ if(!active)return;active.disposed=true;active.controller.abort();active.cleanupOrientation?.();active.cleanupHint?.();active.scene?.dispose();
  if(active.context.shell.appShell.dataset.feature==='tower')active.context.shell.appShell.dataset.feature='practice';
  active=null;
 }
