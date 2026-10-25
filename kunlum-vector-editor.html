@@ -81,7 +81,7 @@ small{display:block;font-size:10px;line-height:1.4;color:#687b7a;margin:3px 0}
 const WIDTH=1843, HEIGHT=1252;
 const candidates=[];
 let plot=null;
-let features=[],openings=[],drawing=[],nextId=1,nextOpeningId=1,pan=null,draggingPlot=null,dragHandle=null,dragOpeningHandle=null,editorMessage='';
+let features=[],mode='select',selected=null,selectedOpening=null,openingDraft=null,openings=[],drawing=[],nextId=1,nextOpeningId=1,pan=null,draggingPlot=null,dragHandle=null,dragOpeningHandle=null,editorMessage='';
 const SVGNS='http://www.w3.org/2000/svg', $=id=>document.getElementById(id);
 const svg=$('map'),groupIds=['terraceAreas','areas','candidates','confirmed','openings','draft','site','handles'];
 const palette={wall:'#c44331',retaining:'#8152b7',house:'#d18a21',terrace:'#d2b33f',passage:'#247d61'};
