@@ -125,8 +125,11 @@ export async function mount(context,params={}){
  function blocks(){return s.sections;}
  function catalogVisible(show){
   side.classList.toggle('is-open',!!show);
+  side.inert=!show;
   game.dataset.catalogOpen=String(!!show);
   q('[data-hammer]').setAttribute('aria-expanded',String(!!show));
+  side.setAttribute('aria-hidden',String(!show));
+  if(!show&&side.contains(document.activeElement))q('[data-hammer]').focus();
  }
  function mode(next){
   s.mode=next;game.dataset.mode=next;
