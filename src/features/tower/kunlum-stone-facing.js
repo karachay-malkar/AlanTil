@@ -135,6 +135,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   }
  }
  root.userData.common100StoneCount=total;
+ root.userData.common100WallSegments=jobs.length;
  root.userData.common100Material=material.name;
  return {stones:total,models:models.map(x=>x.name)};
 }

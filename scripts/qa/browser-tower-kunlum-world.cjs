@@ -88,6 +88,12 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     });
    await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneCount)>0,
     null,{timeout:80000});
+   const coverage=await page.locator('.towerCanvas').evaluate(el=>({
+    stoneCount:Number(el.dataset.kunlumStoneCount),
+    mappedSegments:Number(el.dataset.kunlumStoneSegments)
+   }));
+   if(coverage.mappedSegments<602||coverage.stoneCount<coverage.mappedSegments*2)
+    throw Error(type+' stone-facing skipped historic wall segments '+JSON.stringify(coverage));
    await page.waitForTimeout(1500);
    if(errors.length)throw Error(type+': errors after wide camera: '+JSON.stringify(errors));
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview.png')});
@@ -97,7 +103,7 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     throw Error(type+' overview button did not reset');
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-construction.png')});
    results.push({mode:type,confirmed:details.count,river:details.river,worldView:true,
-    homeRestored:true,hud,errors:errors.length});
+    homeRestored:true,hud,coverage,errors:errors.length});
    await context.close();
   }
   console.log('TOWER_KUNLUM_WORLD_BROWSER_PASS',JSON.stringify(results));
