@@ -43,10 +43,7 @@
 /* First-person 20×20m navigation overlays; pointer events pass through the stage. */
 .towerExploreControls{display:none;position:absolute;inset:0;z-index:7;pointer-events:none}
 .towerGame[data-explore="true"] .towerExploreControls{display:block}
-.towerGame[data-explore="true"] .towerSide,
-.towerGame[data-explore="true"] [data-hammer],
-.towerGame[data-explore="true"] .towerSelectionBar,
-.towerGame[data-explore="true"] .towerPlacementBar{display:none!important}
+.towerGame[data-explore="true"] .towerSelectionBar{display:none!important}
 .towerGame[data-explore="true"] .towerCanvas canvas{cursor:crosshair}
 .towerExploreHint{position:absolute;left:50%;top:calc(var(--safe-top,0px) + 12px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 160px);padding:5px 9px;border-radius:var(--radius-sm);background:rgba(30,36,33,.7);color:#fff;font:500 11px/1.3 var(--font-body);text-align:center}
 .towerJoystick{position:absolute;left:22px;bottom:max(55px,calc(var(--safe-bottom,0px) + 55px));width:118px;height:118px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:rgba(60,62,57,.23);box-shadow:0 1px 12px #0002;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -61,3 +58,7 @@
 .towerGround{padding:6px 10px}
 @media(pointer:fine){.towerJoystick{display:none}.towerExploreHint{max-width:65%}}
 @media(max-width:749px){.towerExploreHint{top:calc(var(--safe-top,0px) + 7px);font-size:10px;max-width:calc(100% - 145px)}.towerFlightPanel{right:9px;bottom:max(30px,var(--safe-bottom,0px))}.towerJoystick{left:14px;bottom:max(30px,var(--safe-bottom,0px))}}
+
+/* Browser orientation fallback when automatic Screen Orientation lock is denied. */
+.towerOrientationAction{position:absolute;z-index:15;top:calc(var(--safe-top,0px) + 10px);left:50%;transform:translateX(-50%);border:1px solid #c8af80;border-radius:8px;background:#223d33;color:white;padding:9px 12px;font:600 12px/1.2 var(--font-body);box-shadow:0 2px 12px #0005}
+@media(orientation:landscape){.towerOrientationAction{display:none!important}}

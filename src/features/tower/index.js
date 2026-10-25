@@ -24,10 +24,11 @@ export async function mount(context,params={}){
  const root=context.root;
  root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
-   <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">${uiIcon('house')}</button>
+   <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Строительство от первого лица" title="Строительство от первого лица">${uiIcon('userRound')}</button>
    <button type="button" class="btn towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}<span>Обзор Кюнлюма</span></button>
-   <button type="button" class="btn towerWorldAction" data-explore disabled aria-pressed="false" aria-label="Прогулка от первого лица" title="Прогулка от первого лица">${uiIcon('userRound')}<span>Прогулка</span></button>
+
    ${icon('clear','Очистить всю башню')}</div>
+   <button type="button" class="towerOrientationAction" data-landscape hidden>Горизонтальный экран</button>
   </div>
   <div class="towerExploreControls" role="group" aria-label="Перемещение от первого лица">
    <div class="towerExploreHint">Проведи пальцем справа, чтобы осмотреться</div>
@@ -58,6 +59,27 @@ export async function mount(context,params={}){
  const q=sel=>root.querySelector(sel);
  const on=(sel,type,cb)=>q(sel)?.addEventListener(type,cb,{signal:controller.signal});
  const game=q('.towerGame'),side=q('[data-side]');
+ let fullscreenByTower=false,orientationLocked=false;
+ const landscapeButton=q('[data-landscape]');
+ const isPortrait=()=>matchMedia('(orientation:portrait)').matches;
+ async function requestTowerLandscape({gesture=false}={}){
+  if(s.disposed)return;
+  try{
+   if(gesture&&!document.fullscreenElement&&game.requestFullscreen){
+    await game.requestFullscreen();fullscreenByTower=true;
+   }
+   if(screen.orientation?.lock){await screen.orientation.lock('landscape');orientationLocked=true;}
+  }catch(error){console.info('Landscape rotation requires device permission or user gesture:',error?.message||error);}
+  landscapeButton.hidden=!isPortrait();
+ }
+ on('[data-landscape]','click',()=>{void requestTowerLandscape({gesture:true});});
+ window.addEventListener('orientationchange',()=>{landscapeButton.hidden=!isPortrait();},{signal:controller.signal});
+ // Fullscreen and orientation APIs can reject automatic requests on mobile browsers.
+ s.cleanupOrientation=()=>{
+  if(orientationLocked)try{screen.orientation.unlock?.();}catch{}
+  if(fullscreenByTower&&document.fullscreenElement)void document.exitFullscreen?.().catch(()=>{});
+ };
+ void requestTowerLandscape();
  const catalog=q('.towerCatalog');
  catalog.innerHTML=BUILDABLE_PREFAB_TYPES.map(spec=>`<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="Секция ${spec.id.replaceAll('x',' на ')}"><span class="towerItemIcon" aria-hidden="true">${uiIcon('blocks')}</span><span class="towerItemName">[ ${spec.id===WINDOW_PREFAB_ID?'Окно 0,5×1 м':spec.id===DOOR_PREFAB_ID?'Дверь 0,75×2 м':spec.id===GATE_PREFAB_ID?'Ворота 2×2 м':spec.id.replaceAll('x','×')} ]</span></button>`).join('');
  let toastTimer=null;
@@ -78,8 +100,8 @@ export async function mount(context,params={}){
   q('[data-confirm]').disabled=next!=='placing';
   q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
   q('[data-remove]').disabled=next!=='selected'||s.busy;
-  for(const name of ['cancel','rotate','variant','hammer','camera','explore','world']){
-   const button=q(name==='explore'?'button[data-explore]':`[data-${name}]`);if(button)button.disabled=s.busy;
+  for(const name of ['cancel','rotate','variant','hammer','camera','world']){
+   const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
   }
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
   if(next==='placing'||next==='saving-place')catalogVisible(false);
@@ -234,7 +256,7 @@ export async function mount(context,params={}){
   game.dataset.flying='false';q('[data-fly]')?.setAttribute('aria-pressed','false');
   q('[data-fly]').textContent='Полёт';
   joystick={forward:0,strafe:0};altitude=0;sendMotion();
-  if(active)catalogVisible(false);else if(s.mode==='idle')catalogVisible(true);
+  if(s.mode==='idle')catalogVisible(true);
  }
  on('[data-camera]','click',()=>{
   s.scene?.home();walkUi(false);
@@ -242,22 +264,11 @@ export async function mount(context,params={}){
   q('[data-world] span').textContent='Обзор Кюнлюма';
  });
  on('[data-world]','click',()=>{
-  if(game.dataset.explore==='true')walkUi(false);
-  const wide=s.scene?.worldView();
+  if(s.busy||!s.scene)return;
+  const wide=s.scene.worldView();
+  walkUi(!wide);
   q('[data-world]')?.setAttribute('aria-pressed',String(!!wide));
   const span=q('[data-world] span');if(span)span.textContent=wide?'К строительству':'Обзор Кюнлюма';
- });
- on('button[data-explore]','click',()=>{
-  if(s.busy||!s.scene)return;
-  if(game.dataset.explore==='true'){
-   s.scene.exitExplore();walkUi(false);return;
-  }
-  if(s.mode==='placing')cancel();
-  else if(s.mode==='selected')markSelection(null);
-  const active=s.scene.enterExplore();
-  walkUi(active);
-  q('[data-world]')?.setAttribute('aria-pressed','false');
-  q('[data-world] span').textContent='Обзор Кюнлюма';
  });
  on('[data-fly]','click',()=>{
   if(game.dataset.explore!=='true')return;
@@ -327,8 +338,8 @@ export async function mount(context,params={}){
   });
   if(s.disposed){s.scene.dispose();return;}
   q('[data-world]').disabled=false;
-  q('button[data-explore]').disabled=false;
   mode('idle');
+  walkUi(true);
   try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
   if(params.userId&&!editable(s))catalogVisible(false);
   s.ready=true;mode(s.mode);
@@ -336,7 +347,7 @@ export async function mount(context,params={}){
 }
 export function canLeave(){return active?.canLeave?.()??true;}
 export function unmount(){
- if(!active)return;active.disposed=true;active.controller.abort();active.scene?.dispose();
+ if(!active)return;active.disposed=true;active.controller.abort();active.cleanupOrientation?.();active.scene?.dispose();
  if(active.context.shell.appShell.dataset.feature==='tower')active.context.shell.appShell.dataset.feature='practice';
  active=null;
 }

@@ -99,16 +99,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  function enterExplore(){
   worldMode=false;explorer.enter();
-  grid.visible=false;faceGrid.visible=false;preview.visible=false;
+  grid.visible=tool==='place';faceGrid.visible=false;preview.visible=tool==='place'&&!!activeGhost;
   container.dataset.worldView='false';container.dataset.cameraMode='explore';
   container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');
   container.dataset.flying='false';
   scheduleDraw();return true;
  }
  function resetCamera(){
-  leaveExplorer();worldMode=false;controls.maxDistance=85;
-  camera.far=5000;camera.updateProjectionMatrix();
-  container.dataset.worldView='false';fit();
+  worldMode=false;camera.far=5000;camera.updateProjectionMatrix();
+  if(!explorer.active)enterExplore();
+  container.dataset.worldView='false';scheduleDraw();
  }
  const stoneMaterial=await stoneMaterialPromise;
  container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
@@ -322,12 +322,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   return null;
  }
  const activePointers=new Set();let pressed=null;
- function pointerDown(e){if(explorer.active)return;activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
- function pointerUp(e){if(explorer.active)return;activePointers.delete(e.pointerId);if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+ function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
+ function pointerUp(e){activePointers.delete(e.pointerId);if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();scheduleDraw();});observer.observe(container);
- function fit(){if(!blocks.length){controls.target.set(10,.5,10);camera.position.set(32,15,-23);}else{
+ function fit(){if(!blocks.length){controls.target.set(SITE.centerX,.5,SITE.centerZ);camera.position.set(32,15,-23);}else{
   const bounds=new THREE.Box3();for(const b of blocks){const box=prefabBounds(b);bounds.expandByPoint(new THREE.Vector3(...box.min.map(v=>v*CELL)));bounds.expandByPoint(new THREE.Vector3(...box.max.map(v=>v*CELL)));}
   const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());controls.target.copy(center);
   const distance=Math.max(2.8,Math.max(size.x,size.y,size.z)*3);camera.position.copy(center).add(new THREE.Vector3(distance*.83,distance*.58,distance));}
@@ -338,8 +338,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(explorer.active){
    if(explorer.frame(now)){
     container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');
-    needsRender=true;scheduleDraw();
+    needsRender=true;scheduleDraw();needsAim=true;
    }
+   if(tool==='place')needsAim=true;
   }else{
    controls.update();
    // Flat playable plot needs close-up camera access; steep surrounding DEM
@@ -349,7 +350,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const safe=constrainTowerCamera(camera.position,kunlum?.heightAt||(()=>0),margin);
    if(camera.position.y<safe.y){camera.position.y=safe.y;needsRender=true;}
   }
-  if(!explorer.active&&needsAim&&tool==='place'){
+  if(needsAim&&tool==='place'&&!worldMode){
    needsAim=false;
    const forward=new THREE.Vector3();camera.getWorldDirection(forward);
    const rect=renderer.domElement.getBoundingClientRect();
@@ -364,8 +365,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(worldMode)scheduleDraw();
  }
  function worldView(){
-  if(explorer.active){leaveExplorer();worldMode=false;}
   worldMode=!worldMode;
+  if(worldMode)leaveExplorer();
   if(worldMode){
    controls.maxDistance=3500;
    camera.far=9000;camera.updateProjectionMatrix();
@@ -375,24 +376,24 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    camera.position.set(700,1480,1630);
    controls.update();scheduleDraw();
   }else{
-   controls.maxDistance=85;camera.far=5000;camera.updateProjectionMatrix();
-   fit();
+   camera.far=5000;camera.updateProjectionMatrix();
+   enterExplore();
   }
   container.dataset.worldView=String(worldMode);
   return worldMode;
  }
  function onVisibility(){if(document.hidden)explorer.clear();else scheduleDraw();}
  document.addEventListener('visibilitychange',onVisibility);
- scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='build';
- return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length)fit();},setPreview,
-  setSelected,getAimHit(){if(explorer.active)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!explorer.active;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
+ enterExplore();scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='explore';
+ return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
+  setSelected,getAimHit(){const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
   exitExplore:resetCamera,
   setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);
    container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');return on;},
   setMotion:explorer.setMotion,getExploreState:explorer.state,
-  rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
-  zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
+  rotateView(delta){if(explorer.active)return;camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
+  zoom(multiplier){if(explorer.active)return;camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
   pickAt:findHit,
   getEnvironmentInfo(){const info=kunlum?.group?.userData.kunlum;return {
    confirmed:info?.ruins?.confirmed||0,river:info?.river||null,
