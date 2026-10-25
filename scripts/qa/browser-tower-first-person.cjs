@@ -84,10 +84,24 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     throw Error(device+' overview teleported the player '+JSON.stringify({lowered,home}));
    if(await page.locator('.towerCatalog').isVisible())throw Error('Construction catalog should default closed');
    await page.locator('[data-hammer]').click();
-   await page.locator('.towerCatalog').waitFor({state:'visible',timeout:4000});
+   try{
+    await page.locator('.towerCatalog').waitFor({state:'visible',timeout:4000});
+   }catch(error){
+    const debug=await page.evaluate(()=>{
+     const game=document.querySelector('.towerGame'),side=document.querySelector('[data-side]');
+     const catalog=document.querySelector('.towerCatalog');
+     return {mode:game?.dataset.mode,explore:game?.dataset.explore,catalogOpen:game?.dataset.catalogOpen,
+      sideClass:side?.className,sideInert:side?.inert,sideHidden:side?.hidden,
+      sideDisplay:side&&getComputedStyle(side).display,sideVisibility:side&&getComputedStyle(side).visibility,
+      catalogDisplay:catalog&&getComputedStyle(catalog).display,
+      hammerDisabled:document.querySelector('[data-hammer]')?.disabled};
+    });
+    throw Error(device+' catalog after overview did not open '+JSON.stringify(debug)+' '+error.message);
+   }
    if(errors.length)throw Error(device+' uncaught JavaScript '+JSON.stringify(errors));
    verified.push({device,walkMoved:true,raisedY:raised.point[1],loweredY:lowered.point[1],
     altitudePreserved:true,constructionRestored:true,errors:errors.length});
+   console.log('TOWER_FIRST_PERSON_DEVICE_PASS',device,JSON.stringify(verified.at(-1)));
    await ctx.close();
   }
   console.log('TOWER_FIRST_PERSON_BROWSER_PASS',JSON.stringify(verified));
