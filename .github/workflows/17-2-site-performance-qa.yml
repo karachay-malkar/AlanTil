@@ -57,7 +57,7 @@ jobs:
           node scripts/release/sync-version.mjs --check
           node scripts/assets/build-path-index.mjs
           git diff --exit-code -- src/data/path-route-index.json src/data/path-route-index.json.gz
-      - name: Kunlum 25x40m construction parcel regressions
+      - name: Kunlum authoritative 2D 15x30m parcel regressions
         run: |
           node --test \
             tests/kunlum-yellow-parcel.test.mjs \

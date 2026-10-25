@@ -42,7 +42,7 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     wide:el.dataset.kunlumWide,
     centre:el.dataset.kunlumPlotCenter
    }));
-   if(extent.centre!=='12.5,20'||extent.wide!=='ready')
+   if(extent.centre!=='7.5,15'||extent.wide!=='ready')
     throw Error(type+' wrong yellow parcel centre / expanded DEM absent '+JSON.stringify(extent));
    await page.waitForFunction(()=>document.getElementById('qa-root')?.dataset.mount==='success'&&
     document.querySelector('[data-world]')?.disabled===false,null,{timeout:60000});

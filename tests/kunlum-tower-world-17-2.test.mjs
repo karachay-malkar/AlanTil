@@ -23,7 +23,7 @@ test('game environment consumes the same approved plan and local OSM river as 3D
  assert.match(world,/createKunlumRiverbankScatter/);
  assert.match(world,/createKunlumMapOverlay/);
  assert.match(world,/createKunlumGameAlignment/);
- assert.match(read('src/features/tower/kunlum-build-alignment.js'),/-134/);
+ assert.match(read('src/features/tower/kunlum-build-alignment.js'),/plot\.angleDeg/);
  assert.doesNotMatch(world,/populateKunlumVectorSettlement\(/);
 });
 
