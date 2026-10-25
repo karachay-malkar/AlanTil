@@ -64,7 +64,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
      plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
   kunlum=createKunlumEnvironment(THREE,scene,{
-   plan,mobile:matchMedia('(max-width:749px)').matches,onReady:refreshEnvironmentStatus
+   plan,stoneMaterialPromise,mobile:matchMedia('(max-width:749px)').matches,onReady:refreshEnvironmentStatus
   });
   void kunlum.ready.then(refreshEnvironmentStatus);
  }

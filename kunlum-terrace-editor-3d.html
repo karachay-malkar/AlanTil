@@ -81,6 +81,7 @@ import {KUNLUM_DEM} from './src/features/tower/kunlum-dem-data.js';
 import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,localWorldToPixel,sampleDemLocal,plotCorners} from './src/features/tower/kunlum-georeference.js';
 import {demContourLines,terrainColor,validTerraceFeature} from './src/features/tower/kunlum-dem-contours.js';
 import {insidePolygon} from './src/features/tower/kunlum-terraces.js';
+import {createKunlumMapOverlay} from './src/features/tower/kunlum-map-overlay.js';
 
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();
@@ -270,59 +271,23 @@ function buildParcel(){
  floatLine([...corners,corners[0]],'#f1d44b',parcelGroup,1);
  parcelGroup.visible=$('parcelVisible').checked;
 }
+let mappedWalls=null;
 function buildWalls(){
- eachMeshDisposed(confirmedGroup);eachMeshDisposed(candidateGroup);eachMeshDisposed(passageGroup);
- const walls={wall:[],retaining:[],house:[]},passages=[];
- for(const f of source.confirmed_features){
-  if(f.type==='terrace'||!Array.isArray(f.points)||f.points.length<2)continue;
-  const poly=f.points.map(world);
-  if(f.type==='passage'){
-   for(let i=1;i<poly.length;i++)passages.push(...worldLine(poly[i-1],poly[i],.95));
-   continue;
-  }
-  const type=f.type==='retaining'?'retaining':f.type==='house'?'house':'wall';
-  for(const [a,b] of getOpeningSections(f,poly))wallQuad(walls[type],a,b,type==='retaining'?2.1:type==='house'?1.5:1.7,type==='retaining'?.7:.48);
+ if(mappedWalls){
+  confirmedGroup.remove(mappedWalls.confirmed);
+  candidateGroup.remove(mappedWalls.candidates);
+  passageGroup.remove(mappedWalls.passages);
+  mappedWalls.dispose();mappedWalls=null;
  }
- for(const [name,arr] of Object.entries(walls)){
-  if(!arr.length)continue;
-  const geometry=new THREE.BufferGeometry();
-  geometry.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));geometry.computeVertexNormals();
-  const mat=new THREE.MeshStandardMaterial({color:name==='retaining'?'#bca183':name==='house'?'#e0be8e':'#d0c8b2',side:THREE.DoubleSide,roughness:1});
-  const mesh=new THREE.Mesh(geometry,mat);mesh.name=name+' verified stone walls';confirmedGroup.add(mesh);
- }
- const ids=new Set(source.confirmed_features.map(f=>f.origin));
- const candidates=[];
- let candidateCount=0;
- for(const c of source.auto_candidates||[]){
-  if(c.promoted||ids.has(c.id)||!c.points?.length)continue;
-  candidateCount++;
-  const pts=c.points.map(world);
-  for(let i=1;i<pts.length;i++)wallQuad(candidates,pts[i-1],pts[i],1.4,.42);
- }
- if(candidates.length){
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(candidates,3));geo.computeVertexNormals();
-  const mat=new THREE.MeshStandardMaterial({color:'#69b7c2',roughness:1,transparent:true,opacity:.72,depthWrite:false,side:THREE.DoubleSide});
-  const mesh=new THREE.Mesh(geo,mat);mesh.name='Unverified automatic 3D walls';candidateGroup.add(mesh);
- }
- meshLine(passages,'#38f2ad',passageGroup,{depthTest:false});
- // Linked openings are not walls: mark their locations with green lines.
- const featureMap=new Map(source.confirmed_features.map(f=>[f.id,f]));
- const openings=[];
- for(const o of source.openings||[]){
-  const f=featureMap.get(o.wallId);if(!f)continue;
-  const pts=f.points.map(world);
-  const a=o.start,b=o.end;
-  const xy=at=>at&&pts[at.segment]&&pts[at.segment+1]?
-    [pts[at.segment][0]+(pts[at.segment+1][0]-pts[at.segment][0])*at.t,
-     pts[at.segment][1]+(pts[at.segment+1][1]-pts[at.segment][1])*at.t]:null;
-  const p=xy(a),q=xy(b);if(p&&q)openings.push(...worldLine(p,q,1.12));
- }
- meshLine(openings,'#3affb4',passageGroup,{depthTest:false});
+ mappedWalls=createKunlumMapOverlay(THREE,source,{toWorld:world,heightAt,mobile:matchMedia('(max-width:749px)').matches});
+ confirmedGroup.add(mappedWalls.confirmed);
+ candidateGroup.add(mappedWalls.candidates);
+ passageGroup.add(mappedWalls.passages);
  confirmedGroup.visible=$('confirmedVisible').checked;
  candidateGroup.visible=$('candidatesVisible').checked;
  passageGroup.visible=$('passageVisible').checked;
- return candidateCount;
+ void mappedWalls.enhance({renderer}).catch(error=>console.warn('Common100 3D walls unavailable',error));
+ return mappedWalls.counters.remainingCandidates;
 }
 function worldLine(a,b,offset){
  const segments=[],length=Math.hypot(a[0]-b[0],a[1]-b[1]),steps=Math.max(1,Math.ceil(length/3));

@@ -1,9 +1,10 @@
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
  * All elevations use the same terrain sampler as the terrain mesh beneath.
  */
-export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt}){
+export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=false}={}){
  if(!source||!Array.isArray(source.confirmed_features)||!Array.isArray(source.auto_candidates))
   throw new Error('Invalid Kunlum vector plan');
  const root=new THREE.Group();root.name='Latest Kunlum mapped walls (read-only, no terraces)';
@@ -12,19 +13,26 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt}){
  passages.name='Confirmed and linked passages';
  root.add(confirmed,candidates,passages);
  const buffers={wall:[],house:[],retaining:[]},auto=[],gap=[];
+ const confirmedSegments=[],candidateSegments=[];
  const clamp=t=>Math.max(0,Math.min(1,t));
  const interpolate=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
  const pushQuad=(out,a,b,c,d)=>out.push(...a,...b,...c,...a,...c,...d);
  function wallPiece(out,a,b,height,width){
   const len=dist(a,b);if(len<.01)return;
-  const n=Math.max(1,Math.ceil(len/2.5)),nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;
+  const stoneSegments=out===auto?candidateSegments:confirmedSegments;
+  stoneSegments.push({a,b,height,width,heightAt});
+  const n=Math.max(1,Math.ceil(len/.75)),nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;
   for(let i=0;i<n;i++){
    const p=interpolate(a,b,i/n),q=interpolate(a,b,(i+1)/n);
-   const y=heightAt(...p)+.08,z=heightAt(...q)+.08;
-   const f=[p[0]+nx,y,p[1]+nz],g=[q[0]+nx,z,q[1]+nz],h=[q[0]+nx,z+height,q[1]+nz],j=[p[0]+nx,y+height,p[1]+nz];
-   const k=[p[0]-nx,y,p[1]-nz],l=[q[0]-nx,z,q[1]-nz],m=[q[0]-nx,z+height,q[1]-nz],o=[p[0]-nx,y+height,p[1]-nz];
+   const y=heightAt(...p)+.035,z=heightAt(...q)+.035;
+   const crown=q=>.86+.12*Math.abs(Math.sin(q[0]*1.97+q[1]*3.37));
+   const aTop=height*crown(p),bTop=height*crown(q);
+   const f=[p[0]+nx,y,p[1]+nz],g=[q[0]+nx,z,q[1]+nz],h=[q[0]+nx,z+bTop,q[1]+nz],j=[p[0]+nx,y+aTop,p[1]+nz];
+   const k=[p[0]-nx,y,p[1]-nz],l=[q[0]-nx,z,q[1]-nz],m=[q[0]-nx,z+bTop,q[1]-nz],o=[p[0]-nx,y+aTop,p[1]-nz];
+   // Enclosed irregular core prevents any light leaking through the stone joints.
    pushQuad(out,f,g,h,j);pushQuad(out,l,k,o,m);pushQuad(out,j,h,m,o);
+   pushQuad(out,k,l,g,f);pushQuad(out,f,j,o,k);pushQuad(out,g,l,m,h);
   }
  }
  function line(out,a,b,raise=.7){
@@ -118,9 +126,12 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt}){
  addMesh(confirmed,buffers.retaining,'#ab8e77','16 retaining walls');
  addMesh(candidates,auto,'#72aab6','Unverified automatic 3D walls');
  addLines(passages,gap,'#2ae9a7','11 confirmed passages plus linked openings');
+ const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
+  {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
+ ],{renderer,materialPromise,mobile});
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
- return {root,confirmed,candidates,passages,counters,center,
+ return {root,confirmed,candidates,passages,counters,center,enhance,
   setVisibility({confirmedVisible=true,candidatesVisible=true,passagesVisible=true}={}){
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },

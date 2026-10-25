@@ -15,13 +15,14 @@ import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './ku
 import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
 
 
-export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,onReady=()=>{}}={}){
+export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stoneMaterialPromise=null,onReady=()=>{}}={}){
  if(!plan?.plot||!Array.isArray(plan.confirmed_features)||!Array.isArray(plan.auto_candidates))
   throw Error('Authoritative 2D vector plan required');
  const group=new THREE.Group();
  group.name='Кюнлюм · актуальный DEM PBR, план 120, Черек OSM';
  scene.add(group);
  const materials=[],geometries=[],textures=[];
+ let monument=null;
  let disposed=false;
  const register=(geo,mat,texture)=>{
   if(geo)geometries.push(geo);
@@ -78,7 +79,7 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,onRea
   const m=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
   const tower=new THREE.Mesh(g,m);
   tower.name='Абай-къала · approximate stone monument on real DEM elevation';
-  group.add(tower);register(g,m);
+  group.add(tower);register(g,m);monument=tower;
  }
  createMonument();
  // One 15x30m boundary from the exact 2D plot.
@@ -117,12 +118,19 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,onRea
      source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;
   planData=source;
-  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt});
+  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt,mobile});
   overlay.setVisibility({confirmedVisible:true,candidatesVisible:true,passagesVisible:true});
   group.add(overlay.root);
   Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,
    sourceAccuracy:'Approved user-drawn vector plan (one-point registration)'});
   if(localLine.length)installScenery();
+  try{
+   await overlay.enhance({materialPromise:stoneMaterialPromise});
+   if(monument&&stoneMaterialPromise){
+    const {applyRockSurface}=await import('./rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2');
+    applyRockSurface(monument,await stoneMaterialPromise);
+   }
+  }catch(error){console.warn('Common100 historic stone detail unavailable:',error);}
   onReady();
  }
  function wideHeightAt(x,z){
