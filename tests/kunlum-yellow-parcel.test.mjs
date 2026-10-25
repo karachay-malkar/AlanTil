@@ -77,8 +77,8 @@ test('construction opens in first person, and route button is the only overview 
  assert.match(ui,/data-world/);
  assert.doesNotMatch(ui,/button data-explore/);
  assert.match(stage,/enterExplore\(\);scheduleDraw\(\);container\.dataset\.ready/);
- assert.match(ui,/requestTowerLandscape/);
- assert.match(ui,/screen\.orientation\.lock\('landscape'\)/);
+ assert.match(ui,/requestTowerOrientation\('landscape'\)/);
+ assert.match(ui,/screen\.orientation\.lock\(target\)/);
 });
 
 test('world overview is read-only; placement UI only appears in first-person',()=>{
