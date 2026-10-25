@@ -394,7 +394,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   exitExplore:resetCamera,
   setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);
    container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');return on;},
-  setMotion:explorer.setMotion,getExploreState:explorer.state,
+  setMotion(next){explorer.setMotion(next);
+   // Input processing advances position independently of expensive WebGL frames.
+   container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');
+   scheduleDraw();
+  },getExploreState:explorer.state,
   rotateView(delta){if(explorer.active)return;camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
   zoom(multiplier){if(explorer.active)return;camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
   pickAt:findHit,

@@ -27,6 +27,9 @@ export function createTowerExplorerController({
   camera.rotation.set(pitch,yaw,0,'YXZ');requestRender();
  }
  function setMotion(next={}){
+  // If WebGL blocked animation frames during a held button, flush elapsed
+  // movement *before* changing the input. Otherwise pointerup loses flight.
+  if(enabled&&lastFrame&&moving())frame(performance.now());
   motion={forward:clamp(Number(next.forward)||0,-1,1),
    strafe:clamp(Number(next.strafe)||0,-1,1),
    up:clamp(Number(next.up)||0,-1,1)};
@@ -65,7 +68,7 @@ export function createTowerExplorerController({
   if(!enabled)return false;
   // Use wall-clock time even on low-FPS Android: step in small increments to
   // preserve collision integrity instead of slowing flight with dropped frames.
-  const elapsed=lastFrame?Math.min(.25,(now-lastFrame)/1000):0;lastFrame=now;
+  const elapsed=lastFrame?Math.min(1.25,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;
   if(!moving())return false;
   const steps=Math.max(1,Math.ceil(elapsed/.05)),dt=elapsed/steps;
   let point=camera.position;
@@ -81,6 +84,7 @@ export function createTowerExplorerController({
     e.target?.closest?.('input,textarea,select,[contenteditable]')||
     document.body.classList.contains('modal-open'))return;
   e.preventDefault();
+  if(lastFrame&&moving())frame(performance.now());
   if(e.type==='keydown')pressed.add(e.code);else pressed.delete(e.code);
   requestRender();
  }
