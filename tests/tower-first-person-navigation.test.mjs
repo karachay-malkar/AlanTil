@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {constrainTowerCamera,moveTowerExplorer,TOWER_EXPLORER} from '../src/features/tower/first-person-navigation.js';
+
+const groundAt=()=>0;
+const wall=[{min:{x:9,y:0,z:6},max:{x:11,y:3,z:14}}];
+test('walk stays inside 20x20 lot and 1.7 m above physical ground',()=>{
+ const start={x:1,y:1.7,z:1};
+ const next=moveTowerExplorer(start,{forward:1,strafe:1,up:0},0,1,{groundAt,fly:false,obstacles:[]});
+ assert.ok(next.x<=19.65&&next.x>=.35);
+ assert.ok(next.z>=.35&&next.z<=19.65);
+ assert.equal(next.y,1.7);
+ for(let i=0,p=start;i<40;i++)p=moveTowerExplorer(p,{forward:-1,strafe:-1},0,.08,{groundAt,fly:false,obstacles:[]});
+});
+test('fly cannot go lower than eye or higher than 15m, including on steep terrain',()=>{
+ const start={x:1,y:1.7,z:1};
+ let p=start;
+ for(let i=0;i<100;i++)p=moveTowerExplorer(p,{up:1},0,.05,{groundAt,fly:true,obstacles:[]});
+ assert.equal(p.y,TOWER_EXPLORER.maxHeight);
+ for(let i=0;i<120;i++)p=moveTowerExplorer(p,{up:-1},0,.05,{groundAt,fly:true,obstacles:[]});
+ assert.equal(p.y,1.7);
+ const limit=constrainTowerCamera({x:1,y:-100,z:2},()=>12,3);
+ assert.equal(limit.y,15);
+});
+test('solid authored prefabs block movement and sliding preserves free axis',()=>{
+ const start={x:8.3,y:1.7,z:10};
+ const next=moveTowerExplorer(start,{strafe:1},0,.08,{groundAt,fly:false,obstacles:wall});
+ assert.ok(next.x<8.7,'player capsule cannot enter a stone section');
+ const above=moveTowerExplorer({...start,y:5},{strafe:1},0,.08,{groundAt,fly:true,obstacles:wall});
+ assert.ok(above.x>start.x,'can fly over geometry when whole capsule clears it');
+});
+test('world and construction orbit camera always remain above DEM',()=>{
+ const floor=(x,z)=>x>10?25:0;
+ const r=constrainTowerCamera({x:18,y:-8,z:10},floor,4);
+ assert.equal(r.y,29);
+ assert.deepEqual(constrainTowerCamera({x:5,y:10,z:5},floor,.3),{x:5,y:10,z:5});
+});
