@@ -26,7 +26,22 @@ export async function mount(context,params={}){
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div>
    <div class="towerCamera"><button type="button" class="btn towerIconAction" data-camera="home" aria-label="Показать всю башню" title="Показать всю башню">${uiIcon('house')}</button>
    <button type="button" class="btn towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}<span>Обзор Кюнлюма</span></button>
+   <button type="button" class="btn towerWorldAction" data-explore disabled aria-pressed="false" aria-label="Прогулка от первого лица" title="Прогулка от первого лица">${uiIcon('userRound')}<span>Прогулка</span></button>
    ${icon('clear','Очистить всю башню')}</div>
+  </div>
+  <div class="towerExploreControls" role="group" aria-label="Перемещение от первого лица">
+   <div class="towerExploreHint">Проведи пальцем справа, чтобы осмотреться</div>
+   <div class="towerJoystick" data-joystick role="application" aria-label="Джойстик движения">
+    <div class="towerJoystickPuck" data-joystick-puck></div>
+   </div>
+   <div class="towerFlightPanel">
+    <button type="button" class="btn towerFlySwitch" data-fly aria-pressed="false">Полёт</button>
+    <div class="towerAltitude">
+     <button type="button" class="btn" data-rise aria-label="Подняться">↑</button>
+     <button type="button" class="btn" data-fall aria-label="Спуститься">↓</button>
+    </div>
+    <button type="button" class="btn towerGround" data-ground>На землю</button>
+   </div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
@@ -63,7 +78,7 @@ export async function mount(context,params={}){
   q('[data-confirm]').disabled=next!=='placing';
   q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
   q('[data-remove]').disabled=next!=='selected'||s.busy;
-  for(const name of ['cancel','rotate','variant','hammer','camera']){
+  for(const name of ['cancel','rotate','variant','hammer','camera','explore','world']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
   }
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
@@ -210,12 +225,88 @@ export async function mount(context,params={}){
   }
   void mutate('remove',null,id);
  });
- on('[data-camera]','click',()=>{s.scene?.home();q('[data-world]')?.setAttribute('aria-pressed','false');});
- on('[data-world]','click',()=>{
-  const active=s.scene?.worldView();
-  q('[data-world]')?.setAttribute('aria-pressed',String(!!active));
-  const span=q('[data-world] span');if(span)span.textContent=active?'К строительству':'Обзор Кюнлюма';
+ let joystick={forward:0,strafe:0},altitude=0;
+ function sendMotion(){s.scene?.setMotion({forward:joystick.forward,strafe:joystick.strafe,up:altitude});}
+ function walkUi(active){
+  game.dataset.explore=String(active);
+  const b=q('[data-explore]');b?.setAttribute('aria-pressed',String(active));
+  const span=b?.querySelector('span');if(span)span.textContent=active?'К строительству':'Прогулка';
+  game.dataset.flying='false';q('[data-fly]')?.setAttribute('aria-pressed','false');
+  q('[data-fly]').textContent='Полёт';
+  joystick={forward:0,strafe:0};altitude=0;sendMotion();
+  if(active)catalogVisible(false);else if(s.mode==='idle')catalogVisible(true);
+ }
+ on('[data-camera]','click',()=>{
+  s.scene?.home();walkUi(false);
+  q('[data-world]')?.setAttribute('aria-pressed','false');
+  q('[data-world] span').textContent='Обзор Кюнлюма';
  });
+ on('[data-world]','click',()=>{
+  if(game.dataset.explore==='true')walkUi(false);
+  const wide=s.scene?.worldView();
+  q('[data-world]')?.setAttribute('aria-pressed',String(!!wide));
+  const span=q('[data-world] span');if(span)span.textContent=wide?'К строительству':'Обзор Кюнлюма';
+ });
+ on('[data-explore]','click',()=>{
+  if(s.busy||!s.scene)return;
+  if(game.dataset.explore==='true'){
+   s.scene.exitExplore();walkUi(false);return;
+  }
+  if(s.mode==='placing')cancel();
+  else if(s.mode==='selected')markSelection(null);
+  const active=s.scene.enterExplore();
+  walkUi(active);
+  q('[data-world]')?.setAttribute('aria-pressed','false');
+  q('[data-world] span').textContent='Обзор Кюнлюма';
+ });
+ on('[data-fly]','click',()=>{
+  if(game.dataset.explore!=='true')return;
+  const active=s.scene?.setFly(q('[data-fly]').getAttribute('aria-pressed')!=='true');
+  q('[data-fly]').setAttribute('aria-pressed',String(!!active));
+  q('[data-fly]').textContent=active?'Полёт: вкл.':'Полёт';
+  game.dataset.flying=String(!!active);
+ });
+ on('[data-ground]','click',()=>{
+  if(game.dataset.explore!=='true')return;
+  s.scene?.setFly(false);altitude=0;sendMotion();
+  q('[data-fly]').setAttribute('aria-pressed','false');
+  q('[data-fly]').textContent='Полёт';game.dataset.flying='false';
+ });
+ let stickPointer=null;
+ function stickMove(event){
+  if(stickPointer!==event.pointerId)return;
+  const b=q('[data-joystick]').getBoundingClientRect(),r=b.width*.34;
+  const dx=(event.clientX-b.left-b.width/2)/r;
+  const dy=(event.clientY-b.top-b.height/2)/r;
+  const scale=Math.max(1,Math.hypot(dx,dy));
+  joystick={strafe:dx/scale,forward:-dy/scale};
+  q('[data-joystick-puck]').style.transform=`translate(${Math.round(joystick.strafe*r)}px,${Math.round(-joystick.forward*r)}px)`;
+  sendMotion();
+ }
+ function stickEnd(event){
+  if(stickPointer!==event.pointerId)return;
+  stickPointer=null;joystick={strafe:0,forward:0};
+  q('[data-joystick-puck]').style.transform='';
+  sendMotion();
+ }
+ on('[data-joystick]','pointerdown',event=>{
+  if(game.dataset.explore!=='true'||stickPointer!==null)return;
+  stickPointer=event.pointerId;
+  q('[data-joystick]').setPointerCapture(event.pointerId);stickMove(event);
+ });
+ for(const name of ['pointermove','pointerup','pointercancel','lostpointercapture']){
+  on('[data-joystick]',name,name==='pointermove'?stickMove:stickEnd);
+ }
+ for(const [selector,value] of [['[data-rise]',1],['[data-fall]',-1]]){
+  const button=q(selector);let pointer=null;
+  on(selector,'pointerdown',event=>{
+   if(game.dataset.explore!=='true')return;
+   pointer=event.pointerId;button.setPointerCapture(pointer);
+   altitude=value;sendMotion();
+  });
+  const end=event=>{if(pointer!==event.pointerId)return;pointer=null;altitude=0;sendMotion();};
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])on(selector,type,end);
+ }
  window.addEventListener('keydown',e=>{
   if(s.disposed||s.busy||document.body.classList.contains('modal-open')||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
   if(e.key==='Escape'){cancel();return;}
@@ -233,6 +324,7 @@ export async function mount(context,params={}){
   });
   if(s.disposed){s.scene.dispose();return;}
   q('[data-world]').disabled=false;
+  q('[data-explore]').disabled=false;
   mode('idle');
   try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
   if(params.userId&&!editable(s))catalogVisible(false);
