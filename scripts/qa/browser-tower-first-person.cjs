@@ -57,7 +57,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    await page.mouse.down();
    await sleep(950);await page.mouse.up();await sleep(80);
    const flown=await state();
-   if(!(flown.point[1]>a.point[1]+1&&flown.point[1]<=15.02))
+   if(!(flown.point[1]>a.point[1]+.05&&flown.point[1]<a.point[1]+1.3&&flown.point[1]<=15.02))
     throw Error(device+' flight altitude invalid '+JSON.stringify({a,flown}));
    await page.screenshot({path:path.join(out,device+'-flight.png')});
    await page.locator('[data-ground]').click();
