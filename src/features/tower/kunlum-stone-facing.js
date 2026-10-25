@@ -22,7 +22,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const [material,{manifest,geometries}]=await Promise.all([
   materialPromise||getRockSurface(renderer),loadCommon100()
  ]);
- if(!root.parent)return null; // disposed while loading
+ if(root.userData.disposed)return null; // Editor attaches layer groups independently
  const names=manifest.models.filter(m=>m.category==='main').map(m=>m.name);
  const choices=[3,14,26,37,49,60].map(i=>names[i]).filter(Boolean);
  if(choices.length!==6)throw Error('Common100 six stone variants missing');
@@ -86,6 +86,44 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    entry.group.add(instance);laid.push(instance);
   }
   total+=count;
+ }
+
+ // Abay-Kala uses the same real library stones. Facing follows the original
+ // tapered monument polygon at every course, so no stones float outside it.
+ if(monument?.userData?.common100TowerBase){
+  const {x,z,baseY,height:H}=monument.userData.common100TowerBase;
+  const rows=mobile?30:44,columns=mobile?7:11;
+  const bins=models.map(()=>[]);
+  for(let side=0;side<4;side++)for(let row=0;row<rows;row++){
+   const h=H/rows,y=baseY+(row+.5)*h,relative=(row+.5)/rows;
+   const width=6-(6-4.65)*relative,radius=width/2+.025;
+   const nx=side===0?0:side===1?0:side===2?1:-1;
+   const nz=side===0?1:side===1?-1:0;
+   for(let col=0;col<columns;col++){
+    const u=(col+.5+(row%2)*.20)/columns-.5;
+    if(Math.abs(u)>.495)continue;
+    // Preserve existing arched doorway and two window openings on the front.
+    if(side===0&&Math.abs(u)<.09&&(y-baseY<2.6||
+      (y-baseY>5.3&&y-baseY<7)||(y-baseY>9.5&&y-baseY<11.1)))continue;
+    const k=Math.floor(hash(u*70,row,side)*models.length),model=models[k];
+    const across=u*width;
+    const px=x+nx*radius+(side<2?across:0);
+    const pz=z+nz*radius+(side>=2?across:0);
+    dummy.position.set(px,y,pz);
+    dummy.rotation.set(0,Math.atan2(nx,nz),0);
+    dummy.scale.set((width/columns*1.12)/model.size.x,(h*1.12)/model.size.y,.19/model.size.z);
+    dummy.updateMatrix();
+    bins[k].push(dummy.matrix.clone());
+  }
+  }
+  for(let k=0;k<models.length;k++){
+   if(!bins[k].length)continue;
+   const inst=new THREE.InstancedMesh(models[k].geometry,material,bins[k].length);
+   inst.name='Abay-Kala Common100 '+models[k].name;inst.frustumCulled=false;
+   bins[k].forEach((matrix,j)=>inst.setMatrixAt(j,matrix));
+   inst.instanceMatrix.needsUpdate=true;root.add(inst);laid.push(inst);
+   total+=bins[k].length;
+  }
  }
  root.userData.common100StoneCount=total;
  root.userData.common100Material=material.name;

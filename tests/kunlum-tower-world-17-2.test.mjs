@@ -41,7 +41,7 @@ test('terrain geometry follows mirrored preview DEM, retains original DEM and is
 
 test('tower building controls remain and new wide-view action is independently accessible',()=>{
  assert.match(tower,/data-world/);
- assert.match(tower,/scene\?\.worldView\(\)/);
+ assert.match(tower,/scene\.worldView\(\)/);
  assert.match(scene,/worldView\(\)/);
  assert.match(scene,/raycaster\.intersectObjects\(\[\.\.\.targets,floor\],false\)/);
  assert.match(scene,/if\(needsRender\)\{needsRender=false;renderer\.render\(scene,camera\);\}/);

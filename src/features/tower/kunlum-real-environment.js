@@ -79,6 +79,7 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
   const m=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
   const tower=new THREE.Mesh(g,m);
   tower.name='Абай-къала · approximate stone monument on real DEM elevation';
+  tower.userData.common100TowerBase={x,z,baseY,height:H};
   group.add(tower);register(g,m);monument=tower;
  }
  createMonument();
@@ -118,19 +119,14 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
      source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;
   planData=source;
-  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt,mobile});
+  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt,mobile,monument});
   overlay.setVisibility({confirmedVisible:true,candidatesVisible:true,passagesVisible:true});
   group.add(overlay.root);
   Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,
    sourceAccuracy:'Approved user-drawn vector plan (one-point registration)'});
   if(localLine.length)installScenery();
-  try{
-   await overlay.enhance({materialPromise:stoneMaterialPromise});
-   if(monument&&stoneMaterialPromise){
-    const {applyRockSurface}=await import('./rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2');
-    applyRockSurface(monument,await stoneMaterialPromise);
-   }
-  }catch(error){console.warn('Common100 historic stone detail unavailable:',error);}
+  try{await overlay.enhance({materialPromise:stoneMaterialPromise});}
+  catch(error){console.warn('Common100 historic stone detail unavailable:',error);}
   onReady();
  }
  function wideHeightAt(x,z){

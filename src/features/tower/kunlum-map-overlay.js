@@ -4,7 +4,7 @@ import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js';
  * Historic vector-plan alignment remains explicitly one-point/unverified.
  * All elevations use the same terrain sampler as the terrain mesh beneath.
  */
-export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=false}={}){
+export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=false,monument=null}={}){
  if(!source||!Array.isArray(source.confirmed_features)||!Array.isArray(source.auto_candidates))
   throw new Error('Invalid Kunlum vector plan');
  const root=new THREE.Group();root.name='Latest Kunlum mapped walls (read-only, no terraces)';
@@ -128,7 +128,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  addLines(passages,gap,'#2ae9a7','11 confirmed passages plus linked openings');
  const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
- ],{renderer,materialPromise,mobile});
+ ],{renderer,materialPromise,mobile,monument});
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,
@@ -136,6 +136,6 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },
   setVerticalScale(scale){root.scale.y=scale},
-  dispose(){for(const [g,m] of owned){g.dispose();m.dispose()} }
+  dispose(){root.userData.disposed=true;for(const [g,m] of owned){g.dispose();m.dispose()} }
  };
 }

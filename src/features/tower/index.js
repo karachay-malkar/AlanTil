@@ -259,7 +259,7 @@ export async function mount(context,params={}){
   if(s.mode==='idle')catalogVisible(true);
  }
  on('[data-camera]','click',()=>{
-  s.scene?.home();walkUi(false);
+  s.scene?.home();walkUi(true);
   q('[data-world]')?.setAttribute('aria-pressed','false');
   q('[data-world] span').textContent='Обзор Кюнлюма';
  });
