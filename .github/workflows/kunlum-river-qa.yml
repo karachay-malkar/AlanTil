@@ -26,6 +26,9 @@ on:
       - 'scripts/qa/browser-tower-kunlum-world.cjs'
       - 'assets/tower/environment/kunlum-cherek-balkarsky-osm.json'
       - 'kunlum-terrain-review.html'
+      - 'kunlum-vector-editor.html'
+      - 'kunlum-terrace-editor-3d.html'
+      - 'scripts/qa/browser-kunlum-editors.cjs'
       - 'tests/kunlum-river-realism.test.mjs'
       - 'tests/kunlum-tower-world-17-2.test.mjs'
       - 'scripts/qa/browser-kunlum-river.cjs'
@@ -111,5 +114,31 @@ jobs:
         with:
           name: tower-kunlum-world-desktop-mobile
           path: tower-world-browser-qa/
+          retention-days: 14
+          if-no-files-found: warn
+
+  editor-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright
+      - name: Verify one source plan in 2D and 3D editors (desktop/mobile)
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/kunlum-editor-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/kunlum-vector-editor.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/browser-kunlum-editors.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kunlum-unified-editors-desktop-mobile
+          path: kunlum-editors-browser-qa/
           retention-days: 14
           if-no-files-found: warn
