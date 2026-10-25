@@ -1,4 +1,4 @@
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.20";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.21";
 
 export const measurementId = "G-1WSMD45Q9D";
 export const appVersion = APP_VERSION;
