@@ -52,7 +52,8 @@
 .towerJoystickPuck{position:absolute;left:calc(50% - 17px);top:calc(50% - 17px);width:34px;height:34px;border-radius:50%;background:rgba(235,242,243,.92);border:1px solid rgba(40,49,39,.45);box-shadow:0 1px 6px #0003;pointer-events:none}
 .towerFlightPanel{position:absolute;right:calc(max(10px,var(--safe-right,0px)) + var(--tower-hud-size) + 8px);bottom:max(12px,calc(var(--safe-bottom,0px) + 12px));display:flex;align-items:center;pointer-events:auto}
 .towerFlightPanel [data-fly][aria-pressed="true"]{background:rgba(96,125,127,.96);border-color:#d9d3b5}
-.towerAltitude{position:absolute;bottom:calc(100% + 8px);right:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.towerAltitude{position:absolute;bottom:calc(100% + 10px);right:0;display:flex;flex-direction:row;align-items:center;gap:6px}
+.towerGame .towerAltitude .towerIconAction{width:42px;height:42px;min-width:42px;min-height:42px}
 .towerGame[data-flying="false"] .towerAltitude{display:none}
 @media(pointer:fine){.towerJoystick{display:none}}
 @media(max-width:749px){.towerGame{--tower-hud-size:42px}.towerCamera{left:67px}.towerQuickActions{right:max(8px,var(--safe-right,0px))}.towerGame [data-hammer]{right:max(8px,var(--safe-right,0px))}.towerSide{right:max(8px,var(--safe-right,0px));width:min(390px,calc(100% - 16px))}.towerExploreHint{max-width:calc(100% - 180px);font-size:10px}.towerJoystick{left:max(26px,calc(var(--safe-left,0px) + 26px));width:86px;height:86px}.towerFlightPanel{right:calc(max(8px,var(--safe-right,0px)) + var(--tower-hud-size) + 7px)}}
