@@ -319,7 +319,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    }
   }else{
    controls.update();
-   const safe=constrainTowerCamera(camera.position,kunlum?.heightAt||(()=>0),worldMode?4:.35);
+   // Flat playable plot needs close-up camera access; steep surrounding DEM
+   // needs a larger margin because sampled height and 8–30m render triangles differ.
+   const onFlatPlot=camera.position.x>=-10&&camera.position.x<=30&&
+     camera.position.z>=-15&&camera.position.z<=35;
+   const margin=onFlatPlot?.35:worldMode?6:3;
+   const safe=constrainTowerCamera(camera.position,kunlum?.heightAt||(()=>0),margin);
    if(camera.position.y<safe.y){camera.position.y=safe.y;needsRender=true;}
   }
   if(!explorer.active&&needsAim&&tool==='place'){
