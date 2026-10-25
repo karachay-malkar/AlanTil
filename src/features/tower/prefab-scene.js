@@ -64,11 +64,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#e1be7b',depthTest:false,transparent:true,opacity:1}));outline.visible=false;outline.renderOrder=999;scene.add(outline);
  const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
  const previewContents=new THREE.Group();preview.add(previewContents);
- const stoneMaterial=await stoneMaterialPromise;
- container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
- const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
- let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
- let renderedById=new Map(),renderedJoints=new Map();
  const solidBounds=[];
  const explorer=createTowerExplorerController({
   camera,controls,canvas:renderer.domElement,
@@ -92,6 +87,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   camera.far=5000;camera.updateProjectionMatrix();
   container.dataset.worldView='false';fit();
  }
+ const stoneMaterial=await stoneMaterialPromise;
+ container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
+ const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
+ let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
+ let renderedById=new Map(),renderedJoints=new Map();
+
  function cameraChanged(){needsAim=true;scheduleDraw();}
  controls.addEventListener('change',cameraChanged);
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
