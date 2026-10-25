@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,plotCorners,rotateKunlumPlanPoint} from '../src/features/tower/kunlum-georeference.js';
 import {PLOT,createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alignment.js';
 import {readFileSync} from 'node:fs';
+import {wideDemTilePlan} from '../src/features/tower/kunlum-wide-dem.js';
 
 const a=createKunlumGameAlignment();
 const near=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1])<1e-7;
@@ -43,4 +44,20 @@ test('game environment requests real Mapzen outer data and retains immutable Cop
  assert.match(readFileSync(new URL('../src/features/tower/kunlum-wide-dem.js',import.meta.url),'utf8'),/originalSample/);
  assert.match(src,/loadKunlumCherekLocal/);
  assert.match(src,/excludeBounds/);
+});
+test('all nine AWS Mapzen originals are locally pinned with unchanged PNG pixel encoding',()=>{
+ const path='assets/tower/environment/mapzen-terrarium-z13/';
+ const manifest=JSON.parse(readFileSync(new URL('../'+path+'manifest.json',import.meta.url),'utf8'));
+ const p=wideDemTilePlan();
+ assert.deepEqual(manifest.grid,[p.x0,p.x1,p.y0,p.y1]);
+ assert.equal(manifest.tiles.length,p.tiles);
+ assert.equal(manifest.tiles.length,9);
+ for(const filename of manifest.tiles){
+  const png=readFileSync(new URL('../'+path+filename,import.meta.url));
+  assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  assert.equal(png.readUInt32BE(16),256);
+  assert.equal(png.readUInt32BE(20),256);
+ }
+ const source=readFileSync(new URL('../src/features/tower/kunlum-wide-dem.js',import.meta.url),'utf8');
+ assert.match(source,/\/assets\/tower\/environment\/mapzen-terrarium-z13\//);
 });
