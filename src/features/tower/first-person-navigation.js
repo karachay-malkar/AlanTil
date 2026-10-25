@@ -3,7 +3,7 @@ import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-p
 export const TOWER_EXPLORER=Object.freeze({
  minX:SITE.minX,maxX:SITE.maxX,minZ:SITE.minZ,maxZ:SITE.maxZ,
  radius:.32,eyeHeight:1.7,maxHeight:15,
- walkingSpeed:3.2,flyingSpeed:4,verticalSpeed:1.25
+ walkingSpeed:3.2,verticalSpeed:1.25
 });
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 const valid=n=>Number.isFinite(n)?n:0;
@@ -29,11 +29,11 @@ export function canTowerExplorerLand(position,groundAt,obstacles=[],config=TOWER
  * Ground collision and altitude limits are independent of rendered materials.
  */
 export function moveTowerExplorer(position,input,yaw,dt,{
- groundAt=()=>0,fly=false,obstacles=[],config=TOWER_EXPLORER
+ groundAt=()=>0,obstacles=[],config=TOWER_EXPLORER
 }={}){
  const t=clamp(valid(dt),0,.05),a=clamp(valid(input?.forward),-1,1),
   b=clamp(valid(input?.strafe),-1,1),up=clamp(valid(input?.up),-1,1);
- const length=Math.max(1,Math.hypot(a,b)),speed=fly?config.flyingSpeed:config.walkingSpeed;
+ const length=Math.max(1,Math.hypot(a,b)),speed=config.walkingSpeed;
  const distance=t*speed/length,sy=Math.sin(yaw),cy=Math.cos(yaw);
  const dx=(-sy*a+cy*b)*distance,dz=(-cy*a-sy*b)*distance;
  const loX=config.minX+config.radius,hiX=config.maxX-config.radius;
@@ -41,8 +41,7 @@ export function moveTowerExplorer(position,input,yaw,dt,{
  let x=clamp(valid(position.x),loX,hiX),z=clamp(valid(position.z),loZ,hiZ);
  let y=valid(position.y);
  const baseY=valid(groundAt(x,z));
- const candidateY=fly?clamp(y+up*t*config.verticalSpeed,baseY+config.eyeHeight,baseY+config.maxHeight):
-  baseY+config.eyeHeight;
+ const candidateY=clamp(y+up*t*config.verticalSpeed,baseY+config.eyeHeight,baseY+config.maxHeight);
  // Block both ascending through overhangs and descending through roofs.
  if(!intersects(x,candidateY,z,obstacles,config))y=candidateY;
  // Vertical flight must respect stone roofs and lintels, not only terrain.
@@ -53,7 +52,7 @@ export function moveTowerExplorer(position,input,yaw,dt,{
  const nextZ=clamp(z+dz,loZ,hiZ);
  if(!intersects(x,y,nextZ,obstacles,config))z=nextZ;
  const ground=valid(groundAt(x,z));
- const finalY=fly?clamp(y,ground+config.eyeHeight,ground+config.maxHeight):ground+config.eyeHeight;
+ const finalY=clamp(y,ground+config.eyeHeight,ground+config.maxHeight);
  if(!intersects(x,finalY,z,obstacles,config))y=finalY;
  return {x,y,z};
 }

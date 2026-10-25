@@ -3,7 +3,7 @@
 .appShell[data-feature="tower"] .appHeader{z-index:10;pointer-events:none}
 .appShell[data-feature="tower"] .appHeaderCenter,.appShell[data-feature="tower"] .appHeaderTrailing{display:none}
 .appShell[data-feature="tower"] .appHeaderLeading{pointer-events:auto}
-.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{min-width:44px;min-height:44px;border:1px solid rgba(255,255,255,.15);background:rgba(58,67,74,.9);color:#fff;box-shadow:0 2px 10px #0003}
+.appShell[data-feature="tower"] .appHeaderLeading .appHeaderAction{min-width:44px;min-height:44px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);box-shadow:var(--shadow-sm)}
 .appShell[data-feature="tower"] .appViewport::before,.appShell[data-feature="tower"] .appViewport::after{display:none}
 .appShell[data-feature="tower"] .appViewport,.appShell[data-feature="tower"] .appScreenHost{position:absolute;inset:0;min-width:0;width:100%;height:100%;max-width:none;overflow:hidden;padding:0}
 .appShell[data-feature="tower"] .towerView{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;padding:0;margin:0}
@@ -14,31 +14,31 @@
 .towerStage{position:absolute;inset:0;overflow:hidden;background:var(--surface-1)}
 .towerCanvas,.towerCanvas canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 .towerCanvas canvas{cursor:grab}
-.towerGame .towerIconAction{display:grid;place-items:center;width:var(--tower-hud-size);height:var(--tower-hud-size);min-width:var(--tower-hud-size);min-height:var(--tower-hud-size);border-radius:13px;border:1px solid rgba(255,255,255,.13);background:rgba(59,68,76,.89);box-shadow:0 3px 12px #0004;color:#fff;padding:0;cursor:pointer;transition:background 130ms ease,transform 130ms ease}
+.towerGame .towerIconAction{display:grid;place-items:center;width:var(--tower-hud-size);height:var(--tower-hud-size);min-width:var(--tower-hud-size);min-height:var(--tower-hud-size);border-radius:13px;border:1px solid var(--line);background:var(--surface-0);box-shadow:var(--shadow-sm);color:var(--text-1);padding:0;cursor:pointer;transition:background 130ms ease,transform 130ms ease}
 .towerGame .towerIconAction .uiIcon{width:22px;height:22px}
-.towerGame .towerIconAction:active:not(:disabled){transform:scale(.95);background:rgba(96,125,127,.96)}
+.towerGame .towerIconAction:active:not(:disabled){transform:scale(.95);background:var(--accent-soft)}
 .towerCamera{position:absolute;z-index:9;top:calc(var(--safe-top,0px) + 10px);left:78px;display:flex;gap:7px}
 .towerQuickActions{position:absolute;z-index:11;top:calc(var(--safe-top,0px) + 10px);right:max(10px,var(--safe-right,0px));display:flex;align-items:center;gap:7px}
-.towerWorldAction[aria-pressed="true"]{background:rgba(96,125,127,.96);border-color:#d9d3b5}
-.towerSettingsMenu{position:absolute;z-index:11;top:calc(var(--safe-top,0px) + 62px);right:max(10px,var(--safe-right,0px));display:flex;gap:9px;align-items:center;padding:9px 12px;background:rgba(45,54,62,.96);color:#fff;border:1px solid rgba(255,255,255,.13);border-radius:14px;box-shadow:0 6px 22px #0005;font:600 12px/1.2 var(--font-body);white-space:nowrap}
+.towerWorldAction[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-strong)}
+.towerSettingsMenu{position:absolute;z-index:11;top:calc(var(--safe-top,0px) + 62px);right:max(10px,var(--safe-right,0px));display:flex;gap:9px;align-items:center;padding:9px 12px;background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 22px #0005;font:600 12px/1.2 var(--font-body);white-space:nowrap}
 .towerSettingsMenu .towerIconAction{color:var(--danger)}
-.towerSide{position:absolute;z-index:9;bottom:max(66px,calc(var(--safe-bottom,0px) + 66px));right:max(10px,var(--safe-right,0px));width:min(460px,calc(100% - 24px));max-height:min(67dvh,300px);overflow:hidden;transform:translateY(10px);opacity:0;visibility:hidden;pointer-events:none;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(45,54,62,.96);color:#fff;box-shadow:0 8px 28px #0005;padding:10px;transition:transform 180ms ease,opacity 180ms ease,visibility 180ms}
+.towerSide{position:absolute;z-index:9;bottom:max(66px,calc(var(--safe-bottom,0px) + 66px));right:max(10px,var(--safe-right,0px));width:min(460px,calc(100% - 24px));max-height:min(67dvh,300px);overflow:hidden;transform:translateY(10px);opacity:0;visibility:hidden;pointer-events:none;border-radius:16px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);box-shadow:0 8px 28px #0005;padding:10px;transition:transform 180ms ease,opacity 180ms ease,visibility 180ms}
 .towerSide.is-open{transform:translateY(0);opacity:1;visibility:visible;pointer-events:auto}
 .towerCatalogHeading{display:flex;align-items:center;justify-content:space-between;padding:0 3px 7px;font:700 13px/1.3 var(--font-body)}
-.towerGame .towerCatalogClose{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:rgba(116,125,134,.5);color:#fff;cursor:pointer}
+.towerGame .towerCatalogClose{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:var(--surface-1);color:var(--text-1);cursor:pointer}
 .towerCatalogClose .uiIcon{width:17px;height:17px}
 .towerCatalogContent{max-height:calc(min(67dvh,300px) - 50px);overflow-y:auto;overscroll-behavior:contain}
 .towerCatalog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.towerCatalog .towerItem{display:flex;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 3px;text-align:center;background:rgba(77,87,96,.92);border:1px solid rgba(255,255,255,.13);border-radius:10px;color:#fff;box-shadow:none;cursor:pointer}
-.towerItemIcon{display:grid;place-items:center;color:#e8eff0}
+.towerCatalog .towerItem{display:flex;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 3px;text-align:center;background:var(--surface-0);border:1px solid var(--line);border-radius:10px;color:var(--text-1);box-shadow:none;cursor:pointer}
+.towerItemIcon{display:grid;place-items:center;color:var(--text-2)}
 .towerItemIcon .uiIcon{width:22px;height:22px}
 .towerItemName{font:700 11px/1.15 var(--font-body);white-space:normal;overflow-wrap:anywhere}
 .towerGame[data-catalog-open="true"] .towerJoystick{opacity:0;pointer-events:none}
 .towerGame [data-hammer]{position:absolute;z-index:9;right:max(10px,var(--safe-right,0px));bottom:max(12px,calc(var(--safe-bottom,0px) + 12px))}
-.towerGame [data-hammer][aria-expanded="true"]{background:rgba(96,125,127,.96);border-color:#d9d3b5}
+.towerGame [data-hammer][aria-expanded="true"]{background:var(--accent-soft);border-color:var(--accent-strong)}
 .towerClearWarning{margin-top:8px;font-weight:400;font-size:.9em;line-height:1.4}
 .towerPlacementBar,.towerSelectionBar{position:absolute;z-index:8;bottom:max(12px,calc(var(--safe-bottom,0px) + 12px));left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:6px;width:max-content;max-width:calc(100% - 160px)}
-.towerPlacementBar .towerIconAction:first-child{background:rgba(96,125,127,.96);border-color:#d9d3b5}
+.towerPlacementBar .towerIconAction:first-child{background:var(--accent-soft);border-color:var(--accent-strong)}
 .towerSelectionBar .towerIconAction{color:var(--danger)}
 .towerToast{position:absolute;z-index:12;left:50%;top:calc(var(--safe-top,0px) + 67px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);background:rgba(45,54,62,.96);color:#fff;border:1px solid rgba(255,255,255,.13);border-radius:12px;box-shadow:0 6px 22px #0005;padding:8px 12px;font:600 12px/1.3 var(--font-body);text-align:center}
 .towerGame[data-mode="saving-place"] .towerPlacementBar .towerIconAction,.towerGame[data-mode="saving-remove"] .towerSelectionBar .towerIconAction,.towerGame[data-mode="saving-clear"] .towerIconAction{opacity:.5;pointer-events:none}
@@ -50,14 +50,12 @@
 .towerExploreHint{position:absolute;left:50%;top:calc(var(--safe-top,0px) + 12px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 210px);padding:7px 12px;border-radius:14px;background:rgba(30,36,33,.72);color:#fff;font:500 11px/1.3 var(--font-body);text-align:center}
 .towerJoystick{position:absolute;left:max(34px,calc(var(--safe-left,0px) + 34px));bottom:max(25px,calc(var(--safe-bottom,0px) + 25px));width:90px;height:90px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(48,56,62,.28);box-shadow:0 1px 10px #0002;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;transition:opacity 130ms ease}
 .towerJoystickPuck{position:absolute;left:calc(50% - 17px);top:calc(50% - 17px);width:34px;height:34px;border-radius:50%;background:rgba(235,242,243,.92);border:1px solid rgba(40,49,39,.45);box-shadow:0 1px 6px #0003;pointer-events:none}
-.towerFlightPanel{position:absolute;right:calc(max(10px,var(--safe-right,0px)) + var(--tower-hud-size) + 8px);bottom:max(12px,calc(var(--safe-bottom,0px) + 12px));display:flex;align-items:center;pointer-events:auto}
-.towerFlightPanel [data-fly][aria-pressed="true"]{background:rgba(96,125,127,.96);border-color:#d9d3b5}
-.towerAltitude{position:absolute;bottom:calc(100% + 10px);right:0;display:flex;flex-direction:row;align-items:center;gap:6px}
-.towerGame .towerAltitude .towerIconAction{width:42px;height:42px;min-width:42px;min-height:42px}
-.towerGame[data-flying="false"] .towerAltitude{display:none}
+.towerElevationControls{position:absolute;right:calc(max(10px,var(--safe-right,0px)) + var(--tower-hud-size) + 8px);bottom:max(12px,calc(var(--safe-bottom,0px) + 12px));display:flex;align-items:center;gap:7px;pointer-events:auto}
 @media(pointer:fine){.towerJoystick{display:none}}
-@media(max-width:749px){.towerGame{--tower-hud-size:42px}.towerCamera{left:67px}.towerQuickActions{right:max(8px,var(--safe-right,0px))}.towerGame [data-hammer]{right:max(8px,var(--safe-right,0px))}.towerSide{right:max(8px,var(--safe-right,0px));width:min(390px,calc(100% - 16px))}.towerExploreHint{max-width:calc(100% - 180px);font-size:10px}.towerJoystick{left:max(26px,calc(var(--safe-left,0px) + 26px));width:86px;height:86px}.towerFlightPanel{right:calc(max(8px,var(--safe-right,0px)) + var(--tower-hud-size) + 7px)}}
+@media(max-width:749px){.towerGame{--tower-hud-size:42px}.towerCamera{left:67px}.towerQuickActions{right:max(8px,var(--safe-right,0px))}.towerGame [data-hammer]{right:max(8px,var(--safe-right,0px))}.towerSide{right:max(8px,var(--safe-right,0px));width:min(390px,calc(100% - 16px))}.towerExploreHint{max-width:calc(100% - 180px);font-size:10px}.towerJoystick{left:max(26px,calc(var(--safe-left,0px) + 26px));width:86px;height:86px}.towerElevationControls{right:calc(max(8px,var(--safe-right,0px)) + var(--tower-hud-size) + 7px)}}
 @media(max-height:420px){.towerGame{--tower-hud-size:40px}.towerCatalog .towerItem{min-height:54px}.towerSide{max-height:calc(100dvh - 124px)}.towerCatalogContent{max-height:calc(100dvh - 175px)}.towerJoystick{width:78px;height:78px;bottom:max(16px,calc(var(--safe-bottom,0px) + 16px))}.towerExploreHint{top:calc(var(--safe-top,0px) + 6px)}}
 @media(max-width:360px){.towerPlacementBar{gap:3px;left:46%;max-width:calc(100% - 102px)}.towerCatalog{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 .towerGame[data-explore="false"] .towerSide,.towerGame[data-explore="false"] [data-hammer]{display:none!important}
+
+@media(max-width:520px){.towerGame:is([data-mode="placing"],[data-mode="selected"]) .towerElevationControls{bottom:max(68px,calc(var(--safe-bottom,0px) + 68px))}}

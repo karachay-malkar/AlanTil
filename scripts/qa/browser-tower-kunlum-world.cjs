@@ -51,11 +51,12 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     orientationVisible:!!document.querySelector('[data-orientation]')?.getClientRects().length,
     extraCameraButtons:document.querySelectorAll('[data-camera]').length,
     clearInsideSettings:!!document.querySelector('[data-settings-panel] [data-clear]'),
-    flightAltitudeHidden:getComputedStyle(document.querySelector('.towerAltitude')).display==='none',
+    elevationButtonsVisible:getComputedStyle(document.querySelector('.towerElevationControls')).display==='flex',
+    flightModeAbsent:!document.querySelector('[data-fly], [data-ground]'),
     items:document.querySelectorAll('[data-section-id]').length
    }));
    if(!hud.catalogClosed||!hud.orientationVisible||hud.extraCameraButtons||
-      !hud.clearInsideSettings||!hud.flightAltitudeHidden||hud.items!==7)
+      !hud.clearInsideSettings||!hud.elevationButtonsVisible||!hud.flightModeAbsent||hud.items!==7)
     throw Error(type+' invalid compact HUD '+JSON.stringify(hud));
    await page.locator('[data-hammer]').click();
    if(!(await page.locator('[data-side]').evaluate(el=>el.classList.contains('is-open'))))
@@ -74,6 +75,7 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     throw Error(type+' orientation button disappeared');
    if(!(await page.locator('[data-world]').isVisible()))
     throw Error(type+' no overview control in actual construction UI');
+   const savedLocation=await page.locator('.towerCanvas').getAttribute('data-camera-location');
    await page.locator('[data-world]').click();
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='true',
     null,{polling:200,timeout:25000}).catch(async error=>{
@@ -99,6 +101,8 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview.png')});
    await page.locator('[data-world]').click();
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='false');
+   const restoredLocation=await page.locator('.towerCanvas').getAttribute('data-camera-location');
+   if(savedLocation!==restoredLocation)throw Error(type+' camera teleported after overview '+JSON.stringify({savedLocation,restoredLocation}));
    if(await page.locator('[data-world]').getAttribute('aria-pressed')!=='false')
     throw Error(type+' overview button did not reset');
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-construction.png')});

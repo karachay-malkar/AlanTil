@@ -1,5 +1,5 @@
 /** First-person controller is visual only: no prefab placement or save mutations. */
-import {canTowerExplorerLand,moveTowerExplorer,TOWER_EXPLORER} from './first-person-navigation.js';
+import {moveTowerExplorer,TOWER_EXPLORER} from './first-person-navigation.js';
 const keys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown',
  'ArrowLeft','ArrowRight','KeyQ','KeyE','Space','ShiftLeft']);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -7,15 +7,15 @@ export function createTowerExplorerController({
  camera,controls,canvas,groundAt,getObstacles,requestRender
 }){
  const pressed=new Set();
- let enabled=false,flying=false,yaw=0,pitch=0,lastFrame=0;
+ let enabled=false,yaw=0,pitch=0,lastFrame=0,savedPosition=null;
  let motion={forward:0,strafe:0,up:0},lookTouch=null;
- function state(){return {active:enabled,flying,position:camera.position.toArray(),yaw,pitch};}
+ function state(){return {active:enabled,position:camera.position.toArray(),yaw,pitch};}
  function input(){
   const num=key=>Number(pressed.has(key));
   return {
    forward:clamp(motion.forward+num('KeyW')+num('ArrowUp')-num('KeyS')-num('ArrowDown'),-1,1),
    strafe:clamp(motion.strafe+num('KeyD')+num('ArrowRight')-num('KeyA')-num('ArrowLeft'),-1,1),
-   up:flying?clamp(motion.up+num('Space')+num('KeyE')-num('KeyQ')-num('ShiftLeft'),-1,1):0
+   up:clamp(motion.up+num('Space')+num('KeyE')-num('KeyQ')-num('ShiftLeft'),-1,1)
   };
  }
  function moving(){const m=input();return !!(m.forward||m.strafe||m.up);}
@@ -35,20 +35,13 @@ export function createTowerExplorerController({
    up:clamp(Number(next.up)||0,-1,1)};
   if(enabled)requestRender();
  }
- function setFly(value){
-  if(!enabled)return false;
-  if(!value&&!canTowerExplorerLand(camera.position,groundAt,getObstacles())){
-   // The player must fly sideways to clear the roof before touching down.
-   return true;
-  }
-  flying=!!value;
-  if(!flying)camera.position.y=groundAt(camera.position.x,camera.position.z)+TOWER_EXPLORER.eyeHeight;
-  requestRender();
-  return flying;
- }
  function enter(){
-  enabled=true;flying=false;controls.enabled=false;resetInput();
+  enabled=true;controls.enabled=false;resetInput();
   controls.maxDistance=85;camera.far=5000;camera.updateProjectionMatrix();
+  if(savedPosition){
+   camera.position.set(savedPosition.x,savedPosition.y,savedPosition.z);
+   camera.rotation.set(pitch,yaw,0,'YXZ');requestRender();return true;
+  }
   // Spawns at a free corner instead of inside a saved stone section.
   const obstacles=getObstacles();
   const {minX,maxX,minZ,maxZ}=TOWER_EXPLORER;
@@ -63,7 +56,8 @@ export function createTowerExplorerController({
  }
  function exit(){
   if(!enabled)return;
-  enabled=false;flying=false;controls.enabled=true;resetInput();
+  savedPosition={x:camera.position.x,y:camera.position.y,z:camera.position.z};
+  enabled=false;controls.enabled=true;resetInput();
   camera.rotation.set(0,0,0,'XYZ');
  }
  function frame(now){
@@ -77,7 +71,7 @@ export function createTowerExplorerController({
   let point=camera.position;
   const obstacles=getObstacles(),ground=groundAt,keys=input();
   for(let i=0;i<steps;i++)
-   point=moveTowerExplorer(point,keys,yaw,dt,{groundAt:ground,fly:flying,obstacles});
+   point=moveTowerExplorer(point,keys,yaw,dt,{groundAt:ground,obstacles});
   if(Math.abs(point.x-camera.position.x)+Math.abs(point.y-camera.position.y)+Math.abs(point.z-camera.position.z)>1e-8)
    camera.position.set(point.x,point.y,point.z);
   return true;
@@ -110,7 +104,7 @@ export function createTowerExplorerController({
  canvas.addEventListener('pointermove',onPointerMove);
  canvas.addEventListener('pointerup',onPointerUp);
  canvas.addEventListener('pointercancel',onPointerUp);
- return {enter,exit,setFly,setMotion,lookBy,state,frame,moving,clear,
+ return {enter,exit,setMotion,lookBy,state,frame,moving,clear,
   get active(){return enabled},
   dispose(){
    exit();window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKey);

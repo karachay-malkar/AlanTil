@@ -1,5 +1,5 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.23';
+import {createTowerScene} from './prefab-scene.js?v=17.2.24';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
@@ -7,7 +7,7 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {APPROVED_PREFAB_VERSION,approvedVariantCount} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3} from './repository.js?v=17.7-approved-only.1';
-import {uiIcon} from '../../shared/ui/icons.js?v=17.2.23';
+import {uiIcon} from '../../shared/ui/icons.js?v=17.2.24';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
@@ -39,13 +39,9 @@ export async function mount(context,params={}){
    <div class="towerJoystick" data-joystick role="application" aria-label="Джойстик движения">
     <div class="towerJoystickPuck" data-joystick-puck></div>
    </div>
-   <div class="towerFlightPanel" role="group" aria-label="Управление полётом">
-    <button type="button" class="btn towerIconAction towerFlySwitch" data-fly aria-pressed="false" aria-label="Включить полёт" title="Включить полёт">${uiIcon('plane')}</button>
-    <div class="towerAltitude">
-     <button type="button" class="btn towerIconAction" data-rise aria-label="Подняться" title="Подняться">${uiIcon('arrowUp')}</button>
-     <button type="button" class="btn towerIconAction" data-fall aria-label="Спуститься" title="Спуститься">${uiIcon('arrowDown')}</button>
-     <button type="button" class="btn towerIconAction towerGround" data-ground aria-label="Приземлиться" title="Приземлиться">${uiIcon('footprints')}</button>
-    </div>
+   <div class="towerElevationControls" role="group" aria-label="Плавный подъём и спуск">
+    <button type="button" class="btn towerIconAction" data-rise aria-label="Подняться" title="Подняться">${uiIcon('arrowUp')}</button>
+    <button type="button" class="btn towerIconAction" data-fall aria-label="Спуститься" title="Спуститься">${uiIcon('arrowDown')}</button>
    </div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
@@ -301,9 +297,6 @@ export async function mount(context,params={}){
   game.dataset.explore=String(active);
   const b=q('button[data-explore]');b?.setAttribute('aria-pressed',String(active));
   const span=b?.querySelector('span');if(span)span.textContent=active?'К строительству':'Прогулка';
-  game.dataset.flying='false';q('[data-fly]')?.setAttribute('aria-pressed','false');
-  q('[data-fly]').setAttribute('aria-label','Включить полёт');
-  q('[data-fly]').title='Включить полёт';
   joystick={forward:0,strafe:0};altitude=0;sendMotion();
   catalogVisible(false);closeSettings();
  }
@@ -318,24 +311,6 @@ export async function mount(context,params={}){
   button.setAttribute('aria-label',wide?'К строительству от первого лица':'Обзор Кюнлюма');
   button.title=wide?'К строительству от первого лица':'Обзор Кюнлюма';
   button.innerHTML=uiIcon(wide?'userRound':'route');
- });
- on('[data-fly]','click',()=>{
-  if(game.dataset.explore!=='true')return;
-  const active=s.scene?.setFly(q('[data-fly]').getAttribute('aria-pressed')!=='true');
-  q('[data-fly]').setAttribute('aria-pressed',String(!!active));
-  q('[data-fly]').setAttribute('aria-label',active?'Выключить полёт':'Включить полёт');
-  q('[data-fly]').title=active?'Выключить полёт':'Включить полёт';
-  game.dataset.flying=String(!!active);
- });
- on('[data-ground]','click',()=>{
-  if(game.dataset.explore!=='true')return;
-  const stillFlying=s.scene?.setFly(false);
-  altitude=0;sendMotion();
-  q('[data-fly]').setAttribute('aria-pressed',String(!!stillFlying));
-  q('[data-fly]').setAttribute('aria-label',stillFlying?'Выключить полёт':'Включить полёт');
-  q('[data-fly]').title=stillFlying?'Выключить полёт':'Включить полёт';
-  game.dataset.flying=String(!!stillFlying);
-  if(stillFlying)message('Освободи место под собой, чтобы приземлиться');
  });
  let stickPointer=null;
  function stickMove(event){

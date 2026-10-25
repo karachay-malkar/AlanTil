@@ -3,7 +3,7 @@ import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.23';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.24';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -394,8 +394,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
   exitExplore:resetCamera,
-  setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);
-   container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');return on;},
   setMotion(next){explorer.setMotion(next);
    // Input processing advances position independently of expensive WebGL frames.
    container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');

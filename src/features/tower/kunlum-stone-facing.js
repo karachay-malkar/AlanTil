@@ -71,21 +71,27 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   return [Math.max(1,Math.ceil(length/(.57*lod))),
           Math.max(1,Math.ceil(seg.height/(.33*lod)))];
  }
- // First pass ensures every segment is physically faced on BOTH sides before
- // the mobile instance budget is spent on near-camera detailed stone courses.
- for(const job of jobs){
-  const [cols,rows]=dimensions(job);
-  put(job,Math.floor(rows/2),Math.floor(cols/2),rows,cols);
+ // Allocate complete masonry courses on every segment, not only near walls.
+ const projected=jobs.map(dimensions);
+ const cost=density=>projected.reduce((sum,[cols,rows])=>
+  sum+2*Math.max(1,Math.floor(cols*density))*Math.max(1,Math.floor(rows*density)),0);
+ let density=1;
+ if(cost(1)>budget){
+  let low=0,high=1;
+  for(let i=0;i<22;i++){
+   const mid=(low+high)/2;
+   if(cost(mid)<=budget)low=mid;else high=mid;
+  }
+  density=low;
  }
- for(const job of jobs){
-  if(total+2>budget)break;
-  const [cols,rows]=dimensions(job);
-  for(let row=0;row<rows&&total+2<=budget;row++)
-   for(let col=0;col<cols&&total+2<=budget;col++){
-    if(row===Math.floor(rows/2)&&col===Math.floor(cols/2))continue;
-    put(job,row,col,rows,cols);
-   }
+ for(let i=0;i<jobs.length;i++){
+  const [fullCols,fullRows]=projected[i];
+  const cols=Math.max(1,Math.floor(fullCols*density));
+  const rows=Math.max(1,Math.floor(fullRows*density));
+  for(let row=0;row<rows;row++)
+   for(let col=0;col<cols;col++)put(jobs[i],row,col,rows,cols);
  }
+ root.userData.common100FacingDensity=density;
  for(let layer=0;layer<groups.length;layer++)
   for(let k=0;k<models.length;k++){
    const entries=bins[layer][k];if(!entries.length)continue;
