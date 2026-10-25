@@ -1,0 +1,58 @@
+name: Tower first-person walking and bounded flight QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/first-person-navigation.js'
+      - 'src/features/tower/tower-explorer-controller.js'
+      - 'src/features/tower/prefab-scene.js'
+      - 'src/features/tower/index.js'
+      - 'src/features/tower/tower.css'
+      - 'src/features/tower/kunlum-real-environment.js'
+      - 'tests/tower-first-person-navigation.test.mjs'
+      - 'scripts/qa/browser-tower-first-person.cjs'
+      - 'tests/fixtures/kunlum-tower-world.html'
+      - '.github/workflows/tower-first-person-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Syntax and deterministic collision tests
+        run: |
+          node --check src/features/tower/first-person-navigation.js
+          node --check src/features/tower/tower-explorer-controller.js
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/index.js
+          node --test tests/tower-first-person-navigation.test.mjs tests/tower-approved-manual.test.mjs
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright
+      - name: Drive real desktop/mobile tower editor with walking and flight
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/tower-first-person.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/tests/fixtures/kunlum-tower-world.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/browser-tower-first-person.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tower-first-person-desktop-mobile
+          path: tower-first-person-qa/
+          retention-days: 14
+          if-no-files-found: warn
