@@ -47,7 +47,7 @@ test('both editors and game use one 2D plan; auto candidates are volume meshes',
  assert.match(game,/candidatesVisible:true/);
  assert.match(overlay,/wallPiece\(auto,a,b,1\.45,\.42\)/);
  assert.match(overlay,/addMesh\(candidates,auto/);
- assert.match(threeD,/wallQuad\(candidates,pts\[i-1\],pts\[i\],1\.4,\.42\)/);
+ assert.match(threeD,/createKunlumMapOverlay/);
  assert.match(threeD,/function buildParcel\(\)/);
  assert.doesNotMatch(overlay,/clipKunlumOutsideReserve|excludeBounds/);
 });

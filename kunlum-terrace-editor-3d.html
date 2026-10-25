@@ -220,51 +220,6 @@ function buildLocalTerrain(){
  patchedTerrain.name=$('preview').checked?'Temporary terrace preview (source DEM unchanged)':'Unmodified local DEM samples';
  scene.add(patchedTerrain);
 }
-function getOpeningSections(f,poly){
- const complete=f.type==='house'&&poly.length>2;
- if(complete&&Math.hypot(poly[0][0]-poly.at(-1)[0],poly[0][1]-poly.at(-1)[1])>.01)poly=[...poly,poly[0]];
- const lengths=[],prefix=[0];
- for(let i=0;i<poly.length-1;i++){
-  const length=Math.hypot(poly[i+1][0]-poly[i][0],poly[i+1][1]-poly[i][1]);
-  lengths.push(length);prefix.push(prefix.at(-1)+length);
- }
- const cuts=(source.openings||[]).filter(o=>o.wallId===f.id).flatMap(o=>{
-  const metric=a=>a&&Number.isInteger(a.segment)&&a.segment>=0&&a.segment<lengths.length?
-   prefix[a.segment]+Math.max(0,Math.min(1,Number(a.t)||0))*lengths[a.segment]:null;
-  const a=metric(o.start),b=metric(o.end);return a===null||b===null?[]:[[Math.min(a,b),Math.max(a,b)]];
- });
- const kept=[];
- for(let i=0;i<lengths.length;i++){
-  const len=lengths[i];if(len<.001)continue;
-  let intervals=[[0,1]];
-  for(const [a,b] of cuts){
-   const low=Math.max(0,(a-prefix[i])/len),high=Math.min(1,(b-prefix[i])/len);
-   if(high<=low)continue;
-   intervals=intervals.flatMap(([start,end])=>{
-    if(high<=start||low>=end)return [[start,end]];
-    return [...(low>start?[[start,Math.min(low,end)]]:[]),...(high<end?[[Math.max(high,start),end]]:[])];
-   });
-  }
-  for(const [a,b] of intervals){
-   const x=poly[i],y=poly[i+1];
-   kept.push([[x[0]+(y[0]-x[0])*a,x[1]+(y[1]-x[1])*a],[x[0]+(y[0]-x[0])*b,x[1]+(y[1]-x[1])*b]]);
-  }
- }
- return kept;
-}
-function wallQuad(out,a,b,height,width){
- const len=Math.hypot(a[0]-b[0],a[1]-b[1]);if(len<.18)return;
- const nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;
- const y1=heightAt(a[0],a[1])+.2,y2=heightAt(b[0],b[1])+.2;
- const v=[
-  [a[0]+nx,y1,a[1]+nz],[b[0]+nx,y2,b[1]+nz],
-  [b[0]+nx,y2+height,b[1]+nz],[a[0]+nx,y1+height,a[1]+nz],
-  [a[0]-nx,y1,a[1]-nz],[b[0]-nx,y2,b[1]-nz],
-  [b[0]-nx,y2+height,b[1]-nz],[a[0]-nx,y1+height,a[1]-nz]
- ];
- const face=(p,q,r,s)=>out.push(...v[p],...v[q],...v[r],...v[p],...v[r],...v[s]);
- face(0,1,2,3);face(5,4,7,6);face(3,2,6,7);face(4,5,1,0);
-}
 function buildParcel(){
  eachMeshDisposed(parcelGroup);
  const corners=plotCorners(source.plot,source.plot.ppm).map(world);
