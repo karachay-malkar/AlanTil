@@ -83,6 +83,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   worldMode=false;explorer.enter();
   grid.visible=false;faceGrid.visible=false;preview.visible=false;
   container.dataset.worldView='false';container.dataset.cameraMode='explore';
+  container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');
   container.dataset.flying='false';
   scheduleDraw();return true;
  }
@@ -311,7 +312,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   frame=0;
   if(disposed||document.hidden)return;
   if(explorer.active){
-   if(explorer.frame(now)){needsRender=true;scheduleDraw();}
+   if(explorer.frame(now)){
+    container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');
+    needsRender=true;scheduleDraw();
+   }
   }else{
    controls.update();
    const safe=constrainTowerCamera(camera.position,kunlum?.heightAt||(()=>0),worldMode?4:.35);
@@ -356,7 +360,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   setSelected,getAimHit(){if(explorer.active)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!explorer.active;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
   exitExplore:resetCamera,
-  setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);return on;},
+  setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);
+   container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');return on;},
   setMotion:explorer.setMotion,getExploreState:explorer.state,
   rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
