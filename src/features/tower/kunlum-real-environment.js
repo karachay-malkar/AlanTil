@@ -109,6 +109,19 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  const footprintMaterial=new THREE.LineBasicMaterial({color:'#f0a75c',depthTest:false});
  group.add(new THREE.LineSegments(footprintGeometry,footprintMaterial));
  register(footprintGeometry,footprintMaterial);
+ // Distinguish the existing 20m square from the historical yellow 30x15m
+ // survey rectangle. Do not misrepresent it as fully contained.
+ const buildCorners=[[0,0],[20,0],[20,20],[0,20]],buildLine=[];
+ for(let i=0;i<4;i++){
+  const a=buildCorners[i],b=buildCorners[(i+1)%4];
+  buildLine.push(a[0],.19,a[1],b[0],.19,b[1]);
+ }
+ const buildG=new THREE.BufferGeometry();
+ buildG.setAttribute('position',new THREE.Float32BufferAttribute(buildLine,3));
+ const buildM=new THREE.LineBasicMaterial({color:'#6bc9cd',depthTest:false});
+ const buildOutline=new THREE.LineSegments(buildG,buildM);
+ buildOutline.name='Legacy 20x20 buildable area (cyan); approved 30x15 plot (yellow)';
+ group.add(buildOutline);register(buildG,buildM);
  const currentStats={houseContours:0,roofCourtyards:0,courtyards:0,
   confirmedFeatures:0,candidateFeatures:0,sourceAccuracy:'Loading vector plan'};
  group.userData.kunlum={
@@ -126,6 +139,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  // Both datasets are versioned and bundled with the same published tower branch.
  // No live OSM request, no dynamically generated fake substitute river.
  let river=null,riverbank=null,scatter=null,outcrops=null,overlay=null,wideDem=null;
+ let riverSourceLine=[];
  let localLine=[],planData=null;
  async function loadApprovedMap(){
   const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
@@ -144,23 +158,47 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   if(localLine.length)installScenery();
   onReady();
  }
+ function wideHeightAt(x,z){
+  if(!wideDem?.loaded)return terrain.surfaceAt(x,z);
+  const [east,north]=terrain.sceneToDem(x,z),b=wideDem.bounds;
+  return wideDem.sample(
+   Math.max(b.minX,Math.min(b.maxX,east)),
+   Math.max(b.minZ,Math.min(b.maxZ,north))
+  )-terrain.baseHeight;
+ }
+ function rebuildRiver(){
+  if(!riverSourceLine.length)return;
+  const wide=!!wideDem?.loaded;
+  const src=wide?riverSourceLine:riverSourceLine.filter(
+   p=>Math.abs(p.x)<=1750&&Math.abs(p.z)<=1750
+  );
+  const line=src.map(({x,z})=>{
+   const [sx,sz]=terrain.demToScene(x,z);return {x:sx,z:sz};
+  });
+  if(line.length<2)throw Error('Mapped Cherek reach outside current DEM');
+  if(river){group.remove(river.root);river.dispose();}
+  if(riverbank){group.remove(riverbank.root);riverbank.dispose();}
+  // Keep the immutable Copernicus geometry incised only near its own extent.
+  const core=riverSourceLine.filter(p=>Math.abs(p.x)<=1750&&Math.abs(p.z)<=1750)
+   .map(({x,z})=>{const [sx,sz]=terrain.demToScene(x,z);return {x:sx,z:sz}});
+  terrain.setRiverLine(core);
+  localLine=line;
+  const surface=wide?wideHeightAt:terrain.surfaceAt;
+  river=createKunlumRiverLayer(THREE,surface,{
+   quality:mobile?'interactive':'beautiful',mobile,centerline:line
+  });
+  group.add(river.root);
+  riverbank=createKunlumRiverbankScatter(THREE,surface,{
+   points:river.points,mobile,features:planData?.confirmed_features||[],toWorld:P
+  });
+  group.add(riverbank.root);
+ }
  async function loadMappedRiver(){
   const source=await loadKunlumCherekLocal({url:'/assets/tower/environment/kunlum-cherek-balkarsky-osm.json'});
   if(disposed)return;
-  localLine=source.line.filter(p=>Math.abs(p.x)<=1750&&Math.abs(p.z)<=1750)
-   .map(({x,z})=>{const [sx,sz]=terrain.demToScene(x,z);return {x:sx,z:sz}});
-  if(localLine.length<2)throw Error('Mapped Cherek reach outside Copernicus DEM');
-  terrain.setRiverLine(localLine); // visible vertices only, immutable source DEM
+  riverSourceLine=source.line;
   // Existing tower raycasting still checks ONLY construction prefabs and floor.
-  river=createKunlumRiverLayer(THREE,terrain.surfaceAt,{
-   quality:mobile?'interactive':'beautiful',mobile,centerline:localLine
-  });
-  group.add(river.root);
-  riverbank=createKunlumRiverbankScatter(THREE,terrain.surfaceAt,{
-   points:river.points,mobile,features:planData?.confirmed_features||[],
-   toWorld:p=>{const [x,z]=P(p);return [-x,z]}
-  });
-  group.add(riverbank.root);
+  rebuildRiver();
   group.userData.kunlum.river='Local OpenStreetMap ODbL, '+source.line.length+' points';
   if(planData)installScenery();
   onReady();
@@ -171,11 +209,12 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
    mobile,features:planData.confirmed_features,toWorld:P,
    riverDistanceAt:(x,z)=>riverDistanceAt(localLine,x,z)
   };
-  scatter=createKunlumTerrainScatter(THREE,terrain.heightAt,{
+  const surface=wideDem?.loaded?wideHeightAt:terrain.heightAt;
+  scatter=createKunlumTerrainScatter(THREE,surface,{
    ...options,range:mobile?450:580,
    excludedBounds:{minX:-10,maxX:30,minZ:-15,maxZ:35}
   });
-  outcrops=createKunlumRockOutcrops(THREE,terrain.heightAt,{
+  outcrops=createKunlumRockOutcrops(THREE,surface,{
    ...options,bounds:{minX:-1600,maxX:1600,minZ:-1600,maxZ:1600}
   });
   group.add(scatter.root,outcrops.root);
@@ -191,6 +230,12 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
    if(disposed)return;
    const summary=terrain.installWideDem(wideDem);
    panorama.mesh.visible=false;
+   // Extend the locally frozen OSM Cherek along the outer DEM and refresh
+   // terrain-based scattered stones without moving any historic walls.
+   if(riverSourceLine.length)rebuildRiver();
+   if(scatter){group.remove(scatter.root);scatter.dispose();scatter=null;}
+   if(outcrops){group.remove(outcrops.root);outcrops.dispose();outcrops=null;}
+   if(planData&&riverSourceLine.length)installScenery();
    const meta=group.userData.kunlum;
    meta.wideStatus='ready';
    meta.terrainExtentM=summary.extent;
