@@ -2,7 +2,7 @@
   "expo": {
     "name": "Alan Til",
     "slug": "alan-til",
-    "version": "17.2.23",
+    "version": "17.2.24",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
@@ -54,7 +54,7 @@
       "buildNumber": "61"
     },
     "extra": {
-      "releaseVersion": "17.2.23",
+      "releaseVersion": "17.2.24",
       "architecture": "shared-core-16.7.0",
       "preview": "expo-web-and-native-preview"
     },
