@@ -46,6 +46,32 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     throw Error(type+' wrong yellow parcel centre / expanded DEM absent '+JSON.stringify(extent));
    await page.waitForFunction(()=>document.getElementById('qa-root')?.dataset.mount==='success'&&
     document.querySelector('[data-world]')?.disabled===false,null,{timeout:60000});
+   const hud=await page.evaluate(()=>({
+    catalogClosed:document.querySelector('[data-side]')?.classList.contains('is-open')===false,
+    orientationVisible:!!document.querySelector('[data-orientation]')?.getClientRects().length,
+    extraCameraButtons:document.querySelectorAll('[data-camera]').length,
+    clearInsideSettings:!!document.querySelector('[data-settings-panel] [data-clear]'),
+    flightAltitudeHidden:getComputedStyle(document.querySelector('.towerAltitude')).display==='none',
+    items:document.querySelectorAll('[data-section-id]').length
+   }));
+   if(!hud.catalogClosed||!hud.orientationVisible||hud.extraCameraButtons||
+      !hud.clearInsideSettings||!hud.flightAltitudeHidden||hud.items!==7)
+    throw Error(type+' invalid compact HUD '+JSON.stringify(hud));
+   await page.locator('[data-hammer]').click();
+   if(!(await page.locator('[data-side]').evaluate(el=>el.classList.contains('is-open'))))
+    throw Error(type+' catalog did not open');
+   await page.locator('[data-catalog-close]').click();
+   if(await page.locator('[data-side]').evaluate(el=>el.classList.contains('is-open')))
+    throw Error(type+' catalog did not close');
+   await page.locator('[data-settings]').click();
+   if(!(await page.locator('[data-settings-panel]').isVisible()))
+    throw Error(type+' settings did not open');
+   await page.locator('[data-settings]').click();
+   if(await page.locator('[data-settings-panel]').isVisible())
+    throw Error(type+' settings did not close');
+   await page.locator('[data-orientation]').click();
+   if(!(await page.locator('[data-orientation]').isVisible()))
+    throw Error(type+' orientation button disappeared');
    if(!(await page.locator('[data-world]').isVisible()))
     throw Error(type+' no overview control in actual construction UI');
    await page.locator('[data-world]').click();
@@ -65,13 +91,13 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    await page.waitForTimeout(1500);
    if(errors.length)throw Error(type+': errors after wide camera: '+JSON.stringify(errors));
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview.png')});
-   await page.locator('[data-camera="home"]').click();
+   await page.locator('[data-world]').click();
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='false');
    if(await page.locator('[data-world]').getAttribute('aria-pressed')!=='false')
     throw Error(type+' overview button did not reset');
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-construction.png')});
    results.push({mode:type,confirmed:details.count,river:details.river,worldView:true,
-    homeRestored:true,errors:errors.length});
+    homeRestored:true,hud,errors:errors.length});
    await context.close();
   }
   console.log('TOWER_KUNLUM_WORLD_BROWSER_PASS',JSON.stringify(results));
