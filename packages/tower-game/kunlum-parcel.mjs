@@ -1,7 +1,7 @@
 /** Single authoritative construction parcel, shared by terrain, scene and validation. */
 export const KUNLUM_BUILD_PARCEL=Object.freeze({
- minX:0,maxX:25,minZ:0,maxZ:40,
- widthM:25,depthM:40,centerX:12.5,centerZ:20,
+ minX:0,maxX:15,minZ:0,maxZ:30,
+ widthM:15,depthM:30,centerX:7.5,centerZ:15,
  gridStepM:.25,transitionM:12
 });
 export function isWithinKunlumParcel(x,z){

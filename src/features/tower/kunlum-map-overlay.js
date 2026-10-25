@@ -97,7 +97,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt}){
    const a=p[i-1],b=p[i],pkey=q=>q.map(v=>v.toFixed(3)).join(',');
    const key=[pkey(a),pkey(b)].sort().join('|');
    if(seenAutoSegments.has(key))continue;
-   seenAutoSegments.add(key);line(auto,a,b,.85);
+   seenAutoSegments.add(key);wallPiece(auto,a,b,1.45,.42);
   }
  }
  const owned=[];
@@ -116,7 +116,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt}){
  addMesh(confirmed,buffers.wall,'#b9b5a5','74 confirmed walls');
  addMesh(confirmed,buffers.house,'#dfb88b','19 house boundaries');
  addMesh(confirmed,buffers.retaining,'#ab8e77','16 retaining walls');
- addLines(candidates,auto,'#4cb6de','Unverified automatic traces',.70);
+ addMesh(candidates,auto,'#72aab6','Unverified automatic 3D walls');
  addLines(passages,gap,'#2ae9a7','11 confirmed passages plus linked openings');
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];

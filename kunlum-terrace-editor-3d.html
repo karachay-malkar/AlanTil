@@ -49,6 +49,7 @@ label{display:block;margin:8px 0 5px}
 <label><input id="confirmedVisible" type="checkbox" checked> Подтверждённые стены и дома</label>
 <label><input id="candidatesVisible" type="checkbox" checked> Автоматические контуры (не проверены)</label>
 <label><input id="passageVisible" type="checkbox" checked> Проходы (зелёные)</label>
+<label><input id="parcelVisible" type="checkbox" checked> Строительный участок 15 × 30 м (жёлтый)</label>
 <div id="terrainStatus">Загрузка рельефа…</div></div>
 <div class="box"><h2>2. Инструмент на 3D-поверхности</h2>
 <div class="row"><button id="viewMode" class="active">Вращать</button><button id="drawMode">Рисовать</button><button id="editMode">Править</button></div>
@@ -77,7 +78,7 @@ label{display:block;margin:8px 0 5px}
 import * as THREE from './src/vendor/three/three.module.js';
 import {OrbitControls} from './src/vendor/three/addons/controls/OrbitControls.js';
 import {KUNLUM_DEM} from './src/features/tower/kunlum-dem-data.js';
-import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,localWorldToPixel,sampleDemLocal} from './src/features/tower/kunlum-georeference.js';
+import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,localWorldToPixel,sampleDemLocal,plotCorners} from './src/features/tower/kunlum-georeference.js';
 import {demContourLines,terrainColor,validTerraceFeature} from './src/features/tower/kunlum-dem-contours.js';
 import {insidePolygon} from './src/features/tower/kunlum-terraces.js';
 
@@ -99,9 +100,9 @@ orbit.enableDamping=true;orbit.minDistance=3;orbit.maxDistance=3500;
 const raycaster=new THREE.Raycaster(),cursor=new THREE.Vector2();
 const alignment=structuredClone(DEFAULT_KUNLUM_ALIGNMENT);
 let source=null,heights=null,terrain=null,patchedTerrain=null,bounds=null;
-let contourGroup=new THREE.Group(),confirmedGroup=new THREE.Group(),candidateGroup=new THREE.Group(),passageGroup=new THREE.Group();
+let contourGroup=new THREE.Group(),confirmedGroup=new THREE.Group(),candidateGroup=new THREE.Group(),passageGroup=new THREE.Group(),parcelGroup=new THREE.Group();
 let terraceGroup=new THREE.Group(),handleGroup=new THREE.Group(),draftGroup=new THREE.Group();
-for(const g of [contourGroup,confirmedGroup,candidateGroup,passageGroup,terraceGroup,handleGroup,draftGroup])scene.add(g);
+for(const g of [contourGroup,confirmedGroup,candidateGroup,passageGroup,parcelGroup,terraceGroup,handleGroup,draftGroup])scene.add(g);
 let mode='view',selected=null,drawing=[],dragVertex=null,changed=false,nextId=1,contourCache=new Map(),unverifiedCount=0;
 const heightAt=(x,z)=>sampleDemLocal(heights,x,z);
 const world=p=>pixelToLocalWorld(p,alignment);
@@ -148,7 +149,7 @@ function rectangleOf(points){
 }
 function setupBounds(){
  const pts=source.confirmed_features.filter(f=>f.type!=='passage'&&Array.isArray(f.points)).flatMap(f=>f.points.map(world));
- const all=pts.length?pts:[[0,0]];
+ const all=[...(pts.length?pts:[[0,0]]),...plotCorners(source.plot,source.plot.ppm).map(world)];
  const m=rectangleOf(all),pad=45,roundLo=v=>Math.max(-1770,Math.floor(v/30)*30),roundHi=v=>Math.min(1770,Math.ceil(v/30)*30);
  bounds={x0:roundLo(m.x0-pad),x1:roundHi(m.x1+pad),z0:roundLo(m.z0-pad),z1:roundHi(m.z1+pad)};
 }
@@ -263,6 +264,12 @@ function wallQuad(out,a,b,height,width){
  const face=(p,q,r,s)=>out.push(...v[p],...v[q],...v[r],...v[p],...v[r],...v[s]);
  face(0,1,2,3);face(5,4,7,6);face(3,2,6,7);face(4,5,1,0);
 }
+function buildParcel(){
+ eachMeshDisposed(parcelGroup);
+ const corners=plotCorners(source.plot,source.plot.ppm).map(world);
+ floatLine([...corners,corners[0]],'#f1d44b',parcelGroup,1);
+ parcelGroup.visible=$('parcelVisible').checked;
+}
 function buildWalls(){
  eachMeshDisposed(confirmedGroup);eachMeshDisposed(candidateGroup);eachMeshDisposed(passageGroup);
  const walls={wall:[],retaining:[],house:[]},passages=[];
@@ -290,9 +297,14 @@ function buildWalls(){
   if(c.promoted||ids.has(c.id)||!c.points?.length)continue;
   candidateCount++;
   const pts=c.points.map(world);
-  for(let i=1;i<pts.length;i++)candidates.push(...worldLine(pts[i-1],pts[i],1));
+  for(let i=1;i<pts.length;i++)wallQuad(candidates,pts[i-1],pts[i],1.4,.42);
  }
- meshLine(candidates,'#62d1ed',candidateGroup,{opacity:.53,depthTest:false});
+ if(candidates.length){
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(candidates,3));geo.computeVertexNormals();
+  const mat=new THREE.MeshStandardMaterial({color:'#69b7c2',roughness:1,transparent:true,opacity:.72,depthWrite:false,side:THREE.DoubleSide});
+  const mesh=new THREE.Mesh(geo,mat);mesh.name='Unverified automatic 3D walls';candidateGroup.add(mesh);
+ }
  meshLine(passages,'#38f2ad',passageGroup,{depthTest:false});
  // Linked openings are not walls: mark their locations with green lines.
  const featureMap=new Map(source.confirmed_features.map(f=>[f.id,f]));
@@ -518,10 +530,11 @@ function loadPlan(plan){
  const invalid=plan.confirmed_features.filter(f=>f.type==='terrace'&&!validTerraceFeature(f));
  if(invalid.length)throw Error('Некорректные террасы: '+invalid.map(f=>f.id).join(', '));
  source=structuredClone(plan);
+ alignment.pixelsPerMetre=source.plot.ppm;
  if(!Array.isArray(source.openings))source.openings=[];
  if(!Array.isArray(source.auto_candidates))source.auto_candidates=[];
  selected=null;drawing=[];dragVertex=null;nextId=1+source.confirmed_features.reduce((m,f)=>Math.max(m,Number(String(f.id).slice(1))||0),0);
- setupBounds();contourCache.clear();buildTerrain();unverifiedCount=buildWalls();updateContours();refreshTerraces();
+ setupBounds();contourCache.clear();buildTerrain();unverifiedCount=buildWalls();buildParcel();updateContours();refreshTerraces();
  changed=false;setMode('view');focus();
  $('status').textContent='План загружен. Рельеф оригинальный, террасы доступны для ручного редактирования.';
 }
@@ -572,6 +585,7 @@ $('contourOpacity').oninput=updateContours;
 $('confirmedVisible').onchange=()=>{confirmedGroup.visible=$('confirmedVisible').checked};
 $('candidatesVisible').onchange=()=>{candidateGroup.visible=$('candidatesVisible').checked};
 $('passageVisible').onchange=()=>{passageGroup.visible=$('passageVisible').checked};
+$('parcelVisible').onchange=()=>{parcelGroup.visible=$('parcelVisible').checked};
 $('preview').onchange=()=>{
  if($('preview').checked&&mode==='draw')setMode('view');
  buildLocalTerrain();refreshTerraces();

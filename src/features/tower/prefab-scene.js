@@ -36,7 +36,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',750,4200);
  const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,5000);
  camera.position.set(32,15,-23);
- const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(10,.5,10);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.update();
+ const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(SITE.centerX,.5,SITE.centerZ);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.update();
  scene.add(new THREE.HemisphereLight('#f0f6ff','#766950',2.0));
  const sunlight=new THREE.DirectionalLight('#fff3df',3);sunlight.position.set(-10,20,13);scene.add(sunlight);
  const surface=new THREE.Group();scene.add(surface);
@@ -57,9 +57,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(meta.wideStatus==='ready'){scene.fog.near=3300;scene.fog.far=10300;}
   scheduleDraw();
  }
- try { kunlum=createKunlumEnvironment(THREE,scene,{
-  mobile:matchMedia('(max-width:749px)').matches,onReady:refreshEnvironmentStatus
- });
+ try {
+  const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
+  if(!response.ok)throw Error('Authoritative Kunlum plan HTTP '+response.status);
+  const plan=await response.json();
+  if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
+     plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
+  kunlum=createKunlumEnvironment(THREE,scene,{
+   plan,mobile:matchMedia('(max-width:749px)').matches,onReady:refreshEnvironmentStatus
+  });
   void kunlum.ready.then(refreshEnvironmentStatus);
  }
  catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }

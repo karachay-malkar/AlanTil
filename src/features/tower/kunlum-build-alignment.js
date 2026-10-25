@@ -1,26 +1,22 @@
-/** Single 25x40m parcel shared by georeferenced scene and saved 25cm grid.
- * The one-point calibrated settlement/DEM rotation stays -134 degrees.
- * Parcel angle compensates for the mirrored georeference to align to X/Z grid.
- */
+/** Derive the game parcel and mapped walls from the single approved 2D plan. */
 import {DEFAULT_KUNLUM_ALIGNMENT,pixelToLocalWorld,plotCorners,rotateKunlumPlanPoint} from './kunlum-georeference.js';
 import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
-export const PLOT=Object.freeze({
- // Preserve the old plot centre in original map pixels.
- x:1069.9197998046875,y:846.0927734375,
- widthM:SITE.widthM,heightM:SITE.depthM,ppm:3.6,angleDeg:-116
-});
-export const APPROVED_KUNLUM_ROTATION=-134;
-export function createKunlumGameAlignment({plot=PLOT,calibration=DEFAULT_KUNLUM_ALIGNMENT,rotation=APPROVED_KUNLUM_ROTATION}={}){
- const pixels=plotCorners(plot,calibration.pixelsPerMetre);
- const transformed=pixels.map(p=>rotateKunlumPlanPoint(pixelToLocalWorld(p,calibration),rotation));
- const origin=[
-  transformed.reduce((v,p)=>v+p[0],0)/transformed.length,
-  transformed.reduce((v,p)=>v+p[1],0)/transformed.length
- ];
- const pointInDisplay=p=>rotateKunlumPlanPoint(pixelToLocalWorld(p,calibration),rotation);
- const planToScene=p=>{const [x,z]=pointInDisplay(p);return [SITE.centerX+x-origin[0],SITE.centerZ+z-origin[1]]};
+export function createKunlumGameAlignment({plot,calibration=DEFAULT_KUNLUM_ALIGNMENT}={}){
+ if(!plot||plot.widthM!==SITE.depthM||plot.heightM!==SITE.widthM||
+  !Number.isFinite(plot.x)||!Number.isFinite(plot.y)||!Number.isFinite(plot.ppm)||plot.ppm<=0||
+  !Number.isFinite(plot.angleDeg))throw Error('Expected authoritative 30x15m 2D plot');
+ // The rectangle on the 2D map is drawn at plot.ppm, not the DEM draft scale.
+ const survey={...calibration,pixelsPerMetre:plot.ppm};
+ if(!survey.mirrorWallsX)throw Error('Kunlum mirrored plan required');
+ // Align the 30m map side with world Z, the 15m side with world X.
+ const rotation=-90-plot.angleDeg-survey.angleDeg;
+ const pixels=plotCorners(plot,plot.ppm);
+ const project=p=>rotateKunlumPlanPoint(pixelToLocalWorld(p,survey),rotation);
+ const transformed=pixels.map(project);
+ const origin=[transformed.reduce((s,p)=>s+p[0],0)/4,transformed.reduce((s,p)=>s+p[1],0)/4];
+ const planToScene=p=>{const [x,z]=project(p);return [SITE.centerX+x-origin[0],SITE.centerZ+z-origin[1]]};
  const demToScene=(east,north)=>[SITE.centerX-east-origin[0],SITE.centerZ+north-origin[1]];
  const sceneToDem=(x,z)=>[SITE.centerX-x-origin[0],z-SITE.centerZ+origin[1]];
- return {origin,pixels,planToScene,demToScene,sceneToDem,
-  footprintMetres:[plot.widthM,plot.heightM],footprintScene:pixels.map(planToScene)};
+ return {origin,pixels,rotation,plot,planToScene,demToScene,sceneToDem,
+  footprintMetres:[SITE.widthM,SITE.depthM],footprintScene:pixels.map(planToScene)};
 }

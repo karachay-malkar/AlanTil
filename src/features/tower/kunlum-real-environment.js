@@ -1,13 +1,13 @@
 /**
  * Georeferenced Kunlum visual environment for the Tower game.
- * Shared 25x40m plot; preserve saved structures.
+ * Approved 2D 30x15m plot drives 15x30m construction grid.
  * Render-only. All historic polygons are one-point calibrated and provisional.
  * Does not register landscape as a placement target.
  */
 import {makeKunlumTerrain,makeKunlumPanorama} from './kunlum-terrain-lod.js';
 import {sampleDemLocal} from './kunlum-georeference.js';
 import {createKunlumWideDem} from './kunlum-wide-dem.js';
-import {createKunlumGameAlignment,PLOT} from './kunlum-build-alignment.js';
+import {createKunlumGameAlignment} from './kunlum-build-alignment.js';
 import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
 import {createKunlumMapOverlay} from './kunlum-map-overlay.js';
 import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js';
@@ -15,7 +15,9 @@ import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './ku
 import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
 
 
-export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()=>{}}={}){
+export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,onReady=()=>{}}={}){
+ if(!plan?.plot||!Array.isArray(plan.confirmed_features)||!Array.isArray(plan.auto_candidates))
+  throw Error('Authoritative 2D vector plan required');
  const group=new THREE.Group();
  group.name='Кюнлюм · актуальный DEM PBR, план 120, Черек OSM';
  scene.add(group);
@@ -27,10 +29,10 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   if(texture)textures.push(texture);
  };
  // One calibrated yellow parcel shared by all map and terrain layers.
- const alignment=createKunlumGameAlignment();
+ const alignment=createKunlumGameAlignment({plot:plan.plot});
  const pbr=createKunlumNativeTerrainPBR(THREE,{mobile});
  const terrain=makeKunlumTerrain(THREE,group,{
-  mobile,plot:PLOT,register,alignment,pbr
+  mobile,plot:plan.plot,register,alignment,pbr
  });
  const panorama=makeKunlumPanorama(THREE,group,terrain,{mobile,register});
  const P=alignment.planToScene;
@@ -79,7 +81,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   group.add(tower);register(g,m);
  }
  createMonument();
- // Single approved, level 25x40m yellow boundary.
+ // One 15x30m boundary from the exact 2D plot.
  const planned=alignment.footprintScene,footprint=[];
  for(let i=0;i<4;i++){
   const a=planned[i],b=planned[(i+1)%4];
@@ -89,12 +91,12 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  footprintGeometry.setAttribute('position',new THREE.Float32BufferAttribute(footprint,3));
  const footprintMaterial=new THREE.LineBasicMaterial({color:'#f1d44b',depthTest:false});
  const parcelOutline=new THREE.LineSegments(footprintGeometry,footprintMaterial);
- parcelOutline.name='Approved yellow 25x40m construction parcel';
+ parcelOutline.name='Approved yellow 15x30m construction parcel';
  group.add(parcelOutline);register(footprintGeometry,footprintMaterial);
  const currentStats={houseContours:0,roofCourtyards:0,courtyards:0,
   confirmedFeatures:0,candidateFeatures:0,sourceAccuracy:'Loading vector plan'};
  group.userData.kunlum={
-  plot:[PLOT.widthM,PLOT.heightM],buildable:[SITE.widthM,SITE.depthM],
+  plot:[plan.plot.widthM,plan.plot.heightM],buildable:[SITE.widthM,SITE.depthM],
   yellowParcelCenter:[SITE.centerX,SITE.centerZ],yellowParcelCorners:planned,
   gridStep:.25,ruins:currentStats,sitePlan:'kunlum-vector-plan-2026-10-23.json',
   monument:'Абай-къала',abaevModelPosition:towerBase,
@@ -110,9 +112,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  let riverSourceLine=[];
  let localLine=[],planData=null;
  async function loadApprovedMap(){
-  const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
-  if(!response.ok)throw Error('Approved Kunlum plan: HTTP '+response.status);
-  const source=await response.json();
+  const source=plan; // Same plan fetched by the construction scene.
   if(source.confirmed_features?.length!==120||source.openings?.length!==42||
      source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;

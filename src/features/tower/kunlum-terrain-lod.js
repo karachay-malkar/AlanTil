@@ -24,7 +24,7 @@ export function getKunlumHeights(){
 }
 export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,register=()=>{},mirrorDemX=false,pbr=null,alignment=null}={}){
  const heights=getKunlumHeights();
- // The plot centre stays at the existing gameplay (10,0,10).
+ // Terrain height baseline follows the current construction plot centre.
  const centrePixel=[plot.x+plot.widthM*plot.ppm/2,plot.y+plot.heightM*plot.ppm/2];
  const [legacyEast,legacyNorth]=pixelToLocalWorld(centrePixel,calibration);
  const centerEast=alignment?.origin[0]??legacyEast;
@@ -33,7 +33,7 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   ((east,north)=>[(mirrorDemX?centerEast-east:east-centerEast)+10,north-centerNorth+10]);
  const sceneToDem=alignment?.sceneToDem||
   ((x,z)=>[centerEast+(mirrorDemX?10-x:x-10),z-10+centerNorth]);
- const [anchorE,anchorN]=sceneToDem(10,10);
+ const [anchorE,anchorN]=sceneToDem(SITE.centerX,SITE.centerZ);
  const baseHeight=sampleDemLocal(heights,anchorE,anchorN);
  const sample=(east,north)=>sampleDemLocal(heights,east,north);
  const clamped=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -108,7 +108,7 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
  const south=demToScene(0,-1800)[1],north=demToScene(0,1800)[1];
  // Rectangular tiles share the same bilinear sampler, so LOD edges are watertight.
  // Fine local detail, economical normal LOD outside; adjacent tiles do not overlap.
- const focus={minX:-15,maxX:40,minZ:-15,maxZ:55};
+ const focus={minX:SITE.minX-15,maxX:SITE.maxX+15,minZ:SITE.minZ-15,maxZ:SITE.maxZ+15};
  const nearTiles=[
   [centreX-near,focus.minX,centreZ-near,centreZ+near,step,'Near west'],
   [focus.maxX,centreX+near,centreZ-near,centreZ+near,step,'Near east'],
