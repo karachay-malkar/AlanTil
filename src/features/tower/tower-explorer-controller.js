@@ -59,13 +59,17 @@ export function createTowerExplorerController({
  }
  function frame(now){
   if(!enabled)return false;
-  const dt=lastFrame?Math.min(.05,(now-lastFrame)/1000):0;lastFrame=now;
+  // Use wall-clock time even on low-FPS Android: step in small increments to
+  // preserve collision integrity instead of slowing flight with dropped frames.
+  const elapsed=lastFrame?Math.min(.25,(now-lastFrame)/1000):0;lastFrame=now;
   if(!moving())return false;
-  const p=moveTowerExplorer(camera.position,input(),yaw,dt,{
-   groundAt,fly:flying,obstacles:getObstacles()
-  });
-  if(Math.abs(p.x-camera.position.x)+Math.abs(p.y-camera.position.y)+Math.abs(p.z-camera.position.z)>1e-8)
-   camera.position.set(p.x,p.y,p.z);
+  const steps=Math.max(1,Math.ceil(elapsed/.05)),dt=elapsed/steps;
+  let point=camera.position;
+  const obstacles=getObstacles(),ground=groundAt,keys=input();
+  for(let i=0;i<steps;i++)
+   point=moveTowerExplorer(point,keys,yaw,dt,{groundAt:ground,fly:flying,obstacles});
+  if(Math.abs(point.x-camera.position.x)+Math.abs(point.y-camera.position.y)+Math.abs(point.z-camera.position.z)>1e-8)
+   camera.position.set(point.x,point.y,point.z);
   return true;
  }
  function onKey(e){
