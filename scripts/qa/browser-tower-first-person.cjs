@@ -55,6 +55,9 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    const up=await page.locator('[data-rise]').boundingBox();
    await page.evaluate(()=>{
     window.__towerRiseEvents=[];
+    window.addEventListener('blur',()=>window.__towerRiseEvents.push({type:'window-blur',at:performance.now()}));
+    document.addEventListener('visibilitychange',()=>window.__towerRiseEvents.push({type:'visibility-'+document.visibilityState,at:performance.now()}));
+    let n=0;const track=()=>{n++;window.__towerRafCount=n;if(n<300)requestAnimationFrame(track)};requestAnimationFrame(track);
     const b=document.querySelector('[data-rise]');
     for(const type of ['pointerdown','pointerup','pointercancel','lostpointercapture','gotpointercapture'])
      b.addEventListener(type,e=>window.__towerRiseEvents.push({type,at:performance.now(),id:e.pointerId}));
@@ -66,7 +69,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    const flown=await state();
    if(!(flown.point[1]>a.point[1]+1&&flown.point[1]<=15.02)){
     const events=await page.evaluate(()=>window.__towerRiseEvents);
-    throw Error(device+' flight altitude invalid '+JSON.stringify({a,flown,samples,events,up}));
+    throw Error(device+' flight altitude invalid '+JSON.stringify({a,flown,samples,events,up,raf:await page.evaluate(()=>window.__towerRafCount),focus:await page.evaluate(()=>document.hasFocus()),visibility:await page.evaluate(()=>document.visibilityState)}));
    }
    await page.screenshot({path:path.join(out,device+'-flight.png')});
    await page.locator('[data-ground]').click();
