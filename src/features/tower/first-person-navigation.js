@@ -16,6 +16,12 @@ export function constrainTowerCamera(point,groundAt,clearance=.5){
  const x=valid(point.x),z=valid(point.z);
  return {x,y:Math.max(valid(point.y),valid(groundAt(x,z))+clearance),z};
 }
+/** Refuse landing when the capsule would overlap any existing authored stone. */
+export function canTowerExplorerLand(position,groundAt,obstacles=[],config=TOWER_EXPLORER){
+ const x=valid(position.x),z=valid(position.z);
+ const y=valid(groundAt(x,z))+config.eyeHeight;
+ return !intersects(x,y,z,obstacles,config);
+}
 /**
  * Collision is a swept-by-small-steps capsule approximation against real
  * prefab bounds; separate X/Z steps allow the player to slide along walls.
@@ -34,13 +40,19 @@ export function moveTowerExplorer(position,input,yaw,dt,{
  let x=clamp(valid(position.x),loX,hiX),z=clamp(valid(position.z),loZ,hiZ);
  let y=valid(position.y);
  const baseY=valid(groundAt(x,z));
- if(fly)y=clamp(y+up*distance,baseY+config.eyeHeight,baseY+config.maxHeight);
- else y=baseY+config.eyeHeight;
+ const candidateY=fly?clamp(y+up*distance,baseY+config.eyeHeight,baseY+config.maxHeight):
+  baseY+config.eyeHeight;
+ // Block both ascending through overhangs and descending through roofs.
+ if(!intersects(x,candidateY,z,obstacles,config))y=candidateY;
+ // Vertical flight must respect stone roofs and lintels, not only terrain.
+ // The prior height is used as the collision-safe fallback when descending.
+ if(intersects(x,y,z,obstacles,config))y=clamp(valid(position.y),baseY+config.eyeHeight,baseY+config.maxHeight);
  const nextX=clamp(x+dx,loX,hiX);
  if(!intersects(nextX,y,z,obstacles,config))x=nextX;
  const nextZ=clamp(z+dz,loZ,hiZ);
  if(!intersects(x,y,nextZ,obstacles,config))z=nextZ;
  const ground=valid(groundAt(x,z));
- y=fly?clamp(y,ground+config.eyeHeight,ground+config.maxHeight):ground+config.eyeHeight;
+ const finalY=fly?clamp(y,ground+config.eyeHeight,ground+config.maxHeight):ground+config.eyeHeight;
+ if(!intersects(x,finalY,z,obstacles,config))y=finalY;
  return {x,y,z};
 }
