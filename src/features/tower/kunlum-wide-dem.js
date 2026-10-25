@@ -9,7 +9,7 @@ import {utm38ToWgs84,webMercatorTile} from './kunlum-color-landscape.js';
 export const KUNLUM_WIDE_BOUNDS=Object.freeze({
  minX:-2300,maxX:3800,minZ:-3800,maxZ:3800
 });
-export const KUNLUM_WIDE_CREDIT='Outer DEM: Mapzen / AWS Terrain Tiles (Terrarium; mixed DEM sources). Central DEM: Copernicus GLO-30.';
+export const KUNLUM_WIDE_CREDIT='Outer DEM: original Mapzen / AWS Terrain Tiles, pinned local Terrarium PNGs (mixed DEM sources). Central DEM: Copernicus GLO-30.';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export function wideDemTilePlan({
  bounds=KUNLUM_WIDE_BOUNDS,zoom=13,
@@ -64,7 +64,13 @@ export function createKunlumWideDem(originalSample,{
    const timer=setTimeout(()=>finish(new Error('Тайм-аут карты высот')),timeoutMs);
    image.onload=()=>finish(null);
    image.onerror=()=>finish(new Error('Не загружены внешние высоты (сеть/CORS)'));
-   image.src='https://s3.amazonaws.com/elevation-tiles-prod/terrarium/'+zoom+'/'+x+'/'+y+'.png';
+   // The source Terrarium pixels were frozen once from Mapzen/AWS in 17.2.
+   // Use same-origin immutable tiles so the tower world works through VPNs,
+   // offline caches and networks that cannot reach the third-party S3 host.
+   const pinned=zoom===13&&easting===372151.107&&northing===4773796.751;
+   image.src=pinned
+    ?'/assets/tower/environment/mapzen-terrarium-z13/'+x+'-'+y+'.png'
+    :'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/'+zoom+'/'+x+'/'+y+'.png';
   });
  }
  async function load(){
