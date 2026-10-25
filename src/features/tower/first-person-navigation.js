@@ -1,0 +1,46 @@
+/** Pure, independent camera rules for the 20x20 m approved tower building site. */
+export const TOWER_EXPLORER=Object.freeze({
+ minX:0,maxX:20,minZ:0,maxZ:20,
+ radius:.32,eyeHeight:1.7,maxHeight:15,
+ walkingSpeed:3.2,flyingSpeed:4
+});
+const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+const valid=n=>Number.isFinite(n)?n:0;
+const intersects=(x,y,z,obstacles,config)=>{
+ const bottom=y-config.eyeHeight+.08,top=y+.1,r=config.radius;
+ return obstacles.some(b=>x+r>b.min.x&&x-r<b.max.x&&
+  z+r>b.min.z&&z-r<b.max.z&&bottom<b.max.y&&top>b.min.y);
+};
+/** Prevent the orbit camera from crossing even the dynamically incised terrain. */
+export function constrainTowerCamera(point,groundAt,clearance=.5){
+ const x=valid(point.x),z=valid(point.z);
+ return {x,y:Math.max(valid(point.y),valid(groundAt(x,z))+clearance),z};
+}
+/**
+ * Collision is a swept-by-small-steps capsule approximation against real
+ * prefab bounds; separate X/Z steps allow the player to slide along walls.
+ * Ground collision and altitude limits are independent of rendered materials.
+ */
+export function moveTowerExplorer(position,input,yaw,dt,{
+ groundAt=()=>0,fly=false,obstacles=[],config=TOWER_EXPLORER
+}={}){
+ const t=clamp(valid(dt),0,.05),a=clamp(valid(input?.forward),-1,1),
+  b=clamp(valid(input?.strafe),-1,1),up=clamp(valid(input?.up),-1,1);
+ const length=Math.max(1,Math.hypot(a,b)),speed=fly?config.flyingSpeed:config.walkingSpeed;
+ const distance=t*speed/length,sy=Math.sin(yaw),cy=Math.cos(yaw);
+ const dx=(-sy*a+cy*b)*distance,dz=(-cy*a-sy*b)*distance;
+ const loX=config.minX+config.radius,hiX=config.maxX-config.radius;
+ const loZ=config.minZ+config.radius,hiZ=config.maxZ-config.radius;
+ let x=clamp(valid(position.x),loX,hiX),z=clamp(valid(position.z),loZ,hiZ);
+ let y=valid(position.y);
+ const baseY=valid(groundAt(x,z));
+ if(fly)y=clamp(y+up*distance,baseY+config.eyeHeight,baseY+config.maxHeight);
+ else y=baseY+config.eyeHeight;
+ const nextX=clamp(x+dx,loX,hiX);
+ if(!intersects(nextX,y,z,obstacles,config))x=nextX;
+ const nextZ=clamp(z+dz,loZ,hiZ);
+ if(!intersects(x,y,nextZ,obstacles,config))z=nextZ;
+ const ground=valid(groundAt(x,z));
+ y=fly?clamp(y,ground+config.eyeHeight,ground+config.maxHeight):ground+config.eyeHeight;
+ return {x,y,z};
+}
