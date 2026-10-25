@@ -1,6 +1,8 @@
 /** Single approved authored masonry scene; no legacy mesh generation or manifest. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
+import {createTowerExplorerController} from './tower-explorer-controller.js';
+import {constrainTowerCamera} from './first-person-navigation.js';
 import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.13';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
@@ -67,6 +69,28 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
  let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
  let renderedById=new Map(),renderedJoints=new Map();
+ const solidBounds=[];
+ const explorer=createTowerExplorerController({
+  camera,controls,canvas:renderer.domElement,
+  groundAt:(x,z)=>kunlum?.heightAt(x,z)??0,
+  getObstacles:()=>solidBounds,requestRender:scheduleDraw
+ });
+ function leaveExplorer(){
+  explorer.exit();container.dataset.cameraMode='build';
+  container.dataset.flying='false';
+ }
+ function enterExplore(){
+  worldMode=false;explorer.enter();
+  grid.visible=false;faceGrid.visible=false;preview.visible=false;
+  container.dataset.worldView='false';container.dataset.cameraMode='explore';
+  container.dataset.flying='false';
+  scheduleDraw();return true;
+ }
+ function resetCamera(){
+  leaveExplorer();worldMode=false;controls.maxDistance=85;
+  camera.far=5000;camera.updateProjectionMatrix();
+  container.dataset.worldView='false';fit();
+ }
  function cameraChanged(){needsAim=true;scheduleDraw();}
  controls.addEventListener('change',cameraChanged);
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
@@ -211,6 +235,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    }
    for(const group of nextJoints.values())if(group.parent!==surface)surface.add(group);
    renderedById=nextSections;renderedJoints=nextJoints;blocks=nextBlocks;
+   solidBounds.length=0;
+   for(const entry of renderedById.values()){
+    entry.group.updateMatrixWorld(true);
+    const bounds=new THREE.Box3().setFromObject(entry.group);
+    if(!bounds.isEmpty())solidBounds.push({min:bounds.min,max:bounds.max});
+   }
    targets.length=0;
    for(const entry of renderedById.values())entry.group.traverse(node=>{if(node.isMesh&&node.userData.block)targets.push(node);});
    container.dataset.prefabReady='true';
@@ -267,8 +297,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   return null;
  }
  const activePointers=new Set();let pressed=null;
- function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
- function pointerUp(e){activePointers.delete(e.pointerId);if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+ function pointerDown(e){if(explorer.active)return;activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
+ function pointerUp(e){if(explorer.active)return;activePointers.delete(e.pointerId);if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();scheduleDraw();});observer.observe(container);
@@ -280,8 +310,14 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function draw(now=0){
   frame=0;
   if(disposed||document.hidden)return;
-  controls.update();
-  if(needsAim&&tool==='place'){
+  if(explorer.active){
+   if(explorer.frame(now)){needsRender=true;scheduleDraw();}
+  }else{
+   controls.update();
+   const safe=constrainTowerCamera(camera.position,kunlum?.heightAt||(()=>0),worldMode?4:.35);
+   if(camera.position.y<safe.y){camera.position.y=safe.y;needsRender=true;}
+  }
+  if(!explorer.active&&needsAim&&tool==='place'){
    needsAim=false;
    const forward=new THREE.Vector3();camera.getWorldDirection(forward);
    const rect=renderer.domElement.getBoundingClientRect();
@@ -289,13 +325,14 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    showFaceGrid(hit);
    onCameraChange({origin:camera.position.toArray(),forward:forward.toArray(),target:hit?.position||controls.target.toArray(),hit});
   }
-  if(worldMode&&now-lastWorldFrame>=(matchMedia('(max-width:749px)').matches?150:75)){
+  if(worldMode&&!explorer.active&&now-lastWorldFrame>=(matchMedia('(max-width:749px)').matches?150:75)){
    lastWorldFrame=now;kunlum?.update?.(now*.001);needsRender=true;
   }
   if(needsRender){needsRender=false;renderer.render(scene,camera);}
   if(worldMode)scheduleDraw();
  }
  function worldView(){
+  if(explorer.active){leaveExplorer();worldMode=false;}
   worldMode=!worldMode;
   if(worldMode){
    controls.maxDistance=3500;
@@ -312,12 +349,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   container.dataset.worldView=String(worldMode);
   return worldMode;
  }
- function onVisibility(){if(!document.hidden)scheduleDraw();}
+ function onVisibility(){if(document.hidden)explorer.clear();else scheduleDraw();}
  document.addEventListener('visibilitychange',onVisibility);
- scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';
+ scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='build';
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length)fit();},setPreview,
-  setSelected,getAimHit(){const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place';container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home(){worldMode=false;controls.maxDistance=85;camera.far=5000;camera.updateProjectionMatrix();container.dataset.worldView='false';fit();},worldView,rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
+  setSelected,getAimHit(){if(explorer.active)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!explorer.active;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
+  exitExplore:resetCamera,
+  setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);return on;},
+  setMotion:explorer.setMotion,getExploreState:explorer.state,
+  rotateView(delta){camera.position.sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0),delta).add(controls.target);controls.update();scheduleDraw();},
   zoom(multiplier){camera.position.sub(controls.target).multiplyScalar(multiplier).add(controls.target);controls.update();scheduleDraw();},
   pickAt:findHit,
   getEnvironmentInfo(){const info=kunlum?.group?.userData.kunlum;return {
@@ -325,6 +366,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    meshNames:kunlum?.group?.children.map(x=>x.name)||[],
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
-  dispose(){disposed=true;kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}
  };
 }
