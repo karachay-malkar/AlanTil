@@ -25,8 +25,8 @@ test('all terrain and OSM locations use the same reversible mirrored display fra
   assert.ok(near(source,[east,north]));
  }
  const pt=[994,688];
- const plan=rotateKunlumPlanPoint(pixelToLocalWorld(pt,{...DEFAULT_KUNLUM_ALIGNMENT,pixelsPerMetre:plan.plot.ppm}),a.rotation);
- assert.ok(near(a.planToScene(pt),[7.5+plan[0]-a.origin[0],15+plan[1]-a.origin[1]]));
+ const projected=rotateKunlumPlanPoint(pixelToLocalWorld(pt,{...DEFAULT_KUNLUM_ALIGNMENT,pixelsPerMetre:plan.plot.ppm}),a.rotation);
+ assert.ok(near(a.planToScene(pt),[7.5+projected[0]-a.origin[0],15+projected[1]-a.origin[1]]));
  assert.ok(near(a.sceneToDem(7.5,15),[-a.origin[0],a.origin[1]]));
 });
 test('single mapped 15x30 footprint matches game placement',()=>{
