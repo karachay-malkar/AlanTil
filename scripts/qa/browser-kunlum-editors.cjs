@@ -49,6 +49,8 @@ const dir=path.join(process.cwd(),'kunlum-editors-browser-qa');fs.mkdirSync(dir,
     canvas:!!document.querySelector('#view canvas')}));
    if(!threeD.parcel||!threeD.canvas||errors.length)
     throw Error(mode+' 3D editor inconsistent: '+JSON.stringify({threeD,errors}));
+   await page.waitForFunction(()=>Number(document.querySelector('#view')?.dataset.common100StoneCount)>0,
+    null,{timeout:80000});
    await page.screenshot({path:path.join(dir,mode+'-3d.png')});
    output.push({mode,twoD,threeD,errors});
    await context.close();

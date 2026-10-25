@@ -60,6 +60,8 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
      throw Error(type+' view toggle failed '+JSON.stringify(state)+', page errors='+
       JSON.stringify(errors)+'; '+error.message);
     });
+   await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneCount)>0,
+    null,{timeout:80000});
    await page.waitForTimeout(1500);
    if(errors.length)throw Error(type+': errors after wide camera: '+JSON.stringify(errors));
    await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview.png')});

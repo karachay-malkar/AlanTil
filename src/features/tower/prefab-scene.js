@@ -54,6 +54,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   container.dataset.kunlumRiver=meta.river||'';
   container.dataset.kunlumWide=meta.wideStatus||'loading';
   container.dataset.kunlumPlotCenter=(meta.yellowParcelCenter||[]).join(',');
+  container.dataset.kunlumStoneCount=String(kunlum.group.children.find(g=>g.name==='Latest Kunlum mapped walls (read-only, no terraces)')?.userData.common100StoneCount||0);
   if(meta.wideStatus==='ready'){scene.fog.near=3300;scene.fog.far=10300;}
   scheduleDraw();
  }

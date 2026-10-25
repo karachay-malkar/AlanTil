@@ -286,7 +286,9 @@ function buildWalls(){
  confirmedGroup.visible=$('confirmedVisible').checked;
  candidateGroup.visible=$('candidatesVisible').checked;
  passageGroup.visible=$('passageVisible').checked;
- void mappedWalls.enhance({renderer}).catch(error=>console.warn('Common100 3D walls unavailable',error));
+ void mappedWalls.enhance({renderer}).then(result=>{
+  if(result)document.getElementById('view').dataset.common100StoneCount=String(result.stones);
+ }).catch(error=>console.warn('Common100 3D walls unavailable',error));
  return mappedWalls.counters.remainingCandidates;
 }
 function worldLine(a,b,offset){
