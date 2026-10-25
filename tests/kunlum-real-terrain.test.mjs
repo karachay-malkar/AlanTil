@@ -77,7 +77,7 @@ test('terrain is built as metre-scaled LOD tiles with procedural non-Google pano
 
 test('tower interaction, state and raycast path remain untouched',()=>{
  assert.match(sceneCode,/createKunlumRealEnvironment as createKunlumEnvironment/);
- assert.match(sceneCode,/onReady:scheduleDraw/);
+ assert.match(sceneCode,/onReady:refreshEnvironmentStatus/);
  assert.match(sceneCode,/raycaster\.intersectObjects\(\[\.\.\.targets,floor\],false\)/);
  assert.match(sceneCode,/maxDistance=85/);
  assert.match(gameplayCode,/return \{group,heightAt:terrain\.heightAt,ready,update\(seconds\)/);
