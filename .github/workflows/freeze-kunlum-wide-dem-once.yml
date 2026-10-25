@@ -1,0 +1,26 @@
+name: Freeze original wide Mapzen DEM tiles for Kunlum (once)
+on:
+  push:
+    branches: ['17.2']
+    paths: ['.github/workflows/freeze-kunlum-wide-dem-once.yml']
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '17.2', persist-credentials: true}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Download and validate the nine Mapzen original Terrarium PNGs
+        run: node scripts/qa/freeze-kunlum-wide-mapzen.mjs
+      - name: Commit frozen DEM source and attribution without editing Copernicus
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f assets/tower/environment/mapzen-terrarium-z13/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'data(kunlum): freeze source Mapzen 7.6x6.1km Terrarium z13 tiles'
+          git push origin HEAD:17.2
