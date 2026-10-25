@@ -7,7 +7,7 @@ import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-p
 export const PLOT=Object.freeze({
  // Preserve the old plot centre in original map pixels.
  x:1069.9197998046875,y:846.0927734375,
- widthM:SITE.widthM,heightM:SITE.depthM,ppm:3.6,angleDeg:116
+ widthM:SITE.widthM,heightM:SITE.depthM,ppm:3.6,angleDeg:-116
 });
 export const APPROVED_KUNLUM_ROTATION=-134;
 export function createKunlumGameAlignment({plot=PLOT,calibration=DEFAULT_KUNLUM_ALIGNMENT,rotation=APPROVED_KUNLUM_ROTATION}={}){
