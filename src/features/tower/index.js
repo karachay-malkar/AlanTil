@@ -79,7 +79,7 @@ export async function mount(context,params={}){
   q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
   q('[data-remove]').disabled=next!=='selected'||s.busy;
   for(const name of ['cancel','rotate','variant','hammer','camera','explore','world']){
-   const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
+   const button=q(name==='explore'?'button[data-explore]':`[data-${name}]`);if(button)button.disabled=s.busy;
   }
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
   if(next==='placing'||next==='saving-place')catalogVisible(false);
@@ -229,7 +229,7 @@ export async function mount(context,params={}){
  function sendMotion(){s.scene?.setMotion({forward:joystick.forward,strafe:joystick.strafe,up:altitude});}
  function walkUi(active){
   game.dataset.explore=String(active);
-  const b=q('[data-explore]');b?.setAttribute('aria-pressed',String(active));
+  const b=q('button[data-explore]');b?.setAttribute('aria-pressed',String(active));
   const span=b?.querySelector('span');if(span)span.textContent=active?'К строительству':'Прогулка';
   game.dataset.flying='false';q('[data-fly]')?.setAttribute('aria-pressed','false');
   q('[data-fly]').textContent='Полёт';
@@ -247,7 +247,7 @@ export async function mount(context,params={}){
   q('[data-world]')?.setAttribute('aria-pressed',String(!!wide));
   const span=q('[data-world] span');if(span)span.textContent=wide?'К строительству':'Обзор Кюнлюма';
  });
- on('[data-explore]','click',()=>{
+ on('button[data-explore]','click',()=>{
   if(s.busy||!s.scene)return;
   if(game.dataset.explore==='true'){
    s.scene.exitExplore();walkUi(false);return;
@@ -324,7 +324,7 @@ export async function mount(context,params={}){
   });
   if(s.disposed){s.scene.dispose();return;}
   q('[data-world]').disabled=false;
-  q('[data-explore]').disabled=false;
+  q('button[data-explore]').disabled=false;
   mode('idle');
   try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
   if(params.userId&&!editable(s))catalogVisible(false);
