@@ -1,4 +1,4 @@
-name: Tower first-person walking and bounded flight QA
+name: Tower first-person walking and continuous elevation QA
 on:
   push:
     branches: ['17.2']
@@ -40,7 +40,7 @@ jobs:
         with: {node-version: '22'}
       - name: Install browser harness
         run: npm install --no-save --no-audit --no-fund playwright
-      - name: Drive real desktop/mobile tower editor with walking and flight
+      - name: Drive real desktop/mobile tower editor with continuous elevation
         run: |
           node scripts/static-preview-server.mjs > /tmp/tower-first-person.log 2>&1 &
           for i in {1..30}; do

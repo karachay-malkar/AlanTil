@@ -23,7 +23,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     document.querySelector('.towerCanvas')?.dataset.cameraMode==='explore',null,{timeout:90000});
    const state=()=>page.locator('.towerCanvas').evaluate(el=>{
     const raw=el.dataset.cameraLocation?.split(',').map(Number)||[];
-    return {mode:el.dataset.cameraMode,point:raw,flying:el.dataset.flying};
+    return {mode:el.dataset.cameraMode,point:raw};
    });
    // Building starts in first-person; the old orbit-mode switch is removed.
    let a=await state();
@@ -47,23 +47,30 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    const box=await canvas.boundingBox();const x=box.x+box.width*.67,y=box.y+box.height*.54;
    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+70,y+22,{steps:4});await page.mouse.up();
    if(errors.length)throw Error(device+' look errors '+JSON.stringify(errors));
-   await page.locator('[data-fly]').click();
-   if(await page.locator('[data-fly]').getAttribute('aria-pressed')!=='true')
-    throw Error('Flight not enabled');
-   if(!(await page.locator('[data-rise]').isVisible()))
-    throw Error(device+' flight altitude control hidden while flying');
+   if(await page.locator('[data-fly], [data-ground]').count())
+    throw Error(device+' obsolete flight mode still exists');
+   if(!(await page.locator('[data-rise]').isVisible())||
+      !(await page.locator('[data-fall]').isVisible()))
+    throw Error(device+' two always-visible height arrows missing');
+   const beforeElevation=await state();
    const up=await page.locator('[data-rise]').boundingBox();
    await page.mouse.move(up.x+up.width/2,up.y+up.height/2);
-   await page.mouse.down();
-   await sleep(950);await page.mouse.up();await sleep(80);
-   const flown=await state();
-   if(!(flown.point[1]>a.point[1]+.05&&flown.point[1]<a.point[1]+1.3&&flown.point[1]<=15.02))
-    throw Error(device+' flight altitude invalid '+JSON.stringify({a,flown}));
-   await page.screenshot({path:path.join(out,device+'-flight.png')});
-   await page.locator('[data-ground]').click();
-   const grounded=await state();
-   if(Math.abs(grounded.point[1]-1.7)>.08||grounded.flying!=='false')
-    throw Error(device+' did not land '+JSON.stringify(grounded));
+   await page.mouse.down();await sleep(850);await page.mouse.up();await sleep(120);
+   const raised=await state();
+   if(!(raised.point[1]>beforeElevation.point[1]+.08&&
+        raised.point[1]<beforeElevation.point[1]+1.4&&raised.point[1]<=15.02))
+    throw Error(device+' elevation did not move smoothly '+JSON.stringify({beforeElevation,raised}));
+   await sleep(250);
+   const heldAltitude=await state();
+   if(Math.abs(heldAltitude.point[1]-raised.point[1])>.03)
+    throw Error(device+' altitude changed after releasing ↑ '+JSON.stringify({raised,heldAltitude}));
+   const down=await page.locator('[data-fall]').boundingBox();
+   await page.mouse.move(down.x+down.width/2,down.y+down.height/2);
+   await page.mouse.down();await sleep(400);await page.mouse.up();await sleep(100);
+   const lowered=await state();
+   if(!(lowered.point[1]<raised.point[1]-.04&&lowered.point[1]>=1.7))
+    throw Error(device+' lowering jumped or failed '+JSON.stringify({raised,lowered}));
+   await page.screenshot({path:path.join(out,device+'-height-arrows.png')});
    await page.locator('[data-world]').click();
    if(await page.locator('.towerCanvas').getAttribute('data-world-view')!=='true')
     throw Error(device+' overview camera unavailable');
@@ -71,12 +78,16 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    const home=await state();
    if(home.mode!=='explore'||await page.locator('.towerCanvas').getAttribute('data-world-view')!=='false')
     throw Error(device+' normal construction camera not restored '+JSON.stringify(home));
+   if(Math.abs(home.point[0]-lowered.point[0])>.03||
+      Math.abs(home.point[1]-lowered.point[1])>.03||
+      Math.abs(home.point[2]-lowered.point[2])>.03)
+    throw Error(device+' overview teleported the player '+JSON.stringify({lowered,home}));
    if(await page.locator('.towerCatalog').isVisible())throw Error('Construction catalog should default closed');
    await page.locator('[data-hammer]').click();
    await page.locator('.towerCatalog').waitFor({state:'visible',timeout:4000});
    if(errors.length)throw Error(device+' uncaught JavaScript '+JSON.stringify(errors));
-   verified.push({device,walkMoved:true,flightY:flown.point[1],landedY:grounded.point[1],
-    constructionRestored:true,errors:errors.length});
+   verified.push({device,walkMoved:true,raisedY:raised.point[1],loweredY:lowered.point[1],
+    altitudePreserved:true,constructionRestored:true,errors:errors.length});
    await ctx.close();
   }
   console.log('TOWER_FIRST_PERSON_BROWSER_PASS',JSON.stringify(verified));
