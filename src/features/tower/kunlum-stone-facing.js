@@ -39,7 +39,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const jobs=groups.flatMap((entry,layer)=>entry.segments.map(seg=>({
   seg,layer,distance:Math.hypot((seg.a[0]+seg.b[0])*.5-LANDMARK[0],
                              (seg.a[1]+seg.b[1])*.5-LANDMARK[1])
- }))).filter(({seg})=>Math.hypot(seg.b[0]-seg.a[0],seg.b[1]-seg.a[1])>=.16)
+ }))).filter(({seg})=>Math.hypot(seg.b[0]-seg.a[0],seg.b[1]-seg.a[1])>=.01)
   .sort((a,b)=>a.distance-b.distance);
  const budget=Math.max(mobile?4400:11000,jobs.length*2);
  const bins=groups.map(()=>models.map(()=>[]));
@@ -130,7 +130,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    const inst=new THREE.InstancedMesh(models[k].geometry,material,bins[k].length);
    inst.name='Abay-Kala Common100 '+models[k].name;inst.frustumCulled=false;
    bins[k].forEach((matrix,j)=>inst.setMatrixAt(j,matrix));
-   inst.instanceMatrix.needsUpdate=true;root.add(inst);laid.push(inst);
+   inst.instanceMatrix.needsUpdate=true;root.add(inst);
    total+=bins[k].length;
   }
  }
