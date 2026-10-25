@@ -1,6 +1,6 @@
 {
   "name": "alantil-mobile",
-  "version": "17.2.16",
+  "version": "17.2.17",
   "private": true,
   "main": "index.js",
   "scripts": {
