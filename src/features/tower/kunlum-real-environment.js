@@ -5,15 +5,15 @@
  * Does not register landscape as a placement target.
  */
 import {makeKunlumTerrain,makeKunlumPanorama} from './kunlum-terrain-lod.js';
+import {sampleDemLocal} from './kunlum-georeference.js';
+import {createKunlumWideDem} from './kunlum-wide-dem.js';
+import {createKunlumGameAlignment,PLOT} from './kunlum-build-alignment.js';
 import {createKunlumMapOverlay} from './kunlum-map-overlay.js';
 import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js';
 import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './kunlum-river-layer.js';
 import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
-import {pixelToLocalWorld,plotCorners,rotateKunlumPlanPoint,DEFAULT_KUNLUM_ALIGNMENT}
- from './kunlum-georeference.js';
 
-const PLOT={x:1060.6697998046875,y:892.3427734375,
- widthM:30,heightM:15,ppm:3.6,angleDeg:-7};
+
 export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()=>{}}={}){
  const group=new THREE.Group();
  group.name='Кюнлюм · актуальный DEM PBR, план 120, Черек OSM';
@@ -25,24 +25,17 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   if(mat)materials.push(mat);
   if(texture)textures.push(texture);
  };
- const calibration=DEFAULT_KUNLUM_ALIGNMENT;
- // The tower engine keeps its own untouched 20x20m plane and grid.
- // Only scenic geometry uses the same east/west mirroring as the latest review.
+ // The local game coordinate [10,10] is the centre of the approved
+ // 30x15 yellow rectangle; historic plan, Copernicus and OSM share this frame.
+ // The saved 20x20 prefab grid (80x80 cells) is deliberately not rescaled.
+ const alignment=createKunlumGameAlignment();
  const pbr=createKunlumNativeTerrainPBR(THREE,{mobile});
  const terrain=makeKunlumTerrain(THREE,group,{
-  mobile,plot:PLOT,calibration,register,mirrorDemX:true,pbr
+  mobile,plot:PLOT,register,alignment,pbr
  });
- makeKunlumPanorama(THREE,group,terrain,{mobile,register});
- // Approved -134 degree settlement rotation is visual-only; source coordinates
- // and the playable plot have NOT been moved.
- const P=p=>{
-  const [displayEast,north]=rotateKunlumPlanPoint(pixelToLocalWorld(p,calibration),-134);
-  // The approved historical plan is already mirrored in its own calibration.
-  // Only the DEM needs an X mirror; mirroring these wall coordinates again
-  // would move the village away from the validated 3D preview.
-  return [displayEast+terrain.centerEast+10,north-terrain.centerNorth+10];
- };
- const towerBase=P([calibration.anchorPixel.x,calibration.anchorPixel.y]);
+ const panorama=makeKunlumPanorama(THREE,group,terrain,{mobile,register});
+ const P=alignment.planToScene;
+ const towerBase=P([908,460]);
  function createMonument(){
   // Monument is an interpretative geometry only; exact elevation follows DEM.
   const stoneColors=['#b6ae99','#c7bfaf','#a39f8f','#d0c7b3','#aba99a','#bdb5a3'];
@@ -104,7 +97,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
  addPerimeter();
  // Separate the historic-plan 30×15m rectangle from the existing playable
  // 20×20m cell grid. They have different purposes; neither changes saved builds.
- const planned=plotCorners(PLOT,calibration.pixelsPerMetre).map(P);
+ const planned=alignment.footprintScene;
  const footprint=[];
  for(let i=0;i<4;i++){
   const a=planned[i],b=planned[(i+1)%4];
@@ -120,16 +113,19 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   confirmedFeatures:0,candidateFeatures:0,sourceAccuracy:'Loading vector plan'};
  group.userData.kunlum={
   plot:[PLOT.widthM,PLOT.heightM],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
+  yellowParcelCenter:[10,10],yellowParcelCorners:planned,
+  legacyBuildFitsYellow:alignment.legacyBuildFitsYellow,
   gridStep:.25,ruins:currentStats,sitePlan:'kunlum-vector-plan-2026-10-23.json',
   monument:'Абай-къала',abaevModelPosition:towerBase,
   terrain:'Copernicus DEM GLO-30 + PBR, 30m source',terrainResolutionNearM:mobile?12:8,
-  terrainTriangles:terrain.triangles,panorama:'procedural DEM-border based: not a surveyed skyline',
+  terrainTriangles:terrain.triangles,wideStatus:'loading',
+  panorama:'fallback only: hidden after loading real Mapzen heights',
   accuracy:'UNVERIFIED: one-point user calibration; rendered scenery does not modify DEM or saved builds'
  };
 
  // Both datasets are versioned and bundled with the same published tower branch.
  // No live OSM request, no dynamically generated fake substitute river.
- let river=null,riverbank=null,scatter=null,outcrops=null,overlay=null;
+ let river=null,riverbank=null,scatter=null,outcrops=null,overlay=null,wideDem=null;
  let localLine=[],planData=null;
  async function loadApprovedMap(){
   const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
@@ -185,6 +181,32 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   group.add(scatter.root,outcrops.root);
   onReady();
  }
+ // The review uses the same real Mapzen/AWS Terrain Tiles DEM. Preserve
+ // Copernicus at the centre and load only the 7.6x6.1km outer bands here.
+ // It is optional and asynchronous: a failed CORS request cannot disable building.
+ async function loadWideTerrain(){
+  try{
+   wideDem=createKunlumWideDem((e,n)=>sampleDemLocal(terrain.heights,e,n));
+   await wideDem.load();
+   if(disposed)return;
+   const summary=terrain.installWideDem(wideDem);
+   panorama.mesh.visible=false;
+   const meta=group.userData.kunlum;
+   meta.wideStatus='ready';
+   meta.terrainExtentM=summary.extent;
+   meta.wideTriangles=summary.triangles;
+   meta.terrain='Copernicus GLO-30 centre plus Mapzen/AWS real 7.6x6.1km DEM';
+   onReady();
+  }catch(error){
+   if(disposed)return;
+   group.userData.kunlum.wideStatus='unavailable';
+   group.userData.kunlum.wideError=String(error?.message||error);
+   console.warn('Kunlum outer Mapzen DEM unavailable; central DEM retained:',error);
+   onReady();
+  }
+ }
+ // Run independently of the saved tower and fast local OSM/plan readiness.
+ void loadWideTerrain();
  const ready=Promise.allSettled([loadApprovedMap(),loadMappedRiver()]).then(results=>{
   if(disposed)return;
   const failed=results.filter(x=>x.status==='rejected');
@@ -202,7 +224,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
    for(const o of geometries)o.dispose();
    for(const m of materials)m.dispose();
    for(const t of textures)t.dispose();
-   pbr.dispose();
+   wideDem?.dispose();pbr.dispose();
   }};
 
 }
