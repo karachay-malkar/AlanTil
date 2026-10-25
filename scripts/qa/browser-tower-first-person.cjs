@@ -20,12 +20,12 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    await page.goto('http://127.0.0.1:4173/tests/fixtures/kunlum-tower-world.html',
     {waitUntil:'domcontentloaded',timeout:45000});
    await page.waitForFunction(()=>document.getElementById('qa-root')?.dataset.mount==='success'&&
-    document.querySelector('[data-explore]')?.disabled===false,null,{timeout:90000});
+    document.querySelector('button[data-explore]')?.disabled===false,null,{timeout:90000});
    const state=()=>page.locator('.towerCanvas').evaluate(el=>{
     const raw=el.dataset.cameraLocation?.split(',').map(Number)||[];
     return {mode:el.dataset.cameraMode,point:raw,flying:el.dataset.flying};
    });
-   await page.locator('[data-explore]').click();
+   await page.locator('button[data-explore]').click();
    let a=await state();
    if(a.mode!=='explore'||Math.abs(a.point[1]-1.7)>.08)
     throw Error(device+' did not start at person eye level '+JSON.stringify(a));
@@ -62,7 +62,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     throw Error(device+' did not land '+JSON.stringify(grounded));
    await page.locator('[data-camera="home"]').click();
    const home=await state();
-   if(home.mode!=='build'||await page.locator('[data-explore]').getAttribute('aria-pressed')!=='false')
+   if(home.mode!=='build'||await page.locator('button[data-explore]').getAttribute('aria-pressed')!=='false')
     throw Error(device+' normal construction camera not restored '+JSON.stringify(home));
    if(!(await page.locator('.towerCatalog').isVisible()))throw Error('Construction catalog not restored');
    if(errors.length)throw Error(device+' uncaught JavaScript '+JSON.stringify(errors));
