@@ -7,13 +7,13 @@ import {wideDemTilePlan} from '../src/features/tower/kunlum-wide-dem.js';
 
 const a=createKunlumGameAlignment();
 const near=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1])<1e-7;
-test('yellow 30x15m rectangle, not unrotated DEM, anchors the legacy 20m game scene',()=>{
+test('single 25x40m yellow parcel anchors the build grid',()=>{
  const projected=plotCorners(PLOT,DEFAULT_KUNLUM_ALIGNMENT.pixelsPerMetre).map(x=>a.planToScene(x));
  const centroid=[projected.reduce((n,x)=>n+x[0],0)/4,projected.reduce((n,x)=>n+x[1],0)/4];
- assert.ok(near(centroid,[10,10]),'the authoritative rectangle must be centred on game plot');
+ assert.ok(near(centroid,[12.5,20]),'the authoritative rectangle must be centred on game plot');
  const lengths=projected.map((p,i)=>Math.hypot(p[0]-projected[(i+1)%4][0],p[1]-projected[(i+1)%4][1]));
- assert.ok(lengths.every((l,i)=>Math.abs(l-(i%2?15:30))<1e-8));
- assert.notDeepEqual(a.planToScene([DEFAULT_KUNLUM_ALIGNMENT.anchorPixel.x,DEFAULT_KUNLUM_ALIGNMENT.anchorPixel.y]),[10,10],
+ assert.ok(lengths.every((l,i)=>Math.abs(l-(i%2?40:25))<1e-8));
+ assert.notDeepEqual(a.planToScene([DEFAULT_KUNLUM_ALIGNMENT.anchorPixel.x,DEFAULT_KUNLUM_ALIGNMENT.anchorPixel.y]),[12.5,20],
   'Abay-Kala anchor cannot be arbitrarily placed on building site');
 });
 test('all terrain and OSM locations use the same reversible mirrored display frame',()=>{
@@ -25,14 +25,14 @@ test('all terrain and OSM locations use the same reversible mirrored display fra
  }
  const pt=[994,688];
  const plan=rotateKunlumPlanPoint(pixelToLocalWorld(pt),-134);
- assert.ok(near(a.planToScene(pt),[10+plan[0]-a.origin[0],10+plan[1]-a.origin[1]]));
- assert.ok(near(a.sceneToDem(10,10),[-a.origin[0],a.origin[1]]));
+ assert.ok(near(a.planToScene(pt),[12.5+plan[0]-a.origin[0],20+plan[1]-a.origin[1]]));
+ assert.ok(near(a.sceneToDem(12.5,20),[-a.origin[0],a.origin[1]]));
 });
-test('mapped 30x15 footprint cannot silently be treated as the saved 20x20 placement area',()=>{
- assert.equal(a.footprintMetres[0],30);
- assert.equal(a.footprintMetres[1],15);
- assert.deepEqual(a.savedBuildableMetres,[20,20]);
- assert.equal(a.legacyBuildFitsYellow,false);
+test('single mapped 25x40 footprint matches game placement',()=>{
+ assert.deepEqual(a.footprintMetres,[25,40]);
+ const xs=a.footprintScene.map(p=>p[0]),zs=a.footprintScene.map(p=>p[1]);
+ for(const [value,want] of [[Math.min(...xs),0],[Math.max(...xs),25],[Math.min(...zs),0],[Math.max(...zs),40]])
+  assert.ok(Math.abs(value-want)<1e-7);
 });
 test('game environment requests real Mapzen outer data and retains immutable Copernicus core',()=>{
  const src=readFileSync(new URL('../src/features/tower/kunlum-real-environment.js',import.meta.url),'utf8');
@@ -43,7 +43,7 @@ test('game environment requests real Mapzen outer data and retains immutable Cop
  assert.match(terrain,/installWideDem/);
  assert.match(readFileSync(new URL('../src/features/tower/kunlum-wide-dem.js',import.meta.url),'utf8'),/originalSample/);
  assert.match(src,/loadKunlumCherekLocal/);
- assert.match(src,/excludeBounds/);
+ assert.doesNotMatch(src,/excludeBounds:/);
 });
 test('all nine AWS Mapzen originals are locally pinned with unchanged PNG pixel encoding',()=>{
  const path='assets/tower/environment/mapzen-terrarium-z13/';
