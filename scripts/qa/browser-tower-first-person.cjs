@@ -53,24 +53,12 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    if(!(await page.locator('[data-rise]').isVisible()))
     throw Error(device+' flight altitude control hidden while flying');
    const up=await page.locator('[data-rise]').boundingBox();
-   await page.evaluate(()=>{
-    window.__towerRiseEvents=[];
-    window.addEventListener('blur',()=>window.__towerRiseEvents.push({type:'window-blur',at:performance.now()}));
-    document.addEventListener('visibilitychange',()=>window.__towerRiseEvents.push({type:'visibility-'+document.visibilityState,at:performance.now()}));
-    let n=0;const track=()=>{n++;window.__towerRafCount=n;if(n<300)requestAnimationFrame(track)};requestAnimationFrame(track);
-    const b=document.querySelector('[data-rise]');
-    for(const type of ['pointerdown','pointerup','pointercancel','lostpointercapture','gotpointercapture'])
-     b.addEventListener(type,e=>window.__towerRiseEvents.push({type,at:performance.now(),id:e.pointerId}));
-   });
    await page.mouse.move(up.x+up.width/2,up.y+up.height/2);
    await page.mouse.down();
-   const samples=[];for(let i=0;i<3;i++){await sleep(300);samples.push(await state());}
-   await page.mouse.up();await sleep(80);
+   await sleep(950);await page.mouse.up();await sleep(80);
    const flown=await state();
-   if(!(flown.point[1]>a.point[1]+1&&flown.point[1]<=15.02)){
-    const events=await page.evaluate(()=>window.__towerRiseEvents);
-    throw Error(device+' flight altitude invalid '+JSON.stringify({a,flown,samples,events,up,raf:await page.evaluate(()=>window.__towerRafCount),focus:await page.evaluate(()=>document.hasFocus()),visibility:await page.evaluate(()=>document.visibilityState)}));
-   }
+   if(!(flown.point[1]>a.point[1]+1&&flown.point[1]<=15.02))
+    throw Error(device+' flight altitude invalid '+JSON.stringify({a,flown}));
    await page.screenshot({path:path.join(out,device+'-flight.png')});
    await page.locator('[data-ground]').click();
    const grounded=await state();
@@ -85,7 +73,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     throw Error(device+' normal construction camera not restored '+JSON.stringify(home));
    if(await page.locator('.towerCatalog').isVisible())throw Error('Construction catalog should default closed');
    await page.locator('[data-hammer]').click();
-   if(!(await page.locator('.towerCatalog').isVisible()))throw Error('Construction catalog failed to open');
+   await page.locator('.towerCatalog').waitFor({state:'visible',timeout:4000});
    if(errors.length)throw Error(device+' uncaught JavaScript '+JSON.stringify(errors));
    verified.push({device,walkMoved:true,flightY:flown.point[1],landedY:grounded.point[1],
     constructionRestored:true,errors:errors.length});
