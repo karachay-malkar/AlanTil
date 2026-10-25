@@ -4,20 +4,20 @@ import {canTowerExplorerLand,constrainTowerCamera,moveTowerExplorer,TOWER_EXPLOR
 
 const groundAt=()=>0;
 const wall=[{min:{x:9,y:0,z:6},max:{x:11,y:3,z:14}}];
-test('walk stays inside 20x20 lot and 1.7 m above physical ground',()=>{
+test('walk stays inside 15x30 lot and 1.7 m above physical ground',()=>{
  const start={x:1,y:1.7,z:1};
  const next=moveTowerExplorer(start,{forward:1,strafe:1,up:0},0,1,{groundAt,fly:false,obstacles:[]});
- assert.ok(next.x<=19.65&&next.x>=.35);
- assert.ok(next.z>=.35&&next.z<=19.65);
+ assert.ok(next.x<=14.68&&next.x>=.32);
+ assert.ok(next.z>=.32&&next.z<=29.68);
  assert.equal(next.y,1.7);
  for(let i=0,p=start;i<40;i++)p=moveTowerExplorer(p,{forward:-1,strafe:-1},0,.08,{groundAt,fly:false,obstacles:[]});
 });
 test('fly cannot go lower than eye or higher than 15m, including on steep terrain',()=>{
  const start={x:1,y:1.7,z:1};
  let p=start;
- for(let i=0;i<100;i++)p=moveTowerExplorer(p,{up:1},0,.05,{groundAt,fly:true,obstacles:[]});
+ for(let i=0;i<300;i++)p=moveTowerExplorer(p,{up:1},0,.05,{groundAt,fly:true,obstacles:[]});
  assert.equal(p.y,TOWER_EXPLORER.maxHeight);
- for(let i=0;i<120;i++)p=moveTowerExplorer(p,{up:-1},0,.05,{groundAt,fly:true,obstacles:[]});
+ for(let i=0;i<350;i++)p=moveTowerExplorer(p,{up:-1},0,.05,{groundAt,fly:true,obstacles:[]});
  assert.equal(p.y,1.7);
  const limit=constrainTowerCamera({x:1,y:-100,z:2},()=>12,3);
  assert.equal(limit.y,15);
@@ -43,4 +43,13 @@ test('descent over a real stone bounding box stops at the roof instead of fallin
  assert.ok(p.y>=5.62,'capsule feet must remain above four-metre roof');
  assert.ok(!canTowerExplorerLand(p,groundAt,roof),'cannot switch to ground mode inside solid prefab');
  assert.equal(canTowerExplorerLand({x:2,y:4,z:2},groundAt,roof),true);
+});
+
+test('flight arrows move smoothly from current altitude without jumping',()=>{
+ const start={x:7.5,y:3,z:15};
+ const up=moveTowerExplorer(start,{up:1},0,.05,{groundAt,fly:true});
+ const down=moveTowerExplorer(start,{up:-1},0,.05,{groundAt,fly:true});
+ assert.ok(up.y>start.y&&up.y-start.y<=.063);
+ assert.ok(down.y<start.y&&start.y-down.y<=.063);
+ assert.equal(up.x,start.x);assert.equal(up.z,start.z);
 });

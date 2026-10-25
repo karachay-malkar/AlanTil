@@ -1,8 +1,9 @@
-/** Pure, independent camera rules for the 20x20 m approved tower building site. */
+/** Continuous first-person movement inside the authoritative 15x30m parcel. */
+import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
 export const TOWER_EXPLORER=Object.freeze({
- minX:0,maxX:20,minZ:0,maxZ:20,
+ minX:SITE.minX,maxX:SITE.maxX,minZ:SITE.minZ,maxZ:SITE.maxZ,
  radius:.32,eyeHeight:1.7,maxHeight:15,
- walkingSpeed:3.2,flyingSpeed:4
+ walkingSpeed:3.2,flyingSpeed:4,verticalSpeed:1.25
 });
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 const valid=n=>Number.isFinite(n)?n:0;
@@ -40,7 +41,7 @@ export function moveTowerExplorer(position,input,yaw,dt,{
  let x=clamp(valid(position.x),loX,hiX),z=clamp(valid(position.z),loZ,hiZ);
  let y=valid(position.y);
  const baseY=valid(groundAt(x,z));
- const candidateY=fly?clamp(y+up*distance,baseY+config.eyeHeight,baseY+config.maxHeight):
+ const candidateY=fly?clamp(y+up*t*config.verticalSpeed,baseY+config.eyeHeight,baseY+config.maxHeight):
   baseY+config.eyeHeight;
  // Block both ascending through overhangs and descending through roofs.
  if(!intersects(x,candidateY,z,obstacles,config))y=candidateY;

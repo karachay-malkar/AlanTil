@@ -51,7 +51,9 @@ export function createTowerExplorerController({
   controls.maxDistance=85;camera.far=5000;camera.updateProjectionMatrix();
   // Spawns at a free corner instead of inside a saved stone section.
   const obstacles=getObstacles();
-  const corners=[[2,2],[18,2],[2,18],[18,18],[10,2],[10,18],[2,10],[18,10]];
+  const {minX,maxX,minZ,maxZ}=TOWER_EXPLORER;
+  const midX=(minX+maxX)/2,midZ=(minZ+maxZ)/2;
+  const corners=[[minX+2,minZ+2],[maxX-2,minZ+2],[minX+2,maxZ-2],[maxX-2,maxZ-2],[midX,minZ+2],[midX,maxZ-2],[minX+2,midZ],[maxX-2,midZ]];
   const free=([x,z])=>!obstacles.some(b=>x+.35>b.min.x&&x-.35<b.max.x&&
     z+.35>b.min.z&&z-.35<b.max.z&&b.min.y<1.9&&b.max.y>0);
   const [x,z]=corners.find(free)||[2,2];
@@ -68,7 +70,8 @@ export function createTowerExplorerController({
   if(!enabled)return false;
   // Use wall-clock time even on low-FPS Android: step in small increments to
   // preserve collision integrity instead of slowing flight with dropped frames.
-  const elapsed=lastFrame?Math.min(1.25,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;
+  // Avoid replaying a long stalled frame as a jump in altitude.
+  const elapsed=lastFrame?Math.min(.10,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;
   if(!moving())return false;
   const steps=Math.max(1,Math.ceil(elapsed/.05)),dt=elapsed/steps;
   let point=camera.position;
