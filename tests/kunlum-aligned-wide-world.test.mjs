@@ -12,7 +12,7 @@ test('yellow 30x15m rectangle, not unrotated DEM, anchors the legacy 20m game sc
  assert.ok(near(centroid,[10,10]),'the authoritative rectangle must be centred on game plot');
  const lengths=projected.map((p,i)=>Math.hypot(p[0]-projected[(i+1)%4][0],p[1]-projected[(i+1)%4][1]));
  assert.ok(lengths.every((l,i)=>Math.abs(l-(i%2?15:30))<1e-8));
- assert.notDeepEqual(a.planToScene(DEFAULT_KUNLUM_ALIGNMENT.anchorPixel),[10,10],
+ assert.notDeepEqual(a.planToScene([DEFAULT_KUNLUM_ALIGNMENT.anchorPixel.x,DEFAULT_KUNLUM_ALIGNMENT.anchorPixel.y]),[10,10],
   'Abay-Kala anchor cannot be arbitrarily placed on building site');
 });
 test('all terrain and OSM locations use the same reversible mirrored display frame',()=>{
@@ -40,7 +40,7 @@ test('game environment requests real Mapzen outer data and retains immutable Cop
  assert.match(src,/terrain\.installWideDem\(/);
  assert.match(src,/sourceAccuracy:'Approved user-drawn vector plan/);
  assert.match(terrain,/installWideDem/);
- assert.match(terrain,/originalSample/);
+ assert.match(readFileSync(new URL('../src/features/tower/kunlum-wide-dem.js',import.meta.url),'utf8'),/originalSample/);
  assert.match(src,/loadKunlumCherekLocal/);
  assert.match(src,/excludeBounds/);
 });
