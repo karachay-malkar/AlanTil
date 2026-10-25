@@ -16,7 +16,16 @@ const dir=path.join(process.cwd(),'kunlum-editors-browser-qa');fs.mkdirSync(dir,
    await page.goto('http://127.0.0.1:4173/kunlum-vector-editor.html',
     {waitUntil:'domcontentloaded',timeout:45000});
    await page.waitForFunction(()=>document.querySelector('#site rect')&&
-    document.querySelectorAll('#candidates path').length===602,null,{timeout:45000});
+    document.querySelectorAll('#candidates path').length===602,null,{timeout:30000}).catch(async error=>{
+     const details=await page.evaluate(()=>({
+      status:document.querySelector('#status')?.textContent?.slice(0,700),
+      rectangles:document.querySelectorAll('#site rect').length,
+      auto:document.querySelectorAll('#candidates path').length,
+      title:document.title,body:document.body.innerText.slice(0,900)
+     }));
+     await page.screenshot({path:path.join(dir,mode+'-2d-failed.png')});
+     throw Error(mode+' cannot load original 2D map: '+JSON.stringify({details,errors})+'; '+error.message);
+    });
    const twoD=await page.evaluate(()=>{
     const b=document.querySelector('#site rect');
     return {x:Number(b.getAttribute('x')),y:Number(b.getAttribute('y')),
