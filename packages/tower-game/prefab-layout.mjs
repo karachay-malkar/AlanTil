@@ -1,10 +1,12 @@
 import {isApprovedMasonryType,approvedVariantCount,APPROVED_PREFAB_VERSION} from './approved-prefab.mjs';
+import {KUNLUM_BUILD_PARCEL as SITE} from './kunlum-parcel.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from './window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
 /** One section = one immutable prefabricated masonry asset. Positions are integer 25-cm cells. */
 export const PREFAB_CELL_METERS=.25;
-export const PREFAB_WORLD_CELLS=80;
+export const PREFAB_WORLD_X_CELLS=SITE.widthM/PREFAB_CELL_METERS;
+export const PREFAB_WORLD_Z_CELLS=SITE.depthM/PREFAB_CELL_METERS;
 export const PREFAB_HEIGHT_CELLS=80;
 export const PREFAB_TYPES=Object.freeze([
  {id:'1x1x1',size:[1,1,1]},
@@ -60,7 +62,7 @@ export function validatePrefabPlacement(blocks,section,options={}){
  if(![section.x,section.y,section.z].every(v=>Number.isFinite(v)))return{ok:false,reason:'Некорректная позиция'};
  if(![section.x,section.y,section.z].every(v=>Number.isInteger(v)))return{ok:false,reason:'Секция должна быть привязана к сетке 25 см'};
  const a=prefabBounds(section);
- if(a.min.some(v=>v<0)||a.max[0]>PREFAB_WORLD_CELLS||a.max[1]>PREFAB_HEIGHT_CELLS||a.max[2]>PREFAB_WORLD_CELLS)
+ if(a.min.some(v=>v<0)||a.max[0]>PREFAB_WORLD_X_CELLS||a.max[1]>PREFAB_HEIGHT_CELLS||a.max[2]>PREFAB_WORLD_Z_CELLS)
   return{ok:false,reason:'Секция выходит за границы участка'};
  if(blocks.some(b=>{if(b.id===section.id)return false;const c=prefabBounds(b);return [0,1,2].every(k=>overlap(a,c,k)>EPS);}))return{ok:false,reason:'Место занято'};
  if(!hasPrefabSupport(blocks,section))return{ok:false,reason:'Основание должно полностью опираться на нижние секции'};

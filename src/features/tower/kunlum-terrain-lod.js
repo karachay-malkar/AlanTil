@@ -7,6 +7,7 @@
 import {KUNLUM_DEM} from './kunlum-dem-data.js';
 import {pixelToLocalWorld,sampleDemLocal} from './kunlum-georeference.js';
 import {carveKunlumRiverHeight} from './kunlum-river-layer.js';
+import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel,kunlumTerraceBlend} from '../../../packages/tower-game/kunlum-parcel.mjs';
 
 let decoded=null;
 export function getKunlumHeights(){
@@ -37,16 +38,14 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
  const sample=(east,north)=>sampleDemLocal(heights,east,north);
  const clamped=(x,a,b)=>Math.max(a,Math.min(b,x));
  const smooth=t=>{t=clamped(t,0,1);return t*t*(3-2*t)};
- const reserve=[-10,30,-15,35]; // Retain current interactive 40×50 m clear zone
+ // Flatten only the construction parcel, blending naturally within 12m.
  function surfaceAt(x,z){
   const [e,n]=sceneToDem(x,z);
-  const rel=sample(e,n)-baseHeight;
-  const outX=Math.max(reserve[0]-x,0,x-reserve[1]);
-  const outZ=Math.max(reserve[2]-z,0,z-reserve[3]);
-  return rel*smooth(Math.hypot(outX,outZ)/32);
+  return (sample(e,n)-baseHeight)*kunlumTerraceBlend(x,z);
  }
  let riverLine=[];
  function heightAt(x,z){
+  if(isWithinKunlumParcel(x,z))return 0;
   const natural=surfaceAt(x,z);
   return riverLine.length>1?carveKunlumRiverHeight(x,z,surfaceAt,riverLine):natural;
  }
@@ -103,12 +102,23 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   mesh.name=label;mesh.frustumCulled=true;mesh.receiveShadow=false;
   group.add(mesh);terrainMeshes.push(mesh);register(geometry,pbr?null:material);return index.length/3;
  }
- const centreX=10,centreZ=10,near=mobile?450:600,step=mobile?12:8;
+ const centreX=SITE.centerX,centreZ=SITE.centerZ,near=mobile?450:600,step=mobile?12:8;
  const [leftA]=demToScene(-1800,0),[leftB]=demToScene(1800,0);
  const west=Math.min(leftA,leftB),east=Math.max(leftA,leftB);
  const south=demToScene(0,-1800)[1],north=demToScene(0,1800)[1];
  // Rectangular tiles share the same bilinear sampler, so LOD edges are watertight.
- let triangles=addTerrainTile(centreX-near,centreX+near,centreZ-near,centreZ+near,step,'Copernicus · near 3D terrain');
+ // Fine local detail, economical normal LOD outside; adjacent tiles do not overlap.
+ const focus={minX:-15,maxX:40,minZ:-15,maxZ:55};
+ const nearTiles=[
+  [centreX-near,focus.minX,centreZ-near,centreZ+near,step,'Near west'],
+  [focus.maxX,centreX+near,centreZ-near,centreZ+near,step,'Near east'],
+  [focus.minX,focus.maxX,centreZ-near,focus.minZ,step,'Near south'],
+  [focus.minX,focus.maxX,focus.maxZ,centreZ+near,step,'Near north'],
+  [focus.minX,focus.maxX,focus.minZ,focus.maxZ,mobile?2:1.25,'Level parcel detail']
+ ];
+ let triangles=0;
+ for(const [x0,x1,z0,z1,res,name] of nearTiles)
+  triangles+=addTerrainTile(x0,x1,z0,z1,res,name);
  const tiles=[
   [west,centreX-near,south,north,'West outer terrain'],
   [centreX+near,east,south,north,'East outer terrain'],
