@@ -1,4 +1,5 @@
 import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js';
+import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
@@ -111,7 +112,10 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  const owned=[];
  function addMesh(target,vertices,color,name){
   if(!vertices.length)return;
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.computeVertexNormals();
+  const raw=new THREE.BufferGeometry();raw.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));raw.computeVertexNormals();
+  // Every sealed wall body uses the very same metric stone UV projection as
+  // authentic Common100 geometry, including walls beyond the mobile mesh LOD.
+  const g=getApprovedStoneSurfaceGeometry(raw);raw.dispose();
   const m=new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide});
   const mesh=new THREE.Mesh(g,m);mesh.name=name;target.add(mesh);owned.push([g,m]);
  }
@@ -122,9 +126,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   const lines=new THREE.LineSegments(g,m);lines.name=name;target.add(lines);owned.push([g,m]);
  }
  addMesh(confirmed,buffers.wall,'#b9b5a5','74 confirmed walls');
- addMesh(confirmed,buffers.house,'#dfb88b','19 house boundaries');
- addMesh(confirmed,buffers.retaining,'#ab8e77','16 retaining walls');
- addMesh(candidates,auto,'#72aab6','Unverified automatic 3D walls');
+ addMesh(confirmed,buffers.house,'#b9b5a5','19 house boundaries');
+ addMesh(confirmed,buffers.retaining,'#b9b5a5','16 retaining walls');
+ addMesh(candidates,auto,'#b9b5a5','Unverified automatic 3D walls');
  addLines(passages,gap,'#2ae9a7','11 confirmed passages plus linked openings');
  const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
