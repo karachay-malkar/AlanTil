@@ -50,7 +50,10 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    await page.locator('[data-fly]').click();
    if(await page.locator('[data-fly]').getAttribute('aria-pressed')!=='true')
     throw Error('Flight not enabled');
-   await page.locator('[data-rise]').hover();
+   if(!(await page.locator('[data-rise]').isVisible()))
+    throw Error(device+' flight altitude control hidden while flying');
+   const up=await page.locator('[data-rise]').boundingBox();
+   await page.mouse.move(up.x+up.width/2,up.y+up.height/2);
    await page.mouse.down();await sleep(950);await page.mouse.up();await sleep(80);
    const flown=await state();
    if(!(flown.point[1]>a.point[1]+1&&flown.point[1]<=15.02))
@@ -60,11 +63,16 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    const grounded=await state();
    if(Math.abs(grounded.point[1]-1.7)>.08||grounded.flying!=='false')
     throw Error(device+' did not land '+JSON.stringify(grounded));
-   await page.locator('[data-camera="home"]').click();
+   await page.locator('[data-world]').click();
+   if(await page.locator('.towerCanvas').getAttribute('data-world-view')!=='true')
+    throw Error(device+' overview camera unavailable');
+   await page.locator('[data-world]').click();
    const home=await state();
    if(home.mode!=='explore'||await page.locator('.towerCanvas').getAttribute('data-world-view')!=='false')
     throw Error(device+' normal construction camera not restored '+JSON.stringify(home));
-   if(!(await page.locator('.towerCatalog').isVisible()))throw Error('Construction catalog not restored');
+   if(await page.locator('.towerCatalog').isVisible())throw Error('Construction catalog should default closed');
+   await page.locator('[data-hammer]').click();
+   if(!(await page.locator('.towerCatalog').isVisible()))throw Error('Construction catalog failed to open');
    if(errors.length)throw Error(device+' uncaught JavaScript '+JSON.stringify(errors));
    verified.push({device,walkMoved:true,flightY:flown.point[1],landedY:grounded.point[1],
     constructionRestored:true,errors:errors.length});
