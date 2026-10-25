@@ -44,15 +44,21 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);floor.receiveShadow=true;scene.add(floor);
  // Kunlum landscape stays independent from prefab placement and saved state.
  let kunlum=null;
- try { kunlum=createKunlumEnvironment(THREE,scene,{mobile:matchMedia('(max-width:749px)').matches,onReady:scheduleDraw});
-  void kunlum.ready.then(()=>{
-   if(disposed)return;
-   const meta=kunlum.group.userData.kunlum;
-   container.dataset.kunlumWorldReady=String(!!meta.river&&meta.ruins.confirmed===120);
-   container.dataset.kunlumConfirmed=String(meta.ruins.confirmed||0);
-   container.dataset.kunlumRiver=meta.river||'';
-   scheduleDraw();
-  });
+ function refreshEnvironmentStatus(){
+  if(disposed||!kunlum)return;
+  const meta=kunlum.group.userData.kunlum;
+  container.dataset.kunlumWorldReady=String(!!meta.river&&meta.ruins.confirmed===120);
+  container.dataset.kunlumConfirmed=String(meta.ruins.confirmed||0);
+  container.dataset.kunlumRiver=meta.river||'';
+  container.dataset.kunlumWide=meta.wideStatus||'loading';
+  container.dataset.kunlumPlotCenter=(meta.yellowParcelCenter||[]).join(',');
+  if(meta.wideStatus==='ready'){scene.fog.near=3300;scene.fog.far=10300;}
+  scheduleDraw();
+ }
+ try { kunlum=createKunlumEnvironment(THREE,scene,{
+  mobile:matchMedia('(max-width:749px)').matches,onReady:refreshEnvironmentStatus
+ });
+  void kunlum.ready.then(refreshEnvironmentStatus);
  }
  catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
@@ -375,6 +381,11 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   getEnvironmentInfo(){const info=kunlum?.group?.userData.kunlum;return {
    confirmed:info?.ruins?.confirmed||0,river:info?.river||null,
    meshNames:kunlum?.group?.children.map(x=>x.name)||[],
+   wideStatus:info?.wideStatus||'loading',
+   wideTriangles:info?.wideTriangles||0,
+   yellowParcelCenter:info?.yellowParcelCenter||null,
+   yellowParcelCorners:info?.yellowParcelCorners||null,
+   legacyBuildFitsYellow:info?.legacyBuildFitsYellow,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
   dispose(){disposed=true;explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}
