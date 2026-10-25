@@ -55,3 +55,28 @@ test('new database migration only narrows grid; old migration retained unchanged
  assert.match(file('supabase/migrations/20261025100000_tower_parcel_25x40.sql'),/px\+dims\[1\]>100 OR py\+dims\[2\]>80 OR pz\+dims\[3\]>160/);
  assert.match(file('supabase/migrations/20261025160000_tower_parcel_15x30.sql'),/px\+dims\[1\]>60 OR py\+dims\[2\]>80 OR pz\+dims\[3\]>120/);
 });
+
+test('same approved Common 100 geometries and PBR material drive both village renderers',()=>{
+ const stone=file('src/features/tower/kunlum-stone-facing.js');
+ const overlay=file('src/features/tower/kunlum-map-overlay.js');
+ const editor=file('kunlum-terrace-editor-3d.html');
+ const world=file('src/features/tower/kunlum-real-environment.js');
+ assert.match(stone,/loadCommon100\(/);
+ assert.match(stone,/getApprovedStoneSurfaceGeometry\(/);
+ assert.match(stone,/getRockSurface\(/);
+ assert.match(stone,/InstancedMesh/);
+ assert.match(stone,/common100TowerBase/);
+ assert.match(overlay,/enhanceKunlumStoneWalls/);
+ assert.match(overlay,/Enclosed irregular core prevents any light leaking/);
+ assert.match(editor,/createKunlumMapOverlay/);
+ assert.match(world,/stoneMaterialPromise/);
+});
+test('construction opens in first person, and route button is the only overview control',()=>{
+ const ui=file('src/features/tower/index.js');
+ const stage=file('src/features/tower/prefab-scene.js');
+ assert.match(ui,/data-world/);
+ assert.doesNotMatch(ui,/button data-explore/);
+ assert.match(stage,/enterExplore\(\);scheduleDraw\(\);container\.dataset\.ready/);
+ assert.match(ui,/requestTowerLandscape/);
+ assert.match(ui,/screen\.orientation\.lock\('landscape'\)/);
+});
