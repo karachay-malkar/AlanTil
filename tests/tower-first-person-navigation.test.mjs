@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {constrainTowerCamera,moveTowerExplorer,TOWER_EXPLORER} from '../src/features/tower/first-person-navigation.js';
+import {canTowerExplorerLand,constrainTowerCamera,moveTowerExplorer,TOWER_EXPLORER} from '../src/features/tower/first-person-navigation.js';
 
 const groundAt=()=>0;
 const wall=[{min:{x:9,y:0,z:6},max:{x:11,y:3,z:14}}];
@@ -34,4 +34,13 @@ test('world and construction orbit camera always remain above DEM',()=>{
  const r=constrainTowerCamera({x:18,y:-8,z:10},floor,4);
  assert.equal(r.y,29);
  assert.deepEqual(constrainTowerCamera({x:5,y:10,z:5},floor,.3),{x:5,y:10,z:5});
+});
+
+test('descent over a real stone bounding box stops at the roof instead of falling through',()=>{
+ const roof=[{min:{x:3,y:0,z:3},max:{x:7,y:4,z:7}}];
+ let p={x:5,y:7,z:5};
+ for(let i=0;i<200;i++)p=moveTowerExplorer(p,{up:-1},0,.05,{groundAt,fly:true,obstacles:roof});
+ assert.ok(p.y>=5.62,'capsule feet must remain above four-metre roof');
+ assert.ok(!canTowerExplorerLand(p,groundAt,roof),'cannot switch to ground mode inside solid prefab');
+ assert.equal(canTowerExplorerLand({x:2,y:4,z:2},groundAt,roof),true);
 });
