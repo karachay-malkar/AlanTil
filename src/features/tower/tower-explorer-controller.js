@@ -1,5 +1,5 @@
 /** First-person controller is visual only: no prefab placement or save mutations. */
-import {moveTowerExplorer,TOWER_EXPLORER} from './first-person-navigation.js';
+import {canTowerExplorerLand,moveTowerExplorer,TOWER_EXPLORER} from './first-person-navigation.js';
 const keys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown',
  'ArrowLeft','ArrowRight','KeyQ','KeyE','Space','ShiftLeft']);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -34,6 +34,10 @@ export function createTowerExplorerController({
  }
  function setFly(value){
   if(!enabled)return false;
+  if(!value&&!canTowerExplorerLand(camera.position,groundAt,getObstacles())){
+   // The player must fly sideways to clear the roof before touching down.
+   return true;
+  }
   flying=!!value;
   if(!flying)camera.position.y=groundAt(camera.position.x,camera.position.z)+TOWER_EXPLORER.eyeHeight;
   requestRender();
