@@ -218,7 +218,7 @@ export async function mount(context,params={}){
  }
  on('[data-clear]','click',()=>{void clearAll();});
  on('.towerCatalog','click',event=>{
-  const el=event.target.closest('[data-section-id]');if(el)begin(el.dataset.sectionId);
+  const el=event.target.closest('[data-section-id]');if(el&&game.dataset.explore==='true')begin(el.dataset.sectionId);
  });
  on('[data-hammer]','click',()=>{
   if(s.busy)return;
@@ -265,6 +265,8 @@ export async function mount(context,params={}){
  });
  on('[data-world]','click',()=>{
   if(s.busy||!s.scene)return;
+  if(s.mode==='placing')cancel();
+  else if(s.mode==='selected')markSelection(null);
   const wide=s.scene.worldView();
   walkUi(!wide);
   q('[data-world]')?.setAttribute('aria-pressed',String(!!wide));

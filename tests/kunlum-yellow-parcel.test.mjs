@@ -80,3 +80,13 @@ test('construction opens in first person, and route button is the only overview 
  assert.match(ui,/requestTowerLandscape/);
  assert.match(ui,/screen\.orientation\.lock\('landscape'\)/);
 });
+
+test('world overview is read-only; placement UI only appears in first-person',()=>{
+ const ui=file('src/features/tower/index.js');
+ const stage=file('src/features/tower/prefab-scene.js');
+ const css=file('src/features/tower/tower.css');
+ assert.match(ui,/if\(s\.mode==='placing'\)cancel\(\);/);
+ assert.match(stage,/getAimHit\(\)\{if\(worldMode\)return null/);
+ assert.match(stage,/container\.dataset\.cameraMode='overview'/);
+ assert.match(css,/data-explore="false"/);
+});

@@ -324,7 +324,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  const activePointers=new Set();let pressed=null;
  function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
- function pointerUp(e){activePointers.delete(e.pointerId);if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+ function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();scheduleDraw();});observer.observe(container);
@@ -367,8 +367,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  function worldView(){
   worldMode=!worldMode;
-  if(worldMode)leaveExplorer();
   if(worldMode){
+   leaveExplorer();
+   grid.visible=false;faceGrid.visible=false;preview.visible=false;
+   container.dataset.cameraMode='overview';
    controls.maxDistance=3500;
    camera.far=9000;camera.updateProjectionMatrix();
    // The hillside rises hundreds of metres: panorama camera must stay ABOVE
@@ -387,7 +389,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  document.addEventListener('visibilitychange',onVisibility);
  enterExplore();scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='explore';
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
-  setSelected,getAimHit(){const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
+  setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
   exitExplore:resetCamera,
   setFly(value){const on=explorer.setFly(value);container.dataset.flying=String(on);

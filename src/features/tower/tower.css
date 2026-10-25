@@ -58,6 +58,8 @@
 @media(pointer:fine){.towerJoystick{display:none}.towerExploreHint{max-width:65%}}
 @media(max-width:749px){.towerExploreHint{top:calc(var(--safe-top,0px) + 7px);font-size:10px;max-width:calc(100% - 145px)}.towerFlightPanel{right:9px;bottom:max(30px,var(--safe-bottom,0px))}.towerJoystick{left:14px;bottom:max(30px,var(--safe-bottom,0px))}}
 
+/* World overview is read-only; construction controls belong to first-person mode. */
+.towerGame[data-explore="false"] .towerSide,.towerGame[data-explore="false"] [data-hammer]{display:none!important}
 /* Browser orientation fallback when automatic Screen Orientation lock is denied. */
 .towerOrientationAction{position:absolute;z-index:15;top:calc(var(--safe-top,0px) + 10px);left:50%;transform:translateX(-50%);border:1px solid #c8af80;border-radius:8px;background:#223d33;color:white;padding:9px 12px;font:600 12px/1.2 var(--font-body);box-shadow:0 2px 12px #0005}
 @media(orientation:landscape){.towerOrientationAction{display:none!important}}
