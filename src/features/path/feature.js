@@ -1,4 +1,4 @@
-import { BEGINNER_SET_METADATA, INTERMEDIATE_SET_METADATA } from "../../data/path-set-metadata.js?v=17.2.15";
+import { BEGINNER_SET_METADATA, INTERMEDIATE_SET_METADATA } from "../../data/path-set-metadata.js?v=17.2.16";
 import { getInterfaceLanguage, msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { getDisplayedSetName, getDisplayedWordCollection } from "../../shared/domain/alan-display.js?v=16.8.0.3";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.3";
@@ -16,7 +16,7 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
 import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.3";
 import { renderStationView } from "./station-view.js?v=16.8.0.3";
-import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=17.2.15";
+import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=17.2.16";
 import { readScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
 import { renderStoryWordList } from "./story-word-list.js?v=16.8.0.3";
 
@@ -24,8 +24,8 @@ let controller = null;
 let activeStudy = false;
 const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
-const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.15";
-const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.15";
+const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.16";
+const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.16";
 let pathIndexCache = null;
 
 async function getHomeRouteWords(signal) {

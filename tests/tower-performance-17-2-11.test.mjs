@@ -7,8 +7,8 @@ test("Approved tower layout stylesheet exists, route loads it by current release
  assert.match(css,/\.towerGame\{/);
  assert.match(css,/\.towerStage\{/);
  assert.match(css,/\.towerCatalog\{/);
- assert.match(lazy,/tower\.css\?v=17\.2\.15/);
- assert.match(router,/TOWER_ASSET_VERSION = "17\.2\.15"/);
+ assert.match(lazy,/tower\.css\?v=17\.2\.16/);
+ assert.match(router,/TOWER_ASSET_VERSION = "17\.2\.16"/);
 });
 test("Rendering is invalidated by changes and is stopped when nothing changes",async()=>{
  const s=await read("src/features/tower/prefab-scene.js");
