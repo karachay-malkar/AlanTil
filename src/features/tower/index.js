@@ -268,9 +268,12 @@ export async function mount(context,params={}){
  });
  on('[data-ground]','click',()=>{
   if(game.dataset.explore!=='true')return;
-  s.scene?.setFly(false);altitude=0;sendMotion();
-  q('[data-fly]').setAttribute('aria-pressed','false');
-  q('[data-fly]').textContent='Полёт';game.dataset.flying='false';
+  const stillFlying=s.scene?.setFly(false);
+  altitude=0;sendMotion();
+  q('[data-fly]').setAttribute('aria-pressed',String(!!stillFlying));
+  q('[data-fly]').textContent=stillFlying?'Полёт: вкл.':'Полёт';
+  game.dataset.flying=String(!!stillFlying);
+  if(stillFlying)message('Освободи место под собой, чтобы приземлиться');
  });
  let stickPointer=null;
  function stickMove(event){
