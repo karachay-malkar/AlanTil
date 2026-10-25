@@ -1,0 +1,31 @@
+{
+  "schema": "alantil.kunlum.mapzen-terrarium.v1",
+  "source": "Mapzen / AWS Terrain Tiles",
+  "url": "https://registry.opendata.aws/terrain-tiles/",
+  "license": "Mixed upstream DEM sources; preserve Mapzen and provider attribution",
+  "projection": "WebMercator z13 Terrarium PNG",
+  "zoom": 13,
+  "bounds": {
+    "minX": -2300,
+    "maxX": 3800,
+    "minZ": -3800,
+    "maxZ": 3800
+  },
+  "grid": [
+    5083,
+    5085,
+    3005,
+    3007
+  ],
+  "tiles": [
+    "5083-3005.png",
+    "5084-3005.png",
+    "5085-3005.png",
+    "5083-3006.png",
+    "5084-3006.png",
+    "5085-3006.png",
+    "5083-3007.png",
+    "5084-3007.png",
+    "5085-3007.png"
+  ]
+}
