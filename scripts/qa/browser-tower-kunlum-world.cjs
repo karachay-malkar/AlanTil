@@ -34,6 +34,16 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    }));
    if(details.count!==120||!details.river.includes('186 points')||!details.node||errors.length)
     throw Error(type+' incorrect world data: '+JSON.stringify({details,errors}));
+   await page.waitForFunction(()=>{
+    const el=document.querySelector('.towerCanvas');
+    return el&&['ready','unavailable'].includes(el.dataset.kunlumWide);
+   },null,{timeout:30000});
+   const extent=await page.locator('.towerCanvas').evaluate(el=>({
+    wide:el.dataset.kunlumWide,
+    centre:el.dataset.kunlumPlotCenter
+   }));
+   if(extent.centre!=='10,10'||extent.wide!=='ready')
+    throw Error(type+' wrong yellow parcel centre / expanded DEM absent '+JSON.stringify(extent));
    await page.waitForFunction(()=>document.getElementById('qa-root')?.dataset.mount==='success'&&
     document.querySelector('[data-world]')?.disabled===false,null,{timeout:60000});
    if(!(await page.locator('[data-world]').isVisible()))
