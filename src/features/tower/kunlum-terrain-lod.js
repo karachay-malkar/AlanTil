@@ -21,14 +21,19 @@ export function getKunlumHeights(){
  }
  decoded=out;return out;
 }
-export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,register=()=>{},mirrorDemX=false,pbr=null}={}){
+export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,register=()=>{},mirrorDemX=false,pbr=null,alignment=null}={}){
  const heights=getKunlumHeights();
  // The plot centre stays at the existing gameplay (10,0,10).
  const centrePixel=[plot.x+plot.widthM*plot.ppm/2,plot.y+plot.heightM*plot.ppm/2];
- const [centerEast,centerNorth]=pixelToLocalWorld(centrePixel,calibration);
- const baseHeight=sampleDemLocal(heights,centerEast,centerNorth);
- const demToScene=(east,north)=>[(mirrorDemX?centerEast-east:east-centerEast)+10,north-centerNorth+10];
- const sceneToDem=(x,z)=>[centerEast+(mirrorDemX?10-x:x-10),z-10+centerNorth];
+ const [legacyEast,legacyNorth]=pixelToLocalWorld(centrePixel,calibration);
+ const centerEast=alignment?.origin[0]??legacyEast;
+ const centerNorth=alignment?.origin[1]??legacyNorth;
+ const demToScene=alignment?.demToScene||
+  ((east,north)=>[(mirrorDemX?centerEast-east:east-centerEast)+10,north-centerNorth+10]);
+ const sceneToDem=alignment?.sceneToDem||
+  ((x,z)=>[centerEast+(mirrorDemX?10-x:x-10),z-10+centerNorth]);
+ const [anchorE,anchorN]=sceneToDem(10,10);
+ const baseHeight=sampleDemLocal(heights,anchorE,anchorN);
  const sample=(east,north)=>sampleDemLocal(heights,east,north);
  const clamped=(x,a,b)=>Math.max(a,Math.min(b,x));
  const smooth=t=>{t=clamped(t,0,1);return t*t*(3-2*t)};
@@ -99,9 +104,9 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   group.add(mesh);terrainMeshes.push(mesh);register(geometry,pbr?null:material);return index.length/3;
  }
  const centreX=10,centreZ=10,near=mobile?450:600,step=mobile?12:8;
- const west=(mirrorDemX?centerEast-1800:-1800-centerEast)+10,
-  east=(mirrorDemX?centerEast+1800:1800-centerEast)+10;
- const south=-1800-centerNorth+10,north=1800-centerNorth+10;
+ const [leftA]=demToScene(-1800,0),[leftB]=demToScene(1800,0);
+ const west=Math.min(leftA,leftB),east=Math.max(leftA,leftB);
+ const south=demToScene(0,-1800)[1],north=demToScene(0,1800)[1];
  // Rectangular tiles share the same bilinear sampler, so LOD edges are watertight.
  let triangles=addTerrainTile(centreX-near,centreX+near,centreZ-near,centreZ+near,step,'Copernicus · near 3D terrain');
  const tiles=[
@@ -114,7 +119,67 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   if(x1-x0<2||z1-z0<2)continue;
   triangles+=addTerrainTile(x0,x1,z0,z1,30,name);
  }
+ let wideMesh=null;
+ // The central Copernicus geometry is never removed or resampled.
+ // The real Mapzen DEM is rendered ONLY outside its authoritative 3.6km core.
+ function installWideDem(wide){
+  if(!wide?.loaded||wideMesh)throw Error('Expanded terrain must be loaded once');
+  const bounds=wide.bounds;
+  const [xA]=demToScene(bounds.minX,0),[xB]=demToScene(bounds.maxX,0);
+  const minX=Math.min(xA,xB),maxX=Math.max(xA,xB);
+  const minZ=demToScene(0,bounds.minZ)[1],maxZ=demToScene(0,bounds.maxZ)[1];
+  const root=new THREE.Group();root.name='Mapzen real expanded DEM outside Copernicus 3.6km';
+  const step=mobile?90:70,idxStep=30;
+  let wideTriangles=0;
+  function band(x0,x1,z0,z1,stepX,stepZ,label){
+   if(x1<=x0||z1<=z0)return;
+   const nx=Math.max(1,Math.ceil((x1-x0)/stepX));
+   const nz=Math.max(1,Math.ceil((z1-z0)/stepZ));
+   const count=(nx+1)*(nz+1),positions=new Float32Array(count*3);
+   const colors=new Float32Array(count*3),uvs=new Float32Array(count*2),indices=[];
+   for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){
+    const x=x0+(x1-x0)*i/nx,z=z0+(z1-z0)*j/nz;
+    const [e,n]=sceneToDem(x,z),y=wide.sample(e,n)-baseHeight;
+    const off=(j*(nx+1)+i)*3;
+    positions[off]=x;positions[off+1]=y;positions[off+2]=z;
+    if(pbr){
+     const sampleHeight=(tx,tz)=>{
+      const [u,v]=sceneToDem(tx,tz);
+      return wide.sample(u,v)-baseHeight;
+     };
+     const slope=Math.hypot(
+      (sampleHeight(Math.max(minX,x-12),z)-sampleHeight(Math.min(maxX,x+12),z))/24,
+      (sampleHeight(x,Math.max(minZ,z-12))-sampleHeight(x,Math.min(maxZ,z+12)))/24
+     );
+     const rgb=pbr.terrainColor(y+baseHeight+1251.24,slope,x,z);
+     colors.set(rgb,off);
+    }else{colors[off]=colors[off+1]=colors[off+2]=.8;}
+    const ui=(j*(nx+1)+i)*2;uvs[ui]=x*(pbr?.texScale||.1);uvs[ui+1]=z*(pbr?.texScale||.1);
+   }
+   for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){
+    const a=j*(nx+1)+i,b=a+1,c=a+nx+1,d=c+1;
+    indices.push(a,c,b,b,c,d);
+   }
+   const geo=new THREE.BufferGeometry();
+   geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+   geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+   geo.setAttribute('uv',new THREE.BufferAttribute(uvs,2));
+   geo.setIndex(indices);geo.computeVertexNormals();
+   const mat=pbr?.material||new THREE.MeshLambertMaterial({vertexColors:true});
+   const mesh=new THREE.Mesh(geo,mat);mesh.name=label;
+   root.add(mesh);register(geo,pbr?null:mat);
+   wideTriangles+=indices.length/3;
+  }
+  // Core-edge bands retain 30m spacing along the seam (no unfilled T-junctions).
+  band(minX,west,minZ,maxZ,step,idxStep,'Mapzen western rim');
+  band(east,maxX,minZ,maxZ,step,idxStep,'Mapzen eastern rim');
+  band(west,east,minZ,south,idxStep,step,'Mapzen southern rim');
+  band(west,east,north,maxZ,idxStep,step,'Mapzen northern rim');
+  group.add(root);wideMesh=root;
+  return {triangles:wideTriangles,extent:[maxX-minX,maxZ-minZ]};
+ }
  return {heights,baseHeight,centerEast,centerNorth,demToScene,sceneToDem,heightAt,surfaceAt,setRiverLine,
+  installWideDem,
   triangles,nearRadius:near,extentM:3600,plotMetres:[plot.widthM,plot.heightM]};
 }
 /**
