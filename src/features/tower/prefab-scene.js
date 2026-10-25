@@ -6,6 +6,7 @@ import {constrainTowerCamera} from './first-person-navigation.js';
 import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.16';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
+import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION,WINDOW_JOINT_FILES} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
@@ -40,8 +41,9 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const sunlight=new THREE.DirectionalLight('#fff3df',3);sunlight.position.set(-10,20,13);scene.add(sunlight);
  const surface=new THREE.Group();scene.add(surface);
  // Existing open landscape remains independent of the construction engine.
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:'#929673',roughness:1}));
- floor.rotation.x=-Math.PI/2;floor.position.set(10,-.006,10);floor.receiveShadow=true;scene.add(floor);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(SITE.widthM,SITE.depthM),
+  new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false}));
+ floor.rotation.x=-Math.PI/2;floor.position.set(SITE.centerX,-.006,SITE.centerZ);floor.receiveShadow=true;scene.add(floor);
  // Kunlum landscape stays independent from prefab placement and saved state.
  let kunlum=null;
  function refreshEnvironmentStatus(){
@@ -62,8 +64,17 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
- const grid=new THREE.GridHelper(20,80,'#d9ead7','#879e84');grid.position.set(10,.008,10);
- grid.material.transparent=true;grid.material.opacity=.28;grid.visible=false;scene.add(grid);
+ // Rectangular 25cm grid inside the only yellow plot.
+ const gridVertices=[];
+ for(let x=SITE.minX;x<=SITE.maxX+1e-6;x+=CELL)
+  gridVertices.push(x,.008,SITE.minZ,x,.008,SITE.maxZ);
+ for(let z=SITE.minZ;z<=SITE.maxZ+1e-6;z+=CELL)
+  gridVertices.push(SITE.minX,.008,z,SITE.maxX,.008,z);
+ const gridGeometry=new THREE.BufferGeometry();
+ gridGeometry.setAttribute('position',new THREE.Float32BufferAttribute(gridVertices,3));
+ const grid=new THREE.LineSegments(gridGeometry,
+  new THREE.LineBasicMaterial({color:'#879e84',transparent:true,opacity:.28}));
+ grid.visible=false;scene.add(grid);
  const faceGrid=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:'#bcefc0',transparent:true,opacity:.67,depthTest:false}));
  scene.add(faceGrid);faceGrid.visible=false;
  const preview=new THREE.Group();scene.add(preview);preview.visible=false;
@@ -327,8 +338,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    controls.update();
    // Flat playable plot needs close-up camera access; steep surrounding DEM
    // needs a larger margin because sampled height and 8–30m render triangles differ.
-   const onFlatPlot=camera.position.x>=-10&&camera.position.x<=30&&
-     camera.position.z>=-15&&camera.position.z<=35;
+   const onFlatPlot=isWithinKunlumParcel(camera.position.x,camera.position.z);
    const margin=onFlatPlot?.35:worldMode?6:3;
    const safe=constrainTowerCamera(camera.position,kunlum?.heightAt||(()=>0),margin);
    if(camera.position.y<safe.y){camera.position.y=safe.y;needsRender=true;}
@@ -385,7 +395,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    wideTriangles:info?.wideTriangles||0,
    yellowParcelCenter:info?.yellowParcelCenter||null,
    yellowParcelCorners:info?.yellowParcelCorners||null,
-   legacyBuildFitsYellow:info?.legacyBuildFitsYellow,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
   dispose(){disposed=true;explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}

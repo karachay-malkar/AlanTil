@@ -1,32 +1,9 @@
 /**
- * Clips only rendered wall/trace segments outside the playable tower footprint.
- * The source historic vector plan remains unchanged.
- */
-export function clipKunlumOutsideReserve(A,B,bounds){
- if(!bounds)return [[A,B]];
- const dx=B[0]-A[0],dz=B[1]-A[1];
- const P=[-dx,dx,-dz,dz],Q=[
-  A[0]-bounds.minX,bounds.maxX-A[0],A[1]-bounds.minZ,bounds.maxZ-A[1]
- ];
- let low=0,high=1;
- for(let i=0;i<4;i++){
-  if(Math.abs(P[i])<1e-10){if(Q[i]<0)return [[A,B]];continue;}
-  const t=Q[i]/P[i];
-  if(P[i]<0)low=Math.max(low,t);else high=Math.min(high,t);
-  if(low>high)return [[A,B]];
- }
- if(high<0||low>1)return [[A,B]];
- const at=t=>[A[0]+dx*t,A[1]+dz*t],result=[];
- if(low>1e-5)result.push([A,at(low)]);
- if(high<1-1e-5)result.push([at(high),B]);
- return result;
-}
-/**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
  * All elevations use the same terrain sampler as the terrain mesh beneath.
  */
-export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,excludeBounds=null}){
+export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt}){
  if(!source||!Array.isArray(source.confirmed_features)||!Array.isArray(source.auto_candidates))
   throw new Error('Invalid Kunlum vector plan');
  const root=new THREE.Group();root.name='Latest Kunlum mapped walls (read-only, no terraces)';
@@ -91,11 +68,11 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,excludeBou
   if(f.type==='passage'){
    counters.passages++;
    const p=f.points.map(toWorld);
-   for(let i=1;i<p.length;i++)for(const [a,b] of clipKunlumOutsideReserve(p[i-1],p[i],excludeBounds))line(gap,a,b,1.05);
+   for(let i=1;i<p.length;i++)line(gap,p[i-1],p[i],1.05);
   }else if(Object.hasOwn(buffers,f.type)){
    counters[f.type==='wall'?'walls':f.type==='house'?'houses':'retaining']++;
    if(f.type==='house')for(const p of f.points)centers.push(toWorld(p));
-   for(const [a,b] of segments(f))for(const [p,q] of clipKunlumOutsideReserve(a,b,excludeBounds))wallPiece(buffers[f.type],p,q,
+   for(const [p,q] of segments(f))wallPiece(buffers[f.type],p,q,
     f.type==='retaining'?1.8:f.type==='house'?1.6:1.4,
     f.type==='retaining'?.65:.5);
   }
@@ -107,15 +84,21 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,excludeBou
   const at=p=>p&&pts[p.segment]&&pts[p.segment+1]&&Number.isFinite(p.t)?
    interpolate(pts[p.segment],pts[p.segment+1],clamp(p.t)):null;
   const a=at(o.start),b=at(o.end);if(!a||!b)continue;
-  for(const [p,q] of clipKunlumOutsideReserve(a,b,excludeBounds))line(gap,p,q,1.3);
+  line(gap,a,b,1.3);
   counters.linkedOpenings++;
  }
  const confirmedOrigins=new Set(source.confirmed_features.map(x=>x.origin));
+ const seenAutoSegments=new Set();
  for(const f of source.auto_candidates){
   if(f.promoted||confirmedOrigins.has(f.id)||!Array.isArray(f.points)||f.points.length<2)continue;
   counters.remainingCandidates++;
   const p=f.points.map(toWorld);
-  for(let i=1;i<p.length;i++)for(const [a,b] of clipKunlumOutsideReserve(p[i-1],p[i],excludeBounds))line(auto,a,b,.85);
+  for(let i=1;i<p.length;i++){
+   const a=p[i-1],b=p[i],pkey=q=>q.map(v=>v.toFixed(3)).join(',');
+   const key=[pkey(a),pkey(b)].sort().join('|');
+   if(seenAutoSegments.has(key))continue;
+   seenAutoSegments.add(key);line(auto,a,b,.85);
+  }
  }
  const owned=[];
  function addMesh(target,vertices,color,name){

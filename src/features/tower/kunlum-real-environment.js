@@ -1,6 +1,6 @@
 /**
  * Georeferenced Kunlum visual environment for the Tower game.
- * Supports the unchanged 20x20m prefab raycast floor and current tower saves.
+ * Shared 25x40m plot; preserve saved structures.
  * Render-only. All historic polygons are one-point calibrated and provisional.
  * Does not register landscape as a placement target.
  */
@@ -8,6 +8,7 @@ import {makeKunlumTerrain,makeKunlumPanorama} from './kunlum-terrain-lod.js';
 import {sampleDemLocal} from './kunlum-georeference.js';
 import {createKunlumWideDem} from './kunlum-wide-dem.js';
 import {createKunlumGameAlignment,PLOT} from './kunlum-build-alignment.js';
+import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
 import {createKunlumMapOverlay} from './kunlum-map-overlay.js';
 import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js';
 import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './kunlum-river-layer.js';
@@ -25,9 +26,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   if(mat)materials.push(mat);
   if(texture)textures.push(texture);
  };
- // The local game coordinate [10,10] is the centre of the approved
- // 30x15 yellow rectangle; historic plan, Copernicus and OSM share this frame.
- // The saved 20x20 prefab grid (80x80 cells) is deliberately not rescaled.
+ // One calibrated yellow parcel shared by all map and terrain layers.
  const alignment=createKunlumGameAlignment();
  const pbr=createKunlumNativeTerrainPBR(THREE,{mobile});
  const terrain=makeKunlumTerrain(THREE,group,{
@@ -80,54 +79,23 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   group.add(tower);register(g,m);
  }
  createMonument();
- // The current placeable 20m square is not affected. The outer envelope is
- // a visual marker for the legacy gameplay reserve, not a build permission.
- function addPerimeter(){
-  const coords=[];
-  const corners=[[-10,-15],[30,-15],[30,35],[-10,35]];
-  for(let i=0;i<4;i++){
-   const a=corners[i],b=corners[(i+1)%4];
-   coords.push(a[0],.10,a[1],b[0],.10,b[1]);
-  }
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));
-  const m=new THREE.LineBasicMaterial({color:'#ccb88d',transparent:true,opacity:.65});
-  group.add(new THREE.LineSegments(g,m));register(g,m);
- }
- addPerimeter();
- // Separate the historic-plan 30×15m rectangle from the existing playable
- // 20×20m cell grid. They have different purposes; neither changes saved builds.
- const planned=alignment.footprintScene;
- const footprint=[];
+ // Single approved, level 25x40m yellow boundary.
+ const planned=alignment.footprintScene,footprint=[];
  for(let i=0;i<4;i++){
   const a=planned[i],b=planned[(i+1)%4];
-  footprint.push(a[0],terrain.heightAt(...a)+.14,a[1],
-   b[0],terrain.heightAt(...b)+.14,b[1]);
+  footprint.push(a[0],.14,a[1],b[0],.14,b[1]);
  }
  const footprintGeometry=new THREE.BufferGeometry();
  footprintGeometry.setAttribute('position',new THREE.Float32BufferAttribute(footprint,3));
- const footprintMaterial=new THREE.LineBasicMaterial({color:'#f0a75c',depthTest:false});
- group.add(new THREE.LineSegments(footprintGeometry,footprintMaterial));
- register(footprintGeometry,footprintMaterial);
- // Distinguish the existing 20m square from the historical yellow 30x15m
- // survey rectangle. Do not misrepresent it as fully contained.
- const buildCorners=[[0,0],[20,0],[20,20],[0,20]],buildLine=[];
- for(let i=0;i<4;i++){
-  const a=buildCorners[i],b=buildCorners[(i+1)%4];
-  buildLine.push(a[0],.19,a[1],b[0],.19,b[1]);
- }
- const buildG=new THREE.BufferGeometry();
- buildG.setAttribute('position',new THREE.Float32BufferAttribute(buildLine,3));
- const buildM=new THREE.LineBasicMaterial({color:'#6bc9cd',depthTest:false});
- const buildOutline=new THREE.LineSegments(buildG,buildM);
- buildOutline.name='Legacy 20x20 buildable area (cyan); approved 30x15 plot (yellow)';
- group.add(buildOutline);register(buildG,buildM);
+ const footprintMaterial=new THREE.LineBasicMaterial({color:'#f1d44b',depthTest:false});
+ const parcelOutline=new THREE.LineSegments(footprintGeometry,footprintMaterial);
+ parcelOutline.name='Approved yellow 25x40m construction parcel';
+ group.add(parcelOutline);register(footprintGeometry,footprintMaterial);
  const currentStats={houseContours:0,roofCourtyards:0,courtyards:0,
   confirmedFeatures:0,candidateFeatures:0,sourceAccuracy:'Loading vector plan'};
  group.userData.kunlum={
-  plot:[PLOT.widthM,PLOT.heightM],buildable:[20,20],reserveX:[-10,30],reserveZ:[-15,35],
-  yellowParcelCenter:[10,10],yellowParcelCorners:planned,
-  legacyBuildFitsYellow:alignment.legacyBuildFitsYellow,
+  plot:[PLOT.widthM,PLOT.heightM],buildable:[SITE.widthM,SITE.depthM],
+  yellowParcelCenter:[SITE.centerX,SITE.centerZ],yellowParcelCorners:planned,
   gridStep:.25,ruins:currentStats,sitePlan:'kunlum-vector-plan-2026-10-23.json',
   monument:'Абай-къала',abaevModelPosition:towerBase,
   terrain:'Copernicus DEM GLO-30 + PBR, 30m source',terrainResolutionNearM:mobile?12:8,
@@ -149,9 +117,8 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
      source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;
   planData=source;
-  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt,
-   excludeBounds:{minX:-10.75,maxX:30.75,minZ:-15.75,maxZ:35.75}});
-  overlay.setVisibility({confirmedVisible:true,candidatesVisible:false,passagesVisible:true});
+  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt});
+  overlay.setVisibility({confirmedVisible:true,candidatesVisible:true,passagesVisible:true});
   group.add(overlay.root);
   Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,
    sourceAccuracy:'Approved user-drawn vector plan (one-point registration)'});
@@ -212,7 +179,7 @@ export function createKunlumRealEnvironment(THREE,scene,{mobile=false,onReady=()
   const surface=wideDem?.loaded?wideHeightAt:terrain.heightAt;
   scatter=createKunlumTerrainScatter(THREE,surface,{
    ...options,range:mobile?450:580,
-   excludedBounds:{minX:-10,maxX:30,minZ:-15,maxZ:35}
+   excludedBounds:SITE
   });
   outcrops=createKunlumRockOutcrops(THREE,surface,{
    ...options,bounds:{minX:-1600,maxX:1600,minZ:-1600,maxZ:1600}
