@@ -127,7 +127,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const explorer=createTowerExplorerController({
   camera,controls,canvas:renderer.domElement,
   groundAt:(x,z)=>kunlum?.heightAt(x,z)??0,
-  getObstacles:()=>solidBounds,requestRender:scheduleDraw
+  getObstacles:()=>solidBounds,requestRender:scheduleDraw,
+  onPositionChanged:()=>{container.dataset.cameraLocation=camera.position.toArray().map(n=>n.toFixed(2)).join(',');}
  });
  function leaveExplorer(){
   explorer.exit();container.dataset.cameraMode='build';
@@ -424,6 +425,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  enterExplore();scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='explore';
  // Render a playable frame before fetching scenery and decoding 2K maps.
  requestAnimationFrame(()=>{if(!disposed)visualStartTimer=setTimeout(loadVisualAssets,100);});
+ // Complete the first frame before controls become available.
+ await new Promise(resolve=>requestAnimationFrame(resolve));
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
   setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
