@@ -80,6 +80,6 @@ test('tower interaction, state and raycast path remain untouched',()=>{
  assert.match(sceneCode,/onReady:refreshEnvironmentStatus/);
  assert.match(sceneCode,/raycaster\.intersectObjects\(\[\.\.\.targets,floor\],false\)/);
  assert.match(sceneCode,/maxDistance=85/);
- assert.match(gameplayCode,/return \{group,heightAt:terrain\.heightAt,ready,update\(seconds\)/);
+ assert.match(gameplayCode,/return \{group,heightAt:terrain\.heightAt,ready,update\(seconds,camera\)/);
  assert.match(gameplayCode,/accuracy:'UNVERIFIED/);
 });
