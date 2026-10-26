@@ -35,6 +35,15 @@ test('confirmed and automatic mapped walls contain real passage gaps, with no ov
   scene.dispose();
  }
 });
+test('a duplicate automatic trace cannot seal a confirmed doorway',()=>{
+ const scene=demo({wall:true,auto:true,openings:[{
+  wallId:'W',start:{segment:0,t:.25},end:{segment:0,t:.75}
+ }]});
+ const mesh=scene.candidates.children.find(x=>x.isMesh);
+ assert.ok(mesh);
+ assert.equal(nearGap(mesh,-.98,.98),false,'automatic masonry sealed a doorway');
+ scene.dispose();
+});
 test('the original 42-style linked intervals cut stone geometry instead of drawing a line',()=>{
  const scene=demo({wall:true,openings:[{
   wallId:'W',start:{segment:0,t:.3},end:{segment:0,t:.7}

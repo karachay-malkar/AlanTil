@@ -24,6 +24,15 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  // intersect unverified traces as well as confirmed walls, so both use this.
  const passageEdges=source.confirmed_features.filter(f=>f.type==='passage'&&Array.isArray(f.points))
   .flatMap(f=>{const pts=f.points.map(toWorld);return pts.slice(1).map((b,i)=>[pts[i],b]);});
+ const openingEdges=(source.openings||[]).flatMap(o=>{
+  const feature=source.confirmed_features.find(f=>f.id===o.wallId);
+  if(!feature)return [];
+  const pts=feature.points.map(toWorld);
+  const at=p=>p&&pts[p.segment]&&pts[p.segment+1]&&Number.isFinite(p.t)?
+   interpolate(pts[p.segment],pts[p.segment+1],clamp(p.t)):null;
+  const a=at(o.start),b=at(o.end);
+  return a&&b?[[a,b]]:[];
+ });
  const cross=(u,v)=>u[0]*v[1]-u[1]*v[0];
  function outsidePassages(a,b){
   const ab=[b[0]-a[0],b[1]-a[1]],length=dist(a,b);
@@ -37,6 +46,19 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    if(at<0||at>1||along<0||along>1)continue;
    const half=.60/length; // 1.2 m walk-through, not a drawn overlay
    cuts.push([Math.max(0,at-half),Math.min(1,at+half)]);
+  }
+  // A second automatically traced wall must never refill a deliberately
+  // specified opening in the confirmed wall directly underneath it.
+  for(const [c,d] of openingEdges){
+   const cd=[d[0]-c[0],d[1]-c[1]],segmentLen=dist(c,d);
+   if(segmentLen<.1)continue;
+   const dot=ab[0]*cd[0]+ab[1]*cd[1];
+   if(Math.abs(dot)/(length*segmentLen)<.86)continue;
+   const ca=[c[0]-a[0],c[1]-a[1]],da=[d[0]-a[0],d[1]-a[1]];
+   if(Math.max(Math.abs(cross(ab,ca)),Math.abs(cross(ab,da)))/length>.32)continue;
+   const start=(ca[0]*ab[0]+ca[1]*ab[1])/(length*length);
+   const end=(da[0]*ab[0]+da[1]*ab[1])/(length*length);
+   cuts.push([Math.max(0,Math.min(start,end)),Math.min(1,Math.max(start,end))]);
   }
   let intervals=[[0,1]];
   for(const [from,to] of cuts)intervals=intervals.flatMap(([x,y])=>
