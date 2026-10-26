@@ -154,6 +154,10 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },
   setVerticalScale(scale){root.scale.y=scale},
-  dispose(){root.userData.disposed=true;for(const [g,m] of owned){g.dispose();m.dispose()} }
+  dispose(){root.userData.disposed=true;
+   root.traverse(node=>{if(node.isInstancedMesh)node.dispose();});
+   for(const geometry of root.userData.wallFacadeGeometries||[])geometry.dispose();
+   for(const [g,m] of owned){g.dispose();m.dispose();}
+  }
  };
 }

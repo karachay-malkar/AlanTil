@@ -59,16 +59,17 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  // Unlike an all-village instance budget, this never enlarges individual
  // stones if there are more wall segments than GPU capacity.
  const detailGeometry=Array.from({length:6},(_,i)=>makeDistanceStone(i+1));
- const farBins=groups.map(()=>detailGeometry.map(()=>[]));
+ const farBins=new Map();
+ const chunkWidth=85; // metres: bound visibility to small terrain regions
  let total=0;
  for(let i=0;i<jobs.length;i++){
   const {seg,layer,distance}=jobs[i];
   const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
   // Geometry stays stone-sized throughout the village, including long traces.
-  const step=distance>200?.90:distance>70?.77:.65;
+  const step=distance>200?1.00:distance>70?.85:.65;
   const columns=Math.max(1,Math.ceil(length/step));
-  const rows=Math.max(2,Math.ceil(seg.height/(distance>200?.57:.44)));
+  const rows=Math.max(2,Math.ceil(seg.height/(distance>200?.68:distance>70?.54:.44)));
   for(let row=0;row<rows;row++){
    const stagger=row%2?-.5:0;
    for(let col=0;col<=columns;col++){
@@ -87,7 +88,10 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
                         (hash(row,x,z)-.5)*.085);
      dummy.scale.set(w*1.045,h*1.05,.27);
      dummy.updateMatrix();
-     farBins[layer][kind].push(dummy.matrix.clone());total++;
+     const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
+     let bucket=farBins.get(key);
+     if(!bucket){bucket={layer,kind,matrices:[]};farBins.set(key,bucket);}
+     bucket.matrices.push(dummy.matrix.clone());total++;
     }
    }
   }
@@ -97,23 +101,24 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    if(root.userData.disposed){detailGeometry.forEach(g=>g.dispose());return null;}
   }
  }
- for(let layer=0;layer<groups.length;layer++)
-  for(let k=0;k<detailGeometry.length;k++){
-   const matrices=farBins[layer][k];if(!matrices.length)continue;
-   const mesh=new THREE.InstancedMesh(detailGeometry[k],material,matrices.length);
-   mesh.name='Solid low-detail masonry '+k;
-   // All instances span distinct wall traces; disable culling on their shared
-   // bounds so rotating the village overview never hides an entire layer.
-   mesh.frustumCulled=false;
-   matrices.forEach((matrix,i)=>{
-    mesh.setMatrixAt(i,matrix);
-    shade.setScalar(.90+.10*hash(k,i,layer));
-    mesh.setColorAt(i,shade);
-   });
-   mesh.instanceMatrix.needsUpdate=true;
-   if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-   groups[layer].group.add(mesh);
-  }
+ for(const {layer,kind,matrices} of farBins.values()){
+  const mesh=new THREE.InstancedMesh(detailGeometry[kind],material,matrices.length);
+  mesh.name='Solid masonry LOD '+kind;
+  matrices.forEach((matrix,i)=>{
+   mesh.setMatrixAt(i,matrix);
+   shade.setScalar(.90+.10*hash(kind,i,layer));
+   mesh.setColorAt(i,shade);
+  });
+  mesh.instanceMatrix.needsUpdate=true;
+  if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+  // Unlike the former settlement-wide mesh, each 85m cluster can be
+  // rejected by the GPU camera frustum without inspecting its stones.
+  mesh.computeBoundingSphere();
+  mesh.frustumCulled=true;
+  groups[layer].group.add(mesh);
+ }
+ root.userData.wallFacadeChunks=farBins.size;
+ root.userData.wallFacadeGeometries=detailGeometry;
  if(root.userData.disposed)return null;
  const {manifest,geometries}=await loadCommon100();
  if(root.userData.disposed)return null;

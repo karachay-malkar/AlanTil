@@ -48,6 +48,9 @@ test('the original 42-style linked intervals cut stone geometry instead of drawi
 });
 test('stretched whole-trace stones are impossible, and real library variety is increased',()=>{
  assert.match(facingSource,/Math\.ceil\(length\/step\)/);
+ assert.match(facingSource,/const farBins=new Map\(\)/);
+ assert.match(facingSource,/mesh\.computeBoundingSphere\(\)/);
+ assert.match(facingSource,/mesh\.frustumCulled=true/);
  assert.match(facingSource,/Math\.ceil\(length\/\.57\)/);
  assert.match(facingSource,/if\(actual\+needed>budget\)continue/);
  assert.match(facingSource,/const count=mobile\?32:52/);
