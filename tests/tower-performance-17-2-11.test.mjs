@@ -7,8 +7,9 @@ test("Approved tower layout stylesheet exists, route loads it by current release
  assert.match(css,/\.towerGame\{/);
  assert.match(css,/\.towerStage\{/);
  assert.match(css,/\.towerCatalog\{/);
- assert.match(lazy,/tower\.css\?v=17\.2\.16/);
- assert.match(router,/TOWER_ASSET_VERSION = "17\.2\.16"/);
+ const version=JSON.parse(await read("release.json")).version;
+ assert.ok(lazy.includes("tower.css?v="+version));
+ assert.ok(router.includes('TOWER_ASSET_VERSION = "'+version+'"'));
 });
 test("Rendering is invalidated by changes and is stopped when nothing changes",async()=>{
  const s=await read("src/features/tower/prefab-scene.js");
@@ -28,10 +29,12 @@ test("Stable prefab meshes and joint tiles are reused on incremental rebuild",as
  assert.match(s,/targets\.length=0/);
  assert.doesNotMatch(s,/function clearPrevious\(\)/);
 });
-test("PBR loads in parallel with scene preparation, without changing authored meshes",async()=>{
+test("PBR cannot gate first-person scene preparation",async()=>{
  const [scene,surface,library]=await Promise.all([read("src/features/tower/prefab-scene.js"),read("src/features/tower/rock-surface.js"),read("src/features/tower/approved-section-scene.js")]);
- assert.match(scene,/const stoneMaterialPromise=getRockSurface\(renderer\)/);
- assert.match(scene,/const stoneMaterial=await stoneMaterialPromise/);
+ assert.match(scene,/stoneMaterialPromise=getRockSurface\(renderer\)\.then/);
+ assert.doesNotMatch(scene,/await stoneMaterialPromise/);
+ assert.match(scene,/requestAnimationFrame\(\(\)=>\{if\(!disposed\)visualStartTimer/);
+ assert.match(scene,/mobileQuality=matchMedia\('\(pointer:coarse\)/);
  assert.match(scene,/approvedModelPromises\.get\(key\)/);
  assert.match(surface,/KTX2Loader/);
  assert.match(surface,/falling back to PNG/);

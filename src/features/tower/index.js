@@ -16,7 +16,7 @@ const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data
 export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
-  sections:[],revision:0,resetAt:null,selected:null,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
+  sections:[],revision:0,resetAt:null,selected:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
   preview:null,previewHit:null,locked:false,busy:false,ready:false,canLeave:()=>true};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
@@ -56,6 +56,10 @@ export async function mount(context,params={}){
   </aside>
   ${icon('hammer','Каталог секций')}
   <div class="towerToast" data-toast role="status" aria-live="polite" hidden></div>
+  <div class="towerLoadStatus" data-load-status role="status" aria-live="polite">
+   <span data-load-text>Запуск строительства…</span>
+   <button type="button" class="btn towerLoadRetry" data-retry hidden>Повторить загрузку</button>
+  </div>
  </div></section>`;
  const q=sel=>root.querySelector(sel);
  const on=(sel,type,cb)=>q(sel)?.addEventListener(type,cb,{signal:controller.signal});
@@ -135,7 +139,7 @@ export async function mount(context,params={}){
   q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
   q('[data-remove]').disabled=next!=='selected'||s.busy;
   for(const name of ['cancel','rotate','variant','hammer','world','settings']){
-   const button=q(`[data-${name}]`);if(button)button.disabled=s.busy;
+   const button=q(`[data-${name}]`);if(button)button.disabled=s.busy||(name==='hammer'&&(!s.ready||s.loadFailed));
   }
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
   if(next==='placing'||next==='saving-place')catalogVisible(false);
@@ -177,7 +181,7 @@ export async function mount(context,params={}){
   if(s.mode==='placing')await preview();
  }
  function begin(type){
-  if(s.busy||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type))return;
+  if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type))return;
   s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
@@ -264,7 +268,7 @@ export async function mount(context,params={}){
   const el=event.target.closest('[data-section-id]');if(el&&game.dataset.explore==='true')begin(el.dataset.sectionId);
  });
  on('[data-hammer]','click',()=>{
-  if(s.busy)return;
+  if(s.busy||!s.ready||s.loadFailed)return;
   if(s.mode==='placing')cancel();
   if(s.mode==='selected'){markSelection(null);catalogVisible(true);return;}
   closeSettings();
@@ -347,6 +351,23 @@ export async function mount(context,params={}){
   const end=event=>{if(pointer!==event.pointerId)return;pointer=null;altitude=0;sendMotion();};
   for(const type of ['pointerup','pointercancel','lostpointercapture'])on(selector,type,end);
  }
+ on('[data-retry]','click',async()=>{
+  if(s.disposed||!s.scene||s.busy)return;
+  q('[data-retry]').hidden=true;
+  q('[data-load-status]').dataset.error='false';
+  q('[data-load-text]').textContent='Повторная загрузка построек…';
+  try{
+   await refreshServer();
+   s.loadFailed=false;
+   q('[data-load-status]').hidden=true;
+  }catch(error){
+   s.loadFailed=true;
+   q('[data-load-status]').dataset.error='true';
+   q('[data-load-text]').textContent='Не удалось загрузить сохранённую башню';
+   q('[data-retry]').hidden=false;
+   console.warn('Saved tower retry failed:',error);
+  }finally{if(!s.disposed)mode(s.mode);}
+ });
  window.addEventListener('keydown',e=>{
   if(s.disposed||s.busy||document.body.classList.contains('modal-open')||e.target?.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey)return;
   if(e.key==='Escape'){closeSettings();catalogVisible(false);cancel();return;}
@@ -366,10 +387,25 @@ export async function mount(context,params={}){
   q('[data-world]').disabled=false;
   mode('idle');
   walkUi(true);
-  try{await refreshServer();}catch{message('Не удалось загрузить сохранённую башню');await redraw();}
+  q('[data-load-text]').textContent='Загрузка сохранённых построек…';
+  try{
+   await refreshServer();
+   q('[data-load-status]').hidden=true;
+  }catch(error){
+   s.loadFailed=true;
+   q('[data-load-status]').dataset.error='true';
+   q('[data-load-text]').textContent='Не удалось загрузить сохранённую башню';
+   q('[data-retry]').hidden=false;
+   message('Проверь соединение и повтори загрузку');
+   console.warn('Saved tower unavailable; preventing edits:',error);
+  }
   if(params.userId&&!editable(s))catalogVisible(false);
   s.ready=true;mode(s.mode);
- }catch(error){message('Не удалось загрузить 3D-сцену');console.error(error);}
+ }catch(error){
+  q('[data-load-status]').dataset.error='true';
+  q('[data-load-text]').textContent='Не удалось запустить 3D-сцену. Перезагрузи игру.';
+  message('Не удалось загрузить 3D-сцену');console.error(error);
+ }
 }
 export function canLeave(){return active?.canLeave?.()??true;}
 export function unmount(){

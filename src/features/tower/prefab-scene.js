@@ -31,7 +31,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
  renderer.setSize(Math.max(1,container.clientWidth),Math.max(320,container.clientHeight),false);
- const stoneMaterialPromise=getRockSurface(renderer);
+ // Keep first-person usable while large PBR textures load in the background.
+ const stoneMaterial=new THREE.MeshStandardMaterial({color:'#b9ae9a',roughness:1,metalness:0,side:THREE.DoubleSide});
+ let stoneMaterialPromise=Promise.resolve(stoneMaterial),visualStartTimer=0;
+ const mobileQuality=matchMedia('(pointer:coarse), (hover:none), (max-width:749px), (max-height:520px)').matches;
+ container.dataset.mobileQuality=String(mobileQuality);
+ container.dataset.stoneTextureEncoding='pending';
  renderer.domElement.style.cssText='width:100%;height:100%;display:block;touch-action:none';container.append(renderer.domElement);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#b3c9d9');scene.fog=new THREE.Fog('#b3c9d9',750,4200);
  const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,5000);
@@ -60,18 +65,45 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(meta.wideStatus==='ready'){scene.fog.near=3300;scene.fog.far=10300;}
   scheduleDraw();
  }
- try {
-  const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
-  if(!response.ok)throw Error('Authoritative Kunlum plan HTTP '+response.status);
-  const plan=await response.json();
-  if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
-     plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
-  kunlum=createKunlumEnvironment(THREE,scene,{
-   plan,stoneMaterialPromise,mobile:matchMedia('(max-width:749px)').matches,onReady:refreshEnvironmentStatus
-  });
-  void kunlum.ready.then(refreshEnvironmentStatus);
+ async function loadEnvironment(){
+  try{
+   const response=await fetch('/assets/tower/environment/kunlum-vector-plan-2026-10-23.json');
+   if(!response.ok)throw Error('Authoritative Kunlum plan HTTP '+response.status);
+   const plan=await response.json();
+   if(disposed)return;
+   if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
+      plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
+   kunlum=createKunlumEnvironment(THREE,scene,{
+    plan,stoneMaterialPromise,mobile:mobileQuality,onReady:refreshEnvironmentStatus
+   });
+   void kunlum.ready.then(refreshEnvironmentStatus);
+  }catch(error){
+   if(disposed)return;
+   container.dataset.kunlumWorldReady='false';
+   container.dataset.kunlumError=String(error?.message||error);
+   console.warn('Kunlum environment unavailable; tower building continues',error);
+  }
  }
- catch (error) { console.warn('Kunlum environment unavailable; tower building continues',error); }
+ function loadVisualAssets(){
+  if(disposed)return;
+  stoneMaterialPromise=getRockSurface(renderer).then(loaded=>{
+   if(!disposed){
+    stoneMaterial.copy(loaded);
+    stoneMaterial.needsUpdate=true;
+    container.dataset.stoneTextureEncoding=loaded.name.endsWith('KTX2')?'ktx2':'png';
+    scheduleDraw();
+   }
+   return loaded;
+  }).catch(error=>{
+   if(!disposed){
+    container.dataset.stoneTextureEncoding='fallback';
+    console.warn('Stone PBR unavailable, keeping playable fallback:',error);
+    scheduleDraw();
+   }
+   return stoneMaterial;
+  });
+  void loadEnvironment();
+ }
  // Visible ONLY during installation; invisible 25-cm snapping applies in all cases.
  // Rectangular 25cm grid inside the only yellow plot.
  const gridVertices=[];
@@ -113,8 +145,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(!explorer.active)enterExplore();
   container.dataset.worldView='false';scheduleDraw();
  }
- const stoneMaterial=await stoneMaterialPromise;
- container.dataset.stoneTextureEncoding=stoneMaterial.name.endsWith('KTX2')?'ktx2':'png';
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
  let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
  let renderedById=new Map(),renderedJoints=new Map();
@@ -361,7 +391,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    showFaceGrid(hit);
    onCameraChange({origin:camera.position.toArray(),forward:forward.toArray(),target:hit?.position||controls.target.toArray(),hit});
   }
-  if(worldMode&&!explorer.active&&now-lastWorldFrame>=(matchMedia('(max-width:749px)').matches?150:75)){
+  if(worldMode&&!explorer.active&&now-lastWorldFrame>=(mobileQuality?150:75)){
    lastWorldFrame=now;kunlum?.update?.(now*.001);needsRender=true;
   }
   if(needsRender){needsRender=false;renderer.render(scene,camera);}
@@ -390,6 +420,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function onVisibility(){if(document.hidden)explorer.clear();else scheduleDraw();}
  document.addEventListener('visibilitychange',onVisibility);
  enterExplore();scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='explore';
+ // Render a playable frame before fetching scenery and decoding 2K maps.
+ requestAnimationFrame(()=>{if(!disposed)visualStartTimer=setTimeout(loadVisualAssets,100);});
  return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
   setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
@@ -411,6 +443,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    yellowParcelCorners:info?.yellowParcelCorners||null,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
-  dispose(){disposed=true;explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;clearTimeout(visualStartTimer);explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
  };
 }

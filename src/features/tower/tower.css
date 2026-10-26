@@ -59,3 +59,8 @@
 .towerGame[data-explore="false"] .towerSide,.towerGame[data-explore="false"] [data-hammer]{display:none!important}
 
 @media(max-width:520px){.towerGame:is([data-mode="placing"],[data-mode="selected"]) .towerElevationControls{bottom:max(68px,calc(var(--safe-bottom,0px) + 68px))}}
+
+/* Non-blocking, theme-native construction startup status. */
+.towerLoadStatus{position:absolute;z-index:12;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:9px;min-width:190px;max-width:calc(100% - 48px);padding:14px 18px;border-radius:14px;background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);box-shadow:var(--shadow-sm);font:600 13px/1.4 var(--font-body);text-align:center;pointer-events:none}
+.towerLoadStatus[data-error="true"]{pointer-events:auto}
+.towerGame .towerLoadRetry{min-height:38px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--accent-soft);color:var(--text-1);cursor:pointer}

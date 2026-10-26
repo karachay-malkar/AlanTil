@@ -37,3 +37,10 @@ test('two permanent height arrows use the original app colors',()=>{
  assert.match(tower,/data-clear aria-label/);
  assert.match(tower,/context\.modal\.confirm/);
 });
+
+test('construction catalog waits for a safe server snapshot and exposes retry',()=>{
+ assert.match(tower,/name==='hammer'&&\(!s\.ready\|\|s\.loadFailed\)/);
+ assert.match(tower,/data-load-status/);
+ assert.match(tower,/data-retry/);
+ assert.match(tower,/if\(s\.busy\|\|!s\.ready\|\|s\.loadFailed\)return/);
+});
