@@ -136,6 +136,38 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   await landscape.screenshot({path:path.join(out,'mobile-landscape-fast-start.png')});
   console.log('TOWER_LANDSCAPE_FAST_START_PASS',JSON.stringify({startupMs,...quality}));
   await landscapeCtx.close();
+  // Real SPA route, not only the isolated test fixture: guest setup is already complete.
+  const appCtx=await browser.newContext({viewport:{width:844,height:390},
+   isMobile:true,hasTouch:true});
+  await appCtx.addInitScript(()=>{
+   localStorage.setItem('alantil_scope_v1:guest:settings',JSON.stringify({
+    interface_language_code:'ru',translation_language_code:'ru',
+    alan_script_code:'cyrillic',alan_dialect_code:'canonical',
+    text_size_code:'medium',learning_setup_completed_at:'2026-10-26T00:00:00.000Z'
+   }));
+  });
+  const app=await appCtx.newPage(),appErrors=[];
+  app.on('pageerror',error=>appErrors.push(error.message));
+  await app.goto('http://127.0.0.1:4173/practice/tower',
+   {waitUntil:'domcontentloaded',timeout:45000});
+  await app.waitForFunction(()=>{
+   const world=document.querySelector('.towerCanvas'),hud=document.querySelector('.towerGame');
+   return world?.dataset.cameraMode==='explore'&&hud?.dataset.explore==='true'&&
+    hud.dataset.mode==='idle'&&!document.querySelector('[data-hammer]')?.disabled;
+  },null,{timeout:65000});
+  const fullRoute=await app.locator('.towerCanvas').evaluate(el=>({
+   mobile:el.dataset.mobileQuality,ready:el.dataset.ready,mode:el.dataset.cameraMode
+  }));
+  if(fullRoute.mobile!=='true'||fullRoute.ready!=='true'||appErrors.length)
+   throw Error('Real mobile SPA construction failed '+JSON.stringify({fullRoute,appErrors}));
+  await app.locator('[data-hammer]').click();
+  await app.locator('.towerCatalog').waitFor({state:'visible',timeout:5000});
+  await app.locator('[data-section-id="1x1x1"]').click();
+  await app.waitForFunction(()=>document.querySelector('.towerGame')?.dataset.mode==='placing',
+   null,{timeout:15000});
+  await app.screenshot({path:path.join(out,'real-spa-landscape-construction.png')});
+  console.log('TOWER_REAL_SPA_ROUTE_PASS',JSON.stringify(fullRoute));
+  await appCtx.close();
   console.log('TOWER_FIRST_PERSON_BROWSER_PASS',JSON.stringify(verified));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});
