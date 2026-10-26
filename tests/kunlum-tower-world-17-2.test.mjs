@@ -44,7 +44,7 @@ test('tower building controls remain and new wide-view action is independently a
  assert.match(tower,/scene\.worldView\(\)/);
  assert.match(scene,/worldView\(\)/);
  assert.match(scene,/raycaster\.intersectObjects\(\[\.\.\.targets,floor\],false\)/);
- assert.match(scene,/if\(needsRender\)\{needsRender=false;renderer\.render\(scene,camera\);\}/);
+ assert.match(scene,/if\(needsRender\)\{needsRender=false;sky\.update\(\);renderer\.render\(scene,camera\);\}/);
  assert.match(scene,/getRockSurface\(renderer\)/);
  assert.match(scene,/function scheduleDraw\(\)/);
  assert.match(scene,/kunlum\?\.update\?\./);
