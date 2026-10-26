@@ -76,6 +76,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    kunlum=createKunlumEnvironment(THREE,scene,{
     plan,stoneMaterialPromise,mobile:mobileQuality,onReady:refreshEnvironmentStatus
    });
+   if(worldMode)void kunlum.ensureWideTerrain();
    void kunlum.ready.then(refreshEnvironmentStatus);
   }catch(error){
    if(disposed)return;
@@ -401,6 +402,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   worldMode=!worldMode;
   if(worldMode){
    leaveExplorer();
+   void kunlum?.ensureWideTerrain?.();
    grid.visible=false;faceGrid.visible=false;preview.visible=false;
    container.dataset.cameraMode='overview';
    controls.maxDistance=3500;

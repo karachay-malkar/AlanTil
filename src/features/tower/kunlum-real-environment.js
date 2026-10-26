@@ -221,8 +221,14 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
    onReady();
   }
  }
- // Run independently of the saved tower and fast local OSM/plan readiness.
- void loadWideTerrain();
+ // The multi-kilometre DEM is needed only in panorama. Do not download or
+ // synchronously assemble its terrain tiles when opening first-person building.
+ let wideTerrainTask=null;
+ function ensureWideTerrain(){
+  if(disposed)return Promise.resolve();
+  if(!wideTerrainTask)wideTerrainTask=loadWideTerrain();
+  return wideTerrainTask;
+ }
  const ready=Promise.allSettled([loadApprovedMap(),loadMappedRiver()]).then(results=>{
   if(disposed)return;
   const failed=results.filter(x=>x.status==='rejected');
@@ -233,7 +239,7 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
   onReady();
  });
  // Environment remains independent of tower placement and server state.
- return {group,heightAt:terrain.heightAt,ready,update(seconds){river?.update(seconds)},
+ return {group,heightAt:terrain.heightAt,ready,update(seconds){river?.update(seconds)},ensureWideTerrain,
   dispose(){
    if(disposed)return;disposed=true;scene.remove(group);
    overlay?.dispose();river?.dispose();riverbank?.dispose();scatter?.dispose();outcrops?.dispose();

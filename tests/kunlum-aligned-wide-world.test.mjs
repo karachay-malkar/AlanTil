@@ -62,3 +62,13 @@ test('all nine AWS Mapzen originals are locally pinned with unchanged PNG pixel 
  const source=readFileSync(new URL('../src/features/tower/kunlum-wide-dem.js',import.meta.url),'utf8');
  assert.match(source,/\/assets\/tower\/environment\/mapzen-terrarium-z13\//);
 });
+
+test('outer DEM is deferred until panorama; first-person loads only the local terrain',()=>{
+ const env=readFileSync(new URL('../src/features/tower/kunlum-real-environment.js',import.meta.url),'utf8');
+ const scene=readFileSync(new URL('../src/features/tower/prefab-scene.js',import.meta.url),'utf8');
+ assert.match(env,/function ensureWideTerrain\(\)/);
+ assert.doesNotMatch(env,/void loadWideTerrain\(\);/);
+ assert.match(env,/ensureWideTerrain,/);
+ assert.match(scene,/if\(worldMode\)void kunlum\.ensureWideTerrain\(\)/);
+ assert.match(scene,/void kunlum\?\.ensureWideTerrain\?\.\(\)/);
+});
