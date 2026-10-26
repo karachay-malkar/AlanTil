@@ -13,13 +13,42 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  confirmed.name='Confirmed stone wall paths';candidates.name='Unverified automatic traces';
  passages.name='Confirmed and linked passages';
  root.add(confirmed,candidates,passages);
- const buffers={wall:[],house:[],retaining:[]},auto=[],gap=[];
+ const buffers={wall:[],house:[],retaining:[]},auto=[];
  const confirmedSegments=[],candidateSegments=[];
  const clamp=t=>Math.max(0,Math.min(1,t));
  const interpolate=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+
  const pushQuad=(out,a,b,c,d)=>out.push(...a,...b,...c,...a,...c,...d);
+ // Passage contours are negative space, never rendered strokes. They can
+ // intersect unverified traces as well as confirmed walls, so both use this.
+ const passageEdges=source.confirmed_features.filter(f=>f.type==='passage'&&Array.isArray(f.points))
+  .flatMap(f=>{const pts=f.points.map(toWorld);return pts.slice(1).map((b,i)=>[pts[i],b]);});
+ const cross=(u,v)=>u[0]*v[1]-u[1]*v[0];
+ function outsidePassages(a,b){
+  const ab=[b[0]-a[0],b[1]-a[1]],length=dist(a,b);
+  if(length<.01)return [];
+  const cuts=[];
+  for(const [c,d] of passageEdges){
+   const cd=[d[0]-c[0],d[1]-c[1]],den=cross(ab,cd);
+   if(Math.abs(den)<.25*length*dist(c,d))continue; // parallel path, not a doorway
+   const ca=[c[0]-a[0],c[1]-a[1]];
+   const at=cross(ca,cd)/den,along=cross(ca,ab)/den;
+   if(at<0||at>1||along<0||along>1)continue;
+   const half=.60/length; // 1.2 m walk-through, not a drawn overlay
+   cuts.push([Math.max(0,at-half),Math.min(1,at+half)]);
+  }
+  let intervals=[[0,1]];
+  for(const [from,to] of cuts)intervals=intervals.flatMap(([x,y])=>
+   to<=x||from>=y?[[x,y]]:
+    [...(from>x?[[x,Math.min(from,y)]]:[]),...(to<y?[[Math.max(to,x),y]]:[])]);
+  return intervals.filter(([x,y])=>(y-x)*length>.08)
+   .map(([x,y])=>[interpolate(a,b,x),interpolate(a,b,y)]);
+ }
  function wallPiece(out,a,b,height,width){
+  for(const [start,end] of outsidePassages(a,b))wallBody(out,start,end,height,width);
+ }
+ function wallBody(out,a,b,height,width){
   const len=dist(a,b);if(len<.01)return;
   const stoneSegments=out===auto?candidateSegments:confirmedSegments;
   stoneSegments.push({a,b,height,width,heightAt});
@@ -34,14 +63,6 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    // Enclosed irregular core prevents any light leaking through the stone joints.
    pushQuad(out,f,g,h,j);pushQuad(out,l,k,o,m);pushQuad(out,j,h,m,o);
    pushQuad(out,k,l,g,f);pushQuad(out,f,j,o,k);pushQuad(out,g,l,m,h);
-  }
- }
- function line(out,a,b,raise=.7){
-  const len=dist(a,b);if(len<.01)return;
-  const n=Math.max(1,Math.ceil(len/4));
-  for(let i=0;i<n;i++){
-   const p=interpolate(a,b,i/n),q=interpolate(a,b,(i+1)/n);
-   out.push(p[0],heightAt(...p)+raise,p[1],q[0],heightAt(...q)+raise,q[1]);
   }
  }
  const map=new Map(source.confirmed_features.map(f=>[f.id,f]));
@@ -76,8 +97,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   counters.confirmed++;
   if(f.type==='passage'){
    counters.passages++;
-   const p=f.points.map(toWorld);
-   for(let i=1;i<p.length;i++)line(gap,p[i-1],p[i],1.05);
+   // This feature describes open ground, not a wall or a visible line.
   }else if(Object.hasOwn(buffers,f.type)){
    counters[f.type==='wall'?'walls':f.type==='house'?'houses':'retaining']++;
    if(f.type==='house')for(const p of f.points)centers.push(toWorld(p));
@@ -93,7 +113,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   const at=p=>p&&pts[p.segment]&&pts[p.segment+1]&&Number.isFinite(p.t)?
    interpolate(pts[p.segment],pts[p.segment+1],clamp(p.t)):null;
   const a=at(o.start),b=at(o.end);if(!a||!b)continue;
-  line(gap,a,b,1.3);
+  // Explicit openings were already removed from segments(f).
   counters.linkedOpenings++;
  }
  const confirmedOrigins=new Set(source.confirmed_features.map(x=>x.origin));
@@ -119,17 +139,11 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   const m=new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide});
   const mesh=new THREE.Mesh(g,m);mesh.name=name;target.add(mesh);owned.push([g,m]);
  }
- function addLines(target,vertices,color,name,opacity=1){
-  if(!vertices.length)return;
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
-  const m=new THREE.LineBasicMaterial({color,transparent:opacity<1,opacity,depthTest:false});
-  const lines=new THREE.LineSegments(g,m);lines.name=name;target.add(lines);owned.push([g,m]);
- }
  addMesh(confirmed,buffers.wall,'#b9b5a5','74 confirmed walls');
  addMesh(confirmed,buffers.house,'#b9b5a5','19 house boundaries');
  addMesh(confirmed,buffers.retaining,'#b9b5a5','16 retaining walls');
  addMesh(candidates,auto,'#b9b5a5','Unverified automatic 3D walls');
- addLines(passages,gap,'#2ae9a7','11 confirmed passages plus linked openings');
+ // No passage line meshes: only physical gaps in the wall geometry.
  const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
  ],{renderer,materialPromise,mobile,monument});
