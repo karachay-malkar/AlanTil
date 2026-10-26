@@ -17,20 +17,34 @@ const usable=(geom)=>{
 // objects, not stretched Common100 blocks, decals or repeated image panels.
 function makeDistanceStone(seed){
  const r=n=>hash(seed*13.7,n*7.3,seed+n*3.1)-.5;
- const front=[
-  [-.46+r(1)*.09,-.47+r(2)*.06,.28+r(3)*.07],
-  [ .46+r(4)*.08,-.46+r(5)*.08,.30+r(6)*.08],
-  [ .47+r(7)*.08, .46+r(8)*.08,.27+r(9)*.09],
-  [-.47+r(10)*.08,.47+r(11)*.06,.29+r(12)*.08]
+ // Broad, naturally fractured face instead of a pointed pyramid. The
+ // central plateau forms ~70% of the visible rock; the outer ring gives it
+ // real chipped 3D shoulders and a slightly uneven silhouette.
+ const outer=[
+  [-.49+r(1)*.06,-.47+r(2)*.05,.24+r(3)*.035],
+  [ .49+r(4)*.06,-.47+r(5)*.06,.24+r(6)*.035],
+  [ .48+r(7)*.06, .47+r(8)*.06,.25+r(9)*.035],
+  [-.49+r(10)*.06,.47+r(11)*.06,.24+r(12)*.035]
  ];
- const back=front.map((p,i)=>[p[0]*1.01,p[1]*.98,-.32+r(i+17)*.08]);
- const peak=[r(25)*.16,r(26)*.13,.47+r(27)*.14],vertices=[];
+ const face=[
+  [-.37+r(13)*.075,-.34+r(14)*.05,.40+r(15)*.035],
+  [ .38+r(16)*.075,-.35+r(17)*.05,.41+r(18)*.035],
+  [ .37+r(19)*.075, .35+r(20)*.05,.40+r(21)*.035],
+  [-.38+r(22)*.075,.34+r(23)*.05,.40+r(24)*.035]
+ ];
+ const back=outer.map((p,i)=>[p[0]*1.01,p[1]*.98,-.29+r(i+25)*.04]),vertices=[];
  const tri=(a,b,c)=>vertices.push(...a,...b,...c);
- for(let i=0;i<4;i++)tri(peak,front[i],front[(i+1)%4]);
+ for(let i=0;i<4;i++){
+  const j=(i+1)%4;
+  tri(outer[i],outer[j],face[j]);
+  tri(outer[i],face[j],face[i]);
+ }
+ // Two large almost-flat facets carry the same PBR as real Common100 stone.
+ tri(face[0],face[1],face[2]);tri(face[0],face[2],face[3]);
  tri(back[0],back[2],back[1]);tri(back[0],back[3],back[2]);
  for(let i=0;i<4;i++){
   const j=(i+1)%4;
-  tri(front[i],back[i],back[j]);tri(front[i],back[j],front[j]);
+  tri(outer[i],back[i],back[j]);tri(outer[i],back[j],outer[j]);
  }
  const raw=new THREE.BufferGeometry();
  raw.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
@@ -58,7 +72,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   .sort((a,b)=>a.distance-b.distance);
  // Unlike an all-village instance budget, this never enlarges individual
  // stones if there are more wall segments than GPU capacity.
- const detailGeometry=Array.from({length:6},(_,i)=>makeDistanceStone(i+1));
+ const detailGeometry=Array.from({length:8},(_,i)=>makeDistanceStone(i+1));
  const farBins=new Map();
  const chunkWidth=85; // metres: bound visibility to small terrain regions
  let total=0;
@@ -85,7 +99,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
                         z+side*nz*(seg.width*.5+.025));
      dummy.rotation.set((hash(z,row,x)-.5)*.08,
                         yaw+(side<0?Math.PI:0),
-                        (hash(row,x,z)-.5)*.085);
+                        (hash(row,x,z)>.50?Math.PI:0)+(hash(row,x,z)-.5)*.075);
      dummy.scale.set(w*1.045,h*1.05,.27);
      dummy.updateMatrix();
      const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
