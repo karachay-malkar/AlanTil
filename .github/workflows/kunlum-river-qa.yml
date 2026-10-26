@@ -7,6 +7,9 @@ on:
       - 'src/features/tower/kunlum-river-layer.js'
       - 'src/features/tower/kunlum-terrain-scatter.js'
       - 'src/features/tower/kunlum-real-environment.js'
+      - 'src/features/tower/kunlum-map-overlay.js'
+      - 'src/features/tower/kunlum-stone-facing.js'
+      - 'tests/kunlum-wall-masonry.test.mjs'
       - 'src/features/tower/kunlum-terrain-lod.js'
       - 'src/features/tower/kunlum-build-alignment.js'
       - 'src/features/tower/kunlum-wide-dem.js'
@@ -45,7 +48,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - name: Cherek geometry and snapshot validation
-        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs tests/kunlum-real-terrain.test.mjs tests/kunlum-aligned-wide-world.test.mjs tests/tower-release-cache-17-2.test.mjs tests/tower-hud-compact.test.mjs
+        run: node --experimental-default-type=module --test tests/kunlum-river-realism.test.mjs tests/kunlum-tower-world-17-2.test.mjs tests/kunlum-real-terrain.test.mjs tests/kunlum-aligned-wide-world.test.mjs tests/tower-release-cache-17-2.test.mjs tests/tower-hud-compact.test.mjs tests/kunlum-wall-masonry.test.mjs
       - name: Module and embedded viewer syntax
         run: |
           node --check src/features/tower/kunlum-osm-river.js
@@ -55,6 +58,8 @@ jobs:
           node --check src/features/tower/kunlum-build-alignment.js
           node --check src/features/tower/kunlum-wide-dem.js
           node --check src/features/tower/kunlum-real-environment.js
+          node --check src/features/tower/kunlum-map-overlay.js
+          node --check src/features/tower/kunlum-stone-facing.js
           node --check src/features/tower/prefab-scene.js
           node --check src/features/tower/index.js
           python3 - <<'PY'
