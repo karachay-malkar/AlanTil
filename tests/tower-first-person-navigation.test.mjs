@@ -70,3 +70,12 @@ test('first-person input starts counting elapsed time immediately',async()=>{
  assert.match(source,/if\(enabled&&!wasMoving&&moving\(\)\)lastFrame=performance\.now\(\)/);
  assert.match(source,/if\(!wasMoving&&moving\(\)\)lastFrame=performance\.now\(\)/);
 });
+
+test('early input updates camera state without waiting for WebGL',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const controller=await readFile(new URL('../src/features/tower/tower-explorer-controller.js',import.meta.url),'utf8');
+ const scene=await readFile(new URL('../src/features/tower/prefab-scene.js',import.meta.url),'utf8');
+ assert.match(controller,/onPositionChanged\(camera\.position\)/);
+ assert.match(scene,/onPositionChanged:/);
+ assert.match(scene,/await new Promise\(resolve=>requestAnimationFrame\(resolve\)\)/);
+});

@@ -4,7 +4,7 @@ const keys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown',
  'ArrowLeft','ArrowRight','KeyQ','KeyE','Space','ShiftLeft']);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 export function createTowerExplorerController({
- camera,controls,canvas,groundAt,getObstacles,requestRender
+ camera,controls,canvas,groundAt,getObstacles,requestRender,onPositionChanged=()=>{}
 }){
  const pressed=new Set();
  let enabled=false,yaw=0,pitch=0,lastFrame=0,savedPosition=null;
@@ -75,8 +75,10 @@ export function createTowerExplorerController({
   const obstacles=getObstacles(),ground=groundAt,keys=input();
   for(let i=0;i<steps;i++)
    point=moveTowerExplorer(point,keys,yaw,dt,{groundAt:ground,obstacles});
-  if(Math.abs(point.x-camera.position.x)+Math.abs(point.y-camera.position.y)+Math.abs(point.z-camera.position.z)>1e-8)
+  if(Math.abs(point.x-camera.position.x)+Math.abs(point.y-camera.position.y)+Math.abs(point.z-camera.position.z)>1e-8){
    camera.position.set(point.x,point.y,point.z);
+   onPositionChanged(camera.position);
+  }
   return true;
  }
  function onKey(e){

@@ -40,6 +40,10 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
     await page.mouse.move(x,y);await page.mouse.down();
     await page.mouse.move(x+31,y,{steps:6});await sleep(800);await page.mouse.up();
    }
+   await page.waitForFunction(startX=>{
+    const el=document.querySelector('.towerCanvas');
+    return Number(el?.dataset.cameraLocation?.split(',')[0])>startX+.10;
+   },a.point[0],{timeout:5000}).catch(()=>{});
    const moved=await state();
    if(!(moved.point[0]>a.point[0]+.10))throw Error(device+' did not move right '+JSON.stringify({a,moved}));
    const lookBefore=(await state()).point;
