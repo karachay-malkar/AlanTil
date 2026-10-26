@@ -83,3 +83,10 @@ test('tower interaction, state and raycast path remain untouched',()=>{
  assert.match(gameplayCode,/return \{group,heightAt:terrain\.heightAt,ready,update\(seconds,camera\)/);
  assert.match(gameplayCode,/accuracy:'UNVERIFIED/);
 });
+
+test('visual wall foundations use triangle-matched terrain, not coarser sampled DEM',()=>{
+ assert.match(terrainCode,/function renderedHeightAt\(x,z\)/);
+ assert.match(terrainCode,/terrainTiles\.push\(\{x0,x1,z0,z1,nx,nz,positions:/);
+ assert.match(gameplayCode,/heightAt:terrain\.renderedHeightAt,mobile,monument/);
+ assert.doesNotMatch(gameplayCode,/heightAt:terrain\.heightAt,mobile,monument/);
+});

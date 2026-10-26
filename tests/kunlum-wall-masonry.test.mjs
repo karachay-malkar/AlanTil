@@ -67,3 +67,12 @@ test('stretched whole-trace stones are impossible, and real library variety is i
  assert.doesNotMatch(facingSource,/choices=\[3,14,26,37,49,60\]/);
  assert.doesNotMatch(overlaySource,/new THREE\.LineSegments\(g,m\);lines\.name/);
 });
+
+test('one stone style renders per wall: near Common100 and distant faceted instances never overlap',()=>{
+ assert.match(facingSource,/const budget=mobile\?3200:7200,nearJobs=new Set\(\)/);
+ assert.match(facingSource,/if\(nearJobs\.has\(i\)\)continue/);
+ assert.match(facingSource,/if\(!nearJobs\.has\(index\)\)continue/);
+ assert.match(facingSource,/kunlumRuinFoot\(x,z,seg\.width,seg\.heightAt/);
+ assert.match(facingSource,/kunlumRuinCrown\(seg\.height,x,z\)/);
+ assert.doesNotMatch(facingSource,/seg\.heightAt\(x,z\)\+\.035\+\(row\+\.5\)\*h/);
+});

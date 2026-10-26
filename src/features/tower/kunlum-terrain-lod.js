@@ -50,7 +50,7 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   const natural=surfaceAt(x,z);
   return riverLine.length>1?carveKunlumRiverHeight(x,z,surfaceAt,riverLine):natural;
  }
- const terrainMeshes=[];
+ const terrainMeshes=[],terrainTiles=[];
  function setRiverLine(line){
   riverLine=Array.isArray(line)?line:[];
   for(const mesh of terrainMeshes){
@@ -101,7 +101,27 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   const material=pbr?.material||new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.FrontSide});
   const mesh=new THREE.Mesh(geometry,material);
   mesh.name=label;mesh.frustumCulled=true;mesh.receiveShadow=false;
-  group.add(mesh);terrainMeshes.push(mesh);register(geometry,pbr?null:material);return index.length/3;
+  group.add(mesh);terrainMeshes.push(mesh);
+  terrainTiles.push({x0,x1,z0,z1,nx,nz,positions:geometry.getAttribute('position')});
+  register(geometry,pbr?null:material);return index.length/3;
+ }
+ // Match the actual piecewise-planar DEM triangles used by the renderer.
+ // High-resolution raw heightAt can differ from a coarse LOD triangle by
+ // decimetres or metres on a steep slope; stone bases must use THIS sampler.
+ function renderedHeightAt(x,z){
+  for(const tile of terrainTiles){
+   const {x0,x1,z0,z1,nx,nz,positions}=tile;
+   if(x<x0-1e-6||x>x1+1e-6||z<z0-1e-6||z>z1+1e-6)continue;
+   const u=Math.max(0,Math.min(nx-1e-9,(x-x0)/(x1-x0)*nx));
+   const v=Math.max(0,Math.min(nz-1e-9,(z-z0)/(z1-z0)*nz));
+   const i=Math.floor(u),j=Math.floor(v),tx=u-i,tz=v-j;
+   const a=j*(nx+1)+i,b=a+1,d=a+nx+1,c=d+1;
+   if(tx+tz<=1)return positions.getY(a)*(1-tx-tz)+
+    positions.getY(b)*tx+positions.getY(d)*tz;
+   return positions.getY(c)*(tx+tz-1)+positions.getY(b)*(1-tz)+
+    positions.getY(d)*(1-tx);
+  }
+  return heightAt(x,z); // outside rendered core
  }
  const centreX=SITE.centerX,centreZ=SITE.centerZ,near=mobile?450:600,step=mobile?12:8;
  const [leftA]=demToScene(-1800,0),[leftB]=demToScene(1800,0);
@@ -189,7 +209,7 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
   group.add(root);wideMesh=root;
   return {triangles:wideTriangles,extent:[maxX-minX,maxZ-minZ]};
  }
- return {heights,baseHeight,centerEast,centerNorth,demToScene,sceneToDem,heightAt,surfaceAt,setRiverLine,
+ return {heights,baseHeight,centerEast,centerNorth,demToScene,sceneToDem,heightAt,renderedHeightAt,surfaceAt,setRiverLine,
   installWideDem,
   triangles,nearRadius:near,extentM:3600,plotMetres:[plot.widthM,plot.heightM]};
 }

@@ -119,7 +119,7 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
      source.auto_candidates?.length!==702)throw Error('Unexpected current settlement plan');
   if(disposed)return;
   planData=source;
-  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.heightAt,mobile,monument});
+  overlay=createKunlumMapOverlay(THREE,source,{toWorld:P,heightAt:terrain.renderedHeightAt,mobile,monument});
   overlay.setVisibility({confirmedVisible:true,candidatesVisible:true,passagesVisible:true});
   group.add(overlay.root);
   Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,

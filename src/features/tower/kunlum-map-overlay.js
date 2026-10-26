@@ -1,4 +1,5 @@
 import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js';
 import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
@@ -77,11 +78,12 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   const n=Math.max(1,Math.ceil(len/.75)),nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;
   for(let i=0;i<n;i++){
    const p=interpolate(a,b,i/n),q=interpolate(a,b,(i+1)/n);
-   const y=heightAt(...p)+.035,z=heightAt(...q)+.035;
-   const crown=q=>.86+.12*Math.abs(Math.sin(q[0]*1.97+q[1]*3.37));
-   const aTop=height*crown(p),bTop=height*crown(q);
-   const f=[p[0]+nx,y,p[1]+nz],g=[q[0]+nx,z,q[1]+nz],h=[q[0]+nx,z+bTop,q[1]+nz],j=[p[0]+nx,y+aTop,p[1]+nz];
-   const k=[p[0]-nx,y,p[1]-nz],l=[q[0]-nx,z,q[1]-nz],m=[q[0]-nx,z+bTop,q[1]-nz],o=[p[0]-nx,y+aTop,p[1]-nz];
+   const y=kunlumRuinFoot(...p,width,heightAt,[nx,nz]);
+   const z=kunlumRuinFoot(...q,width,heightAt,[nx,nz]);
+   const aTop=heightAt(...p)+kunlumRuinCrown(height,...p);
+   const bTop=heightAt(...q)+kunlumRuinCrown(height,...q);
+   const f=[p[0]+nx,y,p[1]+nz],g=[q[0]+nx,z,q[1]+nz],h=[q[0]+nx,bTop,q[1]+nz],j=[p[0]+nx,aTop,p[1]+nz];
+   const k=[p[0]-nx,y,p[1]-nz],l=[q[0]-nx,z,q[1]-nz],m=[q[0]-nx,bTop,q[1]-nz],o=[p[0]-nx,aTop,p[1]-nz];
    // Enclosed irregular core prevents any light leaking through the stone joints.
    pushQuad(out,f,g,h,j);pushQuad(out,l,k,o,m);pushQuad(out,j,h,m,o);
    pushQuad(out,k,l,g,f);pushQuad(out,f,j,o,k);pushQuad(out,g,l,m,h);
@@ -165,6 +167,11 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  addMesh(confirmed,buffers.house,'#b9b5a5','19 house boundaries');
  addMesh(confirmed,buffers.retaining,'#b9b5a5','16 retaining walls');
  addMesh(candidates,auto,'#b9b5a5','Unverified automatic 3D walls');
+ // Soil and fallen angular stones follow the same CUT intervals; never fill openings.
+ const footings=createKunlumWallFootings(THREE,
+  [...confirmedSegments,...candidateSegments],heightAt,{mobile});
+ root.add(footings.root);
+ root.userData.ruinContact=footings.counts;
  // No passage line meshes: only physical gaps in the wall geometry.
  const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
@@ -176,7 +183,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },
   setVerticalScale(scale){root.scale.y=scale},
-  dispose(){root.userData.disposed=true;
+  dispose(){root.userData.disposed=true;footings.dispose();
    root.traverse(node=>{if(node.isInstancedMesh)node.dispose();});
    for(const geometry of root.userData.wallFacadeGeometries||[])geometry.dispose();
    for(const [g,m] of owned){g.dispose();m.dispose();}

@@ -5,6 +5,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
+import {kunlumRuinCrown,kunlumRuinFoot} from './kunlum-wall-ground.js';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const LANDMARK=[7.5,15];
@@ -71,12 +72,25 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   .sort((a,b)=>a.distance-b.distance);
  // Unlike an all-village instance budget, this never enlarges individual
  // stones if there are more wall segments than GPU capacity.
+ // Reserve Common100 budget FIRST. A near wall must not simultaneously
+ // render the regular far-row substitute underneath its wild facing.
+ const budget=mobile?3200:7200,nearJobs=new Set();
+ let reserved=0;
+ jobs.forEach(({seg,distance},i)=>{
+  if(distance>(mobile?45:70))return;
+  const len=Math.hypot(seg.b[0]-seg.a[0],seg.b[1]-seg.a[1]);
+  const required=Math.max(1,Math.ceil(len/.57))*
+   Math.max(3,Math.ceil(seg.height/.34))*2;
+  if(reserved+required>budget)return;
+  reserved+=required;nearJobs.add(i);
+ });
  const detailGeometry=Array.from({length:8},(_,i)=>makeDistanceStone(i+1));
  const farBins=new Map();
  const chunkWidth=85; // metres: bound visibility to small terrain regions
  let total=0;
  for(let i=0;i<jobs.length;i++){
   const {seg,layer,distance}=jobs[i];
+  if(nearJobs.has(i))continue;
   const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
   // Geometry stays stone-sized throughout the village, including long traces.
@@ -94,15 +108,21 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
     const right=col===columns-1?1:left+widths[col]/sum;
     const t=(left+right)/2,x=seg.a[0]+dx*t,z=seg.a[1]+dz*t;
     const w=(right-left)*length,h=seg.height/rows;
+    const foot=kunlumRuinFoot(x,z,seg.width,seg.heightAt,[nx,nz]);
+    const crown=seg.heightAt(x,z)+kunlumRuinCrown(seg.height,x,z);
+    const stagger=(hash(x*1.3,row,z*1.7)-.5)*h*.15;
+    const bottom=foot+row*h+stagger;
+    const visibleH=Math.min(h*1.24,crown-bottom+.025);
+    if(visibleH<.09){left=right;continue;}
     const kind=Math.floor(hash(x,row,z+col)*detailGeometry.length);
     for(const side of [-1,1]){
      dummy.position.set(x+side*nx*(seg.width*.5+.025),
-                        seg.heightAt(x,z)+.035+(row+.5)*h,
+                        bottom+visibleH*.50,
                         z+side*nz*(seg.width*.5+.025));
-     dummy.rotation.set((hash(z,row,x)-.5)*.08,
+     dummy.rotation.set((hash(z,row,x)-.5)*.16,
                         yaw+(side<0?Math.PI:0),
-                        (hash(row,x,z)>.50?Math.PI:0)+(hash(row,x,z)-.5)*.075);
-     dummy.scale.set(w*1.045,h*1.05,.27);
+                        (hash(row,x,z)>.50?Math.PI:0)+(hash(row,x,z)-.5)*.12);
+     dummy.scale.set(w*1.065,visibleH,.27);
      dummy.updateMatrix();
      const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
      let bucket=farBins.get(key);
@@ -151,10 +171,9 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  });
  const bins=groups.map(()=>models.map(()=>[]));
  let actual=0;
- const budget=mobile?3200:7200;
  for(let index=0;index<jobs.length;index++){
   const job=jobs[index],{seg,layer,distance}=job;
-  if(distance>(mobile?45:70))continue;
+  if(!nearJobs.has(index))continue;
   const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
   const columns=Math.max(1,Math.ceil(length/.57));
   const rows=Math.max(3,Math.ceil(seg.height/.34));
@@ -167,17 +186,22 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
     const t=Math.min(.98,Math.max(.02,(col+.5+offset)/columns));
     const x=seg.a[0]+dx*t,z=seg.a[1]+dz*t;
     const w=length/columns*(1.035+.065*hash(x,row,z));
-    const h=seg.height/rows*(1.02+.04*hash(z,row,x));
+    const h=seg.height/rows;
+    const foot=kunlumRuinFoot(x,z,seg.width,seg.heightAt,[nx,nz]);
+    const crown=seg.heightAt(x,z)+kunlumRuinCrown(seg.height,x,z);
+    const bottom=foot+row*h+(hash(x,row,z)-.5)*h*.13;
+    const visibleH=Math.min(h*(1.16+.12*hash(z,row,x)),crown-bottom+.03);
+    if(visibleH<.08)continue;
     const k=Math.floor(hash(x+index,row*17+col*7,z)*models.length);
     const model=models[k];
     for(const side of [-1,1]){
      dummy.position.set(x+side*nx*(seg.width*.5+.082),
-                        seg.heightAt(x,z)+.055+(row+.5)*seg.height/rows,
+                        bottom+visibleH*.49,
                         z+side*nz*(seg.width*.5+.082));
-     dummy.rotation.set((hash(x,z,row)-.5)*.12,
+     dummy.rotation.set((hash(x,z,row)-.5)*.15,
                         yaw+(side<0?Math.PI:0),
-                        (hash(z,x,col)-.5)*.12);
-     dummy.scale.set(w/model.size.x,h/model.size.y,
+                        (hash(z,x,col)-.5)*.18);
+     dummy.scale.set(w/model.size.x,visibleH/model.size.y,
                      (.23+.035*hash(row,z,x))/model.size.z);
      dummy.updateMatrix();
      bins[layer][k].push(dummy.matrix.clone());
@@ -196,6 +220,8 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    groups[layer].group.add(mesh);
   }
  root.userData.common100FacingDensity=1;
+ root.userData.common100NearOnlyWallSegments=nearJobs.size;
+ root.userData.ruinedCrown='shared-profile-v1';
  root.userData.common100ActualWallStones=actual;
  root.userData.wallFacadeLODStones=total;
  // Abay-Kala uses the same real library stones. Facing follows the original
