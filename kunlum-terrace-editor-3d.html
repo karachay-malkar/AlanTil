@@ -61,6 +61,8 @@ label{display:block;margin:8px 0 5px}
 <small id="heightInfo">Исходная отметка по DEM предлагается автоматически. Ты можешь задать другую.</small></div>
 <div id="status">Выбери инструмент, чтобы начать.</div></div>
 <div class="box"><h2>3. Предпросмотр реконструкции</h2>
+<button id="inferTerraces" type="button">Предложить террасы по домам</button>
+<small>Предварительное объединение домов: перепад DEM до 2 м, расстояние до 12 м, без пересечения подпорной стены между центрами. DEM 30 м; геопривязка не проверена. Результат можно править, исходные объекты сохраняются.</small>
 <label><input id="preview" type="checkbox"> Показать горизонтальные площадки</label>
 <small>По умолчанию демонстрируется нетронутый склон. Предпросмотр временно выравнивает рельеф внутри нарисованных контуров; исходные высоты DEM и контуры стен в данных не изменяются.</small>
 <div class="row" style="margin-top:8px"><button id="focus">К поселению</button><button id="top">Сверху</button><button id="valley">Вся долина</button></div></div>
@@ -162,6 +164,51 @@ function terrainSurfaceColor(y){const m=y+KUNLUM_DEM.centerHeightASL,c=new THREE
   return c.set(stops[i-1][1]).lerp(new THREE.Color(stops[i][1]),t);
  }
  return c.set(stops.at(-1)[1]);
+}
+function suggestHouseTerraces(){
+ const houses=source.confirmed_features.filter(f=>f.type==='house'&&Array.isArray(f.points))
+  .map(f=>({feature:f,poly:asPolygon(f.points.map(world))})).filter(h=>h.poly.length>=3)
+  .map(h=>({...h,center:centre(h.poly)}));
+ for(const h of houses)h.height=heightAt(h.center[0],h.center[1])+KUNLUM_DEM.centerHeightASL;
+ const walls=source.confirmed_features.filter(f=>f.type==='retaining'&&f.points?.length>=2).map(f=>f.points.map(world));
+ const orient=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);
+ const crossing=(a,b,c,d)=>orient(a,b,c)*orient(a,b,d)<0&&orient(c,d,a)*orient(c,d,b)<0;
+ const blocked=(a,b)=>walls.some(w=>w.slice(1).some((p,i)=>crossing(a,b,w[i],p)));
+ const gap=(a,b)=>{let min=Infinity;
+  for(const p of a.poly)for(let i=0;i<b.poly.length;i++){
+   const q=b.poly[i],r=b.poly[(i+1)%b.poly.length],dx=r[0]-q[0],dz=r[1]-q[1];
+   const t=Math.max(0,Math.min(1,((p[0]-q[0])*dx+(p[1]-q[1])*dz)/(dx*dx+dz*dz||1)));
+   min=Math.min(min,Math.hypot(p[0]-q[0]-t*dx,p[1]-q[1]-t*dz));
+  }
+  return min;
+ };
+ const parent=houses.map((_,i)=>i);
+ const root=i=>{while(parent[i]!==i)i=parent[i]=parent[parent[i]];return i};
+ for(let i=0;i<houses.length;i++)for(let j=i+1;j<houses.length;j++){
+  const a=houses[i],b=houses[j];
+  if(Math.abs(a.height-b.height)>2||gap(a,b)>12||blocked(a.center,b.center))continue;
+  const ri=root(i),rj=root(j);
+  const members=houses.filter((_,k)=>root(k)===ri||root(k)===rj);
+  if(Math.max(...members.map(h=>h.height))-Math.min(...members.map(h=>h.height))<=2)parent[rj]=ri;
+ }
+ const groups=new Map();
+ houses.forEach((h,i)=>{const k=root(i);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(h)});
+ const hull=points=>{const sorted=points.map(p=>[...p]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const chain=pts=>{const out=[];for(const p of pts){while(out.length>=2&&orient(out.at(-2),out.at(-1),p)<=0)out.pop();out.push(p)}return out};
+  return [...chain(sorted).slice(0,-1),...chain([...sorted].reverse()).slice(0,-1)];
+ };
+ const proposed=[];
+ for(const group of groups.values()){
+  const pts=hull(group.flatMap(h=>h.poly));if(pts.length<3)continue;
+  // A convex connection crossing a retaining wall must be split into house footprints.
+  const split=group.length>1&&walls.some(w=>w.slice(1).some((p,i)=>pts.some((q,j)=>crossing(q,pts[(j+1)%pts.length],w[i],p))));
+  for(const members of split?group.map(h=>[h]):[group]){
+   const polygon=split?members[0].poly:pts,height=Math.round(members.reduce((n,h)=>n+h.height,0)/members.length);
+   proposed.push({id:'V'+nextId++,type:'terrace',points:[...polygon.map(pixel),pixel(polygon[0])],
+    origin:'suggested_from_houses',houseIds:members.map(h=>h.feature.id),level:null,certainty:'review-needed',elevationASL:height});
+  }
+ }
+ return {proposed,houseCount:houses.length};
 }
 function terraceList(){return source.confirmed_features.filter(validTerraceFeature)}
 function terraceRings(){
@@ -508,7 +555,16 @@ $('confirmedVisible').onchange=()=>{confirmedGroup.visible=$('confirmedVisible')
 $('candidatesVisible').onchange=()=>{candidateGroup.visible=$('candidatesVisible').checked};
 $('passageVisible').onchange=()=>{passageGroup.visible=$('passageVisible').checked};
 $('parcelVisible').onchange=()=>{parcelGroup.visible=$('parcelVisible').checked};
-$('preview').onchange=()=>{
+$('inferTerraces').onclick=()=>{
+  // Preserve manual terraces, all houses, walls, passages and openings.
+  source.confirmed_features=source.confirmed_features.filter(f=>f.origin!=='suggested_from_houses');
+  const {proposed,houseCount}=suggestHouseTerraces();
+  if(!proposed.length){$('status').textContent='Замкнутые дома для реконструкции не найдены.';return}
+  source.confirmed_features.push(...proposed);changed=true;selected=null;$('preview').checked=true;
+  buildLocalTerrain();refreshTerraces();storeDraft();
+  $('status').textContent='Предложено '+proposed.length+' террас по '+houseCount+' домам. Высоты и формы ориентировочные — проверь вручную.';
+ };
+ $('preview').onchange=()=>{
  if($('preview').checked&&mode==='draw')setMode('view');
  buildLocalTerrain();refreshTerraces();
  $('hud').textContent=$('preview').checked?'ПРЕДПРОСМОТР: временное выравнивание только внутри твоих контуров.':'ИСХОДНЫЙ DEM: никакие террасы не изменяют рельеф.';
