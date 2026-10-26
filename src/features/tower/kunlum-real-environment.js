@@ -239,7 +239,7 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
   onReady();
  });
  // Environment remains independent of tower placement and server state.
- return {group,heightAt:terrain.heightAt,ready,update(seconds){river?.update(seconds)},ensureWideTerrain,
+ return {group,heightAt:terrain.heightAt,ready,update(seconds,camera){river?.update(seconds);scatter?.update(seconds,camera)},ensureWideTerrain,
   dispose(){
    if(disposed)return;disposed=true;scene.remove(group);
    overlay?.dispose();river?.dispose();riverbank?.dispose();scatter?.dispose();outcrops?.dispose();

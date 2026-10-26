@@ -1,5 +1,6 @@
 import {KUNLUM_AUTUMN} from './kunlum-autumn-palette.js';
 import {carveKunlumRiverHeight} from './kunlum-river-layer.js';
+import {createKunlumVegetation,createKunlumShrubGeometry} from './kunlum-vegetation.js';
 /**
  * Deterministic 3D stones, grass tufts and low mountain shrubs for Kunlum.
  * Visual decoration only. These positions are artistic and not mapped vegetation.
@@ -28,78 +29,58 @@ export function createKunlumAvoidance(features=[],toWorld=p=>p,{cell=12}={}){
  };
 }
 export function createKunlumTerrainScatter(THREE,heightAt,{
- mobile=false,features=[],toWorld=p=>p,riverXAt=()=>Infinity,riverDistanceAt=null,range=1000,seed=87131,excludedBounds=null
+ mobile=false,features=[],toWorld=p=>p,riverXAt=()=>Infinity,riverDistanceAt=null,
+ range=1000,seed=87131,excludedBounds=null
 }={}){
- const root=new THREE.Group();root.name='Kunlum artistic 3D boulders / grass / shrubland';
- const rng=kunlumRng(seed),avoid=createKunlumAvoidance(features,toWorld);
- const owned=[];
- const stoneGeom=new THREE.IcosahedronGeometry(1,0);
- const shrubGeom=new THREE.DodecahedronGeometry(.8,0);
- const grassGeom=new THREE.BufferGeometry();
- grassGeom.setAttribute('position',new THREE.Float32BufferAttribute([
-  -.45,0,0,  .05,1.65,0,  .50,0,0,
-  0,0,-.40, 0,1.45,.05, 0,0,.42,
-  -.18,0,-.38, .10,1.35,.12, .32,0,.27
- ],3));grassGeom.computeVertexNormals();
+ const root=new THREE.Group();root.name='Kunlum stone scatter and native 3D vegetation';
+ const rng=kunlumRng(seed),avoid=createKunlumAvoidance(features,toWorld),owned=[];
+ const stoneGeo=new THREE.IcosahedronGeometry(1,0);
  const rockMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.96,metalness:0,flatShading:true});
- const shrubMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,flatShading:true});
- const grassMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,side:THREE.DoubleSide});
- owned.push(stoneGeom,shrubGeom,grassGeom,rockMat,shrubMat,grassMat);
- const budgets=mobile?{rock:1150,shrub:460,grass:1800}:{rock:3400,shrub:1250,grass:5700};
- const materialMap={rock:[stoneGeom,rockMat],shrub:[shrubGeom,shrubMat],grass:[grassGeom,grassMat]};
- const dummy=new THREE.Object3D(),col=new THREE.Color();
- const placementCounts={};
+ owned.push(stoneGeo,rockMat);
+ const budget=mobile?1150:3400;
+ const stones=new THREE.InstancedMesh(stoneGeo,rockMat,budget);
+ stones.name='Mountain stones (artistic 3D instances)';
+ stones.frustumCulled=false;
+ const dummy=new THREE.Object3D(),color=new THREE.Color();
+ let placed=0,attempts=0;
  const nearWater=(x,z)=>riverDistanceAt?riverDistanceAt(x,z)<30:Math.abs(x-riverXAt(z))<27;
- const take=(type,target)=>{
-  const [geom,mat]=materialMap[type],mesh=new THREE.InstancedMesh(geom,mat,target);
-  mesh.name=type+' (3D instances, artistic)';
-  mesh.castShadow=type==='rock'&&!mobile;mesh.receiveShadow=false;
-  mesh.frustumCulled=false;
-  let placed=0,tries=0;
-  while(placed<target&&tries<target*10){
-   tries++;
-   // Put about 60% of detail into walkable vicinity of the ruins.
-   const cluster=rng()<.68?Math.min(range,type==='rock'?560:470):range;
-   const x=(rng()*2-1)*cluster,z=(rng()*2-1)*cluster;
-   if(x*x+z*z<750||nearWater(x,z)||avoid(x,z)||
-    (excludedBounds&&x>=excludedBounds.minX&&x<=excludedBounds.maxX&&
-     z>=excludedBounds.minZ&&z<=excludedBounds.maxZ))continue;
-   const y=heightAt(x,z);
-   const dx=(heightAt(x+4,z)-heightAt(x-4,z))/8,dz=(heightAt(x,z+4)-heightAt(x,z-4))/8;
-   const slope=Math.hypot(dx,dz);
-   if(!Number.isFinite(y)||slope>3.5)continue;
-   if(type==='grass'&&(slope>.65||y>470))continue;
-   if(type==='shrub'&&(slope>.89||y>400))continue;
-   if(type==='rock'&&slope<.12&&rng()<.65)continue;
-   const r=rng();
-   if(type==='rock'){
-    const scale=.5+Math.pow(r,3)*(slope>.8?4.7:2.2);
-    dummy.scale.set(scale*(1+rng()*.65),scale*(.58+rng()*.36),scale*(.8+rng()*.65));
-    dummy.position.set(x,y+scale*.12,z); // embed stones into ground, no floating stones
-    col.set(KUNLUM_AUTUMN.rock).multiplyScalar(.82+rng()*.33);
-   }else if(type==='shrub'){
-    const scale=.65+rng()*.9;
-    dummy.scale.set(scale*(.9+rng()*.6),scale*(.54+rng()*.4),scale*(.8+rng()*.7));
-    dummy.position.set(x,y+scale*.18,z);
-    col.set(KUNLUM_AUTUMN.shrub).multiplyScalar(.73+rng()*.35);
-   }else{
-    const scale=.36+rng()*.62;
-    dummy.scale.set(scale,scale,scale);
-    dummy.position.set(x,y-.08,z);
-    col.set(KUNLUM_AUTUMN.dryGrass).multiplyScalar(.76+rng()*.44);
-   }
-   dummy.rotation.set((rng()-.5)*.45,rng()*Math.PI*2,(rng()-.5)*.55);
-   dummy.updateMatrix();
-   mesh.setMatrixAt(placed,dummy.matrix);mesh.setColorAt(placed,col);placed++;
-  }
-  mesh.count=placed;
-  mesh.instanceMatrix.needsUpdate=true;
-  if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-  root.add(mesh);owned.push(mesh);
-  placementCounts[type]=placed;
- };
- for(const type of ['rock','shrub','grass'])take(type,budgets[type]);
- return {root,counts:placementCounts,dispose(){for(const o of owned)o.dispose?.()}};
+ while(placed<budget&&attempts<budget*10){
+  attempts++;
+  const spread=rng()<.68?Math.min(range,560):range;
+  const x=(rng()*2-1)*spread,z=(rng()*2-1)*spread;
+  if(x*x+z*z<750||nearWater(x,z)||avoid(x,z)||
+   (excludedBounds&&x>=excludedBounds.minX&&x<=excludedBounds.maxX&&
+    z>=excludedBounds.minZ&&z<=excludedBounds.maxZ))continue;
+  const y=heightAt(x,z);
+  const slope=Math.hypot((heightAt(x+4,z)-heightAt(x-4,z))/8,
+   (heightAt(x,z+4)-heightAt(x,z-4))/8);
+  if(!Number.isFinite(y)||!Number.isFinite(slope)||slope>3.5)continue;
+  if(slope<.12&&rng()<.65)continue;
+  const r=rng(),scale=.5+Math.pow(r,3)*(slope>.8?4.7:2.2);
+  dummy.position.set(x,y+scale*.12,z);
+  dummy.scale.set(scale*(1+rng()*.65),scale*(.58+rng()*.36),scale*(.8+rng()*.65));
+  dummy.rotation.set((rng()-.5)*.45,rng()*Math.PI*2,(rng()-.5)*.55);
+  dummy.updateMatrix();
+  stones.setMatrixAt(placed,dummy.matrix);
+  color.set(KUNLUM_AUTUMN.rock).multiplyScalar(.82+rng()*.33);
+  stones.setColorAt(placed,color);
+  placed++;
+ }
+ stones.count=placed;stones.instanceMatrix.needsUpdate=true;
+ if(stones.instanceColor)stones.instanceColor.needsUpdate=true;
+ root.add(stones);owned.push(stones);
+
+ // Flowering shrubs, meadow grasses and willows use true 3D geometry.
+ // Keep construction and mapped archaeological walls clear.
+ const vegetation=createKunlumVegetation(THREE,heightAt,{
+  mobile,rng,avoid,riverDistanceAt:riverDistanceAt||
+   ((x,z)=>Math.abs(x-riverXAt(z))),
+  range,excludedBounds,colors:{dryGrass:KUNLUM_AUTUMN.dryGrass}
+ });
+ root.add(vegetation.root);
+ return {root,counts:{rock:placed,...vegetation.counts},
+  update(seconds,camera){vegetation.update(seconds,camera)},
+  dispose(){vegetation.dispose();for(const o of owned)o.dispose?.()}};
 }
 
 /**
@@ -190,11 +171,12 @@ export function createKunlumRiverbankScatter(THREE,heightAt,{
  const specs=[
   ['pebble',mobile?210:790,new THREE.IcosahedronGeometry(1,0),0xaaaaaa],
   ['boulder',mobile?85:245,new THREE.DodecahedronGeometry(1,0),0x97958d],
-  ['shrub',mobile?26:95,new THREE.DodecahedronGeometry(1,0),0x425335]
+  ['shrub',mobile?26:95,createKunlumShrubGeometry(THREE,'seabuckthorn',1),0xffffff]
  ];
  for(const [kind,target,geometry,tint] of specs){
   const material=new THREE.MeshStandardMaterial({
-   color:tint,roughness:kind==='boulder'?.77:1,metalness:0,flatShading:true
+   color:tint,roughness:kind==='boulder'?.77:1,metalness:0,
+   flatShading:true,vertexColors:kind==='shrub'
   });
   const mesh=new THREE.InstancedMesh(geometry,material,target);
   mesh.name='Riverbank '+kind+' 3D instances';mesh.frustumCulled=false;
@@ -225,7 +207,7 @@ export function createKunlumRiverbankScatter(THREE,heightAt,{
    dummy.updateMatrix();
    mesh.setMatrixAt(n,dummy.matrix);
    const v=rng();
-   if(kind==='shrub')color.setRGB(.27+v*.1,.34+v*.16,.18+v*.09);
+   if(kind==='shrub')color.setRGB(.9+v*.07,.9+v*.07,.9+v*.07);
    else if(kind==='boulder')color.setRGB(.23+v*.19,.25+v*.18,.25+v*.17); // darker wet rock
    else color.setRGB(.38+v*.23,.37+v*.21,.32+v*.19);
    mesh.setColorAt(n,color);n++;

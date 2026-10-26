@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.31';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.32';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -26,7 +26,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const approvedSections=createApprovedSectionLoader();
  const approvedModelPromises=new Map();
  let disposed=false,layer=null,tool='select',blocks=[],selected=null;
- let frame=0,needsRender=true,needsAim=true,worldMode=false,lastWorldFrame=0;
+ let frame=0,needsRender=true,needsAim=true,worldMode=false,lastWorldFrame=0,windTimer=0;
  function scheduleDraw(){needsRender=true;if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(draw);}
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
@@ -400,8 +400,12 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(worldMode&&!explorer.active&&now-lastWorldFrame>=(mobileQuality?150:75)){
    lastWorldFrame=now;kunlum?.update?.(now*.001);needsRender=true;
   }
+  if(needsRender)kunlum?.update?.(now*.001,camera);
   if(needsRender){needsRender=false;sky.update();renderer.render(scene,camera);}
   if(worldMode)scheduleDraw();
+  else if(kunlum&&!windTimer&&!document.hidden){
+   windTimer=setTimeout(()=>{windTimer=0;scheduleDraw()},mobileQuality?170:110);
+  }
  }
  function worldView(){
   worldMode=!worldMode;
@@ -452,6 +456,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    yellowParcelCorners:info?.yellowParcelCorners||null,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
-  dispose(){disposed=true;clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
  };
 }

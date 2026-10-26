@@ -171,6 +171,12 @@ if(uKunlumGameEnabled > 0.5 && uKunlumGameDetail > 0.5){
 const srgbToLinear=c=>{
  c=clamp(c/255);return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);
 };
+/** Slowly varying metre-scale patches disrupt a repeating checkerboard appearance. */
+export function kunlumMeadowPatch(x,z){
+ const wave=.48*Math.sin(x*.039+Math.sin(z*.015)*2.1)+
+  .31*Math.cos(z*.063-x*.019)+.21*Math.sin(x*.12+z*.071);
+ return clamp(.5+wave*.43,0,1);
+}
 export function kunlumNativeTerrainColor(elevation,slope,x,z,tiles){
  if(!Number.isFinite(elevation)||!Number.isFinite(slope)||!Number.isFinite(x)||!Number.isFinite(z))
   throw Error('Terrain colour coordinates must be finite');
@@ -189,7 +195,10 @@ export function kunlumNativeTerrainColor(elevation,slope,x,z,tiles){
  const rgb=[0,1,2].map(c=>{
   const base=blend(grass[c],soil[c],masks.soil);
   const gravel=blend(base,scree[c],masks.scree);
-  return srgbToLinear(blend(gravel,rock[c],masks.rock));
+  const meadow=kunlumMeadowPatch(x,z)-.5;
+  const mineral=1-clamp(masks.rock+masks.scree*.65,0,1);
+  const dither=[.23,.17,.09][c]*meadow*mineral;
+  return srgbToLinear(clamp(blend(gravel,rock[c],masks.rock)*(1+dither),0,255));
  });
  return rgb;
 }
