@@ -104,6 +104,34 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    console.log('TOWER_FIRST_PERSON_DEVICE_PASS',device,JSON.stringify(verified.at(-1)));
    await ctx.close();
   }
+  // Landscape mobile must remain interactive while all 2K stone PBR downloads stall.
+  const landscapeCtx=await browser.newContext({viewport:{width:844,height:390},isMobile:true,hasTouch:true});
+  const landscape=await landscapeCtx.newPage();
+  await landscape.route('**/assets/tower/materials/balkaria-stone-v2.1/**',async route=>{
+   await sleep(12000);
+   await route.continue().catch(()=>{});
+  });
+  const started=Date.now();
+  await landscape.goto('http://127.0.0.1:4173/tests/fixtures/kunlum-tower-world.html',
+   {waitUntil:'domcontentloaded',timeout:45000});
+  await landscape.waitForFunction(()=>
+   document.getElementById('qa-root')?.dataset.mount==='success'&&
+   document.querySelector('.towerCanvas')?.dataset.cameraMode==='explore',
+   null,{timeout:9000});
+  const startupMs=Date.now()-started;
+  const quality=await landscape.locator('.towerCanvas').evaluate(el=>({
+   mobile:el.dataset.mobileQuality,encoding:el.dataset.stoneTextureEncoding,
+   playable:el.dataset.ready
+  }));
+  if(quality.mobile!=='true'||quality.playable!=='true')
+   throw Error('Landscape mobile quality/startup regression '+JSON.stringify(quality));
+  if(quality.encoding!=='pending')
+   throw Error('Tower blocked on PBR texture download '+JSON.stringify(quality));
+  await landscape.locator('[data-hammer]').click({timeout:6000});
+  await landscape.locator('.towerCatalog').waitFor({state:'visible',timeout:3000});
+  await landscape.screenshot({path:path.join(out,'mobile-landscape-fast-start.png')});
+  console.log('TOWER_LANDSCAPE_FAST_START_PASS',JSON.stringify({startupMs,...quality}));
+  await landscapeCtx.close();
   console.log('TOWER_FIRST_PERSON_BROWSER_PASS',JSON.stringify(verified));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});
