@@ -1,3 +1,4 @@
+import {KUNLUM_AUTUMN} from './kunlum-autumn-palette.js';
 /**
  * Real Copernicus GLO-30 Kunlum terrain with two geometry resolutions.
  * EPSG:32638 east/north. The user-calibrated map is provisional (one control point).
@@ -204,8 +205,8 @@ export function makeKunlumPanorama(THREE,group,terrain,{mobile=false,register=()
  if(!ctx)return {dispose(){}};
  const W=canvas.width,H=canvas.height;
  const grad=ctx.createLinearGradient(0,0,0,H);
- grad.addColorStop(0,'#aec6d8');grad.addColorStop(.46,'#c7d4d9');
- grad.addColorStop(.72,'#b7c9cb');grad.addColorStop(1,'#b4bbb1');
+ grad.addColorStop(0,KUNLUM_AUTUMN.skyTop);grad.addColorStop(.46,KUNLUM_AUTUMN.skyMiddle);
+ grad.addColorStop(.72,KUNLUM_AUTUMN.skyHorizon);grad.addColorStop(1,KUNLUM_AUTUMN.fog);
  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
  const lines=[];
  for(let i=0;i<=W;i++){
@@ -228,14 +229,14 @@ export function makeKunlumPanorama(THREE,group,terrain,{mobile=false,register=()
    ctx.lineTo(i,y);
   }
   ctx.lineTo(W,H);ctx.closePath();
-  ctx.fillStyle=['#7f9a91','#94aca4','#a8bcb2'][layer];
+  ctx.fillStyle=['#80766D','#9F9C90','#B5B4AD'][layer];
   ctx.globalAlpha=[.76,.60,.36][layer];ctx.fill();
  }
  ctx.globalAlpha=1;
  // Soft grain to keep repeated sections non-flat without a photographic texture.
  for(let i=0;i<900;i++){
   const x=(i*131.37)%W,y=220+((i*71.19)%290);
-  ctx.fillStyle=i%4?'#ffffff0a':'#4a625b0b';
+  ctx.fillStyle=i%4?'#ffffff0a':'#695A4D0b';
   ctx.fillRect(x,y,i%3+1,1);
  }
  const texture=new THREE.CanvasTexture(canvas);

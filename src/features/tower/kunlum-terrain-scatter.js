@@ -1,3 +1,4 @@
+import {KUNLUM_AUTUMN} from './kunlum-autumn-palette.js';
 import {carveKunlumRiverHeight} from './kunlum-river-layer.js';
 /**
  * Deterministic 3D stones, grass tufts and low mountain shrubs for Kunlum.
@@ -75,17 +76,17 @@ export function createKunlumTerrainScatter(THREE,heightAt,{
     const scale=.5+Math.pow(r,3)*(slope>.8?4.7:2.2);
     dummy.scale.set(scale*(1+rng()*.65),scale*(.58+rng()*.36),scale*(.8+rng()*.65));
     dummy.position.set(x,y+scale*.12,z); // embed stones into ground, no floating stones
-    col.setRGB(.38+rng()*.28,.36+rng()*.25,.30+rng()*.22);
+    col.set(KUNLUM_AUTUMN.rock).multiplyScalar(.82+rng()*.33);
    }else if(type==='shrub'){
     const scale=.65+rng()*.9;
     dummy.scale.set(scale*(.9+rng()*.6),scale*(.54+rng()*.4),scale*(.8+rng()*.7));
     dummy.position.set(x,y+scale*.18,z);
-    col.setRGB(.19+rng()*.12,.24+rng()*.22,.11+rng()*.1);
+    col.set(KUNLUM_AUTUMN.shrub).multiplyScalar(.73+rng()*.35);
    }else{
     const scale=.36+rng()*.62;
     dummy.scale.set(scale,scale,scale);
     dummy.position.set(x,y-.08,z);
-    col.setRGB(.27+rng()*.15,.36+rng()*.25,.12+rng()*.11);
+    col.set(KUNLUM_AUTUMN.dryGrass).multiplyScalar(.76+rng()*.44);
    }
    dummy.rotation.set((rng()-.5)*.45,rng()*Math.PI*2,(rng()-.5)*.55);
    dummy.updateMatrix();
@@ -160,7 +161,7 @@ export function createKunlumRockOutcrops(THREE,heightAt,{
   dummy.updateMatrix();
   mesh.setMatrixAt(placed,dummy.matrix);
   const t=rng();
-  color.setRGB(.39+.22*t,.38+.20*t,.33+.18*t);
+  color.set(KUNLUM_AUTUMN.rock).multiplyScalar(.82+.36*t);
   mesh.setColorAt(placed,color);
   placed++;
  }

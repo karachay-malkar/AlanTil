@@ -1,3 +1,4 @@
+import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js';
 /**
  * Procedural game-terrain PBR layer for Kunlum. No satellite imagery or external
  * texture downloads. Albedo, grain and roughness are artistic, not mapped landcover.
@@ -36,12 +37,7 @@ export function kunlumTerrainMasks(elevation,slope,patch){
 export function createKunlumTerrainTiles(THREE,{resolution=256}={}){
  if(!THREE||!Number.isInteger(resolution)||resolution<32||resolution>512)
   throw Error('Invalid game-landscape texture settings');
- const palettes={
-  grass:{lo:[112,135,78],hi:[174,180,112],seed:37,contrast:30},
-  soil:{lo:[132,99,65],hi:[189,155,110],seed:83,contrast:28},
-  scree:{lo:[150,139,118],hi:[213,197,164],seed:173,contrast:34},
-  rock:{lo:[139,140,130],hi:[218,211,191],seed:271,contrast:34}
- };
+ const palettes=KUNLUM_AUTUMN_TERRAIN;
  // Compute periodic fractal texture grain once; each material uses a different
  // wrapped phase offset, avoiding four expensive rounds of noise generation.
  const grainBase=new Float32Array(resolution*resolution);
