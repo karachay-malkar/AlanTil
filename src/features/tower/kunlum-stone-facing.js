@@ -17,37 +17,36 @@ const usable=(geom)=>{
 // objects, not stretched Common100 blocks, decals or repeated image panels.
 function makeDistanceStone(seed){
  const r=n=>hash(seed*13.7,n*7.3,seed+n*3.1)-.5;
- // Broad, naturally fractured face instead of a pointed pyramid. The
- // central plateau forms ~70% of the visible rock; the outer ring gives it
- // real chipped 3D shoulders and a slightly uneven silhouette.
- const outer=[
-  [-.49+r(1)*.06,-.47+r(2)*.05,.24+r(3)*.035],
-  [ .49+r(4)*.06,-.47+r(5)*.06,.24+r(6)*.035],
-  [ .48+r(7)*.06, .47+r(8)*.06,.25+r(9)*.035],
-  [-.49+r(10)*.06,.47+r(11)*.06,.24+r(12)*.035]
+ // Six uneven, chamfered rock shoulders and a broad fractured face.
+ // This is intentionally an irregular stone, never a rectangular brick
+ // or a pyramid. Real Common100 rocks replace this LOD near the player.
+ const outline=[
+  [-.49+r(1)*.12,-.20+r(2)*.12],
+  [-.32+r(3)*.16,-.48+r(4)*.08],
+  [ .36+r(5)*.16,-.47+r(6)*.09],
+  [ .49+r(7)*.12,-.18+r(8)*.12],
+  [ .37+r(9)*.16, .44+r(10)*.10],
+  [-.40+r(11)*.16,.46+r(12)*.09]
  ];
- const face=[
-  [-.37+r(13)*.075,-.34+r(14)*.05,.40+r(15)*.035],
-  [ .38+r(16)*.075,-.35+r(17)*.05,.41+r(18)*.035],
-  [ .37+r(19)*.075, .35+r(20)*.05,.40+r(21)*.035],
-  [-.38+r(22)*.075,.34+r(23)*.05,.40+r(24)*.035]
- ];
- const back=outer.map((p,i)=>[p[0]*1.01,p[1]*.98,-.29+r(i+25)*.04]),vertices=[];
- const tri=(a,b,c)=>vertices.push(...a,...b,...c);
- for(let i=0;i<4;i++){
-  const j=(i+1)%4;
+ const outer=outline.map(([x,y],i)=>[x,y,.23+r(i+13)*.035]);
+ const face=outline.map(([x,y],i)=>[x*(.84+r(i+21)*.05),y*(.86+r(i+29)*.04),.39+r(i+37)*.035]);
+ const back=outline.map(([x,y],i)=>[x*1.02,y*.97,-.29+r(i+45)*.04]);
+ const middle=[r(52)*.14,r(53)*.12,.40+r(54)*.035],verts=[];
+ const tri=(a,b,c)=>verts.push(...a,...b,...c);
+ for(let i=0;i<outline.length;i++){
+  const j=(i+1)%outline.length;
   tri(outer[i],outer[j],face[j]);
   tri(outer[i],face[j],face[i]);
+  tri(middle,face[i],face[j]);
  }
- // Two large almost-flat facets carry the same PBR as real Common100 stone.
- tri(face[0],face[1],face[2]);tri(face[0],face[2],face[3]);
- tri(back[0],back[2],back[1]);tri(back[0],back[3],back[2]);
- for(let i=0;i<4;i++){
-  const j=(i+1)%4;
-  tri(outer[i],back[i],back[j]);tri(outer[i],back[j],outer[j]);
+ for(let i=1;i<outline.length-1;i++)tri(back[0],back[i+1],back[i]);
+ for(let i=0;i<outline.length;i++){
+  const j=(i+1)%outline.length;
+  tri(outer[i],back[i],back[j]);
+  tri(outer[i],back[j],outer[j]);
  }
  const raw=new THREE.BufferGeometry();
- raw.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ raw.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
  raw.computeVertexNormals();
  const geometry=getApprovedStoneSurfaceGeometry(raw);raw.dispose();
  return geometry;
@@ -85,11 +84,14 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   const columns=Math.max(1,Math.ceil(length/step));
   const rows=Math.max(2,Math.ceil(seg.height/(distance>200?.68:distance>70?.54:.44)));
   for(let row=0;row<rows;row++){
-   const stagger=row%2?-.5:0;
-   for(let col=0;col<=columns;col++){
-    const left=Math.max(0,(col+stagger)/columns);
-    const right=Math.min(1,(col+stagger+1)/columns);
-    if(right-left<.012)continue;
+   // Each course uses independent unequal stone widths. Vertical joints
+   // cannot line up into a repetitive modern-brick pattern.
+   const widths=Array.from({length:columns},(_,col)=>
+    .70+.60*hash(seg.a[0]+row*7.1,col*3.7,seg.a[1]+i));
+   const sum=widths.reduce((a,b)=>a+b,0);
+   let left=0;
+   for(let col=0;col<columns;col++){
+    const right=col===columns-1?1:left+widths[col]/sum;
     const t=(left+right)/2,x=seg.a[0]+dx*t,z=seg.a[1]+dz*t;
     const w=(right-left)*length,h=seg.height/rows;
     const kind=Math.floor(hash(x,row,z+col)*detailGeometry.length);
@@ -107,6 +109,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
      if(!bucket){bucket={layer,kind,matrices:[]};farBins.set(key,bucket);}
      bucket.matrices.push(dummy.matrix.clone());total++;
     }
+    left=right;
    }
   }
   // Loading historic decoration cannot monopolize Android's UI thread.
