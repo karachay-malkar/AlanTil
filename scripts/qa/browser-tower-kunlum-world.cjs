@@ -34,16 +34,12 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    }));
    if(details.count!==120||!details.river.includes('186 points')||!details.node||errors.length)
     throw Error(type+' incorrect world data: '+JSON.stringify({details,errors}));
-   await page.waitForFunction(()=>{
-    const el=document.querySelector('.towerCanvas');
-    return el&&['ready','unavailable'].includes(el.dataset.kunlumWide);
-   },null,{timeout:30000});
-   const extent=await page.locator('.towerCanvas').evaluate(el=>({
-    wide:el.dataset.kunlumWide,
-    centre:el.dataset.kunlumPlotCenter
+   // Heavy multi-kilometre DEM must NOT load during construction.
+   const beforeOverview=await page.locator('.towerCanvas').evaluate(el=>({
+    wide:el.dataset.kunlumWide,centre:el.dataset.kunlumPlotCenter
    }));
-   if(extent.centre!=='7.5,15'||extent.wide!=='ready')
-    throw Error(type+' wrong yellow parcel centre / expanded DEM absent '+JSON.stringify(extent));
+   if(beforeOverview.centre!=='7.5,15'||beforeOverview.wide!=='loading')
+    throw Error(type+' unexpectedly loaded far terrain before overview '+JSON.stringify(beforeOverview));
    await page.waitForFunction(()=>document.getElementById('qa-root')?.dataset.mount==='success'&&
     document.querySelector('[data-world]')?.disabled===false,null,{timeout:60000});
    const hud=await page.evaluate(()=>({
@@ -88,6 +84,14 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
      throw Error(type+' view toggle failed '+JSON.stringify(state)+', page errors='+
       JSON.stringify(errors)+'; '+error.message);
     });
+   await page.waitForFunction(()=>{
+    const el=document.querySelector('.towerCanvas');
+    return el&&['ready','unavailable'].includes(el.dataset.kunlumWide);
+   },null,{timeout:45000});
+   const extent=await page.locator('.towerCanvas').evaluate(el=>({
+    wide:el.dataset.kunlumWide,centre:el.dataset.kunlumPlotCenter
+   }));
+   if(extent.wide!=='ready')throw Error(type+' panorama could not load the real wide DEM '+JSON.stringify(extent));
    await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneCount)>0,
     null,{timeout:80000});
    const coverage=await page.locator('.towerCanvas').evaluate(el=>({

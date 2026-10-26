@@ -63,3 +63,10 @@ test('arrow release and horizontal movement preserve altitude at 1.25 m/s',()=>{
  assert.equal(stopped.y,up.y);
  assert.equal(walked.y,up.y);
 });
+
+test('first-person input starts counting elapsed time immediately',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(new URL('../src/features/tower/tower-explorer-controller.js',import.meta.url),'utf8');
+ assert.match(source,/if\(enabled&&!wasMoving&&moving\(\)\)lastFrame=performance\.now\(\)/);
+ assert.match(source,/if\(!wasMoving&&moving\(\)\)lastFrame=performance\.now\(\)/);
+});

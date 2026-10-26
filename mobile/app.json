@@ -2,7 +2,7 @@
   "expo": {
     "name": "Alan Til",
     "slug": "alan-til",
-    "version": "17.2.26",
+    "version": "17.2.27",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "alantil",
@@ -26,7 +26,7 @@
     },
     "android": {
       "package": "app.alantil.mobile",
-      "versionCode": 62,
+      "versionCode": 63,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -51,10 +51,10 @@
     },
     "ios": {
       "bundleIdentifier": "app.alantil.mobile",
-      "buildNumber": "62"
+      "buildNumber": "63"
     },
     "extra": {
-      "releaseVersion": "17.2.26",
+      "releaseVersion": "17.2.27",
       "architecture": "shared-core-16.7.0",
       "preview": "expo-web-and-native-preview"
     },

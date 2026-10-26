@@ -29,10 +29,13 @@ export function createTowerExplorerController({
  function setMotion(next={}){
   // If WebGL blocked animation frames during a held button, flush elapsed
   // movement *before* changing the input. Otherwise pointerup loses flight.
-  if(enabled&&lastFrame&&moving())frame(performance.now());
+  const wasMoving=moving();
+  if(enabled&&lastFrame&&wasMoving)frame(performance.now());
   motion={forward:clamp(Number(next.forward)||0,-1,1),
    strafe:clamp(Number(next.strafe)||0,-1,1),
    up:clamp(Number(next.up)||0,-1,1)};
+  // Fast-start input can arrive before the first animation frame.
+  if(enabled&&!wasMoving&&moving())lastFrame=performance.now();
   if(enabled)requestRender();
  }
  function enter(){
@@ -81,8 +84,10 @@ export function createTowerExplorerController({
     e.target?.closest?.('input,textarea,select,[contenteditable]')||
     document.body.classList.contains('modal-open'))return;
   e.preventDefault();
-  if(lastFrame&&moving())frame(performance.now());
+  const wasMoving=moving();
+  if(lastFrame&&wasMoving)frame(performance.now());
   if(e.type==='keydown')pressed.add(e.code);else pressed.delete(e.code);
+  if(!wasMoving&&moving())lastFrame=performance.now();
   requestRender();
  }
  function onPointerDown(e){
