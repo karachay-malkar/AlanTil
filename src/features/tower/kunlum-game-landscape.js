@@ -217,9 +217,9 @@ export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
   neutral[p+2]=Math.round(255*factor);neutral[p+3]=255;
   const gx=(sample(x+1,y)-sample(x-1,y))/255;
   const gy=(sample(x,y+1)-sample(x,y-1))/255;
-  const nz=1/Math.sqrt(1+gx*gx*.3+gy*gy*.3);
-  normals[p]=Math.round(127.5*(1-gx*.5*nz));
-  normals[p+1]=Math.round(127.5*(1-gy*.5*nz));
+  const nz=1/Math.sqrt(1+gx*gx*.8+gy*gy*.8);
+  normals[p]=Math.round(127.5*(1-gx*.85*nz));
+  normals[p+1]=Math.round(127.5*(1-gy*.85*nz));
   normals[p+2]=Math.round(127.5*(1+nz));
   normals[p+3]=255;
  }
@@ -234,7 +234,7 @@ export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
  map.colorSpace=THREE.SRGBColorSpace;
  const material=new THREE.MeshStandardMaterial({
   vertexColors:true,map,normalMap,
-  normalScale:new THREE.Vector2(.24,.24),
+  normalScale:new THREE.Vector2(mobile?.54:.68,mobile?.54:.68),
   side:THREE.DoubleSide,metalness:0,roughness:.95
  });
  const bareMaterial=new THREE.MeshStandardMaterial({
@@ -243,7 +243,8 @@ export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
  return {
   material,bareMaterial,
   terrainColor:(height,slope,x,z)=>kunlumNativeTerrainColor(height,slope,x,z,tiles),
-  texScale:.1,
+  // Physical metre-scale UVs: grain repeats every ~3.7 m.
+  texScale:.27,
   dispose(){
    material.dispose();bareMaterial.dispose();map.dispose();normalMap.dispose();
    Object.values(tiles).forEach(t=>t.dispose());
