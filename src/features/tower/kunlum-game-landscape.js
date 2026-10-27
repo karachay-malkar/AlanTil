@@ -211,7 +211,7 @@ export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
   const p=(y*size+x)*4,detail=sample(x,y)/255;
   // Neutral (almost white) albedo maintains distinct terrain biomes from vertices.
-  const factor=clamp(.89+(detail-.5)*.23,.73,1);
+  const factor=clamp(.96+(detail-.5)*.36,.75,1);
   neutral[p]=Math.round(255*factor);
   neutral[p+1]=Math.round(255*factor);
   neutral[p+2]=Math.round(255*factor);neutral[p+3]=255;
