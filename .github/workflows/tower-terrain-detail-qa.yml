@@ -9,6 +9,8 @@ on:
       - 'tests/kunlum-microrelief.test.mjs'
       - 'tests/kunlum-ground-material.test.mjs'
       - '.github/workflows/tower-terrain-detail-qa.yml'
+  pull_request:
+    branches: ['17.2']
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,7 +28,7 @@ jobs:
           node --check src/features/tower/kunlum-terrain-lod.js
           node --check src/features/tower/kunlum-game-landscape.js
           node --test tests/kunlum-microrelief.test.mjs tests/kunlum-ground-material.test.mjs tests/kunlum-wall-ground.test.mjs tests/kunlum-wall-masonry.test.mjs
-          node scripts/release/sync-version.mjs --check
+          GITHUB_REF_NAME=17.2 node scripts/release/sync-version.mjs --check
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 18
