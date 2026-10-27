@@ -1,0 +1,54 @@
+name: Kunlum terrain detail QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/kunlum-microrelief.mjs'
+      - 'src/features/tower/kunlum-terrain-lod.js'
+      - 'src/features/tower/kunlum-game-landscape.js'
+      - 'tests/kunlum-microrelief.test.mjs'
+      - 'tests/kunlum-ground-material.test.mjs'
+      - '.github/workflows/tower-terrain-detail-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Terrain syntax and terrain/ruins regressions
+        run: |
+          node --check src/features/tower/kunlum-microrelief.mjs
+          node --check src/features/tower/kunlum-terrain-lod.js
+          node --check src/features/tower/kunlum-game-landscape.js
+          node --test tests/kunlum-microrelief.test.mjs tests/kunlum-ground-material.test.mjs tests/kunlum-wall-ground.test.mjs tests/kunlum-wall-masonry.test.mjs
+          node scripts/release/sync-version.mjs --check
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright
+      - name: Verify Kunlum desktop and mobile world
+        run: |
+          node scripts/static-preview-server.mjs > /tmp/kunlum-terrain-browser.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsSL http://127.0.0.1:4173/tests/fixtures/kunlum-tower-world.html -o /dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome)"
+          node scripts/qa/browser-tower-kunlum-world.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kunlum-terrain-desktop-mobile
+          path: tower-world-browser-qa/
+          retention-days: 14
+          if-no-files-found: warn
