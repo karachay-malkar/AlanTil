@@ -6,6 +6,7 @@ import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.j
 
 const overlaySource=readFileSync(new URL('../src/features/tower/kunlum-map-overlay.js',import.meta.url),'utf8');
 const facingSource=readFileSync(new URL('../src/features/tower/kunlum-stone-facing.js',import.meta.url),'utf8');
+const layoutSource=readFileSync(new URL('../src/features/tower/kunlum-ruin-layout.js',import.meta.url),'utf8');
 function demo({wall=false,auto=false,passage=false,openings=[]}={}){
  const confirmed_features=[
   ...(wall?[{id:'W',type:'wall',origin:'manual',points:[[-2,0],[2,0]]}]:[]),
@@ -62,7 +63,7 @@ test('stretched whole-trace stones are impossible, Common100 remains, and facete
  assert.match(facingSource,/const count=mobile\?32:52/);
  assert.match(facingSource,/m\.category==='main'\|\|m\.category==='large'/);
  assert.match(facingSource,/for\(const rock of layoutKunlumRuinStones\(seg\)\)/);
- assert.match(facingSource,/function makeDistanceStone\(seed\)/);
+ assert.match(facingSource,/function makeDistanceStone\(seed,angles=10\)/);
  assert.doesNotMatch(facingSource,/choices=\[3,14,26,37,49,60\]/);
  assert.doesNotMatch(overlaySource,/new THREE\.LineSegments\(g,m\);lines\.name/);
 });
@@ -71,7 +72,7 @@ test('one stone style renders per wall: near Common100 and distant faceted insta
  assert.match(facingSource,/const budget=mobile\?3200:7200,nearJobs=new Set\(\)/);
  assert.match(facingSource,/if\(nearJobs\.has\(i\)\)continue/);
  assert.match(facingSource,/if\(!nearJobs\.has\(index\)\)continue/);
- assert.match(facingSource,/kunlumRuinFoot\(x,z,seg\.width,seg\.heightAt/);
- assert.match(facingSource,/kunlumRuinCrown\(seg\.height,x,z\)/);
+ assert.match(layoutSource,/kunlumRuinFoot\(x,z,width,heightAt/);
+ assert.match(layoutSource,/kunlumRuinCrown\(height,x,z\)/);
  assert.doesNotMatch(facingSource,/seg\.heightAt\(x,z\)\+\.035\+\(row\+\.5\)\*h/);
 });
