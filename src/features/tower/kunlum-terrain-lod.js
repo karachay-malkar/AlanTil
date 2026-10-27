@@ -8,6 +8,7 @@ import {KUNLUM_AUTUMN} from './kunlum-autumn-palette.js';
 import {KUNLUM_DEM} from './kunlum-dem-data.js';
 import {pixelToLocalWorld,sampleDemLocal} from './kunlum-georeference.js';
 import {carveKunlumRiverHeight} from './kunlum-river-layer.js';
+import {kunlumMicrorelief} from './kunlum-microrelief.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel,kunlumTerraceBlend} from '../../../packages/tower-game/kunlum-parcel.mjs';
 
 let decoded=null;
@@ -48,7 +49,10 @@ export function makeKunlumTerrain(THREE,group,{mobile=false,plot,calibration,reg
  function heightAt(x,z){
   if(isWithinKunlumParcel(x,z))return 0;
   const natural=surfaceAt(x,z);
-  return riverLine.length>1?carveKunlumRiverHeight(x,z,surfaceAt,riverLine):natural;
+  const carved=riverLine.length>1?carveKunlumRiverHeight(x,z,surfaceAt,riverLine):natural;
+  // One height sampler serves terrain vertices, first-person walking and scenery.
+  // Keep microrelief out of the build parcel, river incision and coarser tile edges.
+  return carved+kunlumMicrorelief(x,z,Math.max(0,natural-carved));
  }
  const terrainMeshes=[],terrainTiles=[];
  function setRiverLine(line){
