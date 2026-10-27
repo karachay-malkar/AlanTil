@@ -1,5 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.35';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.35';
 import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
@@ -183,7 +183,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },
   setVerticalScale(scale){root.scale.y=scale},
-  dispose(){root.userData.disposed=true;footings.dispose();
+  dispose(){root.userData.disposed=true;footings.dispose();root.userData.wallBackingMaterial?.dispose();
    root.traverse(node=>{if(node.isInstancedMesh)node.dispose();});
    for(const geometry of root.userData.wallFacadeGeometries||[])geometry.dispose();
    for(const [g,m] of owned){g.dispose();m.dispose();}

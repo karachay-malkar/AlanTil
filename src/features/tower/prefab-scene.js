@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.34';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.35';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -66,6 +66,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const allWalls=kunlum.group.children.find(g=>g.name==='Latest Kunlum mapped walls (read-only, no terraces)');
   container.dataset.kunlumStoneCount=String(allWalls?.userData.common100StoneCount||0);
   container.dataset.kunlumStoneSegments=String(allWalls?.userData.common100WallSegments||0);
+  container.dataset.kunlumRuinEngine=allWalls?.userData.ruinPlacementMode||'loading';
+  container.dataset.kunlumRuinFarSegments=String(allWalls?.userData.ruinFarSegments||0);
   if(meta.wideStatus==='ready'){scene.fog.near=3300;scene.fog.far=10300;}
   scheduleDraw();
  }

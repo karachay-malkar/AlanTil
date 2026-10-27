@@ -5,7 +5,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
-import {kunlumRuinCrown,kunlumRuinFoot} from './kunlum-wall-ground.js';
+import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.35';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const LANDMARK=[7.5,15];
@@ -16,35 +16,37 @@ const usable=(geom)=>{
 };
 // Geometric low-detail stones for distant walls. These are real faceted 3D
 // objects, not stretched Common100 blocks, decals or repeated image panels.
-function makeDistanceStone(seed){
- const r=n=>hash(seed*13.7,n*7.3,seed+n*3.1)-.5;
- // Six uneven, chamfered rock shoulders and a broad fractured face.
- // This is intentionally an irregular stone, never a rectangular brick
- // or a pyramid. Real Common100 rocks replace this LOD near the player.
- const outline=[
-  [-.49+r(1)*.12,-.20+r(2)*.12],
-  [-.32+r(3)*.16,-.48+r(4)*.08],
-  [ .36+r(5)*.16,-.47+r(6)*.09],
-  [ .49+r(7)*.12,-.18+r(8)*.12],
-  [ .37+r(9)*.16, .44+r(10)*.10],
-  [-.40+r(11)*.16,.46+r(12)*.09]
- ];
- const outer=outline.map(([x,y],i)=>[x,y,.23+r(i+13)*.035]);
- const face=outline.map(([x,y],i)=>[x*(.84+r(i+21)*.05),y*(.86+r(i+29)*.04),.39+r(i+37)*.035]);
- const back=outline.map(([x,y],i)=>[x*1.02,y*.97,-.29+r(i+45)*.04]);
- const middle=[r(52)*.14,r(53)*.12,.40+r(54)*.035],verts=[];
- const tri=(a,b,c)=>verts.push(...a,...b,...c);
- for(let i=0;i<outline.length;i++){
-  const j=(i+1)%outline.length;
+function makeDistanceStone(seed,angles=10){
+ const random=i=>hash(seed*9.81,i*13.7,seed+i*3.3);
+ const outline=[];
+ const initial=(random(1)-.5)*.31;
+ for(let i=0;i<angles;i++){
+  const a=2*Math.PI*i/angles+initial;
+  // Angular, broken shoulders with deep irregularities rather than 6-sided
+  // beveled rectangular bricks. The same stone placement drives Common100.
+  const r=.63+.55*random(2+i);
+  const along=(Math.cos(a)*.50*r)+(.11*(random(15+i)-.5));
+  const up=(Math.sin(a)*.49*r)+(.10*(random(34+i)-.5));
+  outline.push([along,up]);
+ }
+ const outer=outline.map(([x,y],i)=>[x,y,.18+.055*(random(i+51)-.5)]);
+ const face=outline.map(([x,y],i)=>[
+   x*(.73+.20*random(i+70)),y*(.73+.18*random(i+83)),
+   .32+.07*(random(i+95)-.5)
+ ]);
+ const back=outline.map(([x,y],i)=>[x*1.06,y*1.06,-.26-.07*random(i+120)]);
+ const centre=[(random(170)-.5)*.16,(random(180)-.5)*.13,.39],verts=[];
+ const tri=(v1,v2,v3)=>verts.push(...v1,...v2,...v3);
+ for(let i=0;i<angles;i++){
+  const j=(i+1)%angles;
   tri(outer[i],outer[j],face[j]);
   tri(outer[i],face[j],face[i]);
-  tri(middle,face[i],face[j]);
+  tri(centre,face[i],face[j]);
  }
- for(let i=1;i<outline.length-1;i++)tri(back[0],back[i+1],back[i]);
- for(let i=0;i<outline.length;i++){
-  const j=(i+1)%outline.length;
-  tri(outer[i],back[i],back[j]);
-  tri(outer[i],back[j],outer[j]);
+ for(let i=1;i<angles-1;i++)tri(back[0],back[i+1],back[i]);
+ for(let i=0;i<angles;i++){
+  const j=(i+1)%angles;
+  tri(outer[i],back[i],back[j]);tri(outer[i],back[j],outer[j]);
  }
  const raw=new THREE.BufferGeometry();
  raw.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
@@ -62,7 +64,22 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
 }={}){
  const material=await (materialPromise||getRockSurface(renderer));
  if(root.userData.disposed)return null;
- for(const container of groups)applyRockSurface(container.group,material);
+ // All wall cores remain sealed, but their previously bright, perfectly
+ // planar PBR face used to show through as rectangular-looking patches.
+ // Recess the visual core into shadow; irregular 3D stones own the silhouette.
+ const backing=material.clone();
+ backing.color.multiplyScalar(.49);
+ backing.roughness=1;
+ backing.polygonOffset=true;
+ backing.polygonOffsetFactor=1;
+ backing.polygonOffsetUnits=1;
+ for(const container of groups){
+  applyRockSurface(container.group,material);
+  container.group.children.filter(node=>node.isMesh).forEach(node=>{
+   node.material=backing;
+  });
+ }
+ root.userData.wallBackingMaterial=backing;
  if(monument)applyRockSurface(monument,material);
  const dummy=new THREE.Object3D(),shade=new THREE.Color();
  const jobs=groups.flatMap((entry,layer)=>entry.segments.map(seg=>({
@@ -84,52 +101,28 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   if(reserved+required>budget)return;
   reserved+=required;nearJobs.add(i);
  });
- const detailGeometry=Array.from({length:8},(_,i)=>makeDistanceStone(i+1));
+ const detailGeometry=Array.from({length:mobile?12:16},(_,i)=>makeDistanceStone(i+1,mobile?8:10));
  const farBins=new Map();
  const chunkWidth=85; // metres: bound visibility to small terrain regions
  let total=0;
  for(let i=0;i<jobs.length;i++){
-  const {seg,layer,distance}=jobs[i];
+  const {seg,layer}=jobs[i];
   if(nearJobs.has(i))continue;
   const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
-  // Geometry stays stone-sized throughout the village, including long traces.
-  const step=distance>200?1.00:distance>70?.85:.65;
-  const columns=Math.max(1,Math.ceil(length/step));
-  const rows=Math.max(2,Math.ceil(seg.height/(distance>200?.68:distance>70?.54:.44)));
-  for(let row=0;row<rows;row++){
-   // Each course uses independent unequal stone widths. Vertical joints
-   // cannot line up into a repetitive modern-brick pattern.
-   const widths=Array.from({length:columns},(_,col)=>
-    .70+.60*hash(seg.a[0]+row*7.1,col*3.7,seg.a[1]+i));
-   const sum=widths.reduce((a,b)=>a+b,0);
-   let left=0;
-   for(let col=0;col<columns;col++){
-    const right=col===columns-1?1:left+widths[col]/sum;
-    const t=(left+right)/2,x=seg.a[0]+dx*t,z=seg.a[1]+dz*t;
-    const w=(right-left)*length,h=seg.height/rows;
-    const foot=kunlumRuinFoot(x,z,seg.width,seg.heightAt,[nx,nz]);
-    const crown=seg.heightAt(x,z)+kunlumRuinCrown(seg.height,x,z);
-    const stagger=(hash(x*1.3,row,z*1.7)-.5)*h*.15;
-    const bottom=foot+row*h+stagger;
-    const visibleH=Math.min(h*1.24,crown-bottom+.025);
-    if(visibleH<.09){left=right;continue;}
-    const kind=Math.floor(hash(x,row,z+col)*detailGeometry.length);
-    for(const side of [-1,1]){
-     dummy.position.set(x+side*nx*(seg.width*.5+.025),
-                        bottom+visibleH*.50,
-                        z+side*nz*(seg.width*.5+.025));
-     dummy.rotation.set((hash(z,row,x)-.5)*.16,
-                        yaw+(side<0?Math.PI:0),
-                        (hash(row,x,z)>.50?Math.PI:0)+(hash(row,x,z)-.5)*.12);
-     dummy.scale.set(w*1.065,visibleH,.27);
-     dummy.updateMatrix();
-     const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
-     let bucket=farBins.get(key);
-     if(!bucket){bucket={layer,kind,matrices:[]};farBins.set(key,bucket);}
-     bucket.matrices.push(dummy.matrix.clone());total++;
-    }
-    left=right;
+  for(const rock of layoutKunlumRuinStones(seg)){
+   const {x,z}=rock;
+   const kind=rock.kind%detailGeometry.length;
+   for(const side of [-1,1]){
+    dummy.position.set(x+side*nx*(seg.width*.5+.025),rock.y,
+                       z+side*nz*(seg.width*.5+.025));
+    dummy.rotation.set(rock.tilt,yaw+(side<0?Math.PI:0),rock.lean);
+    dummy.scale.set(rock.width,rock.height,rock.depth);
+    dummy.updateMatrix();
+    const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
+    let bucket=farBins.get(key);
+    if(!bucket){bucket={layer,kind,matrices:[]};farBins.set(key,bucket);}
+    bucket.matrices.push(dummy.matrix.clone());total++;
    }
   }
   // Loading historic decoration cannot monopolize Android's UI thread.
@@ -175,39 +168,20 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   const job=jobs[index],{seg,layer,distance}=job;
   if(!nearJobs.has(index))continue;
   const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
-  const columns=Math.max(1,Math.ceil(length/.57));
-  const rows=Math.max(3,Math.ceil(seg.height/.34));
-  const needed=columns*rows*2;
-  if(actual+needed>budget)continue; // no stretched leftovers
   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
-  for(let row=0;row<rows;row++)
-   for(let col=0;col<columns;col++){
-    const offset=row%2?.45:0;
-    const t=Math.min(.98,Math.max(.02,(col+.5+offset)/columns));
-    const x=seg.a[0]+dx*t,z=seg.a[1]+dz*t;
-    const w=length/columns*(1.035+.065*hash(x,row,z));
-    const h=seg.height/rows;
-    const foot=kunlumRuinFoot(x,z,seg.width,seg.heightAt,[nx,nz]);
-    const crown=seg.heightAt(x,z)+kunlumRuinCrown(seg.height,x,z);
-    const bottom=foot+row*h+(hash(x,row,z)-.5)*h*.13;
-    const visibleH=Math.min(h*(1.16+.12*hash(z,row,x)),crown-bottom+.03);
-    if(visibleH<.08)continue;
-    const k=Math.floor(hash(x+index,row*17+col*7,z)*models.length);
-    const model=models[k];
-    for(const side of [-1,1]){
-     dummy.position.set(x+side*nx*(seg.width*.5+.082),
-                        bottom+visibleH*.49,
-                        z+side*nz*(seg.width*.5+.082));
-     dummy.rotation.set((hash(x,z,row)-.5)*.15,
-                        yaw+(side<0?Math.PI:0),
-                        (hash(z,x,col)-.5)*.18);
-     dummy.scale.set(w/model.size.x,visibleH/model.size.y,
-                     (.23+.035*hash(row,z,x))/model.size.z);
-     dummy.updateMatrix();
-     bins[layer][k].push(dummy.matrix.clone());
-     actual++;
-    }
+  for(const rock of layoutKunlumRuinStones(seg)){
+   const {x,z}=rock;
+   const k=rock.kind%models.length,model=models[k];
+   for(const side of [-1,1]){
+    dummy.position.set(x+side*nx*(seg.width*.5+.082),rock.y,
+                       z+side*nz*(seg.width*.5+.082));
+    dummy.rotation.set(rock.tilt,yaw+(side<0?Math.PI:0),rock.lean);
+    dummy.scale.set(rock.width/model.size.x,rock.height/model.size.y,
+                    rock.depth/model.size.z);
+    dummy.updateMatrix();
+    bins[layer][k].push(dummy.matrix.clone());actual++;
    }
+  }
  }
  for(let layer=0;layer<groups.length;layer++)
   for(let k=0;k<models.length;k++){
@@ -220,7 +194,10 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    groups[layer].group.add(mesh);
   }
  root.userData.common100FacingDensity=1;
+ root.userData.ruinPlacementMode='shared-irregular-v2';
  root.userData.common100NearOnlyWallSegments=nearJobs.size;
+ root.userData.ruinFarSegments=jobs.length-nearJobs.size;
+ root.userData.ruinFacingEngine='Kunlum shared placement; 16 faceted organic shapes; 52 Common100 near';
  root.userData.ruinedCrown='shared-profile-v1';
  root.userData.common100ActualWallStones=actual;
  root.userData.wallFacadeLODStones=total;

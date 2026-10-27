@@ -94,9 +94,17 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    if(extent.wide!=='ready')throw Error(type+' panorama could not load the real wide DEM '+JSON.stringify(extent));
    await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneCount)>0,
     null,{timeout:80000});
+   // This check protects against the exact previous regression: the app
+   // displayed an updated release while still rendering old rectangular rows.
+   await page.waitForFunction(()=>{
+    const el=document.querySelector('.towerCanvas');
+    return el?.dataset.kunlumRuinEngine==='shared-irregular-v2';
+   },null,{timeout:30000});
    const coverage=await page.locator('.towerCanvas').evaluate(el=>({
     stoneCount:Number(el.dataset.kunlumStoneCount),
-    mappedSegments:Number(el.dataset.kunlumStoneSegments)
+    mappedSegments:Number(el.dataset.kunlumStoneSegments),
+    ruinEngine:el.dataset.kunlumRuinEngine,
+    distantSegments:Number(el.dataset.kunlumRuinFarSegments)
    }));
    if(coverage.mappedSegments<602||coverage.stoneCount<coverage.mappedSegments*2)
     throw Error(type+' stone-facing skipped historic wall segments '+JSON.stringify(coverage));

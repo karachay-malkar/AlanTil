@@ -55,15 +55,14 @@ test('the original 42-style linked intervals cut stone geometry instead of drawi
  assert.equal(scene.passages.children.length,0);
  scene.dispose();
 });
-test('stretched whole-trace stones are impossible, and real library variety is increased',()=>{
- assert.match(facingSource,/Math\.ceil\(length\/step\)/);
+test('stretched whole-trace stones are impossible, Common100 remains, and faceted stones are organic',()=>{
  assert.match(facingSource,/const farBins=new Map\(\)/);
  assert.match(facingSource,/mesh\.computeBoundingSphere\(\)/);
  assert.match(facingSource,/mesh\.frustumCulled=true/);
- assert.match(facingSource,/Math\.ceil\(length\/\.57\)/);
- assert.match(facingSource,/if\(actual\+needed>budget\)continue/);
  assert.match(facingSource,/const count=mobile\?32:52/);
  assert.match(facingSource,/m\.category==='main'\|\|m\.category==='large'/);
+ assert.match(facingSource,/for\(const rock of layoutKunlumRuinStones\(seg\)\)/);
+ assert.match(facingSource,/function makeDistanceStone\(seed\)/);
  assert.doesNotMatch(facingSource,/choices=\[3,14,26,37,49,60\]/);
  assert.doesNotMatch(overlaySource,/new THREE\.LineSegments\(g,m\);lines\.name/);
 });

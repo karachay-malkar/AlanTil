@@ -20,7 +20,7 @@ export function kunlumRuinCrown(height,x,z){
  const broad=noise(x+17.3,z-9.1,3.3);
  const chips=noise(x-1.8,z+22.2,.83);
  const rare=clamp((chips-.71)/.29);
- const loss=.035+.105*broad+.103*chips+.13*rare*rare;
+ const loss=.07+.15*broad+.13*chips+.17*rare*rare;
  return Math.max(height*.58,height-Math.min(.37,loss));
 }
 /** Footings lie BELOW the lowest terrain contact across the width and run.
