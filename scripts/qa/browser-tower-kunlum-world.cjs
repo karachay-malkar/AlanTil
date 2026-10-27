@@ -75,7 +75,7 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
    await page.locator('[data-world]').click();
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='true',
     null,{polling:200,timeout:25000}).catch(async error=>{
-     await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview-error.png')});
+     await page.screenshot({timeout:90000,animations:'disabled',path:path.join(out,'tower-kunlum-'+type+'-overview-error.png')});
      const state=await page.evaluate(()=>({
       canvas:document.querySelector('.towerCanvas')?.dataset,
       pressed:document.querySelector('[data-world]')?.getAttribute('aria-pressed'),
@@ -106,18 +106,19 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     ruinEngine:el.dataset.kunlumRuinEngine,
     distantSegments:Number(el.dataset.kunlumRuinFarSegments)
    }));
+   console.log('TOWER_RUIN_ENGINE_VERIFIED',type,JSON.stringify(coverage));
    if(coverage.mappedSegments<602||coverage.stoneCount<coverage.mappedSegments*2)
     throw Error(type+' stone-facing skipped historic wall segments '+JSON.stringify(coverage));
    await page.waitForTimeout(1500);
    if(errors.length)throw Error(type+': errors after wide camera: '+JSON.stringify(errors));
-   await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-overview.png')});
+   await page.screenshot({timeout:90000,animations:'disabled',path:path.join(out,'tower-kunlum-'+type+'-overview.png')});
    await page.locator('[data-world]').click();
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.worldView==='false');
    const restoredLocation=await page.locator('.towerCanvas').getAttribute('data-camera-location');
    if(savedLocation!==restoredLocation)throw Error(type+' camera teleported after overview '+JSON.stringify({savedLocation,restoredLocation}));
    if(await page.locator('[data-world]').getAttribute('aria-pressed')!=='false')
     throw Error(type+' overview button did not reset');
-   await page.screenshot({path:path.join(out,'tower-kunlum-'+type+'-construction.png')});
+   await page.screenshot({timeout:90000,animations:'disabled',path:path.join(out,'tower-kunlum-'+type+'-construction.png')});
    results.push({mode:type,confirmed:details.count,river:details.river,worldView:true,
     homeRestored:true,hud,coverage,errors:errors.length});
    await context.close();

@@ -23,7 +23,7 @@ const dir=path.join(process.cwd(),'kunlum-editors-browser-qa');fs.mkdirSync(dir,
       auto:document.querySelectorAll('#candidates path').length,
       title:document.title,body:document.body.innerText.slice(0,900)
      }));
-     await page.screenshot({path:path.join(dir,mode+'-2d-failed.png')});
+     await page.screenshot({timeout:90000,animations:'disabled',path:path.join(dir,mode+'-2d-failed.png')});
      throw Error(mode+' cannot load original 2D map: '+JSON.stringify({details,errors})+'; '+error.message);
     });
    const twoD=await page.evaluate(()=>{
@@ -37,7 +37,7 @@ const dir=path.join(process.cwd(),'kunlum-editors-browser-qa');fs.mkdirSync(dir,
       Math.abs(twoD.width-108)>1e-5||Math.abs(twoD.height-54)>1e-5||
       !twoD.transform.startsWith('rotate(-7 ')||twoD.auto!==602||errors.length)
     throw Error(mode+' 2D original map changed: '+JSON.stringify({twoD,errors}));
-   await page.screenshot({path:path.join(dir,mode+'-2d.png')});
+   await page.screenshot({timeout:90000,animations:'disabled',path:path.join(dir,mode+'-2d.png')});
    await page.goto('http://127.0.0.1:4173/kunlum-terrace-editor-3d.html',
     {waitUntil:'domcontentloaded',timeout:45000});
    await page.waitForFunction(()=>document.querySelector('#hud')?.textContent.includes('120 подтверждённых объектов')&&
@@ -51,7 +51,7 @@ const dir=path.join(process.cwd(),'kunlum-editors-browser-qa');fs.mkdirSync(dir,
     throw Error(mode+' 3D editor inconsistent: '+JSON.stringify({threeD,errors}));
    await page.waitForFunction(()=>Number(document.querySelector('#view')?.dataset.common100StoneCount)>0,
     null,{timeout:80000});
-   await page.screenshot({path:path.join(dir,mode+'-3d.png')});
+   await page.screenshot({timeout:90000,animations:'disabled',path:path.join(dir,mode+'-3d.png')});
    output.push({mode,twoD,threeD,errors});
    await context.close();
   }
