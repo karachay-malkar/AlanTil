@@ -2,7 +2,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js';
 import {CELL_METERS,stoneColor,serializeTransform} from './library.js?v=17.7-approved-masonry.2';
-import {createArchitectureLoader} from './architecture-assets.js?v=17.7-approved-masonry.1';
+import {createArchitectureLoader} from './architecture-assets.js?v=17.2.36';
 
 export function createMasonryScene(host,{models,geometries,onSelect,onDragStart,onTransform}){
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});

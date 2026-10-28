@@ -3,7 +3,7 @@ import * as THREE from '../../vendor/three/three.module.js';
 import {hasActivityAccess} from '../../shared/admin/admin-access.js?v=16.8.0.16';
 import {getCurrentAuthState,subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.3';
 import {CELL_METERS,CATEGORIES,RECIPE_VERSION,loadCommon100,makeRecipe,validateRecipe,serializeTransform} from './library.js?v=17.7-approved-masonry.2';
-import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.7-approved-only.1';
+import {ARCHITECTURE,architectureById} from './architecture-assets.js?v=17.2.36';
 import {buildGateWings} from './gate-wings.mjs';
 import {createMasonryScene} from './scene.js?v=17.7-approved-masonry.2';
 import {stagingPosition} from './staging-position.mjs';
@@ -67,8 +67,8 @@ export async function mount(context){
  </div>
  <div class="masonryEditorPanel">
   <div class="masonryActions">
-    <button type="button" data-action="gate-template" hidden title="Архивная кладка ворот v7">Ворота v7 + кладка</button>
-    <button type="button" data-action="gate-v9" title="Открыть утверждённые игровые ворота v9 в редакторе">Ворота v9 · игровые</button>
+    <button type="button" data-action="gate-template" hidden title="Архивная кладка ворот v7">къабакъла v7 + кладка</button>
+    <button type="button" data-action="gate-v9" title="Открыть утверждённые игровые ворота v9 в редакторе">къабакъла v9 · игровые</button>
     <button type="button" data-action="wings" title="Добавить боковую кладку к воротам" hidden>Дополнить по бокам</button>
    <button type="button" data-action="duplicate" data-requires-selection title="Дублировать выбранный камень" aria-label="Дублировать камень" hidden>⧉</button>
    <button type="button" data-action="delete" data-requires-selection title="Удалить выбранный камень" aria-label="Удалить камень" hidden>⌫</button>
@@ -337,11 +337,11 @@ export async function mount(context){
   const cells=[Math.min(32,Math.max(18,Math.ceil(filling.fullWidth/CELL_METERS))),10,2];
   const recipe={...makeRecipe(cells),libraryVersion:state.library.manifest.version,librarySha256:state.library.manifest.glbSHA256,
    stones:filling.stones,architectures:[gate]};
-  await setRecipe(recipe,{title:'Ворота — боковая кладка',dirty:true});
+  await setRecipe(recipe,{title:'къабакъла — боковая кладка',dirty:true});
   state.selected=gate.id;syncScene();scheduleScratch();
   state.scene.cameraFitOnStones(cells);
   await refreshList();
-  toast('Ворота загружены · боковые участки добавлены, кладку можно доработать вручную');
+  toast('къабакъла загружены · боковые участки добавлены, кладку можно доработать вручную');
  }
  async function gateV9Template(){
   if(!confirmDiscard())return;
@@ -350,7 +350,7 @@ export async function mount(context){
   const gate=makeArchitecture('gate-v9'),cells=[18,10,2];
   const recipe={...makeRecipe(cells),libraryVersion:state.library.manifest.version,
    librarySha256:state.library.manifest.glbSHA256,stones:[],architectures:[gate]};
-  await setRecipe(recipe,{title:'Ворота v9 — игровая модель',dirty:true});
+  await setRecipe(recipe,{title:'къабакъла v9 — игровая модель',dirty:true});
   state.selected=gate.id;syncScene();scheduleScratch();
   state.scene.cameraFitOnStones(cells);
   await refreshList();

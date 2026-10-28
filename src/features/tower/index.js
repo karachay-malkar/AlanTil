@@ -1,5 +1,5 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.35';
+import {createTowerScene} from './prefab-scene.js?v=17.2.36';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';

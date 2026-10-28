@@ -5,10 +5,10 @@ import {getRockSurface,applyRockSurface} from '../tower/rock-surface.js';
 import {applyGateSurfaces} from '../tower/gate-surface.js';
 
 export const ARCHITECTURE=Object.freeze([
- {id:'gate',title:'Ворота · утверждённые',file:'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb',cells:[18,10,2]},
- {id:'gate-v9',title:'Ворота v9 · игровая модель',file:'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb',cells:[18,10,2]},
- {id:'door',title:'Дверь с кладкой',file:'/assets/tower/approved-library/architecture/door-7x9x2-stone-v1.glb',cells:[7,9,2]},
- {id:'window',title:'Окно с кладкой',file:'/assets/tower/approved-library/architecture/window-4x5x2-v2.glb',cells:[4,5,2]}
+ {id:'gate',title:'къабакъла · утверждённые',file:'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb',cells:[18,10,2]},
+ {id:'gate-v9',title:'къабакъла v9 · игровая модель',file:'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb',cells:[18,10,2]},
+ {id:'door',title:'эшик',file:'/assets/tower/approved-library/architecture/door-7x9x2-stone-v1.glb',cells:[7,9,2]},
+ {id:'window',title:'Терезе',file:'/assets/tower/approved-library/architecture/window-4x5x2-v2.glb',cells:[4,5,2]}
 ]);
 export const ARCHITECTURE_IDS=new Set(ARCHITECTURE.map(a=>a.id));
 const DOOR_WOOD='/assets/tower/approved-library/architecture/door-wood-v1.glb';
