@@ -4,7 +4,8 @@ import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '..
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
-import {APPROVED_PREFAB_VERSION,approvedVariantCount} from '../../../packages/tower-game/approved-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION} from '../../../packages/tower-game/bagana-prefab.mjs';
+import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3} from './repository.js?v=17.7-approved-only.1';
 import {uiIcon} from '../../shared/ui/icons.js?v=17.2.29';
@@ -52,7 +53,7 @@ export async function mount(context,params={}){
   </div>
   <aside class="towerSide" data-side aria-label="Каталог секций">
    <div class="towerCatalogHeading">Каталог секций <button type="button" class="btn towerCatalogClose" data-catalog-close aria-label="Закрыть каталог" title="Закрыть каталог">${uiIcon('x')}</button></div>
-   <div class="towerCatalogContent" data-catalog-body><div class="towerCatalog" role="group" aria-label="Каталог каменных секций"></div></div>
+   <div class="towerCatalogContent" data-catalog-body><div class="towerCatalog" role="group" aria-label="Каталог строительных элементов"></div></div>
   </aside>
   ${icon('hammer','Каталог секций')}
   <div class="towerToast" data-toast role="status" aria-live="polite" hidden></div>
@@ -99,12 +100,15 @@ export async function mount(context,params={}){
  syncOrientationButton();
  void requestTowerOrientation('landscape');
  const catalog=q('.towerCatalog');
- catalog.innerHTML=BUILDABLE_PREFAB_TYPES.map(spec=>{
-  const opening=spec.id===WINDOW_PREFAB_ID?'Окно':spec.id===DOOR_PREFAB_ID?'Дверь':spec.id===GATE_PREFAB_ID?'Ворота':null;
-  const label=opening||spec.id.replaceAll('x','×');
-  const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':'blocks';
-  return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${opening||'Секция '+label}" title="${opening||'Секция '+label}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${label}</span></button>`;
- }).join('');
+ const catalogItem=spec=>{
+  const title=spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':spec.id===BAGANA_PREFAB_ID?'багъана':spec.id.replaceAll('x','×');
+  const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':spec.id===BAGANA_PREFAB_ID?'bagana':'blocks';
+  return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span></button>`;
+ };
+ const walls=BUILDABLE_PREFAB_TYPES.filter(spec=>isApprovedMasonryType(spec.id));
+ const architecture=BUILDABLE_PREFAB_TYPES.filter(spec=>!isApprovedMasonryType(spec.id));
+ catalog.innerHTML='<div class="towerCatalogGroupTitle">къабыргъа</div>'+walls.map(catalogItem).join('')+
+  '<div class="towerCatalogGroupTitle">Архитектура</div>'+architecture.map(catalogItem).join('');
  let toastTimer=null,hintTimer=null;
  const hint=q('.towerExploreHint');
  try{
@@ -158,7 +162,7 @@ export async function mount(context,params={}){
   const hit=s.previewHit||s.scene?.getAimHit?.();
   if(!hit)return null;
   const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
-   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:APPROVED_PREFAB_VERSION};
+   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:s.type===BAGANA_PREFAB_ID?BAGANA_PREFAB_VERSION:APPROVED_PREFAB_VERSION};
   return positionAgainst(item,hit);
  }
  let previewSequence=0;

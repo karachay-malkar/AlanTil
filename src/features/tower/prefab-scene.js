@@ -12,7 +12,8 @@ import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION,WINDOW_JOINT_FILES} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,GATE_PREFAB_SPEC} from '../../../packages/tower-game/gate-prefab.mjs';
-import {applyGateSurfaces} from './gate-surface.js';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_VERSION} from '../../../packages/tower-game/bagana-prefab.mjs';
+import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
@@ -203,6 +204,19 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    gate.position.y+=targetBottom-bounds.min.y;
    container.dataset.gatePbrReady='true';
    return gate;
+  }
+  if(block.sectionId===BAGANA_PREFAB_ID){
+   if(block.geometryVersion!==BAGANA_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported bagana prefab version');
+   const url=BAGANA_PREFAB_FILE+'?v='+encodeURIComponent(BAGANA_RENDER_VERSION);
+   const woodUrl=DOOR_WOOD_FILE+'?v='+encodeURIComponent(DOOR_RENDER_VERSION);
+   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
+   if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl));
+   const [original,reference]=await Promise.all([loaded.get(url),loaded.get(woodUrl)]);
+   const {wood}=findApprovedGateMaterials(reference.scene);
+   const model=original.scene.clone(true);
+   model.traverse(node=>{if(node.isMesh){node.material=wood;node.userData.alantilNonStone=true;}});
+   container.dataset.baganaPbrReady='true';
+   return model;
   }
   if(block.sectionId===DOOR_PREFAB_ID){
    if(block.geometryVersion!==DOOR_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported door prefab version');

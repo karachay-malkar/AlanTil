@@ -29,6 +29,7 @@
 .towerCatalogClose .uiIcon{width:17px;height:17px}
 .towerCatalogContent{max-height:calc(min(67dvh,300px) - 50px);overflow-y:auto;overscroll-behavior:contain}
 .towerCatalog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.towerCatalogGroupTitle{grid-column:1/-1;font:700 12px/1.2 var(--font-body);padding:7px 3px 3px;color:var(--text-2)}
 .towerCatalog .towerItem{display:flex;min-width:0;min-height:66px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 3px;text-align:center;background:var(--surface-0);border:1px solid var(--line);border-radius:10px;color:var(--text-1);box-shadow:none;cursor:pointer}
 .towerItemIcon{display:grid;place-items:center;color:var(--text-2)}
 .towerItemIcon .uiIcon{width:22px;height:22px}

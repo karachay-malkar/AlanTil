@@ -2,6 +2,7 @@ import {prefabBounds,touchingPrefabPairs} from './prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_JOINT_FILES} from './window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
+import {BAGANA_PREFAB_ID} from './bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from './approved-prefab.mjs';
 /** Static 25-cm joint-tile resolver; no runtime mesh generation/deformation. */
 export const JOINT_INTERFACE='shared-recessed-25cm-v1';
@@ -64,7 +65,10 @@ export function stoneAtJoint(section,point){
 /** Every compatible contact uses authored, immutable approved joint assets. */
 export function resolvePrefabJoints(sections,manifest){
  const byId=new Map(sections.map(s=>[s.id,s]));
- const pairs=touchingPrefabPairs(sections.filter(s=>s.type==='masonry_section'));
+ // Timber posts have no stone-to-stone joint interface. A post can touch a wall
+ // without producing rubble tiles or blocking placement of either object.
+ const pairs=touchingPrefabPairs(sections.filter(s=>s.type==='masonry_section'))
+  .filter(p=>byId.get(p.a)?.sectionId!==BAGANA_PREFAB_ID&&byId.get(p.b)?.sectionId!==BAGANA_PREFAB_ID);
  const joints=[],incompatible=[];
  for(const pair of pairs){
   const a=byId.get(pair.a),b=byId.get(pair.b);
