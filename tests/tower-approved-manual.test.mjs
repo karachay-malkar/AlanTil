@@ -1,4 +1,4 @@
-/** Active tower only: eleven approved recipes, three architectural assets. */
+/** Active tower only: eleven approved recipes, three stone openings and one timber support. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -15,8 +15,8 @@ const block=(id,variant=0,rotation=0,version=APPROVED_PREFAB_VERSION)=>({
 });
 test('tower catalog contains exclusively current supported sections',()=>{
  assert.deepEqual(APPROVED_MASONRY_TYPES,types);
- assert.deepEqual(BUILDABLE_PREFAB_TYPES.map(x=>x.id),[...types,'window-4x5x2','door-7x9x2','gate-18x10x2']);
- assert.equal(PREFAB_TYPES.length,7);
+ assert.deepEqual(BUILDABLE_PREFAB_TYPES.map(x=>x.id),[...types,'window-4x5x2','door-7x9x2','gate-18x10x2','bagana-2x10x2']);
+ assert.equal(PREFAB_TYPES.length,8);
  assert.equal(catalog.sections.length,11);
  assert.equal(catalog.archivedSources,undefined);
  const ui=read('src/features/tower/index.js');
