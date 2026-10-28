@@ -1,0 +1,38 @@
+name: Tower 17.2 Bagana prefab QA
+
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'packages/tower-game/bagana-prefab.mjs'
+      - 'packages/tower-game/prefab-layout.mjs'
+      - 'packages/tower-game/prefab-joints.mjs'
+      - 'src/features/tower/index.js'
+      - 'src/features/tower/prefab-scene.js'
+      - 'src/shared/ui/icons.js'
+      - 'src/features/tower/tower.css'
+      - 'assets/tower/approved-library/architecture/bagana-2x10x2-v1.glb'
+      - 'supabase/migrations/20261028123000_tower_bagana_172.sql'
+      - 'tests/tower-bagana-17-2.test.mjs'
+      - 'tests/tower-approved-manual.test.mjs'
+      - '.github/workflows/tower-bagana-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  bagana:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax verification
+        run: |
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --check packages/tower-game/prefab-layout.mjs
+          node --check packages/tower-game/prefab-joints.mjs
+      - name: Bagana and existing approved tower integration tests
+        run: node --test tests/tower-bagana-17-2.test.mjs tests/tower-approved-manual.test.mjs
