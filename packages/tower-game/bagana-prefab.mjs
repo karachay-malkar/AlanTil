@@ -11,7 +11,7 @@ export const BAGANA_PREFAB_SPEC=Object.freeze({
  variants:Object.freeze([Object.freeze({file:BAGANA_PREFAB_FILE})]),jointInterface:null
 });
 export const BAGANA_PREFAB_VERSION_V2='17.2-bagana.2';
-export const BAGANA_RENDER_VERSION_V2='17.2-bagana-wood-rock.4';
+export const BAGANA_RENDER_VERSION_V2='17.2-bagana-wood-rock.5';
 export const BAGANA_WOOD_HEIGHT_CELLS=Object.freeze([8,9,10,11,12]);
 export const baganaType=(form,woodCells)=>`bagana-f${form}-3x${woodCells+1}x3`;
 export const BAGANA_PREFABS=Object.freeze([1,2,3].flatMap(form=>
