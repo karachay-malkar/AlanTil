@@ -169,7 +169,32 @@ test('catalog header is removed and hammer is a dedicated construction icon',()=
  const css=readFileSync(new URL('../src/features/tower/tower.css',import.meta.url),'utf8');
  const icons=readFileSync(new URL('../src/shared/ui/icons.js',import.meta.url),'utf8');
  assert.ok(!ui.includes('towerCatalogHeading'));
- assert.ok(ui.includes("hammer:'catalogHammer'"));
- assert.ok(icons.includes('catalogHammer:'));
+ assert.ok(ui.includes("hammer:'hammer'"));
+ assert.ok(icons.includes('hammer:'));
  assert.ok(css.includes('.towerCatalogClose{position:absolute'));
+});
+
+test('timber supports use three distinct construction tops at every wood height',async()=>{
+ const forms=new Map();
+ for(const spec of BAGANA_PREFABS){
+  const bytes=readFileSync(new URL('..'+spec.file,import.meta.url));
+  const payload=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.length);
+  const result=await new Promise((resolve,reject)=>new GLTFLoader().parse(payload,'',resolve,reject));
+  const wood=result.scene.getObjectByName('bagana_wood');
+  assert.ok(wood?.isMesh);
+  const p=wood.geometry.getAttribute('position');
+  let top=-Infinity,centreTop=-Infinity;
+  for(let i=0;i<p.count;i++){
+   const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+   top=Math.max(top,y);
+   if(Math.hypot(x,z)<.035&&y>0)centreTop=Math.max(centreTop,y);
+  }
+  const depression=top-centreTop;
+  if(spec.form===2)assert.ok(depression>=-.005&&depression<.012,
+   'flat chamfered top must have no fork or deep notch: '+spec.id+' '+depression);
+  if(spec.form===3)assert.ok(depression>.040&&depression<.10,
+   'shallow saddle must have a smooth 4–10cm depression: '+spec.id+' '+depression);
+  forms.set(spec.form,(forms.get(spec.form)||0)+1);
+ }
+ assert.deepEqual([...forms.values()],[5,5,5]);
 });
