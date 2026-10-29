@@ -83,7 +83,8 @@ test('15 bagana 3D assets: three forms and five 25cm increments with an integrat
   const {scene}=await new Promise((resolve,reject)=>new GLTFLoader().parse(payload,'',resolve,reject));
   const wood=scene.getObjectByName('bagana_wood'),stone=scene.getObjectByName('bagana_stone');
   assert.ok(wood?.isMesh&&stone?.isMesh,'separate 3D material meshes');
-  const stoneBounds=new THREE.Box3().setFromObject(stone),fullBounds=new THREE.Box3().setFromObject(scene);
+  const stoneBounds=new THREE.Box3().setFromObject(stone),woodBounds=new THREE.Box3().setFromObject(wood),fullBounds=new THREE.Box3().setFromObject(scene);
+  assert.ok(Math.abs(woodBounds.min.y-stoneBounds.max.y)<.001,'wood must sit directly on its own stone');
   assert.ok(Math.abs(stoneBounds.max.y-stoneBounds.min.y-.25)<.001);
   assert.ok(Math.abs(fullBounds.max.y-fullBounds.min.y-(spec.woodHeightM+.25))<.05);
   const extents=fullBounds.getSize(new THREE.Vector3());
