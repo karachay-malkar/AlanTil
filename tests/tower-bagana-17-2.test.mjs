@@ -5,7 +5,7 @@ import * as THREE from '../src/vendor/three/three.module.js';
 import {GLTFLoader} from '../src/vendor/three/addons/loaders/GLTFLoader.js';
 import {BUILDABLE_PREFAB_TYPES,prefabBounds,validatePrefabPlacement} from '../packages/tower-game/prefab-layout.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../packages/tower-game/prefab-joints.mjs';
-import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_PREFABS,BAGANA_PREFAB_VERSION_V2,baganaType} from '../packages/tower-game/bagana-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_PREFABS,BAGANA_PREFAB_VERSION_V2,baganaType,baganaPrefab,nextBaganaType} from '../packages/tower-game/bagana-prefab.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../packages/tower-game/window-prefab.mjs';
 
 const entry=(id,sectionId,geometryVersion,x=0,y=0,z=0)=>({id,type:'masonry_section',sectionId,geometryVersion,variant:0,rotation:0,x,y,z});
@@ -98,4 +98,37 @@ test('bagana height selector and existing legacy post persist safely',()=>{
  assert.match(ui,/baganaType\(current.form,cells\)/);
  assert.equal(baganaType(3,12),'bagana-f3-3x13x3');
  assert.equal(validatePrefabPlacement([],post).ok,true);
+});
+
+
+test('catalog shows only three bracketed sections and one bagana item',()=>{
+ const ui=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/features/tower/tower.css',import.meta.url),'utf8');
+ for(const name of ['Къабыргъа','Тешик толтуруу','Багъана']){
+  assert.ok(ui.includes("label:'"+name+"'"));
+ }
+ assert.ok(ui.includes('class="bracketNavigation towerCatalogTab"'));
+ assert.ok(ui.includes('data-catalog-category'));
+ assert.ok(ui.includes('data-catalog-panel'));
+ assert.ok(ui.includes('items:[baganaCatalogItem]'));
+ assert.ok(ui.includes('baganaCatalogItem={id:baganaType(1,10)}'));
+ assert.ok(!ui.includes('posts.map(catalogItem)'));
+ assert.ok(!ui.includes("spec.id.replaceAll('x','×')||"));
+ assert.ok(css.includes('.towerCatalogPanel{display:grid'));
+});
+test('existing type button cycles bagana form 1 -> 2 -> 3 -> 1 without resetting height',()=>{
+ const ui=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
+ for(const height of [8,9,10,11,12]){
+  let type=baganaType(1,height);
+  for(const nextForm of [2,3,1]){
+   type=nextBaganaType(type);
+   assert.equal(type,baganaType(nextForm,height));
+   assert.equal(baganaPrefab(type).woodCells,height);
+  }
+ }
+ assert.equal(nextBaganaType('2x2x2'),null);
+ assert.ok(ui.includes('s.type=nextBaganaType(s.type)'));
+ assert.ok(ui.includes("variantButton.hidden=!post&&approvedVariantCount(s.type)<2"));
+ assert.ok(ui.includes("s.variant=(s.variant+1)%count"));
+ assert.ok(ui.includes("s.rotation=(s.rotation+1)%4"));
 });

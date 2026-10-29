@@ -6,9 +6,9 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "17.2.38";
-const TOWER_ASSET_VERSION = "17.2.38";
-const MASONRY_ASSET_VERSION = "17.2.38";
+const ASSET_VERSION = "17.2.39";
+const TOWER_ASSET_VERSION = "17.2.39";
+const MASONRY_ASSET_VERSION = "17.2.39";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",

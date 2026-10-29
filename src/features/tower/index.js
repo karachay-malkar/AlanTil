@@ -1,10 +1,10 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.38';
+import {createTowerScene} from './prefab-scene.js?v=17.2.39';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
-import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_PREFABS,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3} from './repository.js?v=17.7-approved-only.1';
@@ -56,7 +56,7 @@ export async function mount(context,params={}){
    ${icon('remove','Удалить выбранную секцию')}
   </div>
   <aside class="towerSide" data-side aria-label="Каталог секций">
-   <div class="towerCatalogHeading">Каталог секций <button type="button" class="btn towerCatalogClose" data-catalog-close aria-label="Закрыть каталог" title="Закрыть каталог">${uiIcon('x')}</button></div>
+   <div class="towerCatalogHeading">Каталог <button type="button" class="btn towerCatalogClose" data-catalog-close aria-label="Закрыть каталог" title="Закрыть каталог">${uiIcon('x')}</button></div>
    <div class="towerCatalogContent" data-catalog-body><div class="towerCatalog" role="group" aria-label="Каталог строительных элементов"></div></div>
   </aside>
   ${icon('hammer','Каталог секций')}
@@ -105,17 +105,31 @@ export async function mount(context,params={}){
  void requestTowerOrientation('landscape');
  const catalog=q('.towerCatalog');
  const catalogItem=spec=>{
-  const bagana=baganaPrefab(spec.id);
-  const title=spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':bagana?'багъана '+bagana.form:spec.id===BAGANA_PREFAB_ID?'багъана':spec.id.replaceAll('x','×');
+  const title=spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':isBaganaPrefab(spec.id)?'Багъана':spec.id.replaceAll('x','×');
   const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
   return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span></button>`;
  };
  const walls=BUILDABLE_PREFAB_TYPES.filter(spec=>isApprovedMasonryType(spec.id));
- const architecture=BUILDABLE_PREFAB_TYPES.filter(spec=>!isApprovedMasonryType(spec.id)&&!isBaganaPrefab(spec.id));
- const posts=BAGANA_PREFABS.filter(spec=>spec.woodCells===10);
- catalog.innerHTML='<div class="towerCatalogGroupTitle">къабыргъа</div>'+walls.map(catalogItem).join('')+
-  '<div class="towerCatalogGroupTitle">Архитектура</div>'+architecture.map(catalogItem).join('')+
-  '<div class="towerCatalogGroupTitle">багъана</div>'+posts.map(catalogItem).join('');
+ const openings=BUILDABLE_PREFAB_TYPES.filter(spec=>[WINDOW_PREFAB_ID,DOOR_PREFAB_ID,GATE_PREFAB_ID].includes(spec.id));
+ // One catalog entry, not 15 internal prefab IDs. The existing type action cycles the fork forms.
+ const baganaCatalogItem={id:baganaType(1,10)};
+ const groups=[
+  {id:'walls',label:'Къабыргъа',items:walls},
+  {id:'openings',label:'Тешик толтуруу',items:openings},
+  {id:'bagana',label:'Багъана',items:[baganaCatalogItem]}
+ ];
+ catalog.innerHTML=`<div class="towerCatalogTabs" role="tablist" aria-label="Разделы каталога">${groups.map((group,i)=>
+  `<button type="button" class="bracketNavigation towerCatalogTab" role="tab" id="tower-tab-${group.id}" data-catalog-category="${group.id}" aria-controls="tower-panel-${group.id}" aria-selected="${i===0}" tabindex="${i===0?0:-1}">[${group.label}]</button>`).join('')}</div>`+
+  groups.map((group,i)=>`<div class="towerCatalogPanel" role="tabpanel" id="tower-panel-${group.id}" aria-labelledby="tower-tab-${group.id}" data-catalog-panel="${group.id}" ${i===0?'':'hidden'}>${group.items.map(catalogItem).join('')}</div>`).join('');
+ const setCatalogCategory=category=>{
+  if(!groups.some(group=>group.id===category))return;
+  catalog.querySelectorAll('[data-catalog-category]').forEach(tab=>{
+   const selected=tab.dataset.catalogCategory===category;
+   tab.setAttribute('aria-selected',String(selected));tab.classList.toggle('active',selected);
+   tab.tabIndex=selected?0:-1;
+  });
+  catalog.querySelectorAll('[data-catalog-panel]').forEach(panel=>{panel.hidden=panel.dataset.catalogPanel!==category;});
+ };
  let toastTimer=null,hintTimer=null;
  const hint=q('.towerExploreHint');
  try{
@@ -147,10 +161,15 @@ export async function mount(context,params={}){
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place';
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing';
-  q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
+  const post=baganaPrefab(s.type);
+  const variantButton=q('[data-variant]');
+  variantButton.hidden=!post&&approvedVariantCount(s.type)<2;
+  const variantLabel=post?'Сменить тип багъаны':'Сменить вариант';
+  variantButton.setAttribute('aria-label',variantLabel);variantButton.title=variantLabel;
   const heightControl=q('[data-bagana-heights]');
   heightControl.hidden=!(next==='placing'||next==='saving-place')||!baganaPrefab(s.type);
-  const chosen=baganaPrefab(s.type)?.woodCells;
+  const chosen=post?.woodCells;
+  heightControl.querySelector('span').textContent=post?'Багъана '+post.form+' · дерево, м:':'Дерево, м:';
   heightControl.querySelectorAll('[data-bagana-wood-cells]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.baganaWoodCells)===chosen)));
   q('[data-remove]').disabled=next!=='selected'||s.busy;
   for(const name of ['cancel','rotate','variant','hammer','world','settings']){
@@ -288,7 +307,19 @@ export async function mount(context,params={}){
   s.type=baganaType(current.form,cells);mode('placing');void preview();
  });
  on('.towerCatalog','click',event=>{
-  const el=event.target.closest('[data-section-id]');if(el&&game.dataset.explore==='true')begin(el.dataset.sectionId);
+  const tab=event.target.closest('[data-catalog-category]');
+  if(tab){setCatalogCategory(tab.dataset.catalogCategory);return;}
+  const el=event.target.closest('[data-section-id]');
+  if(el&&game.dataset.explore==='true')begin(el.dataset.sectionId);
+ });
+ on('.towerCatalogTabs','keydown',event=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  const tabs=[...catalog.querySelectorAll('[data-catalog-category]')];
+  const current=tabs.indexOf(event.target.closest('[data-catalog-category]'));if(current<0)return;
+  event.preventDefault();
+  const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:
+   (current+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+  setCatalogCategory(tabs[next].dataset.catalogCategory);tabs[next].focus();
  });
  on('[data-hammer]','click',()=>{
   if(s.busy||!s.ready||s.loadFailed)return;
@@ -300,6 +331,10 @@ export async function mount(context,params={}){
  on('[data-cancel]','click',cancel);
  on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;void preview();});
  on('[data-variant]','click',()=>{if(s.mode!=='placing')return;
+  if(baganaPrefab(s.type)){
+   s.type=nextBaganaType(s.type);
+   mode('placing');void preview();return;
+  }
   const count=approvedVariantCount(s.type)||1;
   s.variant=(s.variant+1)%count;void preview();
  });

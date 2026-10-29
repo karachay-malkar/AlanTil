@@ -24,4 +24,9 @@ export const BAGANA_PREFABS=Object.freeze([1,2,3].flatMap(form=>
 ));
 const byId=new Map(BAGANA_PREFABS.map(b=>[b.id,b]));
 export const baganaPrefab=id=>byId.get(id)||null;
+/** Cycle the three supported fork shapes without changing the chosen wood height. */
+export const nextBaganaType=id=>{
+ const current=baganaPrefab(id);
+ return current?baganaType(current.form%3+1,current.woodCells):null;
+};
 export const isBaganaPrefab=id=>id===BAGANA_PREFAB_ID||byId.has(id);
