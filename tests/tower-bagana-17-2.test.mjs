@@ -39,7 +39,7 @@ test('approved bagana glb contains genuine 3D mesh geometry',()=>{
 test('catalog and server migration preserve IDs while adding Alan terminology',()=>{
  const client=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
  const migration=readFileSync(new URL('../supabase/migrations/20261028123000_tower_bagana_172.sql',import.meta.url),'utf8');
- for(const name of ['къабыргъа','къабакъла','эшик','Терезе','багъана'])assert.ok(client.includes(name),name);
+ for(const name of ['Къабыргъа','Тешик толтуруу','Багъана','къабакъла','эшик','Терезе'])assert.ok(client.includes(name),name);
  assert.ok(client.includes("s.type===BAGANA_PREFAB_ID?BAGANA_PREFAB_VERSION"));
  assert.ok(migration.includes("WHEN typ='bagana-2x10x2'"));
  assert.ok(migration.includes("WHEN 'bagana-2x10x2' THEN ARRAY[2,10,2]"));
