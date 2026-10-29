@@ -11,8 +11,10 @@ on:
       - 'src/features/tower/prefab-scene.js'
       - 'src/shared/ui/icons.js'
       - 'src/features/tower/tower.css'
+      - 'assets/tower/approved-library/architecture/bagana-*-v2.glb'
       - 'assets/tower/approved-library/architecture/bagana-2x10x2-v1.glb'
       - 'supabase/migrations/20261028123000_tower_bagana_172.sql'
+      - 'supabase/migrations/20261029113100_tower_bagana_fork_height_172.sql'
       - 'tests/tower-bagana-17-2.test.mjs'
       - 'tests/tower-approved-manual.test.mjs'
       - 'release.json'
@@ -50,8 +52,11 @@ jobs:
             if curl -fsS http://127.0.0.1:4173/release.json >/tmp/bagana-release.json; then break; fi
             sleep 1
           done
-          test "$(node -p "JSON.parse(require('fs').readFileSync('/tmp/bagana-release.json','utf8')).version")" = '17.2.36'
-          curl -fsS http://127.0.0.1:4173/assets/tower/approved-library/architecture/bagana-2x10x2-v1.glb -o /tmp/bagana-http.glb
-          cmp /tmp/bagana-http.glb assets/tower/approved-library/architecture/bagana-2x10x2-v1.glb
+          test "$(node -p "JSON.parse(require('fs').readFileSync('/tmp/bagana-release.json','utf8')).version")" = "$(node -p "require('./release.json').version")"
+          test "$(find assets/tower/approved-library/architecture -name 'bagana-f*-v2.glb' | wc -l)" -eq 15
+          for file in assets/tower/approved-library/architecture/bagana-f*-v2.glb; do
+            curl -fsS "http://127.0.0.1:4173/$file" -o /tmp/bagana-http.glb
+            cmp /tmp/bagana-http.glb "$file"
+          done
       - name: Bagana and existing approved tower integration tests
         run: node --test tests/tower-bagana-17-2.test.mjs tests/tower-approved-manual.test.mjs
