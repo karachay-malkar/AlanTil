@@ -3,7 +3,7 @@ import {KUNLUM_BUILD_PARCEL as SITE} from './kunlum-parcel.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from './window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from './door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from './gate-prefab.mjs';
-import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION} from './bagana-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFABS,BAGANA_PREFAB_VERSION_V2} from './bagana-prefab.mjs';
 /** One section = one immutable prefabricated masonry asset. Positions are integer 25-cm cells. */
 export const PREFAB_CELL_METERS=.25;
 export const PREFAB_WORLD_X_CELLS=SITE.widthM/PREFAB_CELL_METERS;
@@ -17,7 +17,8 @@ export const PREFAB_TYPES=Object.freeze([
  {id:'window-4x5x2',size:[4,5,2]},
  {id:'door-7x9x2',size:[7,9,2]},
  {id:'gate-18x10x2',size:[18,10,2]},
- {id:BAGANA_PREFAB_ID,size:[2,10,2]}
+ {id:BAGANA_PREFAB_ID,size:[2,10,2]},
+ ...BAGANA_PREFABS.map(({id,size})=>({id,size}))
 ].map(t=>Object.freeze({...t,size:Object.freeze(t.size)})));
 /** Only approved masonry and current architectural modules are buildable. */
 export const BUILDABLE_PREFAB_TYPES=PREFAB_TYPES;
@@ -55,7 +56,8 @@ export function hasPrefabSupport(blocks,proposed){
 }
 export function validatePrefabPlacement(blocks,section,options={}){
  const versions={
-  [WINDOW_PREFAB_ID]:WINDOW_PREFAB_VERSION,[DOOR_PREFAB_ID]:DOOR_PREFAB_VERSION,[GATE_PREFAB_ID]:GATE_PREFAB_VERSION,[BAGANA_PREFAB_ID]:BAGANA_PREFAB_VERSION
+  [WINDOW_PREFAB_ID]:WINDOW_PREFAB_VERSION,[DOOR_PREFAB_ID]:DOOR_PREFAB_VERSION,[GATE_PREFAB_ID]:GATE_PREFAB_VERSION,[BAGANA_PREFAB_ID]:BAGANA_PREFAB_VERSION,
+  ...Object.fromEntries(BAGANA_PREFABS.map(b=>[b.id,BAGANA_PREFAB_VERSION_V2]))
  };
  const allowed=section?.sectionId in versions?1:approvedVariantCount(section?.sectionId);
  const version=versions[section?.sectionId]||APPROVED_PREFAB_VERSION;

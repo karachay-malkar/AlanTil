@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.36';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.37';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -12,7 +12,7 @@ import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION,WINDOW_JOINT_FILES} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,GATE_PREFAB_SPEC} from '../../../packages/tower-game/gate-prefab.mjs';
-import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_VERSION} from '../../../packages/tower-game/bagana-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_RENDER_VERSION_V2,baganaPrefab,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
@@ -205,16 +205,24 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    container.dataset.gatePbrReady='true';
    return gate;
   }
-  if(block.sectionId===BAGANA_PREFAB_ID){
-   if(block.geometryVersion!==BAGANA_PREFAB_VERSION||block.variant!==0)throw new TypeError('Unsupported bagana prefab version');
-   const url=BAGANA_PREFAB_FILE+'?v='+encodeURIComponent(BAGANA_RENDER_VERSION);
+  if(isBaganaPrefab(block.sectionId)){
+   const spec=baganaPrefab(block.sectionId);
+   const legacy=block.sectionId===BAGANA_PREFAB_ID;
+   const version=legacy?BAGANA_PREFAB_VERSION:BAGANA_PREFAB_VERSION_V2;
+   if(block.geometryVersion!==version||block.variant!==0)throw new TypeError('Unsupported bagana prefab version');
+   const url=(legacy?BAGANA_PREFAB_FILE:spec.file)+'?v='+encodeURIComponent(legacy?BAGANA_RENDER_VERSION:BAGANA_RENDER_VERSION_V2);
    const woodUrl=DOOR_WOOD_FILE+'?v='+encodeURIComponent(DOOR_RENDER_VERSION);
-   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url));
-   if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl));
+   if(!loaded.has(url))loaded.set(url,loader.loadAsync(url).catch(e=>{loaded.delete(url);throw e;}));
+   if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl).catch(e=>{loaded.delete(woodUrl);throw e;}));
    const [original,reference]=await Promise.all([loaded.get(url),loaded.get(woodUrl)]);
    const {wood}=findApprovedGateMaterials(reference.scene);
    const model=original.scene.clone(true);
-   model.traverse(node=>{if(node.isMesh){node.material=wood;node.userData.alantilNonStone=true;}});
+   model.traverse(node=>{
+    if(!node.isMesh)return;
+    if(legacy||node.name.includes('wood')){node.material=wood;node.userData.alantilNonStone=true;}
+    else node.userData.alantilNonStone=false;
+   });
+   if(!legacy)applyRockSurface(model,stoneMaterial);
    container.dataset.baganaPbrReady='true';
    return model;
   }

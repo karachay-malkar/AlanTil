@@ -1,10 +1,10 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.36';
+import {createTowerScene} from './prefab-scene.js?v=17.2.37';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
-import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION} from '../../../packages/tower-game/bagana-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_PREFABS,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3} from './repository.js?v=17.7-approved-only.1';
@@ -44,6 +44,10 @@ export async function mount(context,params={}){
     <button type="button" class="btn towerIconAction" data-rise aria-label="Подняться" title="Подняться">${uiIcon('arrowUp')}</button>
     <button type="button" class="btn towerIconAction" data-fall aria-label="Спуститься" title="Спуститься">${uiIcon('arrowDown')}</button>
    </div>
+  </div>
+  <div class="towerBaganaHeights" data-bagana-heights hidden role="group" aria-label="Высота деревянной багъаны">
+   <span>Дерево, м:</span>
+   ${BAGANA_WOOD_HEIGHT_CELLS.map(c=>`<button type="button" class="btn" data-bagana-wood-cells="${c}" aria-pressed="false">${(c*.25).toFixed(2)}</button>`).join('')}
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
@@ -101,14 +105,17 @@ export async function mount(context,params={}){
  void requestTowerOrientation('landscape');
  const catalog=q('.towerCatalog');
  const catalogItem=spec=>{
-  const title=spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':spec.id===BAGANA_PREFAB_ID?'багъана':spec.id.replaceAll('x','×');
-  const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':spec.id===BAGANA_PREFAB_ID?'bagana':'blocks';
+  const bagana=baganaPrefab(spec.id);
+  const title=spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':bagana?'багъана '+bagana.form:spec.id===BAGANA_PREFAB_ID?'багъана':spec.id.replaceAll('x','×');
+  const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
   return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span></button>`;
  };
  const walls=BUILDABLE_PREFAB_TYPES.filter(spec=>isApprovedMasonryType(spec.id));
- const architecture=BUILDABLE_PREFAB_TYPES.filter(spec=>!isApprovedMasonryType(spec.id));
+ const architecture=BUILDABLE_PREFAB_TYPES.filter(spec=>!isApprovedMasonryType(spec.id)&&!isBaganaPrefab(spec.id));
+ const posts=BAGANA_PREFABS.filter(spec=>spec.woodCells===10);
  catalog.innerHTML='<div class="towerCatalogGroupTitle">къабыргъа</div>'+walls.map(catalogItem).join('')+
-  '<div class="towerCatalogGroupTitle">Архитектура</div>'+architecture.map(catalogItem).join('');
+  '<div class="towerCatalogGroupTitle">Архитектура</div>'+architecture.map(catalogItem).join('')+
+  '<div class="towerCatalogGroupTitle">багъана</div>'+posts.map(catalogItem).join('');
  let toastTimer=null,hintTimer=null;
  const hint=q('.towerExploreHint');
  try{
@@ -141,6 +148,10 @@ export async function mount(context,params={}){
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing';
   q('[data-variant]').hidden=approvedVariantCount(s.type)<2;
+  const heightControl=q('[data-bagana-heights]');
+  heightControl.hidden=!(next==='placing'||next==='saving-place')||!baganaPrefab(s.type);
+  const chosen=baganaPrefab(s.type)?.woodCells;
+  heightControl.querySelectorAll('[data-bagana-wood-cells]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.baganaWoodCells)===chosen)));
   q('[data-remove]').disabled=next!=='selected'||s.busy;
   for(const name of ['cancel','rotate','variant','hammer','world','settings']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy||(name==='hammer'&&(!s.ready||s.loadFailed));
@@ -162,7 +173,7 @@ export async function mount(context,params={}){
   const hit=s.previewHit||s.scene?.getAimHit?.();
   if(!hit)return null;
   const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
-   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:s.type===BAGANA_PREFAB_ID?BAGANA_PREFAB_VERSION:APPROVED_PREFAB_VERSION};
+   variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:s.type===BAGANA_PREFAB_ID?BAGANA_PREFAB_VERSION:baganaPrefab(s.type)?BAGANA_PREFAB_VERSION_V2:APPROVED_PREFAB_VERSION};
   return positionAgainst(item,hit);
  }
  let previewSequence=0;
@@ -268,6 +279,14 @@ export async function mount(context,params={}){
  }
  on('[data-clear]','click',()=>{closeSettings();void clearAll();});
  on('[data-catalog-close]','click',()=>catalogVisible(false));
+ on('[data-bagana-heights]','click',event=>{
+  if(s.mode!=='placing'||s.busy)return;
+  const btn=event.target.closest('[data-bagana-wood-cells]');
+  const current=baganaPrefab(s.type);if(!btn||!current)return;
+  const cells=Number(btn.dataset.baganaWoodCells);
+  if(!BAGANA_WOOD_HEIGHT_CELLS.includes(cells))return;
+  s.type=baganaType(current.form,cells);mode('placing');void preview();
+ });
  on('.towerCatalog','click',event=>{
   const el=event.target.closest('[data-section-id]');if(el&&game.dataset.explore==='true')begin(el.dataset.sectionId);
  });

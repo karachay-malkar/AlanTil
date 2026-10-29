@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {APPROVED_PREFAB_VERSION,APPROVED_MASONRY_TYPES,APPROVED_MASONRY_VARIANTS,approvedSectionId,approvedVariantCount} from '../packages/tower-game/approved-prefab.mjs';
 import {PREFAB_TYPES,BUILDABLE_PREFAB_TYPES,validatePrefabPlacement,prefabBounds} from '../packages/tower-game/prefab-layout.mjs';
+import {BAGANA_PREFABS} from '../packages/tower-game/bagana-prefab.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE,sectionJointProfile} from '../packages/tower-game/prefab-joints.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const catalog=JSON.parse(read('assets/tower/approved-library/index.json'));
@@ -15,8 +16,8 @@ const block=(id,variant=0,rotation=0,version=APPROVED_PREFAB_VERSION)=>({
 });
 test('tower catalog contains exclusively current supported sections',()=>{
  assert.deepEqual(APPROVED_MASONRY_TYPES,types);
- assert.deepEqual(BUILDABLE_PREFAB_TYPES.map(x=>x.id),[...types,'window-4x5x2','door-7x9x2','gate-18x10x2','bagana-2x10x2']);
- assert.equal(PREFAB_TYPES.length,8);
+ assert.deepEqual(BUILDABLE_PREFAB_TYPES.map(x=>x.id),[...types,'window-4x5x2','door-7x9x2','gate-18x10x2','bagana-2x10x2',...BAGANA_PREFABS.map(b=>b.id)]);
+ assert.equal(PREFAB_TYPES.length,23);
  assert.equal(catalog.sections.length,11);
  assert.equal(catalog.archivedSources,undefined);
  const ui=read('src/features/tower/index.js');

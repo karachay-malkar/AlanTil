@@ -5,7 +5,7 @@ import * as THREE from '../src/vendor/three/three.module.js';
 import {GLTFLoader} from '../src/vendor/three/addons/loaders/GLTFLoader.js';
 import {BUILDABLE_PREFAB_TYPES,prefabBounds,validatePrefabPlacement} from '../packages/tower-game/prefab-layout.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../packages/tower-game/prefab-joints.mjs';
-import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE} from '../packages/tower-game/bagana-prefab.mjs';
+import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_PREFABS,BAGANA_PREFAB_VERSION_V2,baganaType} from '../packages/tower-game/bagana-prefab.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../packages/tower-game/window-prefab.mjs';
 
 const entry=(id,sectionId,geometryVersion,x=0,y=0,z=0)=>({id,type:'masonry_section',sectionId,geometryVersion,variant:0,rotation:0,x,y,z});
@@ -13,7 +13,7 @@ const post=entry('bagana',BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION);
 const windowSection=entry('window',WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,2,0,0);
 const manifest={version:'17.7-approved-manual.1'};
 test('bagana is an approved single-variant 0.5×2.5×0.5m buildable item',()=>{
- assert.deepEqual(BUILDABLE_PREFAB_TYPES.at(-1),{id:BAGANA_PREFAB_ID,size:[2,10,2]});
+ assert.deepEqual(BUILDABLE_PREFAB_TYPES.find(spec=>spec.id===BAGANA_PREFAB_ID),{id:BAGANA_PREFAB_ID,size:[2,10,2]});
  assert.deepEqual(prefabBounds(post).size,[2,10,2]);
  assert.equal(validatePrefabPlacement([],post).ok,true);
  assert.equal(validatePrefabPlacement([post],entry('other',BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION)).ok,false);
@@ -70,4 +70,31 @@ test('tower and masonry release no longer share stale 17.2.35 cache keys',()=>{
  assert.ok(router.includes('const MASONRY_ASSET_VERSION = "'+release.version+'"'));
  assert.ok(scene.includes('prefab-scene.js?v='+release.version));
  for(const name of ['къабакъла','эшик','Терезе']) assert.ok(masonry.includes(name),name);
+});
+
+test('15 bagana 3D assets: three forms and five 25cm increments with an integrated 25cm stone',async()=>{
+ assert.equal(BAGANA_PREFABS.length,15);
+ for(const spec of BAGANA_PREFABS){
+  assert.deepEqual(prefabBounds(entry(spec.id,spec.id,BAGANA_PREFAB_VERSION_V2)).size,[3,spec.woodCells+1,3]);
+  assert.equal(spec.stoneHeightM,.25);
+  assert.equal(validatePrefabPlacement([],entry(spec.id,spec.id,BAGANA_PREFAB_VERSION_V2)).ok,true);
+  const bytes=readFileSync(new URL('..'+spec.file,import.meta.url));
+  const payload=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+  const {scene}=await new Promise((resolve,reject)=>new GLTFLoader().parse(payload,'',resolve,reject));
+  const wood=scene.getObjectByName('bagana_wood'),stone=scene.getObjectByName('bagana_stone');
+  assert.ok(wood?.isMesh&&stone?.isMesh,'separate 3D material meshes');
+  const stoneBounds=new THREE.Box3().setFromObject(stone),fullBounds=new THREE.Box3().setFromObject(scene);
+  assert.ok(Math.abs(stoneBounds.max.y-stoneBounds.min.y-.25)<.001);
+  assert.ok(Math.abs(fullBounds.max.y-fullBounds.min.y-(spec.woodHeightM+.25))<.05);
+  const extents=fullBounds.getSize(new THREE.Vector3());
+  assert.ok(extents.x<=.75&&extents.z<=.75);
+ }
+});
+test('bagana height selector and existing legacy post persist safely',()=>{
+ const ui=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
+ assert.match(ui,/data-bagana-heights/);
+ assert.match(ui,/data-bagana-wood-cells/);
+ assert.match(ui,/baganaType\(current.form,cells\)/);
+ assert.equal(baganaType(3,12),'bagana-f3-3x13x3');
+ assert.equal(validatePrefabPlacement([],post).ok,true);
 });
