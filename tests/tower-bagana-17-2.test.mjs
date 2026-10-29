@@ -87,7 +87,7 @@ test('15 bagana 3D assets: three forms and five 25cm increments with an integrat
   const penetration=stoneBounds.max.y-woodBounds.min.y;
   assert.ok(penetration>=-.005&&penetration<=.035,'wood must sit firmly in its original Common100 stone');
   assert.ok(Math.abs(stoneBounds.max.y-stoneBounds.min.y-.25)<.001);
-  if(spec.form!==1)assert.ok(Math.abs(stoneBounds.min.y+spec.size[1]*.25/2)<.004,'stone base must rest on the footprint floor');
+  assert.ok(Math.abs(stoneBounds.min.y+spec.size[1]*.25/2)<.004,'stone base must rest on the footprint floor: '+spec.id);
   assert.ok(Math.abs(fullBounds.max.y-fullBounds.min.y-(spec.woodHeightM+.25))<.05);
   const extents=fullBounds.getSize(new THREE.Vector3());
   assert.ok(extents.x<=.75&&extents.z<=.75);
