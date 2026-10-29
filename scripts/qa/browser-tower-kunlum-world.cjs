@@ -49,10 +49,12 @@ const out=path.join(process.cwd(),'tower-world-browser-qa');fs.mkdirSync(out,{re
     clearInsideSettings:!!document.querySelector('[data-settings-panel] [data-clear]'),
     elevationButtonsVisible:getComputedStyle(document.querySelector('.towerElevationControls')).display==='flex',
     flightModeAbsent:!document.querySelector('[data-fly], [data-ground]'),
-    items:document.querySelectorAll('[data-section-id]').length
+    items:document.querySelectorAll('[data-section-id]').length,
+    baganaItems:document.querySelectorAll('[data-section-id^="bagana-f"]').length
    }));
    if(!hud.catalogClosed||!hud.orientationVisible||hud.extraCameraButtons||
-      !hud.clearInsideSettings||!hud.elevationButtonsVisible||!hud.flightModeAbsent||hud.items!==7)
+      !hud.clearInsideSettings||!hud.elevationButtonsVisible||!hud.flightModeAbsent||
+      hud.items!==8||hud.baganaItems!==1)
     throw Error(type+' invalid compact HUD '+JSON.stringify(hud));
    await page.locator('[data-hammer]').click();
    if(!(await page.locator('[data-side]').evaluate(el=>el.classList.contains('is-open'))))
