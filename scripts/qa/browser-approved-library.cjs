@@ -12,6 +12,9 @@ const root=path.resolve(__dirname,'../..');
   page.on('pageerror',e=>pageErrors.push(String(e)));
   page.on('response',r=>{if(r.status()>=400)badRequests.push([r.status(),r.url()])});
   await new Promise(r=>setTimeout(r,650));
+  // Isolated same-origin harness: the retired gate-fit-review page imports a deleted editor module.
+  // This test renders only the approved Common100 sections through their production loader.
+  await page.route('**/gate-fit-review.html',route=>route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><body></body></html>'}));
   await page.goto('http://127.0.0.1:8824/gate-fit-review.html',{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
    const [T,component,variants]=await Promise.all([
