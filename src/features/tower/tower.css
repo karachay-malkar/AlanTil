@@ -24,12 +24,11 @@
 .towerSettingsMenu .towerIconAction{color:var(--danger)}
 .towerSide{position:absolute;z-index:9;bottom:max(66px,calc(var(--safe-bottom,0px) + 66px));right:max(10px,var(--safe-right,0px));width:min(460px,calc(100% - 24px));max-height:min(67dvh,300px);overflow:hidden;transform:translateY(10px);opacity:0;visibility:hidden;pointer-events:none;border-radius:16px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);box-shadow:0 8px 28px #0005;padding:10px;transition:transform 180ms ease,opacity 180ms ease}
 .towerSide.is-open{transform:translateY(0);opacity:1;visibility:visible!important;pointer-events:auto}
-.towerCatalogHeading{display:flex;align-items:center;justify-content:space-between;padding:0 3px 7px;font:700 13px/1.3 var(--font-body)}
-.towerGame .towerCatalogClose{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:var(--surface-1);color:var(--text-1);cursor:pointer}
+.towerGame .towerCatalogClose{position:absolute;right:9px;top:9px;z-index:2;display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:8px;background:var(--surface-1);color:var(--text-1);cursor:pointer}
 .towerCatalogClose .uiIcon{width:17px;height:17px}
-.towerCatalogContent{max-height:calc(min(67dvh,300px) - 50px);overflow-y:auto;overscroll-behavior:contain}
+.towerCatalogContent{max-height:calc(min(67dvh,300px) - 20px);overflow-y:auto;overscroll-behavior:contain}
 .towerCatalog{display:flex;flex-direction:column;gap:9px}
-.towerCatalogTabs{display:flex;align-items:center;flex-wrap:wrap;gap:3px 8px;padding:0 2px 7px;border-bottom:1px solid var(--line-soft)}
+.towerCatalogTabs{display:flex;align-items:center;flex-wrap:wrap;gap:3px 8px;padding:0 38px 7px 2px;border-bottom:1px solid var(--line-soft)}
 .towerGame .towerCatalogTab{flex:0 0 auto;min-height:30px;padding:5px 2px;border:0;border-radius:0;background:transparent;box-shadow:none;clip-path:none;color:var(--text-2);font:750 var(--text-button)/1.2 var(--font-body);white-space:nowrap;cursor:pointer}
 .towerGame .towerCatalogTab[aria-selected="true"]{color:var(--text-1);font-weight:900;text-decoration:underline;text-decoration-color:var(--accent-strong);text-underline-offset:4px}
 .towerCatalogPanel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -61,7 +60,7 @@
 .towerElevationControls{position:absolute;right:calc(max(10px,var(--safe-right,0px)) + var(--tower-hud-size) + 8px);bottom:max(12px,calc(var(--safe-bottom,0px) + 12px));display:flex;align-items:center;gap:7px;pointer-events:auto}
 @media(pointer:fine){.towerJoystick{display:none}}
 @media(max-width:749px){.towerGame{--tower-hud-size:42px}.towerCamera{left:67px}.towerQuickActions{right:max(8px,var(--safe-right,0px))}.towerGame [data-hammer]{right:max(8px,var(--safe-right,0px))}.towerSide{right:max(8px,var(--safe-right,0px));width:min(390px,calc(100% - 16px))}.towerExploreHint{max-width:calc(100% - 180px);font-size:10px}.towerJoystick{left:max(26px,calc(var(--safe-left,0px) + 26px));width:86px;height:86px}.towerElevationControls{right:calc(max(8px,var(--safe-right,0px)) + var(--tower-hud-size) + 7px)}}
-@media(max-height:420px){.towerGame{--tower-hud-size:40px}.towerCatalog .towerItem{min-height:54px}.towerSide{max-height:calc(100dvh - 124px)}.towerCatalogContent{max-height:calc(100dvh - 175px)}.towerJoystick{width:78px;height:78px;bottom:max(16px,calc(var(--safe-bottom,0px) + 16px))}.towerExploreHint{top:calc(var(--safe-top,0px) + 6px)}}
+@media(max-height:420px){.towerGame{--tower-hud-size:40px}.towerCatalog .towerItem{min-height:54px}.towerSide{max-height:calc(100dvh - 124px)}.towerCatalogContent{max-height:calc(100dvh - 144px)}.towerJoystick{width:78px;height:78px;bottom:max(16px,calc(var(--safe-bottom,0px) + 16px))}.towerExploreHint{top:calc(var(--safe-top,0px) + 6px)}}
 @media(max-width:360px){.towerPlacementBar{gap:3px;left:46%;max-width:calc(100% - 102px)}.towerCatalogPanel{grid-template-columns:repeat(3,minmax(0,1fr))}.towerGame .towerCatalogTab{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 .towerGame[data-explore="false"] .towerSide,.towerGame[data-explore="false"] [data-hammer]{display:none!important}

@@ -84,7 +84,8 @@ test('15 bagana 3D assets: three forms and five 25cm increments with an integrat
   const wood=scene.getObjectByName('bagana_wood'),stone=scene.getObjectByName('bagana_stone');
   assert.ok(wood?.isMesh&&stone?.isMesh,'separate 3D material meshes');
   const stoneBounds=new THREE.Box3().setFromObject(stone),woodBounds=new THREE.Box3().setFromObject(wood),fullBounds=new THREE.Box3().setFromObject(scene);
-  assert.ok(Math.abs(woodBounds.min.y-stoneBounds.max.y)<.001,'wood must sit directly on its own stone');
+  const penetration=stoneBounds.max.y-woodBounds.min.y;
+  assert.ok(penetration>=-.005&&penetration<=.035,'wood must sit firmly in its original Common100 stone');
   assert.ok(Math.abs(stoneBounds.max.y-stoneBounds.min.y-.25)<.001);
   assert.ok(Math.abs(fullBounds.max.y-fullBounds.min.y-(spec.woodHeightM+.25))<.05);
   const extents=fullBounds.getSize(new THREE.Vector3());
@@ -131,4 +132,44 @@ test('existing type button cycles bagana form 1 -> 2 -> 3 -> 1 without resetting
  assert.ok(ui.includes("variantButton.hidden=!post&&approvedVariantCount(s.type)<2"));
  assert.ok(ui.includes("s.variant=(s.variant+1)%count"));
  assert.ok(ui.includes("s.rotation=(s.rotation+1)%4"));
+});
+
+test('bagana geometry uses one closed wood surface and original Common 100 source stones',async()=>{
+ const expected=['LARGE_005','LARGE_006','LARGE_009'];
+ const source=JSON.parse(readFileSync(new URL('../assets/tower/approved-library/common100/common-100.json',import.meta.url),'utf8'));
+ for(const spec of BAGANA_PREFABS){
+  const bytes=readFileSync(new URL('..'+spec.file,import.meta.url));
+  const textLength=bytes.readUInt32LE(12);
+  const gltf=JSON.parse(bytes.subarray(20,20+textLength).toString('utf8').trim());
+  const original=expected[spec.form-1];
+  assert.ok(gltf.asset.generator.includes('Common100 '+original));
+  assert.equal(gltf.meshes.length,2);
+  const originalStone=source.models.find(m=>m.name===original);
+  const stonePrim=gltf.meshes[1].primitives[0];
+  assert.equal(gltf.accessors[stonePrim.indices].count,originalStone.triangles*3);
+  const woodPrim=gltf.meshes[0].primitives[0];
+  const index=gltf.accessors[woodPrim.indices],view=gltf.bufferViews[index.bufferView];
+  const offset=20+textLength+8+view.byteOffset;
+  const read=i=>index.componentType===5125?bytes.readUInt32LE(offset+i*4):bytes.readUInt16LE(offset+i*2);
+  const edgeCounts=new Map(),parent=new Int32Array(gltf.accessors[woodPrim.attributes.POSITION].count);
+  for(let i=0;i<parent.length;i++)parent[i]=i;
+  const find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+  for(let i=0;i<index.count;i+=3){
+   const a=read(i),b=read(i+1),c=read(i+2);
+   parent[find(b)]=find(a);parent[find(c)]=find(a);
+   for(const [x,y] of [[a,b],[b,c],[c,a]]){const k=x<y?x+'_'+y:y+'_'+x;edgeCounts.set(k,(edgeCounts.get(k)||0)+1);}
+  }
+  assert.ok([...edgeCounts.values()].every(v=>v===2),'wood is watertight with no exposed internal endcaps');
+  const groups=new Set(Array.from({length:parent.length},(_,i)=>find(i)));
+  assert.equal(groups.size,1,'wood must be one connected seamless surface');
+ }
+});
+test('catalog header is removed and hammer is a dedicated construction icon',()=>{
+ const ui=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../src/features/tower/tower.css',import.meta.url),'utf8');
+ const icons=readFileSync(new URL('../src/shared/ui/icons.js',import.meta.url),'utf8');
+ assert.ok(!ui.includes('towerCatalogHeading'));
+ assert.ok(ui.includes("hammer:'catalogHammer'"));
+ assert.ok(icons.includes('catalogHammer:'));
+ assert.ok(css.includes('.towerCatalogClose{position:absolute'));
 });
