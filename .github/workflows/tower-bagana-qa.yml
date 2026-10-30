@@ -16,6 +16,9 @@ on:
       - 'supabase/migrations/20261028123000_tower_bagana_172.sql'
       - 'supabase/migrations/20261029113100_tower_bagana_fork_height_172.sql'
       - 'tests/tower-bagana-17-2.test.mjs'
+      - 'tests/tower-bagana-organic.test.mjs'
+      - 'tools/tower/bagana-organic-mesh.mjs'
+      - 'tools/tower/bake-bagana-organic.mjs'
       - 'tests/tower-approved-manual.test.mjs'
       - 'release.json'
       - 'src/app/router.js'
@@ -59,4 +62,4 @@ jobs:
             cmp /tmp/bagana-http.glb "$file"
           done
       - name: Bagana and existing approved tower integration tests
-        run: node --test tests/tower-bagana-17-2.test.mjs tests/tower-approved-manual.test.mjs
+        run: node --test tests/tower-bagana-17-2.test.mjs tests/tower-approved-manual.test.mjs tests/tower-bagana-organic.test.mjs
