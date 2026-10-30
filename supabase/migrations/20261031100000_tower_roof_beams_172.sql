@@ -6,6 +6,8 @@ ALTER TABLE private.tower_v3_sections ADD CONSTRAINT tower_v3_sections_section_i
 ALTER TABLE private.tower_v3_sections DROP CONSTRAINT tower_v3_sections_geometry_version_check;
 ALTER TABLE private.tower_v3_sections ADD CONSTRAINT tower_v3_sections_geometry_version_check
  CHECK (geometry_version IN ('17.5.0','17.5.1','17.5.2','17.6-window.1','17.6-door.1','17.5.3','17.6-gate.1','17.5.4','17.5.5','17.7-approved-manual.1','17.2-bagana.1','17.2-bagana.2','17.2-roof-beam.1'));
+
+
 CREATE OR REPLACE FUNCTION private.tower_v3_size(p_type text, p_rotation integer)
  RETURNS integer[]
  LANGUAGE sql
@@ -22,11 +24,10 @@ SELECT CASE
  WHEN p_type='gate-18x10x2' THEN CASE WHEN p_rotation%2=1 THEN ARRAY[2,10,18] ELSE ARRAY[18,10,2] END
  WHEN p_type='bagana-2x10x2' THEN ARRAY[2,10,2]
  WHEN p_type ~ '^bagana-f[123]-3x(9|10|11|12|13)x3$' THEN ARRAY[3,split_part(p_type,'x',2)::int,3]
- WHEN p_type ~ '^roof-beam-([1-9]|[1-3][0-9]|40)
-$function$;
- THEN CASE WHEN p_rotation%2=1 THEN ARRAY[1,1,split_part(p_type,'-',3)::int] ELSE ARRAY[split_part(p_type,'-',3)::int,1,1] END
+ WHEN p_type ~ '^roof-beam-([1-9]|[1-3][0-9]|40)$' THEN CASE WHEN p_rotation%2=1 THEN ARRAY[1,1,split_part(p_type,'-',3)::int] ELSE ARRAY[split_part(p_type,'-',3)::int,1,1] END
  ELSE NULL::integer[] END
 $function$;
+
 
 CREATE OR REPLACE FUNCTION private.tower_v3_canonical(e jsonb)
  RETURNS jsonb
@@ -56,7 +57,8 @@ BEGIN
  WHEN typ='gate-18x10x2' THEN version='17.6-gate.1' AND v=0
  WHEN typ='bagana-2x10x2' THEN version='17.2-bagana.1' AND v=0
  WHEN typ ~ '^bagana-f[123]-3x(9|10|11|12|13)x3$' THEN version='17.2-bagana.2' AND v=0
- WHEN typ ~ '^roof-beam-([1-9]|[1-3][0-9]|40)
+ WHEN typ ~ '^roof-beam-([1-9]|[1-3][0-9]|40)$' THEN version='17.2-roof-beam.1' AND v=0 AND e->>'type'='roof_beam'
+ ELSE false END;
  IF uid IS NULL OR dims IS NULL OR NOT COALESCE(valid,false) OR r NOT BETWEEN 0 AND 3 OR
  px+dims[1]>60 OR py+dims[2]>80 OR pz+dims[3]>120 THEN RAISE EXCEPTION 'INVALID_V3_SECTION'; END IF;
  RETURN jsonb_build_object('id',uid,'type',CASE WHEN typ LIKE 'roof-beam-%' THEN 'roof_beam' ELSE 'masonry_section' END,'sectionId',typ,
@@ -64,15 +66,7 @@ BEGIN
 EXCEPTION WHEN invalid_text_representation OR numeric_value_out_of_range
  THEN RAISE EXCEPTION 'INVALID_V3_SECTION';
 END $function$;
- THEN version='17.2-roof-beam.1' AND v=0 AND e->>'type'='roof_beam'
- ELSE false END;
- IF uid IS NULL OR dims IS NULL OR NOT COALESCE(valid,false) OR r NOT BETWEEN 0 AND 3 OR
- px+dims[1]>60 OR py+dims[2]>80 OR pz+dims[3]>120 THEN RAISE EXCEPTION 'INVALID_V3_SECTION'; END IF;
- RETURN jsonb_build_object('id',uid,'type','masonry_section','sectionId',typ,
- 'variant',v,'rotation',r,'x',px,'y',py,'z',pz,'geometryVersion',version);
-EXCEPTION WHEN invalid_text_representation OR numeric_value_out_of_range
- THEN RAISE EXCEPTION 'INVALID_V3_SECTION';
-END $function$;
+
 
 CREATE OR REPLACE FUNCTION private.tower_v3_snapshot_rows(p_uid uuid)
 RETURNS jsonb LANGUAGE sql STABLE SET search_path TO ''
@@ -129,6 +123,7 @@ begin
  end loop;
  return true;
 end $function$;
+
 
 CREATE OR REPLACE FUNCTION private.tower_v3_beam_has_anchor(p_sections jsonb,p_beam jsonb)
 RETURNS boolean LANGUAGE sql STABLE SET search_path TO ''
