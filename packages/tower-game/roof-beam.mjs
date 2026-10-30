@@ -14,7 +14,7 @@ export function positionRoofBeamAgainst(b,hit,shift=0){
  if(!hit?.block||hit.block.type!=='masonry_section'||!Number.isInteger(hit.supportTop))return null;
  const n=roofBeamLength(b.sectionId);if(n===null)return null;
  const axis=b.rotation%2?2:0;
- const position=[Math.round(hit.position[0]*4),hit.supportTop,Math.round(hit.position[2]*4)];
+ const position=[Math.floor(hit.position[0]*4),hit.supportTop,Math.floor(hit.position[2]*4)];
  position[axis]+=-Math.floor(n/2)+shift;
  return {...b,x:position[0],y:position[1],z:position[2]};
 }
