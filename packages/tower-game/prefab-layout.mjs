@@ -1,3 +1,4 @@
+import {roofBeamBounds,validateRoofBeamPlacement} from './roof-beam.mjs';
 import {isApprovedMasonryType,approvedVariantCount,APPROVED_PREFAB_VERSION} from './approved-prefab.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE} from './kunlum-parcel.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from './window-prefab.mjs';
@@ -29,6 +30,7 @@ export function worldToGrid(meters){if(!Number.isFinite(meters))throw new TypeEr
 export function gridToWorld(cells){if(!Number.isFinite(cells))throw new TypeError('Invalid grid coordinate');return cells*PREFAB_CELL_METERS;}
 export function snapPrefabPosition(coords){return Object.fromEntries(['x','y','z'].map(k=>[k,Math.round(Number(coords[k]))]));}
 export function prefabBounds(b){
+ if(b?.type==='roof_beam')return roofBeamBounds(b);
  if(b?.type!=='masonry_section')throw new TypeError('Unsupported tower block');
  const s=prefabSize(b.sectionId);
  const r=b.rotation||0;
@@ -42,7 +44,7 @@ const overlap=(a,b,k)=>Math.min(a.max[k],b.max[k])-Math.max(a.min[k],b.min[k]);
 export function hasPrefabSupport(blocks,proposed){
  const a=prefabBounds(proposed);
  if(a.min[1]===0)return true;
- const supports=blocks.map(prefabBounds).filter(b=>Math.abs(b.max[1]-a.min[1])<EPS&&overlap(a,b,0)>EPS&&overlap(a,b,2)>EPS);
+ const supports=blocks.filter(b=>b.type==='masonry_section').map(prefabBounds).filter(b=>Math.abs(b.max[1]-a.min[1])<EPS&&overlap(a,b,0)>EPS&&overlap(a,b,2)>EPS);
  if(!supports.length)return false;
  const xs=[a.min[0],a.max[0]],zs=[a.min[2],a.max[2]];
  for(const b of supports){xs.push(Math.max(a.min[0],b.min[0]),Math.min(a.max[0],b.max[0]));zs.push(Math.max(a.min[2],b.min[2]),Math.min(a.max[2],b.max[2]));}
@@ -55,6 +57,7 @@ export function hasPrefabSupport(blocks,proposed){
  return true;
 }
 export function validatePrefabPlacement(blocks,section,options={}){
+ if(section?.type==='roof_beam')return validateRoofBeamPlacement(blocks,section,prefabBounds);
  const versions={
   [WINDOW_PREFAB_ID]:WINDOW_PREFAB_VERSION,[DOOR_PREFAB_ID]:DOOR_PREFAB_VERSION,[GATE_PREFAB_ID]:GATE_PREFAB_VERSION,[BAGANA_PREFAB_ID]:BAGANA_PREFAB_VERSION,
   ...Object.fromEntries(BAGANA_PREFABS.map(b=>[b.id,BAGANA_PREFAB_VERSION_V2]))
@@ -68,7 +71,7 @@ export function validatePrefabPlacement(blocks,section,options={}){
  const a=prefabBounds(section);
  if(a.min.some(v=>v<0)||a.max[0]>PREFAB_WORLD_X_CELLS||a.max[1]>PREFAB_HEIGHT_CELLS||a.max[2]>PREFAB_WORLD_Z_CELLS)
   return{ok:false,reason:'Секция выходит за границы участка'};
- if(blocks.some(b=>{if(b.id===section.id)return false;const c=prefabBounds(b);return [0,1,2].every(k=>overlap(a,c,k)>EPS);}))return{ok:false,reason:'Место занято'};
+ if(blocks.some(b=>{if(b.id===section.id||b.type==='roof_beam')return false;const c=prefabBounds(b);return [0,1,2].every(k=>overlap(a,c,k)>EPS);}))return{ok:false,reason:'Место занято'};
  if(!hasPrefabSupport(blocks,section))return{ok:false,reason:'Основание должно полностью опираться на нижние секции'};
  return{ok:true,reason:''};
 }
@@ -94,6 +97,7 @@ export function getPlacementGrid(section){
 export function touchingPrefabPairs(blocks){
  const result=[];
  for(let i=0;i<blocks.length;i++)for(let j=i+1;j<blocks.length;j++){
+  if(blocks[i].type==='roof_beam'||blocks[j].type==='roof_beam')continue;
   const a=prefabBounds(blocks[i]),b=prefabBounds(blocks[j]);
   for(let axis=0;axis<3;axis++){
    const forward=Math.abs(a.max[axis]-b.min[axis])<EPS;
