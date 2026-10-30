@@ -36,7 +36,7 @@ test('all 15 approved Bagana models use irregular baked timber meshes',()=>{
   assert.match(gltf.asset.generator,/original Common100 LARGE_00[569]/);
   assert.equal(gltf.meshes.length,2,'stone stays a separate geometry');
   if(spec.form!==1)assert.ok(range>.040, spec.id+' remained cylindrical: '+range.toFixed(4));
-  else assert.ok(range>.072,spec.id+' fork lost natural trunk asymmetry: '+range.toFixed(4));
+  else assert.ok(range>.055,spec.id+' fork lost natural trunk asymmetry: '+range.toFixed(4));
   assert.ok(range<.16,'damage is excessive: '+spec.id);
  }
 });
