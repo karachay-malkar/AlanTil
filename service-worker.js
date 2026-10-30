@@ -1,4 +1,4 @@
-const VERSION = "17.2.45";
+const VERSION = "17.2.46";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 // Images are content-addressed by their ?v= URL, not by the application release.
@@ -8,23 +8,23 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=17.2.45",
-  "/src/app/router.js?v=17.2.45",
+  "/src/app/bootstrap.js?v=17.2.46",
+  "/src/app/router.js?v=17.2.46",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",
   "/src/shared/styles/bracket-tabs.css?v=16.8.0.16",
-  "/src/shared/styles/app.css?v=17.2.45",
+  "/src/shared/styles/app.css?v=17.2.46",
   "/src/shared/styles/learning-preview.css?v=16.8.0.16",
-  "/src/features/path/feature.js?v=17.2.45",
-  "/src/data/path-set-metadata.js?v=17.2.45",
-  "/src/features/path/story-stele.js?v=17.2.45",
+  "/src/features/path/feature.js?v=17.2.46",
+  "/src/data/path-set-metadata.js?v=17.2.46",
+  "/src/features/path/story-stele.js?v=17.2.46",
   "/src/shared/data/word-repository.js?v=16.8.0.16",
   "/src/shared/data/dictionary-store.js?v=16.8.0.16",
   "/assets/icons/ui/path-elbrus-white.png?v=16.8.0.16",
-  "/assets/icons/ui/favicon-32.png?v=17.2.45",
-  "/assets/icons/ui/favicon-192.png?v=17.2.45",
-  "/assets/icons/ui/favicon-512.png?v=17.2.45"
+  "/assets/icons/ui/favicon-32.png?v=17.2.46",
+  "/assets/icons/ui/favicon-192.png?v=17.2.46",
+  "/assets/icons/ui/favicon-512.png?v=17.2.46"
 ];
 
 self.addEventListener("install", (event) => {
