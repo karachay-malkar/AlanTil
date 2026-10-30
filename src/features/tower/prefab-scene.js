@@ -27,6 +27,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const loader=new GLTFLoader(),loaded=new Map();
  const approvedSections=createApprovedSectionLoader();
  const approvedModelPromises=new Map();
+ const roofMeshCache=new Map();
  let disposed=false,layer=null,tool='select',blocks=[],selected=null;
  let frame=0,needsRender=true,needsAim=true,worldMode=false,lastWorldFrame=0,windTimer=0;
  function scheduleDraw(){needsRender=true;if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(draw);}
@@ -187,7 +188,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const woodUrl=DOOR_WOOD_FILE+'?v='+encodeURIComponent(DOOR_RENDER_VERSION);
    if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl).catch(e=>{loaded.delete(woodUrl);throw e;}));
    const {wood}=findApprovedGateMaterials((await loaded.get(woodUrl)).scene);
-   return makeRoofBeam(roofBeamLength(block.sectionId)*CELL,wood);
+   if(!roofMeshCache.has(block.sectionId))roofMeshCache.set(block.sectionId,makeRoofBeam(roofBeamLength(block.sectionId)*CELL,wood));
+   return roofMeshCache.get(block.sectionId);
   }
   if(block.geometryVersion===APPROVED_PREFAB_VERSION){
    if(!isApprovedMasonryType(block.sectionId))throw new TypeError('Not an approved author-built section');

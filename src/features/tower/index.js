@@ -240,7 +240,7 @@ export async function mount(context,params={}){
   if(s.mode==='placing')await preview();
  }
  function begin(type){
-  if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type))return;
+  if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type)&&!isRoofBeamId(type))return;
   s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;s.beamShift=0;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
