@@ -26,6 +26,7 @@ jobs:
         run: |
           node --check packages/tower-game/approved-prefab.mjs
           node --check packages/tower-game/prefab-layout.mjs
+          node --check packages/tower-game/roof-beam.mjs
           node --check packages/tower-game/prefab-joints.mjs
           node --check src/features/tower/approved-section-scene.js
           node --check src/features/tower/prefab-scene.js
@@ -38,4 +39,4 @@ jobs:
           node --check src/features/masonry/library.js
           node --check src/features/masonry/index.js
       - name: Approved assets, placement, rendering dependencies and editor
-        run: node --test scripts/qa/approved-library.test.mjs tests/tower-approved-manual.test.mjs scripts/qa/manual-masonry.test.mjs tests/kunlum-real-terrain.test.mjs
+        run: node --test scripts/qa/approved-library.test.mjs tests/tower-approved-manual.test.mjs scripts/qa/manual-masonry.test.mjs tests/kunlum-real-terrain.test.mjs tests/tower-roof-beam-17-2.test.mjs

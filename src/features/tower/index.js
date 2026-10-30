@@ -174,7 +174,8 @@ export async function mount(context,params={}){
   q('[data-confirm]').disabled=next!=='placing';
   const post=baganaPrefab(s.type);
   const variantButton=q('[data-variant]');
-  variantButton.hidden=isRoofBeamId(s.type)||(!post&&approvedVariantCount(s.type)<2);
+  variantButton.hidden=!post&&approvedVariantCount(s.type)<2;
+  if(isRoofBeamId(s.type))variantButton.hidden=true;
   const variantLabel=post?'Сменить тип багъаны':'Сменить вариант';
   variantButton.setAttribute('aria-label',variantLabel);variantButton.title=variantLabel;
   const heightControl=q('[data-bagana-heights]');
