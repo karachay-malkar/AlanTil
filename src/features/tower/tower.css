@@ -71,3 +71,10 @@
 .towerLoadStatus{position:absolute;z-index:12;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:9px;min-width:190px;max-width:calc(100% - 48px);padding:14px 18px;border-radius:14px;background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);box-shadow:var(--shadow-sm);font:600 13px/1.4 var(--font-body);text-align:center;pointer-events:none}
 .towerLoadStatus[data-error="true"]{pointer-events:auto}
 .towerGame .towerLoadRetry{min-height:38px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--accent-soft);color:var(--text-1);cursor:pointer}
+
+/* Roof timber controls share the tower HUD and sit above its action bar. */
+.towerBeamControls{position:absolute;z-index:9;left:50%;bottom:max(69px,calc(var(--safe-bottom,0px) + 69px));transform:translateX(-50%);display:flex;align-items:center;gap:5px;max-width:calc(100% - 22px);padding:6px 8px;border:1px solid var(--line);border-radius:12px;background:var(--surface-0);box-shadow:var(--shadow-sm);font:600 11px/1.2 var(--font-body);white-space:nowrap}
+.towerBeamControls .btn{display:grid;place-items:center;min-width:30px;min-height:30px;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface-1);color:var(--text-1)}
+.towerBeamControls .uiIcon{width:17px;height:17px}
+.towerBeamControls output{font-variant-numeric:tabular-nums}
+@media(max-width:520px){.towerBeamControls{bottom:max(118px,calc(var(--safe-bottom,0px) + 118px));font-size:10px;gap:3px}.towerBeamControls .btn{min-width:27px;min-height:29px}}

@@ -1,6 +1,8 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
 import {createTowerScene} from './prefab-scene.js?v=17.2.45';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
+import {ROOF_BEAM_VERSION,roofBeamId,roofBeamLength,isRoofBeamId,positionRoofBeamAgainst} from '../../../packages/tower-game/roof-beam.mjs';
+import {prefabBounds} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
 import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/gate-prefab.mjs';
@@ -18,7 +20,7 @@ export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
   sections:[],revision:0,resetAt:null,selected:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
-  preview:null,previewHit:null,locked:false,busy:false,ready:false,canLeave:()=>true};
+  preview:null,previewHit:null,locked:false,beamShift:0,busy:false,ready:false,canLeave:()=>true};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  context.shell.appShell.dataset.feature='tower';
@@ -48,6 +50,14 @@ export async function mount(context,params={}){
   <div class="towerBaganaHeights" data-bagana-heights hidden role="group" aria-label="Высота деревянной багъаны">
    <span>Дерево, м:</span>
    ${BAGANA_WOOD_HEIGHT_CELLS.map(c=>`<button type="button" class="btn" data-bagana-wood-cells="${c}" aria-pressed="false">${(c*.25).toFixed(2)}</button>`).join('')}
+  </div>
+  <div class="towerBeamControls" data-beam-controls hidden role="group" aria-label="Длина и смещение балки">
+   <span>Длина <output data-beam-length>4,00 м</output></span>
+   <button type="button" class="btn" data-beam-shorter aria-label="Укоротить на 25 см" title="Укоротить на 25 см">${uiIcon('arrowDown')}</button>
+   <button type="button" class="btn" data-beam-longer aria-label="Удлинить на 25 см" title="Удлинить на 25 см">${uiIcon('arrowUp')}</button>
+   <span>Сдвиг</span>
+   <button type="button" class="btn" data-beam-back aria-label="Сдвинуть назад на 25 см" title="Сдвинуть назад на 25 см">${uiIcon('arrowLeft')}</button>
+   <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вперёд на 25 см" title="Сдвинуть вперёд на 25 см">${uiIcon('route')}</button>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
@@ -105,8 +115,8 @@ export async function mount(context,params={}){
  void requestTowerOrientation('landscape');
  const catalog=q('.towerCatalog');
  const catalogItem=spec=>{
-  const title=spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':isBaganaPrefab(spec.id)?'Багъана':spec.id.replaceAll('x','×');
-  const symbol=spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
+  const title=isRoofBeamId(spec.id)?'Балка':spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':isBaganaPrefab(spec.id)?'Багъана':spec.id.replaceAll('x','×');
+  const symbol=isRoofBeamId(spec.id)?'layers':spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
   return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span></button>`;
  };
  const walls=BUILDABLE_PREFAB_TYPES.filter(spec=>isApprovedMasonryType(spec.id));
@@ -116,7 +126,8 @@ export async function mount(context,params={}){
  const groups=[
   {id:'walls',label:'Къабыргъа',items:walls},
   {id:'openings',label:'Тешик толтуруу',items:openings},
-  {id:'bagana',label:'Багъана',items:[baganaCatalogItem]}
+  {id:'bagana',label:'Багъана',items:[baganaCatalogItem]},
+  {id:'roof',label:'Крыша',items:[{id:roofBeamId(16)}]}
  ];
  catalog.innerHTML=`<div class="towerCatalogTabs" role="tablist" aria-label="Разделы каталога">${groups.map((group,i)=>
   `<button type="button" class="bracketNavigation towerCatalogTab" role="tab" id="tower-tab-${group.id}" data-catalog-category="${group.id}" aria-controls="tower-panel-${group.id}" aria-selected="${i===0}" tabindex="${i===0?0:-1}">[${group.label}]</button>`).join('')}</div>`+
@@ -163,7 +174,7 @@ export async function mount(context,params={}){
   q('[data-confirm]').disabled=next!=='placing';
   const post=baganaPrefab(s.type);
   const variantButton=q('[data-variant]');
-  variantButton.hidden=!post&&approvedVariantCount(s.type)<2;
+  variantButton.hidden=isRoofBeamId(s.type)||(!post&&approvedVariantCount(s.type)<2);
   const variantLabel=post?'Сменить тип багъаны':'Сменить вариант';
   variantButton.setAttribute('aria-label',variantLabel);variantButton.title=variantLabel;
   const heightControl=q('[data-bagana-heights]');
@@ -171,6 +182,13 @@ export async function mount(context,params={}){
   const chosen=post?.woodCells;
   heightControl.querySelector('span').textContent=post?'Багъана '+post.form+' · дерево, м:':'Дерево, м:';
   heightControl.querySelectorAll('[data-bagana-wood-cells]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.baganaWoodCells)===chosen)));
+  const beamMode=isRoofBeamId(s.type)&&(next==='placing'||next==='saving-place');
+  q('[data-beam-controls]').hidden=!beamMode;
+  if(beamMode){
+   q('[data-beam-length]').textContent=(roofBeamLength(s.type)*.25).toFixed(2).replace('.',',')+' м';
+   q('[data-beam-shorter]').disabled=s.busy||roofBeamLength(s.type)<=1;
+   q('[data-beam-longer]').disabled=s.busy||roofBeamLength(s.type)>=40;
+  }
   q('[data-remove]').disabled=next!=='selected'||s.busy;
   for(const name of ['cancel','rotate','variant','hammer','world','settings']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy||(name==='hammer'&&(!s.ready||s.loadFailed));
@@ -191,6 +209,13 @@ export async function mount(context,params={}){
   if(s.mode!=='placing'&&s.mode!=='saving-place')return null;
   const hit=s.previewHit||s.scene?.getAimHit?.();
   if(!hit)return null;
+  if(isRoofBeamId(s.type)){
+   const item={id:'00000000-0000-4000-8000-000000000001',type:'roof_beam',sectionId:s.type,
+    variant:0,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:ROOF_BEAM_VERSION};
+   if(!hit.block||hit.block.type!=='masonry_section')return null;
+   const supportTop=prefabBounds(hit.block).max[1];
+   return positionRoofBeamAgainst(item,{...hit,supportTop},s.beamShift);
+  }
   const item={id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:s.type,
    variant:s.variant,rotation:s.rotation,x:0,y:0,z:0,geometryVersion:s.type===WINDOW_PREFAB_ID?WINDOW_PREFAB_VERSION:s.type===DOOR_PREFAB_ID?DOOR_PREFAB_VERSION:s.type===GATE_PREFAB_ID?GATE_PREFAB_VERSION:s.type===BAGANA_PREFAB_ID?BAGANA_PREFAB_VERSION:baganaPrefab(s.type)?BAGANA_PREFAB_VERSION_V2:APPROVED_PREFAB_VERSION};
   return positionAgainst(item,hit);
@@ -201,7 +226,7 @@ export async function mount(context,params={}){
   if(s.disposed||s.mode!=='placing'||!s.scene)return;
   const candidate=placement();s.preview=candidate;
   const placing=candidate&&validatePrefabPlacement(blocks(),candidate);
-  const joints=placing?.ok?validateSectionJoints(s.sections,candidate,s.scene.manifest):{ok:false};
+  const joints=placing?.ok?(candidate.type==='roof_beam'?{ok:true}:validateSectionJoints(s.sections.filter(b=>b.type==='masonry_section'),candidate,s.scene.manifest)):{ok:false};
   const valid=!!placing?.ok&&joints.ok;
   q('[data-confirm]').disabled=!valid||!editable(s)||s.busy;
   await s.scene.setPreview(candidate,valid);
@@ -216,7 +241,7 @@ export async function mount(context,params={}){
  }
  function begin(type){
   if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type))return;
-  s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;
+  s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;s.beamShift=0;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
   mode('placing');void preview();
@@ -329,6 +354,19 @@ export async function mount(context,params={}){
   catalogVisible(!side.classList.contains('is-open'));
  });
  on('[data-cancel]','click',cancel);
+ for(const [name,delta] of [['shorter',-1],['longer',1]]){
+  on('[data-beam-'+name+']','click',()=>{
+   if(s.mode!=='placing'||!isRoofBeamId(s.type)||s.busy)return;
+   const cells=roofBeamLength(s.type)+delta;if(cells<1||cells>40)return;
+   s.type=roofBeamId(cells);mode('placing');void preview();
+  });
+ }
+ for(const [name,delta] of [['back',-1],['forward',1]]){
+  on('[data-beam-'+name+']','click',()=>{
+   if(s.mode!=='placing'||!isRoofBeamId(s.type)||s.busy)return;
+   s.beamShift+=delta;void preview();
+  });
+ }
  on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;void preview();});
  on('[data-variant]','click',()=>{if(s.mode!=='placing')return;
   if(baganaPrefab(s.type)){
@@ -342,13 +380,13 @@ export async function mount(context,params={}){
   if(s.mode!=='placing'||!s.preview||q('[data-confirm]').disabled)return;
   if(!s.userId){message('Для сохранения башни необходимо войти в аккаунт');return;}
   const section={...s.preview,id:crypto.randomUUID()};
-  if(!validatePrefabPlacement(blocks(),section).ok||!validateSectionJoints(s.sections,section,s.scene.manifest).ok)return;
+  if(!validatePrefabPlacement(blocks(),section).ok||(section.type!=='roof_beam'&&!validateSectionJoints(s.sections.filter(b=>b.type==='masonry_section'),section,s.scene.manifest).ok))return;
   void mutate('place',section,null);
  });
  on('[data-remove]','click',()=>{
   if(s.mode!=='selected'||!s.selected)return;
   const id=s.selected,remaining=s.sections.filter(b=>b.id!==id);
-  if(remaining.some((b,i)=>!validatePrefabPlacement(remaining.filter((_,j)=>j!==i),b).ok)){
+  if(remaining.some((b,i)=>b.type!=='roof_beam'&&!validatePrefabPlacement(remaining.filter((_,j)=>j!==i),b).ok)){
    message('Нельзя удалить опору для верхних секций');return;
   }
   void mutate('remove',null,id);

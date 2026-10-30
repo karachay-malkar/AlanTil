@@ -5,6 +5,7 @@ import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
 import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.45';
+import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -162,7 +163,32 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  controls.addEventListener('change',cameraChanged);
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
+ function makeRoofBeam(length,material){
+  // Distinct timber mesh: irregular cylinder with actual end caps.
+  const rings=Math.max(2,Math.ceil(length/.25));
+  const geometry=new THREE.CylinderGeometry(.113,.123,length,13,rings,false);
+  geometry.rotateZ(-Math.PI/2);
+  const pos=geometry.getAttribute('position');
+  for(let i=0;i<pos.count;i++){
+   const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);
+   const angle=Math.atan2(z,y);
+   const scale=1+.045*Math.sin(x*8.3+angle*3)+.025*Math.sin(x*17+angle*5);
+   pos.setY(i,y*scale);pos.setZ(i,z*scale);
+  }
+  geometry.computeVertexNormals();
+  const bark=material.clone();bark.side=THREE.DoubleSide;
+  const mesh=new THREE.Mesh(geometry,bark);
+  mesh.name='roof-beam-natural-log';mesh.userData.alantilNonStone=true;
+  return mesh;
+ }
  async function getPrefab(block){
+  if(block.type==='roof_beam'){
+   if(!isRoofBeamId(block.sectionId)||block.geometryVersion!==ROOF_BEAM_VERSION)throw new TypeError('Unknown roof beam');
+   const woodUrl=DOOR_WOOD_FILE+'?v='+encodeURIComponent(DOOR_RENDER_VERSION);
+   if(!loaded.has(woodUrl))loaded.set(woodUrl,loader.loadAsync(woodUrl).catch(e=>{loaded.delete(woodUrl);throw e;}));
+   const {wood}=findApprovedGateMaterials((await loaded.get(woodUrl)).scene);
+   return makeRoofBeam(roofBeamLength(block.sectionId)*CELL,wood);
+  }
   if(block.geometryVersion===APPROVED_PREFAB_VERSION){
    if(!isApprovedMasonryType(block.sectionId))throw new TypeError('Not an approved author-built section');
    const key=block.sectionId+':'+block.variant;
@@ -266,7 +292,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function blockKey(block){return JSON.stringify([block.id,block.type,block.sectionId,block.variant,block.rotation,block.x,block.y,block.z,block.geometryVersion]);}
  function jointKey(joint){return joint.file+':'+joint.point.join(',');}
  function rebindGroup(group,block){group.userData.block=block;group.traverse(node=>{if(node.isMesh)node.userData.block=block;});}
- function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected&&x.type==='masonry_section');outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}scheduleDraw();}
+ function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected);outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}scheduleDraw();}
  function prepareMesh(model,block){
   const group=new THREE.Group();group.add(model.clone(true));group.userData.block=block;
   group.traverse(child=>{if(!child.isMesh)return;
@@ -291,7 +317,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const nextSections=new Map(),nextJoints=new Map();
   try{
    for(const block of visible){
-    if(block.type!=='masonry_section')throw new TypeError('Unsupported tower block');
+    if(block.type!=='masonry_section'&&block.type!=='roof_beam')throw new TypeError('Unsupported tower block');
     const signature=blockKey(block);
     let entry=renderedById.get(block.id);
     if(!entry||entry.signature!==signature){
@@ -301,7 +327,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     }
     nextSections.set(block.id,entry);
    }
-   const resolved=resolvePrefabJoints(visible,manifest);
+   const resolved=resolvePrefabJoints(visible.filter(b=>b.type==='masonry_section'),manifest);
    for(const joint of resolved.joints){
     const key=jointKey(joint);
     let group=renderedJoints.get(key);
@@ -345,6 +371,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   geometry.dispose();
   faceGrid.visible=false;
   if(tool!=='place'||!hit?.block){return;}
+  if(hit.block.type==='roof_beam')return;
   const bounds=prefabBounds(hit.block),n=hit.normal;
   const axis=Math.abs(n.x)>.5?0:Math.abs(n.y)>.5?1:2;
   const dir=[n.x,n.y,n.z][axis]>0?1:0;
