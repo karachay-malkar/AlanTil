@@ -81,8 +81,6 @@
 
 
 /* Polygon roofing: no numeric dimensions, instructions, or unrelated construction HUD. */
-.towerRoofPrice{display:flex;align-items:center;gap:6px;padding:0 11px;height:43px;border:1px solid #4b8059;border-radius:12px;background:var(--surface-0);color:var(--text-1);font-weight:700;font-variant-numeric:tabular-nums}
-.towerRoofPrice .uiIcon{height:20px;width:20px;color:#b78c32}
 .towerGame[data-mode="roof"] .towerCamera,.towerGame[data-mode="saving-roof"] .towerCamera,
 .towerGame[data-mode="roof"] .towerQuickActions,.towerGame[data-mode="saving-roof"] .towerQuickActions,
 .towerGame[data-mode="roof"] .towerExploreControls,.towerGame[data-mode="saving-roof"] .towerExploreControls,
