@@ -36,16 +36,23 @@ test('support and overlap are validated on ALL covered cells',()=>{
  const masonry={type:'masonry_section',_roofBounds:{min:[3,2,3],max:[4,3,4]}};
  assert.equal(checkRoofPlacement(points,2,[beam,masonry]).reason,'ROOF_COLLISION');
 });
-test('real 3D layers and minimal HUD are wired into the tower',()=>{
+test('continuous multi-layer geometry and the free-build HUD are wired into tower',()=>{
  const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
  const geom=read('src/features/tower/roof-cover-scene.js');
  const ui=read('src/features/tower/index.js');
- const sql=read('supabase/migrations/20261031154400_tower_polygon_roof_25cm_paid_cells.sql');
- assert.match(geom,/InstancedMesh/);
- for(const layer of ['soilGeo','strawGeo','scrubGeo','logGeo','grassGeo'])assert.match(geom,new RegExp(layer));
- assert.match(ui,/data-roof-price/);
+ const sql=read('supabase/migrations/20261031233000_tower_roof_free_build_and_preserve_wallet.sql');
+ assert.match(geom,/function terrain\(/);
+ assert.match(geom,/computeVertexNormals/);
+ assert.match(geom,/DataTexture/);
+ assert.match(geom,/function poles\(/);
+ assert.match(geom,/grassGeo/);
+ assert.match(geom,/function soilHeight\(/);
+ assert.doesNotMatch(geom,/new THREE.BoxGeometry\(C,\.10,C\)/);
  assert.match(ui,/pickRoof\(hit\)/);
  assert.match(ui,/placeTowerRoof/);
- assert.match(sql,/price:=cnt\*4/);
- assert.match(sql,/INSUFFICIENT_COINS/);
+ assert.doesNotMatch(ui,/\[data-roof-price\]/);
+ assert.doesNotMatch(ui,/s\.roofBalance\s*<|>s\.roofBalance/);
+ assert.match(sql,/price:=0/);
+ assert.doesNotMatch(sql,/silver=silver-price/);
+ assert.doesNotMatch(sql,/RAISE EXCEPTION 'INSUFFICIENT_COINS'/);
 });
