@@ -7,7 +7,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
  const strawGeo=new THREE.BoxGeometry(C,.02,C);
  const scrubGeo=new THREE.CylinderGeometry(.004,.005,.27,4,2);
  scrubGeo.rotateZ(-Math.PI/2);
- const logGeo=new THREE.CylinderGeometry(.048,.054,.256,9,2);
+ const logGeo=new THREE.CylinderGeometry(.048,.054,.25,9,2);
  logGeo.rotateZ(-Math.PI/2);
  const grassGeo=new THREE.ConeGeometry(.012,.058,3);
  const highlightGeo=new THREE.BoxGeometry(C,.007,C);
@@ -49,18 +49,43 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   mesh.userData.roofGeometry=true;
   group.add(mesh);
  }
+ /** Merge adjacent 25-cm log segments into continuous natural poles along X. */
+ function poles(group,cells,level){
+  const rows=new Map();
+  for(const [x,z] of cells){if(!rows.has(z))rows.set(z,[]);rows.get(z).push(x);}
+  const runs=[];
+  for(const [z,xs] of rows){
+   xs.sort((a,b)=>a-b);
+   let start=xs[0],end=start;
+   for(const x of xs.slice(1)){
+    if(x===end+1){end=x;continue;}
+    runs.push([start,end,z]);start=end=x;
+   }
+   runs.push([start,end,z]);
+  }
+  const mesh=new THREE.InstancedMesh(logGeo,woodMat,runs.length*2);
+  mesh.frustumCulled=false;
+  let i=0;
+  for(const [start,end,z] of runs)for(const offset of [-.059,.059]){
+   tmp.position.set((start+(end-start+1)/2)*C,level*C+.05,(z+.5)*C+offset);
+   tmp.scale.set(end-start+1,1,1);tmp.rotation.set(0,0,0);tmp.updateMatrix();
+   mesh.setMatrixAt(i,tmp.matrix);
+   const f=.83+.12*rand(start*15+end*17+z*31+offset*59);
+   col.setRGB(f,f,f);mesh.setColorAt(i,col);i++;
+  }
+  mesh.instanceMatrix.needsUpdate=true;
+  if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+  group.add(mesh);
+ }
  function assembly(cells,level,ghost=false){
   const group=new THREE.Group();if(!cells.length)return group;
-  instance(group,logGeo,woodMat,cells,level,2,(o,x,z,i)=>{
-   o.position.y+=.05;o.position.z+=(i===0?-.059:.059);
-   o.rotation.y+=(rand(x*5+z*9+i)-.5)*.04;
-  },true);
+  poles(group,cells,level);
   instance(group,strawGeo,strawMat,cells,level,1,o=>{o.position.y+=.11;},true);
   instance(group,scrubGeo,twigMat,cells,level,3,(o,x,z,i)=>{
    o.position.y+=.135;o.position.z+=(i-1)*.064;
    o.rotation.y=(rand(x*23+z*17+i)-.5)*.30;
   },true);
-  instance(group,soilGeo,earthMat,cells,level,1,o=>{o.position.y+=.20;},true);
+  instance(group,soilGeo,earthMat,cells,level,1,o=>{o.position.y+=.20;});
   instance(group,grassGeo,grassMat,cells,level,4,(o,x,z,i)=>{
    const seed=x*97+z*31+i*47;
    o.position.y+=.25+.021*rand(seed);
