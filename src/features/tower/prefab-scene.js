@@ -6,6 +6,7 @@ import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
 import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.47';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
+import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-roof-cover.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -52,6 +53,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const sunlight=new THREE.DirectionalLight(KUNLUM_AUTUMN.sun,2.6);
  sunlight.position.set(-20,19,12);scene.add(sunlight);
  const surface=new THREE.Group();scene.add(surface);
+ const roofCoverRenderer=createRoofCoverRenderer(THREE,scene,scheduleDraw);
+ let roofDraft=null;
  // Existing open landscape remains independent of the construction engine.
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(SITE.widthM,SITE.depthM),
   new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false}));
@@ -413,9 +416,30 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   }
   return null;
  }
+ function roofPick(clientX,clientY){
+  const rect=renderer.domElement.getBoundingClientRect();
+  if(roofDraft?.points?.length){
+   const remove=roofCoverRenderer.screenVertex(camera,rect,clientX,clientY,roofDraft.points,roofDraft.level);
+   if(remove>=0)return {remove};
+   pointer.set((clientX-rect.left)/rect.width*2-1,-(clientY-rect.top)/rect.height*2+1);
+   raycaster.setFromCamera(pointer,camera);
+   const plane=new THREE.Plane(new THREE.Vector3(0,1,0),-roofDraft.level*CELL);
+   const target=new THREE.Vector3();
+   if(!raycaster.ray.intersectPlane(plane,target))return null;
+   const x=Math.floor(target.x/CELL),z=Math.floor(target.z/CELL);
+   if(x<0||z<0||x>=SITE.widthM/CELL||z>=SITE.depthM/CELL)return null;
+   return {cell:[x,z],level:roofDraft.level};
+  }
+  const hit=findHit(clientX,clientY);
+  if(!hit)return null;
+  const x=Math.floor(hit.position[0]/CELL),z=Math.floor(hit.position[2]/CELL);
+  if(x<0||z<0||x>=SITE.widthM/CELL||z>=SITE.depthM/CELL)return null;
+  const level=hit.block?prefabBounds(hit.block).max[1]:Math.round(hit.position[1]/CELL);
+  return {cell:[x,z],level};
+ }
  const activePointers=new Set();let pressed=null;
  function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
- function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+ function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;if(tool==='roof'){const picked=roofPick(e.clientX,e.clientY);if(picked)onPick(picked);return;}const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();scheduleDraw();});observer.observe(container);
@@ -488,7 +512,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  requestAnimationFrame(()=>{if(!disposed)visualStartTimer=setTimeout(loadVisualAssets,100);});
  // Complete the first frame before controls become available.
  await new Promise(resolve=>requestAnimationFrame(resolve));
- return {manifest,async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
+ return {manifest,setRoofs(roofs){roofCoverRenderer.setSaved(roofs);},setRoofDraft(next,cells=[]){roofDraft=next;roofCoverRenderer.setDraft(next,cells);},async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
   setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
   setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
   exitExplore:resetCamera,
@@ -509,6 +533,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    yellowParcelCorners:info?.yellowParcelCorners||null,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
-  dispose(){disposed=true;clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;roofCoverRenderer.dispose();clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
  };
 }
