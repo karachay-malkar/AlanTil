@@ -18,7 +18,9 @@ on:
       - 'tests/tower-bagana-17-2.test.mjs'
       - 'tests/tower-bagana-organic.test.mjs'
       - 'tests/tower-bagana-stone-seat.test.mjs'
+      - 'tests/tower-bagana-crown-seat.test.mjs'
       - 'tools/tower/bagana-stone-seat.mjs'
+      - 'tools/tower/bagana-crown-seat.mjs'
       - 'tools/tower/bagana-organic-mesh.mjs'
       - 'tools/tower/bake-bagana-organic.mjs'
       - 'tests/tower-approved-manual.test.mjs'
@@ -45,6 +47,7 @@ jobs:
           node --check src/features/tower/prefab-scene.js
           node --check packages/tower-game/prefab-layout.mjs
           node --check packages/tower-game/prefab-joints.mjs
+          node --check tools/tower/bagana-crown-seat.mjs
       - name: Verify release version and cache synchronization
         run: node scripts/release/sync-version.mjs --check
       - name: Verify the standalone asset over local HTTP
@@ -64,4 +67,4 @@ jobs:
             cmp /tmp/bagana-http.glb "$file"
           done
       - name: Bagana and existing approved tower integration tests
-        run: node --test tests/tower-bagana-17-2.test.mjs tests/tower-approved-manual.test.mjs tests/tower-bagana-organic.test.mjs tests/tower-bagana-stone-seat.test.mjs
+        run: node --test tests/tower-bagana-17-2.test.mjs tests/tower-approved-manual.test.mjs tests/tower-bagana-organic.test.mjs tests/tower-bagana-stone-seat.test.mjs tests/tower-bagana-crown-seat.test.mjs

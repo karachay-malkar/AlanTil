@@ -32,7 +32,7 @@ test('all 15 approved Bagana models use irregular baked timber meshes',()=>{
  for(const spec of BAGANA_PREFABS){
   const bytes=readFileSync(new URL('..'+spec.file,import.meta.url));
   const {gltf,range}=ringGeometry(bytes);
-  assert.match(gltf.asset.generator,/timber v5/,'versioned organic mesh: '+spec.id);
+  assert.match(gltf.asset.generator,/timber v6/,'versioned organic mesh: '+spec.id);
   assert.match(gltf.asset.generator,/original Common100 LARGE_00[569]/);
   assert.equal(gltf.meshes.length,2,'stone stays a separate geometry');
   if(spec.form!==1)assert.ok(range>.040, spec.id+' remained cylindrical: '+range.toFixed(4));
