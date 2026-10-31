@@ -26,3 +26,19 @@ export function mutateTowerV3({revision,id,action,section=null,sectionId=null}){
 export function clearTowerV3({revision,id}){
  return rpc('clear_tower_v3',{p_revision:revision,p_operation_id:id});
 }
+
+
+/** Polygon roofs persist separately from legacy rectangular prefab entries. */
+async function roofRpc(name,args){
+ const client=await getSupabaseClient();
+ const {data,error}=await client.rpc(name,args);
+ if(error)throw error;
+ if(!data||!Array.isArray(data.roofs)||!Number.isFinite(Number(data.balance)))throw new Error('INVALID_ROOF_SNAPSHOT');
+ return {roofs:data.roofs,balance:Number(data.balance),replayed:!!data.replayed};
+}
+export function loadTowerRoofs(userId=null){
+ return roofRpc('get_tower_roof_snapshot',{p_user_id:userId});
+}
+export function placeTowerRoof({id,points,level}){
+ return roofRpc('mutate_tower_roof',{p_operation_id:id,p_points:points,p_level:level});
+}
