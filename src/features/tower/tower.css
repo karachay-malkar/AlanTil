@@ -93,3 +93,5 @@
 .towerGame[data-mode="roof"] .towerPlacementBar,.towerGame[data-mode="saving-roof"] .towerPlacementBar{max-width:calc(100% - 24px)}
 .towerGame[data-mode="roof"] .towerPlacementBar [data-confirm],.towerGame[data-mode="saving-roof"] .towerPlacementBar [data-confirm]{border-color:#399354;background:#e2f7e7}
 .towerGame[data-mode="saving-roof"] [data-confirm],.towerGame[data-mode="saving-roof"] [data-cancel]{pointer-events:none;opacity:.5}
+
+.towerPlacementBar [data-confirm]{background:var(--accent-soft);border-color:var(--accent-strong)}
