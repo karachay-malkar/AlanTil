@@ -2,6 +2,7 @@
 import {createTowerScene} from './prefab-scene.js?v=17.2.47';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {ROOF_BEAM_VERSION,roofBeamId,roofBeamLength,isRoofBeamId,positionRoofBeamAgainst} from '../../../packages/tower-game/roof-beam.mjs';
+import {roofCoverCells,checkRoofPlacement,ROOF_PRICE_PER_CELL} from '../../../packages/tower-game/roof-cover.mjs';
 import {prefabBounds} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
@@ -9,7 +10,7 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3} from './repository.js?v=17.7-approved-only.1';
+import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3,loadTowerRoofs,placeTowerRoof} from './repository.js?v=17.2-roof-cover.1';
 import {uiIcon} from '../../shared/ui/icons.js?v=17.2.47';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -20,7 +21,8 @@ export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
   sections:[],revision:0,resetAt:null,selected:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
-  preview:null,previewHit:null,locked:false,beamShift:0,busy:false,ready:false,canLeave:()=>true};
+  preview:null,previewHit:null,locked:false,beamShift:0,busy:false,ready:false,canLeave:()=>true,
+  roofs:[],roofBalance:0,roofDraft:null,roofValidity:null};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  context.shell.appShell.dataset.feature='tower';
@@ -60,6 +62,7 @@ export async function mount(context,params={}){
    <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вперёд на 25 см" title="Сдвинуть вперёд на 25 см">${uiIcon('route')}</button>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
+   <div class="towerRoofPrice" data-roof-price hidden aria-live="polite">${uiIcon('circleDot')} <output data-roof-amount>0</output></div>
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
   </div>
   <div class="towerSelectionBar" data-selection hidden role="toolbar" aria-label="Выделенная секция">
@@ -115,8 +118,8 @@ export async function mount(context,params={}){
  void requestTowerOrientation('landscape');
  const catalog=q('.towerCatalog');
  const catalogItem=spec=>{
-  const title=isRoofBeamId(spec.id)?'Балка':spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':isBaganaPrefab(spec.id)?'Багъана':spec.id.replaceAll('x','×');
-  const symbol=isRoofBeamId(spec.id)?'layers':spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
+  const title=spec.id==='roof-cover'?'Покрытие':isRoofBeamId(spec.id)?'Балка':spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':isBaganaPrefab(spec.id)?'Багъана':spec.id.replaceAll('x','×');
+  const symbol=spec.id==='roof-cover'?'layers':isRoofBeamId(spec.id)?'layers':spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
   return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span></button>`;
  };
  const walls=BUILDABLE_PREFAB_TYPES.filter(spec=>isApprovedMasonryType(spec.id));
@@ -127,7 +130,7 @@ export async function mount(context,params={}){
   {id:'walls',label:'Къабыргъа',items:walls},
   {id:'openings',label:'Тешик толтуруу',items:openings},
   {id:'bagana',label:'Багъана',items:[baganaCatalogItem]},
-  {id:'roof',label:'Крыша',items:[{id:roofBeamId(16)}]}
+  {id:'roof',label:'Крыша',items:[{id:roofBeamId(16)},{id:'roof-cover'}]}
  ];
  catalog.innerHTML=`<div class="towerCatalogTabs" role="tablist" aria-label="Разделы каталога">${groups.map((group,i)=>
   `<button type="button" class="bracketNavigation towerCatalogTab" role="tab" id="tower-tab-${group.id}" data-catalog-category="${group.id}" aria-controls="tower-panel-${group.id}" aria-selected="${i===0}" tabindex="${i===0?0:-1}">[${group.label}]</button>`).join('')}</div>`+
@@ -169,13 +172,16 @@ export async function mount(context,params={}){
  }
  function mode(next){
   s.mode=next;game.dataset.mode=next;
-  q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place';
+  const roofing=next==='roof'||next==='saving-roof';
+  q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place'&&!roofing;
+  q('[data-roof-price]').hidden=!roofing||!s.roofDraft?.points.length;
+  q('[data-rotate]').hidden=roofing;
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
-  q('[data-confirm]').disabled=next!=='placing';
+  q('[data-confirm]').disabled=next!=='placing'&&next!=='roof';
   const post=baganaPrefab(s.type);
   const variantButton=q('[data-variant]');
   variantButton.hidden=!post&&approvedVariantCount(s.type)<2;
-  if(isRoofBeamId(s.type))variantButton.hidden=true;
+  if(isRoofBeamId(s.type)||roofing)variantButton.hidden=true;
   const variantLabel=post?'Сменить тип багъаны':'Сменить вариант';
   variantButton.setAttribute('aria-label',variantLabel);variantButton.title=variantLabel;
   const heightControl=q('[data-bagana-heights]');
@@ -195,8 +201,8 @@ export async function mount(context,params={}){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy||(name==='hammer'&&(!s.ready||s.loadFailed));
   }
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
-  if(next==='placing'||next==='saving-place')catalogVisible(false);
-  s.scene?.setTool(next==='placing'||next==='saving-place'?'place':'select');
+  if(next==='placing'||next==='saving-place'||roofing)catalogVisible(false);
+  s.scene?.setTool(roofing?'roof':next==='placing'||next==='saving-place'?'place':'select');
   if(next!=='placing'&&next!=='saving-place')void s.scene?.setPreview(null);
  }
  function markSelection(id){
@@ -205,6 +211,62 @@ export async function mount(context,params={}){
   s.scene?.setSelected(s.selected);
   mode(chosen&&editable(s)?'selected':'idle');
   if(chosen&&editable(s))catalogVisible(false);
+ }
+ function updateRoofDraft(){
+  if(!s.roofDraft)return;
+  const points=s.roofDraft.points,level=s.roofDraft.level;
+  const cells=roofCoverCells(points);
+  s.roofValidity=points.length&&Number.isInteger(level)?checkRoofPlacement(points,level,
+   s.sections.map(b=>({...b,_roofBounds:prefabBounds(b)})),s.roofs):{ok:false,cells};
+  s.scene?.setRoofDraft(points.length?s.roofDraft:null,cells);
+  q('[data-roof-price]').hidden=!points.length;
+  q('[data-roof-amount]').textContent=String(cells.length*ROOF_PRICE_PER_CELL);
+  q('[data-confirm]').disabled=!s.roofValidity.ok||!s.userId||s.busy||
+   cells.length*ROOF_PRICE_PER_CELL>s.roofBalance;
+ }
+ function pickRoof(hit){
+  if(!s.roofDraft||s.busy)return;
+  if(Number.isInteger(hit.remove)){
+   s.roofDraft.points.splice(hit.remove,1);
+   if(!s.roofDraft.points.length)s.roofDraft.level=null;
+  }else if(Array.isArray(hit.cell)){
+   const [x,z]=hit.cell;
+   const index=s.roofDraft.points.findIndex(p=>p[0]===x&&p[1]===z);
+   if(index!==-1)s.roofDraft.points.splice(index,1);
+   else if(s.roofDraft.points.length<64){
+    if(!s.roofDraft.points.length)s.roofDraft.level=hit.level;
+    s.roofDraft.points.push([x,z]);
+   }
+   if(!s.roofDraft.points.length)s.roofDraft.level=null;
+  }
+  updateRoofDraft();
+ }
+ function beginRoof(){
+  if(s.busy||!s.ready||s.loadFailed||!editable(s))return;
+  s.type='roof-cover';s.selected=null;s.roofDraft={points:[],level:null};
+  s.scene?.setSelected(null);
+  mode('roof');updateRoofDraft();
+ }
+ async function commitRoof(){
+  if(s.mode!=='roof'||s.busy||!s.userId||!s.roofValidity?.ok)return;
+  const points=s.roofDraft.points.map(p=>[...p]),level=s.roofDraft.level;
+  s.busy=true;mode('saving-roof');
+  try{
+   const saved=await placeTowerRoof({id:crypto.randomUUID(),points,level});
+   if(s.disposed)return;
+   s.roofs=saved.roofs;s.roofBalance=saved.balance;
+   s.scene?.setRoofs(s.roofs);s.scene?.setRoofDraft(null);
+   s.roofDraft=null;s.roofValidity=null;mode('idle');
+  }catch(error){
+   if(s.disposed)return;
+   const reason=String(error?.message||error);
+   try{const snapshot=await loadTowerRoofs();s.roofs=snapshot.roofs;s.roofBalance=snapshot.balance;s.scene?.setRoofs(s.roofs);}catch{}
+   mode('roof');updateRoofDraft();
+   message(reason.includes('INSUFFICIENT_COINS')?'Недостаточно монет':
+    reason.includes('ROOF_SUPPORT')?'Не хватает опор':
+    reason.includes('ROOF_COLLISION')||reason.includes('ROOF_OVERLAP')?'Крыша пересекается с постройкой':
+    'Не удалось установить крышу');
+  }finally{s.busy=false;if(!s.disposed&&s.mode==='roof')updateRoofDraft();}
  }
  function placement(){
   if(s.mode!=='placing'&&s.mode!=='saving-place')return null;
@@ -241,6 +303,7 @@ export async function mount(context,params={}){
   if(s.mode==='placing')await preview();
  }
  function begin(type){
+  if(type==='roof-cover'){beginRoof();return;}
   if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type)&&!isRoofBeamId(type))return;
   s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;s.beamShift=0;
   s.previewHit=s.scene?.getAimHit?.()||null;
@@ -249,14 +312,16 @@ export async function mount(context,params={}){
  }
  function cancel(){
   if(s.busy)return;
+  if(s.roofDraft){s.roofDraft=null;s.roofValidity=null;s.scene?.setRoofDraft(null);}
   ++previewSequence;s.preview=null;s.previewHit=null;s.selected=null;s.locked=false;
   s.scene?.setSelected(null);mode('idle');
  }
  async function refreshServer(){
-  if(!s.userId){s.sections=[];s.revision=0;s.resetAt=null;await redraw();return;}
-  const snapshot=await loadTowerV3(params.userId||null);
+  if(!s.userId){s.sections=[];s.roofs=[];s.revision=0;s.resetAt=null;s.scene?.setRoofs([]);await redraw();return;}
+  const [snapshot,roofSnapshot]=await Promise.all([loadTowerV3(params.userId||null),loadTowerRoofs(params.userId||null)]);
   s.sections=snapshot.elements;s.revision=snapshot.revision;s.resetAt=snapshot.resetAt;
-  await redraw();
+  s.roofs=roofSnapshot.roofs;s.roofBalance=roofSnapshot.balance;
+  s.scene?.setRoofs(s.roofs);await redraw();
  }
  async function mutate(action,section=null,sectionId=null){
   if(s.busy||!s.userId||!editable(s))return;
@@ -300,7 +365,7 @@ export async function mount(context,params={}){
    s.sections=result.elements;s.revision=result.revision;
    s.resetAt=result.resetAt;
    s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
-   s.scene?.setSelected(null);mode('idle');await redraw();
+   s.scene?.setSelected(null);s.roofs=[];s.scene?.setRoofs([]);mode('idle');await redraw();
   }catch(error){
    if(s.disposed)return;
    try{await refreshServer();}catch{}
@@ -378,6 +443,7 @@ export async function mount(context,params={}){
   s.variant=(s.variant+1)%count;void preview();
  });
  on('[data-confirm]','click',()=>{
+  if(s.mode==='roof'){void commitRoof();return;}
   if(s.mode!=='placing'||!s.preview||q('[data-confirm]').disabled)return;
   if(!s.userId){message('Для сохранения башни необходимо войти в аккаунт');return;}
   const section={...s.preview,id:crypto.randomUUID()};
@@ -472,7 +538,7 @@ export async function mount(context,params={}){
  },{signal:controller.signal});
  try{
   s.scene=await createTowerScene(q('.towerCanvas'),{
-   onPick(hit){if(s.mode!=='placing')return;s.previewHit=hit;s.locked=true;void preview();},
+   onPick(hit){if(s.mode==='roof'){pickRoof(hit);return;}if(s.mode!=='placing')return;s.previewHit=hit;s.locked=true;void preview();},
    onSelection(id){if(s.mode==='idle'||s.mode==='selected')markSelection(id);},
    onCameraChange(camera){if(s.mode!=='placing'||s.locked)return;
     const hit=camera.hit||{position:camera.target,normal:{x:0,y:1,z:0}};
