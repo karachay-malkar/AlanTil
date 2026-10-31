@@ -33,7 +33,9 @@ const THREE={
  MeshStandardMaterial:Material,MeshBasicMaterial:Material,LineBasicMaterial:Material,
  BufferGeometry:Geometry,Float32BufferAttribute:class{constructor(array,itemSize){this.array=array;this.itemSize=itemSize;}},
  Group,Object3D,Mesh,InstancedMesh,Line:Mesh,Color,
- DoubleSide:2,RepeatWrapping:1,LinearMipmapLinearFilter:1,LinearFilter:1,SRGBColorSpace:1
+ Vector2:class{constructor(x,y){this.x=x;this.y=y;}},
+ ShapeUtils:{triangulateShape(points){return Array.from({length:Math.max(0,points.length-2)},(_,i)=>[0,i+1,i+2]);}},
+DoubleSide:2,RepeatWrapping:1,LinearMipmapLinearFilter:1,LinearFilter:1,SRGBColorSpace:1
 };
 test('contiguous 3 by 2 modules share soil vertices and remain 25cm thick',()=>{
  const root=new Group(),roof=createRoofCoverRenderer(THREE,root,()=>{});
@@ -62,5 +64,20 @@ test('draft points and final roof can be rebuilt and cleared',()=>{
  roof.setDraft(null,[]);roof.setSaved([]);
  assert.equal(root.children[0].children.length,0);
  assert.equal(root.children[1].children.length,0);
+ roof.dispose();
+});
+
+test('polygon outline is continuous across diagonal boundaries',()=>{
+ const root=new Group(),roof=createRoofCoverRenderer(THREE,root,()=>{});
+ roof.setSaved([{id:'diagonal',level:6,points:[[2,2],[5,2],[4,4]],
+  cells:[[2,2],[3,2],[4,2],[5,2],[3,3],[4,3],[4,4]]}]);
+ const meshes=root.children[0].children[0].children;
+ const soil=meshes.find(x=>x.geometry?.attrs?.uv);
+ assert.ok(soil,'earth is a polygon mesh');
+ const xs=soil.geometry.attrs.position.array;
+ assert.ok(xs.length>80,'top face is subdivided to sub-cell detail');
+ assert.ok([...xs].every(Number.isFinite),'no invalid 3D positions');
+ assert.ok(Array.from({length:xs.length/3},(_,i)=>xs[i*3]).some(x=>Math.abs(x/.0625-Math.round(x/.0625))>1e-3),
+ 'diagonal roof edge is not forced onto the 25cm voxel outline');
  roof.dispose();
 });
