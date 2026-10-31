@@ -7,6 +7,7 @@ import {BUILDABLE_PREFAB_TYPES,prefabBounds,validatePrefabPlacement} from '../pa
 import {validateSectionJoints,resolvePrefabJoints} from '../packages/tower-game/prefab-joints.mjs';
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_PREFABS,BAGANA_PREFAB_VERSION_V2,baganaType,baganaPrefab,nextBaganaType} from '../packages/tower-game/bagana-prefab.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../packages/tower-game/window-prefab.mjs';
+import {measureBaganaCrown} from '../tools/tower/bagana-crown-seat.mjs';
 
 const entry=(id,sectionId,geometryVersion,x=0,y=0,z=0)=>({id,type:'masonry_section',sectionId,geometryVersion,variant:0,rotation:0,x,y,z});
 const post=entry('bagana',BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION);
@@ -88,7 +89,11 @@ test('15 bagana 3D assets: three forms and five 25cm increments with an integrat
   assert.ok(penetration>=-.005&&penetration<=.035,'wood must sit firmly in its original Common100 stone');
   assert.ok(Math.abs(stoneBounds.max.y-stoneBounds.min.y-.25)<.001);
   assert.ok(Math.abs(stoneBounds.min.y+spec.size[1]*.25/2)<.004,'stone base must rest on the footprint floor: '+spec.id);
-  assert.ok(Math.abs(fullBounds.max.y-fullBounds.min.y-(spec.woodHeightM+.25))<.05);
+  // The declared height is the *bearing* height. Fork horns now deliberately
+  // protrude above it so a roof log rests in the cradle rather than floats.
+  const crown=measureBaganaCrown(bytes,spec);
+  assert.ok(Math.abs(crown.seat-(spec.size[1]*.25/2+.012))<.004,'physical roof-log contact: '+spec.id);
+  assert.ok(Math.abs(fullBounds.max.y-crown.top)<.002,'rendered geometry includes the fork protrusions: '+spec.id);
   const extents=fullBounds.getSize(new THREE.Vector3());
   assert.ok(extents.x<=.75&&extents.z<=.75);
  }
