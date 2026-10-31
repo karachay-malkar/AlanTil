@@ -219,7 +219,103 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   parent.add(new THREE.Mesh(sideG,sideMat));
   return g;
  }
- function assembly(cells,level,preview=false){
+ function contourFromCenters(points){
+  if(!Array.isArray(points)||!points.length)return null;
+  const raw=points.map(([x,z])=>[(x+.5)*C,(z+.5)*C]),r=C/2;
+  if(raw.length===1){
+   const [x,z]=raw[0];
+   return [[x-r,z-r],[x+r,z-r],[x+r,z+r],[x-r,z+r]];
+  }
+  if(raw.length===2){
+   const [a,b]=raw,dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz);
+   if(!len)return null;
+   const nx=-dz/len*r,nz=dx/len*r;
+   return [[a[0]+nx,a[1]+nz],[b[0]+nx,b[1]+nz],[b[0]-nx,b[1]-nz],[a[0]-nx,a[1]-nz]];
+  }
+  const signed=raw.reduce((v,p,i)=>{
+   const q=raw[(i+1)%raw.length];return v+p[0]*q[1]-q[0]*p[1];
+  },0);
+  if(Math.abs(signed)<1e-8)return null;
+  const outward=signed>0?1:-1;
+  const result=[];
+  for(let i=0;i<raw.length;i++){
+   const a=raw[(i-1+raw.length)%raw.length],p=raw[i],b=raw[(i+1)%raw.length];
+   const ux=p[0]-a[0],uz=p[1]-a[1],vx=b[0]-p[0],vz=b[1]-p[1];
+   const lu=Math.hypot(ux,uz),lv=Math.hypot(vx,vz);
+   if(lu<1e-7||lv<1e-7)return null;
+   const n1=[outward*uz/lu,-outward*ux/lu];
+   const n2=[outward*vz/lv,-outward*vx/lv];
+   const den=1+n1[0]*n2[0]+n1[1]*n2[1];
+   const m=den>.18?Math.min(r/den,r*1.9):r*.95;
+   const dx=(n1[0]+n2[0])*m,dz=(n1[1]+n2[1])*m;
+   result.push([p[0]+dx,p[1]+dz]);
+  }
+  return result;
+ }
+ function contourSoil(parent,points,level){
+  const ring=contourFromCenters(points);
+  if(!ring||ring.length<3||!THREE.ShapeUtils?.triangulateShape)return null;
+  const input=ring.map(p=>new THREE.Vector2(p[0],p[1]));
+  const triangles=THREE.ShapeUtils.triangulateShape(input,[]);
+  if(!triangles?.length)return null;
+  const topPos=[],topUV=[],topIndex=[],vMap=new Map();
+  function vertex(p){
+   const key=p[0].toFixed(6)+','+p[1].toFixed(6);
+   if(vMap.has(key))return vMap.get(key);
+   const i=topPos.length/3;
+   topPos.push(p[0],level*C+soilHeight(p[0],p[1]),p[1]);
+   topUV.push(p[0]*1.65,p[1]*1.65);
+   vMap.set(key,i);return i;
+  }
+  function subdivide(a,b,c,depth=0){
+   const ab=(a[0]-b[0])**2+(a[1]-b[1])**2;
+   const bc=(b[0]-c[0])**2+(b[1]-c[1])**2;
+   const ca=(c[0]-a[0])**2+(c[1]-a[1])**2;
+   if(depth<7&&Math.max(ab,bc,ca)>.11**2){
+    const m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+    const d=m(a,b),e=m(b,c),f=m(c,a);
+    subdivide(a,d,f,depth+1);subdivide(d,b,e,depth+1);
+    subdivide(f,e,c,depth+1);subdivide(d,e,f,depth+1);
+    return;
+   }
+   const area=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+   const ia=vertex(a),ib=vertex(b),ic=vertex(c);
+   // XZ orientation is inverted relative to Y-up; ensure material faces upward.
+   topIndex.push(...(area>0?[ia,ic,ib]:[ia,ib,ic]));
+  }
+  for(const tri of triangles){
+   const [a,b,c]=tri.map(i=>ring[i]);
+   subdivide(a,b,c);
+  }
+  const geom=new THREE.BufferGeometry();
+  geom.setAttribute('position',new THREE.Float32BufferAttribute(topPos,3));
+  geom.setAttribute('uv',new THREE.Float32BufferAttribute(topUV,2));
+  geom.setIndex(topIndex);geom.computeVertexNormals();geom.userData.roofOwned=true;
+  parent.add(new THREE.Mesh(geom,earthMat));
+  const skirts=[],colors=[],faces=[];
+  for(let i=0;i<ring.length;i++){
+   const [ax,az]=ring[i],[bx,bz]=ring[(i+1)%ring.length];
+   const seg=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/.08));
+   for(let j=0;j<seg;j++){
+    const x0=ax+(bx-ax)*j/seg,z0=az+(bz-az)*j/seg;
+    const x1=ax+(bx-ax)*(j+1)/seg,z1=az+(bz-az)*(j+1)/seg;
+    const s0=skirts.length/3,h0=soilHeight(x0,z0),h1=soilHeight(x1,z1);
+    const b0=SOIL_BASE+.003*(noise(x0,z0,.13,11)-.5),b1=SOIL_BASE+.003*(noise(x1,z1,.13,11)-.5);
+    skirts.push(x0,level*C+h0,z0,x1,level*C+h1,z1,x0,level*C+b0,z0,x1,level*C+b1,z1);
+    const c0=.7+.18*noise(x0,z0,.21,14),c1=.7+.18*noise(x1,z1,.21,14);
+    colors.push(c0*.58,c0*.45,c0*.30,c1*.58,c1*.45,c1*.30,
+                c0*.67,c0*.53,c0*.35,c1*.67,c1*.53,c1*.35);
+    faces.push(s0,s0+1,s0+2,s0+1,s0+3,s0+2);
+   }
+  }
+  const wall=new THREE.BufferGeometry();
+  wall.setAttribute('position',new THREE.Float32BufferAttribute(skirts,3));
+  wall.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  wall.setIndex(faces);wall.computeVertexNormals();wall.userData.roofOwned=true;
+  parent.add(new THREE.Mesh(wall,sideMat));
+  return geom;
+ }
+ function assembly(cells,level,preview=false,points=null){
   const group=new THREE.Group();
   if(!cells?.length||!Number.isInteger(level))return group;
   poles(group,cells,level);
@@ -248,7 +344,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
    o.rotation.set(Math.PI/2.25,hash(k,9,5)*Math.PI*2,0);
    o.scale.set(.7,.45+hash(k,7,6)*.45,.7);
   },true);
-  const top=terrain(group,cells,level);
+  const top=(points?.length?contourSoil(group,points,level):null)||terrain(group,cells,level);
   const blades=cells.length>2500?3:cells.length>900?5:cells.length>300?9:16;
   instances(group,grassGeo,grassMat,cells,level,blades,(o,x,z,n)=>{
    const k=x*997+z*337+n*67;
@@ -282,7 +378,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   clear(saved);
   for(const roof of roofs||[]){
    if(!Array.isArray(roof.cells)||!Number.isInteger(roof.level))continue;
-   saved.add(assembly(roof.cells,roof.level,false));
+   saved.add(assembly(roof.cells,roof.level,false,roof.points));
   }
   requestRender();
  }
@@ -290,7 +386,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   clear(draftLayer);
   if(!roof?.points?.length){requestRender();return;}
   const {points,level}=roof;
-  draftLayer.add(assembly(cells,level,true));
+  draftLayer.add(assembly(cells,level,true,points));
   const lines=[];
   for(const [x,z] of points)lines.push((x+.5)*C,level*C+.27,(z+.5)*C);
   if(points.length>1)lines.push(...lines.slice(0,3));
