@@ -78,3 +78,18 @@
 .towerBeamControls .uiIcon{width:17px;height:17px}
 .towerBeamControls output{font-variant-numeric:tabular-nums}
 @media(max-width:520px){.towerBeamControls{bottom:max(118px,calc(var(--safe-bottom,0px) + 118px));font-size:10px;gap:3px}.towerBeamControls .btn{min-width:27px;min-height:29px}}
+
+
+/* Polygon roofing: no numeric dimensions, instructions, or unrelated construction HUD. */
+.towerRoofPrice{display:flex;align-items:center;gap:6px;padding:0 11px;height:43px;border:1px solid #4b8059;border-radius:12px;background:var(--surface-0);color:var(--text-1);font-weight:700;font-variant-numeric:tabular-nums}
+.towerRoofPrice .uiIcon{height:20px;width:20px;color:#b78c32}
+.towerGame[data-mode="roof"] .towerCamera,.towerGame[data-mode="saving-roof"] .towerCamera,
+.towerGame[data-mode="roof"] .towerQuickActions,.towerGame[data-mode="saving-roof"] .towerQuickActions,
+.towerGame[data-mode="roof"] .towerExploreControls,.towerGame[data-mode="saving-roof"] .towerExploreControls,
+.towerGame[data-mode="roof"] [data-hammer],.towerGame[data-mode="saving-roof"] [data-hammer],
+.towerGame[data-mode="roof"] .towerLoadStatus,.towerGame[data-mode="saving-roof"] .towerLoadStatus{display:none!important}
+.appShell[data-feature="tower"]:has(.towerGame[data-mode="roof"]) .appHeader,
+.appShell[data-feature="tower"]:has(.towerGame[data-mode="saving-roof"]) .appHeader{display:none}
+.towerGame[data-mode="roof"] .towerPlacementBar,.towerGame[data-mode="saving-roof"] .towerPlacementBar{max-width:calc(100% - 24px)}
+.towerGame[data-mode="roof"] .towerPlacementBar [data-confirm],.towerGame[data-mode="saving-roof"] .towerPlacementBar [data-confirm]{border-color:#399354;background:#e2f7e7}
+.towerGame[data-mode="saving-roof"] [data-confirm],.towerGame[data-mode="saving-roof"] [data-cancel]{pointer-events:none;opacity:.5}
