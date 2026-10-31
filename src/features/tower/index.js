@@ -2,7 +2,7 @@
 import {createTowerScene} from './prefab-scene.js?v=17.2.49';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {ROOF_BEAM_VERSION,roofBeamId,roofBeamLength,isRoofBeamId,positionRoofBeamAgainst} from '../../../packages/tower-game/roof-beam.mjs';
-import {roofCoverCells,checkRoofPlacement,ROOF_PRICE_PER_CELL} from '../../../packages/tower-game/roof-cover.mjs';
+import {roofCoverCells,checkRoofPlacement} from '../../../packages/tower-game/roof-cover.mjs';
 import {prefabBounds} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
@@ -62,7 +62,6 @@ export async function mount(context,params={}){
    <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вперёд на 25 см" title="Сдвинуть вперёд на 25 см">${uiIcon('route')}</button>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
-   <div class="towerRoofPrice" data-roof-price hidden aria-live="polite">${uiIcon('circleDot')} <output data-roof-amount>0</output></div>
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
   </div>
   <div class="towerSelectionBar" data-selection hidden role="toolbar" aria-label="Выделенная секция">
@@ -174,7 +173,6 @@ export async function mount(context,params={}){
   s.mode=next;game.dataset.mode=next;
   const roofing=next==='roof'||next==='saving-roof';
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place'&&!roofing;
-  q('[data-roof-price]').hidden=!roofing||!s.roofDraft?.points.length;
   q('[data-rotate]').hidden=roofing;
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing'&&next!=='roof';
@@ -219,10 +217,8 @@ export async function mount(context,params={}){
   s.roofValidity=points.length&&Number.isInteger(level)?checkRoofPlacement(points,level,
    s.sections.map(b=>({...b,_roofBounds:prefabBounds(b)})),s.roofs):{ok:false,cells};
   s.scene?.setRoofDraft(points.length?s.roofDraft:null,cells);
-  q('[data-roof-price]').hidden=!points.length;
-  q('[data-roof-amount]').textContent=String(cells.length*ROOF_PRICE_PER_CELL);
-  q('[data-confirm]').disabled=!s.roofValidity.ok||!s.userId||s.busy||
-   cells.length*ROOF_PRICE_PER_CELL>s.roofBalance;
+  // Temporary free-build phase: no wallet check or price display.
+  q('[data-confirm]').disabled=!s.roofValidity.ok||!s.userId||s.busy;
  }
  function pickRoof(hit){
   if(!s.roofDraft||s.busy)return;
@@ -262,8 +258,7 @@ export async function mount(context,params={}){
    const reason=String(error?.message||error);
    try{const snapshot=await loadTowerRoofs();s.roofs=snapshot.roofs;s.roofBalance=snapshot.balance;s.scene?.setRoofs(s.roofs);}catch{}
    mode('roof');updateRoofDraft();
-   message(reason.includes('INSUFFICIENT_COINS')?'Недостаточно монет':
-    reason.includes('ROOF_SUPPORT')?'Не хватает опор':
+   message(reason.includes('ROOF_SUPPORT')?'Не хватает опор':
     reason.includes('ROOF_COLLISION')||reason.includes('ROOF_OVERLAP')?'Крыша пересекается с постройкой':
     'Не удалось установить крышу');
   }finally{s.busy=false;if(!s.disposed&&s.mode==='roof')updateRoofDraft();}
