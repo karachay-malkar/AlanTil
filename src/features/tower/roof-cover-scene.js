@@ -6,7 +6,6 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
  const C=.25,STEP=4,SOIL_BASE=.153,TOP=.246;
  const saved=new THREE.Group(),draftLayer=new THREE.Group();
  root.add(saved,draftLayer);
- const dark=(r,g,b)=>new THREE.Color(r/255,g/255,b/255);
  const hash=(x,z,seed=0)=>{
   let h=(Math.imul(x|0,374761393)+Math.imul(z|0,668265263)+Math.imul(seed,1442695041))|0;
   h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;
@@ -21,7 +20,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
  }
  function soilHeight(x,z){
   const variation=(noise(x,z,.53,7)-.5)*.006+(noise(x,z,.14,11)-.5)*.007;
-  return TOP+variation;
+  return Math.max(.237,Math.min(.25,TOP+variation));
  }
  const groundMap=new THREE.DataTexture((()=>{
   const n=256,data=new Uint8Array(n*n*4);
@@ -172,7 +171,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
    const i=positions.length/3;positions.push(x,level*C+soilHeight(x,z),z);
    uv.push(x*1.65,z*1.65);vertices.set(key,i);return i;
   };
-  const skirtPos=[],skirtColors=[],skirtUv=[],skirtIndices=[];
+  const skirtPos=[],skirtColors=[],skirtIndices=[];
   const addSkirt=(x0,z0,x1,z1)=>{
    const s=skirtPos.length/3;
    const y0=soilHeight(x0,z0),y1=soilHeight(x1,z1);
@@ -183,7 +182,6 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
    const c0=.74+.16*noise(x0,z0,.18,21),c1=.74+.16*noise(x1,z1,.18,21);
    skirtColors.push(c0*.55,c0*.43,c0*.28,c1*.55,c1*.43,c1*.28,
      c0*.62,c0*.48,c0*.31,c1*.62,c1*.48,c1*.31);
-   skirtUv.push(x0*2,z0*2,x1*2,z1*2,x0*2,lower0*2,x1*2,lower1*2);
    skirtIndices.push(s,s+1,s+2,s+1,s+3,s+2);
   };
   for(const [x,z] of cells){
@@ -268,12 +266,15 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   return group;
  }
  function clear(group){
+  const disposed=new Set();
   for(const item of [...group.children]){
    group.remove(item);
    item.traverse(n=>{
     if(n.isInstancedMesh)n.dispose();
-    if(n.geometry?.userData?.roofOwned)n.geometry.dispose();
-    if(n.isLine)n.geometry.dispose();
+    const geometry=n.geometry;
+    if((geometry?.userData?.roofOwned||n.isLine)&&!disposed.has(geometry)){
+     geometry.dispose();disposed.add(geometry);
+    }
    });
   }
  }
