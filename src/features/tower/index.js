@@ -353,7 +353,7 @@ export async function mount(context,params={}){
  }
  async function clearAll(){
   if(s.busy||!s.ready||!s.userId||!editable(s))return;
-  if(!s.sections.length)return;
+  if(!s.sections.length&&!s.roofs.length)return;
   const confirmed=await context.modal.confirm({
    message:'Удалить всю построенную башню?<div class="towerClearWarning">Все установленные элементы будут безвозвратно удалены.</div>'
   });
