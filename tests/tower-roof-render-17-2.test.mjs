@@ -15,7 +15,7 @@ class Group {
  traverse(fn){fn(this);for(const c of this.children)c.traverse(fn);}
 }
 class Mesh extends Group {
- constructor(g,m){super();this.geometry=g;this.material=m;this.isMesh=true;this.position={set(){}};}
+ constructor(g,m){super();this.geometry=g;this.material=m;this.isMesh=true;this.position={set(){}};this.userData={};}
 }
 class InstancedMesh extends Mesh {
  constructor(g,m,n){super(g,m);this.count=n;this.instanceMatrix={};this.isInstancedMesh=true;}
@@ -37,22 +37,37 @@ const THREE={
  ShapeUtils:{triangulateShape(points){return Array.from({length:Math.max(0,points.length-2)},(_,i)=>[0,i+1,i+2]);}},
 DoubleSide:2,RepeatWrapping:1,LinearMipmapLinearFilter:1,LinearFilter:1,SRGBColorSpace:1
 };
-test('contiguous 3 by 2 modules share soil vertices and remain 25cm thick',()=>{
+const layerOf=(assembly,name)=>assembly.children.find(c=>c.userData?.roofLayer===name);
+const extents=geometry=>{
+ const pos=geometry.attrs.position.array,values=Array.from({length:pos.length/3},(_,i)=>[pos[i*3],pos[i*3+1],pos[i*3+2]]);
+ return [0,1,2].map(k=>[Math.min(...values.map(v=>v[k])),Math.max(...values.map(v=>v[k]))]);
+};
+test('all 25cm roof cells have a continuous 3D earth surface, closed underside and no gaps between layers',()=>{
  const root=new Group(),roof=createRoofCoverRenderer(THREE,root,()=>{});
  const cells=Array.from({length:6},(_,i)=>[Math.floor(i/2),i%2]);
  roof.setSaved([{id:'test',level:8,cells}]);
- const children=root.children[0].children[0].children;
- const terrain=children.find(c=>c.geometry?.attrs?.uv);
- assert.ok(terrain);
- assert.equal(terrain.geometry.attrs.position.array.length/3,13*9);
- assert.equal(terrain.geometry.index.length/3,3*2*4*4*2);
- for(let i=1;i<terrain.geometry.attrs.position.array.length;i+=3){
-  const h=terrain.geometry.attrs.position.array[i]-8*.25;
-  assert.ok(Number.isFinite(h)&&h>=.237-1e-7&&h<=.25+1e-7);
+ const assembly=root.children[0].children[0];
+ const chaff=layerOf(assembly,'chaff'),juniper=layerOf(assembly,'juniper'),earth=layerOf(assembly,'soil');
+ assert.ok(chaff&&juniper&&earth,'three solid infill layers');
+ assert.equal(earth.geometry.attrs.position.array.length/3,13*9*2,'shared top and bottom earth vertices across all cells');
+ assert.equal(earth.geometry.index.length/3,6*4*4*4,'both top and underside have two triangles per subcell');
+ const [earthX,earthY,earthZ]=extents(earth.geometry);
+ assert.equal(earthX[0],0);assert.equal(earthX[1],.75);
+ assert.equal(earthZ[0],0);assert.equal(earthZ[1],.5);
+ assert.ok(earthY[0]>=8*.25+.149&&earthY[0]<=8*.25+.151);
+ assert.ok(earthY[1]>=8*.25+.237&&earthY[1]<=8*.25+.25);
+ const [,chaffY]=extents(chaff.geometry),[,juniperY]=extents(juniper.geometry);
+ assert.ok(chaffY[1]>=juniperY[0]+.002,'chaff physically overlaps juniper');
+ assert.ok(juniperY[1]>=earthY[0]+.002,'juniper physically overlaps earth');
+ assert.ok(chaffY[0]<=8*.25+.097,'chaff touches the rounded wood pole tops');
+ for(const m of [chaff,juniper,earth]){
+  const [x,,z]=extents(m.geometry);
+  assert.deepEqual(x,earthX,'every layer spans the same full-cell X footprint');
+  assert.deepEqual(z,earthZ,'every layer spans the same full-cell Z footprint');
  }
- const instances=children.filter(c=>c.isInstancedMesh);
- assert.ok(instances.length>=5);
- assert.ok(instances.some(c=>c.count>90),'dense grass / chaff geometry');
+ const instances=assembly.children.filter(c=>c.isInstancedMesh);
+ assert.ok(instances.length>=6,'wood, fibers, twigs, needles, earth clods and grass as instanced 3D geometry');
+ assert.ok(instances.some(c=>c.count>90),'dense plants and compact organic fibers');
  roof.dispose();
 });
 test('draft points and final roof can be rebuilt and cleared',()=>{
@@ -67,17 +82,26 @@ test('draft points and final roof can be rebuilt and cleared',()=>{
  roof.dispose();
 });
 
-test('polygon outline is continuous across diagonal boundaries',()=>{
+test('diagonal node contours fill whole 25cm cells of earth exactly like timber (never crop polygon)',()=>{
  const root=new Group(),roof=createRoofCoverRenderer(THREE,root,()=>{});
- roof.setSaved([{id:'diagonal',level:6,points:[[2,2],[5,2],[4,4]],
-  cells:[[2,2],[3,2],[4,2],[5,2],[3,3],[4,3],[4,4]]}]);
- const meshes=root.children[0].children[0].children;
- const soil=meshes.find(x=>x.geometry?.attrs?.uv);
- assert.ok(soil,'earth is a polygon mesh');
- const xs=soil.geometry.attrs.position.array;
- assert.ok(xs.length>80,'top face is subdivided to sub-cell detail');
- assert.ok([...xs].every(Number.isFinite),'no invalid 3D positions');
- assert.ok(Array.from({length:xs.length/3},(_,i)=>xs[i*3]).some(x=>Math.abs(x/.0625-Math.round(x/.0625))>1e-3),
- 'diagonal roof edge is not forced onto the 25cm voxel outline');
+ const cells=[[2,2],[3,2],[4,2],[5,2],[3,3],[4,3],[4,4]];
+ roof.setSaved([{id:'diagonal',level:6,points:[[2,2],[5,2],[4,4]],cells}]);
+ const assembly=root.children[0].children[0];
+ const expected=new Set(cells.map(c=>c.join(',')));
+ for(const name of ['soil','juniper','chaff']){
+  const m=layerOf(assembly,name);
+  assert.ok(m,name+' exists');
+  const pos=m.geometry.attrs.position.array,index=m.geometry.index;
+  assert.ok(index.length>0);
+  for(let i=0;i<index.length;i+=3){
+   const pts=[0,1,2].map(d=>{const k=index[i+d]*3;return [pos[k],pos[k+2]];});
+   const cx=pts.reduce((s,p)=>s+p[0],0)/3,cz=pts.reduce((s,p)=>s+p[1],0)/3;
+   const key=[Math.floor(cx/.25),Math.floor(cz/.25)].join(',');
+   assert.ok(expected.has(key),name+' triangle must stay inside the same chosen 25cm cell mask: '+key);
+  }
+  const [x,,z]=extents(m.geometry);
+  assert.equal(x[0],.5);assert.equal(x[1],1.5);
+  assert.equal(z[0],.5);assert.equal(z[1],1.25);
+ }
  roof.dispose();
 });
