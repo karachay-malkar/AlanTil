@@ -11,7 +11,7 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {planMasonryLine,checkMasonryLine} from '../../../packages/tower-game/masonry-line.mjs';
+import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs';
 import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2-masonry-line.1';
 import {uiIcon} from '../../shared/ui/icons.js?v=17.2.54';
 let active=null;
@@ -518,8 +518,10 @@ export async function mount(context,params={}){
  });
  on('[data-undo]','click',()=>{
   if(s.mode!=='placing'||s.busy||!s.lineStart)return;
-  if(s.lineEnd)s.lineEnd=null;
-  else {s.lineStart=null;s.locked=false;s.previewHit=s.scene?.getAimHit?.()||null;}
+  const releasingFirst=!s.lineEnd;
+  const next=undoMasonryEndpoint(s.lineStart,s.lineEnd);
+  s.lineStart=next.first;s.lineEnd=next.last;
+  if(releasingFirst){s.locked=false;s.previewHit=s.scene?.getAimHit?.()||null;}
   void preview();
  });
  on('[data-confirm]','click',()=>{
@@ -610,9 +612,9 @@ export async function mount(context,params={}){
    },
    onEndpointMove(index,position){
     if(s.mode!=='placing'||s.busy||!isApprovedMasonryType(s.type))return;
-    if(index===0&&s.lineStart)s.lineStart={...s.lineStart,...position};
-    else if(index===1&&s.lineEnd)s.lineEnd={...s.lineEnd,...position};
-    else return;
+    if(index===1&&!s.lineEnd)return;
+    const next=editMasonryEndpoint(s.lineStart,s.lineEnd,index,position);
+    s.lineStart=next.first;s.lineEnd=next.last;
     void preview();
    },
    onSelection(id){if(s.mode==='idle'||s.mode==='selected')markSelection(id);},
