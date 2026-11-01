@@ -182,7 +182,7 @@ export async function mount(context,params={}){
   const roofing=next==='roof'||next==='saving-roof';
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place'&&!roofing;
   q('[data-rotate]').hidden=roofing;
-  q('[data-tekmet-wallet]').hidden=roofing||s.tekmetBalance==null||!editable(s);
+  q('[data-tekmet-wallet]').hidden=s.tekmetBalance==null||!editable(s);
   quoteUpdate(roofing?tekmetRoofCost(s.roofValidity?.cells?.length||0):next==='placing'?tekmetSectionCost(s.type):null);
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing'&&next!=='roof';
