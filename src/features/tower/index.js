@@ -32,6 +32,7 @@ export async function mount(context,params={}){
   <div class="towerTekmetWallet" data-tekmet-wallet hidden aria-label="Баланс текметов">${tekmetIcon("towerTekmetIcon")}<output data-tekmet-balance>0</output></div>
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div></div>
   <div class="towerCamera" role="group" aria-label="Камера">
+   <button type="button" class="btn towerIconAction" data-home aria-label="К участку" title="К участку">${uiIcon('blocks')}</button>
    <button type="button" class="btn towerIconAction towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}</button>
   </div>
   <div class="towerQuickActions" role="group" aria-label="Экран и настройки">
@@ -40,16 +41,6 @@ export async function mount(context,params={}){
   </div>
   <div class="towerSettingsMenu" id="tower-settings-panel" data-settings-panel hidden>
    <button type="button" class="btn towerIconAction" data-clear aria-label="Очистить всю башню" title="Очистить всю башню">${uiIcon('trash2')}</button><span>Очистить башню</span>
-  </div>
-  <div class="towerExploreControls" role="group" aria-label="Перемещение от первого лица">
-   <div class="towerExploreHint">Проведи пальцем справа, чтобы осмотреться</div>
-   <div class="towerJoystick" data-joystick role="application" aria-label="Джойстик движения">
-    <div class="towerJoystickPuck" data-joystick-puck></div>
-   </div>
-   <div class="towerElevationControls" role="group" aria-label="Плавный подъём и спуск">
-    <button type="button" class="btn towerIconAction" data-rise aria-label="Подняться" title="Подняться">${uiIcon('arrowUp')}</button>
-    <button type="button" class="btn towerIconAction" data-fall aria-label="Спуститься" title="Спуститься">${uiIcon('arrowDown')}</button>
-   </div>
   </div>
   <div class="towerBaganaHeights" data-bagana-heights hidden role="group" aria-label="Высота деревянной багъаны">
    <span>Дерево, м:</span>
@@ -246,8 +237,8 @@ export async function mount(context,params={}){
   s.scene?.setRoofDraft(points.length?s.roofDraft:null,cells);
   const price=tekmetRoofCost(cells.length);
   quoteUpdate(price);
-  q('[data-confirm]').disabled=!s.roofValidity.ok||!s.userId||s.busy||
-   s.tekmetBalance==null||price>s.tekmetBalance;
+  // Keep the confirm button actionable so invalid contours and supports can be explained.
+  q('[data-confirm]').disabled=!points.length||!s.userId||s.busy;
  }
  function pickRoof(hit){
   if(!s.roofDraft||s.busy)return;
@@ -273,7 +264,16 @@ export async function mount(context,params={}){
   mode('roof');updateRoofDraft();
  }
  async function commitRoof(){
-  if(s.mode!=='roof'||s.busy||!s.userId||!s.roofValidity?.ok)return;
+  if(s.mode!=='roof'||s.busy||!s.userId||!s.roofDraft?.points?.length)return;
+  if(!s.roofValidity?.ok){
+   const reason=s.roofValidity?.reason;
+   message(reason==='ROOF_SUPPORT_REQUIRED'?'Выше земли для крыши необходимы опоры':
+    reason==='ROOF_COLLISION'||reason==='ROOF_OVERLAP'?'Место для крыши занято':
+    'Неверный контур крыши');return;
+  }
+  if(s.tekmetBalance==null||tekmetRoofCost(s.roofValidity.cells.length)>s.tekmetBalance){
+   message('Недостаточно текметов');return;
+  }
   const points=s.roofDraft.points.map(p=>[...p]),level=s.roofDraft.level;
   s.busy=true;mode('saving-roof');
   try{
@@ -506,62 +506,30 @@ export async function mount(context,params={}){
   }
   void mutate('remove',null,id);
  });
- let joystick={forward:0,strafe:0},altitude=0;
- function sendMotion(){s.scene?.setMotion({forward:joystick.forward,strafe:joystick.strafe,up:altitude});}
  function walkUi(active){
   game.dataset.explore=String(active);
-  const b=q('button[data-explore]');b?.setAttribute('aria-pressed',String(active));
-  const span=b?.querySelector('span');if(span)span.textContent=active?'К строительству':'Прогулка';
-  joystick={forward:0,strafe:0};altitude=0;sendMotion();
   catalogVisible(false);closeSettings();
  }
+ on('[data-home]','click',()=>{
+  if(!s.scene||s.busy)return;
+  if(s.mode==='placing'||s.mode==='roof')cancel();
+  s.scene.home();walkUi(true);
+  const button=q('[data-world]');
+  button.setAttribute('aria-pressed','false');
+  button.setAttribute('aria-label','Обзор Кюнлюма');
+  button.title='Обзор Кюнлюма';button.innerHTML=uiIcon('route');
+ });
  on('[data-world]','click',()=>{
   if(s.busy||!s.scene)return;
-  if(s.mode==='placing')cancel();
+  if(s.mode==='placing'||s.mode==='roof')cancel();
   else if(s.mode==='selected')markSelection(null);
-  const wide=s.scene.worldView();
-  walkUi(!wide);
+  const wide=s.scene.worldView();walkUi(!wide);
   const button=q('[data-world]');
   button.setAttribute('aria-pressed',String(!!wide));
-  button.setAttribute('aria-label',wide?'К строительству от первого лица':'Обзор Кюнлюма');
-  button.title=wide?'К строительству от первого лица':'Обзор Кюнлюма';
-  button.innerHTML=uiIcon(wide?'userRound':'route');
+  button.setAttribute('aria-label',wide?'К участку':'Обзор Кюнлюма');
+  button.title=wide?'К участку':'Обзор Кюнлюма';
+  button.innerHTML=uiIcon(wide?'blocks':'route');
  });
- let stickPointer=null;
- function stickMove(event){
-  if(stickPointer!==event.pointerId)return;
-  const b=q('[data-joystick]').getBoundingClientRect(),r=b.width*.34;
-  const dx=(event.clientX-b.left-b.width/2)/r;
-  const dy=(event.clientY-b.top-b.height/2)/r;
-  const scale=Math.max(1,Math.hypot(dx,dy));
-  joystick={strafe:dx/scale,forward:-dy/scale};
-  q('[data-joystick-puck]').style.transform=`translate(${Math.round(joystick.strafe*r)}px,${Math.round(-joystick.forward*r)}px)`;
-  sendMotion();
- }
- function stickEnd(event){
-  if(stickPointer!==event.pointerId)return;
-  stickPointer=null;joystick={strafe:0,forward:0};
-  q('[data-joystick-puck]').style.transform='';
-  sendMotion();
- }
- on('[data-joystick]','pointerdown',event=>{
-  if(game.dataset.explore!=='true'||stickPointer!==null)return;
-  stickPointer=event.pointerId;
-  q('[data-joystick]').setPointerCapture(event.pointerId);stickMove(event);
- });
- for(const name of ['pointermove','pointerup','pointercancel','lostpointercapture']){
-  on('[data-joystick]',name,name==='pointermove'?stickMove:stickEnd);
- }
- for(const [selector,value] of [['[data-rise]',1],['[data-fall]',-1]]){
-  const button=q(selector);let pointer=null;
-  on(selector,'pointerdown',event=>{
-   if(game.dataset.explore!=='true')return;
-   pointer=event.pointerId;button.setPointerCapture(pointer);
-   altitude=value;sendMotion();
-  });
-  const end=event=>{if(pointer!==event.pointerId)return;pointer=null;altitude=0;sendMotion();};
-  for(const type of ['pointerup','pointercancel','lostpointercapture'])on(selector,type,end);
- }
  on('[data-retry]','click',async()=>{
   if(s.disposed||!s.scene||s.busy)return;
   q('[data-retry]').hidden=true;
