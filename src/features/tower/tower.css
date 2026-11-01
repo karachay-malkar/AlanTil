@@ -97,3 +97,16 @@
 .towerItemPrice .towerTekmetIcon{height:15px;width:15px;filter:none}
 
 @media(max-width:749px){.towerTekmetWallet{left:max(67px,calc(var(--safe-left,0px) + 67px));height:42px;padding:3px 7px;min-width:65px;font-size:14px}.towerTekmetIcon{width:21px;height:21px}.towerTekmetQuote{min-width:55px;height:41px;font-size:14px}}
+
+
+/* Automatic one-point / two-point masonry construction; never a separate mode. */
+.towerLineShuffle{display:flex;align-items:center}
+.towerLineCount{font:700 11px/1.2 var(--font-body);color:var(--text-2);white-space:nowrap}
+.towerGame[data-mode="placing"] .towerLineShuffle .towerIconAction{border-color:var(--accent-strong)}
+@media(max-width:520px){
+ .towerGame:is([data-mode="placing"],[data-mode="saving-place"]) .towerPlacementBar{
+  left:50%;bottom:max(64px,calc(var(--safe-bottom,0px) + 64px));
+  max-width:calc(100% - 16px);width:max-content;flex-wrap:wrap;gap:4px;
+ }
+ .towerLineCount{font-size:10px}
+}
