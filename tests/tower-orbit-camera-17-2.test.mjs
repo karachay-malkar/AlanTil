@@ -32,7 +32,9 @@ test('new construction controls use orbit rather than joystick',()=>{
  const ui=read('src/features/tower/index.js');
  assert.match(scene,/function setConstructionOrbit\(/);
  assert.match(scene,/towerOrbitMaximumDistance/);
- assert.match(scene,/controls\.enablePan=false/);
+ assert.match(scene,/controls\.enablePan=true/);
+ assert.match(scene,/THREE\.TOUCH\.DOLLY_PAN/);
+ assert.match(scene,/Math\.pow\(zoom,\.75\)/);
  assert.match(scene,/cameraMode='orbit'/);
  assert.match(ui,/data-home/);
  assert.doesNotMatch(ui,/data-joystick|data-rise|data-fall|function stickMove/);
