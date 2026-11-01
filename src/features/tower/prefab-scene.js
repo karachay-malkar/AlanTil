@@ -585,6 +585,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const index=endpointAt(e.clientX,e.clientY);
   if(index<0)return;
   markerDrag={id:e.pointerId,index};
+  renderer.domElement.setPointerCapture?.(e.pointerId);
   controls.enabled=false;pressed=null;
   e.preventDefault();e.stopImmediatePropagation();
  }
@@ -597,6 +598,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(!markerDrag||markerDrag.id!==e.pointerId)return;
   if(e.type==='pointerup')dragEndpoint(e.clientX,e.clientY);
   markerDrag=null;controls.enabled=true;
+  if(renderer.domElement.hasPointerCapture?.(e.pointerId))renderer.domElement.releasePointerCapture(e.pointerId);
   e.preventDefault();e.stopImmediatePropagation();
  }
  renderer.domElement.addEventListener('pointerdown',endpointPointerDown,true);
