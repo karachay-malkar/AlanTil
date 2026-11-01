@@ -343,9 +343,23 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   clear(saved);
   for(const roof of roofs||[]){
    if(!Array.isArray(roof.cells)||!Number.isInteger(roof.level))continue;
-   saved.add(assembly(roof.cells,roof.level,false));
+   const section=assembly(roof.cells,roof.level,false);
+   section.userData.roofId=roof.id;
+   saved.add(section);
   }
   requestRender();
+ }
+ /** Select built roofing, not draft green controls, using a real Three.js raycast. */
+ function pickRoof(raycaster){
+  const hits=raycaster.intersectObjects(saved.children,true);
+  for(const hit of hits){
+   let object=hit.object;
+   while(object&&object!==saved){
+    if(object.userData?.roofId)return object.userData.roofId;
+    object=object.parent;
+   }
+  }
+  return null;
  }
  function setDraft(roof,cells){
   clear(draftLayer);
@@ -385,5 +399,5 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   shared.forEach(g=>g.dispose());
   materials.forEach(m=>m.dispose());groundMap.dispose();barkMap.dispose();
  }
- return {setSaved,setDraft,screenVertex,dispose};
+ return {setSaved,setDraft,pickRoof,screenVertex,dispose};
 }
