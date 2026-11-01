@@ -45,7 +45,6 @@ export function planMasonryLine({first,last=null,existing=[],seed=0,maxCount=MAX
   const position={x:first.x+(axis==='x'?direction*i*step:0),
    y:first.y,z:first.z+(axis==='z'?direction*i*step:0)};
   const base={...first,...position,id:i===0?first.id:'00000000-0000-4000-8000-'+String(i+1).padStart(12,'0')};
-  if(i===0){result.push(base);continue;}
   let best=null,bestScore=Infinity;
   for(const option of options){
    const candidate={...base,...option};
@@ -54,7 +53,9 @@ export function planMasonryLine({first,last=null,existing=[],seed=0,maxCount=MAX
    const similar=nearest.filter(b=>b.variant===option.variant).length;
    const exact=nearest.filter(b=>b.variant===option.variant&&b.rotation===option.rotation).length;
    const rotationRepeat=nearest.filter(b=>b.rotation===option.rotation).length;
-   const score=similar*100+exact*40+rotationRepeat*8+mix(seed+i*41+option.variant*13+option.rotation*7);
+   const userPreference=i===0?((option.variant===first.variant?0:1)+(option.rotation===first.rotation?0:.15)):0;
+   const score=similar*100+exact*40+rotationRepeat*8+userPreference+
+    mix(seed+i*41+option.variant*13+option.rotation*7)*.6;
    if(score<bestScore){bestScore=score;best=candidate;}
   }
   result.push(best||base);
@@ -65,6 +66,7 @@ export function planMasonryLine({first,last=null,existing=[],seed=0,maxCount=MAX
 export function checkMasonryLine(existing,sections,manifest,validateJoints=null){
  if(!Array.isArray(sections)||!sections.length||sections.length>MAX_MASONRY_LINE)
   return {ok:false,reason:'LINE_TOO_LONG'};
+ if(existing.length+sections.length>250)return {ok:false,reason:'TOWER_SECTION_LIMIT'};
  const all=[...existing];
  for(const block of sections){
   const valid=validatePrefabPlacement(all,block);
