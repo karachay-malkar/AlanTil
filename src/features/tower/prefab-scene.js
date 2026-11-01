@@ -446,9 +446,28 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const level=hit.block?prefabBounds(hit.block).max[1]:Math.round(hit.position[1]/CELL);
   return {cell:[x,z],level};
  }
+ let lastTapAt=0,lastTapX=0,lastTapY=0;
+ function focusOnDoubleTap(e){
+  if(tool!=='select'||worldMode)return false;
+  const now=performance.now();
+  const again=now-lastTapAt<340&&Math.hypot(e.clientX-lastTapX,e.clientY-lastTapY)<28;
+  lastTapAt=again?0:now;lastTapX=e.clientX;lastTapY=e.clientY;
+  if(!again)return false;
+  const hit=findHit(e.clientX,e.clientY);
+  if(!hit)return true;
+  const newTarget=new THREE.Vector3(
+   THREE.MathUtils.clamp(hit.position[0],SITE.minX,SITE.maxX),
+   Math.max(0,hit.position[1]),
+   THREE.MathUtils.clamp(hit.position[2],SITE.minZ,SITE.maxZ));
+  camera.position.add(newTarget.clone().sub(controls.target));
+  controls.target.copy(newTarget);
+  camera.position.sub(newTarget).multiplyScalar(.68).clampLength(controls.minDistance,controls.maxDistance).add(newTarget);
+  controls.update();scheduleDraw();
+  return true;
+ }
  const activePointers=new Set();let pressed=null;
  function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
- function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;if(tool==='roof'){const picked=roofPick(e.clientX,e.clientY);if(picked)onPick(picked);return;}const rect=renderer.domElement.getBoundingClientRect();
+ function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;if(focusOnDoubleTap(e))return;if(tool==='roof'){const picked=roofPick(e.clientX,e.clientY);if(picked)onPick(picked);return;}const rect=renderer.domElement.getBoundingClientRect();
   pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
   raycaster.setFromCamera(pointer,camera);
   if(tool==='select'){
