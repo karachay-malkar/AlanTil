@@ -6,7 +6,7 @@ import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
 import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.51';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
-import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-roof-cover.4';
+import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
@@ -22,7 +22,7 @@ import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-ston
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
-export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onCameraChange=()=>{}}={}){
+export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onRoofSelection=()=>{},onCameraChange=()=>{}}={}){
  const manifest={version:APPROVED_PREFAB_VERSION,types:BUILDABLE_PREFAB_TYPES,
   connectors:Object.fromEntries(Object.entries(WINDOW_JOINT_FILES).map(([axis,file])=>[axis,{file,interface:JOINT_INTERFACE}]))};
  const loader=new GLTFLoader(),loaded=new Map();
@@ -439,7 +439,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  const activePointers=new Set();let pressed=null;
  function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
- function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;if(tool==='roof'){const picked=roofPick(e.clientX,e.clientY);if(picked)onPick(picked);return;}const hit=findHit(e.clientX,e.clientY);if(!hit)return;if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+ function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;if(tool==='roof'){const picked=roofPick(e.clientX,e.clientY);if(picked)onPick(picked);return;}const rect=renderer.domElement.getBoundingClientRect();
+  pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
+  raycaster.setFromCamera(pointer,camera);
+  if(tool==='select'){
+   const roofId=roofCoverRenderer.pickRoof(raycaster);
+   if(roofId){onRoofSelection(roofId);return;}
+  }
+  const hit=findHit(e.clientX,e.clientY);if(!hit)return;
+  if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();scheduleDraw();});observer.observe(container);
