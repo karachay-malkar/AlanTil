@@ -64,10 +64,11 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
  const twigMat=new THREE.MeshStandardMaterial({color:0x6b6446,roughness:1});
  const needleMat=new THREE.MeshStandardMaterial({color:0x656c40,roughness:1,side:THREE.DoubleSide});
  const grassMat=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:1,side:THREE.DoubleSide});
+ const clodMat=new THREE.MeshStandardMaterial({color:0x725c43,roughness:1,metalness:0});
  const ghostMat=new THREE.MeshBasicMaterial({color:0x20bd64,transparent:true,opacity:.08,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});
  const nodeMat=new THREE.MeshBasicMaterial({color:0x22e377,depthTest:false});
  const lineMat=new THREE.LineBasicMaterial({color:0x23e681,depthTest:false});
- const materials=[earthMat,sideMat,poleMat,chaffMat,fillMat,twigMat,needleMat,grassMat,ghostMat,nodeMat,lineMat];
+ const materials=[earthMat,sideMat,poleMat,chaffMat,fillMat,twigMat,needleMat,grassMat,clodMat,ghostMat,nodeMat,lineMat];
  // Make real non-uniform naturally weathered poles; scale length along X for contiguous courses.
  const poleGeo=new THREE.CylinderGeometry(.061,.064,C,13,8,false);
  poleGeo.rotateZ(-Math.PI/2);
@@ -82,6 +83,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
  const twigGeo=new THREE.CylinderGeometry(.0018,.0045,.17,5,2);
  const needleGeo=new THREE.ConeGeometry(.009,.050,3);
  const nodeGeo=new THREE.SphereGeometry(.073,14,10);
+ const clodGeo=new THREE.SphereGeometry(.012,7,5);
  const grassGeo=(()=>{
   const positions=[],colors=[],indices=[];let vertex=0;
   // A tuft is ten individually curved, tapered double-sided grass blades.
@@ -110,7 +112,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
   g.setIndex(indices);g.computeVertexNormals();return g;
  })();
- const shared=[poleGeo,fiberGeo,twigGeo,needleGeo,nodeGeo,grassGeo];
+ const shared=[poleGeo,fiberGeo,twigGeo,needleGeo,nodeGeo,grassGeo,clodGeo];
  const tmp=new THREE.Object3D(),col=new THREE.Color();
  function instances(parent,geometry,material,cells,level,perCell,place,tint=false){
   if(!cells.length||!perCell)return;
@@ -298,6 +300,16 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
    o.scale.set(.7,.45+hash(k,7,6)*.45,.7);
   },true);
   const top=terrain(group,cells,level);
+  // Small real three-dimensional earth clods interrupt the former flat slab silhouette.
+  const clods=cells.length>2500?1:cells.length>900?2:4;
+  instances(group,clodGeo,clodMat,cells,level,clods,(o,x,z,n)=>{
+   const k=x*173+z*367+n*71;
+   o.position.x+=(hash(k,2,31)-.5)*C*.88;
+   o.position.z+=(hash(k,5,37)-.5)*C*.88;
+   o.position.y+=soilHeight(o.position.x,o.position.z)-.001;
+   o.scale.set(.65+hash(k,3,43)*.9,.24+hash(k,4,47)*.36,.7+hash(k,6,53)*.8);
+   o.rotation.y=hash(k,1,59)*Math.PI*2;
+  },true);
   const blades=cells.length>2500?3:cells.length>900?5:cells.length>300?9:16;
   instances(group,grassGeo,grassMat,cells,level,blades,(o,x,z,n)=>{
    const k=x*997+z*337+n*67;
