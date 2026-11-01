@@ -9,7 +9,7 @@ import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/t
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
-import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel} from '../../../packages/tower-game/kunlum-parcel.mjs';
+import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel,towerOrbitFramingDistance,towerOrbitMaximumDistance,towerOrbitTargetY,TOWER_ORBIT_MIN_DISTANCE} from '../../../packages/tower-game/kunlum-parcel.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION,WINDOW_PREFAB_FILE,WINDOW_PREFAB_SPEC,WINDOW_WOOD_FILE,WINDOW_RENDER_VERSION,WINDOW_JOINT_FILES} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION,DOOR_STONE_FILE,DOOR_WOOD_FILE,DOOR_RENDER_VERSION,DOOR_PREFAB_SPEC} from '../../../packages/tower-game/door-prefab.mjs';
@@ -30,7 +30,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const approvedModelPromises=new Map();
  const roofMeshCache=new Map();
  let disposed=false,layer=null,tool='select',blocks=[],selected=null;
- let frame=0,needsRender=true,needsAim=true,worldMode=false,lastWorldFrame=0,windTimer=0;
+ let frame=0,needsRender=true,needsAim=true,worldMode=false,lastWorldFrame=0,windTimer=0,savedOrbit=null;
  function scheduleDraw(){needsRender=true;if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(draw);}
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,pixelLimit()));
@@ -48,7 +48,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const camera=new THREE.PerspectiveCamera(42,Math.max(1,container.clientWidth)/Math.max(1,container.clientHeight),.1,5000);
  camera.position.set(32,15,-23);
  const sky=createKunlumAutumnSky(THREE,scene,camera);
- const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(SITE.centerX,.5,SITE.centerZ);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.update();
+ const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(SITE.centerX,.5,SITE.centerZ);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.12;controls.enablePan=false;controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;controls.update();
  scene.add(new THREE.HemisphereLight(KUNLUM_AUTUMN.skyLight,KUNLUM_AUTUMN.groundLight,1.7));
  const sunlight=new THREE.DirectionalLight(KUNLUM_AUTUMN.sun,2.6);
  sunlight.position.set(-20,19,12);scene.add(sunlight);
@@ -146,19 +146,28 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   explorer.exit();container.dataset.cameraMode='build';
   container.dataset.flying='false';
  }
- function enterExplore(){
-  worldMode=false;explorer.enter();
+ function setConstructionOrbit(restore=false){
+  if(explorer.active)leaveExplorer();
+  controls.enabled=true;worldMode=false;
+  camera.far=5000;camera.updateProjectionMatrix();
+  controls.enableRotate=true;controls.enableZoom=true;controls.enablePan=false;
+  controls.minDistance=TOWER_ORBIT_MIN_DISTANCE;
+  controls.maxDistance=towerOrbitMaximumDistance(camera.aspect,camera.fov);
+  controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI*.49;
+  if(restore&&savedOrbit){
+   controls.target.copy(savedOrbit.target);
+   camera.position.copy(savedOrbit.position);
+  }else{
+   const d=towerOrbitFramingDistance(camera.aspect,camera.fov);
+   controls.target.set(SITE.centerX,towerOrbitTargetY(blocks),SITE.centerZ);
+   camera.position.copy(controls.target).add(new THREE.Vector3(d*.38,d*.77,d*.51));
+  }
+  controls.update();
+  container.dataset.worldView='false';container.dataset.cameraMode='orbit';
   grid.visible=tool==='place';faceGrid.visible=false;preview.visible=tool==='place'&&!!activeGhost;
-  container.dataset.worldView='false';container.dataset.cameraMode='explore';
-  container.dataset.cameraLocation=explorer.state().position.map(n=>n.toFixed(2)).join(',');
-  container.dataset.flying='false';
   scheduleDraw();return true;
  }
- function resetCamera(){
-  worldMode=false;camera.far=5000;camera.updateProjectionMatrix();
-  if(!explorer.active)enterExplore();
-  container.dataset.worldView='false';scheduleDraw();
- }
+ function resetCamera(){return setConstructionOrbit(false);}
  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();const targets=[],world=new THREE.Vector3();
  let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
  let renderedById=new Map(),renderedJoints=new Map();
@@ -450,12 +459,14 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
- const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();scheduleDraw();});observer.observe(container);
- function fit(){if(!blocks.length){controls.target.set(SITE.centerX,.5,SITE.centerZ);camera.position.set(32,15,-23);}else{
-  const bounds=new THREE.Box3();for(const b of blocks){const box=prefabBounds(b);bounds.expandByPoint(new THREE.Vector3(...box.min.map(v=>v*CELL)));bounds.expandByPoint(new THREE.Vector3(...box.max.map(v=>v*CELL)));}
-  const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());controls.target.copy(center);
-  const distance=Math.max(2.8,Math.max(size.x,size.y,size.z)*3);camera.position.copy(center).add(new THREE.Vector3(distance*.83,distance*.58,distance));}
-  controls.update();scheduleDraw();}
+ const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();if(!worldMode)controls.maxDistance=towerOrbitMaximumDistance(camera.aspect,camera.fov);scheduleDraw();});observer.observe(container);
+ function fit(){
+  if(worldMode)return;
+  const focusY=towerOrbitTargetY(blocks);
+  const delta=focusY-controls.target.y;
+  controls.target.y+=delta;camera.position.y+=delta;
+  controls.update();scheduleDraw();
+ }
  function draw(now=0){
   frame=0;
   if(disposed||document.hidden)return;
@@ -495,6 +506,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function worldView(){
   worldMode=!worldMode;
   if(worldMode){
+   savedOrbit={position:camera.position.clone(),target:controls.target.clone()};
    leaveExplorer();
    void kunlum?.ensureWideTerrain?.();
    grid.visible=false;faceGrid.visible=false;preview.visible=false;
@@ -508,21 +520,21 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    controls.update();scheduleDraw();
   }else{
    camera.far=5000;camera.updateProjectionMatrix();
-   enterExplore();
+   setConstructionOrbit(true);
   }
   container.dataset.worldView=String(worldMode);
   return worldMode;
  }
  function onVisibility(){if(document.hidden)explorer.clear();else scheduleDraw();}
  document.addEventListener('visibilitychange',onVisibility);
- enterExplore();scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='explore';
+ setConstructionOrbit(false);scheduleDraw();container.dataset.ready='true';container.dataset.gridVisible='false';container.dataset.cameraMode='orbit';
  // Render a playable frame before fetching scenery and decoding 2K maps.
  requestAnimationFrame(()=>{if(!disposed)visualStartTimer=setTimeout(loadVisualAssets,100);});
  // Complete the first frame before controls become available.
  await new Promise(resolve=>requestAnimationFrame(resolve));
- return {manifest,setRoofs(roofs){roofCoverRenderer.setSaved(roofs);},setRoofDraft(next,cells=[]){roofDraft=next;roofCoverRenderer.setDraft(next,cells);},async setBlocks(v){const wasEmpty=!blocks.length;await setBlocks(v||[]);if(wasEmpty&&(v||[]).length&&!explorer.active)fit();},setPreview,
+ return {manifest,setRoofs(roofs){roofCoverRenderer.setSaved(roofs);},setRoofDraft(next,cells=[]){roofDraft=next;roofCoverRenderer.setDraft(next,cells);},async setBlocks(v){await setBlocks(v||[]);if(!worldMode&&!explorer.active)fit();},setPreview,
   setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore,
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore:setConstructionOrbit,
   exitExplore:resetCamera,
   setMotion(next){explorer.setMotion(next);
    // Input processing advances position independently of expensive WebGL frames.
