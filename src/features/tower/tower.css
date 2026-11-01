@@ -40,7 +40,6 @@
 .towerItemIcon{display:grid;place-items:center;color:var(--text-2)}
 .towerItemIcon .uiIcon{width:22px;height:22px}
 .towerItemName{font:700 11px/1.15 var(--font-body);white-space:normal;overflow-wrap:anywhere}
-.towerGame[data-catalog-open="true"] .towerJoystick{opacity:0;pointer-events:none}
 .towerGame [data-hammer]{position:absolute;z-index:9;right:max(10px,var(--safe-right,0px));bottom:max(12px,calc(var(--safe-bottom,0px) + 12px))}
 .towerGame [data-hammer][aria-expanded="true"]{background:var(--accent-soft);border-color:var(--accent-strong)}
 .towerClearWarning{margin-top:8px;font-weight:400;font-size:.9em;line-height:1.4}
@@ -49,23 +48,17 @@
 .towerSelectionBar .towerIconAction{color:var(--danger)}
 .towerToast{position:absolute;z-index:12;left:50%;top:calc(var(--safe-top,0px) + 67px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-sm);padding:8px 12px;font:600 12px/1.3 var(--font-body);text-align:center}
 .towerGame[data-mode="saving-place"] .towerPlacementBar .towerIconAction,.towerGame[data-mode="saving-remove"] .towerSelectionBar .towerIconAction,.towerGame[data-mode="saving-clear"] .towerIconAction{opacity:.5;pointer-events:none}
-.towerCanvas[data-grid-visible="true"] canvas{cursor:crosshair}
-/* Transparent to WebGL outside the interactive control surfaces. */
-.towerExploreControls{display:none;position:absolute;inset:0;z-index:7;pointer-events:none}
-.towerGame[data-explore="true"] .towerExploreControls{display:block}
-.towerGame[data-explore="true"] .towerCanvas canvas{cursor:crosshair}
-.towerExploreHint{position:absolute;left:50%;top:calc(var(--safe-top,0px) + 12px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 210px);padding:7px 12px;border-radius:14px;background:rgba(30,36,33,.72);color:#fff;font:500 11px/1.3 var(--font-body);text-align:center}
-.towerJoystick{position:absolute;left:max(34px,calc(var(--safe-left,0px) + 34px));bottom:max(25px,calc(var(--safe-bottom,0px) + 25px));width:90px;height:90px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(48,56,62,.28);box-shadow:0 1px 10px #0002;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;transition:opacity 130ms ease}
-.towerJoystickPuck{position:absolute;left:calc(50% - 17px);top:calc(50% - 17px);width:34px;height:34px;border-radius:50%;background:rgba(235,242,243,.92);border:1px solid rgba(40,49,39,.45);box-shadow:0 1px 6px #0003;pointer-events:none}
-.towerElevationControls{position:absolute;right:calc(max(10px,var(--safe-right,0px)) + var(--tower-hud-size) + 8px);bottom:max(12px,calc(var(--safe-bottom,0px) + 12px));display:flex;align-items:center;gap:7px;pointer-events:auto}
-@media(pointer:fine){.towerJoystick{display:none}}
-@media(max-width:749px){.towerGame{--tower-hud-size:42px}.towerCamera{left:67px}.towerQuickActions{right:max(8px,var(--safe-right,0px))}.towerGame [data-hammer]{right:max(8px,var(--safe-right,0px))}.towerSide{right:max(8px,var(--safe-right,0px));width:min(390px,calc(100% - 16px))}.towerExploreHint{max-width:calc(100% - 180px);font-size:10px}.towerJoystick{left:max(26px,calc(var(--safe-left,0px) + 26px));width:86px;height:86px}.towerElevationControls{right:calc(max(8px,var(--safe-right,0px)) + var(--tower-hud-size) + 7px)}}
-@media(max-height:420px){.towerGame{--tower-hud-size:40px}.towerCatalog .towerItem{min-height:54px}.towerSide{max-height:calc(100dvh - 124px)}.towerCatalogContent{max-height:calc(100dvh - 144px)}.towerJoystick{width:78px;height:78px;bottom:max(16px,calc(var(--safe-bottom,0px) + 16px))}.towerExploreHint{top:calc(var(--safe-top,0px) + 6px)}}
+ .towerCanvas[data-grid-visible="true"] canvas{cursor:crosshair}
+/* Orbit camera rotates on swipe and zooms on pinch. */
+.towerCanvas canvas{cursor:grab;touch-action:none}
+.towerCanvas canvas:active{cursor:grabbing}
+@media(max-width:749px){.towerGame{--tower-hud-size:42px}.towerCamera{left:67px}.towerQuickActions{right:max(8px,var(--safe-right,0px))}.towerGame [data-hammer]{right:max(8px,var(--safe-right,0px))}.towerSide{right:max(8px,var(--safe-right,0px));width:min(390px,calc(100% - 16px))}}
+@media(max-height:420px){.towerGame{--tower-hud-size:40px}.towerCatalog .towerItem{min-height:54px}.towerSide{max-height:calc(100dvh - 124px)}.towerCatalogContent{max-height:calc(100dvh - 144px)}}
 @media(max-width:360px){.towerPlacementBar{gap:3px;left:46%;max-width:calc(100% - 102px)}.towerCatalogPanel{grid-template-columns:repeat(3,minmax(0,1fr))}.towerGame .towerCatalogTab{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 .towerGame[data-explore="false"] .towerSide,.towerGame[data-explore="false"] [data-hammer]{display:none!important}
 
-@media(max-width:520px){.towerGame:is([data-mode="placing"],[data-mode="selected"]) .towerElevationControls{bottom:max(68px,calc(var(--safe-bottom,0px) + 68px))}}
+@media(max-width:520px){.towerGame:is([data-mode="placing"],[data-mode="selected"]) }
 
 /* Non-blocking, theme-native construction startup status. */
 .towerLoadStatus{position:absolute;z-index:12;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:9px;min-width:190px;max-width:calc(100% - 48px);padding:14px 18px;border-radius:14px;background:var(--surface-0);color:var(--text-1);border:1px solid var(--line);box-shadow:var(--shadow-sm);font:600 13px/1.4 var(--font-body);text-align:center;pointer-events:none}
@@ -97,10 +90,10 @@
 
 /* Single Tekmet currency: stamped Karachay coin in a compact game HUD. */
 .towerTekmetIcon{display:block;width:23px;height:23px;flex:none;filter:drop-shadow(0 1px 2px #65401255)}
-.towerTekmetWallet{position:absolute;z-index:12;top:calc(var(--safe-top,0px) + 10px);left:max(132px,calc(var(--safe-left,0px) + 132px));min-width:75px;height:44px;padding:4px 10px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--surface-0);border:1px solid #c99f4c;border-radius:13px;box-shadow:var(--shadow-sm);font:800 16px/1 var(--font-body);font-variant-numeric:tabular-nums}
+.towerTekmetWallet{position:absolute;z-index:12;top:calc(var(--safe-top,0px) + 61px);left:max(78px,calc(var(--safe-left,0px) + 78px));min-width:75px;height:44px;padding:4px 10px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--surface-0);border:1px solid #c99f4c;border-radius:13px;box-shadow:var(--shadow-sm);font:800 16px/1 var(--font-body);font-variant-numeric:tabular-nums}
 .towerTekmetQuote{height:43px;display:flex;align-items:center;justify-content:center;gap:5px;min-width:60px;padding:5px 9px;border:1px solid #c99f4c;border-radius:12px;background:var(--surface-0);font:800 15px/1 var(--font-body);font-variant-numeric:tabular-nums}
 .towerTekmetQuote[data-insufficient="true"]{border-color:var(--danger);color:var(--danger)}
 .towerItemPrice{display:flex;align-items:center;justify-content:center;gap:3px;font:700 12px/1 var(--font-body);font-variant-numeric:tabular-nums}
 .towerItemPrice .towerTekmetIcon{height:15px;width:15px;filter:none}
-.towerGame[data-mode="roof"] .towerTekmetWallet,.towerGame[data-mode="saving-roof"] .towerTekmetWallet{display:none}
-@media(max-width:749px){.towerTekmetWallet{left:max(68px,calc(var(--safe-left,0px) + 68px));height:42px;padding:3px 7px;min-width:65px;font-size:14px}.towerTekmetIcon{width:21px;height:21px}.towerTekmetQuote{min-width:55px;height:41px;font-size:14px}}
+
+@media(max-width:749px){.towerTekmetWallet{left:max(67px,calc(var(--safe-left,0px) + 67px));height:42px;padding:3px 7px;min-width:65px;font-size:14px}.towerTekmetIcon{width:21px;height:21px}.towerTekmetQuote{min-width:55px;height:41px;font-size:14px}}
