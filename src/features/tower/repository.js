@@ -7,7 +7,9 @@ function normalize(data){
  if(data?.format!==3||!Array.isArray(data.elements)||!Number.isSafeInteger(Number(data.revision)))
   throw new Error('INVALID_TOWER_SNAPSHOT');
  return {format:3,revision:Number(data.revision),elements:data.elements,
-  replayed:!!data.replayed,resetAt:data.resetAt||null};
+  replayed:!!data.replayed,resetAt:data.resetAt||null,
+  tekmetBalance:data.tekmetBalance==null?null:Number(data.tekmetBalance),
+  charged:Number(data.charged||0),refunded:Number(data.refunded||0)};
 }
 async function rpc(name,args){
  const client=await getSupabaseClient();
@@ -33,12 +35,17 @@ async function roofRpc(name,args){
  const client=await getSupabaseClient();
  const {data,error}=await client.rpc(name,args);
  if(error)throw error;
- if(!data||!Array.isArray(data.roofs)||!Number.isFinite(Number(data.balance)))throw new Error('INVALID_ROOF_SNAPSHOT');
- return {roofs:data.roofs,balance:Number(data.balance),replayed:!!data.replayed};
+ if(!data||!Array.isArray(data.roofs)||(data.balance!=null&&!Number.isFinite(Number(data.balance))))throw new Error('INVALID_ROOF_SNAPSHOT');
+ return {roofs:data.roofs,balance:data.balance==null?null:Number(data.balance),replayed:!!data.replayed};
 }
 export function loadTowerRoofs(userId=null){
  return roofRpc('get_tower_roof_snapshot',{p_user_id:userId});
 }
 export function placeTowerRoof({id,points,level}){
  return roofRpc('mutate_tower_roof',{p_operation_id:id,p_points:points,p_level:level});
+}
+
+/** Delete one polygon roof, refunding its original paid Tekmet amount exactly once. */
+export function removeTowerRoof({id,roofId}){
+ return roofRpc('remove_tower_roof',{p_operation_id:id,p_roof_id:roofId});
 }
