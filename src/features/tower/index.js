@@ -23,7 +23,7 @@ export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
   sections:[],revision:0,resetAt:null,selected:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
-  preview:null,previewSections:[],previewHit:null,locked:false,lineStart:null,lineEnd:null,beamShift:0,busy:false,ready:false,canLeave:()=>true,
+  preview:null,previewSections:[],previewHit:null,locked:false,lineStart:null,lineEnd:null,lineTipShown:false,beamShift:0,busy:false,ready:false,canLeave:()=>true,
   roofs:[],tekmetBalance:null,roofBalance:null,roofDraft:null,roofValidity:null,selectedRoofId:null};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
@@ -505,8 +505,8 @@ export async function mount(context,params={}){
    s.beamShift+=delta;void preview();
   });
  }
- on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;
-  if(s.lineEnd)return;
+ on('[data-rotate]','click',()=>{if(s.mode!=='placing'||s.lineEnd)return;
+  s.rotation=(s.rotation+1)%4;
   if(s.lineStart)s.lineStart={...s.lineStart,rotation:s.rotation};void preview();});
  on('[data-variant]','click',()=>{if(s.mode!=='placing'||s.lineEnd)return;
   if(baganaPrefab(s.type)){
@@ -600,7 +600,10 @@ export async function mount(context,params={}){
     s.previewHit=hit;s.locked=true;
     if(isApprovedMasonryType(s.type)){
      const picked=placement();
-     if(!s.lineStart){s.lineStart=picked;s.lineEnd=null;}
+     if(!s.lineStart){
+      s.lineStart=picked;s.lineEnd=null;
+      if(picked&&!s.lineTipShown){message('Перетащи зелёную точку, чтобы изменить начало линии');s.lineTipShown=true;}
+     }
      else if(picked)s.lineEnd=(picked.x===s.lineStart.x&&picked.z===s.lineStart.z)?null:picked;
     }
     void preview();
