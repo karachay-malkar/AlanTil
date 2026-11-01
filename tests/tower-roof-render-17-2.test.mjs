@@ -9,8 +9,8 @@ class Geometry {
  computeVertexNormals(){}dispose(){}
 }
 class Group {
- constructor(){this.children=[];}
- add(...c){this.children.push(...c);}
+ constructor(){this.children=[];this.userData={};this.parent=null;}
+ add(...c){this.children.push(...c);for(const v of c)v.parent=this;}
  remove(...c){this.children=this.children.filter(v=>!c.includes(v));}
  traverse(fn){fn(this);for(const c of this.children)c.traverse(fn);}
 }
@@ -103,5 +103,13 @@ test('diagonal node contours fill whole 25cm cells of earth exactly like timber 
   assert.equal(x[0],.5);assert.equal(x[1],1.5);
   assert.equal(z[0],.5);assert.equal(z[1],1.25);
  }
+ roof.dispose();
+});
+
+test('picking a saved roof identifies its persistent id for exact refund',()=>{
+ const root=new Group(),roof=createRoofCoverRenderer(THREE,root,()=>{});
+ roof.setSaved([{id:'paid-roof',level:8,cells:[[2,2]]}]);
+ const section=root.children[0].children[0];
+ assert.equal(roof.pickRoof({intersectObjects:()=>[{object:section.children[0]}]}),'paid-roof');
  roof.dispose();
 });
