@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {planMasonryLine,checkMasonryLine,MAX_MASONRY_LINE} from '../packages/tower-game/masonry-line.mjs';
+import {planMasonryLine,checkMasonryLine,MAX_MASONRY_LINE,editMasonryEndpoint,undoMasonryEndpoint} from '../packages/tower-game/masonry-line.mjs';
 import {prefabBounds} from '../packages/tower-game/prefab-layout.mjs';
 import {resolvePrefabJoints} from '../packages/tower-game/prefab-joints.mjs';
 import {APPROVED_PREFAB_VERSION} from '../packages/tower-game/approved-prefab.mjs';
@@ -90,4 +90,24 @@ test('camera reacts to drag without using one-finger orbit and returns normal se
  assert.match(scene,/markerDrag=null;controls.enabled=true/);
  assert.match(scene,/activePointers.size>=2/);
  assert.match(scene,/renderer.domElement.addEventListener\('pointermove',endpointPointerMove,true\)/);
+});
+
+test('start marker moves without changing the end; end marker moves without moving the start',()=>{
+ const a=first('2x2x2',10,10),b={...a,x:18,z:10};
+ const movedStart=editMasonryEndpoint(a,b,0,{x:12,y:0,z:11});
+ assert.equal(movedStart.first.x,12);
+ assert.equal(movedStart.first.z,11);
+ assert.equal(movedStart.last,b);
+ assert.equal(a.x,10);
+ const movedEnd=editMasonryEndpoint(movedStart.first,b,1,{x:20,z:12});
+ assert.equal(movedEnd.last.x,20);
+ assert.equal(movedEnd.last.z,12);
+ assert.equal(movedEnd.first,movedStart.first);
+});
+test('undo removes second anchor first, then releases first for another tap',()=>{
+ const start=first('1x1x1'),end={...start,x:18};
+ const one=undoMasonryEndpoint(start,end);
+ assert.equal(one.first,start);assert.equal(one.last,null);
+ const two=undoMasonryEndpoint(one.first,one.last);
+ assert.equal(two.first,null);assert.equal(two.last,null);
 });
