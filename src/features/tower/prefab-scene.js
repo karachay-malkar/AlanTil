@@ -22,7 +22,7 @@ import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-ston
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
-export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onRoofSelection=()=>{},onCameraChange=()=>{}}={}){
+export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onRoofSelection=()=>{},onEndpointMove=()=>{},onCameraChange=()=>{}}={}){
  const manifest={version:APPROVED_PREFAB_VERSION,types:BUILDABLE_PREFAB_TYPES,
   connectors:Object.fromEntries(Object.entries(WINDOW_JOINT_FILES).map(([axis,file])=>[axis,{file,interface:JOINT_INTERFACE}]))};
  const loader=new GLTFLoader(),loaded=new Map();
@@ -175,11 +175,23 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
  let renderedById=new Map(),renderedJoints=new Map();
 
+ let lastPanTarget=controls.target.clone();
  function cameraChanged(){
-  // Two-finger pan shifts the orbit target locally; distant overview stays centred.
+  // OrbitControls scales pan with distance. Amplify only active two-touch pans;
+  // zoom and single-finger rotation retain their original sensitivity.
   if(!worldMode&&!explorer.active){
    const d=camera.position.distanceTo(controls.target);
    const zoom=Math.max(0,Math.min(1,1-d/controls.maxDistance));
+   if(activePointers.size>=2){
+    const movement=controls.target.clone().sub(lastPanTarget);
+    const gain=1+3*Math.pow(zoom,.7);
+    if(movement.lengthSq()>1e-12&&movement.lengthSq()<9){
+     const extra=movement.multiplyScalar(gain-1);
+     controls.target.add(extra);camera.position.add(extra);
+    }
+   }
+   // Keep the target inside the plot + 10m context. Restrictions apply to
+   // final position, not to incremental gesture speed.
    const reach=Math.pow(zoom,.75);
    const x=THREE.MathUtils.clamp(controls.target.x,SITE.centerX-(SITE.widthM/2+10)*reach,SITE.centerX+(SITE.widthM/2+10)*reach);
    const z=THREE.MathUtils.clamp(controls.target.z,SITE.centerZ-(SITE.depthM/2+10)*reach,SITE.centerZ+(SITE.depthM/2+10)*reach);
@@ -187,6 +199,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    const offset=new THREE.Vector3(x-controls.target.x,y-controls.target.y,z-controls.target.z);
    if(offset.lengthSq()>1e-10){camera.position.add(offset);controls.target.add(offset);}
   }
+  lastPanTarget.copy(controls.target);
   needsAim=true;scheduleDraw();
  }
  controls.addEventListener('change',cameraChanged);
