@@ -332,14 +332,43 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  function cleanGhost(){for(const child of [...previewContents.children]){previewContents.remove(child);child.traverse(node=>{if(node.isMesh&&node.userData.ghostMaterial)node.material.dispose();if(node.isInstancedMesh)node.dispose();});}activeGhost=null;}
  async function setPreview(block,valid=true){
-  const generation=++previewGeneration;cleanGhost();preview.visible=!!block;scheduleDraw();
-  if(!block)return;
+  const generation=++previewGeneration;
+  cleanGhost();
+  const items=Array.isArray(block)?block:block?[block]:[];
+  preview.visible=items.length>0;
+  preview.position.set(0,0,0);
+  preview.rotation.set(0,0,0);
+  ghostBounds.visible=items.length===1;
+  scheduleDraw();
+  if(!items.length)return;
   try{
-   const model=await getPrefab(block);if(disposed||generation!==previewGeneration)return;
-   const clone=model.clone(true);clone.traverse(node=>{if(!node.isMesh)return;node.material=new THREE.MeshBasicMaterial({color:valid?'#69cf91':'#ed7777',transparent:true,opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide});node.userData.ghostMaterial=true;});
-   previewContents.add(clone);activeGhost=clone;setPosition(preview,block);
-   ghostBounds.scale.copy(footprint(block)).multiplyScalar(1.01);scheduleDraw();
-  }catch(e){if(generation===previewGeneration){container.dataset.prefabError=String(e?.message||e);console.warn('Prefab preview:',e);}}
+   for(const item of items){
+    const model=await getPrefab(item);
+    if(disposed||generation!==previewGeneration)return;
+    const wrap=new THREE.Group(),clone=model.clone(true);
+    clone.traverse(node=>{
+     if(!node.isMesh)return;
+     node.material=new THREE.MeshBasicMaterial({
+      color:valid?'#69cf91':'#ed7777',transparent:true,
+      opacity:valid?.45:.20,depthWrite:false,side:THREE.DoubleSide
+     });
+     node.userData.ghostMaterial=true;
+    });
+    wrap.add(clone);setPosition(wrap,item);
+    previewContents.add(wrap);activeGhost=wrap;
+    if(items.length===1){
+     ghostBounds.position.copy(center(item));
+     ghostBounds.rotation.set(0,item.rotation*Math.PI/2,0);
+     ghostBounds.scale.copy(footprint(item)).multiplyScalar(1.01);
+    }
+   }
+   scheduleDraw();
+  }catch(e){
+   if(generation===previewGeneration){
+    container.dataset.prefabError=String(e?.message||e);
+    console.warn('Prefab preview:',e);
+   }
+  }
  }
  async function setBlocks(elements){
   const generation=++rebuildGeneration;
