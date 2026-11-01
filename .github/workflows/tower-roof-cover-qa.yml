@@ -12,6 +12,8 @@ on:
       - 'packages/tower-game/tekmet-economy.mjs'
       - 'packages/tower-game/kunlum-parcel.mjs'
       - 'tests/tower-orbit-camera-17-2.test.mjs'
+      - 'tests/tower-masonry-line-17-2.test.mjs'
+      - 'packages/tower-game/masonry-line.mjs'
       - 'release.json'
       - 'scripts/release/sync-version.mjs'
       - '.github/workflows/tower-roof-cover-qa.yml'
@@ -33,6 +35,6 @@ jobs:
           node --check packages/tower-game/roof-cover.mjs
           node --check packages/tower-game/tekmet-economy.mjs
       - name: Polygon and support tests
-        run: node --test tests/tower-roof-cover-17-2.test.mjs tests/tower-roof-render-17-2.test.mjs tests/tower-tekmet-economy-17-2.test.mjs tests/tower-orbit-camera-17-2.test.mjs
+        run: node --test tests/tower-roof-cover-17-2.test.mjs tests/tower-roof-render-17-2.test.mjs tests/tower-tekmet-economy-17-2.test.mjs tests/tower-orbit-camera-17-2.test.mjs tests/tower-masonry-line-17-2.test.mjs
       - name: Consistent release versions
         run: node scripts/release/sync-version.mjs --check
