@@ -8,6 +8,8 @@ on:
       - 'supabase/migrations/*tower_roof*.sql'
       - 'supabase/migrations/*tower_polygon_roof*.sql'
       - 'tests/tower-roof-*.test.mjs'
+      - 'tests/tower-tekmet-*.test.mjs'
+      - 'packages/tower-game/tekmet-economy.mjs'
       - 'release.json'
       - 'scripts/release/sync-version.mjs'
       - '.github/workflows/tower-roof-cover-qa.yml'
@@ -27,7 +29,8 @@ jobs:
           node --check src/features/tower/roof-cover-scene.js
           node --check src/features/tower/repository.js
           node --check packages/tower-game/roof-cover.mjs
+          node --check packages/tower-game/tekmet-economy.mjs
       - name: Polygon and support tests
-        run: node --test tests/tower-roof-cover-17-2.test.mjs tests/tower-roof-render-17-2.test.mjs
+        run: node --test tests/tower-roof-cover-17-2.test.mjs tests/tower-roof-render-17-2.test.mjs tests/tower-tekmet-economy-17-2.test.mjs
       - name: Consistent release versions
         run: node scripts/release/sync-version.mjs --check
