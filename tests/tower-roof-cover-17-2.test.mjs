@@ -36,23 +36,17 @@ test('support and overlap are validated on ALL covered cells',()=>{
  const masonry={type:'masonry_section',_roofBounds:{min:[3,2,3],max:[4,3,4]}};
  assert.equal(checkRoofPlacement(points,2,[beam,masonry]).reason,'ROOF_COLLISION');
 });
-test('continuous multi-layer geometry and the free-build HUD are wired into tower',()=>{
+test('continuous roof, paid Tekmet UI and secure mutation in migration',()=>{
  const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
  const geom=read('src/features/tower/roof-cover-scene.js');
  const ui=read('src/features/tower/index.js');
- const sql=read('supabase/migrations/20261031233000_tower_roof_free_build_and_preserve_wallet.sql');
- assert.match(geom,/function terrain\(/);
- assert.match(geom,/computeVertexNormals/);
- assert.match(geom,/DataTexture/);
- assert.match(geom,/function poles\(/);
- assert.match(geom,/grassGeo/);
- assert.match(geom,/function soilHeight\(/);
- assert.doesNotMatch(geom,/new THREE.BoxGeometry\(C,\.10,C\)/);
- assert.match(ui,/pickRoof\(hit\)/);
- assert.match(ui,/placeTowerRoof/);
- assert.doesNotMatch(ui,/\[data-roof-price\]/);
- assert.doesNotMatch(ui,/s\.roofBalance\s*<|>s\.roofBalance/);
- assert.match(sql,/price:=0/);
- assert.doesNotMatch(sql,/silver=silver-price/);
- assert.doesNotMatch(sql,/RAISE EXCEPTION 'INSUFFICIENT_COINS'/);
+ const sql=read('supabase/migrations/20261101141500_tower_tekmet_wallet_rewards_costs_reset_172.sql');
+ for(const token of ['function solidLayer(','function poles(','grassGeo','function soilHeight('])assert.ok(geom.includes(token));
+ assert.doesNotMatch(geom,/function contourSoil\(/);
+ assert.match(ui,/tekmetRoofCost/);
+ assert.match(ui,/data-tekmet-price/);
+ assert.match(ui,/data-tekmet-balance/);
+ assert.match(sql,/amount:=jsonb_array_length\(cells\)\*2/);
+ assert.match(sql,/INSUFFICIENT_TEKMET/);
+ assert.match(sql,/tekmet_paid/);
 });
