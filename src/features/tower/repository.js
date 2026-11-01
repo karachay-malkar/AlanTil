@@ -25,6 +25,12 @@ export function mutateTowerV3({revision,id,action,section=null,sectionId=null}){
   p_revision:revision,p_operation_id:id,p_action:action,p_section:section,p_section_id:sectionId
  });
 }
+/** Save one complete masonry row atomically with a single wallet debit. */
+export function placeTowerLine({revision,id,sections}){
+ return rpc('mutate_tower_v3_line',{
+  p_revision:revision,p_operation_id:id,p_sections:sections
+ });
+}
 export function clearTowerV3({revision,id}){
  return rpc('clear_tower_v3',{p_revision:revision,p_operation_id:id});
 }
