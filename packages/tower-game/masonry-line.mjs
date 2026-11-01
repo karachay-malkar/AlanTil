@@ -31,6 +31,18 @@ export function planMasonryLine({first,last=null,maxCount=MAX_MASONRY_LINE}){
  }
  return {ok:true,reason:'',sections:result,axis};
 }
+/** Moving a draft endpoint does not change the other anchor or any saved section. */
+export function editMasonryEndpoint(first,last,index,position){
+ if(!first||!position||!Number.isInteger(position.x)||!Number.isInteger(position.z))
+  return {first,last};
+ if(index===0)return {first:{...first,x:position.x,z:position.z},last};
+ if(index===1&&last)return {first,last:{...last,x:position.x,z:position.z}};
+ return {first,last};
+}
+/** Rewind: remove end first; the next undo releases the start for a new tap. */
+export function undoMasonryEndpoint(first,last){
+ return last?{first,last:null}:{first:null,last:null};
+}
 /** Validate the ENTIRE operation, not just the most recently selected block. */
 export function checkMasonryLine(existing,sections,manifest,validateJoints=null){
  if(!Array.isArray(sections)||!sections.length||sections.length>MAX_MASONRY_LINE)
