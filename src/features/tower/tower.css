@@ -93,3 +93,14 @@
 .towerGame[data-mode="saving-roof"] [data-confirm],.towerGame[data-mode="saving-roof"] [data-cancel]{pointer-events:none;opacity:.5}
 
 .towerPlacementBar [data-confirm]{background:var(--accent-soft);border-color:var(--accent-strong)}
+
+
+/* Single Tekmet currency: stamped Karachay coin in a compact game HUD. */
+.towerTekmetIcon{display:block;width:23px;height:23px;flex:none;filter:drop-shadow(0 1px 2px #65401255)}
+.towerTekmetWallet{position:absolute;z-index:12;top:calc(var(--safe-top,0px) + 10px);left:max(132px,calc(var(--safe-left,0px) + 132px));min-width:75px;height:44px;padding:4px 10px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--surface-0);border:1px solid #c99f4c;border-radius:13px;box-shadow:var(--shadow-sm);font:800 16px/1 var(--font-body);font-variant-numeric:tabular-nums}
+.towerTekmetQuote{height:43px;display:flex;align-items:center;justify-content:center;gap:5px;min-width:60px;padding:5px 9px;border:1px solid #c99f4c;border-radius:12px;background:var(--surface-0);font:800 15px/1 var(--font-body);font-variant-numeric:tabular-nums}
+.towerTekmetQuote[data-insufficient="true"]{border-color:var(--danger);color:var(--danger)}
+.towerItemPrice{display:flex;align-items:center;justify-content:center;gap:3px;font:700 12px/1 var(--font-body);font-variant-numeric:tabular-nums}
+.towerItemPrice .towerTekmetIcon{height:15px;width:15px;filter:none}
+.towerGame[data-mode="roof"] .towerTekmetWallet,.towerGame[data-mode="saving-roof"] .towerTekmetWallet{display:none}
+@media(max-width:749px){.towerTekmetWallet{left:max(68px,calc(var(--safe-left,0px) + 68px));height:42px;padding:3px 7px;min-width:65px;font-size:14px}.towerTekmetIcon{width:21px;height:21px}.towerTekmetQuote{min-width:55px;height:41px;font-size:14px}}
