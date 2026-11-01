@@ -52,7 +52,7 @@ export function checkRoofPlacement(points,level,sections,roofs=[]){
    return t.min[1]<=level&&t.max[1]>level&&x>=t.min[0]&&x<t.max[0]&&z>=t.min[2]&&z<t.max[2];
   });
   if(collides)return {ok:false,reason:'ROOF_COLLISION',cells};
-  const supported=sections.some(b=>{
+  const supported=level===0||sections.some(b=>{
    const t=b._roofBounds;if(!t)return false;
    return t.max[1]===level&&x>=t.min[0]-2&&x<=t.max[0]+1&&z>=t.min[2]-2&&z<=t.max[2]+1;
   });
