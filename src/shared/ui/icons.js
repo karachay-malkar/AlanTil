@@ -1,6 +1,7 @@
 const PATHS = Object.freeze({
   check: '<path d="m20 6-11 11-5-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
   x: '<path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+  shuffle: '<path d="m17 3 4 4-4 4M3 17h5l9-10h4M17 21l4-4-4-4M3 7h5l3 3m3 4 3 3h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
   rotateCw: '<path d="M21 11a9 9 0 1 0-2.4 6.1M21 3v8h-8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
   layers: '<path d="m12 2 9 5-9 5-9-5 9-5Zm-9 10 9 5 9-5M3 17l9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
   eraser: '<path d="m7 21-4-4a2 2 0 0 1 0-3L14 3a2 2 0 0 1 3 0l4 4a2 2 0 0 1 0 3L10 21H7Zm-2-7 7 7M10 21h11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
