@@ -150,7 +150,10 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   if(explorer.active)leaveExplorer();
   controls.enabled=true;worldMode=false;
   camera.far=5000;camera.updateProjectionMatrix();
-  controls.enableRotate=true;controls.enableZoom=true;controls.enablePan=false;
+  controls.enableRotate=true;controls.enableZoom=true;controls.enablePan=true;
+  controls.screenSpacePanning=true;
+  controls.touches.ONE=THREE.TOUCH.ROTATE;
+  controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;
   controls.minDistance=TOWER_ORBIT_MIN_DISTANCE;
   controls.maxDistance=towerOrbitMaximumDistance(camera.aspect,camera.fov);
   controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI*.49;
@@ -172,7 +175,20 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  let previewGeneration=0,rebuildGeneration=0,activeGhost=null;
  let renderedById=new Map(),renderedJoints=new Map();
 
- function cameraChanged(){needsAim=true;scheduleDraw();}
+ function cameraChanged(){
+  // Two-finger pan shifts the orbit target locally; distant overview stays centred.
+  if(!worldMode&&!explorer.active){
+   const d=camera.position.distanceTo(controls.target);
+   const zoom=Math.max(0,Math.min(1,1-d/controls.maxDistance));
+   const reach=Math.pow(zoom,.75);
+   const x=THREE.MathUtils.clamp(controls.target.x,SITE.centerX-(SITE.widthM/2+10)*reach,SITE.centerX+(SITE.widthM/2+10)*reach);
+   const z=THREE.MathUtils.clamp(controls.target.z,SITE.centerZ-(SITE.depthM/2+10)*reach,SITE.centerZ+(SITE.depthM/2+10)*reach);
+   const y=THREE.MathUtils.clamp(controls.target.y,.25,20);
+   const offset=new THREE.Vector3(x-controls.target.x,y-controls.target.y,z-controls.target.z);
+   if(offset.lengthSq()>1e-10){camera.position.add(offset);controls.target.add(offset);}
+  }
+  needsAim=true;scheduleDraw();
+ }
  controls.addEventListener('change',cameraChanged);
  function footprint(block){const b=prefabBounds(block);return new THREE.Vector3(...b.size.map(v=>v*CELL));}
  function center(block){const b=prefabBounds(block);return new THREE.Vector3(...b.min.map((v,i)=>(v+b.size[i]/2)*CELL));}
@@ -530,7 +546,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    void kunlum?.ensureWideTerrain?.();
    grid.visible=false;faceGrid.visible=false;preview.visible=false;
    container.dataset.cameraMode='overview';
-   controls.maxDistance=3500;
+   controls.maxDistance=3500;controls.enablePan=false;
    camera.far=9000;camera.updateProjectionMatrix();
    // The hillside rises hundreds of metres: panorama camera must stay ABOVE
    // terrain, not under the 3D mountain (previous 315m eye was underground).
