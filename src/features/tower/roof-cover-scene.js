@@ -3,7 +3,9 @@
  * juniper twigs, packed soil and small grass blades. No per-cell earth boxes.
  */
 export function createRoofCoverRenderer(THREE,root,requestRender){
- const C=.25,STEP=4,SOIL_BASE=.153,TOP=.246;
+ const C=.25,STEP=4,TOP=.246;
+ // All four layers use the exact same occupied 25-cm cells. Adjacent layers overlap 3-6 mm.
+ const CHAFF_BOTTOM=.096,CHAFF_TOP=.123,JUNIPER_BOTTOM=.119,JUNIPER_TOP=.155,SOIL_BOTTOM=.150;
  const saved=new THREE.Group(),draftLayer=new THREE.Group();
  root.add(saved,draftLayer);
  const hash=(x,z,seed=0)=>{
@@ -58,15 +60,16 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
  const sideMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide,metalness:0});
  const poleMat=new THREE.MeshStandardMaterial({map:barkMap,color:0xffffff,roughness:.97,metalness:0});
  const chaffMat=new THREE.MeshStandardMaterial({color:0xb8a078,roughness:1,side:THREE.DoubleSide});
+ const fillMat=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:1,metalness:0,side:THREE.DoubleSide});
  const twigMat=new THREE.MeshStandardMaterial({color:0x6b6446,roughness:1});
  const needleMat=new THREE.MeshStandardMaterial({color:0x656c40,roughness:1,side:THREE.DoubleSide});
  const grassMat=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:1,side:THREE.DoubleSide});
  const ghostMat=new THREE.MeshBasicMaterial({color:0x20bd64,transparent:true,opacity:.08,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});
  const nodeMat=new THREE.MeshBasicMaterial({color:0x22e377,depthTest:false});
  const lineMat=new THREE.LineBasicMaterial({color:0x23e681,depthTest:false});
- const materials=[earthMat,sideMat,poleMat,chaffMat,twigMat,needleMat,grassMat,ghostMat,nodeMat,lineMat];
+ const materials=[earthMat,sideMat,poleMat,chaffMat,fillMat,twigMat,needleMat,grassMat,ghostMat,nodeMat,lineMat];
  // Make real non-uniform naturally weathered poles; scale length along X for contiguous courses.
- const poleGeo=new THREE.CylinderGeometry(.043,.049,C,13,8,false);
+ const poleGeo=new THREE.CylinderGeometry(.061,.064,C,13,8,false);
  poleGeo.rotateZ(-Math.PI/2);
  const polePos=poleGeo.getAttribute('position');
  for(let i=0;i<polePos.count;i++){
@@ -150,9 +153,9 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   let i=0;
   for(const [start,end,z] of runs)for(const lane of [-1,1]){
    const n=hash(z,start+lane,19);
-   tmp.position.set((start+end+1)*C/2,level*C+.054+(.003*(n-.5)),(z+.5)*C+lane*.062);
+   tmp.position.set((start+end+1)*C/2,level*C+.052+(.001*(n-.5)),(z+.5)*C+lane*.062);
    tmp.rotation.set(0,0,0);
-   tmp.scale.set(end-start+1,.91+n*.14,.91+n*.14);
+   tmp.scale.set(end-start+1,.77+n*.045,1.01+n*.025);
    tmp.updateMatrix();mesh.setMatrixAt(i,tmp.matrix);
    const t=.86+.25*hash(start,end+z,lane+11);
    col.setRGB(t,t,t);mesh.setColorAt(i,col);i++;
@@ -160,162 +163,112 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;
   parent.add(mesh);
  }
- function terrain(parent,cells,level){
+
+ /**
+  * Continuous solids over EXACTLY the same cell mask as the timber courses.
+  * Each band has a shared-vertex top and underside, plus sides only on exposed
+  * cell edges. No polygon clipping and no internal seams or floating layers.
+  */
+ function solidLayer(parent,cells,level,{name,bottom,top,material,shade,divisions=1}){
   if(!cells.length)return null;
-  const occupied=new Set(cells.map(c=>c[0]+','+c[1]));
-  const positions=[],uv=[],indices=[],vertices=new Map();
-  const gIndex=(gx,gz)=>{
-   const key=gx+','+gz;
-   if(vertices.has(key))return vertices.get(key);
-   const x=gx*C/STEP,z=gz*C/STEP;
-   const i=positions.length/3;positions.push(x,level*C+soilHeight(x,z),z);
-   uv.push(x*1.65,z*1.65);vertices.set(key,i);return i;
-  };
-  const skirtPos=[],skirtColors=[],skirtIndices=[];
-  const addSkirt=(x0,z0,x1,z1)=>{
-   const s=skirtPos.length/3;
-   const y0=soilHeight(x0,z0),y1=soilHeight(x1,z1);
-   const lower0=SOIL_BASE+.003*(hash(Math.round(x0*32),Math.round(z0*32),5)-.5);
-   const lower1=SOIL_BASE+.003*(hash(Math.round(x1*32),Math.round(z1*32),5)-.5);
-   skirtPos.push(x0,level*C+y0,z0,x1,level*C+y1,z1,
-     x0,level*C+lower0,z0,x1,level*C+lower1,z1);
-   const c0=.74+.16*noise(x0,z0,.18,21),c1=.74+.16*noise(x1,z1,.18,21);
-   skirtColors.push(c0*.55,c0*.43,c0*.28,c1*.55,c1*.43,c1*.28,
-     c0*.62,c0*.48,c0*.31,c1*.62,c1*.48,c1*.31);
-   skirtIndices.push(s,s+1,s+2,s+1,s+3,s+2);
-  };
-  for(const [x,z] of cells){
-   for(let ix=0;ix<STEP;ix++)for(let iz=0;iz<STEP;iz++){
-    const a=gIndex(x*STEP+ix,z*STEP+iz);
-    const b=gIndex(x*STEP+ix+1,z*STEP+iz);
-    const c=gIndex(x*STEP+ix,z*STEP+iz+1);
-    const d=gIndex(x*STEP+ix+1,z*STEP+iz+1);
-    indices.push(a,c,b,b,c,d);
+  const occupied=new Set(cells.map(([x,z])=>x+','+z));
+  const grid=new Map(),vertices=[],colors=[],uv=[],faces=[];
+  const variation=(x,z,y,seed)=>y+(noise(x,z,.17,seed)-.5)*.0018;
+  const bottomAt=(x,z)=>variation(x,z,bottom,name==='soil'?39:55);
+  const topAt=(x,z)=>name==='soil'?soilHeight(x,z):variation(x,z,top,name==='chaff'?21:37);
+  function vertex(gx,gz,upper){
+   const key=gx+','+gz+','+Number(upper);
+   if(grid.has(key))return grid.get(key);
+   const x=gx*C/divisions,z=gz*C/divisions;
+   const y=upper?topAt(x,z):bottomAt(x,z);
+   const idx=vertices.length/3;
+   vertices.push(x,level*C+y,z);
+   uv.push(x*1.65,z*1.65);
+   const variance=.86+.26*noise(x,z,.12,name==='chaff'?71:85);
+   colors.push(shade[0]*variance,shade[1]*variance,shade[2]*variance);
+   grid.set(key,idx);return idx;
+  }
+  const sidePos=[],sideColors=[],sideIndices=[];
+  function border(x0,z0,x1,z1,inX,inZ){
+   const yTop0=topAt(x0,z0),yTop1=topAt(x1,z1);
+   const yBottom0=bottomAt(x0,z0),yBottom1=bottomAt(x1,z1);
+   const soil=name==='soil';
+   const steps=soil?2:1;
+   const shift=soil?.0025*(.65+noise((x0+x1)/2,(z0+z1)/2,.08,63)):0;
+   // Soil has a shallow, broken face, not a flat vertical rectangular slab.
+   const levels=soil?
+    [[x0,yTop0,z0,x1,yTop1,z1],
+     [x0+inX*shift,(yTop0+yBottom0)/2,z0+inZ*shift,
+      x1+inX*shift,(yTop1+yBottom1)/2,z1+inZ*shift],
+     [x0,yBottom0,z0,x1,yBottom1,z1]]:
+    [[x0,yTop0,z0,x1,yTop1,z1],[x0,yBottom0,z0,x1,yBottom1,z1]];
+   for(let j=0;j<steps;j++){
+    const a=levels[j],b=levels[j+1],index=sidePos.length/3;
+    sidePos.push(a[0],level*C+a[1],a[2],a[3],level*C+a[4],a[5],
+      b[0],level*C+b[1],b[2],b[3],level*C+b[4],b[5]);
+    const grit=noise((x0+x1)/2,(z0+z1)/2,.085,19+j);
+    const tone=soil?.73+.24*grit:.83+.18*grit;
+    const f=j===steps-1?.93:1.04;
+    for(let k=0;k<4;k++){
+     const fleck=.91+.13*noise(x0+k*.017,z0+k*.029,.061,51);
+     sideColors.push(shade[0]*tone*f*fleck,shade[1]*tone*f*fleck,shade[2]*tone*f*fleck);
+    }
+    sideIndices.push(index,index+1,index+2,index+1,index+3,index+2);
    }
-   const border=[
-    [x-1,z,x*C,z*C,x*C,(z+1)*C],
-    [x+1,z,(x+1)*C,z*C,(x+1)*C,(z+1)*C],
-    [x,z-1,x*C,z*C,(x+1)*C,z*C],
-    [x,z+1,x*C,(z+1)*C,(x+1)*C,(z+1)*C]
+  }
+  for(const [x,z] of cells){
+   for(let ix=0;ix<divisions;ix++)for(let iz=0;iz<divisions;iz++){
+    const a=vertex(x*divisions+ix,z*divisions+iz,true);
+    const b=vertex(x*divisions+ix+1,z*divisions+iz,true);
+    const c=vertex(x*divisions+ix,z*divisions+iz+1,true);
+    const d=vertex(x*divisions+ix+1,z*divisions+iz+1,true);
+    faces.push(a,c,b,b,c,d);
+    // Closed underside is required to avoid hollow floating material in section views.
+    const e=vertex(x*divisions+ix,z*divisions+iz,false);
+    const f=vertex(x*divisions+ix+1,z*divisions+iz,false);
+    const g=vertex(x*divisions+ix,z*divisions+iz+1,false);
+    const h=vertex(x*divisions+ix+1,z*divisions+iz+1,false);
+    faces.push(e,f,g,f,h,g);
+   }
+   const edges=[
+    [x-1,z,x*C,z*C,x*C,(z+1)*C,1,0],
+    [x+1,z,(x+1)*C,z*C,(x+1)*C,(z+1)*C,-1,0],
+    [x,z-1,x*C,z*C,(x+1)*C,z*C,0,1],
+    [x,z+1,x*C,(z+1)*C,(x+1)*C,(z+1)*C,0,-1]
    ];
-   for(const [nx,nz,ax,az,bx,bz] of border)if(!occupied.has(nx+','+nz)){
-    for(let k=0;k<STEP;k++){
-     const t0=k/STEP,t1=(k+1)/STEP;
-     addSkirt(ax+(bx-ax)*t0,az+(bz-az)*t0,ax+(bx-ax)*t1,az+(bz-az)*t1);
+   for(const [nx,nz,ax,az,bx,bz,inX,inZ] of edges)if(!occupied.has(nx+','+nz)){
+    for(let k=0;k<divisions;k++){
+     const t0=k/divisions,t1=(k+1)/divisions;
+     border(ax+(bx-ax)*t0,az+(bz-az)*t0,ax+(bx-ax)*t1,az+(bz-az)*t1,inX,inZ);
     }
    }
   }
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
-  g.setIndex(indices);g.computeVertexNormals();g.userData.roofOwned=true;
-  const top=new THREE.Mesh(g,earthMat);
-  parent.add(top);
-  const sideG=new THREE.BufferGeometry();
-  sideG.setAttribute('position',new THREE.Float32BufferAttribute(skirtPos,3));
-  sideG.setAttribute('color',new THREE.Float32BufferAttribute(skirtColors,3));
-  sideG.setIndex(skirtIndices);sideG.computeVertexNormals();
-  sideG.userData.roofOwned=true;
-  parent.add(new THREE.Mesh(sideG,sideMat));
-  return g;
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  geometry.setIndex(faces);geometry.computeVertexNormals();geometry.userData.roofOwned=true;
+  const mesh=new THREE.Mesh(geometry,material);
+  mesh.userData.roofLayer=name;
+  parent.add(mesh);
+  const sides=new THREE.BufferGeometry();
+  sides.setAttribute('position',new THREE.Float32BufferAttribute(sidePos,3));
+  sides.setAttribute('color',new THREE.Float32BufferAttribute(sideColors,3));
+  sides.setIndex(sideIndices);sides.computeVertexNormals();sides.userData.roofOwned=true;
+  const side=new THREE.Mesh(sides,sideMat);
+  side.userData.roofLayer=name+'-edge';
+  parent.add(side);
+  return geometry;
  }
- function contourFromCenters(points){
-  if(!Array.isArray(points)||!points.length)return null;
-  const raw=points.map(([x,z])=>[(x+.5)*C,(z+.5)*C]),r=C/2;
-  if(raw.length===1){
-   const [x,z]=raw[0];
-   return [[x-r,z-r],[x+r,z-r],[x+r,z+r],[x-r,z+r]];
-  }
-  if(raw.length===2){
-   const [a,b]=raw,dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz);
-   if(!len)return null;
-   const nx=-dz/len*r,nz=dx/len*r;
-   return [[a[0]+nx,a[1]+nz],[b[0]+nx,b[1]+nz],[b[0]-nx,b[1]-nz],[a[0]-nx,a[1]-nz]];
-  }
-  const signed=raw.reduce((v,p,i)=>{
-   const q=raw[(i+1)%raw.length];return v+p[0]*q[1]-q[0]*p[1];
-  },0);
-  if(Math.abs(signed)<1e-8)return null;
-  const outward=signed>0?1:-1;
-  const result=[];
-  for(let i=0;i<raw.length;i++){
-   const a=raw[(i-1+raw.length)%raw.length],p=raw[i],b=raw[(i+1)%raw.length];
-   const ux=p[0]-a[0],uz=p[1]-a[1],vx=b[0]-p[0],vz=b[1]-p[1];
-   const lu=Math.hypot(ux,uz),lv=Math.hypot(vx,vz);
-   if(lu<1e-7||lv<1e-7)return null;
-   const n1=[outward*uz/lu,-outward*ux/lu];
-   const n2=[outward*vz/lv,-outward*vx/lv];
-   const den=1+n1[0]*n2[0]+n1[1]*n2[1];
-   const m=den>.18?Math.min(r/den,r*1.9):r*.95;
-   const dx=(n1[0]+n2[0])*m,dz=(n1[1]+n2[1])*m;
-   result.push([p[0]+dx,p[1]+dz]);
-  }
-  return result;
+ function terrain(parent,cells,level){
+  solidLayer(parent,cells,level,{name:'chaff',bottom:CHAFF_BOTTOM,top:CHAFF_TOP,
+    material:fillMat,shade:[.67,.54,.33]});
+  solidLayer(parent,cells,level,{name:'juniper',bottom:JUNIPER_BOTTOM,top:JUNIPER_TOP,
+    material:fillMat,shade:[.33,.38,.24]});
+  return solidLayer(parent,cells,level,{name:'soil',bottom:SOIL_BOTTOM,top:TOP,
+    material:earthMat,shade:[.48,.37,.24],divisions:STEP});
  }
- function contourSoil(parent,points,level){
-  const ring=contourFromCenters(points);
-  if(!ring||ring.length<3||!THREE.ShapeUtils?.triangulateShape)return null;
-  const input=ring.map(p=>new THREE.Vector2(p[0],p[1]));
-  const triangles=THREE.ShapeUtils.triangulateShape(input,[]);
-  if(!triangles?.length)return null;
-  const topPos=[],topUV=[],topIndex=[],vMap=new Map();
-  function vertex(p){
-   const key=p[0].toFixed(6)+','+p[1].toFixed(6);
-   if(vMap.has(key))return vMap.get(key);
-   const i=topPos.length/3;
-   topPos.push(p[0],level*C+soilHeight(p[0],p[1]),p[1]);
-   topUV.push(p[0]*1.65,p[1]*1.65);
-   vMap.set(key,i);return i;
-  }
-  function subdivide(a,b,c,depth=0){
-   const ab=(a[0]-b[0])**2+(a[1]-b[1])**2;
-   const bc=(b[0]-c[0])**2+(b[1]-c[1])**2;
-   const ca=(c[0]-a[0])**2+(c[1]-a[1])**2;
-   if(depth<7&&Math.max(ab,bc,ca)>.11**2){
-    const m=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
-    const d=m(a,b),e=m(b,c),f=m(c,a);
-    subdivide(a,d,f,depth+1);subdivide(d,b,e,depth+1);
-    subdivide(f,e,c,depth+1);subdivide(d,e,f,depth+1);
-    return;
-   }
-   const area=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
-   const ia=vertex(a),ib=vertex(b),ic=vertex(c);
-   // XZ orientation is inverted relative to Y-up; ensure material faces upward.
-   topIndex.push(...(area>0?[ia,ic,ib]:[ia,ib,ic]));
-  }
-  for(const tri of triangles){
-   const [a,b,c]=tri.map(i=>ring[i]);
-   subdivide(a,b,c);
-  }
-  const geom=new THREE.BufferGeometry();
-  geom.setAttribute('position',new THREE.Float32BufferAttribute(topPos,3));
-  geom.setAttribute('uv',new THREE.Float32BufferAttribute(topUV,2));
-  geom.setIndex(topIndex);geom.computeVertexNormals();geom.userData.roofOwned=true;
-  parent.add(new THREE.Mesh(geom,earthMat));
-  const skirts=[],colors=[],faces=[];
-  for(let i=0;i<ring.length;i++){
-   const [ax,az]=ring[i],[bx,bz]=ring[(i+1)%ring.length];
-   const seg=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/.08));
-   for(let j=0;j<seg;j++){
-    const x0=ax+(bx-ax)*j/seg,z0=az+(bz-az)*j/seg;
-    const x1=ax+(bx-ax)*(j+1)/seg,z1=az+(bz-az)*(j+1)/seg;
-    const s0=skirts.length/3,h0=soilHeight(x0,z0),h1=soilHeight(x1,z1);
-    const b0=SOIL_BASE+.003*(noise(x0,z0,.13,11)-.5),b1=SOIL_BASE+.003*(noise(x1,z1,.13,11)-.5);
-    skirts.push(x0,level*C+h0,z0,x1,level*C+h1,z1,x0,level*C+b0,z0,x1,level*C+b1,z1);
-    const c0=.7+.18*noise(x0,z0,.21,14),c1=.7+.18*noise(x1,z1,.21,14);
-    colors.push(c0*.58,c0*.45,c0*.30,c1*.58,c1*.45,c1*.30,
-                c0*.67,c0*.53,c0*.35,c1*.67,c1*.53,c1*.35);
-    faces.push(s0,s0+1,s0+2,s0+1,s0+3,s0+2);
-   }
-  }
-  const wall=new THREE.BufferGeometry();
-  wall.setAttribute('position',new THREE.Float32BufferAttribute(skirts,3));
-  wall.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  wall.setIndex(faces);wall.computeVertexNormals();wall.userData.roofOwned=true;
-  parent.add(new THREE.Mesh(wall,sideMat));
-  return geom;
- }
- function assembly(cells,level,preview=false,points=null){
+ function assembly(cells,level,preview=false){
   const group=new THREE.Group();
   if(!cells?.length||!Number.isInteger(level))return group;
   poles(group,cells,level);
@@ -344,7 +297,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
    o.rotation.set(Math.PI/2.25,hash(k,9,5)*Math.PI*2,0);
    o.scale.set(.7,.45+hash(k,7,6)*.45,.7);
   },true);
-  const top=(points?.length?contourSoil(group,points,level):null)||terrain(group,cells,level);
+  const top=terrain(group,cells,level);
   const blades=cells.length>2500?3:cells.length>900?5:cells.length>300?9:16;
   instances(group,grassGeo,grassMat,cells,level,blades,(o,x,z,n)=>{
    const k=x*997+z*337+n*67;
@@ -378,7 +331,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   clear(saved);
   for(const roof of roofs||[]){
    if(!Array.isArray(roof.cells)||!Number.isInteger(roof.level))continue;
-   saved.add(assembly(roof.cells,roof.level,false,roof.points));
+   saved.add(assembly(roof.cells,roof.level,false));
   }
   requestRender();
  }
@@ -386,7 +339,7 @@ export function createRoofCoverRenderer(THREE,root,requestRender){
   clear(draftLayer);
   if(!roof?.points?.length){requestRender();return;}
   const {points,level}=roof;
-  draftLayer.add(assembly(cells,level,true,points));
+  draftLayer.add(assembly(cells,level,true));
   const lines=[];
   for(const [x,z] of points)lines.push((x+.5)*C,level*C+.27,(z+.5)*C);
   if(points.length>1)lines.push(...lines.slice(0,3));
