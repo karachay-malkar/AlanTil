@@ -17,13 +17,13 @@ import {uiIcon} from '../../shared/ui/icons.js?v=17.2.54';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
-const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',shuffle:'shuffle',remove:'eraser',hammer:'hammer',clear:'trash2'};
+const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',undo:'arrowLeft',remove:'eraser',hammer:'hammer',clear:'trash2'};
 const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${label}" title="${label}">${uiIcon(TOWER_ICONS[name])}</button>`;
 export async function mount(context,params={}){
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
   sections:[],revision:0,resetAt:null,selected:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
-  preview:null,previewSections:[],previewHit:null,locked:false,lineStart:null,lineEnd:null,lineSeed:1,beamShift:0,busy:false,ready:false,canLeave:()=>true,
+  preview:null,previewSections:[],previewHit:null,locked:false,lineStart:null,lineEnd:null,beamShift:0,busy:false,ready:false,canLeave:()=>true,
   roofs:[],tekmetBalance:null,roofBalance:null,roofDraft:null,roofValidity:null,selectedRoofId:null};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
@@ -58,7 +58,7 @@ export async function mount(context,params={}){
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
    <span class="towerLineCount" data-line-count hidden></span>
    <div class="towerTekmetQuote" data-tekmet-quote hidden aria-label="Стоимость строительства">${tekmetIcon("towerTekmetIcon")}<output data-tekmet-price>0</output></div>
-   ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}<span class="towerLineShuffle" data-line-shuffle hidden>${icon('shuffle','Перемешать кладку')}</span>
+   ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}${icon('undo','Убрать последнюю точку')}
   </div>
   <div class="towerSelectionBar" data-selection hidden role="toolbar" aria-label="Выделенная секция">
    ${icon('remove','Удалить выбранную секцию')}
@@ -172,8 +172,9 @@ export async function mount(context,params={}){
   s.mode=next;game.dataset.mode=next;
   const roofing=next==='roof'||next==='saving-roof';
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place'&&!roofing;
-  q('[data-rotate]').hidden=roofing;
-  q('[data-line-shuffle]').hidden=next!=='placing'||!s.lineEnd||s.previewSections.length<2;
+  const drawingLine=next==='placing'&&s.previewSections.length>1;
+  q('[data-rotate]').hidden=roofing||drawingLine;
+  q('[data-undo]').hidden=next!=='placing'||!s.lineStart;
   q('[data-line-count]').hidden=next!=='placing'||s.previewSections.length<2;
   q('[data-tekmet-wallet]').hidden=s.tekmetBalance==null||!editable(s);
   quoteUpdate(roofing?tekmetRoofCost(s.roofValidity?.cells?.length||0):next==='placing'?tekmetSectionCost(s.type):null);
@@ -182,7 +183,7 @@ export async function mount(context,params={}){
   const post=baganaPrefab(s.type);
   const variantButton=q('[data-variant]');
   variantButton.hidden=!post&&approvedVariantCount(s.type)<2;
-  if(isRoofBeamId(s.type)||roofing)variantButton.hidden=true;
+  if(isRoofBeamId(s.type)||roofing||drawingLine)variantButton.hidden=true;
   const variantLabel=post?'Сменить тип багъаны':'Сменить вариант';
   variantButton.setAttribute('aria-label',variantLabel);variantButton.title=variantLabel;
   const heightControl=q('[data-bagana-heights]');
@@ -204,7 +205,10 @@ export async function mount(context,params={}){
   q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
   if(next==='placing'||next==='saving-place'||roofing)catalogVisible(false);
   s.scene?.setTool(roofing?'roof':next==='placing'||next==='saving-place'?'place':'select');
-  if(next!=='placing'&&next!=='saving-place')void s.scene?.setPreview(null);
+  if(next!=='placing'&&next!=='saving-place'){
+   s.scene?.setLineDraft(null,null);
+   void s.scene?.setPreview(null);
+  }
  }
  function markSelection(id){
   const chosen=s.sections.find(b=>b.id===id);
@@ -325,7 +329,7 @@ export async function mount(context,params={}){
   let candidate=placement(),sections=candidate?[candidate]:[];
   let failure=null;
   if(isApprovedMasonryType(s.type)&&s.lineStart){
-   const line=planMasonryLine({first:s.lineStart,last:s.lineEnd,existing:s.sections,seed:s.lineSeed});
+   const line=planMasonryLine({first:s.lineStart,last:s.lineEnd});
    if(line.ok)sections=line.sections;
    else{sections=[];failure=line.reason;}
    candidate=sections[0]||null;
@@ -345,7 +349,12 @@ export async function mount(context,params={}){
   const count=q('[data-line-count]');
   count.hidden=sections.length<2;
   if(sections.length>1)count.textContent=sections.length+' шт.';
-  q('[data-line-shuffle]').hidden=!s.lineEnd||sections.length<2||!isApprovedMasonryType(s.type);
+  const drawingLine=sections.length>1;
+  q('[data-rotate]').hidden=drawingLine;
+  q('[data-variant]').hidden=drawingLine||isRoofBeamId(s.type)||approvedVariantCount(s.type)<2;
+  q('[data-undo]').hidden=!s.lineStart;
+  // Endpoint markers follow the fully snapped line, not the raw finger position.
+  s.scene?.setLineDraft(s.lineStart,s.lineEnd&&drawingLine?sections[sections.length-1]:null);
   q('[data-confirm]').disabled=!valid||!editable(s)||s.busy||
    s.tekmetBalance==null||price==null||price>s.tekmetBalance;
   q('[data-confirm]').dataset.valid=String(valid);
@@ -362,8 +371,8 @@ export async function mount(context,params={}){
   if(type==='roof-cover'){beginRoof();return;}
   if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type)&&!isRoofBeamId(type))return;
   s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.selectedRoofId=null;s.locked=false;
-  s.lineStart=null;s.lineEnd=null;s.lineSeed=Math.floor(Math.random()*1000000);
-  s.previewSections=[];s.beamShift=0;
+  s.lineStart=null;s.lineEnd=null;
+  s.previewSections=[];s.scene?.setLineDraft(null,null);s.beamShift=0;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
   mode('placing');void preview();
@@ -372,7 +381,7 @@ export async function mount(context,params={}){
   if(s.busy)return;
   if(s.roofDraft){s.roofDraft=null;s.roofValidity=null;s.scene?.setRoofDraft(null);}
   ++previewSequence;s.preview=null;s.previewSections=[];s.previewHit=null;s.selected=null;s.selectedRoofId=null;s.locked=false;
-  s.lineStart=null;s.lineEnd=null;
+  s.lineStart=null;s.lineEnd=null;s.scene?.setLineDraft(null,null);
   s.scene?.setSelected(null);mode('idle');
  }
  async function refreshServer(){
@@ -392,7 +401,7 @@ export async function mount(context,params={}){
     await mutateTowerV3({revision:s.revision,id:operationId,action,section,sectionId});
    s.sections=data.elements;s.revision=data.revision;balanceUpdate(data.tekmetBalance);
    s.selected=null;s.preview=null;s.previewSections=[];s.previewHit=null;s.locked=false;
-   s.lineStart=null;s.lineEnd=null;s.lineSeed=Math.floor(Math.random()*1000000);
+   s.lineStart=null;s.lineEnd=null;
    // A successful place keeps the chosen type, variant and yaw for the next block.
    mode(placing?'placing':'idle');
    await redraw();
@@ -497,8 +506,9 @@ export async function mount(context,params={}){
   });
  }
  on('[data-rotate]','click',()=>{if(s.mode!=='placing')return;s.rotation=(s.rotation+1)%4;
+  if(s.lineEnd)return;
   if(s.lineStart)s.lineStart={...s.lineStart,rotation:s.rotation};void preview();});
- on('[data-variant]','click',()=>{if(s.mode!=='placing')return;
+ on('[data-variant]','click',()=>{if(s.mode!=='placing'||s.lineEnd)return;
   if(baganaPrefab(s.type)){
    s.type=nextBaganaType(s.type);
    mode('placing');void preview();return;
@@ -506,8 +516,12 @@ export async function mount(context,params={}){
   const count=approvedVariantCount(s.type)||1;
   s.variant=(s.variant+1)%count;if(s.lineStart)s.lineStart={...s.lineStart,variant:s.variant};void preview();
  });
- on('[data-shuffle]','click',()=>{if(s.mode!=='placing'||!s.lineEnd)return;
-  s.lineSeed=Math.floor(Math.random()*1000000);void preview();});
+ on('[data-undo]','click',()=>{
+  if(s.mode!=='placing'||s.busy||!s.lineStart)return;
+  if(s.lineEnd)s.lineEnd=null;
+  else {s.lineStart=null;s.locked=false;s.previewHit=s.scene?.getAimHit?.()||null;}
+  void preview();
+ });
  on('[data-confirm]','click',()=>{
   if(s.mode==='roof'){void commitRoof();return;}
   if(s.mode!=='placing'||!s.preview||q('[data-confirm]').disabled)return;
@@ -589,6 +603,13 @@ export async function mount(context,params={}){
      if(!s.lineStart){s.lineStart=picked;s.lineEnd=null;}
      else if(picked)s.lineEnd=(picked.x===s.lineStart.x&&picked.z===s.lineStart.z)?null:picked;
     }
+    void preview();
+   },
+   onEndpointMove(index,position){
+    if(s.mode!=='placing'||s.busy||!isApprovedMasonryType(s.type))return;
+    if(index===0&&s.lineStart)s.lineStart={...s.lineStart,...position};
+    else if(index===1&&s.lineEnd)s.lineEnd={...s.lineEnd,...position};
+    else return;
     void preview();
    },
    onSelection(id){if(s.mode==='idle'||s.mode==='selected')markSelection(id);},
