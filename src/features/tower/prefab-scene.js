@@ -135,6 +135,62 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  const outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#e1be7b',depthTest:false,transparent:true,opacity:1}));outline.visible=false;outline.renderOrder=999;scene.add(outline);
  const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
  const previewContents=new THREE.Group();preview.add(previewContents);
+ // Editable 3D endpoints: rendered above the draft stones, not saved in the DB.
+ const lineMarkerGeometry=new THREE.SphereGeometry(.16,16,12);
+ const lineMarkerMaterials=[
+  new THREE.MeshBasicMaterial({color:'#32bc7b',depthTest:false,transparent:true,opacity:.95}),
+  new THREE.MeshBasicMaterial({color:'#39a8d8',depthTest:false,transparent:true,opacity:.95})
+ ];
+ const lineMarkers=lineMarkerMaterials.map((material,i)=>{
+  const mesh=new THREE.Mesh(lineMarkerGeometry,material);
+  mesh.renderOrder=1100;mesh.visible=false;mesh.userData.handleIndex=i;
+  scene.add(mesh);return mesh;
+ });
+ let lineBlocks=[null,null],markerDrag=null;
+ function setLineDraft(first=null,last=null){
+  lineBlocks=[first,last];
+  for(let i=0;i<2;i++){
+   const block=lineBlocks[i],marker=lineMarkers[i];
+   marker.visible=!!block&&tool==='place'&&!worldMode;
+   if(block){
+    const bounds=prefabBounds(block);
+    marker.position.set((bounds.min[0]+bounds.size[0]/2)*CELL,
+     bounds.max[1]*CELL+.16,(bounds.min[2]+bounds.size[2]/2)*CELL);
+   }
+  }
+  scheduleDraw();
+ }
+ function endpointAt(clientX,clientY){
+  if(tool!=='place'||worldMode)return -1;
+  const rect=renderer.domElement.getBoundingClientRect(),point=new THREE.Vector3();
+  let match=-1,best=36*36;
+  for(let i=0;i<2;i++){
+   if(!lineMarkers[i].visible)continue;
+   point.copy(lineMarkers[i].position).project(camera);
+   if(point.z< -1||point.z>1)continue;
+   const dx=(point.x*.5+.5)*rect.width+rect.left-clientX;
+   const dy=(-point.y*.5+.5)*rect.height+rect.top-clientY;
+   const distance=dx*dx+dy*dy;
+   if(distance<best){best=distance;match=i;}
+  }
+  return match;
+ }
+ function dragEndpoint(clientX,clientY){
+  if(!markerDrag)return;
+  const marker=lineMarkers[markerDrag.index],block=lineBlocks[markerDrag.index];
+  if(!block)return;
+  const rect=renderer.domElement.getBoundingClientRect();
+  pointer.set((clientX-rect.left)/rect.width*2-1,-(clientY-rect.top)/rect.height*2+1);
+  raycaster.setFromCamera(pointer,camera);
+  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),-marker.position.y);
+  const target=new THREE.Vector3();
+  if(!raycaster.ray.intersectPlane(plane,target))return;
+  const size=prefabBounds(block).size;
+  const x=THREE.MathUtils.clamp(Math.round(target.x/CELL-size[0]/2),0,SITE.widthM/CELL-size[0]);
+  const z=THREE.MathUtils.clamp(Math.round(target.z/CELL-size[2]/2),0,SITE.depthM/CELL-size[2]);
+  if(x!==block.x||z!==block.z)onEndpointMove(markerDrag.index,{x,y:block.y,z});
+ }
+
  const solidBounds=[];
  const explorer=createTowerExplorerController({
   camera,controls,canvas:renderer.domElement,
@@ -523,6 +579,30 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   controls.update();scheduleDraw();
   return true;
  }
+ // Capturing an endpoint press prevents OrbitControls from rotating on handle drag.
+ function endpointPointerDown(e){
+  if(markerDrag||e.button>0||e.isPrimary===false)return;
+  const index=endpointAt(e.clientX,e.clientY);
+  if(index<0)return;
+  markerDrag={id:e.pointerId,index};
+  controls.enabled=false;pressed=null;
+  e.preventDefault();e.stopImmediatePropagation();
+ }
+ function endpointPointerMove(e){
+  if(!markerDrag||markerDrag.id!==e.pointerId)return;
+  dragEndpoint(e.clientX,e.clientY);
+  e.preventDefault();e.stopImmediatePropagation();
+ }
+ function endpointPointerUp(e){
+  if(!markerDrag||markerDrag.id!==e.pointerId)return;
+  if(e.type==='pointerup')dragEndpoint(e.clientX,e.clientY);
+  markerDrag=null;controls.enabled=true;
+  e.preventDefault();e.stopImmediatePropagation();
+ }
+ renderer.domElement.addEventListener('pointerdown',endpointPointerDown,true);
+ renderer.domElement.addEventListener('pointermove',endpointPointerMove,true);
+ renderer.domElement.addEventListener('pointerup',endpointPointerUp,true);
+ renderer.domElement.addEventListener('pointercancel',endpointPointerUp,true);
  const activePointers=new Set();let pressed=null;
  function pointerDown(e){activePointers.add(e.pointerId);pressed=activePointers.size===1?{id:e.pointerId,x:e.clientX,y:e.clientY,at:performance.now()}:null;}
  function pointerUp(e){activePointers.delete(e.pointerId);if(worldMode){pressed=null;return;}if(!pressed||pressed.id!==e.pointerId||activePointers.size||Math.hypot(e.clientX-pressed.x,e.clientY-pressed.y)>7||performance.now()-pressed.at>650){pressed=null;return;}pressed=null;if(focusOnDoubleTap(e))return;if(tool==='roof'){const picked=roofPick(e.clientX,e.clientY);if(picked)onPick(picked);return;}const rect=renderer.domElement.getBoundingClientRect();
@@ -610,8 +690,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // Complete the first frame before controls become available.
  await new Promise(resolve=>requestAnimationFrame(resolve));
  return {manifest,setRoofs(roofs){roofCoverRenderer.setSaved(roofs);},setRoofDraft(next,cells=[]){roofDraft=next;roofCoverRenderer.setDraft(next,cells);},async setBlocks(v){await setBlocks(v||[]);if(!worldMode&&!explorer.active)fit();},setPreview,
-  setSelected,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore:setConstructionOrbit,
+  setSelected,setLineDraft,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;setLineDraft(v==='place'?lineBlocks[0]:null,v==='place'?lineBlocks[1]:null);grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore:setConstructionOrbit,
   exitExplore:resetCamera,
   setMotion(next){explorer.setMotion(next);
    // Input processing advances position independently of expensive WebGL frames.
@@ -630,6 +710,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    yellowParcelCorners:info?.yellowParcelCorners||null,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
-  dispose(){disposed=true;roofCoverRenderer.dispose();clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;markerDrag=null;renderer.domElement.removeEventListener('pointerdown',endpointPointerDown,true);renderer.domElement.removeEventListener('pointermove',endpointPointerMove,true);renderer.domElement.removeEventListener('pointerup',endpointPointerUp,true);renderer.domElement.removeEventListener('pointercancel',endpointPointerUp,true);lineMarkerGeometry.dispose();lineMarkerMaterials.forEach(material=>material.dispose());roofCoverRenderer.dispose();clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
  };
 }
