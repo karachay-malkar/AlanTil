@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {planMasonryLine,checkMasonryLine,MAX_MASONRY_LINE} from '../packages/tower-game/masonry-line.mjs';
 import {prefabBounds} from '../packages/tower-game/prefab-layout.mjs';
 import {approvedVariantCount} from '../packages/tower-game/approved-prefab.mjs';
@@ -76,4 +77,12 @@ test('planner does not change placed sections or mutate draft anchors',()=>{
  const result=planMasonryLine({first:a,last:b});
  assert.deepEqual({a,b},before);
  assert.notEqual(result.sections[1].variant+':'+result.sections[1].rotation,result.sections[0].variant+':'+result.sections[0].rotation);
+});
+
+test('tower imports the masonry planner with the release version',()=>{
+ const release=JSON.parse(readFileSync(new URL('../release.json',import.meta.url),'utf8'));
+ const tower=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
+ const sync=readFileSync(new URL('../scripts/release/sync-version.mjs',import.meta.url),'utf8');
+ assert.ok(tower.includes("from '../../../packages/tower-game/masonry-line.mjs?v="+release.version+"'"));
+ assert.ok(sync.includes('return replaceOne(s,/(masonry-line'));
 });
