@@ -12,8 +12,8 @@ import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_W
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
 import {planMasonryLine,checkMasonryLine} from '../../../packages/tower-game/masonry-line.mjs';
-import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2-tekmet.1';
-import {uiIcon} from '../../shared/ui/icons.js?v=17.2.47';
+import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2-masonry-line.1';
+import {uiIcon} from '../../shared/ui/icons.js?v=17.2.54';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
@@ -139,18 +139,7 @@ export async function mount(context,params={}){
   });
   catalog.querySelectorAll('[data-catalog-panel]').forEach(panel=>{panel.hidden=panel.dataset.catalogPanel!==category;});
  };
- let toastTimer=null,hintTimer=null;
- const hint=q('.towerExploreHint');
- try{
-  if(sessionStorage.getItem('alantil:tower-hint-shown'))hint.hidden=true;
-  else {
-   sessionStorage.setItem('alantil:tower-hint-shown','1');
-   hintTimer=setTimeout(()=>{if(!s.disposed)hint.hidden=true;},3800);
-  }
- }catch{
-  hintTimer=setTimeout(()=>{if(!s.disposed)hint.hidden=true;},3800);
- }
- s.cleanupHint=()=>clearTimeout(hintTimer);
+ let toastTimer=null;
  function message(text){
   if(s.disposed)return;
   const el=q('[data-toast]');el.textContent=text;el.hidden=false;
@@ -631,7 +620,7 @@ export async function mount(context,params={}){
 }
 export function canLeave(){return active?.canLeave?.()??true;}
 export function unmount(){
- if(!active)return;active.disposed=true;active.controller.abort();active.cleanupOrientation?.();active.cleanupHint?.();active.scene?.dispose();
+ if(!active)return;active.disposed=true;active.controller.abort();active.cleanupOrientation?.();active.scene?.dispose();
  if(active.context.shell.appShell.dataset.feature==='tower')active.context.shell.appShell.dataset.feature='practice';
  active=null;
 }
