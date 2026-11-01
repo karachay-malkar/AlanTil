@@ -3,6 +3,7 @@ import {createTowerScene} from './prefab-scene.js?v=17.2.51';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {ROOF_BEAM_VERSION,roofBeamId,roofBeamLength,isRoofBeamId,positionRoofBeamAgainst} from '../../../packages/tower-game/roof-beam.mjs';
 import {roofCoverCells,checkRoofPlacement} from '../../../packages/tower-game/roof-cover.mjs';
+import {tekmetSectionCost,tekmetRoofCost,tekmetIcon} from '../../../packages/tower-game/tekmet-economy.mjs';
 import {prefabBounds} from '../../../packages/tower-game/prefab-layout.mjs';
 import {WINDOW_PREFAB_ID,WINDOW_PREFAB_VERSION} from '../../../packages/tower-game/window-prefab.mjs';
 import {DOOR_PREFAB_ID,DOOR_PREFAB_VERSION} from '../../../packages/tower-game/door-prefab.mjs';
@@ -10,7 +11,7 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3,loadTowerRoofs,placeTowerRoof} from './repository.js?v=17.2-roof-cover.1';
+import {towerUserId,loadTowerV3,mutateTowerV3,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2-tekmet.1';
 import {uiIcon} from '../../shared/ui/icons.js?v=17.2.47';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -22,12 +23,13 @@ export async function mount(context,params={}){
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
   sections:[],revision:0,resetAt:null,selected:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
   preview:null,previewHit:null,locked:false,beamShift:0,busy:false,ready:false,canLeave:()=>true,
-  roofs:[],roofBalance:0,roofDraft:null,roofValidity:null};
+  roofs:[],tekmetBalance:null,roofBalance:null,roofDraft:null,roofValidity:null,selectedRoofId:null};
  active=s;
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  context.shell.appShell.dataset.feature='tower';
  const root=context.root;
  root.innerHTML=`<section class="view towerView"><div class="towerGame" data-mode="idle">
+  <div class="towerTekmetWallet" data-tekmet-wallet hidden aria-label="Баланс текметов">${tekmetIcon("towerTekmetIcon")}<output data-tekmet-balance>0</output></div>
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div></div>
   <div class="towerCamera" role="group" aria-label="Камера">
    <button type="button" class="btn towerIconAction towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}</button>
@@ -62,6 +64,7 @@ export async function mount(context,params={}){
    <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вперёд на 25 см" title="Сдвинуть вперёд на 25 см">${uiIcon('route')}</button>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
+   <div class="towerTekmetQuote" data-tekmet-quote hidden aria-label="Стоимость строительства">${tekmetIcon("towerTekmetIcon")}<output data-tekmet-price>0</output></div>
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}
   </div>
   <div class="towerSelectionBar" data-selection hidden role="toolbar" aria-label="Выделенная секция">
@@ -119,7 +122,8 @@ export async function mount(context,params={}){
  const catalogItem=spec=>{
   const title=spec.id==='roof-cover'?'Покрытие':isRoofBeamId(spec.id)?'Балка':spec.id===WINDOW_PREFAB_ID?'Терезе':spec.id===DOOR_PREFAB_ID?'эшик':spec.id===GATE_PREFAB_ID?'къабакъла':isBaganaPrefab(spec.id)?'Багъана':spec.id.replaceAll('x','×');
   const symbol=spec.id==='roof-cover'?'layers':isRoofBeamId(spec.id)?'layers':spec.id===WINDOW_PREFAB_ID?'appWindow':spec.id===DOOR_PREFAB_ID?'doorClosed':spec.id===GATE_PREFAB_ID?'gate':isBaganaPrefab(spec.id)?'bagana':'blocks';
-  return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span></button>`;
+  const cost=spec.id==='roof-cover'?2:tekmetSectionCost(spec.id);
+  return `<button type="button" class="btn towerItem" data-section-id="${spec.id}" aria-label="${title}, ${cost} текметов" title="${title}"><span class="towerItemIcon" aria-hidden="true">${uiIcon(symbol)}</span><span class="towerItemName">${title}</span><span class="towerItemPrice">${tekmetIcon('towerTekmetIcon')}<span>${cost}${spec.id==='roof-cover'?'/яч':''}</span></span></button>`;
  };
  const walls=BUILDABLE_PREFAB_TYPES.filter(spec=>isApprovedMasonryType(spec.id));
  const openings=BUILDABLE_PREFAB_TYPES.filter(spec=>[WINDOW_PREFAB_ID,DOOR_PREFAB_ID,GATE_PREFAB_ID].includes(spec.id));
@@ -161,6 +165,19 @@ export async function mount(context,params={}){
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{if(!s.disposed)el.hidden=true;},3200);
  }
  function blocks(){return s.sections;}
+ function balanceUpdate(next){
+  s.tekmetBalance=next==null?null:Number(next);
+  const wallet=q('[data-tekmet-wallet]');wallet.hidden=s.tekmetBalance==null||!editable(s);
+  if(s.tekmetBalance!=null)q('[data-tekmet-balance]').textContent=String(s.tekmetBalance);
+ }
+ function quoteUpdate(amount){
+  const quote=q('[data-tekmet-quote]');
+  quote.hidden=!Number.isInteger(amount)||amount<1;
+  if(amount>=1){
+   q('[data-tekmet-price]').textContent=String(amount);
+   quote.dataset.insufficient=String(s.tekmetBalance!=null&&amount>s.tekmetBalance);
+  }
+ }
  function catalogVisible(show){
   side.classList.toggle('is-open',!!show);
   side.inert=!show;
@@ -174,6 +191,8 @@ export async function mount(context,params={}){
   const roofing=next==='roof'||next==='saving-roof';
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place'&&!roofing;
   q('[data-rotate]').hidden=roofing;
+  q('[data-tekmet-wallet]').hidden=roofing||s.tekmetBalance==null||!editable(s);
+  quoteUpdate(roofing?tekmetRoofCost(s.roofValidity?.cells?.length||0):next==='placing'?tekmetSectionCost(s.type):null);
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
   q('[data-confirm]').disabled=next!=='placing'&&next!=='roof';
   const post=baganaPrefab(s.type);
@@ -205,10 +224,18 @@ export async function mount(context,params={}){
  }
  function markSelection(id){
   const chosen=s.sections.find(b=>b.id===id);
+  s.selectedRoofId=null;
   s.selected=chosen?.id||null;
   s.scene?.setSelected(s.selected);
   mode(chosen&&editable(s)?'selected':'idle');
   if(chosen&&editable(s))catalogVisible(false);
+ }
+ function markRoofSelection(id){
+  const roof=s.roofs.find(r=>r.id===id);
+  s.selected=null;s.selectedRoofId=roof?.id||null;
+  s.scene?.setSelected(null);
+  mode(roof&&editable(s)?'selected':'idle');
+  if(roof&&editable(s))catalogVisible(false);
  }
  function updateRoofDraft(){
   if(!s.roofDraft)return;
@@ -217,8 +244,10 @@ export async function mount(context,params={}){
   s.roofValidity=points.length&&Number.isInteger(level)?checkRoofPlacement(points,level,
    s.sections.map(b=>({...b,_roofBounds:prefabBounds(b)})),s.roofs):{ok:false,cells};
   s.scene?.setRoofDraft(points.length?s.roofDraft:null,cells);
-  // Temporary free-build phase: no wallet check or price display.
-  q('[data-confirm]').disabled=!s.roofValidity.ok||!s.userId||s.busy;
+  const price=tekmetRoofCost(cells.length);
+  quoteUpdate(price);
+  q('[data-confirm]').disabled=!s.roofValidity.ok||!s.userId||s.busy||
+   s.tekmetBalance==null||price>s.tekmetBalance;
  }
  function pickRoof(hit){
   if(!s.roofDraft||s.busy)return;
@@ -239,7 +268,7 @@ export async function mount(context,params={}){
  }
  function beginRoof(){
   if(s.busy||!s.ready||s.loadFailed||!editable(s))return;
-  s.type='roof-cover';s.selected=null;s.roofDraft={points:[],level:null};
+  s.type='roof-cover';s.selected=null;s.selectedRoofId=null;s.roofDraft={points:[],level:null};
   s.scene?.setSelected(null);
   mode('roof');updateRoofDraft();
  }
@@ -250,18 +279,36 @@ export async function mount(context,params={}){
   try{
    const saved=await placeTowerRoof({id:crypto.randomUUID(),points,level});
    if(s.disposed)return;
-   s.roofs=saved.roofs;s.roofBalance=saved.balance;
+   s.roofs=saved.roofs;balanceUpdate(saved.balance);
    s.scene?.setRoofs(s.roofs);s.scene?.setRoofDraft(null);
    s.roofDraft=null;s.roofValidity=null;mode('idle');
   }catch(error){
    if(s.disposed)return;
    const reason=String(error?.message||error);
-   try{const snapshot=await loadTowerRoofs();s.roofs=snapshot.roofs;s.roofBalance=snapshot.balance;s.scene?.setRoofs(s.roofs);}catch{}
+   try{const snapshot=await loadTowerRoofs();s.roofs=snapshot.roofs;balanceUpdate(snapshot.balance);s.scene?.setRoofs(s.roofs);}catch{}
    mode('roof');updateRoofDraft();
-   message(reason.includes('ROOF_SUPPORT')?'Не хватает опор':
+   message(reason.includes('INSUFFICIENT_TEKMET')?'Недостаточно текметов':
+    reason.includes('ROOF_SUPPORT')?'Не хватает опор':
     reason.includes('ROOF_COLLISION')||reason.includes('ROOF_OVERLAP')?'Крыша пересекается с постройкой':
     'Не удалось установить крышу');
   }finally{s.busy=false;if(!s.disposed&&s.mode==='roof')updateRoofDraft();}
+ }
+ async function deleteRoof(){
+  const id=s.selectedRoofId;
+  if(!id||s.busy||!s.userId||!editable(s))return;
+  s.busy=true;mode('saving-remove');
+  try{
+   const data=await removeTowerRoof({id:crypto.randomUUID(),roofId:id});
+   if(s.disposed)return;
+   s.roofs=data.roofs;balanceUpdate(data.balance);s.selectedRoofId=null;
+   s.scene?.setRoofs(s.roofs);mode('idle');
+  }catch(error){
+   if(s.disposed)return;
+   try{await refreshServer();}catch{}
+   mode('idle');message('Не удалось удалить крышу');
+  }finally{
+   s.busy=false;if(!s.disposed)mode(s.mode);
+  }
  }
  function placement(){
   if(s.mode!=='placing'&&s.mode!=='saving-place')return null;
@@ -286,7 +333,10 @@ export async function mount(context,params={}){
   const placing=candidate&&validatePrefabPlacement(blocks(),candidate);
   const joints=placing?.ok?(candidate.type==='roof_beam'?{ok:true}:validateSectionJoints(s.sections.filter(b=>b.type==='masonry_section'),candidate,s.scene.manifest)):{ok:false};
   const valid=!!placing?.ok&&joints.ok;
-  q('[data-confirm]').disabled=!valid||!editable(s)||s.busy;
+  const price=tekmetSectionCost(s.type);
+  quoteUpdate(price);
+  q('[data-confirm]').disabled=!valid||!editable(s)||s.busy||
+   s.tekmetBalance==null||price==null||price>s.tekmetBalance;
   await s.scene.setPreview(candidate,valid);
   if(generation!==previewSequence||s.disposed)return;
   q('[data-confirm]').dataset.valid=String(valid);
@@ -300,7 +350,7 @@ export async function mount(context,params={}){
  function begin(type){
   if(type==='roof-cover'){beginRoof();return;}
   if(s.busy||!s.ready||s.loadFailed||!editable(s)||!BUILDABLE_PREFAB_TYPES.some(spec=>spec.id===type)&&!isRoofBeamId(type))return;
-  s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.locked=false;s.beamShift=0;
+  s.type=type;s.variant=0;s.rotation=0;s.selected=null;s.selectedRoofId=null;s.locked=false;s.beamShift=0;
   s.previewHit=s.scene?.getAimHit?.()||null;
   s.scene?.setSelected(null);
   mode('placing');void preview();
@@ -308,14 +358,14 @@ export async function mount(context,params={}){
  function cancel(){
   if(s.busy)return;
   if(s.roofDraft){s.roofDraft=null;s.roofValidity=null;s.scene?.setRoofDraft(null);}
-  ++previewSequence;s.preview=null;s.previewHit=null;s.selected=null;s.locked=false;
+  ++previewSequence;s.preview=null;s.previewHit=null;s.selected=null;s.selectedRoofId=null;s.locked=false;
   s.scene?.setSelected(null);mode('idle');
  }
  async function refreshServer(){
-  if(!s.userId){s.sections=[];s.roofs=[];s.revision=0;s.resetAt=null;s.scene?.setRoofs([]);await redraw();return;}
+  if(!s.userId){s.sections=[];s.roofs=[];s.revision=0;s.resetAt=null;balanceUpdate(null);s.scene?.setRoofs([]);await redraw();return;}
   const [snapshot,roofSnapshot]=await Promise.all([loadTowerV3(params.userId||null),loadTowerRoofs(params.userId||null)]);
   s.sections=snapshot.elements;s.revision=snapshot.revision;s.resetAt=snapshot.resetAt;
-  s.roofs=roofSnapshot.roofs;s.roofBalance=roofSnapshot.balance;
+  s.roofs=roofSnapshot.roofs;balanceUpdate(roofSnapshot.balance);
   s.scene?.setRoofs(s.roofs);await redraw();
  }
  async function mutate(action,section=null,sectionId=null){
@@ -324,7 +374,7 @@ export async function mount(context,params={}){
   const operationId=crypto.randomUUID();
   try{
    const data=await mutateTowerV3({revision:s.revision,id:operationId,action,section,sectionId});
-   s.sections=data.elements;s.revision=data.revision;
+   s.sections=data.elements;s.revision=data.revision;balanceUpdate(data.tekmetBalance);
    s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
    // A successful place keeps the chosen type, variant and yaw for the next block.
    mode(action==='place'?'placing':'idle');
@@ -341,6 +391,7 @@ export async function mount(context,params={}){
    mode(action==='place'?'placing':'selected');
    message(reason.includes('AUTH_')?'Необходимо войти в аккаунт':
     reason.includes('SUPPORT')?'Нельзя удалить несущую секцию':
+    reason.includes('INSUFFICIENT_TEKMET')?'Недостаточно текметов':
     reason.includes('REVISION_CONFLICT')?'Башня изменилась. Выберите место снова.':
     'Не удалось сохранить башню');
    if(action==='place')await preview();
@@ -350,17 +401,17 @@ export async function mount(context,params={}){
   if(s.busy||!s.ready||!s.userId||!editable(s))return;
   if(!s.sections.length&&!s.roofs.length)return;
   const confirmed=await context.modal.confirm({
-   message:'Удалить всю построенную башню?<div class="towerClearWarning">Все установленные элементы будут безвозвратно удалены.</div>'
+   message:'Удалить всю построенную башню?<div class="towerClearWarning">Уплаченные текметы вернутся на баланс.</div>'
   });
   if(!confirmed||s.disposed||s.busy||!editable(s))return;
   s.busy=true;mode('saving-clear');
   try{
    const result=await clearTowerV3({revision:s.revision,id:crypto.randomUUID()});
    if(s.disposed)return;
-   s.sections=result.elements;s.revision=result.revision;
+   s.sections=result.elements;s.revision=result.revision;balanceUpdate(result.tekmetBalance);
    s.resetAt=result.resetAt;
    s.selected=null;s.preview=null;s.previewHit=null;s.locked=false;
-   s.scene?.setSelected(null);s.roofs=[];s.scene?.setRoofs([]);mode('idle');await redraw();
+   s.scene?.setSelected(null);s.selectedRoofId=null;s.roofs=[];s.scene?.setRoofs([]);mode('idle');await redraw();
   }catch(error){
    if(s.disposed)return;
    try{await refreshServer();}catch{}
@@ -446,7 +497,9 @@ export async function mount(context,params={}){
   void mutate('place',section,null);
  });
  on('[data-remove]','click',()=>{
-  if(s.mode!=='selected'||!s.selected)return;
+  if(s.mode!=='selected')return;
+  if(s.selectedRoofId){void deleteRoof();return;}
+  if(!s.selected)return;
   const id=s.selected,remaining=s.sections.filter(b=>b.id!==id);
   if(remaining.some((b,i)=>b.type!=='roof_beam'&&!validatePrefabPlacement(remaining.filter((_,j)=>j!==i),b).ok)){
    message('Нельзя удалить опору для верхних секций');return;
@@ -535,6 +588,7 @@ export async function mount(context,params={}){
   s.scene=await createTowerScene(q('.towerCanvas'),{
    onPick(hit){if(s.mode==='roof'){pickRoof(hit);return;}if(s.mode!=='placing')return;s.previewHit=hit;s.locked=true;void preview();},
    onSelection(id){if(s.mode==='idle'||s.mode==='selected')markSelection(id);},
+   onRoofSelection(id){if(s.mode==='idle'||s.mode==='selected')markRoofSelection(id);},
    onCameraChange(camera){if(s.mode!=='placing'||s.locked)return;
     const hit=camera.hit||{position:camera.target,normal:{x:0,y:1,z:0}};
     const last=s.previewHit;
