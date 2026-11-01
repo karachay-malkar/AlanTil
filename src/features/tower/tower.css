@@ -100,9 +100,7 @@
 
 
 /* Automatic one-point / two-point masonry construction; never a separate mode. */
-.towerLineShuffle{display:flex;align-items:center}
 .towerLineCount{font:700 11px/1.2 var(--font-body);color:var(--text-2);white-space:nowrap}
-.towerGame[data-mode="placing"] .towerLineShuffle .towerIconAction{border-color:var(--accent-strong)}
 @media(max-width:520px){
  .towerGame:is([data-mode="placing"],[data-mode="saving-place"]) .towerPlacementBar{
   left:50%;bottom:max(64px,calc(var(--safe-bottom,0px) + 64px));
