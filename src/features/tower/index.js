@@ -56,6 +56,7 @@ export async function mount(context,params={}){
    <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вперёд на 25 см" title="Сдвинуть вперёд на 25 см">${uiIcon('route')}</button>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
+   <span class="towerLineCount" data-line-count hidden></span>
    <div class="towerTekmetQuote" data-tekmet-quote hidden aria-label="Стоимость строительства">${tekmetIcon("towerTekmetIcon")}<output data-tekmet-price>0</output></div>
    ${icon('confirm','Установить')}${icon('cancel','Отменить')}${icon('rotate','Повернуть на 90°')}${icon('variant','Сменить вариант')}<span class="towerLineShuffle" data-line-shuffle hidden>${icon('shuffle','Перемешать кладку')}</span>
   </div>
@@ -173,6 +174,7 @@ export async function mount(context,params={}){
   q('[data-placement]').hidden=next!=='placing'&&next!=='saving-place'&&!roofing;
   q('[data-rotate]').hidden=roofing;
   q('[data-line-shuffle]').hidden=next!=='placing'||!s.lineEnd||s.previewSections.length<2;
+  q('[data-line-count]').hidden=next!=='placing'||s.previewSections.length<2;
   q('[data-tekmet-wallet]').hidden=s.tekmetBalance==null||!editable(s);
   quoteUpdate(roofing?tekmetRoofCost(s.roofValidity?.cells?.length||0):next==='placing'?tekmetSectionCost(s.type):null);
   q('[data-selection]').hidden=next!=='selected'&&next!=='saving-remove';
@@ -340,6 +342,9 @@ export async function mount(context,params={}){
   const unit=tekmetSectionCost(s.type);
   const price=unit==null?null:unit*sections.length;
   quoteUpdate(price);
+  const count=q('[data-line-count]');
+  count.hidden=sections.length<2;
+  if(sections.length>1)count.textContent=sections.length+' шт.';
   q('[data-line-shuffle]').hidden=!s.lineEnd||sections.length<2||!isApprovedMasonryType(s.type);
   q('[data-confirm]').disabled=!valid||!editable(s)||s.busy||
    s.tekmetBalance==null||price==null||price>s.tekmetBalance;
