@@ -1,0 +1,33 @@
+name: AlanTil 17.2 analytics traffic isolation QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'packages/alantil-core/analytics.js'
+      - 'src/shared/analytics/**'
+      - 'src/features/admin/index.js'
+      - 'supabase/migrations/*traffic_analytics*'
+      - 'tests/traffic-analytics-17-2.test.mjs'
+      - 'tests/visitor-analytics.test.mjs'
+      - '.github/workflows/17-2-analytics-traffic-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  analytics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify traffic-origin, visitor tracking and historical-statistics contracts
+        run: |
+          node --test tests/traffic-analytics-17-2.test.mjs tests/visitor-analytics.test.mjs tests/extended-statistics-16-8.test.mjs
+      - name: Verify release and JavaScript syntax
+        run: |
+          node --check src/shared/analytics/analytics.js
+          node --check src/shared/analytics/visitor-analytics.js
+          node --check src/features/admin/index.js
+          node scripts/release/sync-version.mjs --check
