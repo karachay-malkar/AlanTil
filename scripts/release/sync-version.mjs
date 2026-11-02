@@ -58,8 +58,17 @@ await set('src/app/bootstrap.js',original=>{
 });
 await set('src/app/router.js',original=>{
  let s=replaceOne(original,/(const ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js');
- return replaceOne(s,/(const TOWER_ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js');
+ s=replaceOne(s,/(const TOWER_ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js');
+ return replaceOne(s,/(const MASONRY_ASSET_VERSION = ")[^"]+/,'$1'+version,'src/app/router.js');
 });
+await set('src/features/masonry/index.js',original=>{
+ let s=replaceOne(original,/(architecture-assets\.js\?v=)[0-9.]+/,'$1'+version,'src/features/masonry/index.js');
+ return replaceOne(s,/(scene\.js\?v=)[0-9.]+/,'$1'+version,'src/features/masonry/index.js');
+});
+await set('src/features/masonry/scene.js',s=>replaceOne(s,/(architecture-assets\.js\?v=)[0-9.]+/,'$1'+version,'src/features/masonry/scene.js'));
+await set('src/features/masonry/architecture-assets.js',s=>replaceOne(s,/(const VERSION=')[^']+/,'$1'+version,'src/features/masonry/architecture-assets.js'));
+await set('packages/tower-game/door-prefab.mjs',s=>replaceOne(s,/(DOOR_RENDER_VERSION=')[^']+/,'$1'+version,'packages/tower-game/door-prefab.mjs'));
+await set('packages/tower-game/window-prefab.mjs',s=>replaceOne(s,/(WINDOW_RENDER_VERSION=')[^']+/,'$1'+version,'packages/tower-game/window-prefab.mjs'));
 await set('src/features/tower/index.js',s=>{
  s=replaceOne(s,/(prefab-scene\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js');
  return replaceOne(s,/(masonry-line\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js');

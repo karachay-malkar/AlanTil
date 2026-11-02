@@ -8,13 +8,13 @@ import {applyGateSurfaces} from '../tower/gate-surface.js';
 export const ARCHITECTURE=Object.freeze([
  {id:'gate',title:'къабакъла · утверждённые',file:'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb',cells:[18,10,2]},
  {id:'gate-v9',title:'къабакъла v9 · игровая модель',file:'/assets/tower/approved-library/architecture/gate-18x10x2-v9.glb',cells:[18,10,2]},
- {id:'door',title:'эшик',file:'/assets/tower/approved-library/architecture/door-7x9x2-stone-v1.glb',cells:[7,9,2]},
+ {id:'door',title:'эшик',file:'/assets/tower/approved-library/architecture/optimized/door-7x9x2-stone-v1-meshopt.glb',cells:[7,9,2]},
  {id:'window',title:'Терезе',file:'/assets/tower/approved-library/architecture/window-4x5x2-v2.glb',cells:[4,5,2]}
 ]);
 export const ARCHITECTURE_IDS=new Set(ARCHITECTURE.map(a=>a.id));
-const DOOR_WOOD='/assets/tower/approved-library/architecture/door-wood-v1.glb';
-const WINDOW_WOOD='/assets/tower/approved-library/architecture/window-wood-v3.glb';
-const VERSION='17.2-approved-architecture.1';
+const DOOR_WOOD='/assets/tower/approved-library/architecture/optimized/door-wood-v1-webp.glb';
+const WINDOW_WOOD='/assets/tower/approved-library/architecture/optimized/window-wood-v3-webp.glb';
+const VERSION='17.2.60';
 export const architectureById=id=>ARCHITECTURE.find(item=>item.id===id)||null;
 
 /** Preserve original materials and mesh hierarchy; flatten only the addressing of editable parts. */

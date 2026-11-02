@@ -1,0 +1,21 @@
+name: Tower 17.2 masonry LOD and architecture asset QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - .github/workflows/tower-lod-architecture-qa.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify masonry LOD, cut openings and compressed architecture
+        run: node --test tests/kunlum-ruin-lod.test.mjs tests/kunlum-ruin-shell.test.mjs tests/kunlum-ruin-layout.test.mjs tests/kunlum-wall-ground.test.mjs tests/tower-optimized-architecture.test.mjs
+      - name: Verify release versions and asset cache keys
+        run: node scripts/release/sync-version.mjs --check

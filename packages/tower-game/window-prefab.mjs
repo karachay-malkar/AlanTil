@@ -1,8 +1,8 @@
 /** AlanTil 17.6 window prefab: immutable architectural add-on. */
 export const WINDOW_PREFAB_ID='window-4x5x2';
 export const WINDOW_PREFAB_VERSION='17.6-window.1';
-export const WINDOW_RENDER_VERSION='17.6-window.2';
-export const WINDOW_WOOD_FILE='/assets/tower/approved-library/architecture/window-wood-v3.glb';
+export const WINDOW_RENDER_VERSION='17.2.60';
+export const WINDOW_WOOD_FILE='/assets/tower/approved-library/architecture/optimized/window-wood-v3-webp.glb';
 export const WINDOW_JOINT_FILES=Object.freeze({
  x:'/assets/tower/approved-library/architecture/window-joint-x-v1.glb',
  y:'/assets/tower/approved-library/architecture/window-joint-y-v1.glb',
