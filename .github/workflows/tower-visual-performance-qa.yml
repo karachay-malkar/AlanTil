@@ -12,6 +12,7 @@ on:
       - 'scripts/qa/kunlum-visual-optimization.mjs'
       - 'src/features/tower/block-render-snapshot.mjs'
       - 'tests/kunlum-material-fidelity.test.mjs'
+      - 'tests/kunlum-scan-material.test.mjs'
       - 'tests/tower-render-cache.test.mjs'
       - '.github/workflows/tower-visual-performance-qa.yml'
 permissions:
@@ -32,7 +33,7 @@ jobs:
           node --check src/features/tower/block-render-snapshot.mjs
       - name: Test geometry, ground surfaces, render snapshots and existing masonry
         run: |
-          node --test tests/kunlum-material-fidelity.test.mjs tests/tower-render-cache.test.mjs tests/kunlum-ruin-shell.test.mjs tests/kunlum-ruin-lod.test.mjs tests/kunlum-ground-material.test.mjs tests/kunlum-golden-autumn.test.mjs tests/kunlum-wall-ground.test.mjs
+          node --test tests/kunlum-material-fidelity.test.mjs tests/kunlum-scan-material.test.mjs tests/tower-render-cache.test.mjs tests/kunlum-ruin-shell.test.mjs tests/kunlum-ruin-lod.test.mjs tests/kunlum-ground-material.test.mjs tests/kunlum-golden-autumn.test.mjs tests/kunlum-wall-ground.test.mjs
       - name: Verify release cache and Android synchronization
         run: GITHUB_REF_NAME=17.2 node scripts/release/sync-version.mjs --check
   visual:

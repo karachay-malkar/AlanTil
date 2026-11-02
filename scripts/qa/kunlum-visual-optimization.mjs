@@ -29,6 +29,9 @@ for(const mode of ['before','after']){
     return Number(el?.dataset.kunlumStoneSegments||0)>0 &&
       el?.dataset.kunlumRuinEngine==='camera-chunk-lod-v4';
    },null,{timeout:100000});
+   if(mode==='after')await page.waitForFunction(()=>
+    document.querySelector('.towerCanvas')?.dataset.kunlumTerrainScan==='ready',
+    null,{timeout:45000});
    await page.waitForTimeout(800);
    Object.assign(row,await page.locator('.towerCanvas').evaluate(el=>({
     engine:el.dataset.kunlumRuinEngine,
@@ -37,7 +40,8 @@ for(const mode of ['before','after']){
     triangles:Number(el.dataset.towerTriangles||0),
     gpuGeometries:Number(el.dataset.towerGpuGeometries||0),
     gpuTextures:Number(el.dataset.towerGpuTextures||0),
-    terrainEncoding:el.dataset.stoneTextureEncoding
+    terrainEncoding:el.dataset.stoneTextureEncoding,
+    terrainScan:el.dataset.kunlumTerrainScan||'unknown'
    })));
    row.readyMs=Date.now()-start;row.status='ready';
    await page.screenshot({path:out+'/'+mode+'-'+name+'.png',animations:'disabled'});

@@ -95,7 +95,10 @@ await set('src/features/tower/kunlum-stone-facing.js',source=>{
  return replaceOne(s,/(kunlum-ruin-lod\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js');
 });
 await set('src/features/tower/kunlum-ruin-shell.js',s=>replaceOne(s,/(kunlum-ruin-layout\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-ruin-shell.js'));
-await set('src/features/tower/kunlum-game-landscape.js',s=>replaceOne(s,/(kunlum-autumn-palette\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-game-landscape.js'));
+await set('src/features/tower/kunlum-game-landscape.js',source=>{
+ let s=replaceOne(source,/(kunlum-autumn-palette\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-game-landscape.js');
+ return replaceOne(s,/(const KUNLUM_SCAN_VERSION=')[^']+/,'$1'+version,'src/features/tower/kunlum-game-landscape.js');
+});
 await set('src/shared/styles/lazy/tower.css',s=>replaceOne(s,/(features\/tower\/tower\.css\?v=)[0-9.]+/,'$1'+version,'src/shared/styles/lazy/tower.css'));
 await set('service-worker.js',original=>{
   let s=replaceOne(original,/(const VERSION = ")[^"]+/,'$1'+version,'service-worker.js');

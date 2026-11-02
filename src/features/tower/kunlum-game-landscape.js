@@ -1,4 +1,4 @@
-import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js?v=17.2.64';
+import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js?v=17.2.65';
 /**
  * Procedural game-terrain PBR layer for Kunlum. No satellite imagery or external
  * texture downloads. Albedo, grain and roughness are artistic, not mapped landcover.
@@ -254,19 +254,53 @@ export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
  map.colorSpace=THREE.SRGBColorSpace;
  const material=new THREE.MeshStandardMaterial({
   vertexColors:true,map,normalMap,
-  normalScale:new THREE.Vector2(mobile?.54:.68,mobile?.54:.68),
+  normalScale:new THREE.Vector2(.60,.60),
   side:THREE.DoubleSide,metalness:0,roughness:.95
  });
  const bareMaterial=new THREE.MeshStandardMaterial({
   vertexColors:true,side:THREE.DoubleSide,roughness:1,metalness:0
  });
+ // A shared CC0 scan-derived image pair is loaded only after the first frame.
+ // Generated textures stay as a complete fallback if WebP is unavailable.
+ let activeMap=map,activeNormalMap=normalMap,disposed=false,scanTask=null;
+ const scanRoot='/assets/tower/materials/kunlum-landscape/';
+ const KUNLUM_SCAN_VERSION='17.2.65';
+ function loadScannedDetail(){
+  if(scanTask)return scanTask;
+  scanTask=(async()=>{
+   const loader=new THREE.TextureLoader();
+   const urls=['KunlumScan_Neutral_512.webp','KunlumScan_NormalGL_512.webp']
+    .map(file=>scanRoot+file+'?v='+KUNLUM_SCAN_VERSION);
+   const settled=await Promise.allSettled(urls.map(url=>loader.loadAsync(url)));
+   if(disposed||settled.some(result=>result.status!=='fulfilled')){
+    for(const result of settled)if(result.status==='fulfilled')result.value.dispose();
+    return false;
+   }
+   const [albedo,normal]=settled.map(result=>result.value);
+   for(const texture of [albedo,normal]){
+    texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+    texture.minFilter=THREE.LinearMipmapLinearFilter;
+    texture.magFilter=THREE.LinearFilter;
+    texture.generateMipmaps=true;texture.anisotropy=4;texture.needsUpdate=true;
+   }
+   albedo.colorSpace=THREE.SRGBColorSpace;
+   normal.colorSpace=THREE.NoColorSpace;
+   activeMap.dispose();activeNormalMap.dispose();
+   activeMap=albedo;activeNormalMap=normal;
+   material.map=albedo;material.normalMap=normal;material.needsUpdate=true;
+   material.userData={...material.userData,kunlumScanPBR:true};
+   return true;
+  })();
+  return scanTask;
+ }
  return {
-  material,bareMaterial,
+  material,bareMaterial,loadScannedDetail,
   terrainColor:(height,slope,x,z)=>kunlumNativeTerrainColor(height,slope,x,z,tiles),
-  // Physical metre-scale UVs: grain repeats every ~3.7 m.
   texScale:.27,
   dispose(){
-   material.dispose();bareMaterial.dispose();map.dispose();normalMap.dispose();
+   disposed=true;
+   material.dispose();bareMaterial.dispose();
+   activeMap.dispose();activeNormalMap.dispose();
    Object.values(tiles).forEach(t=>t.dispose());
   }
  };
