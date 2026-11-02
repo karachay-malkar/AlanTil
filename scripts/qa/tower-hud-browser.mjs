@@ -28,7 +28,7 @@ const cases=[
  {width:360,height:800},{width:667,height:375},{width:844,height:390},{width:915,height:412}
 ];
 for(const viewport of cases){
- const page=await browser.newPage({viewport,isMobile:false});
+ const page=await browser.newPage({viewport,isMobile:false,reducedMotion:'reduce'});
  await page.setContent(html);
  const rect=async s=>page.locator(s).boundingBox();
  const back=await rect('#back'),wallet=await rect('.towerTekmetWallet');
@@ -60,6 +60,7 @@ for(const viewport of cases){
  if(!(await page.locator('#back').isVisible()))throw Error('Back hidden in roofing');
  await page.locator('.towerGame').evaluate(el=>{el.dataset.mode='idle';el.dataset.catalogOpen='true'});
  await page.locator('#catalog').evaluate(el=>el.classList.add('is-open'));
+ await page.waitForTimeout(220); // Measure settled layout, not the drawer's transition frame.
  const catalog=await rect('#catalog');
  if(!catalog||catalog.x<0||catalog.y<0||catalog.x+catalog.width>viewport.width+1||catalog.y+catalog.height>viewport.height+1)
   throw Error('Catalog clipped '+JSON.stringify({viewport,catalog}));
