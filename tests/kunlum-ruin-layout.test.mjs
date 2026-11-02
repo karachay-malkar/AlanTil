@@ -24,20 +24,23 @@ test('every ruin wall has organically spaced stones rather than identical brick 
  assert.ok(stones.every(s=>Number.isFinite(s.x)&&Number.isFinite(s.y)&&s.height>.08));
 });
 
-test('all wall sections use stone-only thickness in both detail levels',()=>{
- assert.equal((facing.match(/for\(const rock of layoutKunlumRuinStones\(seg\)\)/g)||[]).length,2);
- assert.equal((facing.match(/for\(const layerDepth of \[-1,0,1\]\)/g)||[]).length,2);
- assert.match(facing,/root.userData.ruinPlacementMode='stone-only-broken-v3'/);
- assert.doesNotMatch(facing,/backing\.color\.multiplyScalar|wallBackingMaterial/);
+test('dynamic ruin chunks use camera distance and merged outer masonry',()=>{
+ assert.match(facing,/groupRuinSegments/);
+ assert.match(facing,/makeKunlumRuinShell/);
+ assert.match(facing,/selectKunlumRuinTier/);
+ assert.match(facing,/createDetail\(bucket,true\)/);
+ assert.match(facing,/root.userData.ruinPlacementMode='camera-chunk-lod-v4'/);
+ assert.doesNotMatch(facing,/const LANDMARK|chunkWidth=85|mesh.frustumCulled=false/);
  assert.doesNotMatch(map,/function wallBody|pushQuad\(out|addMesh\(confirmed/);
- assert.match(map,/stoneSegments|candidateSegments/);
 });
 
-test('historic map still supports cut passages, grounded rubble and versioned stone meshes',()=>{
- assert.match(scene,/dataset.kunlumRuinEngine/);
+test('stone renderer updates with camera and frees detail buffers',()=>{
+ assert.match(map,/update\(camera\)/);
+ assert.match(map,/ruinLodController\?\.dispose/);
  assert.match(map,/outsidePassages\(a,b\)/);
- assert.match(map,/kunlum-stone-facing\.js\?v=17\.2\.58/);
  assert.match(map,/createKunlumWallFootings/);
+ assert.match(map,/kunlum-stone-facing\.js\?v=17\.2\.59/);
+ assert.match(scene,/dataset.kunlumRuinEngine/);
 });
 
 test('upper edge has major, smooth collapsed spans without floating top blocks',()=>{

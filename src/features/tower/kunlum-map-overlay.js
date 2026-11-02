@@ -1,5 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.58';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.58';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.59';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.59';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
@@ -149,11 +149,12 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,
+  update(camera){root.userData.ruinLodController?.update(camera);},
   setVisibility({confirmedVisible=true,candidatesVisible=true,passagesVisible=true}={}){
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },
   setVerticalScale(scale){root.scale.y=scale},
-  dispose(){root.userData.disposed=true;footings.dispose();
+  dispose(){root.userData.disposed=true;root.userData.ruinLodController?.dispose();footings.dispose();
    root.traverse(node=>{if(node.isInstancedMesh)node.dispose();});
    for(const geometry of root.userData.wallFacadeGeometries||[])geometry.dispose();
   }

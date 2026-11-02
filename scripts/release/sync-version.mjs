@@ -72,6 +72,11 @@ await set('src/features/tower/kunlum-map-overlay.js',original=>{
 });
 await set('src/features/tower/kunlum-stone-facing.js',s=>replaceOne(s,/(kunlum-ruin-layout\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js'));
 await set('src/features/tower/kunlum-ruin-layout.js',s=>replaceOne(s,/(kunlum-wall-ground\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-ruin-layout.js'));
+await set('src/features/tower/kunlum-stone-facing.js',s=>{
+ s=replaceOne(s,/(kunlum-ruin-shell\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js');
+ return replaceOne(s,/(kunlum-ruin-lod\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js');
+});
+await set('src/features/tower/kunlum-ruin-shell.js',s=>replaceOne(s,/(kunlum-ruin-layout\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-ruin-shell.js'));
 await set('src/shared/styles/lazy/tower.css',s=>replaceOne(s,/(features\/tower\/tower\.css\?v=)[0-9.]+/,'$1'+version,'src/shared/styles/lazy/tower.css'));
 await set('service-worker.js',original=>{
   let s=replaceOne(original,/(const VERSION = ")[^"]+/,'$1'+version,'service-worker.js');

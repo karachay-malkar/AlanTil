@@ -1,6 +1,7 @@
 /** Original architectural GLBs for the separate manual masonry editor. */
 import * as THREE from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
+import {MeshoptDecoder} from '../../vendor/meshopt/meshopt_decoder.mjs';
 import {getRockSurface,applyRockSurface} from '../tower/rock-surface.js';
 import {applyGateSurfaces} from '../tower/gate-surface.js';
 
@@ -18,7 +19,7 @@ export const architectureById=id=>ARCHITECTURE.find(item=>item.id===id)||null;
 
 /** Preserve original materials and mesh hierarchy; flatten only the addressing of editable parts. */
 export function createArchitectureLoader(renderer){
- const loader=new GLTFLoader(),glbs=new Map(),assets=new Map(),ready=new Map();
+ const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder),glbs=new Map(),assets=new Map(),ready=new Map();
  function glb(path){
   if(!glbs.has(path))glbs.set(path,loader.loadAsync(path+'?v='+VERSION).catch(e=>{glbs.delete(path);throw e;}));
   return glbs.get(path);

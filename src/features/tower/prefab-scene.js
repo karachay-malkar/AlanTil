@@ -4,10 +4,11 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.58';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.59';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
+import {MeshoptDecoder} from '../../vendor/meshopt/meshopt_decoder.mjs';
 import {prefabBounds,PREFAB_CELL_METERS as CELL,BUILDABLE_PREFAB_TYPES} from '../../../packages/tower-game/prefab-layout.mjs';
 import {KUNLUM_BUILD_PARCEL as SITE,isWithinKunlumParcel,towerOrbitFramingDistance,towerOrbitMaximumDistance,towerOrbitTargetY,TOWER_ORBIT_MIN_DISTANCE} from '../../../packages/tower-game/kunlum-parcel.mjs';
 import {resolvePrefabJoints,JOINT_INTERFACE} from '../../../packages/tower-game/prefab-joints.mjs';
@@ -25,7 +26,7 @@ const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onRoofSelection=()=>{},onEndpointMove=()=>{},onCameraChange=()=>{}}={}){
  const manifest={version:APPROVED_PREFAB_VERSION,types:BUILDABLE_PREFAB_TYPES,
   connectors:Object.fromEntries(Object.entries(WINDOW_JOINT_FILES).map(([axis,file])=>[axis,{file,interface:JOINT_INTERFACE}]))};
- const loader=new GLTFLoader(),loaded=new Map();
+ const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder),loaded=new Map();
  const approvedSections=createApprovedSectionLoader();
  const approvedModelPromises=new Map();
  const roofMeshCache=new Map();
@@ -656,7 +657,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    lastWorldFrame=now;kunlum?.update?.(now*.001);needsRender=true;
   }
   if(needsRender)kunlum?.update?.(now*.001,camera);
-  if(needsRender){needsRender=false;sky.update();renderer.render(scene,camera);}
+  if(needsRender){
+   needsRender=false;sky.update();renderer.render(scene,camera);
+   if(now-(container._lastTowerStatsAt||0)>1000){
+    container._lastTowerStatsAt=now;
+    container.dataset.towerDrawCalls=String(renderer.info.render.calls);
+    container.dataset.towerTriangles=String(renderer.info.render.triangles);
+    container.dataset.towerGpuGeometries=String(renderer.info.memory.geometries);
+    container.dataset.towerGpuTextures=String(renderer.info.memory.textures);
+   }
+  }
   if(worldMode)scheduleDraw();
   else if(kunlum&&!windTimer&&!document.hidden){
    windTimer=setTimeout(()=>{windTimer=0;scheduleDraw()},mobileQuality?170:110);

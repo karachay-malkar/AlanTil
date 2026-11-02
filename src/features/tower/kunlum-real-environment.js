@@ -9,7 +9,7 @@ import {sampleDemLocal} from './kunlum-georeference.js';
 import {createKunlumWideDem} from './kunlum-wide-dem.js';
 import {createKunlumGameAlignment} from './kunlum-build-alignment.js';
 import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
-import {createKunlumMapOverlay} from './kunlum-map-overlay.js?v=17.2.58';
+import {createKunlumMapOverlay} from './kunlum-map-overlay.js?v=17.2.59';
 import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js';
 import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './kunlum-river-layer.js';
 import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
@@ -239,7 +239,7 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
   onReady();
  });
  // Environment remains independent of tower placement and server state.
- return {group,heightAt:terrain.heightAt,ready,update(seconds,camera){river?.update(seconds);scatter?.update(seconds,camera)},ensureWideTerrain,
+ return {group,heightAt:terrain.heightAt,ready,update(seconds,camera){river?.update(seconds);scatter?.update(seconds,camera);overlay?.update(camera)},ensureWideTerrain,
   dispose(){
    if(disposed)return;disposed=true;scene.remove(group);
    overlay?.dispose();river?.dispose();riverbank?.dispose();scatter?.dispose();outcrops?.dispose();

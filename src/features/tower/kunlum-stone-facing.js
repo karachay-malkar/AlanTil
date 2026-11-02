@@ -1,14 +1,15 @@
 /** Real Common 100 stone facing shared by the live village and 3D editor.
- * Instanced LOD; each rough physical stone is embedded in a watertight backing.
- * No new pseudo-cubic substitute stones, no independent palette or textures.
+ * Dynamic camera-based LOD: close Common100, intermediate faceted stones,
+ * and distant merged external stone faces. No opaque internal wall backing.
  */
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
-import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.58';
+import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.59';
+import {makeKunlumRuinShell} from './kunlum-ruin-shell.js?v=17.2.59';
+import {groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier} from './kunlum-ruin-lod.mjs?v=17.2.59';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
-const LANDMARK=[7.5,15];
 const usable=(geom)=>{
  const box=geom.boundingBox||(geom.computeBoundingBox(),geom.boundingBox);
  const size=box.getSize(new THREE.Vector3());
@@ -54,138 +55,166 @@ function makeDistanceStone(seed,angles=10){
  const geometry=getApprovedStoneSurfaceGeometry(raw);raw.dispose();
  return geometry;
 }
-/** The complete settlement shares one renderer and material regardless of
- * confirmation origin. The original Common100 has bounded real-world sizes
- * close to the player. Farther away, inexpensive irregular solid stones form
- * complete tight courses; no stone is ever enlarged to span an entire wall.
- */
+/** Three camera-selected physical LODs; never use a fixed landmark to
+ * classify masonry quality. Chunks are both frustum- and distance-bounded. */
 export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  renderer,materialPromise,mobile=false,monument=null
 }={}){
  const material=await (materialPromise||getRockSurface(renderer));
  if(root.userData.disposed)return null;
- // The village's geometry is only physical stones. Never reintroduce an
- // opaque gray backing: the third row of stones fills the wall thickness.
  if(monument)applyRockSurface(monument,material);
- const dummy=new THREE.Object3D(),shade=new THREE.Color();
- const jobs=groups.flatMap((entry,layer)=>entry.segments.map(seg=>({
-  seg,layer,distance:Math.hypot((seg.a[0]+seg.b[0])*.5-LANDMARK[0],
-                             (seg.a[1]+seg.b[1])*.5-LANDMARK[1])
- }))).filter(({seg})=>Math.hypot(seg.b[0]-seg.a[0],seg.b[1]-seg.a[1])>=.01)
-  .sort((a,b)=>a.distance-b.distance);
- // Unlike an all-village instance budget, this never enlarges individual
- // stones if there are more wall segments than GPU capacity.
- // Reserve Common100 budget FIRST. Only actual 3D stones are rendered.
- const budget=mobile?3200:7200,nearJobs=new Set();
- let reserved=0;
- jobs.forEach(({seg,distance},i)=>{
-  if(distance>(mobile?45:70))return;
-  const len=Math.hypot(seg.b[0]-seg.a[0],seg.b[1]-seg.a[1]);
-  const required=Math.max(1,Math.ceil(len/.57))*
-   Math.max(3,Math.ceil(seg.height/.34))*3;
-  if(reserved+required>budget)return;
-  reserved+=required;nearJobs.add(i);
- });
- const detailGeometry=Array.from({length:mobile?12:16},(_,i)=>makeDistanceStone(i+1,mobile?8:10));
- const farBins=new Map();
- const chunkWidth=85; // metres: bound visibility to small terrain regions
- let total=0;
- for(let i=0;i<jobs.length;i++){
-  const {seg,layer}=jobs[i];
-  if(nearJobs.has(i))continue;
-  const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
-  const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
-  for(const rock of layoutKunlumRuinStones(seg)){
-   const {x,z}=rock;
-   for(const layerDepth of [-1,0,1]){
-    const offset=layerDepth*seg.width*.32;
-    const kind=(rock.kind+(layerDepth+1)*7)%detailGeometry.length;
-    dummy.position.set(x+nx*offset,rock.y-(layerDepth===0?.012:0),z+nz*offset);
-    dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
-    dummy.scale.set(rock.width,rock.height,seg.width*.87);
-    dummy.updateMatrix();
-    const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
-    let bucket=farBins.get(key);
-    if(!bucket){bucket={layer,kind,matrices:[]};farBins.set(key,bucket);}
-    bucket.matrices.push(dummy.matrix.clone());total++;
-   }
+ const chunks=groupRuinSegments(groups.flatMap((entry,layer)=>
+  entry.segments.map(seg=>({seg,layer}))));
+ const sharedGeometries=[];
+ const distantGeometries=Array.from({length:mobile?12:16},
+  (_,i)=>makeDistanceStone(i+1,mobile?8:10));
+ sharedGeometries.push(...distantGeometries);
+ const makeBucket=(c)=>{
+  const group=new THREE.Group();
+  group.name='Kunlum ruin chunk '+c.key;
+  const far=new THREE.Group();far.name='Merged exterior stone LOD';
+  const geometry=makeKunlumRuinShell(THREE,c.segments);
+  if(geometry){
+   const mesh=new THREE.Mesh(geometry,material);
+   mesh.name='Externally visible ruin stone facets';
+   mesh.frustumCulled=true;
+   far.add(mesh);sharedGeometries.push(geometry);
   }
-  // Loading historic decoration cannot monopolize Android's UI thread.
-  if(i%85===84){
+  group.add(far);groups[c.layer].group.add(group);
+  return {...c,group,far,medium:null,near:null,tier:'far'};
+ };
+ const buckets=[];
+ for(let i=0;i<chunks.length;i++){
+  buckets.push(makeBucket(chunks[i]));
+  if(i%12===11){
    await new Promise(resolve=>setTimeout(resolve,0));
-   if(root.userData.disposed){detailGeometry.forEach(g=>g.dispose());return null;}
+   if(root.userData.disposed)return null;
   }
  }
- for(const {layer,kind,matrices} of farBins.values()){
-  const mesh=new THREE.InstancedMesh(detailGeometry[kind],material,matrices.length);
-  mesh.name='Solid masonry LOD '+kind;
-  matrices.forEach((matrix,i)=>{
-   mesh.setMatrixAt(i,matrix);
-   shade.setScalar(.90+.10*hash(kind,i,layer));
-   mesh.setColorAt(i,shade);
-  });
-  mesh.instanceMatrix.needsUpdate=true;
-  if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-  // Unlike the former settlement-wide mesh, each 85m cluster can be
-  // rejected by the GPU camera frustum without inspecting its stones.
-  mesh.computeBoundingSphere();
-  mesh.frustumCulled=true;
-  groups[layer].group.add(mesh);
- }
- root.userData.wallFacadeChunks=farBins.size;
- root.userData.wallFacadeGeometries=detailGeometry;
- if(root.userData.disposed)return null;
+ root.userData.wallFacadeGeometries=sharedGeometries;
+ root.userData.wallFacadeChunks=buckets.length;
+ root.userData.ruinPlacementMode='camera-chunk-lod-v4';
+ root.userData.ruinedCrown='collapsed-profile-v2';
+ // Common100 is shared with authored tower sections, but near meshes are
+ // instantiated only for the chunks the player can actually approach.
  const {manifest,geometries}=await loadCommon100();
  if(root.userData.disposed)return null;
- // Varied original author-made rock shapes, distributed deterministically
- // rather than the six identical forms in the previous renderer.
  const sources=manifest.models.filter(m=>m.category==='main'||m.category==='large');
  const count=mobile?32:52;
- const selected=Array.from({length:count},(_,i)=>sources[Math.floor((i+.5)*sources.length/count)]);
+ const selected=Array.from({length:count},
+  (_,i)=>sources[Math.floor((i+.5)*sources.length/count)]);
  const models=selected.map(({name})=>{
   const source=geometries.get(name),size=source&&usable(source);
   if(!size)throw Error('Common100 stone source missing: '+name);
   return {name,geometry:getApprovedStoneSurfaceGeometry(source),size};
  });
- const bins=groups.map(()=>models.map(()=>[]));
- let actual=0;
- for(let index=0;index<jobs.length;index++){
-  const job=jobs[index],{seg,layer,distance}=job;
-  if(!nearJobs.has(index))continue;
-  const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
-  const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
-  for(const rock of layoutKunlumRuinStones(seg)){
-   const {x,z}=rock;
-   for(const layerDepth of [-1,0,1]){
-    const k=(rock.kind+(layerDepth+1)*7)%models.length,model=models[k];
-    const offset=layerDepth*seg.width*.32;
-    dummy.position.set(x+nx*offset,rock.y-(layerDepth===0?.012:0),z+nz*offset);
-    dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
-    dummy.scale.set(rock.width/model.size.x,rock.height/model.size.y,
-                    (seg.width*.63)/model.size.z);
-    dummy.updateMatrix();
-    bins[layer][k].push(dummy.matrix.clone());actual++;
+ const dummy=new THREE.Object3D(),shade=new THREE.Color();
+ const installedMeshes=new Set();
+ function createDetail(bucket,near){
+  const geometryList=near?models.map(m=>m.geometry):distantGeometries;
+  const bins=geometryList.map(()=>[]);
+  const colorBins=geometryList.map(()=>[]);
+  for(const seg of bucket.segments){
+   const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
+   if(length<.01)continue;
+   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
+   for(const rock of layoutKunlumRuinStones(seg)){
+    // Medium LOD retains both visible faces without 3 hidden interior rows.
+    // Near LOD preserves all original irregular Common100 stone geometry.
+    for(const layerDepth of (near?[-1,0,1]:[-1,1])){
+     const k=(rock.kind+(layerDepth+1)*7)%geometryList.length;
+     const offset=layerDepth*seg.width*(near?.32:.29);
+     dummy.position.set(rock.x+nx*offset,rock.y-(layerDepth===0?.012:0),
+                        rock.z+nz*offset);
+     dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
+     if(near){
+      const m=models[k];
+      dummy.scale.set(rock.width/m.size.x,rock.height/m.size.y,
+                      (seg.width*.63)/m.size.z);
+     }else{
+      dummy.scale.set(rock.width,rock.height,seg.width*.74);
+     }
+     dummy.updateMatrix();
+     bins[k].push(dummy.matrix.clone());
+     if(!near)colorBins[k].push(.90+.10*hash(k,bins[k].length,bucket.layer));
+    }
    }
   }
- }
- for(let layer=0;layer<groups.length;layer++)
-  for(let k=0;k<models.length;k++){
-   const matrices=bins[layer][k];if(!matrices.length)continue;
-   const mesh=new THREE.InstancedMesh(models[k].geometry,material,matrices.length);
-   mesh.name='Common100 bounded wall stone '+models[k].name;
-   mesh.frustumCulled=false;
-   matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));
+  const group=new THREE.Group();
+  group.name=near?'Near Common100 stones':'Medium faceted stones';
+  for(let k=0;k<bins.length;k++){
+   if(!bins[k].length)continue;
+   const mesh=new THREE.InstancedMesh(geometryList[k],material,bins[k].length);
+   mesh.name=(near?'Common100':'Medium')+' ruin stone '+k;
+   bins[k].forEach((matrix,i)=>{
+    mesh.setMatrixAt(i,matrix);
+    if(!near){shade.setScalar(colorBins[k][i]);mesh.setColorAt(i,shade);}
+   });
    mesh.instanceMatrix.needsUpdate=true;
-   groups[layer].group.add(mesh);
+   if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+   mesh.computeBoundingSphere();mesh.frustumCulled=true;
+   group.add(mesh);installedMeshes.add(mesh);
   }
+  bucket.group.add(group);
+  return group;
+ }
+ function disposeDetail(bucket,kind){
+  const group=bucket[kind];if(!group)return;
+  bucket.group.remove(group);
+  group.traverse(node=>{
+   if(node.isInstancedMesh){installedMeshes.delete(node);node.dispose();}
+  });
+  bucket[kind]=null;
+ }
+ let lastUpdate=-Infinity,created=0;
+ function update(camera,force=false){
+  if(root.userData.disposed||!camera)return false;
+  const now=typeof performance!=='undefined'?performance.now():0;
+  if(!force&&now-lastUpdate<180)return false;
+  lastUpdate=now;
+  const targets=buckets.map(bucket=>{
+   const distance=ruinChunkDistance(camera.position,bucket.bounds);
+   return {bucket,distance,tier:selectKunlumRuinTier(distance,bucket.tier,{mobile})};
+  });
+  // Lazy creation of heavy meshes: at most two new chunks in one update.
+  let available=force?4:2,active=0;
+  targets.sort((a,b)=>a.distance-b.distance);
+  for(const {bucket,distance,tier} of targets){
+   if(tier==='near'&&!bucket.near&&available>0){
+    bucket.near=createDetail(bucket,true);available--;created++;
+   }else if((tier==='medium'||tier==='near')&&!bucket.medium&&!bucket.near&&available>0){
+    bucket.medium=createDetail(bucket,false);available--;created++;
+   }else if(tier==='medium'&&!bucket.medium&&available>0){
+    bucket.medium=createDetail(bucket,false);available--;created++;
+   }
+   // Distant groups release geometry buffers, not the shared source meshes.
+   if(distance>140){disposeDetail(bucket,'near');disposeDetail(bucket,'medium');}
+   else if(distance>40)disposeDetail(bucket,'near');
+   bucket.tier=tier;
+   const showNear=tier==='near'&&!!bucket.near;
+   const showMedium=!showNear&&tier!=='far'&&!!bucket.medium;
+   bucket.far.visible=!showNear&&!showMedium;
+   if(bucket.near)bucket.near.visible=showNear;
+   if(bucket.medium)bucket.medium.visible=showMedium;
+   if(distance<110)active++;
+  }
+  root.userData.ruinLOD={chunks:buckets.length,near:buckets.filter(c=>c.near?.visible).length,
+   medium:buckets.filter(c=>c.medium?.visible).length,
+   far:buckets.filter(c=>c.far.visible).length,active,created};
+  return true;
+ }
+ function dispose(){
+  for(const bucket of buckets){
+   disposeDetail(bucket,'near');disposeDetail(bucket,'medium');
+  }
+ }
+ root.userData.ruinLodController={update,dispose};
+ root.userData.common100NearOnlyWallSegments=0;
+ root.userData.ruinFarSegments=chunks.reduce((sum,c)=>sum+c.segments.length,0);
+ root.userData.ruinFacingEngine='camera-driven Common100 / instanced stones / merged external shell';
  root.userData.common100FacingDensity=1;
- root.userData.ruinPlacementMode='stone-only-broken-v3';
- root.userData.common100NearOnlyWallSegments=nearJobs.size;
- root.userData.ruinFarSegments=jobs.length-nearJobs.size;
- root.userData.ruinFacingEngine='Kunlum shared placement; 16 faceted organic shapes; 52 Common100 near';
- root.userData.ruinedCrown='collapsed-profile-v2';
- root.userData.common100ActualWallStones=actual;
- root.userData.wallFacadeLODStones=total;
+ root.userData.common100Material=material.name;
+ let total=0,actual=0;
  // Abay-Kala uses the same real library stones. Facing follows the original
  // tapered monument polygon at every course, so no stones float outside it.
  if(monument?.userData?.common100TowerBase){
@@ -224,7 +253,6 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   }
  }
  root.userData.common100StoneCount=total+actual;
- root.userData.common100WallSegments=jobs.length;
- root.userData.common100Material=material.name;
- return {stones:total+actual,common100:actual,models:models.map(x=>x.name)};
+ root.userData.common100WallSegments=chunks.reduce((n,c)=>n+c.segments.length,0);
+ return {stones:total+actual,models:models.map(x=>x.name),update,dispose};
 }
