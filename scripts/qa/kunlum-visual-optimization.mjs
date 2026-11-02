@@ -12,6 +12,7 @@ for(const mode of ['before','after']){
    isMobile:name==='mobile',hasTouch:name==='mobile'});
   const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
+  page.on('console',message=>{if(message.type()==='error'&&/WebGLProgram|shader error|glsl/i.test(message.text()))errors.push(message.text());});
   const start=Date.now(),port=mode==='before'?4174:4173;
   const row={mode,name,width,height};
   try{
