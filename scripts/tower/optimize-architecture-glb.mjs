@@ -9,7 +9,7 @@ import {dirname,join,resolve} from 'node:path';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const directory=join(root,'assets/tower/approved-library/architecture');
 const names=['window-wood-v3','door-wood-v1','gate-18x10x2-v9','door-7x9x2-stone-v1'];
-const cli=join(root,'node_modules/.bin/gltf-transform');
+const cli=join(root,'node_modules/.bin/gltfpack');
 function glbMeta(bytes){
  if(bytes.length<24||bytes.toString('ascii',0,4)!=='glTF'||bytes.readUInt32LE(4)!==2)
   throw Error('Not GLB 2.0');
@@ -37,22 +37,27 @@ for(const name of names){
  const temporary=output+'.tmp.glb';
  const oldData=await readFile(source);
  try{
-  execFileSync(cli,['meshopt',source,temporary,'--level','high'],{
+  execFileSync(cli,['-i',source,'-o',temporary,'-cc','-kn','-km','-ke','-vpf'],{
    cwd:root,stdio:'inherit',maxBuffer:32*1024*1024
   });
   const optData=await readFile(temporary);
   const oldMeta=glbMeta(oldData),newMeta=glbMeta(optData);
   const {extensions:oldExtensions,...oldShape}=oldMeta;
   const {extensions:newExtensions,...newShape}=newMeta;
-  if(JSON.stringify(oldShape)!==JSON.stringify(newShape))
-   throw Error('GLB scene hierarchy, node transforms, materials or animation changed: '+name);
-  if(!newExtensions.includes('EXT_meshopt_compression'))
-   throw Error('Meshopt extension absent: '+name);
-  if(optData.length>=oldData.length*.95)
-   throw Error('Meshopt did not reduce transfer size by 5%: '+name);
-  await rename(temporary,output);
-  results.push({name,originalBytes:oldData.length,optimizedBytes:optData.length,
-   reductionPercent:+((1-optData.length/oldData.length)*100).toFixed(1),structureVerified:true});
+  const preserved=JSON.stringify(oldShape)===JSON.stringify(newShape);
+  const compressed=newExtensions.includes('EXT_meshopt_compression');
+  const smaller=optData.length<oldData.length*.95;
+  if(preserved&&compressed&&smaller){
+   await rename(temporary,output);
+   results.push({name,originalBytes:oldData.length,optimizedBytes:optData.length,
+    reductionPercent:+((1-optData.length/oldData.length)*100).toFixed(1),structureVerified:true,status:'accepted'});
+  }else{
+   results.push({name,originalBytes:oldData.length,optimizedBytes:optData.length,
+    reductionPercent:+((1-optData.length/oldData.length)*100).toFixed(1),structureVerified:preserved,
+    meshoptExtension:compressed,status:'rejected'});
+  }
+ }catch(error){
+  results.push({name,originalBytes:oldData.length,status:'conversion-failed',error:String(error?.message||error)});
  }finally{await rm(temporary,{force:true});}
 }
 await writeFile(join(root,'reports/tower-model-size.json'),
