@@ -3,13 +3,16 @@
  * Keeps the original GLBs untouched until each sidecar is verified.
  */
 import {readFile,writeFile,mkdir,stat,rename,rm} from 'node:fs/promises';
-import {execFileSync} from 'node:child_process';
+import {NodeIO} from '@gltf-transform/core';
+import {EXTMeshoptCompression} from '@gltf-transform/extensions';
+import {MeshoptEncoder} from 'meshoptimizer';
 import {fileURLToPath} from 'node:url';
 import {dirname,join,resolve} from 'node:path';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const directory=join(root,'assets/tower/approved-library/architecture');
 const names=['window-wood-v3','door-wood-v1','gate-18x10x2-v9','door-7x9x2-stone-v1'];
-const cli=join(root,'node_modules/.bin/gltfpack');
+await MeshoptEncoder.ready;
+const io=new NodeIO().registerExtensions([EXTMeshoptCompression]).registerDependencies({'meshopt.encoder':MeshoptEncoder});
 function glbMeta(bytes){
  if(bytes.length<24||bytes.toString('ascii',0,4)!=='glTF'||bytes.readUInt32LE(4)!==2)
   throw Error('Not GLB 2.0');
@@ -37,9 +40,10 @@ for(const name of names){
  const temporary=output+'.tmp.glb';
  const oldData=await readFile(source);
  try{
-  execFileSync(cli,['-i',source,'-o',temporary,'-cc','-kn','-km','-ke','-vpf'],{
-   cwd:root,stdio:'inherit',maxBuffer:32*1024*1024
-  });
+  const document=await io.read(source);
+  document.createExtension(EXTMeshoptCompression).setRequired(true)
+   .setEncoderOptions({method:EXTMeshoptCompression.EncoderMethod.QUANTIZE});
+  await io.write(temporary,document);
   const optData=await readFile(temporary);
   const oldMeta=glbMeta(oldData),newMeta=glbMeta(optData);
   const {extensions:oldExtensions,...oldShape}=oldMeta;
