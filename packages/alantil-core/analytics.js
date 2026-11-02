@@ -21,3 +21,8 @@ const FORBIDDEN_PARAMETER_NAMES = new Set(['name','email','phone','telephone','t
 function sanitizeValue(value) { if (value === null || value === undefined) return undefined; if (typeof value === 'boolean' || typeof value === 'number') return value; if (typeof value === 'string') return value.slice(0, 300); return undefined; }
 export function sanitizeAnalyticsParameters(parameters = {}, { appVersion = '', debugMode = false } = {}) { const safe = {}; Object.entries(parameters || {}).forEach(([key,value])=>{const normalizedKey=String(key||'').trim();if(!normalizedKey||FORBIDDEN_PARAMETER_NAMES.has(normalizedKey.toLowerCase()))return;const sanitized=sanitizeValue(value);if(sanitized!==undefined)safe[normalizedKey]=sanitized;});if(appVersion!==undefined)safe.app_version=appVersion;if(debugMode)safe.debug_mode=true;return safe; }
 export function mergeAnalyticsContext(current = {}, nextContext = {}, options = {}) { const next={...current,...sanitizeAnalyticsParameters(nextContext,options)};delete next.app_version;delete next.debug_mode;return next; }
+
+const PRODUCTION_ANALYTICS_HOSTS = new Set(['alantil.ru', 'www.alantil.ru', 'karachay-malkar.github.io']);
+export function isProductionAnalyticsHost(hostname = '') {
+  return PRODUCTION_ANALYTICS_HOSTS.has(String(hostname || '').toLowerCase());
+}

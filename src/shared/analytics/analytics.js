@@ -2,9 +2,11 @@ import { analyticsAvailable, appVersion, debugMode, measurementId } from "../../
 import {
   mergeAnalyticsContext,
   sanitizeAnalyticsParameters,
+  isProductionAnalyticsHost,
 } from "../../../packages/alantil-core/analytics.js";
 
 const GA_DISABLE_KEY = `ga-disable-${measurementId}`;
+const productionAnalyticsEnabled = isProductionAnalyticsHost(window.location.hostname);
 const VISITOR_ANALYTICS_MODULE_URL = "./visitor-analytics.js?v=16.8.0.3";
 let initialized = false;
 let scriptRequested = false;
@@ -100,14 +102,14 @@ export function getAnalyticsContext() {
 }
 
 export function prepareAnalytics() {
-  if (!analyticsAvailable) return false;
+  if (!analyticsAvailable || !productionAnalyticsEnabled) return false;
   window[GA_DISABLE_KEY] = true;
   setDefaultConsent("denied");
   return true;
 }
 
 async function enableAnalytics() {
-  if (!analyticsAvailable) return false;
+  if (!analyticsAvailable || !productionAnalyticsEnabled) return false;
   setDefaultConsent("denied");
   window[GA_DISABLE_KEY] = false;
   runtimeEnabled = true;
@@ -147,7 +149,7 @@ export function isAnalyticsEnabled() {
 }
 
 export function trackEvent(eventName, parameters = {}) {
-  if (!analyticsAvailable || !runtimeEnabled || !eventName) return false;
+  if (!analyticsAvailable || !productionAnalyticsEnabled || !runtimeEnabled || !eventName) return false;
   try {
     const safe = sanitizeParameters(parameters);
     if (debugMode) console.info(`[analytics] ${eventName}`, safe);
@@ -160,6 +162,7 @@ export function trackEvent(eventName, parameters = {}) {
 }
 
 export function trackPageView(parameters = {}) {
+  if (!productionAnalyticsEnabled) return false;
   trackEvent("page_view", parameters);
   void loadVisitorAnalytics()
     .then(({ recordAnonymousPageView }) => recordAnonymousPageView({

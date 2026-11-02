@@ -76,6 +76,7 @@ jobs:
             tests/path-index-preload-17-2.test.mjs \
             tests/profile-avatar-removal-16-7.test.mjs \
             tests/storage-profile-analytics-16-8.test.mjs \
+            tests/traffic-analytics-17-2.test.mjs \
             mobile/tests/architecture.test.mjs
 
   lighthouse:

@@ -1,4 +1,5 @@
 import { getCurrentAuthState } from "../auth/auth-service.js?v=16.8.0.3";
+import { isProductionAnalyticsHost } from "../../../packages/alantil-core/analytics.js";
 
 const VISITOR_STORAGE_KEY = "alantil_analytics_visitor_id_v1";
 const SESSION_STORAGE_KEY = "alantil_analytics_session_v1";
@@ -148,6 +149,7 @@ async function getAnalyticsSupabaseClient() {
 }
 
 export async function recordAnonymousPageView({ pagePath, pageReferrer, appVersion } = {}) {
+  if (!isProductionAnalyticsHost(globalThis.location?.hostname)) return false;
   try {
     const scopeId = String(getCurrentAuthState().user?.id || "").trim();
     const { visitorId, sessionId } = resolveAnonymousIdentity({ scopeId });
@@ -179,6 +181,7 @@ export async function recordUsageEvent({
   setId = "",
   platform = "web",
 } = {}) {
+  if (!isProductionAnalyticsHost(globalThis.location?.hostname)) return false;
   try {
     const normalizedEventType = String(eventType || "").trim();
     if (!normalizedEventType) return false;

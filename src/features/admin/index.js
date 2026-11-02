@@ -419,6 +419,16 @@ function monthlyVisitorsCharts(data) {
   </div>`;
 }
 
+function trafficQualityNote() {
+  const language = getInterfaceLanguage();
+  const notice = language === "en"
+    ? "Historical guest counts through 2 November 2026 include automated browser tests. New test-origin requests are excluded from analytics. Browser IDs are not necessarily people."
+    : language === "tr"
+      ? "2 Kasım 2026 dahil geçmiş misafir sayıları otomatik tarayıcı testlerini içerir. Yeni test ortamı istekleri sayılmaz. Tarayıcı kimlikleri her zaman gerçek kişi değildir."
+      : "Архивная статистика гостей по 2 ноября 2026 года включительно содержит автоматические тесты и не отражает число реальных людей. Новые запросы из тестовых сред исключаются; ID браузера не равен человеку.";
+  return `<p class="adminGuestEmpty" role="note">${escapeHtml(notice)}</p>`;
+}
+
 function audienceSummary(data) {
   const summary=data?.summary||{};
   return `<div class="adminGuestLegend">
@@ -497,6 +507,7 @@ async function renderGuestAnalytics(context,signal,host){
           <div class="adminGuestPeriodTabs">${periods}</div>
         </div>
         ${audienceSummary(data)}
+        ${trafficQualityNote()}
         ${dailyVisitorsChart(data)}
       </section>
       <section class="adminAnalyticsSection">
