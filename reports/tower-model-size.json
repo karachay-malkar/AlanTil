@@ -1,0 +1,41 @@
+{
+  "sourceBranch": "17.2",
+  "models": [
+    {
+      "name": "window-wood-v3",
+      "originalBytes": 7408152,
+      "optimizedBytes": 12098652,
+      "reductionPercent": -63.3,
+      "structureVerified": false,
+      "meshoptExtension": true,
+      "status": "rejected"
+    },
+    {
+      "name": "door-wood-v1",
+      "originalBytes": 6730324,
+      "optimizedBytes": 9489940,
+      "reductionPercent": -41,
+      "structureVerified": false,
+      "meshoptExtension": true,
+      "status": "rejected"
+    },
+    {
+      "name": "gate-18x10x2-v9",
+      "originalBytes": 5846220,
+      "optimizedBytes": 941064,
+      "reductionPercent": 83.9,
+      "structureVerified": false,
+      "meshoptExtension": true,
+      "status": "rejected"
+    },
+    {
+      "name": "door-7x9x2-stone-v1",
+      "originalBytes": 3242628,
+      "optimizedBytes": 1387640,
+      "reductionPercent": 57.2,
+      "structureVerified": false,
+      "meshoptExtension": true,
+      "status": "rejected"
+    }
+  ]
+}
