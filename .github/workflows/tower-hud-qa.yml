@@ -7,6 +7,7 @@ on:
       - 'src/features/tower/tower.css'
       - 'src/shared/ui/icons.js'
       - 'tests/tower-hud.test.mjs'
+      - 'tests/kunlum-ruin-layout.test.mjs'
       - 'release.json'
       - '.github/workflows/tower-hud-qa.yml'
 permissions:
