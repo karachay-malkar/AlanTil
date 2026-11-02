@@ -1,0 +1,22 @@
+name: Tower joint rendering performance QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'packages/tower-game/prefab-layout.mjs'
+      - 'packages/tower-game/prefab-joints.mjs'
+      - 'tests/tower-joint-geometry-performance.test.mjs'
+      - '.github/workflows/tower-joint-performance.yml'
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Test unchanged adjacency geometry and benchmark
+        run: node --test tests/tower-joint-geometry-performance.test.mjs tests/tower-render-cache.test.mjs tests/tower-optimized-architecture.test.mjs
+      - name: Validate version and cached imports
+        run: GITHUB_REF_NAME=17.2 node scripts/release/sync-version.mjs --check

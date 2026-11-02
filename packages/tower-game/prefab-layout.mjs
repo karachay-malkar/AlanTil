@@ -96,9 +96,12 @@ export function getPlacementGrid(section){
 }
 export function touchingPrefabPairs(blocks){
  const result=[];
+ // Geometry bounds are invariant during this contact scan: calculate once
+ // instead of O(n²) times when rebuilding a large construction.
+ const boxes=blocks.map(b=>b.type==='roof_beam'?null:prefabBounds(b));
  for(let i=0;i<blocks.length;i++)for(let j=i+1;j<blocks.length;j++){
-  if(blocks[i].type==='roof_beam'||blocks[j].type==='roof_beam')continue;
-  const a=prefabBounds(blocks[i]),b=prefabBounds(blocks[j]);
+  const a=boxes[i],b=boxes[j];
+  if(!a||!b)continue;
   for(let axis=0;axis<3;axis++){
    const forward=Math.abs(a.max[axis]-b.min[axis])<EPS;
    const reverse=Math.abs(b.max[axis]-a.min[axis])<EPS;

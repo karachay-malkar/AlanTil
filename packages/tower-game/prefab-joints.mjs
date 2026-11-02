@@ -87,9 +87,18 @@ export function resolvePrefabJoints(sections,manifest){
    }
  }
  // A prepared vertical corner tile connects two perpendicular seam chains.
+ // Group touching pairs once; avoid scanning every contact again for each stone.
+ const connectedBySection=new Map();
+ for(const pair of pairs){
+  for(const id of [pair.a,pair.b]){
+   let connected=connectedBySection.get(id);
+   if(!connected){connected=[];connectedBySection.set(id,connected);}
+   connected.push(pair);
+  }
+ }
  const dedupe=new Set();
  for(const middle of sections.filter(s=>s.type==='masonry_section')){
-  const connected=pairs.filter(p=>p.a===middle.id||p.b===middle.id);
+  const connected=connectedBySection.get(middle.id)||[];
   for(const px of connected.filter(p=>p.axis==='x'))for(const pz of connected.filter(p=>p.axis==='z')){
    const y0=Math.max(px.min[1],pz.min[1]),y1=Math.min(px.max[1],pz.max[1]);
    if(y1-y0<EPS)continue;
