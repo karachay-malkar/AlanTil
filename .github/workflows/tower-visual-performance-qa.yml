@@ -1,0 +1,69 @@
+name: Kunlum material and tower render optimization QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'release.json'
+      - 'src/features/tower/kunlum-game-landscape.js'
+      - 'src/features/tower/kunlum-autumn-palette.js'
+      - 'src/features/tower/kunlum-ruin-shell.js'
+      - 'src/features/tower/kunlum-stone-facing.js'
+      - 'src/features/tower/prefab-scene.js'
+      - 'src/features/tower/block-render-snapshot.mjs'
+      - 'tests/kunlum-material-fidelity.test.mjs'
+      - 'tests/tower-render-cache.test.mjs'
+      - '.github/workflows/tower-visual-performance-qa.yml'
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check changed source syntax
+        run: |
+          node --check src/features/tower/kunlum-game-landscape.js
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/kunlum-ruin-shell.js
+          node --check src/features/tower/block-render-snapshot.mjs
+      - name: Test geometry, ground surfaces, render snapshots and existing masonry
+        run: |
+          node --test tests/kunlum-material-fidelity.test.mjs tests/tower-render-cache.test.mjs tests/kunlum-ruin-shell.test.mjs tests/kunlum-ruin-lod.test.mjs tests/kunlum-ground-material.test.mjs tests/kunlum-golden-autumn.test.mjs tests/kunlum-wall-ground.test.mjs tests/tower-prefab-joints-17-5.test.mjs
+      - name: Verify release cache and Android synchronization
+        run: GITHUB_REF_NAME=17.2 node scripts/release/sync-version.mjs --check
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: karachay-malkar/AlanTil
+          ref: 90b264724b0a48d62ab6ed88ab9140dc72185915
+          path: baseline
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install browser harness
+        run: npm install --no-save --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium with software GL
+        run: npx playwright install --with-deps chromium
+      - name: Start baseline and current site servers
+        run: |
+          (cd baseline && PORT=4174 node scripts/static-preview-server.mjs >/tmp/tower-before.log 2>&1) &
+          PORT=4173 node scripts/static-preview-server.mjs >/tmp/tower-after.log 2>&1 &
+          for port in 4173 4174; do
+            for count in {1..45}; do curl -fsS http://127.0.0.1:$port/tests/fixtures/kunlum-tower-world.html >/dev/null && break; sleep 1; done
+            curl -fS http://127.0.0.1:$port/tests/fixtures/kunlum-tower-world.html >/dev/null
+          done
+      - name: Compare actual WebGL construction worlds and capture matching screenshots
+        run: node scripts/qa/kunlum-visual-optimization.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kunlum-optimization-before-after
+          path: reports/kunlum-visual-optimization/
+          retention-days: 14
+          if-no-files-found: warn

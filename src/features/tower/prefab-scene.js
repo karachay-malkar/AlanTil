@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.63';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.64';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
@@ -19,6 +19,7 @@ import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_
 import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
+import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.64';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
@@ -391,7 +392,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function release(group){surface.remove(group);group.traverse(node=>{if(node.isInstancedMesh)node.dispose();});}
  function blockKey(block){return JSON.stringify([block.id,block.type,block.sectionId,block.variant,block.rotation,block.x,block.y,block.z,block.geometryVersion]);}
  function jointKey(joint){return joint.file+':'+joint.point.join(',');}
- function rebindGroup(group,block){group.userData.block=block;group.traverse(node=>{if(node.isMesh)node.userData.block=block;});}
+ function rebindGroup(group,block,entry){rebindCachedBlockTargets(group,block,entry.targets);}
  function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected);outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}scheduleDraw();}
  function prepareMesh(model,block){
   const group=new THREE.Group();group.add(model.clone(true));group.userData.block=block;
@@ -444,6 +445,15 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   const generation=++rebuildGeneration;
   const nextBlocks=[...elements],visible=nextBlocks.filter(b=>layer===null||b.y<=layer);
   const nextSections=new Map(),nextJoints=new Map();
+  // Identical geometry signatures: keep connectors and cached raycast bounds.
+  if(areSameRenderedBlocks(visible,renderedById,blockKey)){
+   blocks=nextBlocks;
+   for(const block of visible){
+    const entry=renderedById.get(block.id);
+    if(entry.group.userData.block!==block)rebindGroup(entry.group,block,entry);
+   }
+   setSelected(selected);return;
+  }
   try{
    for(const block of visible){
     if(block.type!=='masonry_section'&&block.type!=='roof_beam')throw new TypeError('Unsupported tower block');
@@ -452,7 +462,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     if(!entry||entry.signature!==signature){
      const model=await getPrefab(block);
      if(disposed||generation!==rebuildGeneration)return;
-     entry={signature,group:prepareMesh(model,block)};
+     const group=prepareMesh(model,block);
+     entry={signature,group,...captureBlockRenderSnapshot(THREE,group)};
     }
     nextSections.set(block.id,entry);
    }
@@ -463,7 +474,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     if(!group){
      const model=await getConnector(joint);
      if(disposed||generation!==rebuildGeneration)return;
-     group=applyRockSurface(model.clone(true),stoneMaterial);
+     group=model; // getConnector already returns a prepared clone.
      group.position.set(...joint.point.map(v=>v*CELL));
     }
     nextJoints.set(key,group);
@@ -473,19 +484,16 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    for(const [key,group] of renderedJoints)if(nextJoints.get(key)!==group)release(group);
    for(const block of visible){
     const entry=nextSections.get(block.id);
-    rebindGroup(entry.group,block);
+    if(entry.group.userData.block!==block)rebindGroup(entry.group,block,entry);
     if(entry.group.parent!==surface)surface.add(entry.group);
    }
    for(const group of nextJoints.values())if(group.parent!==surface)surface.add(group);
    renderedById=nextSections;renderedJoints=nextJoints;blocks=nextBlocks;
-   solidBounds.length=0;
+   solidBounds.length=0;targets.length=0;
    for(const entry of renderedById.values()){
-    entry.group.updateMatrixWorld(true);
-    const bounds=new THREE.Box3().setFromObject(entry.group);
-    if(!bounds.isEmpty())solidBounds.push({min:bounds.min,max:bounds.max});
+    if(entry.bounds)solidBounds.push(entry.bounds);
+    for(const mesh of entry.targets)targets.push(mesh);
    }
-   targets.length=0;
-   for(const entry of renderedById.values())entry.group.traverse(node=>{if(node.isMesh&&node.userData.block)targets.push(node);});
    container.dataset.prefabReady='true';
    container.dataset.prefabCount=String(visible.length);
    container.dataset.prefabJoints=String(resolved.pairs.length);

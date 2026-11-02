@@ -1,4 +1,4 @@
-import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js';
+import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js?v=17.2.64';
 /**
  * Procedural game-terrain PBR layer for Kunlum. No satellite imagery or external
  * texture downloads. Albedo, grain and roughness are artistic, not mapped landcover.
@@ -23,6 +23,21 @@ export function kunlumTileNoise(x,y,frequency,seed=1){
  const bb=hash(wrap(a+1,frequency),wrap(b+1,frequency),seed);
  return blend(blend(aa,ab,fx),blend(ba,bb,fx),fy);
 }
+/** Continuous mineral and meadow patches in world metres (no added texture). */
+export function kunlumNaturalGroundPatch(x,z){
+ const broad=kunlumTileNoise(x/73,z/73,4096,1541);
+ const secondary=kunlumTileNoise(x/31,z/31,4096,241);
+ return clamp(.62*broad+.38*secondary);
+}
+/** Periodic bedding, weathering and thin fissures in natural limestone. */
+export function kunlumRockStrata(u,v){
+ const tau=Math.PI*2;
+ const warp=.085*Math.sin(tau*u*3)+.035*Math.sin(tau*v*2);
+ const bands=.5+.5*Math.cos(tau*(v*11+warp));
+ const fissure=Math.pow(1-Math.abs(Math.sin(tau*(u*6+v*3+warp))),10);
+ return clamp(.20+.7*bands-.24*fissure);
+}
+
 export function kunlumTerrainMasks(elevation,slope,patch){
  const p=clamp(patch),s=Math.max(0,slope);
  // The DEM gradient is a rise/run ratio, not an angle. Earlier dividing it by
@@ -56,7 +71,10 @@ export function createKunlumTerrainTiles(THREE,{resolution=256}={}){
   const phaseX=(type.seed*37)%resolution,phaseY=(type.seed*19)%resolution;
   for(let y=0;y<resolution;y++)for(let x=0;x<resolution;x++){
    const at=((y+phaseY)%resolution)*resolution+(x+phaseX)%resolution;
-   const grain=grainBase[at],fine=fineBase[at],p=(y*resolution+x)*4;
+   const base=grainBase[at],fine=fineBase[at],p=(y*resolution+x)*4;
+   const strata=kunlumRockStrata(x/resolution,y/resolution);
+   const grain=name==='rock'?clamp(.57*base+.43*strata):
+    name==='scree'?clamp(.82*base+.18*strata):base;
    for(let c=0;c<3;c++){
     const shade=blend(type.lo[c],type.hi[c],grain);
     arr[p+c]=Math.round(clamp((shade+(fine-.5)*type.contrast)/255)*255);
@@ -191,13 +209,15 @@ export function kunlumNativeTerrainColor(elevation,slope,x,z,tiles){
  const grass=data('grass',.092),soil=data('soil',.073),
   scree=data('scree',.087),rock=data('rock',.106);
  const patch=data('soil',.0073)[3];
- const masks=kunlumTerrainMasks(elevation,slope,patch);
+ const macro=kunlumNaturalGroundPatch(x,z);
+ const masks=kunlumTerrainMasks(elevation,slope,clamp(patch*.63+macro*.37));
  const rgb=[0,1,2].map(c=>{
   const base=blend(grass[c],soil[c],masks.soil);
   const gravel=blend(base,scree[c],masks.scree);
   const meadow=kunlumMeadowPatch(x,z)-.5;
   const mineral=1-clamp(masks.rock+masks.scree*.65,0,1);
-  const dither=[.23,.17,.09][c]*meadow*mineral;
+  const dither=[.27,.23,.13][c]*meadow*mineral+
+   (macro-.5)*(masks.rock*.065+(1-masks.rock)*.16);
   return srgbToLinear(clamp(blend(gravel,rock[c],masks.rock)*(1+dither),0,255));
  });
  return rgb;

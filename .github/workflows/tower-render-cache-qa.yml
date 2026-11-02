@@ -1,0 +1,20 @@
+name: Tower render cache regression
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/prefab-scene.js'
+      - 'src/features/tower/block-render-snapshot.mjs'
+      - 'tests/tower-render-cache.test.mjs'
+      - '.github/workflows/tower-render-cache-qa.yml'
+permissions: {contents: read}
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node --test tests/tower-render-cache.test.mjs tests/tower-optimized-architecture.test.mjs tests/kunlum-ruin-lod.test.mjs
+      - run: node scripts/release/sync-version.mjs --check

@@ -5,9 +5,9 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
-import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.62';
-import {makeKunlumRuinShell} from './kunlum-ruin-shell.js?v=17.2.63';
-import {groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier} from './kunlum-ruin-lod.mjs?v=17.2.63';
+import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.64';
+import {makeKunlumRuinShell} from './kunlum-ruin-shell.js?v=17.2.64';
+import {groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier} from './kunlum-ruin-lod.mjs?v=17.2.64';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const usable=(geom)=>{
@@ -66,7 +66,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const chunks=groupRuinSegments(groups.flatMap((entry,layer)=>
   entry.segments.map(seg=>({seg,layer}))));
  const sharedGeometries=[];
- const distantGeometries=Array.from({length:mobile?12:16},
+ const distantGeometries=Array.from({length:mobile?10:12},
   (_,i)=>makeDistanceStone(i+1,mobile?8:10));
  sharedGeometries.push(...distantGeometries);
  const makeBucket=(c)=>{

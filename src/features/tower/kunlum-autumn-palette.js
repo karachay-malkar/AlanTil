@@ -8,7 +8,7 @@ export const KUNLUM_AUTUMN_TERRAIN=Object.freeze({
  grass:{lo:[129,111,66],hi:[205,176,101],seed:37,contrast:30},
  soil:{lo:[143,117,86],hi:[205,174,126],seed:83,contrast:28},
  scree:{lo:[163,147,124],hi:[222,199,161],seed:173,contrast:34},
- rock:{lo:[106,106,104],hi:[171,162,151],seed:271,contrast:34}
+ rock:{lo:[98,104,105],hi:[167,159,148],seed:271,contrast:34}
 });
 /** Camera-centred sky uses low-poly vertex colours: no texture, shaders or network. */
 export function createKunlumAutumnSky(THREE,scene,camera){
