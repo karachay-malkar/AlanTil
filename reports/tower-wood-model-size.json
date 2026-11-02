@@ -1,0 +1,35 @@
+{
+  "sourceBranch": "17.2",
+  "models": [
+    {
+      "name": "window-wood-v3",
+      "originalBytes": 7408152,
+      "optimizedBytes": 3268584,
+      "reductionPercent": 55.9,
+      "structureVerified": true,
+      "webpExtension": true,
+      "images": 12,
+      "status": "accepted"
+    },
+    {
+      "name": "door-wood-v1",
+      "originalBytes": 6730324,
+      "optimizedBytes": 2093712,
+      "reductionPercent": 68.9,
+      "structureVerified": true,
+      "webpExtension": true,
+      "images": 10,
+      "status": "accepted"
+    },
+    {
+      "name": "gate-18x10x2-v9",
+      "originalBytes": 5846220,
+      "optimizedBytes": 5755352,
+      "reductionPercent": 1.6,
+      "structureVerified": false,
+      "webpExtension": false,
+      "images": 0,
+      "status": "rejected"
+    }
+  ]
+}
