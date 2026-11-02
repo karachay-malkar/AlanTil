@@ -1,0 +1,43 @@
+name: Kunlum verified CC0 terrain detail maps
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'scripts/tower/build-kunlum-pbr.py'
+      - '.github/workflows/tower-kunlum-cc0-pbr.yml'
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check Pillow==11.3.0
+      - name: Fetch Poly Haven CC0 PBR sources and build compressed shared surface maps
+        run: python scripts/tower/build-kunlum-pbr.py
+      - name: Confirm output texture signatures
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('assets/tower/materials/kunlum-landscape')
+          j=json.loads((p/'manifest.json').read_text())
+          assert j['license']=='CC0 1.0'
+          assert len(j['materials'])==3
+          for filename,info in j['files'].items():
+              b=(p/filename).read_bytes()
+              assert b[:4]==b'RIFF' and b[8:12]==b'WEBP'
+              assert len(b)==info['bytes'] and len(b)<600000
+          print('Verified Poly Haven CC0 materials',list(j['files']))
+          PY
+      - name: Commit scan-derived textures only after successful verification
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/materials/kunlum-landscape
+          git diff --cached --quiet && exit 0
+          git commit -m 'assets(tower): verified Poly Haven CC0 PBR terrain detail maps'
+          git push origin HEAD:17.2
