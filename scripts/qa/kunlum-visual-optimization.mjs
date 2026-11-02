@@ -22,7 +22,14 @@ for(const mode of ['before','after']){
     return c?.dataset.kunlumWorldReady==='true'&&
      document.querySelector('#qa-root')?.dataset.mount==='success';
    },null,{timeout:100000});
-   await page.waitForTimeout(700);
+   // WorldReady reports terrain/river, not the later async Common100 wall pass.
+   // Both baselines must be compared after that second pass finishes.
+   await page.waitForFunction(()=>{
+    const el=document.querySelector('.towerCanvas');
+    return Number(el?.dataset.kunlumStoneSegments||0)>0 &&
+      el?.dataset.kunlumRuinEngine==='camera-chunk-lod-v4';
+   },null,{timeout:100000});
+   await page.waitForTimeout(800);
    Object.assign(row,await page.locator('.towerCanvas').evaluate(el=>({
     engine:el.dataset.kunlumRuinEngine,
     segments:Number(el.dataset.kunlumStoneSegments||0),

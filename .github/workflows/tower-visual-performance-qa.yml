@@ -9,6 +9,7 @@ on:
       - 'src/features/tower/kunlum-ruin-shell.js'
       - 'src/features/tower/kunlum-stone-facing.js'
       - 'src/features/tower/prefab-scene.js'
+      - 'scripts/qa/kunlum-visual-optimization.mjs'
       - 'src/features/tower/block-render-snapshot.mjs'
       - 'tests/kunlum-material-fidelity.test.mjs'
       - 'tests/tower-render-cache.test.mjs'
