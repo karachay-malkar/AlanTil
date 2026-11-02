@@ -1,0 +1,35 @@
+{
+  "license": "CC0 1.0",
+  "origin": "https://polyhaven.com",
+  "resolution": 512,
+  "materials": {
+    "grass": {
+      "slug": "withered_grass",
+      "color_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/withered_grass/withered_grass_diff_1k.jpg",
+      "normal_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/withered_grass/withered_grass_nor_gl_1k.jpg",
+      "color_sha256": "8bebfb639ef74f651bc445526c46c845beee52a86d831848b82eb2bbbf2d98ee"
+    },
+    "soil": {
+      "slug": "dry_ground_rocks",
+      "color_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dry_ground_rocks/dry_ground_rocks_diff_1k.jpg",
+      "normal_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dry_ground_rocks/dry_ground_rocks_nor_gl_1k.jpg",
+      "color_sha256": "491ac5be54859171730c620ad768a615f600b81ce00d83bbeab8a7aed7b199d8"
+    },
+    "rock": {
+      "slug": "rock_boulder_dry",
+      "color_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_boulder_dry/rock_boulder_dry_diff_1k.jpg",
+      "normal_url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_boulder_dry/rock_boulder_dry_nor_gl_1k.jpg",
+      "color_sha256": "20f653a42fb24f42aa40641663070d578678da49af18cc1049dbdd4ed8679f3c"
+    }
+  },
+  "files": {
+    "KunlumScan_Neutral_512.webp": {
+      "sha256": "56c1ed8207815dc442d15c73bb16a66bd15f504aab84303bd365fcc13bab5942",
+      "bytes": 71978
+    },
+    "KunlumScan_NormalGL_512.webp": {
+      "sha256": "182b8ea841363cdcbd7884019b30a3263e6329a3bcfb6e5c2e2d414154f99557",
+      "bytes": 63840
+    }
+  }
+}
