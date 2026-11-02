@@ -1,7 +1,7 @@
 /** Gate/architecture editor regression checks; run with Node 22. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {buildGateWings,WING_WIDTH,WING_HEIGHT,WING_DEPTH} from '../../src/features/masonry/gate-wings.mjs';
 
 const source=path=>readFileSync(new URL('../../'+path,import.meta.url),'utf8');
@@ -50,10 +50,19 @@ test('current v9 gate can be selected from the authoring templates',()=>{
  assert.match(editor,/cells=\[18,10,2\]/);
  assert.ok(!source('src/features/tower/prefab-scene.js').includes('gate-editor-stretch.mjs'));
 });
-test('all architectural variants reference existing original repo GLB files',()=>{
+test('all architectural variants reference existing verified source or compressed GLB files',()=>{
  const assets=source('src/features/masonry/architecture-assets.js');
- for(const name of ['gate-18x10x2-v9.glb','door-7x9x2-stone-v1.glb','door-wood-v1.glb','window-4x5x2-v2.glb','window-wood-v3.glb']){
-  assert.match(assets,new RegExp(name.replaceAll('.','\\.')));
+ const expected=[
+  'gate-18x10x2-v9.glb',
+  'optimized/door-7x9x2-stone-v1-meshopt.glb',
+  'optimized/door-wood-v1-webp.glb',
+  'window-4x5x2-v2.glb',
+  'optimized/window-wood-v3-webp.glb'
+ ];
+ for(const file of expected){
+  assert.ok(assets.includes(file),file);
+  const path='assets/tower/approved-library/architecture/'+file;
+  assert.ok(existsSync(new URL('../../'+path,import.meta.url)),path);
  }
  assert.match(assets,/applyGateSurfaces/);
  assert.match(assets,/applyRockSurface/);
