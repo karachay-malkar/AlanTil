@@ -4,26 +4,26 @@
     {
       "name": "window-wood-v3",
       "originalBytes": 7408152,
-      "optimizedBytes": 12098652,
-      "reductionPercent": -63.3,
-      "structureVerified": false,
+      "optimizedBytes": 12169856,
+      "reductionPercent": -64.3,
+      "structureVerified": true,
       "meshoptExtension": true,
       "status": "rejected"
     },
     {
       "name": "door-wood-v1",
       "originalBytes": 6730324,
-      "optimizedBytes": 9489940,
-      "reductionPercent": -41,
-      "structureVerified": false,
+      "optimizedBytes": 9541312,
+      "reductionPercent": -41.8,
+      "structureVerified": true,
       "meshoptExtension": true,
       "status": "rejected"
     },
     {
       "name": "gate-18x10x2-v9",
       "originalBytes": 5846220,
-      "optimizedBytes": 941064,
-      "reductionPercent": 83.9,
+      "optimizedBytes": 3780516,
+      "reductionPercent": 35.3,
       "structureVerified": false,
       "meshoptExtension": true,
       "status": "rejected"
@@ -31,11 +31,10 @@
     {
       "name": "door-7x9x2-stone-v1",
       "originalBytes": 3242628,
-      "optimizedBytes": 1387640,
-      "reductionPercent": 57.2,
-      "structureVerified": false,
-      "meshoptExtension": true,
-      "status": "rejected"
+      "optimizedBytes": 2794068,
+      "reductionPercent": 13.8,
+      "structureVerified": true,
+      "status": "accepted"
     }
   ]
 }
