@@ -43,7 +43,7 @@
 .towerGame[data-explore="false"] .towerSide,.towerGame[data-explore="false"] [data-hammer]{display:none!important}
 .towerGame[data-mode="saving-place"] .towerPlacementBar .towerIconAction,.towerGame[data-mode="saving-remove"] .towerSelectionBar .towerIconAction,.towerGame[data-mode="saving-clear"] .towerIconAction{opacity:.5;pointer-events:none}
 /* Large catalogue is a responsive, self-contained drawer. */
-.towerSide{position:absolute;z-index:11;right:var(--tower-right);bottom:calc(var(--tower-bottom) + 58px);width:min(410px,calc(100% - 20px));max-height:min(57dvh,360px);overflow:hidden;transform:translateY(10px);opacity:0;visibility:hidden;pointer-events:none;border-radius:15px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);box-shadow:0 8px 28px #0005;padding:10px;transition:transform 180ms ease,opacity 180ms ease}
+.towerSide{box-sizing:border-box;position:absolute;z-index:11;right:var(--tower-right);bottom:calc(var(--tower-bottom) + 58px);width:min(410px,calc(100% - 20px));max-height:min(57dvh,360px);overflow:hidden;transform:translateY(10px);opacity:0;visibility:hidden;pointer-events:none;border-radius:15px;border:1px solid var(--line);background:var(--surface-0);color:var(--text-1);box-shadow:0 8px 28px #0005;padding:10px;transition:transform 180ms ease,opacity 180ms ease}
 .towerSide.is-open{transform:translateY(0);opacity:1;visibility:visible!important;pointer-events:auto}
 .towerGame .towerCatalogClose{position:absolute;right:8px;top:8px;z-index:2;display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:0;border-radius:9px;background:var(--surface-1);color:var(--text-1);cursor:pointer}
 .towerCatalogClose .uiIcon{width:19px;height:19px}

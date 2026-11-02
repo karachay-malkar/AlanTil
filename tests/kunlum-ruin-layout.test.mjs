@@ -39,7 +39,7 @@ test('stone renderer updates with camera and frees detail buffers',()=>{
  assert.match(map,/ruinLodController\?\.dispose/);
  assert.match(map,/outsidePassages\(a,b\)/);
  assert.match(map,/createKunlumWallFootings/);
- assert.match(map,/kunlum-stone-facing\.js\?v=17\.2\.61/);
+ assert.match(map,/kunlum-stone-facing\.js\?v=17\.2\.62/);
  assert.match(scene,/dataset.kunlumRuinEngine/);
 });
 
