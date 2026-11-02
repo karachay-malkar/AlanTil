@@ -1,0 +1,32 @@
+name: Tower architecture GLB Meshopt compression
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - .github/workflows/tower-architecture-meshopt.yml
+permissions:
+  contents: write
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned offline conversion tool
+        run: npm install --no-audit --no-fund --no-save @gltf-transform/cli@4.5.1
+      - name: Compress and verify four architectural source GLBs
+        run: node scripts/tower/optimize-architecture-glb.mjs
+      - name: Check optimized files and publish sidecars to the same branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/approved-library/architecture/optimized reports/tower-model-size.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'perf(tower): verified Meshopt architecture sidecars'
+          git push origin HEAD:17.2
