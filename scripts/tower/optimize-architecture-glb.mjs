@@ -34,7 +34,7 @@ await mkdir(join(root,'reports'),{recursive:true});
 const results=[];
 for(const name of names){
  const source=join(directory,name+'.glb'),output=join(directory,'optimized',name+'-meshopt.glb');
- const temporary=output+'.tmp';
+ const temporary=output+'.tmp.glb';
  const oldData=await readFile(source);
  try{
   execFileSync(cli,['meshopt',source,temporary,'--level','high'],{

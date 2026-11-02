@@ -1,4 +1,4 @@
-name: Tower architecture GLB Meshopt compression
+name: Tower architecture GLB Meshopt compression v2
 on:
   push:
     branches: ['17.2']
