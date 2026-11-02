@@ -8,7 +8,8 @@ import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings}
 test('historic wall crowns vary by place with bounded broken-top erosion',()=>{
  const values=Array.from({length:30},(_,i)=>kunlumRuinCrown(1.6,i*.37,6.4));
  assert.ok(new Set(values.map(x=>x.toFixed(3))).size>17);
- assert.ok(values.every(h=>h>=1.23&&h<1.6));
+ assert.ok(values.every(h=>h>=1.6*.27&&h<1.6));
+ assert.ok(Math.max(...values)-Math.min(...values)>.25,'ruined parapet needs visible collapsed stretches');
  assert.equal(kunlumRuinCrown(1.6,2,4),kunlumRuinCrown(1.6,2,4));
  assert.throws(()=>kunlumRuinCrown(1.6,NaN,0));
 });
@@ -46,10 +47,8 @@ test('ground contacts share one profile for rubble-core and both facing LODs',()
  },{toWorld:p=>p,heightAt:(x,z)=>.25*x+.02*z});
  const footing=map.root.children.find(x=>x.name==='Kunlum wall embedded sediment and fallen stones');
  assert.ok(footing,'every mapped wall uses the same embedded footings');
- const body=map.confirmed.children.find(x=>x.isMesh);
- assert.ok(body);
- const ys=body.geometry.getAttribute('position');
- let min=Infinity;for(let i=0;i<ys.count;i++)min=Math.min(min,ys.getY(i));
- assert.ok(min<-.14,'wall core must be embedded, not hovering above the terrain');
+ assert.equal(map.confirmed.children.filter(x=>x.isMesh).length,0,'no sealed gray masonry body');
+ assert.ok(map.root.userData.ruinContact.stones>0,'stone debris remains grounded');
+ assert.ok(map.enhance,'actual 3D stones are provided by facing enhancement');
  map.dispose();
 });

@@ -13,15 +13,19 @@ function noise(x,z,period){
  const hi=(1-tx)*hash(a,b+1)+tx*hash(a+1,b+1);
  return lo*(1-tz)+hi*tz;
 }
-/** Removed stones break the crown, never the lower structural courses. */
+/** Large irregular collapse pockets break the upper courses, not the foundations. */
 export function kunlumRuinCrown(height,x,z){
  if(!Number.isFinite(height)||height<=0||!Number.isFinite(x)||!Number.isFinite(z))
   throw Error('Invalid wall crown input');
- const broad=noise(x+17.3,z-9.1,3.3);
- const chips=noise(x-1.8,z+22.2,.83);
- const rare=clamp((chips-.71)/.29);
- const loss=.07+.15*broad+.13*chips+.17*rare*rare;
- return Math.max(height*.58,height-Math.min(.37,loss));
+ // Broad missing stretches, local fractures and surviving shoulders form a
+ // stepped, irregular skyline. The bottom courses remain in contact with soil.
+ const broad=noise(x+17.3,z-9.1,5.4);
+ const shoulders=noise(x-3.8,z+8.7,2.6);
+ const chips=noise(x-1.8,z+22.2,.78);
+ const collapse=noise(x+31.7,z-12.6,3.2);
+ const severe=Math.pow(clamp((collapse-.57)/.43),1.4);
+ const survivor=clamp(.34+.55*broad+.16*shoulders-.29*severe-.14*chips,.27,.97);
+ return height*survivor;
 }
 /** Footings lie BELOW the lowest terrain contact across the width and run.
  * The downhill side is supported, the uphill side is naturally buried.

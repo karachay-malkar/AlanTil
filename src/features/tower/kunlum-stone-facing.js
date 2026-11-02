@@ -5,7 +5,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
-import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.35';
+import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.58';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const LANDMARK=[7.5,15];
@@ -64,22 +64,8 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
 }={}){
  const material=await (materialPromise||getRockSurface(renderer));
  if(root.userData.disposed)return null;
- // All wall cores remain sealed, but their previously bright, perfectly
- // planar PBR face used to show through as rectangular-looking patches.
- // Recess the visual core into shadow; irregular 3D stones own the silhouette.
- const backing=material.clone();
- backing.color.multiplyScalar(.49);
- backing.roughness=1;
- backing.polygonOffset=true;
- backing.polygonOffsetFactor=1;
- backing.polygonOffsetUnits=1;
- for(const container of groups){
-  applyRockSurface(container.group,material);
-  container.group.children.filter(node=>node.isMesh).forEach(node=>{
-   node.material=backing;
-  });
- }
- root.userData.wallBackingMaterial=backing;
+ // The village's geometry is only physical stones. Never reintroduce an
+ // opaque gray backing: the third row of stones fills the wall thickness.
  if(monument)applyRockSurface(monument,material);
  const dummy=new THREE.Object3D(),shade=new THREE.Color();
  const jobs=groups.flatMap((entry,layer)=>entry.segments.map(seg=>({
@@ -89,15 +75,14 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   .sort((a,b)=>a.distance-b.distance);
  // Unlike an all-village instance budget, this never enlarges individual
  // stones if there are more wall segments than GPU capacity.
- // Reserve Common100 budget FIRST. A near wall must not simultaneously
- // render the regular far-row substitute underneath its wild facing.
+ // Reserve Common100 budget FIRST. Only actual 3D stones are rendered.
  const budget=mobile?3200:7200,nearJobs=new Set();
  let reserved=0;
  jobs.forEach(({seg,distance},i)=>{
   if(distance>(mobile?45:70))return;
   const len=Math.hypot(seg.b[0]-seg.a[0],seg.b[1]-seg.a[1]);
   const required=Math.max(1,Math.ceil(len/.57))*
-   Math.max(3,Math.ceil(seg.height/.34))*2;
+   Math.max(3,Math.ceil(seg.height/.34))*3;
   if(reserved+required>budget)return;
   reserved+=required;nearJobs.add(i);
  });
@@ -112,12 +97,12 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
   for(const rock of layoutKunlumRuinStones(seg)){
    const {x,z}=rock;
-   const kind=rock.kind%detailGeometry.length;
-   for(const side of [-1,1]){
-    dummy.position.set(x+side*nx*(seg.width*.5+.025),rock.y,
-                       z+side*nz*(seg.width*.5+.025));
-    dummy.rotation.set(rock.tilt,yaw+(side<0?Math.PI:0),rock.lean);
-    dummy.scale.set(rock.width,rock.height,rock.depth);
+   for(const layerDepth of [-1,0,1]){
+    const offset=layerDepth*seg.width*.32;
+    const kind=(rock.kind+(layerDepth+1)*7)%detailGeometry.length;
+    dummy.position.set(x+nx*offset,rock.y-(layerDepth===0?.012:0),z+nz*offset);
+    dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
+    dummy.scale.set(rock.width,rock.height,seg.width*.87);
     dummy.updateMatrix();
     const key=layer+':'+kind+':'+Math.floor(x/chunkWidth)+':'+Math.floor(z/chunkWidth);
     let bucket=farBins.get(key);
@@ -171,13 +156,13 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
   for(const rock of layoutKunlumRuinStones(seg)){
    const {x,z}=rock;
-   const k=rock.kind%models.length,model=models[k];
-   for(const side of [-1,1]){
-    dummy.position.set(x+side*nx*(seg.width*.5+.082),rock.y,
-                       z+side*nz*(seg.width*.5+.082));
-    dummy.rotation.set(rock.tilt,yaw+(side<0?Math.PI:0),rock.lean);
+   for(const layerDepth of [-1,0,1]){
+    const k=(rock.kind+(layerDepth+1)*7)%models.length,model=models[k];
+    const offset=layerDepth*seg.width*.32;
+    dummy.position.set(x+nx*offset,rock.y-(layerDepth===0?.012:0),z+nz*offset);
+    dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
     dummy.scale.set(rock.width/model.size.x,rock.height/model.size.y,
-                    rock.depth/model.size.z);
+                    (seg.width*.63)/model.size.z);
     dummy.updateMatrix();
     bins[layer][k].push(dummy.matrix.clone());actual++;
    }
@@ -194,11 +179,11 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    groups[layer].group.add(mesh);
   }
  root.userData.common100FacingDensity=1;
- root.userData.ruinPlacementMode='shared-irregular-v2';
+ root.userData.ruinPlacementMode='stone-only-broken-v3';
  root.userData.common100NearOnlyWallSegments=nearJobs.size;
  root.userData.ruinFarSegments=jobs.length-nearJobs.size;
  root.userData.ruinFacingEngine='Kunlum shared placement; 16 faceted organic shapes; 52 Common100 near';
- root.userData.ruinedCrown='shared-profile-v1';
+ root.userData.ruinedCrown='collapsed-profile-v2';
  root.userData.common100ActualWallStones=actual;
  root.userData.wallFacadeLODStones=total;
  // Abay-Kala uses the same real library stones. Facing follows the original

@@ -24,23 +24,33 @@ test('every ruin wall has organically spaced stones rather than identical brick 
  assert.ok(stones.every(s=>Number.isFinite(s.x)&&Number.isFinite(s.y)&&s.height>.08));
 });
 
-test('actual Common100 and far faceted geometry use exactly the same placement generator',()=>{
+test('all wall sections use stone-only thickness in both detail levels',()=>{
  assert.equal((facing.match(/for\(const rock of layoutKunlumRuinStones\(seg\)\)/g)||[]).length,2);
- assert.doesNotMatch(facing,/const rows=Math.max\(2,Math.ceil\(seg.height/);
- assert.doesNotMatch(facing,/const widths=Array.from\(\{length:columns\}/);
- assert.match(facing,/Array.from\(\{length:mobile\?12:16\}/);
- assert.match(facing,/root.userData.ruinPlacementMode='shared-irregular-v2'/);
- assert.match(facing,/backing.color.multiplyScalar\(\.49\)/);
+ assert.equal((facing.match(/for\(const layerDepth of \[-1,0,1\]\)/g)||[]).length,2);
+ assert.match(facing,/root.userData.ruinPlacementMode='stone-only-broken-v3'/);
+ assert.doesNotMatch(facing,/backing\.color\.multiplyScalar|wallBackingMaterial/);
+ assert.doesNotMatch(map,/function wallBody|pushQuad\(out|addMesh\(confirmed/);
+ assert.match(map,/stoneSegments|candidateSegments/);
 });
 
-test('the new masonry source is observable by the real-world browser verification',()=>{
+test('historic map still supports cut passages, grounded rubble and versioned stone meshes',()=>{
  assert.match(scene,/dataset.kunlumRuinEngine/);
- assert.match(map,/kunlum-stone-facing\.js\?v=17\.2\.35/);
- assert.match(map,/wallBackingMaterial\?\.dispose/);
+ assert.match(map,/outsidePassages\(a,b\)/);
+ assert.match(map,/kunlum-stone-facing\.js\?v=17\.2\.58/);
+ assert.match(map,/createKunlumWallFootings/);
 });
 
-test('upper edge variations form visible loss without creating full-height teeth',()=>{
+test('upper edge has major, smooth collapsed spans without floating top blocks',()=>{
  const heights=Array.from({length:40},(_,i)=>kunlumRuinCrown(1.6,2+i*.45,3));
- assert.ok(heights.every(v=>v>=1.23&&v<=1.55));
- assert.ok(Math.max(...heights)-Math.min(...heights)>.06);
+ assert.ok(heights.every(v=>v>=1.6*.27&&v<1.6));
+ assert.ok(Math.max(...heights)-Math.min(...heights)>.25);
+});
+
+test('all authored historical placement remains reproducible',()=>{
+ const segment={a:[-12,-3],b:[20,3],width:.65,height:1.8,heightAt:(x,z)=>.025*x+.03*z};
+ const stones=layoutKunlumRuinStones(segment);
+ assert.ok(stones.length>60);
+ assert.deepEqual(stones,layoutKunlumRuinStones(segment));
+ assert.ok(stones.some(s=>s.row===0));
+ assert.ok(stones.every(s=>Number.isFinite(s.y)&&s.height>.08));
 });

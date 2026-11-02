@@ -1,6 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.35';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.35';
-import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.58';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.58';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
@@ -14,13 +13,12 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  confirmed.name='Confirmed stone wall paths';candidates.name='Unverified automatic traces';
  passages.name='Confirmed and linked passages';
  root.add(confirmed,candidates,passages);
- const buffers={wall:[],house:[],retaining:[]},auto=[];
+ const candidateLayer=true;
  const confirmedSegments=[],candidateSegments=[];
  const clamp=t=>Math.max(0,Math.min(1,t));
  const interpolate=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 
- const pushQuad=(out,a,b,c,d)=>out.push(...a,...b,...c,...a,...c,...d);
  // Passage contours are negative space, never rendered strokes. They can
  // intersect unverified traces as well as confirmed walls, so both use this.
  const passageEdges=source.confirmed_features.filter(f=>f.type==='passage'&&Array.isArray(f.points))
@@ -68,26 +66,12 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   return intervals.filter(([x,y])=>(y-x)*length>.08)
    .map(([x,y])=>[interpolate(a,b,x),interpolate(a,b,y)]);
  }
- function wallPiece(out,a,b,height,width){
-  for(const [start,end] of outsidePassages(a,b))wallBody(out,start,end,height,width);
- }
- function wallBody(out,a,b,height,width){
-  const len=dist(a,b);if(len<.01)return;
-  const stoneSegments=out===auto?candidateSegments:confirmedSegments;
-  stoneSegments.push({a,b,height,width,heightAt});
-  const n=Math.max(1,Math.ceil(len/.75)),nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;
-  for(let i=0;i<n;i++){
-   const p=interpolate(a,b,i/n),q=interpolate(a,b,(i+1)/n);
-   const y=kunlumRuinFoot(...p,width,heightAt,[nx,nz]);
-   const z=kunlumRuinFoot(...q,width,heightAt,[nx,nz]);
-   const aTop=heightAt(...p)+kunlumRuinCrown(height,...p);
-   const bTop=heightAt(...q)+kunlumRuinCrown(height,...q);
-   const f=[p[0]+nx,y,p[1]+nz],g=[q[0]+nx,z,q[1]+nz],h=[q[0]+nx,bTop,q[1]+nz],j=[p[0]+nx,aTop,p[1]+nz];
-   const k=[p[0]-nx,y,p[1]-nz],l=[q[0]-nx,z,q[1]-nz],m=[q[0]-nx,bTop,q[1]-nz],o=[p[0]-nx,aTop,p[1]-nz];
-   // Enclosed irregular core prevents any light leaking through the stone joints.
-   pushQuad(out,f,g,h,j);pushQuad(out,l,k,o,m);pushQuad(out,j,h,m,o);
-   pushQuad(out,k,l,g,f);pushQuad(out,f,j,o,k);pushQuad(out,g,l,m,h);
-  }
+ // Only real 3D stones represent these historic polylines. There is no
+ // sealed gray prism or hidden wall mesh between the facing stones.
+ function wallPiece(a,b,height,width,candidate=false){
+  const target=candidate?candidateSegments:confirmedSegments;
+  for(const [start,end] of outsidePassages(a,b))
+   target.push({a:start,b:end,height,width,heightAt});
  }
  const map=new Map(source.confirmed_features.map(f=>[f.id,f]));
  function segments(f){
@@ -122,10 +106,10 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
   if(f.type==='passage'){
    counters.passages++;
    // This feature describes open ground, not a wall or a visible line.
-  }else if(Object.hasOwn(buffers,f.type)){
+  }else if(['wall','house','retaining'].includes(f.type)){
    counters[f.type==='wall'?'walls':f.type==='house'?'houses':'retaining']++;
    if(f.type==='house')for(const p of f.points)centers.push(toWorld(p));
-   for(const [p,q] of segments(f))wallPiece(buffers[f.type],p,q,
+   for(const [p,q] of segments(f))wallPiece(p,q,
     f.type==='retaining'?1.8:f.type==='house'?1.6:1.4,
     f.type==='retaining'?.65:.5);
   }
@@ -150,23 +134,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    const a=p[i-1],b=p[i],pkey=q=>q.map(v=>v.toFixed(3)).join(',');
    const key=[pkey(a),pkey(b)].sort().join('|');
    if(seenAutoSegments.has(key))continue;
-   seenAutoSegments.add(key);wallPiece(auto,a,b,1.45,.42);
+   seenAutoSegments.add(key);wallPiece(a,b,1.45,.42,candidateLayer);
   }
  }
- const owned=[];
- function addMesh(target,vertices,color,name){
-  if(!vertices.length)return;
-  const raw=new THREE.BufferGeometry();raw.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));raw.computeVertexNormals();
-  // Every sealed wall body uses the very same metric stone UV projection as
-  // authentic Common100 geometry, including walls beyond the mobile mesh LOD.
-  const g=getApprovedStoneSurfaceGeometry(raw);raw.dispose();
-  const m=new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide});
-  const mesh=new THREE.Mesh(g,m);mesh.name=name;target.add(mesh);owned.push([g,m]);
- }
- addMesh(confirmed,buffers.wall,'#b9b5a5','74 confirmed walls');
- addMesh(confirmed,buffers.house,'#b9b5a5','19 house boundaries');
- addMesh(confirmed,buffers.retaining,'#b9b5a5','16 retaining walls');
- addMesh(candidates,auto,'#b9b5a5','Unverified automatic 3D walls');
  // Soil and fallen angular stones follow the same CUT intervals; never fill openings.
  const footings=createKunlumWallFootings(THREE,
   [...confirmedSegments,...candidateSegments],heightAt,{mobile});
@@ -183,10 +153,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;
   },
   setVerticalScale(scale){root.scale.y=scale},
-  dispose(){root.userData.disposed=true;footings.dispose();root.userData.wallBackingMaterial?.dispose();
+  dispose(){root.userData.disposed=true;footings.dispose();
    root.traverse(node=>{if(node.isInstancedMesh)node.dispose();});
    for(const geometry of root.userData.wallFacadeGeometries||[])geometry.dispose();
-   for(const [g,m] of owned){g.dispose();m.dispose();}
   }
  };
 }
