@@ -1,0 +1,32 @@
+name: Tower HUD browser verification
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/index.js'
+      - 'src/features/tower/tower.css'
+      - 'scripts/qa/tower-hud-browser.mjs'
+      - '.github/workflows/tower-hud-browser.yml'
+permissions:
+  contents: read
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned browser runner
+        run: npm install --no-save --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify responsive tower HUD with real CSS
+        run: node scripts/qa/tower-hud-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tower-hud-responsive-screenshots
+          path: reports/tower-hud-browser/
+          if-no-files-found: ignore

@@ -1,5 +1,5 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.60';
+import {createTowerScene} from './prefab-scene.js?v=17.2.61';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {ROOF_BEAM_VERSION,roofBeamId,roofBeamLength,isRoofBeamId,positionRoofBeamAgainst} from '../../../packages/tower-game/roof-beam.mjs';
 import {roofCoverCells,checkRoofPlacement} from '../../../packages/tower-game/roof-cover.mjs';
@@ -11,13 +11,13 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs?v=17.2.60';
+import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs?v=17.2.61';
 import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2-masonry-line.1';
-import {uiIcon} from '../../shared/ui/icons.js?v=17.2.54';
+import {uiIcon} from '../../shared/ui/icons.js?v=17.2.61';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
-const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',undo:'arrowLeft',remove:'eraser',hammer:'hammer',clear:'trash2'};
+const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',undo:'undo2',remove:'trash2',hammer:'hammer',clear:'trash2'};
 const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${label}" title="${label}">${uiIcon(TOWER_ICONS[name])}</button>`;
 export async function mount(context,params={}){
  const controller=new AbortController();
@@ -33,27 +33,29 @@ export async function mount(context,params={}){
   <div class="towerTekmetWallet" data-tekmet-wallet hidden aria-label="Баланс текметов">${tekmetIcon("towerTekmetIcon")}<output data-tekmet-balance>0</output></div>
   <div class="towerStage"><div class="towerCanvas" role="application" aria-label="Каменная башня"></div></div>
   <div class="towerCamera" role="group" aria-label="Камера">
-   <button type="button" class="btn towerIconAction" data-home aria-label="К участку" title="К участку">${uiIcon('blocks')}</button>
-   <button type="button" class="btn towerIconAction towerWorldAction" data-world disabled aria-pressed="false" aria-label="Обзор Кюнлюма" title="Обзор Кюнлюма">${uiIcon('route')}</button>
+   <button type="button" class="btn towerIconAction" data-home aria-label="К участку" title="К участку">${uiIcon('house')}</button>
   </div>
   <div class="towerQuickActions" role="group" aria-label="Экран и настройки">
    <button type="button" class="btn towerIconAction towerOrientationAction" data-orientation aria-label="Горизонтальный экран" title="Горизонтальный экран">${uiIcon('deviceLandscape')}</button>
    <button type="button" class="btn towerIconAction" data-settings aria-expanded="false" aria-controls="tower-settings-panel" aria-label="Настройки башни" title="Настройки башни">${uiIcon('settings')}</button>
   </div>
   <div class="towerSettingsMenu" id="tower-settings-panel" data-settings-panel hidden>
-   <button type="button" class="btn towerIconAction" data-clear aria-label="Очистить всю башню" title="Очистить всю башню">${uiIcon('trash2')}</button><span>Очистить башню</span>
+   <button type="button" class="btn towerIconAction" data-clear aria-label="Очистить всю башню" title="Очистить всю башню">${uiIcon('trash2')}</button><span>Очистить башню</span><span data-clear-note class="towerSettingsHint" hidden></span>
   </div>
   <div class="towerBaganaHeights" data-bagana-heights hidden role="group" aria-label="Высота деревянной багъаны">
    <span>Дерево, м:</span>
    ${BAGANA_WOOD_HEIGHT_CELLS.map(c=>`<button type="button" class="btn" data-bagana-wood-cells="${c}" aria-pressed="false">${(c*.25).toFixed(2)}</button>`).join('')}
   </div>
   <div class="towerBeamControls" data-beam-controls hidden role="group" aria-label="Длина и смещение балки">
-   <span>Длина <output data-beam-length>4,00 м</output></span>
-   <button type="button" class="btn" data-beam-shorter aria-label="Укоротить на 25 см" title="Укоротить на 25 см">${uiIcon('arrowDown')}</button>
-   <button type="button" class="btn" data-beam-longer aria-label="Удлинить на 25 см" title="Удлинить на 25 см">${uiIcon('arrowUp')}</button>
-   <span>Сдвиг</span>
-   <button type="button" class="btn" data-beam-back aria-label="Сдвинуть назад на 25 см" title="Сдвинуть назад на 25 см">${uiIcon('arrowLeft')}</button>
-   <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вперёд на 25 см" title="Сдвинуть вперёд на 25 см">${uiIcon('route')}</button>
+   <div class="towerBeamRow"><span class="towerBeamLabel">Длина</span>
+    <button type="button" class="btn" data-beam-shorter aria-label="Укоротить на 25 см" title="Укоротить на 25 см">${uiIcon('arrowDown')}</button>
+    <output data-beam-length>4,00 м</output>
+    <button type="button" class="btn" data-beam-longer aria-label="Удлинить на 25 см" title="Удлинить на 25 см">${uiIcon('arrowUp')}</button>
+   </div>
+   <div class="towerBeamRow"><span class="towerBeamLabel">Смещение</span>
+    <button type="button" class="btn" data-beam-back aria-label="Сдвинуть влево на 25 см" title="Сдвинуть влево на 25 см">${uiIcon('arrowLeft')}</button>
+    <button type="button" class="btn" data-beam-forward aria-label="Сдвинуть вправо на 25 см" title="Сдвинуть вправо на 25 см">${uiIcon('arrowRight')}</button>
+   </div>
   </div>
   <div class="towerPlacementBar" data-placement hidden role="toolbar" aria-label="Установка секции">
    <span class="towerLineCount" data-line-count hidden></span>
@@ -90,8 +92,9 @@ export async function mount(context,params={}){
   if(s.disposed)return false;
   try{
    // Android often requires fullscreen entered from a real button press.
-   if(gesture&&!document.fullscreenElement&&game.requestFullscreen){
-    await game.requestFullscreen();fullscreenByTower=true;
+   if(gesture&&!document.fullscreenElement&&document.documentElement.requestFullscreen){
+    // Back navigation and the global confirmation modal must be visible in fullscreen.
+    await document.documentElement.requestFullscreen();fullscreenByTower=true;
    }
    if(!screen.orientation?.lock)throw Error('Screen Orientation API unavailable');
    await screen.orientation.lock(target);orientationLocked=true;
@@ -199,11 +202,15 @@ export async function mount(context,params={}){
    q('[data-beam-longer]').disabled=s.busy||roofBeamLength(s.type)>=40;
   }
   q('[data-remove]').disabled=next!=='selected'||s.busy;
-  for(const name of ['cancel','rotate','variant','hammer','world','settings']){
+  for(const name of ['cancel','rotate','variant','hammer','settings']){
    const button=q(`[data-${name}]`);if(button)button.disabled=s.busy||(name==='hammer'&&(!s.ready||s.loadFailed));
   }
-  q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s);
-  if(next==='placing'||next==='saving-place'||roofing)catalogVisible(false);
+  q('[data-clear]').disabled=s.busy||!s.ready||!s.userId||!editable(s)||(!s.sections.length&&!s.roofs.length);
+  const note=q('[data-clear-note]');
+  const reason=!s.userId?'Войдите в аккаунт':!editable(s)?'Чужую башню нельзя очищать':
+   !s.ready?'Загрузка данных':!s.sections.length&&!s.roofs.length?'Построек пока нет':'';
+  note.hidden=!reason;note.textContent=reason;
+  if(next==='placing'||next==='saving-place'||roofing){catalogVisible(false);closeSettings();}
   s.scene?.setTool(roofing?'roof':next==='placing'||next==='saving-place'?'place':'select');
   if(next!=='placing'&&next!=='saving-place'){
    s.scene?.setLineDraft(null,null);
@@ -426,9 +433,11 @@ export async function mount(context,params={}){
  async function clearAll(){
   if(s.busy||!s.ready||!s.userId||!editable(s))return;
   if(!s.sections.length&&!s.roofs.length)return;
-  const confirmed=await context.modal.confirm({
-   message:'Удалить всю построенную башню?<div class="towerClearWarning">Уплаченные текметы вернутся на баланс.</div>'
-  });
+  // #modalRoot stays visible because fullscreen now applies to the document.
+   const confirmed=await context.modal.confirm({
+    message:'Удалить всю построенную башню?<div class="towerClearWarning">Уплаченные текметы вернутся на баланс.</div>',
+    cancelText:'Отмена',confirmText:'Удалить всё'
+   });
   if(!confirmed||s.disposed||s.busy||!editable(s))return;
   s.busy=true;mode('saving-clear');
   try{
@@ -556,21 +565,6 @@ export async function mount(context,params={}){
   if(!s.scene||s.busy)return;
   if(s.mode==='placing'||s.mode==='roof')cancel();
   s.scene.home();walkUi(true);
-  const button=q('[data-world]');
-  button.setAttribute('aria-pressed','false');
-  button.setAttribute('aria-label','Обзор Кюнлюма');
-  button.title='Обзор Кюнлюма';button.innerHTML=uiIcon('route');
- });
- on('[data-world]','click',()=>{
-  if(s.busy||!s.scene)return;
-  if(s.mode==='placing'||s.mode==='roof')cancel();
-  else if(s.mode==='selected')markSelection(null);
-  const wide=s.scene.worldView();walkUi(!wide);
-  const button=q('[data-world]');
-  button.setAttribute('aria-pressed',String(!!wide));
-  button.setAttribute('aria-label',wide?'К участку':'Обзор Кюнлюма');
-  button.title=wide?'К участку':'Обзор Кюнлюма';
-  button.innerHTML=uiIcon(wide?'blocks':'route');
  });
  on('[data-retry]','click',async()=>{
   if(s.disposed||!s.scene||s.busy)return;
@@ -626,7 +620,6 @@ export async function mount(context,params={}){
     s.previewHit=hit;void preview();}
   });
   if(s.disposed){s.scene.dispose();return;}
-  q('[data-world]').disabled=false;
   mode('idle');
   walkUi(true);
   q('[data-load-text]').textContent='Загрузка сохранённых построек…';

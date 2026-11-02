@@ -1,0 +1,25 @@
+name: Tower responsive HUD QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/index.js'
+      - 'src/features/tower/tower.css'
+      - 'src/shared/ui/icons.js'
+      - 'tests/tower-hud.test.mjs'
+      - 'release.json'
+      - '.github/workflows/tower-hud-qa.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tower HUD and masonry regression tests
+        run: node --test tests/tower-hud.test.mjs tests/kunlum-ruin-layout.test.mjs tests/kunlum-wall-ground.test.mjs
+      - name: Release consistency
+        run: node scripts/release/sync-version.mjs --check

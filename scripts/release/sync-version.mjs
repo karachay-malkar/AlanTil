@@ -71,7 +71,8 @@ await set('packages/tower-game/door-prefab.mjs',s=>replaceOne(s,/(DOOR_RENDER_VE
 await set('packages/tower-game/window-prefab.mjs',s=>replaceOne(s,/(WINDOW_RENDER_VERSION=')[^']+/,'$1'+version,'packages/tower-game/window-prefab.mjs'));
 await set('src/features/tower/index.js',s=>{
  s=replaceOne(s,/(prefab-scene\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js');
- return replaceOne(s,/(masonry-line\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js');
+ s=replaceOne(s,/(masonry-line\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js');
+ return replaceOne(s,/(shared\/ui\/icons\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/index.js');
 });
 await set('src/features/tower/prefab-scene.js',s=>replaceOne(s,/(kunlum-(?:real-)?environment\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/prefab-scene.js'));
 await set('src/features/tower/kunlum-real-environment.js',s=>replaceOne(s,/(kunlum-map-overlay\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-real-environment.js'));
