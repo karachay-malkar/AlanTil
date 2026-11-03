@@ -94,14 +94,34 @@ export function getPlacementGrid(section){
  const b=prefabBounds(section);
  return{stepMeters:PREFAB_CELL_METERS,origin:[...b.min],size:[...b.size],face:b.min[1]===0?'ground':'contact'};
 }
-export function touchingPrefabPairs(blocks){
+export function touchingPrefabPairs(blocks,stats=null){
  const result=[];
- // Geometry bounds are invariant during this contact scan: calculate once
- // instead of O(n²) times when rebuilding a large construction.
+ // Sweep the X intervals so buildings separated in space never enter the
+ // contact resolver. Keep the original (i,j,axis) result order exactly.
  const boxes=blocks.map(b=>b.type==='roof_beam'?null:prefabBounds(b));
- for(let i=0;i<blocks.length;i++)for(let j=i+1;j<blocks.length;j++){
+ const sorted=boxes.map((box,index)=>({box,index})).filter(x=>x.box)
+  .sort((a,b)=>a.box.min[0]-b.box.min[0]||a.index-b.index);
+ const active=[],candidates=[];
+ let tested=0;
+ for(const current of sorted){
+  const a=current.box;
+  for(let k=active.length-1;k>=0;k--){
+   if(active[k].box.max[0]<a.min[0]-EPS)active.splice(k,1);
+  }
+  for(const previous of active){
+   const b=previous.box;
+   // A contact on any axis still requires overlap or contact on X,Y,Z.
+   if(b.max[1]<a.min[1]-EPS||a.max[1]<b.min[1]-EPS||
+      b.max[2]<a.min[2]-EPS||a.max[2]<b.min[2]-EPS)continue;
+   tested++;
+   const i=Math.min(previous.index,current.index),j=Math.max(previous.index,current.index);
+   candidates.push([i,j]);
+  }
+  active.push(current);
+ }
+ candidates.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ for(const [i,j] of candidates){
   const a=boxes[i],b=boxes[j];
-  if(!a||!b)continue;
   for(let axis=0;axis<3;axis++){
    const forward=Math.abs(a.max[axis]-b.min[axis])<EPS;
    const reverse=Math.abs(b.max[axis]-a.min[axis])<EPS;
@@ -114,6 +134,11 @@ export function touchingPrefabPairs(blocks){
     point:min.map((v,k)=>(v+max[k])/2),span:max.map((v,k)=>v-min[k]),
     aFace:forward?'+':'-',bFace:forward?'-':'+'});
   }
+ }
+ if(stats&&typeof stats==='object'){
+  stats.visitedSections=sorted.length;
+  stats.candidatePairs=tested;
+  stats.returnedContacts=result.length;
  }
  return result;
 }

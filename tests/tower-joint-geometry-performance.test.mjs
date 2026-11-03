@@ -58,3 +58,27 @@ test('diagnostic contact broad phase benchmark on large tower does not change ge
  console.log(JSON.stringify({contactPairs:actual.length,sections:blocks.length,
   baselineMs:+oldMs.toFixed(2),optimizedMs:+newMs.toFixed(2)}));
 });
+
+/** Broad phase must skip distant pairs without changing exact contact coordinates. */
+test('sweep candidate pruning avoids the quadratic search for scattered towers',()=>{
+ const blocks=Array.from({length:2000},(_,i)=>stone('spread-'+i,i*4,0,0));
+ const measured={};
+ const started=performance.now();
+ const result=touchingPrefabPairs(blocks,measured);
+ const elapsedMs=performance.now()-started;
+ assert.deepEqual(result,[]);
+ assert.equal(measured.visitedSections,blocks.length);
+ assert.equal(measured.candidatePairs,0);
+ assert.equal(measured.returnedContacts,0);
+ console.log(JSON.stringify({scenario:'scattered',sections:blocks.length,elapsedMs:+elapsedMs.toFixed(2),candidates:measured.candidatePairs}));
+});
+
+test('sweep preserves all near-contact and epsilon-adjacent results',()=>{
+ const blocks=Array.from({length:110},(_,i)=>stone('packed'+i,(i%11)*2,Math.floor(i/11)%5*2,Math.floor(i/55)*2));
+ blocks.push(stone('tolerance',22.000004,0,0));
+ const measured={};
+ const actual=touchingPrefabPairs(blocks,measured);
+ assert.deepEqual(actual,baselinePairs(blocks));
+ assert.ok(measured.candidatePairs<blocks.length*(blocks.length-1)/2);
+ assert.equal(measured.returnedContacts,actual.length);
+});

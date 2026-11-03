@@ -2,7 +2,7 @@
  * It combines small sets of stones, not an opaque wall core or a village-wide mesh.
  * Original archaeological polylines and existing authored stone recipes are untouched.
  */
-import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.67';
+import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.68';
 import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 
 export function makeKunlumRuinShell(THREE,segments,{aggregate=3}={}){
