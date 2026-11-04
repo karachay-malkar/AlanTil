@@ -5,6 +5,7 @@ import {loadManualSection} from '../masonry/manual-sections/registry.mjs?v=appro
 import {approvedSectionId,APPROVED_PREFAB_VERSION} from '../../../packages/tower-game/approved-prefab.mjs';
 import {PREFAB_CELL_METERS} from '../../../packages/tower-game/prefab-layout.mjs';
 import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
+import {mergeApprovedStoneMeshes} from './approved-section-geometry.js?v=17.2.69';
 
 /**
  * Each stone is a real authored GLB mesh, centered using the exact same
@@ -44,6 +45,14 @@ export function createApprovedSectionLoader(){
    mesh.userData.approvedSourceId=entry.id;
    root.add(mesh);
   }
+  // Authored recipe remains untouched; the game receives one render mesh.
+  // Fully buried triangles are culled only after geometric containment proof.
+  const {geometry,stats}=mergeApprovedStoneMeshes(root);
+  root.clear();
+  const optimized=new THREE.Mesh(geometry,material);
+  optimized.name='Approved consolidated '+id;
+  root.add(optimized);
+  root.userData.optimization=stats;
   root.userData.approvedSectionId=id;
   root.userData.geometryVersion=APPROVED_PREFAB_VERSION;
   root.userData.sourceStoneCount=recipe.stones.length;
