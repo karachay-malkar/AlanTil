@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.72';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.73';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
@@ -19,7 +19,7 @@ import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_
 import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
-import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.72';
+import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.73';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 import {resolvePrefabHitFace} from '../../../packages/tower-game/prefab-placement-face.mjs';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
