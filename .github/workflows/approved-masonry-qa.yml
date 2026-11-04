@@ -8,6 +8,7 @@ on:
       - 'src/features/tower/**'
       - 'src/features/masonry/**'
       - 'tests/tower-approved-manual.test.mjs'
+      - 'tests/tower-roof-beam-17-2.test.mjs'
       - 'tests/tower-merged-stone-sections.test.mjs'
       - 'scripts/qa/approved-library.test.mjs'
       - '.github/workflows/approved-masonry-qa.yml'
