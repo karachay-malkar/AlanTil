@@ -36,6 +36,12 @@ for(const mode of ['before','after']){
     document.querySelector('.towerCanvas')?.dataset.kunlumTerrainScan==='ready',
     null,{timeout:45000});
    await page.waitForTimeout(800);
+   // Ready time is measured before LOD warmup, not conflated with it.
+   row.readyMs=Date.now()-start;
+   // Lazy chunk updates are throttled and staggered across frames. Compare
+   // warmed worlds instead of whichever transient frame a runner happened
+   // to capture right after the first ready event.
+   await page.waitForTimeout(2400);
    Object.assign(row,await page.locator('.towerCanvas').evaluate(el=>({
     engine:el.dataset.kunlumRuinEngine,
     segments:Number(el.dataset.kunlumStoneSegments||0),
@@ -46,7 +52,7 @@ for(const mode of ['before','after']){
     terrainEncoding:el.dataset.stoneTextureEncoding,
     terrainScan:el.dataset.kunlumTerrainScan||'unknown'
    })));
-   row.readyMs=Date.now()-start;row.status='ready';
+   row.status='ready';
    await page.screenshot({path:out+'/'+mode+'-'+name+'.png',animations:'disabled'});
    if(!row.segments||!row.engine||errors.length)
     throw Error('Incomplete construction world '+JSON.stringify({row,errors}));
@@ -58,22 +64,26 @@ for(const mode of ['before','after']){
 await browser.close();
 await writeFile(out+'/comparison.json',JSON.stringify(rows,null,2)+'\n');
 if(rows.some(r=>r.status!=='ready'))process.exitCode=1;
-// Guard against accidentally reintroducing heavy middle-distance geometry.
-// Draw calls/triangles are comparable within the same headless WebGL runner;
-// these are NOT a substitute for physical-phone FPS or equal terrain profiles.
+// Absolute budgets reject the original 456-draw-call mobile regression.
+// The historical branch and current branch may be in different async LOD
+// states (and have different terrain scans); relative ratios are informative
+// only and MUST NOT be used as hard pass/fail criteria.
+const budgets={
+ mobile:{drawCalls:260,triangles:2500000},
+ desktop:{drawCalls:340,triangles:3100000}
+};
 for(const name of ['desktop','mobile']){
  const old=rows.find(r=>r.mode==='before'&&r.name===name);
  const fresh=rows.find(r=>r.mode==='after'&&r.name===name);
  if(old?.status!=='ready'||fresh?.status!=='ready')continue;
- const limit=name==='mobile'?1.15:1.45;
+ const limits=budgets[name];
  const ratios=Object.fromEntries(['drawCalls','triangles'].map(key=>
   [key,+(fresh[key]/Math.max(1,old[key])).toFixed(3)]));
- console.log('TOWER_LOD_WEBGL_BUDGET',JSON.stringify({name,ratios,limit,
+ console.log('TOWER_LOD_WEBGL_BUDGET',JSON.stringify({name,ratios,limits,
   before:{drawCalls:old.drawCalls,triangles:old.triangles},
   after:{drawCalls:fresh.drawCalls,triangles:fresh.triangles}}));
- if(Object.values(ratios).some(ratio=>ratio>limit)){
-  console.error(name+' WebGL geometry budget exceeded',JSON.stringify({ratios,limit}));
+ if(Object.keys(limits).some(key=>fresh[key]>limits[key])){
+  console.error(name+' WebGL geometry budget exceeded',JSON.stringify({fresh,limits}));
   process.exitCode=1;
  }
 }
-
