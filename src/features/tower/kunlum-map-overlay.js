@@ -1,5 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.68';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.68';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.69';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.69';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
