@@ -1,4 +1,4 @@
-/** Real WebGL smoke test of all ten independently authored and stored 3D masonry recipes. */
+/** Real WebGL smoke test of all eleven independently authored and stored 3D masonry recipes. */
 const {chromium}=require('playwright');
 const path=require('node:path'),cp=require('node:child_process');
 const root=path.resolve(__dirname,'../..');
@@ -29,13 +29,14 @@ const root=path.resolve(__dirname,'../..');
    scene.add(new T.AmbientLight('white',2));
    scene.add(new T.DirectionalLight('white',2));
    const loader=component.createApprovedSectionLoader(),material=new T.MeshStandardMaterial({color:'#bdb5a2',roughness:1});
-   const expected=[['1x1x1',[6,8]],['2x2x2',[11,19,15]],['2x3x4',[40,40,28]],['3x3x3',[86,23]]];
+   const expected=[['1x1x1',[6,8,11]],['2x2x2',[11,19,15]],['2x3x4',[40,40,28]],['3x3x3',[86,23]]];
    const checks=[];
    for(const [name,counts] of expected){
     for(let v=0;v<counts.length;v++){
      const model=await loader.make(name,v,material);
      const meshes=[];model.traverse(n=>{if(n.isMesh)meshes.push(n)});
-     if(meshes.length!==counts[v])throw new Error(name+' variant '+v+' has '+meshes.length+' meshes instead of '+counts[v]);
+     if(meshes.length!==1)throw new Error(name+' variant '+v+' must use one optimized mesh, got '+meshes.length);
+     if(model.userData.sourceStoneCount!==counts[v])throw new Error('Original stone count changed '+name+' '+v);
      if(meshes.some(mesh=>mesh.geometry.type==='BoxGeometry'))throw new Error('Procedural cube substitution');
      if(!meshes.every(mesh=>mesh.geometry.attributes.position?.count>12))throw new Error('Bad authored GLB mesh');
      const bbox=new T.Box3().setFromObject(model);
@@ -45,13 +46,13 @@ const root=path.resolve(__dirname,'../..');
      renderer.render(scene,camera);
      for(let rot=0;rot<4;rot++){model.rotation.y=rot*Math.PI/2;renderer.render(scene,camera)}
      scene.remove(model);
-     checks.push({name,variant:v,stones:meshes.length,bounds:{min:bbox.min.toArray(),max:bbox.max.toArray()}});
+     checks.push({name,variant:v,sourceStones:model.userData.sourceStoneCount,renderMeshes:meshes.length,sourceTriangles:model.userData.optimization.sourceTriangles,renderTriangles:model.userData.optimization.renderTriangles,trimmedTriangles:model.userData.optimization.trimmedTriangles,bounds:{min:bbox.min.toArray(),max:bbox.max.toArray()}});
     }
    }
    renderer.dispose();
    return {passed:checks.length,checks};
   });
-  if(result.passed!==10)throw Error('Expected ten rendered sections');
+  if(result.passed!==11)throw Error('Expected eleven rendered sections');
   if(pageErrors.length||badRequests.length)throw Error(JSON.stringify({pageErrors,badRequests}));
   console.log('APPROVED_WEBGL_RENDERING_PASS',JSON.stringify(result));
  }finally{if(browser)await browser.close();server.kill()}
