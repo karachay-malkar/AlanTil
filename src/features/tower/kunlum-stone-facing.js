@@ -107,10 +107,15 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   if(!size)throw Error('Common100 stone source missing: '+name);
   return {name,geometry:getApprovedStoneSurfaceGeometry(source),size};
  });
- const dummy=new THREE.Object3D(),shade=new THREE.Color();
+ // Middle-distance geometry uses a reduced set of the SAME approved
+ // Common100 stones. This reduces per-chunk draw calls without substituting
+ // boxes, stretched prisms or low-poly synthetic blocks.
+ const midModels=models.filter((_,i)=>i%3===0);
+  const dummy=new THREE.Object3D(),shade=new THREE.Color();
  const installedMeshes=new Set();
  function createDetail(bucket,near){
-  const geometryList=models.map(m=>m.geometry);
+  const sources=near?models:midModels;
+  const geometryList=sources.map(m=>m.geometry);
   const bins=geometryList.map(()=>[]);
   // Both near and medium share identical exterior stone shapes.
   for(const seg of bucket.segments){
@@ -126,7 +131,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
      dummy.position.set(rock.x+nx*offset,rock.y-(layerDepth===0?.012:0),
                         rock.z+nz*offset);
      dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
-     const m=models[k];
+     const m=sources[k];
      dummy.scale.set(rock.width/m.size.x,rock.height/m.size.y,
                      (seg.width*.63)/m.size.z);
      dummy.updateMatrix();
@@ -178,26 +183,32 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   let available=force?4:2,active=0;
   targets.sort((a,b)=>a.distance-b.distance);
   for(const {bucket,distance,tier} of targets){
-   if(tier==='near'&&!bucket.near&&available>0){
+   // Keep natural close-up stone shapes, but limit expensive instanced
+   // medium meshes to the area where individual stones occupy real pixels.
+   const nearEnd=mobile?28:30,mediumEnd=mobile?95:120;
+   if(distance<nearEnd&&!bucket.near&&available>0){
     bucket.near=createDetail(bucket,true);available--;created++;
-   }else if((tier==='medium'||tier==='near')&&!bucket.medium&&!bucket.near&&available>0){
-    bucket.medium=createDetail(bucket,false);available--;created++;
-   }else if(tier==='medium'&&!bucket.medium&&available>0){
+   }
+   if(distance<mediumEnd&&!bucket.medium&&available>0){
     bucket.medium=createDetail(bucket,false);available--;created++;
    }
-   // Distant groups release geometry buffers, not the shared source meshes.
-   if(distance>210){disposeDetail(bucket,'near');disposeDetail(bucket,'medium');}
-   else if(distance>48)disposeDetail(bucket,'near');
+   if(distance>mediumEnd+8)disposeDetail(bucket,'medium');
+   if(distance>nearEnd+8)disposeDetail(bucket,'near');
    bucket.tier=tier;
-   const showNear=tier==='near'&&!!bucket.near;
-   const detail=showNear?bucket.near:bucket.medium||bucket.near;
-   const blend=detail?ruinFarBlend(distance,{mobile}):1;
-   const showDetail=!!detail&&blend<1;
-   bucket.far.visible=blend>0||!showDetail;
+   // Crossfade both LOD transitions. Never swap a full-size real stone
+   // silhouette for a faceted proxy at one distance threshold.
+   const nearStart=mobile?14:16;
+   const nearWeight=Math.max(0,Math.min(1,(nearEnd-distance)/(nearEnd-nearStart)));
+   const farWeight=ruinFarBlend(distance,{mobile});
+   const hasNear=!!bucket.near,hasMedium=!!bucket.medium;
+   const nearAlpha=hasNear?(1-farWeight)*(hasMedium?nearWeight:1):0;
+   const mediumAlpha=hasMedium?(1-farWeight)*(hasNear?1-nearWeight:1):0;
+   const detailVisible=nearAlpha>0||mediumAlpha>0;
+   bucket.far.visible=farWeight>0||!detailVisible;
    const farMaterial=bucket.far.children[0]?.material;
-   if(farMaterial)farMaterial.opacity=blend;
-   if(bucket.near){bucket.near.visible=showDetail&&detail===bucket.near;bucket.near.userData.lodMaterial.opacity=1-blend;}
-   if(bucket.medium){bucket.medium.visible=showDetail&&detail===bucket.medium;bucket.medium.userData.lodMaterial.opacity=1-blend;}
+   if(farMaterial)farMaterial.opacity=detailVisible?farWeight:1;
+   if(bucket.near){bucket.near.visible=nearAlpha>0;bucket.near.userData.lodMaterial.opacity=nearAlpha;}
+   if(bucket.medium){bucket.medium.visible=mediumAlpha>0;bucket.medium.userData.lodMaterial.opacity=mediumAlpha;}
    if(distance<110)active++;
   }
   root.userData.ruinLOD={chunks:buckets.length,near:buckets.filter(c=>c.near?.visible).length,

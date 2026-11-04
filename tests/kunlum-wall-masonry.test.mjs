@@ -65,5 +65,6 @@ test('far transitions crossfade detailed stones rather than popping geometry',()
  assert.match(facingSource,/farMaterial\.opacity=blend/);
  assert.match(facingSource,/lodMaterial\.opacity=1-blend/);
  assert.match(facingSource,/bucket\.far\.visible=blend>0/);
- assert.match(facingSource,/geometryList=models\.map\(m=>m\.geometry\)/);
+ assert.match(facingSource,/const sources=near\?models:midModels/);
+ assert.match(facingSource,/midModels=models\.filter/);
 });

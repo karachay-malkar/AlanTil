@@ -20,7 +20,9 @@ test('17.2 skips unrelated JS warmups and lazy-loads the stele',async()=>{
  const stele=await read('src/features/path/story-stele.js');
  const sw=await read('service-worker.js');
  assert.doesNotMatch(router,/scheduleFeatureWarmup/);
- assert.match(router,/MASONRY_ASSET_VERSION = "17\.7-approved-only\.2"/);
+ const release=JSON.parse(await read('release.json'));
+ assert.ok(router.includes('const MASONRY_ASSET_VERSION = "'+release.version+'"'),
+  'Masonry imports must share the unified active release version');
  assert.match(stele,/artwork\.src=artwork\.dataset\.src/);
  assert.doesNotMatch(sw,/\/assets\/path\/story-stele\.webp\?v=16\.8\.0\.16/);
 });
