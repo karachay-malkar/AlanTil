@@ -53,7 +53,7 @@ test('stone facade uses Common100 geometry, instancing and bounded spatial chunk
  assert.match(facingSource,/getApprovedStoneSurfaceGeometry\(/);
  assert.match(facingSource,/mesh\.computeBoundingSphere\(\)/);
  assert.match(facingSource,/mesh\.frustumCulled=true/);
- assert.match(facingSource,/const count=mobile\?32:52/);
+ assert.match(facingSource,/const count=mobile\?20:36/);
  assert.match(facingSource,/for\(const rock of layoutKunlumRuinStones\(seg\)\)/);
  assert.match(facingSource,/new THREE\.InstancedMesh/);
  assert.match(facingSource,/makeKunlumRuinShell/);

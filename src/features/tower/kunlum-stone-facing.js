@@ -1,6 +1,6 @@
 /** Real Common 100 stone facing shared by the live village and 3D editor.
- * Dynamic camera-based LOD: close Common100, intermediate faceted stones,
- * and distant merged external stone faces. No opaque internal wall backing.
+ * Dynamic camera-based LOD: real Common100 stone geometry near and medium,
+ * with a smoothly faded distant shell. No opaque internal wall backing.
  */
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
@@ -99,7 +99,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const {manifest,geometries}=await loadCommon100();
  if(root.userData.disposed)return null;
  const sources=manifest.models.filter(m=>m.category==='main'||m.category==='large');
- const count=mobile?32:52;
+ const count=mobile?20:36;
  const selected=Array.from({length:count},
   (_,i)=>sources[Math.floor((i+.5)*sources.length/count)]);
  const models=selected.map(({name})=>{
