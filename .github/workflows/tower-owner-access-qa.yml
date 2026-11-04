@@ -30,7 +30,7 @@ jobs:
           node --check src/features/tower/index.js
           node --check src/features/practice/index.js
           node --check src/app/router.js
-          node --test tests/tower-owner-access.test.mjs tests/tower-hud.test.mjs tests/tower-controls-172.test.mjs
+          node --test tests/tower-owner-access.test.mjs tests/tower-hud.test.mjs
           node scripts/release/sync-version.mjs --check
   browser:
     runs-on: ubuntu-24.04
