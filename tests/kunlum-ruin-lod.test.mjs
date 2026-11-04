@@ -26,17 +26,17 @@ test('LOD changes with moving camera without oscillation near thresholds',()=>{
  assert.equal(selectKunlumRuinTier(5),'near');
  assert.equal(selectKunlumRuinTier(40),'medium');
  assert.equal(selectKunlumRuinTier(140),'far');
- assert.equal(selectKunlumRuinTier(22,'near'),'near');
+ assert.equal(selectKunlumRuinTier(21,'near'),'near');
  assert.equal(selectKunlumRuinTier(25,'near'),'medium');
  assert.equal(selectKunlumRuinTier(141,'far'),'far');
- assert.equal(selectKunlumRuinTier(115,'far'),'medium');
+ assert.equal(selectKunlumRuinTier(65,'far'),'medium');
  assert.equal(selectKunlumRuinTier(22,null,{mobile:true}),'medium');
 });
 
 test('far transition blends silhouettes smoothly without abrupt tier swaps',()=>{
- assert.equal(ruinFarBlend(80),0);
- assert.equal(ruinFarBlend(102.5),.5);
- assert.equal(ruinFarBlend(125),1);
- assert.equal(ruinFarBlend(80,{mobile:true}),.5);
- assert.equal(ruinFarBlend(100,{mobile:true}),1);
+ assert.equal(ruinFarBlend(45),0);
+ assert.equal(ruinFarBlend(60),.5);
+ assert.equal(ruinFarBlend(75),1);
+ assert.equal(ruinFarBlend(50,{mobile:true}),.5);
+ assert.equal(ruinFarBlend(65,{mobile:true}),1);
 });

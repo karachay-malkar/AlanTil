@@ -185,7 +185,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   for(const {bucket,distance,tier} of targets){
    // Keep natural close-up stone shapes, but limit expensive instanced
    // medium meshes to the area where individual stones occupy real pixels.
-   const nearEnd=mobile?28:30,mediumEnd=mobile?95:120;
+   const nearEnd=mobile?16:18,mediumEnd=mobile?60:70;
    if(distance<nearEnd&&!bucket.near&&available>0){
     bucket.near=createDetail(bucket,true);available--;created++;
    }
@@ -197,7 +197,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    bucket.tier=tier;
    // Crossfade both LOD transitions. Never swap a full-size real stone
    // silhouette for a faceted proxy at one distance threshold.
-   const nearStart=mobile?14:16;
+   const nearStart=mobile?10:12;
    const nearWeight=Math.max(0,Math.min(1,(nearEnd-distance)/(nearEnd-nearStart)));
    const farWeight=ruinFarBlend(distance,{mobile});
    const hasNear=!!bucket.near,hasMedium=!!bucket.medium;
