@@ -31,5 +31,9 @@ test('migration and UI explicitly allow deletion of a beam support',()=>{
  const sql=readFileSync(new URL('../supabase/migrations/20261031100000_tower_roof_beams_172.sql',import.meta.url),'utf8');
  const ui=readFileSync(new URL('../src/features/tower/index.js',import.meta.url),'utf8');
  assert.match(sql,/tower_v3_beam_has_anchor/);assert.match(sql,/NOT \(box->>'support'\)::boolean THEN CONTINUE/);
- assert.match(ui,/b.type!=='roof_beam'&&!validatePrefabPlacement/);
+ const newSql=readFileSync(new URL('../supabase/migrations/20261104134000_tower_v3_batch_remove_floating_172.sql',import.meta.url),'utf8');
+ assert.doesNotMatch(ui,/b.type!=='roof_beam'&&!validatePrefabPlacement/,'removal must not reject floating survivors');
+ assert.match(ui,/beginBatchDelete\(s\.selected\)/,'selected support can enter batch delete');
+ assert.match(newSql,/private\.remove_tower_v3_sections/);
+ assert.match(newSql,/Existing elements may float after removal/);
 });
