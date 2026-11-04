@@ -1,0 +1,18 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body><main id="root"></main>
+<script type="module">
+try{
+ const [{setAuthState},{mount,unmount},{TOWER_ACCESS_USER_ID}]=await Promise.all([
+  import('/src/shared/auth/auth-store.js'),import('/src/features/practice/index.js'),import('/src/features/tower/access.mjs')
+ ]);
+ const routes=[];
+ mount({
+  root:document.getElementById('root'),shell:{setHeaderContent(){}},
+  router:{navigate(route){routes.push(route);}}
+ });
+ window.testOwnerAccess={
+  setAuthState,unmount,routes,TOWER_ACCESS_USER_ID
+ };
+ document.body.dataset.ready='true';
+}catch(error){document.body.dataset.ready='error';document.body.dataset.error=String(error.stack||error);console.error(error);}
+</script></body></html>

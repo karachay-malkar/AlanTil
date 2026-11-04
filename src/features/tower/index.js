@@ -1,6 +1,8 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.70';
-import {toggleBatchSelection,retainBatchSelection} from './batch-delete-selection.mjs?v=17.2.70';
+import {createTowerScene} from './prefab-scene.js?v=17.2.71';
+import {mayOpenTower} from './access.mjs';
+import {subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.16';
+import {toggleBatchSelection,retainBatchSelection} from './batch-delete-selection.mjs?v=17.2.71';
 import {BUILDABLE_PREFAB_TYPES,positionAgainst,validatePrefabPlacement} from '../../../packages/tower-game/prefab-layout.mjs';
 import {ROOF_BEAM_VERSION,roofBeamId,roofBeamLength,isRoofBeamId,positionRoofBeamAgainst} from '../../../packages/tower-game/roof-beam.mjs';
 import {roofCoverCells,checkRoofPlacement} from '../../../packages/tower-game/roof-cover.mjs';
@@ -12,21 +14,30 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs?v=17.2.70';
-import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,removeTowerV3Sections,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2.70';
-import {uiIcon} from '../../shared/ui/icons.js?v=17.2.70';
+import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs?v=17.2.71';
+import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,removeTowerV3Sections,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2.71';
+import {uiIcon} from '../../shared/ui/icons.js?v=17.2.71';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
 const TOWER_ICONS={confirm:'check',cancel:'x',rotate:'rotateCw',variant:'layers',undo:'undo2',remove:'trash2','batch-confirm':'trash2','batch-cancel':'x',hammer:'hammer',clear:'trash2'};
 const icon=(name,label)=>`<button type="button" class="btn towerIconAction" data-${name} aria-label="${label}" title="${label}">${uiIcon(TOWER_ICONS[name])}</button>`;
 export async function mount(context,params={}){
+ if(!mayOpenTower(towerUserId())){
+  context.root.innerHTML='<section class="view"><div class="panel">Раздел временно недоступен</div></section>';
+  return;
+ }
  const controller=new AbortController();
  const s={context,params,controller,disposed:false,userId:towerUserId(),scene:null,mode:'idle',
   sections:[],revision:0,resetAt:null,selected:null,deleteIds:new Set(),deleteOperation:null,loadFailed:false,type:BUILDABLE_PREFAB_TYPES[0].id,variant:0,rotation:0,
   preview:null,previewSections:[],previewHit:null,locked:false,lineStart:null,lineEnd:null,lineTipShown:false,beamShift:0,busy:false,ready:false,canLeave:()=>true,
   roofs:[],tekmetBalance:null,roofBalance:null,roofDraft:null,roofValidity:null,selectedRoofId:null};
  active=s;
+ const stopTowerAuth=subscribeToAuth(auth=>{
+  if(!auth?.ready||s.disposed||mayOpenTower(auth.user?.id))return;
+  queueMicrotask(()=>{if(!s.disposed)void context.router?.replace('practice.home',{}, {reason:'session_changed',force:true});});
+ });
+ controller.signal.addEventListener('abort',stopTowerAuth,{once:true});
  context.shell.setHeaderContent?.({title:'Къала · Башня'});
  context.shell.appShell.dataset.feature='tower';
  const root=context.root;

@@ -1,14 +1,15 @@
 import { msg } from "../shared/i18n/index.js?v=16.8.0.16";
 import { setAnalyticsContext, trackEvent, trackPageView } from "../shared/analytics/analytics.js?v=16.8.0.16";
 import { EVENTS } from "../shared/analytics/events.js?v=16.8.0.16";
-import { initializeAuth } from "../shared/auth/auth-service.js?v=16.8.0.16";
+import { initializeAuth,getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.16";
+import { mayOpenTower } from "../features/tower/access.mjs";
 import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admin-access.js?v=16.8.0.16";
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "17.2.70";
-const TOWER_ASSET_VERSION = "17.2.70";
-const MASONRY_ASSET_VERSION = "17.2.70";
+const ASSET_VERSION = "17.2.71";
+const TOWER_ASSET_VERSION = "17.2.71";
+const MASONRY_ASSET_VERSION = "17.2.71";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -368,6 +369,8 @@ export function createRouter({ shell, modal, context }) {
   function discardScreenTimer() { currentScreen = ""; screenPagePath = "/"; screenOpenedAt = 0; activeDuration = 0; activeStartedAt = 0; }
   function setAnalyticsActive(enabled) { discardScreenTimer(); if (!enabled || !started) return false; startScreenTimer(current.route); return sendPageView({ force: true }); }
   async function guardAdminTarget(target) {
+    if (target.route === "practice.tower" && !mayOpenTower(getCurrentAuthState().user?.id))
+      return { route: "practice.home", params: {}, redirected: true };
     if (target.route === "admin.users") return { route: "friends.home", params: { mode: "stats" }, redirected: true };
     const manualMasonry = target.route === "practice.masonry";
     if (!manualMasonry && !target.route.startsWith("admin.")) return target;

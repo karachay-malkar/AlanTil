@@ -1,0 +1,47 @@
+name: Tower 17.2 — private owner access QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'src/features/tower/access.mjs'
+      - 'src/features/tower/index.js'
+      - 'src/features/practice/index.js'
+      - 'src/app/router.js'
+      - 'tests/tower-owner-access.test.mjs'
+      - 'tests/fixtures/tower-owner-access.html'
+      - 'scripts/qa/browser-tower-owner-access.cjs'
+      - 'supabase/migrations/*tower_owner_only_access*'
+      - 'release.json'
+      - '.github/workflows/tower-owner-access-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Owner-only guard and other construction regressions
+        run: |
+          node --check src/features/tower/access.mjs
+          node --check src/features/tower/index.js
+          node --check src/features/practice/index.js
+          node --check src/app/router.js
+          node --test tests/tower-owner-access.test.mjs tests/tower-hud.test.mjs tests/tower-controls-172.test.mjs
+          node scripts/release/sync-version.mjs --check
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Playwright
+        run: npm install --no-save --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Confirm Tower menu stays invisible to other users
+        run: node scripts/qa/browser-tower-owner-access.cjs
