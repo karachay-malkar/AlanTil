@@ -81,6 +81,13 @@ const root=path.resolve(__dirname,'../..');
       return pixels;
      };
      const beforePixels=frame(originalRoot),afterPixels=frame(optimizedRoot);
+     let foreground=0;
+     for(let i=0;i<beforePixels.length;i+=4){
+      if(Math.max(Math.abs(beforePixels[i]-beforePixels[0]),
+       Math.abs(beforePixels[i+1]-beforePixels[1]),
+       Math.abs(beforePixels[i+2]-beforePixels[2]))>20)foreground++;
+     }
+     if(foreground<500)throw Error('Cannot compare blank WebGL images '+id+' rotation '+rotation);
      let changed=0;
      for(let i=0;i<beforePixels.length;i+=4){
       const delta=Math.max(Math.abs(beforePixels[i]-afterPixels[i]),
@@ -89,7 +96,7 @@ const root=path.resolve(__dirname,'../..');
       if(delta>12)changed++;
      }
      const mismatch=changed/(width*height);
-     visualChecks.push({section:id,rotation,changedPixels:changed,mismatch});
+     visualChecks.push({section:id,rotation,foreground,changedPixels:changed,mismatch});
      if(mismatch>.015)throw Error('Exterior masonry changed beyond pixel tolerance '+JSON.stringify(visualChecks.at(-1)));
     }
    }
