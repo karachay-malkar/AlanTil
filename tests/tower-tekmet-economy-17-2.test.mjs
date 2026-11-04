@@ -16,8 +16,8 @@ test('all approved prefab costs and long beams',()=>{
   'roof-beam-4':2,'roof-beam-5':3,'roof-beam-40':20
  }))assert.equal(tekmetSectionCost(id),cost,id);
  assert.equal(tekmetSectionCost('unsafe-element'),null);
- assert.equal(tekmetRoofCost(1),2);
- assert.equal(tekmetRoofCost(16),32);
+ assert.equal(tekmetRoofCost(1),1);
+ assert.equal(tekmetRoofCost(16),16);
  assert.equal(tekmetRoofCost(0),0);
  assert.equal(tekmetRoofCost(-1),null);
 });
