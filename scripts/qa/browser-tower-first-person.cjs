@@ -9,7 +9,7 @@ const out=path.join(root,'tower-first-person-qa');fs.mkdirSync(out,{recursive:tr
 (async()=>{
  const server=spawn('node',['scripts/static-preview-server.mjs'],{cwd:root,stdio:'ignore'});let browser;
  try{
-  browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   const results=[];
   for(const [device,width,height] of [['desktop',1280,850],['mobile',390,844]]){
    const context=await browser.newContext({viewport:{width,height},isMobile:device==='mobile',hasTouch:device==='mobile',deviceScaleFactor:1});

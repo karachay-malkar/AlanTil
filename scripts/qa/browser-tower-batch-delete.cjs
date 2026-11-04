@@ -23,7 +23,7 @@ const ids=Array.from({length:4},(_,i)=>'00000000-0000-4000-8000-'+String(i+1).pa
   export const placeTowerRoof=async()=>{throw Error('not exercised')};
   export const removeTowerRoof=async()=>{throw Error('not exercised')};
   `}));
-  await page.route(/\\/src\\/features\\/tower\\/prefab-scene\\.js\\?v=/,route=>route.fulfill({status:200,contentType:'text/javascript',body:`
+  await page.route(url=>url.pathname==='/src/features/tower/prefab-scene.js'&&url.searchParams.has('v'),route=>route.fulfill({status:200,contentType:'text/javascript',body:`
   import {createTowerScene as real} from './prefab-scene.js?batch-delete-qa-original';
   export async function createTowerScene(container,callbacks){
    window.qaSelectBlock=callbacks.onSelection;

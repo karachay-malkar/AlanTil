@@ -19,7 +19,7 @@ test('tower environment patch is a new release, not cached 17.2.11 code',()=>{
  assert.ok(router.includes('const ASSET_VERSION = "'+version+'"'));
  const tower=file('src/features/tower/index.js');
  assert.ok(tower.includes("prefab-scene.js?v="+version));
- assert.ok(tower.includes('data-world'), 'The latest construction UI must expose the world button');
+ assert.ok(tower.includes('data-home'), 'Current construction UI must expose the plot reset button');
  assert.ok(file('src/features/tower/prefab-scene.js').includes('kunlum-real-environment.js?v='+version));
  assert.ok(file('src/shared/styles/lazy/tower.css').includes('tower.css?v='+version));
  const sw=file('service-worker.js');
