@@ -58,3 +58,22 @@ for(const mode of ['before','after']){
 await browser.close();
 await writeFile(out+'/comparison.json',JSON.stringify(rows,null,2)+'\n');
 if(rows.some(r=>r.status!=='ready'))process.exitCode=1;
+// Guard against accidentally reintroducing heavy middle-distance geometry.
+// Draw calls/triangles are comparable within the same headless WebGL runner;
+// these are NOT a substitute for physical-phone FPS or equal terrain profiles.
+for(const name of ['desktop','mobile']){
+ const old=rows.find(r=>r.mode==='before'&&r.name===name);
+ const fresh=rows.find(r=>r.mode==='after'&&r.name===name);
+ if(old?.status!=='ready'||fresh?.status!=='ready')continue;
+ const limit=name==='mobile'?1.15:1.45;
+ const ratios=Object.fromEntries(['drawCalls','triangles'].map(key=>
+  [key,+(fresh[key]/Math.max(1,old[key])).toFixed(3)]));
+ console.log('TOWER_LOD_WEBGL_BUDGET',JSON.stringify({name,ratios,limit,
+  before:{drawCalls:old.drawCalls,triangles:old.triangles},
+  after:{drawCalls:fresh.drawCalls,triangles:fresh.triangles}}));
+ if(Object.values(ratios).some(ratio=>ratio>limit)){
+  console.error(name+' WebGL geometry budget exceeded',JSON.stringify({ratios,limit}));
+  process.exitCode=1;
+ }
+}
+
