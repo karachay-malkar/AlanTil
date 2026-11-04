@@ -62,9 +62,10 @@ test('stone facade uses Common100 geometry, instancing and bounded spatial chunk
 });
 test('far transitions crossfade detailed stones rather than popping geometry',()=>{
  assert.match(facingSource,/ruinFarBlend\(distance/);
- assert.match(facingSource,/farMaterial\.opacity=blend/);
- assert.match(facingSource,/lodMaterial\.opacity=1-blend/);
- assert.match(facingSource,/bucket\.far\.visible=blend>0/);
+ assert.match(facingSource,/farMaterial\.opacity=detailVisible\?farWeight:1/);
+ assert.match(facingSource,/lodMaterial\.opacity=nearAlpha/);
+ assert.match(facingSource,/lodMaterial\.opacity=mediumAlpha/);
+ assert.match(facingSource,/bucket\.far\.visible=farWeight>0/);
  assert.match(facingSource,/const sources=near\?models:midModels/);
  assert.match(facingSource,/midModels=models\.filter/);
 });
