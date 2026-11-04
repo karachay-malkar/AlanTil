@@ -25,6 +25,14 @@ export function mutateTowerV3({revision,id,action,section=null,sectionId=null}){
   p_revision:revision,p_operation_id:id,p_action:action,p_section:section,p_section_id:sectionId
  });
 }
+/** Delete one or more authored blocks in one server transaction. */
+export function removeTowerV3Sections({revision,id,sectionIds}){
+ if(!Array.isArray(sectionIds)||!sectionIds.length||sectionIds.length>250||new Set(sectionIds).size!==sectionIds.length)
+  throw new Error('INVALID_BATCH_REMOVE_SELECTION');
+ return rpc('remove_tower_v3_sections',{
+  p_revision:revision,p_operation_id:id,p_section_ids:sectionIds
+ });
+}
 /** Save one complete masonry row atomically with a single wallet debit. */
 export function placeTowerLine({revision,id,sections}){
  return rpc('mutate_tower_v3_line',{

@@ -1,0 +1,29 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../../src/shared/styles/app.css"><link rel="stylesheet" href="../../src/features/tower/tower.css">
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden}#qa-root{width:100%;height:100dvh}</style></head>
+<body><div id="qa-root"></div>
+<script>
+const version='17.7-approved-manual.1';
+window.qaBlocks=[
+ {id:'00000000-0000-4000-8000-000000000001',type:'masonry_section',sectionId:'1x1x1',variant:0,rotation:0,geometryVersion:version,x:0,y:0,z:0},
+ {id:'00000000-0000-4000-8000-000000000002',type:'masonry_section',sectionId:'1x1x1',variant:0,rotation:0,geometryVersion:version,x:1,y:0,z:0},
+ {id:'00000000-0000-4000-8000-000000000003',type:'masonry_section',sectionId:'1x1x1',variant:0,rotation:0,geometryVersion:version,x:2,y:0,z:0},
+ {id:'00000000-0000-4000-8000-000000000004',type:'masonry_section',sectionId:'1x1x1',variant:0,rotation:0,geometryVersion:version,x:0,y:1,z:0}
+];
+window.qaRevision=0;window.qaConfirm=true;window.qaRequests=[];
+window.qaRemove=async function({revision,id,sectionIds}){
+ if(revision!==window.qaRevision)throw Error('REVISION_CONFLICT');
+ window.qaRequests.push({revision,id,sectionIds});
+ window.qaBlocks=window.qaBlocks.filter(b=>!sectionIds.includes(b.id));window.qaRevision++;
+ return {format:3,revision:window.qaRevision,elements:window.qaBlocks,tekmetBalance:sectionIds.length*7,refunded:sectionIds.length*7};
+};
+</script>
+<script type="module">
+import {mount,unmount} from '../../src/features/tower/index.js';
+try{
+ await mount({root:document.getElementById('qa-root'),shell:{appShell:document.body,setHeaderContent(){}},modal:{
+  async confirm(options){window.qaLastConfirmation=options;return window.qaConfirm;}
+ }},{});
+ document.body.dataset.qaReady='true';window.qaUnmount=unmount;
+}catch(error){document.body.dataset.qaReady='error';document.body.dataset.qaError=String(error.stack||error);console.error(error);}
+</script></body></html>

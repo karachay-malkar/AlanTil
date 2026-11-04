@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.69';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.70';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
@@ -19,7 +19,7 @@ import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_
 import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
-import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.69';
+import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.70';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
@@ -136,6 +136,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  scene.add(faceGrid);faceGrid.visible=false;
  const preview=new THREE.Group();scene.add(preview);preview.visible=false;
  const outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#e1be7b',depthTest:false,transparent:true,opacity:1}));outline.visible=false;outline.renderOrder=999;scene.add(outline);
+ const selectedManyMaterial=new THREE.LineBasicMaterial({color:'#e58a46',depthTest:false,transparent:true,opacity:1});
+ const selectedManyOutlines=new Map();
  const ghostBounds=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),new THREE.LineBasicMaterial({color:'#a3e1b1',transparent:true,opacity:.55}));preview.add(ghostBounds);
  const previewContents=new THREE.Group();preview.add(previewContents);
  // Editable 3D endpoints: rendered above the draft stones, not saved in the DB.
@@ -395,6 +397,22 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  function jointKey(joint){return joint.file+':'+joint.point.join(',');}
  function rebindGroup(group,block,entry){rebindCachedBlockTargets(group,block,entry.targets);}
  function setSelected(id){selected=id||null;const b=blocks.find(x=>x.id===selected);outline.visible=!!b;if(b){outline.position.copy(center(b));outline.scale.copy(footprint(b)).multiplyScalar(1.015);}scheduleDraw();}
+ function setSelectedMany(ids=[]){
+  const requested=new Set(ids);
+  for(const [id,line] of selectedManyOutlines)if(!requested.has(id)||!blocks.some(b=>b.id===id)){
+   scene.remove(line);selectedManyOutlines.delete(id);
+  }
+  for(const id of requested){
+   const block=blocks.find(b=>b.id===id);
+   if(!block)continue;
+   let line=selectedManyOutlines.get(id);
+   if(!line){line=new THREE.LineSegments(outline.geometry,selectedManyMaterial);line.renderOrder=1000;scene.add(line);selectedManyOutlines.set(id,line);}
+   line.position.copy(center(block));line.rotation.set(0,0,0);
+   line.scale.copy(footprint(block)).multiplyScalar(1.02);
+  }
+  container.dataset.batchHighlightCount=String(selectedManyOutlines.size);
+  scheduleDraw();
+ }
  function prepareMesh(model,block){
   const group=new THREE.Group();group.add(model.clone(true));group.userData.block=block;
   group.traverse(child=>{if(!child.isMesh)return;
@@ -453,7 +471,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
     const entry=renderedById.get(block.id);
     if(entry.group.userData.block!==block)rebindGroup(entry.group,block,entry);
    }
-   setSelected(selected);return;
+   setSelected(selected);setSelectedMany([...selectedManyOutlines.keys()]);return;
   }
   try{
    for(const block of visible){
@@ -500,7 +518,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    container.dataset.prefabJoints=String(resolved.pairs.length);
    container.dataset.prefabJointTiles=String(resolved.joints.length);
    container.dataset.prefabJointErrors=String(resolved.incompatible.length);
-   setSelected(selected);
+   setSelected(selected);setSelectedMany([...selectedManyOutlines.keys()]);
    scheduleDraw();
   }catch(error){console.warn('Prefab build:',error);container.dataset.prefabError=String(error?.message||error);}
  }
@@ -625,7 +643,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(roofId){onRoofSelection(roofId);return;}
   }
   const hit=findHit(e.clientX,e.clientY);if(!hit)return;
-  if(tool==='select'){onSelection(hit.block?.id||null);return;}onPick(hit);}
+  if(tool==='select'||tool==='delete'){onSelection(hit.block?.id||null);return;}onPick(hit);}
  function pointerCancel(e){activePointers.delete(e.pointerId);pressed=null;}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
  const observer=new ResizeObserver(()=>{if(disposed)return;const width=Math.max(1,container.clientWidth),height=Math.max(300,container.clientHeight);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();if(!worldMode)controls.maxDistance=towerOrbitMaximumDistance(camera.aspect,camera.fov);scheduleDraw();});observer.observe(container);
@@ -711,8 +729,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  // Complete the first frame before controls become available.
  await new Promise(resolve=>requestAnimationFrame(resolve));
  return {manifest,setRoofs(roofs){roofCoverRenderer.setSaved(roofs);},setRoofDraft(next,cells=[]){roofDraft=next;roofCoverRenderer.setDraft(next,cells);},async setBlocks(v){await setBlocks(v||[]);if(!worldMode&&!explorer.active)fit();},setPreview,
-  setSelected,setLineDraft,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
-  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;setLineDraft(v==='place'?lineBlocks[0]:null,v==='place'?lineBlocks[1]:null);grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore:setConstructionOrbit,
+  setSelected,setSelectedMany,setLineDraft,getAimHit(){if(worldMode)return null;const r=renderer.domElement.getBoundingClientRect();return findHit(r.left+r.width/2,r.top+r.height/2);},
+  setLayer(v){layer=v;void setBlocks(blocks);},setTool(v){tool=v;container.dataset.deleteActive=String(v==='delete');setLineDraft(v==='place'?lineBlocks[0]:null,v==='place'?lineBlocks[1]:null);grid.visible=v==='place'&&!worldMode;container.dataset.gridVisible=String(grid.visible);if(v!=='place')faceGrid.visible=false;needsAim=true;scheduleDraw();},home:resetCamera,worldView,enterExplore:setConstructionOrbit,
   exitExplore:resetCamera,
   setMotion(next){explorer.setMotion(next);
    // Input processing advances position independently of expensive WebGL frames.
@@ -731,6 +749,6 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    yellowParcelCorners:info?.yellowParcelCorners||null,
    hasFlowingWater:!!kunlum?.group?.getObjectByName('Cherek flowing water')
   };},
-  dispose(){disposed=true;markerDrag=null;renderer.domElement.removeEventListener('pointerdown',endpointPointerDown,true);renderer.domElement.removeEventListener('pointermove',endpointPointerMove,true);renderer.domElement.removeEventListener('pointerup',endpointPointerUp,true);renderer.domElement.removeEventListener('pointercancel',endpointPointerUp,true);lineMarkerGeometry.dispose();lineMarkerMaterials.forEach(material=>material.dispose());roofCoverRenderer.dispose();clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
+  dispose(){disposed=true;for(const line of selectedManyOutlines.values())scene.remove(line);selectedManyOutlines.clear();selectedManyMaterial.dispose();markerDrag=null;renderer.domElement.removeEventListener('pointerdown',endpointPointerDown,true);renderer.domElement.removeEventListener('pointermove',endpointPointerMove,true);renderer.domElement.removeEventListener('pointerup',endpointPointerUp,true);renderer.domElement.removeEventListener('pointercancel',endpointPointerUp,true);lineMarkerGeometry.dispose();lineMarkerMaterials.forEach(material=>material.dispose());roofCoverRenderer.dispose();clearTimeout(windTimer);clearTimeout(visualStartTimer);sky.dispose();explorer.dispose();kunlum?.dispose();previewGeneration++;rebuildGeneration++;cancelAnimationFrame(frame);controls.removeEventListener('change',cameraChanged);document.removeEventListener('visibilitychange',onVisibility);grid.geometry.dispose();grid.material.dispose();faceGrid.geometry.dispose();faceGrid.material.dispose();observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);cleanGhost();scene.traverse(o=>{if(o.geometry&&o!==floor)o.geometry.dispose();});floor.geometry.dispose();floor.material.dispose();renderer.dispose();stoneMaterial.dispose();renderer.domElement.remove();}
  };
 }

@@ -21,7 +21,7 @@
 .towerGame .towerIconAction:active:not(:disabled){transform:scale(.95);background:var(--accent-soft)}
 /* Back belongs to the shared header, wallet and screen actions to the game. */
 .towerQuickActions{position:absolute;z-index:11;top:calc(var(--safe-top,0px) + 9px);right:var(--tower-right);display:flex;align-items:center;gap:7px}
-.towerCamera{position:absolute;z-index:10;bottom:calc(var(--tower-bottom) + 59px);left:var(--tower-left)}
+.towerCamera{position:absolute;z-index:10;bottom:calc(var(--tower-bottom) + 59px);left:var(--tower-left);display:flex;flex-direction:column;gap:7px}
 .towerGame:is([data-mode="placing"],[data-mode="saving-place"],[data-mode="roof"],[data-mode="saving-roof"]) .towerCamera{display:none}
 .towerTekmetIcon{display:block;width:18px;height:18px;flex:none;filter:drop-shadow(0 1px 1px #65401255)}
 .towerTekmetWallet{position:absolute;z-index:12;top:calc(var(--safe-top,0px) + 13px);left:50%;transform:translateX(-50%);height:32px;min-width:74px;max-width:min(140px,28vw);padding:3px 9px;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;overflow:hidden;background:var(--surface-0);border:1px solid #c99f4c;border-radius:999px;box-shadow:var(--shadow-sm);font:750 13px/1 var(--font-body);font-variant-numeric:tabular-nums;pointer-events:none}
@@ -102,3 +102,13 @@
  .towerTekmetWallet{top:calc(var(--safe-top,0px) + 12px)}
 }
 @media(prefers-reduced-motion:reduce){.towerGame *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Explicit batch delete, shared-size touch controls and unobstructed construction view. */
+.towerGame [data-delete-mode][aria-pressed="true"]{background:#fff0e5;border-color:#d17c40;color:#944113}
+.towerCanvas[data-delete-active="true"] canvas{cursor:crosshair}
+.towerBatchRemoveBar{position:absolute;z-index:11;bottom:var(--tower-bottom);left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;max-width:calc(100% - 20px);padding:0 4px}
+.towerBatchCount{display:flex;align-items:center;gap:4px;min-height:42px;padding:0 9px;border:1px solid var(--line);border-radius:11px;background:var(--surface-0);box-shadow:var(--shadow-sm);white-space:nowrap;font:700 12px/1 var(--font-body)}
+.towerBatchCount output{font-variant-numeric:tabular-nums}
+.towerBatchRemoveBar [data-batch-confirm]{color:#a94221;border-color:#c57b49;background:#fff0e5}
+.towerGame[data-mode="saving-batch-remove"] .towerBatchRemoveBar{opacity:.6;pointer-events:none}
+.towerGame[data-mode="multi-remove"] [data-hammer],.towerGame[data-mode="saving-batch-remove"] [data-hammer]{display:none!important}
