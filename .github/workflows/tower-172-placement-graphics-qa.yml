@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/tower-172-placement-graphics-qa.yml'
       - 'release.json'
+      - 'scripts/qa/browser-tower-172-placement-graphics.cjs'
+      - 'tests/fixtures/tower-172-placement-graphics.html'
       - 'packages/tower-game/prefab-placement-face.mjs'
       - 'packages/tower-game/roof-cover.mjs'
       - 'src/features/tower/kunlum-stone-facing.js'
@@ -43,3 +45,16 @@ jobs:
           fi
           git commit -m 'chore(release): synchronize AlanTil 17.2.72 across web, service worker and mobile'
           git push origin HEAD:17.2
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Install Playwright
+        run: npm install --no-save --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify native 1K maps and mobile placement controls
+        run: node scripts/qa/browser-tower-172-placement-graphics.cjs

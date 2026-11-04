@@ -1,0 +1,9 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/src/shared/styles/app.css"><link rel="stylesheet" href="/src/features/tower/tower.css"><style>html,body,#qa-root{margin:0;width:100%;height:100%;overflow:hidden}</style></head><body><div id="qa-root"></div><script type="module">
+try{
+ const {setAuthState}=await import('/src/shared/auth/auth-store.js?v=16.8.0.3');
+ setAuthState({ready:true,user:{id:'dfcf124e-735b-4caa-81d2-99eb5f02218d'}});
+ const {mount}=await import('/src/features/tower/index.js');
+ await mount({root:document.getElementById('qa-root'),shell:{appShell:document.body,setHeaderContent(){}},modal:{async confirm(){return false}}},{});
+ document.body.dataset.ready='true';
+}catch(error){document.body.dataset.ready='error';document.body.dataset.error=String(error.stack||error);console.error(error);}
+</script></body></html>
