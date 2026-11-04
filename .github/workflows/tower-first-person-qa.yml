@@ -1,4 +1,4 @@
-name: Tower first-person walking and continuous elevation QA
+name: Tower 17.2 — construction orbit and mobile placement QA
 on:
   push:
     branches: ['17.2']

@@ -49,8 +49,10 @@ const dir=path.join(process.cwd(),'kunlum-editors-browser-qa');fs.mkdirSync(dir,
     canvas:!!document.querySelector('#view canvas')}));
    if(!threeD.parcel||!threeD.canvas||errors.length)
     throw Error(mode+' 3D editor inconsistent: '+JSON.stringify({threeD,errors}));
-   await page.waitForFunction(()=>Number(document.querySelector('#view')?.dataset.common100StoneCount)>0,
+   await page.waitForFunction(()=>Number(document.querySelector('#view')?.dataset.kunlumWallSegments)>0,
     null,{timeout:80000});
+   if(Number(await page.locator('#view').getAttribute('data-kunlum-wall-segments'))<602)
+    throw Error(mode+' 3D wall intervals missing');
    await page.screenshot({timeout:90000,animations:'disabled',path:path.join(dir,mode+'-3d.png')});
    output.push({mode,twoD,threeD,errors});
    await context.close();

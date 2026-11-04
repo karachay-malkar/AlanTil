@@ -5,7 +5,9 @@
 <link rel="stylesheet" href="../../src/features/tower/tower.css">
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#b3c9d9}#qa-root{height:100dvh}</style>
 </head><body><div id="qa-root"></div><script type="module">
+import {setAuthState} from '../../src/shared/auth/auth-store.js?v=16.8.0.3';
 import {mount,unmount} from '../../src/features/tower/index.js';
+setAuthState({ready:true,user:{id:'dfcf124e-735b-4caa-81d2-99eb5f02218d'}});
 const root=document.getElementById('qa-root');
 try{
  await mount({

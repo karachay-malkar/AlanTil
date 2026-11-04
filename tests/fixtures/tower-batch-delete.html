@@ -19,7 +19,9 @@ window.qaRemove=async function({revision,id,sectionIds}){
 };
 </script>
 <script type="module">
+import {setAuthState} from '../../src/shared/auth/auth-store.js?v=16.8.0.3';
 import {mount,unmount} from '../../src/features/tower/index.js';
+setAuthState({ready:true,user:{id:'dfcf124e-735b-4caa-81d2-99eb5f02218d'}});
 try{
  await mount({root:document.getElementById('qa-root'),shell:{appShell:document.body,setHeaderContent(){}},modal:{
   async confirm(options){window.qaLastConfirmation=options;return window.qaConfirm;}

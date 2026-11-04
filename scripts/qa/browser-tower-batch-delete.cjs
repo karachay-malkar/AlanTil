@@ -13,7 +13,7 @@ const ids=Array.from({length:4},(_,i)=>'00000000-0000-4000-8000-'+String(i+1).pa
   const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.route('**/src/features/tower/repository.js*',route=>route.fulfill({status:200,contentType:'text/javascript',body:`
-  export const towerUserId=()=> '00000000-0000-4000-8000-999999999999';
+  export const towerUserId=()=> 'dfcf124e-735b-4caa-81d2-99eb5f02218d';
   export const loadTowerV3=async()=>({format:3,revision:window.qaRevision,elements:window.qaBlocks,resetAt:null,tekmetBalance:0});
   export const loadTowerRoofs=async()=>({roofs:[],balance:0});
   export const removeTowerV3Sections=async options=>window.qaRemove(options);
@@ -23,7 +23,7 @@ const ids=Array.from({length:4},(_,i)=>'00000000-0000-4000-8000-'+String(i+1).pa
   export const placeTowerRoof=async()=>{throw Error('not exercised')};
   export const removeTowerRoof=async()=>{throw Error('not exercised')};
   `}));
-  await page.route('**/src/features/tower/prefab-scene.js?v=17.2.70',route=>route.fulfill({status:200,contentType:'text/javascript',body:`
+  await page.route(/\\/src\\/features\\/tower\\/prefab-scene\\.js\\?v=/,route=>route.fulfill({status:200,contentType:'text/javascript',body:`
   import {createTowerScene as real} from './prefab-scene.js?batch-delete-qa-original';
   export async function createTowerScene(container,callbacks){
    window.qaSelectBlock=callbacks.onSelection;
