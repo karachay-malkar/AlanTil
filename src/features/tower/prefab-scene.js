@@ -107,7 +107,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(!disposed){
     stoneMaterial.copy(loaded);
     stoneMaterial.needsUpdate=true;
-    container.dataset.stoneTextureEncoding=loaded.name.endsWith('KTX2')?'ktx2':'png';
+    container.dataset.stoneTextureEncoding=loaded.name.endsWith('KTX2')?'ktx2':loaded.name.endsWith('PNG-1K')?'png-1k':'png';
     scheduleDraw();
    }
    return loaded;
