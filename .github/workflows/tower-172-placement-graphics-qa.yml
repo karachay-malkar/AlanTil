@@ -43,7 +43,8 @@ jobs:
             echo 'Release already synchronized'
             exit 0
           fi
-          git commit -m 'chore(release): synchronize AlanTil 17.2.72 across web, service worker and mobile'
+          VERSION="$(node -p "require('./release.json').version")"
+          git commit -m "chore(release): synchronize AlanTil $VERSION across web, service worker and mobile"
           git push origin HEAD:17.2
   browser:
     runs-on: ubuntu-24.04
