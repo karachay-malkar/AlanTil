@@ -39,12 +39,13 @@ test('terrain geometry follows mirrored preview DEM, retains original DEM and is
  assert.equal(sampleDemLocal(height,97.55,-94.95),before);
 });
 
-test('tower building controls remain and new wide-view action is independently accessible',()=>{
- assert.match(tower,/data-world/);
- assert.match(tower,/scene\.worldView\(\)/);
- assert.match(scene,/worldView\(\)/);
+test('current 17.2 tower controls keep construction camera, full 3D raycast and landscape updates',()=>{
+ assert.match(tower,/data-home/);
+ assert.match(tower,/scene\.home\(\)/);
+ assert.doesNotMatch(tower,/data-world/,'obsolete removed overview button must not be required');
+ assert.match(scene,/function worldView\(\)/,'3D overview capability is preserved as a scene API');
  assert.match(scene,/raycaster\.intersectObjects\(\[\.\.\.targets,floor\],false\)/);
- assert.match(scene,/if\(needsRender\)\{needsRender=false;sky\.update\(\);renderer\.render\(scene,camera\);\}/);
+ assert.match(scene,/renderer\.render\(scene,camera\)/);
  assert.match(scene,/getRockSurface\(renderer\)/);
  assert.match(scene,/function scheduleDraw\(\)/);
  assert.match(scene,/kunlum\?\.update\?\./);

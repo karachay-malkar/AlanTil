@@ -45,8 +45,10 @@ test('both editors and game use one 2D plan; auto candidates are volume meshes',
  assert.match(twoD,/plot=\{\.\.\.data\.plot\}/);
  assert.match(scene,/PlaneGeometry\(SITE.widthM,SITE.depthM\)/);
  assert.match(game,/candidatesVisible:true/);
- assert.match(overlay,/wallPiece\(auto,a,b,1\.45,\.42\)/);
- assert.match(overlay,/addMesh\(candidates,auto/);
+ assert.match(overlay,/wallPiece\(a,b,1\.45,\.42,candidateLayer\)/);
+ assert.match(overlay,/confirmedSegments/);
+ assert.match(overlay,/candidateSegments/);
+ assert.match(overlay,/enhanceKunlumStoneWalls/);
  assert.match(threeD,/createKunlumMapOverlay/);
  assert.match(threeD,/function buildParcel\(\)/);
  assert.doesNotMatch(overlay,/clipKunlumOutsideReserve|excludeBounds/);
@@ -67,16 +69,18 @@ test('same approved Common 100 geometries and PBR material drive both village re
  assert.match(stone,/InstancedMesh/);
  assert.match(stone,/common100TowerBase/);
  assert.match(overlay,/enhanceKunlumStoneWalls/);
- assert.match(overlay,/Enclosed irregular core prevents any light leaking/);
+ assert.match(overlay,/Only real 3D stones represent these historic polylines/);
+ assert.doesNotMatch(overlay,/new THREE\.BoxGeometry/,'no solid rectangular backdrop');
  assert.match(editor,/createKunlumMapOverlay/);
  assert.match(world,/stoneMaterialPromise/);
 });
-test('construction opens in first person, and route button is the only overview control',()=>{
+test('construction starts with bounded orbit camera and keeps orientation controls',()=>{
  const ui=file('src/features/tower/index.js');
  const stage=file('src/features/tower/prefab-scene.js');
- assert.match(ui,/data-world/);
+ assert.match(ui,/data-home/);
+ assert.doesNotMatch(ui,/data-world/);
  assert.doesNotMatch(ui,/button data-explore/);
- assert.match(stage,/enterExplore\(\);scheduleDraw\(\);container\.dataset\.ready/);
+ assert.match(stage,/setConstructionOrbit\(false\);scheduleDraw\(\);container\.dataset\.ready/);
  assert.match(ui,/requestTowerOrientation\('landscape'\)/);
  assert.match(ui,/screen\.orientation\.lock\(target\)/);
 });

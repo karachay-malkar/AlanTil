@@ -149,6 +149,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,
+   // Logical wall intervals are retained so gaps can be regression-tested
+   // independently of lazy GPU geometry and without adding opaque filler.
+   segments:{confirmed:confirmedSegments,candidates:candidateSegments},
   update(camera){root.userData.ruinLodController?.update(camera);},
   setVisibility({confirmedVisible=true,candidatesVisible=true,passagesVisible=true}={}){
    confirmed.visible=confirmedVisible;candidates.visible=candidatesVisible;passages.visible=passagesVisible;

@@ -256,5 +256,5 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  }
  root.userData.common100StoneCount=total+actual;
  root.userData.common100WallSegments=chunks.reduce((n,c)=>n+c.segments.length,0);
- return {stones:total+actual,models:models.map(x=>x.name),update,dispose};
+ return {stones:total+actual,segments:root.userData.ruinFarSegments,models:models.map(x=>x.name),update,dispose};
 }

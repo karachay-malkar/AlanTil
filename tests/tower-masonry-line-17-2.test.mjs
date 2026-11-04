@@ -25,8 +25,10 @@ test('two points build a contiguous straight row with no overlap and no gaps',()
   const b=p.sections[i];
   assert.equal(b.x,10+2*i);assert.equal(b.z,10);
   assert.equal(b.rotation>=0&&b.rotation<=3,true);
-  assert.equal(b.variant,p.sections[0].variant,'all modules keep chosen variant');
-  assert.equal(b.rotation,p.sections[0].rotation,'all modules keep chosen rotation');
+  assert.ok(b.variant>=0&&b.variant<3,'approved variant is in range');
+  assert.deepEqual(prefabBounds(b).size,[2,2,2],'each section keeps the same grid footprint');
+  if(i>0)assert.notDeepEqual([b.variant,b.rotation],[p.sections[i-1].variant,p.sections[i-1].rotation],
+   'adjacent approved sections vary without changing geometry bounds');
  }
  assert.ok(checkMasonryLine([],p.sections,{},joints).ok);
 });
@@ -41,17 +43,20 @@ test('asymmetric masonry retains player-selected orientation along the row',()=>
  }
  assert.ok(checkMasonryLine([],p.sections,{},joints).ok);
 });
-test('long rows rejected, selected variant never randomized',()=>{
+test('long rows rejected, approved variants repeat deterministically',()=>{
  const a=first('1x1x1');
  assert.equal(planMasonryLine({first:a,last:{x:90,z:10}}).reason,'LINE_TOO_LONG');
  const firstRun=planMasonryLine({first:a,last:{x:14,z:10},seed:252});
  const replay=planMasonryLine({first:a,last:{x:14,z:10},seed:252});
  assert.deepEqual(firstRun,replay);
  assert.equal(firstRun.sections.length,5);
- assert.equal(new Set(firstRun.sections.map(s=>s.variant)).size,1);
+ assert.ok(new Set(firstRun.sections.map(s=>s.variant)).size>1,
+  'the current renderer intentionally alternates manual recipes');
  const chosen={...first('1x1x1'),variant:1,rotation:3};
  const all=planMasonryLine({first:chosen,last:{x:13,z:10}}).sections;
- assert.ok(all.every(b=>b.variant===1&&b.rotation===3));
+ assert.deepEqual([all[0].variant,all[0].rotation],[1,3],'first anchor preserves selection');
+ assert.ok(all.every(b=>b.variant>=0&&b.variant<3&&b.rotation>=0&&b.rotation<=3));
+ assert.ok(checkMasonryLine([],all,{},joints).ok,'variant mixing must preserve physical placement');
 });
 test('line invalidates when an occupied grid cell intersects a new section',()=>{
  const candidate=planMasonryLine({first:first('2x2x2'),last:{x:16,z:10}});

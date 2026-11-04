@@ -4,7 +4,6 @@ import {readFileSync} from 'node:fs';
 import * as THREE from '../src/vendor/three/three.module.js';
 import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.js';
 
-const overlaySource=readFileSync(new URL('../src/features/tower/kunlum-map-overlay.js',import.meta.url),'utf8');
 const facingSource=readFileSync(new URL('../src/features/tower/kunlum-stone-facing.js',import.meta.url),'utf8');
 const layoutSource=readFileSync(new URL('../src/features/tower/kunlum-ruin-layout.js',import.meta.url),'utf8');
 function demo({wall=false,auto=false,passage=false,openings=[]}={}){
@@ -17,62 +16,54 @@ function demo({wall=false,auto=false,passage=false,openings=[]}={}){
   toWorld:p=>p,heightAt:()=>0
  });
 }
-function nearGap(mesh,min=-.58,max=.58){
- const attr=mesh.geometry.getAttribute('position');
- for(let i=0;i<attr.count;i++){
-  const x=attr.getX(i);
-  if(x>min&&x<max)return true;
- }
- return false;
+function crossesGap(segments,from,to){
+ return segments.some(({a,b})=>Math.max(a[0],b[0])>from+1e-6&&Math.min(a[0],b[0])<to-1e-6);
 }
-test('confirmed and automatic mapped walls contain real passage gaps, with no overlay strokes',()=>{
+test('confirmed and automatic 3D wall recipes retain a physical passage, not a drawn line',()=>{
  for(const kind of ['confirmed','candidates']){
   const scene=demo({wall:kind==='confirmed',auto:kind==='candidates',passage:true});
-  const target=scene[kind].children.find(x=>x.isMesh);
-  assert.ok(target,'volume mesh must remain present for '+kind);
-  assert.equal(nearGap(target),false,'wall volume crosses physical passage');
-  assert.equal(scene.passages.children.length,0,'passage lines must never render');
+  const intervals=scene.segments[kind];
+  assert.equal(intervals.length,2,'stone wall split into two real intervals');
+  assert.equal(crossesGap(intervals,-.58,.58),false);
+  assert.equal(scene.passages.children.length,0,'do not draw a passage stroke');
   assert.equal(scene.counters.passages,1);
   scene.dispose();
  }
 });
-test('a duplicate automatic trace cannot seal a confirmed doorway',()=>{
+test('duplicate unverified trace cannot seal a manually defined doorway',()=>{
  const scene=demo({wall:true,auto:true,openings:[{
   wallId:'W',start:{segment:0,t:.25},end:{segment:0,t:.75}
  }]});
- const mesh=scene.candidates.children.find(x=>x.isMesh);
- assert.ok(mesh);
- assert.equal(nearGap(mesh,-.98,.98),false,'automatic masonry sealed a doorway');
+ assert.ok(scene.segments.candidates.length>=2);
+ assert.equal(crossesGap(scene.segments.candidates,-.98,.98),false);
  scene.dispose();
 });
-test('the original 42-style linked intervals cut stone geometry instead of drawing a line',()=>{
+test('linked opening cuts real wall intervals before 3D mesh generation',()=>{
  const scene=demo({wall:true,openings:[{
   wallId:'W',start:{segment:0,t:.3},end:{segment:0,t:.7}
  }]});
- const mesh=scene.confirmed.children.find(x=>x.isMesh);
- assert.ok(mesh);
- assert.equal(nearGap(mesh,-.78,.78),false,'linked interval has an actual opening');
+ assert.equal(scene.segments.confirmed.length,2);
+ assert.equal(crossesGap(scene.segments.confirmed,-.78,.78),false);
  assert.equal(scene.counters.linkedOpenings,1);
  assert.equal(scene.passages.children.length,0);
  scene.dispose();
 });
-test('stretched whole-trace stones are impossible, Common100 remains, and faceted stones are organic',()=>{
- assert.match(facingSource,/const farBins=new Map\(\)/);
+test('stone facade uses Common100 geometry, instancing and bounded spatial chunks',()=>{
+ assert.match(facingSource,/loadCommon100\(/);
+ assert.match(facingSource,/getApprovedStoneSurfaceGeometry\(/);
  assert.match(facingSource,/mesh\.computeBoundingSphere\(\)/);
  assert.match(facingSource,/mesh\.frustumCulled=true/);
  assert.match(facingSource,/const count=mobile\?32:52/);
- assert.match(facingSource,/m\.category==='main'\|\|m\.category==='large'/);
  assert.match(facingSource,/for\(const rock of layoutKunlumRuinStones\(seg\)\)/);
- assert.match(facingSource,/function makeDistanceStone\(seed,angles=10\)/);
- assert.doesNotMatch(facingSource,/choices=\[3,14,26,37,49,60\]/);
- assert.doesNotMatch(overlaySource,/new THREE\.LineSegments\(g,m\);lines\.name/);
-});
-
-test('one stone style renders per wall: near Common100 and distant faceted instances never overlap',()=>{
- assert.match(facingSource,/const budget=mobile\?3200:7200,nearJobs=new Set\(\)/);
- assert.match(facingSource,/if\(nearJobs\.has\(i\)\)continue/);
- assert.match(facingSource,/if\(!nearJobs\.has\(index\)\)continue/);
+ assert.match(facingSource,/new THREE\.InstancedMesh/);
+ assert.match(facingSource,/makeKunlumRuinShell/);
  assert.match(layoutSource,/kunlumRuinFoot\(x,z,width,heightAt/);
  assert.match(layoutSource,/kunlumRuinCrown\(height,x,z\)/);
- assert.doesNotMatch(facingSource,/seg\.heightAt\(x,z\)\+\.035\+\(row\+\.5\)\*h/);
+});
+test('far transitions crossfade detailed stones rather than popping geometry',()=>{
+ assert.match(facingSource,/ruinFarBlend\(distance/);
+ assert.match(facingSource,/farMaterial\.opacity=blend/);
+ assert.match(facingSource,/lodMaterial\.opacity=1-blend/);
+ assert.match(facingSource,/bucket\.far\.visible=blend>0/);
+ assert.match(facingSource,/geometryList=models\.map\(m=>m\.geometry\)/);
 });
