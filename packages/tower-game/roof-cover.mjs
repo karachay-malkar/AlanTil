@@ -1,6 +1,6 @@
 /** Roof mask in 25-cm CELL-CENTRE coordinates. Mirrors private.tower_roof_cells. */
 export const ROOF_CELL=0.25;
-export const ROOF_PRICE_PER_CELL=2;
+export const ROOF_PRICE_PER_CELL=1;
 export const ROOF_MODEL_VERSION='17.2-tekmet.1';
 export const ROOF_GRID_X=60,ROOF_GRID_Z=120;
 const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);

@@ -4,17 +4,17 @@ import {readFileSync} from 'node:fs';
 import {roofCoverCells,roofPrice,validRoofPoints,checkRoofPlacement,ROOF_PRICE_PER_CELL} from '../packages/tower-game/roof-cover.mjs';
 
 const roof=[[4,7],[7,7],[7,9],[4,9]];
-test('one tapped CELL CENTRE costs two Tekmets',()=>{
+test('one tapped CELL CENTRE costs one Tekmet',()=>{
  assert.deepEqual(roofCoverCells([[4,7]]),[[4,7]]);
- assert.equal(roofPrice([[4,7]]),2);
- assert.equal(ROOF_PRICE_PER_CELL,2);
+ assert.equal(roofPrice([[4,7]]),1);
+ assert.equal(ROOF_PRICE_PER_CELL,1);
 });
 test('closed polygon fills a nonrectangular footprint deterministically',()=>{
  assert.equal(roofCoverCells(roof).length,12);
- assert.equal(roofPrice(roof),24);
+ assert.equal(roofPrice(roof),12);
  const l=[[1,1],[6,1],[6,3],[3,3],[3,6],[1,6]];
  assert.equal(roofCoverCells(l).length,27);
- assert.equal(roofPrice(l),54);
+ assert.equal(roofPrice(l),27);
  assert.equal(new Set(roofCoverCells(l).map(c=>c.join(','))).size,27);
  assert.deepEqual(roofCoverCells(l),roofCoverCells(l));
 });

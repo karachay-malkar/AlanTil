@@ -21,6 +21,7 @@ import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/t
 import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
 import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.71';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
+import {resolvePrefabHitFace} from '../../../packages/tower-game/prefab-placement-face.mjs';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
 const pixelLimit=()=>matchMedia('(max-width:749px), (max-height:520px)').matches?1.25:1.6;
 const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
@@ -51,8 +52,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  camera.position.set(32,15,-23);
  const sky=createKunlumAutumnSky(THREE,scene,camera);
  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(SITE.centerX,.5,SITE.centerZ);controls.enableDamping=true;controls.dampingFactor=.095;controls.minDistance=1.5;controls.maxDistance=85;controls.maxPolarAngle=Math.PI*.48;controls.minPolarAngle=.12;controls.enablePan=false;controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;controls.update();
- scene.add(new THREE.HemisphereLight(KUNLUM_AUTUMN.skyLight,KUNLUM_AUTUMN.groundLight,1.7));
- const sunlight=new THREE.DirectionalLight(KUNLUM_AUTUMN.sun,2.6);
+ scene.add(new THREE.HemisphereLight(KUNLUM_AUTUMN.skyLight,KUNLUM_AUTUMN.groundLight,1.5));
+ const sunlight=new THREE.DirectionalLight(KUNLUM_AUTUMN.sun,2.55);
  sunlight.position.set(-20,19,12);scene.add(sunlight);
  const surface=new THREE.Group();scene.add(surface);
  const roofCoverRenderer=createRoofCoverRenderer(THREE,scene,scheduleDraw);
@@ -553,16 +554,17 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   for(const hit of hits){
    const b=hit.object.userData.block||null;
    if(layer!==null&&hit.point.y>(layer+1)*CELL+.001)continue;
-   const n=hit.face?.normal?.clone()||new THREE.Vector3(0,1,0);
+   const fallback=hit.face?.normal?.clone()||new THREE.Vector3(0,1,0);
    if(b){
     if(hit.object.isInstancedMesh&&hit.instanceId!==undefined){
      const instance=new THREE.Matrix4();hit.object.getMatrixAt(hit.instanceId,instance);
      const combined=new THREE.Matrix4().multiplyMatrices(hit.object.matrixWorld,instance);
-     n.applyMatrix3(new THREE.Matrix3().getNormalMatrix(combined)).normalize();
-    }else n.transformDirection(hit.object.matrixWorld);
-    let axis=0;for(let i=1;i<3;i++)if(Math.abs(n.getComponent(i))>Math.abs(n.getComponent(axis)))axis=i;
-    const dir=Math.sign(n.getComponent(axis))||1;n.set(axis===0?dir:0,axis===1?dir:0,axis===2?dir:0);
-   }else n.set(0,1,0);
+     fallback.applyMatrix3(new THREE.Matrix3().getNormalMatrix(combined)).normalize();
+    }else fallback.transformDirection(hit.object.matrixWorld);
+   }else fallback.set(0,1,0);
+   const n=b&&b.type==='masonry_section'
+    ?resolvePrefabHitFace(prefabBounds(b),raycaster.ray.origin.toArray(),raycaster.ray.direction.toArray(),hit.point.toArray(),{x:fallback.x,y:fallback.y,z:fallback.z})
+    :{x:fallback.x,y:fallback.y,z:fallback.z};
    return{block:b,normal:{x:n.x,y:n.y,z:n.z},position:hit.point.toArray()};
   }
   return null;

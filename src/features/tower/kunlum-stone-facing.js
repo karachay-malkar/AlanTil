@@ -7,7 +7,7 @@ import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.71';
 import {makeKunlumRuinShell} from './kunlum-ruin-shell.js?v=17.2.71';
-import {groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier} from './kunlum-ruin-lod.mjs?v=17.2.71';
+import {groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier,ruinFarBlend} from './kunlum-ruin-lod.mjs?v=17.2.71';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const usable=(geom)=>{
@@ -66,16 +66,15 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const chunks=groupRuinSegments(groups.flatMap((entry,layer)=>
   entry.segments.map(seg=>({seg,layer}))));
  const sharedGeometries=[];
- const distantGeometries=Array.from({length:mobile?10:12},
-  (_,i)=>makeDistanceStone(i+1,mobile?8:10));
- sharedGeometries.push(...distantGeometries);
+ // Medium LOD reuses real Common100 stones; no faceted substitute.
  const makeBucket=(c)=>{
   const group=new THREE.Group();
   group.name='Kunlum ruin chunk '+c.key;
   const far=new THREE.Group();far.name='Merged exterior stone LOD';
   const geometry=makeKunlumRuinShell(THREE,c.segments);
   if(geometry){
-   const mesh=new THREE.Mesh(geometry,material);
+   const mesh=new THREE.Mesh(geometry,material.clone());
+   mesh.material.transparent=true;mesh.material.depthWrite=false;
    mesh.name='Externally visible ruin stone facets';
    mesh.frustumCulled=true;
    far.add(mesh);sharedGeometries.push(geometry);
@@ -111,9 +110,9 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const dummy=new THREE.Object3D(),shade=new THREE.Color();
  const installedMeshes=new Set();
  function createDetail(bucket,near){
-  const geometryList=near?models.map(m=>m.geometry):distantGeometries;
+  const geometryList=models.map(m=>m.geometry);
   const bins=geometryList.map(()=>[]);
-  const colorBins=geometryList.map(()=>[]);
+  // Both near and medium share identical exterior stone shapes.
   for(const seg of bucket.segments){
    const dx=seg.b[0]-seg.a[0],dz=seg.b[1]-seg.a[1],length=Math.hypot(dx,dz);
    if(length<.01)continue;
@@ -123,35 +122,33 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
     // Near LOD preserves all original irregular Common100 stone geometry.
     for(const layerDepth of (near?[-1,0,1]:[-1,1])){
      const k=(rock.kind+(layerDepth+1)*7)%geometryList.length;
-     const offset=layerDepth*seg.width*(near?.32:.29);
+     const offset=layerDepth*seg.width*.32;
      dummy.position.set(rock.x+nx*offset,rock.y-(layerDepth===0?.012:0),
                         rock.z+nz*offset);
      dummy.rotation.set(rock.tilt,yaw+(layerDepth<0?Math.PI:0),rock.lean);
-     if(near){
-      const m=models[k];
-      dummy.scale.set(rock.width/m.size.x,rock.height/m.size.y,
-                      (seg.width*.63)/m.size.z);
-     }else{
-      dummy.scale.set(rock.width,rock.height,seg.width*.74);
-     }
+     const m=models[k];
+     dummy.scale.set(rock.width/m.size.x,rock.height/m.size.y,
+                     (seg.width*.63)/m.size.z);
      dummy.updateMatrix();
      bins[k].push(dummy.matrix.clone());
-     if(!near)colorBins[k].push(.90+.10*hash(k,bins[k].length,bucket.layer));
+
     }
    }
   }
   const group=new THREE.Group();
-  group.name=near?'Near Common100 stones':'Medium faceted stones';
+  const groupMaterial=material.clone();groupMaterial.transparent=true;groupMaterial.depthWrite=false;
+  group.name=near?'Near Common100 stones':'Medium Common100 exterior stones';
+  group.userData.lodMaterial=groupMaterial;
   for(let k=0;k<bins.length;k++){
    if(!bins[k].length)continue;
-   const mesh=new THREE.InstancedMesh(geometryList[k],material,bins[k].length);
-   mesh.name=(near?'Common100':'Medium')+' ruin stone '+k;
+   const mesh=new THREE.InstancedMesh(geometryList[k],groupMaterial,bins[k].length);
+   mesh.name=(near?'Common100':'Medium Common100')+' ruin stone '+k;
    bins[k].forEach((matrix,i)=>{
     mesh.setMatrixAt(i,matrix);
-    if(!near){shade.setScalar(colorBins[k][i]);mesh.setColorAt(i,shade);}
+
    });
    mesh.instanceMatrix.needsUpdate=true;
-   if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+
    mesh.computeBoundingSphere();mesh.frustumCulled=true;
    group.add(mesh);installedMeshes.add(mesh);
   }
@@ -164,6 +161,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   group.traverse(node=>{
    if(node.isInstancedMesh){installedMeshes.delete(node);node.dispose();}
   });
+  group.userData.lodMaterial?.dispose();
   bucket[kind]=null;
  }
  let lastUpdate=-Infinity,created=0;
@@ -188,14 +186,18 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
     bucket.medium=createDetail(bucket,false);available--;created++;
    }
    // Distant groups release geometry buffers, not the shared source meshes.
-   if(distance>140){disposeDetail(bucket,'near');disposeDetail(bucket,'medium');}
-   else if(distance>40)disposeDetail(bucket,'near');
+   if(distance>210){disposeDetail(bucket,'near');disposeDetail(bucket,'medium');}
+   else if(distance>48)disposeDetail(bucket,'near');
    bucket.tier=tier;
    const showNear=tier==='near'&&!!bucket.near;
-   const showMedium=!showNear&&tier!=='far'&&!!bucket.medium;
-   bucket.far.visible=!showNear&&!showMedium;
-   if(bucket.near)bucket.near.visible=showNear;
-   if(bucket.medium)bucket.medium.visible=showMedium;
+   const detail=showNear?bucket.near:bucket.medium||bucket.near;
+   const blend=detail?ruinFarBlend(distance,{mobile}):1;
+   const showDetail=!!detail&&blend<1;
+   bucket.far.visible=blend>0||!showDetail;
+   const farMaterial=bucket.far.children[0]?.material;
+   if(farMaterial)farMaterial.opacity=blend;
+   if(bucket.near){bucket.near.visible=showDetail&&detail===bucket.near;bucket.near.userData.lodMaterial.opacity=1-blend;}
+   if(bucket.medium){bucket.medium.visible=showDetail&&detail===bucket.medium;bucket.medium.userData.lodMaterial.opacity=1-blend;}
    if(distance<110)active++;
   }
   root.userData.ruinLOD={chunks:buckets.length,near:buckets.filter(c=>c.near?.visible).length,

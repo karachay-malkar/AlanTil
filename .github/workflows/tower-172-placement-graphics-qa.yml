@@ -1,0 +1,45 @@
+name: Tower 17.2 — placement, roofing and LOD QA
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - '.github/workflows/tower-172-placement-graphics-qa.yml'
+      - 'release.json'
+      - 'packages/tower-game/prefab-placement-face.mjs'
+      - 'packages/tower-game/roof-cover.mjs'
+      - 'src/features/tower/kunlum-stone-facing.js'
+      - 'src/features/tower/rock-surface.js'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-and-sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Synchronize release files
+        run: node scripts/release/sync-version.mjs
+      - name: Verify syntax and focused regression tests
+        run: |
+          node --check src/features/tower/index.js
+          node --check src/features/tower/prefab-scene.js
+          node --check src/features/tower/kunlum-stone-facing.js
+          node --check src/features/tower/rock-surface.js
+          node --check packages/tower-game/prefab-placement-face.mjs
+          node --test tests/tower-placement-face-172.test.mjs tests/tower-roof-cover-17-2.test.mjs tests/kunlum-ruin-lod.test.mjs tests/tower-prefab-placement-17-4.test.mjs
+          node scripts/release/sync-version.mjs --check
+      - name: Commit synchronized release to branch 17.2
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u
+          if git diff --cached --quiet; then
+            echo 'Release already synchronized'
+            exit 0
+          fi
+          git commit -m 'chore(release): synchronize AlanTil 17.2.72 across web, service worker and mobile'
+          git push origin HEAD:17.2

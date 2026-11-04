@@ -35,9 +35,15 @@ export function ruinChunkDistance(camera,bounds){
 }
 /** Four-metre hysteresis avoids flickering while crossing a tier boundary. */
 export function selectKunlumRuinTier(distance,previous=null,{mobile=false}={}){
- const near=mobile?18:20,far=mobile?75:80,margin=4;
+ const near=mobile?18:20,far=mobile?125:135,margin=4;
  if(previous==='near'&&distance<near+margin)return 'near';
  if(previous==='medium'&&distance>=near-margin&&distance<far+margin)return 'medium';
  if(previous==='far'&&distance>=far-margin)return 'far';
  return distance<near?'near':distance<far?'medium':'far';
+}
+
+/** Smooth blend of detailed stone silhouettes and simplified distant shell. */
+export function ruinFarBlend(distance,{mobile=false}={}){
+ const start=mobile?115:125,end=mobile?145:155;
+ return Math.max(0,Math.min(1,(distance-start)/(end-start)));
 }

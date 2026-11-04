@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {RUIN_CHUNK_SIZE,ruinChunkKey,groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier} from '../src/features/tower/kunlum-ruin-lod.mjs';
+import {RUIN_CHUNK_SIZE,ruinChunkKey,groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier,ruinFarBlend} from '../src/features/tower/kunlum-ruin-lod.mjs';
 
 test('ruin chunks preserve every historic segment and spatial order',()=>{
  const items=[{layer:0,seg:{a:[1,1],b:[4,1]}},{layer:0,seg:{a:[31,1],b:[35,1]}},{layer:1,seg:{a:[1,1],b:[4,1]}}];
@@ -28,7 +28,14 @@ test('LOD changes with moving camera without oscillation near thresholds',()=>{
  assert.equal(selectKunlumRuinTier(140),'far');
  assert.equal(selectKunlumRuinTier(22,'near'),'near');
  assert.equal(selectKunlumRuinTier(25,'near'),'medium');
- assert.equal(selectKunlumRuinTier(77,'far'),'far');
- assert.equal(selectKunlumRuinTier(74,'far'),'medium');
+ assert.equal(selectKunlumRuinTier(141,'far'),'far');
+ assert.equal(selectKunlumRuinTier(120,'far'),'medium');
  assert.equal(selectKunlumRuinTier(22,null,{mobile:true}),'medium');
+});
+
+test('far transition blends silhouettes smoothly without abrupt tier swaps',()=>{
+ assert.equal(ruinFarBlend(100),0);
+ assert.equal(ruinFarBlend(140),.5);
+ assert.equal(ruinFarBlend(160),1);
+ assert.equal(ruinFarBlend(130,{mobile:true}),.5);
 });

@@ -112,3 +112,10 @@
 .towerBatchRemoveBar [data-batch-confirm]{color:#a94221;border-color:#c57b49;background:#fff0e5}
 .towerGame[data-mode="saving-batch-remove"] .towerBatchRemoveBar{opacity:.6;pointer-events:none}
 .towerGame[data-mode="multi-remove"] [data-hammer],.towerGame[data-mode="saving-batch-remove"] [data-hammer]{display:none!important}
+
+/* Compact 25-cm placement nudges, kept away from the bottom confirmation bar. */
+.towerNudge{position:absolute;z-index:11;right:var(--tower-right);bottom:calc(var(--tower-bottom) + 64px);display:flex;flex-direction:column;align-items:center;gap:3px;touch-action:manipulation}
+.towerNudge>div{display:flex;gap:35px}
+.towerNudge button{display:grid;place-items:center;width:32px;height:32px;min-width:32px;min-height:32px;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--surface-0);color:var(--text-1);box-shadow:var(--shadow-sm);cursor:pointer}
+.towerNudge button .uiIcon{width:18px;height:18px}
+.towerNudge button:active{background:var(--accent-soft)}

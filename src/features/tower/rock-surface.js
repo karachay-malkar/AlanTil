@@ -13,6 +13,16 @@ let materialPromise=null;
 const url=(name,extension)=>root+'BalkariaStone_'+name+'_2K.'+extension+'?v='+ROCK_SURFACE_VERSION;
 
 async function loadRockMaps(renderer){
+ // Every phone receives native 1K PBR maps. The GPU automatically selects
+ // the 512px mip level for distant geometry, without a second network fetch.
+ const mobile=typeof matchMedia==='function'&&matchMedia('(pointer:coarse), (hover:none), (max-width:749px), (max-height:520px)').matches;
+ if(mobile){
+  try{
+   const loader=new THREE.TextureLoader();
+   const maps=await Promise.all(names.map(name=>loader.loadAsync(root+'BalkariaStone_'+name+'_1K.png?v='+ROCK_SURFACE_VERSION)));
+   return {maps,encoding:'PNG-1K'};
+  }catch(error){console.warn('Native 1K stone maps unavailable; falling back to 2K:',error);}
+ }
  // A/B diagnostic for devices that return valid KTX2 textures but render black.
  // ?towerTexture=png uses the identical UV maps; it never changes saved towers.
  if(typeof location!=='undefined' && new URLSearchParams(location.search).get('towerTexture')==='png'){
@@ -49,6 +59,10 @@ export function getRockSurface(renderer){
     tex.wrapS=THREE.RepeatWrapping;
     tex.wrapT=THREE.RepeatWrapping;
     tex.anisotropy=4;
+    if(encoding.startsWith('PNG')){
+     tex.generateMipmaps=true;
+     tex.minFilter=THREE.LinearMipmapLinearFilter;
+    }
     tex.needsUpdate=true;
    }
    return new THREE.MeshStandardMaterial({
@@ -60,7 +74,7 @@ export function getRockSurface(renderer){
     // the packed R channel can be validated across Android GPUs.
     roughnessMap:orm,roughness:1,
     metalness:0,
-    normalScale:new THREE.Vector2(.38,.38),
+    normalScale:new THREE.Vector2(.46,.46),
     side:THREE.DoubleSide
    });
   }).catch(error=>{materialPromise=null;throw error;});

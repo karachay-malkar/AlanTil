@@ -11,7 +11,7 @@ export function tekmetSectionCost(sectionId){
  const beam=/^roof-beam-([1-9]|[1-3][0-9]|40)$/.exec(sectionId);
  return beam?Math.ceil(Number(beam[1])/2):null; // 2 per metre; lengths are 25cm cells.
 }
-export const tekmetRoofCost=cells=>Number.isInteger(cells)&&cells>=0?cells*2:null;
+export const tekmetRoofCost=cells=>Number.isInteger(cells)&&cells>=0?cells:null;
 let coinSerial=0;
 export function tekmetIcon(className=''){
  const gradientId='tekmet-gold-'+(++coinSerial);
