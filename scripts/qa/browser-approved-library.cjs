@@ -49,8 +49,49 @@ const root=path.resolve(__dirname,'../..');
      checks.push({name,variant:v,sourceStones:model.userData.sourceStoneCount,renderMeshes:meshes.length,sourceTriangles:model.userData.optimization.sourceTriangles,renderTriangles:model.userData.optimization.renderTriangles,trimmedTriangles:model.userData.optimization.trimmedTriangles,bounds:{min:bbox.min.toArray(),max:bbox.max.toArray()}});
     }
    }
+   // Actual WebGL draw calls: identical six-stone construction sections,
+   // compared as independent source rocks and consolidated render meshes.
+   const {loadCommon100}=await import('/src/features/masonry/library.js');
+   const {loadManualSection}=await import('/src/features/masonry/manual-sections/registry.mjs');
+   const {getApprovedStoneSurfaceGeometry}=await import('/src/features/tower/rock-surface.js');
+   const library=await loadCommon100();
+   const original=await loadManualSection('manual-1x1x1-v1',library.manifest);
+   const merged=await loader.make('1x1x1',0,material);
+   const performanceChecks=[];
+   for(const count of [25,100,300]){
+    const results={sections:count};
+    for(const mode of ['original','merged']){
+     const benchScene=new T.Scene(),columns=Math.ceil(Math.sqrt(count));
+     benchScene.add(new T.AmbientLight('white',1));
+     for(let i=0;i<count;i++){
+      const instance=mode==='merged'?merged.clone(true):new T.Group();
+      if(mode==='original'){
+       instance.position.y=-original.recipe.cells[1]*.25/2;
+       for(const stone of original.recipe.stones){
+        const mesh=new T.Mesh(getApprovedStoneSurfaceGeometry(library.geometries.get(stone.name),stone.scale),material);
+        mesh.position.fromArray(stone.position);
+        mesh.quaternion.fromArray(stone.quaternion);
+        mesh.scale.fromArray(stone.scale);
+        instance.add(mesh);
+       }
+      }
+      const column=i%columns,row=Math.floor(i/columns),rows=Math.ceil(count/columns);
+      const wrap=new T.Group();
+      wrap.position.set((column-(columns-1)/2)*.6,0,(row-(rows-1)/2)*.6);
+      wrap.add(instance);
+      benchScene.add(wrap);
+     }
+     camera.position.set(0,18,25);camera.lookAt(0,0,0);
+     renderer.render(benchScene,camera);
+     results[mode]={drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};
+    }
+    if(results.original.drawCalls!==count*original.recipe.stones.length||
+       results.merged.drawCalls!==count)
+     throw new Error('WebGL call count mismatch '+JSON.stringify(results));
+    performanceChecks.push(results);
+   }
    renderer.dispose();
-   return {passed:checks.length,checks};
+   return {passed:checks.length,checks,performanceChecks};
   });
   if(result.passed!==11)throw Error('Expected eleven rendered sections');
   if(pageErrors.length||badRequests.length)throw Error(JSON.stringify({pageErrors,badRequests}));
