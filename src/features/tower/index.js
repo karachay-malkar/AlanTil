@@ -1,5 +1,5 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.71';
+import {createTowerScene} from './prefab-scene.js?v=17.2.72';
 import {mayOpenTower} from './access.mjs';
 import {subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.16';
 import {toggleBatchSelection,retainBatchSelection} from './batch-delete-selection.mjs?v=17.2.71';
@@ -15,9 +15,9 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION} from '../../../packages/tower-game/g
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_WOOD_HEIGHT_CELLS,baganaPrefab,baganaType,nextBaganaType,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {APPROVED_PREFAB_VERSION,approvedVariantCount,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
 import {validateSectionJoints,resolvePrefabJoints} from '../../../packages/tower-game/prefab-joints.mjs';
-import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs?v=17.2.71';
+import {planMasonryLine,checkMasonryLine,editMasonryEndpoint,undoMasonryEndpoint} from '../../../packages/tower-game/masonry-line.mjs?v=17.2.72';
 import {towerUserId,loadTowerV3,mutateTowerV3,placeTowerLine,removeTowerV3Sections,clearTowerV3,loadTowerRoofs,placeTowerRoof,removeTowerRoof} from './repository.js?v=17.2.71';
-import {uiIcon} from '../../shared/ui/icons.js?v=17.2.71';
+import {uiIcon} from '../../shared/ui/icons.js?v=17.2.72';
 let active=null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const editable=(s)=>!s.params?.userId||s.params.userId===s.userId;
