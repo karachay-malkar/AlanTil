@@ -13,7 +13,7 @@ function section(...stones){
  }
  return root;
 }
-const faces=geometry=>geometry.getAttribute('position').count/3;
+const faces=geometry=>(geometry.getIndex()?.count||geometry.getAttribute('position').count)/3;
 const compareBox=(before,after)=>{
  for(const axis of ['x','y','z']){
   assert.ok(Math.abs(before.min[axis]-after.min[axis])<1e-5,'min '+axis);
