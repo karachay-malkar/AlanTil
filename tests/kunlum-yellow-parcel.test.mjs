@@ -63,7 +63,8 @@ test('same approved Common 100 geometries and PBR material drive both village re
  const overlay=file('src/features/tower/kunlum-map-overlay.js');
  const editor=file('kunlum-terrace-editor-3d.html');
  const world=file('src/features/tower/kunlum-real-environment.js');
- assert.match(stone,/loadCommon100\(/);
+ assert.match(stone,/loadLibrary=loadCommon100/);
+ assert.match(stone,/await loadLibrary\(\)/);
  assert.match(stone,/getApprovedStoneSurfaceGeometry\(/);
  assert.match(stone,/getRockSurface\(/);
  assert.match(stone,/InstancedMesh/);
