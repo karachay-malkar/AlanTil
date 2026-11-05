@@ -18,14 +18,14 @@ const out=path.join(root,'tower-world-browser-qa');fs.mkdirSync(out,{recursive:t
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.kunlumWorldReady==='true'&&
     document.getElementById('qa-root')?.dataset.mount==='success',null,{timeout:100000});
    await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneSegments)>0&&
-    document.querySelector('.towerCanvas')?.dataset.kunlumRuinEngine==='camera-chunk-lod-v4',null,{timeout:90000});
+    document.querySelector('.towerCanvas')?.dataset.kunlumRuinEngine==='fixed-common100-instances-v1',null,{timeout:90000});
    const data=await page.locator('.towerCanvas').evaluate(el=>({
     confirmed:Number(el.dataset.kunlumConfirmed),river:el.dataset.kunlumRiver,
     segments:Number(el.dataset.kunlumStoneSegments),ruinEngine:el.dataset.kunlumRuinEngine,
-    distantSegments:Number(el.dataset.kunlumRuinFarSegments),
+    stoneCount:Number(el.dataset.kunlumStoneCount),
     wide:el.dataset.kunlumWide,mode:el.dataset.cameraMode
    }));
-   if(data.confirmed!==120||!data.river.includes('186 points')||data.segments<602||data.distantSegments<602)
+   if(data.confirmed!==120||!data.river.includes('186 points')||data.segments<602||data.stoneCount<=data.segments)
     throw Error(device+' lost mapped 3D world '+JSON.stringify(data));
    if(data.mode!=='orbit')throw Error(device+' wrong default camera '+data.mode);
    if(await page.locator('[data-world]').count())throw Error(device+' removed wide-view HUD button unexpectedly restored');

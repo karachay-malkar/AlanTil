@@ -1,8 +1,8 @@
 /**
- * Spatially bounded Kunlum ruin LOD. Rendering quality follows the camera,
- * never a fixed village landmark. Chunks keep distant culling independent.
+ * Spatially grouped permanent Kunlum Common100 stone geometry.
+ * Larger chunks reduce draw calls without ever changing the stone shapes.
  */
-export const RUIN_CHUNK_SIZE=30;
+export const RUIN_CHUNK_SIZE=90;
 export const ruinChunkKey=(x,z,layer=0)=>layer+':'+Math.floor(x/RUIN_CHUNK_SIZE)+':'+Math.floor(z/RUIN_CHUNK_SIZE);
 export function groupRuinSegments(entries){
  const chunks=new Map();

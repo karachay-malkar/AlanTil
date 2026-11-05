@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {RUIN_CHUNK_SIZE,ruinChunkKey,groupRuinSegments,ruinChunkDistance} from '../src/features/tower/kunlum-ruin-lod.mjs';
 
 test('ruin chunks preserve every historic segment and spatial order',()=>{
- const items=[{layer:0,seg:{a:[1,1],b:[4,1]}},{layer:0,seg:{a:[31,1],b:[35,1]}},{layer:1,seg:{a:[1,1],b:[4,1]}}];
+ const items=[{layer:0,seg:{a:[1,1],b:[4,1]}},{layer:0,seg:{a:[91,1],b:[95,1]}},{layer:1,seg:{a:[1,1],b:[4,1]}}];
  const groups=groupRuinSegments(items);
  assert.equal(groups.length,3);
  assert.equal(groups.reduce((n,c)=>n+c.segments.length,0),items.length);
- assert.equal(ruinChunkKey(31,1,0),'0:1:0');
- assert.equal(RUIN_CHUNK_SIZE,30);
+ assert.equal(ruinChunkKey(91,1,0),'0:1:0');
+ assert.equal(RUIN_CHUNK_SIZE,90);
  for(const c of groups)for(const s of c.segments)for(const p of [s.a,s.b]){
   assert.ok(p[0]>=c.bounds.minX&&p[0]<=c.bounds.maxX);
   assert.ok(p[1]>=c.bounds.minZ&&p[1]<=c.bounds.maxZ);
