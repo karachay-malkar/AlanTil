@@ -5,7 +5,7 @@ import {loadManualSection} from '../masonry/manual-sections/registry.mjs?v=appro
 import {approvedSectionId,APPROVED_PREFAB_VERSION} from '../../../packages/tower-game/approved-prefab.mjs';
 import {PREFAB_CELL_METERS} from '../../../packages/tower-game/prefab-layout.mjs';
 import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
-import {loadBakedMasonry} from './baked-masonry.js?v=1';
+import {loadBakedMasonry} from './baked-masonry.js?v=2';
 import {mergeApprovedStoneMeshes} from './approved-section-geometry.js?v=17.2.69';
 
 /**
@@ -34,7 +34,8 @@ export function createApprovedSectionLoader({loadBaked=loadBakedMasonry}={}){
    console.warn('Baked masonry unavailable; assembling the approved recipe:',error);
    return null;
   });
-  if(!geometry){
+  if(geometry)Object.assign(root.userData,geometry.userData);
+  else{
    const [{geometries},{recipe}]=await Promise.all([library(),source(id)]);
    if(recipe.cells.join('x')!==sectionId)throw new Error('Approved prefab footprint mismatch: '+id);
    for(const entry of recipe.stones){

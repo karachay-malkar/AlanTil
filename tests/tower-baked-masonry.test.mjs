@@ -8,7 +8,7 @@ import {makeKunlumTerrain} from '../src/features/tower/kunlum-terrain-lod.js';
 import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alignment.js';
 
 const root=new URL('../',import.meta.url);
-const asset='/assets/tower/approved-library/baked/section-3x3x3-v2.glb?v=1';
+const asset='/assets/tower/approved-library/baked/section-3x3x3-v2.glb?v=2';
 
 test('construction and the mapped fence pilot share the same prebuilt geometry',async()=>{
  const requests=[];
@@ -52,6 +52,8 @@ test('construction and the mapped fence pilot share the same prebuilt geometry',
    assert.ok(actual.every((value,i)=>Math.abs(value-expected[i])<1e-6),name+' changed when baking');
   }
   assert.equal(original.userData.optimization.trimmedTriangles,31);
+  assert.deepEqual(model.userData.optimization,original.userData.optimization);
+  assert.equal(model.userData.sourceStoneCount,original.userData.sourceStoneCount);
   for(let rotation=0;rotation<4;rotation++){
    model.rotation.y=original.rotation.y=rotation*Math.PI/2;
    const actual=new THREE.Box3().setFromObject(model,true);

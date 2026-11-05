@@ -52,6 +52,10 @@ const section=await createApprovedSectionLoader({loadBaked:async()=>null})
  .make('3x3x3',1,new MeshStandardMaterial());
 const [mesh]=section.children;
 mesh.geometry=indexExactVertices(mesh.geometry);
+mesh.userData={
+ sourceStoneCount:section.userData.sourceStoneCount,
+ optimization:section.userData.optimization
+};
 const binary=await new GLTFExporter().parseAsync(mesh,{binary:true});
 const output=new URL('assets/tower/approved-library/baked/',root);
 await mkdir(output,{recursive:true});
