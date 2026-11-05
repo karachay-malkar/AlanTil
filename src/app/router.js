@@ -7,9 +7,9 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "17.2.77";
-const TOWER_ASSET_VERSION = "17.2.77";
-const MASONRY_ASSET_VERSION = "17.2.77";
+const ASSET_VERSION = "17.2.78";
+const TOWER_ASSET_VERSION = "17.2.78";
+const MASONRY_ASSET_VERSION = "17.2.78";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -227,7 +227,13 @@ function screenNameOf(route) {
 }
 function targetsEqual(left, right) { return left?.route === right?.route && JSON.stringify(left?.params || {}) === JSON.stringify(right?.params || {}); }
 function compactParams(parameters = {}) { return Object.fromEntries(Object.entries(parameters).filter(([, value]) => value !== undefined && value !== null && value !== "")); }
-function debugSearchSuffix() { const debug = new URLSearchParams(window.location.search).get("analytics_debug"); return debug === "1" ? "?analytics_debug=1" : ""; }
+function debugSearchSuffix({ towerPilot = false } = {}) {
+  const current = new URLSearchParams(window.location.search);
+  const flags = new URLSearchParams();
+  if (current.get("analytics_debug") === "1") flags.set("analytics_debug", "1");
+  if (towerPilot && current.get("towerBakedFence") === "1") flags.set("towerBakedFence", "1");
+  return flags.size ? "?" + flags.toString() : "";
+}
 function safeReferrer(value) { if (!value) return ""; try { const url = new URL(value, window.location.origin); return `${url.origin}${url.pathname}`; } catch { return ""; } }
 
 export function createRouter({ shell, modal, context }) {
@@ -344,7 +350,7 @@ export function createRouter({ shell, modal, context }) {
     const backButton = telegramWebApp?.BackButton;
     try { if (visible) backButton?.show?.(); else backButton?.hide?.(); } catch (error) { console.warn("Telegram BackButton update failed", error); }
   }
-  function navigationSuffix() { return context.telegram?.getPendingUrlSuffix?.() || debugSearchSuffix(); }
+  function navigationSuffix() { return context.telegram?.getPendingUrlSuffix?.() || debugSearchSuffix({ towerPilot: true }); }
   function historyState(target, index) { return { [ROUTER_STATE_KEY]: true, index, route: target.route, params: target.params }; }
   function syncBrowserHistory(target, mode = "push") {
     const path = `${buildPath(target.route, target.params)}${navigationSuffix()}`;
@@ -461,7 +467,7 @@ export function createRouter({ shell, modal, context }) {
     historyIndex = targetIndex; entries[historyIndex] = target;
     await show(target, { historyMode: "none", force: true, reason: targetIndex < oldIndex ? "back" : "route_change", skipLeaveCheck: true });
   }
-  function releaseTelegramLaunchUrl() { context.telegram?.releaseLaunchUrl?.(); const path = `${buildPath(current.route, current.params)}${debugSearchSuffix()}`; window.history.replaceState(historyState(current, historyIndex), "", path); }
+  function releaseTelegramLaunchUrl() { context.telegram?.releaseLaunchUrl?.(); const path = `${buildPath(current.route, current.params)}${debugSearchSuffix({ towerPilot: true })}`; window.history.replaceState(historyState(current, historyIndex), "", path); }
   function attachTelegram(webApp) {
     const nextWebApp = webApp || null; const nextBackButton = nextWebApp?.BackButton || null;
     if (telegramBackButton === nextBackButton && telegramWebApp === nextWebApp) { syncBackControls(); return nextWebApp; }

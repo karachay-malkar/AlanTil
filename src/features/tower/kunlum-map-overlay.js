@@ -1,5 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.77';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.77';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.78';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.78';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
@@ -68,10 +68,10 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  }
  // Only real 3D stones represent these historic polylines. There is no
  // sealed gray prism or hidden wall mesh between the facing stones.
- function wallPiece(a,b,height,width,candidate=false){
+ function wallPiece(a,b,height,width,candidate=false,featureId=null){
   const target=candidate?candidateSegments:confirmedSegments;
   for(const [start,end] of outsidePassages(a,b))
-   target.push({a:start,b:end,height,width,heightAt});
+   target.push({a:start,b:end,height,width,heightAt,featureId});
  }
  const map=new Map(source.confirmed_features.map(f=>[f.id,f]));
  function segments(f){
@@ -111,7 +111,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    if(f.type==='house')for(const p of f.points)centers.push(toWorld(p));
    for(const [p,q] of segments(f))wallPiece(p,q,
     f.type==='retaining'?1.8:f.type==='house'?1.6:1.4,
-    f.type==='retaining'?.65:.5);
+    f.type==='retaining'?.65:.5,false,f.id);
   }
  }
  for(const o of source.openings||[]){
@@ -143,9 +143,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  root.add(footings.root);
  root.userData.ruinContact=footings.counts;
  // No passage line meshes: only physical gaps in the wall geometry.
- const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
+ const enhance=({renderer,materialPromise,bakedFencePilot}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
- ],{renderer,materialPromise,mobile,monument});
+ ],{renderer,materialPromise,mobile,monument,bakedFencePilot});
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,

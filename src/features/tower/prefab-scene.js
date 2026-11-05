@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.77';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.78';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
@@ -18,8 +18,8 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_RENDER_VERSION_V2,baganaPrefab,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
-import {createApprovedSectionLoader} from './approved-section-scene.js?v=17.7-approved-masonry.1';
-import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.77';
+import {createApprovedSectionLoader} from './approved-section-scene.js?v=baked-masonry.1';
+import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.78';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 import {resolvePrefabHitFace} from '../../../packages/tower-game/prefab-placement-face.mjs';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
@@ -28,6 +28,7 @@ const dir3=(a,b)=>new THREE.Vector3(...a).sub(new THREE.Vector3(...b));
 export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>{},onRoofSelection=()=>{},onEndpointMove=()=>{},onCameraChange=()=>{}}={}){
  const manifest={version:APPROVED_PREFAB_VERSION,types:BUILDABLE_PREFAB_TYPES,
   connectors:Object.fromEntries(Object.entries(WINDOW_JOINT_FILES).map(([axis,file])=>[axis,{file,interface:JOINT_INTERFACE}]))};
+ const bakedFencePilot=new URLSearchParams(globalThis.location?.search).get('towerBakedFence')==='1';
  const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder),loaded=new Map();
  const approvedSections=createApprovedSectionLoader();
  const approvedModelPromises=new Map();
@@ -76,6 +77,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
   container.dataset.kunlumStoneCount=String(allWalls?.userData.common100StoneCount||0);
   container.dataset.kunlumStoneSegments=String(allWalls?.userData.common100WallSegments||0);
   container.dataset.kunlumRuinEngine=allWalls?.userData.ruinPlacementMode||'loading';
+  container.dataset.kunlumBakedFenceBlocks=String(allWalls?.userData.bakedFenceBlocks||0);
   container.dataset.kunlumRuinFarSegments=String(allWalls?.userData.ruinFarSegments||0);
   container.dataset.kunlumTerrainScan=kunlum.group.userData.kunlumTerrainScan||'procedural';
   if(meta.wideStatus==='ready'){scene.fog.near=3300;scene.fog.far=10300;}
@@ -90,7 +92,8 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
       plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
    kunlum=createKunlumEnvironment(THREE,scene,{
-    plan,stoneMaterialPromise,mobile:mobileQuality,onReady:refreshEnvironmentStatus
+    plan,stoneMaterialPromise,mobile:mobileQuality,onReady:refreshEnvironmentStatus,
+    bakedFencePilot
    });
    if(worldMode)void kunlum.ensureWideTerrain();
    void kunlum.ready.then(refreshEnvironmentStatus);

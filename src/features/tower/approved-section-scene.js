@@ -5,6 +5,7 @@ import {loadManualSection} from '../masonry/manual-sections/registry.mjs?v=appro
 import {approvedSectionId,APPROVED_PREFAB_VERSION} from '../../../packages/tower-game/approved-prefab.mjs';
 import {PREFAB_CELL_METERS} from '../../../packages/tower-game/prefab-layout.mjs';
 import {getApprovedStoneSurfaceGeometry} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
+import {loadBakedMasonry} from './baked-masonry.js?v=1';
 import {mergeApprovedStoneMeshes} from './approved-section-geometry.js?v=17.2.69';
 
 /**
@@ -12,7 +13,7 @@ import {mergeApprovedStoneMeshes} from './approved-section-geometry.js?v=17.2.69
  * loadCommon100 geometry routine as the editor. Its source transform is
  * never replaced by a cube, rounded, or grid-snapped.
  */
-export function createApprovedSectionLoader(){
+export function createApprovedSectionLoader({loadBaked=loadBakedMasonry}={}){
  let libraryPromise=null;
  const recipes=new Map();
  const library=()=>{
@@ -26,36 +27,39 @@ export function createApprovedSectionLoader(){
  };
  async function make(sectionId,variant,material){
   const id=approvedSectionId(sectionId,variant);
-  const [{geometries},document]=await Promise.all([library(),source(id)]);
-  const {recipe}=document;
-  const parts=recipe.cells.join('x');
-  if(parts!==sectionId)throw new Error('Approved prefab footprint mismatch: '+id);
   const root=new THREE.Group();root.name='Approved '+id;
-  // Editor recipes are bottom-anchored and centered in X/Z; tower
-  // blocks are centered around their logical 25 cm grid volume.
-  root.position.y=-recipe.cells[1]*PREFAB_CELL_METERS/2;
-  for(const entry of recipe.stones){
-   const original=geometries.get(entry.name);
-   if(!original)throw new Error('Missing authored mesh '+entry.name);
-   const mesh=new THREE.Mesh(getApprovedStoneSurfaceGeometry(original,entry.scale),material);
-   mesh.name=entry.name;
-   mesh.position.fromArray(entry.position);
-   mesh.quaternion.fromArray(entry.quaternion);
-   mesh.scale.fromArray(entry.scale);
-   mesh.userData.approvedSourceId=entry.id;
-   root.add(mesh);
+  // Editor and baked meshes are bottom-anchored; game blocks are centered.
+  root.position.y=-Number(sectionId.split('x')[1])*PREFAB_CELL_METERS/2;
+  let geometry=await loadBaked(id).catch(error=>{
+   console.warn('Baked masonry unavailable; assembling the approved recipe:',error);
+   return null;
+  });
+  if(!geometry){
+   const [{geometries},{recipe}]=await Promise.all([library(),source(id)]);
+   if(recipe.cells.join('x')!==sectionId)throw new Error('Approved prefab footprint mismatch: '+id);
+   for(const entry of recipe.stones){
+    const original=geometries.get(entry.name);
+    if(!original)throw new Error('Missing authored mesh '+entry.name);
+    const mesh=new THREE.Mesh(getApprovedStoneSurfaceGeometry(original,entry.scale),material);
+    mesh.name=entry.name;
+    mesh.position.fromArray(entry.position);
+    mesh.quaternion.fromArray(entry.quaternion);
+    mesh.scale.fromArray(entry.scale);
+    mesh.userData.approvedSourceId=entry.id;
+    root.add(mesh);
+   }
+   // Keep the original recipe intact and cull only provably buried triangles.
+   const result=mergeApprovedStoneMeshes(root);
+   root.clear();
+   geometry=result.geometry;
+   root.userData.optimization=result.stats;
+   root.userData.sourceStoneCount=recipe.stones.length;
   }
-  // Authored recipe remains untouched; the game receives one render mesh.
-  // Fully buried triangles are culled only after geometric containment proof.
-  const {geometry,stats}=mergeApprovedStoneMeshes(root);
-  root.clear();
   const optimized=new THREE.Mesh(geometry,material);
   optimized.name='Approved consolidated '+id;
   root.add(optimized);
-  root.userData.optimization=stats;
   root.userData.approvedSectionId=id;
   root.userData.geometryVersion=APPROVED_PREFAB_VERSION;
-  root.userData.sourceStoneCount=recipe.stones.length;
   return root;
  }
  return {make};
