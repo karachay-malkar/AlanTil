@@ -1,6 +1,7 @@
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {GLTFExporter} from '../ashyk-web/node_modules/three/examples/jsm/exporters/GLTFExporter.js';
 import {BufferAttribute,BufferGeometry,MeshStandardMaterial} from '../../src/vendor/three/three.module.js';
+import {APPROVED_MASONRY_VARIANTS} from '../../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from '../../src/features/tower/approved-section-scene.js';
 
 const root=new URL('../../',import.meta.url);
@@ -48,16 +49,26 @@ function indexExactVertices(source){
  return geometry;
 }
 
-const section=await createApprovedSectionLoader({loadBaked:async()=>null})
- .make('3x3x3',1,new MeshStandardMaterial());
-const [mesh]=section.children;
-mesh.geometry=indexExactVertices(mesh.geometry);
-mesh.userData={
- sourceStoneCount:section.userData.sourceStoneCount,
- optimization:section.userData.optimization
-};
-const binary=await new GLTFExporter().parseAsync(mesh,{binary:true});
+const loader=createApprovedSectionLoader({loadBaked:async()=>null});
+const exporter=new GLTFExporter();
+const material=new MeshStandardMaterial();
 const output=new URL('assets/tower/approved-library/baked/',root);
 await mkdir(output,{recursive:true});
-await writeFile(new URL('section-3x3x3-v2.glb',output),new Uint8Array(binary));
-console.log(JSON.stringify({...section.userData.optimization,bytes:binary.byteLength}));
+for(const [size,ids] of Object.entries(APPROVED_MASONRY_VARIANTS)){
+ for(const [variant,id] of ids.entries()){
+  const section=await loader.make(size,variant,material);
+  const [mesh]=section.children;
+  const source=mesh.geometry;
+  mesh.geometry=indexExactVertices(source);
+  source.dispose();
+  mesh.userData={
+   sourceStoneCount:section.userData.sourceStoneCount,
+   optimization:section.userData.optimization
+  };
+  const binary=await exporter.parseAsync(mesh,{binary:true});
+  await writeFile(new URL(id.replace('manual-','section-')+'.glb',output),new Uint8Array(binary));
+  mesh.geometry.dispose();
+  console.log(JSON.stringify({id,...section.userData.optimization,bytes:binary.byteLength}));
+ }
+}
+material.dispose();

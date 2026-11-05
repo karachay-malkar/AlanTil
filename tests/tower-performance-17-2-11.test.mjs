@@ -31,7 +31,9 @@ test("Stable prefab meshes and joint tiles are reused on incremental rebuild",as
 });
 test("PBR cannot gate first-person scene preparation",async()=>{
  const [scene,surface,library]=await Promise.all([read("src/features/tower/prefab-scene.js"),read("src/features/tower/rock-surface.js"),read("src/features/tower/approved-section-scene.js")]);
- assert.match(scene,/stoneMaterialPromise=getRockSurface\(renderer\)\.then/);
+ assert.match(scene,/void getRockSurface\(renderer\)\.then/);
+ assert.match(scene,/stoneMaterialPromise:Promise\.resolve\(stoneMaterial\)/);
+ assert.match(scene,/stoneMaterial\.copy\(loaded\)/);
  assert.doesNotMatch(scene,/await stoneMaterialPromise/);
  assert.match(scene,/requestAnimationFrame\(\(\)=>\{if\(!disposed\)visualStartTimer/);
  assert.match(scene,/mobileQuality=matchMedia\('\(pointer:coarse\)/);

@@ -1,5 +1,5 @@
-export const APP_VERSION = "17.2.79";
+export const APP_VERSION = "17.2.80";
 export const RELEASE_DATE = "2026-11-05";
-export const WEB_BUILD_VERSION = "17.2.79";
+export const WEB_BUILD_VERSION = "17.2.80";
 export const WEB_DEPLOY_REPOSITORY = "karachay-malkar/AlanTil";
 export const WEB_DEPLOY_BRANCH = "17.2";

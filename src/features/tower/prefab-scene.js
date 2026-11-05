@@ -4,7 +4,7 @@ import {OrbitControls} from '../../vendor/three/addons/controls/OrbitControls.js
 import {createTowerExplorerController} from './tower-explorer-controller.js';
 import {constrainTowerCamera} from './first-person-navigation.js';
 import {KUNLUM_AUTUMN,createKunlumAutumnSky} from './kunlum-autumn-palette.js';
-import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.79';
+import {createKunlumRealEnvironment as createKunlumEnvironment} from './kunlum-real-environment.js?v=17.2.80';
 import {isRoofBeamId,roofBeamLength,ROOF_BEAM_VERSION} from '../../../packages/tower-game/roof-beam.mjs';
 import {createRoofCoverRenderer} from './roof-cover-scene.js?v=17.2-tekmet.1';
 import {GLTFLoader} from '../../vendor/three/addons/loaders/GLTFLoader.js';
@@ -18,8 +18,8 @@ import {GATE_PREFAB_ID,GATE_PREFAB_VERSION,GATE_PREFAB_FILE,GATE_RENDER_VERSION,
 import {BAGANA_PREFAB_ID,BAGANA_PREFAB_VERSION,BAGANA_PREFAB_FILE,BAGANA_RENDER_VERSION,BAGANA_PREFAB_VERSION_V2,BAGANA_RENDER_VERSION_V2,baganaPrefab,isBaganaPrefab} from '../../../packages/tower-game/bagana-prefab.mjs';
 import {applyGateSurfaces,findApprovedGateMaterials} from './gate-surface.js';
 import {APPROVED_PREFAB_VERSION,isApprovedMasonryType} from '../../../packages/tower-game/approved-prefab.mjs';
-import {createApprovedSectionLoader} from './approved-section-scene.js?v=baked-masonry.2';
-import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.79';
+import {createApprovedSectionLoader} from './approved-section-scene.js?v=baked-masonry.3';
+import {captureBlockRenderSnapshot,rebindCachedBlockTargets,areSameRenderedBlocks} from './block-render-snapshot.mjs?v=17.2.80';
 import {getRockSurface,applyRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 import {resolvePrefabHitFace} from '../../../packages/tower-game/prefab-placement-face.mjs';
 const hash=v=>{const q=Math.sin(v*127.1+311.7)*43758.5453;return q-Math.floor(q);};
@@ -42,7 +42,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  renderer.setSize(Math.max(1,container.clientWidth),Math.max(320,container.clientHeight),false);
  // Keep first-person usable while large PBR textures load in the background.
  const stoneMaterial=new THREE.MeshStandardMaterial({color:'#b9ae9a',roughness:1,metalness:0,side:THREE.DoubleSide});
- let stoneMaterialPromise=Promise.resolve(stoneMaterial),visualStartTimer=0;
+ let visualStartTimer=0;
  const mobileQuality=matchMedia('(pointer:coarse), (hover:none), (max-width:749px), (max-height:520px)').matches;
  container.dataset.mobileQuality=String(mobileQuality);
  container.dataset.stoneTextureEncoding='pending';
@@ -92,7 +92,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
       plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
    kunlum=createKunlumEnvironment(THREE,scene,{
-    plan,stoneMaterialPromise,mobile:mobileQuality,onReady:refreshEnvironmentStatus,
+    plan,stoneMaterialPromise:Promise.resolve(stoneMaterial),mobile:mobileQuality,onReady:refreshEnvironmentStatus,
     bakedFencePilot
    });
    if(worldMode)void kunlum.ensureWideTerrain();
@@ -106,21 +106,19 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
  }
  function loadVisualAssets(){
   if(disposed)return;
-  stoneMaterialPromise=getRockSurface(renderer).then(loaded=>{
+  void getRockSurface(renderer).then(loaded=>{
    if(!disposed){
     stoneMaterial.copy(loaded);
     stoneMaterial.needsUpdate=true;
     container.dataset.stoneTextureEncoding=loaded.name.endsWith('KTX2')?'ktx2':loaded.name.endsWith('PNG-1K')?'png-1k':'png';
     scheduleDraw();
    }
-   return loaded;
   }).catch(error=>{
    if(!disposed){
     container.dataset.stoneTextureEncoding='fallback';
     console.warn('Stone PBR unavailable, keeping playable fallback:',error);
     scheduleDraw();
    }
-   return stoneMaterial;
   });
   void loadEnvironment();
  }

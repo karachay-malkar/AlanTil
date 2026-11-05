@@ -14,11 +14,25 @@ const out=path.join(root,'tower-world-browser-qa');fs.mkdirSync(out,{recursive:t
    const context=await browser.newContext({viewport:{width,height},isMobile:device==='mobile',hasTouch:device==='mobile'});
    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
    await mockRepository(page);
-   await page.goto(base+'/tests/fixtures/kunlum-tower-world.html',{waitUntil:'domcontentloaded'});
-   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.kunlumWorldReady==='true'&&
-    document.getElementById('qa-root')?.dataset.mount==='success',null,{timeout:100000});
-   await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneSegments)>0&&
-    document.querySelector('.towerCanvas')?.dataset.kunlumRuinEngine==='fixed-common100-instances-v1',null,{timeout:90000});
+   let releaseTextures;
+   const textureGate=new Promise(resolve=>{releaseTextures=resolve;});
+   await page.route('**/assets/tower/materials/balkaria-stone-v2.1/**',async route=>{
+    await textureGate;
+    await route.continue();
+   });
+   try{
+    await Promise.all([
+     page.waitForRequest(request=>new URL(request.url()).pathname.startsWith('/assets/tower/materials/balkaria-stone-v2.1/'),{timeout:30000}),
+     page.goto(base+'/tests/fixtures/kunlum-tower-world.html',{waitUntil:'domcontentloaded'})
+    ]);
+    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.kunlumWorldReady==='true'&&
+     document.getElementById('qa-root')?.dataset.mount==='success',null,{timeout:100000});
+    await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumStoneSegments)>0&&
+     document.querySelector('.towerCanvas')?.dataset.kunlumRuinEngine==='fixed-common100-instances-v1'&&
+     document.querySelector('.towerCanvas')?.dataset.stoneTextureEncoding==='pending',null,{timeout:45000});
+   }finally{releaseTextures();}
+   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.stoneTextureEncoding!=='pending',
+    null,{timeout:90000});
    const data=await page.locator('.towerCanvas').evaluate(el=>({
     confirmed:Number(el.dataset.kunlumConfirmed),river:el.dataset.kunlumRiver,
     segments:Number(el.dataset.kunlumStoneSegments),ruinEngine:el.dataset.kunlumRuinEngine,

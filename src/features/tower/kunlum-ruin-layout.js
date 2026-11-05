@@ -2,7 +2,7 @@
  * Geometry changes with detail, never the wall's stone arrangement.
  * Wall positions, doorways, historical linework, and terrain are untouched.
  */
-import {kunlumRuinCrown,kunlumRuinFoot} from './kunlum-wall-ground.js?v=17.2.79';
+import {kunlumRuinCrown,kunlumRuinFoot} from './kunlum-wall-ground.js?v=17.2.80';
 
 const hash=(x,y,z)=>{
  const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;

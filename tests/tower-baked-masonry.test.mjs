@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import * as THREE from '../src/vendor/three/three.module.js';
+import {APPROVED_MASONRY_VARIANTS} from '../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from '../src/features/tower/approved-section-scene.js';
 import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.js';
 import {makeKunlumTerrain} from '../src/features/tower/kunlum-terrain-lod.js';
@@ -111,6 +112,30 @@ test('construction and the mapped fence pilot share the same prebuilt geometry',
    overlay.dispose();
   }
   assert.equal(requests.filter(path=>path===asset).length,1);
+  const bakedLoader=createApprovedSectionLoader();
+  const recipeLoader=createApprovedSectionLoader({loadBaked:async()=>null});
+  for(const [size,ids] of Object.entries(APPROVED_MASONRY_VARIANTS)){
+   for(const [variant,id] of ids.entries()){
+    if(id==='manual-3x3x3-v2')continue;
+    const before=requests.length;
+    const baked=await bakedLoader.make(size,variant,material);
+    assert.deepEqual(requests.slice(before),[
+     '/assets/tower/approved-library/baked/'+id.replace('manual-','section-')+'.glb?v=2'
+    ],id);
+    const expected=await recipeLoader.make(size,variant,material);
+    const positions=baked.children[0].geometry.toNonIndexed();
+    for(const name of ['position','normal','uv','uv2']){
+     const actual=positions.getAttribute(name).array,original=expected.children[0].geometry.getAttribute(name).array;
+     assert.equal(actual.length,original.length,id+' '+name);
+     assert.ok(actual.every((value,i)=>Math.abs(value-original[i])<1e-6),id+' '+name);
+    }
+    positions.dispose();
+    assert.deepEqual(baked.userData,expected.userData,id);
+    assert.equal(baked.position.y,expected.position.y,id);
+    const repeat=await bakedLoader.make(size,variant,material);
+    assert.equal(repeat.children[0].geometry,baked.children[0].geometry,id);
+   }
+  }
  }finally{
   globalThis.fetch=originalFetch;
   globalThis.Request=OriginalRequest;
