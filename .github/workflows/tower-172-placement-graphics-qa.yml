@@ -10,6 +10,11 @@ on:
       - 'packages/tower-game/prefab-placement-face.mjs'
       - 'packages/tower-game/roof-cover.mjs'
       - 'src/features/tower/kunlum-stone-facing.js'
+      - 'src/features/tower/kunlum-ruin-lod.mjs'
+      - 'tests/kunlum-ruin-fixed-geometry.test.mjs'
+      - 'tests/kunlum-wall-masonry.test.mjs'
+      - 'tests/kunlum-ruin-medium-budget.test.mjs'
+      - 'tests/kunlum-ruin-lod.test.mjs'
       - 'src/features/tower/rock-surface.js'
   workflow_dispatch:
 permissions:
@@ -32,7 +37,7 @@ jobs:
           node --check src/features/tower/kunlum-stone-facing.js
           node --check src/features/tower/rock-surface.js
           node --check packages/tower-game/prefab-placement-face.mjs
-          node --test tests/tower-placement-face-172.test.mjs tests/tower-roof-cover-17-2.test.mjs tests/kunlum-ruin-lod.test.mjs
+          node --test tests/tower-placement-face-172.test.mjs tests/tower-roof-cover-17-2.test.mjs tests/kunlum-ruin-lod.test.mjs tests/kunlum-wall-masonry.test.mjs tests/kunlum-ruin-medium-budget.test.mjs tests/kunlum-ruin-fixed-geometry.test.mjs
           node scripts/release/sync-version.mjs --check
       - name: Commit synchronized release to branch 17.2
         run: |
