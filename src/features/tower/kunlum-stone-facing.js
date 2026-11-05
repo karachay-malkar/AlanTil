@@ -127,7 +127,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
     // Its real irregular silhouette remains visible from either side, while
     // avoiding a duplicate layer of high-poly stones on distant walls.
     // Near LOD preserves the original three-layer masonry geometry.
-    for(const layerDepth of (near?[-1,0,1]:[0])){
+    for(const layerDepth of (near?(mobile?[-1,1]:[-1,0,1]):[0])){
      const k=(rock.kind+(layerDepth+1)*7)%geometryList.length;
      const offset=layerDepth*seg.width*.32;
      dummy.position.set(rock.x+nx*offset,rock.y-(layerDepth===0?.012:0),
@@ -187,7 +187,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   for(const {bucket,distance,tier} of targets){
    // Keep natural close-up stone shapes, but limit expensive instanced
    // medium meshes to the area where individual stones occupy real pixels.
-   const nearEnd=mobile?16:18,mediumEnd=mobile?60:70;
+   const nearEnd=mobile?16:18,mediumEnd=mobile?48:70;
    if(distance<nearEnd&&!bucket.near&&available>0){
     bucket.near=createDetail(bucket,true);available--;created++;
    }

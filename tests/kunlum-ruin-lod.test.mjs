@@ -37,6 +37,6 @@ test('far transition blends silhouettes smoothly without abrupt tier swaps',()=>
  assert.equal(ruinFarBlend(45),0);
  assert.equal(ruinFarBlend(60),.5);
  assert.equal(ruinFarBlend(75),1);
- assert.equal(ruinFarBlend(50,{mobile:true}),.5);
+ assert.equal(ruinFarBlend(40,{mobile:true}),.5);
  assert.equal(ruinFarBlend(65,{mobile:true}),1);
 });
