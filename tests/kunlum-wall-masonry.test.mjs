@@ -49,7 +49,8 @@ test('linked opening cuts real wall intervals before 3D mesh generation',()=>{
  scene.dispose();
 });
 test('stone facade uses Common100 geometry, instancing and bounded spatial chunks',()=>{
- assert.match(facingSource,/loadCommon100\(/);
+ assert.match(facingSource,/loadLibrary=loadCommon100/);
+ assert.match(facingSource,/await loadLibrary\(\)/);
  assert.match(facingSource,/getApprovedStoneSurfaceGeometry\(/);
  assert.match(facingSource,/mesh\.computeBoundingSphere\(\)/);
  assert.match(facingSource,/mesh\.frustumCulled=true/);
