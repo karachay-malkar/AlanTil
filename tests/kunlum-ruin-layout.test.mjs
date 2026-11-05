@@ -24,13 +24,13 @@ test('every ruin wall has organically spaced stones rather than identical brick 
  assert.ok(stones.every(s=>Number.isFinite(s.x)&&Number.isFinite(s.y)&&s.height>.08));
 });
 
-test('dynamic ruin chunks use camera distance and merged outer masonry',()=>{
+test('spatial ruin chunks use immutable Common100 geometry at every camera distance',()=>{
  assert.match(facing,/groupRuinSegments/);
- assert.match(facing,/makeKunlumRuinShell/);
- assert.match(facing,/selectKunlumRuinTier/);
- assert.match(facing,/createDetail\(bucket,true\)/);
- assert.match(facing,/root.userData.ruinPlacementMode='camera-chunk-lod-v4'/);
- assert.doesNotMatch(facing,/const LANDMARK|chunkWidth=85|mesh.frustumCulled=false/);
+ assert.match(facing,/getApprovedStoneSurfaceGeometry\(source\)/);
+ assert.match(facing,/new THREE\.InstancedMesh\(models\[k\]\.geometry/);
+ assert.match(facing,/mesh\.frustumCulled=true/);
+ assert.match(facing,/root.userData.ruinPlacementMode='fixed-common100-instances-v1'/);
+ assert.doesNotMatch(facing,/makeKunlumRuinShell|selectKunlumRuinTier|createDetail\(bucket,true\)|bucket\.far/);
  assert.doesNotMatch(map,/function wallBody|pushQuad\(out|addMesh\(confirmed/);
 });
 
