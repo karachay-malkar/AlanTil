@@ -99,7 +99,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  const {manifest,geometries}=await loadCommon100();
  if(root.userData.disposed)return null;
  const sources=manifest.models.filter(m=>m.category==='main'||m.category==='large');
- const count=mobile?20:36;
+ const count=mobile?12:24;
  const selected=Array.from({length:count},
   (_,i)=>sources[Math.floor((i+.5)*sources.length/count)]);
  const models=selected.map(({name})=>{
@@ -123,9 +123,11 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    if(length<.01)continue;
    const nx=-dz/length,nz=dx/length,yaw=Math.atan2(nx,nz);
    for(const rock of layoutKunlumRuinStones(seg)){
-    // Medium LOD retains both visible faces without 3 hidden interior rows.
-    // Near LOD preserves all original irregular Common100 stone geometry.
-    for(const layerDepth of (near?[-1,0,1]:[-1,1])){
+    // Medium LOD retains a single full-depth, double-sided Common100 stone layer.
+    // Its real irregular silhouette remains visible from either side, while
+    // avoiding a duplicate layer of high-poly stones on distant walls.
+    // Near LOD preserves the original three-layer masonry geometry.
+    for(const layerDepth of (near?[-1,0,1]:[0])){
      const k=(rock.kind+(layerDepth+1)*7)%geometryList.length;
      const offset=layerDepth*seg.width*.32;
      dummy.position.set(rock.x+nx*offset,rock.y-(layerDepth===0?.012:0),
