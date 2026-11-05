@@ -56,16 +56,13 @@ test('stone facade uses Common100 geometry, instancing and bounded spatial chunk
  assert.match(facingSource,/const count=mobile\?12:24/);
  assert.match(facingSource,/for\(const rock of layoutKunlumRuinStones\(seg\)\)/);
  assert.match(facingSource,/new THREE\.InstancedMesh/);
- assert.match(facingSource,/makeKunlumRuinShell/);
+ assert.doesNotMatch(facingSource,/makeKunlumRuinShell/);
  assert.match(layoutSource,/kunlumRuinFoot\(x,z,width,heightAt/);
  assert.match(layoutSource,/kunlumRuinCrown\(height,x,z\)/);
 });
-test('far transitions crossfade detailed stones rather than popping geometry',()=>{
- assert.match(facingSource,/ruinFarBlend\(distance/);
- assert.match(facingSource,/farMaterial\.opacity=detailVisible\?farWeight:1/);
- assert.match(facingSource,/lodMaterial\.opacity=nearAlpha/);
- assert.match(facingSource,/lodMaterial\.opacity=mediumAlpha/);
- assert.match(facingSource,/bucket\.far\.visible=farWeight>0/);
- assert.match(facingSource,/const sources=near\?models:midModels/);
- assert.match(facingSource,/midModels=models\.filter/);
+test('camera updates do not replace Common100 geometry with proxy stone meshes',()=>{
+ assert.match(facingSource,/ruinPlacementMode='fixed-common100-instances-v1'/);
+ assert.match(facingSource,/ruinWallStoneInstances=wallInstances/);
+ assert.match(facingSource,/function update\(camera\)/);
+ assert.doesNotMatch(facingSource,/ruinFarBlend|selectKunlumRuinTier|nearWeight|farWeight/);
 });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {RUIN_CHUNK_SIZE,ruinChunkKey,groupRuinSegments,ruinChunkDistance,selectKunlumRuinTier,ruinFarBlend} from '../src/features/tower/kunlum-ruin-lod.mjs';
+import {RUIN_CHUNK_SIZE,ruinChunkKey,groupRuinSegments,ruinChunkDistance} from '../src/features/tower/kunlum-ruin-lod.mjs';
 
 test('ruin chunks preserve every historic segment and spatial order',()=>{
  const items=[{layer:0,seg:{a:[1,1],b:[4,1]}},{layer:0,seg:{a:[31,1],b:[35,1]}},{layer:1,seg:{a:[1,1],b:[4,1]}}];
@@ -20,23 +20,4 @@ test('distance is from the camera to the nearest chunk edge, not the village cen
  assert.equal(ruinChunkDistance({x:20,z:-10},b),0);
  assert.equal(ruinChunkDistance({x:45,z:-10},b),5);
  assert.equal(ruinChunkDistance({x:40,z:3},b),3);
-});
-
-test('LOD changes with moving camera without oscillation near thresholds',()=>{
- assert.equal(selectKunlumRuinTier(5),'near');
- assert.equal(selectKunlumRuinTier(40),'medium');
- assert.equal(selectKunlumRuinTier(140),'far');
- assert.equal(selectKunlumRuinTier(21,'near'),'near');
- assert.equal(selectKunlumRuinTier(25,'near'),'medium');
- assert.equal(selectKunlumRuinTier(141,'far'),'far');
- assert.equal(selectKunlumRuinTier(65,'far'),'medium');
- assert.equal(selectKunlumRuinTier(22,null,{mobile:true}),'medium');
-});
-
-test('far transition blends silhouettes smoothly without abrupt tier swaps',()=>{
- assert.equal(ruinFarBlend(45),0);
- assert.equal(ruinFarBlend(60),.5);
- assert.equal(ruinFarBlend(75),1);
- assert.equal(ruinFarBlend(40,{mobile:true}),.5);
- assert.equal(ruinFarBlend(65,{mobile:true}),1);
 });
