@@ -5,8 +5,8 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
-import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.75';
-import {groupRuinSegments,ruinChunkDistance} from './kunlum-ruin-lod.mjs?v=17.2.75';
+import {layoutKunlumRuinStones} from './kunlum-ruin-layout.js?v=17.2.76';
+import {groupRuinSegments,ruinChunkDistance} from './kunlum-ruin-lod.mjs?v=17.2.76';
 
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const usable=(geom)=>{
