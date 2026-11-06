@@ -1,5 +1,5 @@
 import { prepareAnalytics } from "../shared/analytics/analytics.js?v=16.8.0.16";
-import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.80";
+import { APP_VERSION } from "../../packages/alantil-core/release.js?v=17.2.81";
 import { hasAuthCallback, waitForAuthInitialization } from "../shared/auth/auth-service.js?v=16.8.0.16";
 import { applyOneTimeAuthMigration, hasPersistedAuthSession } from "../shared/auth/supabase-client.js?v=16.8.0.16";
 import { initAdminAccess } from "../shared/admin/admin-access.js?v=16.8.0.16";
@@ -17,10 +17,10 @@ import { getCurrentAuthState } from "../shared/auth/auth-service.js?v=16.8.0.16"
 import { createTelegramAdapter, initTelegram } from "../shared/platform/telegram.js?v=16.8.0.16";
 import { initPrivacyController } from "../shared/privacy/privacy-controller.js?v=16.8.0.16";
 import { createModalService } from "../shared/ui/modal.js?v=16.8.0.16";
-import { createRouter } from "./router.js?v=17.2.80";
+import { createRouter } from "./router.js?v=17.2.81";
 import { createShell } from "./shell.js?v=16.8.0.16";
 
-const ASSET_VERSION = "17.2.80";
+const ASSET_VERSION = "17.2.81";
 const FALLBACK_ROUTE_PARAM = "__alantil_route";
 const PROFILE_REQUIRED_FLOWS = new Set(["legacy_google", "recovery"]);
 
@@ -76,6 +76,7 @@ async function bootstrap() {
   normalizeInitialLearningPath();
   migrateAllStorageKeys();
   initializeI18n();
+  globalThis.performance?.mark?.("alantil:i18n:ready");
   syncFriendsNavLabel();
   window.addEventListener('alantil:languagechange',syncFriendsNavLabel);
   prepareAnalytics();
@@ -93,7 +94,9 @@ async function bootstrap() {
   const context = { root: shell.root, shell, modal, telegram };
 
   if (callbackVisit || persistedAuth) await authInitialization;
+  globalThis.performance?.mark?.("alantil:auth:ready");
   await initializeProgressSystem();
+  globalThis.performance?.mark?.("alantil:progress:ready");
   if ((callbackVisit || persistedAuth) && await requiresProfileCompletion()) {
     window.history.replaceState(null, "", "/profile/account");
   }
@@ -127,11 +130,11 @@ async function bootstrap() {
     if (route === "path.home" || route === "account.home") return;
     void router.refresh({ background: true, reason: "storage_scope" });
   });
-  registerServiceWorker();
   await router.start();
+  registerServiceWorker();
   try { globalThis.performance?.mark?.("alantil:route:ready"); } catch {}
   // Install automatic Guided Help only after the first route has rendered.
-  const installGuide=()=>{ void import("../features/onboarding/guide.js?v=17.2.80").catch(error=>console.warn("Guided Help could not load",error)); };
+  const installGuide=()=>{ void import("../features/onboarding/guide.js?v=17.2.81").catch(error=>console.warn("Guided Help could not load",error)); };
   if(typeof requestIdleCallback==="function") requestIdleCallback(installGuide,{timeout:1400});
   else globalThis.setTimeout(installGuide,200);
 
@@ -233,6 +236,7 @@ async function bootstrap() {
 
 bootstrap().catch((error) => {
   console.error("Application bootstrap failed", error);
-  const shell = document.getElementById("appRoot");
-  if (shell) shell.innerHTML = `<section class="screenState screenStateError">${msg("common.ne_udalos_zapustit_prilozhenie")}</section>`;
+  document.documentElement.dataset.startupError = "bootstrap";
+  document.getElementById("startupRetry").hidden = false;
+  document.getElementById("startupMessage").textContent = msg("common.ne_udalos_zapustit_prilozhenie");
 });

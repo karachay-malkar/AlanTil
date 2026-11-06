@@ -25,6 +25,6 @@ test('tower environment patch is a new release, not cached 17.2.11 code',()=>{
  const sw=file('service-worker.js');
  assert.ok(sw.includes('const VERSION = "'+version+'"'));
  assert.ok(sw.includes('alantil-runtime-'));
- assert.ok(sw.includes('event.respondWith(versionedCode ? cacheFirst(request)'));
+ assert.ok(sw.includes('event.respondWith(versionedCode ? cacheFirst(request, RUNTIME_CACHE, keepAlive)'));
  assert.ok(file('src/app/bootstrap.js').includes('service-worker.js?v=${ASSET_VERSION}'));
 });

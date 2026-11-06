@@ -86,7 +86,7 @@ try {
   const statsExpr = '(() => { const buttons=[...document.querySelectorAll(".pathView button[data-station-key]")]; const pictures=buttons.filter(b=>b.classList.contains("beginnerDioramaNode")); const loaded=pictures.filter(b=>b.querySelector("img[data-beginner-diorama-image]")?.naturalWidth>0); const labeled=pictures.filter(b=>b.querySelector(".stationLabel")?.textContent.trim()); return { total:buttons.length, illustrated:pictures.length, loaded:loaded.length, labeled:labeled.length, missing:pictures.filter(b=>!b.querySelector("img.beginnerDioramaImage")).length }; })()';
   await until(async () => (await evaluate(statsExpr))?.total >= 20, "Path map");
   const initial = await evaluate(statsExpr);
-  // Native lazy icons are loaded as their stations enter the scroll viewport.
+  // Off-screen icons are loaded as their stations approach the scroll viewport.
   await until(async () => { const s=await evaluate(statsExpr); return s?.illustrated === 26 && s?.labeled === 26 && s?.loaded >= 1; }, "illustrated labeled map");
   for (let i=0;i<26;i++){
     const item = await evaluate('(() => { const b=document.querySelectorAll(".pathView button[data-station-key]")['+i+']; if(!b)return false; b.scrollIntoView({block:"center",behavior:"instant"}); return true; })()');
@@ -132,7 +132,6 @@ try {
   await until(async () => await evaluate('Boolean(document.querySelector(".stationView"))'), "station navigation");
   await evaluate("history.back()");
   await until(async () => {const s=await evaluate(statsExpr);return s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;}, "return from station to map");
-  await until(async () => await evaluate('Object.keys(localStorage).some(key=>key.startsWith("alantil_route_images_ready_v1:"))'), "persistent station icon cache", 30000);
   const afterNavigation = await evaluate(statsExpr);
   const worker = await evaluate('(async () => { const ready=await Promise.race([navigator.serviceWorker.ready,new Promise(resolve=>setTimeout(()=>resolve(null),8000))]); if(!ready)return {active:false}; await ready.update(); return {active:Boolean(ready.active),scriptURL:ready.active?.scriptURL||"",cacheKeys:await caches.keys()}; })()');
   assert.ok(worker?.active, "Service Worker did not activate");
@@ -149,8 +148,8 @@ try {
       const s=await evaluate(statsExpr);return reloaded && s?.illustrated===26 && s?.labeled===26 && s?.loaded>=1;
     } catch { return false; }
   }, "completed warm Service Worker reload");
-  const warmMode = await evaluate('[...document.querySelectorAll(".pathView img[data-beginner-diorama-image]")].every(img => img.loading === "eager")');
-  assert.equal(warmMode,true,"Fully cached stations must load eagerly on repeat visit");
+  const pendingImages = await evaluate('document.querySelectorAll(".pathView img[data-stage-src]:not([src])").length');
+  assert.ok(pendingImages>0,"Warm reload must leave distant stage images deferred");
   await cmd("Tracing.end");
   const stream = await Promise.race([tracePromise, sleep(25000).then(() => null)]);
   assert.ok(stream, "Performance trace was not produced");

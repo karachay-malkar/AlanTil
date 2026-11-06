@@ -1,4 +1,4 @@
-import { BEGINNER_SET_METADATA, INTERMEDIATE_SET_METADATA } from "../../data/path-set-metadata.js?v=17.2.80";
+import { BEGINNER_SET_METADATA, INTERMEDIATE_SET_METADATA } from "../../data/path-set-metadata.js?v=17.2.81";
 import { getInterfaceLanguage, msg } from "../../shared/i18n/index.js?v=16.8.0.3";
 import { getDisplayedSetName, getDisplayedWordCollection } from "../../shared/domain/alan-display.js?v=16.8.0.3";
 import { supabasePublishableKey, supabaseUrl } from "../../config/supabase.js?v=16.8.0.3";
@@ -16,7 +16,7 @@ import { renderSegmentedProgress } from "../../shared/ui/segmented-progress.js?v
 import { renderStarButton } from "../../shared/ui/word-renderers.js?v=16.8.0.3";
 import { getHiddenSet, learnState } from "../learn/state.js?v=16.8.0.3";
 import { renderStationView } from "./station-view.js?v=16.8.0.3";
-import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=17.2.80";
+import { hasSeenStoryStele, mountStoryStele } from "./story-stele.js?v=17.2.81";
 import { readScopedJson } from "../../shared/progress/storage-scope.js?v=16.8.0.3";
 import { renderStoryWordList } from "./story-word-list.js?v=16.8.0.3";
 
@@ -24,9 +24,25 @@ let controller = null;
 let activeStudy = false;
 const pendingSelections = new Map();
 let routeCache = { words: null, route: null };
-const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.80";
-const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.80";
+const PATH_ROUTE_INDEX_URL = "/src/data/path-route-index.json.gz?v=17.2.81";
+const PATH_ROUTE_INDEX_FALLBACK_URL = "/src/data/path-route-index.json?v=17.2.81";
 let pathIndexCache = null;
+
+async function fetchRouteIndex(url, signal, compressed) {
+  const response = await fetch(url, { cache: "force-cache", signal });
+  if (!response.ok) throw new Error("Route index HTTP " + response.status);
+  let index;
+  if (compressed) {
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const gzip = bytes[0] === 0x1f && bytes[1] === 0x8b;
+    index = JSON.parse(gzip
+      ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text()
+      : new TextDecoder().decode(bytes));
+  } else index = await response.json();
+  if (!index?.version || !Array.isArray(index.words) || !index.words.length
+      || index.word_count !== index.words.length) throw new Error("Invalid route index");
+  return index;
+}
 
 async function getHomeRouteWords(signal) {
   const diagnostics = getRepositoryDiagnostics();
@@ -37,22 +53,11 @@ async function getHomeRouteWords(signal) {
   try {
     let index = pathIndexCache;
     if (!index) {
-      const useGzip = typeof DecompressionStream === "function";
-      const response = await fetch(useGzip ? PATH_ROUTE_INDEX_URL : PATH_ROUTE_INDEX_FALLBACK_URL, { cache: "force-cache", signal });
-      if (!response.ok) throw new Error("Route index HTTP " + response.status);
-      if (useGzip) {
-        const bytes = new Uint8Array(await response.arrayBuffer());
-        // Some hosts transparently decompress .gz responses; accept either form.
-        const gzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
-        const content = gzipped
-          ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text()
-          : new TextDecoder().decode(bytes);
-        index = JSON.parse(content);
-      } else {
-        index = await response.json();
+      if (typeof DecompressionStream === "function") {
+        try { index = await fetchRouteIndex(PATH_ROUTE_INDEX_URL, signal, true); }
+        catch (error) { if (signal?.aborted) throw error; }
       }
-      if (!index?.version || !Array.isArray(index.words) || !index.words.length
-          || index.word_count !== index.words.length) throw new Error("Invalid route index");
+      index ??= await fetchRouteIndex(PATH_ROUTE_INDEX_FALLBACK_URL, signal, false);
       pathIndexCache = index;
     }
     const installed = getPersistedDictionaryVersion();
@@ -103,9 +108,6 @@ const BEGINNER_METADATA_CACHE_KEY = "alantil_beginner_set_metadata_v2";
 const BEGINNER_SET_PATTERN = /^beginner-(0[1-9]|[12]\d|30)$/;
 const BEGINNER_ICON_PATTERN = /^(0[1-9]|[12]\d|30)_[a-z0-9_]+\.webp$/;
 const SET_ICON_ASSET_VERSION = "16.8.0.14";
-const ROUTE_IMAGE_CACHE = "alantil-path-images-v1";
-const ROUTE_IMAGE_MARKER = "alantil_route_images_ready_v1:" + SET_ICON_ASSET_VERSION + ":";
-let eagerCachedRouteImages = false;
 const STATION_STAR_COUNT = 12;
 const STATION_STAR_ORBITS = Object.freeze([
   { radius: 54, duration: 15 },
@@ -389,7 +391,7 @@ function bindBeginnerDioramaFallbacks(root, signal) {
     };
     image.addEventListener("load", sync, { signal });
     image.addEventListener("error", sync, { signal });
-    if (image.complete) sync();
+    if (image.hasAttribute("src") && image.complete) sync();
   });
 }
 
@@ -412,58 +414,39 @@ function stationMilestones(summary) {
   return `<span class="stationMilestones" aria-label="${msg("path.marshrutnyh_otmetok", { count })}">${Array.from({ length: Math.min(4, count) }, () => "⌃").join("")}</span>`;
 }
 
-function routeImageUrls(story) {
-  return [...new Set((story?.stations || []).map(station => beginnerSetIconName(station) || intermediateSetIconName(station))
-    .filter(Boolean).map(icon => "/assets/icons/sets/" + encodeURIComponent(icon) + "?v=" + SET_ICON_ASSET_VERSION))];
-}
-function routeImagesPreviouslyCached(story, storyType) {
-  const urls = routeImageUrls(story);
-  if (!urls.length) return false;
-  try { return localStorage.getItem(ROUTE_IMAGE_MARKER + storyType) === urls.join("|"); } catch { return false; }
-}
-function warmRouteImages(story, storyType, signal) {
-  const urls = routeImageUrls(story);
-  if (!urls.length || globalThis.navigator?.connection?.saveData) return;
-  const marker = ROUTE_IMAGE_MARKER + storyType;
-  const signature = urls.join("|");
-  void (async () => {
-    try {
-      const visible = [...document.querySelectorAll(".pathView img[data-beginner-diorama-image]")].filter(img => img.loading === "eager").slice(0, 4);
-      await Promise.allSettled(visible.map(img => img.decode()));
-      if (signal.aborted) return;
-      await new Promise(resolve => {
-        if (typeof requestIdleCallback === "function") requestIdleCallback(resolve, { timeout: 2000 });
-        else setTimeout(resolve, 600);
-      });
-      if (signal.aborted) return;
-      const shared = await caches.open(ROUTE_IMAGE_CACHE);
-      // Small serial batches give the visible UI and study pages precedence.
-      for (const url of urls) {
-        if (signal.aborted) return;
-        if (await shared.match(url)) continue;
-        const old = await caches.match(url);
-        if (old) { await shared.put(url, old); continue; }
-        const response = await fetch(url, { cache: "force-cache", signal });
-        if (!response.ok) return;
-        await shared.put(url, response.clone());
+function loadVisibleRouteImages(viewport, signal) {
+  if (!viewport || signal.aborted) return;
+  let frame = 0;
+  const scan = () => {
+    frame = 0;
+    if (signal.aborted) return;
+    const bounds = viewport.getBoundingClientRect();
+    const stations = [...viewport.querySelectorAll("[data-stage-order]")]
+      .filter(button => button.querySelector("img[data-stage-src]:not([src])"))
+      .map(button => ({ button, rect: button.getBoundingClientRect() }));
+    const visible = stations.filter(({ rect }) => rect.bottom > bounds.top && rect.top < bounds.bottom);
+    const nearby = stations.filter(({ rect }) =>
+      (rect.bottom <= bounds.top && rect.bottom > bounds.top - 180) ||
+      (rect.top >= bounds.bottom && rect.top < bounds.bottom + 180));
+    const byOrder = (a,b) => Number(a.button.dataset.stageOrder) - Number(b.button.dataset.stageOrder);
+    const load = ({ button }, priority) => {
+      for (const image of button.querySelectorAll("img[data-stage-src]:not([src])")) {
+        image.fetchPriority = priority;
+        image.src = image.dataset.stageSrc;
       }
-      if (signal.aborted) return;
-      const allPresent = (await Promise.all(urls.map(url => shared.match(url)))).every(Boolean);
-      if (allPresent) localStorage.setItem(marker, signature);
-    } catch (error) {
-      // Quota limits, privacy mode and offline visits must not prevent rendering.
-      console.warn("Path image warmup unavailable", error);
-    }
-  })();
+    };
+    visible.sort(byOrder).forEach(station => load(station, "high"));
+    nearby.sort(byOrder).forEach(station => load(station, "low"));
+  };
+  const schedule = () => { if (!frame && !signal.aborted) frame = requestAnimationFrame(scan); };
+  const observer = new MutationObserver(schedule);
+  observer.observe(viewport, { childList:true, subtree:true, attributes:true, attributeFilter:["data-stage-src"] });
+  viewport.addEventListener("scroll", schedule, { signal, passive:true });
+  window.addEventListener("resize", schedule, { signal });
+  signal.addEventListener("abort", () => { observer.disconnect(); cancelAnimationFrame(frame); }, { once:true });
+  scan();
 }
-function revealCachedRouteImages(context, signal) {
-  if (!eagerCachedRouteImages) return;
-  const visible = [...context.root.querySelectorAll(".pathView img[data-beginner-diorama-image]")].filter(img => img.loading === "eager").slice(0, 4);
-  const decoded = Promise.allSettled(visible.map(img => img.decode()));
-  void Promise.race([decoded, new Promise(resolve => setTimeout(resolve, 1500))]).then(() => {
-    if (!signal.aborted) delete context.root.dataset.pathImageBatch;
-  });
-}
+
 function stationButton(station, index, progressSnapshot) {
   const status = computedStationStatus(null, station, progressSnapshot);
   const progress = stationWordProgress(station, progressSnapshot);
@@ -474,10 +457,7 @@ function stationButton(station, index, progressSnapshot) {
   if (iconName) {
     const iconSrc = `/assets/icons/sets/${encodeURIComponent(iconName)}?v=${SET_ICON_ASSET_VERSION}`;
     const achievementLevel = masteryLevelForPercent(progress.percent);
-    // First four (lower-route) stations load eagerly; others when scrolled into view.
-    const loading = eagerCachedRouteImages || index < 4 ? "eager" : "lazy";
-    const priority = index < 4 ? "high" : "low";
-    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-station-progress-percent="${progress.percent}" data-achievement-level="${achievementLevel}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block">${achievementLevel > 0 ? stationStarField(station.key) : ""}<img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image src="${iconSrc}" alt="" loading="${loading}" decoding="async" fetchpriority="${priority}"><img class="beginnerDioramaImage beginnerDioramaImageProgress" src="${iconSrc}" alt="" aria-hidden="true" loading="${loading}" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
+    return `<button id="station-${escapeHtml(station.key)}" class="${className}" style="--station-progress:${progress.percent * 3.6}deg;--station-progress-percent:${progress.percent}%;width:168px;height:auto;min-height:148px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px" type="button" data-station-key="${escapeHtml(station.key)}" data-stage-order="${index}" data-station-progress-percent="${progress.percent}" data-achievement-level="${achievementLevel}" aria-label="${msg("path.osvoeno_iz_slov", { label: escapeHtml(stationName), mastered: progress.mastered, total: progress.total })}"><span class="beginnerDioramaFrame" aria-hidden="true" style="position:relative;left:auto;top:auto;flex:0 0 118px;width:118px;height:118px;display:block">${achievementLevel > 0 ? stationStarField(station.key) : ""}<img class="beginnerDioramaImage beginnerDioramaImageMuted" data-beginner-diorama-image data-stage-src="${iconSrc}" alt="" decoding="async"><img class="beginnerDioramaImage beginnerDioramaImageProgress" data-stage-src="${iconSrc}" alt="" aria-hidden="true" decoding="async"></span><span class="stationProgressRing beginnerDioramaFallback" aria-hidden="true"><span class="millstoneFace"><span class="stationOrdinal">${ordinal}</span></span></span><span class="stationLabel beginnerDioramaLabel" style="position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:168px;max-height:30px;margin:0;text-align:center">${escapeHtml(stationName)}</span><span class="stationWordCount beginnerDioramaFallbackCount">${progress.mastered}/${progress.total}</span></button>`;
   }
   const dictionaryId = String(station.dictionaryId || "");
   const label = dictionaryId === "beginner" || !LEVEL_DICTIONARIES.has(dictionaryId)
@@ -534,7 +514,7 @@ function renderRoute(context,route,activeStory,progressSnapshot,storyIntro){
   context.root.querySelector("[data-story-words]")?.addEventListener("click",()=>context.router.navigate("path.story-words",{storyType:activeStory}),{signal:controller.signal});
   context.root.querySelectorAll("[data-story-tab]").forEach((button)=>{button.addEventListener("click",()=>{const type=button.dataset.storyTab;const next=activeStoryType(route,type);if(next===activeStory)return;const viewport=context.root.querySelector(".pathMapViewport");updateRouteSettings({[routeScrollKey(activeStory)]:viewport?.scrollTop||0},{queue:false});updateRouteSettings({active_story:next});context.router.navigate("path.home",{storyType:next});},{signal:controller.signal});});
   context.root.querySelectorAll("[data-station-key]").forEach((button)=>{button.addEventListener("click",()=>{const station=route.byKey.get(button.dataset.stationKey);if(!station)return;const viewport=context.root.querySelector(".pathMapViewport");updateRouteSettings({[routeScrollKey(activeStory)]:viewport?.scrollTop||0},{queue:false});context.router.navigate("path.station",routeParams(station,route));},{signal:controller.signal});});
-  const viewport=context.root.querySelector(".pathMapViewport");createRouteScale({root:context.root,viewport,catalogs:reversedCatalogs,signal:controller.signal});window.addEventListener("alantil:scope-ready",()=>refreshRouteProgressInPlace(context,route,activeStory),{signal:controller.signal});let mapPositionReady=false;void restoreMapPosition(viewport).then(()=>{mapPositionReady=true;});let saveFrame=0;viewport?.addEventListener("scroll",()=>{if(viewport?.dataset?.guideDemoScroll==="true"||!mapPositionReady||saveFrame)return;saveFrame=requestAnimationFrame(()=>{saveFrame=0;updateRouteSettings({[routeScrollKey(activeStory)]:viewport.scrollTop},{queue:false});});},{signal:controller.signal,passive:true});
+  const signal=controller.signal;const viewport=context.root.querySelector(".pathMapViewport");createRouteScale({root:context.root,viewport,catalogs:reversedCatalogs,signal:controller.signal});window.addEventListener("alantil:scope-ready",()=>refreshRouteProgressInPlace(context,route,activeStory),{signal:controller.signal});let mapPositionReady=false;void restoreMapPosition(viewport).then(()=>{mapPositionReady=true;loadVisibleRouteImages(viewport,signal);});let saveFrame=0;viewport?.addEventListener("scroll",()=>{if(viewport?.dataset?.guideDemoScroll==="true"||!mapPositionReady||saveFrame)return;saveFrame=requestAnimationFrame(()=>{saveFrame=0;updateRouteSettings({[routeScrollKey(activeStory)]:viewport.scrollTop},{queue:false});});},{signal:controller.signal,passive:true});
 }
 function refreshSetMetadataInPlace(context,route,activeStory,signal) {
   const story=route.stories[activeStory];
@@ -559,7 +539,7 @@ function refreshSetMetadataInPlace(context,route,activeStory,signal) {
         button.style.cssText=upgraded.style.cssText;
         button.innerHTML=upgraded.innerHTML;
         button.removeAttribute("data-adaptive-station-meta");
-        for(const name of ["data-station-progress-percent","data-achievement-level"]){
+        for(const name of ["data-station-progress-percent","data-achievement-level","data-stage-order"]){
           const value=upgraded.getAttribute(name);
           if(value!==null)button.setAttribute(name,value);
         }
@@ -574,7 +554,7 @@ function refreshSetMetadataInPlace(context,route,activeStory,signal) {
     button.setAttribute("aria-label",msg("path.osvoeno_iz_slov",{label:station.name,mastered:Number(progress[0])||0,total:Number(progress[1])||0}));
     if(icon){
       const src="/assets/icons/sets/"+encodeURIComponent(icon)+"?v="+SET_ICON_ASSET_VERSION;
-      button.querySelectorAll(".beginnerDioramaImage").forEach((image)=>{if(image.getAttribute("src")!==src)image.setAttribute("src",src);});
+      button.querySelectorAll(".beginnerDioramaImage").forEach((image)=>{if(image.dataset.stageSrc!==src){image.dataset.stageSrc=src;if(image.hasAttribute("src"))image.src=src;}});
     }
   }
   // Keep the player's position near the route's bottom when placeholders gain height.
@@ -584,20 +564,31 @@ function refreshSetMetadataInPlace(context,route,activeStory,signal) {
 }
 function refreshSetMetadataAsync(context,route,activeStory,signal) {
   const update=()=>{if(signal.aborted)return;applyBeginnerSetMetadataToRoute(route);applyIntermediateSetMetadataToRoute(route);refreshSetMetadataInPlace(context,route,activeStory,signal);};
-  void Promise.allSettled([
-    fetchBeginnerSetMetadata({signal}).then(map=>{if(!signal.aborted){beginnerSetMetadata=map;update();}}),
-    fetchIntermediateSetMetadata({signal}).then(map=>{if(!signal.aborted){intermediateSetMetadata=map;update();}})
-  ]).then(results=>{for(const result of results)if(result.status==="rejected"&&result.reason?.name!=="AbortError")console.warn("Path set metadata refresh failed",result.reason);});
+  const dictionary=route.stories[activeStory]?.stations[0]?.dictionaryId;
+  const task=dictionary==="beginner"?fetchBeginnerSetMetadata({signal}).then(map=>{beginnerSetMetadata=map;}):
+   dictionary==="intermediate"?fetchIntermediateSetMetadata({signal}).then(map=>{intermediateSetMetadata=map;}):null;
+  void task?.then(update).catch(error=>{if(error?.name!=="AbortError")console.warn("Path set metadata refresh failed",error);});
 }
 function selectedWordsForStation(station){const pending=pendingSelections.get(station.key);if(Array.isArray(pending)&&pending.length)return pending;const hidden=getHiddenSet(station.dictionaryId,station.sectionId,station.setId);const active=station.words.filter((word)=>!hidden.has(word.id));return active.length?active:station.words;}
 function renderStation(context,route,station){renderStationView(context,station,{signal:controller.signal,onStartStudy(mode,words){pendingSelections.set(station.key,words);context.router.navigate("path.study",{...routeParams(station,route),mode});},onStartTest(mode){context.router.navigate("path.test",{...routeParams(station,route),mode});}});}
 function masteryLabel(level){if(level===3)return msg("path.iii_znak_vershiny");if(level===2)return msg("path.ii_marshrutnyy_znak");if(level===1)return msg("path.i_marshrutnyy_znak");return msg("path.test_ne_sdan");}
 function renderResult(context,route,station,result,allWords){if(result.passed)awardWordMilestones(allWords);const message=result.passed?masteryLabel(result.masteryLevel):msg("path.nuzhno_ne_menee",{required:result.required});const wordsById=new Map(allWords.map((word)=>[String(word.id),word]));const alanToTranslation=result.payload.direction!=="ru_to_alan";const rows=(result.payload.words||[]).map((answer)=>{const word=wordsById.get(String(answer.word_id));if(!word)return"";const wrongWord=wordsById.get(String(answer.wrong_word_id||""));const correct=answer.result==="correct"||answer.is_correct===true;const correctAnswer=alanToTranslation?word.trans:word.word;const selectedAnswer=wrongWord?(alanToTranslation?wrongWord.trans:wrongWord.word):correctAnswer;return renderResultRow({id:word.id,status:correct?"ok":"bad",primary:alanToTranslation?word.word:word.trans,details:correct?[{label:msg("test.pravilno"),value:correctAnswer,tone:"correct"}]:[{label:msg("test.otvet"),value:selectedAnswer||"—",tone:"wrong"},{label:msg("test.pravilno"),value:correctAnswer,tone:"correct"}],trailingHtml:renderStarButton(word.id,`data-word-id="${escapeHtml(word.id)}"`)});}).join("");context.shell.setHeaderContent?.({title:msg("path.rezultat_testa"),subtitle:station.name,logo:true,brand:false});context.root.innerHTML=renderResultScreen({className:"stationResultView",summaryClass:"modeResultSummary",summaryHtml:`<span class="modeResultMark" aria-hidden="true">${result.masteryLevel?"⌃".repeat(result.masteryLevel):"—"}</span><strong>${result.payload.accuracy}%</strong><span>${escapeHtml(message)} · ${result.payload.correct_total}/${result.payload.questions_total}</span>`,contentHtml:rows,emptyHtml:`<div class="hintText">${msg("test.net_rezultatov")}</div>`,footerHtml:`<div class="stationActions"><button class="btn actionText" type="button" data-result-return>${msg("path.k_etapu")}</button>${result.passed?"":`<button class="btn actionPrimary" type="button" data-result-repeat>${msg("path.povtorit")}</button>`}</div>`});bindResultRows(context.root,{signal:controller.signal});context.root.querySelectorAll(".starBtn[data-word-id]").forEach((button)=>{button.addEventListener("click",()=>button.classList.toggle("on",wordFavorites.toggle(button.dataset.wordId)),{signal:controller.signal});});context.root.querySelector("[data-result-return]")?.addEventListener("click",()=>context.router.replace("path.station",routeParams(station,route),{force:true}),{signal:controller.signal});context.root.querySelector("[data-result-repeat]")?.addEventListener("click",()=>{const mode=result.payload.direction==="ru_to_alan"?"ru":"kb";const session=testDependencies.createStationTestSession(station,allWords,mode);testDependencies.renderStationTest(context,session,{onComplete:(next)=>renderResult(context,route,station,next,allWords)});},{signal:controller.signal});}
 
-export async function mount(context,params={}){controller=new AbortController();const screen=params.screen||"home";const signal=controller.signal;
+export function mount(context, params = {}) {
+  controller = new AbortController();
+  const signal = controller.signal;
+  if (params.screen && params.screen !== "home") return mountPath(context, params, signal);
+  context.root.innerHTML = `<div class="screenState">${msg("common.otkryvaem")}</div>`;
+  void mountPath(context, params, signal).catch(error => {
+    if (signal.aborted) return;
+    console.warn("Path loading failed", error);
+    context.root.innerHTML = `<div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div>`;
+  });
+}
+async function mountPath(context,params,signal){const screen=params.screen||"home";
   // Metadata is decorative: never delay the first map paint for remote set labels/icons.
   beginnerSetMetadata=readBeginnerMetadataCache();
   intermediateSetMetadata=readIntermediateMetadataCache();
   const words=await (screen==="home"?getHomeRouteWords(signal):getCompleteDictionaryWords({signal}));
-  if(signal.aborted)return;mark("alantil:path:dictionary-ready");if(routeCache.words!==words){routeCache={words,route:buildLearningRoute(words)};mark("alantil:path:route-built");}const route=routeCache.route;applyBeginnerSetMetadataToRoute(route);applyIntermediateSetMetadataToRoute(route);const requestedStory=params.storyType||(screen==="home"?route.defaultStoryType:getRouteSettings().active_story);const activeStory=activeStoryType(route,requestedStory);const storyIntro=localizedStoryIntro(words,activeStory,route.stories[activeStory]?.intro);updateRouteSettings({active_story:activeStory},{queue:false});if(screen==="story-words"){renderStoryWordList({context,route,storyType:activeStory,signal:controller.signal});return;}if(screen==="home"){const progressSnapshot=createRouteProgressSnapshot();if(String(params.storyType||"")!==activeStory)context.router.canonicalize?.("path.home",{storyType:activeStory});eagerCachedRouteImages=routeImagesPreviouslyCached(route.stories[activeStory],activeStory);if(eagerCachedRouteImages)context.root.dataset.pathImageBatch="pending";else delete context.root.dataset.pathImageBatch;renderRoute(context,route,activeStory,progressSnapshot,storyIntro);revealCachedRouteImages(context,signal);warmRouteImages(route.stories[activeStory],activeStory,signal);refreshSetMetadataAsync(context,route,activeStory,signal);return;}const station=resolveStationFromParams(route,{...params,storyType:activeStory});if(!station){context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,createRouteProgressSnapshot(),storyIntro);return;}if(screen==="station"){renderStation(context,route,station);return;}if(screen==="study"){const study=await loadStudyDependencies();if(controller.signal.aborted)return;activeStudy=true;const selectedWords=selectedWordsForStation(station);learnState.currentDict=station.dictionaryId;learnState.currentSection=station.sectionId;learnState.currentSet=station.setId;context.shell.setHeaderContent?.({title:msg("path.uchit_slova"),subtitle:station.name,logo:true,brand:false});study.renderStudy(context,words,controller.signal,{mode:params.mode||learnState.currentStudyMode||"kb",wordsOverride:selectedWords,stationContext:{key:station.key,wordIds:selectedWords.map((word)=>word.id),sectionId:station.sectionId,...routeParams(station,route)},onComplete(){activeStudy=false;pendingSelections.delete(station.key);study.renderLearnResults(context,words,controller.signal,{onDone:()=>context.router.replace("path.station",routeParams(station,route),{force:true})});}});return;}if(screen==="test"){const test=await loadTestDependencies();if(controller.signal.aborted)return;const allWords=route.storyOrder.flatMap((type)=>route.stories[type].stations).flatMap((item)=>item.words);const session=test.createStationTestSession(station,allWords,params.mode||"kb");test.renderStationTest(context,session,{onComplete:(result)=>renderResult(context,route,station,result,allWords)});}}
+  if(signal.aborted)return;mark("alantil:path:dictionary-ready");if(routeCache.words!==words){routeCache={words,route:buildLearningRoute(words)};mark("alantil:path:route-built");}const route=routeCache.route;applyBeginnerSetMetadataToRoute(route);applyIntermediateSetMetadataToRoute(route);const requestedStory=params.storyType||(screen==="home"?route.defaultStoryType:getRouteSettings().active_story);const activeStory=activeStoryType(route,requestedStory);const storyIntro=localizedStoryIntro(words,activeStory,route.stories[activeStory]?.intro);updateRouteSettings({active_story:activeStory},{queue:false});if(screen==="story-words"){renderStoryWordList({context,route,storyType:activeStory,signal:controller.signal});return;}if(screen==="home"){const progressSnapshot=createRouteProgressSnapshot();if(String(params.storyType||"")!==activeStory)context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,progressSnapshot,storyIntro);refreshSetMetadataAsync(context,route,activeStory,signal);return;}const station=resolveStationFromParams(route,{...params,storyType:activeStory});if(!station){context.router.canonicalize?.("path.home",{storyType:activeStory});renderRoute(context,route,activeStory,createRouteProgressSnapshot(),storyIntro);return;}if(screen==="station"){renderStation(context,route,station);return;}if(screen==="study"){const study=await loadStudyDependencies();if(controller.signal.aborted)return;activeStudy=true;const selectedWords=selectedWordsForStation(station);learnState.currentDict=station.dictionaryId;learnState.currentSection=station.sectionId;learnState.currentSet=station.setId;context.shell.setHeaderContent?.({title:msg("path.uchit_slova"),subtitle:station.name,logo:true,brand:false});study.renderStudy(context,words,controller.signal,{mode:params.mode||learnState.currentStudyMode||"kb",wordsOverride:selectedWords,stationContext:{key:station.key,wordIds:selectedWords.map((word)=>word.id),sectionId:station.sectionId,...routeParams(station,route)},onComplete(){activeStudy=false;pendingSelections.delete(station.key);study.renderLearnResults(context,words,controller.signal,{onDone:()=>context.router.replace("path.station",routeParams(station,route),{force:true})});}});return;}if(screen==="test"){const test=await loadTestDependencies();if(controller.signal.aborted)return;const allWords=route.storyOrder.flatMap((type)=>route.stories[type].stations).flatMap((item)=>item.words);const session=test.createStationTestSession(station,allWords,params.mode||"kb");test.renderStationTest(context,session,{onComplete:(result)=>renderResult(context,route,station,result,allWords)});}}
 export function canLeave(){return !activeStudy||!learnState.studySession.inProgress;}export function onLeave(reason="route_change"){if(activeStudy&&learnState.studySession.inProgress)studyDependencies?.finalizeLearnSession("interrupted",reason);activeStudy=false;}export function unmount(){controller?.abort();controller=null;}

@@ -31,7 +31,7 @@ function scenario({ icon = "01_sample.webp", hasLabel = false, labelText = "Old 
     },
     querySelectorAll(selector) {
       return selector === ".beginnerDioramaImage" && rendered
-        ? [{ getAttribute: () => "/assets/icons/sets/" + icon, setAttribute() {} }]
+        ? [{ dataset: { stageSrc: "/assets/icons/sets/" + icon }, hasAttribute: () => false }]
         : [];
     },
     setAttribute(name, value) { attrs.set(name, String(value)); },

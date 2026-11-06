@@ -34,5 +34,5 @@ test('17.2 favicon and versioned static resources load without repeat network fe
  assert.ok(index.includes('targetVersion = "' + JSON.parse(await read('release.json')).version + '"'));
  assert.ok(worker.includes('VERSION = "' + JSON.parse(await read('release.json')).version + '"'));
  assert.match(worker,/url\.searchParams\.has\("v"\)/);
- assert.match(worker,/versionedCode \? cacheFirst\(request\) : networkFirst\(request/);
+ assert.match(worker,/versionedCode \? cacheFirst\(request, RUNTIME_CACHE, keepAlive\) : networkFirst\(request/);
 });

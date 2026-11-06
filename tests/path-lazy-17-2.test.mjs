@@ -45,7 +45,7 @@ test('Only the route map uses compact path data; stations and tests load complet
  assert.match(repo,/export function getPersistedDictionaryVersion/);
  assert.match(worker,/src\/data\/path-route-index\.json/);
  assert.match(worker,/src\/data\/dictionary-snapshot\.json/);
- assert.match(worker,/versionedCode \? cacheFirst\(request\) : networkFirst\(request/);
+ assert.match(worker,/versionedCode \? cacheFirst\(request, RUNTIME_CACHE, keepAlive\) : networkFirst\(request/);
  const ids=new Set(index.words.map(row=>String(row.id)));
  assert.equal(ids.size,index.words.length);
 });

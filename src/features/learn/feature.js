@@ -54,10 +54,21 @@ function renderFavoritesResults(context, words) {
   });
 }
 
-export async function mount(context, params = {}) {
+export function mount(context, params = {}) {
   controller = new AbortController();
+  const signal = controller.signal;
+  if (params.screen && params.screen !== "set") return mountScreen(context, params, signal);
+  context.root.innerHTML = `<div class="screenState">${msg("common.otkryvaem")}</div>`;
+  void mountScreen(context, params, signal).catch(error => {
+    if (signal.aborted) return;
+    console.warn("learn loading failed", error);
+    context.root.innerHTML = `<div class="errorState">${msg("common.ne_udalos_otkryt_razdel")}</div>`;
+  });
+}
+async function mountScreen(context,params,signal){
   wordFavorites.reload();
   const words = await getWords();
+  if (signal.aborted) return;
   const requested = params.screen || "set";
   const isFavorites = String(params.dictionarySlug || "") === "favorites";
 

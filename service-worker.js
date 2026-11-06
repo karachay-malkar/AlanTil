@@ -1,4 +1,4 @@
-const VERSION = "17.2.80";
+const VERSION = "17.2.81";
 const SHELL_CACHE = "alantil-shell-" + VERSION;
 const RUNTIME_CACHE = "alantil-runtime-" + VERSION;
 // Images are content-addressed by their ?v= URL, not by the application release.
@@ -8,23 +8,23 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
   "/404.html",
-  "/src/app/bootstrap.js?v=17.2.80",
-  "/src/app/router.js?v=17.2.80",
+  "/src/app/bootstrap.js?v=17.2.81",
+  "/src/app/router.js?v=17.2.81",
   "/src/app/shell.js?v=16.8.0.16",
   "/src/app/screen-registry.js?v=16.8.0.17",
   "/src/shared/ui/bracket-tabs.js?v=16.8.0.16",
   "/src/shared/styles/bracket-tabs.css?v=16.8.0.16",
-  "/src/shared/styles/app.css?v=17.2.80",
+  "/src/shared/styles/app.css?v=17.2.81",
   "/src/shared/styles/learning-preview.css?v=16.8.0.16",
-  "/src/features/path/feature.js?v=17.2.80",
-  "/src/data/path-set-metadata.js?v=17.2.80",
-  "/src/features/path/story-stele.js?v=17.2.80",
+  "/src/features/path/feature.js?v=17.2.81",
+  "/src/data/path-set-metadata.js?v=17.2.81",
+  "/src/features/path/story-stele.js?v=17.2.81",
   "/src/shared/data/word-repository.js?v=16.8.0.16",
   "/src/shared/data/dictionary-store.js?v=16.8.0.16",
   "/assets/icons/ui/path-elbrus-white.png?v=16.8.0.16",
-  "/assets/icons/ui/favicon-32.png?v=17.2.80",
-  "/assets/icons/ui/favicon-192.png?v=17.2.80",
-  "/assets/icons/ui/favicon-512.png?v=17.2.80"
+  "/assets/icons/ui/favicon-32.png?v=17.2.81",
+  "/assets/icons/ui/favicon-192.png?v=17.2.81",
+  "/assets/icons/ui/favicon-512.png?v=17.2.81"
 ];
 
 self.addEventListener("install", (event) => {
@@ -89,63 +89,77 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
-async function cachedShell() {
-  const cache = await caches.open(SHELL_CACHE);
-  return (await cache.match("/index.html")) || (await cache.match("/"));
+async function openOptionalCache(name) {
+  try { return await caches.open(name); } catch { return null; }
 }
 
-async function navigationResponse(request) {
-  const cache = await caches.open(SHELL_CACHE);
+async function matchOptionalCache(cache, key) {
+  try { return await cache?.match(key); } catch { return undefined; }
+}
+
+function saveOptionalResponse(cache, key, response, keepAlive) {
+  if (!cache || !response.ok || !keepAlive) return;
+  try { keepAlive(cache.put(key, response.clone()).catch(() => {})); } catch {}
+}
+
+async function navigationResponse(request, keepAlive) {
+  const cache = await openOptionalCache(SHELL_CACHE);
   try {
     const response = await fetch(request, { cache: "no-store" });
-    if (response.ok) await cache.put("/index.html", response.clone());
+    saveOptionalResponse(cache, "/index.html", response, keepAlive);
     return response;
   } catch {
-    return (await cache.match("/index.html")) || (await cache.match("/")) || Response.error();
+    return (await matchOptionalCache(cache, "/index.html")) || (await matchOptionalCache(cache, "/")) || Response.error();
   }
 }
 
-async function cacheFirst(request, cacheName = RUNTIME_CACHE) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
+async function cacheFirst(request, cacheName = RUNTIME_CACHE, keepAlive) {
+  const cache = await openOptionalCache(cacheName);
+  const cached = await matchOptionalCache(cache, request);
   if (cached) return cached;
+  const url = new URL(request.url || request, self.location.origin);
+  if (cacheName === RUNTIME_CACHE && CORE_ASSETS.includes(url.pathname + url.search)) {
+    const precached = await matchOptionalCache(await openOptionalCache(SHELL_CACHE), request);
+    if (precached) return precached;
+  }
   try {
     const response = await fetch(request);
-    if (response.ok) await cache.put(request, response.clone());
+    saveOptionalResponse(cache, request, response, keepAlive);
     return response;
   } catch {
     return Response.error();
   }
 }
 
-async function networkFirst(request, cacheName = RUNTIME_CACHE, { noStore = false } = {}) {
-  const cache = await caches.open(cacheName);
+async function networkFirst(request, cacheName = RUNTIME_CACHE, { noStore = false } = {}, keepAlive) {
+  const cache = await openOptionalCache(cacheName);
   try {
     const response = await fetch(request, noStore ? { cache: "no-store" } : undefined);
-    if (response.ok) await cache.put(request, response.clone());
+    saveOptionalResponse(cache, request, response, keepAlive);
     return response;
   } catch {
-    return (await cache.match(request)) || Response.error();
+    return (await matchOptionalCache(cache, request)) || Response.error();
   }
 }
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
+  const keepAlive = task => event.waitUntil(task);
   if (request.method !== "GET") return;
   const url = new URL(request.url);
 
   if (request.mode === "navigate") {
-    event.respondWith(navigationResponse(request));
+    event.respondWith(navigationResponse(request, keepAlive));
     return;
   }
   if (url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith("/assets/icons/sets/")) {
-    event.respondWith(cacheFirst(request, IMAGE_CACHE));
+    event.respondWith(cacheFirst(request, IMAGE_CACHE, keepAlive));
     return;
   }
   if (["image", "font"].includes(request.destination) || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/vendor/")) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(cacheFirst(request, RUNTIME_CACHE, keepAlive));
     return;
   }
 
@@ -157,6 +171,6 @@ self.addEventListener("fetch", (event) => {
       && !url.pathname.startsWith("/src/config/"))
       || (["/src/data/dictionary-snapshot.json", "/src/data/path-route-index.json", "/src/data/path-route-index.json.gz"].includes(url.pathname)
         && url.searchParams.has("v"));
-    event.respondWith(versionedCode ? cacheFirst(request) : networkFirst(request, RUNTIME_CACHE, { noStore: true }));
+    event.respondWith(versionedCode ? cacheFirst(request, RUNTIME_CACHE, keepAlive) : networkFirst(request, RUNTIME_CACHE, { noStore: true }, keepAlive));
   }
 });

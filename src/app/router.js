@@ -7,9 +7,9 @@ import { hasActivityAccess, whenActivityAccessReady } from "../shared/admin/admi
 import { screenStyleDependencies } from "./screen-registry.js?v=16.8.0.17";
 
 const DEFAULT_STORY = "roots";
-const ASSET_VERSION = "17.2.80";
-const TOWER_ASSET_VERSION = "17.2.80";
-const MASONRY_ASSET_VERSION = "17.2.80";
+const ASSET_VERSION = "17.2.81";
+const TOWER_ASSET_VERSION = "17.2.81";
+const MASONRY_ASSET_VERSION = "17.2.81";
 const FEATURE_PATHS = Object.freeze({
   practice: "../features/practice/index.js",
   ashyk: "../features/ashyk/index.js",
@@ -484,7 +484,7 @@ export function createRouter({ shell, modal, context }) {
     return show(current, { historyMode: "none", force: true, initial: true, skipLeaveCheck: true });
   }
   function getCurrent() { return { ...current, params: { ...current.params }, stack: entries.slice(0, historyIndex) }; }
-  const api = { start, navigate, replace, refresh, back, reset, getCurrent, parsePathname, buildPath, resolveInitialRoute, syncBrowserHistory, handlePopState, mountCurrentRoute, attachTelegram, releaseLaunchUrl: releaseTelegramLaunchUrl, releaseTelegramLaunchUrl, setAnalyticsActive, canonicalize };
+  const api = { loadScreenStyles: ensureRouteStyles, start, navigate, replace, refresh, back, reset, getCurrent, parsePathname, buildPath, resolveInitialRoute, syncBrowserHistory, handlePopState, mountCurrentRoute, attachTelegram, releaseLaunchUrl: releaseTelegramLaunchUrl, releaseTelegramLaunchUrl, setAnalyticsActive, canonicalize };
   shell.backButton.addEventListener("click", () => back());
   shell.root.addEventListener("click", (event) => { const routeElement = event.target.closest("[data-route]"); if (!routeElement) return; event.preventDefault(); navigate(routeElement.dataset.route); });
   shell.bottomNav.addEventListener("click", (event) => { const routeElement = event.target.closest("[data-route]"); if (!routeElement) return; event.preventDefault(); navigate(routeElement.dataset.route); });

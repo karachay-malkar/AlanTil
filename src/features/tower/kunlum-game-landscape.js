@@ -1,5 +1,5 @@
-import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js?v=17.2.80';
-import {installKunlumCliffTriplanar} from './kunlum-cliff-projection.mjs?v=17.2.80';
+import {KUNLUM_AUTUMN_TERRAIN} from './kunlum-autumn-palette.js?v=17.2.81';
+import {installKunlumCliffTriplanar} from './kunlum-cliff-projection.mjs?v=17.2.81';
 /**
  * Procedural game-terrain PBR layer for Kunlum. No satellite imagery or external
  * texture downloads. Albedo, grain and roughness are artistic, not mapped landcover.
@@ -266,7 +266,7 @@ export function createKunlumNativeTerrainPBR(THREE,{mobile=false}={}){
  // Generated textures stay as a complete fallback if WebP is unavailable.
  let activeMap=map,activeNormalMap=normalMap,disposed=false,scanTask=null;
  const scanRoot='/assets/tower/materials/kunlum-landscape/';
- const KUNLUM_SCAN_VERSION='17.2.80';
+ const KUNLUM_SCAN_VERSION='17.2.81';
  function loadScannedDetail(){
   if(scanTask)return scanTask;
   scanTask=(async()=>{
