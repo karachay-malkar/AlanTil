@@ -24,12 +24,12 @@ test('every ruin wall has organically spaced stones rather than identical brick 
  assert.ok(stones.every(s=>Number.isFinite(s.x)&&Number.isFinite(s.y)&&s.height>.08));
 });
 
-test('spatial ruin chunks use immutable Common100 geometry at every camera distance',()=>{
+test('spatial ruin chunks use ready instanced casts',()=>{
  assert.match(facing,/groupRuinSegments/);
  assert.match(facing,/getApprovedStoneSurfaceGeometry\(source\)/);
  assert.match(facing,/new THREE\.InstancedMesh\(models\[k\]\.geometry/);
- assert.match(facing,/mesh\.frustumCulled=true/);
- assert.match(facing,/root.userData.ruinPlacementMode='fixed-common100-instances-v1'/);
+ assert.match(facing,/mesh\.computeBoundingSphere/);
+ assert.match(facing,/root.userData.ruinPlacementMode='baked-fence-lod-v1'/);
  assert.doesNotMatch(facing,/makeKunlumRuinShell|selectKunlumRuinTier|createDetail\(bucket,true\)|bucket\.far/);
  assert.doesNotMatch(map,/function wallBody|pushQuad\(out|addMesh\(confirmed/);
 });

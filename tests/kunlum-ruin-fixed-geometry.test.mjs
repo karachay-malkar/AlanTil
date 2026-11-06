@@ -1,51 +1,71 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import * as THREE from '../src/vendor/three/three.module.js';
-import {enhanceKunlumStoneWalls} from '../src/features/tower/kunlum-stone-facing.js';
-import {layoutKunlumRuinStones} from '../src/features/tower/kunlum-ruin-layout.js';
+import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.js';
+import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alignment.js';
 
-async function setup(mobile){
- const root=new THREE.Group(),confirmed=new THREE.Group();
- root.add(confirmed);
- const seg={a:[0,0],b:[6,0],height:1.6,width:.5,heightAt:()=>0};
- const shape=new THREE.IcosahedronGeometry(.5,0);
- const names=Array.from({length:24},(_,i)=>'stone-'+i);
- const manifest={models:names.map(name=>({name,category:'main'}))};
- const geometries=new Map(names.map(name=>[name,shape]));
- const result=await enhanceKunlumStoneWalls(THREE,root,[{group:confirmed,segments:[seg]}],{
-  mobile,materialPromise:Promise.resolve(new THREE.MeshStandardMaterial()),
-  loadLibrary:async()=>({manifest,geometries})
- });
- const meshes=[];
- confirmed.traverse(mesh=>{if(mesh.isInstancedMesh)meshes.push(mesh);});
- return {root,seg,result,meshes,shape};
-}
-function snapshot(meshes){
- return meshes.map(mesh=>{
-  const transforms=[];
-  const matrix=new THREE.Matrix4();
-  for(let i=0;i<mesh.count;i++){
-   mesh.getMatrixAt(i,matrix);transforms.push(matrix.elements.join(','));
+const read=path=>readFile(new URL('../'+path,import.meta.url));
+
+test('all mapped fence intervals use matching near and far casts without recipes',async()=>{
+ const OriginalRequest=globalThis.Request,originalFetch=globalThis.fetch;
+ const originalProgressEvent=globalThis.ProgressEvent;
+ const requested=[];
+ globalThis.Request=class extends OriginalRequest {
+  constructor(url,options){super(new URL(url,'http://localhost'),options);}
+ };
+ globalThis.ProgressEvent=class extends Event {
+  constructor(type,options){super(type);Object.assign(this,options);}
+ };
+ globalThis.fetch=async request=>{
+  const path=new URL(request.url).pathname;
+  requested.push(path);
+  return new Response(await read(path.slice(1)));
+ };
+ try{
+  const plan=JSON.parse(await read('assets/tower/environment/kunlum-vector-plan-2026-10-23.json'));
+  const alignment=createKunlumGameAlignment({plot:plan.plot});
+  const overlay=createKunlumMapOverlay(THREE,plan,{toWorld:alignment.planToScene,heightAt:(x,z)=>x*.01+z*.005});
+  const material=new THREE.MeshStandardMaterial();
+  const result=await overlay.enhance({materialPromise:Promise.resolve(material)});
+  const expected=[...overlay.segments.confirmed,...overlay.segments.candidates];
+  assert.equal(result.segments,expected.length);
+  assert.equal(result.blocks,expected.reduce((n,{a,b})=>n+Math.ceil(Math.hypot(a[0]-b[0],a[1]-b[1])/1.35),0));
+  assert.equal(requested.length,4);
+  assert.ok(requested.every(p=>/\/(casts|fence-lod)\/.+\.glb$/.test(p)));
+  const meshes=[];
+  for(const layer of [overlay.confirmed,overlay.candidates]){
+   const batch=layer.children.filter(m=>m.isInstancedMesh);
+   assert.ok(batch.length>0);
+   meshes.push(...batch);
   }
-  return {id:mesh.id,geometry:mesh.geometry.uuid,count:mesh.count,transforms};
- });
-}
-for(const mobile of [false,true]){
- test('stable Common100 geometry and stone positions at every distance: '+(mobile?'mobile':'desktop'),async()=>{
-  const {root,seg,result,meshes,shape}=await setup(mobile);
-  assert.ok(meshes.length>0);
-  assert.ok(meshes.every(m=>m.frustumCulled));
-  assert.equal(result.stones,layoutKunlumRuinStones(seg).length*(mobile?2:3));
-  const original=snapshot(meshes);
-  for(const distance of [5,17,40,70,150,40,5]){
-   result.update({position:new THREE.Vector3(distance,0,0)});
-   assert.deepEqual(snapshot(meshes),original);
-   const current=[];root.traverse(m=>{if(m.isInstancedMesh)current.push(m);});
-   assert.equal(current.length,meshes.length,'camera movement must never add or remove stone geometry');
+  const triangleCount=(mesh)=>mesh.geometry.index.count/3*mesh.count;
+  for(let i=0;i<meshes.length;i+=2){
+   const near=meshes[i],far=meshes[i+1];
+   assert.ok(triangleCount(far)<triangleCount(near)*.6);
+   assert.deepEqual(near.instanceMatrix.array,far.instanceMatrix.array);
+   assert.ok(near.geometry.boundingBox.min.distanceTo(far.geometry.boundingBox.min)<1e-5);
+   assert.ok(near.geometry.boundingBox.max.distanceTo(far.geometry.boundingBox.max)<1e-5);
   }
-  assert.equal(root.userData.ruinPlacementMode,'fixed-common100-instances-v1');
-  assert.equal(root.userData.ruinWallStoneInstances,result.stones);
-  result.dispose();
-  shape.dispose();
- });
-}
+  const near=meshes[0],far=meshes[1],p=near.boundingSphere.center.clone();
+  result.update({position:p});
+  assert.equal(near.visible,true);
+  const shader={vertexShader:'#include <project_vertex>',fragmentShader:'#include <clipping_planes_fragment>'};
+  const farShader={...shader};
+  near.material.onBeforeCompile(shader);
+  far.material.onBeforeCompile(farShader);
+  assert.match(shader.fragmentShader,/threshold < fade/);
+  assert.match(farShader.fragmentShader,/threshold >= fade/);
+  result.update({position:p.clone().addScalar(10000)});
+  assert.ok(meshes.every((m,i)=>m.visible===Boolean(i%2)));
+  const total=offset=>meshes.filter((_,i)=>i%2===offset).reduce((n,m)=>n+triangleCount(m),0);
+  console.log(JSON.stringify({segments:result.segments,blocks:result.blocks,nearTriangles:total(0),farTriangles:total(1)}));
+  overlay.dispose();
+  material.dispose();
+ }finally{
+  globalThis.Request=OriginalRequest;
+  globalThis.fetch=originalFetch;
+  if(originalProgressEvent)globalThis.ProgressEvent=originalProgressEvent;
+  else delete globalThis.ProgressEvent;
+ }
+});

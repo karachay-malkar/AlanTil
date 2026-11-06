@@ -1,7 +1,7 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {approvedSectionId,APPROVED_PREFAB_VERSION} from '../../../packages/tower-game/approved-prefab.mjs';
 import {PREFAB_CELL_METERS} from '../../../packages/tower-game/prefab-layout.mjs';
-import {loadBakedMasonry} from './baked-masonry.js?v=4';
+import {loadBakedMasonry} from './baked-masonry.js?v=5';
 
 export function createApprovedSectionLoader(){
  async function make(sectionId,variant,material){

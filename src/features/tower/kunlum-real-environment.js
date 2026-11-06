@@ -9,13 +9,13 @@ import {sampleDemLocal} from './kunlum-georeference.js';
 import {createKunlumWideDem} from './kunlum-wide-dem.js';
 import {createKunlumGameAlignment} from './kunlum-build-alignment.js';
 import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
-import {createKunlumMapOverlay} from './kunlum-map-overlay.js?v=17.2.82';
-import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js?v=17.2.82';
+import {createKunlumMapOverlay} from './kunlum-map-overlay.js?v=17.2.83';
+import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js?v=17.2.83';
 import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './kunlum-river-layer.js';
 import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
 
 
-export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stoneMaterialPromise=null,bakedFencePilot=false,onReady=()=>{}}={}){
+export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stoneMaterialPromise=null,onReady=()=>{}}={}){
  if(!plan?.plot||!Array.isArray(plan.confirmed_features)||!Array.isArray(plan.auto_candidates))
   throw Error('Authoritative 2D vector plan required');
  const group=new THREE.Group();
@@ -131,8 +131,8 @@ export function createKunlumRealEnvironment(THREE,scene,{plan,mobile=false,stone
   Object.assign(currentStats,{...overlay.counters,courtyards:overlay.counters.houses,
    sourceAccuracy:'Approved user-drawn vector plan (one-point registration)'});
   if(localLine.length)installScenery();
-  try{await overlay.enhance({materialPromise:stoneMaterialPromise,bakedFencePilot});}
-  catch(error){console.warn('Common100 historic stone detail unavailable:',error);}
+  try{await overlay.enhance({materialPromise:stoneMaterialPromise});}
+  catch(error){console.warn('Kunlum masonry unavailable:',error);}
   onReady();
  }
  function wideHeightAt(x,z){

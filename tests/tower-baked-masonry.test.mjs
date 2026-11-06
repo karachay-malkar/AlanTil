@@ -4,15 +4,12 @@ import {readFile} from 'node:fs/promises';
 import * as THREE from '../src/vendor/three/three.module.js';
 import {APPROVED_MASONRY_VARIANTS} from '../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from '../src/features/tower/approved-section-scene.js';
-import {loadBakedMasonry} from '../src/features/tower/baked-masonry.js?v=4';
-import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.js';
-import {makeKunlumTerrain} from '../src/features/tower/kunlum-terrain-lod.js';
-import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alignment.js';
+import {loadBakedMasonry} from '../src/features/tower/baked-masonry.js?v=5';
 
 const root=new URL('../',import.meta.url);
 const asset='/assets/tower/approved-library/baked/section-3x3x3-v2.glb?v=2';
 
-test('construction loads only ready models and the mapped fence pilot keeps its original geometry',async()=>{
+test('construction loads only ready models without a recipe fallback',async()=>{
  const requests=[];
  let failCast=false;
  const OriginalRequest=globalThis.Request;
@@ -72,56 +69,6 @@ test('construction loads only ready models and the mapped fence pilot keeps its 
     }
    }
   }
-  const plan=JSON.parse(await readFile(new URL('assets/tower/environment/kunlum-vector-plan-2026-10-23.json',root)));
-  const alignment=createKunlumGameAlignment({plot:plan.plot});
-  const fenceGeometry=await loadBakedMasonry('manual-3x3x3-v2');
-  const river=JSON.parse(await readFile(new URL('assets/tower/environment/kunlum-cherek-balkarsky-osm.json',root)));
-  for(const mobile of [false,true]){
-   const terrain=makeKunlumTerrain(THREE,new THREE.Group(),{mobile,plot:plan.plot,alignment});
-   terrain.setRiverLine(river.points.filter(([x,z])=>Math.abs(x)<=1750&&Math.abs(z)<=1750)
-    .map(point=>{const [x,z]=terrain.demToScene(...point);return {x,z};}));
-   const heightAt=terrain.renderedHeightAt;
-   const overlay=createKunlumMapOverlay(THREE,plan,{mobile,toWorld:alignment.planToScene,heightAt});
-   const interval=overlay.segments.confirmed.find(({featureId,a,b})=>
-    featureId==='V174'&&Math.hypot(b[0]-a[0],b[1]-a[1])>3.2&&Math.hypot(b[0]-a[0],b[1]-a[1])<3.25
-   );
-   await overlay.enhance({materialPromise:Promise.resolve(material),bakedFencePilot:true});
-   const batch=overlay.root.getObjectByName('Kunlum baked fence pilot V174');
-   assert.ok(batch?.isInstancedMesh);
-   assert.equal(batch.count,4);
-   assert.equal(batch.geometry,fenceGeometry);
-   const {a,b}=interval;
-   const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
-   const axis=[(b[0]-a[0])/length,(b[1]-a[1])/length];
-   const bounds=fenceGeometry.boundingBox,transform=new THREE.Matrix4();
-   let previousEnd=0;
-   for(let index=0;index<batch.count;index++){
-    batch.getMatrixAt(index,transform);
-    const projections=[];
-    for(const x of [bounds.min.x,bounds.max.x])for(const z of [bounds.min.z,bounds.max.z]){
-     const point=new THREE.Vector3(x,bounds.min.y,z).applyMatrix4(transform);
-     assert.ok(point.y<heightAt(point.x,point.z),'block base must follow the actual terrain');
-     projections.push((point.x-a[0])*axis[0]+(point.z-a[1])*axis[1]);
-    }
-    const min=Math.min(...projections),max=Math.max(...projections);
-    assert.ok(min>=-1e-5&&max<=length+1e-5,'block must fit the clipped wall interval');
-    assert.ok(min<=previousEnd+1e-5,'adjacent envelopes must meet');
-    previousEnd=max;
-   }
-   assert.ok(Math.abs(previousEnd-length)<1e-5);
-   const normal=new THREE.Vector3(-axis[1],0,axis[0]);
-   const ray=new THREE.Raycaster();
-   for(let seam=1;seam<batch.count;seam++)for(const offset of [-.05,-.025,0,.025,.05]){
-    const distance=length*seam/batch.count+offset;
-    const x=a[0]+distance*axis[0],z=a[1]+distance*axis[1];
-    for(let height=.025;height<=.45;height+=.025){
-     ray.set(new THREE.Vector3(x,heightAt(x,z)+height,z).add(normal),normal.clone().negate());
-     assert.ok(ray.intersectObject(batch,false).length,'continuous visible stones at seam '+seam);
-    }
-   }
-   overlay.dispose();
-  }
-  assert.equal(requests.filter(path=>path===asset).length,1);
  }finally{
   globalThis.fetch=originalFetch;
   globalThis.Request=OriginalRequest;

@@ -89,10 +89,7 @@ await set('src/features/tower/kunlum-map-overlay.js',original=>{
 });
 
 await set('src/features/tower/kunlum-ruin-layout.js',s=>replaceOne(s,/(kunlum-wall-ground\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-ruin-layout.js'));
-await set('src/features/tower/kunlum-stone-facing.js',source=>{
- let s=replaceOne(source,/(kunlum-ruin-layout\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js');
- return replaceOne(s,/(kunlum-ruin-lod\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js');
-});
+await set('src/features/tower/kunlum-stone-facing.js',s=>replaceOne(s,/(kunlum-ruin-lod\.mjs\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-stone-facing.js'));
 await set('src/features/tower/kunlum-ruin-shell.js',s=>replaceOne(s,/(kunlum-ruin-layout\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-ruin-shell.js'));
 await set('src/features/tower/kunlum-game-landscape.js',source=>{
  let s=replaceOne(source,/(kunlum-autumn-palette\.js\?v=)[0-9.]+/,'$1'+version,'src/features/tower/kunlum-game-landscape.js');

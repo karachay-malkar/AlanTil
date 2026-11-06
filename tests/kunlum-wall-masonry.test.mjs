@@ -1,11 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
 import * as THREE from '../src/vendor/three/three.module.js';
 import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.js';
 
-const facingSource=readFileSync(new URL('../src/features/tower/kunlum-stone-facing.js',import.meta.url),'utf8');
-const layoutSource=readFileSync(new URL('../src/features/tower/kunlum-ruin-layout.js',import.meta.url),'utf8');
 function demo({wall=false,auto=false,passage=false,openings=[]}={}){
  const confirmed_features=[
   ...(wall?[{id:'W',type:'wall',origin:'manual',points:[[-2,0],[2,0]]}]:[]),
@@ -47,23 +44,4 @@ test('linked opening cuts real wall intervals before 3D mesh generation',()=>{
  assert.equal(scene.counters.linkedOpenings,1);
  assert.equal(scene.passages.children.length,0);
  scene.dispose();
-});
-test('stone facade uses Common100 geometry, instancing and bounded spatial chunks',()=>{
- assert.match(facingSource,/loadLibrary=loadCommon100/);
- assert.match(facingSource,/await loadLibrary\(\)/);
- assert.match(facingSource,/getApprovedStoneSurfaceGeometry\(/);
- assert.match(facingSource,/mesh\.computeBoundingSphere\(\)/);
- assert.match(facingSource,/mesh\.frustumCulled=true/);
- assert.match(facingSource,/const count=mobile\?12:24/);
- assert.match(facingSource,/for\(const rock of layoutKunlumRuinStones\(seg\)\)/);
- assert.match(facingSource,/new THREE\.InstancedMesh/);
- assert.doesNotMatch(facingSource,/makeKunlumRuinShell/);
- assert.match(layoutSource,/kunlumRuinFoot\(x,z,width,heightAt/);
- assert.match(layoutSource,/kunlumRuinCrown\(height,x,z\)/);
-});
-test('camera updates do not replace Common100 geometry with proxy stone meshes',()=>{
- assert.match(facingSource,/ruinPlacementMode='fixed-common100-instances-v1'/);
- assert.match(facingSource,/ruinWallStoneInstances=wallInstances/);
- assert.match(facingSource,/function update\(camera\)/);
- assert.doesNotMatch(facingSource,/ruinFarBlend|selectKunlumRuinTier|nearWeight|farWeight/);
 });

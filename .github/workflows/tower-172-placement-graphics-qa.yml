@@ -62,5 +62,15 @@ jobs:
         run: npm install --no-save --no-audit --no-fund playwright@1.56.1
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Verify smooth fence LOD and compare with 17.2.82
+        run: |
+          git fetch --depth=1 origin b68ceaafc66b5e9ecc4954178673d4e5e522bee9
+          git show FETCH_HEAD:src/features/tower/kunlum-stone-facing.js | sed 's/{BAKED_MASONRY_PILOT,loadBakedMasonry}/{loadBakedMasonry}/' > src/features/tower/.fence-baseline.js
+          node scripts/qa/browser-kunlum-fence-lod.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kunlum-fence-lod-frames
+          path: fence-browser-results/
       - name: Verify native 1K maps and mobile placement controls
         run: node scripts/qa/browser-tower-172-placement-graphics.cjs

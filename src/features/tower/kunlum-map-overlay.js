@@ -1,5 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.82';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.82';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.83';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.83';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
@@ -143,9 +143,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  root.add(footings.root);
  root.userData.ruinContact=footings.counts;
  // No passage line meshes: only physical gaps in the wall geometry.
- const enhance=({renderer,materialPromise,bakedFencePilot}={})=>enhanceKunlumStoneWalls(THREE,root,[
+ const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
- ],{renderer,materialPromise,mobile,monument,bakedFencePilot});
+ ],{renderer,materialPromise,mobile,monument});
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,

@@ -1,13 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-const source=readFileSync(new URL('../src/features/tower/kunlum-stone-facing.js',import.meta.url),'utf8');
+import {Vector3,Sphere} from '../src/vendor/three/three.module.js';
+import {fenceLodVisibility} from '../src/features/tower/kunlum-ruin-lod.mjs';
 
-test('every camera distance uses the same Common100 model selection and stone layers',()=>{
- assert.match(source,/const count=mobile\?12:24;/);
- assert.match(source,/for\(const layerDepth of \(mobile\?\[-1,1\]:\[-1,0,1\]\)\)/);
- assert.match(source,/new THREE\.InstancedMesh\(models\[k\]\.geometry,material,bins\[k\]\.length\)/);
- assert.match(source,/mesh\.computeBoundingSphere\(\)/);
- assert.match(source,/mesh\.frustumCulled=true/);
- assert.doesNotMatch(source,/midModels|makeKunlumRuinShell|bucket\.far|bucket\.medium|bucket\.near/);
+test('fence batches submit both levels only when they intersect the blend band',()=>{
+ const bounds=new Sphere(new Vector3(),2);
+ for(const [distance,near,far] of [[0,true,false],[20,true,false],[38,true,true],[55,false,true],[100,false,true]]){
+  assert.deepEqual(fenceLodVisibility(new Vector3(distance,0,0),bounds),{near,far});
+  assert.deepEqual(fenceLodVisibility(new Vector3(0,distance,0),bounds),{near,far});
+ }
 });
