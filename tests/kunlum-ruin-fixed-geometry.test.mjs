@@ -7,7 +7,7 @@ import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alig
 
 const read=path=>readFile(new URL('../'+path,import.meta.url));
 
-test('all mapped fence intervals use matching near and far casts without recipes',async()=>{
+test('mapped fence intervals keep their casts and switch to continuous distant shells',async()=>{
  const OriginalRequest=globalThis.Request,originalFetch=globalThis.fetch;
  const originalProgressEvent=globalThis.ProgressEvent;
  const requested=[];
@@ -48,7 +48,9 @@ test('all mapped fence intervals use matching near and far casts without recipes
    assert.ok(near.geometry.boundingBox.max.distanceTo(far.geometry.boundingBox.max)<1e-5);
   }
   const near=meshes[0],far=meshes[1],p=near.boundingSphere.center.clone();
-  result.update({position:p});
+  const camera=new THREE.PerspectiveCamera(42,1,.1,20000);
+  camera.position.copy(p);
+  result.update(camera);
   assert.equal(near.visible,true);
   const shader={vertexShader:'#include <project_vertex>',fragmentShader:'#include <clipping_planes_fragment>'};
   const farShader={...shader};
@@ -56,8 +58,16 @@ test('all mapped fence intervals use matching near and far casts without recipes
   far.material.onBeforeCompile(farShader);
   assert.match(shader.fragmentShader,/threshold < fade/);
   assert.match(farShader.fragmentShader,/threshold >= fade/);
-  result.update({position:p.clone().addScalar(10000)});
-  assert.ok(meshes.every((m,i)=>m.visible===Boolean(i%2)));
+  assert.match(shader.fragmentShader,/masonryNoise < masonryMix/);
+  camera.position.copy(p).addScalar(10000);
+  result.update(camera);
+  assert.ok(meshes.every(m=>!m.visible));
+  const shells=[...overlay.confirmed.children,...overlay.candidates.children]
+   .filter(mesh=>mesh.name==='Kunlum distant wall shell');
+  assert.ok(shells.length>0&&shells.every(mesh=>mesh.visible));
+  camera.position.copy(p);
+  result.update(camera);
+  assert.equal(near.visible,true);
   const total=offset=>meshes.filter((_,i)=>i%2===offset).reduce((n,m)=>n+triangleCount(m),0);
   console.log(JSON.stringify({segments:result.segments,blocks:result.blocks,nearTriangles:total(0),farTriangles:total(1)}));
   overlay.dispose();
