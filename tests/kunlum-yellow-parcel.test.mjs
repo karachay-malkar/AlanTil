@@ -45,7 +45,7 @@ test('both editors and game use one 2D plan; auto candidates are volume meshes',
  assert.match(twoD,/plot=\{\.\.\.data\.plot\}/);
  assert.match(scene,/PlaneGeometry\(SITE.widthM,SITE.depthM\)/);
  assert.match(game,/candidatesVisible:true/);
- assert.match(overlay,/wallPiece\(a,b,1\.45,\.42,candidateLayer\)/);
+ assert.match(overlay,/wallPiece\(a,b,1\.45,\.42,candidateLayer,f\.id\)/);
  assert.match(overlay,/confirmedSegments/);
  assert.match(overlay,/candidateSegments/);
  assert.match(overlay,/enhanceKunlumStoneWalls/);
