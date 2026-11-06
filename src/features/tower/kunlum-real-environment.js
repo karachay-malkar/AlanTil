@@ -10,8 +10,8 @@ import {sampleDemLocal} from './kunlum-georeference.js';
 import {createKunlumWideDem} from './kunlum-wide-dem.js';
 import {createKunlumGameAlignment} from './kunlum-build-alignment.js';
 import {KUNLUM_BUILD_PARCEL as SITE} from '../../../packages/tower-game/kunlum-parcel.mjs';
-import {createKunlumMapOverlay} from './kunlum-map-overlay.js?v=17.2.83';
-import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js?v=17.2.83';
+import {createKunlumMapOverlay} from './kunlum-map-overlay.js?v=17.2.84';
+import {createKunlumNativeTerrainPBR} from './kunlum-game-landscape.js?v=17.2.84';
 import {loadKunlumCherekLocal,createKunlumRiverLayer,riverDistanceAt} from './kunlum-river-layer.js';
 import {createKunlumTerrainScatter,createKunlumRockOutcrops,createKunlumRiverbankScatter} from './kunlum-terrain-scatter.js';
 

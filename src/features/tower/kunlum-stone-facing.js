@@ -4,8 +4,12 @@ import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 import {loadBakedMasonry} from './baked-masonry.js?v=5';
 import {kunlumRuinCrown,kunlumRuinFoot} from './kunlum-wall-ground.js?v=17.2.77';
-import {groupRuinSegments,ruinChunkDistance,fenceLodVisibility,FENCE_LOD_START,FENCE_LOD_END} from './kunlum-ruin-lod.mjs?v=17.2.83';
+import {groupRuinSegments,ruinChunkDistance,fenceLodVisibility,FENCE_LOD_START,FENCE_LOD_END} from './kunlum-ruin-lod.mjs?v=17.2.84';
 
+import {createDistantMasonry,distantWallPositions,loadDistantTower,masonryFade} from './kunlum-distant-masonry.js';
+
+const WALL_SHELL={start:68,end:100};
+const TOWER_SHELL={start:105,end:165};
 const hash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453123;return v-Math.floor(v)};
 const usable=(geom)=>{
  const box=geom.boundingBox||(geom.computeBoundingBox(),geom.boundingBox);
@@ -60,7 +64,7 @@ function fenceMatrices(seg,models,bins){
 
 export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  renderer,materialPromise,mobile=false,monument=null,loadLibrary=loadCommon100,
- loadSection=loadBakedMasonry
+ loadSection=loadBakedMasonry,distantShells=false
 }={}){
  const material=await (materialPromise||getRockSurface(renderer));
  if(root.userData.disposed)return null;
@@ -81,7 +85,21 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   return {near,far,box,size:box.getSize(new THREE.Vector3()),center:box.getCenter(new THREE.Vector3())};
  })):[];
  if(root.userData.disposed)return null;
- const nearMaterial=fenceMaterial(material,false),farMaterial=fenceMaterial(material,true);
+ const nearSource=fenceMaterial(material,false),farSource=fenceMaterial(material,true);
+ const nearMaterial=distantShells?masonryFade(nearSource,WALL_SHELL):nearSource;
+ const farMaterial=distantShells?masonryFade(farSource,WALL_SHELL):farSource;
+ const shellBase=distantShells?new THREE.MeshStandardMaterial({color:'#a99b83',roughness:1,side:THREE.DoubleSide}):null;
+ const wallShellMaterial=shellBase&&masonryFade(shellBase,{...WALL_SHELL,distant:true});
+ const shells=[],towerMeshes=[];
+ const fallbackWallMaterial=distantShells?masonryFade(material,WALL_SHELL):material;
+ let towerShell=null,towerShellMaterial=null,towerFacingMaterial=null,towerBaseMaterial=null,originalTowerMaterial=null;
+ const zoomFor=camera=>Math.abs(camera.projectionMatrix.elements[5])/2.60509;
+ const shellVisibility=(camera,mesh,limits)=>{
+  mesh.updateWorldMatrix(true,false);
+  const sphere=mesh.geometry.boundingSphere.clone().applyMatrix4(mesh.matrixWorld);
+  const distance=camera.position.distanceTo(sphere.center),zoom=zoomFor(camera);
+  return {near:distance-sphere.radius<limits.end*zoom,far:distance+sphere.radius>limits.start*zoom};
+ };
  const meshes=new Set(),pairs=[];
  let materialVersion=material.version,wallInstances=0;
  function batch(geometry,drawMaterial,matrices,group){
@@ -97,27 +115,45 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  function dispose(){
   for(const mesh of meshes){mesh.removeFromParent();mesh.dispose();}
   meshes.clear();
-  nearMaterial.dispose();
-  farMaterial.dispose();
+  for(const {mesh} of shells){mesh.removeFromParent();mesh.geometry.dispose();}
+  if(towerShell){towerShell.removeFromParent();towerShell.geometry.dispose();}
+  if(towerBaseMaterial)monument.material=originalTowerMaterial;
+  const owned=new Set([nearSource,farSource,nearMaterial,farMaterial,shellBase,wallShellMaterial,
+   towerShellMaterial,towerFacingMaterial,towerBaseMaterial]);
+  if(distantShells)owned.add(fallbackWallMaterial);
+  for(const variant of owned)variant?.dispose();
  }
  function update(camera){
   if(root.userData.disposed||!camera)return false;
   if(materialVersion!==material.version){
    materialVersion=material.version;
-   for(const variant of [nearMaterial,farMaterial]){
+   for(const variant of new Set([nearMaterial,farMaterial,fallbackWallMaterial,towerFacingMaterial].filter(v=>v&&v!==material))){
     variant.copy(material);
     variant.needsUpdate=true;
    }
   }
-  let nearCount=0,farCount=0;
   for(const {near,far} of pairs){
    const visible=fenceLodVisibility(camera.position,near.boundingSphere);
    near.visible=visible.near;
    far.visible=visible.far;
-   if(visible.near)nearCount+=near.count;
-   if(visible.far)farCount+=far.count;
   }
-  root.userData.ruinLOD={nearCount,farCount};
+  let shellCount=0;
+  for(const {mesh,details,unpaired} of shells){
+   const visible=shellVisibility(camera,mesh,WALL_SHELL);
+   mesh.visible=visible.far;
+   if(mesh.visible)shellCount++;
+   if(!visible.near)for(const detail of details)detail.visible=false;
+   else for(const detail of unpaired)detail.visible=true;
+  }
+  if(towerShell){
+   const visible=shellVisibility(camera,towerShell,TOWER_SHELL);
+   towerShell.visible=visible.far;
+   monument.visible=visible.near;
+   for(const mesh of towerMeshes)mesh.visible=visible.near;
+  }
+  const nearCount=pairs.reduce((n,{near})=>n+(near.visible?near.count:0),0);
+  const farCount=pairs.reduce((n,{far})=>n+(far.visible?far.count:0),0);
+  root.userData.ruinLOD={nearCount,farCount,shellCount,towerShell:!!towerShell?.visible};
   return true;
  }
  root.userData.ruinLodController={update,dispose};
@@ -125,13 +161,26 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   if(root.userData.disposed)return null;
   const chunk=chunks[i],group=groups[chunk.layer].group;
   const bins=models.map(()=>[]);
+  const details=[],unpaired=new Set();
   for(const seg of chunk.segments)fenceMatrices(seg,models,bins);
   for(let k=0;k<models.length;k++){
    if(!bins[k].length)continue;
    const {near,far}=models[k];
-   const full=batch(near,far?nearMaterial:material,bins[k],group);
-   if(far)pairs.push({near:full,far:batch(far,farMaterial,bins[k],group)});
+   const full=batch(near,far?nearMaterial:fallbackWallMaterial,bins[k],group);
+   details.push(full);
+   if(far){
+    const middle=batch(far,farMaterial,bins[k],group);
+    pairs.push({near:full,far:middle});
+    details.push(middle);
+   }else unpaired.add(full);
    wallInstances+=bins[k].length;
+  }
+  if(distantShells&&details.length){
+   const mesh=createDistantMasonry(THREE,distantWallPositions(chunk.segments),wallShellMaterial);
+   mesh.name='Kunlum distant wall shell';
+   mesh.visible=false;
+   group.add(mesh);
+   shells.push({mesh,details,unpaired});
   }
   if(i%4===3)await new Promise(resolve=>setTimeout(resolve,0));
  }
@@ -156,6 +205,23 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   });
   const dummy=new THREE.Object3D();
   const {x,z,baseY,height:H}=monument.userData.common100TowerBase;
+  const positions=distantShells?await loadDistantTower().catch(error=>{
+   console.warn('Kunlum tower LOD unavailable:',error);
+   return null;
+  }):null;
+  if(root.userData.disposed)return null;
+  if(positions){
+   towerShellMaterial=masonryFade(shellBase,{...TOWER_SHELL,distant:true});
+   towerFacingMaterial=masonryFade(material,TOWER_SHELL);
+   originalTowerMaterial=monument.material;
+   towerBaseMaterial=masonryFade(originalTowerMaterial,TOWER_SHELL);
+   monument.material=towerBaseMaterial;
+   towerShell=createDistantMasonry(THREE,positions,towerShellMaterial);
+   towerShell.position.set(x,baseY,z);
+   towerShell.visible=false;
+   towerShell.name='Abay-Kala distant shell';
+   root.add(towerShell);
+  }
   const rows=mobile?30:44,columns=mobile?7:11;
   const bins=models.map(()=>[]);
   for(let side=0;side<4;side++)for(let row=0;row<rows;row++){
@@ -182,10 +248,11 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   }
   for(let k=0;k<models.length;k++){
    if(!bins[k].length)continue;
-   const inst=new THREE.InstancedMesh(models[k].geometry,material,bins[k].length);
+   const inst=new THREE.InstancedMesh(models[k].geometry,towerFacingMaterial||material,bins[k].length);
    inst.name='Abay-Kala Common100 '+models[k].name;inst.frustumCulled=false;
    bins[k].forEach((matrix,j)=>inst.setMatrixAt(j,matrix));
    meshes.add(inst);
+   towerMeshes.push(inst);
    inst.instanceMatrix.needsUpdate=true;root.add(inst);
    total+=bins[k].length;
   }

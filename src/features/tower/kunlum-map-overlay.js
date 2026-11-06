@@ -1,5 +1,5 @@
-import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.83';
-import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.83';
+import {enhanceKunlumStoneWalls} from './kunlum-stone-facing.js?v=17.2.84';
+import {kunlumRuinCrown,kunlumRuinFoot,createKunlumWallFootings} from './kunlum-wall-ground.js?v=17.2.84';
 /**
  * Read-only overlay for the ORIGINAL, undeformed 30 m Copernicus DEM preview.
  * Historic vector-plan alignment remains explicitly one-point/unverified.
@@ -134,7 +134,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
    const a=p[i-1],b=p[i],pkey=q=>q.map(v=>v.toFixed(3)).join(',');
    const key=[pkey(a),pkey(b)].sort().join('|');
    if(seenAutoSegments.has(key))continue;
-   seenAutoSegments.add(key);wallPiece(a,b,1.45,.42,candidateLayer);
+   seenAutoSegments.add(key);wallPiece(a,b,1.45,.42,candidateLayer,f.id);
   }
  }
  // Soil and fallen angular stones follow the same CUT intervals; never fill openings.
@@ -145,7 +145,7 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  // No passage line meshes: only physical gaps in the wall geometry.
  const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
- ],{renderer,materialPromise,mobile,monument});
+ ],{renderer,materialPromise,mobile,monument,distantShells:true});
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,
