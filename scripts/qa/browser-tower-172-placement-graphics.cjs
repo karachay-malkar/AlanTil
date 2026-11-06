@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'../..'),base='http://127.0.0.1:8838';
  try{
   browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
-  const requested=[],errors=[];page.on('request',r=>{if(/BalkariaStone_/.test(r.url()))requested.push(r.url())});page.on('pageerror',e=>errors.push(String(e)));
+  const masonryRequests=[],requested=[],errors=[];page.on('request',r=>{if(/BalkariaStone_/.test(r.url()))requested.push(r.url());if(/approved-library\/(casts|baked|sections)\//.test(r.url()))masonryRequests.push(new URL(r.url()).pathname)});page.on('pageerror',e=>errors.push(String(e)));
   await page.route('**/src/features/tower/repository.js*',route=>route.fulfill({status:200,contentType:'text/javascript',body:`
    export const towerUserId=()=> 'dfcf124e-735b-4caa-81d2-99eb5f02218d';
    import {APPROVED_PREFAB_VERSION} from '../../../packages/tower-game/approved-prefab.mjs';
@@ -52,6 +52,10 @@ const root=path.resolve(__dirname,'../..'),base='http://127.0.0.1:8838';
   if((await page.locator('.towerGame').getAttribute('data-mode'))!=='placing')throw Error('Nudge exited placement');
   await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.prefabCount==='1'&&
    typeof window.qaTowerPick==='function',null,{timeout:120000});
+  if(!masonryRequests.includes('/assets/tower/approved-library/casts/section-2x2x2-v1.glb'))
+   throw Error('Saved construction did not load its ready cast: '+JSON.stringify(masonryRequests));
+  if(masonryRequests.some(url=>url.includes('/sections/')))
+   throw Error('Construction requested a stone recipe: '+JSON.stringify(masonryRequests));
   // Exercise the real HUD + validator + 3D ghost with a deterministic hit on
   // the TOP logical face. This uses a seeded 3D source block, not a fake cube.
   await page.evaluate(()=>window.qaTowerPick({

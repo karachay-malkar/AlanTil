@@ -28,7 +28,7 @@ jobs:
           node --check src/features/tower/approved-section-scene.js
           node --check src/features/tower/prefab-scene.js
           node --check tests/tower-common100-stone-uv.test.mjs
-          node --test tests/tower-common100-stone-uv.test.mjs tests/tower-approved-manual.test.mjs
+          node --test tests/tower-common100-stone-uv.test.mjs tests/tower-approved-manual.test.mjs tests/tower-baked-masonry.test.mjs
       - name: Ensure site assets are version-synchronized
         run: node scripts/release/sync-version.mjs --check
   browser:

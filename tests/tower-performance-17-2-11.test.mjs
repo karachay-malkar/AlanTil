@@ -40,5 +40,6 @@ test("PBR cannot gate first-person scene preparation",async()=>{
  assert.match(scene,/approvedModelPromises\.get\(key\)/);
  assert.match(surface,/KTX2Loader/);
  assert.match(surface,/falling back to PNG/);
- assert.match(library,/loadManualSection\(id,manifest\)/);
+ assert.match(library,/await loadBakedMasonry\(id,/);
+ assert.doesNotMatch(library,/loadManualSection|loadCommon100/);
 });

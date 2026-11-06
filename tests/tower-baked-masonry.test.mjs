@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import * as THREE from '../src/vendor/three/three.module.js';
 import {APPROVED_MASONRY_VARIANTS} from '../packages/tower-game/approved-prefab.mjs';
 import {createApprovedSectionLoader} from '../src/features/tower/approved-section-scene.js';
+import {loadBakedMasonry} from '../src/features/tower/baked-masonry.js?v=4';
 import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.js';
 import {makeKunlumTerrain} from '../src/features/tower/kunlum-terrain-lod.js';
 import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alignment.js';
@@ -11,8 +12,9 @@ import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alig
 const root=new URL('../',import.meta.url);
 const asset='/assets/tower/approved-library/baked/section-3x3x3-v2.glb?v=2';
 
-test('construction and the mapped fence pilot share the same prebuilt geometry',async()=>{
+test('construction loads only ready models and the mapped fence pilot keeps its original geometry',async()=>{
  const requests=[];
+ let failCast=false;
  const OriginalRequest=globalThis.Request;
  const originalFetch=globalThis.fetch;
  const originalProgressEvent=globalThis.ProgressEvent;
@@ -25,46 +27,54 @@ test('construction and the mapped fence pilot share the same prebuilt geometry',
  globalThis.fetch=async input=>{
   const path=typeof input==='string'?input:new URL(input.url).pathname+new URL(input.url).search;
   requests.push(path);
+  if(failCast)return new Response(null,{status:503});
   return new Response(await readFile(new URL(path.slice(1).split('?')[0],root)));
  };
  try{
   const material=new THREE.MeshStandardMaterial({side:THREE.DoubleSide});
-  const startBaked=performance.now();
-  const model=await createApprovedSectionLoader().make('3x3x3',1,material);
-  const bakedMs=performance.now()-startBaked;
-  assert.deepEqual(requests,[asset],'first placement needs only the baked GLB');
-  const mesh=model.children[0];
-  assert.equal(mesh.material,material);
-  assert.equal(model.position.y,-.375);
+  const loader=createApprovedSectionLoader();
+  const castAsset=asset.replace('/baked/','/casts/');
+  failCast=true;
+  await assert.rejects(loader.make('3x3x3',1,material));
+  assert.deepEqual(requests.splice(0),[castAsset],'failed asset must not trigger Common 100');
+  failCast=false;
+  for(const [size,ids] of Object.entries(APPROVED_MASONRY_VARIANTS)){
+   for(const [variant,id] of ids.entries()){
+    const before=requests.length;
+    const model=await loader.make(size,variant,material);
+    const cast=size!=='1x1x1';
+    const directory=cast?'casts':'baked';
+    const filename=id.replace('manual-','section-')+'.glb';
+    assert.deepEqual(requests.slice(before),[
+     '/assets/tower/approved-library/'+directory+'/'+filename+'?v=2'
+    ],id);
+    assert.equal(model.children.length,1);
+    assert.equal(model.position.y,-Number(size.split('x')[1])*.125);
+    const geometry=model.children[0].geometry;
+    assert.equal(model.children[0].material,material);
+    assert.ok(geometry.getAttribute('uv')&&geometry.getAttribute('uv2'),id);
+    const restored=await createApprovedSectionLoader().make(size,variant,material);
+    assert.equal(restored.children[0].geometry,geometry,id);
+    assert.equal(requests.length,before+1,id);
+    const original=await loadBakedMasonry(id);
+    if(cast){
+     assert.notEqual(geometry,original);
+     assert.ok(geometry.index.count<original.index.count,id);
+     assert.equal(geometry.index.count/3,model.userData.optimization.renderTriangles,id);
+    }
+    const reference=new THREE.Mesh(original);
+    reference.position.y=model.position.y;
+    for(let rotation=0;rotation<4;rotation++){
+     model.rotation.y=reference.rotation.y=rotation*Math.PI/2;
+     const actual=new THREE.Box3().setFromObject(model,true);
+     const expected=new THREE.Box3().setFromObject(reference,true);
+     assert.ok(actual.min.distanceTo(expected.min)<1e-6&&actual.max.distanceTo(expected.max)<1e-6,id);
+    }
+   }
+  }
   const plan=JSON.parse(await readFile(new URL('assets/tower/environment/kunlum-vector-plan-2026-10-23.json',root)));
   const alignment=createKunlumGameAlignment({plot:plan.plot});
-  const originalRequestsStart=requests.length;
-  const startOriginal=performance.now();
-  const original=await createApprovedSectionLoader({loadBaked:async()=>null}).make('3x3x3',1,material);
-  const originalMs=performance.now()-startOriginal;
-  const originalBytes=(await Promise.all(requests.slice(originalRequestsStart).map(path=>
-   readFile(new URL(path.slice(1).split('?')[0],root))
-  ))).reduce((sum,file)=>sum+file.byteLength,0);
-  const expanded=mesh.geometry.toNonIndexed();
-  const source=original.children[0].geometry;
-  for(const name of ['position','normal','uv','uv2']){
-   const actual=expanded.getAttribute(name).array,expected=source.getAttribute(name).array;
-   assert.equal(actual.length,expected.length);
-   assert.ok(actual.every((value,i)=>Math.abs(value-expected[i])<1e-6),name+' changed when baking');
-  }
-  assert.equal(original.userData.optimization.trimmedTriangles,31);
-  assert.deepEqual(model.userData.optimization,original.userData.optimization);
-  assert.equal(model.userData.sourceStoneCount,original.userData.sourceStoneCount);
-  for(let rotation=0;rotation<4;rotation++){
-   model.rotation.y=original.rotation.y=rotation*Math.PI/2;
-   const actual=new THREE.Box3().setFromObject(model,true);
-   const expected=new THREE.Box3().setFromObject(original,true);
-   assert.ok(actual.min.distanceTo(expected.min)<1e-6&&actual.max.distanceTo(expected.max)<1e-6);
-  }
-  const bakedBytes=(await readFile(new URL(asset.slice(1).split('?')[0],root))).byteLength;
-  console.log('Local first use (read + parse/assemble):',JSON.stringify({
-   bakedMs:Math.round(bakedMs),originalMs:Math.round(originalMs),bakedBytes,originalBytes
-  }));
+  const fenceGeometry=await loadBakedMasonry('manual-3x3x3-v2');
   const river=JSON.parse(await readFile(new URL('assets/tower/environment/kunlum-cherek-balkarsky-osm.json',root)));
   for(const mobile of [false,true]){
    const terrain=makeKunlumTerrain(THREE,new THREE.Group(),{mobile,plot:plan.plot,alignment});
@@ -79,11 +89,11 @@ test('construction and the mapped fence pilot share the same prebuilt geometry',
    const batch=overlay.root.getObjectByName('Kunlum baked fence pilot V174');
    assert.ok(batch?.isInstancedMesh);
    assert.equal(batch.count,4);
-   assert.equal(batch.geometry,mesh.geometry);
+   assert.equal(batch.geometry,fenceGeometry);
    const {a,b}=interval;
    const length=Math.hypot(b[0]-a[0],b[1]-a[1]);
    const axis=[(b[0]-a[0])/length,(b[1]-a[1])/length];
-   const bounds=mesh.geometry.boundingBox,transform=new THREE.Matrix4();
+   const bounds=fenceGeometry.boundingBox,transform=new THREE.Matrix4();
    let previousEnd=0;
    for(let index=0;index<batch.count;index++){
     batch.getMatrixAt(index,transform);
@@ -112,30 +122,6 @@ test('construction and the mapped fence pilot share the same prebuilt geometry',
    overlay.dispose();
   }
   assert.equal(requests.filter(path=>path===asset).length,1);
-  const bakedLoader=createApprovedSectionLoader();
-  const recipeLoader=createApprovedSectionLoader({loadBaked:async()=>null});
-  for(const [size,ids] of Object.entries(APPROVED_MASONRY_VARIANTS)){
-   for(const [variant,id] of ids.entries()){
-    if(id==='manual-3x3x3-v2')continue;
-    const before=requests.length;
-    const baked=await bakedLoader.make(size,variant,material);
-    assert.deepEqual(requests.slice(before),[
-     '/assets/tower/approved-library/baked/'+id.replace('manual-','section-')+'.glb?v=2'
-    ],id);
-    const expected=await recipeLoader.make(size,variant,material);
-    const positions=baked.children[0].geometry.toNonIndexed();
-    for(const name of ['position','normal','uv','uv2']){
-     const actual=positions.getAttribute(name).array,original=expected.children[0].geometry.getAttribute(name).array;
-     assert.equal(actual.length,original.length,id+' '+name);
-     assert.ok(actual.every((value,i)=>Math.abs(value-original[i])<1e-6),id+' '+name);
-    }
-    positions.dispose();
-    assert.deepEqual(baked.userData,expected.userData,id);
-    assert.equal(baked.position.y,expected.position.y,id);
-    const repeat=await bakedLoader.make(size,variant,material);
-    assert.equal(repeat.children[0].geometry,baked.children[0].geometry,id);
-   }
-  }
  }finally{
   globalThis.fetch=originalFetch;
   globalThis.Request=OriginalRequest;

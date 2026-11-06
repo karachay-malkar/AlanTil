@@ -5,10 +5,11 @@ export const BAKED_MASONRY_PILOT='manual-3x3x3-v2';
 const approvedIds=new Set(Object.values(APPROVED_MASONRY_VARIANTS).flat());
 const geometries=new Map();
 
-export async function loadBakedMasonry(id){
+export async function loadBakedMasonry(id,{cast=false}={}){
  if(!approvedIds.has(id))return null;
- const url='/assets/tower/approved-library/baked/'+id.replace('manual-','section-')+'.glb?v=2';
- if(!geometries.has(id))geometries.set(id,new GLTFLoader().loadAsync(url).then(({scene})=>{
+ const directory=cast?'casts':'baked';
+ const url='/assets/tower/approved-library/'+directory+'/'+id.replace('manual-','section-')+'.glb?v=2';
+ if(!geometries.has(url))geometries.set(url,new GLTFLoader().loadAsync(url).then(({scene})=>{
   const [mesh]=scene.children;
   if(scene.children.length!==1||!mesh?.isMesh||!mesh.geometry.getAttribute('uv'))
    throw Error('Invalid baked masonry GLB: '+id);
@@ -19,6 +20,6 @@ export async function loadBakedMasonry(id){
   mesh.geometry.userData={sourceStoneCount,optimization};
   mesh.geometry.computeBoundingBox();
   return mesh.geometry;
- }).catch(error=>{geometries.delete(id);throw error;}));
- return geometries.get(id);
+ }).catch(error=>{geometries.delete(url);throw error;}));
+ return geometries.get(url);
 }

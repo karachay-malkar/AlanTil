@@ -57,9 +57,10 @@ test('PBR UVs remain metric under non-uniform stone scaling; originals are not m
  assert.strictEqual(a,getApprovedStoneSurfaceGeometry(g,[2,1,.5]),'same mesh+scale cached');
  assert.strictEqual(b,getApprovedStoneSurfaceGeometry(g,[1,1,1]),'uniform cache reused');
 });
-test('new approved sections use corrected UVs but preserve original recipe transforms',()=>{
- const src=readFileSync(new URL('../src/features/tower/approved-section-scene.js',import.meta.url),'utf8');
+test('offline masonry exporter applies game UVs and preserves authored recipe transforms',()=>{
+ const src=readFileSync(new URL('../tools/tower/bake-approved-masonry.mjs',import.meta.url),'utf8');
  assert.match(src,/getApprovedStoneSurfaceGeometry\(original,entry\.scale\)/);
+ assert.match(src,/getApprovedStoneSurfaceGeometry\(cast\.geometry\)/);
  assert.match(src,/mesh\.position\.fromArray\(entry\.position\)/);
  assert.match(src,/mesh\.quaternion\.fromArray\(entry\.quaternion\)/);
  assert.match(src,/mesh\.scale\.fromArray\(entry\.scale\)/);
