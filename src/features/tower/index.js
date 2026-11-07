@@ -1,5 +1,5 @@
 /** AlanTil tower: server-authoritative approved prefab construction only. */
-import {createTowerScene} from './prefab-scene.js?v=17.2.84';
+import {createTowerScene} from './prefab-scene.js?v=17.2.85';
 import {mayOpenTower} from './access.mjs';
 import {subscribeToAuth} from '../../shared/auth/auth-service.js?v=16.8.0.16';
 import {toggleBatchSelection,retainBatchSelection} from './batch-delete-selection.mjs?v=17.2.71';
