@@ -42,3 +42,17 @@ export function fenceLodVisibility(camera,sphere){
   far:distance+sphere.radius>FENCE_LOD_START
  };
 }
+
+// Distance bands measured from a chunk's near edge in world metres.
+// No stochastic shader fade: one rendered LOD per object, selected with hysteresis.
+export const RUIN_LOD_DISTANCES=Object.freeze([26,65,130]);
+export function selectRuinLOD(distance,previous=null,thresholds=RUIN_LOD_DISTANCES,hysteresis=.10){
+ const valid=Number.isInteger(previous)&&previous>=0&&previous<=thresholds.length;
+ if(!Number.isFinite(distance))return valid?previous:0;
+ const d=Math.max(0,distance);
+ if(!valid)return thresholds.reduce((level,threshold)=>level+(d>threshold?1:0),0);
+ let level=previous;
+ while(level<thresholds.length&&d>thresholds[level]*(1+hysteresis))level++;
+ while(level>0&&d<thresholds[level-1]*(1-hysteresis))level--;
+ return level;
+}

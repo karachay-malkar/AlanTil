@@ -16,7 +16,11 @@ export function createKunlumMonument(THREE,{x,z,baseY,mobile=false}){
   const dx=side===0?q:side===1?-q:side===2?half:-half;
   const dz=side===0?half:side===1?-half:side===2?-q:q;
   const r=Math.hypot(dx,dz)||1;
-  return [x+dx+dx/r*offset,baseY+y,z+dz+dz/r*offset];
+  // The stone facing is centred 2.5cm outside the original wall and has
+  // a 19cm depth. Recess the backing behind its inner face to prevent
+  // competing depth surfaces (z-fighting), without moving openings.
+  const backingInset=.16;
+  return [x+dx+dx/r*(offset-backingInset),baseY+y,z+dz+dz/r*(offset-backingInset)];
  };
  for(let side=0;side<4;side++)for(let row=0;row<(mobile?22:34);row++){
   const y0=row*H/(mobile?22:34),y1=(row+1)*H/(mobile?22:34);
