@@ -10,8 +10,8 @@ export function groupRuinSegments(entries,size=RUIN_CHUNK_SIZE){
   if(!chunk){
    const cx=Math.floor(x/size),cz=Math.floor(z/size);
    chunk={key,layer,segments:[],bounds:{
-    minX:cx*size,maxX:(cx+1)*size,
-    minZ:cz*size,maxZ:(cz+1)*size
+    minX:Infinity,maxX:-Infinity,
+    minZ:Infinity,maxZ:-Infinity
    }};
    chunks.set(key,chunk);
   }
