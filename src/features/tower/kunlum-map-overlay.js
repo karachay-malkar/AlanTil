@@ -143,9 +143,9 @@ export function createKunlumMapOverlay(THREE,source,{toWorld,heightAt,mobile=fal
  root.add(footings.root);
  root.userData.ruinContact=footings.counts;
  // No passage line meshes: only physical gaps in the wall geometry.
- const enhance=({renderer,materialPromise}={})=>enhanceKunlumStoneWalls(THREE,root,[
+ const enhance=({renderer,materialPromise,loadSection,loadLOD}={})=>enhanceKunlumStoneWalls(THREE,root,[
   {group:confirmed,segments:confirmedSegments},{group:candidates,segments:candidateSegments}
- ],{renderer,materialPromise,mobile,monument,distantShells:true});
+ ],{renderer,materialPromise,loadSection,loadLOD,mobile,monument,distantShells:true});
  const center=centers.length?
   [centers.reduce((s,p)=>s+p[0],0)/centers.length,centers.reduce((s,p)=>s+p[1],0)/centers.length]:[0,0];
  return {root,confirmed,candidates,passages,counters,center,enhance,

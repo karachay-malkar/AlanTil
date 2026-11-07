@@ -90,7 +90,7 @@ export async function createTowerScene(container,{onPick=()=>{},onSelection=()=>
    if(disposed)return;
    if(plan.confirmed_features?.length!==120||plan.openings?.length!==42||
       plan.auto_candidates?.length!==702)throw Error('Incomplete authoritative plan');
-   kunlum=createKunlumEnvironment(THREE,scene,{
+   kunlum=createKunlumEnvironment(THREE,scene,{renderer,
     plan,stoneMaterialPromise:Promise.resolve(stoneMaterial),mobile:mobileQuality,onReady:refreshEnvironmentStatus
    });
    if(worldMode)void kunlum.ensureWideTerrain();

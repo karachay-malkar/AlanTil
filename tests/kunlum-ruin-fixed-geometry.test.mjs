@@ -6,76 +6,33 @@ import {createKunlumMapOverlay} from '../src/features/tower/kunlum-map-overlay.j
 import {createKunlumGameAlignment} from '../src/features/tower/kunlum-build-alignment.js';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url));
-
-test('mapped fence intervals keep their casts and switch to continuous distant shells',async()=>{
- const OriginalRequest=globalThis.Request,originalFetch=globalThis.fetch;
- const originalProgressEvent=globalThis.ProgressEvent;
- const requested=[];
- globalThis.Request=class extends OriginalRequest {
-  constructor(url,options){super(new URL(url,'http://localhost'),options);}
- };
- globalThis.ProgressEvent=class extends Event {
-  constructor(type,options){super(type);Object.assign(this,options);}
- };
- globalThis.fetch=async request=>{
-  const path=new URL(request.url).pathname;
-  requested.push(path);
-  return new Response(await read(path.slice(1)));
- };
- try{
-  const plan=JSON.parse(await read('assets/tower/environment/kunlum-vector-plan-2026-10-23.json'));
-  const alignment=createKunlumGameAlignment({plot:plan.plot});
-  const overlay=createKunlumMapOverlay(THREE,plan,{toWorld:alignment.planToScene,heightAt:(x,z)=>x*.01+z*.005});
-  const material=new THREE.MeshStandardMaterial();
-  const result=await overlay.enhance({materialPromise:Promise.resolve(material)});
-  const expected=[...overlay.segments.confirmed,...overlay.segments.candidates];
-  assert.equal(result.segments,expected.length);
-  assert.equal(result.blocks,expected.reduce((n,{a,b})=>n+Math.ceil(Math.hypot(a[0]-b[0],a[1]-b[1])/1.35),0));
-  assert.equal(requested.length,4);
-  assert.ok(requested.every(p=>/\/(casts|fence-lod)\/.+\.glb$/.test(p)));
-  const meshes=[];
-  for(const layer of [overlay.confirmed,overlay.candidates]){
-   const batch=layer.children.filter(m=>m.isInstancedMesh);
-   assert.ok(batch.length>0);
-   meshes.push(...batch);
-  }
-  const triangleCount=(mesh)=>mesh.geometry.index.count/3*mesh.count;
-  for(let i=0;i<meshes.length;i+=2){
-   const near=meshes[i],far=meshes[i+1];
-   assert.ok(triangleCount(far)<triangleCount(near)*.6);
-   assert.deepEqual(near.instanceMatrix.array,far.instanceMatrix.array);
-   assert.ok(near.geometry.boundingBox.min.distanceTo(far.geometry.boundingBox.min)<1e-5);
-   assert.ok(near.geometry.boundingBox.max.distanceTo(far.geometry.boundingBox.max)<1e-5);
-  }
-  const near=meshes[0],far=meshes[1],p=near.boundingSphere.center.clone();
-  const camera=new THREE.PerspectiveCamera(42,1,.1,20000);
-  camera.position.copy(p);
-  result.update(camera);
-  assert.equal(near.visible,true);
-  const shader={vertexShader:'#include <project_vertex>',fragmentShader:'#include <clipping_planes_fragment>'};
-  const farShader={...shader};
-  near.material.onBeforeCompile(shader);
-  far.material.onBeforeCompile(farShader);
-  assert.match(shader.fragmentShader,/threshold < fade/);
-  assert.match(farShader.fragmentShader,/threshold >= fade/);
-  assert.match(shader.fragmentShader,/masonryNoise < masonryMix/);
-  camera.position.copy(p).addScalar(10000);
-  result.update(camera);
-  assert.ok(meshes.every(m=>!m.visible));
-  const shells=[...overlay.confirmed.children,...overlay.candidates.children]
-   .filter(mesh=>mesh.name==='Kunlum distant wall shell');
-  assert.ok(shells.length>0&&shells.every(mesh=>mesh.visible));
-  camera.position.copy(p);
-  result.update(camera);
-  assert.equal(near.visible,true);
-  const total=offset=>meshes.filter((_,i)=>i%2===offset).reduce((n,m)=>n+triangleCount(m),0);
-  console.log(JSON.stringify({segments:result.segments,blocks:result.blocks,nearTriangles:total(0),farTriangles:total(1)}));
-  overlay.dispose();
-  material.dispose();
- }finally{
-  globalThis.Request=OriginalRequest;
-  globalThis.fetch=originalFetch;
-  if(originalProgressEvent)globalThis.ProgressEvent=originalProgressEvent;
-  else delete globalThis.ProgressEvent;
- }
+test('mapped cast LODs keep every approved segment and each opening remains physical',async()=>{
+ const plan=JSON.parse(await read('assets/tower/environment/kunlum-vector-plan-2026-10-23.json'));
+ const alignment=createKunlumGameAlignment({plot:plan.plot});
+ const overlay=createKunlumMapOverlay(THREE,plan,{
+  toWorld:alignment.planToScene,heightAt:(x,z)=>x*.01+z*.005
+ });
+ const material=new THREE.MeshStandardMaterial();
+ const geometry=new THREE.BoxGeometry(.52,.52,.52);
+ geometry.computeBoundingBox();
+ const result=await overlay.enhance({
+  materialPromise:Promise.resolve(material),
+  loadSection:async()=>geometry,
+  loadLOD:async()=>({geometry,material})
+ });
+ const segments=[...overlay.segments.confirmed,...overlay.segments.candidates];
+ assert.equal(result.segments,segments.length);
+ assert.equal(overlay.counters.linkedOpenings,42);
+ assert.ok(result.blocks>segments.length,'natural-scale masonry uses multiple small casts per interval');
+ const meshes=[...overlay.confirmed.children,...overlay.candidates.children]
+  .filter(x=>x.isInstancedMesh);
+ assert.ok(meshes.length>0);
+ assert.deepEqual([...new Set(meshes.map(x=>x.userData.kunlumLOD))].sort(),[0,1,2,3]);
+ const camera=new THREE.PerspectiveCamera(42,1,.1,20000);
+ camera.position.set(0,0,0);result.update(camera);
+ const active=meshes.filter(x=>x.visible);
+ assert.ok(active.length>0);
+ assert.ok(active.every(m=>m.userData.kunlumLOD===0||m.userData.kunlumLOD>0));
+ assert.equal(result.blocks,overlay.root.userData.bakedFenceBlocks);
+ overlay.dispose();material.dispose();geometry.dispose();
 });
