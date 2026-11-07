@@ -21,7 +21,8 @@ CASTS = ('section-2x2x2-v3', 'section-3x3x3-v2')
 LEVELS = ((1, 0.44, 1024, .35), (2, .13, 512, 1.3), (3, .035, 256, 2.2))
 MAGIC = bytes.fromhex('ab4b5458203230bb0d0a1a0a')
 manifest = {'version': 1, 'material': 'BalkariaStone_BaseColor_2K.png',
-            'levels': {}, 'source': 'approved-library/casts', 'files': {}}
+            'levels': {}, 'source': 'approved-library/casts',
+            'towerSource': 'approved-library/lod-review/models.json', 'files': {}}
 assert COLOR.is_file()
 OUTPUT.mkdir(parents=True, exist_ok=True)
 
@@ -150,9 +151,55 @@ def select(*objects, active=None):
         obj.select_set(True)
     bpy.context.view_layer.objects.active = active or objects[-1]
 
+def load_baked_tower_source():
+    """Use the existing approved 3D shell and real doorway/window geometry."""
+    file=ROOT/'assets/tower/approved-library/lod-review/models.json'
+    raw=json.loads(file.read_text(encoding='utf-8'))['tower']
+    verts=[tuple(raw[i:i+3]) for i in range(0,len(raw),3)]
+    tris=[(i,i+1,i+2) for i in range(0,len(verts),3)]
+    geo=bpy.data.meshes.new('Abay-Kala authored shell')
+    geo.from_pydata(verts,[],tris)
+    geo.update()
+    ob=bpy.data.objects.new('abay-kala',geo)
+    bpy.context.collection.objects.link(ob)
+    import bmesh
+    bm=bmesh.new()
+    bm.from_mesh(geo)
+    bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=1e-5)
+    bm.to_mesh(geo)
+    bm.free()
+    geo.update()
+    uv=geo.uv_layers.new(name='BalkariaStone world-scale UV')
+    for face in geo.polygons:
+        normal=face.normal
+        ax=abs(normal.x)
+        ay=abs(normal.y)
+        az=abs(normal.z)
+        axis=0 if ax>=ay and ax>=az else 1 if ay>=az else 2
+        for index in face.loop_indices:
+            co=geo.vertices[geo.loops[index].vertex_index].co
+            uv.data[index].uv=((co.z if axis==0 else co.x)*3.15,
+                               (co.z if axis==1 else co.y)*3.15)
+    return ob
+
+
+def validate_tower_openings(mesh, level):
+    bvh=BVHTree.FromObject(mesh,bpy.context.evaluated_depsgraph_get())
+    from mathutils import Vector
+    for y in (1.25,6.0,10.1):
+        hit,normal,face,distance=bvh.ray_cast(Vector((0,y,8)),
+                                             Vector((0,0,-1)),8.0)
+        if hit is not None:
+            raise RuntimeError(f'Abay-Kala LOD {level} seals doorway/window at {y}m')
+
+
 def bake_one(name, level, ratio, size, blur):
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=str(SOURCE / (name + '.glb')))
+    if name=='abay-kala':
+        load_baked_tower_source()
+        ratio={1:.78,2:.53,3:.30}[level]
+    else:
+        bpy.ops.import_scene.gltf(filepath=str(SOURCE / (name + '.glb')))
     meshes = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
     if len(meshes) != 1:
         raise RuntimeError(f'{name}: expected one cast mesh, got {len(meshes)}')
@@ -173,6 +220,8 @@ def bake_one(name, level, ratio, size, blur):
     modifier.ratio = ratio
     bpy.ops.object.modifier_apply(modifier=modifier.name)
     exact_bounds(low, expected)
+    if name=='abay-kala':
+        validate_tower_openings(low,level)
     select(low)
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
@@ -198,7 +247,7 @@ def bake_one(name, level, ratio, size, blur):
     with glb.open('rb') as f:
         assert f.read(4) == b'glTF', f'invalid GLB file: {glb}'
     count = len(low.data.polygons)
-    if not (0 < count < faces * .62):
+    if not (0 < count < faces * (.91 if name=='abay-kala' else .62)):
         raise RuntimeError(f'LOD budget not met: {name} {level}: {count}/{faces}')
     key = f'lod{level}/{name}'
     manifest['files'][key] = {'triangles': sum(len(p.vertices) - 2 for p in low.data.polygons),
@@ -210,7 +259,7 @@ def bake_one(name, level, ratio, size, blur):
 
 for level, ratio, size, blur in LEVELS:
     manifest['levels'][str(level)] = {'ratio': ratio, 'resolution': size}
-    for name in CASTS:
+    for name in (*CASTS,'abay-kala'):
         bake_one(name, level, ratio, size, blur)
 
 (OUTPUT / 'manifest.json').write_text(

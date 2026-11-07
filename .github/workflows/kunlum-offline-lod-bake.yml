@@ -47,7 +47,7 @@ jobs:
           from PIL import Image, ImageStat
           p=Path('assets/tower/approved-library/lod-baked')
           m=json.loads((p/'manifest.json').read_text())
-          assert len(m['files'])==6
+          assert len(m['files'])==9
           magic=bytes.fromhex('ab4b5458203230bb0d0a1a0a')
           for key,stat in m['files'].items():
               glb=(p/(key+'.glb')).read_bytes()
