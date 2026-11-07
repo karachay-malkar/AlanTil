@@ -1,5 +1,28 @@
 {
   "files": {
+    "lod1/abay-kala": {
+      "colorStdDev": 30.225,
+      "glbBytes": 10440,
+      "ktx2Bytes": 1398624,
+      "resolution": 1024,
+      "sourceBounds": [
+        [
+          -3.0,
+          3.0
+        ],
+        [
+          0.0,
+          15.800000190734863
+        ],
+        [
+          -3.0,
+          3.0
+        ]
+      ],
+      "sourceFaces": 298,
+      "triangles": 232,
+      "uniqueColors": 1001
+    },
     "lod1/section-2x2x2-v3": {
       "colorStdDev": 37.649,
       "glbBytes": 37052,
@@ -46,6 +69,29 @@
       "triangles": 1056,
       "uniqueColors": 1001
     },
+    "lod2/abay-kala": {
+      "colorStdDev": 10.554,
+      "glbBytes": 8232,
+      "ktx2Bytes": 350032,
+      "resolution": 512,
+      "sourceBounds": [
+        [
+          -3.0,
+          3.0
+        ],
+        [
+          0.0,
+          15.800000190734863
+        ],
+        [
+          -3.0,
+          3.0
+        ]
+      ],
+      "sourceFaces": 298,
+      "triangles": 157,
+      "uniqueColors": 1001
+    },
     "lod2/section-2x2x2-v3": {
       "colorStdDev": 27.521,
       "glbBytes": 12796,
@@ -90,6 +136,29 @@
       ],
       "sourceFaces": 2400,
       "triangles": 311,
+      "uniqueColors": 1001
+    },
+    "lod3/abay-kala": {
+      "colorStdDev": 8.276,
+      "glbBytes": 5808,
+      "ktx2Bytes": 87856,
+      "resolution": 256,
+      "sourceBounds": [
+        [
+          -3.0,
+          3.0
+        ],
+        [
+          0.0,
+          15.800000190734863
+        ],
+        [
+          -3.0,
+          3.0
+        ]
+      ],
+      "sourceFaces": 298,
+      "triangles": 89,
       "uniqueColors": 1001
     },
     "lod3/section-2x2x2-v3": {
@@ -155,5 +224,6 @@
   },
   "material": "BalkariaStone_BaseColor_2K.png",
   "source": "approved-library/casts",
+  "towerSource": "approved-library/lod-review/models.json",
   "version": 1
 }
