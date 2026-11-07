@@ -94,7 +94,8 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
 
  if(root.userData.disposed)return null;
  const ownedMeshes=new Set(),wallChunks=[],towerMeshes=[];
- let towerShell=null,towerMaterial=null,towerState=null;
+ const towerLevels=[];
+ let towerState=null;
  let blocks=0;
  function batch(geometry,drawMaterial,matrices,group,level){
   const mesh=new THREE.InstancedMesh(geometry,drawMaterial,matrices.length);
@@ -147,19 +148,27 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    return {name,geometry:getApprovedStoneSurfaceGeometry(source),size};
   });
   const {x,z,baseY,height:H}=monument.userData.common100TowerBase;
-  const positions=distantShells?await loadDistantTower().catch(error=>{
-   console.warn('Kunlum tower distant asset unavailable:',error);return null;
-  }):null;
-  if(root.userData.disposed)return null;
-  if(positions){
-   towerMaterial=new THREE.MeshStandardMaterial({
-    color:'#a99b83',roughness:1,side:THREE.DoubleSide
-   });
-   towerShell=createDistantMasonry(THREE,positions,towerMaterial);
-   towerShell.position.set(x,baseY,z);
-   towerShell.visible=false;
-   towerShell.name='Abay-Kala prebaked distant shell';
-   root.add(towerShell);
+  if(distantShells){
+   try{
+    const assets=await Promise.all([1,2,3].map(level=>loadLOD('abay-kala',level,{renderer})));
+    if(root.userData.disposed)return null;
+    for(let i=0;i<assets.length;i++){
+     const asset=assets[i];
+     if(!asset?.geometry||!asset?.material||!usable(asset.geometry))
+      throw Error('Invalid Abay-Kala baked LOD '+(i+1));
+    }
+    for(let i=0;i<assets.length;i++){
+     const {geometry,material:atlas}=assets[i];
+     const mesh=new THREE.Mesh(geometry,atlas);
+     mesh.name='Abay-Kala prebaked LOD '+(i+1);
+     mesh.position.set(x,baseY,z);
+     mesh.userData.kunlumTowerLOD=i+1;
+     mesh.visible=false;
+     root.add(mesh);towerLevels.push(mesh);
+    }
+   }catch(error){
+    console.warn('Abay-Kala prebaked LOD unavailable; retaining approved near geometry:',error);
+   }
   }
   const dummy=new THREE.Object3D();
   const rows=mobile?30:44,columns=mobile?7:11;
@@ -209,27 +218,32 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
     if(mesh.visible)active[level]+=mesh.count;
    }
   }
-  if(towerShell){
-   towerShell.updateWorldMatrix(true,false);
-   const sphere=towerShell.geometry.boundingSphere.clone().applyMatrix4(towerShell.matrixWorld);
+  if(towerLevels.length===3){
+   const sphere=new THREE.Sphere(new THREE.Vector3(
+    monument.userData.common100TowerBase.x,
+    monument.userData.common100TowerBase.baseY+monument.userData.common100TowerBase.height*.5,
+    monument.userData.common100TowerBase.z
+   ),monument.userData.common100TowerBase.height*.65);
    const distance=Math.max(0,camera.position.distanceTo(sphere.center)-sphere.radius);
-   towerState=selectRuinLOD(distance/zoom,towerState,[135]);
-   const far=towerState===1;
-   towerShell.visible=far;
-   monument.visible=!far;
-   for(const stone of towerMeshes)stone.visible=!far;
+   towerState=selectRuinLOD(distance/zoom,towerState,[65,145,300]);
+   monument.visible=towerState===0;
+   for(const stone of towerMeshes)stone.visible=towerState===0;
+   for(const mesh of towerLevels)mesh.visible=mesh.userData.kunlumTowerLOD===towerState;
+  }else{
+   towerState=0;
+   monument.visible=true;
+   for(const stone of towerMeshes)stone.visible=true;
   }
   root.userData.ruinLOD={
    nearCount:active[0],farCount:active[1]+active[2]+active[3],
-   activeLevels:active,shellCount:0,towerShell:!!towerShell?.visible
+   activeLevels:active,shellCount:0,towerShell:towerState>0,towerLOD:towerState
   };
   return true;
  }
  function dispose(){
   for(const mesh of ownedMeshes){mesh.removeFromParent();mesh.dispose();}
   ownedMeshes.clear();
-  if(towerShell){towerShell.removeFromParent();towerShell.geometry.dispose();}
-  towerMaterial?.dispose();
+  for(const mesh of towerLevels)mesh.removeFromParent();
  }
  root.userData.ruinLodController={update,dispose};
  return {stones:stoneCount,blocks,segments:segmentCount,update,dispose};
