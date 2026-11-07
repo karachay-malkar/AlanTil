@@ -42,7 +42,7 @@ test('mapped segments have one visible physical LOD per spatial chunk and natura
  assert.equal(meshes.length,8,'2 cast variants x 4 prepared levels');
  for(const [x,expected] of [[2,0],[60,1],[100,2],[200,3]]){
   camera.position.set(x,0,0);
-  scene.update(camera);
+  assert.doesNotThrow(()=>scene.update(camera),'wall-only scenes must not require a monument');
   const counts=Array.from({length:4},(_,i)=>meshes.filter(m=>m.visible&&m.userData.kunlumLOD===i).length);
   assert.equal(counts.reduce((a,b)=>a+b,0),2,'one LOD per cast');
   assert.equal(counts[expected],2,'correct stable LOD');
