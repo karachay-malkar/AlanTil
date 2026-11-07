@@ -4,6 +4,9 @@ on:
     branches: ['17.2']
     paths:
       - .github/workflows/tower-lod-architecture-qa.yml
+      - tests/kunlum-stable-lod.test.mjs
+      - src/features/tower/kunlum-ruin-lod.mjs
+      - src/features/tower/kunlum-monument.js
 permissions:
   contents: read
 jobs:
@@ -16,6 +19,6 @@ jobs:
         with:
           node-version: '22'
       - name: Verify masonry LOD, cut openings and compressed architecture
-        run: node --test tests/kunlum-ruin-lod.test.mjs tests/kunlum-ruin-shell.test.mjs tests/kunlum-ruin-layout.test.mjs tests/kunlum-wall-ground.test.mjs tests/tower-optimized-architecture.test.mjs
+        run: node --test tests/kunlum-stable-lod.test.mjs tests/kunlum-ruin-lod.test.mjs tests/kunlum-ruin-shell.test.mjs tests/kunlum-ruin-layout.test.mjs tests/kunlum-wall-ground.test.mjs tests/tower-optimized-architecture.test.mjs
       - name: Verify release versions and asset cache keys
         run: node scripts/release/sync-version.mjs --check
