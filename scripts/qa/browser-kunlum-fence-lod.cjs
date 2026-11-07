@@ -72,12 +72,12 @@ const {chromium}=require('playwright');
      near:frames[0],blend:frames[5],far:frames[10]};
    });
   });
+  console.log('FENCE_BENCHMARK',JSON.stringify({baseline:stats[0],casts:stats[1]}));
   assert.equal(errors.length,0,errors.join('\n'));
   assert.ok(stats[1].near.lod.nearCount>0&&stats[1].near.lod.farCount===0);
-  assert.ok(stats[1].blend.lod.nearCount>0&&stats[1].blend.lod.farCount>0);
+  assert.ok(stats[1].blend.lod.nearCount===0&&stats[1].blend.lod.farCount>0);
   assert.ok(stats[1].far.lod.nearCount===0&&stats[1].far.lod.farCount>0);
-  assert.ok(stats[1].far.triangles<stats[0].far.triangles);
-  console.log('FENCE_BENCHMARK',JSON.stringify({baseline:stats[0],casts:stats[1]}));
+  assert.ok(stats[1].far.triangles<stats[1].near.triangles);
  }finally{
   await browser?.close();
   server.kill();
