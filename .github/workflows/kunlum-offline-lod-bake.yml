@@ -44,6 +44,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import json,struct
+          from PIL import Image, ImageStat
           p=Path('assets/tower/approved-library/lod-baked')
           m=json.loads((p/'manifest.json').read_text())
           assert len(m['files'])==6
@@ -55,6 +56,10 @@ jobs:
               assert ktx[:12]==magic and len(ktx)==stat['ktx2Bytes']
               assert struct.unpack_from('<I',ktx,40)[0]>1, 'Missing KTX2 mipmaps'
               assert stat['triangles']>0 and stat['sourceFaces']>stat['triangles']
+              assert stat['uniqueColors']>=64 and stat['colorStdDev']>=3
+              png=p/(key+'.png')
+              with Image.open(png) as im:
+                  assert max(ImageStat.Stat(im.convert('RGB')).stddev)>=3, f'flat atlas {png}'
           print('Validated',len(m['files']),'GLB/KTX2 pairs')
           PY
       - name: Publish only validated generated assets to branch 17.2

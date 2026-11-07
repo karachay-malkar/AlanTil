@@ -9,7 +9,9 @@ import json
 import math
 from pathlib import Path
 import subprocess
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageStat
+import numpy as np
+from mathutils.bvhtree import BVHTree
 
 ROOT = Path.cwd()
 SOURCE = ROOT / 'assets/tower/approved-library/casts'
@@ -37,18 +39,110 @@ def exact_bounds(obj, original):
                 (want_hi - want_lo) / (got_hi - got_lo))
     obj.data.update()
 
-def shader_material(name, image, bake_target=False):
-    material = bpy.data.materials.new(name)
-    material.use_nodes = True
-    nodes = material.node_tree.nodes
-    tex = nodes.new('ShaderNodeTexImage')
-    tex.image = image
-    tex.extension = 'REPEAT' if not bake_target else 'CLIP'
-    nodes.active = tex
-    if not bake_target:
-        bsdf = nodes.get('Principled BSDF')
-        material.node_tree.links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
-    return material
+def barycentric(p, a, b, c):
+    u = b - a
+    v = c - a
+    w = p - a
+    uu, uv, vv = u.dot(u), u.dot(v), v.dot(v)
+    wu, wv = w.dot(u), w.dot(v)
+    den = uu * vv - uv * uv
+    if abs(den) < 1e-12:
+        return None
+    s = (wu * vv - wv * uv) / den
+    t = (wv * uu - wu * uv) / den
+    return (1 - s - t, s, t)
+
+
+def rasterize_source_colour(high, low, size, blur, png):
+    """Project each low-mesh UV texel onto the actual approved high mesh.
+
+    Blender Cycles selected-to-active silently returned a flat generated colour
+    on these tightly overlapping casts. Nearest-surface BVH sampling makes the
+    transfer deterministic and checks that genuine source pixels are used.
+    """
+    high.data.calc_loop_triangles()
+    low.data.calc_loop_triangles()
+    uvsrc = high.data.uv_layers.active.data
+    uvdst = low.data.uv_layers.active.data
+    bvh = BVHTree.FromObject(high, bpy.context.evaluated_depsgraph_get())
+    original = Image.open(COLOR).convert('RGB')
+    source = original.load()
+    sw, sh = original.size
+    avg = tuple(int(x) for x in ImageStat.Stat(original.resize((16, 16))).mean)
+    n = min(size, 512)
+    output = Image.new('RGB', (n, n), avg)
+    pixels = output.load()
+    mask = np.zeros((n, n), dtype=np.bool_)
+    hits = 0
+    for tri in low.data.loop_triangles:
+        corners = [low.data.vertices[i].co for i in tri.vertices]
+        uv = [uvdst[i].uv for i in tri.loops]
+        xy = [(p.x * n, (1-p.y) * n) for p in uv]
+        x0 = max(0, int(min(p[0] for p in xy)))
+        x1 = min(n-1, int(max(p[0] for p in xy)+1))
+        y0 = max(0, int(min(p[1] for p in xy)))
+        y1 = min(n-1, int(max(p[1] for p in xy)+1))
+        ax, ay = xy[0]
+        bx, by = xy[1]
+        cx, cy = xy[2]
+        det = (by-cy)*(ax-cx)+(cx-bx)*(ay-cy)
+        if abs(det) < 1e-8:
+            continue
+        for y in range(y0, y1+1):
+            for x in range(x0, x1+1):
+                px, py = x+.5, y+.5
+                w0 = ((by-cy)*(px-cx)+(cx-bx)*(py-cy))/det
+                w1 = ((cy-ay)*(px-cx)+(ax-cx)*(py-cy))/det
+                w2 = 1-w0-w1
+                if min(w0,w1,w2) < -1e-5:
+                    continue
+                point = corners[0]*w0 + corners[1]*w1 + corners[2]*w2
+                nearest, normal, face_id, distance = bvh.find_nearest(point, .65)
+                if nearest is None:
+                    continue
+                poly = high.data.polygons[face_id]
+                if len(poly.vertices) != 3:
+                    continue
+                a,b,c = [high.data.vertices[i].co for i in poly.vertices]
+                weights = barycentric(nearest, a,b,c)
+                if weights is None:
+                    continue
+                uv_values=[uvsrc[i].uv for i in poly.loop_indices]
+                u=sum(weights[i]*uv_values[i].x for i in range(3))
+                v=sum(weights[i]*uv_values[i].y for i in range(3))
+                rgb=source[int(u*sw)%sw, int((1-v)*sh)%sh]
+                pixels[x,y]=rgb
+                mask[y,x]=True
+                hits+=1
+    if hits < n*n*.08:
+        raise RuntimeError(f'No source-colour UV transfer: {png} hits={hits}')
+    # Dilate UV-island colours into their safety margin to stop mip bleeding.
+    arr=np.array(output)
+    for _ in range(8):
+        missing=~mask
+        if not missing.any():
+            break
+        for direction,shift in [(0,1),(0,-1),(1,1),(1,-1)]:
+            shifted_mask=np.roll(mask,shift,axis=direction)
+            found=missing & shifted_mask
+            if not found.any():
+                continue
+            arr[found]=np.roll(arr,shift,axis=direction)[found]
+            mask[found]=True
+            missing[found]=False
+    output=Image.fromarray(arr)
+    if n!=size:
+        output=output.resize((size,size),Image.Resampling.LANCZOS)
+    if blur:
+        output=output.filter(ImageFilter.GaussianBlur(blur))
+    output.save(png,optimize=True)
+    stat=ImageStat.Stat(output)
+    deviation=max(stat.stddev)
+    unique=len(output.getcolors(maxcolors=1000) or range(1001))
+    if deviation<3 or unique<64:
+        raise RuntimeError(f'Flat prebaked atlas: {png}: stddev={deviation}, colors={unique}')
+    return round(deviation,3),unique
+
 
 def select(*objects, active=None):
     bpy.ops.object.select_all(action='DESELECT')
@@ -58,11 +152,6 @@ def select(*objects, active=None):
 
 def bake_one(name, level, ratio, size, blur):
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.scene.cycles.samples = 1
-    bpy.context.scene.render.bake.margin = 12
-    bpy.context.scene.render.bake.use_selected_to_active = True
-    bpy.context.scene.render.bake.max_ray_distance = .23
     bpy.ops.import_scene.gltf(filepath=str(SOURCE / (name + '.glb')))
     meshes = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
     if len(meshes) != 1:
@@ -74,9 +163,6 @@ def bake_one(name, level, ratio, size, blur):
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
     expected = bounds(high)
     faces = len(high.data.polygons)
-    source_image = bpy.data.images.load(str(COLOR), check_existing=True)
-    high.data.materials.clear()
-    high.data.materials.append(shader_material('Approved stone source', source_image))
 
     low = high.copy()
     low.data = high.data.copy()
@@ -93,22 +179,11 @@ def bake_one(name, level, ratio, size, blur):
     bpy.ops.uv.smart_project(island_margin=.018)
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    atlas = bpy.data.images.new('Colour atlas', width=size, height=size,
-                                alpha=False, float_buffer=False)
-    atlas.generated_color = (0.67, 0.62, 0.53, 1)
-    low.data.materials.clear()
-    low.data.materials.append(shader_material('Baked atlas destination', atlas, True))
-    select(high, low, active=low)
-    bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'})
     folder = OUTPUT / f'lod{level}'
     folder.mkdir(parents=True, exist_ok=True)
     png = folder / f'{name}.png'
-    atlas.filepath_raw = str(png)
-    atlas.file_format = 'PNG'
-    atlas.save()
-    if blur:
-        with Image.open(png) as img:
-            img.convert('RGB').filter(ImageFilter.GaussianBlur(blur)).save(png, optimize=True)
+    deviation, unique = rasterize_source_colour(high,low,size,blur,png)
+    low.data.materials.clear()
 
     select(low)
     glb = folder / f'{name}.glb'
@@ -128,7 +203,8 @@ def bake_one(name, level, ratio, size, blur):
     key = f'lod{level}/{name}'
     manifest['files'][key] = {'triangles': sum(len(p.vertices) - 2 for p in low.data.polygons),
                               'sourceFaces': faces, 'sourceBounds': expected,
-                              'resolution': size, 'glbBytes': glb.stat().st_size,
+                              'resolution': size, 'colorStdDev': deviation, 'uniqueColors': unique,
+                              'glbBytes': glb.stat().st_size,
                               'ktx2Bytes': ktx.stat().st_size}
     print('BAKED', key, manifest['files'][key], flush=True)
 
