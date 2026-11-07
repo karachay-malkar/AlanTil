@@ -60,7 +60,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
  if(root.userData.disposed)return null;
  if(monument)applyRockSurface(monument,material);
  const chunks=groupRuinSegments(groups.flatMap((entry,layer)=>
-  entry.segments.map(seg=>({seg,layer}))),24);
+  entry.segments.map(seg=>({seg,layer}))),64);
  chunks.sort((a,b)=>ruinChunkDistance({x:0,z:0},a.bounds)-
   ruinChunkDistance({x:0,z:0},b.bounds));
  const models=chunks.length?await Promise.all(FENCE_SECTIONS.map(async id=>{
@@ -202,7 +202,8 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
   const active=[0,0,0,0],zoom=zoomFor(camera);
   for(const chunk of wallChunks){
    chunk.selected=selectRuinLOD(
-    ruinChunkDistance(camera.position,chunk.bounds)/zoom,chunk.selected);
+    ruinChunkDistance(camera.position,chunk.bounds)/zoom,chunk.selected,
+    mobile?[14,42,100]:undefined);
    for(let level=0;level<4;level++)for(const mesh of chunk.levels[level]){
     mesh.visible=chunk.selected===level;
     if(mesh.visible)active[level]+=mesh.count;
