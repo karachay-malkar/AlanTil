@@ -1,6 +1,7 @@
 {
   "files": {
     "lod1/section-2x2x2-v3": {
+      "colorStdDev": 37.649,
       "glbBytes": 37052,
       "ktx2Bytes": 1398624,
       "resolution": 1024,
@@ -19,9 +20,11 @@
         ]
       ],
       "sourceFaces": 1218,
-      "triangles": 535
+      "triangles": 535,
+      "uniqueColors": 1001
     },
     "lod1/section-3x3x3-v2": {
+      "colorStdDev": 38.606,
       "glbBytes": 70672,
       "ktx2Bytes": 1398624,
       "resolution": 1024,
@@ -40,9 +43,11 @@
         ]
       ],
       "sourceFaces": 2400,
-      "triangles": 1056
+      "triangles": 1056,
+      "uniqueColors": 1001
     },
     "lod2/section-2x2x2-v3": {
+      "colorStdDev": 27.521,
       "glbBytes": 12796,
       "ktx2Bytes": 350032,
       "resolution": 512,
@@ -61,9 +66,11 @@
         ]
       ],
       "sourceFaces": 1218,
-      "triangles": 158
+      "triangles": 158,
+      "uniqueColors": 1001
     },
     "lod2/section-3x3x3-v2": {
+      "colorStdDev": 25.536,
       "glbBytes": 24820,
       "ktx2Bytes": 350032,
       "resolution": 512,
@@ -82,9 +89,11 @@
         ]
       ],
       "sourceFaces": 2400,
-      "triangles": 311
+      "triangles": 311,
+      "uniqueColors": 1001
     },
     "lod3/section-2x2x2-v3": {
+      "colorStdDev": 24.243,
       "glbBytes": 4736,
       "ktx2Bytes": 87856,
       "resolution": 256,
@@ -103,9 +112,11 @@
         ]
       ],
       "sourceFaces": 1218,
-      "triangles": 42
+      "triangles": 42,
+      "uniqueColors": 1001
     },
     "lod3/section-3x3x3-v2": {
+      "colorStdDev": 20.612,
       "glbBytes": 7996,
       "ktx2Bytes": 87856,
       "resolution": 256,
@@ -124,7 +135,8 @@
         ]
       ],
       "sourceFaces": 2400,
-      "triangles": 84
+      "triangles": 84,
+      "uniqueColors": 1001
     }
   },
   "levels": {
