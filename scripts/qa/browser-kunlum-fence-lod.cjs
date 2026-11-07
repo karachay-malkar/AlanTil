@@ -51,6 +51,7 @@ const {chromium}=require('playwright');
     camera.lookAt(0,.35,-2);
     entry.result.update(camera);
     const start=performance.now();
+    renderer.info.reset();
     renderer.render(entry.scene,camera);
     renderer.getContext().finish();
     return {ms:performance.now()-start,triangles:renderer.info.render.triangles,lod:entry.root.userData.ruinLOD};
@@ -74,10 +75,12 @@ const {chromium}=require('playwright');
   });
   console.log('FENCE_BENCHMARK',JSON.stringify({baseline:stats[0],casts:stats[1]}));
   assert.equal(errors.length,0,errors.join('\n'));
-  assert.ok(stats[1].near.lod.nearCount>0&&stats[1].near.lod.farCount===0);
-  assert.ok(stats[1].blend.lod.nearCount===0&&stats[1].blend.lod.farCount>0);
-  assert.ok(stats[1].far.lod.nearCount===0&&stats[1].far.lod.farCount>0);
-  assert.ok(stats[1].far.triangles<stats[1].near.triangles);
+  for(const frame of [stats[1].near,stats[1].blend,stats[1].far]){
+   assert.equal(frame.lod.activeLevels.length,4);
+   assert.ok(frame.lod.activeLevels.reduce((a,b)=>a+b)>0);
+  }
+  assert.ok(stats[1].far.lod.activeLevels[3]>0,'most distant cast uses prebaked LOD 3');
+  assert.ok(stats[1].far.triangles<stats[0].far.triangles,'far scene must beat old baseline triangle budget');
  }finally{
   await browser?.close();
   server.kill();

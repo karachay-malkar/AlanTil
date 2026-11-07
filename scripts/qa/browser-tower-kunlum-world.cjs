@@ -28,7 +28,7 @@ const out=path.join(root,'tower-world-browser-qa');fs.mkdirSync(out,{recursive:t
     await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.kunlumWorldReady==='true'&&
      document.getElementById('qa-root')?.dataset.mount==='success',null,{timeout:100000});
     await page.waitForFunction(()=>Number(document.querySelector('.towerCanvas')?.dataset.kunlumBakedFenceBlocks)>0&&
-     document.querySelector('.towerCanvas')?.dataset.kunlumRuinEngine==='baked-fence-lod-v1'&&
+     document.querySelector('.towerCanvas')?.dataset.kunlumRuinEngine==='approved-offline-lod-v2'&&
      document.querySelector('.towerCanvas')?.dataset.stoneTextureEncoding==='pending',null,{timeout:45000});
    }finally{releaseTextures();}
    await page.waitForFunction(()=>document.querySelector('.towerCanvas')?.dataset.stoneTextureEncoding!=='pending',
