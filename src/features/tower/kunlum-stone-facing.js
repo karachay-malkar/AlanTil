@@ -231,7 +231,7 @@ export async function enhanceKunlumStoneWalls(THREE,root,groups,{
    for(const mesh of towerLevels)mesh.visible=mesh.userData.kunlumTowerLOD===towerState;
   }else{
    towerState=0;
-   monument.visible=true;
+   if(monument)monument.visible=true;
    for(const stone of towerMeshes)stone.visible=true;
   }
   root.userData.ruinLOD={
