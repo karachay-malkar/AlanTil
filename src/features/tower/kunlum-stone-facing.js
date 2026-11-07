@@ -4,7 +4,7 @@ import {loadCommon100} from '../masonry/library.js?v=17.7-approved-masonry.1';
 import {getApprovedStoneSurfaceGeometry,applyRockSurface,getRockSurface} from './rock-surface.js?v=balkaria-stone-v2.1-light-ochre.2';
 import {loadBakedMasonry} from './baked-masonry.js?v=5';
 import {kunlumRuinCrown,kunlumRuinFoot} from './kunlum-wall-ground.js?v=17.2.77';
-import {groupRuinSegments,ruinChunkDistance,selectRuinLOD} from './kunlum-ruin-lod.mjs?v=17.2.84';
+import {groupRuinSegments,ruinChunkDistance,selectRuinLOD} from './kunlum-ruin-lod.mjs?v=17.2.85';
 import {createDistantMasonry,loadDistantTower} from './kunlum-distant-masonry.js';
 import {loadKunlumPrebakedLOD} from './kunlum-prebaked-lod.js';
 
