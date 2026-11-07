@@ -7,7 +7,7 @@ const cache=new Map();
 const root='/assets/tower/approved-library/lod-baked/';
 export function kunlumBakedAssetURL(id,level,ext){
  if(!Number.isInteger(level)||level<1||level>3)throw Error('Unknown Kunlum LOD '+level);
- if(!/^manual-(?:2x2x2-v3|3x3x3-v2)$/.test(id))throw Error('Unapproved Kunlum LOD '+id);
+ if(id!=='abay-kala'&&!/^manual-(?:2x2x2-v3|3x3x3-v2)$/.test(id))throw Error('Unapproved Kunlum LOD '+id);
  if(!['glb','ktx2','png'].includes(ext))throw Error('Invalid Kunlum asset format');
  return root+'lod'+level+'/'+id.replace('manual-','section-')+'.'+ext;
 }
