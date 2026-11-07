@@ -1,0 +1,64 @@
+name: Kunlum 17.2 — offline approved stone LOD GLB KTX2 bake
+on:
+  push:
+    branches: ['17.2']
+    paths:
+      - 'tools/tower/bake-kunlum-lod-atlases.py'
+      - '.github/workflows/kunlum-offline-lod-bake.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: kunlum-offline-bake-17-2
+  cancel-in-progress: false
+jobs:
+  bake:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install offline baking tools
+        run: |
+          python -m pip install --disable-pip-version-check Pillow==11.3.0
+          sudo apt-get update -qq
+          sudo apt-get install -y blender
+          curl -fL --retry 3 -o /tmp/ktx.deb https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Linux-x86_64.deb
+          sudo apt-get install -y /tmp/ktx.deb
+          blender --version | head -2
+          toktx --version
+      - name: Bake all approved cast LOD geometry and colour textures
+        run: blender -b --python tools/tower/bake-kunlum-lod-atlases.py
+      - name: Validate each generated GLB and KTX2, scale, size, budgets and atlas
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,struct
+          p=Path('assets/tower/approved-library/lod-baked')
+          m=json.loads((p/'manifest.json').read_text())
+          assert len(m['files'])==6
+          magic=bytes.fromhex('ab4b5458203230bb0d0a1a0a')
+          for key,stat in m['files'].items():
+              glb=(p/(key+'.glb')).read_bytes()
+              ktx=(p/(key+'.ktx2')).read_bytes()
+              assert glb[:4]==b'glTF' and len(glb)==stat['glbBytes']
+              assert ktx[:12]==magic and len(ktx)==stat['ktx2Bytes']
+              assert struct.unpack_from('<I',ktx,40)[0]>1, 'Missing KTX2 mipmaps'
+              assert stat['triangles']>0 and stat['sourceFaces']>stat['triangles']
+          print('Validated',len(m['files']),'GLB/KTX2 pairs')
+          PY
+      - name: Publish only validated generated assets to branch 17.2
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/tower/approved-library/lod-baked
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'assets(tower): prebake approved stone LOD meshes and KTX2 atlases'
+          git fetch origin 17.2
+          git rebase origin/17.2
+          git push origin HEAD:17.2
